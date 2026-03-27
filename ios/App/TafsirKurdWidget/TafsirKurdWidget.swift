@@ -36,7 +36,7 @@ private var widgetGradient: some View {
     LinearGradient(colors: [DS.bg1, DS.bg2], startPoint: .top, endPoint: .bottom)
 }
 
-// MARK: — Data model
+// MARK: — Data model (untouched)
 
 struct PrayerWidgetData: Codable {
     let city:    String
@@ -62,7 +62,7 @@ struct PrayerWidgetData: Codable {
             wLog.info("decode OK — city=\(decoded.city) date=\(decoded.date)")
             return decoded
         } catch {
-            wLog.error("JSON decode failed: \(error.localizedDescription) — raw=\(json.prefix(200))")
+            wLog.error("JSON decode failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -115,7 +115,7 @@ struct PrayerEntry: TimelineEntry {
     let next: (name: String, time: Date, ku: String)?
 }
 
-// MARK: — Provider
+// MARK: — Provider (untouched)
 
 struct PrayerProvider: TimelineProvider {
     func placeholder(in _: Context) -> PrayerEntry {
@@ -166,7 +166,6 @@ private func remaining(_ to: Date) -> String {
 
 // MARK: — Reusable components
 
-/// City pill
 private struct CityLabel: View {
     let city: String
     var body: some View {
@@ -181,55 +180,60 @@ private struct CityLabel: View {
     }
 }
 
-/// Remaining time badge
 private struct RemBadge: View {
     let text: String
     var body: some View {
         Text(text)
             .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(DS.accent)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, 7)
             .padding(.vertical, 3)
             .background(DS.accentDim)
             .clipShape(Capsule())
     }
 }
 
-/// Single prayer row
-/// compact=true uses tighter padding and smaller font for the medium widget
+/// Prayer row.
+///
+/// `compact: true` → 11 pt font, 2 pt vertical padding.
+/// Used in the medium widget where 5 rows must fit the available height.
+///
+/// Height math (compact, iOS 17+ with ~11 pt system content margins):
+///   row = 11 pt font (line height ~13 pt) + 2 × 2 pt vpad = 17 pt
+///   5 rows × 17 pt = 85 pt — fits in any medium widget
 private struct PRow: View {
     let name:    String
     let time:    String
     let isNext:  Bool
-    var compact: Bool    = false
+    var compact: Bool     = false
     var fontSize: CGFloat = 13
 
     var body: some View {
-        let vPad: CGFloat = compact ? (isNext ? 4 : 3) : (isNext ? 7 : 5)
-        let fs:   CGFloat = compact ? 12 : fontSize
+        let fs:   CGFloat = compact ? 11 : fontSize
+        let vPad: CGFloat = compact ? 2  : (isNext ? 6 : 4)
+        let hPad: CGFloat = compact ? 8  : 10
 
         HStack(spacing: 0) {
             Text(time)
                 .font(.system(size: fs, weight: isNext ? .medium : .light).monospacedDigit())
                 .foregroundStyle(isNext ? DS.accent : DS.t3)
-                .frame(width: compact ? 40 : 44, alignment: .leading)
+                .frame(width: compact ? 38 : 44, alignment: .leading)
             Spacer()
             Text(kKurdish[name] ?? name)
-                .font(.system(size: fs, weight: isNext ? .bold : .regular))
+                .font(.system(size: fs, weight: isNext ? .semibold : .regular))
                 .foregroundStyle(isNext ? DS.t1 : DS.t2)
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, hPad)
         .padding(.vertical, vPad)
         .background(isNext ? DS.accentDim : Color.clear)
         .overlay(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .stroke(isNext ? DS.accentMid : Color.clear, lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 }
 
-/// Empty / no data state
 private struct NoDataView: View {
     var body: some View {
         VStack(spacing: 8) {
@@ -262,13 +266,13 @@ private struct SmallView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer()
                 Text(showName)
-                    .font(.system(size: 34, weight: .bold))
+                    .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(DS.t1)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Text(d.displayTime(showKey))
-                    .font(.system(size: 22, weight: .thin).monospacedDigit())
+                    .font(.system(size: 21, weight: .thin).monospacedDigit())
                     .foregroundStyle(DS.accent)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer()
@@ -277,7 +281,7 @@ private struct SmallView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-            .padding(14)
+            .padding(12)
         } else {
             NoDataView()
         }
@@ -285,8 +289,19 @@ private struct SmallView: View {
 }
 
 // MARK: — Medium widget
-// Layout budget (155pt min height):
-//   padding 10+10=20, header ~18+5=23, 5 rows @~21pt + 4×1pt spacing = 109 → total ≈ 152pt ✓
+//
+// Layout budget (iOS 17+, with system content margins ~11 pt each side):
+//   own padding:   top 4 + bottom 4   = 8 pt
+//   header:        ~16 pt + 3 pt gap  = 19 pt
+//   5 rows:        5 × 17 pt          = 85 pt   (compact: 11 pt font, 2 pt vpad)
+//   row spacing:   0
+//   total content: 8 + 19 + 85        = 112 pt
+//
+//   available (iPhone SE, 141 pt medium − 22 pt sys margins): 119 pt
+//   headroom: 119 − 112 = 7 pt ✓
+//
+//   available (iPhone 16 Pro, 169 pt − 22 pt):                147 pt
+//   headroom: 147 − 112 = 35 pt ✓
 
 private struct MediumView: View {
     let entry: PrayerEntry
@@ -299,8 +314,8 @@ private struct MediumView: View {
                     Spacer()
                     CityLabel(city: d.city)
                 }
-                .padding(.bottom, 5)
-                VStack(spacing: 1) {
+                .padding(.bottom, 3)
+                VStack(spacing: 0) {
                     ForEach(kPrayerOrder, id: \.self) { name in
                         PRow(name: name,
                              time: d.displayTime(name),
@@ -309,8 +324,8 @@ private struct MediumView: View {
                     }
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
         } else {
             NoDataView()
         }
@@ -327,9 +342,8 @@ private struct LargeView: View {
             let bottomName = n?.name ?? "Fajr"
             let bottomKu   = n?.ku   ?? (kKurdish["Fajr"] ?? "سپێدە")
             VStack(spacing: 0) {
-                // Top bar
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 3) {
                         if let n = n { RemBadge(text: remaining(n.time)) }
                         Text(d.hijri)
                             .font(.system(size: 10))
@@ -345,7 +359,6 @@ private struct LargeView: View {
                 DS.sep.frame(height: 1)
                     .padding(.bottom, 10)
 
-                // Prayer list
                 VStack(spacing: 3) {
                     ForEach(kPrayerOrder, id: \.self) { name in
                         PRow(name: name,
@@ -360,7 +373,6 @@ private struct LargeView: View {
                 DS.sep.frame(height: 1)
                     .padding(.vertical, 14)
 
-                // Bottom feature row
                 HStack(alignment: .center) {
                     Text(d.displayTime(bottomName))
                         .font(.system(size: 40, weight: .thin).monospacedDigit())
@@ -379,7 +391,7 @@ private struct LargeView: View {
                 }
                 .padding(.horizontal, 4)
             }
-            .padding(16)
+            .padding(14)
         } else {
             NoDataView()
         }
@@ -417,6 +429,13 @@ private struct LockView: View {
 }
 
 // MARK: — Entry view routers
+//
+// Background architecture — ONE layer only:
+//   iOS 17+: containerBackground(for: .widget) → fills the full rounded widget surface
+//   iOS 16:  .background()                    → fills behind the content view
+//
+// No ZStack wrappers, no additional background layers, no debug overlays.
+// The dark gradient IS the widget surface. Content sits directly on it.
 
 struct TafsirKurdWidgetEntryView: View {
     @Environment(\.widgetFamily) private var family
@@ -446,7 +465,7 @@ struct TafsirKurdLockWidgetEntryView: View {
     }
 }
 
-// MARK: — containerBackground compatibility
+// MARK: — Background compatibility
 
 private extension View {
     @ViewBuilder
