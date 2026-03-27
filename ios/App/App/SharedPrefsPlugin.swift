@@ -1,5 +1,6 @@
 import Foundation
 import Capacitor
+import WidgetKit
 
 /**
  SharedPrefsPlugin
@@ -26,6 +27,10 @@ public class SharedPrefsPlugin: CAPPlugin {
         }
         ud.set(value, forKey: key)
         ud.synchronize()
+        // Reload widget timelines so the widget reads new data immediately
+        if key == "widgetPrayerData" {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         call.resolve()
     }
 

@@ -104,11 +104,20 @@ struct PrayerProvider: TimelineProvider {
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         let now  = Date()
         let data = PrayerWidgetData.load()
-        var entries: [PrayerEntry] = [.init(date: now, data: data, next: data?.nextPrayer(from: now))]
+
+        // No data yet — retry in 3 minutes (app may not have been opened yet)
+        guard let data = data else {
+            let retry = now.addingTimeInterval(3 * 60)
+            let entry = PrayerEntry(date: now, data: nil, next: nil)
+            completion(Timeline(entries: [entry], policy: .after(retry)))
+            return
+        }
+
+        var entries: [PrayerEntry] = [.init(date: now, data: data, next: data.nextPrayer(from: now))]
         for name in kPrayerOrder {
-            if let t = data?.prayerDate(name), t > now {
+            if let t = data.prayerDate(name), t > now {
                 let after = t.addingTimeInterval(30)
-                entries.append(.init(date: t, data: data, next: data?.nextPrayer(from: after)))
+                entries.append(.init(date: t, data: data, next: data.nextPrayer(from: after)))
             }
         }
         let refresh = (entries.last?.date ?? now).addingTimeInterval(6 * 3600)
