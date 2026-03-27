@@ -84,17 +84,24 @@ struct PrayerWidgetData: Codable {
         return "OK:\(decoded.city)"
     }
 
-    func prayerDate(_ name: String) -> Date? {
+    private static var baghdadCal: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "Asia/Baghdad") ?? .current
+        return c
+    }()
+
+    func prayerDate(_ name: String, dayOffset: Int = 0) -> Date? {
         guard let raw = timings[name] else { return nil }
         let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
         let parts = hm.split(separator: ":").compactMap { Int($0) }
         guard parts.count >= 2 else { return nil }
         var c  = DateComponents()
         let dp = date.split(separator: "-").compactMap { Int($0) }
-        if dp.count == 3 { c.year = dp[0]; c.month = dp[1]; c.day = dp[2] }
+        guard dp.count == 3 else { return nil }
+        c.year = dp[0]; c.month = dp[1]; c.day = dp[2] + dayOffset
         c.hour = parts[0]; c.minute = parts[1]; c.second = 0
         c.timeZone = TimeZone(identifier: "Asia/Baghdad")
-        return Calendar.current.date(from: c)
+        return PrayerWidgetData.baghdadCal.date(from: c)
     }
 
     func displayTime(_ name: String) -> String {
@@ -103,8 +110,17 @@ struct PrayerWidgetData: Codable {
     }
 
     func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
+        // Check today's prayers
         for n in kPrayerOrder {
-            if let t = prayerDate(n), t > now { return (n, t, kKurdish[n] ?? n) }
+            if let t = prayerDate(n), t > now {
+                wLog.info("nextPrayer: found \(n) at \(t)")
+                return (n, t, kKurdish[n] ?? n)
+            }
+        }
+        // All passed — fall back to tomorrow's Fajr
+        wLog.warning("nextPrayer: all prayers passed, using tomorrow Fajr fallback")
+        if let fajrTomorrow = prayerDate("Fajr", dayOffset: 1) {
+            return ("Fajr", fajrTomorrow, kKurdish["Fajr"] ?? "سپێدە")
         }
         return nil
     }
@@ -280,28 +296,34 @@ private struct NoDataView: View {
 private struct SmallView: View {
     let entry: PrayerEntry
     var body: some View {
-        if let d = entry.data, let n = entry.next {
+        if let d = entry.data {
+            let n = entry.next
+            let showName  = n?.ku  ?? (kKurdish["Fajr"] ?? "سپێدە")
+            let showKey   = n?.name ?? "Fajr"
+            let dbg = entry.debugState + (n.map { " ›\($0.name)" } ?? " ›nil")
             ZStack {
                 VStack(alignment: .trailing, spacing: 0) {
                     CityLabel(city: d.city)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                     Spacer()
-                    Text(n.ku)
+                    Text(showName)
                         .font(.system(size: 34, weight: .bold))
                         .foregroundStyle(DS.t1)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                         .frame(maxWidth: .infinity, alignment: .trailing)
-                    Text(d.displayTime(n.name))
+                    Text(d.displayTime(showKey))
                         .font(.system(size: 22, weight: .thin).monospacedDigit())
                         .foregroundStyle(DS.accent)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                     Spacer()
-                    RemBadge(text: remaining(n.time))
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    if let n = n {
+                        RemBadge(text: remaining(n.time))
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
                 }
                 .padding(14)
-                DebugBadge(state: entry.debugState)
+                DebugBadge(state: dbg)
             }
         } else {
             NoDataView(debugState: entry.debugState)
@@ -314,23 +336,25 @@ private struct SmallView: View {
 private struct MediumView: View {
     let entry: PrayerEntry
     var body: some View {
-        if let d = entry.data, let n = entry.next {
+        if let d = entry.data {
+            let n = entry.next
+            let dbg = entry.debugState + (n.map { " ›\($0.name)" } ?? " ›nil")
             ZStack {
                 VStack(spacing: 0) {
                     HStack(alignment: .center) {
-                        RemBadge(text: remaining(n.time))
+                        if let n = n { RemBadge(text: remaining(n.time)) }
                         Spacer()
                         CityLabel(city: d.city)
                     }
                     .padding(.bottom, 9)
                     VStack(spacing: 2) {
                         ForEach(kPrayerOrder, id: \.self) { name in
-                            PRow(name: name, time: d.displayTime(name), isNext: name == n.name)
+                            PRow(name: name, time: d.displayTime(name), isNext: name == n?.name)
                         }
                     }
                 }
                 .padding(13)
-                DebugBadge(state: entry.debugState)
+                DebugBadge(state: dbg)
             }
         } else {
             NoDataView(debugState: entry.debugState)
@@ -343,61 +367,65 @@ private struct MediumView: View {
 private struct LargeView: View {
     let entry: PrayerEntry
     var body: some View {
-        if let d = entry.data, let n = entry.next {
+        if let d = entry.data {
+            let n = entry.next
+            let dbg = entry.debugState + (n.map { " ›\($0.name)" } ?? " ›nil")
             ZStack {
-            VStack(spacing: 0) {
-                // Top bar
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        RemBadge(text: remaining(n.time))
-                        Text(d.hijri)
-                            .font(.system(size: 10))
-                            .foregroundStyle(DS.t3)
-                    }
-                    Spacer()
-                    Text(d.city)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(DS.t1)
-                }
-                .padding(.bottom, 14)
-
-                DS.sep.frame(height: 1)
-                    .padding(.bottom, 10)
-
-                // Prayer list
-                VStack(spacing: 3) {
-                    ForEach(kPrayerOrder, id: \.self) { name in
-                        PRow(name: name, time: d.displayTime(name), isNext: name == n.name, fontSize: 15)
-                    }
-                }
-
-                Spacer(minLength: 0)
-
-                DS.sep.frame(height: 1)
-                    .padding(.vertical, 14)
-
-                // Bottom next prayer card
-                HStack(alignment: .center) {
-                    // Big time
-                    Text(d.displayTime(n.name))
-                        .font(.system(size: 40, weight: .thin).monospacedDigit())
-                        .foregroundStyle(DS.accent)
-                    Spacer()
-                    // Prayer name + remaining
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text(n.ku)
-                            .font(.system(size: 26, weight: .bold))
+                VStack(spacing: 0) {
+                    // Top bar
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            if let n = n { RemBadge(text: remaining(n.time)) }
+                            Text(d.hijri)
+                                .font(.system(size: 10))
+                                .foregroundStyle(DS.t3)
+                        }
+                        Spacer()
+                        Text(d.city)
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(DS.t1)
-                        Text(remaining(n.time))
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(DS.t2)
                     }
+                    .padding(.bottom, 14)
+
+                    DS.sep.frame(height: 1)
+                        .padding(.bottom, 10)
+
+                    // Prayer list
+                    VStack(spacing: 3) {
+                        ForEach(kPrayerOrder, id: \.self) { name in
+                            PRow(name: name, time: d.displayTime(name), isNext: name == n?.name, fontSize: 15)
+                        }
+                    }
+
+                    Spacer(minLength: 0)
+
+                    DS.sep.frame(height: 1)
+                        .padding(.vertical, 14)
+
+                    // Bottom next prayer card
+                    let bottomName = n?.name ?? "Fajr"
+                    let bottomKu   = n?.ku   ?? (kKurdish["Fajr"] ?? "سپێدە")
+                    HStack(alignment: .center) {
+                        Text(d.displayTime(bottomName))
+                            .font(.system(size: 40, weight: .thin).monospacedDigit())
+                            .foregroundStyle(DS.accent)
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text(bottomKu)
+                                .font(.system(size: 26, weight: .bold))
+                                .foregroundStyle(DS.t1)
+                            if let n = n {
+                                Text(remaining(n.time))
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(DS.t2)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 4)
                 }
-                .padding(.horizontal, 4)
+                .padding(16)
+                DebugBadge(state: dbg)
             }
-            .padding(16)
-            DebugBadge(state: entry.debugState)
-            } // ZStack
         } else {
             NoDataView(debugState: entry.debugState)
         }
@@ -409,17 +437,22 @@ private struct LargeView: View {
 private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
-        if let d = entry.data, let n = entry.next {
+        if let d = entry.data {
+            let n       = entry.next
+            let showKey = n?.name ?? "Fajr"
+            let showKu  = n?.ku   ?? (kKurdish["Fajr"] ?? "سپێدە")
             HStack(spacing: 0) {
-                Text(remaining(n.time))
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.trailing, 6)
+                if let n = n {
+                    Text(remaining(n.time))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .padding(.trailing, 6)
+                }
                 Spacer()
-                Text(d.displayTime(n.name))
+                Text(d.displayTime(showKey))
                     .font(.system(size: 14, weight: .semibold).monospacedDigit())
                     .padding(.trailing, 5)
-                Text(n.ku)
+                Text(showKu)
                     .font(.system(size: 14, weight: .bold))
             }
             .environment(\.layoutDirection, .rightToLeft)
