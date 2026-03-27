@@ -32,9 +32,11 @@ public class SharedPrefsPlugin: CAPPlugin {
         let synced = ud.synchronize()
         NSLog("[SharedPrefs] wrote key=%@ valueLen=%d synced=%d", key, value.count, synced ? 1 : 0)
         if key == "widgetPrayerData" {
-            NSLog("[SharedPrefs] calling WidgetCenter.reloadAllTimelines")
+            NSLog("[SharedPrefs] calling WidgetCenter reload")
             WidgetCenter.shared.reloadAllTimelines()
-            NSLog("[SharedPrefs] reloadAllTimelines done")
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdWidgetV2")
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdLockWidgetV2")
+            NSLog("[SharedPrefs] reload done")
         }
         call.resolve()
     }

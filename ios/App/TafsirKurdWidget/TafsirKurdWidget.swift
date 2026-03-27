@@ -477,7 +477,7 @@ private extension View {
 // MARK: — Widget declarations
 
 struct TafsirKurdWidget: Widget {
-    let kind = "TafsirKurdWidget"
+    let kind = "TafsirKurdWidgetV2"
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             TafsirKurdWidgetEntryView(entry: entry)
@@ -489,7 +489,7 @@ struct TafsirKurdWidget: Widget {
 }
 
 struct TafsirKurdLockWidget: Widget {
-    let kind = "TafsirKurdLockWidget"
+    let kind = "TafsirKurdLockWidgetV2"
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             TafsirKurdLockWidgetEntryView(entry: entry)
