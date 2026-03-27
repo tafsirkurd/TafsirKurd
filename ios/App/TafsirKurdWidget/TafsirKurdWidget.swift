@@ -24,8 +24,8 @@ private enum DS {
     static let bg1       = Color(red: 0.055, green: 0.065, blue: 0.055)
     static let bg2       = Color(red: 0.035, green: 0.042, blue: 0.035)
     static let accent    = Color(red: 0.16,  green: 0.80,  blue: 0.44)
-    static let accentDim = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.10)
-    static let accentMid = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.22)
+    static let accentDim = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.07)
+    static let accentMid = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.14)
     static let t1        = Color.white
     static let t2        = Color(white: 1, opacity: 0.50)
     static let t3        = Color(white: 1, opacity: 0.28)
@@ -215,16 +215,17 @@ private struct PRow: View {
 
         HStack(spacing: 0) {
             Text(time)
-                .font(.system(size: fs, weight: isNext ? .medium : .light).monospacedDigit())
+                .font(.system(size: fs, weight: isNext ? .medium : .ultraLight).monospacedDigit())
                 .foregroundStyle(isNext ? DS.accent : DS.t3)
                 .frame(width: compact ? 38 : 44, alignment: .leading)
             Spacer()
             Text(kKurdish[name] ?? name)
-                .font(.system(size: fs, weight: isNext ? .semibold : .regular))
+                .font(.system(size: fs, weight: isNext ? .semibold : .light))
                 .foregroundStyle(isNext ? DS.t1 : DS.t2)
         }
         .padding(.horizontal, hPad)
         .padding(.vertical, vPad)
+        .lineSpacing(compact ? 1 : 0)
         .background(isNext ? DS.accentDim : Color.clear)
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -266,13 +267,13 @@ private struct SmallView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer()
                 Text(showName)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.system(size: 30, weight: .semibold))
                     .foregroundStyle(DS.t1)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Text(d.displayTime(showKey))
-                    .font(.system(size: 21, weight: .thin).monospacedDigit())
+                    .font(.system(size: 22, weight: .ultraLight).monospacedDigit())
                     .foregroundStyle(DS.accent)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer()
@@ -309,9 +310,9 @@ private struct MediumView: View {
         if let d = entry.data {
             let n = entry.next
             VStack(spacing: 0) {
-                HStack(alignment: .center) {
+                HStack(alignment: .center, spacing: 0) {
                     if let n = n { RemBadge(text: remaining(n.time)) }
-                    Spacer()
+                    Spacer(minLength: 6)
                     CityLabel(city: d.city)
                 }
                 .padding(.bottom, 3)
