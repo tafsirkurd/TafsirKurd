@@ -12,10 +12,10 @@ private let kDeepLink    = URL(string: "tafsirkurd://prayer")!
 private let kPrayerOrder = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
 private let kKurdish: [String: String] = [
     "Fajr":    "سپێدە",
-    "Dhuhr":   "نیوەڕۆ",
-    "Asr":     "ئەسر",
-    "Maghrib": "مەغریب",
-    "Isha":    "عیشا"
+    "Dhuhr":   "نیڤرۆ",
+    "Asr":     "ئێڤار",
+    "Maghrib": "مەغرەب",
+    "Isha":    "عەیشا"
 ]
 
 // MARK: — Design system
@@ -154,12 +154,24 @@ struct PrayerProvider: TimelineProvider {
 
 // MARK: — Helpers
 
+private func gregorianDisplay(_ dateISO: String) -> String {
+    let parts = dateISO.split(separator: "-").compactMap { Int($0) }
+    guard parts.count == 3 else { return dateISO }
+    var c = DateComponents()
+    c.year = parts[0]; c.month = parts[1]; c.day = parts[2]
+    guard let d = Calendar(identifier: .gregorian).date(from: c) else { return dateISO }
+    let f = DateFormatter()
+    f.dateFormat = "d MMM yyyy"
+    f.locale = Locale(identifier: "en_US")
+    return f.string(from: d)
+}
+
 private func remaining(_ to: Date) -> String {
     let sec = Int(to.timeIntervalSinceNow)
     guard sec > 60 else { return "ئێستا" }
     let h = sec / 3600
     let m = (sec % 3600) / 60
-    return String(format: "ماوە %02d:%02d", h, m)
+    return String(format: "%02d:%02d یێت ماین", h, m)
 }
 
 // MARK: — Reusable components
@@ -342,7 +354,7 @@ private struct LargeView: View {
                                 .font(.system(size: 9.5, weight: .light))
                                 .foregroundStyle(DS.t3)
                         }
-                        Text(d.hijri)
+                        Text(gregorianDisplay(d.date))
                             .font(.system(size: 10))
                             .foregroundStyle(DS.t3)
                     }
