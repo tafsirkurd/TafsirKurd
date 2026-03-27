@@ -314,6 +314,8 @@ function init(){
             }
             // Reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
+            // Push fresh widget data if date or city changed since last push
+            if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
             initDailyVerse();
             scheduleStreakReminder();
             checkNewVideoNotif();
@@ -468,6 +470,8 @@ function init(){
 
   // Critical: schedule athan + daily verse immediately (notification timing matters)
   if(window.PrayerUI)PrayerUI.initScheduleOnStart();
+  // Push widget data from cache if date/city changed (runs without network)
+  if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
   initDailyVerse();
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);

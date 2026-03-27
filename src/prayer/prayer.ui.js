@@ -1195,12 +1195,36 @@
       console.log('[Widget] SharedPrefs available:', !!sp, '| payload len:', payload.length);
       if (sp) {
         sp.set({ key: 'widgetPrayerData', value: payload })
-          .then(function() { console.log('[Widget] iOS write OK'); })
+          .then(function() {
+            console.log('[Widget] iOS write OK');
+            localStorage.setItem('widgetLastPushedDate', dateISO);
+            localStorage.setItem('widgetLastPushedCity', city);
+          })
           .catch(function(e) { console.log('[Widget] iOS write FAIL:', e && e.message || e); });
       } else {
         console.log('[Widget] SharedPrefs NOT available — plugin not loaded on iOS');
+        // Non-iOS path: stamp anyway so stale-check stays consistent
+        localStorage.setItem('widgetLastPushedDate', dateISO);
+        localStorage.setItem('widgetLastPushedCity', city);
       }
     } catch(e) { console.log('[Widget] pushWidgetData error:', e); }
+  }
+
+  // Stale-data protection: call on app start and every foreground resume.
+  // Reads from cache (no network) and pushes to widget if the stored date or
+  // city no longer matches what the widget received last time.
+  function pushWidgetIfStale() {
+    if (!window.PrayerLogic || !window.PrayerCache) return;
+    var city     = getCity();
+    var today    = window.PrayerLogic.todayBaghdad();
+    var lastDate = localStorage.getItem('widgetLastPushedDate') || '';
+    var lastCity = localStorage.getItem('widgetLastPushedCity') || '';
+    if (lastDate === today && lastCity === city) return; // still fresh
+    console.log('[Widget] stale — lastDate=' + lastDate + ' today=' + today +
+                ' lastCity=' + lastCity + ' city=' + city + ' — refreshing from cache');
+    var data = readCacheNow(city, today);
+    if (data) pushWidgetData(data, city, today);
+    // If no cache: next render() will push when user opens prayer tab
   }
 
   async function render() {
@@ -2460,6 +2484,7 @@
     openSettings: openSettings,
     openQibla: openQibla,
     initScheduleOnStart: initScheduleOnStart,
+    pushWidgetIfStale: pushWidgetIfStale,
     prefetchAllCities: prefetchAllCities,
     preloadAthanVoices: preloadVoiceBuffers,
     testNotifNow: testNotifNow,

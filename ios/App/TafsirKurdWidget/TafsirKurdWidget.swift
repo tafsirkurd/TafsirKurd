@@ -400,6 +400,10 @@ private struct LargeView: View {
 }
 
 // MARK: — Lock screen widget
+//
+// Reading order (RTL): prayer name (right) → time → · remaining (left)
+// In an RTL HStack the first child appears at the trailing (right) edge.
+// System semantic colors (.primary / .secondary) adapt to wallpaper vibrancy.
 
 private struct LockView: View {
     let entry: PrayerEntry
@@ -409,18 +413,24 @@ private struct LockView: View {
             let showKey = n?.name ?? "Fajr"
             let showKu  = n?.ku   ?? (kKurdish["Fajr"] ?? "سپێدە")
             HStack(spacing: 0) {
-                if let n = n {
-                    Text(remaining(n.time))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .padding(.trailing, 6)
-                }
-                Spacer()
-                Text(d.displayTime(showKey))
-                    .font(.system(size: 14, weight: .semibold).monospacedDigit())
-                    .padding(.trailing, 5)
+                // Right edge (first in RTL): prayer name — most prominent
                 Text(showKu)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .widgetAccentable()
+                // Time — close to name
+                Text(d.displayTime(showKey))
+                    .font(.system(size: 13, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.primary)
+                    .padding(.leading, 5) // leading = right side in RTL
+                // Push remaining to the far left
+                Spacer(minLength: 8)
+                // Remaining — dim, minimal, left edge
+                if let n = n {
+                    Text("·  " + remaining(n.time))
+                        .font(.system(size: 11, weight: .light))
+                        .foregroundStyle(.secondary)
+                }
             }
             .environment(\.layoutDirection, .rightToLeft)
         } else {
