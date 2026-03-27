@@ -325,6 +325,15 @@ function init(){
       }
     }catch(e){console.warn('App state listener not available',e)}
 
+    // Handle iOS widget tap → deep link to prayer tab (tafsirkurd://prayer)
+    try{
+      if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){
+        Capacitor.Plugins.App.addListener('appUrlOpen',function(ev){
+          if(ev&&ev.url&&ev.url.indexOf('://prayer')!==-1){App.tab('prayer');}
+        });
+      }
+    }catch(e){}
+
     // Handle notification tap → deep link to ayah/video
     if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications){
       Capacitor.Plugins.LocalNotifications.addListener('localNotificationActionPerformed',function(ev){

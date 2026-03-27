@@ -16,6 +16,10 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		WDGT000000000001 /* TafsirKurdWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000011 /* TafsirKurdWidget.swift */; };
+		WDGT000000000002 /* TafsirKurdWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WDGT000000000010 /* TafsirKurdWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		WDGT000000000003 /* SharedPrefsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000014 /* SharedPrefsPlugin.swift */; };
+		WDGT000000000004 /* SharedPrefsPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000015 /* SharedPrefsPlugin.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,10 +36,47 @@
 		AABB00001122334455667788 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		WDGT000000000010 /* TafsirKurdWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TafsirKurdWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		WDGT000000000011 /* TafsirKurdWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TafsirKurdWidget.swift; sourceTree = "<group>"; };
+		WDGT000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		WDGT000000000013 /* TafsirKurdWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TafsirKurdWidget.entitlements; sourceTree = "<group>"; };
+		WDGT000000000014 /* SharedPrefsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPrefsPlugin.swift; sourceTree = "<group>"; };
+		WDGT000000000015 /* SharedPrefsPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedPrefsPlugin.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXContainerItemProxy section */
+		WDGT000000000051 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = WDGT000000000030;
+			remoteInfo = TafsirKurdWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		WDGT000000000034 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				WDGT000000000002 /* TafsirKurdWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		504EC3011FED79650016851F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WDGT000000000032 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -50,6 +91,7 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				WDGT000000000020 /* TafsirKurdWidget */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -58,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				WDGT000000000010 /* TafsirKurdWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,8 +119,20 @@
 				AABB00001122334455667788 /* App.entitlements */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				WDGT000000000014 /* SharedPrefsPlugin.swift */,
+				WDGT000000000015 /* SharedPrefsPlugin.m */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		WDGT000000000020 /* TafsirKurdWidget */ = {
+			isa = PBXGroup;
+			children = (
+				WDGT000000000011 /* TafsirKurdWidget.swift */,
+				WDGT000000000012 /* Info.plist */,
+				WDGT000000000013 /* TafsirKurdWidget.entitlements */,
+			);
+			path = TafsirKurdWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -90,15 +145,34 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				WDGT000000000034 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				WDGT000000000050 /* PBXTargetDependency */,
 			);
 			name = App;
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		WDGT000000000030 /* TafsirKurdWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = WDGT000000000042 /* Build configuration list for PBXNativeTarget "TafsirKurdWidget" */;
+			buildPhases = (
+				WDGT000000000031 /* Sources */,
+				WDGT000000000032 /* Frameworks */,
+				WDGT000000000033 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TafsirKurdWidget;
+			productName = TafsirKurdWidget;
+			productReference = WDGT000000000010 /* TafsirKurdWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -112,6 +186,10 @@
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
+						ProvisioningStyle = Automatic;
+					};
+					WDGT000000000030 = {
+						CreatedOnToolsVersion = 15.0;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -130,6 +208,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				WDGT000000000030 /* TafsirKurdWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -148,6 +227,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		WDGT000000000033 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -158,6 +244,16 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				AA01000000000001AABBCCDD /* TafsirAppleSignIn.swift in Sources */,
 				AA01000000000005AABBCCDD /* MainViewController.swift in Sources */,
+				WDGT000000000003 /* SharedPrefsPlugin.swift in Sources */,
+				WDGT000000000004 /* SharedPrefsPlugin.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WDGT000000000031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WDGT000000000001 /* TafsirKurdWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,6 +277,14 @@
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
+
+/* Begin PBXTargetDependency section */
+		WDGT000000000050 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = WDGT000000000030 /* TafsirKurdWidget */;
+			targetProxy = WDGT000000000051 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		504EC3141FED79650016851F /* Debug */ = {
@@ -338,6 +442,54 @@
 			};
 			name = Release;
 		};
+		WDGT000000000040 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TafsirKurdWidget/TafsirKurdWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = 8KA7UDSC9D;
+				INFOPLIST_FILE = TafsirKurdWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tafsirkurd.app.TafsirKurdWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		WDGT000000000041 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TafsirKurdWidget/TafsirKurdWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = 8KA7UDSC9D;
+				INFOPLIST_FILE = TafsirKurdWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tafsirkurd.app.TafsirKurdWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -355,6 +507,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		WDGT000000000042 /* Build configuration list for PBXNativeTarget "TafsirKurdWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WDGT000000000040 /* Debug */,
+				WDGT000000000041 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

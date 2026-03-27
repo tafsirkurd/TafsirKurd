@@ -1165,7 +1165,6 @@
   // Push prayer data to Android widget via JS bridge
   function pushWidgetData(data, city, dateISO) {
     try {
-      if (!window.TafsirAndroid) return;
       var t = data.timings;
       var hijriStr = '';
       if (data.date && data.date.hijri) {
@@ -1187,7 +1186,13 @@
           Isha:    (t.Isha    || '').split(' ')[0]
         }
       });
-      window.TafsirAndroid.saveString('widget_prayer', payload);
+      // Android widget
+      if (window.TafsirAndroid) {
+        window.TafsirAndroid.saveString('widget_prayer', payload);
+      }
+      // iOS widget — write to App Group UserDefaults via SharedPrefs plugin
+      var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
+      if (sp) { sp.set({ key: 'widgetPrayerData', value: payload }); }
     } catch(e) {}
   }
 

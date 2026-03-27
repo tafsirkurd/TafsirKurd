@@ -8,6 +8,19 @@
 
 <script>
 (function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();
+// Device-safe rendering detection — default OFF, only enable on confirmed safe devices
+(function(){
+  var ua=navigator.userAgent;
+  var isIOS=/iPhone|iPad|iPod/.test(ua);
+  var isSamsung=/samsung|SM-[A-Z]/i.test(ua);
+  var cv=parseInt((ua.match(/Chrome\/(\d+)/)||[,0])[1]);
+  // Safe criteria:
+  // iOS: WKWebView is reliable — always safe
+  // Samsung: Exynos 2200 GPU bugs fixed in WebView 120+
+  // Other Android: safe with WebView 100+
+  var safe=isIOS||(isSamsung?cv>=120:cv>=100);
+  if(safe)document.documentElement.classList.add('safe-render');
+})();
 </script>
 <script src="/utils/platform.js"></script>
 <script>
@@ -114,9 +127,20 @@ img{display:block;max-width:100%}
 
 body{background:var(--bg);color:var(--text)}
 
+/* ===== SAFE-RENDER — advanced features only on confirmed safe devices ===== */
+/* Default is OFF. html.safe-render class added by detection script in <head>  */
+/* content-visibility:auto — skips off-screen layout/paint (scroll perf boost) */
+.safe-render .surah-card{content-visibility:auto;contain-intrinsic-size:auto 84px}
+.safe-render .iv-card{content-visibility:auto;contain-intrinsic-size:auto 155px}
+.safe-render .iv-ep-item{content-visibility:auto;contain-intrinsic-size:auto 76px}
+/* mix-blend-mode + filter — theme-aware logo coloring (GPU composite op) */
+.safe-render .splash-logo{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
+.safe-render .hdr-logo img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
+.safe-render .about-section img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
+
 /* ===== SPLASH ===== */
 .splash{position:fixed;inset:0;z-index:9999;background:var(--bg,#0d0d0d);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;transition:opacity .4s ease}
-.splash-logo{width:88px;height:88px;object-fit:contain;border-radius:20px;filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
+.splash-logo{width:88px;height:88px;object-fit:contain;border-radius:20px}
 .splash-bar-wrap{width:160px;height:3px;background:var(--bg2,#1a1a1a);border-radius:2px;overflow:hidden}
 .splash-bar-fill{height:100%;width:0%;background:var(--accent,#2e7d50);border-radius:2px;transition:width .5s ease-out}
 .splash.hide{opacity:0;pointer-events:none}
@@ -138,7 +162,7 @@ body{background:var(--bg);color:var(--text)}
 [data-theme="sakina"] .hdr{background:var(--bg)}
 [data-theme="noor"] .hdr{background:var(--bg)}
 .hdr-logo{display:flex;align-items:center;gap:10px;flex:1}
-.hdr-logo img{width:40px;height:40px;object-fit:contain;filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
+.hdr-logo img{width:40px;height:40px;object-fit:contain}
 .hdr-logo span{font-size:1.05rem;font-weight:800;letter-spacing:-.2px}
 .hdr-title{font-size:1.1rem;font-weight:800;flex:1;letter-spacing:-.2px}
 .hdr-btn{width:40px;height:40px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:background .2s,transform .2s}
@@ -177,7 +201,7 @@ body{background:var(--bg);color:var(--text)}
 
 /* ===== SURAH GRID ===== */
 .surah-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}
-.surah-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);cursor:pointer;transition:transform .15s var(--ease);display:flex;align-items:stretch;overflow:visible;position:relative;content-visibility:auto;contain-intrinsic-size:auto 84px}
+.surah-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);cursor:pointer;transition:transform .15s var(--ease);display:flex;align-items:stretch;overflow:visible;position:relative}
 .surah-card:active{transform:scale(.97)}
 .surah-img-panel{width:64px;flex-shrink:0;background-size:cover;background-position:center;border-radius:var(--r-xl) 0 0 var(--r-xl)}.surah-img-panel.meccan{background-image:url('/assets/icons/Makkah.webp')}.surah-img-panel.maddinah{background-image:url('/assets/icons/Maddinah.webp')}
 .surah-num-badge{position:absolute;top:10px;right:0;z-index:3;min-width:28px;height:26px;padding:0 9px 0 10px;border-radius:10px 0 0 10px;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.7rem;line-height:1;border:1px solid rgba(255,255,255,.25);text-shadow:0 1px 4px rgba(0,0,0,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
@@ -673,7 +697,7 @@ body{background:var(--bg);color:var(--text)}
 .slider-val{font-size:.8rem;font-weight:700;min-width:28px;text-align:center}
 
 .about-section{text-align:center;padding:32px 24px;margin-top:12px}
-.about-section img{width:56px;height:56px;margin:0 auto 8px;object-fit:contain;filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
+.about-section img{width:56px;height:56px;margin:0 auto 8px;object-fit:contain}
 .about-name{font-weight:800;font-size:1.1rem}
 .about-ver{font-size:.75rem;color:var(--text3);margin-top:2px}
 .about-desc{font-size:.85rem;color:var(--text2);margin-top:6px}
@@ -781,7 +805,7 @@ body{background:var(--bg);color:var(--text)}
 .iv-series-view{display:none}
 .iv-series-view.on{display:block}
 .iv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px}
-.iv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;cursor:pointer;transition:transform .2s var(--ease);content-visibility:auto;contain-intrinsic-size:auto 155px}
+.iv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;cursor:pointer;transition:transform .2s var(--ease)}
 .iv-card:active{transform:scale(.98)}
 .iv-card-img{width:100%;aspect-ratio:16/9;background:var(--bg3);position:relative;overflow:hidden}
 .iv-card-img img{width:100%;height:100%;object-fit:cover}
@@ -811,7 +835,7 @@ body{background:var(--bg);color:var(--text)}
 .iv-series-title{flex:1;text-align:center;font-size:.95rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px}
 .iv-series-desc{padding:12px 16px;font-size:.8rem;color:var(--text2);line-height:1.6}
 .iv-ep-list{padding:0 16px 24px}
-.iv-ep-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .2s var(--ease);content-visibility:auto;contain-intrinsic-size:auto 76px}
+.iv-ep-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .2s var(--ease)}
 .iv-ep-item:active{transform:scale(.98)}
 .iv-ep-item.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .iv-ep-num{width:28px;height:28px;border-radius:var(--r-s);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
