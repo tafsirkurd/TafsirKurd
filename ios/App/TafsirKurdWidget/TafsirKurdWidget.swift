@@ -159,9 +159,7 @@ private func remaining(_ to: Date) -> String {
     guard sec > 60 else { return "ئێستا" }
     let h = sec / 3600
     let m = (sec % 3600) / 60
-    if h > 0 && m > 0 { return "لە \(h)س \(m)خ" }
-    if h > 0           { return "لە \(h) کاتژمێر" }
-    return "لە \(m) خولەک"
+    return String(format: "ماوە %02d:%02d", h, m)
 }
 
 // MARK: — Reusable components
@@ -401,45 +399,54 @@ private struct LargeView: View {
 
 // MARK: — Lock screen widget  (accessoryRectangular — all 5 prayers)
 //
-// Height budget — VStack(spacing:0), 9 pt font, SF Pro line height ≈ 11 pt/row:
-//   5 rows × 11 pt = 55 pt  ← fits iPhone SE (~57 pt) through 16 Pro Max (~74 pt)
+// Layout (RTL): city header + 5 prayer rows (name right, time left)
+// No countdown — lock screen shows prayer names and times only.
 //
-// RTL layout: first HStack child renders at the RIGHT edge.
-//   → prayer name right, time left, remaining time appended to time on next-prayer row
+// Hierarchy:
+//   next prayer  → 10 pt semibold/medium, .primary  (bright, readable at a glance)
+//   other prayers → 8.5 pt light/ultraLight, .secondary  (present but subdued)
+//   city header  → 7.5 pt semibold, .tertiary  (orientation cue, very quiet)
 //
-// Colors: system semantic (.primary / .secondary) → correct vibrancy on any wallpaper
-// .widgetAccentable(isNext) → active row adopts user's lock-screen accent color
+// Height estimate (VStack spacing:0):
+//   city 7.5 pt → ~9 pt line + 2 pt gap  = 11 pt
+//   next row 10 pt                        = 12 pt
+//   4 other rows 8.5 pt × 4              = 42 pt
+//   total                                 ≈ 65 pt  (fits iPhone 14–16 Pro; SE may clip city)
+//
+// .widgetAccentable(isNext) → next-prayer row adopts user's chosen lock-screen accent color.
 
 private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let upcoming = entry.next          // nil-safe alias — avoids shadowing below
+            let upcoming = entry.next
             VStack(alignment: .trailing, spacing: 0) {
+                // City header — orientation cue, quiet
+                HStack(spacing: 0) {
+                    Spacer()
+                    Text(d.city)
+                        .font(.system(size: 7.5, weight: .semibold))
+                        .foregroundStyle(AnyShapeStyle(.tertiary))
+                }
+                .padding(.bottom, 2)
+
+                // 5 prayer rows — name right, time left (RTL)
                 ForEach(kPrayerOrder, id: \.self) { pName in
                     let isNext = pName == upcoming?.name
                     HStack(spacing: 0) {
-                        // Prayer name — rightmost in RTL
                         Text(kKurdish[pName] ?? pName)
-                            .font(.system(size: 9, weight: isNext ? .semibold : .light))
+                            .font(.system(size: isNext ? 10 : 8.5,
+                                          weight: isNext ? .semibold : .light))
                             .foregroundStyle(
                                 isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                             .lineLimit(1)
-                        Spacer(minLength: 3)
-                        // Time — leftmost in RTL (monospacedDigit keeps column aligned)
+                        Spacer(minLength: 4)
                         Text(d.displayTime(pName))
-                            .font(.system(size: 9,
+                            .font(.system(size: isNext ? 10 : 8.5,
                                           weight: isNext ? .medium : .ultraLight).monospacedDigit())
                             .foregroundStyle(
                                 isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                             .lineLimit(1)
-                        // Remaining — appended inline only on next-prayer row, very dim
-                        if isNext, let u = upcoming {
-                            Text("  · " + remaining(u.time))
-                                .font(.system(size: 8, weight: .light))
-                                .foregroundStyle(AnyShapeStyle(.tertiary))
-                                .lineLimit(1)
-                        }
                     }
                     .widgetAccentable(isNext)
                 }
