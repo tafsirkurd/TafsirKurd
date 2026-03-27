@@ -13,6 +13,7 @@ workflows:
         XCODE_WORKSPACE: ios/App/App.xcworkspace
         XCODE_SCHEME: App
         BUNDLE_ID: com.tafsirkurd.app
+        BUNDLE_ID_WIDGET: com.tafsirkurd.app.TafsirKurdWidget
         TEAM_ID: 8KA7UDSC9D
       node: latest
       xcode: 16.2
@@ -183,14 +184,23 @@ workflows:
 
           echo "Using profile UUID: $UUID"
 
-          # Step 6: Install profile
+          # Step 6: Install main app profile
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp /tmp/profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
 
-          echo "Installed profile:"
+          # Step 7: Install widget provisioning profile
+          if [ -n "$CM_PROVISIONING_PROFILE_WIDGET" ]; then
+            printf '%s' "$CM_PROVISIONING_PROFILE_WIDGET" | base64 --decode > /tmp/widget_profile.mobileprovision
+            security cms -D -i /tmp/widget_profile.mobileprovision > /tmp/widget_profile.plist
+            WIDGET_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/widget_profile.plist)
+            cp /tmp/widget_profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$WIDGET_UUID.mobileprovision"
+            echo "Widget profile UUID: $WIDGET_UUID"
+          fi
+
+          echo "Installed profiles:"
           ls -la "$HOME/Library/MobileDevice/Provisioning Profiles"
 
-          # Step 7: Apply to Xcode project
+          # Step 8: Apply to Xcode project
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
       - name: Build iOS
