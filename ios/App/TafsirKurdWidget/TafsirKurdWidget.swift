@@ -403,15 +403,15 @@ private struct LargeView: View {
 // No countdown — lock screen shows prayer names and times only.
 //
 // Hierarchy:
-//   next prayer  → 10 pt semibold/medium, .primary  (bright, readable at a glance)
-//   other prayers → 8.5 pt light/ultraLight, .secondary  (present but subdued)
-//   city header  → 7.5 pt semibold, .tertiary  (orientation cue, very quiet)
+//   next prayer  → 13 pt semibold/medium, .primary  — dominant focal point
+//   other prayers →  8 pt light/ultraLight, .secondary — supporting list
+//   city header  →  7.5 pt semibold, .tertiary — orientation cue, very quiet
 //
-// Height estimate (VStack spacing:0):
+// Height estimate (VStack spacing:0, 5 pt gap after next row):
 //   city 7.5 pt → ~9 pt line + 2 pt gap  = 11 pt
-//   next row 10 pt                        = 12 pt
-//   4 other rows 8.5 pt × 4              = 42 pt
-//   total                                 ≈ 65 pt  (fits iPhone 14–16 Pro; SE may clip city)
+//   next row 13 pt + 5 pt bottom gap      = 21 pt
+//   4 other rows 8 pt × 4                 = 38 pt
+//   total                                  ≈ 70 pt  (fits iPhone 14–16 Pro; SE clips city)
 //
 // .widgetAccentable(isNext) → next-prayer row adopts user's chosen lock-screen accent color.
 
@@ -431,24 +431,28 @@ private struct LockView: View {
                 .padding(.bottom, 2)
 
                 // 5 prayer rows — name right, time left (RTL)
+                // Next prayer: 13 pt semibold — dominant focal point
+                // Others:       8 pt light   — supporting list
                 ForEach(kPrayerOrder, id: \.self) { pName in
                     let isNext = pName == upcoming?.name
                     HStack(spacing: 0) {
                         Text(kKurdish[pName] ?? pName)
-                            .font(.system(size: isNext ? 10 : 8.5,
+                            .font(.system(size: isNext ? 13 : 8,
                                           weight: isNext ? .semibold : .light))
                             .foregroundStyle(
                                 isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                             .lineLimit(1)
                         Spacer(minLength: 4)
                         Text(d.displayTime(pName))
-                            .font(.system(size: isNext ? 10 : 8.5,
+                            .font(.system(size: isNext ? 13 : 8,
                                           weight: isNext ? .medium : .ultraLight).monospacedDigit())
                             .foregroundStyle(
                                 isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                             .lineLimit(1)
                     }
                     .widgetAccentable(isNext)
+                    // Visual break after next-prayer row so the list reads as "header + rest"
+                    .padding(.bottom, isNext ? 5 : 0)
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)
