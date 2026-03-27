@@ -407,62 +407,84 @@ private struct LargeView: View {
     }
 }
 
-// MARK: — Lock screen widget  (accessoryRectangular — all 5 prayers)
+// MARK: — Lock screen widget  (accessoryRectangular — Hero + compact list)
 //
-// Layout (RTL): city header + 5 prayer rows (name right, time left)
-// No countdown — lock screen shows prayer names and times only.
+// Layout (RTL — name right, time left):
+//   [City]                         7 pt .tertiary
+//   [Hero: next prayer  time]     14 pt semibold/medium .primary  ← dominant
+//   [── 5 pt gap ──]
+//   [ڕوژهەلات       time]          8 pt light/ultraLight .tertiary ← dimmest
+//   [other prayers  time] ×4       8 pt light/ultraLight .secondary
 //
-// Hierarchy:
-//   next prayer  → 13 pt semibold/medium, .primary  — dominant focal point
-//   other prayers →  8 pt light/ultraLight, .secondary — supporting list
-//   city header  →  7.5 pt semibold, .tertiary — orientation cue, very quiet
+// Hierarchy:  hero (.primary 14pt)  >  list (.secondary 8pt)  >  sunrise (.tertiary 8pt)
+// No countdown. .widgetAccentable(true) on hero row.
 //
-// Height estimate (VStack spacing:0, 5 pt gap after next row):
-//   city 7.5 pt → ~9 pt line + 2 pt gap  = 11 pt
-//   next row 13 pt + 5 pt bottom gap      = 21 pt
-//   4 other rows 8 pt × 4                 = 38 pt
-//   total                                  ≈ 70 pt  (fits iPhone 14–16 Pro; SE clips city)
-//
-// .widgetAccentable(isNext) → next-prayer row adopts user's chosen lock-screen accent color.
+// Height estimate (VStack spacing:0):
+//   city  7 pt  → ~9 pt + 2 pt gap = 11 pt
+//   hero 14 pt  → ~17 pt + 5 pt gap = 22 pt
+//   sunrise 8pt → ~10 pt
+//   4 prayers   →  4 × 10 pt = 40 pt
+//   total       ≈ 83 pt  (hero + city always visible; bottom clips on SE/standard)
 
 private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
             let upcoming = entry.next
+            let heroName = upcoming?.name ?? "Fajr"
+
             VStack(alignment: .trailing, spacing: 0) {
-                // City header — orientation cue, quiet
+
+                // ── City header ──────────────────────────────────────────
                 HStack(spacing: 0) {
                     Spacer()
                     Text(d.city)
-                        .font(.system(size: 7.5, weight: .semibold))
+                        .font(.system(size: 7, weight: .semibold))
                         .foregroundStyle(AnyShapeStyle(.tertiary))
                 }
                 .padding(.bottom, 2)
 
-                // 5 prayer rows — name right, time left (RTL)
-                // Next prayer: 13 pt semibold — dominant focal point
-                // Others:       8 pt light   — supporting list
-                ForEach(kPrayerOrder, id: \.self) { pName in
-                    let isNext = pName == upcoming?.name
+                // ── Hero: next prayer ────────────────────────────────────
+                HStack(spacing: 0) {
+                    Text(kKurdish[heroName] ?? heroName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AnyShapeStyle(.primary))
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(d.displayTime(heroName))
+                        .font(.system(size: 14, weight: .medium).monospacedDigit())
+                        .foregroundStyle(AnyShapeStyle(.primary))
+                        .lineLimit(1)
+                }
+                .widgetAccentable(true)
+                .padding(.bottom, 5)
+
+                // ── Sunrise — secondary info, dimmest ────────────────────
+                HStack(spacing: 0) {
+                    Text("ڕوژهەلات")
+                        .font(.system(size: 8, weight: .light))
+                        .foregroundStyle(AnyShapeStyle(.tertiary))
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(d.displayTime("Sunrise"))
+                        .font(.system(size: 8, weight: .ultraLight).monospacedDigit())
+                        .foregroundStyle(AnyShapeStyle(.tertiary))
+                        .lineLimit(1)
+                }
+
+                // ── Remaining prayers (all except hero) ──────────────────
+                ForEach(kPrayerOrder.filter { $0 != heroName }, id: \.self) { pName in
                     HStack(spacing: 0) {
                         Text(kKurdish[pName] ?? pName)
-                            .font(.system(size: isNext ? 13 : 8,
-                                          weight: isNext ? .semibold : .light))
-                            .foregroundStyle(
-                                isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                            .font(.system(size: 8, weight: .light))
+                            .foregroundStyle(AnyShapeStyle(.secondary))
                             .lineLimit(1)
                         Spacer(minLength: 4)
                         Text(d.displayTime(pName))
-                            .font(.system(size: isNext ? 13 : 8,
-                                          weight: isNext ? .medium : .ultraLight).monospacedDigit())
-                            .foregroundStyle(
-                                isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                            .font(.system(size: 8, weight: .ultraLight).monospacedDigit())
+                            .foregroundStyle(AnyShapeStyle(.secondary))
                             .lineLimit(1)
                     }
-                    .widgetAccentable(isNext)
-                    // Visual break after next-prayer row so the list reads as "header + rest"
-                    .padding(.bottom, isNext ? 5 : 0)
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)
