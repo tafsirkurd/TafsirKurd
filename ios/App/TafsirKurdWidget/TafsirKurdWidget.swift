@@ -23,7 +23,7 @@ private let kKurdish: [String: String] = [
 private enum DS {
     static let bg1       = Color(red: 0.055, green: 0.065, blue: 0.055)
     static let bg2       = Color(red: 0.035, green: 0.042, blue: 0.035)
-    static let accent    = Color(red: 0.16,  green: 0.80,  blue: 0.44)
+    static let accent    = Color(red: 0.14,  green: 0.74,  blue: 0.41)
     static let accentDim = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.07)
     static let accentMid = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.14)
     static let t1        = Color.white
@@ -377,7 +377,7 @@ private struct LargeView: View {
                 HStack(alignment: .center) {
                     Text(d.displayTime(bottomName))
                         .font(.system(size: 40, weight: .thin).monospacedDigit())
-                        .foregroundStyle(DS.accent)
+                        .foregroundStyle(DS.accent.opacity(0.82))
                     Spacer()
                     VStack(alignment: .trailing, spacing: 4) {
                         Text(bottomKu)
