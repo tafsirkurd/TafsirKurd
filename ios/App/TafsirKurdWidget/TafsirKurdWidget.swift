@@ -399,42 +399,56 @@ private struct LargeView: View {
     }
 }
 
-// MARK: — Lock screen widget
+// MARK: — Lock screen widget  (accessoryRectangular — all 5 prayers)
 //
-// Reading order (RTL): prayer name (right) → time → · remaining (left)
-// In an RTL HStack the first child appears at the trailing (right) edge.
-// System semantic colors (.primary / .secondary) adapt to wallpaper vibrancy.
+// Height budget — VStack(spacing:0), 9 pt font, SF Pro line height ≈ 11 pt/row:
+//   5 rows × 11 pt = 55 pt  ← fits iPhone SE (~57 pt) through 16 Pro Max (~74 pt)
+//
+// RTL layout: first HStack child renders at the RIGHT edge.
+//   → prayer name right, time left, remaining time appended to time on next-prayer row
+//
+// Colors: system semantic (.primary / .secondary) → correct vibrancy on any wallpaper
+// .widgetAccentable(isNext) → active row adopts user's lock-screen accent color
 
 private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let n       = entry.next
-            let showKey = n?.name ?? "Fajr"
-            let showKu  = n?.ku   ?? (kKurdish["Fajr"] ?? "سپێدە")
-            HStack(spacing: 0) {
-                // Right edge (first in RTL): prayer name — most prominent
-                Text(showKu)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .widgetAccentable()
-                // Time — close to name
-                Text(d.displayTime(showKey))
-                    .font(.system(size: 13, weight: .medium).monospacedDigit())
-                    .foregroundStyle(.primary)
-                    .padding(.leading, 5) // leading = right side in RTL
-                // Push remaining to the far left
-                Spacer(minLength: 8)
-                // Remaining — dim, minimal, left edge
-                if let n = n {
-                    Text("·  " + remaining(n.time))
-                        .font(.system(size: 11, weight: .light))
-                        .foregroundStyle(.secondary)
+            let upcoming = entry.next          // nil-safe alias — avoids shadowing below
+            VStack(alignment: .trailing, spacing: 0) {
+                ForEach(kPrayerOrder, id: \.self) { pName in
+                    let isNext = pName == upcoming?.name
+                    HStack(spacing: 0) {
+                        // Prayer name — rightmost in RTL
+                        Text(kKurdish[pName] ?? pName)
+                            .font(.system(size: 9, weight: isNext ? .semibold : .light))
+                            .foregroundStyle(
+                                isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                            .lineLimit(1)
+                        Spacer(minLength: 3)
+                        // Time — leftmost in RTL (monospacedDigit keeps column aligned)
+                        Text(d.displayTime(pName))
+                            .font(.system(size: 9,
+                                          weight: isNext ? .medium : .ultraLight).monospacedDigit())
+                            .foregroundStyle(
+                                isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                            .lineLimit(1)
+                        // Remaining — appended inline only on next-prayer row, very dim
+                        if isNext, let u = upcoming {
+                            Text("  · " + remaining(u.time))
+                                .font(.system(size: 8, weight: .light))
+                                .foregroundStyle(AnyShapeStyle(.tertiary))
+                                .lineLimit(1)
+                        }
+                    }
+                    .widgetAccentable(isNext)
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)
         } else {
-            Text("کاتا نوێژ").font(.system(size: 12)).foregroundStyle(.secondary)
+            Text("کاتا نوێژ")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
         }
     }
 }
