@@ -746,9 +746,7 @@ struct TafsirKurdAyahEntryView: View {
             default:                    AyahMediumView(entry: entry)
             }
         }
-        .widgetBackground {
-            if family == .accessoryRectangular { Color.clear } else { ayahGradient }
-        }
+        .widgetBackground { ayahGradient }
     }
 }
 
@@ -953,9 +951,7 @@ struct TafsirKurdGoalEntryView: View {
             default:                    GoalMediumView(entry: entry)
             }
         }
-        .widgetBackground {
-            if family == .accessoryRectangular { Color.clear } else { widgetGradient }
-        }
+        .widgetBackground { widgetGradient }
     }
 }
 
