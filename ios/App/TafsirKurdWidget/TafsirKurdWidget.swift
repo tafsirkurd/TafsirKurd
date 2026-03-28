@@ -91,7 +91,14 @@ struct PrayerWidgetData: Codable {
 
     func displayTime(_ name: String) -> String {
         guard let raw = timings[name] else { return "--:--" }
-        return String(raw.split(separator: " ").first ?? Substring(raw))
+        let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
+        let parts = hm.split(separator: ":").compactMap { Int($0) }
+        guard parts.count >= 2 else { return hm }
+        var h = parts[0]
+        let m = parts[1]
+        if h == 0       { h = 12 }
+        else if h > 12  { h -= 12 }
+        return String(format: "%d:%02d", h, m)
     }
 
     func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
