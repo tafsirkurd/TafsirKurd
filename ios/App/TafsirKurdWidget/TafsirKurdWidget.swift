@@ -34,7 +34,7 @@ private enum DS {
     static let sep       = Color(white: 1, opacity: 0.07)
 }
 
-private var widgetGradient: some View {
+private var widgetGradient: LinearGradient {
     LinearGradient(colors: [DS.bg1, DS.bg2], startPoint: .top, endPoint: .bottom)
 }
 
@@ -541,7 +541,10 @@ private struct AyahWidgetData: Codable {
     let showTafsir:    Bool
     let showReference: Bool
 
-    var reference: String { "\(surahName.isEmpty ? "سورة \(chapter)" : surahName) · \(verse)" }
+    var reference: String {
+        let sn = surahName.isEmpty ? "سورة \(chapter)" : surahName
+        return "\(sn) · \(verse)"
+    }
 
     static func load() -> AyahWidgetData? {
         guard let ud   = UserDefaults(suiteName: kAppGroup),
@@ -561,9 +564,9 @@ private struct GoalWidgetData: Codable {
     let weeklyData:    [Int]   // 7 values oldest→today
     let todayDate:     String  // YYYY-MM-DD
 
-    var progress: Double {
+    var progress: CGFloat {
         guard dailyGoal > 0 else { return 0 }
-        return min(Double(todayCount) / Double(dailyGoal), 1.0)
+        return min(CGFloat(todayCount) / CGFloat(dailyGoal), 1.0)
     }
     var isGoalMet: Bool { todayCount >= dailyGoal }
 
@@ -726,7 +729,7 @@ private struct AyahLargeView: View {
     }
 }
 
-private var ayahGradient: some View {
+private var ayahGradient: LinearGradient {
     LinearGradient(
         colors: [DS.bg1, Color(red: 0.04, green: 0.07, blue: 0.05)],
         startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -736,16 +739,15 @@ struct TafsirKurdAyahEntryView: View {
     @Environment(\.widgetFamily) private var family
     let entry: AyahEntry
     var body: some View {
-        switch family {
-        case .accessoryRectangular:
-            AyahLockView(entry: entry)
-                .widgetBackground { Color.clear }
-        case .systemLarge:
-            AyahLargeView(entry: entry)
-                .widgetBackground { ayahGradient }
-        default:
-            AyahMediumView(entry: entry)
-                .widgetBackground { ayahGradient }
+        Group {
+            switch family {
+            case .accessoryRectangular: AyahLockView(entry: entry)
+            case .systemLarge:          AyahLargeView(entry: entry)
+            default:                    AyahMediumView(entry: entry)
+            }
+        }
+        .widgetBackground {
+            if family == .accessoryRectangular { Color.clear } else { ayahGradient }
         }
     }
 }
@@ -943,18 +945,16 @@ private struct GoalWeeklyBars: View {
 struct TafsirKurdGoalEntryView: View {
     @Environment(\.widgetFamily) private var family
     let entry: GoalEntry
-    private let deepLink = URL(string: "tafsirkurd://quran") ?? kDeepLink
     var body: some View {
-        switch family {
-        case .accessoryRectangular:
-            GoalLockView(entry: entry)
-                .widgetBackground { Color.clear }
-        case .systemLarge:
-            GoalLargeView(entry: entry)
-                .widgetBackground { widgetGradient }
-        default:
-            GoalMediumView(entry: entry)
-                .widgetBackground { widgetGradient }
+        Group {
+            switch family {
+            case .accessoryRectangular: GoalLockView(entry: entry)
+            case .systemLarge:          GoalLargeView(entry: entry)
+            default:                    GoalMediumView(entry: entry)
+            }
+        }
+        .widgetBackground {
+            if family == .accessoryRectangular { Color.clear } else { widgetGradient }
         }
     }
 }
