@@ -1,276 +1,105 @@
 package com.tafsirkurd.app
 
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
 import android.content.Context
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.glance.GlanceId
-import androidx.glance.GlanceModifier
-import androidx.glance.LocalContext
-import androidx.glance.LocalSize
-import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.SizeMode
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.provideContent
-import androidx.glance.background
-import androidx.glance.layout.*
-import androidx.glance.text.*
+import android.view.View
+import android.widget.RemoteViews
 import org.json.JSONObject
 
-private val GBg1       = Color(0xFF0E100E)
-private val GBg2       = Color(0xFF161A16)
-private val GAccent    = Color(0xFF23BD69)
-private val GDarkGreen = Color(0xFF1A8F50)
-private val GT1        = Color(0xFFFFFFFF)
-private val GT2        = Color(0x80FFFFFF.toInt())
-private val GT3        = Color(0x47FFFFFF.toInt())
-
-private data class GoalData(
-    val todayCount: Int,
-    val dailyGoal: Int,
-    val currentStreak: Int,
-    val weeklyData: List<Int>,
-    val translations: Map<String, String>
-)
-
-private fun loadGoalData(context: Context): GoalData? {
-    val raw = WidgetDataStore.getString(context, "widgetGoalData") ?: return null
-    return try {
-        val obj = JSONObject(raw)
-        val arr = obj.optJSONArray("weeklyData")
-        val weekly = if (arr != null) (0 until arr.length()).map { arr.getInt(it) } else emptyList()
-        GoalData(
-            todayCount    = obj.optInt("todayCount", 0),
-            dailyGoal     = obj.optInt("dailyGoal", 10).coerceAtLeast(1),
-            currentStreak = obj.optInt("currentStreak", 0),
-            weeklyData    = weekly,
-            translations  = loadGoalTranslations(context)
-        )
-    } catch (_: Exception) { null }
-}
-
-private fun loadGoalTranslations(context: Context): Map<String, String> {
-    val raw = WidgetDataStore.getString(context, "widgetTranslations") ?: return emptyMap()
-    return try {
-        val obj = JSONObject(raw).getJSONObject("keys")
-        obj.keys().asSequence().associateWith { obj.getString(it) }
-    } catch (_: Exception) { emptyMap() }
-}
-
-private fun Map<String, String>.gt(key: String, fallback: String) = this[key] ?: fallback
+private val BAR_IDS = listOf(R.id.bar0, R.id.bar1, R.id.bar2, R.id.bar3, R.id.bar4, R.id.bar5, R.id.bar6)
+private const val COLOR_ACCENT     = 0xFF23BD69.toInt()
+private const val COLOR_DARK_GREEN = 0xFF1A8F50.toInt()
+private const val COLOR_BG2        = 0xFF161A16.toInt()
 
 private fun motivationalMsg(ratio: Float, tr: Map<String, String>): String = when {
-    ratio >= 1f   -> tr.gt("widget.goal.done",       "ئەمڕۆ تەواو بوو ✓")
-    ratio >= 0.7f -> tr.gt("widget.goal.almost",     "نزیکە!")
-    ratio >= 0.3f -> tr.gt("widget.goal.keep_going", "بەردەوام بە")
-    else          -> tr.gt("widget.goal.start",      "بیکە!")
+    ratio >= 1f   -> tr["widget.goal.done"]       ?: "ئەمڕۆ تەواو بوو ✓"
+    ratio >= 0.7f -> tr["widget.goal.almost"]     ?: "نزیکە!"
+    ratio >= 0.3f -> tr["widget.goal.keep_going"] ?: "بەردەوام بە"
+    else          -> tr["widget.goal.start"]      ?: "بیکە!"
 }
 
-class GoalWidget : GlanceAppWidget() {
+class GoalWidget : AppWidgetProvider() {
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        appWidgetIds.forEach { id ->
+            val size    = appWidgetManager.getAppWidgetOptions(id)
+            val heightDp = size.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
+            appWidgetManager.updateAppWidget(id, buildViewsForHeight(context, heightDp))
+        }
+    }
 
     companion object {
-        private val MEDIUM = DpSize(220.dp, 110.dp)
-        private val LARGE  = DpSize(220.dp, 220.dp)
-    }
+        fun buildViews(context: Context): RemoteViews = buildViewsForHeight(context, 220)
 
-    override val sizeMode = SizeMode.Responsive(setOf(MEDIUM, LARGE))
+        fun buildViewsForHeight(context: Context, heightDp: Int): RemoteViews {
+            val views   = RemoteViews(context.packageName, R.layout.widget_goal)
+            val raw     = WidgetDataStore.getString(context, "widgetGoalData")
+            val isLarge = heightDp > 160
+            val tr      = loadTranslations(context)
 
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent { GoalContent() }
-    }
+            if (raw == null) {
+                views.setTextViewText(R.id.countText, "0")
+                views.setTextViewText(R.id.goalText, "")
+                views.setProgressBar(R.id.progressBar, 100, 0, false)
+                views.setViewVisibility(R.id.weeklyBars, View.GONE)
+                return views
+            }
 
-    @Composable
-    private fun GoalContent() {
-        val context = LocalContext.current
-        val size    = LocalSize.current
-        val data    = loadGoalData(context)
+            val obj           = try { JSONObject(raw) } catch (_: Exception) { return views }
+            val todayCount    = obj.optInt("todayCount", 0)
+            val dailyGoal     = obj.optInt("dailyGoal", 10).coerceAtLeast(1)
+            val currentStreak = obj.optInt("currentStreak", 0)
+            val arr           = obj.optJSONArray("weeklyData")
+            val weekly        = if (arr != null) (0 until arr.length()).map { arr.getInt(it) } else emptyList()
+            val ratio         = (todayCount.toFloat() / dailyGoal).coerceIn(0f, 1f)
 
-        Box(
-            modifier = GlanceModifier
-                .fillMaxSize()
-                .background(GBg1)
-                .padding(0.dp)
-        ) {
-            if (data == null) {
-                EmptyState()
-            } else if (size.height < 200.dp) {
-                MediumContent(data)
+            // Count + goal
+            views.setTextViewText(R.id.countText, "$todayCount")
+            views.setTextViewText(R.id.goalText, "/$dailyGoal")
+
+            // Streak
+            views.setTextViewText(R.id.streakLabel, tr["widget.goal.streak"] ?: "streak")
+            views.setTextViewText(R.id.streakValue, "\uD83D\uDD25 $currentStreak")
+
+            // Progress bar
+            views.setProgressBar(R.id.progressBar, 100, (ratio * 100).toInt(), false)
+
+            // Motivational message
+            val msgColor = if (ratio >= 1f) COLOR_ACCENT else 0x80FFFFFF.toInt()
+            views.setTextViewText(R.id.motivationText, motivationalMsg(ratio, tr))
+            views.setTextColor(R.id.motivationText, msgColor)
+
+            // Weekly bars (only on large)
+            if (isLarge && weekly.size >= 7) {
+                views.setViewVisibility(R.id.weeklyBars, View.VISIBLE)
+                BAR_IDS.forEachIndexed { i, barId ->
+                    val count   = weekly[i]
+                    val isToday = i == weekly.size - 1
+                    val color   = when {
+                        isToday       -> COLOR_ACCENT
+                        count >= dailyGoal -> COLOR_DARK_GREEN
+                        else          -> COLOR_BG2
+                    }
+                    views.setInt(barId, "setBackgroundColor", color)
+                }
             } else {
-                LargeContent(data)
+                views.setViewVisibility(R.id.weeklyBars, View.GONE)
             }
+
+            return views
+        }
+
+        private fun loadTranslations(context: Context): Map<String, String> {
+            val raw = WidgetDataStore.getString(context, "widgetTranslations") ?: return emptyMap()
+            return try {
+                val obj = JSONObject(raw).getJSONObject("keys")
+                obj.keys().asSequence().associateWith { obj.getString(it) }
+            } catch (_: Exception) { emptyMap() }
         }
     }
-
-    @Composable
-    private fun EmptyState() {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = GlanceModifier.fillMaxSize()
-        ) {
-            Text(
-                text = "ئامانجا خواندنێ",
-                style = TextStyle(
-                    color = androidx.glance.unit.ColorProvider(GT3),
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center
-                )
-            )
-        }
-    }
-
-    @Composable
-    private fun MediumContent(data: GoalData) {
-        val ratio = (data.todayCount.toFloat() / data.dailyGoal).coerceIn(0f, 1f)
-        val widgetWidth = LocalSize.current.width
-
-        Column(
-            modifier = GlanceModifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            Row(
-                horizontalAlignment = Alignment.End,
-                modifier = GlanceModifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "${data.todayCount}/${data.dailyGoal}",
-                    style = TextStyle(color = androidx.glance.unit.ColorProvider(GT1), fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                )
-                Spacer(GlanceModifier.defaultWeight())
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = data.translations.gt("widget.goal.streak", "streak"),
-                        style = TextStyle(color = androidx.glance.unit.ColorProvider(GT3), fontSize = 10.sp)
-                    )
-                    Text(
-                        text = "\uD83D\uDD25 ${data.currentStreak}",
-                        style = TextStyle(color = androidx.glance.unit.ColorProvider(GT1), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    )
-                }
-            }
-            Spacer(GlanceModifier.height(8.dp))
-            ProgressBar(ratio, widgetWidth)
-            Spacer(GlanceModifier.height(6.dp))
-            Text(
-                text = motivationalMsg(ratio, data.translations),
-                style = TextStyle(
-                    color = androidx.glance.unit.ColorProvider(if (ratio >= 1f) GAccent else GT2),
-                    fontSize = 11.sp
-                )
-            )
-        }
-    }
-
-    @Composable
-    private fun LargeContent(data: GoalData) {
-        val ratio = (data.todayCount.toFloat() / data.dailyGoal).coerceIn(0f, 1f)
-        val widgetWidth = LocalSize.current.width
-
-        Column(
-            modifier = GlanceModifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            Row(
-                horizontalAlignment = Alignment.End,
-                modifier = GlanceModifier.fillMaxWidth()
-            ) {
-                Row(horizontalAlignment = Alignment.End, verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = "${data.todayCount}",
-                        style = TextStyle(color = androidx.glance.unit.ColorProvider(GT1), fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                    )
-                    Text(
-                        text = "/${data.dailyGoal}",
-                        style = TextStyle(color = androidx.glance.unit.ColorProvider(GT3), fontSize = 18.sp)
-                    )
-                }
-                Spacer(GlanceModifier.defaultWeight())
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = data.translations.gt("widget.goal.streak", "streak"),
-                        style = TextStyle(color = androidx.glance.unit.ColorProvider(GT3), fontSize = 10.sp)
-                    )
-                    Text(
-                        text = "\uD83D\uDD25 ${data.currentStreak}",
-                        style = TextStyle(color = androidx.glance.unit.ColorProvider(GT1), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    )
-                }
-            }
-            Spacer(GlanceModifier.height(8.dp))
-            ProgressBar(ratio, widgetWidth)
-            Spacer(GlanceModifier.height(12.dp))
-            if (data.weeklyData.size >= 7) {
-                WeeklyBars(data.weeklyData, data.dailyGoal)
-                Spacer(GlanceModifier.height(10.dp))
-            }
-            Text(
-                text = motivationalMsg(ratio, data.translations),
-                style = TextStyle(
-                    color = androidx.glance.unit.ColorProvider(if (ratio >= 1f) GAccent else GT2),
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
-                )
-            )
-        }
-    }
-
-    @Composable
-    private fun ProgressBar(ratio: Float, widgetWidth: androidx.compose.ui.unit.Dp) {
-        val trackPx = (widgetWidth.value - 28f).coerceAtLeast(4f)
-        val fillW   = (trackPx * ratio.coerceIn(0.02f, 1f)).dp
-
-        Box(modifier = GlanceModifier.fillMaxWidth().height(8.dp)) {
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxSize()
-                    .background(GBg2)
-                    .cornerRadius(4.dp)
-            ) {}
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxHeight()
-                    .width(fillW)
-                    .background(GAccent)
-                    .cornerRadius(4.dp)
-            ) {}
-        }
-    }
-
-    @Composable
-    private fun WeeklyBars(weekly: List<Int>, goal: Int) {
-        val maxVal = (weekly.maxOrNull() ?: 0).coerceAtLeast(goal)
-
-        Row(modifier = GlanceModifier.fillMaxWidth().height(40.dp)) {
-            weekly.forEachIndexed { index, count ->
-                val frac    = if (maxVal > 0) (count.toFloat() / maxVal).coerceIn(0.05f, 1f) else 0.05f
-                val barH    = (40f * frac).dp
-                val isToday = index == weekly.size - 1
-                val color   = when {
-                    isToday       -> GAccent
-                    count >= goal -> GDarkGreen
-                    else          -> GBg2
-                }
-                Column(
-                    verticalAlignment = Alignment.Bottom,
-                    modifier = GlanceModifier.defaultWeight().fillMaxHeight()
-                ) {
-                    Spacer(GlanceModifier.defaultWeight())
-                    Box(
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .height(barH)
-                            .background(color)
-                            .cornerRadius(3.dp)
-                    ) {}
-                }
-                if (index < weekly.size - 1) {
-                    Spacer(GlanceModifier.width(3.dp))
-                }
-            }
-        }
-    }
-}
-
-class GoalWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget = GoalWidget()
 }

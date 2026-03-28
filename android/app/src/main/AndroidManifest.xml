@@ -45,7 +45,7 @@
         </provider>
 
         <!-- Prayer Widget -->
-        <receiver android:name=".PrayerWidgetReceiver" android:exported="true">
+        <receiver android:name=".PrayerWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -55,7 +55,7 @@
         </receiver>
 
         <!-- Ayah Widget -->
-        <receiver android:name=".AyahWidgetReceiver" android:exported="true">
+        <receiver android:name=".AyahWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -65,7 +65,7 @@
         </receiver>
 
         <!-- Goal Widget -->
-        <receiver android:name=".GoalWidgetReceiver" android:exported="true">
+        <receiver android:name=".GoalWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0E100E"
+    android:padding="12dp">
+
+    <!-- Header: city (right) + hijri (left) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/hijriText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="9sp"
+            android:textColor="#80FFFFFF"
+            android:fontFamily="@font/ibm_plex_arabic"
+            android:gravity="start"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/cityText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:textColor="#23BD69"
+            android:fontFamily="@font/ibm_plex_arabic"
+            android:gravity="end"
+            android:maxLines="1" />
+    </LinearLayout>
+
+    <!-- Next prayer hero card -->
+    <LinearLayout
+        android:id="@+id/nextPrayerCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/widget_accent_bg"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/nextPrayerTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/ibm_plex_arabic"
+            android:fontFeatureSettings="'tnum'"
+            android:gravity="start" />
+
+        <TextView
+            android:id="@+id/nextPrayerName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/ibm_plex_arabic"
+            android:textStyle="bold"
+            android:gravity="end" />
+    </LinearLayout>
+
+    <!-- Prayer list -->
+    <LinearLayout
+        android:id="@+id/prayerList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginTop="4dp">
+
+        <!-- Fajr -->
+        <LinearLayout
+            android:id="@+id/rowFajr"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/timeFajr"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:fontFeatureSettings="'tnum'"
+                android:gravity="start" />
+            <TextView android:id="@+id/nameFajr"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Sunrise -->
+        <LinearLayout
+            android:id="@+id/rowSunrise"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/timeSunrise"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:fontFeatureSettings="'tnum'"
+                android:gravity="start" />
+            <TextView android:id="@+id/nameSunrise"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Dhuhr -->
+        <LinearLayout
+            android:id="@+id/rowDhuhr"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/timeDhuhr"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:fontFeatureSettings="'tnum'"
+                android:gravity="start" />
+            <TextView android:id="@+id/nameDhuhr"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Asr -->
+        <LinearLayout
+            android:id="@+id/rowAsr"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/timeAsr"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:fontFeatureSettings="'tnum'"
+                android:gravity="start" />
+            <TextView android:id="@+id/nameAsr"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Maghrib -->
+        <LinearLayout
+            android:id="@+id/rowMaghrib"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/timeMaghrib"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:fontFeatureSettings="'tnum'"
+                android:gravity="start" />
+            <TextView android:id="@+id/nameMaghrib"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Isha -->
+        <LinearLayout
+            android:id="@+id/rowIsha"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/timeIsha"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:fontFeatureSettings="'tnum'"
+                android:gravity="start" />
+            <TextView android:id="@+id/nameIsha"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textSize="11sp" android:textColor="#80FFFFFF"
+                android:fontFamily="@font/ibm_plex_arabic" android:gravity="end" />
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>
