@@ -20,6 +20,8 @@
 		WDGT000000000002 /* TafsirKurdWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WDGT000000000010 /* TafsirKurdWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		WDGT000000000003 /* SharedPrefsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000014 /* SharedPrefsPlugin.swift */; };
 		WDGT000000000004 /* SharedPrefsPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000015 /* SharedPrefsPlugin.m */; };
+		FONT000000000003 /* UthmanicHafs1Ver18.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FONT000000000002 /* UthmanicHafs1Ver18.ttf */; };
+		FONT000000000004 /* UthmanicHafs1Ver18.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FONT000000000002 /* UthmanicHafs1Ver18.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +44,7 @@
 		WDGT000000000013 /* TafsirKurdWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TafsirKurdWidget.entitlements; sourceTree = "<group>"; };
 		WDGT000000000014 /* SharedPrefsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPrefsPlugin.swift; sourceTree = "<group>"; };
 		WDGT000000000015 /* SharedPrefsPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedPrefsPlugin.m; sourceTree = "<group>"; };
+		FONT000000000002 /* UthmanicHafs1Ver18.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = UthmanicHafs1Ver18.ttf; path = Fonts/UthmanicHafs1Ver18.ttf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -121,8 +124,17 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 				WDGT000000000014 /* SharedPrefsPlugin.swift */,
 				WDGT000000000015 /* SharedPrefsPlugin.m */,
+				FONT000000000001 /* Fonts */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		FONT000000000001 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				FONT000000000002 /* UthmanicHafs1Ver18.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		WDGT000000000020 /* TafsirKurdWidget */ = {
@@ -224,6 +236,7 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				FONT000000000003 /* UthmanicHafs1Ver18.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -231,6 +244,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FONT000000000004 /* UthmanicHafs1Ver18.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,7 +417,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 60;
+				CURRENT_PROJECT_VERSION = 62;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -426,7 +440,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 60;
+				CURRENT_PROJECT_VERSION = 62;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -448,7 +462,7 @@
 				CODE_SIGN_ENTITLEMENTS = TafsirKurdWidget/TafsirKurdWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 60;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = 8KA7UDSC9D;
 				INFOPLIST_FILE = TafsirKurdWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -474,7 +488,7 @@
 				CODE_SIGN_ENTITLEMENTS = TafsirKurdWidget/TafsirKurdWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 60;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = 8KA7UDSC9D;
 				INFOPLIST_FILE = TafsirKurdWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;

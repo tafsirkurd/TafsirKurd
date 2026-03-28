@@ -68,5 +68,9 @@
 	<string>ئەم ئەپە ب دەنگا تە ئیزنا دەخوازێت دا بتوانی ئایەتێن قورئانێ ب دەنگ بژمێری</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>ئەم ئەپە ناسینا دەنگی بکار تینێت دا بتوانی ئایەتێن قورئانێ ب دەنگ بژمێری</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>UthmanicHafs1Ver18.ttf</string>
+	</array>
 </dict>
 </plist>

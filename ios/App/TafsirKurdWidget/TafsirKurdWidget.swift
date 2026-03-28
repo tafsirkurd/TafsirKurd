@@ -669,6 +669,11 @@ private struct NoAyahView: View {
     }
 }
 
+// KFGQPC Hafs font helpers
+private func hafsFont(size: CGFloat) -> Font {
+    Font.custom("KFGQPCHAFSUthmanicScript-Regula", size: size)
+}
+
 // Lock screen — Arabic (13 pt, 2 lines) + reference (9 pt)
 private struct AyahLockView: View {
     let entry: AyahEntry
@@ -676,7 +681,7 @@ private struct AyahLockView: View {
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 5) {
                 Text(d.arabic)
-                    .font(.system(size: 13, weight: .regular))
+                    .font(hafsFont(size: 13))
                     .foregroundStyle(AnyShapeStyle(.primary))
                     .multilineTextAlignment(.trailing)
                     .lineLimit(2)
@@ -697,66 +702,76 @@ private struct AyahLockView: View {
     }
 }
 
-// Medium home — reference header + Arabic text (up to 4 lines)
+// Medium/Small home — centered Arabic (Hafs) + small reference below
 private struct AyahMediumView: View {
     let entry: AyahEntry
     var body: some View {
         if let d = entry.data {
-            VStack(alignment: .trailing, spacing: 0) {
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                Text(d.arabic)
+                    .font(hafsFont(size: 18))
+                    .foregroundStyle(DS.t1)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6)
+                    .lineLimit(4)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 14)
                 if d.showReference {
                     Text(d.reference)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(DS.accent)
                         .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.bottom, 8)
+                        .padding(.top, 10)
                 }
-                Text(d.arabic)
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundStyle(DS.t1)
-                    .multilineTextAlignment(.trailing)
-                    .lineLimit(4)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer(minLength: 0)
             }
-            .padding(14)
             .environment(\.layoutDirection, .rightToLeft)
         } else { NoAyahView() }
     }
 }
 
-// Large home — reference + large Arabic + separator + tafsir
+// Large home — centered reference (top) + large Hafs Arabic (center) + tafsir (bottom)
 private struct AyahLargeView: View {
     let entry: AyahEntry
     var body: some View {
         if let d = entry.data {
-            VStack(alignment: .trailing, spacing: 0) {
+            VStack(spacing: 0) {
+                // Reference badge at top
                 if d.showReference {
                     Text(d.reference)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(DS.accent)
                         .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.bottom, 12)
+                        .padding(.top, 18)
                 }
+                Spacer(minLength: 8)
+                // Arabic centered with Hafs font
                 Text(d.arabic)
-                    .font(.system(size: 20, weight: .regular))
+                    .font(hafsFont(size: 22))
                     .foregroundStyle(DS.t1)
-                    .multilineTextAlignment(.trailing)
-                    .lineLimit(6)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(8)
+                    .lineLimit(7)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 18)
+                Spacer(minLength: 8)
+                // Tafsir at bottom
                 if d.showTafsir && !d.tafsir.isEmpty {
-                    DS.sep.frame(height: 1).padding(.vertical, 14)
+                    DS.sep.frame(height: 1).padding(.horizontal, 20)
                     Text(d.tafsir)
-                        .font(.system(size: 12, weight: .light))
+                        .font(.system(size: 11, weight: .light))
                         .foregroundStyle(DS.t2)
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(6)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(4)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.horizontal, 18)
+                        .padding(.top, 10)
+                        .padding(.bottom, 16)
+                } else {
+                    Spacer(minLength: 16)
                 }
-                Spacer(minLength: 0)
             }
-            .padding(16)
             .environment(\.layoutDirection, .rightToLeft)
         } else { NoAyahView() }
     }
