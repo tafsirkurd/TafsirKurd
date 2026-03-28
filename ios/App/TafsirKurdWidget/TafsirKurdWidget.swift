@@ -547,10 +547,27 @@ struct AyahWidgetData: Codable {
     }
 
     static func load() -> AyahWidgetData? {
-        guard let ud   = UserDefaults(suiteName: kAppGroup),
-              let json = ud.string(forKey: "widgetAyahData"),
-              let raw  = json.data(using: .utf8) else { return nil }
-        return try? JSONDecoder().decode(AyahWidgetData.self, from: raw)
+        guard let ud = UserDefaults(suiteName: kAppGroup) else {
+            wLog.error("[AyahWidget] UserDefaults(suiteName:\(kAppGroup)) is NIL — App Group missing")
+            return nil
+        }
+        guard let json = ud.string(forKey: "widgetAyahData") else {
+            wLog.warning("[AyahWidget] key 'widgetAyahData' not found in App Group — widget never written")
+            return nil
+        }
+        wLog.info("[AyahWidget] found key widgetAyahData len=\(json.count)")
+        guard let raw = json.data(using: .utf8) else {
+            wLog.error("[AyahWidget] UTF8 conversion failed")
+            return nil
+        }
+        do {
+            let d = try JSONDecoder().decode(AyahWidgetData.self, from: raw)
+            wLog.info("[AyahWidget] decode OK — chapter=\(d.chapter) verse=\(d.verse)")
+            return d
+        } catch {
+            wLog.error("[AyahWidget] JSON decode failed: \(error.localizedDescription)")
+            return nil
+        }
     }
 }
 
@@ -571,10 +588,27 @@ struct GoalWidgetData: Codable {
     var isGoalMet: Bool { todayCount >= dailyGoal }
 
     static func load() -> GoalWidgetData? {
-        guard let ud   = UserDefaults(suiteName: kAppGroup),
-              let json = ud.string(forKey: "widgetGoalData"),
-              let raw  = json.data(using: .utf8) else { return nil }
-        return try? JSONDecoder().decode(GoalWidgetData.self, from: raw)
+        guard let ud = UserDefaults(suiteName: kAppGroup) else {
+            wLog.error("[GoalWidget] UserDefaults(suiteName:\(kAppGroup)) is NIL — App Group missing")
+            return nil
+        }
+        guard let json = ud.string(forKey: "widgetGoalData") else {
+            wLog.warning("[GoalWidget] key 'widgetGoalData' not found in App Group — widget never written")
+            return nil
+        }
+        wLog.info("[GoalWidget] found key widgetGoalData len=\(json.count)")
+        guard let raw = json.data(using: .utf8) else {
+            wLog.error("[GoalWidget] UTF8 conversion failed")
+            return nil
+        }
+        do {
+            let d = try JSONDecoder().decode(GoalWidgetData.self, from: raw)
+            wLog.info("[GoalWidget] decode OK — todayCount=\(d.todayCount)/\(d.dailyGoal) streak=\(d.currentStreak)")
+            return d
+        } catch {
+            wLog.error("[GoalWidget] JSON decode failed: \(error.localizedDescription)")
+            return nil
+        }
     }
 }
 

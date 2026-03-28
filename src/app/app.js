@@ -3995,13 +3995,25 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 
 /* ===== WIDGET DATA PUSH ===== */
 
+// Unified helper — same plugin name as prayer.ui.js (proven to work).
+// @objc(SharedPrefsPlugin) → Capacitor exposes as "SharedPrefs" on iOS.
+function _sharedPrefsSet(key,value){
+  var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefs;
+  if(!sp){
+    console.warn('[Widget] SharedPrefs plugin not available — not iOS or plugin not loaded. Available plugins:',
+      window.Capacitor&&window.Capacitor.Plugins?Object.keys(window.Capacitor.Plugins):'(no Capacitor)');
+    return Promise.reject(new Error('SharedPrefs not available'));
+  }
+  console.log('[Widget] _sharedPrefsSet key='+key+' valueLen='+value.length);
+  return sp.set({key:key,value:value});
+}
+
 // Push selected ayah + tafsir to iOS widget via shared App Group.
 // Called when user taps the star (⭐) button on an ayah card.
 function pushAyahToWidget(surahNum,ayahNum){
-  var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefsPlugin;
-  if(!sp){toast('iOS widget نیە');return;}
+  console.log('[WidgetAyah] pushAyahToWidget called surah='+surahNum+' ayah='+ayahNum);
   var quranSurah=S.quranData&&S.quranData[String(surahNum)];
-  if(!quranSurah||!quranSurah[ayahNum-1]){toast('داتا نیە');return;}
+  if(!quranSurah||!quranSurah[ayahNum-1]){console.error('[WidgetAyah] quran data missing');toast('داتا نیە');return;}
   var ayah=quranSurah[ayahNum-1];
   var tafsirText='';
   if(S.tafsirData&&S.tafsirData[surahNum-1]){
@@ -4021,16 +4033,21 @@ function pushAyahToWidget(surahNum,ayahNum){
     showTafsir:true,
     showReference:true
   });
-  sp.set({key:'widgetAyahData',value:payload})
-    .then(function(){toast('ئایەت بۆ ویجیت زیاد کرا ✓');})
-    .catch(function(e){console.error('[WidgetAyah]',e);});
+  console.log('[WidgetAyah] writing payload len='+payload.length);
+  _sharedPrefsSet('widgetAyahData',payload)
+    .then(function(){
+      console.log('[WidgetAyah] write SUCCESS ✓');
+      toast('ئایەت بۆ ویجیت زیاد کرا ✓');
+    })
+    .catch(function(e){
+      console.error('[WidgetAyah] write FAILED:',e);
+      toast('ویجیت نیوست ✗');
+    });
 }
 
 // Push reading progress + streak to iOS goal widget.
 // Called after every ayah is counted and on prayer tab init.
 function pushGoalDataToWidget(){
-  var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefsPlugin;
-  if(!sp)return;
   var l=getReadLog();
   var today=dateKey(new Date());
   var g=getGoal();
@@ -4048,8 +4065,36 @@ function pushGoalDataToWidget(){
     weeklyData:weekly,
     todayDate:today
   });
-  sp.set({key:'widgetGoalData',value:payload}).catch(function(){});
+  console.log('[WidgetGoal] pushGoalDataToWidget today='+today+' count='+todayCount+'/'+dailyGoal+' streak='+streak);
+  _sharedPrefsSet('widgetGoalData',payload)
+    .then(function(){console.log('[WidgetGoal] write SUCCESS ✓');})
+    .catch(function(){/* non-iOS — silent */});
 }
+
+// ── Debug helpers (temporary) ──────────────────────────────────────────
+window.testAyahWidgetPush=function(){
+  console.log('[WidgetAyah] testAyahWidgetPush: writing known-good payload');
+  var payload=JSON.stringify({
+    chapter:1,verse:1,
+    arabic:'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
+    tafsir:'بسمەلە — سوورەتا فاتیحەیێ',
+    surahName:'الفاتحة',
+    showTafsir:true,showReference:true
+  });
+  _sharedPrefsSet('widgetAyahData',payload)
+    .then(function(){console.log('[WidgetAyah] testAyahWidgetPush: SUCCESS ✓');alert('Ayah widget write OK');})
+    .catch(function(e){console.error('[WidgetAyah] testAyahWidgetPush: FAILED',e);alert('Ayah widget write FAILED: '+e);});
+};
+window.testGoalWidgetPush=function(){
+  console.log('[WidgetGoal] testGoalWidgetPush: writing known-good payload');
+  var payload=JSON.stringify({
+    todayCount:5,dailyGoal:10,currentStreak:3,bestStreak:7,
+    weeklyData:[2,4,10,8,5,10,5],todayDate:dateKey(new Date())
+  });
+  _sharedPrefsSet('widgetGoalData',payload)
+    .then(function(){console.log('[WidgetGoal] testGoalWidgetPush: SUCCESS ✓');alert('Goal widget write OK');})
+    .catch(function(e){console.error('[WidgetGoal] testGoalWidgetPush: FAILED',e);alert('Goal widget write FAILED: '+e);});
+};
 
 /* ===== GOAL WIZARD ===== */
 var PRESETS=[
