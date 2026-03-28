@@ -316,6 +316,7 @@ function init(){
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
             // Push fresh widget data if date or city changed since last push
             if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
+            pushGoalDataToWidget();
             initDailyVerse();
             scheduleStreakReminder();
             checkNewVideoNotif();
@@ -472,6 +473,7 @@ function init(){
   if(window.PrayerUI)PrayerUI.initScheduleOnStart();
   // Push widget data from cache if date/city changed (runs without network)
   if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
+  pushGoalDataToWidget();
   initDailyVerse();
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);
@@ -2083,6 +2085,7 @@ function renderAyahs(surahNum,scrollTo){
     var plBtn=e.target.closest('[data-play]');
     var bmBtn=e.target.closest('[data-bm]');
     var cpBtn=e.target.closest('[data-cp]');
+    var wgtBtn=e.target.closest('[data-wgt]');
     if(plBtn){
       var an=+plBtn.dataset.play;
       haptic([8]);
@@ -2098,6 +2101,7 @@ function renderAyahs(surahNum,scrollTo){
       bmBtn.classList.toggle('active',added);
     }
     if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
+    if(wgtBtn){pushAyahToWidget(surahNum,+wgtBtn.dataset.wgt);}
   });
 
   // Hold detection via 400ms timer in touchstart (fires before touchend/touchcancel).
@@ -2107,7 +2111,7 @@ function renderAyahs(surahNum,scrollTo){
     var _lpTimer=null,_lpCard=null,_lpX=0,_lpY=0;
     list.addEventListener('touchstart',function(e){
       var mc=e.target.closest('.ayah-card');
-      if(!mc||e.target.closest('[data-play],[data-bm],[data-cp]'))return;
+      if(!mc||e.target.closest('[data-play],[data-bm],[data-cp],[data-wgt]'))return;
       _lpCard=mc;_lpX=e.touches[0].clientX;_lpY=e.touches[0].clientY;
       mc.classList.add('ayah-card--pressing');
       clearTimeout(_lpTimer);
@@ -2178,6 +2182,10 @@ function renderAyahs(surahNum,scrollTo){
     copyBtn.dataset.cp=String(ayahNum);
     copyBtn.appendChild(icon('fas fa-copy'));
     actions.appendChild(copyBtn);
+    var wgtBtn=el('button','ayah-act');
+    wgtBtn.dataset.wgt=String(ayahNum);
+    wgtBtn.appendChild(icon('fas fa-star'));
+    actions.appendChild(wgtBtn);
     head.appendChild(actions);
     card.appendChild(head);
     var arabic=el('div','ayah-arabic');
@@ -3644,6 +3652,8 @@ function trackVerse(surah,ayah){
   // Haptic exactly once on goal completion
   var g=getGoal();
   if(g&&l[today]===g.pages){haptic([50]);}
+  // Keep goal widget current — lightweight, no network
+  pushGoalDataToWidget();
 }
 
 function calcBestStreak(log){
@@ -3982,6 +3992,64 @@ function calcStreak(log){
   return streak;
 }
 function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+/* ===== WIDGET DATA PUSH ===== */
+
+// Push selected ayah + tafsir to iOS widget via shared App Group.
+// Called when user taps the star (⭐) button on an ayah card.
+function pushAyahToWidget(surahNum,ayahNum){
+  var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefsPlugin;
+  if(!sp){toast('iOS widget نیە');return;}
+  var quranSurah=S.quranData&&S.quranData[String(surahNum)];
+  if(!quranSurah||!quranSurah[ayahNum-1]){toast('داتا نیە');return;}
+  var ayah=quranSurah[ayahNum-1];
+  var tafsirText='';
+  if(S.tafsirData&&S.tafsirData[surahNum-1]){
+    var td=S.tafsirData[surahNum-1];
+    if(td.verses){
+      var tv=td.verses.find(function(v){return(v.verse||v.ayah)===ayahNum;});
+      if(tv&&tv.text)tafsirText=tv.text.substring(0,400);
+    }
+  }
+  var surahInfo=SURAHS[surahNum-1]||{};
+  var payload=JSON.stringify({
+    chapter:surahNum,
+    verse:ayahNum,
+    arabic:ayah.text||'',
+    tafsir:tafsirText,
+    surahName:surahInfo.ar||('سورة '+surahNum),
+    showTafsir:true,
+    showReference:true
+  });
+  sp.set({key:'widgetAyahData',value:payload})
+    .then(function(){toast('ئایەت بۆ ویجیت زیاد کرا ✓');})
+    .catch(function(e){console.error('[WidgetAyah]',e);});
+}
+
+// Push reading progress + streak to iOS goal widget.
+// Called after every ayah is counted and on prayer tab init.
+function pushGoalDataToWidget(){
+  var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefsPlugin;
+  if(!sp)return;
+  var l=getReadLog();
+  var today=dateKey(new Date());
+  var g=getGoal();
+  var dailyGoal=g&&g.pages?g.pages:10;
+  var todayCount=l[today]||0;
+  var streak=calcStreak(l);
+  var best=parseInt(localStorage.getItem('bestStreak')||'0',10);
+  var weekly=[];
+  for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);weekly.push(l[dateKey(d)]||0);}
+  var payload=JSON.stringify({
+    todayCount:todayCount,
+    dailyGoal:dailyGoal,
+    currentStreak:streak,
+    bestStreak:best,
+    weeklyData:weekly,
+    todayDate:today
+  });
+  sp.set({key:'widgetGoalData',value:payload}).catch(function(){});
+}
 
 /* ===== GOAL WIZARD ===== */
 var PRESETS=[
