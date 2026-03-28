@@ -9,9 +9,11 @@ private let wLog = Logger(subsystem: "com.tafsirkurd.app.TafsirKurdWidget", cate
 private let kAppGroup    = "group.com.tafsirkurd.app"
 private let kDataKey     = "widgetPrayerData"
 private let kDeepLink    = URL(string: "tafsirkurd://prayer")!
-private let kPrayerOrder = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
+private let kPrayerOrder   = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]          // notifications + next-prayer logic
+private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"] // home widget rows (includes sunrise)
 private let kKurdish: [String: String] = [
     "Fajr":    "سپێدە",
+    "Sunrise": "ڕوژهەلات",
     "Dhuhr":   "نیڤرۆ",
     "Asr":     "ئێڤار",
     "Maghrib": "مەغرەب",
@@ -196,8 +198,8 @@ private struct CityLabel: View {
 /// Used in the medium widget where 5 rows must fit the available height.
 ///
 /// Height math (compact, iOS 17+ with ~11 pt system content margins):
-///   row = 11 pt font (line height ~13 pt) + 2 × 2 pt vpad = 17 pt
-///   5 rows × 17 pt = 85 pt — fits in any medium widget
+///   row = 11 pt font (line height ~13 pt) + 2 × 1 pt vpad = 15 pt
+///   6 rows × 15 pt = 90 pt — fits in any medium widget (SE budget: 119 pt)
 private struct PRow: View {
     let name:    String
     let time:    String
@@ -207,7 +209,7 @@ private struct PRow: View {
 
     var body: some View {
         let fs:   CGFloat = compact ? 11 : fontSize
-        let vPad: CGFloat = compact ? 2  : (isNext ? 6 : 4)
+        let vPad: CGFloat = compact ? 1  : (isNext ? 6 : 4)
         let hPad: CGFloat = compact ? 8  : 10
 
         HStack(spacing: 0) {
@@ -321,7 +323,7 @@ private struct MediumView: View {
                 }
                 .padding(.bottom, 3)
                 VStack(spacing: 0) {
-                    ForEach(kPrayerOrder, id: \.self) { name in
+                    ForEach(kDisplayOrder, id: \.self) { name in
                         PRow(name: name,
                              time: d.displayTime(name),
                              isNext: name == n?.name,
@@ -369,7 +371,7 @@ private struct LargeView: View {
                     .padding(.bottom, 10)
 
                 VStack(spacing: 3) {
-                    ForEach(kPrayerOrder, id: \.self) { name in
+                    ForEach(kDisplayOrder, id: \.self) { name in
                         PRow(name: name,
                              time: d.displayTime(name),
                              isNext: name == n?.name,
@@ -407,81 +409,58 @@ private struct LargeView: View {
     }
 }
 
-// MARK: — Lock screen widget  (accessoryRectangular — Hero + compact list, no-clip)
+// MARK: — Lock screen widget  (accessoryRectangular — 3 × 2 grid)
 //
-// Height budget — VStack(spacing:0), fits ≤73 pt (standard iPhones):
-//   city  6.5 pt → line ~8 pt  + 1 pt gap  =  9 pt
-//   hero 12.5 pt → line ~15 pt + 3 pt gap  = 18 pt
-//   sunrise 7.5 pt → line ~9 pt             =  9 pt
-//   4 prayers 7.5 pt × 4 → ~9 pt each       = 36 pt
-//   total                                    = 72 pt  ✓ no clip
+// 6 items paired into 3 rows:
+//   Row 1: Fajr      | Sunrise
+//   Row 2: Dhuhr     | Asr
+//   Row 3: Maghrib   | Isha
 //
-// Hierarchy:
-//   hero    → 12.5 pt semibold/medium, .primary + widgetAccentable
-//   prayers →  7.5 pt light/ultraLight, .secondary
-//   sunrise →  7.5 pt light/ultraLight, .tertiary  (dimmest — info only)
-//   city    →  6.5 pt semibold, .tertiary
+// RTL: within each cell → name RIGHT, time LEFT.
+//      within each row  → pair[0] RIGHT, pair[1] LEFT.
 //
-// No countdown anywhere.
+// Height (VStack spacing:7, 10pt font → ~12pt line height):
+//   3 rows × 12pt = 36pt
+//   2 gaps × 7pt  = 14pt
+//   total          = 50pt  ✓ fits all devices (standard ≥ 73pt available)
+//
+// All 6 items identical styling — no hero, no highlight, no countdown.
+
+private let kLockPairs: [(String, String, String, String)] = [
+    ("Fajr",    "سپێدە",   "Sunrise", "ڕوژهەلات"),
+    ("Dhuhr",   "نیڤرۆ",   "Asr",     "ئێڤار"),
+    ("Maghrib", "مەغرەب",  "Isha",    "عەیشا"),
+]
+
+private struct LockPairCell: View {
+    let time: String
+    let name: String
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(name)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(AnyShapeStyle(.primary))
+                .lineLimit(1)
+            Spacer(minLength: 2)
+            Text(time)
+                .font(.system(size: 10, weight: .regular).monospacedDigit())
+                .foregroundStyle(AnyShapeStyle(.primary))
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
 
 private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let upcoming = entry.next
-            let heroName = upcoming?.name ?? "Fajr"
-
-            VStack(alignment: .trailing, spacing: 0) {
-
-                // ── City header ──────────────────────────────────────────
-                HStack(spacing: 0) {
-                    Spacer()
-                    Text(d.city)
-                        .font(.system(size: 6.5, weight: .semibold))
-                        .foregroundStyle(AnyShapeStyle(.tertiary))
-                }
-                .padding(.bottom, 1)
-
-                // ── Hero: next prayer ────────────────────────────────────
-                HStack(spacing: 0) {
-                    Text(kKurdish[heroName] ?? heroName)
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(AnyShapeStyle(.primary))
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    Text(d.displayTime(heroName))
-                        .font(.system(size: 12.5, weight: .medium).monospacedDigit())
-                        .foregroundStyle(AnyShapeStyle(.primary))
-                        .lineLimit(1)
-                }
-                .widgetAccentable(true)
-                .padding(.bottom, 3)
-
-                // ── Sunrise — dimmest, informational ─────────────────────
-                HStack(spacing: 0) {
-                    Text("ڕوژهەلات")
-                        .font(.system(size: 7.5, weight: .light))
-                        .foregroundStyle(AnyShapeStyle(.tertiary))
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    Text(d.displayTime("Sunrise"))
-                        .font(.system(size: 7.5, weight: .ultraLight).monospacedDigit())
-                        .foregroundStyle(AnyShapeStyle(.tertiary))
-                        .lineLimit(1)
-                }
-
-                // ── Remaining prayers (all except hero) ──────────────────
-                ForEach(kPrayerOrder.filter { $0 != heroName }, id: \.self) { pName in
-                    HStack(spacing: 0) {
-                        Text(kKurdish[pName] ?? pName)
-                            .font(.system(size: 7.5, weight: .light))
-                            .foregroundStyle(AnyShapeStyle(.secondary))
-                            .lineLimit(1)
-                        Spacer(minLength: 4)
-                        Text(d.displayTime(pName))
-                            .font(.system(size: 7.5, weight: .ultraLight).monospacedDigit())
-                            .foregroundStyle(AnyShapeStyle(.secondary))
-                            .lineLimit(1)
+            VStack(spacing: 7) {
+                ForEach(0..<3, id: \.self) { i in
+                    let row = kLockPairs[i]
+                    HStack(spacing: 12) {
+                        LockPairCell(time: d.displayTime(row.0), name: row.1)
+                        LockPairCell(time: d.displayTime(row.2), name: row.3)
                     }
                 }
             }
