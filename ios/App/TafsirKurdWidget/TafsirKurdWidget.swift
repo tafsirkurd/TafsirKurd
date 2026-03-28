@@ -740,10 +740,14 @@ struct TafsirKurdAyahEntryView: View {
     let entry: AyahEntry
     var body: some View {
         Group {
-            switch family {
-            case .accessoryRectangular: AyahLockView(entry: entry)
-            case .systemLarge:          AyahLargeView(entry: entry)
-            default:                    AyahMediumView(entry: entry)
+            if family == .systemLarge {
+                AyahLargeView(entry: entry)
+            } else if family == .systemSmall {
+                AyahMediumView(entry: entry)
+            } else if family == .systemMedium {
+                AyahMediumView(entry: entry)
+            } else {
+                AyahLockView(entry: entry)
             }
         }
         .widgetBackground { ayahGradient }
@@ -945,10 +949,14 @@ struct TafsirKurdGoalEntryView: View {
     let entry: GoalEntry
     var body: some View {
         Group {
-            switch family {
-            case .accessoryRectangular: GoalLockView(entry: entry)
-            case .systemLarge:          GoalLargeView(entry: entry)
-            default:                    GoalMediumView(entry: entry)
+            if family == .systemLarge {
+                GoalLargeView(entry: entry)
+            } else if family == .systemSmall {
+                GoalMediumView(entry: entry)
+            } else if family == .systemMedium {
+                GoalMediumView(entry: entry)
+            } else {
+                GoalLockView(entry: entry)
             }
         }
         .widgetBackground { widgetGradient }
