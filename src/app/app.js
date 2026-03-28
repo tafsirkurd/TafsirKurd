@@ -4034,11 +4034,16 @@ function syncWidgetTranslations(){
 }
 
 function _sharedPrefsSet(key,value){
+  // Android path — synchronous JavascriptInterface bridge
+  if(window.TafsirAndroid){
+    try{window.TafsirAndroid.saveString(key,value);}catch(e){console.warn('[Widget] Android bridge error:',e);}
+    return Promise.resolve();
+  }
+  // iOS path — Capacitor SharedPrefs plugin (App Group UserDefaults)
   var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefs;
   if(!sp){
-    console.warn('[Widget] SharedPrefs plugin not available — not iOS or plugin not loaded. Available plugins:',
-      window.Capacitor&&window.Capacitor.Plugins?Object.keys(window.Capacitor.Plugins):'(no Capacitor)');
-    return Promise.reject(new Error('SharedPrefs not available'));
+    console.warn('[Widget] _sharedPrefsSet: no bridge available (key='+key+')');
+    return Promise.reject(new Error('no widget bridge'));
   }
   console.log('[Widget] _sharedPrefsSet key='+key+' valueLen='+value.length);
   return sp.set({key:key,value:value});

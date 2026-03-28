@@ -56,5 +56,8 @@ public class MainActivity extends BridgeActivity {
 
         // Media playback settings
         settings.setMediaPlaybackRequiresUserGesture(false);
+
+        // Register JS bridge for widget data writes (Android SharedPreferences)
+        webView.addJavascriptInterface(new TafsirAndroidBridge(this), "TafsirAndroid");
     }
 }
