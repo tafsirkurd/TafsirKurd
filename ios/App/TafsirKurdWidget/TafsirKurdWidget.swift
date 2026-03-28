@@ -11,14 +11,43 @@ private let kDataKey     = "widgetPrayerData"
 private let kDeepLink    = URL(string: "tafsirkurd://prayer")!
 private let kPrayerOrder   = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]          // notifications + next-prayer logic
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"] // home widget rows (includes sunrise)
-private let kKurdish: [String: String] = [
-    "Fajr":    "سپێدە",
-    "Sunrise": "ڕوژهەلات",
-    "Dhuhr":   "نیڤرۆ",
-    "Asr":     "ئێڤار",
-    "Maghrib": "مەغرەب",
-    "Isha":    "عەیشا"
-]
+// MARK: — Widget translations (read from App Group UserDefaults, set by main app)
+
+/// Reads the `widgetTranslations` key written by `syncWidgetTranslations()` in app.js.
+/// Falls back to built-in Kurdish strings if the key is absent.
+/// Cached per widget process invocation (widgets are short-lived processes).
+private enum WT {
+    private static var _cache: [String: String]? = nil
+
+    static func load() {
+        guard let ud = UserDefaults(suiteName: kAppGroup),
+              let json = ud.string(forKey: "widgetTranslations"),
+              let data = json.data(using: .utf8),
+              let obj  = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let keys = obj["keys"] as? [String: String]
+        else { _cache = [:]; return }
+        _cache = keys
+    }
+
+    /// Returns the translated string for `key`, using `fallback` if missing.
+    static func t(_ key: String, _ fallback: String) -> String {
+        if _cache == nil { load() }
+        return _cache?[key] ?? fallback
+    }
+}
+
+/// Convenience: Kurdish prayer name from WT, falls back to hardcoded value.
+private func kn(_ name: String) -> String {
+    switch name {
+    case "Fajr":    return WT.t("widget.prayer.fajr",    "سپێدە")
+    case "Sunrise": return WT.t("widget.prayer.sunrise", "ڕوژهەلات")
+    case "Dhuhr":   return WT.t("widget.prayer.dhuhr",   "نیڤرۆ")
+    case "Asr":     return WT.t("widget.prayer.asr",     "ئێڤار")
+    case "Maghrib": return WT.t("widget.prayer.maghrib", "مەغرەب")
+    case "Isha":    return WT.t("widget.prayer.isha",    "عەیشا")
+    default:        return name
+    }
+}
 
 // MARK: — Design system
 
@@ -180,7 +209,7 @@ private func remaining(_ to: Date) -> String {
     guard sec > 60 else { return "ئێستا" }
     let h = sec / 3600
     let m = (sec % 3600) / 60
-    return String(format: "%02d:%02d یێت ماین", h, m)
+    return String(format: "%02d:%02d \(WT.t("widget.prayer.time_left", "یێت ماین"))", h, m)
 }
 
 // MARK: — Reusable components
@@ -225,7 +254,7 @@ private struct PRow: View {
                 .foregroundStyle(isNext ? DS.accent : DS.t3)
                 .frame(width: compact ? 38 : 44, alignment: .leading)
             Spacer()
-            Text(kKurdish[name] ?? name)
+            Text(kn(name))
                 .font(.system(size: fs, weight: isNext ? .semibold : .light))
                 .foregroundStyle(isNext ? DS.t1 : DS.t2)
         }
@@ -247,10 +276,10 @@ private struct NoDataView: View {
             Image(systemName: "moon.stars")
                 .font(.system(size: 24, weight: .ultraLight))
                 .foregroundStyle(DS.t3)
-            Text("کاتا نوێژ")
+            Text(WT.t("widget.prayer.empty_title", "کاتا نوێژ"))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(DS.t3)
-            Text("بکوژێنەوە بۆ بارکردن")
+            Text(WT.t("widget.prayer.empty_hint", "بکوژێنەوە بۆ بارکردن"))
                 .font(.system(size: 9))
                 .foregroundStyle(DS.t3.opacity(0.6))
         }
@@ -658,10 +687,10 @@ private struct NoAyahView: View {
             Image(systemName: "text.book.closed")
                 .font(.system(size: 22, weight: .ultraLight))
                 .foregroundStyle(DS.t3)
-            Text("هیچ ئایەتێک نەبژاردراوە")
+            Text(WT.t("widget.ayah.empty_title", "هیچ ئایەتێک نەبژاردراوە"))
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(DS.t3)
-            Text("لە دانەی ئایەتێک بژێرە")
+            Text(WT.t("widget.ayah.empty_hint", "لە دانەی ئایەتێک بژێرە"))
                 .font(.system(size: 9))
                 .foregroundStyle(DS.t3.opacity(0.6))
         }
@@ -695,7 +724,7 @@ private struct AyahLockView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
             .environment(\.layoutDirection, .rightToLeft)
         } else {
-            Text("کتێبی پیرۆز")
+            Text(WT.t("widget.ayah.lock_fallback", "کتێبی پیرۆز"))
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
         }
@@ -810,10 +839,10 @@ private struct NoGoalView: View {
             Image(systemName: "chart.bar")
                 .font(.system(size: 22, weight: .ultraLight))
                 .foregroundStyle(DS.t3)
-            Text("ئامانجا ئیرۆ")
+            Text(WT.t("widget.goal.empty_title", "ئامانجا ئیرۆ"))
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(DS.t3)
-            Text("بکوژێنەوە بۆ بینین")
+            Text(WT.t("widget.goal.empty_hint", "بکوژێنەوە بۆ بینین"))
                 .font(.system(size: 9))
                 .foregroundStyle(DS.t3.opacity(0.6))
         }
@@ -839,7 +868,7 @@ private struct GoalLockView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            Text("ئامانجا ئیرۆ").font(.system(size: 10)).foregroundStyle(.secondary)
+            Text(WT.t("widget.goal.lock_fallback", "ئامانجا ئیرۆ")).font(.system(size: 10)).foregroundStyle(.secondary)
         }
     }
 }
@@ -854,7 +883,7 @@ private struct GoalMediumView: View {
                     Text(gregorianDisplay(d.todayDate))
                         .font(.system(size: 9)).foregroundStyle(DS.t3)
                     Spacer()
-                    Text("ئامانجا ئیرۆ")
+                    Text(WT.t("widget.goal.title", "ئامانجا ئیرۆ"))
                         .font(.system(size: 11, weight: .semibold)).foregroundStyle(DS.t1)
                 }
                 .padding(.bottom, 10)
@@ -872,14 +901,14 @@ private struct GoalMediumView: View {
                         Text("\(d.todayCount)/\(d.dailyGoal)")
                             .font(.system(size: 22, weight: .bold).monospacedDigit())
                             .foregroundStyle(DS.t1)
-                        Text("ئایەت").font(.system(size: 9)).foregroundStyle(DS.t3)
+                        Text(WT.t("widget.goal.ayah_label", "ئایەت")).font(.system(size: 9)).foregroundStyle(DS.t3)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("🔥 \(d.currentStreak)")
                             .font(.system(size: 22, weight: .bold))
                             .foregroundStyle(DS.t1)
-                        Text("ڕۆژ").font(.system(size: 9)).foregroundStyle(DS.t3)
+                        Text(WT.t("widget.goal.streak_label", "ڕۆژ")).font(.system(size: 9)).foregroundStyle(DS.t3)
                     }
                 }
             }
@@ -909,7 +938,7 @@ private struct GoalLargeView: View {
                     .frame(width: 56, height: 56)
                     Spacer()
                     VStack(alignment: .trailing, spacing: 3) {
-                        Text("ئامانجا ئیرۆ")
+                        Text(WT.t("widget.goal.title", "ئامانجا ئیرۆ"))
                             .font(.system(size: 15, weight: .bold)).foregroundStyle(DS.t1)
                         Text(gregorianDisplay(d.todayDate))
                             .font(.system(size: 9)).foregroundStyle(DS.t3)
@@ -918,9 +947,9 @@ private struct GoalLargeView: View {
                 .padding(.bottom, 12)
                 DS.sep.frame(height: 1).padding(.bottom, 10)
                 HStack {
-                    GoalStatBox(value: "\(d.todayCount)/\(d.dailyGoal)", label: "ئایەت")
+                    GoalStatBox(value: "\(d.todayCount)/\(d.dailyGoal)", label: WT.t("widget.goal.ayah_label", "ئایەت"))
                     Spacer()
-                    GoalStatBox(value: "🔥 \(d.currentStreak)", label: "ڕۆژ")
+                    GoalStatBox(value: "🔥 \(d.currentStreak)", label: WT.t("widget.goal.streak_label", "ڕۆژ"))
                     Spacer()
                     GoalStatBox(value: "\(d.bestStreak)", label: "باشترین")
                 }
@@ -929,7 +958,7 @@ private struct GoalLargeView: View {
                 GoalWeeklyBars(data: d.weeklyData, goal: d.dailyGoal)
                     .padding(.bottom, 10)
                 Spacer(minLength: 0)
-                Text(d.isGoalMet ? "🎉 ئامانجت تەواو کر!" : "بەردەوام بە، دەتوانی!")
+                Text(d.isGoalMet ? WT.t("widget.goal.completed", "🎉 ئامانجت تەواو کر!") : WT.t("widget.goal.motivate", "بەردەوام بە، دەتوانی!"))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(d.isGoalMet ? DS.accent : DS.t2)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -1010,8 +1039,8 @@ struct TafsirKurdWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             TafsirKurdWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("کاتا نوێژ")
-        .description("کاتەکانی نوێژ نیشان بدە")
+        .configurationDisplayName(WT.t("widget.prayer.widget_name", "کاتا نوێژ"))
+        .description(WT.t("widget.prayer.widget_desc", "کاتەکانی نوێژ نیشان بدە"))
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
@@ -1022,8 +1051,8 @@ struct TafsirKurdLockWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             TafsirKurdLockWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("نوێژا داهاتو")
-        .description("نوێژا داهاتو لە لۆک سکرین")
+        .configurationDisplayName(WT.t("widget.prayer.lock_name", "نوێژا داهاتو"))
+        .description(WT.t("widget.prayer.lock_desc", "نوێژا داهاتو لە لۆک سکرین"))
         .supportedFamilies([.accessoryRectangular])
     }
 }
@@ -1034,8 +1063,8 @@ struct TafsirKurdAyahWidget: Widget {
         StaticConfiguration(kind: kind, provider: AyahProvider()) { entry in
             TafsirKurdAyahEntryView(entry: entry)
         }
-        .configurationDisplayName("ئایەتا قورئانێ")
-        .description("ئایەتا بژاردەی خۆت نیشان بدە")
+        .configurationDisplayName(WT.t("widget.ayah.widget_name", "ئایەتا قورئانێ"))
+        .description(WT.t("widget.ayah.widget_desc", "ئایەتا بژاردەی خۆت نیشان بدە"))
         .supportedFamilies([.systemMedium, .systemLarge, .accessoryRectangular])
     }
 }
@@ -1046,8 +1075,8 @@ struct TafsirKurdGoalWidget: Widget {
         StaticConfiguration(kind: kind, provider: GoalProvider()) { entry in
             TafsirKurdGoalEntryView(entry: entry)
         }
-        .configurationDisplayName("ئامانجا ئیرۆ")
-        .description("پێشکەوتنی مانگرتن و ستریک")
+        .configurationDisplayName(WT.t("widget.goal.widget_name", "ئامانجا ئیرۆ"))
+        .description(WT.t("widget.goal.widget_desc", "پێشکەوتنی مانگرتن و ستریک"))
         .supportedFamilies([.systemMedium, .systemLarge, .accessoryRectangular])
     }
 }

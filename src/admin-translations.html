@@ -250,6 +250,14 @@
             white-space: nowrap;
         }
 
+        /* ===== Widget platform override badges ===== */
+        .t-widget-overrides { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .t-platform-override { font-size: 11px; padding: 2px 8px; border-radius: 12px; direction: rtl; unicode-bidi: plaintext; }
+        .ios-override     { background: #f5f3ff; color: #6d28d9; }
+        .android-override { background: #f0fdf4; color: #15803d; }
+        body.dark-mode .ios-override     { background: #2e1065; color: #c4b5fd; }
+        body.dark-mode .android-override { background: #052e16; color: #86efac; }
+
         /* ===== Copy toast on key ===== */
         .t-key { cursor: pointer; position: relative; }
         .t-key:hover { opacity: 0.7; }
@@ -1366,6 +1374,9 @@
                     <button class="platform-tab" onclick="setPlatform('notifications', this)">
                         <i data-lucide="bell" style="width:16px;height:16px"></i> Notifications <span class="tab-count" id="notifCount">--</span>
                     </button>
+                    <button class="platform-tab" onclick="setPlatform('widgets', this)">
+                        <i data-lucide="layout-dashboard" style="width:16px;height:16px"></i> Widgets <span class="tab-count" id="widgetCount">--</span>
+                    </button>
                 </div>
 
                 <div class="stats-row">
@@ -1401,6 +1412,25 @@
                         <div class="edit-field">
                             <label>Context (optional)</label>
                             <input type="text" id="newContext" placeholder="e.g. Hero section title, Button label...">
+                        </div>
+                        <!-- Widget-only fields (shown/hidden by toggleAddForm) -->
+                        <div class="edit-row" id="newWidgetGroupRow" style="display:none">
+                            <div class="edit-field">
+                                <label>Widget Group</label>
+                                <select id="newWidgetGroup">
+                                    <option value="prayer_widget">prayer_widget</option>
+                                    <option value="ayah_widget">ayah_widget</option>
+                                    <option value="goal_widget">goal_widget</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="edit-field" id="newIosTextRow" style="display:none">
+                            <label>🍎 iOS override (optional)</label>
+                            <textarea id="newIosText" placeholder="iOS-specific text — leave empty to use shared value" dir="rtl"></textarea>
+                        </div>
+                        <div class="edit-field" id="newAndroidTextRow" style="display:none">
+                            <label>🤖 Android override (optional)</label>
+                            <textarea id="newAndroidText" placeholder="Android-specific text — leave empty to use shared value" dir="rtl"></textarea>
                         </div>
                         <div class="edit-actions">
                             <button class="btn btn-secondary" onclick="toggleAddForm()">Cancel</button>
@@ -1469,7 +1499,7 @@
             'privacy-policy','terms-and-conditions','delete-account','footer'
         ];
         // For dropdowns (Add New / Edit)
-        const KNOWN_PAGES = WEB_PAGES.concat(['android','ios']);
+        const KNOWN_PAGES = WEB_PAGES.concat(['android','ios','widgets']);
 
         let allTranslations = [];
         let filteredList = [];
@@ -1566,28 +1596,32 @@
                 });
             } else if (activePlatform === 'notifications') {
                 return allTranslations.filter(function(t) { var c = t.category || ''; return c === 'notifications' || c === 'notification'; });
+            } else if (activePlatform === 'widgets') {
+                return allTranslations.filter(function(t) { return normalizePage(t.page) === 'widgets'; });
             } else {
-                // Web = everything except android, ios, and notifications
+                // Web = everything except android, ios, widgets, and notifications
                 return allTranslations.filter(function(t) {
                     var p = normalizePage(t.page);
                     var c = t.category || '';
-                    return p !== 'android' && p !== 'ios' && c !== 'notifications' && c !== 'notification';
+                    return p !== 'android' && p !== 'ios' && p !== 'widgets' && c !== 'notifications' && c !== 'notification';
                 });
             }
         }
 
         function updatePlatformCounts() {
-            var webCount = 0, mobileCount = 0, notifCount = 0;
+            var webCount = 0, mobileCount = 0, notifCount = 0, widgetCnt = 0;
             allTranslations.forEach(function(t) {
                 var c = t.category || '';
-                if (c === 'notifications' || c === 'notification') { notifCount++; return; }
                 var p = normalizePage(t.page);
+                if (c === 'notifications' || c === 'notification') { notifCount++; return; }
+                if (p === 'widgets') { widgetCnt++; return; }
                 if (p === 'android' || p === 'ios') mobileCount++;
                 else webCount++;
             });
             document.getElementById('webCount').textContent = webCount;
             document.getElementById('androidCount').textContent = mobileCount;
             document.getElementById('notifCount').textContent = notifCount;
+            document.getElementById('widgetCount').textContent = widgetCnt;
         }
 
         function populatePageDropdowns() {
@@ -1623,8 +1657,8 @@
         function updateStats() {
             var platformData = getPlatformData();
             document.getElementById('totalTranslations').textContent = platformData.length;
-            document.getElementById('pagesLabel').textContent = (activePlatform === 'mobile' || activePlatform === 'notifications') ? 'categories' : 'pages';
-            if (activePlatform === 'mobile' || activePlatform === 'notifications') {
+            document.getElementById('pagesLabel').textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? 'categories' : 'pages';
+            if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
                 // For app platforms, count categories
                 var cats = [];
                 platformData.forEach(function(t) {
@@ -1652,7 +1686,7 @@
             var isSearching = Array.isArray(filteredData);
 
             function getChipKey(t) {
-                return (activePlatform === 'mobile' || activePlatform === 'notifications')
+                return (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets')
                     ? (t.category || 'general')
                     : normalizePage(t.page);
             }
@@ -1897,6 +1931,25 @@
             }
             contentDiv.appendChild(textDiv);
 
+            // Widgets platform: show iOS/Android override values if set
+            if (activePlatform === 'widgets' && (t.ios_text || t.android_text)) {
+                var overridesDiv = document.createElement('div');
+                overridesDiv.className = 't-widget-overrides';
+                if (t.ios_text) {
+                    var iosBadge = document.createElement('span');
+                    iosBadge.className = 't-platform-override ios-override';
+                    iosBadge.textContent = '🍎 ' + t.ios_text;
+                    overridesDiv.appendChild(iosBadge);
+                }
+                if (t.android_text) {
+                    var droidBadge = document.createElement('span');
+                    droidBadge.className = 't-platform-override android-override';
+                    droidBadge.textContent = '🤖 ' + t.android_text;
+                    overridesDiv.appendChild(droidBadge);
+                }
+                contentDiv.appendChild(overridesDiv);
+            }
+
             if (t.context) {
                 var ctxDiv = document.createElement('div');
                 ctxDiv.className = 't-context';
@@ -1908,7 +1961,7 @@
             // Page badge
             var pageDiv = document.createElement('div');
             pageDiv.className = 't-page-badge';
-            pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications') ? (t.category || 'general') : normalizePage(t.page);
+            pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? (t.category || 'general') : normalizePage(t.page);
             row.appendChild(pageDiv);
 
             // Actions
@@ -2025,6 +2078,35 @@
             ctxField.appendChild(ctxInput);
             form.appendChild(ctxField);
 
+            // Widget platform: iOS and Android override text fields
+            if (normalizePage(t.page) === 'widgets') {
+                var iosField = document.createElement('div');
+                iosField.className = 'edit-field';
+                var iosLabel = document.createElement('label');
+                iosLabel.textContent = '🍎 iOS override (optional)';
+                var iosInput = document.createElement('textarea');
+                iosInput.id = 'editIos-' + t.id;
+                iosInput.value = t.ios_text || '';
+                iosInput.placeholder = 'iOS-specific text — leave empty to use shared value';
+                iosInput.setAttribute('dir', 'rtl');
+                iosField.appendChild(iosLabel);
+                iosField.appendChild(iosInput);
+                form.appendChild(iosField);
+
+                var droidField = document.createElement('div');
+                droidField.className = 'edit-field';
+                var droidLabel = document.createElement('label');
+                droidLabel.textContent = '🤖 Android override (optional)';
+                var droidInput = document.createElement('textarea');
+                droidInput.id = 'editAndroid-' + t.id;
+                droidInput.value = t.android_text || '';
+                droidInput.placeholder = 'Android-specific text — leave empty to use shared value';
+                droidInput.setAttribute('dir', 'rtl');
+                droidField.appendChild(droidLabel);
+                droidField.appendChild(droidInput);
+                form.appendChild(droidField);
+            }
+
             // Actions
             var actions = document.createElement('div');
             actions.className = 'edit-actions';
@@ -2106,9 +2188,15 @@
                 var oldText = oldItem ? oldItem.kurdish_text : '';
                 var oldKey  = oldItem ? oldItem.key_id : '';
 
+                var iosEl    = document.getElementById('editIos-' + id);
+                var droidEl  = document.getElementById('editAndroid-' + id);
+                var updateObj = { key_id: keyVal, kurdish_text: textVal, page: pageVal, context: ctxVal || '' };
+                if (iosEl   !== null) updateObj.ios_text     = iosEl.value.trim()   || null;
+                if (droidEl !== null) updateObj.android_text = droidEl.value.trim() || null;
+
                 var result = await supabase
                     .from('kurdish_translations')
-                    .update({ key_id: keyVal, kurdish_text: textVal, page: pageVal, context: ctxVal || '' })
+                    .update(updateObj)
                     .eq('id', id);
 
                 if (result.error) throw result.error;
@@ -2121,6 +2209,8 @@
                     item.kurdish_text = textVal;
                     item.page = pageVal;
                     item.context = ctxVal || '';
+                    if (iosEl   !== null) item.ios_text     = iosEl.value.trim()   || null;
+                    if (droidEl !== null) item.android_text = droidEl.value.trim() || null;
                 }
 
                 editingId = null;
@@ -2141,8 +2231,16 @@
             if (form.classList.contains('active')) {
                 document.getElementById('newKeyId').value = '';
                 document.getElementById('newKurdishText').value = '';
+                var isWidgetsPlatform = (activePlatform === 'widgets');
                 document.getElementById('newPage').value = (activePlatform === 'web') ? 'all' : (activePlatform === 'notifications' || activePlatform === 'mobile') ? 'android' : activePlatform;
                 document.getElementById('newContext').value = '';
+                document.getElementById('newWidgetGroupRow').style.display = isWidgetsPlatform ? '' : 'none';
+                document.getElementById('newIosTextRow').style.display = isWidgetsPlatform ? '' : 'none';
+                document.getElementById('newAndroidTextRow').style.display = isWidgetsPlatform ? '' : 'none';
+                if (isWidgetsPlatform) {
+                    document.getElementById('newIosText').value = '';
+                    document.getElementById('newAndroidText').value = '';
+                }
                 document.getElementById('newKeyId').focus();
             }
         }
@@ -2159,9 +2257,19 @@
             }
 
             try {
+                var insertObj = { key_id: keyVal, kurdish_text: textVal, page: pageVal, context: ctxVal || '' };
+                if (activePlatform === 'widgets') {
+                    insertObj.category = document.getElementById('newWidgetGroup').value || 'prayer_widget';
+                    var iosAddVal   = document.getElementById('newIosText').value.trim();
+                    var droidAddVal = document.getElementById('newAndroidText').value.trim();
+                    if (iosAddVal)   insertObj.ios_text     = iosAddVal;
+                    if (droidAddVal) insertObj.android_text = droidAddVal;
+                } else {
+                    insertObj.category = 'general';
+                }
                 var result = await supabase
                     .from('kurdish_translations')
-                    .insert([{ key_id: keyVal, kurdish_text: textVal, page: pageVal, category: 'general', context: ctxVal || '' }])
+                    .insert([insertObj])
                     .select()
                     .single();
 
@@ -2352,6 +2460,7 @@
                 var np = normalizePage(page);
                 if (np === 'android') return 'android';
                 if (np === 'ios') return 'ios';
+                if (np === 'widgets') return 'widgets';
             }
             // Fall back to key prefix
             if (!keyId) return 'web';

@@ -317,6 +317,7 @@ function init(){
             // Push fresh widget data if date or city changed since last push
             if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
             pushGoalDataToWidget();
+            syncWidgetTranslations();
             initDailyVerse();
             scheduleStreakReminder();
             checkNewVideoNotif();
@@ -474,6 +475,8 @@ function init(){
   // Push widget data from cache if date/city changed (runs without network)
   if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
   pushGoalDataToWidget();
+  // Sync widget translations from Supabase (once per day, requires network)
+  setTimeout(function(){syncWidgetTranslations();},3000);
   initDailyVerse();
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);
@@ -3997,6 +4000,39 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 
 // Unified helper — same plugin name as prayer.ui.js (proven to work).
 // @objc(SharedPrefsPlugin) → Capacitor exposes as "SharedPrefs" on iOS.
+// ── Widget translation sync ──────────────────────────────────────────────
+// Fetches widget.* keys from Supabase, resolves iOS override values,
+// and writes a flat key→text JSON blob to SharedPrefs key 'widgetTranslations'.
+// Widgets read this key from App Group UserDefaults at render time.
+// Called once on init and once per foreground resume (cached: skips if same day).
+function syncWidgetTranslations(){
+  var TODAY=dateKey(new Date());
+  var CACHE_KEY='widgetTranslationsSyncDate';
+  if(localStorage.getItem(CACHE_KEY)===TODAY){return;}// already synced today
+  var sb=window._supabase||window.supabase;
+  if(!sb){return;}// not signed in or Supabase unavailable
+  sb.from('kurdish_translations')
+    .select('key_id,kurdish_text,ios_text,android_text')
+    .eq('page','widgets')
+    .then(function(res){
+      if(res.error||!res.data||!res.data.length){return;}
+      var keys={};
+      res.data.forEach(function(row){
+        // iOS gets ios_text if set; otherwise shared kurdish_text
+        var val=(row.ios_text&&row.ios_text.trim())?row.ios_text.trim():(row.kurdish_text||'');
+        if(val)keys[row.key_id]=val;
+      });
+      var payload=JSON.stringify({v:1,ts:new Date().toISOString(),keys:keys});
+      _sharedPrefsSet('widgetTranslations',payload)
+        .then(function(){
+          localStorage.setItem(CACHE_KEY,TODAY);
+          console.log('[WidgetT9n] synced '+Object.keys(keys).length+' keys');
+        })
+        .catch(function(){/* non-iOS — silent */});
+    })
+    .catch(function(){/* network error — skip, try again next launch */});
+}
+
 function _sharedPrefsSet(key,value){
   var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefs;
   if(!sp){
