@@ -669,26 +669,25 @@ private struct NoAyahView: View {
     }
 }
 
-// Lock screen — Arabic text + optional reference, 2–3 lines
+// Lock screen — Arabic (13 pt, 2 lines) + reference (9 pt)
 private struct AyahLockView: View {
     let entry: AyahEntry
     var body: some View {
         if let d = entry.data {
-            VStack(alignment: .trailing, spacing: 3) {
+            VStack(alignment: .trailing, spacing: 5) {
                 Text(d.arabic)
-                    .font(.system(size: 10.5, weight: .regular))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundStyle(AnyShapeStyle(.primary))
                     .multilineTextAlignment(.trailing)
-                    .lineLimit(3)
+                    .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                if d.showReference {
-                    Text(d.reference)
-                        .font(.system(size: 8, weight: .light))
-                        .foregroundStyle(AnyShapeStyle(.secondary))
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
+                Text(d.reference)
+                    .font(.system(size: 9, weight: .light))
+                    .foregroundStyle(AnyShapeStyle(.secondary))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
             .environment(\.layoutDirection, .rightToLeft)
         } else {
             Text("کتێبی پیرۆز")
@@ -807,32 +806,23 @@ private struct NoGoalView: View {
     }
 }
 
-// Lock screen — 2-column: count/goal  |  streak
+// Lock screen — two numbers only: progress left, streak right (15 pt bold)
 private struct GoalLockView: View {
     let entry: GoalEntry
     var body: some View {
         if let d = entry.data {
-            HStack(spacing: 12) {
-                HStack(spacing: 0) {
-                    Text("ئایەت")
-                        .font(.system(size: 8, weight: .light))
-                        .foregroundStyle(AnyShapeStyle(.secondary)).lineLimit(1)
-                    Spacer(minLength: 3)
-                    Text("\(d.todayCount)/\(d.dailyGoal)")
-                        .font(.system(size: 10, weight: .medium).monospacedDigit())
-                        .foregroundStyle(AnyShapeStyle(.primary)).lineLimit(1)
-                }.frame(maxWidth: .infinity)
-                HStack(spacing: 0) {
-                    Text("🔥 ڕۆژ")
-                        .font(.system(size: 8, weight: .light))
-                        .foregroundStyle(AnyShapeStyle(.secondary)).lineLimit(1)
-                    Spacer(minLength: 3)
-                    Text("\(d.currentStreak)")
-                        .font(.system(size: 10, weight: .medium).monospacedDigit())
-                        .foregroundStyle(AnyShapeStyle(.primary)).lineLimit(1)
-                }.frame(maxWidth: .infinity)
+            HStack(alignment: .center, spacing: 0) {
+                Text("\(d.todayCount)/\(d.dailyGoal)")
+                    .font(.system(size: 15, weight: .bold).monospacedDigit())
+                    .foregroundStyle(AnyShapeStyle(.primary))
+                    .lineLimit(1)
+                Spacer()
+                Text("🔥 \(d.currentStreak)")
+                    .font(.system(size: 15, weight: .bold).monospacedDigit())
+                    .foregroundStyle(AnyShapeStyle(.primary))
+                    .lineLimit(1)
             }
-            .environment(\.layoutDirection, .rightToLeft)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             Text("ئامانجا ئیرۆ").font(.system(size: 10)).foregroundStyle(.secondary)
         }
