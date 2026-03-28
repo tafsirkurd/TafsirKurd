@@ -532,7 +532,7 @@ private extension View {
 
 // MARK: — Ayah widget data model
 
-private struct AyahWidgetData: Codable {
+struct AyahWidgetData: Codable {
     let chapter:       Int
     let verse:         Int
     let arabic:        String
@@ -556,7 +556,7 @@ private struct AyahWidgetData: Codable {
 
 // MARK: — Goal widget data model
 
-private struct GoalWidgetData: Codable {
+struct GoalWidgetData: Codable {
     let todayCount:    Int
     let dailyGoal:     Int
     let currentStreak: Int
@@ -580,12 +580,12 @@ private struct GoalWidgetData: Codable {
 
 // MARK: — Ayah widget timeline
 
-private struct AyahEntry: TimelineEntry {
+struct AyahEntry: TimelineEntry {
     let date: Date
     let data: AyahWidgetData?
 }
 
-private struct AyahProvider: TimelineProvider {
+struct AyahProvider: TimelineProvider {
     func placeholder(in _: Context) -> AyahEntry { .init(date: .now, data: nil) }
     func getSnapshot(in _: Context, completion: @escaping (AyahEntry) -> Void) {
         completion(.init(date: .now, data: AyahWidgetData.load()))
@@ -599,12 +599,12 @@ private struct AyahProvider: TimelineProvider {
 
 // MARK: — Goal widget timeline
 
-private struct GoalEntry: TimelineEntry {
+struct GoalEntry: TimelineEntry {
     let date: Date
     let data: GoalWidgetData?
 }
 
-private struct GoalProvider: TimelineProvider {
+struct GoalProvider: TimelineProvider {
     func placeholder(in _: Context) -> GoalEntry { .init(date: .now, data: nil) }
     func getSnapshot(in _: Context, completion: @escaping (GoalEntry) -> Void) {
         completion(.init(date: .now, data: GoalWidgetData.load()))
