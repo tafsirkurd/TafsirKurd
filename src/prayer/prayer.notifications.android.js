@@ -235,9 +235,7 @@
         var titleKey = 'prayer.notif_title_' + name.toLowerCase();
         var title = window.t ? window.t(titleKey) : pName;
         if (!title || title === titleKey) title = pName; // fallback to prayer name if key missing
-        var body  = window.t
-          ? window.t('prayer.notif_body', { prayer: pName })
-          : ('نوکە دەمێ بانگێ ' + pName + ' یە');
+        var body = 'نوکە دەمێ بانگێ ' + pName + ' یە';
 
         var notif = {
           id: id,
