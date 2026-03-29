@@ -164,12 +164,12 @@ struct PrayerWidgetData: Codable {
         for n in kPrayerOrder {
             if let t = prayerDate(n), t > now {
                 wLog.info("nextPrayer: found \(n) at \(t)")
-                return (n, t, kKurdish[n] ?? n)
+                return (n, t, kn(n))
             }
         }
         wLog.warning("nextPrayer: all prayers passed, using tomorrow Fajr fallback")
         if let fajrTomorrow = prayerDate("Fajr", dayOffset: 1) {
-            return ("Fajr", fajrTomorrow, kKurdish["Fajr"] ?? "سپێدە")
+            return ("Fajr", fajrTomorrow, kn("Fajr"))
         }
         return nil
     }
@@ -327,7 +327,7 @@ private struct SmallView: View {
     var body: some View {
         if let d = entry.data {
             let n        = entry.next
-            let showName = n?.ku   ?? (kKurdish["Fajr"] ?? "سپێدە")
+            let showName = n?.ku   ?? kn("Fajr")
             let showKey  = n?.name ?? "Fajr"
             VStack(alignment: .trailing, spacing: 0) {
                 CityLabel(city: d.city)
@@ -415,7 +415,7 @@ private struct LargeView: View {
         if let d = entry.data {
             let n          = entry.next
             let bottomName = n?.name ?? "Fajr"
-            let bottomKu   = n?.ku   ?? (kKurdish["Fajr"] ?? "سپێدە")
+            let bottomKu   = n?.ku   ?? kn("Fajr")
             VStack(spacing: 0) {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 3) {
