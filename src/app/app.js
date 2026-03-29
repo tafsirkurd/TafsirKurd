@@ -5403,6 +5403,28 @@ App.openLogin=function(){
   }
   function clearMsg(){msg.className='auth-message';msg.textContent=''}
 
+  // Translate common Supabase auth error strings to user-friendly Badini messages.
+  // Technical details are logged separately; users never see raw API strings.
+  function _mapAuthError(msg){
+    if(!msg)return t('error.generic');
+    var m=msg.toLowerCase();
+    if(m.indexOf('invalid login')!==-1||m.indexOf('invalid credentials')!==-1||m.indexOf('wrong password')!==-1)
+      return t('auth.err_wrong_credentials')||'Email an jî şîfre şaş e.';
+    if(m.indexOf('email not confirmed')!==-1||m.indexOf('not confirmed')!==-1)
+      return t('auth.err_email_not_confirmed')||'E-name pejirandî nîn e. Sanduqa xwe kontrol bike.';
+    if(m.indexOf('too many requests')!==-1||m.indexOf('rate limit')!==-1||m.indexOf('over_email_send_rate_limit')!==-1)
+      return t('auth.err_rate_limit')||'Gelek caran hewl daye. Hinekî bisekine û dûbaré biceribîne.';
+    if(m.indexOf('user already registered')!==-1||m.indexOf('already been registered')!==-1||m.indexOf('already exists')!==-1)
+      return t('auth.err_already_registered')||'Ev e-name berê hatiye tomarkirin. Têkeve hesabê xwe.';
+    if(m.indexOf('network')!==-1||m.indexOf('fetch')!==-1)
+      return t('auth.err_network')||'Yek pirsgirêka torê derket. Girêdana xwe kontrol bike.';
+    if(m.indexOf('token')!==-1&&m.indexOf('expired')!==-1)
+      return t('auth.err_token_expired')||'Koda xwe ya pejirandinê derbasbûye. Koda nû bixwaze.';
+    if(m.indexOf('token')!==-1&&(m.indexOf('invalid')!==-1||m.indexOf('wrong')!==-1))
+      return t('auth.err_token_invalid')||'Koda te şaş e. Kontrol bike û dûbaré biceribîne.';
+    return t('error.generic');
+  }
+
   function buildSigninForm(){
     clear(forms);
     var f=el('div','auth-form');
@@ -5410,48 +5432,58 @@ App.openLogin=function(){
     var emailGrp=el('div','auth-form-group');
     var emailInput=document.createElement('input');
     emailInput.className='auth-form-input';emailInput.type='email';emailInput.placeholder=t('auth.email');emailInput.dir='ltr';
+    on(emailInput,'focus',clearMsg);
     emailGrp.appendChild(emailInput);
     f.appendChild(emailGrp);
 
     var passGrp=el('div','auth-form-group');
     var passInput=document.createElement('input');
     passInput.className='auth-form-input';passInput.type='password';passInput.placeholder=t('auth.password');passInput.dir='ltr';
+    on(passInput,'focus',clearMsg);
     passGrp.appendChild(passInput);
     f.appendChild(passGrp);
 
-    var submitBtn=el('button','auth-submit-btn',t('auth.login'));
-    on(submitBtn,'click',function(){
+    // Enter on email → focus password; Enter on password → submit
+    on(emailInput,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();passInput.focus();}});
+
+    function doSignin(){
       var email=emailInput.value.trim();
       var pass=passInput.value;
       if(!email||!pass){showMsg(t('auth.fill_all'),'error');return}
       clearMsg();
       submitBtn.disabled=true;submitBtn.textContent='...';
       S.supabase.auth.signInWithPassword({email:email,password:pass}).then(function(resp){
-        if(resp.error){showMsg(resp.error.message,'error');submitBtn.disabled=false;submitBtn.textContent=t('auth.login');return}
+        if(resp.error){
+          console.warn('[Auth] signin error:',resp.error.message);
+          showMsg(_mapAuthError(resp.error.message),'error');
+          submitBtn.disabled=false;submitBtn.textContent=t('auth.login');
+          return;
+        }
         var session=resp.data.session;
         if(!session){
-          // Session might be null if email not confirmed; try getSession
           S.supabase.auth.getSession().then(function(r2){
-            if(r2.data&&r2.data.session){
-              checkProfileComplete(r2.data.session);
-            }else{
-              showMsg(t('auth.verify_email'),'info');
-              submitBtn.disabled=false;submitBtn.textContent=t('auth.login');
-            }
+            if(r2.data&&r2.data.session){checkProfileComplete(r2.data.session);}
+            else{showMsg(t('auth.verify_email'),'info');submitBtn.disabled=false;submitBtn.textContent=t('auth.login');}
           });
           return;
         }
         checkProfileComplete(session);
-      }).catch(function(e){showMsg(e.message||t('error.generic'),'error');submitBtn.disabled=false;submitBtn.textContent=t('auth.login')});
-    });
+      }).catch(function(e){
+        console.error('[Auth] signin catch:',e);
+        showMsg(_mapAuthError(e.message),'error');
+        submitBtn.disabled=false;submitBtn.textContent=t('auth.login');
+      });
+    }
+    on(passInput,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSignin();}});
+
+    var submitBtn=el('button','auth-submit-btn',t('auth.login'));
+    on(submitBtn,'click',doSignin);
     f.appendChild(submitBtn);
 
-    // OAuth buttons
     var divider=el('div','auth-divider');
     divider.appendChild(el('span','',t('auth.or')));
     f.appendChild(divider);
 
-    // Sign in with Apple — iOS only, shown first per Apple Guideline 4.8
     if(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios'){
       var appleBtn=el('button','auth-apple-btn');
       appleBtn.appendChild(icon('fab fa-apple'));
@@ -5463,7 +5495,7 @@ App.openLogin=function(){
     var googleBtn=el('button','auth-google-btn');
     googleBtn.appendChild(icon('fab fa-google'));
     googleBtn.appendChild(el('span','',t('auth.google_login')));
-    on(googleBtn,'click',function(){signInWithGoogle()});
+    on(googleBtn,'click',function(){signInWithGoogle(googleBtn)});
     f.appendChild(googleBtn);
 
     var guestBtn=el('button','auth-guest-btn',t('auth.continue_guest'));
@@ -5480,23 +5512,28 @@ App.openLogin=function(){
     var nameGrp=el('div','auth-form-group');
     var nameInput=document.createElement('input');
     nameInput.className='auth-form-input';nameInput.type='text';nameInput.placeholder=t('auth.name');
+    on(nameInput,'focus',clearMsg);
     nameGrp.appendChild(nameInput);
     f.appendChild(nameGrp);
 
     var emailGrp=el('div','auth-form-group');
     var emailInput=document.createElement('input');
     emailInput.className='auth-form-input';emailInput.type='email';emailInput.placeholder=t('auth.email');emailInput.dir='ltr';
+    on(emailInput,'focus',clearMsg);
     emailGrp.appendChild(emailInput);
     f.appendChild(emailGrp);
 
     var passGrp=el('div','auth-form-group');
     var passInput=document.createElement('input');
     passInput.className='auth-form-input';passInput.type='password';passInput.placeholder=t('auth.password');passInput.dir='ltr';
+    on(passInput,'focus',clearMsg);
     passGrp.appendChild(passInput);
     f.appendChild(passGrp);
 
-    var submitBtn=el('button','auth-submit-btn',t('auth.signup'));
-    on(submitBtn,'click',function(){
+    on(nameInput,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();emailInput.focus();}});
+    on(emailInput,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();passInput.focus();}});
+
+    function doSignup(){
       var name=nameInput.value.trim();
       var email=emailInput.value.trim();
       var pass=passInput.value;
@@ -5508,19 +5545,29 @@ App.openLogin=function(){
         email:email,password:pass,
         options:{data:{full_name:name,registration_source:'email'}}
       }).then(function(resp){
-        if(resp.error){showMsg(resp.error.message,'error');submitBtn.disabled=false;submitBtn.textContent=t('auth.signup');return}
-        // Show OTP verification
+        if(resp.error){
+          console.warn('[Auth] signup error:',resp.error.message);
+          showMsg(_mapAuthError(resp.error.message),'error');
+          submitBtn.disabled=false;submitBtn.textContent=t('auth.signup');
+          return;
+        }
         buildOtpForm(email);
-      }).catch(function(e){showMsg(e.message||t('error.generic'),'error');submitBtn.disabled=false;submitBtn.textContent=t('auth.signup')});
-    });
+      }).catch(function(e){
+        console.error('[Auth] signup catch:',e);
+        showMsg(_mapAuthError(e.message),'error');
+        submitBtn.disabled=false;submitBtn.textContent=t('auth.signup');
+      });
+    }
+    on(passInput,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSignup();}});
+
+    var submitBtn=el('button','auth-submit-btn',t('auth.signup'));
+    on(submitBtn,'click',doSignup);
     f.appendChild(submitBtn);
 
-    // OAuth buttons
     var divider=el('div','auth-divider');
     divider.appendChild(el('span','',t('auth.or')));
     f.appendChild(divider);
 
-    // Sign in with Apple — iOS only, shown first per Apple Guideline 4.8
     if(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios'){
       var appleBtn=el('button','auth-apple-btn');
       appleBtn.appendChild(icon('fab fa-apple'));
@@ -5532,7 +5579,7 @@ App.openLogin=function(){
     var googleBtn=el('button','auth-google-btn');
     googleBtn.appendChild(icon('fab fa-google'));
     googleBtn.appendChild(el('span','',t('auth.google_signup')));
-    on(googleBtn,'click',function(){signInWithGoogle()});
+    on(googleBtn,'click',function(){signInWithGoogle(googleBtn)});
     f.appendChild(googleBtn);
 
     var guestBtn=el('button','auth-guest-btn',t('auth.continue_guest'));
@@ -5550,25 +5597,57 @@ App.openLogin=function(){
 
     var otpGrp=el('div','auth-form-group');
     var otpInput=document.createElement('input');
-    otpInput.className='auth-form-input';otpInput.type='text';otpInput.placeholder=t('auth.otp_placeholder');otpInput.dir='ltr';otpInput.maxLength=6;
+    otpInput.className='auth-form-input';otpInput.type='text';otpInput.placeholder=t('auth.otp_placeholder');
+    otpInput.dir='ltr';otpInput.maxLength=6;otpInput.inputMode='numeric';otpInput.autocomplete='one-time-code';
+    on(otpInput,'focus',clearMsg);
     otpGrp.appendChild(otpInput);
     f.appendChild(otpGrp);
 
-    var submitBtn=el('button','auth-submit-btn',t('auth.verify'));
-    on(submitBtn,'click',function(){
+    function doVerify(){
       var token=otpInput.value.trim();
       if(!token){showMsg(t('auth.enter_code'),'error');return}
       clearMsg();
       submitBtn.disabled=true;submitBtn.textContent='...';
+      resendBtn.disabled=true;
       S.supabase.auth.verifyOtp({email:email,token:token,type:'signup'}).then(function(resp){
-        if(resp.error){showMsg(resp.error.message,'error');submitBtn.disabled=false;submitBtn.textContent=t('auth.verify');return}
-        // Create profile
+        if(resp.error){
+          console.warn('[Auth] OTP error:',resp.error.message);
+          showMsg(_mapAuthError(resp.error.message),'error');
+          submitBtn.disabled=false;submitBtn.textContent=t('auth.verify');
+          resendBtn.disabled=false;
+          return;
+        }
         createAppProfile(resp.data.session);
-      }).catch(function(e){showMsg(e.message||t('error.generic'),'error');submitBtn.disabled=false;submitBtn.textContent=t('auth.verify')});
-    });
+      }).catch(function(e){
+        console.error('[Auth] OTP catch:',e);
+        showMsg(_mapAuthError(e.message),'error');
+        submitBtn.disabled=false;submitBtn.textContent=t('auth.verify');
+        resendBtn.disabled=false;
+      });
+    }
+    on(otpInput,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();doVerify();}});
+
+    var submitBtn=el('button','auth-submit-btn',t('auth.verify'));
+    on(submitBtn,'click',doVerify);
     f.appendChild(submitBtn);
 
+    var resendBtn=el('button','auth-guest-btn',t('auth.resend_code')||'Koda nû bişîne');
+    on(resendBtn,'click',function(){
+      resendBtn.disabled=true;resendBtn.textContent='...';
+      S.supabase.auth.resend({type:'signup',email:email}).then(function(){
+        showMsg(t('auth.code_resent')||'Koda nû hat şandin.','info');
+        setTimeout(function(){resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'Koda nû bişîne';},30000);
+      }).catch(function(e){
+        console.warn('[Auth] resend error:',e);
+        showMsg(_mapAuthError(e.message),'error');
+        resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'Koda nû bişîne';
+      });
+    });
+    f.appendChild(resendBtn);
+
     forms.appendChild(f);
+    // Auto-focus OTP input after render
+    setTimeout(function(){otpInput.focus();},100);
   }
 
   function loginSuccess(session){
@@ -5614,8 +5693,12 @@ App.openLogin=function(){
     }).catch(function(){loginSuccess(session)});
   }
 
-  function signInWithGoogle(){
+  var _googleBusy=false;
+  function signInWithGoogle(btn){
+    if(_googleBusy)return;
     if(!S.supabase){showMsg(t('error.system_not_ready'),'error');return}
+    _googleBusy=true;
+    if(btn){btn.disabled=true;btn.style.opacity='0.6';}
 
     var redirectUrl='com.tafsirkurd.app://auth/callback';
     if(!window.Capacitor||!window.Capacitor.isNativePlatform()){
@@ -5630,7 +5713,13 @@ App.openLogin=function(){
         skipBrowserRedirect:true
       }
     }).then(function(resp){
-      if(resp.error){showMsg(resp.error.message,'error');return}
+      if(resp.error){
+        console.warn('[Google] OAuth error:',resp.error.message);
+        showMsg(_mapAuthError(resp.error.message),'error');
+        _googleBusy=false;
+        if(btn){btn.disabled=false;btn.style.opacity='';}
+        return;
+      }
       if(resp.data&&resp.data.url){
         if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
           window.Capacitor.Plugins.Browser.open({url:resp.data.url});
@@ -5638,7 +5727,17 @@ App.openLogin=function(){
           window.location.href=resp.data.url;
         }
       }
-    }).catch(function(e){showMsg(e.message||t('error.generic'),'error')});
+      // Browser opened — restore button after 3s so user can retry if browser dismissed
+      setTimeout(function(){
+        _googleBusy=false;
+        if(btn){btn.disabled=false;btn.style.opacity='';}
+      },3000);
+    }).catch(function(e){
+      console.error('[Google] OAuth catch:',e);
+      showMsg(_mapAuthError(e.message),'error');
+      _googleBusy=false;
+      if(btn){btn.disabled=false;btn.style.opacity='';}
+    });
   }
 
   function _genNonce(len){
@@ -5681,14 +5780,14 @@ App.openLogin=function(){
       if(!resp)return;
       if(resp.error){
         console.error('[Apple] Supabase token exchange error:',resp.error.message);
-        showMsg(resp.error.message,'error');
+        showMsg(t('error.apple_failed')||'Apple sign-in failed. Please try again.','error');
         return;
       }
       var session=resp.data&&resp.data.session;
       console.log('[Apple] Supabase session OK — user:',session&&session.user&&session.user.email);
       if(session){
-        setUserFromSession(session);
-        App.closeLogin();
+        // checkProfileComplete handles profile creation + startCloudSync + loginSuccess
+        checkProfileComplete(session);
       }
     }).catch(function(e){
       var code=e&&e.data&&e.data.errorCode;
