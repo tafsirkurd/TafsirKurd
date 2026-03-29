@@ -47,7 +47,11 @@
             gap: 0;
             margin-bottom: 24px;
             border-bottom: 2px solid var(--border-light);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
         }
+        .platform-tabs::-webkit-scrollbar { display: none; }
         .platform-tab {
             padding: 12px 24px;
             font-size: 14px;
@@ -63,6 +67,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
         .platform-tab:hover {
             color: var(--text-primary);
@@ -85,7 +91,11 @@
         }
         @media (max-width: 768px) {
             .platform-tabs { margin-bottom: 16px; }
-            .platform-tab { padding: 10px 16px; font-size: 13px; }
+            .platform-tab { padding: 10px 14px; font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            .platform-tab { padding: 9px 12px; font-size: 12px; gap: 5px; }
+            .platform-tab .tab-count { padding: 1px 6px; font-size: 10px; }
         }
 
         /* ===== Stats ===== */
@@ -1377,6 +1387,9 @@
                     <button class="platform-tab" onclick="setPlatform('widgets', this)">
                         <i data-lucide="layout-dashboard" style="width:16px;height:16px"></i> Widgets <span class="tab-count" id="widgetCount">--</span>
                     </button>
+                    <button class="platform-tab" onclick="setPlatform('updates', this)">
+                        <i data-lucide="arrow-up-circle" style="width:16px;height:16px"></i> Updates <span class="tab-count" id="updatesCount">--</span>
+                    </button>
                 </div>
 
                 <div class="stats-row">
@@ -1598,23 +1611,26 @@
                 return allTranslations.filter(function(t) { var c = t.category || ''; return c === 'notifications' || c === 'notification'; });
             } else if (activePlatform === 'widgets') {
                 return allTranslations.filter(function(t) { return normalizePage(t.page) === 'widgets'; });
+            } else if (activePlatform === 'updates') {
+                return allTranslations.filter(function(t) { return normalizePage(t.page) === 'updates'; });
             } else {
-                // Web = everything except android, ios, widgets, and notifications
+                // Web = everything except android, ios, widgets, notifications, updates
                 return allTranslations.filter(function(t) {
                     var p = normalizePage(t.page);
                     var c = t.category || '';
-                    return p !== 'android' && p !== 'ios' && p !== 'widgets' && c !== 'notifications' && c !== 'notification';
+                    return p !== 'android' && p !== 'ios' && p !== 'widgets' && p !== 'updates' && c !== 'notifications' && c !== 'notification';
                 });
             }
         }
 
         function updatePlatformCounts() {
-            var webCount = 0, mobileCount = 0, notifCount = 0, widgetCnt = 0;
+            var webCount = 0, mobileCount = 0, notifCount = 0, widgetCnt = 0, updatesCnt = 0;
             allTranslations.forEach(function(t) {
                 var c = t.category || '';
                 var p = normalizePage(t.page);
                 if (c === 'notifications' || c === 'notification') { notifCount++; return; }
                 if (p === 'widgets') { widgetCnt++; return; }
+                if (p === 'updates') { updatesCnt++; return; }
                 if (p === 'android' || p === 'ios') mobileCount++;
                 else webCount++;
             });
@@ -1622,6 +1638,7 @@
             document.getElementById('androidCount').textContent = mobileCount;
             document.getElementById('notifCount').textContent = notifCount;
             document.getElementById('widgetCount').textContent = widgetCnt;
+            document.getElementById('updatesCount').textContent = updatesCnt;
         }
 
         function populatePageDropdowns() {
@@ -1637,14 +1654,24 @@
 
         async function loadTranslations() {
             try {
-                var result = await supabase
-                    .from('kurdish_translations')
-                    .select('*')
-                    .order('page', { ascending: true })
-                    .order('key_id', { ascending: true });
-
-                if (result.error) throw result.error;
-                allTranslations = result.data || [];
+                // Paginate — Supabase default cap is 1000 rows per request
+                var allData = [];
+                var from = 0;
+                var PAGE_SIZE = 1000;
+                while (true) {
+                    var result = await supabase
+                        .from('kurdish_translations')
+                        .select('*')
+                        .order('page', { ascending: true })
+                        .order('key_id', { ascending: true })
+                        .range(from, from + PAGE_SIZE - 1);
+                    if (result.error) throw result.error;
+                    var rows = result.data || [];
+                    allData = allData.concat(rows);
+                    if (rows.length < PAGE_SIZE) break;
+                    from += PAGE_SIZE;
+                }
+                allTranslations = allData;
                 updateStats();
                 populatePageFilter();
                 filterTranslations();

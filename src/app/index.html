@@ -157,6 +157,15 @@ body{background:var(--bg);color:var(--text)}
 .app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t);opacity:0;transition:opacity .35s ease}
 .app.visible{opacity:1}
 
+/* ===== FORCE UPDATE OVERLAY ===== */
+.fu-overlay{display:none;position:fixed;inset:0;z-index:99999;background:var(--bg,#0a0a0a);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;gap:0}
+.fu-overlay.on{display:flex}
+.fu-logo{width:80px;height:80px;border-radius:20px;object-fit:contain;margin-bottom:28px}
+.fu-icon{font-size:2.4rem;color:var(--accent,#2e7d50);margin-bottom:20px}
+.fu-title{font-size:1.4rem;font-weight:800;color:var(--text,#f0f0f0);margin-bottom:12px;direction:rtl}
+.fu-msg{font-size:.92rem;color:var(--text2,#aaa);line-height:1.7;direction:rtl;max-width:300px;margin-bottom:36px}
+.fu-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:300px;padding:16px 24px;border-radius:var(--r-l,14px);background:var(--accent,#2e7d50);color:var(--accent-t,#fff);font-size:1rem;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
 /* ===== TAB PANELS ===== */
 .panel{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px)}
 #panelQuran{padding-bottom:0}
@@ -1642,6 +1651,18 @@ body{background:var(--bg);color:var(--text)}
 <div aria-hidden="true" style="position:fixed;top:-200px;left:-200px;pointer-events:none;font-family:'KFGQPC Hafs',serif;font-size:1px;opacity:0">بسم الله</div>
 
 <!-- SPLASH -->
+<!-- FORCE UPDATE OVERLAY (shown if app version < min required) -->
+<div class="fu-overlay" id="fuOverlay">
+  <img src="/assets/images/logo.png" class="fu-logo" alt="">
+  <div class="fu-icon"><i class="fas fa-arrow-up-from-bracket"></i></div>
+  <div class="fu-title" id="fuTitle" data-i18n="update.title">نوێکردنەوەی پێویستە</div>
+  <div class="fu-msg" id="fuMsg" data-i18n="update.message">وەشانێکی نوێیی بەردەستە. تکایە بۆ بەردەوامبوون بەرنامە نوێبکەرەوە.</div>
+  <button class="fu-btn" id="fuBtn" onclick="ForceUpdate.openStore()">
+    <i class="fas fa-download"></i>
+    <span data-i18n="update.btn">نوێبکەرەوە</span>
+  </button>
+</div>
+
 <div class="splash" id="splash">
   <img src="/assets/images/logo.png" class="splash-logo" alt="">
   <div class="splash-bar-wrap"><div class="splash-bar-fill" id="splashBarFill"></div></div>

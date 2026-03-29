@@ -4,6 +4,85 @@
 (function(){
 'use strict';
 
+/* ===== FORCE UPDATE ===== */
+window.ForceUpdate = (function(){
+  var CACHE_KEY = 'tk_update_cfg_v1';
+  var _storeUrl = '';
+
+  function compareVersions(a, b) {
+    var pa = String(a).split('.').map(Number);
+    var pb = String(b).split('.').map(Number);
+    for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
+      var x = pa[i] || 0, y = pb[i] || 0;
+      if (x < y) return -1;
+      if (x > y) return 1;
+    }
+    return 0;
+  }
+
+  function readCache() {
+    try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch(e) { return null; }
+  }
+
+  function writeCache(cfg) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cfg)); } catch(e) {}
+  }
+
+  async function fetchConfig() {
+    try {
+      var r = await fetch('/update-config', { cache: 'no-cache' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var cfg = await r.json();
+      if (cfg && !cfg.error) { writeCache(cfg); return cfg; }
+    } catch(e) {}
+    return readCache(); // offline fallback
+  }
+
+  function showOverlay() {
+    var o = document.getElementById('fuOverlay');
+    if (o) o.classList.add('on');
+    // Apply latest translations
+    if (window.i18n) window.i18n.applyTranslations();
+  }
+
+  async function check() {
+    try {
+      if (!window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.App) return;
+      var info = await Capacitor.Plugins.App.getInfo();
+      var version = info.version;
+      var platform = Capacitor.getPlatform ? Capacitor.getPlatform() : 'web';
+      if (platform === 'web') return;
+
+      var cfg = await fetchConfig();
+      if (!cfg) return;
+      if (cfg.force_update_enabled !== 'true') return;
+
+      var minVersion = platform === 'ios' ? cfg.min_ios_version : cfg.min_android_version;
+      if (!minVersion) return;
+
+      _storeUrl = platform === 'ios' ? (cfg.ios_store_url || '') : (cfg.android_store_url || '');
+
+      if (compareVersions(version, minVersion) < 0) {
+        console.log('[ForceUpdate] version', version, '< min', minVersion, '— blocking');
+        showOverlay();
+      }
+    } catch(e) {
+      console.warn('[ForceUpdate] check error:', e);
+    }
+  }
+
+  function openStore() {
+    if (_storeUrl) {
+      try { window.Capacitor.Plugins.Browser
+              ? Capacitor.Plugins.Browser.open({ url: _storeUrl })
+              : window.open(_storeUrl, '_system');
+      } catch(e) { window.open(_storeUrl, '_system'); }
+    }
+  }
+
+  return { check: check, openStore: openStore };
+})();
+
 /* ===== i18n ===== */
 function t(k,v){return window.t?window.t(k,v):k}
 
@@ -308,7 +387,9 @@ function init(){
             // Sync data when app goes to background
             if(S.user)syncToCloud();
           } else {
-            // App came to foreground — cancel any athan notifications whose athan has completed
+            // App came to foreground — check for forced update first
+            ForceUpdate.check();
+            // Cancel any athan notifications whose athan has completed
             if(window.PrayerNotifications&&PrayerNotifications.cancelFiredAthanNotifications){
               PrayerNotifications.cancelFiredAthanNotifications();
             }
@@ -6662,6 +6743,9 @@ function startApp(){
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||22)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
+  // Force-update check runs early — parallel with i18n, non-blocking
+  ForceUpdate.check();
+
   if(window.i18n){
     i18n.initLang().then(function(){
       console.log('[Startup] i18n ready (all layers)',Date.now()-_startupT0,'ms');
