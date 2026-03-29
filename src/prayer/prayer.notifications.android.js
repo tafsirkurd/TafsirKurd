@@ -232,10 +232,10 @@
 
         var id    = ID_BASE + dayOffset * 5 + PRAYER_IDX[name];
         var pName = prayerName(name);
-        var titleKey = 'prayer.notif_title_' + name.toLowerCase();
-        var title = window.t ? window.t(titleKey) : pName;
-        if (!title || title === titleKey) title = pName; // fallback to prayer name if key missing
-        var body = 'نوکە دەمێ بانگێ ' + pName + ' یە';
+        var title = window.t ? window.t('prayer.notif_title') : 'بانگ';
+        var bodyKey = 'prayer.notif_body_' + name.toLowerCase();
+        var body = window.t ? window.t(bodyKey) : ('نوکە دەمێ بانگێ ' + pName + ' یە');
+        if (!body || body === bodyKey) body = 'نوکە دەمێ بانگێ ' + pName + ' یە';
 
         var notif = {
           id: id,
