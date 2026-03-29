@@ -7,7 +7,15 @@
 <title>Tafsir Kurd</title>
 
 <script>
-(function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();
+(function(){
+  var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');
+  var theme=t||(p.darkMode?'dark':'light');
+  document.documentElement.setAttribute('data-theme',theme);
+  // Kill white flash: set bg on html+body immediately before any CSS class renders
+  var bg={dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc',light:'#fafafa'}[theme]||'#0a0a0a';
+  document.documentElement.style.background=bg;
+  document.documentElement.style.setProperty('--bg',bg);
+})();
 // Device-safe rendering detection — default OFF, only enable on confirmed safe devices
 (function(){
   var ua=navigator.userAgent;
