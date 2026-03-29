@@ -112,8 +112,6 @@
   function setToggles(v) { if (window.S) S.prayerToggles = v;      localStorage.setItem('prayerToggles', JSON.stringify(v)); }
   function getAthanVoice()    { return localStorage.getItem('prayerAthanVoice') || 'mishary'; }
   function setAthanVoice(v)   { localStorage.setItem('prayerAthanVoice', v); }
-  function getAthanDuration() { var v = parseInt(localStorage.getItem('prayerAthanDuration')); return (isNaN(v) || v <= 0) ? 0 : v; }
-  function setAthanDuration(v){ localStorage.setItem('prayerAthanDuration', String(v)); }
   function setFormat(v)       { localStorage.setItem('prayerTimeFormat', v); }
 
   function clearEl(el) { while (el.firstChild) el.removeChild(el.firstChild); }
@@ -1678,7 +1676,6 @@
       var allOn = {};
       window.PrayerLogic.NOTIF_PRAYERS.forEach(function(n) { allOn[n] = true; });
       setToggles(allOn);
-      setAthanDuration(0);
       setAthanVoice('mishary');
       if (_currentTimings && _currentDateISO) {
         _athanSettingsKey = null; // force rebuild after reset
@@ -1732,7 +1729,7 @@
     // Intentionally excludes next.name — which prayer is "next" changes every few
     // hours and must NOT trigger a full clearEl() rebuild while the sheet is open.
     // The timings availability flag ('0'/'1') handles the null→real data transition.
-    var newKey = city + ':' + dateISO + ':' + use12h + ':' + isOn + ':' + (timings ? '1' : '0') + ':' + getAthanVoice() + ':' + getAthanDuration() + ':' + JSON.stringify(getToggles());
+    var newKey = city + ':' + dateISO + ':' + use12h + ':' + isOn + ':' + (timings ? '1' : '0') + ':' + getAthanVoice() + ':' + JSON.stringify(getToggles());
     if (!force && newKey === _athanSettingsKey && container.firstChild) {
       // Just update the header subtitle — content is already correct
       var hdrSubFast = document.getElementById('as2HdrCitySub');
@@ -1846,66 +1843,6 @@
       container.appendChild(reciterWrap);
     }
 
-    // ── Duration (Android only — iOS has no athan audio) ──────────
-    if (!_isIOS) {
-      container.appendChild(secTitle(tStr('prayer.duration_label'), ' as2-dimable' + (isOn ? '' : ' as2-dim')));
-      var durWrap = cel('div', 'as2-dimable' + (isOn ? '' : ' as2-dim'));
-      buildDurationPicker(durWrap);
-      container.appendChild(durWrap);
-    }
-
-    // ── Notification preview ──────────────────────────────────────
-    container.appendChild(secTitle(tStr('prayer.test_label') || 'پێشبینین'));
-
-    var notifWrap = cel('div', 'as2-notif-wrap');
-    var notifSys = cel('div', 'as2-notif-sys');
-    var notifSysDot = cel('div', 'as2-notif-sys-dot');
-    var notifSysApp = cel('span', 'as2-notif-sys-app');
-    notifSysApp.textContent = 'TafsirKurd';
-    var notifSysTime = cel('span', 'as2-notif-sys-time');
-    notifSysTime.textContent = tStr('prayer.notif_now', 'هێستا');
-    notifSys.appendChild(notifSysDot);
-    notifSys.appendChild(notifSysApp);
-    notifSys.appendChild(notifSysTime);
-    notifWrap.appendChild(notifSys);
-
-    var notifBody = cel('div', 'as2-notif-body');
-    var notifIcon = cel('div', 'as2-notif-icon');
-    var notifIconI = document.createElement('i');
-    notifIconI.className = 'fas fa-mosque';
-    notifIcon.appendChild(notifIconI);
-    var notifTexts = cel('div', 'as2-notif-texts');
-    var notifTitle = cel('div', 'as2-notif-title');
-    notifTitle.textContent = tStr('prayer.notif_title');
-    var notifSub = cel('div', 'as2-notif-sub');
-    notifSub.textContent = tStr('prayer.test_notif_body');
-    notifTexts.appendChild(notifTitle);
-    notifTexts.appendChild(notifSub);
-    notifBody.appendChild(notifIcon);
-    notifBody.appendChild(notifTexts);
-    notifWrap.appendChild(notifBody);
-    container.appendChild(notifWrap);
-
-    // Test bell button (small, inline below mockup)
-    var testRow = cel('div', 'as2-test-row');
-    var testBtn = cel('button', 'as2-test-btn');
-    var testBtnI = document.createElement('i');
-    testBtnI.className = 'fas fa-bell';
-    testBtn.appendChild(testBtnI);
-    testBtn.appendChild(document.createTextNode(' ' + tStr('prayer.test_btn')));
-    testBtn.onclick = function() {
-      testBtn.disabled = true;
-      testBtn.style.opacity = '0.5';
-      window.PrayerNotifications.scheduleTestNotification(10).then(function(res) {
-        testBtn.disabled = false;
-        testBtn.style.opacity = '';
-        if (res && res.ok) { if (window.toast) toast(tStr('prayer.test_sent')); }
-        else if (res && res.denied) { if (window.toast) toast(tStr('prayer.perm_denied')); }
-        else { if (window.toast) toast(tStr('prayer.test_failed')); }
-      });
-    };
-    testRow.appendChild(testBtn);
-    container.appendChild(testRow);
   }
 
   /**
@@ -1942,7 +1879,7 @@
     function decodeNext() {
       if (!queue.length) return;
       var voice = queue.shift();
-      fetch(voice.previewUrl || ('/audio/athan_' + voice.id + '.ogg'))
+      fetch(voice.previewUrl || ('/audio/athan_' + voice.id + '.mp3'))
         .then(function(r) { return r.arrayBuffer(); })
         .then(function(buf) { return ctx.decodeAudioData(buf); })
         .then(function(decoded) {
@@ -2015,11 +1952,9 @@
     btn._playingVoiceId = voice.id;
     if (row) row.classList.add('playing');
 
-    var durSec = getAthanDuration();
-
     // Buffer already decoded — play instantly with zero delay
     if (_voiceBuffers[voice.id]) {
-      playDecodedBuffer(_voiceBuffers[voice.id], durSec);
+      playDecodedBuffer(_voiceBuffers[voice.id], 0);
       return;
     }
 
@@ -2027,14 +1962,14 @@
     var abort = new AbortController();
     _previewAbort = abort;
     var ctx = getAudioCtx();
-    fetch(voice.previewUrl || ('/audio/athan_' + voice.id + '.ogg'), { signal: abort.signal })
+    fetch(voice.previewUrl || ('/audio/athan_' + voice.id + '.mp3'), { signal: abort.signal })
       .then(function(r) { return r.arrayBuffer(); })
       .then(function(buf) { return ctx.decodeAudioData(buf); })
       .then(function(decoded) {
         if (abort.signal.aborted) return;
         _previewAbort = null;
         _voiceBuffers[voice.id] = decoded;
-        playDecodedBuffer(decoded, durSec);
+        playDecodedBuffer(decoded, 0);
       })
       .catch(function(err) {
         if (!abort.signal.aborted) {
@@ -2102,43 +2037,6 @@
     });
 
     parent.appendChild(scroll);
-  }
-
-  var DURATIONS = [
-    { sec: 10,  key: 'prayer.dur_10s' },
-    { sec: 20,  key: 'prayer.dur_20s' },
-    { sec: 30,  key: 'prayer.dur_30s' },
-    { sec: 60,  key: 'prayer.dur_60s' },
-    { sec: 0,   key: 'prayer.dur_full' }
-  ];
-
-  function buildDurationPicker(parent) {
-    var current = getAthanDuration();
-    var wrap = cel('div', 'as2-dur-row');
-    DURATIONS.forEach(function(d) {
-      var btn = cel('button', 'as2-dur-btn' + (d.sec === current ? ' on' : ''));
-      btn.dataset.sec = String(d.sec);
-      btn.textContent = tStr(d.key);
-      btn.onclick = function() {
-        setAthanDuration(d.sec);
-        wrap.querySelectorAll('.as2-dur-btn').forEach(function(b) {
-          b.classList.toggle('on', b.dataset.sec === String(d.sec));
-        });
-        // Reschedule with new offset so pending notifications fire at the right time
-        if (getAthan() && window.PrayerNotifications) {
-          var today = window.PrayerLogic.todayBaghdad();
-          fetchDaysData(getCity(), today, 7).then(function(daysData) {
-            if (daysData.length) {
-              window.PrayerNotifications.scheduleAthanMultiDay(
-                daysData, getCity(), getToggles(), true
-              );
-            }
-          });
-        }
-      };
-      wrap.appendChild(btn);
-    });
-    parent.appendChild(wrap);
   }
 
   // Pause all sky RAF loops while the sheet is open so they don't compete
@@ -2458,25 +2356,6 @@
     window.PrayerQibla.open(coords);
   }
 
-  async function testNotifNow(delaySeconds) {
-    var LN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
-    if (!LN) return;
-    delaySeconds = delaySeconds || 10;
-    var voice = window.PrayerNotifications.getSelectedVoice();
-    await window.PrayerNotifications.ensureAllChannels();
-    var at = new Date(Date.now() + delaySeconds * 1000);
-    await LN.cancel({ notifications: [{ id: 999 }] }).catch(function() {});
-    await LN.schedule({ notifications: [{
-      id: 999,
-      title: tStr('prayer.test_notif_title'),
-      body: tStr('prayer.test_notif_body'),
-      schedule: { at: at, allowWhileIdle: true },
-      channelId: 'athan_' + voice,
-      sound: 'athan_' + voice,
-      smallIcon: 'ic_notification'
-    }]});
-  }
-
   // Called by App.tab('prayer') after the panel becomes visible.
   // Belt-and-suspenders: ensures countdown is always ticking when user sees the tab.
   function ensureCountdown() {
@@ -2498,7 +2377,6 @@
     pushWidgetIfStale: pushWidgetIfStale,
     prefetchAllCities: prefetchAllCities,
     preloadAthanVoices: preloadVoiceBuffers,
-    testNotifNow: testNotifNow,
     // Debug helpers — call from browser devtools or adb logcat
     debugNotifs: function() {
       if (window.PrayerNotifications && window.PrayerNotifications.debugPendingNotifications) {

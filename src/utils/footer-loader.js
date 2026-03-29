@@ -98,6 +98,89 @@
             if (yearSpan) {
                 yearSpan.textContent = new Date().getFullYear();
             }
+            // Inject app section before footer-bottom
+            injectFooterAppSection();
         }
+    }
+
+    function injectFooterAppSection() {
+        if (document.getElementById('tk-fa')) return;
+        const fb = document.querySelector('.footer-bottom');
+        if (!fb || !fb.parentNode) return;
+
+        // Inject CSS if app-promo.js isn't loaded on this page
+        if (!document.getElementById('tk-promo-css')) {
+            const st = document.createElement('style');
+            st.id = 'tk-promo-css';
+            st.textContent = [
+                '#tk-fa{padding:22px 0 0;margin-bottom:20px;border-top:1px solid var(--border,rgba(0,0,0,.08));}',
+                '[data-theme="dark"] #tk-fa{border-top-color:rgba(255,255,255,.07);}',
+                '.tk-fa-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}',
+                '.tk-fa-brand{display:flex;align-items:center;gap:11px;min-width:0;}',
+                '.tk-fa-brand img{width:34px;height:34px;border-radius:8px;flex-shrink:0;}',
+                '.tk-fa-info{display:flex;flex-direction:column;gap:2px;}',
+                '.tk-fa-name{font-size:.85rem;font-weight:700;color:var(--text,#000);}',
+                '.tk-fa-desc{font-size:.76rem;color:var(--text-muted,rgba(0,0,0,.45));}',
+                '[data-theme="dark"] .tk-fa-name{color:rgba(255,255,255,.9);}',
+                '[data-theme="dark"] .tk-fa-desc{color:rgba(255,255,255,.4);}',
+                '.tk-fa-btns{display:flex;gap:8px;flex-shrink:0;}',
+                '.tk-fa-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;',
+                    'height:38px;padding:0 14px;font-size:.79rem;font-weight:600;',
+                    'background:var(--primary,#000);color:var(--accent,#fff);',
+                    'border-radius:11px;text-decoration:none;white-space:nowrap;',
+                    'transition:opacity .2s;-webkit-tap-highlight-color:transparent;}',
+                '[data-theme="dark"] .tk-fa-btn{background:#fff;color:#000;}',
+                '.tk-fa-btn:hover{opacity:.8;}',
+                '@media(max-width:560px){',
+                    '.tk-fa-row{flex-direction:column;align-items:flex-start;}',
+                    '.tk-fa-btns{width:100%;}',
+                    '.tk-fa-btn{flex:1;}',
+                '}',
+            ].join('');
+            document.head.appendChild(st);
+        }
+
+        const ua = navigator.userAgent || '';
+        const iOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        const Drd = /Android/.test(ua);
+
+        const PLAY = 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
+        const IOS  = 'https://apps.apple.com/us/app/tafsirkurd/id6760433688';
+
+        function mkBtn(label, url) {
+            const a = document.createElement('a');
+            a.className = 'tk-fa-btn';
+            a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+            a.setAttribute('aria-label', label);
+            const sp = document.createElement('span'); sp.textContent = label;
+            a.appendChild(sp);
+            return a;
+        }
+
+        const wrap  = document.createElement('div'); wrap.id = 'tk-fa';
+        const row   = document.createElement('div'); row.className = 'tk-fa-row';
+        const brand = document.createElement('div'); brand.className = 'tk-fa-brand';
+        const img   = document.createElement('img');
+        img.src = '/assets/images/logo.png'; img.alt = 'TafsirKurd';
+        img.width = 34; img.height = 34;
+        const info  = document.createElement('div'); info.className = 'tk-fa-info';
+        const nm    = document.createElement('span'); nm.className = 'tk-fa-name'; nm.textContent = 'TafsirKurd App';
+        const dc    = document.createElement('span'); dc.className = 'tk-fa-desc'; dc.textContent = 'Read, listen, and keep your progress with you.';
+        info.appendChild(nm); info.appendChild(dc);
+        brand.appendChild(img); brand.appendChild(info);
+        const btns  = document.createElement('div'); btns.className = 'tk-fa-btns';
+
+        if (iOS) {
+            btns.appendChild(mkBtn('App Store', IOS));
+        } else if (Drd) {
+            btns.appendChild(mkBtn('Google Play', PLAY));
+        } else {
+            btns.appendChild(mkBtn('App Store', IOS));
+            btns.appendChild(mkBtn('Google Play', PLAY));
+        }
+
+        row.appendChild(brand); row.appendChild(btns);
+        wrap.appendChild(row);
+        fb.parentNode.insertBefore(wrap, fb);
     }
 })();

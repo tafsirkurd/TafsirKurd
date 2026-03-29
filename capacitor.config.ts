@@ -15,11 +15,11 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'never',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: '#fafafa',
     scheme: 'capacitor',
   },
   android: {
-    backgroundColor: '#0d0d0d',
+    backgroundColor: '#fafafa',
   },
   plugins: {
     SplashScreen: {
@@ -43,7 +43,7 @@ const config: CapacitorConfig = {
           importance: 3,
         },
         // Athan channels — one per voice, high importance, custom sound.
-        // Sound filename must match res/raw/athan_<id>.ogg exactly.
+        // Sound filename must match res/raw/athan_<id>.mp3 exactly.
         // These are also created at runtime by ensureAllChannels() to handle
         // version upgrades, but declaring them here ensures they exist from
         // first launch without the user needing to open the prayer tab first.
@@ -56,14 +56,6 @@ const config: CapacitorConfig = {
           sound: 'athan_mishary',
         },
         {
-          id: 'athan_ahmed',
-          name: 'Athan — أحمد العمادي',
-          description: 'Prayer time athan alerts',
-          importance: 5,
-          vibration: true,
-          sound: 'athan_ahmed',
-        },
-        {
           id: 'athan_nasser',
           name: 'Athan — ناصر القطامي',
           description: 'Prayer time athan alerts',
@@ -72,20 +64,28 @@ const config: CapacitorConfig = {
           sound: 'athan_nasser',
         },
         {
-          id: 'athan_majed',
-          name: 'Athan — ماجد الحمضاني',
+          id: 'athan_omar',
+          name: 'Athan — عمر هشام العربي',
           description: 'Prayer time athan alerts',
           importance: 5,
           vibration: true,
-          sound: 'athan_majed',
+          sound: 'athan_omar',
         },
         {
-          id: 'athan_mokhtar',
-          name: 'Athan — مختار حاج سليمان',
+          id: 'athan_peshawa',
+          name: 'Athan — پیشەوا',
           description: 'Prayer time athan alerts',
           importance: 5,
           vibration: true,
-          sound: 'athan_mokhtar',
+          sound: 'athan_peshawa',
+        },
+        {
+          id: 'athan_raad',
+          name: 'Athan — راعد محمد الكردي',
+          description: 'Prayer time athan alerts',
+          importance: 5,
+          vibration: true,
+          sound: 'athan_raad',
         },
       ],
     },

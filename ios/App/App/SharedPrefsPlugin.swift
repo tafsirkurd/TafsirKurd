@@ -47,6 +47,16 @@ public class SharedPrefsPlugin: CAPPlugin {
             WidgetCenter.shared.reloadAllTimelines()
             WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdGoalWidget")
             NSLog("[SharedPrefs] goal reload done")
+        } else if key == "widgetTranslations" {
+            // BUG FIX: widgetTranslations previously fell into the else branch —
+            // no reload was triggered so widgets never picked up admin text changes.
+            NSLog("[SharedPrefs] widgetTranslations written — reloading all widget timelines")
+            WidgetCenter.shared.reloadAllTimelines()
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdWidgetV2")
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdLockWidgetV2")
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdAyahWidget")
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdGoalWidget")
+            NSLog("[SharedPrefs] widgetTranslations reload done")
         } else {
             NSLog("[SharedPrefs] key=%@ has no widget reload handler", key)
         }

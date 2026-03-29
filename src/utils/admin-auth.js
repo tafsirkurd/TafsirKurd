@@ -83,13 +83,41 @@ async function initSupabase() {
     }
 }
 
+// ── 3-minute grace token (survives Safari close/reopen) ──────
+const GRACE_KEY = 'adminGraceToken';
+const GRACE_TTL = 3 * 60 * 1000; // 3 minutes
+
+function saveGraceToken(token) {
+    try { localStorage.setItem(GRACE_KEY, JSON.stringify({ token, at: Date.now() })); } catch(e) {}
+}
+function tryRestoreGraceToken() {
+    try {
+        const raw = localStorage.getItem(GRACE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.token && (Date.now() - parsed.at) < GRACE_TTL) return parsed.token;
+        localStorage.removeItem(GRACE_KEY); // expired
+    } catch(e) {}
+    return null;
+}
+function clearGraceToken() {
+    try { localStorage.removeItem(GRACE_KEY); } catch(e) {}
+}
+
 // Check if user is authenticated
 async function checkAuth() {
-    const adminToken = sessionStorage.getItem('adminToken');
+    let adminToken = sessionStorage.getItem('adminToken');
 
     if (!adminToken) {
-        redirectToLogin();
-        return false;
+        // Safari closes and wipes sessionStorage — allow 3-min re-entry via grace token
+        const graceToken = tryRestoreGraceToken();
+        if (graceToken) {
+            sessionStorage.setItem('adminToken', graceToken);
+            adminToken = graceToken;
+        } else {
+            redirectToLogin();
+            return false;
+        }
     }
 
     // Get device fingerprint (async - server-side generated)
@@ -109,6 +137,9 @@ async function checkAuth() {
         const data = await response.json();
 
         if (data.success) {
+            // Refresh grace token timestamp on every successful verify
+            saveGraceToken(adminToken);
+
             // Store permissions
             adminPermissions = data.permissions || [];
 
@@ -200,6 +231,8 @@ async function login(email, password) {
             sessionStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
             // Set session start time for 60-minute auto-logout
             sessionStorage.setItem('adminSessionStart', new Date().toISOString());
+            // Save grace token — allows 3-min restore after Safari close
+            saveGraceToken(data.token);
 
             // console.log('✅ Login successful');
 
@@ -238,6 +271,7 @@ async function logout() {
     }
 
     sessionStorage.clear();
+    clearGraceToken(); // explicit logout = wipe grace, must re-login
     window.location.href = '/admin-login.html';
 }
 

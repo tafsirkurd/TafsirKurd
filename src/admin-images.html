@@ -439,6 +439,28 @@
                     </div>
                 </div>
 
+                <h3 class="section-divider">App Popup</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Image shown in the app-download popup on the website (homepage, Quran, IslamVoice). Best dimensions: portrait phone screenshot — recommended 9:16. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
+                <div class="images-grid">
+                    <div class="image-card" data-key="app_popup_image_url">
+                        <div class="image-card-preview" id="preview-app_popup_image_url" style="aspect-ratio:9/16;max-width:200px;margin:0 auto;">
+                            <div class="placeholder"><i data-lucide="smartphone"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">App Popup Image</div>
+                            <div class="image-card-desc">Portrait image shown in the app download popup (9:16 recommended — phone screenshot or mockup)</div>
+                            <span class="status-badge empty" id="status-app_popup_image_url">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-app_popup_image_url" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('app_popup_image_url')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('app_popup_image_url')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('app_popup_image_url')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-app_popup_image_url" accept="image/*" onchange="handleUpload('app_popup_image_url', this)">
+                        </div>
+                    </div>
+                </div>
+
                 <h3 class="section-divider">Qari Profile Photos</h3>
                 <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Circular profile pictures shown in the audio player. Upload a 1:1 square photo — stored in Cloudflare R2. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
                 <div id="reciterPhotosGrid" class="reciter-photos-grid"></div>
@@ -471,7 +493,7 @@
         const R2_WORKER_URL = 'https://tafsirkurd-images.tefsirkurd.workers.dev';
         const R2_UPLOAD_SECRET = 'tk_r2_img_2026_K8mX3pW7nR9vJ4sQ';
 
-        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image'];
+        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image', 'app_popup_image_url'];
         let supabase = null;
 
         const RECITERS_ADMIN = [
@@ -578,7 +600,7 @@
                 preview.appendChild(img);
                 if (status) { status.textContent = 'Set'; status.className = 'status-badge set'; }
             } else {
-                const icons = { founder_avatar_url: 'user', hero_card_quran_image: 'book-open', hero_card_islamvoice_image: 'play', login_hero_quran_image: 'book-open', login_hero_islamvoice_image: 'play', tafsir_book_image: 'book-open' };
+                const icons = { founder_avatar_url: 'user', hero_card_quran_image: 'book-open', hero_card_islamvoice_image: 'play', login_hero_quran_image: 'book-open', login_hero_islamvoice_image: 'play', tafsir_book_image: 'book-open', app_popup_image_url: 'smartphone' };
                 const placeholder = document.createElement('div');
                 placeholder.className = 'placeholder';
                 const icon = document.createElement('i');
@@ -600,7 +622,8 @@
             hero_card_islamvoice_image: 16 / 9,
             login_hero_quran_image: 9 / 16,
             login_hero_islamvoice_image: 9 / 16,
-            tafsir_book_image: 3 / 4
+            tafsir_book_image: 3 / 4,
+            app_popup_image_url: 9 / 16
         };
 
         const CROP_TITLES = {
@@ -609,7 +632,8 @@
             hero_card_islamvoice_image: 'Crop IslamVoice Card (16:9)',
             login_hero_quran_image: 'Crop Login Hero — Quran (9:16)',
             login_hero_islamvoice_image: 'Crop Login Hero — IslamVoice (9:16)',
-            tafsir_book_image: 'Crop Tafsir Book (3:4)'
+            tafsir_book_image: 'Crop Tafsir Book (3:4)',
+            app_popup_image_url: 'Crop App Popup Image (9:16)'
         };
 
         function pickFile(key) {

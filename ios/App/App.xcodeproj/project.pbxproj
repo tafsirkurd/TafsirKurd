@@ -22,6 +22,11 @@
 		WDGT000000000004 /* SharedPrefsPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000015 /* SharedPrefsPlugin.m */; };
 		FONT000000000003 /* UthmanicHafs1Ver18.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FONT000000000002 /* UthmanicHafs1Ver18.ttf */; };
 		FONT000000000004 /* UthmanicHafs1Ver18.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FONT000000000002 /* UthmanicHafs1Ver18.ttf */; };
+		ATHN000000000011 /* athan_mishary.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000001 /* athan_mishary.caf */; };
+		ATHN000000000012 /* athan_nasser.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000002 /* athan_nasser.caf */; };
+		ATHN000000000013 /* athan_omar.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000003 /* athan_omar.caf */; };
+		ATHN000000000014 /* athan_peshawa.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000004 /* athan_peshawa.caf */; };
+		ATHN000000000015 /* athan_raad.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000005 /* athan_raad.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +50,11 @@
 		WDGT000000000014 /* SharedPrefsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPrefsPlugin.swift; sourceTree = "<group>"; };
 		WDGT000000000015 /* SharedPrefsPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedPrefsPlugin.m; sourceTree = "<group>"; };
 		FONT000000000002 /* UthmanicHafs1Ver18.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = UthmanicHafs1Ver18.ttf; path = UthmanicHafs1Ver18.ttf; sourceTree = "<group>"; };
+		ATHN000000000001 /* athan_mishary.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_mishary.caf; sourceTree = "<group>"; };
+		ATHN000000000002 /* athan_nasser.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_nasser.caf; sourceTree = "<group>"; };
+		ATHN000000000003 /* athan_omar.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_omar.caf; sourceTree = "<group>"; };
+		ATHN000000000004 /* athan_peshawa.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_peshawa.caf; sourceTree = "<group>"; };
+		ATHN000000000005 /* athan_raad.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_raad.caf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -125,6 +135,11 @@
 				WDGT000000000014 /* SharedPrefsPlugin.swift */,
 				WDGT000000000015 /* SharedPrefsPlugin.m */,
 				FONT000000000001 /* Fonts */,
+				ATHN000000000001 /* athan_mishary.caf */,
+				ATHN000000000002 /* athan_nasser.caf */,
+				ATHN000000000003 /* athan_omar.caf */,
+				ATHN000000000004 /* athan_peshawa.caf */,
+				ATHN000000000005 /* athan_raad.caf */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -237,6 +252,11 @@
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
 				FONT000000000003 /* UthmanicHafs1Ver18.ttf in Resources */,
+				ATHN000000000011 /* athan_mishary.caf in Resources */,
+				ATHN000000000012 /* athan_nasser.caf in Resources */,
+				ATHN000000000013 /* athan_omar.caf in Resources */,
+				ATHN000000000014 /* athan_peshawa.caf in Resources */,
+				ATHN000000000015 /* athan_raad.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

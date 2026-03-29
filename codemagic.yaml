@@ -203,6 +203,22 @@ workflows:
           # Step 8: Apply to Xcode project
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
+      - name: Convert athan M4A to CAF
+        script: |
+          set -e
+          chmod +x scripts/convert-athan-to-caf.sh
+          bash scripts/convert-athan-to-caf.sh
+          echo "Verifying .caf files..."
+          for v in mishary nasser omar peshawa raad; do
+            f="ios/App/App/athan_${v}.caf"
+            if [ ! -f "$f" ]; then
+              echo "ERROR: $f was not created by conversion script"
+              exit 1
+            fi
+            echo "OK: $f ($(wc -c < "$f") bytes)"
+          done
+          echo "All 5 .caf files ready."
+
       - name: Build iOS
         script: |
           xcode-project build-ipa \

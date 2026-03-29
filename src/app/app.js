@@ -6,12 +6,14 @@
 
 /* ===== FORCE UPDATE ===== */
 window.ForceUpdate = (function(){
-  var CFG_CACHE_KEY   = 'tk_update_cfg_v2';
-  var SOFT_SNOOZE_KEY = 'tk_soft_snooze_v2'; // {at, permanent}
-  var _storeUrl       = '';
-  var _lastCheckTs    = 0;
-  var CHECK_DEBOUNCE  = 30 * 1000; // 30s between checks
-  var _fuBtnBusy      = false;     // prevent double-tap on hard update btn
+  var CFG_CACHE_KEY      = 'tk_update_cfg_v2';
+  var SOFT_SNOOZE_KEY    = 'tk_soft_snooze_v2'; // {at, permanent}
+  var UPDATE_NOTIF_KEY   = 'updateNotifVer';     // last minVersion we scheduled a notification for
+  var UPDATE_NOTIF_ID    = 50;                   // LocalNotification ID — free slot (1=reminder,10-16,20-26,30-32,100-134=athan,200=test)
+  var _storeUrl          = '';
+  var _lastCheckTs       = 0;
+  var CHECK_DEBOUNCE     = 30 * 1000; // 30s between checks
+  var _fuBtnBusy         = false;     // prevent double-tap on hard update btn
 
   // ── Semver comparison ─────────────────────────────────────────────────────
   function compareVersions(a, b) {
@@ -143,13 +145,13 @@ window.ForceUpdate = (function(){
 
     var title = document.createElement('div');
     title.className = 'fu-banner-title';
-    title.setAttribute('data-i18n', 'update.title');
-    title.textContent = window.t ? window.t('update.title') : 'نوێکردنەوەی بەردەستە';
+    title.setAttribute('data-i18n', 'update.notice_title');
+    title.textContent = window.t ? (window.t('update.notice_title') || window.t('update.title') || 'نوێکردنەوەیەکی نوێ بەردەستە') : 'نوێکردنەوەیەکی نوێ بەردەستە';
 
     var msg = document.createElement('div');
     msg.className = 'fu-banner-msg';
-    msg.setAttribute('data-i18n', 'update.soft_message');
-    msg.textContent = window.t ? window.t('update.soft_message') : 'وەشانێکی نوێیی بەردەستە.';
+    msg.setAttribute('data-i18n', 'update.notice_message');
+    msg.textContent = window.t ? (window.t('update.notice_message') || window.t('update.soft_message') || 'وەشانێکی نوێیی بەردەستە.') : 'وەشانێکی نوێیی بەردەستە.';
 
     textWrap.appendChild(title);
     textWrap.appendChild(msg);
@@ -159,17 +161,19 @@ window.ForceUpdate = (function(){
 
     var updateBtn = document.createElement('button');
     updateBtn.className = 'fu-banner-btn';
-    updateBtn.setAttribute('data-i18n', 'update.btn');
-    updateBtn.textContent = window.t ? window.t('update.btn') : 'نوێبکەرەوە';
+    updateBtn.setAttribute('data-i18n', 'update.notice_btn');
+    updateBtn.textContent = window.t ? (window.t('update.notice_btn') || window.t('update.btn') || 'نوێبکەرەوە') : 'نوێبکەرەوە';
     updateBtn.onclick = function() {
       openStore();
       snoozeForever(); // clicked → never show again
+      _cancelUpdateNotification(); // user is going to update — no need to remind 24h later
       dismissBanner();
     };
 
     var dismissBtn = document.createElement('button');
     dismissBtn.className = 'fu-banner-dismiss';
-    dismissBtn.textContent = '×';
+    dismissBtn.setAttribute('data-i18n', 'update.notice_later');
+    dismissBtn.textContent = window.t ? (window.t('update.notice_later') || '×') : '×';
     dismissBtn.onclick = function() { snoozeDismiss(); dismissBanner(); };
 
     actions.appendChild(updateBtn);
@@ -189,6 +193,59 @@ window.ForceUpdate = (function(){
     setTimeout(function(){ if (banner.parentNode) banner.parentNode.removeChild(banner); }, 320);
   }
 
+  // ── Update reminder notification ──────────────────────────────────────────
+  //
+  // When soft mode is detected and the user's version is outdated, we schedule
+  // one local notification to fire 24 hours later. This nudges users who
+  // dismissed the in-app banner but haven't yet updated.
+  //
+  // Rules:
+  //   - Only scheduled ONCE per minVersion string (tracked in UPDATE_NOTIF_KEY)
+  //   - Fires 24h after first detection — users who update quickly never see it
+  //   - Automatically cancelled when check() finds the version is no longer outdated
+  //   - Uses notification ID 50 (unique, won't clash with any other notification)
+  //   - No new permissions required — reuses existing 'reminder' channel
+
+  function _getLN() {
+    return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications || null;
+  }
+
+  function _scheduleUpdateNotification(minVersion) {
+    var LN = _getLN();
+    if (!LN) return; // not on a device or plugin missing
+
+    // Already scheduled a notification for this version — don't duplicate
+    if (localStorage.getItem(UPDATE_NOTIF_KEY) === String(minVersion)) return;
+
+    var at = new Date(Date.now() + 24 * 3600 * 1000); // 24 hours from now
+    var title = (window.t && (window.t('update.notice_notification_title') || window.t('update.title'))) || 'نوێکردنەوەیەکی نوێ بەردەستە';
+    var body  = (window.t && window.t('update.notice_notification_body')) || 'ئەپی تافسیر کوردی نوێبکەرەوە — وەشانێکی نوێیی دابەزاوە.';
+
+    // Cancel any leftover notification from a previous version first
+    LN.cancel({ notifications: [{ id: UPDATE_NOTIF_ID }] }).catch(function() {});
+
+    LN.schedule({ notifications: [{
+      id:          UPDATE_NOTIF_ID,
+      title:       title,
+      body:        body,
+      schedule:    { at: at, allowWhileIdle: true },
+      channelId:   'reminder',
+      smallIcon:   'ic_notification',
+      extra:       { type: 'update' }
+    }] }).then(function() {
+      localStorage.setItem(UPDATE_NOTIF_KEY, String(minVersion));
+      console.log('[Update] reminder notification scheduled for', at.toISOString(), '(ver', minVersion, ')');
+    }).catch(function(e) {
+      console.warn('[Update] could not schedule reminder notification:', e && e.message);
+    });
+  }
+
+  function _cancelUpdateNotification() {
+    var LN = _getLN();
+    if (LN) LN.cancel({ notifications: [{ id: UPDATE_NOTIF_ID }] }).catch(function() {});
+    localStorage.removeItem(UPDATE_NOTIF_KEY);
+  }
+
   // ── Main check ────────────────────────────────────────────────────────────
   async function check() {
     var now = Date.now();
@@ -203,7 +260,7 @@ window.ForceUpdate = (function(){
       if (platform === 'web') return;
 
       var cfg = await fetchConfig();
-      if (!cfg) { console.log('[Update] No config — skipping'); return; }
+      if (!cfg) { console.log('[Update] No config — skipping'); _cancelUpdateNotification(); return; }
 
       var mode       = resolveMode(cfg);
       var minVersion = platform === 'ios' ? cfg.min_ios_version : cfg.min_android_version;
@@ -216,6 +273,7 @@ window.ForceUpdate = (function(){
       console.log('[Update] v=' + version + ' min=' + (minVersion||'—') + ' stage=' + stage + ' mode=' + mode + ' outdated=' + outdated + ' platform=' + platform);
 
       if (mode === 'off' || !minVersion || !outdated) {
+        _cancelUpdateNotification(); // version is current — clear any pending reminder
         console.log('[Update] No action needed');
         return;
       }
@@ -237,6 +295,7 @@ window.ForceUpdate = (function(){
         }
         console.log('[Update] SOFT — queuing banner (6s delay)');
         showSoftBanner();
+        _scheduleUpdateNotification(minVersion); // once per version, 24h later
       }
     } catch(e) {
       console.warn('[Update] check error:', e);
@@ -556,10 +615,6 @@ function init(){
             // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
             // are skipped for today's goal count.
             initTodayVerses();
-            // Cancel any athan notifications whose athan has completed
-            if(window.PrayerNotifications&&PrayerNotifications.cancelFiredAthanNotifications){
-              PrayerNotifications.cancelFiredAthanNotifications();
-            }
             // Reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
             // Push fresh widget data if date or city changed since last push
@@ -623,6 +678,10 @@ function init(){
         }
         if(extra.type==='prayer'){
           App.tab('prayer');
+        }
+        if(extra.type==='update'){
+          // Tapping the update notification opens the store directly
+          if(window.ForceUpdate)window.ForceUpdate.openStore();
         }
       });
     }
@@ -951,13 +1010,18 @@ function loadTafsirData(){
 
 /* ===== THEME & SIZES ===== */
 function applyTheme(){
+  var bgMap={light:'#fafafa',dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc'};
+  var bg=bgMap[S.theme]||'#fafafa';
   document.documentElement.setAttribute('data-theme',S.theme);
+  // Keep inline --bg in sync with the startup anti-flash script (index.html head).
+  // Without this, the startup inline style overrides CSS [data-theme] rules on every theme switch.
+  document.documentElement.style.background=bg;
+  document.documentElement.style.setProperty('--bg',bg);
   localStorage.setItem('theme',S.theme);
   if(window.Capacitor&&window.Capacitor.Plugins.StatusBar){
     var isDark=S.theme==='dark'||S.theme==='sakina';
     try{window.Capacitor.Plugins.StatusBar.setStyle({style:isDark?'DARK':'LIGHT'})}catch(e){}
-    try{var bgMap={light:'#fafafa',dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc'};
-        window.Capacitor.Plugins.StatusBar.setBackgroundColor({color:bgMap[S.theme]||'#fafafa'})}catch(e){}
+    try{window.Capacitor.Plugins.StatusBar.setBackgroundColor({color:bg})}catch(e){}
   }
 }
 function applySizes(){
@@ -4254,35 +4318,61 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 // ── Widget translation sync ──────────────────────────────────────────────
 // Fetches widget.* keys from Supabase, resolves iOS override values,
 // and writes a flat key→text JSON blob to SharedPrefs key 'widgetTranslations'.
-// Widgets read this key from App Group UserDefaults at render time.
-// Called once on init and once per foreground resume (cached: skips if same day).
-function syncWidgetTranslations(){
-  var TODAY=dateKey(new Date());
-  var CACHE_KEY='widgetTranslationsSyncDate';
-  if(localStorage.getItem(CACHE_KEY)===TODAY){return;}// already synced today
-  var sb=window._supabase||window.supabase;
-  if(!sb){return;}// not signed in or Supabase unavailable
+// Writing 'widgetTranslations' now triggers WidgetCenter.shared.reloadAllTimelines()
+// in SharedPrefsPlugin.swift so the widget extension picks up the new strings
+// on the very next render — without waiting for its own timeline expiry.
+//
+// Called on init and every foreground resume. Throttled to once per 5 minutes.
+function _doSyncWidgetTranslations(force){
+  var CACHE_KEY='widgetTranslationsSyncTs';
+  var lastTs=parseInt(localStorage.getItem(CACHE_KEY)||'0',10);
+  var elapsed=Date.now()-lastTs;
+  if(!force && elapsed<5*60*1000){
+    console.log('[WidgetT9n] skipped — last sync '+Math.round(elapsed/1000)+'s ago (throttle 300s)');
+    return;
+  }
+  console.log('[WidgetT9n] syncWidgetTranslations START force='+!!force);
+  // S.supabase = initialized Supabase client (set in initSupabase).
+  // window.supabase = the raw CDN library — do NOT use it here (has no .from()).
+  var sb=S.supabase||window._appSupabase;
+  if(!sb){console.warn('[WidgetT9n] no Supabase client — Supabase not yet initialized');return;}
   sb.from('kurdish_translations')
     .select('key_id,kurdish_text,ios_text,android_text')
     .eq('page','widgets')
     .then(function(res){
-      if(res.error||!res.data||!res.data.length){return;}
+      if(res.error){console.error('[WidgetT9n] DB error:',res.error.message);return;}
+      if(!res.data||!res.data.length){console.warn('[WidgetT9n] 0 rows returned — no widget.* keys in DB?');return;}
+      console.log('[WidgetT9n] fetched '+res.data.length+' rows from kurdish_translations');
       var keys={};
       res.data.forEach(function(row){
         // iOS gets ios_text if set; otherwise shared kurdish_text
         var val=(row.ios_text&&row.ios_text.trim())?row.ios_text.trim():(row.kurdish_text||'');
         if(val)keys[row.key_id]=val;
       });
+      console.log('[WidgetT9n] resolved '+Object.keys(keys).length+' keys');
+      // Log a sample to verify correct value is being written
+      var sampleKey=Object.keys(keys)[0];
+      if(sampleKey)console.log('[WidgetT9n] sample: '+sampleKey+' = '+keys[sampleKey]);
       var payload=JSON.stringify({v:1,ts:new Date().toISOString(),keys:keys});
+      console.log('[WidgetT9n] calling _sharedPrefsSet widgetTranslations len='+payload.length);
       _sharedPrefsSet('widgetTranslations',payload)
         .then(function(){
-          localStorage.setItem(CACHE_KEY,TODAY);
-          console.log('[WidgetT9n] synced '+Object.keys(keys).length+' keys');
+          localStorage.setItem(CACHE_KEY,String(Date.now()));
+          console.log('[WidgetT9n] write SUCCESS — widgetTranslations written, WidgetKit reload triggered');
         })
-        .catch(function(){/* non-iOS — silent */});
+        .catch(function(e){
+          console.warn('[WidgetT9n] _sharedPrefsSet failed (non-iOS or bridge missing):',e&&e.message);
+        });
     })
-    .catch(function(){/* network error — skip, try again next launch */});
+    .catch(function(e){console.warn('[WidgetT9n] fetch error:',e&&e.message);});
 }
+
+function syncWidgetTranslations(){ _doSyncWidgetTranslations(false); }
+
+// Temporary debug helper — call from DevTools or console to force an immediate sync.
+// Bypasses throttle. Proves whether the sync+write pipeline works end-to-end.
+// Usage: window.forceWidgetTranslationSync()
+window.forceWidgetTranslationSync=function(){ _doSyncWidgetTranslations(true); };
 
 function _sharedPrefsSet(key,value){
   // Android path — synchronous JavascriptInterface bridge

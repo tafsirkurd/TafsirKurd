@@ -15,18 +15,48 @@ private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Ish
 
 /// Reads the `widgetTranslations` key written by `syncWidgetTranslations()` in app.js.
 /// Falls back to built-in Kurdish strings if the key is absent.
-/// Cached per widget process invocation (widgets are short-lived processes).
+///
+/// BUG FIX: `_cache` was only loaded once per process (`if _cache == nil`).
+/// WidgetKit often reuses the same extension process across timeline refreshes,
+/// so stale translations persisted even after the app wrote new values and
+/// triggered a reload.  Fix: `reload()` is now called at the top of every
+/// `getTimeline()` / `getSnapshot()` invocation so each timeline generation
+/// reads fresh UserDefaults data.
 private enum WT {
     private static var _cache: [String: String]? = nil
 
+    /// Force-read UserDefaults into _cache. Called at the start of every
+    /// getTimeline() / getSnapshot() so reused widget processes pick up new values.
+    static func reload() {
+        _cache = nil
+        load()
+    }
+
     static func load() {
-        guard let ud = UserDefaults(suiteName: kAppGroup),
-              let json = ud.string(forKey: "widgetTranslations"),
-              let data = json.data(using: .utf8),
+        guard let ud = UserDefaults(suiteName: kAppGroup) else {
+            wLog.error("[WT] UserDefaults(suiteName:) returned nil — App Group missing?")
+            _cache = [:]
+            return
+        }
+        guard let json = ud.string(forKey: "widgetTranslations") else {
+            wLog.warning("[WT] widgetTranslations key absent from App Group — using fallbacks")
+            _cache = [:]
+            return
+        }
+        guard let data = json.data(using: .utf8),
               let obj  = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let keys = obj["keys"] as? [String: String]
-        else { _cache = [:]; return }
+        else {
+            wLog.error("[WT] failed to decode widgetTranslations JSON (len=\(json.count))")
+            _cache = [:]
+            return
+        }
         _cache = keys
+        wLog.info("[WT] loaded \(keys.count) translation keys from App Group")
+        // Log one sample key so we can verify correct data is reaching the widget
+        if let sample = keys.first {
+            wLog.info("[WT] sample: \(sample.key) = \(sample.value)")
+        }
     }
 
     /// Returns the translated string for `key`, using `fallback` if missing.
@@ -160,11 +190,13 @@ struct PrayerProvider: TimelineProvider {
         .init(date: .now, data: nil, next: nil)
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
+        WT.reload()
         wLog.info("getSnapshot called")
         let d = PrayerWidgetData.load()
         completion(.init(date: .now, data: d, next: d?.nextPrayer()))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
+        WT.reload()
         let now  = Date()
         wLog.info("getTimeline called")
         let data = PrayerWidgetData.load()
@@ -651,9 +683,11 @@ struct AyahEntry: TimelineEntry {
 struct AyahProvider: TimelineProvider {
     func placeholder(in _: Context) -> AyahEntry { .init(date: .now, data: nil) }
     func getSnapshot(in _: Context, completion: @escaping (AyahEntry) -> Void) {
+        WT.reload()
         completion(.init(date: .now, data: AyahWidgetData.load()))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<AyahEntry>) -> Void) {
+        WT.reload()
         let now = Date()
         let e   = AyahEntry(date: now, data: AyahWidgetData.load())
         completion(Timeline(entries: [e], policy: .after(now.addingTimeInterval(3600))))
@@ -670,9 +704,11 @@ struct GoalEntry: TimelineEntry {
 struct GoalProvider: TimelineProvider {
     func placeholder(in _: Context) -> GoalEntry { .init(date: .now, data: nil) }
     func getSnapshot(in _: Context, completion: @escaping (GoalEntry) -> Void) {
+        WT.reload()
         completion(.init(date: .now, data: GoalWidgetData.load()))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<GoalEntry>) -> Void) {
+        WT.reload()
         let now = Date()
         let e   = GoalEntry(date: now, data: GoalWidgetData.load())
         completion(Timeline(entries: [e], policy: .after(now.addingTimeInterval(1800))))
