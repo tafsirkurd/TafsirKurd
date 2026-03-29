@@ -60,7 +60,7 @@ window.ForceUpdate = (function(){
     if (stage === 'soft' && cfg.update_release_time && cfg.update_enforce_delay_hours) {
       var releaseTs  = new Date(cfg.update_release_time).getTime();
       var delayMs    = parseFloat(cfg.update_enforce_delay_hours) * 3600000;
-      if (!isNaN(releaseTs) && !isNaN(delayMs) && Date.now() > releaseTs + delayMs) {
+      if (!isNaN(releaseTs) && releaseTs > 0 && !isNaN(delayMs) && Date.now() > releaseTs + delayMs) {
         console.log('[Update] Auto-transition: soft → hard (delay elapsed)');
         return 'hard';
       }
@@ -1705,8 +1705,6 @@ function renderSurahGrid(){
       var card=e.target.closest('.surah-card');
       if(card)App.openSurah(+card.dataset.n);
     });
-    // Apply backdrop-filter only to truly visible cards — rootMargin:0 limits GPU layers to ~6 at once
-    // Cache badge element on the card node to avoid querySelector on every IO callback
     _surahBadgeObs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         var badge=entry.target._badge||(entry.target._badge=entry.target.querySelector('.surah-num-badge'));
@@ -1716,6 +1714,10 @@ function renderSurahGrid(){
         badge.style.webkitBackdropFilter=bf;
       });
     },{rootMargin:'0px'});
+  }
+  // Always reconnect observer to current cards — old cards may have been removed (e.g. pull-to-refresh)
+  if(_surahBadgeObs){
+    _surahBadgeObs.disconnect();
     grid.querySelectorAll('.surah-card').forEach(function(card){_surahBadgeObs.observe(card);});
   }
 }
@@ -1746,10 +1748,11 @@ function renderContinue(){
 App.openSurah=function(num,scrollTo){
   if(S.surah===num&&$('quranReader').classList.contains('on'))return; // already open
   if(tapGuard('openSurah',300))return; // prevent double-tap race
+  var s=SURAHS[num-1]; // bounds-check before any state mutation
+  if(!s){console.warn('[openSurah] invalid surah num:',num);return;}
   haptic([8]);
   _startSession(num);
   S.surah=num;
-  var s=SURAHS[num-1];
   $('readerName').textContent=s.en+' - '+s.ar;
   if(window.innerWidth<768){$('quranHome').style.display='none';}
   $('quranReader').classList.add('on');
@@ -1939,7 +1942,7 @@ function renderMushafView(){
         if(k.classList&&k.classList.contains('mushaf-surah-banner')){
           var bn=parseInt(k.dataset.surah);
           if(bn===targetSurah){keepFrom=i;foundTarget=true;}
-          else{keepTo=i;break;}
+          else if(foundTarget){keepTo=i;break;} // only cut at the surah AFTER the target
         }
       }
       // Remove trailing other-surah content (from end down to keepTo)
