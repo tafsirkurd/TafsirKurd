@@ -5652,31 +5652,61 @@ App.openLogin=function(){
       return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
     });
   }
+  var _appleBusy=false;
   function signInWithApple(){
+    if(_appleBusy)return;
     if(!S.supabase){showMsg(t('error.system_not_ready'),'error');return}
     var plugin=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.TafsirAppleSignIn;
-    if(!plugin){showMsg(t('error.generic'),'error');return}
+    if(!plugin){showMsg(t('error.apple_unavailable')||'Sign in with Apple is not available on this device.','error');return}
+    _appleBusy=true;
+    // Set loading state on Apple button
+    var appleBtn=document.querySelector('.auth-apple-btn');
+    if(appleBtn){appleBtn.disabled=true;appleBtn.style.opacity='0.6';}
+    console.log('[Apple] authorize() — starting');
     var rawNonce=_genNonce(32);
     _sha256hex(rawNonce).then(function(hashedNonce){
+      console.log('[Apple] nonce ready, calling plugin.authorize()');
       return plugin.authorize({nonce:hashedNonce});
     }).then(function(res){
+      console.log('[Apple] native result — user:',res&&res.user,'token present:',(res&&!!res.identityToken),'email:',res&&res.email,'givenName:',res&&res.givenName);
       var token=res&&res.identityToken;
-      if(!token){showMsg(t('error.generic'),'error');return null}
+      if(!token){
+        console.warn('[Apple] no identityToken in result');
+        showMsg(t('error.apple_failed')||'Apple sign-in failed. Please try again.','error');
+        return null;
+      }
+      console.log('[Apple] calling supabase.auth.signInWithIdToken()');
       return S.supabase.auth.signInWithIdToken({provider:'apple',token:token,nonce:rawNonce});
     }).then(function(resp){
       if(!resp)return;
-      if(resp.error){showMsg(resp.error.message,'error');return}
+      if(resp.error){
+        console.error('[Apple] Supabase token exchange error:',resp.error.message);
+        showMsg(resp.error.message,'error');
+        return;
+      }
       var session=resp.data&&resp.data.session;
+      console.log('[Apple] Supabase session OK — user:',session&&session.user&&session.user.email);
       if(session){
         setUserFromSession(session);
         App.closeLogin();
       }
     }).catch(function(e){
-      // 1001 = user cancelled — silent regardless of locale or message format
-      var code=e&&(e.data&&e.data.errorCode);
+      var code=e&&e.data&&e.data.errorCode;
       var msg=e&&(e.message||e.errorMessage||'');
+      console.log('[Apple] error — code:',code,'msg:',msg);
+      // 1001 = user cancelled — always silent
       if(code===1001||msg.indexOf('1001')!==-1||msg.toLowerCase().indexOf('cancel')!==-1)return;
-      showMsg(msg||t('error.generic'),'error');
+      // 1000 = presentation/context error — show friendly retry message
+      if(code===1000||msg.indexOf('1000')!==-1){
+        showMsg(t('error.apple_try_again')||'Could not open Sign in with Apple. Please try again.','error');
+        return;
+      }
+      // Any other error — friendly message, not raw system string
+      showMsg(t('error.apple_failed')||'Apple sign-in failed. Please try again.','error');
+    }).finally(function(){
+      _appleBusy=false;
+      var appleBtn=document.querySelector('.auth-apple-btn');
+      if(appleBtn){appleBtn.disabled=false;appleBtn.style.opacity='';}
     });
   }
 

@@ -235,6 +235,9 @@
   "error.occurred": "خەلەتی ڕووی دا",
   "error.system_not_ready": "سیستەم ئامادە نینە",
   "error.delete": "خەلەتی ل ژێبرنێ",
+  "error.apple_try_again": "نەتوانی Sign in with Apple veke. Dûbaré biceribîne.",
+  "error.apple_failed": "Têketina Apple têk çû. Dûbaré biceribîne.",
+  "error.apple_unavailable": "Sign in with Apple li vê amûrê peyda nabe.",
 
   "goals.empty.title": "ئارمانجەکێ ژبۆ خۆ دابنێ",
   "goals.empty.subtitle": "ڕۆژانە چەند ئایەتەک بخوینە",
