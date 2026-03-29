@@ -552,6 +552,10 @@ function init(){
           } else {
             // App came to foreground — check for forced update first
             ForceUpdate.check();
+            // Refresh today's verse set so the date is correct after overnight open.
+            // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
+            // are skipped for today's goal count.
+            initTodayVerses();
             // Cancel any athan notifications whose athan has completed
             if(window.PrayerNotifications&&PrayerNotifications.cancelFiredAthanNotifications){
               PrayerNotifications.cancelFiredAthanNotifications();
@@ -5190,6 +5194,10 @@ function applySyncData(data){
   S.dailyReminder=localStorage.getItem('dailyReminder')==='true';
   S.reminderTime=localStorage.getItem('reminderTime')||'08:00';
   applyTheme();applySizes();
+  // Sync in-memory bookmark map with whatever applySyncData wrote to localStorage.
+  // Without this, _bmMap lags after a user-switch wipe or realtime push that
+  // updated app_bookmarks in localStorage but not in the authoritative in-memory map.
+  _loadBookmarks();
 }
 
 function renderCurrentTab(){
@@ -5309,7 +5317,7 @@ function _clearUserLocalData(){
     localStorage.removeItem('surah_progress_'+i);
     localStorage.removeItem('surah_scroll_'+i);
   }
-  ['_lastSyncTime','readingGoal','readLog','readAyahsToday'].forEach(function(k){localStorage.removeItem(k);});
+  ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions'].forEach(function(k){localStorage.removeItem(k);});
   /* Reset in-memory state to defaults */
   S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;S.showTafsir=true;S.bgAudio=false;
   S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;
