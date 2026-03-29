@@ -44,9 +44,9 @@
 
   var CITIES = [
     'Sulaymaniyah', 'Erbil', 'Duhok', 'Kirkuk',
-    'Halabja', 'Kfry', 'Rania', 'Koya',
+    'Halabcha', 'Kfry', 'Rania', 'Koya',
     'Qaladze', 'Zakho', 'Bardarash', 'Mosul',
-    'Darbandikhan', 'Kalar', 'Akre', 'Daquq',
+    'Darbandikan', 'Kalar', 'Akre', 'Daquq',
     'Makhmur', 'Mandali', 'Qarahanjir', 'DuzKhormatou'
   ];
 
@@ -55,7 +55,7 @@
     Erbil:        'هەولێر',
     Duhok:        'دهۆک',
     Kirkuk:       'کەرکووک',
-    Halabja:      'هەڵەبجە',
+    Halabcha:     'هەڵەبجە',
     Kfry:         'کفری',
     Rania:        'ڕانیە',
     Koya:         'کۆیە',
@@ -63,7 +63,7 @@
     Zakho:        'زاخۆ',
     Bardarash:    'بەردەڕەش',
     Mosul:        'موسل',
-    Darbandikhan: 'دەربەندیخان',
+    Darbandikan:  'دەربەندیخان',
     Kalar:        'کەلار',
     Akre:         'ئاکرێ',
     Daquq:        'داقووق',
@@ -93,6 +93,13 @@
   }
 
   function getCity()    { return (window.S && S.prayerCity) || localStorage.getItem('prayerCity') || 'Duhok'; }
+
+  // Bad-city tracking — cities that returned no data are hidden from the picker
+  var _BAD_KEY = 'prayer_bad_cities';
+  function getBadCities() { try { return JSON.parse(localStorage.getItem(_BAD_KEY) || '[]'); } catch(e) { return []; } }
+  function markCityBad(c) { var b = getBadCities(); if (b.indexOf(c) === -1) { b.push(c); try { localStorage.setItem(_BAD_KEY, JSON.stringify(b)); } catch(e) {} } }
+  function markCityGood(c) { var b = getBadCities().filter(function(x){ return x !== c; }); try { localStorage.setItem(_BAD_KEY, JSON.stringify(b)); } catch(e) {} }
+
   function getAthan()   { if (window.S) return S.prayerAthanEnabled; var v = localStorage.getItem('prayerAthanEnabled'); return v === null ? true : v === 'true'; }
   function getToggles() {
     if (window.S && S.prayerToggles) return S.prayerToggles;
@@ -1297,6 +1304,7 @@
       _currentTimings = data.timings;
       _currentDateISO = today;
       _currentData    = data;
+      markCityGood(city);
       buildPanel(container, data, city, today);
       startCountdown();
       pushWidgetData(data, city, today);
@@ -1312,6 +1320,7 @@
         startCountdown();
         _showCachedBadge(container);
       } else {
+        markCityBad(city);
         buildError(container);
       }
     }
@@ -1611,7 +1620,9 @@
     var cityScroll = cel('div', 'as2-city-scroll');
     cityScroll.id = 'prayerCityGrid';
     var currentCity = getCity();
+    var badCities = getBadCities();
     CITIES.forEach(function(c) {
+      if (badCities.indexOf(c) !== -1 && c !== currentCity) return; // hide broken cities
       var pill = cel('button', 'as2-city-pill' + (c === currentCity ? ' on' : ''));
       pill.dataset.city = c;
       pill.textContent = getCityLabel(c);

@@ -16,10 +16,11 @@ export async function onRequest(context) {
     // Allow Capacitor mobile app (origin: capacitor://localhost or https://localhost)
     const isCapacitor = origin === 'capacitor://localhost' || origin === 'https://localhost';
 
-    // Block only when both Origin and Referer are absent (direct URL access / curl with no headers)
-    const isDirectAccess = !origin && !referer;
+    // Anon key is public-facing — allow all browser requests.
+    // Only block obvious non-browser direct access (no headers at all).
+    const isDirectAccess = !origin && !referer && !request.headers.get('User-Agent')?.includes('Mozilla');
 
-    if ((!isAllowed && !isCapacitor) || (isDirectAccess && !isCapacitor)) {
+    if (isDirectAccess) {
         return new Response(
             JSON.stringify({ error: 'Access denied' }),
             { status: 403, headers: { 'Content-Type': 'application/json' } }

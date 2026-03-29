@@ -27,8 +27,15 @@
     <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
-    <!-- Supabase -->
+    <!-- Supabase (primary: jsdelivr, fallback: unpkg) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    if(!window.supabase){
+      var s=document.createElement('script');
+      s.src='https://unpkg.com/@supabase/supabase-js@2';
+      document.head.appendChild(s);
+    }
+    </script>
 
     <!-- Secure Storage System -->
     <script src="/utils/secure-storage.js"></script>
@@ -2003,7 +2010,11 @@ Press Ctrl+Shift+C to copy this report
 
             } catch (error) {
                 console.error('❌ Failed to initialize Supabase:', error);
-                showMessage('خەتایەک ڕوویدا لە دامەزراندنی سیستەم. تکایە دواتر هەوڵ بدەرەوە.', 'error');
+                if (!window.supabase) {
+                    showMessage('تکایە زیادکەری بلۆکەرەکەت ببەستەوە و پەڕە نوێبکەرەوە.', 'error');
+                } else {
+                    showMessage('خەتایەک ڕوویدا لە دامەزراندنی سیستەم. تکایە پەڕە نوێبکەرەوە.', 'error');
+                }
                 return false;
             }
         }
@@ -2448,10 +2459,14 @@ Press Ctrl+Shift+C to copy this report
         async function signInWithGoogle() {
             clearMessage();
 
-            // Check if Supabase is initialized
+            // If Supabase init failed on page load, retry once before giving up
             if (!supabaseClient) {
-                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
-                return;
+                showMessage('چاوەڕوانبە...', 'info');
+                const retried = await initializeSupabase();
+                if (!retried || !supabaseClient) {
+                    showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                    return;
+                }
             }
 
             showMessage('ڤەگوهاستنا تە بۆ Google...', 'info');
