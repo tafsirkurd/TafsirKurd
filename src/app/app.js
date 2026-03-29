@@ -6,9 +6,13 @@
 
 /* ===== FORCE UPDATE ===== */
 window.ForceUpdate = (function(){
-  var CACHE_KEY = 'tk_update_cfg_v1';
+  var CFG_CACHE_KEY  = 'tk_update_cfg_v2';
+  var SOFT_SNOOZE_KEY = 'tk_soft_snooze_v1'; // {at: timestamp}
   var _storeUrl = '';
+  var _lastCheckTs = 0;
+  var CHECK_DEBOUNCE = 30 * 1000; // 30s — skip re-check if within this window
 
+  // ── Version comparison (semver-safe) ─────────────────────────────────────
   function compareVersions(a, b) {
     var pa = String(a).split('.').map(Number);
     var pb = String(b).split('.').map(Number);
@@ -20,12 +24,12 @@ window.ForceUpdate = (function(){
     return 0;
   }
 
+  // ── Config cache (offline fallback) ──────────────────────────────────────
   function readCache() {
-    try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch(e) { return null; }
+    try { return JSON.parse(localStorage.getItem(CFG_CACHE_KEY)); } catch(e) { return null; }
   }
-
   function writeCache(cfg) {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cfg)); } catch(e) {}
+    try { localStorage.setItem(CFG_CACHE_KEY, JSON.stringify(cfg)); } catch(e) {}
   }
 
   async function fetchConfig() {
@@ -35,17 +39,100 @@ window.ForceUpdate = (function(){
       var cfg = await r.json();
       if (cfg && !cfg.error) { writeCache(cfg); return cfg; }
     } catch(e) {}
-    return readCache(); // offline fallback
+    return readCache(); // network failed — use last known config
   }
 
-  function showOverlay() {
+  // ── Soft-update snooze helpers ────────────────────────────────────────────
+  function isSnoozed(cooldownDays) {
+    try {
+      var s = JSON.parse(localStorage.getItem(SOFT_SNOOZE_KEY));
+      if (!s || !s.at) return false;
+      var days = parseFloat(cooldownDays) || 7;
+      return (Date.now() - s.at) < days * 86400000;
+    } catch(e) { return false; }
+  }
+  function snooze() {
+    try { localStorage.setItem(SOFT_SNOOZE_KEY, JSON.stringify({ at: Date.now() })); } catch(e) {}
+  }
+
+  // ── Open store ────────────────────────────────────────────────────────────
+  function openStore() {
+    if (!_storeUrl) return;
+    try {
+      window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Browser
+        ? Capacitor.Plugins.Browser.open({ url: _storeUrl })
+        : window.open(_storeUrl, '_system');
+    } catch(e) { window.open(_storeUrl, '_system'); }
+  }
+
+  // ── Hard update (full-screen block) ──────────────────────────────────────
+  function showHard() {
     var o = document.getElementById('fuOverlay');
-    if (o) o.classList.add('on');
-    // Apply latest translations
+    if (!o || o.classList.contains('on')) return;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    o.classList.add('on');
+    requestAnimationFrame(function(){ o.classList.add('fu-visible'); });
     if (window.i18n) window.i18n.applyTranslations();
   }
 
+  // ── Soft update (dismissible banner) ─────────────────────────────────────
+  function showSoft() {
+    if (document.getElementById('fuBanner')) return; // already showing
+    var banner = document.createElement('div');
+    banner.id = 'fuBanner';
+    banner.className = 'fu-banner';
+
+    var left = document.createElement('div');
+    left.className = 'fu-banner-text';
+
+    var title = document.createElement('div');
+    title.className = 'fu-banner-title';
+    title.setAttribute('data-i18n', 'update.title');
+    title.textContent = window.t ? window.t('update.title') : 'نوێکردنەوەی بەردەستە';
+
+    var msg = document.createElement('div');
+    msg.className = 'fu-banner-msg';
+    msg.setAttribute('data-i18n', 'update.soft_message');
+    msg.textContent = window.t ? window.t('update.soft_message') : 'وەشانێکی نوێیی بەردەستە.';
+
+    left.appendChild(title);
+    left.appendChild(msg);
+
+    var actions = document.createElement('div');
+    actions.className = 'fu-banner-actions';
+
+    var updateBtn = document.createElement('button');
+    updateBtn.className = 'fu-banner-btn';
+    updateBtn.setAttribute('data-i18n', 'update.btn');
+    updateBtn.textContent = window.t ? window.t('update.btn') : 'نوێبکەرەوە';
+    updateBtn.onclick = function(){ openStore(); };
+
+    var dismissBtn = document.createElement('button');
+    dismissBtn.className = 'fu-banner-dismiss';
+    dismissBtn.innerHTML = '&times;';
+    dismissBtn.onclick = function(){
+      banner.classList.remove('fu-banner-in');
+      setTimeout(function(){ if (banner.parentNode) banner.parentNode.removeChild(banner); }, 300);
+      snooze();
+    };
+
+    actions.appendChild(updateBtn);
+    actions.appendChild(dismissBtn);
+    banner.appendChild(left);
+    banner.appendChild(actions);
+
+    document.body.appendChild(banner);
+    requestAnimationFrame(function(){ banner.classList.add('fu-banner-in'); });
+  }
+
+  // ── Main check ────────────────────────────────────────────────────────────
   async function check() {
+    // Debounce — skip if checked very recently
+    var now = Date.now();
+    if (now - _lastCheckTs < CHECK_DEBOUNCE) return;
+    _lastCheckTs = now;
+
     try {
       if (!window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.App) return;
       var info = await Capacitor.Plugins.App.getInfo();
@@ -54,29 +141,45 @@ window.ForceUpdate = (function(){
       if (platform === 'web') return;
 
       var cfg = await fetchConfig();
-      if (!cfg) return;
-      if (cfg.force_update_enabled !== 'true') return;
+
+      // Safety: never block if config is absent or fetch failed with no cache
+      if (!cfg) {
+        console.log('[Update] No config available — skipping check');
+        return;
+      }
+
+      // Resolve mode — support both old key (force_update_enabled) and new (update_mode)
+      var mode = cfg.update_mode || (cfg.force_update_enabled === 'true' ? 'hard' : 'off');
 
       var minVersion = platform === 'ios' ? cfg.min_ios_version : cfg.min_android_version;
-      if (!minVersion) return;
-
       _storeUrl = platform === 'ios' ? (cfg.ios_store_url || '') : (cfg.android_store_url || '');
 
-      if (compareVersions(version, minVersion) < 0) {
-        console.log('[ForceUpdate] version', version, '< min', minVersion, '— blocking');
-        showOverlay();
+      console.log('[Update] version=' + version + ' min=' + (minVersion || 'none') + ' mode=' + mode + ' platform=' + platform);
+
+      if (mode === 'off' || !minVersion) {
+        console.log('[Update] mode=off or no minVersion — nothing to do');
+        return;
+      }
+
+      var outdated = compareVersions(version, minVersion) < 0;
+      console.log('[Update] outdated=' + outdated);
+
+      if (!outdated) return;
+
+      if (mode === 'hard') {
+        console.log('[Update] HARD — blocking app');
+        showHard();
+      } else if (mode === 'soft') {
+        var cooldown = cfg.soft_update_cooldown_days;
+        if (isSnoozed(cooldown)) {
+          console.log('[Update] SOFT — snoozed, skipping banner');
+          return;
+        }
+        console.log('[Update] SOFT — showing banner');
+        showSoft();
       }
     } catch(e) {
-      console.warn('[ForceUpdate] check error:', e);
-    }
-  }
-
-  function openStore() {
-    if (_storeUrl) {
-      try { window.Capacitor.Plugins.Browser
-              ? Capacitor.Plugins.Browser.open({ url: _storeUrl })
-              : window.open(_storeUrl, '_system');
-      } catch(e) { window.open(_storeUrl, '_system'); }
+      console.warn('[Update] check error:', e);
     }
   }
 

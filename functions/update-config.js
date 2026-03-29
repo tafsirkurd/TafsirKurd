@@ -25,11 +25,14 @@ export async function onRequest(context) {
     }
 
     const UPDATE_KEYS = [
-      'force_update_enabled',
+      'update_mode',               // 'off' | 'soft' | 'hard'
       'min_ios_version',
       'min_android_version',
       'ios_store_url',
       'android_store_url',
+      'soft_update_cooldown_days', // days before re-showing soft banner after dismiss
+      // legacy key — kept for backward compat
+      'force_update_enabled',
     ];
 
     const res = await fetch(
