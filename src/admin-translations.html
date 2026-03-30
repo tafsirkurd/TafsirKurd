@@ -961,6 +961,122 @@
         .fab:active { transform: scale(0.9); }
         .fab svg { width: 24px; height: 24px; }
 
+        /* ===== Mobile filter bar (hidden on desktop) ===== */
+        .mobile-filter-bar {
+            display: none;
+            width: 100%;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            margin-bottom: 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .mobile-filter-bar:hover { background: var(--bg-hover); border-color: var(--border-medium); }
+        .mobile-filter-bar svg { flex-shrink: 0; color: var(--text-tertiary); }
+        .mobile-filter-bar .mfb-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mobile-filter-bar .mfb-count {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--bg-active, rgba(0,0,0,0.06));
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+        }
+        .mobile-filter-bar.has-filter { border-color: var(--text-primary); }
+        .mobile-filter-bar.has-filter svg { color: var(--text-primary); }
+        .mobile-filter-bar.has-filter .mfb-count { background: var(--text-primary); color: var(--bg-app); }
+
+        /* ===== Filter bottom sheet (hidden on desktop) ===== */
+        .filter-sheet-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1100;
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .filter-sheet-backdrop.open { opacity: 1; }
+        .filter-sheet {
+            display: none;
+            flex-direction: column;
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            max-height: 82vh;
+            background: var(--bg-surface);
+            border-radius: 20px 20px 0 0;
+            z-index: 1101;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+        }
+        .filter-sheet.open { transform: translateY(0); }
+        .filter-sheet-handle {
+            width: 36px; height: 4px;
+            background: var(--border-medium);
+            border-radius: 2px;
+            margin: 12px auto 0;
+            flex-shrink: 0;
+        }
+        .filter-sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px 10px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .filter-sheet-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .filter-sheet-close {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-active, rgba(0,0,0,0.06));
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .filter-sheet-list {
+            overflow-y: auto;
+            flex: 1;
+            padding: 6px 0 24px;
+        }
+        .filter-sheet-list .cat-group-lbl {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-tertiary);
+            padding: 12px 20px 4px;
+        }
+        .filter-sheet-list .cat-group-lbl:not(:first-child) {
+            border-top: 1px solid var(--border-light);
+            margin-top: 4px;
+        }
+        .filter-sheet-list .cat-item {
+            padding: 13px 20px;
+            font-size: 15px;
+            border-radius: 0;
+        }
+        .filter-sheet-list .cat-item svg { width: 18px; height: 18px; }
+        .filter-sheet-list .cat-count { font-size: 13px; padding: 2px 10px; }
+
         /* ===== Saving spinner ===== */
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -1017,34 +1133,17 @@
             .filter-search svg { left: 16px; width: 18px; height: 18px; }
             .filter-clear { right: 8px; width: 40px; height: 40px; font-size: 18px; border-radius: 50%; }
 
-            /* Sidebar collapses to horizontal scroll on mobile */
-            .t-body { flex-direction: column; gap: 12px; }
-            .cat-sidebar {
-                width: 100%;
-                position: static;
-                max-height: none;
-                border-radius: 12px;
-            }
-            .cat-sidebar-inner {
-                display: flex;
-                flex-direction: row;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 6px 8px;
-                gap: 4px;
-                scrollbar-width: none;
-            }
-            .cat-sidebar-inner::-webkit-scrollbar { display: none; }
-            .cat-group-lbl { display: none; }
-            .cat-item {
-                flex-shrink: 0;
-                border-radius: 8px;
-                padding: 7px 12px;
-                font-size: 12px;
-                gap: 6px;
-                width: auto;
-            }
-            .cat-item.active { border-radius: 8px; }
+            /* Sidebar hidden on mobile — replaced by bottom sheet */
+            .t-body { flex-direction: column; gap: 0; }
+            .cat-sidebar { display: none; }
+            .t-main { width: 100%; }
+
+            /* Mobile filter trigger bar */
+            .mobile-filter-bar { display: flex; }
+
+            /* Bottom sheet */
+            .filter-sheet-backdrop { display: block; }
+            .filter-sheet { display: flex; }
 
             /* Cards */
             .translation-list { gap: 8px; }
@@ -1135,16 +1234,10 @@
             .add-row { border-radius: 14px; margin-bottom: 12px; }
             .add-row .edit-form { padding: 18px 14px; }
 
-            /* FAB */
-            #addBtn { display: none !important; }
-            .fab {
-                display: flex;
-                bottom: 20px;
-                right: 16px;
-                width: 60px;
-                height: 60px;
-                box-shadow: 0 6px 28px rgba(0,0,0,0.3);
-            }
+            /* Hide FAB on mobile — Add New button stays in header */
+            .fab { display: none !important; }
+            #addBtn { display: flex !important; }
+            #addBtn span { display: none; }
 
             /* Pagination */
             .pagination { gap: 16px; padding: 18px 0; }
@@ -1462,6 +1555,12 @@
                         <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
                     </div>
                 </div>
+                <button class="mobile-filter-bar" id="mobileFilterBar" onclick="openFilterSheet()">
+                    <i data-lucide="filter" style="width:16px;height:16px"></i>
+                    <span class="mfb-label" id="mobileFilterLabel">All categories</span>
+                    <span class="mfb-count" id="mobileFilterCount">--</span>
+                    <i data-lucide="chevron-up" style="width:16px;height:16px"></i>
+                </button>
 
                 <div class="add-row" id="addForm">
                     <div class="edit-form">
@@ -1529,6 +1628,16 @@
                 </div><!-- /.t-main -->
                 </div><!-- /.t-body -->
 
+                <div class="filter-sheet-backdrop" id="filterSheetBackdrop" onclick="closeFilterSheet()"></div>
+                <div class="filter-sheet" id="filterSheet">
+                    <div class="filter-sheet-handle"></div>
+                    <div class="filter-sheet-header">
+                        <span class="filter-sheet-title">Filter by Category</span>
+                        <button class="filter-sheet-close" onclick="closeFilterSheet()">&times;</button>
+                    </div>
+                    <div class="filter-sheet-list" id="filterSheetList"></div>
+                </div>
+
                 <div class="history-drawer-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
                 <div class="history-panel" id="historyPanel">
                     <div class="history-header">
@@ -1576,64 +1685,66 @@
 
         // ── Category metadata: icon (Lucide name) + display label + group ──
         const CATEGORY_META = {
-            // Core App
-            general:      { icon: 'layers',          label: 'General',        group: 'Core' },
-            nav:          { icon: 'navigation',       label: 'Navigation',     group: 'Core' },
-            navigation:   { icon: 'navigation',       label: 'Navigation',     group: 'Core' },
-            ui:           { icon: 'layout',           label: 'UI',             group: 'Core' },
-            errors:       { icon: 'alert-triangle',   label: 'Errors',         group: 'Core' },
-            toast:        { icon: 'zap',              label: 'Toasts',         group: 'Core' },
-            // Content Screens
-            quran:        { icon: 'book-open',        label: 'Quran',          group: 'Screens' },
-            reader:       { icon: 'book-marked',      label: 'Reader',         group: 'Screens' },
-            islamvoice:   { icon: 'radio',            label: 'IslamVoice',     group: 'Screens' },
-            prayer:       { icon: 'moon',             label: 'Prayer',         group: 'Screens' },
-            gencine:      { icon: 'hand',             label: 'Gencine',        group: 'Screens' },
-            goals:        { icon: 'target',           label: 'Goals',          group: 'Screens' },
-            bookmarks:    { icon: 'bookmark',         label: 'Bookmarks',      group: 'Screens' },
-            search:       { icon: 'search',           label: 'Search',         group: 'Screens' },
-            // Audio
-            audio:        { icon: 'headphones',       label: 'Audio',          group: 'Media' },
+            // Core
+            general:       { icon: 'layers',          label: 'General',        group: 'Core' },
+            nav:           { icon: 'navigation',       label: 'Navigation',     group: 'Core' },
+            navigation:    { icon: 'navigation',       label: 'Navigation',     group: 'Core' },
+            ui:            { icon: 'layout',           label: 'UI',             group: 'Core' },
+            header:        { icon: 'heading',          label: 'Header',         group: 'Core' },
+            errors:        { icon: 'alert-triangle',   label: 'Errors',         group: 'Core' },
+            toast:         { icon: 'zap',              label: 'Toasts',         group: 'Core' },
+            copy:          { icon: 'clipboard',        label: 'Copy',           group: 'Core' },
+            // Screens
+            quran:         { icon: 'book-open',        label: 'Quran',          group: 'Screens' },
+            reader:        { icon: 'book-marked',      label: 'Reader',         group: 'Screens' },
+            islamvoice:    { icon: 'radio',            label: 'IslamVoice',     group: 'Screens' },
+            prayer:        { icon: 'moon',             label: 'Prayer',         group: 'Screens' },
+            adhkar:        { icon: 'hand',             label: 'Adhkar',         group: 'Screens' },
+            gencine:       { icon: 'star',             label: 'Gencine',        group: 'Screens' },
+            goals:         { icon: 'target',           label: 'Goals',          group: 'Screens' },
+            bookmarks:     { icon: 'bookmark',         label: 'Bookmarks',      group: 'Screens' },
+            search:        { icon: 'search',           label: 'Search',         group: 'Screens' },
+            // Media
+            audio:         { icon: 'headphones',       label: 'Audio',          group: 'Media' },
+            content:       { icon: 'file-text',        label: 'Content',        group: 'Media' },
             // Account
-            auth:         { icon: 'log-in',           label: 'Auth',           group: 'Account' },
-            signup:       { icon: 'user-plus',        label: 'Sign Up',        group: 'Account' },
-            profile:      { icon: 'user',             label: 'Profile',        group: 'Account' },
-            settings:     { icon: 'settings',         label: 'Settings',       group: 'Account' },
-            security:     { icon: 'shield',           label: 'Security',       group: 'Account' },
-            onboarding:   { icon: 'star',             label: 'Onboarding',     group: 'Account' },
+            auth:          { icon: 'log-in',           label: 'Auth',           group: 'Account' },
+            signup:        { icon: 'user-plus',        label: 'Sign Up',        group: 'Account' },
+            onboarding:    { icon: 'star',             label: 'Onboarding',     group: 'Account' },
+            profile:       { icon: 'user',             label: 'Profile',        group: 'Account' },
+            settings:      { icon: 'settings',         label: 'Settings',       group: 'Account' },
+            security:      { icon: 'shield',           label: 'Security',       group: 'Account' },
             // Notifications
-            notifications:{ icon: 'bell',             label: 'Notifications',  group: 'System' },
-            content:      { icon: 'file-text',        label: 'Content',        group: 'System' },
-            copy:         { icon: 'clipboard',        label: 'Copy',           group: 'System' },
-            header:       { icon: 'heading',          label: 'Header',         group: 'System' },
+            notifications: { icon: 'bell',             label: 'Notifications',  group: 'Notifications' },
+            notification:  { icon: 'bell',             label: 'Notifications',  group: 'Notifications' },
         };
 
-        // ── Web page metadata ──
+        // ── Web page metadata (icon + label + group for sidebar grouping) ──
         const WEB_PAGE_META = {
-            index:                  { icon: 'home',         label: 'Home' },
-            quran:                  { icon: 'book-open',    label: 'Quran' },
-            islamvoice:             { icon: 'radio',        label: 'IslamVoice' },
-            about:                  { icon: 'info',         label: 'About' },
-            founder:                { icon: 'user-check',   label: 'Founder' },
-            onboarding:             { icon: 'star',         label: 'Onboarding' },
-            login:                  { icon: 'log-in',       label: 'Login' },
-            profile:                { icon: 'user',         label: 'Profile' },
-            settings:               { icon: 'settings',     label: 'Settings' },
-            goals:                  { icon: 'target',       label: 'Goals' },
-            bookmarks:              { icon: 'bookmark',     label: 'Bookmarks' },
-            'reading-goal':         { icon: 'trending-up',  label: 'Reading Goal' },
-            'complete-signup':      { icon: 'user-plus',    label: 'Complete Signup' },
-            'privacy-policy':       { icon: 'shield',       label: 'Privacy Policy' },
-            'terms-and-conditions': { icon: 'file-text',    label: 'Terms' },
-            'delete-account':       { icon: 'trash-2',      label: 'Delete Account' },
-            footer:                 { icon: 'layout',       label: 'Footer' },
+            index:                  { icon: 'home',         label: 'Home',           group: 'Main' },
+            quran:                  { icon: 'book-open',    label: 'Quran',          group: 'Main' },
+            islamvoice:             { icon: 'radio',        label: 'IslamVoice',     group: 'Main' },
+            about:                  { icon: 'info',         label: 'About',          group: 'Main' },
+            founder:                { icon: 'user-check',   label: 'Founder',        group: 'Main' },
+            onboarding:             { icon: 'star',         label: 'Onboarding',     group: 'Account' },
+            login:                  { icon: 'log-in',       label: 'Login',          group: 'Account' },
+            'complete-signup':      { icon: 'user-plus',    label: 'Complete Signup',group: 'Account' },
+            'delete-account':       { icon: 'trash-2',      label: 'Delete Account', group: 'Account' },
+            profile:                { icon: 'user',         label: 'Profile',        group: 'Account' },
+            settings:               { icon: 'settings',     label: 'Settings',       group: 'Account' },
+            goals:                  { icon: 'target',       label: 'Goals',          group: 'Content' },
+            bookmarks:              { icon: 'bookmark',     label: 'Bookmarks',      group: 'Content' },
+            'reading-goal':         { icon: 'trending-up',  label: 'Reading Goal',   group: 'Content' },
+            'privacy-policy':       { icon: 'shield',       label: 'Privacy Policy', group: 'Legal' },
+            'terms-and-conditions': { icon: 'file-text',    label: 'Terms',          group: 'Legal' },
+            footer:                 { icon: 'layout',       label: 'Footer',         group: 'Other' },
         };
 
         function getChipMeta(slug, isWeb) {
             if (isWeb) {
                 var m = WEB_PAGE_META[slug];
-                return m ? { icon: m.icon, label: m.label, group: 'Pages' }
-                         : { icon: 'file', label: slug, group: 'Pages' };
+                return m ? { icon: m.icon, label: m.label, group: m.group || 'Pages' }
+                         : { icon: 'file', label: slug, group: 'Other' };
             }
             var m = CATEGORY_META[slug];
             return m || { icon: 'tag', label: slug, group: 'Other' };
@@ -1943,12 +2054,119 @@
             }
 
             lucide.createIcons({ nodes: [inner] });
+            var barCount = activePageFilter ? (pageCounts[activePageFilter] || 0) : platformData.length;
+            _updateMobileFilterBar(barCount);
         }
 
         function setPageFilter(page) {
             activePageFilter = page;
+            closeFilterSheet();
             populatePageFilter();
             filterTranslations();
+        }
+
+        function openFilterSheet() {
+            var backdrop = document.getElementById('filterSheetBackdrop');
+            var sheet = document.getElementById('filterSheet');
+            // Populate sheet list (same as sidebar but in sheet container)
+            _populateSheetList();
+            backdrop.style.display = 'block';
+            sheet.style.display = 'flex';
+            // Force reflow before adding open class for CSS transition
+            backdrop.offsetHeight;
+            backdrop.classList.add('open');
+            sheet.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFilterSheet() {
+            var backdrop = document.getElementById('filterSheetBackdrop');
+            var sheet = document.getElementById('filterSheet');
+            if (!sheet) return;
+            backdrop.classList.remove('open');
+            sheet.classList.remove('open');
+            document.body.style.overflow = '';
+            setTimeout(function() {
+                backdrop.style.display = 'none';
+                sheet.style.display = 'none';
+            }, 300);
+        }
+
+        function _populateSheetList() {
+            var platformData = getPlatformData();
+            var pageCounts = {};
+            var isWeb = (activePlatform === 'web' || activePlatform === 'updates');
+            function getKey(t) {
+                if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
+                    var cat = t.category || 'general';
+                    return cat === 'navigation' ? 'nav' : cat;
+                }
+                return normalizePage(t.page);
+            }
+            platformData.forEach(function(t) { var k = getKey(t); pageCounts[k] = (pageCounts[k]||0)+1; });
+            if (isWeb) { WEB_PAGES.forEach(function(p) { if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0; }); }
+
+            var pages = Object.keys(pageCounts).sort();
+            var list = document.getElementById('filterSheetList');
+            list.textContent = '';
+
+            function makeSheetItem(p, count) {
+                var btn = document.createElement('button');
+                btn.className = 'cat-item' + (activePageFilter === p ? ' active' : '');
+                var meta = p === '' ? { icon: 'layers', label: 'All' } : getChipMeta(p, isWeb);
+                var iconEl = makeLucideEl(meta.icon, 18);
+                btn.appendChild(iconEl);
+                var lbl = document.createElement('span');
+                lbl.className = 'cat-item-label';
+                lbl.textContent = meta.label;
+                btn.appendChild(lbl);
+                var cnt = document.createElement('span');
+                cnt.className = 'cat-count';
+                cnt.textContent = count;
+                btn.appendChild(cnt);
+                btn.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
+                return btn;
+            }
+
+            function addSheetGroupLabel(text) {
+                var lbl = document.createElement('div');
+                lbl.className = 'cat-group-lbl';
+                lbl.textContent = text;
+                list.appendChild(lbl);
+            }
+
+            list.appendChild(makeSheetItem('', platformData.length));
+
+            if (isWeb) {
+                addSheetGroupLabel('Pages');
+                pages.forEach(function(p) { list.appendChild(makeSheetItem(p, pageCounts[p])); });
+            } else {
+                var groups = {}, groupOrder = [];
+                pages.forEach(function(p) {
+                    var g = (getChipMeta(p, false).group) || 'Other';
+                    if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+                    groups[g].push(p);
+                });
+                groupOrder.forEach(function(g) {
+                    addSheetGroupLabel(g);
+                    groups[g].forEach(function(p) { list.appendChild(makeSheetItem(p, pageCounts[p])); });
+                });
+            }
+            lucide.createIcons({ nodes: [list] });
+        }
+
+        function _updateMobileFilterBar(count) {
+            var bar = document.getElementById('mobileFilterBar');
+            var labelEl = document.getElementById('mobileFilterLabel');
+            var countEl = document.getElementById('mobileFilterCount');
+            if (!bar) return;
+            var isWeb = (activePlatform === 'web' || activePlatform === 'updates');
+            var label = activePageFilter
+                ? getChipMeta(activePageFilter, isWeb).label
+                : 'All categories';
+            labelEl.textContent = label;
+            countEl.textContent = count;
+            bar.classList.toggle('has-filter', !!activePageFilter);
         }
 
         function normalizePage(page) {
