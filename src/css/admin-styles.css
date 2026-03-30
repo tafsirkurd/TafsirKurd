@@ -79,13 +79,15 @@ body {
 }
 
 .sidebar-header {
-    padding: 18px 16px;
+    padding: 16px 14px;
     border-bottom: 1px solid var(--border-light);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     overflow: hidden;
+    min-height: 64px;
+    flex-shrink: 0;
 }
 
 .sidebar-logo {
@@ -95,6 +97,7 @@ body {
     color: var(--text-primary);
     min-width: 0;
     flex: 1;
+    overflow: hidden;
 }
 
 .sidebar-logo svg {
@@ -142,19 +145,25 @@ body.dark-mode .sidebar-logo-img {
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
     display: flex;
     align-items: center;
-    transition: color 0.2s;
+    justify-content: center;
+    flex-shrink: 0;       /* never squish the logo */
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+}
+.sidebar-toggle:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .sidebar.collapsed .sidebar-toggle svg {
     transform: rotate(180deg);
 }
 
-.sidebar-toggle:hover {
-    color: var(--text-primary);
-}
 
 .sidebar-nav {
     flex: 1;
@@ -881,11 +890,24 @@ body[data-role="editor"] .nav-item[href*="activity-feed"] {
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 260px; /* full readable width on mobile */
     }
 
     .sidebar.mobile-open {
         transform: translateX(0);
     }
+
+    /* On mobile the sidebar is always "open" when visible — hide collapse toggle */
+    .sidebar-toggle { display: none; }
+
+    /* Always show the full text label on mobile */
+    .sidebar.collapsed .sidebar-logo-text {
+        max-width: 160px;
+        opacity: 1;
+    }
+
+    /* Header taller touch target */
+    .sidebar-header { min-height: 60px; padding: 14px 16px; }
 
     .main-content {
         margin-left: 0;
