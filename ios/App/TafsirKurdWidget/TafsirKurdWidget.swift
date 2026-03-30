@@ -1087,8 +1087,8 @@ struct TafsirKurdLockWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             TafsirKurdLockWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName(WT.t("widget.prayer.lock_name", "نڤێژا دویڤدا"))
-        .description(WT.t("widget.prayer.lock_desc", "نڤێژا بهێت د لۆک سکرینێدا"))
+        .configurationDisplayName(WT.t("widget.prayer.lock_name", "دەمێن نڤێژان"))
+        .description(WT.t("widget.prayer.lock_desc", "دیارکرنا دەمێن نڤێژان"))
         .supportedFamilies([.accessoryRectangular])
     }
 }

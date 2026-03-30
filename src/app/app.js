@@ -389,6 +389,33 @@ var RECITERS=[
 var RECITER=localStorage.getItem('app_reciter')||'Alafasy_128kbps';
 // Load from localStorage cache instantly — no async wait
 var RECITER_PHOTOS=(function(){try{return JSON.parse(localStorage.getItem('reciter_photos_cache')||'{}')}catch(e){return {}}}());
+// Tracks which reciter IDs have their images fully decoded in browser memory this session
+var _imgLoaded={};
+
+// Preload a single reciter image and mark it loaded on completion.
+// _imgLoaded[id]=true on success, ='err' on failure — both prevent retries this session.
+function _preloadReciterImg(id){
+  var url=RECITER_PHOTOS[id];
+  if(!url||_imgLoaded[id])return;
+  var img=new Image();
+  img.onload=function(){_imgLoaded[id]=true;};
+  img.onerror=function(){_imgLoaded[id]='err';};
+  img.src=url;
+}
+
+// Startup: prime browser cache from localStorage-cached URLs immediately.
+// On first install RECITER_PHOTOS is empty so this is a no-op.
+// On second+ launch this starts downloading current reciter before Supabase refresh.
+(function(){
+  [RECITER].concat(RECITERS.slice(0,3).map(function(r){return r.id;})).forEach(function(id){
+    var url=RECITER_PHOTOS[id];
+    if(!url)return;
+    var img=new Image();
+    img.onload=function(){_imgLoaded[id]=true;};
+    img.onerror=function(){_imgLoaded[id]='err';};
+    img.src=url;
+  });
+})();
 
 function loadReciterPhotos(){
   if(!S.supabase)return;
@@ -401,9 +428,12 @@ function loadReciterPhotos(){
       });
       // Persist so next launch is instant
       try{localStorage.setItem('reciter_photos_cache',JSON.stringify(RECITER_PHOTOS))}catch(e){}
-      // Preload top 5 reciter photos during idle time — limit burst to avoid network congestion
-      (window.requestIdleCallback||function(fn){setTimeout(fn,500)})(function(){
-        Object.values(RECITER_PHOTOS).slice(0,5).forEach(function(url){var i=new Image();i.src=url;});
+      // Priority 1: current reciter + top 3 by index — start immediately, not idle
+      _preloadReciterImg(RECITER);
+      RECITERS.slice(0,3).forEach(function(r){_preloadReciterImg(r.id);});
+      // Priority 2: remaining reciters — idle time to avoid initial network burst
+      (window.requestIdleCallback||function(fn){setTimeout(fn,800)})(function(){
+        RECITERS.forEach(function(r){_preloadReciterImg(r.id);});
       });
     }).catch(function(){});
 }
@@ -3263,12 +3293,26 @@ var _lastAvatarReciter=null;
 function updateAudioBarAvatar(){
   var avatarEl=$('audioBarAvatar');
   if(!avatarEl)return;
-  if(RECITER===_lastAvatarReciter)return; // skip rebuild if reciter hasn't changed
+  // Skip rebuild when reciter is unchanged and image state is settled (success or known failure)
+  if(RECITER===_lastAvatarReciter&&_imgLoaded[RECITER])return;
   _lastAvatarReciter=RECITER;
   while(avatarEl.firstChild)avatarEl.removeChild(avatarEl.firstChild);
   var photo=RECITER_PHOTOS[RECITER];
-  if(photo){var img=document.createElement('img');img.src=photo;img.alt='';avatarEl.appendChild(img);}
-  else{var rec=RECITERS.find(function(r){return r.id===RECITER;});var initials=rec?rec.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';avatarEl.appendChild(el('span','audio-bar-avatar-initials',initials));}
+  if(photo&&_imgLoaded[RECITER]===true){
+    // Decoded — show instantly from browser cache
+    var img=document.createElement('img');img.src=photo;img.alt='';avatarEl.appendChild(img);
+  } else {
+    var rec=RECITERS.find(function(r){return r.id===RECITER;});
+    var ini=rec?rec.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
+    avatarEl.appendChild(el('span','audio-bar-avatar-initials',ini));
+    if(photo&&_imgLoaded[RECITER]!=='err'){
+      // URL known, not yet settled — queue upgrade when it loads; onerror silences retries
+      var watchId=RECITER;var watchImg=new Image();
+      watchImg.onload=function(){_imgLoaded[watchId]=true;if(RECITER===watchId){_lastAvatarReciter=null;updateAudioBarAvatar();}};
+      watchImg.onerror=function(){_imgLoaded[watchId]='err';};
+      watchImg.src=photo;
+    }
+  }
 }
 
 function showAudioBar(){
@@ -3599,7 +3643,7 @@ function renderAudioSettings(){
 }
 
 /* ===== FULL PLAYER ===== */
-var _fpOpen=false,_fpRafId=null,_fpLastTick=0;
+var _fpOpen=false,_fpRafId=null,_fpLastTick=0,_fpProg=0,_fpTextTick=0,_fpLastSurah=0,_fpLastAyah=0,_fpAnimating=false,_fpGen=0;
 
 function _fmtTime(s){
   if(!s||isNaN(s))return'0:00';
@@ -3620,20 +3664,79 @@ function _renderFPSpeed(){
   });
 }
 
+function _fpGetAyahText(surah,ayah){
+  if(!S.quranData||!surah||!ayah)return'';
+  try{
+    var sd=S.quranData[String(surah)];if(!sd)return'';
+    var vv=sd.verses||sd;var v=vv[ayah-1];if(!v)return'';
+    return String(v.text||v||'');
+  }catch(e){return'';}
+}
+
+function _fpUpdateAyahs(surah,ayah,instant){
+  if(!surah||!ayah)return;
+  var area=$('fpAyahArea');if(!area)return;
+  if(surah===_fpLastSurah&&ayah===_fpLastAyah)return;
+  function _fill(){
+    var s=SURAHS[surah-1],total=s?s.a:0;
+    var p=$('fpAyahPrev'),c=$('fpAyahCurr'),n=$('fpAyahNext');
+    if(p)p.textContent=ayah>1?_fpGetAyahText(surah,ayah-1):'';
+    if(c){c.textContent=_fpGetAyahText(surah,ayah);c.scrollTop=0;}
+    if(n)n.textContent=ayah<total?_fpGetAyahText(surah,ayah+1):'';
+    _fpLastSurah=surah;_fpLastAyah=ayah;
+  }
+  if(instant||_fpAnimating){
+    _fpGen++; // invalidate any pending delayed callback for a stale ayah
+    _fill();return;
+  }
+  _fpAnimating=true;
+  _fpGen++;var myGen=_fpGen;
+  area.classList.add('fp-out');
+  setTimeout(function(){
+    // Skip fill only if instant-path ran after us (incremented _fpGen past myGen)
+    if(_fpGen===myGen)_fill();
+    area.classList.add('fp-in');
+    area.classList.remove('fp-out');
+    area.offsetHeight; // force reflow — browser registers fp-in state
+    area.classList.remove('fp-in'); // CSS transition fires: opacity 0→1, translateY 8→0
+    setTimeout(function(){_fpAnimating=false;},350);
+  },260);
+}
+
 function syncFullPlayer(){
   if(!_fpOpen)return;
   var fpAv=$('fpAvatar');
   if(fpAv){
     clear(fpAv);
     var photo=RECITER_PHOTOS[RECITER];
-    if(photo){
+    if(photo&&_imgLoaded[RECITER]===true){
+      // Image already decoded — show instantly, no flash
       var img=document.createElement('img');
       img.alt='';img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';
       img.src=photo;fpAv.appendChild(img);
-    } else {
+    } else if(photo&&_imgLoaded[RECITER]!=='err'){
+      // URL known, not yet settled — show initials immediately, crossfade to image when ready
       var rec=RECITERS.find(function(r){return r.id===RECITER;});
-      var initials=rec?rec.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
-      fpAv.appendChild(el('span','fp-avatar-initials',initials));
+      var ini=rec?rec.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
+      var initEl=el('span','fp-avatar-initials',ini);
+      fpAv.appendChild(initEl);
+      var fpPre=new Image();var fpId=RECITER;var fpUrl=photo;
+      fpPre.onload=function(){
+        _imgLoaded[fpId]=true;
+        if(!_fpOpen||RECITER!==fpId)return;
+        var realImg=document.createElement('img');realImg.alt='';
+        realImg.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0;opacity:0;transition:opacity .3s ease';
+        realImg.src=fpUrl;fpAv.appendChild(realImg);
+        requestAnimationFrame(function(){requestAnimationFrame(function(){realImg.style.opacity='1';});});
+        setTimeout(function(){if(fpAv.contains(initEl))fpAv.removeChild(initEl);},350);
+      };
+      fpPre.onerror=function(){_imgLoaded[fpId]='err';};
+      fpPre.src=photo;
+    } else {
+      // No URL or known-broken URL — initials only
+      var rec2=RECITERS.find(function(r){return r.id===RECITER;});
+      var ini2=rec2?rec2.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
+      fpAv.appendChild(el('span','fp-avatar-initials',ini2));
     }
     fpAv.classList.toggle('playing',S.audio.playing);
   }
@@ -3643,17 +3746,22 @@ function syncFullPlayer(){
   var re=$('fpReciter');if(re)re.textContent=getReciterName();
   var fi=$('fpPlayIcon');if(fi)fi.className=S.audio.playing?'fas fa-pause':'fas fa-play';
   _renderFPSpeed();
+  _fpUpdateAyahs(S.audio.surah,S.audio.ayah);
 }
 
 function _fpTick(ts){
   if(!_fpOpen){_fpRafId=null;return;}
-  if(ts-_fpLastTick>250){
-    _fpLastTick=ts;
-    var ae=S.audio.el;
-    if(ae&&ae.duration&&!isNaN(ae.duration)&&ae.duration>0){
-      var pct=ae.currentTime/ae.duration;
-      var fill=$('fpProgressFill');if(fill)fill.style.transform='scaleX('+pct+')';
-      var bp=$('audioBarProgress');if(bp)bp.style.transform='scaleX('+pct+')';
+  var dt=ts-_fpLastTick;_fpLastTick=ts;
+  var ae=S.audio.el;
+  if(ae&&ae.duration>0&&!isNaN(ae.duration)){
+    var target=ae.currentTime/ae.duration;
+    // Time-based exponential lerp — smooth at any frame rate, ~100ms convergence
+    _fpProg+=((target-_fpProg)*Math.min(1,(dt||16)*0.009));
+    var fill=$('fpProgressFill');if(fill)fill.style.transform='scaleX('+_fpProg+')';
+    var bp=$('audioBarProgress');if(bp)bp.style.transform='scaleX('+_fpProg+')';
+    // Text labels update every ~1s (cheap writes, no layout thrash)
+    if(ts-_fpTextTick>900){
+      _fpTextTick=ts;
       var cur=$('fpCurrent');if(cur)cur.textContent=_fmtTime(ae.currentTime);
       var dur=$('fpDuration');if(dur)dur.textContent=_fmtTime(ae.duration);
     }
@@ -3661,12 +3769,181 @@ function _fpTick(ts){
   _fpRafId=requestAnimationFrame(_fpTick);
 }
 
+function _buildRecPicker(){
+  var list=$('rpList');if(!list)return;
+  clear(list);
+  var styleLbls={murattal:t('audio.style_murattal')||'مورتل',mujawwad:t('audio.style_mujawwad')||'مجود',hadr:t('audio.style_hadr')||'حدر'};
+  RECITERS.forEach(function(r){
+    var isOn=r.id===RECITER;
+    var item=el('div','rp-item'+(isOn?' on':''));
+    // Avatar
+    var av=el('div','rp-av');
+    var photo=RECITER_PHOTOS[r.id];
+    if(photo&&_imgLoaded[r.id]===true){
+      // Decoded — show instantly from browser cache, no crossfade needed
+      var avImg=document.createElement('img');avImg.alt='';avImg.src=photo;
+      av.appendChild(avImg);
+    } else if(photo&&_imgLoaded[r.id]!=='err'){
+      // URL known, not yet settled — show initials + crossfade to image when loaded
+      var rpIni=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');
+      var rpIniEl=el('span','rp-ini',rpIni);
+      av.appendChild(rpIniEl);
+      (function(av2,iniEl2,id2,url2){
+        var rpPre=new Image();
+        rpPre.onload=function(){
+          _imgLoaded[id2]=true;
+          var ri=document.createElement('img');ri.alt='';
+          ri.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0;opacity:0;transition:opacity .25s ease';
+          ri.src=url2;av2.appendChild(ri);
+          requestAnimationFrame(function(){requestAnimationFrame(function(){ri.style.opacity='1';});});
+          setTimeout(function(){if(av2.contains(iniEl2))av2.removeChild(iniEl2);},300);
+        };
+        rpPre.onerror=function(){_imgLoaded[id2]='err';};
+        rpPre.src=url2;
+      })(av,rpIniEl,r.id,photo);
+    } else {
+      // No URL or known-broken URL — initials only, no retry
+      var rpFallIni=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');
+      av.appendChild(el('span','rp-ini',rpFallIni));
+    }
+    item.appendChild(av);
+    // Info
+    var info=el('div','rp-info');
+    info.appendChild(el('div','rp-name',r.name));
+    var meta=el('div','rp-meta');
+    if(r.flag)meta.appendChild(el('span','rp-flag',r.flag));
+    if(r.style)meta.appendChild(el('span','rp-style',styleLbls[r.style]||r.style));
+    info.appendChild(meta);
+    item.appendChild(info);
+    // Checkmark
+    var chk=el('div','rp-check');chk.appendChild(el('i','fas fa-check'));
+    item.appendChild(chk);
+    // Click
+    on(item,'click',function(){
+      haptic([8]);
+      App.closeRecPicker();
+      if(RECITER===r.id)return;
+      RECITER=r.id;
+      localStorage.setItem('app_reciter',r.id);
+      clearPrefetch();
+      _fpProg=0; // reset interpolated progress for new track
+      updateAudioBarAvatar();
+      syncFullPlayer();
+      if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
+      else if(S.surah)prefetchAyahBlob(S.surah,(S.audio.ayah||1)-1);
+      else showAudioBar();
+      toast(r.name);
+    });
+    list.appendChild(item);
+  });
+  // Center active reciter in list after sheet opens
+  var onIdx=RECITERS.findIndex(function(r){return r.id===RECITER;});
+  if(onIdx>1){
+    setTimeout(function(){
+      var items=list.querySelectorAll('.rp-item');
+      var item=items[onIdx];if(!item)return;
+      var listH=list.clientHeight,itemH=item.offsetHeight;
+      list.scrollTop=Math.max(0,item.offsetTop-(listH-itemH)/2);
+    },340);
+  }
+}
+
+// Generic drag-to-close for bottom sheets.
+// scrollEl: if provided, drag is suppressed when touch starts inside it with scrollTop>0
+function _attachSheetDrag(sheet,overlay,closeFn,scrollEl){
+  var startY=0,dragY=0,active=false,dragging=false,_hist=[];
+  var SPRING='cubic-bezier(.22,1,.36,1)',EASE_IN='cubic-bezier(.55,0,1,1)';
+  // Progressive resistance: linear up to 100px, then increasing drag beyond
+  function _resist(dy){return dy<=100?dy*0.85:85+(dy-100)*0.35;}
+  sheet.addEventListener('touchstart',function(e){
+    if(scrollEl&&scrollEl.contains(e.target)&&scrollEl.scrollTop>2)return;
+    startY=e.touches[0].clientY;dragY=0;active=true;dragging=false;_hist=[];
+  },{passive:true});
+  sheet.addEventListener('touchmove',function(e){
+    if(!active)return;
+    var dy=e.touches[0].clientY-startY;
+    if(dy<0)dy=0;
+    if(!dragging&&dy>6){
+      dragging=true;
+      sheet.style.transition='none';
+      if(overlay)overlay.style.transition='none';
+    }
+    if(!dragging)return;
+    dragY=dy;
+    // Track last 80ms of movement for velocity calculation
+    var now=Date.now();
+    _hist.push({y:e.touches[0].clientY,t:now});
+    if(_hist.length>8)_hist.shift();
+    var visual=_resist(dragY);
+    sheet.style.transform='translateY('+visual+'px)';
+    if(overlay)overlay.style.opacity=String(Math.max(0,1-visual/Math.max(sheet.offsetHeight,300)*1.4));
+  },{passive:true});
+  function _end(){
+    if(!active)return;
+    active=false;
+    if(!dragging)return;
+    dragging=false;
+    // Velocity: px/ms over the last 80ms window
+    var vel=0;
+    if(_hist.length>=2){
+      var now=Date.now(),old=null;
+      for(var i=0;i<_hist.length;i++){if(now-_hist[i].t<=80){old=_hist[i];break;}}
+      if(old){var last=_hist[_hist.length-1],dt=last.t-old.t;if(dt>0)vel=(last.y-old.y)/dt;}
+    }
+    var shouldClose=dragY>80||vel>0.5;
+    if(shouldClose){
+      sheet.style.transition='transform .24s '+EASE_IN;
+      sheet.style.transform='translateY(100%)';
+      if(overlay){overlay.style.transition='opacity .24s ease-out';overlay.style.opacity='0';}
+      closeFn();
+      setTimeout(function(){
+        sheet.style.transition='';sheet.style.transform='';
+        if(overlay){overlay.style.transition='';overlay.style.opacity='';}
+      },260);
+    } else {
+      sheet.style.transition='transform .3s '+SPRING;
+      sheet.style.transform='translateY(0)';
+      if(overlay){overlay.style.transition='';overlay.style.opacity='';}
+      setTimeout(function(){sheet.style.transition='';sheet.style.transform='';},340);
+    }
+  }
+  sheet.addEventListener('touchend',_end,{passive:true});
+  sheet.addEventListener('touchcancel',function(){
+    if(!active)return;active=false;dragging=false;
+    sheet.style.transition='';sheet.style.transform='';
+    if(overlay){overlay.style.transition='';overlay.style.opacity='';}
+  },{passive:true});
+}
+
+var _rpDragInited=false;
+App.openRecPicker=function(){
+  _buildRecPicker();
+  var ov=$('rpOverlay'),pk=$('recPicker');
+  if(!ov||!pk)return;
+  if(!_rpDragInited){_rpDragInited=true;_attachSheetDrag(pk,ov,App.closeRecPicker,$('rpList'));}
+  haptic([5]);
+  ov.classList.add('open');
+  pk.classList.add('open');
+};
+
+App.closeRecPicker=function(){
+  var ov=$('rpOverlay'),pk=$('recPicker');
+  if(ov)ov.classList.remove('open');
+  if(pk)pk.classList.remove('open');
+};
+
+var _fpDragInited=false;
 App.openFP=function(){
   if(!S.audio.surah)return;
   var ov=$('fpOverlay'),pl=$('fullPlayer');
   if(!ov||!pl)return;
+  if(!_fpDragInited){_fpDragInited=true;_attachSheetDrag(pl,ov,App.closeFP,$('fpAyahArea'));}
+  // Seed interpolated progress to current position — prevents slide-from-zero on open
+  var ae=S.audio.el;
+  if(ae&&ae.duration>0&&!isNaN(ae.duration))_fpProg=ae.currentTime/ae.duration;
   _fpOpen=true;
-  syncFullPlayer();
+  _fpUpdateAyahs(S.audio.surah,S.audio.ayah,true); // instant first — seeds _fpLastSurah/Ayah
+  syncFullPlayer(); // _fpUpdateAyahs inside hits the guard and returns early — no animation
   ov.classList.add('open');
   pl.classList.add('open');
   if(!_fpRafId)_fpRafId=requestAnimationFrame(_fpTick);
@@ -3674,6 +3951,8 @@ App.openFP=function(){
 
 App.closeFP=function(){
   _fpOpen=false;
+  _fpProg=0;
+  _fpLastSurah=0;_fpLastAyah=0;_fpAnimating=false;_fpGen=0;
   var ov=$('fpOverlay'),pl=$('fullPlayer');
   if(ov)ov.classList.remove('open');
   if(pl)pl.classList.remove('open');

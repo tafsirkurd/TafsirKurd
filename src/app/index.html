@@ -325,7 +325,7 @@ body{background:var(--bg);color:var(--text)}
 .sticky-ayah-label{font-size:.72rem;font-weight:600;color:var(--text2)}
 .sticky-pct{font-size:.75rem;font-weight:800;color:var(--accent)}
 
-.ayah-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px var(--ayah-px) calc(var(--tab-h) + var(--safe-b) + 16px)}
+.ayah-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px var(--ayah-px) calc(var(--tab-h) + var(--safe-b) + 80px)}
 .surah-reader-header{margin:0 0 12px;padding:32px 24px 26px;text-align:center;background:var(--surface);border-radius:0 0 32px 32px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
 .surah-reader-num-bg{position:absolute;font-size:9rem;font-weight:900;color:var(--accent);opacity:.055;top:50%;left:50%;transform:translate(-50%,-50%);line-height:1;pointer-events:none;user-select:none;font-variant-numeric:tabular-nums}
 .surah-reader-name{font-family:'SurahNameV2',var(--font-su),serif;font-size:3rem;font-weight:400;line-height:1.2;color:var(--text);display:block;margin-bottom:14px;position:relative}
@@ -420,16 +420,23 @@ body{background:var(--bg);color:var(--text)}
 /* ===== FULL PLAYER SHEET ===== */
 .fp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:395;opacity:0;pointer-events:none;transition:opacity .35s var(--ease)}
 .fp-overlay.open{opacity:1;pointer-events:auto}
-.full-player{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--bg);border-radius:20px 20px 0 0;display:flex;flex-direction:column;align-items:center;padding:0 32px calc(36px + var(--safe-b));transform:translateY(100%);transition:transform .38s var(--ease);box-shadow:0 -12px 48px rgba(0,0,0,.35);will-change:transform}
+.full-player{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--bg);border-radius:20px 20px 0 0;display:flex;flex-direction:column;align-items:center;padding:0 32px calc(36px + var(--safe-b));transform:translateY(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);box-shadow:0 -12px 48px rgba(0,0,0,.35);will-change:transform;max-height:92vh;overflow:hidden}
 .full-player.open{transform:translateY(0)}
 .fp-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:14px 0 22px;flex-shrink:0;cursor:pointer}
-.fp-avatar{width:116px;height:116px;border-radius:50%;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center;border:2.5px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,.18);margin-bottom:20px;flex-shrink:0;transition:border-color .3s}
+.fp-avatar{width:80px;height:80px;border-radius:50%;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);box-shadow:0 6px 20px rgba(0,0,0,.15);margin-bottom:14px;flex-shrink:0;transition:border-color .3s,transform .12s;-webkit-tap-highlight-color:transparent;position:relative}
+.fp-avatar:active{transform:scale(.96)}
 .fp-avatar.playing{border-color:var(--accent)}
 .fp-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.fp-avatar-initials{font-size:2.2rem;font-weight:800;color:var(--text2)}
-.fp-track{text-align:center;width:100%;margin-bottom:18px}
-.fp-surah{font-size:1.15rem;font-weight:700;color:var(--text);direction:rtl;line-height:1.35;margin-bottom:5px}
-.fp-reciter{font-size:.8rem;color:var(--text3);direction:rtl}
+.fp-avatar-initials{font-size:1.6rem;font-weight:800;color:var(--text2)}
+.fp-track{text-align:center;width:100%;margin-bottom:10px}
+.fp-surah{font-size:1.05rem;font-weight:700;color:var(--text);direction:rtl;line-height:1.35;margin-bottom:4px}
+/* Ayah text area */
+.fp-ayah-area{width:100%;margin-bottom:18px;transition:opacity .28s ease,transform .28s cubic-bezier(.22,1,.36,1);will-change:opacity,transform;max-height:max(80px,calc(90vh - 520px));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.fp-ayah-area.fp-out{opacity:0;transform:translateY(-6px)}
+.fp-ayah-area.fp-in{opacity:0;transform:translateY(8px);transition:none!important}
+.fp-ayah-prev,.fp-ayah-next{font-family:var(--font-ar);font-size:.82rem;line-height:1.8;color:var(--text3);direction:rtl;text-align:center;padding:1px 12px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;opacity:.45}
+.fp-ayah-curr{font-family:var(--font-ar);font-size:1.15rem;line-height:2;color:var(--text);direction:rtl;text-align:center;padding:10px 6px}
+.fp-reciter{font-size:.82rem;color:var(--text2);direction:rtl}
 .fp-progress-wrap{width:100%;margin-bottom:24px}
 .fp-progress-bar{width:100%;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:7px}
 .fp-progress-fill{height:100%;width:100%;background:var(--accent);border-radius:2px;transform:scaleX(0);transform-origin:left center}
@@ -445,6 +452,34 @@ body{background:var(--bg);color:var(--text)}
 .fp-speed-btn{padding:5px 13px;border-radius:var(--r-full);background:var(--bg2);color:var(--text3);border:1.5px solid var(--border);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .fp-speed-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
 .fp-speed-btn:active{transform:scale(.92)}
+.fp-reciter-row{display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:6px 14px;border-radius:var(--r-full);transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent;margin-top:3px}
+.fp-reciter-row:active{background:var(--bg2);transform:scale(.97)}
+.fp-reciter-row i{font-size:.68rem;color:var(--text2)}
+/* Reciter Picker Sheet */
+.rp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:405;opacity:0;pointer-events:none;transition:opacity .28s ease-out}
+.rp-overlay.open{opacity:1;pointer-events:auto}
+.rec-picker{position:fixed;bottom:0;left:0;right:0;z-index:410;background:var(--bg);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.22,1,.36,1);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.rec-picker.open{transform:translateY(0)}
+.rp-handle-bar{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;flex-shrink:0;cursor:pointer}
+.rp-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.rp-title{font-size:.88rem;font-weight:700;color:var(--text);direction:rtl}
+.rp-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);border:none;cursor:pointer;color:var(--text2);font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rp-list{overflow-y:auto;padding:6px 12px calc(24px + var(--safe-b));display:flex;flex-direction:column;gap:0}
+.rp-item{display:flex;align-items:center;gap:14px;padding:13px 10px;border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s;position:relative}
+.rp-item:active{background:var(--bg2)}
+.rp-av{width:50px;height:50px;border-radius:50%;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid transparent;transition:border-color .22s,transform .22s,box-shadow .22s;position:relative}
+.rp-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.rp-item.on .rp-av{border-color:var(--accent);transform:scale(1.06);box-shadow:0 0 0 3px var(--accent-glow)}
+.rp-ini{font-size:.95rem;font-weight:700;color:var(--text2)}
+.rp-info{flex:1;min-width:0;direction:rtl}
+.rp-name{font-size:.9rem;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-item.on .rp-name{color:var(--accent);font-weight:700}
+.rp-meta{display:flex;align-items:center;gap:5px;margin-top:3px}
+.rp-flag{font-size:.82rem}
+.rp-style{font-size:.66rem;color:var(--text3);background:var(--bg3);padding:1px 7px;border-radius:10px}
+.rp-check{width:18px;height:18px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .18s,transform .18s;opacity:0;transform:scale(.4)}
+.rp-item.on .rp-check{opacity:.85;transform:scale(1)}
+.rp-check i{font-size:.52rem;color:var(--accent-t)}
 /* Mini bar progress line */
 .audio-bar-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.38);pointer-events:none;transform:scaleX(0);transform-origin:left center}
 /* Reciter skeleton shimmer */
@@ -1912,7 +1947,6 @@ body{background:var(--bg);color:var(--text)}
     <button class="play-btn" onclick="App.audioToggle()"><i class="fas fa-play" id="audioPlayIcon"></i></button>
     <button onclick="App.audioNext()"><i class="fas fa-step-backward"></i></button>
     <button onclick="App.openRepeat()"><i class="fas fa-redo-alt"></i></button>
-    <button onclick="App.openAudioSettings()"><i class="fas fa-sliders-h"></i></button>
     <button onclick="App.audioClose()"><i class="fas fa-times"></i></button>
   </div>
   <div class="audio-bar-progress" id="audioBarProgress"></div>
@@ -1922,10 +1956,18 @@ body{background:var(--bg);color:var(--text)}
 <div class="fp-overlay" id="fpOverlay" onclick="App.closeFP()"></div>
 <div class="full-player" id="fullPlayer">
   <div class="fp-handle" onclick="App.closeFP()"></div>
-  <div class="fp-avatar" id="fpAvatar"></div>
+  <div class="fp-avatar" id="fpAvatar" onclick="App.openRecPicker()" style="cursor:pointer"></div>
   <div class="fp-track">
     <div class="fp-surah" id="fpSurah"></div>
-    <div class="fp-reciter" id="fpReciter"></div>
+    <div class="fp-reciter-row" onclick="App.openRecPicker()">
+      <span id="fpReciter" class="fp-reciter"></span>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </div>
+  <div class="fp-ayah-area" id="fpAyahArea">
+    <div class="fp-ayah-prev" id="fpAyahPrev"></div>
+    <div class="fp-ayah-curr" id="fpAyahCurr"></div>
+    <div class="fp-ayah-next" id="fpAyahNext"></div>
   </div>
   <div class="fp-progress-wrap">
     <div class="fp-progress-bar">
@@ -1942,6 +1984,17 @@ body{background:var(--bg);color:var(--text)}
     <button class="fp-btn fp-btn-sm" onclick="App.audioNext()"><i class="fas fa-step-backward"></i></button>
   </div>
   <div class="fp-speed-row" id="fpSpeedRow"></div>
+</div>
+
+<!-- RECITER PICKER SHEET -->
+<div class="rp-overlay" id="rpOverlay" onclick="App.closeRecPicker()"></div>
+<div class="rec-picker" id="recPicker">
+  <div class="rp-handle-bar" onclick="App.closeRecPicker()"></div>
+  <div class="rp-hdr">
+    <div class="rp-title" data-i18n="audio.reciter">قاریء</div>
+    <button class="rp-close" onclick="App.closeRecPicker()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="rp-list" id="rpList"></div>
 </div>
 
 <!-- AUDIO SETTINGS PANEL -->

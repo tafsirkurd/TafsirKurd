@@ -35,7 +35,9 @@ public class TafsirAppleSignIn: CAPPlugin, CAPBridgedPlugin {
         // This is the primary fix for error 1000 caused by timing/transition races.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             guard let self = self, self.pendingCall != nil else { return }
+            #if DEBUG
             print("[TafsirAppleSignIn] performRequests() starting")
+            #endif
             self.authController?.performRequests()
         }
     }
@@ -48,7 +50,9 @@ extension TafsirAppleSignIn: ASAuthorizationControllerDelegate {
               let cred = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
         let tok = cred.identityToken.flatMap { String(data: $0, encoding: .utf8) }
         let code = cred.authorizationCode.flatMap { String(data: $0, encoding: .utf8) }
+        #if DEBUG
         print("[TafsirAppleSignIn] Success — token present: \(tok != nil), user: \(cred.user)")
+        #endif
         call.resolve([
             "identityToken": tok as Any,
             "authorizationCode": code as Any,
@@ -64,7 +68,9 @@ extension TafsirAppleSignIn: ASAuthorizationControllerDelegate {
         defer { authController = nil }
         guard let call = pendingCall else { return }
         let code = (error as? ASAuthorizationError)?.code.rawValue ?? -1
+        #if DEBUG
         print("[TafsirAppleSignIn] Error — code: \(code), message: \(error.localizedDescription)")
+        #endif
         // Pass numeric code so JS can detect cancel (1001) and presentation errors (1000)
         // without relying on locale-specific error strings
         call.reject(error.localizedDescription, nil, nil, ["errorCode": code])
@@ -115,7 +121,9 @@ extension TafsirAppleSignIn: ASAuthorizationControllerPresentationContextProvidi
         }
 
         // Should be unreachable on a running app; log if we ever hit this
+        #if DEBUG
         print("[TafsirAppleSignIn] WARNING: no valid window found for presentation anchor")
+        #endif
         return allWindows.first ?? UIWindow()
     }
 }

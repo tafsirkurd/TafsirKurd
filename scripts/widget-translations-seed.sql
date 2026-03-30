@@ -23,8 +23,8 @@ INSERT INTO kurdish_translations (key_id, kurdish_text, page, category, context)
 ('widget.prayer.time_left',   'یێت ماین',                     'widgets', 'prayer_widget', 'Countdown suffix — rendered as "HH:MM یێت ماین"'),
 ('widget.prayer.widget_name', 'کاتا نوێژ',                    'widgets', 'prayer_widget', 'Prayer widget display name in iOS/Android widget gallery'),
 ('widget.prayer.widget_desc', 'کاتەکانی نوێژ نیشان بدە',      'widgets', 'prayer_widget', 'Prayer widget description in iOS/Android widget gallery'),
-('widget.prayer.lock_name',   'نوێژا داهاتو',                  'widgets', 'prayer_widget', 'Lock-screen prayer widget name in iOS widget gallery'),
-('widget.prayer.lock_desc',   'نوێژا داهاتو لە لۆک سکرین',    'widgets', 'prayer_widget', 'Lock-screen prayer widget description in gallery'),
+('widget.prayer.lock_name',   'دەمێن نڤێژان',                  'widgets', 'prayer_widget', 'Lock-screen prayer widget name in iOS widget gallery'),
+('widget.prayer.lock_desc',   'دیارکرنا دەمێن نڤێژان',         'widgets', 'prayer_widget', 'Lock-screen prayer widget description in gallery'),
 
 -- ── ayah_widget ────────────────────────────────────────────────────────
 ('widget.ayah.empty_title',   'هیچ ئایەتێک نەبژاردراوە',      'widgets', 'ayah_widget',   'Ayah widget empty-state title (user has not starred an ayah yet)'),

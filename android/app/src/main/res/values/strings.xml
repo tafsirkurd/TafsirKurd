@@ -4,7 +4,4 @@
     <string name="title_activity_main">Tafsir Kurd</string>
     <string name="package_name">com.tafsirkurd.app</string>
     <string name="custom_url_scheme">com.tafsirkurd.app</string>
-    <string name="prayer_widget_desc">کاتا نوێژ — وکتی نوێژ دیاری دەکات</string>
-    <string name="ayah_widget_desc">ئایەتێک — ئایەتا دیارکری نیشان دەدات</string>
-    <string name="goal_widget_desc">ئامانجا خواندنێ — پێشکەتنا خواندنێ نیشان دەدات</string>
 </resources>
