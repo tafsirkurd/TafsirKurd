@@ -473,12 +473,14 @@ function clearPrefetch(){
   _pfCache={};
 }
 
-// Update play/pause/loading icon
+// Update play/pause/loading icon — also keeps full player in sync
 function setAudioIcon(state){
   var ic=$('audioPlayIcon');if(!ic)return;
   ic.className=state==='loading'?'fas fa-spinner fa-spin':state==='pause'?'fas fa-pause':'fas fa-play';
   var av=$('audioBarAvatar');
   if(av){if(state==='pause')av.classList.add('playing');else av.classList.remove('playing');}
+  var fi=$('fpPlayIcon');if(fi)fi.className=ic.className;
+  var fa=$('fpAvatar');if(fa)fa.classList.toggle('playing',state==='pause');
 }
 
 /* ===== STATE ===== */
@@ -3277,6 +3279,7 @@ function showAudioBar(){
   $('audioSub').textContent=getReciterName();
   setAudioIcon(S.audio.playing?'pause':'play');
   updateAudioBarAvatar();
+  if(typeof _fpOpen!=='undefined'&&_fpOpen)syncFullPlayer();
 }
 
 App.audioToggle=function(){
@@ -3328,6 +3331,10 @@ App.audioClose=function(){
   cards.forEach(function(c){c.classList.remove('playing')});
   updateMushafHighlight(0,0);
   updateMushafPlayBtn();
+  // Close full player and reset progress
+  if(typeof App.closeFP==='function')App.closeFP();
+  var bp=$('audioBarProgress');if(bp)bp.style.transform='scaleX(0)';
+  var fp=$('fpProgressFill');if(fp)fp.style.transform='scaleX(0)';
 };
 
 /* ===== MUSHAF SETTINGS SHEET ===== */
@@ -3546,8 +3553,17 @@ function renderAudioSettings(){
     var avatar=el('div','reciter-avatar');
     var photo=RECITER_PHOTOS[r.id];
     if(photo){
+      avatar.classList.add('skel');
       var img=document.createElement('img');
-      img.src=photo;img.alt=r.name;img.className='reciter-avatar-img';
+      img.alt=r.name;img.className='reciter-avatar-img';img.loading='lazy';
+      img.onload=function(){avatar.classList.remove('skel');};
+      img.onerror=function(){
+        avatar.classList.remove('skel');
+        while(avatar.firstChild)avatar.removeChild(avatar.firstChild);
+        var fb=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');
+        avatar.appendChild(el('span','reciter-avatar-initials',fb));
+      };
+      img.src=photo;
       avatar.appendChild(img);
     } else {
       var initials=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');
@@ -3581,6 +3597,88 @@ function renderAudioSettings(){
   });
   body.appendChild(recGrid);
 }
+
+/* ===== FULL PLAYER ===== */
+var _fpOpen=false,_fpRafId=null,_fpLastTick=0;
+
+function _fmtTime(s){
+  if(!s||isNaN(s))return'0:00';
+  s=Math.floor(s);return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);
+}
+
+function _renderFPSpeed(){
+  var row=$('fpSpeedRow');if(!row)return;
+  clear(row);
+  [0.5,0.75,1,1.25,1.5,2].forEach(function(sp){
+    var btn=el('button','fp-speed-btn'+(S.audio.speed===sp?' on':''),sp+'x');
+    on(btn,'click',function(){
+      S.audio.speed=sp;S.audio.el.playbackRate=sp;
+      localStorage.setItem('app_speed',String(sp));
+      haptic([8]);_renderFPSpeed();
+    });
+    row.appendChild(btn);
+  });
+}
+
+function syncFullPlayer(){
+  if(!_fpOpen)return;
+  var fpAv=$('fpAvatar');
+  if(fpAv){
+    clear(fpAv);
+    var photo=RECITER_PHOTOS[RECITER];
+    if(photo){
+      var img=document.createElement('img');
+      img.alt='';img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';
+      img.src=photo;fpAv.appendChild(img);
+    } else {
+      var rec=RECITERS.find(function(r){return r.id===RECITER;});
+      var initials=rec?rec.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
+      fpAv.appendChild(el('span','fp-avatar-initials',initials));
+    }
+    fpAv.classList.toggle('playing',S.audio.playing);
+  }
+  var s=SURAHS[S.audio.surah-1];
+  var se=$('fpSurah');
+  if(se)se.textContent=s?(s.ar+' · '+(t('reader.ayah')||'ئایەت')+' '+S.audio.ayah):'';
+  var re=$('fpReciter');if(re)re.textContent=getReciterName();
+  var fi=$('fpPlayIcon');if(fi)fi.className=S.audio.playing?'fas fa-pause':'fas fa-play';
+  _renderFPSpeed();
+}
+
+function _fpTick(ts){
+  if(!_fpOpen){_fpRafId=null;return;}
+  if(ts-_fpLastTick>250){
+    _fpLastTick=ts;
+    var ae=S.audio.el;
+    if(ae&&ae.duration&&!isNaN(ae.duration)&&ae.duration>0){
+      var pct=ae.currentTime/ae.duration;
+      var fill=$('fpProgressFill');if(fill)fill.style.transform='scaleX('+pct+')';
+      var bp=$('audioBarProgress');if(bp)bp.style.transform='scaleX('+pct+')';
+      var cur=$('fpCurrent');if(cur)cur.textContent=_fmtTime(ae.currentTime);
+      var dur=$('fpDuration');if(dur)dur.textContent=_fmtTime(ae.duration);
+    }
+  }
+  _fpRafId=requestAnimationFrame(_fpTick);
+}
+
+App.openFP=function(){
+  if(!S.audio.surah)return;
+  var ov=$('fpOverlay'),pl=$('fullPlayer');
+  if(!ov||!pl)return;
+  _fpOpen=true;
+  syncFullPlayer();
+  ov.classList.add('open');
+  pl.classList.add('open');
+  if(!_fpRafId)_fpRafId=requestAnimationFrame(_fpTick);
+};
+
+App.closeFP=function(){
+  _fpOpen=false;
+  var ov=$('fpOverlay'),pl=$('fullPlayer');
+  if(ov)ov.classList.remove('open');
+  if(pl)pl.classList.remove('open');
+  if(_fpRafId){cancelAnimationFrame(_fpRafId);_fpRafId=null;}
+};
 
 /* ===== REPEAT MANAGER ===== */
 App.openRepeat=function(){

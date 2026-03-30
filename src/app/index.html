@@ -417,8 +417,43 @@ body{background:var(--bg);color:var(--text)}
 .repeat-count-btn:active{transform:scale(.9)}
 .repeat-count-val{font-size:1.5rem;font-weight:800;min-width:40px;text-align:center}
 
+/* ===== FULL PLAYER SHEET ===== */
+.fp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:395;opacity:0;pointer-events:none;transition:opacity .35s var(--ease)}
+.fp-overlay.open{opacity:1;pointer-events:auto}
+.full-player{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--bg);border-radius:20px 20px 0 0;display:flex;flex-direction:column;align-items:center;padding:0 32px calc(36px + var(--safe-b));transform:translateY(100%);transition:transform .38s var(--ease);box-shadow:0 -12px 48px rgba(0,0,0,.35);will-change:transform}
+.full-player.open{transform:translateY(0)}
+.fp-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:14px 0 22px;flex-shrink:0;cursor:pointer}
+.fp-avatar{width:116px;height:116px;border-radius:50%;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center;border:2.5px solid var(--border);box-shadow:0 8px 28px rgba(0,0,0,.18);margin-bottom:20px;flex-shrink:0;transition:border-color .3s}
+.fp-avatar.playing{border-color:var(--accent)}
+.fp-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.fp-avatar-initials{font-size:2.2rem;font-weight:800;color:var(--text2)}
+.fp-track{text-align:center;width:100%;margin-bottom:18px}
+.fp-surah{font-size:1.15rem;font-weight:700;color:var(--text);direction:rtl;line-height:1.35;margin-bottom:5px}
+.fp-reciter{font-size:.8rem;color:var(--text3);direction:rtl}
+.fp-progress-wrap{width:100%;margin-bottom:24px}
+.fp-progress-bar{width:100%;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:7px}
+.fp-progress-fill{height:100%;width:100%;background:var(--accent);border-radius:2px;transform:scaleX(0);transform-origin:left center}
+.fp-progress-times{display:flex;justify-content:space-between}
+.fp-time{font-size:.68rem;color:var(--text3);font-variant-numeric:tabular-nums;direction:ltr}
+.fp-controls{display:flex;align-items:center;justify-content:center;gap:30px;width:100%;margin-bottom:22px}
+.fp-btn{border:none;background:none;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;flex-shrink:0}
+.fp-btn:active{transform:scale(.86);opacity:.65}
+.fp-btn-sm{width:52px;height:52px;font-size:1.4rem;color:var(--text2)}
+.fp-btn-lg{width:72px;height:72px;border-radius:50%;background:var(--accent);color:var(--accent-t);font-size:1.55rem;box-shadow:0 6px 22px var(--accent-glow)}
+.fp-btn-lg:active{transform:scale(.91)}
+.fp-speed-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.fp-speed-btn{padding:5px 13px;border-radius:var(--r-full);background:var(--bg2);color:var(--text3);border:1.5px solid var(--border);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.fp-speed-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+.fp-speed-btn:active{transform:scale(.92)}
+/* Mini bar progress line */
+.audio-bar-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.38);pointer-events:none;transform:scaleX(0);transform-origin:left center}
+/* Reciter skeleton shimmer */
+.reciter-avatar.skel{position:relative}
+.reciter-avatar.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 25%,rgba(255,255,255,.1) 50%,transparent 75%);background-size:200% 100%;animation:skel-shimmer 1.4s infinite}
+@keyframes skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
 /* ===== PLAYING AYAH HIGHLIGHT ===== */
-.ayah-card.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ayah-card.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 2px 14px var(--accent-glow);background:color-mix(in srgb,var(--accent) 7%,var(--bg2));transition:border-color .3s,box-shadow .3s,background .3s}
 .ayah-card--marked{border-right:4px solid #e6a817;background:rgba(230,168,23,.09);transition:background .3s,border-color .3s}
 [data-theme=dark] .ayah-card--marked{background:rgba(230,168,23,.13)}
 .ayah-card--pressing{transform:scale(.985);opacity:.75;transition:transform .1s,opacity .1s}
@@ -1867,8 +1902,8 @@ body{background:var(--bg);color:var(--text)}
 
 <!-- AUDIO BAR -->
 <div class="audio-bar" id="audioBar">
-  <div class="audio-bar-avatar" id="audioBarAvatar"></div>
-  <div class="audio-info">
+  <div class="audio-bar-avatar" id="audioBarAvatar" onclick="App.openFP()" style="cursor:pointer"></div>
+  <div class="audio-info" onclick="App.openFP()" style="cursor:pointer">
     <div class="audio-info-title" id="audioTitle"></div>
     <div class="audio-info-sub" id="audioSub"></div>
   </div>
@@ -1880,6 +1915,33 @@ body{background:var(--bg);color:var(--text)}
     <button onclick="App.openAudioSettings()"><i class="fas fa-sliders-h"></i></button>
     <button onclick="App.audioClose()"><i class="fas fa-times"></i></button>
   </div>
+  <div class="audio-bar-progress" id="audioBarProgress"></div>
+</div>
+
+<!-- FULL PLAYER SHEET -->
+<div class="fp-overlay" id="fpOverlay" onclick="App.closeFP()"></div>
+<div class="full-player" id="fullPlayer">
+  <div class="fp-handle" onclick="App.closeFP()"></div>
+  <div class="fp-avatar" id="fpAvatar"></div>
+  <div class="fp-track">
+    <div class="fp-surah" id="fpSurah"></div>
+    <div class="fp-reciter" id="fpReciter"></div>
+  </div>
+  <div class="fp-progress-wrap">
+    <div class="fp-progress-bar">
+      <div class="fp-progress-fill" id="fpProgressFill"></div>
+    </div>
+    <div class="fp-progress-times">
+      <span class="fp-time" id="fpCurrent">0:00</span>
+      <span class="fp-time" id="fpDuration">--:--</span>
+    </div>
+  </div>
+  <div class="fp-controls">
+    <button class="fp-btn fp-btn-sm" onclick="App.audioPrev()"><i class="fas fa-step-forward"></i></button>
+    <button class="fp-btn fp-btn-lg" onclick="App.audioToggle()"><i class="fas fa-play" id="fpPlayIcon"></i></button>
+    <button class="fp-btn fp-btn-sm" onclick="App.audioNext()"><i class="fas fa-step-backward"></i></button>
+  </div>
+  <div class="fp-speed-row" id="fpSpeedRow"></div>
 </div>
 
 <!-- AUDIO SETTINGS PANEL -->
