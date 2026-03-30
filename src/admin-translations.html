@@ -1237,7 +1237,6 @@
             /* Hide FAB on mobile — Add New button stays in header */
             .fab { display: none !important; }
             #addBtn { display: flex !important; }
-            #addBtn span { display: none; }
 
             /* Pagination */
             .pagination { gap: 16px; padding: 18px 0; }
@@ -1256,9 +1255,7 @@
                 border-radius: 14px;
             }
 
-            /* Header actions */
-            .page-header .page-actions { gap: 8px; }
-            .page-header .page-actions .btn { font-size: 12px; padding: 8px 12px; }
+            /* History badge position fix */
 
             .empty-state { padding: 50px 20px; border-radius: 14px; }
             .empty-state p { font-size: 15px; }
@@ -1313,12 +1310,6 @@
         .qe-save-btn { font-size: 18px; font-weight: 700; line-height: 1; }
         .qe-save-btn:hover { color: #22c55e !important; background: #f0fdf4 !important; }
         body.dark-mode .qe-save-btn:hover { background: #052e16 !important; }
-
-        /* ===== Page actions — icons only on narrow screens ===== */
-        @media (max-width: 480px) {
-            .page-header .page-actions .btn span { display: none; }
-            .page-header .page-actions .btn { padding: 8px 10px; min-width: 40px; }
-        }
 
         /* ===== Small phones ===== */
         @media (max-width: 380px) {

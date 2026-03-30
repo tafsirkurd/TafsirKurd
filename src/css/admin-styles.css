@@ -532,62 +532,76 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 32px;
+    gap: 16px;
 }
 
 .page-title {
     font-size: 24px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
+    letter-spacing: -0.4px;
 }
 
 .page-actions {
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 /* Buttons */
 .btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
+    gap: 7px;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
     text-decoration: none;
     border: none;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
 }
 
+.btn:active { transform: scale(0.97); }
+
 .btn svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
 }
 
 .btn-primary {
     background: var(--primary);
     color: var(--bg-app);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .btn-primary:hover {
     background: var(--primary-hover);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--border-medium);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
     color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .btn-secondary:hover {
     background: var(--bg-hover);
-    border-color: var(--border-dark);
+    border-color: var(--border-medium);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
 }
 
 .btn-secondary:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 /* Cards */
@@ -820,13 +834,31 @@ body[data-role="editor"] .nav-item[href*="activity-feed"] {
     }
 
     .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        font-size: 20px;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .page-actions {
-        width: 100%;
-        flex-wrap: wrap;
+        flex-shrink: 0;
+        gap: 6px;
     }
+
+    /* Secondary buttons: icon only on mobile */
+    .page-actions .btn-secondary span { display: none; }
+    .page-actions .btn-secondary { padding: 9px 10px; }
+    .page-actions .btn-secondary svg { width: 17px; height: 17px; }
+
+    /* Primary button keeps label on tablet */
+    .page-actions .btn-primary { padding: 9px 14px; font-size: 13px; }
 }
