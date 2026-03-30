@@ -1075,8 +1075,8 @@ struct TafsirKurdWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             TafsirKurdWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName(WT.t("widget.prayer.widget_name", "کاتا نوێژ"))
-        .description(WT.t("widget.prayer.widget_desc", "کاتەکانی نوێژ نیشان بدە"))
+        .configurationDisplayName(WT.t("widget.prayer.widget_name", "دەمێ نڤێژێ"))
+        .description(WT.t("widget.prayer.widget_desc", "دەمێن نڤێژێ نیشان بدە"))
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
@@ -1087,8 +1087,8 @@ struct TafsirKurdLockWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             TafsirKurdLockWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName(WT.t("widget.prayer.lock_name", "نوێژا داهاتو"))
-        .description(WT.t("widget.prayer.lock_desc", "نوێژا داهاتو لە لۆک سکرین"))
+        .configurationDisplayName(WT.t("widget.prayer.lock_name", "نڤێژا دویڤدا"))
+        .description(WT.t("widget.prayer.lock_desc", "نڤێژا بهێت د لۆک سکرینێدا"))
         .supportedFamilies([.accessoryRectangular])
     }
 }
@@ -1100,7 +1100,7 @@ struct TafsirKurdAyahWidget: Widget {
             TafsirKurdAyahEntryView(entry: entry)
         }
         .configurationDisplayName(WT.t("widget.ayah.widget_name", "ئایەتا قورئانێ"))
-        .description(WT.t("widget.ayah.widget_desc", "ئایەتا بژاردەی خۆت نیشان بدە"))
+        .description(WT.t("widget.ayah.widget_desc", "ئایەتا تە هەلبژارتی نیشان بدە"))
         .supportedFamilies([.systemMedium, .systemLarge, .accessoryRectangular])
     }
 }
@@ -1111,8 +1111,8 @@ struct TafsirKurdGoalWidget: Widget {
         StaticConfiguration(kind: kind, provider: GoalProvider()) { entry in
             TafsirKurdGoalEntryView(entry: entry)
         }
-        .configurationDisplayName(WT.t("widget.goal.widget_name", "ئامانجا ئیرۆ"))
-        .description(WT.t("widget.goal.widget_desc", "پێشکەوتنی مانگرتن و ستریک"))
+        .configurationDisplayName(WT.t("widget.goal.widget_name", "ئارمانجا ئەڤرۆ"))
+        .description(WT.t("widget.goal.widget_desc", "دیارکرنا هویرکارییان"))
         .supportedFamilies([.systemMedium, .systemLarge, .accessoryRectangular])
     }
 }
