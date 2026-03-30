@@ -1505,10 +1505,13 @@
                 <div class="page-header">
                     <h1 class="page-title">Translations</h1>
                     <div class="page-actions">
-                        <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn"><i data-lucide="download"></i><span>Import All</span></button>
-                        <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
-                        <button class="btn btn-secondary" onclick="toggleQuickEdit()" id="quickEditBtn" style="display:none"><i data-lucide="zap"></i><span>Quick Edit</span></button>
-                        <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn"><i data-lucide="plus"></i><span>Add New</span></button>
+                        <div class="action-group">
+                            <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
+                            <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
+                            <button class="btn btn-secondary" onclick="toggleQuickEdit()" id="quickEditBtn" title="Quick edit mode" style="display:none"><i data-lucide="zap"></i><span>Quick Edit</span></button>
+                        </div>
+                        <div class="action-sep"></div>
+                        <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn" title="Add a new translation key"><i data-lucide="plus"></i><span>Add New</span></button>
                     </div>
                 </div>
 
