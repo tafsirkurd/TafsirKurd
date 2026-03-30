@@ -185,68 +185,94 @@
         }
         .filter-clear.visible { display: flex; }
 
-        /* ===== Page Chips ===== */
-        .page-chips-wrap {
-            margin-bottom: 18px;
+        /* ===== Two-column body layout ===== */
+        .t-body {
+            display: flex;
+            gap: 18px;
+            align-items: flex-start;
         }
-        .chip-group {
-            margin-bottom: 10px;
+        .cat-sidebar {
+            width: 210px;
+            flex-shrink: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            overflow: hidden;
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
         }
-        .chip-group-label {
+        .cat-sidebar-inner {
+            overflow-y: auto;
+            flex: 1;
+            padding: 6px 0 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-medium) transparent;
+        }
+        .cat-sidebar-inner::-webkit-scrollbar { width: 4px; }
+        .cat-sidebar-inner::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 4px; }
+        .cat-group-lbl {
             font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--text-tertiary);
-            margin-bottom: 6px;
-            padding-left: 2px;
+            padding: 10px 14px 4px;
         }
-        .page-chips {
+        .cat-group-lbl:not(:first-child) {
+            border-top: 1px solid var(--border-light);
+            margin-top: 4px;
+        }
+        .cat-item {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .page-chip {
-            display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-light);
-            background: var(--bg-surface);
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 600;
-            font-family: inherit;
+            gap: 9px;
+            padding: 8px 14px;
             cursor: pointer;
-            transition: all 0.15s;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            transition: background 0.12s, color 0.12s;
             white-space: nowrap;
+            overflow: hidden;
         }
-        .page-chip svg { flex-shrink: 0; opacity: 0.7; }
-        .page-chip:hover {
-            border-color: var(--border-medium);
-            background: var(--bg-hover);
-        }
-        .page-chip.active {
+        .cat-item svg { flex-shrink: 0; width: 14px; height: 14px; opacity: 0.6; }
+        .cat-item-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+        .cat-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .cat-item.active {
             background: var(--text-primary);
             color: var(--bg-app);
-            border-color: var(--text-primary);
+            font-weight: 600;
         }
-        .page-chip.active svg { opacity: 1; }
-        .page-chip .chip-count {
-            display: inline-block;
-            margin-left: 2px;
-            font-size: 10px;
-            font-weight: 700;
-            opacity: 0.5;
+        .cat-item.active svg { opacity: 1; }
+        .cat-count {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 10px;
+            background: var(--bg-active, rgba(0,0,0,0.06));
+            color: var(--text-tertiary);
+            flex-shrink: 0;
         }
-        .page-chip.has-results {
-            border-color: var(--primary, #3b82f6);
-            color: var(--primary, #3b82f6);
-            background: rgba(59,130,246,.07);
+        .cat-item.active .cat-count {
+            background: rgba(255,255,255,0.18);
+            color: var(--bg-app);
         }
-        .page-chip.has-results .chip-count { opacity: 0.9; }
-        .page-chip.no-results { opacity: 0.35; pointer-events: none; }
+        body.dark-mode .cat-item.active .cat-count {
+            background: rgba(0,0,0,0.25);
+        }
+        .cat-item.has-results { color: var(--primary, #3b82f6); }
+        .cat-item.has-results .cat-count { background: rgba(59,130,246,.12); color: var(--primary, #3b82f6); }
+        .cat-item.no-results { opacity: 0.35; pointer-events: none; }
+        .t-main { flex: 1; min-width: 0; }
         .search-hint {
             padding: 8px 14px;
             font-size: 12px;
@@ -974,14 +1000,9 @@
             }
             .stat-pill strong { font-size: 20px; }
 
-            /* Search sticky */
+            /* Search */
             .filters {
-                position: sticky;
-                top: 56px;
-                z-index: 10;
-                background: var(--bg-app);
-                padding: 6px 0 10px;
-                margin-bottom: 6px;
+                margin-bottom: 10px;
             }
             .filter-search {
                 min-width: unset;
@@ -996,18 +1017,34 @@
             .filter-search svg { left: 16px; width: 18px; height: 18px; }
             .filter-clear { right: 8px; width: 40px; height: 40px; font-size: 18px; border-radius: 50%; }
 
-            /* Page chips - wrap to new lines */
-            .page-chips-wrap {
-                margin-bottom: 12px;
+            /* Sidebar collapses to horizontal scroll on mobile */
+            .t-body { flex-direction: column; gap: 12px; }
+            .cat-sidebar {
+                width: 100%;
+                position: static;
+                max-height: none;
+                border-radius: 12px;
             }
-            .page-chips {
-                gap: 6px;
+            .cat-sidebar-inner {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 6px 8px;
+                gap: 4px;
+                scrollbar-width: none;
             }
-            .page-chip {
-                padding: 8px 14px;
-                font-size: 12px;
+            .cat-sidebar-inner::-webkit-scrollbar { display: none; }
+            .cat-group-lbl { display: none; }
+            .cat-item {
+                flex-shrink: 0;
                 border-radius: 8px;
+                padding: 7px 12px;
+                font-size: 12px;
+                gap: 6px;
+                width: auto;
             }
+            .cat-item.active { border-radius: 8px; }
 
             /* Cards */
             .translation-list { gap: 8px; }
@@ -1414,6 +1451,10 @@
                     <div class="stat-pill"><strong id="totalPages">--</strong> <span id="pagesLabel">pages</span></div>
                 </div>
 
+                <div class="t-body">
+                <div class="cat-sidebar" id="catSidebar"><div class="cat-sidebar-inner" id="catSidebarInner"></div></div>
+                <div class="t-main">
+
                 <div class="filters">
                     <div class="filter-search">
                         <i data-lucide="search"></i>
@@ -1421,7 +1462,6 @@
                         <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
                     </div>
                 </div>
-                <div class="page-chips-wrap"><div class="page-chips" id="pageChips"></div></div>
 
                 <div class="add-row" id="addForm">
                     <div class="edit-form">
@@ -1485,6 +1525,9 @@
                     <span class="pagination-info" id="pageInfo">Page 1</span>
                     <button class="pagination-btn" id="nextPage" onclick="changePage(1)"><i data-lucide="chevron-right"></i></button>
                 </div>
+
+                </div><!-- /.t-main -->
+                </div><!-- /.t-body -->
 
                 <div class="history-drawer-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
                 <div class="history-panel" id="historyPanel">
@@ -1805,14 +1848,14 @@
 
         function populatePageFilter(filteredData) {
             var platformData = getPlatformData();
-            var pageCounts = {};      // total per chip
-            var matchCounts = {};     // filtered per chip (during search)
+            var pageCounts = {};
+            var matchCounts = {};
             var isSearching = Array.isArray(filteredData);
 
             function getChipKey(t) {
                 if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
                     var cat = t.category || 'general';
-                    return cat === 'navigation' ? 'nav' : cat; // normalize duplicates
+                    return cat === 'navigation' ? 'nav' : cat;
                 }
                 return normalizePage(t.page);
             }
@@ -1829,7 +1872,7 @@
                 });
             }
 
-            if (activePlatform !== 'mobile') {
+            if (activePlatform === 'web' || activePlatform === 'updates') {
                 WEB_PAGES.forEach(function(p) {
                     if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0;
                 });
@@ -1837,48 +1880,50 @@
 
             var pages = Object.keys(pageCounts).sort();
             var isWeb = (activePlatform === 'web' || activePlatform === 'updates');
-            var container = document.getElementById('pageChips');
-            container.textContent = '';
+            var inner = document.getElementById('catSidebarInner');
+            inner.textContent = '';
 
-            function makeChip(p, displayCount) {
-                var chip = document.createElement('button');
-                var cls = 'page-chip';
+            function makeItem(p, displayCount) {
+                var btn = document.createElement('button');
+                var cls = 'cat-item';
                 if (activePageFilter === p) cls += ' active';
-                else if (isSearching && matchCounts[p] > 0) cls += ' has-results';
-                else if (isSearching && !matchCounts[p]) cls += ' no-results';
-                chip.className = cls;
+                else if (isSearching && (p === '' ? true : matchCounts[p] > 0)) cls += ' has-results';
+                else if (isSearching && p !== '' && !matchCounts[p]) cls += ' no-results';
+                btn.className = cls;
 
                 var meta = p === '' ? { icon: 'layers', label: 'All' } : getChipMeta(p, isWeb);
-                var iconEl = makeLucideEl(meta.icon, 12);
-                chip.appendChild(iconEl);
+                var iconEl = makeLucideEl(meta.icon, 14);
+                btn.appendChild(iconEl);
 
-                var labelNode = document.createTextNode(meta.label);
-                chip.appendChild(labelNode);
+                var lbl = document.createElement('span');
+                lbl.className = 'cat-item-label';
+                lbl.textContent = meta.label;
+                btn.appendChild(lbl);
 
-                var countEl = document.createElement('span');
-                countEl.className = 'chip-count';
-                countEl.textContent = displayCount;
-                chip.appendChild(countEl);
+                var cnt = document.createElement('span');
+                cnt.className = 'cat-count';
+                cnt.textContent = displayCount;
+                btn.appendChild(cnt);
 
-                chip.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
-                return chip;
+                btn.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
+                return btn;
             }
 
-            // "All" chip always first (no group)
-            var allRow = document.createElement('div');
-            allRow.className = 'page-chips';
-            allRow.style.marginBottom = '8px';
-            allRow.appendChild(makeChip('', isSearching ? filteredData.length : platformData.length));
-            container.appendChild(allRow);
+            function addGroupLabel(text) {
+                var lbl = document.createElement('div');
+                lbl.className = 'cat-group-lbl';
+                lbl.textContent = text;
+                inner.appendChild(lbl);
+            }
+
+            // "All" item always first
+            inner.appendChild(makeItem('', isSearching ? filteredData.length : platformData.length));
 
             if (isWeb) {
-                // Web: flat list in one row (page names)
-                var row = document.createElement('div');
-                row.className = 'page-chips';
+                addGroupLabel('Pages');
                 pages.forEach(function(p) {
-                    row.appendChild(makeChip(p, isSearching ? (matchCounts[p] || 0) : pageCounts[p]));
+                    inner.appendChild(makeItem(p, isSearching ? (matchCounts[p] || 0) : pageCounts[p]));
                 });
-                container.appendChild(row);
             } else {
                 // Mobile / Notifications / Widgets: group by CATEGORY_META group
                 var groups = {};
@@ -1890,24 +1935,14 @@
                     groups[g].push(p);
                 });
                 groupOrder.forEach(function(g) {
-                    var wrap = document.createElement('div');
-                    wrap.className = 'chip-group';
-                    var lbl = document.createElement('div');
-                    lbl.className = 'chip-group-label';
-                    lbl.textContent = g;
-                    wrap.appendChild(lbl);
-                    var row = document.createElement('div');
-                    row.className = 'page-chips';
+                    addGroupLabel(g);
                     groups[g].forEach(function(p) {
-                        row.appendChild(makeChip(p, isSearching ? (matchCounts[p] || 0) : pageCounts[p]));
+                        inner.appendChild(makeItem(p, isSearching ? (matchCounts[p] || 0) : pageCounts[p]));
                     });
-                    wrap.appendChild(row);
-                    container.appendChild(wrap);
                 });
             }
 
-            // Re-run lucide icon replacement for dynamically added SVG placeholders
-            lucide.createIcons({ nodes: [container] });
+            lucide.createIcons({ nodes: [inner] });
         }
 
         function setPageFilter(page) {
