@@ -549,15 +549,15 @@ body {
     flex-shrink: 0;
 }
 
-/* Tool group — secondary buttons connected as one unit */
+/* Tool group — secondary buttons connected as one pill */
 .action-group {
     display: flex;
     align-items: stretch;
     border: 1px solid var(--border-light);
-    border-radius: 10px;
+    border-radius: 999px;
     overflow: hidden;
     background: var(--bg-surface);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .action-group .btn {
     border-radius: 0;
@@ -565,7 +565,7 @@ body {
     border-right: 1px solid var(--border-light);
     box-shadow: none;
     background: transparent;
-    padding: 9px 14px;
+    padding: 9px 16px;
 }
 .action-group .btn:last-child { border-right: none; }
 .action-group .btn:hover { background: var(--bg-hover); }
@@ -580,16 +580,16 @@ body {
     flex-shrink: 0;
 }
 
-/* Primary CTA — slightly more breathing room */
+/* Primary CTA */
 .page-actions .btn-primary {
-    padding: 9px 18px;
+    padding: 9px 20px;
     gap: 8px;
 }
 
 /* Buttons */
 .btn {
     padding: 9px 16px;
-    border-radius: 10px;
+    border-radius: 999px;
     font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
