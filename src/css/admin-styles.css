@@ -77,41 +77,36 @@ body {
 .sidebar.collapsed {
     width: 64px;
 }
-/* Collapsed: center the logo, shrink it slightly */
-.sidebar.collapsed .sidebar-logo {
-    flex: 0 0 auto;
-}
-.sidebar.collapsed .sidebar-logo-img {
-    width: 36px;
-    height: 36px;
-}
 
+/* ─── Sidebar Header ─────────────────────────────────────────── */
 .sidebar-header {
-    padding: 16px 14px;
+    padding: 0 14px;
+    height: 64px;           /* fixed height — prevents layout shifts */
     border-bottom: 1px solid var(--border-light);
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* logo left-aligned when expanded */
-    position: relative;          /* anchor for the absolute toggle */
-    overflow: visible;           /* let the toggle bubble peek outside */
-    min-height: 64px;
+    justify-content: space-between; /* logo left, toggle right */
+    overflow: hidden;               /* clips the sliding logo text animation */
     flex-shrink: 0;
 }
-/* Center logo when collapsed (only icon visible) */
+
+/* Collapsed header: center logo; toggle floats outside */
 .sidebar.collapsed .sidebar-header {
     justify-content: center;
-    padding: 16px 0;
+    padding: 0;
+    overflow: visible;   /* allow toggle circle to protrude past the border */
+    position: relative;  /* containing block for the absolute toggle */
 }
 
+/* ─── Logo ───────────────────────────────────────────────────── */
 .sidebar-logo {
     display: flex;
     align-items: center;
     gap: 10px;
     color: var(--text-primary);
     min-width: 0;
-    flex: 0 0 auto; /* don't stretch; toggle is out of flow */
+    flex: 1;           /* fills header; toggle is right-aligned sibling */
     overflow: hidden;
-    max-width: calc(100% - 16px); /* leave room so text doesn't hit edge */
 }
 
 .sidebar-logo svg {
@@ -137,50 +132,78 @@ body.dark-mode .sidebar-logo-img {
     white-space: nowrap;
     letter-spacing: -0.3px;
     overflow: hidden;
-    /* Animate in/out */
     max-width: 160px;
     opacity: 1;
     transition: max-width 0.3s ease, opacity 0.25s ease;
 }
-/* When logo image is present, show the text again (override old rule) */
 .sidebar-logo-img ~ .sidebar-logo-text {
     display: block;
 }
 
-/* Collapsed: slide text out */
+/* Collapsed: slide text out, reset logo flex */
+.sidebar.collapsed .sidebar-logo {
+    flex: 0 0 auto;   /* shrink to image width so it can be centered */
+}
+.sidebar.collapsed .sidebar-logo-img {
+    width: 36px;
+    height: 36px;
+}
 .sidebar.collapsed .sidebar-logo-text {
     max-width: 0;
     opacity: 0;
     pointer-events: none;
 }
 
-/* Toggle always floats as a circle on the sidebar's right edge */
+/* ─── Toggle handle ──────────────────────────────────────────── */
+/*
+ * EXPANDED: toggle lives in the flex row, fully inside the sidebar.
+ * No border-right contact → no "sitting on the line" problem.
+ *
+ * COLLAPSED: toggle is absolutely positioned so it can center on the
+ * sidebar's right border (the classic "pill on the edge" pattern).
+ * Using --bg-app (pure white/black) rather than --bg-surface ensures
+ * the circle is visually distinct from the sidebar's off-white/off-black
+ * background, making it read as a button, not a border artifact.
+ */
 .sidebar-toggle {
-    position: absolute;
-    right: -13px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 26px;
-    height: 26px;
+    /* Expanded state: in flex flow */
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: var(--bg-surface);
-    border: 1px solid var(--border-light);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-    z-index: 101;
-    padding: 4px;
+    border: 1px solid var(--border-medium);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    padding: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: var(--text-secondary);
-    transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+    transition: color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .sidebar-toggle:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.14);
 }
-/* Point right when collapsed (expand icon) */
+
+/* Collapsed state: pull toggle out of flow, float on right edge */
+.sidebar.collapsed .sidebar-toggle {
+    position: absolute;
+    right: -14px;           /* center the 28px circle on the 1px sidebar border */
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-app);  /* white (light) / black (dark) — contrasts with sidebar */
+    border: 1px solid var(--border-medium);
+    box-shadow: 0 1px 8px rgba(0,0,0,0.14);
+    z-index: 101;
+}
+.sidebar.collapsed .sidebar-toggle:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+/* Arrow direction: left=collapse, right=expand */
 .sidebar.collapsed .sidebar-toggle svg {
     transform: rotate(180deg);
 }
@@ -927,8 +950,9 @@ body[data-role="editor"] .nav-item[href*="activity-feed"] {
         opacity: 1;
     }
 
-    /* Header taller touch target; toggle hidden on mobile so no right indent needed */
-    .sidebar-header { min-height: 60px; padding: 14px 16px; overflow: hidden; }
+    /* Header on mobile: fixed height, no toggle, full padding */
+    .sidebar-header { height: 60px; padding: 0 16px; overflow: hidden; }
+    .sidebar.collapsed .sidebar-header { padding: 0 16px; overflow: hidden; }
 
     .main-content {
         margin-left: 0;

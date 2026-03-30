@@ -371,7 +371,11 @@ function applySidebarPermissions(overrideRole) {
     }
 
     var navItems = document.querySelectorAll('.sidebar-nav .nav-item');
-    if (navItems.length === 0) return;
+    if (navItems.length === 0) {
+        // Nav items not found (timing edge-case) — still reveal so sidebar is never blank
+        revealSidebar(role);
+        return;
+    }
 
     navItems.forEach(function(item) {
         var href = item.getAttribute('href');
@@ -400,8 +404,14 @@ function applySidebarPermissions(overrideRole) {
     revealSidebar(role);
 }
 
-// Reveal sidebar after role-based hiding is applied
+// Reveal sidebar after role-based hiding is applied.
+// ALWAYS call this — never leave the sidebar nav hidden.
 function revealSidebar(role) {
+    // Cancel the 4-second safety timer — auth completed normally
+    if (window._sidebarSafetyTimer) {
+        clearTimeout(window._sidebarSafetyTimer);
+        window._sidebarSafetyTimer = null;
+    }
     const sidebarNav = document.querySelector('.sidebar-nav');
     if (sidebarNav) {
         sidebarNav.style.visibility = 'visible';
@@ -435,6 +445,27 @@ function revealSidebar(role) {
         }
     }
 }
+
+// Safety net: if something goes wrong during auth and revealSidebar() is
+// never called, the early-sidebar-hide visibility:hidden would leave the
+// nav permanently blank. This timeout is the last line of defence — it
+// fires 4 seconds after script load and forces visibility:visible if the
+// nav is still hidden at that point. On a normal load it is a no-op.
+(function() {
+    var _safetyTimer = setTimeout(function() {
+        var nav = document.querySelector('.sidebar-nav');
+        var earlyStyle = document.getElementById('early-sidebar-hide');
+        if (nav && getComputedStyle(nav).visibility === 'hidden') {
+            nav.style.visibility = 'visible';
+        }
+        if (earlyStyle && earlyStyle.textContent.includes('visibility:hidden')) {
+            earlyStyle.textContent = '.sidebar-nav{visibility:visible}';
+        }
+    }, 4000);
+
+    // Cancel the timer if auth succeeds normally (revealSidebar clears this)
+    window._sidebarSafetyTimer = _safetyTimer;
+})();
 
 function getCurrentPageSlug() {
     const path = window.location.pathname;
