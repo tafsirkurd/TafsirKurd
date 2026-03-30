@@ -99,8 +99,8 @@ body {
 }
 
 .sidebar-logo-img {
-    width: 28px;
-    height: 28px;
+    width: 120px;
+    height: auto;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -113,6 +113,8 @@ body.dark-mode .sidebar-logo-img {
     font-weight: 600;
     white-space: nowrap;
 }
+/* Hide text label when logo image is present */
+.sidebar-logo-img ~ .sidebar-logo-text { display: none; }
 
 .sidebar.collapsed .sidebar-logo-text {
     display: none;
