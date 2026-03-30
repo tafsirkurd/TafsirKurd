@@ -103,13 +103,9 @@ body {
     height: 28px;
     object-fit: contain;
     flex-shrink: 0;
-    /* Remove white background in light mode */
-    mix-blend-mode: multiply;
 }
 body.dark-mode .sidebar-logo-img {
-    /* Invert to white logo on dark sidebar */
     filter: invert(1);
-    mix-blend-mode: normal;
 }
 
 .sidebar-logo-text {
