@@ -79,45 +79,62 @@ body {
 }
 
 .sidebar-header {
-    padding: 20px 16px;
+    padding: 18px 16px;
     border-bottom: 1px solid var(--border-light);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
+    overflow: hidden;
 }
 
 .sidebar-logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     color: var(--text-primary);
+    min-width: 0;
+    flex: 1;
 }
 
 .sidebar-logo svg {
     width: 24px;
     height: 24px;
+    flex-shrink: 0;
 }
 
 .sidebar-logo-img {
-    width: 44px;
-    height: auto;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
     flex-shrink: 0;
+    border-radius: 8px;
 }
 body.dark-mode .sidebar-logo-img {
     filter: invert(1);
 }
 
 .sidebar-logo-text {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     white-space: nowrap;
+    letter-spacing: -0.3px;
+    overflow: hidden;
+    /* Animate in/out */
+    max-width: 160px;
+    opacity: 1;
+    transition: max-width 0.3s ease, opacity 0.25s ease;
 }
-/* Hide text label when logo image is present */
-.sidebar-logo-img ~ .sidebar-logo-text { display: none; }
+/* When logo image is present, show the text again (override old rule) */
+.sidebar-logo-img ~ .sidebar-logo-text {
+    display: block;
+}
 
+/* Collapsed: slide text out */
 .sidebar.collapsed .sidebar-logo-text {
-    display: none;
+    max-width: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .sidebar-toggle {
