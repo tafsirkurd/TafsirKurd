@@ -189,12 +189,27 @@
         .page-chips-wrap {
             margin-bottom: 18px;
         }
+        .chip-group {
+            margin-bottom: 10px;
+        }
+        .chip-group-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-tertiary);
+            margin-bottom: 6px;
+            padding-left: 2px;
+        }
         .page-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
         }
         .page-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             padding: 6px 12px;
             border-radius: 8px;
             border: 1px solid var(--border-light);
@@ -207,6 +222,7 @@
             transition: all 0.15s;
             white-space: nowrap;
         }
+        .page-chip svg { flex-shrink: 0; opacity: 0.7; }
         .page-chip:hover {
             border-color: var(--border-medium);
             background: var(--bg-hover);
@@ -216,9 +232,10 @@
             color: var(--bg-app);
             border-color: var(--text-primary);
         }
+        .page-chip.active svg { opacity: 1; }
         .page-chip .chip-count {
             display: inline-block;
-            margin-left: 3px;
+            margin-left: 2px;
             font-size: 10px;
             font-weight: 700;
             opacity: 0.5;
@@ -1514,6 +1531,86 @@
         // For dropdowns (Add New / Edit)
         const KNOWN_PAGES = WEB_PAGES.concat(['android','ios','widgets']);
 
+        // ── Category metadata: icon (Lucide name) + display label + group ──
+        const CATEGORY_META = {
+            // Core App
+            general:      { icon: 'layers',          label: 'General',        group: 'Core' },
+            nav:          { icon: 'navigation',       label: 'Navigation',     group: 'Core' },
+            navigation:   { icon: 'navigation',       label: 'Navigation',     group: 'Core' },
+            ui:           { icon: 'layout',           label: 'UI',             group: 'Core' },
+            errors:       { icon: 'alert-triangle',   label: 'Errors',         group: 'Core' },
+            toast:        { icon: 'zap',              label: 'Toasts',         group: 'Core' },
+            // Content Screens
+            quran:        { icon: 'book-open',        label: 'Quran',          group: 'Screens' },
+            reader:       { icon: 'book-marked',      label: 'Reader',         group: 'Screens' },
+            islamvoice:   { icon: 'radio',            label: 'IslamVoice',     group: 'Screens' },
+            prayer:       { icon: 'moon',             label: 'Prayer',         group: 'Screens' },
+            gencine:      { icon: 'hand',             label: 'Gencine',        group: 'Screens' },
+            goals:        { icon: 'target',           label: 'Goals',          group: 'Screens' },
+            bookmarks:    { icon: 'bookmark',         label: 'Bookmarks',      group: 'Screens' },
+            search:       { icon: 'search',           label: 'Search',         group: 'Screens' },
+            // Audio
+            audio:        { icon: 'headphones',       label: 'Audio',          group: 'Media' },
+            // Account
+            auth:         { icon: 'log-in',           label: 'Auth',           group: 'Account' },
+            signup:       { icon: 'user-plus',        label: 'Sign Up',        group: 'Account' },
+            profile:      { icon: 'user',             label: 'Profile',        group: 'Account' },
+            settings:     { icon: 'settings',         label: 'Settings',       group: 'Account' },
+            security:     { icon: 'shield',           label: 'Security',       group: 'Account' },
+            onboarding:   { icon: 'star',             label: 'Onboarding',     group: 'Account' },
+            // Notifications
+            notifications:{ icon: 'bell',             label: 'Notifications',  group: 'System' },
+            content:      { icon: 'file-text',        label: 'Content',        group: 'System' },
+            copy:         { icon: 'clipboard',        label: 'Copy',           group: 'System' },
+            header:       { icon: 'heading',          label: 'Header',         group: 'System' },
+        };
+
+        // ── Web page metadata ──
+        const WEB_PAGE_META = {
+            index:                  { icon: 'home',         label: 'Home' },
+            quran:                  { icon: 'book-open',    label: 'Quran' },
+            islamvoice:             { icon: 'radio',        label: 'IslamVoice' },
+            about:                  { icon: 'info',         label: 'About' },
+            founder:                { icon: 'user-check',   label: 'Founder' },
+            onboarding:             { icon: 'star',         label: 'Onboarding' },
+            login:                  { icon: 'log-in',       label: 'Login' },
+            profile:                { icon: 'user',         label: 'Profile' },
+            settings:               { icon: 'settings',     label: 'Settings' },
+            goals:                  { icon: 'target',       label: 'Goals' },
+            bookmarks:              { icon: 'bookmark',     label: 'Bookmarks' },
+            'reading-goal':         { icon: 'trending-up',  label: 'Reading Goal' },
+            'complete-signup':      { icon: 'user-plus',    label: 'Complete Signup' },
+            'privacy-policy':       { icon: 'shield',       label: 'Privacy Policy' },
+            'terms-and-conditions': { icon: 'file-text',    label: 'Terms' },
+            'delete-account':       { icon: 'trash-2',      label: 'Delete Account' },
+            footer:                 { icon: 'layout',       label: 'Footer' },
+        };
+
+        function getChipMeta(slug, isWeb) {
+            if (isWeb) {
+                var m = WEB_PAGE_META[slug];
+                return m ? { icon: m.icon, label: m.label, group: 'Pages' }
+                         : { icon: 'file', label: slug, group: 'Pages' };
+            }
+            var m = CATEGORY_META[slug];
+            return m || { icon: 'tag', label: slug, group: 'Other' };
+        }
+
+        function makeLucideEl(name, size) {
+            var el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            el.setAttribute('width', size || 12);
+            el.setAttribute('height', size || 12);
+            el.setAttribute('viewBox', '0 0 24 24');
+            el.setAttribute('fill', 'none');
+            el.setAttribute('stroke', 'currentColor');
+            el.setAttribute('stroke-width', '2.2');
+            el.setAttribute('stroke-linecap', 'round');
+            el.setAttribute('stroke-linejoin', 'round');
+            // Use a temporary span so lucide can replace it after render
+            el.dataset.lucide = name;
+            return el;
+        }
+
         let allTranslations = [];
         let filteredList = [];
         let supabase = null;
@@ -1713,9 +1810,11 @@
             var isSearching = Array.isArray(filteredData);
 
             function getChipKey(t) {
-                return (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets')
-                    ? (t.category || 'general')
-                    : normalizePage(t.page);
+                if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
+                    var cat = t.category || 'general';
+                    return cat === 'navigation' ? 'nav' : cat; // normalize duplicates
+                }
+                return normalizePage(t.page);
             }
 
             platformData.forEach(function(t) {
@@ -1737,36 +1836,78 @@
             }
 
             var pages = Object.keys(pageCounts).sort();
+            var isWeb = (activePlatform === 'web' || activePlatform === 'updates');
             var container = document.getElementById('pageChips');
             container.textContent = '';
 
-            // "All" chip
-            var allChip = document.createElement('button');
-            allChip.className = 'page-chip' + (!activePageFilter ? ' active' : '');
-            allChip.textContent = 'All';
-            var allCount = document.createElement('span');
-            allCount.className = 'chip-count';
-            allCount.textContent = isSearching ? filteredData.length : platformData.length;
-            allChip.appendChild(allCount);
-            allChip.addEventListener('click', function() { setPageFilter(''); });
-            container.appendChild(allChip);
-
-            pages.forEach(function(p) {
+            function makeChip(p, displayCount) {
                 var chip = document.createElement('button');
-                var displayCount = isSearching ? (matchCounts[p] || 0) : pageCounts[p];
                 var cls = 'page-chip';
                 if (activePageFilter === p) cls += ' active';
                 else if (isSearching && matchCounts[p] > 0) cls += ' has-results';
                 else if (isSearching && !matchCounts[p]) cls += ' no-results';
                 chip.className = cls;
-                chip.textContent = p;
-                var count = document.createElement('span');
-                count.className = 'chip-count';
-                count.textContent = displayCount;
-                chip.appendChild(count);
-                chip.addEventListener('click', function() { setPageFilter(p); });
-                container.appendChild(chip);
-            });
+
+                var meta = p === '' ? { icon: 'layers', label: 'All' } : getChipMeta(p, isWeb);
+                var iconEl = makeLucideEl(meta.icon, 12);
+                chip.appendChild(iconEl);
+
+                var labelNode = document.createTextNode(meta.label);
+                chip.appendChild(labelNode);
+
+                var countEl = document.createElement('span');
+                countEl.className = 'chip-count';
+                countEl.textContent = displayCount;
+                chip.appendChild(countEl);
+
+                chip.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
+                return chip;
+            }
+
+            // "All" chip always first (no group)
+            var allRow = document.createElement('div');
+            allRow.className = 'page-chips';
+            allRow.style.marginBottom = '8px';
+            allRow.appendChild(makeChip('', isSearching ? filteredData.length : platformData.length));
+            container.appendChild(allRow);
+
+            if (isWeb) {
+                // Web: flat list in one row (page names)
+                var row = document.createElement('div');
+                row.className = 'page-chips';
+                pages.forEach(function(p) {
+                    row.appendChild(makeChip(p, isSearching ? (matchCounts[p] || 0) : pageCounts[p]));
+                });
+                container.appendChild(row);
+            } else {
+                // Mobile / Notifications / Widgets: group by CATEGORY_META group
+                var groups = {};
+                var groupOrder = [];
+                pages.forEach(function(p) {
+                    var meta = getChipMeta(p, false);
+                    var g = meta.group || 'Other';
+                    if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+                    groups[g].push(p);
+                });
+                groupOrder.forEach(function(g) {
+                    var wrap = document.createElement('div');
+                    wrap.className = 'chip-group';
+                    var lbl = document.createElement('div');
+                    lbl.className = 'chip-group-label';
+                    lbl.textContent = g;
+                    wrap.appendChild(lbl);
+                    var row = document.createElement('div');
+                    row.className = 'page-chips';
+                    groups[g].forEach(function(p) {
+                        row.appendChild(makeChip(p, isSearching ? (matchCounts[p] || 0) : pageCounts[p]));
+                    });
+                    wrap.appendChild(row);
+                    container.appendChild(wrap);
+                });
+            }
+
+            // Re-run lucide icon replacement for dynamically added SVG placeholders
+            lucide.createIcons({ nodes: [container] });
         }
 
         function setPageFilter(page) {
@@ -1799,8 +1940,11 @@
             var platformData = getPlatformData();
 
             function chipKey(t) {
-                return (activePlatform === 'mobile' || activePlatform === 'notifications')
-                    ? (t.category || 'general') : normalizePage(t.page);
+                if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
+                    var cat = t.category || 'general';
+                    return cat === 'navigation' ? 'nav' : cat;
+                }
+                return normalizePage(t.page);
             }
 
             // First pass: search-only matches (ignoring chip filter)
