@@ -1647,8 +1647,6 @@
     // Athan (dynamic content filled by updateAthanSettings)
     var athanContainer = cel('div');
     athanContainer.id = 'prayerAthanSettings';
-    var isIOS = window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios';
-    if (isIOS) athanContainer.dataset.hideVoices = '1';
     body.appendChild(athanContainer);
     body.appendChild(cel('div', 'prayer-settings-spacer'));
     sheet.appendChild(body);
@@ -1834,14 +1832,11 @@
     });
     container.appendChild(prayerWrap);
 
-    // ── Reciter (hidden on iOS) ───────────────────────────────────
-    var _isIOS = window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios';
-    if (!_isIOS) {
-      container.appendChild(secTitle(tStr('prayer.voice_label'), ' as2-dimable' + (isOn ? '' : ' as2-dim')));
-      var reciterWrap = cel('div', 'as2-dimable' + (isOn ? '' : ' as2-dim'));
-      buildVoicePicker(reciterWrap, city);
-      container.appendChild(reciterWrap);
-    }
+    // ── Reciter ───────────────────────────────────────────────────
+    container.appendChild(secTitle(tStr('prayer.voice_label'), ' as2-dimable' + (isOn ? '' : ' as2-dim')));
+    var reciterWrap = cel('div', 'as2-dimable' + (isOn ? '' : ' as2-dim'));
+    buildVoicePicker(reciterWrap, city);
+    container.appendChild(reciterWrap);
 
   }
 
