@@ -1999,7 +1999,7 @@
       card.appendChild(wave);
 
       var nameEl = cel('div', 'as2-reciter-name');
-      nameEl.textContent = (voice.nameAr || '').split(' ')[0];
+      nameEl.textContent = (voice.nameKey && tStr(voice.nameKey)) || (voice.nameAr || '').split(' ')[0];
       card.appendChild(nameEl);
 
       var playBtn = cel('button', 'as2-reciter-play');
