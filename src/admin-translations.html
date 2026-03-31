@@ -89,13 +89,52 @@
             background: var(--text-primary);
             color: var(--bg-app);
         }
+        /* ===== Platform tabs → chip scroller on mobile ===== */
         @media (max-width: 768px) {
-            .platform-tabs { margin-bottom: 16px; }
-            .platform-tab { padding: 10px 14px; font-size: 13px; }
-        }
-        @media (max-width: 480px) {
-            .platform-tab { padding: 9px 12px; font-size: 12px; gap: 5px; }
-            .platform-tab .tab-count { padding: 1px 6px; font-size: 10px; }
+            .platform-tabs {
+                border-bottom: none;
+                padding: 0 16px 12px;
+                gap: 8px;
+                scroll-snap-type: x mandatory;
+                scroll-padding-inline: 16px;
+                margin-bottom: 16px;
+            }
+            .platform-tab {
+                scroll-snap-align: start;
+                flex-direction: row;
+                padding: 8px 13px;
+                font-size: 12px;
+                font-weight: 600;
+                gap: 6px;
+                border-radius: 22px;
+                border: 1.5px solid var(--border-light);
+                border-bottom: 1.5px solid var(--border-light);
+                margin-bottom: 0;
+                background: var(--bg-surface);
+                color: var(--text-secondary);
+                white-space: nowrap;
+            }
+            .platform-tab:hover {
+                background: var(--bg-hover);
+                border-color: var(--border-color);
+                color: var(--text-primary);
+            }
+            .platform-tab.active {
+                background: var(--text-primary);
+                color: var(--bg-app);
+                border-color: transparent;
+                border-bottom-color: transparent;
+            }
+            .platform-tab .tab-count {
+                padding: 1px 7px;
+                font-size: 10px;
+                background: var(--bg-hover);
+                color: var(--text-secondary);
+            }
+            .platform-tab.active .tab-count {
+                background: rgba(128,128,128,0.25);
+                color: inherit;
+            }
         }
 
         /* ===== Stats ===== */
@@ -1317,8 +1356,8 @@
             .t-row { padding: 14px 12px; }
             .t-key { font-size: 11px; }
             .t-text { font-size: 15px; }
-            .platform-tab { padding: 8px 10px; font-size: 12px; gap: 4px; }
-            .platform-tab .tab-count { display: none; }
+            .platform-tab { padding: 7px 10px; font-size: 11px; gap: 4px; }
+            .platform-tab .tab-count { padding: 1px 5px; font-size: 9px; }
         }
 
         /* ===== History Drawer ===== */
@@ -1838,7 +1877,10 @@
             document.querySelectorAll('.platform-tab').forEach(function(tab) {
                 tab.classList.remove('active');
             });
-            if (btn) btn.classList.add('active');
+            if (btn) {
+                btn.classList.add('active');
+                btn.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
+            }
 
             updateStats();
             populatePageFilter();
