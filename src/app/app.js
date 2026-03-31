@@ -5453,7 +5453,13 @@ function renderSettings(){
   aboutLogo.src='/assets/images/logo.png';aboutLogo.alt='';
   about.appendChild(aboutLogo);
   about.appendChild(el('div','about-name','Tafsir Kurd'));
-  about.appendChild(el('div','about-ver','v2.0.0'));
+  var verEl=el('div','about-ver','v2.0.0');
+  about.appendChild(verEl);
+  if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){
+    Capacitor.Plugins.App.getInfo().then(function(info){
+      if(info&&info.version)verEl.textContent='v'+info.version+' ('+info.build+')';
+    }).catch(function(){});
+  }
   about.appendChild(el('div','about-desc',t('settings.about_desc')));
   content.appendChild(about);
 }
