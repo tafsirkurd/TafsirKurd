@@ -2067,10 +2067,10 @@ window.GencineUI = {
       _badgeTimer = setTimeout(function(){ badge.style.opacity='0'; }, 900);
     }
 
-    function _clampTx(){
+    function _clampTx(nl){
+      if(nl===undefined) nl = pagesWrap.getBoundingClientRect().left - _tx;
       if(_pdfZoom<=1){ _tx=0; return; }
       var W = window.innerWidth;
-      var nl = pagesWrap.getBoundingClientRect().left - _tx; /* natural left */
       var cw = (pagesWrap.offsetWidth||W) * _pdfZoom;
       if(nl+cw <= W){ _tx=(W-nl-cw)/2; return; }
       _tx = Math.min(-nl, Math.max(W-nl-cw, _tx));
@@ -2107,7 +2107,16 @@ window.GencineUI = {
         _panStart = null;
         var cx=(e.touches[0].clientX+e.touches[1].clientX)/2;
         var cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
-        _pinchStart = { dist:_pinchDist(e.touches), zoom:_pdfZoom, tx:_tx, ty:_ty, cx:cx, cy:cy };
+        var r = pagesWrap.getBoundingClientRect();
+        var nl = r.left - _tx, nt = r.top - _ty;
+        _pinchStart = {
+          dist: _pinchDist(e.touches),
+          zoom: _pdfZoom,
+          cx: cx, cy: cy,
+          nl: nl, nt: nt,
+          lx: (cx - nl - _tx) / _pdfZoom,
+          ly: (cy - nt - _ty) / _pdfZoom
+        };
         e.preventDefault();
       } else if(e.touches.length===1){
         _pinchStart = null;
@@ -2132,8 +2141,10 @@ window.GencineUI = {
       if(e.touches.length===2 && _pinchStart){
         e.preventDefault();
         var newZoom = Math.min(4, Math.max(1, _pinchStart.zoom * _pinchDist(e.touches) / _pinchStart.dist));
-        _pdfZoom = _pinchStart.zoom; _tx = _pinchStart.tx; _ty = _pinchStart.ty;
-        _zoomAt(newZoom, _pinchStart.cx, _pinchStart.cy);
+        _pdfZoom = newZoom;
+        _tx = _pinchStart.cx - _pinchStart.nl - _pinchStart.lx * _pdfZoom;
+        _ty = _pinchStart.cy - _pinchStart.nt - _pinchStart.ly * _pdfZoom;
+        _clampTx(_pinchStart.nl);
         _applyPdfTransform(false);
         _showBadge(_pdfZoom);
       } else if(e.touches.length===1 && _panStart){
