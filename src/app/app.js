@@ -5204,7 +5204,7 @@ async function openAboutSheet(type){
 
     // ── 2. Story ─────────────────────────────────
     var cfoStory=el('div','cfo-section');
-    cfoStory.appendChild(el('div','cab-sec-label','چیرۆک'));
+    cfoStory.appendChild(el('div','cab-sec-label',ss.founder_story_label||'چیرۆک'));
     cfoStory.appendChild(el('div','cfo-bio-name',fname));
     (ss.founder_bio||'').split('\n\n').filter(Boolean).forEach(function(p){cfoStory.appendChild(el('div','cfo-para',p));});
     body.appendChild(cfoStory);
@@ -5218,8 +5218,8 @@ async function openAboutSheet(type){
 
     // ── 4. Journey ───────────────────────────────
     var cfoJrn=el('div','cfo-section');
-    cfoJrn.appendChild(el('div','cab-sec-label','گەشت'));
-    cfoJrn.appendChild(el('div','cab-sec-title','ڕێکا تەفسیر کورد'));
+    cfoJrn.appendChild(el('div','cab-sec-label',ss.founder_journey_label||'گەشت'));
+    cfoJrn.appendChild(el('div','cab-sec-title',ss.founder_journey_title||'ڕێکا تەفسیر کورد'));
     if(ss.founder_journey_intro)cfoJrn.appendChild(el('div','cfo-para',ss.founder_journey_intro));
     var JOURNEY=[
       {t:ss.founder_j1_title||'دەستپێکا هزرێ',d:ss.founder_j1_desc||'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
@@ -5240,7 +5240,7 @@ async function openAboutSheet(type){
 
     // ── 5. Values ────────────────────────────────
     var cfoVals=el('div','cfo-section');
-    cfoVals.appendChild(el('div','cab-sec-label','پابەندبوون'));
+    cfoVals.appendChild(el('div','cab-sec-label',ss.founder_values_label||'پابەندبوون'));
     var VALUES=[
       {t:ss.founder_v1_title||'ڕازەمەندییا خودای',d:ss.founder_v1_desc||'ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن دونیاییدا ناگەڕین، هیڤییا مە بتنێ قەبویلبوونا ژلایێ خوداییە.'},
       {t:ss.founder_v2_title||'خزمەتا قورئانێ',d:ss.founder_v2_desc||'خزمەتکرنا پەرتوکا خودای و گەهاندنا مانایێن قورئانێ بۆ هەمی کوردان ب شێوازەکێ ڕوون و سادە و بێ ئاڵۆزی.'},
@@ -5258,7 +5258,7 @@ async function openAboutSheet(type){
 
     // ── 6. Dua ───────────────────────────────────
     var cfoDua=el('div','cfo-dua');
-    cfoDua.appendChild(el('div','cfo-dua-label','دوعا'));
+    cfoDua.appendChild(el('div','cfo-dua-label',ss.founder_dua_label||'دوعا'));
     cfoDua.appendChild(el('div','cfo-dua-title',ss.founder_dua_title||'دوعا بۆ بینەرێن مە'));
     cfoDua.appendChild(el('div','cfo-dua-text',ss.founder_dua_text||''));
     body.appendChild(cfoDua);
@@ -5290,8 +5290,8 @@ async function openAboutSheet(type){
 
     // ── 2. Services ───────────────────────────────
     var cabSvc=el('div','cab-section');
-    cabSvc.appendChild(el('div','cab-sec-label','خزمەتگوزاری'));
-    cabSvc.appendChild(el('div','cab-sec-title','ئەم چ پێشکێش دکەین'));
+    cabSvc.appendChild(el('div','cab-sec-label',ss.about_svc_label||'خزمەتگوزاری'));
+    cabSvc.appendChild(el('div','cab-sec-title',ss.about_svc_title||'ئەم چ پێشکێش دکەین'));
     var FEATS=[
       {num:ss.about_feat1_num||'٠١',title:ss.about_feat1_title||'خواندنا قورئانێ',desc:ss.about_feat1_desc||'خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.'},
       {num:ss.about_feat2_num||'٠٢',title:ss.about_feat2_title||'دەنگێ ئیسلامێ',desc:ss.about_feat2_desc||'ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.'},
@@ -5327,7 +5327,7 @@ async function openAboutSheet(type){
 
     // ── 5. Declaration ────────────────────────────
     var cabDecl=el('div','cab-decl');
-    cabDecl.appendChild(el('div','cab-decl-title','نە سیاسی، نە حزبی'));
+    cabDecl.appendChild(el('div','cab-decl-title',ss.about_decl_title||'نە سیاسی، نە حزبی'));
     (ss.about_declaration_text||'').split('\n\n').filter(Boolean).forEach(function(p){
       cabDecl.appendChild(el('div','cab-decl-para',p));
     });
@@ -5336,7 +5336,7 @@ async function openAboutSheet(type){
     // ── 6. Tafsir source ──────────────────────────
     if(ss.about_tafsir_text){
       var cabTafsir=el('div','cab-section');
-      cabTafsir.appendChild(el('div','cab-sec-label','ژێدەرێ تەفسیرێ'));
+      cabTafsir.appendChild(el('div','cab-sec-label',ss.about_tafsir_label||'ژێدەرێ تەفسیرێ'));
       (ss.about_tafsir_text).split('\n\n').filter(Boolean).forEach(function(p){
         cabTafsir.appendChild(el('div','cab-decl-para',p));
       });
@@ -5347,8 +5347,8 @@ async function openAboutSheet(type){
     var bookImgUrl=ss.tafsir_book_image||'';
     var cabCard=el('div','cab-book-card');
     var cabCardText=el('div','cab-book-card-text');
-    cabCardText.appendChild(el('div','cab-book-card-badge','تەفسیرا ساناهی'));
-    cabCardText.appendChild(el('div','cab-book-card-title','تەفسیرا ساناهی'));
+    cabCardText.appendChild(el('div','cab-book-card-badge',ss.about_book_title||'تەفسیرا ساناهی'));
+    cabCardText.appendChild(el('div','cab-book-card-title',ss.about_book_title||'تەفسیرا ساناهی'));
     cabCardText.appendChild(el('div','cab-book-card-author',ss.about_tafsir_author||'ماموستا تەحسین ئیبراهیم دۆسکی'));
     cabCardText.appendChild(el('div','cab-book-card-desc',ss.about_tafsir_book_desc||'وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.'));
     cabCard.appendChild(cabCardText);
