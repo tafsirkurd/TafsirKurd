@@ -820,19 +820,84 @@ body{background:var(--bg);color:var(--text)}
 /* About bottom sheet */
 .cfg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:300}
 .cfg-overlay.on{opacity:1;pointer-events:auto}
-.cfg-sheet{position:fixed;left:0;right:0;bottom:0;max-height:88%;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;transform:translateY(105%);transition:transform .3s var(--ease);z-index:301;display:flex;flex-direction:column;overflow:hidden}
-.cfg-sheet.open{transform:translateY(0)}
+.cfg-sheet{position:fixed;left:0;right:0;bottom:0;max-height:92%;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;transform:translateY(105%);transition:transform .3s var(--ease);z-index:301;display:flex;flex-direction:column;overflow:hidden}
+.cfg-sheet.open{transform:translateY(0);min-height:72vh}
 .cfg-sheet-pull{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0;flex-shrink:0}
 .cfg-sheet-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px;flex-shrink:0}
 .cfg-sheet-title{font-size:1rem;font-weight:700;color:var(--text);direction:rtl}
 .cfg-sheet-close{width:32px;height:32px;border-radius:50%;background:var(--bg2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:.85rem}
-.cfg-sheet-body{flex:1;overflow-y:auto;padding:4px 20px 48px}
-.cfg-sheet-img{width:100%;border-radius:var(--r-l);object-fit:cover;margin-bottom:20px;max-height:200px}
-.cfg-sheet-avatar{width:86px;height:86px;border-radius:50%;overflow:hidden;background:var(--bg2);margin:4px auto 14px;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);flex-shrink:0}
+.cfg-sheet-body{flex:1;overflow-y:auto;padding:0 0 56px}
+/* Founder sheet */
+.cfg-sheet-hero{padding:20px 20px 4px;text-align:center}
+.cfg-sheet-intro{font-size:.84rem;color:var(--text3);line-height:1.7;direction:rtl;text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:6px}
+.cfg-sheet-divider{height:1px;background:var(--border);margin:22px 20px 24px}
+.cfg-sheet-para{font-size:.9rem;color:var(--text2);line-height:1.8;direction:rtl;margin-bottom:20px;padding:0 20px}
+.cfg-sheet-img{width:calc(100% - 40px);border-radius:12px;object-fit:cover;margin:24px 20px;display:block}
+.cfg-sheet-avatar{width:86px;height:86px;border-radius:50%;overflow:hidden;background:var(--bg2);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);flex-shrink:0}
 .cfg-sheet-avatar img{width:100%;height:100%;object-fit:cover}
-.cfg-sheet-name{font-size:1.15rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:3px;direction:rtl}
-.cfg-sheet-role{font-size:.82rem;color:var(--text3);text-align:center;margin-bottom:18px;direction:rtl}
-.cfg-sheet-text{font-size:.9rem;color:var(--text2);line-height:1.9;direction:rtl}
+.cfg-sheet-name{font-size:1.15rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:2px;direction:rtl}
+.cfg-sheet-role{font-size:.82rem;color:var(--text3);text-align:center;direction:rtl}
+.cfg-sheet-quote{background:var(--bg2);border-radius:var(--r-l);padding:18px 20px;margin:0 20px 32px;direction:rtl}
+.cfg-sheet-quote-ar{font-family:'KFGQPC Hafs',serif;font-size:1.15rem;line-height:2.2;color:var(--text);margin-bottom:8px;direction:rtl;text-align:center}
+.cfg-sheet-quote-ref{font-size:.72rem;color:var(--text3);text-align:center}
+.cfg-sheet-author-card{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:var(--r-m);padding:12px 14px;margin:0 20px 20px;direction:rtl}
+.cfg-sheet-author-card i{color:var(--accent);font-size:1.1rem;flex-shrink:0}
+.cfg-sheet-author-name{font-size:.9rem;font-weight:600;color:var(--text)}
+/* About TafsirKurd — rich layout */
+.cab-hero{padding:20px 20px 28px;text-align:center}
+.cab-logo{width:76px;height:76px;border-radius:20px;margin:0 auto 16px;display:block;object-fit:contain}
+.cab-title{font-size:1.6rem;font-weight:900;color:var(--text);direction:rtl;margin-bottom:8px;letter-spacing:-.01em}
+.cab-sub{font-size:.9rem;color:var(--text3);direction:rtl;line-height:1.6}
+.cab-section{padding:28px 20px 0}
+.cab-sec-label{font-size:.68rem;font-weight:700;color:var(--accent);letter-spacing:.12em;direction:rtl;margin-bottom:4px;text-transform:uppercase}
+.cab-sec-title{font-size:1.1rem;font-weight:800;color:var(--text);direction:rtl;margin-bottom:16px}
+.cab-feat{background:var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;margin-bottom:10px;direction:rtl;display:flex;gap:12px;align-items:flex-start}
+.cab-feat-num{font-size:.72rem;font-weight:800;color:var(--accent);min-width:28px;padding-top:2px;font-variant-numeric:tabular-nums;letter-spacing:.05em}
+.cab-feat-body{}
+.cab-feat-title{font-size:.92rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.cab-feat-desc{font-size:.82rem;color:var(--text2);line-height:1.75}
+.cab-stats{display:flex;gap:12px;padding:28px 20px 0}
+.cab-stat{flex:1;background:var(--bg2);border-radius:var(--r-l);padding:20px 10px;text-align:center}
+.cab-stat-num{font-size:1.9rem;font-weight:900;color:var(--accent);display:block;line-height:1;direction:ltr}
+.cab-stat-label{font-size:.75rem;color:var(--text3);display:block;margin-top:6px;direction:rtl}
+.cab-ayah-wrap{margin:28px 20px 0;background:var(--bg2);border-radius:var(--r-xl);padding:24px 20px 18px;direction:rtl}
+.cab-ayah-ar{font-family:'KFGQPC Hafs',serif;font-size:1.25rem;line-height:2.3;color:var(--text);text-align:center;margin-bottom:14px}
+.cab-ayah-ku{font-size:.82rem;color:var(--text2);line-height:1.8;direction:rtl;text-align:center;margin-bottom:8px;font-style:italic}
+.cab-ayah-ref{font-size:.7rem;color:var(--text3);text-align:center}
+.cab-decl{padding:28px 20px 0}
+.cab-decl-title{font-size:1rem;font-weight:800;color:var(--text);direction:rtl;margin-bottom:12px}
+.cab-decl-para{font-size:.88rem;color:var(--text2);line-height:1.8;direction:rtl;margin-bottom:14px}
+.cab-book-card{margin:28px 20px 0;background:var(--bg2);border-radius:var(--r-xl);padding:18px 16px;direction:rtl;display:flex;gap:14px;align-items:center}
+.cab-book-card-text{flex:1}
+.cab-book-card-badge{font-size:.65rem;font-weight:700;color:var(--accent);letter-spacing:.08em;margin-bottom:4px;text-transform:uppercase}
+.cab-book-card-title{font-size:.98rem;font-weight:800;color:var(--text);margin-bottom:4px}
+.cab-book-card-author{font-size:.8rem;color:var(--text2);margin-bottom:6px}
+.cab-book-card-desc{font-size:.78rem;color:var(--text3);line-height:1.65}
+.cab-book-card-icon{width:44px;height:44px;border-radius:var(--r-m);background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent-t);font-size:1.1rem}
+/* Founder rich layout */
+.cfo-section{padding:28px 20px 0}
+.cfo-bio-name{font-size:.95rem;font-weight:800;color:var(--text);direction:rtl;margin-bottom:10px}
+.cfo-para{font-size:.9rem;color:var(--text2);line-height:1.8;direction:rtl;margin-bottom:16px}
+.cfo-ayah{background:var(--bg2);border-radius:var(--r-xl);padding:22px 20px 16px;margin:28px 20px 0;direction:rtl}
+.cfo-ayah-ar{font-family:'KFGQPC Hafs',serif;font-size:1.2rem;line-height:2.3;color:var(--text);text-align:center;margin-bottom:12px}
+.cfo-ayah-ku{font-size:.82rem;color:var(--text2);line-height:1.8;direction:rtl;text-align:center;margin-bottom:8px;font-style:italic}
+.cfo-ayah-ref{font-size:.7rem;color:var(--text3);text-align:center}
+.cfo-timeline{margin-top:8px;display:flex;flex-direction:column}
+.cfo-tl-item{display:flex;gap:14px;direction:rtl;padding-bottom:20px;position:relative}
+.cfo-tl-item:not(:last-child)::before{content:'';position:absolute;right:6px;top:16px;bottom:0;width:1px;background:var(--border)}
+.cfo-tl-dot{width:13px;height:13px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:3px}
+.cfo-tl-title{font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:4px;direction:rtl}
+.cfo-tl-desc{font-size:.82rem;color:var(--text2);line-height:1.7;direction:rtl}
+.cfo-values{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.cfo-val-item{background:var(--bg2);border-radius:var(--r-l);padding:14px 16px;direction:rtl}
+.cfo-val-title{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.cfo-val-desc{font-size:.82rem;color:var(--text2);line-height:1.7}
+.cfo-dua{background:var(--bg2);border-radius:var(--r-xl);padding:22px 20px;margin:28px 20px 0;direction:rtl;text-align:center}
+.cfo-dua-label{font-size:.68rem;font-weight:700;color:var(--accent);letter-spacing:.12em;margin-bottom:6px;text-transform:uppercase}
+.cfo-dua-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:12px}
+.cfo-dua-text{font-size:.85rem;color:var(--text2);line-height:1.85;direction:rtl}
+.cfo-closing{padding:28px 20px 4px;text-align:center;direction:rtl}
+.cfo-closing-text{font-size:.82rem;color:var(--text3);line-height:1.8;font-style:italic}
 
 /* Settings extras */
 .setting-label-wrap{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}

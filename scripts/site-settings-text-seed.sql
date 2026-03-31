@@ -1,6 +1,7 @@
 -- Seed new site_settings keys for About + Social
 -- Run once in Supabase SQL editor.
--- Uses ON CONFLICT DO NOTHING so existing values are not overwritten.
+-- Uses ON CONFLICT DO UPDATE so empty/missing values are filled in,
+-- but existing non-empty values are NOT overwritten.
 
 INSERT INTO site_settings (key, value) VALUES
   ('founder_name',       'سامان عبدالرحمن'),
@@ -12,4 +13,6 @@ INSERT INTO site_settings (key, value) VALUES
   ('social_tiktok',      ''),
   ('social_telegram',    ''),
   ('social_website',     'https://tafsirkurd.com')
-ON CONFLICT (key) DO NOTHING;
+ON CONFLICT (key) DO UPDATE
+  SET value = EXCLUDED.value
+  WHERE site_settings.value = '' OR site_settings.value IS NULL;
