@@ -5079,6 +5079,119 @@ function mkToggleRow(labelText,isOn,onToggle,subText){
   row.appendChild(toggle);
   return row;
 }
+/* ===== SITE SETTINGS (shared source: images, social, about text) ===== */
+var _ssCacheKey='siteSettings_v2';
+var _ssCacheTTL=6*3600*1000;
+var _ssMemory=null,_ssMemTs=0;
+
+async function getSiteSettings(){
+  if(_ssMemory&&(Date.now()-_ssMemTs)<_ssCacheTTL)return _ssMemory;
+  try{
+    var c=JSON.parse(localStorage.getItem(_ssCacheKey));
+    if(c&&c.ts&&(Date.now()-c.ts)<_ssCacheTTL){_ssMemory=c.d;_ssMemTs=c.ts;return _ssMemory;}
+  }catch(e){}
+  var sb=S.supabase;
+  if(!sb){
+    // Bare REST with cached config
+    try{
+      var cfg=JSON.parse(localStorage.getItem('supa_cfg'));
+      if(cfg&&cfg.supabaseUrl&&cfg.supabaseKey){
+        var r=await fetch(cfg.supabaseUrl+'/rest/v1/site_settings?select=key,value',{headers:{'apikey':cfg.supabaseKey,'Authorization':'Bearer '+cfg.supabaseKey}});
+        var rows=await r.json();
+        if(Array.isArray(rows)){
+          var res={};rows.forEach(function(row){res[row.key]=row.value;});
+          _ssMemory=res;_ssMemTs=Date.now();
+          try{localStorage.setItem(_ssCacheKey,JSON.stringify({ts:_ssMemTs,d:res}));}catch(e){}
+          return res;
+        }
+      }
+    }catch(e){}
+    try{var stale=JSON.parse(localStorage.getItem(_ssCacheKey));if(stale&&stale.d)return stale.d;}catch(e){}
+    return {};
+  }
+  try{
+    var qr=await sb.from('site_settings').select('key,value');
+    if(qr.error||!qr.data)throw new Error('fetch');
+    var res={};qr.data.forEach(function(row){res[row.key]=row.value;});
+    _ssMemory=res;_ssMemTs=Date.now();
+    try{localStorage.setItem(_ssCacheKey,JSON.stringify({ts:_ssMemTs,d:res}));}catch(e){}
+    return res;
+  }catch(e){
+    try{var stale=JSON.parse(localStorage.getItem(_ssCacheKey));if(stale&&stale.d)return stale.d;}catch(e2){}
+    return {};
+  }
+}
+
+/* ===== ABOUT BOTTOM SHEETS ===== */
+var _cfgOverlayEl=null,_cfgSheetEl=null;
+
+function _ensureCfgSheet(){
+  if(_cfgSheetEl)return;
+  _cfgOverlayEl=el('div','cfg-overlay');
+  on(_cfgOverlayEl,'click',closeCfgSheet);
+  document.body.appendChild(_cfgOverlayEl);
+  _cfgSheetEl=el('div','cfg-sheet');
+  document.body.appendChild(_cfgSheetEl);
+}
+
+function closeCfgSheet(){
+  if(!_cfgSheetEl)return;
+  _cfgSheetEl.classList.remove('open');
+  _cfgOverlayEl.classList.remove('on');
+}
+
+function _openLink(url){
+  if(!url)return;
+  if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Browser){
+    Capacitor.Plugins.Browser.open({url:url}).catch(function(){window.open(url,'_blank');});
+  }else{window.open(url,'_blank');}
+}
+
+async function openAboutSheet(type){
+  _ensureCfgSheet();
+  haptic([8]);
+  clear(_cfgSheetEl);
+
+  var pull=el('div','cfg-sheet-pull');_cfgSheetEl.appendChild(pull);
+  var hdr=el('div','cfg-sheet-hdr');
+  var titleEl=el('div','cfg-sheet-title',type==='founder'?'سامان عبدالرحمن':'Tafsir Kurd');
+  var closeBtn=el('button','cfg-sheet-close');
+  closeBtn.appendChild(icon('fas fa-xmark'));
+  on(closeBtn,'click',closeCfgSheet);
+  hdr.appendChild(titleEl);hdr.appendChild(closeBtn);
+  _cfgSheetEl.appendChild(hdr);
+  var body=el('div','cfg-sheet-body');
+  body.appendChild(el('div','cfg-sheet-role','...'));
+  _cfgSheetEl.appendChild(body);
+
+  _cfgOverlayEl.classList.add('on');
+  _cfgSheetEl.classList.add('open');
+
+  var ss=await getSiteSettings();
+  clear(body);
+
+  if(type==='founder'){
+    var avDiv=el('div','cfg-sheet-avatar');
+    var avUrl=ss.founder_avatar_url||'';
+    if(avUrl){var avImg=document.createElement('img');avImg.src=avUrl;avImg.alt='';avDiv.appendChild(avImg);}
+    else{avDiv.appendChild(icon('fas fa-user'));}
+    body.appendChild(avDiv);
+    var fname=ss.founder_name||'سامان عبدالرحمن';
+    titleEl.textContent=fname;
+    body.appendChild(el('div','cfg-sheet-name',fname));
+    body.appendChild(el('div','cfg-sheet-role',ss.founder_role||'دامەزرێنەرێ تەفسیر کورد'));
+    if(ss.founder_bio)body.appendChild(el('div','cfg-sheet-text',ss.founder_bio));
+  }else{
+    var appImgUrl=ss.tafsir_book_image||'';
+    if(appImgUrl){var appImg=document.createElement('img');appImg.src=appImgUrl;appImg.alt='';appImg.className='cfg-sheet-img';body.appendChild(appImg);}
+    body.appendChild(el('div','cfg-sheet-name','Tafsir Kurd'));
+    body.appendChild(el('div','cfg-sheet-role',t('settings.about_desc')));
+    if(ss.about_app_text&&ss.about_app_text!==t('settings.about_desc')){
+      body.appendChild(el('div','cfg-sheet-text',ss.about_app_text));
+    }
+  }
+}
+
 function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger){
   var row=el('div','setting-row');
   row.appendChild(el('div','setting-label',labelText));
@@ -5446,6 +5559,57 @@ function renderSettings(){
     }));
   }
   content.appendChild(g5);
+
+  // ── About Us ─────────────────────────────────
+  var g6=el('div','settings-group');
+  g6.appendChild(el('div','settings-group-title',t('settings.about_group')||'دەربارەمان'));
+
+  function mkAboutNavRow(iconClass,label,sub,onClick){
+    var row=el('div','about-nav-row');
+    var left=el('div','about-nav-left');
+    var iconBox=el('div','about-nav-icon');iconBox.appendChild(icon(iconClass));
+    left.appendChild(iconBox);
+    var textWrap=el('div');
+    textWrap.appendChild(el('div','about-nav-label',label));
+    if(sub)textWrap.appendChild(el('div','about-nav-sub',sub));
+    left.appendChild(textWrap);
+    row.appendChild(left);
+    var chev=el('span','about-nav-chevron');chev.appendChild(icon('fas fa-chevron-left'));row.appendChild(chev);
+    on(row,'click',onClick);
+    return row;
+  }
+  g6.appendChild(mkAboutNavRow('fas fa-book-quran','Tafsir Kurd',null,function(){openAboutSheet('app');}));
+  g6.appendChild(mkAboutNavRow('fas fa-user','سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
+  content.appendChild(g6);
+
+  // ── Social Links ─────────────────────────────
+  var SOCIAL_DEFS=[
+    {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram'},
+    {key:'social_youtube',icon:'fab fa-youtube',label:'YouTube'},
+    {key:'social_tiktok',icon:'fab fa-tiktok',label:'TikTok'},
+    {key:'social_telegram',icon:'fab fa-telegram',label:'Telegram'},
+    {key:'social_website',icon:'fas fa-globe',label:'Website'}
+  ];
+  var socialBar=el('div','settings-social');
+  var _socBtns={};
+  SOCIAL_DEFS.forEach(function(def){
+    var btn=el('button','soc-btn');
+    btn.title=def.label;
+    btn.appendChild(icon(def.icon));
+    btn.style.display='none'; // hidden until URL loaded
+    on(btn,'click',function(){_openLink(btn._url);haptic([8]);});
+    _socBtns[def.key]=btn;
+    socialBar.appendChild(btn);
+  });
+  content.appendChild(socialBar);
+  // Async: load social URLs
+  getSiteSettings().then(function(ss){
+    SOCIAL_DEFS.forEach(function(def){
+      var url=ss[def.key]||'';
+      var btn=_socBtns[def.key];
+      if(url){btn._url=url;btn.style.display='';}
+    });
+  });
 
   // ── About ────────────────────────────────────
   var about=el('div','about-section');

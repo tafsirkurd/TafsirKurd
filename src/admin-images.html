@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=10">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
     <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
     <style>
         .images-grid {
@@ -461,6 +462,110 @@
                     </div>
                 </div>
 
+                <h3 class="section-divider">Text Content</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Short text fields used in both the website and app About sections. Stored in <code>site_settings</code> — shared source of truth.</p>
+                <div class="images-grid">
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title">Founder Name</div>
+                            <div class="image-card-desc">Displayed on founder page and in app About sheet</div>
+                            <span class="status-badge empty" id="status-founder_name">Not Set</span>
+                            <input type="text" class="image-card-url" id="val-founder_name" placeholder="e.g. سامان عبدالرحمن" dir="rtl">
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('founder_name')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title">Founder Role / Title</div>
+                            <div class="image-card-desc">Shown below name in app and on founder page</div>
+                            <span class="status-badge empty" id="status-founder_role">Not Set</span>
+                            <input type="text" class="image-card-url" id="val-founder_role" placeholder="e.g. دامەزرێنەرێ تەفسیر کورد" dir="rtl">
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('founder_role')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title">Founder Bio (Short)</div>
+                            <div class="image-card-desc">Short paragraph shown in the app About Founder sheet</div>
+                            <span class="status-badge empty" id="status-founder_bio">Not Set</span>
+                            <textarea class="image-card-url" id="val-founder_bio" placeholder="Short bio in Kurdish..." dir="rtl" rows="4" style="resize:vertical;height:auto;font-family:inherit"></textarea>
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('founder_bio')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title">About App Text (Short)</div>
+                            <div class="image-card-desc">Short description of TafsirKurd shown in app About sheet</div>
+                            <span class="status-badge empty" id="status-about_app_text">Not Set</span>
+                            <textarea class="image-card-url" id="val-about_app_text" placeholder="Short about text in Kurdish..." dir="rtl" rows="4" style="resize:vertical;height:auto;font-family:inherit"></textarea>
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('about_app_text')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-divider">Social Links</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Social media URLs shown as icon buttons in app Settings. Leave blank to hide. Updates both website and app.</p>
+                <div class="images-grid">
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title"><i class="fab fa-instagram" style="margin-left:6px"></i> Instagram</div>
+                            <span class="status-badge empty" id="status-social_instagram">Not Set</span>
+                            <input type="url" class="image-card-url" id="val-social_instagram" placeholder="https://www.instagram.com/tafsirkurd">
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('social_instagram')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title"><i class="fab fa-youtube" style="margin-left:6px"></i> YouTube</div>
+                            <span class="status-badge empty" id="status-social_youtube">Not Set</span>
+                            <input type="url" class="image-card-url" id="val-social_youtube" placeholder="https://www.youtube.com/@tafsirkurd">
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('social_youtube')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title"><i class="fab fa-tiktok" style="margin-left:6px"></i> TikTok</div>
+                            <span class="status-badge empty" id="status-social_tiktok">Not Set</span>
+                            <input type="url" class="image-card-url" id="val-social_tiktok" placeholder="https://www.tiktok.com/@tafsirkurd">
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('social_tiktok')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title"><i class="fab fa-telegram" style="margin-left:6px"></i> Telegram</div>
+                            <span class="status-badge empty" id="status-social_telegram">Not Set</span>
+                            <input type="url" class="image-card-url" id="val-social_telegram" placeholder="https://t.me/tafsirkurd">
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('social_telegram')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-card-body">
+                            <div class="image-card-title"><i class="fas fa-globe" style="margin-left:6px"></i> Website</div>
+                            <span class="status-badge empty" id="status-social_website">Not Set</span>
+                            <input type="url" class="image-card-url" id="val-social_website" placeholder="https://tafsirkurd.com">
+                            <div class="image-card-actions">
+                                <button class="btn btn-primary" onclick="saveText('social_website')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <h3 class="section-divider">Qari Profile Photos</h3>
                 <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Circular profile pictures shown in the audio player. Upload a 1:1 square photo — stored in Cloudflare R2. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
                 <div id="reciterPhotosGrid" class="reciter-photos-grid"></div>
@@ -494,6 +599,7 @@
         const R2_UPLOAD_SECRET = 'tk_r2_img_2026_K8mX3pW7nR9vJ4sQ';
 
         const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image', 'app_popup_image_url'];
+        const TEXT_KEYS = ['founder_name', 'founder_role', 'founder_bio', 'about_app_text', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_telegram', 'social_website'];
         let supabase = null;
 
         const RECITERS_ADMIN = [
@@ -568,6 +674,19 @@
                         if (urlInput) urlInput.value = row.value;
                     }
                 });
+                // Load text/social keys
+                const { data: tData } = await supabase
+                    .from('site_settings')
+                    .select('key, value')
+                    .in('key', TEXT_KEYS);
+                (tData || []).forEach(row => {
+                    if (row.value) {
+                        const inp = document.getElementById('val-' + row.key);
+                        if (inp) inp.value = row.value;
+                        const st = document.getElementById('status-' + row.key);
+                        if (st) { st.textContent = 'Set'; st.className = 'status-badge set'; }
+                    }
+                });
                 // Load reciter photos
                 const { data: rData } = await supabase
                     .from('site_settings')
@@ -583,6 +702,16 @@
             } catch (e) {
                 console.error('Failed to load images:', e);
             }
+        }
+
+        async function saveText(key) {
+            const inp = document.getElementById('val-' + key);
+            if (!inp) return;
+            const value = inp.value.trim();
+            await saveToDb(key, value);
+            const st = document.getElementById('status-' + key);
+            if (st) { st.textContent = value ? 'Set' : 'Not Set'; st.className = 'status-badge ' + (value ? 'set' : 'empty'); }
+            alert('Saved!');
         }
 
         function updatePreview(key, url) {
