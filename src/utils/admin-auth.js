@@ -336,6 +336,16 @@ function applySidebarPermissions(overrideRole) {
         document.body.setAttribute('data-role', role);
     }
 
+    // Reset any previously-hidden items so a stale early call
+    // can never permanently blank the sidebar on re-run
+    document.querySelectorAll('.sidebar-nav .nav-item[data-hidden-by-role]').forEach(function(item) {
+        item.style.display = '';
+        item.removeAttribute('data-hidden-by-role');
+    });
+    document.querySelectorAll('.sidebar-nav .nav-section').forEach(function(s) {
+        s.style.display = '';
+    });
+
     // Super admin sees everything
     if (role === 'super_admin') {
         revealSidebar(role);

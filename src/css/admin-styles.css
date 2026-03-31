@@ -94,8 +94,6 @@ body {
 .sidebar.collapsed .sidebar-header {
     justify-content: center;
     padding: 0;
-    overflow: visible;   /* allow toggle circle to protrude past the border */
-    position: relative;  /* containing block for the absolute toggle */
 }
 
 /* ─── Logo ───────────────────────────────────────────────────── */
@@ -140,13 +138,9 @@ body.dark-mode .sidebar-logo-img {
     display: block;
 }
 
-/* Collapsed: slide text out, reset logo flex */
+/* Collapsed: hide logo entirely — toggle takes its place */
 .sidebar.collapsed .sidebar-logo {
-    flex: 0 0 auto;   /* shrink to image width so it can be centered */
-}
-.sidebar.collapsed .sidebar-logo-img {
-    width: 36px;
-    height: 36px;
+    display: none;
 }
 .sidebar.collapsed .sidebar-logo-text {
     max-width: 0;
@@ -155,26 +149,15 @@ body.dark-mode .sidebar-logo-img {
 }
 
 /* ─── Toggle handle ──────────────────────────────────────────── */
-/*
- * EXPANDED: toggle lives in the flex row, fully inside the sidebar.
- * No border-right contact → no "sitting on the line" problem.
- *
- * COLLAPSED: toggle is absolutely positioned so it can center on the
- * sidebar's right border (the classic "pill on the edge" pattern).
- * Using --bg-app (pure white/black) rather than --bg-surface ensures
- * the circle is visually distinct from the sidebar's off-white/off-black
- * background, making it read as a button, not a border artifact.
- */
 .sidebar-toggle {
-    /* Expanded state: in flex flow */
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: var(--bg-surface);
     border: 1px solid var(--border-medium);
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    padding: 5px;
+    padding: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -188,19 +171,17 @@ body.dark-mode .sidebar-logo-img {
     box-shadow: 0 2px 6px rgba(0,0,0,0.14);
 }
 
-/* Collapsed state: pull toggle out of flow, float on right edge */
+/* Collapsed: toggle stays in flex flow, centered (logo is hidden) */
 .sidebar.collapsed .sidebar-toggle {
-    position: absolute;
-    right: -36px;           /* push toggle 8px outside the border: 64+36-28=72px from left */
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--bg-app);  /* white (light) / black (dark) — contrasts with sidebar */
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    background: var(--bg-surface);
     border: 1px solid var(--border-medium);
-    box-shadow: 0 1px 8px rgba(0,0,0,0.14);
-    z-index: 101;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 .sidebar.collapsed .sidebar-toggle:hover {
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.16);
 }
 
 /* Arrow direction: left=collapse, right=expand */
