@@ -5084,11 +5084,11 @@ var _ssCacheKey='siteSettings_v6';
 var _ssCacheTTL=6*3600*1000;
 var _ssMemory=null,_ssMemTs=0;
 
-async function getSiteSettings(){
-  if(_ssMemory&&(Date.now()-_ssMemTs)<_ssCacheTTL)return _ssMemory;
+async function getSiteSettings(force){
+  if(!force&&_ssMemory&&(Date.now()-_ssMemTs)<_ssCacheTTL)return _ssMemory;
   try{
-    var c=JSON.parse(localStorage.getItem(_ssCacheKey));
-    if(c&&c.ts&&(Date.now()-c.ts)<_ssCacheTTL){_ssMemory=c.d;_ssMemTs=c.ts;return _ssMemory;}
+    if(!force){var c=JSON.parse(localStorage.getItem(_ssCacheKey));
+    if(c&&c.ts&&(Date.now()-c.ts)<_ssCacheTTL){_ssMemory=c.d;_ssMemTs=c.ts;return _ssMemory;}}
   }catch(e){}
   var sb=S.supabase;
   if(!sb){
@@ -5173,7 +5173,7 @@ async function openAboutSheet(type){
   _cfgOverlayEl.classList.add('on');
   _cfgSheetEl.classList.add('open');
 
-  var ss=await getSiteSettings();
+  var ss=await getSiteSettings(true);
   clear(body);
 
   function _addQuote(parent,ar,ref){
@@ -5222,10 +5222,10 @@ async function openAboutSheet(type){
     cfoJrn.appendChild(el('div','cab-sec-title','ڕێکا تەفسیر کورد'));
     if(ss.founder_journey_intro)cfoJrn.appendChild(el('div','cfo-para',ss.founder_journey_intro));
     var JOURNEY=[
-      {t:'دەستپێکا هزرێ',d:'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
-      {t:'دروستکرنا ناڤەڕۆکا ڤیدیویی',d:'دەستپێکرنا دروستکرنا ڤیدیویێن ئیسلامی یێن کورت بۆ تۆڕێن جڤاکی وەک ئینستاگرام و تیکتۆک، ب شێوازەکێ بالکێش کو بگەهیتە نەوەیێ نوی یێ کوردان.'},
-      {t:'دامەزراندنا پلاتفۆرمێ',d:'دروستکرنا مالپەڕەکا تەمام بۆ خواندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی، ب تایبەتمەندیێن مۆدێرن وەک شوێنکەفتنا خواندنێ و نیشانەکرن.'},
-      {t:'گەهشتن ب ملیۆنان بینەران',d:'ب ڕێکا ئینستاگرام، تیکتۆک و یوتوب گەهشتینە زێدەتر ژ ٢٥ ملیۆن بینەر و ٦٥ هزار فۆڵۆوەران. ئەڤ ژمارە نیشانا پێدڤییا کوردانە بۆ ناڤەڕۆکەکا ئیسلامی زمانێ وان بخو.'}
+      {t:ss.founder_j1_title||'دەستپێکا هزرێ',d:ss.founder_j1_desc||'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
+      {t:ss.founder_j2_title||'دروستکرنا ناڤەڕۆکا ڤیدیویی',d:ss.founder_j2_desc||'دەستپێکرنا دروستکرنا ڤیدیویێن ئیسلامی یێن کورت بۆ تۆڕێن جڤاکی وەک ئینستاگرام و تیکتۆک، ب شێوازەکێ بالکێش کو بگەهیتە نەوەیێ نوی یێ کوردان.'},
+      {t:ss.founder_j3_title||'دامەزراندنا پلاتفۆرمێ',d:ss.founder_j3_desc||'دروستکرنا مالپەڕەکا تەمام بۆ خواندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی، ب تایبەتمەندیێن مۆدێرن وەک شوێنکەفتنا خواندنێ و نیشانەکرن.'},
+      {t:ss.founder_j4_title||'گەهشتن ب ملیۆنان بینەران',d:ss.founder_j4_desc||'ب ڕێکا ئینستاگرام، تیکتۆک و یوتوب گەهشتینە زێدەتر ژ ٢٥ ملیۆن بینەر و ٦٥ هزار فۆڵۆوەران. ئەڤ ژمارە نیشانا پێدڤییا کوردانە بۆ ناڤەڕۆکەکا ئیسلامی زمانێ وان بخو.'}
     ];
     var tl=el('div','cfo-timeline');
     JOURNEY.forEach(function(j){
@@ -5242,10 +5242,10 @@ async function openAboutSheet(type){
     var cfoVals=el('div','cfo-section');
     cfoVals.appendChild(el('div','cab-sec-label','پابەندبوون'));
     var VALUES=[
-      {t:'ڕازەمەندییا خودای',d:'ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن دونیاییدا ناگەڕین، هیڤییا مە بتنێ قەبویلبوونا ژلایێ خوداییە.'},
-      {t:'خزمەتا قورئانێ',d:'خزمەتکرنا پەرتوکا خودای و گەهاندنا مانایێن قورئانێ بۆ هەمی کوردان ب شێوازەکێ ڕوون و سادە و بێ ئاڵۆزی.'},
-      {t:'گەهاندن بۆ هەمییان',d:'دروستکرنا پلاتفۆرمەکا دیجیتاڵ کو بەردەستە بۆ هەمی کوردان ل هەر جهەکی، بێ سنوور و بێ جیاوازی.'},
-      {t:'خۆگەشەکرن',d:'فێربوون و گەشەکرنا پێزانینێن ئایینی، و پارڤەکرنا وان دگەل گەلێ خۆ ب شێوازەکێ ڕەوان.'}
+      {t:ss.founder_v1_title||'ڕازەمەندییا خودای',d:ss.founder_v1_desc||'ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن دونیاییدا ناگەڕین، هیڤییا مە بتنێ قەبویلبوونا ژلایێ خوداییە.'},
+      {t:ss.founder_v2_title||'خزمەتا قورئانێ',d:ss.founder_v2_desc||'خزمەتکرنا پەرتوکا خودای و گەهاندنا مانایێن قورئانێ بۆ هەمی کوردان ب شێوازەکێ ڕوون و سادە و بێ ئاڵۆزی.'},
+      {t:ss.founder_v3_title||'گەهاندن بۆ هەمییان',d:ss.founder_v3_desc||'دروستکرنا پلاتفۆرمەکا دیجیتاڵ کو بەردەستە بۆ هەمی کوردان ل هەر جهەکی، بێ سنوور و بێ جیاوازی.'},
+      {t:ss.founder_v4_title||'خۆگەشەکرن',d:ss.founder_v4_desc||'فێربوون و گەشەکرنا پێزانینێن ئایینی، و پارڤەکرنا وان دگەل گەلێ خۆ ب شێوازەکێ ڕەوان.'}
     ];
     var valList=el('div','cfo-values');
     VALUES.forEach(function(v){
@@ -5293,9 +5293,9 @@ async function openAboutSheet(type){
     cabSvc.appendChild(el('div','cab-sec-label','خزمەتگوزاری'));
     cabSvc.appendChild(el('div','cab-sec-title','ئەم چ پێشکێش دکەین'));
     var FEATS=[
-      {num:'٠١',title:'خواندنا قورئانێ',desc:'خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.'},
-      {num:'٠٢',title:'دەنگێ ئیسلامێ',desc:'ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.'},
-      {num:'٠٣',title:'نیشانەکرن و پاشەکەفتن',desc:'شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.'}
+      {num:ss.about_feat1_num||'٠١',title:ss.about_feat1_title||'خواندنا قورئانێ',desc:ss.about_feat1_desc||'خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.'},
+      {num:ss.about_feat2_num||'٠٢',title:ss.about_feat2_title||'دەنگێ ئیسلامێ',desc:ss.about_feat2_desc||'ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.'},
+      {num:ss.about_feat3_num||'٠٣',title:ss.about_feat3_title||'نیشانەکرن و پاشەکەفتن',desc:ss.about_feat3_desc||'شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.'}
     ];
     FEATS.forEach(function(f){
       var card=el('div','cab-feat');

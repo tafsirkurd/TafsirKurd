@@ -1757,6 +1757,65 @@
                     </div>
                 </div>
 
+                <h3 class="section-divider">Services (خزمەتگوزاری)</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">The 3 feature cards in the About TafsirKurd sheet — <code>about_feat1_*</code> / <code>about_feat2_*</code> / <code>about_feat3_*</code></p>
+                <div class="about-fields-grid">
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 1 — Number</div>
+                        <span class="status-badge empty" id="status-about_feat1_num">Not Set</span>
+                        <input class="about-field-input" id="val-about_feat1_num" dir="rtl" placeholder="٠١">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat1_num')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 1 — Title</div>
+                        <span class="status-badge empty" id="status-about_feat1_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_feat1_title" dir="rtl" placeholder="خواندنا قورئانێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat1_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 1 — Description</div>
+                        <span class="status-badge empty" id="status-about_feat1_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_feat1_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat1_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 2 — Number</div>
+                        <span class="status-badge empty" id="status-about_feat2_num">Not Set</span>
+                        <input class="about-field-input" id="val-about_feat2_num" dir="rtl" placeholder="٠٢">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat2_num')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 2 — Title</div>
+                        <span class="status-badge empty" id="status-about_feat2_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_feat2_title" dir="rtl" placeholder="دەنگێ ئیسلامێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat2_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 2 — Description</div>
+                        <span class="status-badge empty" id="status-about_feat2_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_feat2_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat2_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 3 — Number</div>
+                        <span class="status-badge empty" id="status-about_feat3_num">Not Set</span>
+                        <input class="about-field-input" id="val-about_feat3_num" dir="rtl" placeholder="٠٣">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat3_num')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 3 — Title</div>
+                        <span class="status-badge empty" id="status-about_feat3_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_feat3_title" dir="rtl" placeholder="نیشانەکرن و پاشەکەفتن">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat3_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Feature 3 — Description</div>
+                        <span class="status-badge empty" id="status-about_feat3_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_feat3_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat3_desc')">Save</button></div>
+                    </div>
+                </div>
+
                 <h3 class="section-divider">About Founder</h3>
                 <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Text shown in the app About Founder sheet. Stored in <code>site_settings</code>.</p>
                 <div class="about-fields-grid">
@@ -1808,6 +1867,118 @@
                         <span class="status-badge empty" id="status-founder_journey_intro">Not Set</span>
                         <textarea class="about-field-input" id="val-founder_journey_intro" dir="rtl" rows="3"></textarea>
                         <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_journey_intro')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 1 — Title</div>
+                        <div class="about-field-desc"><code>founder_j1_title</code></div>
+                        <span class="status-badge empty" id="status-founder_j1_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_j1_title" dir="rtl" placeholder="دەستپێکا هزرێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j1_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 1 — Description</div>
+                        <div class="about-field-desc"><code>founder_j1_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_j1_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_j1_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j1_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 2 — Title</div>
+                        <div class="about-field-desc"><code>founder_j2_title</code></div>
+                        <span class="status-badge empty" id="status-founder_j2_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_j2_title" dir="rtl" placeholder="دروستکرنا ناڤەڕۆکا ڤیدیویی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j2_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 2 — Description</div>
+                        <div class="about-field-desc"><code>founder_j2_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_j2_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_j2_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j2_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 3 — Title</div>
+                        <div class="about-field-desc"><code>founder_j3_title</code></div>
+                        <span class="status-badge empty" id="status-founder_j3_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_j3_title" dir="rtl" placeholder="دامەزراندنا پلاتفۆرمێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j3_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 3 — Description</div>
+                        <div class="about-field-desc"><code>founder_j3_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_j3_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_j3_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j3_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 4 — Title</div>
+                        <div class="about-field-desc"><code>founder_j4_title</code></div>
+                        <span class="status-badge empty" id="status-founder_j4_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_j4_title" dir="rtl" placeholder="گەهشتن ب ملیۆنان بینەران">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j4_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Journey 4 — Description</div>
+                        <div class="about-field-desc"><code>founder_j4_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_j4_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_j4_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j4_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 1 — Title</div>
+                        <div class="about-field-desc"><code>founder_v1_title</code></div>
+                        <span class="status-badge empty" id="status-founder_v1_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_v1_title" dir="rtl" placeholder="ڕازەمەندییا خودای">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v1_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 1 — Description</div>
+                        <div class="about-field-desc"><code>founder_v1_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_v1_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_v1_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v1_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 2 — Title</div>
+                        <div class="about-field-desc"><code>founder_v2_title</code></div>
+                        <span class="status-badge empty" id="status-founder_v2_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_v2_title" dir="rtl" placeholder="خزمەتا قورئانێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v2_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 2 — Description</div>
+                        <div class="about-field-desc"><code>founder_v2_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_v2_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_v2_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v2_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 3 — Title</div>
+                        <div class="about-field-desc"><code>founder_v3_title</code></div>
+                        <span class="status-badge empty" id="status-founder_v3_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_v3_title" dir="rtl" placeholder="گەهاندن بۆ هەمییان">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v3_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 3 — Description</div>
+                        <div class="about-field-desc"><code>founder_v3_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_v3_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_v3_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v3_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 4 — Title</div>
+                        <div class="about-field-desc"><code>founder_v4_title</code></div>
+                        <span class="status-badge empty" id="status-founder_v4_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_v4_title" dir="rtl" placeholder="خۆگەشەکرن">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v4_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Value 4 — Description</div>
+                        <div class="about-field-desc"><code>founder_v4_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_v4_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_v4_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v4_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Dua Title</div>
@@ -2110,9 +2281,17 @@
             'about_hero_sub','about_app_text','about_tafsir_text','about_tafsir_author','about_tafsir_book_desc',
             'about_declaration_text','about_quote_ar','about_quote_ku','about_quote_ref',
             'about_stat1_num','about_stat1_label','about_stat2_num','about_stat2_label',
+            'about_feat1_num','about_feat1_title','about_feat1_desc',
+            'about_feat2_num','about_feat2_title','about_feat2_desc',
+            'about_feat3_num','about_feat3_title','about_feat3_desc',
             'founder_name','founder_role','founder_bio',
             'founder_quote_ar','founder_quote_ku','founder_quote_ref',
-            'founder_journey_intro','founder_dua_title','founder_dua_text',
+            'founder_journey_intro',
+            'founder_j1_title','founder_j1_desc','founder_j2_title','founder_j2_desc',
+            'founder_j3_title','founder_j3_desc','founder_j4_title','founder_j4_desc',
+            'founder_v1_title','founder_v1_desc','founder_v2_title','founder_v2_desc',
+            'founder_v3_title','founder_v3_desc','founder_v4_title','founder_v4_desc',
+            'founder_dua_title','founder_dua_text',
             'founder_quote2_ar','founder_quote2_ku','founder_quote2_ref','founder_closing',
             'social_instagram','social_youtube','social_tiktok','social_telegram',
             'social_pinterest','social_email','social_website'
