@@ -191,7 +191,7 @@ body.dark-mode .sidebar-logo-img {
 /* Collapsed state: pull toggle out of flow, float on right edge */
 .sidebar.collapsed .sidebar-toggle {
     position: absolute;
-    right: -14px;           /* center the 28px circle on the 1px sidebar border */
+    right: -36px;           /* push toggle 8px outside the border: 64+36-28=72px from left */
     top: 50%;
     transform: translateY(-50%);
     background: var(--bg-app);  /* white (light) / black (dark) — contrasts with sidebar */
