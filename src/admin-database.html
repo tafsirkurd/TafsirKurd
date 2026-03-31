@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
-    <link rel="stylesheet" href="/css/admin-styles.css?v=9">
+    <link rel="stylesheet" href="/css/admin-styles.css?v=10">
     <style>
         .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px; }
         .table-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
@@ -17,6 +17,9 @@
         .table-card-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
         .table-card-count { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
         .table-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); }
+        @media (max-width: 768px) {
+            .table-grid { grid-template-columns: 1fr; }
+        }
     </style>
 
     <style id="early-sidebar-hide">

@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="/css/admin-styles.css?v=9">
+    <link rel="stylesheet" href="/css/admin-styles.css?v=10">
     <style>
         .date-range-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
         .date-tab { padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
@@ -47,6 +47,14 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .empty-state { padding: 40px; text-align: center; color: var(--text-tertiary); }
         .error-message { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .cols-3 .data-table-header, .cols-5 .data-table-header { display: none; }
+            .cols-3 .data-table-row, .cols-5 .data-table-row { grid-template-columns: 1fr; }
+            .cols-3 .data-table-row > div, .cols-5 .data-table-row > div { padding: 2px 0; font-size: 13px; }
+            .cols-3 .data-table-row > div:first-child, .cols-5 .data-table-row > div:first-child { font-weight: 600; padding-bottom: 4px; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 
     <style id="early-sidebar-hide">

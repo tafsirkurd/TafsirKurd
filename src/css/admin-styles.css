@@ -908,6 +908,20 @@ body[data-role="editor"] .nav-item[href*="activity-feed"] {
     display: none !important;
 }
 
+/* ── Global overflow guard — nothing should push body wider ──── */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+.dashboard-container {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+.main-content {
+    min-width: 0;
+    overflow-x: hidden;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════════════════════ */
@@ -1081,25 +1095,62 @@ body.sidebar-open {
     }
     .content-grid { grid-template-columns: 1fr; gap: 12px; }
 
-    /* ── Tables: horizontal scroll with fade hint ─────────────── */
+    /* ── Tables: card layout — NO horizontal scroll ──────────────
+       JS in admin-auth.js adds data-label to each <td> from <th>.
+       CSS converts each row into a stacked card.
+    ────────────────────────────────────────────────────────────── */
     .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        /* right-edge fade hint shows there's more content */
-        background: linear-gradient(to right,
-            var(--bg-surface) 0%,
-            var(--bg-surface) 85%,
-            transparent 100%) local,
-            linear-gradient(to right,
-            transparent 0%,
-            rgba(0,0,0,0.06) 100%) scroll;
-        background-color: var(--bg-surface);
-        border-radius: 0 0 8px 8px;
+        overflow-x: visible;
+        background: none;
     }
-    table { min-width: 560px; }
-    th { padding: 10px 12px; font-size: 11px; white-space: nowrap; }
-    td { padding: 12px 12px; font-size: 13px; }
-    .table-actions { gap: 6px; }
+    table {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+    thead { display: none; }          /* labels come from data-label */
+    tbody { display: flex; flex-direction: column; gap: 8px; }
+    tbody tr {
+        display: block;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    tbody td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        font-size: 13px;
+        border: none;
+        border-bottom: 1px solid var(--border-light);
+    }
+    tbody td:last-child { border-bottom: none; }
+    tbody td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+        min-width: 90px;
+        padding-top: 1px;
+    }
+    /* Actions cell: no label, full row, left-aligned */
+    tbody td[data-label="Actions"],
+    tbody td[data-label="actions"],
+    tbody td:last-child:not([data-label]) {
+        justify-content: flex-start;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    tbody td[data-label="Actions"]::before,
+    tbody td[data-label="actions"]::before { display: none; }
+    .table-actions { gap: 8px; justify-content: flex-start; }
+    .table-btn { width: 40px; height: 40px; min-width: 40px; }
 
     /* ── Filters / search bars ────────────────────────────────── */
     .filters-bar,

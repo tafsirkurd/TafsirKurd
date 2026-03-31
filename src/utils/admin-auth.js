@@ -565,6 +565,70 @@ window.addEventListener('admin:session-expired', function() {
     logout();
 });
 
+// ── Mobile table cards: auto-label <td> from <th> ────────────────
+// Converts all tables to vertical card layout on mobile without
+// modifying each page's HTML. Works for static AND dynamic tables.
+(function() {
+    function labelTable(table) {
+        var headers = Array.from(table.querySelectorAll('thead th')).map(function(th) {
+            return th.textContent.trim();
+        });
+        if (!headers.length) return;
+        table.querySelectorAll('tbody tr').forEach(function(row) {
+            Array.from(row.querySelectorAll('td')).forEach(function(td, i) {
+                if (!td.hasAttribute('data-label')) {
+                    td.setAttribute('data-label', headers[i] || '');
+                }
+            });
+        });
+    }
+
+    function labelAllTables() {
+        document.querySelectorAll('table').forEach(labelTable);
+    }
+
+    // Patch inline grid-template-columns to 1fr on mobile
+    function patchInlineGrids() {
+        if (window.innerWidth > 768) return;
+        document.querySelectorAll('div[style*="grid-template-columns"], form[style*="grid-template-columns"]').forEach(function(el) {
+            var cols = el.style.gridTemplateColumns || '';
+            // Only collapse multi-column grids (not already 1fr)
+            if (cols && cols.trim() !== '1fr') {
+                el.setAttribute('data-original-grid', cols);
+                el.style.gridTemplateColumns = '1fr';
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        labelAllTables();
+        patchInlineGrids();
+
+        // Watch for dynamically added table rows (Messages, Users, etc.)
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(m) {
+                m.addedNodes.forEach(function(node) {
+                    if (node.nodeType !== 1) return;
+                    if (node.tagName === 'TR') {
+                        var table = node.closest('table');
+                        if (table) labelTable(table);
+                    } else if (node.querySelector) {
+                        node.querySelectorAll('table').forEach(labelTable);
+                        if (window.innerWidth <= 768) {
+                            node.querySelectorAll('div[style*="grid-template-columns"]').forEach(function(el) {
+                                if (el.style.gridTemplateColumns && el.style.gridTemplateColumns.trim() !== '1fr') {
+                                    el.style.gridTemplateColumns = '1fr';
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+})();
+
 // ── Mobile sidebar: backdrop + click-outside + body scroll lock ──
 (function() {
     document.addEventListener('DOMContentLoaded', function() {

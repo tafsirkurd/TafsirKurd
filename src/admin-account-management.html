@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
-    <link rel="stylesheet" href="/css/admin-styles.css?v=9">
+    <link rel="stylesheet" href="/css/admin-styles.css?v=10">
     <style>
         .role-badge {
             display: inline-block;
@@ -211,6 +211,10 @@
         }
         .perm-row:last-child { border-bottom: none; }
         .perm-row:hover { background: var(--bg-active, #f9fafb); }
+        @media (max-width: 768px) {
+            .perms-grid-hdr { grid-template-columns: 1fr 44px 44px 44px; }
+            .perm-row { grid-template-columns: 1fr 44px 44px 44px; }
+        }
         .perm-row .page-name {
             font-size: 12.5px;
             font-weight: 500;
