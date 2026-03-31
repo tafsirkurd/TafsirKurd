@@ -315,8 +315,8 @@ body.dark-mode .sidebar-logo-img {
 .sidebar.collapsed .sidebar-profile-info {
     display: none;
 }
-.sidebar.collapsed .sidebar-footer {
-    display: none;
+.sidebar.collapsed [title="Logout"] {
+    display: none !important;
 }
 
 .sidebar-profile-name {
