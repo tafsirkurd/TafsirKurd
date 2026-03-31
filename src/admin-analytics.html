@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="/css/admin-styles.css?v=8">
+    <link rel="stylesheet" href="/css/admin-styles.css?v=9">
     <style>
         .analytics-grid {
             display: grid;
@@ -170,6 +170,21 @@
             padding: 20px;
             text-align: center;
             color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .device-breakdown {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .device-item {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                text-align: left;
+                padding: 14px 16px;
+            }
+            .device-icon { font-size: 24px; }
         }
     </style>
 

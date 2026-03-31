@@ -565,6 +565,48 @@ window.addEventListener('admin:session-expired', function() {
     logout();
 });
 
+// ── Mobile sidebar: backdrop + click-outside + body scroll lock ──
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        var sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        // Inject backdrop element once
+        var backdrop = document.createElement('div');
+        backdrop.className = 'sidebar-backdrop';
+        backdrop.id = 'sidebar-backdrop';
+        document.body.appendChild(backdrop);
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove('mobile-open');
+            document.body.classList.remove('sidebar-open');
+        }
+
+        // Tap backdrop → close
+        backdrop.addEventListener('click', closeMobileSidebar);
+
+        // Watch sidebar class changes to sync body state
+        var observer = new MutationObserver(function() {
+            if (sidebar.classList.contains('mobile-open')) {
+                document.body.classList.add('sidebar-open');
+            } else {
+                document.body.classList.remove('sidebar-open');
+            }
+        });
+        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+
+        // Swipe-left on sidebar to close (threshold: 60px)
+        var touchStartX = 0;
+        sidebar.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        sidebar.addEventListener('touchend', function(e) {
+            var dx = touchStartX - e.changedTouches[0].clientX;
+            if (dx > 60) closeMobileSidebar();
+        }, { passive: true });
+    });
+})();
+
 // Apply sidebar permissions immediately on script load if role is already stored
 // This prevents the flash of all sidebar items for returning users
 (function() {

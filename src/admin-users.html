@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="/css/admin-styles.css?v=8">
+    <link rel="stylesheet" href="/css/admin-styles.css?v=9">
     <style>
         .stats-grid {
             display: grid;
@@ -308,6 +308,12 @@
 
         .btn-danger:hover {
             background: #b91c1c;
+        }
+
+        @media (max-width: 768px) {
+            .filter-group { min-width: 0 !important; flex: 1 1 100% !important; }
+            .filter-group[style] { flex: 1 1 100% !important; }
+            .modal-content { max-height: 80vh; overflow-y: auto; }
         }
     </style>
 
