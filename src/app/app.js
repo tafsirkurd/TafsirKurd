@@ -6637,52 +6637,103 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   if(!panel)return;
   ensurePtrSpinner();
 
-  var startY=0,pulling=false,refreshing=false,threshold=130,maxPull=200,panelOrigTop=0;
+  // DEAD_ZONE: raw finger distance before any visual or pull state engages.
+  // This prevents accidental triggers from normal scroll, bounce, or a tiny
+  // downward nudge at the top of the page.
+  var DEAD_ZONE=44;
+  // DIR_RATIO: minimum fraction of dy/distance required to confirm vertical intent.
+  // Diagonal and horizontal gestures below this threshold are ignored.
+  var DIR_RATIO=0.72;
+  // MOMENTUM_LOCK_MS: after any touchend/cancel, block new PTR arm for this long.
+  // Prevents "scrolled fast to top → touch screen → accidental PTR".
+  var MOMENTUM_LOCK_MS=300;
+
+  var startY=0,startX=0,armed=false,pulling=false,refreshing=false;
+  var threshold=130,maxPull=200,panelOrigTop=0;
+  var _momentumLock=false,_momentumTimer=null;
+
+  function _setMomentumLock(){
+    _momentumLock=true;
+    clearTimeout(_momentumTimer);
+    _momentumTimer=setTimeout(function(){ _momentumLock=false; },MOMENTUM_LOCK_MS);
+  }
+
+  function _cancelPull(){
+    if(pulling){
+      pulling=false;
+      panel.style.transform='';
+      ptrSpinner.style.opacity='0';
+      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+      panel.classList.remove('ptr-pulling');
+    }
+    armed=false;
+  }
 
   on(panel,'touchstart',function(e){
-    if(refreshing)return;
+    if(refreshing||_momentumLock)return;
     if(checkFn&&!checkFn())return;
-    if(panel.scrollTop<=2){
+    // Only arm when panel is truly at the top (strict 0, not ≤2).
+    // ≤2 was letting iOS bounce-back scrollTop briefly read as "top".
+    if(panel.scrollTop===0){
       startY=e.touches[0].clientY;
+      startX=e.touches[0].clientX;
       panelOrigTop=panel.getBoundingClientRect().top;
+      armed=true;
+      // pulling stays false — we don't engage until dead zone is crossed in touchmove
+    }
+  });
+
+  // Must be {passive:false} so e.preventDefault() actually cancels native scroll.
+  panel.addEventListener('touchmove',function(e){
+    if(!armed||refreshing)return;
+    var dy=e.touches[0].clientY-startY;
+    var dx=e.touches[0].clientX-startX;
+
+    // Any upward movement cancels immediately.
+    if(dy<=0){ _cancelPull(); return; }
+
+    // Direction confidence check (only before pulling is engaged).
+    // If the gesture is more horizontal than vertical, treat as a scroll not a pull.
+    if(!pulling){
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>16&&dy/dist<DIR_RATIO){ _cancelPull(); return; }
+    }
+
+    // If panel scrolled during the gesture, cancel (e.g. content rendered mid-gesture).
+    if(panel.scrollTop>0){ _cancelPull(); return; }
+
+    // Dead zone: consume movement silently until DEAD_ZONE px are crossed.
+    if(dy<DEAD_ZONE) return;
+
+    // Dead zone crossed — now engage pull visual.
+    if(!pulling){
       pulling=true;
       panel.classList.add('ptr-pulling');
       panel.classList.remove('ptr-releasing');
       ptrSpinner.classList.remove('ptr-snapping');
       ptrSpinner.style.transition='none';
     }
-  });
 
-  on(panel,'touchmove',function(e){
-    if(!pulling||refreshing)return;
-    var dy=e.touches[0].clientY-startY;
-    if(dy<0){
-      pulling=false;
-      panel.style.transform='';
-      ptrSpinner.style.opacity='0';
-      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
-      panel.classList.remove('ptr-pulling');
-      return;
-    }
-    if(dy>18&&panel.scrollTop<=2){
-      e.preventDefault();
-      var pull=dy<threshold?dy:threshold+((dy-threshold)*0.3);
-      pull=Math.min(pull,maxPull);
-      panel.style.transform='translateY('+pull+'px)';
-      // Spinner sits centered in the revealed gap
-      var gapCenter=panelOrigTop+(pull/2)-19;
-      ptrMove(gapCenter);
-      ptrSpinner.style.opacity=Math.min(pull/60,1);
-      var sc=Math.min(pull/80,1);
-      ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+sc+')';
-      var arc=ptrSpinner.querySelector('.ptr-arc');
-      if(arc)arc.style.transform='rotate('+Math.min(dy*3,720)+'deg)';
-    }
-  });
+    e.preventDefault();
+    // Subtract dead zone so pull=0 at the exact moment pulling engages.
+    var pullRaw=dy-DEAD_ZONE;
+    var pull=pullRaw<threshold?pullRaw:threshold+((pullRaw-threshold)*0.3);
+    pull=Math.min(pull,maxPull);
+    panel.style.transform='translateY('+pull+'px)';
+    var gapCenter=panelOrigTop+(pull/2)-19;
+    // Slower visual engagement: opacity and scale ramp up over a longer distance.
+    ptrSpinner.style.opacity=Math.min(pull/90,1);
+    var sc=Math.min(pull/110,1);
+    ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+sc+')';
+    var arc=ptrSpinner.querySelector('.ptr-arc');
+    if(arc)arc.style.transform='rotate('+Math.min(pullRaw*3,720)+'deg)';
+  },{passive:false});
 
-  on(panel,'touchend',function(e){
-    if(!pulling||refreshing)return;
+  on(panel,'touchend',function(){
+    _setMomentumLock();
+    if(!pulling||refreshing){ armed=false; return; }
     pulling=false;
+    armed=false;
     panel.classList.remove('ptr-pulling');
     panel.classList.add('ptr-releasing');
     ptrSpinner.style.transition='';
@@ -6690,7 +6741,6 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     var currentY=parseFloat(panel.style.transform.replace('translateY(','').replace('px)',''))||0;
 
     if(currentY>=threshold*0.75){
-      // Refresh — hold spinner in place, page slides back to 55px
       refreshing=true;
       panel.style.transform='translateY(55px)';
       var holdCenter=panelOrigTop+(55/2)-19;
@@ -6719,6 +6769,11 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
         ptrSpinner.classList.remove('ptr-snapping');
       },300);
     }
+  });
+
+  on(panel,'touchcancel',function(){
+    _setMomentumLock();
+    _cancelPull();
   });
 }
 
