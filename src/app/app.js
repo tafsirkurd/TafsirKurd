@@ -4305,6 +4305,16 @@ function renderBmList(bms){
 }
 
 /* ===== GOALS ===== */
+function _clearTrackingState(){
+  localStorage.removeItem('readLog');
+  localStorage.removeItem('readAyahsToday');
+  localStorage.removeItem('bestStreak');
+  localStorage.removeItem('readSessions');
+  localStorage.setItem('trackingResetAt',new Date().toISOString());
+  for(var i=1;i<=114;i++){localStorage.removeItem('surah_progress_'+i);}
+  S.todayVerses=new Set();
+}
+
 function getGoal(){
   try{return JSON.parse(localStorage.getItem('readingGoal'))||null}catch(e){return null}
 }
@@ -4881,12 +4891,9 @@ App.closeDeleteConfirm=function(){
 };
 App.confirmDeleteGoal=function(){
   localStorage.removeItem('readingGoal');
-  localStorage.removeItem('readLog');
-  localStorage.removeItem('readAyahsToday');
-  localStorage.removeItem('bestStreak');
-  for(var i=1;i<=114;i++){localStorage.removeItem('surah_progress_'+i)}
-  S.todayVerses=new Set();
+  _clearTrackingState();
   $('goalConfirmOverlay').classList.remove('on');
+  debouncedSync(); // push deletion to cloud so stale data cannot be restored on next load
   _restartProgressTracking(); // immediately hide bar + stop tracking if reader is open
   toast(t('toast.goal_deleted'));
   haptic([50]);
@@ -4911,8 +4918,9 @@ App.wizardNext=function(){
       var v=parseInt(S.wizardData.customPages)||5;
       goal={name:t('wizard.custom_name'),pages:v,created:Date.now()};
     }
+    _clearTrackingState(); // wipe all old tracking before new goal starts
     saveGoal(goal);
-    initTodayVerses(); // reset S.todayVerses so new goal starts counting from now
+    initTodayVerses(); // initialise today's verse set fresh
     _restartProgressTracking(); // immediately show bar + start fresh tracking if reader is open
     S.wizardStep=2;
     renderWizardStep();
@@ -5681,14 +5689,9 @@ function renderSettings(){
   // (7) Reset reading progress
   g4.appendChild(mkBtnRow(t('settings.reset_progress'),t('settings.reset_btn'),'fas fa-rotate-left',function(){
     if(!confirm(t('settings.reset_confirm')))return;
-    localStorage.removeItem('readLog');
-    localStorage.removeItem('readAyahsToday');
-    localStorage.removeItem('bestStreak');
-    for(var i=1;i<=114;i++){
-      localStorage.removeItem('surah_progress_'+i);
-      localStorage.removeItem('surah_scroll_'+i);
-    }
-    S.todayVerses=new Set();
+    _clearTrackingState();
+    for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
+    debouncedSync(); // push reset to cloud
     toast(t('toast.progress_reset'));
     renderSettings();
   },true));
@@ -5884,7 +5887,7 @@ function setUserFromSession(session){
 //   FURTHEST  — take whichever position is further in the Quran (lastRead)
 
 var SYNC_SIMPLE_KEYS=[
-  'lastRead','readingGoal','readLog','readAyahsToday',
+  'lastRead','readingGoal','readLog','readAyahsToday','trackingResetAt',
   'app_bookmarks','iv_watch_progress',
   'showTafsir','bgAudio','theme','keepAwake',
   'app_arSize','app_tfSize','app_lineH',
@@ -5910,11 +5913,17 @@ function _mergeBookmarks(aStr,bStr){
 }
 
 // readLog: per-date max (keep highest ayah count for each day)
-function _mergeReadLog(aStr,bStr){
+// sinceMs: if provided, discard entries with dates before this timestamp
+function _mergeReadLog(aStr,bStr,sinceMs){
   try{
     var a=JSON.parse(aStr||'{}');var b=JSON.parse(bStr||'{}');
     var r=Object.assign({},a);
     Object.keys(b).forEach(function(d){r[d]=Math.max(r[d]||0,b[d]||0)});
+    if(sinceMs){
+      Object.keys(r).forEach(function(d){
+        if(new Date(d).getTime()<sinceMs)delete r[d];
+      });
+    }
     return JSON.stringify(r);
   }catch(e){return aStr||bStr||'{}'}
 }
@@ -5943,13 +5952,26 @@ function mergeSyncData(local,cloud){
   // ADDITIVE: bookmarks — always union
   result.app_bookmarks=_mergeBookmarks(local.app_bookmarks,cloud.app_bookmarks);
 
-  // ADDITIVE: reading log — per-day max
-  result.readLog=_mergeReadLog(local.readLog,cloud.readLog);
+  // Determine if either side has a reset — the newer reset wins
+  var localReset=new Date(local.trackingResetAt||0).getTime();
+  var cloudReset=new Date(cloud.trackingResetAt||0).getTime();
+  var newestReset=Math.max(localReset,cloudReset);
+  // The side that owns the newest reset is the authoritative source for progress
+  var resetWinner=cloudReset>=localReset?cloud:local;
 
-  // ADDITIVE: surah progress — union of read ayahs
+  // ADDITIVE: reading log — per-day max, but discard entries before the newest reset
+  result.readLog=_mergeReadLog(local.readLog,cloud.readLog,newestReset||undefined);
+
+  // ADDITIVE (with reset): surah progress — union, but if a reset exists use only reset-winner's data
   for(var i=1;i<=114;i++){
     var pk='surah_progress_'+i;
-    if(local[pk]||cloud[pk])result[pk]=_mergeProgress(local[pk],cloud[pk]);
+    if(newestReset>0){
+      // After a reset, trust only the side that did the reset — don't restore stale data
+      var rv=resetWinner[pk];
+      if(rv)result[pk]=rv; else delete result[pk];
+    } else if(local[pk]||cloud[pk]){
+      result[pk]=_mergeProgress(local[pk],cloud[pk]);
+    }
   }
 
   // FURTHEST: last read position — take whichever is deeper in the Quran
