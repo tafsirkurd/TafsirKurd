@@ -641,6 +641,18 @@ body{background:var(--bg);color:var(--text)}
 .goal-confirm-cancel:active{transform:scale(.95)}
 .goal-confirm-delete{flex:1;height:44px;border-radius:var(--r-l);background:rgba(192,57,43,.9);color:#fff;font-weight:600;font-size:.85rem;cursor:pointer;transition:transform .15s var(--ease),background .15s}
 .goal-confirm-delete:active{transform:scale(.95);background:rgba(192,57,43,1)}
+.goal-choice-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;width:100%}
+.goal-choice-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-l);cursor:pointer;transition:all .18s var(--ease);width:100%;text-align:right}
+.goal-choice-btn:active{transform:scale(.97)}
+.goal-choice-btn>i{font-size:1rem;color:var(--text3);flex-shrink:0;width:18px;text-align:center}
+.goal-choice-danger{background:rgba(192,57,43,.07);border-color:rgba(192,57,43,.2)}
+.goal-choice-danger>i{color:rgba(192,57,43,.7)}
+.goal-choice-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.goal-choice-label{font-size:.88rem;font-weight:700;color:var(--text)}
+.goal-choice-danger .goal-choice-label{color:rgba(192,57,43,.9)}
+.goal-choice-desc{font-size:.72rem;color:var(--text3);line-height:1.4;opacity:.85}
+.goal-confirm-cancel-full{width:100%;height:40px;border-radius:var(--r-l);background:none;font-weight:600;font-size:.82rem;color:var(--text3);cursor:pointer;margin-top:2px}
+.goal-confirm-cancel-full:active{opacity:.6}
 
 #goalsContent{flex:1;display:flex;flex-direction:column}
 .no-goal{text-align:center;color:var(--text3);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;flex:1;padding-top:16vh}
@@ -2245,13 +2257,50 @@ body{background:var(--bg);color:var(--text)}
 <!-- DELETE GOAL CONFIRMATION -->
 <div class="goal-confirm-overlay" id="goalConfirmOverlay" onclick="if(event.target===this)App.closeDeleteConfirm()">
   <div class="goal-confirm-box">
-    <i class="fas fa-exclamation-triangle goal-confirm-icon"></i>
-    <div class="goal-confirm-title" data-i18n="goals.delete.confirm_title" data-t="android_div_34">ئارمانج بسڕیتەوە؟</div>
-    <div class="goal-confirm-text" data-i18n="goals.delete.confirm_text" data-t="android_div_35">هەموو داتاکانی خوێندنەوە و بەردەوامی دەسڕێنەوە. ئەم کردارە ناگەڕێتەوە.</div>
-    <div class="goal-confirm-actions">
-      <button class="goal-confirm-cancel" onclick="App.closeDeleteConfirm()" data-i18n="goals.delete.cancel" data-t="android_button_36">پاشگەز</button>
-      <button class="goal-confirm-delete" onclick="App.confirmDeleteGoal()" data-i18n="goals.delete.confirm" data-t="android_button_37">بسڕەوە</button>
+    <span class="goal-confirm-icon"><i class="fas fa-trash-can"></i></span>
+    <div class="goal-confirm-title">ئارمانج بسڕیتەوە؟</div>
+    <div class="goal-confirm-text">چۆن دەتەوێت بکرێت؟</div>
+    <div class="goal-choice-list">
+      <button class="goal-choice-btn goal-choice-danger" onclick="App.confirmDeleteGoalFull()">
+        <i class="fas fa-rotate-left"></i>
+        <div class="goal-choice-text">
+          <span class="goal-choice-label">سڕینەوە و ریستی هەموو</span>
+          <span class="goal-choice-desc">ئامانج و هەموو ریکۆردەکانی خوێندنەوە دەسڕێنەوە</span>
+        </div>
+      </button>
+      <button class="goal-choice-btn" onclick="App.confirmDeleteGoalKeep()">
+        <i class="fas fa-book-open"></i>
+        <div class="goal-choice-text">
+          <span class="goal-choice-label">تەنیا ئامانج بسڕەوە</span>
+          <span class="goal-choice-desc">شوێنی خوێندنەوەم لە قورئاندا دەمێنێتەوە</span>
+        </div>
+      </button>
     </div>
+    <button class="goal-confirm-cancel-full" onclick="App.closeDeleteConfirm()">پاشگەز</button>
+  </div>
+</div>
+<div class="goal-confirm-overlay" id="goalStartChoiceOverlay" onclick="if(event.target===this)App.closeStartChoice()">
+  <div class="goal-confirm-box">
+    <span class="goal-confirm-icon" style="background:rgba(var(--accent-rgb),.08);color:var(--accent)"><i class="fas fa-seedling"></i></span>
+    <div class="goal-confirm-title">ئامانجی کۆن هەیە</div>
+    <div class="goal-confirm-text">ئامانجی نوێ چۆن دەستت پێ بکات؟</div>
+    <div class="goal-choice-list">
+      <button class="goal-choice-btn goal-choice-danger" onclick="App.confirmStartFresh()">
+        <i class="fas fa-rotate-left"></i>
+        <div class="goal-choice-text">
+          <span class="goal-choice-label">دەستپێکی تازە</span>
+          <span class="goal-choice-desc">ریکۆردەکانی کۆن دەسڕێنەوە و تازە دەستت پێ دەکات</span>
+        </div>
+      </button>
+      <button class="goal-choice-btn" onclick="App.confirmStartKeep()">
+        <i class="fas fa-book-open"></i>
+        <div class="goal-choice-text">
+          <span class="goal-choice-label">شوێنم بمێنێتەوە</span>
+          <span class="goal-choice-desc">ئامانجی نوێ بکە، شوێنی خوێندنەوەم لە قورئاندا بمێنێتەوە</span>
+        </div>
+      </button>
+    </div>
+    <button class="goal-confirm-cancel-full" onclick="App.closeStartChoice()">پاشگەز</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>

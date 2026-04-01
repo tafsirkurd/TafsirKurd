@@ -725,6 +725,7 @@ function init(){
           if($('profilePanel')&&$('profilePanel').classList.contains('on')){App.closeProfile();return}
           if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return}
           if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
+          if($('goalStartChoiceOverlay')&&$('goalStartChoiceOverlay').classList.contains('on')){App.closeStartChoice();return}
           if($('repeatModal').classList.contains('on')){App.closeRepeat();return}
           if($('audioSettingsPanel').classList.contains('on')){App.closeAudioSettings();return}
           if($('qsSheet')&&$('qsSheet').classList.contains('on')){App.closeReaderSettings();return}
@@ -4305,14 +4306,19 @@ function renderBmList(bms){
 }
 
 /* ===== GOALS ===== */
-function _clearTrackingState(){
+// Clear only goal counters — preserves general Quran reading position (surah_progress_*, lastRead, bookmarks)
+function _clearGoalCounters(){
   localStorage.removeItem('readLog');
   localStorage.removeItem('readAyahsToday');
   localStorage.removeItem('bestStreak');
   localStorage.removeItem('readSessions');
   localStorage.setItem('trackingResetAt',new Date().toISOString());
-  for(var i=1;i<=114;i++){localStorage.removeItem('surah_progress_'+i);}
   S.todayVerses=new Set();
+}
+// Full tracking reset — also wipes ayah-level read marks from Quran pages
+function _clearTrackingState(){
+  _clearGoalCounters();
+  for(var i=1;i<=114;i++){localStorage.removeItem('surah_progress_'+i);}
 }
 
 function getGoal(){
@@ -4889,15 +4895,58 @@ App.openDeleteConfirm=function(){
 App.closeDeleteConfirm=function(){
   $('goalConfirmOverlay').classList.remove('on');
 };
-App.confirmDeleteGoal=function(){
+// Option A — delete goal + full reset (clears surah progress marks too)
+App.confirmDeleteGoalFull=function(){
   localStorage.removeItem('readingGoal');
   _clearTrackingState();
   $('goalConfirmOverlay').classList.remove('on');
-  debouncedSync(); // push deletion to cloud so stale data cannot be restored on next load
-  _restartProgressTracking(); // immediately hide bar + stop tracking if reader is open
+  debouncedSync();
+  _restartProgressTracking();
   toast(t('toast.goal_deleted'));
   haptic([50]);
   renderGoals();
+};
+// Option B — delete goal only, keep Quran reading position (surah_progress survives)
+App.confirmDeleteGoalKeep=function(){
+  localStorage.removeItem('readingGoal');
+  _clearGoalCounters();
+  $('goalConfirmOverlay').classList.remove('on');
+  debouncedSync();
+  _restartProgressTracking();
+  toast(t('toast.goal_deleted'));
+  haptic([50]);
+  renderGoals();
+};
+// Keep legacy name so any old call sites still work
+App.confirmDeleteGoal=App.confirmDeleteGoalFull;
+
+// ── Start-choice overlay (shown when creating a new goal while old data exists) ──
+App.closeStartChoice=function(){
+  $('goalStartChoiceOverlay').classList.remove('on');
+};
+function _finishGoalSave(goal,keepProgress){
+  if(keepProgress){
+    _clearGoalCounters(); // preserve surah_progress, wipe only counters
+  }else{
+    _clearTrackingState(); // full reset including ayah marks
+  }
+  saveGoal(goal);
+  initTodayVerses();
+  _restartProgressTracking();
+  App.closeStartChoice();
+  S.wizardStep=2;
+  renderWizardStep();
+  haptic([50]);
+}
+App.confirmStartFresh=function(){
+  var g=S.wizardData._pendingGoal;
+  if(!g)return;
+  _finishGoalSave(g,false);
+};
+App.confirmStartKeep=function(){
+  var g=S.wizardData._pendingGoal;
+  if(!g)return;
+  _finishGoalSave(g,true);
 };
 App.wizardBack=function(){
   if(S.wizardStep>0){S.wizardStep--;renderWizardStep();haptic([8]);}
@@ -4909,7 +4958,6 @@ App.wizardNext=function(){
     renderWizardStep();
     haptic([8]);
   } else if(S.wizardStep===1){
-    // Save goal and show confirmation
     var preset=PRESETS[S.wizardData.preset];
     var goal;
     if(preset){
@@ -4918,13 +4966,16 @@ App.wizardNext=function(){
       var v=parseInt(S.wizardData.customPages)||5;
       goal={name:t('wizard.custom_name'),pages:v,created:Date.now()};
     }
-    _clearTrackingState(); // wipe all old tracking before new goal starts
-    saveGoal(goal);
-    initTodayVerses(); // initialise today's verse set fresh
-    _restartProgressTracking(); // immediately show bar + start fresh tracking if reader is open
-    S.wizardStep=2;
-    renderWizardStep();
-    haptic([50]);
+    // If old goal or tracking data exists, ask user what to preserve
+    var hasOldData=!!getGoal()||Object.keys(getReadLog()).length>0;
+    if(hasOldData){
+      S.wizardData._pendingGoal=goal;
+      $('goalStartChoiceOverlay').classList.add('on');
+      haptic([8]);
+      return; // wait for user choice
+    }
+    // No old data — save cleanly with no questions
+    _finishGoalSave(goal,false);
   } else if(S.wizardStep===2){
     App.closeWizard();
     renderGoals();
