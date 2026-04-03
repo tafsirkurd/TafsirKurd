@@ -391,7 +391,7 @@
         }
         .t-row {
             display: grid;
-            grid-template-columns: 180px 1fr auto 50px;
+            grid-template-columns: 180px 1fr minmax(0,140px) 84px;
             gap: 12px 16px;
             align-items: start;
             padding: 16px 20px;
@@ -448,6 +448,9 @@
             padding: 4px 10px;
             border-radius: 6px;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
         }
         .t-actions {
             display: flex;
@@ -1187,18 +1190,21 @@
             /* Cards */
             .translation-list { gap: 8px; }
             .t-row {
-                grid-template-columns: 1fr;
-                gap: 10px;
-                padding: 16px;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto;
+                gap: 8px 10px;
+                padding: 14px;
                 border-radius: 14px;
-                position: relative;
             }
             .t-key {
+                grid-column: 1;
+                grid-row: 1;
                 font-size: 12px;
-                padding-right: 90px;
                 color: var(--text-secondary);
             }
             .t-text {
+                grid-column: 1 / -1;
+                grid-row: 2;
                 white-space: normal;
                 font-size: 16px;
                 line-height: 1.7;
@@ -1206,6 +1212,8 @@
                 font-weight: 500;
             }
             .t-page-badge {
+                grid-column: 1;
+                grid-row: 3;
                 font-size: 10px;
                 padding: 4px 10px;
                 border-radius: 6px;
@@ -1217,10 +1225,11 @@
                 white-space: normal;
             }
             .t-actions {
-                position: absolute;
-                top: 13px;
-                right: 12px;
-                gap: 6px;
+                grid-column: 2;
+                grid-row: 1 / 2;
+                position: static;
+                gap: 4px;
+                align-self: start;
             }
             .t-btn {
                 width: 40px;
