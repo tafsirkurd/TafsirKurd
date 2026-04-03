@@ -210,15 +210,41 @@ struct PrayerProvider: TimelineProvider {
         }
 
         var entries: [PrayerEntry] = [.init(date: now, data: data, next: data.nextPrayer(from: now))]
+
+        // Today's prayer transition entries
         for name in kPrayerOrder {
             if let t = data.prayerDate(name), t > now {
                 let after = t.addingTimeInterval(30)
                 entries.append(.init(date: t, data: data, next: data.nextPrayer(from: after)))
             }
         }
-        wLog.info("getTimeline: \(entries.count) entries built for city=\(data.city)")
-        let refresh = (entries.last?.date ?? now).addingTimeInterval(6 * 3600)
-        completion(Timeline(entries: entries, policy: .after(refresh)))
+
+        // Tomorrow's prayer transition entries.
+        // nextPrayer(from:) only knows about today's data (dayOffset 0) plus tomorrow-Fajr
+        // fallback, so we compute tomorrow's chain manually to get the correct highlights
+        // across the full next day without requiring the app to open.
+        for i in 0 ..< kPrayerOrder.count {
+            let name = kPrayerOrder[i]
+            guard let t = data.prayerDate(name, dayOffset: 1) else { continue }
+            // Next prayer in tomorrow's order
+            var nextEntry: (name: String, time: Date, ku: String)? = nil
+            for j in (i + 1) ..< kPrayerOrder.count {
+                let nxt = kPrayerOrder[j]
+                if let nt = data.prayerDate(nxt, dayOffset: 1) {
+                    nextEntry = (nxt, nt, kn(nxt)); break
+                }
+            }
+            // After tomorrow's Isha: fall back to day-after-tomorrow's Fajr
+            if nextEntry == nil, let fajr2 = data.prayerDate("Fajr", dayOffset: 2) {
+                nextEntry = ("Fajr", fajr2, kn("Fajr"))
+            }
+            entries.append(.init(date: t, data: data, next: nextEntry))
+        }
+
+        wLog.info("getTimeline: \(entries.count) entries for city=\(data.city) (today+tomorrow)")
+        // Refresh 36 h from now.  App-open triggers WidgetCenter.reloadAllTimelines()
+        // earlier whenever fresh prayer data is pushed — this is just the safety net.
+        completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(36 * 3600))))
     }
 }
 
@@ -236,12 +262,28 @@ private func gregorianDisplay(_ dateISO: String) -> String {
     return f.string(from: d)
 }
 
-private func remaining(_ to: Date) -> String {
-    let sec = Int(to.timeIntervalSinceNow)
-    guard sec > 60 else { return "ئێستا" }
-    let h = sec / 3600
-    let m = (sec % 3600) / 60
-    return String(format: "%02d:%02d \(WT.t("widget.prayer.time_left", "یێت ماین"))", h, m)
+// MARK: — Live countdown (replaces static remaining() string)
+//
+// Uses Text(date, style: .timer) — a WidgetKit-native live text that the system
+// updates every second without a new timeline entry.  The old `remaining()` helper
+// computed timeIntervalSinceNow once at entry-activation time and froze that string
+// until the next entry fired, producing the "shows 9 hours and never moves" bug.
+
+private struct LiveCountdown: View {
+    let to:       Date
+    var fontSize: CGFloat = 9.5
+    var body: some View {
+        Group {
+            if to.timeIntervalSinceNow <= 60 {
+                Text(WT.t("widget.prayer.now", "ئێستا"))
+            } else {
+                Text(to, style: .timer)
+                + Text(" " + WT.t("widget.prayer.time_left", "یێت ماین"))
+            }
+        }
+        .font(.system(size: fontSize, weight: .light).monospacedDigit())
+        .foregroundStyle(DS.t3)
+    }
 }
 
 // MARK: — Reusable components
@@ -344,9 +386,7 @@ private struct SmallView: View {
                     .foregroundStyle(DS.accent)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 if let n = n {
-                    Text(remaining(n.time))
-                        .font(.system(size: 9.5, weight: .light))
-                        .foregroundStyle(DS.t3)
+                    LiveCountdown(to: n.time)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.top, 2)
                 }
@@ -382,9 +422,7 @@ private struct MediumView: View {
             VStack(spacing: 0) {
                 HStack(alignment: .center, spacing: 0) {
                     if let n = n {
-                        Text(remaining(n.time))
-                            .font(.system(size: 9.5, weight: .light))
-                            .foregroundStyle(DS.t3)
+                        LiveCountdown(to: n.time)
                     }
                     Spacer(minLength: 6)
                     CityLabel(city: d.city)
@@ -420,9 +458,7 @@ private struct LargeView: View {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 3) {
                         if let n = n {
-                            Text(remaining(n.time))
-                                .font(.system(size: 9.5, weight: .light))
-                                .foregroundStyle(DS.t3)
+                            LiveCountdown(to: n.time)
                         }
                         Text(gregorianDisplay(d.date))
                             .font(.system(size: 10))
@@ -462,9 +498,7 @@ private struct LargeView: View {
                             .font(.system(size: 26, weight: .bold))
                             .foregroundStyle(DS.t1)
                         if let n = n {
-                            Text(remaining(n.time))
-                                .font(.system(size: 10, weight: .light))
-                                .foregroundStyle(DS.t3)
+                            LiveCountdown(to: n.time, fontSize: 10)
                         }
                     }
                 }
