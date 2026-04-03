@@ -101,7 +101,7 @@
         }
         return new Promise(function(resolve) {
             var script = document.createElement('script');
-            script.src = '/utils/bulk-translations.js?v=20260403';
+            script.src = '/utils/bulk-translations.js?v=20260404';
             script.onload = function() { buildTextToKey(); resolve(); };
             script.onerror = resolve;
             document.head.appendChild(script);

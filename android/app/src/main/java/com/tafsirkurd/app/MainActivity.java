@@ -6,13 +6,16 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.webkit.CookieManager;
+import android.webkit.PermissionRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebChromeClient;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(AudioPermissionPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Request battery optimization exemption so athan alarms are never killed by OS.
@@ -57,5 +60,14 @@ public class MainActivity extends BridgeActivity {
         // Media playback settings
         settings.setMediaPlaybackRequiresUserGesture(false);
 
+        // Grant WebView media permissions (mic, camera) automatically.
+        // Android OS still enforces the runtime permissions (RECORD_AUDIO etc.) —
+        // this just ensures the WebView layer doesn't block webkitSpeechRecognition.
+        webView.setWebChromeClient(new BridgeWebChromeClient(getBridge()) {
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                request.grant(request.getResources());
+            }
+        });
     }
 }

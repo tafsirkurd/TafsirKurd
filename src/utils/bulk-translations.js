@@ -1284,9 +1284,14 @@ window.BULK_TRANSLATIONS = [
     { key_id: "gencine.tasbih_of",        kurdish_text: "من",                                            category: "gencine",    page: "android" },
     { key_id: "gencine.reset",            kurdish_text: "سفر",                                      category: "gencine",    page: "android" },
     { key_id: "gencine.tap_hint",         kurdish_text: "بتەقینە",                                  category: "gencine",    page: "android" },
-    { key_id: "gencine.voice_start",      kurdish_text: "دەنگ",                                     category: "gencine",    page: "android" },
-    { key_id: "gencine.voice_stop",       kurdish_text: "وەستاندن",                                 category: "gencine",    page: "android" },
-    { key_id: "gencine.voice_listening",  kurdish_text: "...دەبیستم",                               category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_start",       kurdish_text: "دەنگ",                                        category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_stop",        kurdish_text: "وەستاندن",                                    category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_listening",   kurdish_text: "...گوێ دەدەم",                                category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_requesting",  kurdish_text: "...مۆڵەت دەخوازێت",                          category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_hint",        kurdish_text: "تاپ بکە و دکرێکێ بگه",                       category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_unavailable", kurdish_text: "دەنگ li vê cîhazê nayê piştgirîkirin",       category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_permission",  kurdish_text: "تکایە مۆڵەتا مایکرۆفۆنێ بدە",               category: "gencine",    page: "android" },
+    { key_id: "gencine.voice_error",       kurdish_text: "هەلەیەک هەیە، دووبارە هەوڵبدە",             category: "gencine",    page: "android" },
 
     // ===== Missing Prayer Keys =====
     { key_id: "prayer.offline_no_cache",  kurdish_text: "بێ ئینتەرنێت — داتایەک نەدیتووە",        category: "prayer",     page: "android" },

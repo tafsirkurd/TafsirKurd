@@ -583,7 +583,8 @@ window.GencineUI = {
   _hadithSearch:    '',     /* current search query */
   _voiceActive:     false,
   _recognition:     null,
-  _voiceListener:   null,
+  _voiceLastMatch:  0,
+  _voiceDebounceMs: 1200,
   _bookCat:         'all',
   _bookSearch:      '',
   _bookAuthor:      '',
@@ -1206,15 +1207,19 @@ window.GencineUI = {
     resetBtn.onclick = function(){ self._tasbihReset(); };
     actionRow.appendChild(resetBtn);
 
+    var hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
     var voiceBtn = document.createElement('button');
     voiceBtn.id = 'tasbihVoiceBtn';
-    voiceBtn.className = 'tasbih-voice-btn' + (self._voiceActive ? ' on' : '');
+    voiceBtn.className = 'tasbih-voice-btn' + (self._voiceActive ? ' on' : '') + (hasSR ? '' : ' disabled');
+    if (!hasSR) voiceBtn.disabled = true;
     var micI = document.createElement('i');
     micI.className = 'fas fa-microphone mic-icon';
     voiceBtn.appendChild(micI);
     var voiceLbl = document.createElement('span');
     voiceLbl.id = 'tasbihVoiceLbl';
-    voiceLbl.textContent = self._voiceActive ? T('gencine.voice_listening','...دابیستم') : T('gencine.voice_start','دانگ');
+    voiceLbl.textContent = self._voiceActive
+      ? T('gencine.voice_listening','...دابیستم')
+      : T('gencine.voice_start','دانگ');
     voiceBtn.appendChild(voiceLbl);
     var bars = document.createElement('div');
     bars.id = 'tasbihVoiceBars';
@@ -1225,11 +1230,20 @@ window.GencineUI = {
       bars.appendChild(bar);
     }
     voiceBtn.appendChild(bars);
-    voiceBtn.onclick = function(){ self._toggleVoice(); };
+    if (hasSR) voiceBtn.onclick = function(){ self._toggleVoice(); };
     actionRow.appendChild(voiceBtn);
-    wrap.appendChild(actionRow);
 
-    /* transcript */
+    /* voice status line — shows hint or "not available" */
+    var voiceStatus = document.createElement('div');
+    voiceStatus.id = 'tasbihVoiceStatus';
+    voiceStatus.className = 'tasbih-voice-status';
+    voiceStatus.textContent = hasSR
+      ? T('gencine.voice_hint', 'تاپ بکە و دکرێکێ بên')
+      : T('gencine.voice_unavailable', 'دانگ li vê cihazê pêşkeftî nîne');
+    wrap.appendChild(actionRow);
+    wrap.appendChild(voiceStatus);
+
+    /* transcript — live speech feedback */
     var tscript = document.createElement('div');
     tscript.id = 'tasbihVoiceTranscript';
     tscript.className = 'tasbih-voice-transcript';
@@ -1668,56 +1682,141 @@ window.GencineUI = {
 
   _startVoice: function(){
     var self = this;
-    var SR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
-    if(!SR){
-      var T = window.t || function(k,d){ return d||k; };
-      alert(T('gencine.voice_unsupported','Voice recognition not supported.'));
+    var T = window.t || function(k,d){ return d||k; };
+    var SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SRClass){
+      self._setVoiceStatus(T('gencine.voice_unavailable','دانگ li vê cihazê pêşkeftî nîne'));
       return;
     }
-    SR.requestPermissions().then(function(){
-      self._voiceActive = true;
-      self._updateVoiceBtn();
-      self._voiceLoop();
+
+    /* stop any existing instance first */
+    if(self._recognition){
+      try{ self._recognition.abort(); }catch(e){}
+      self._recognition = null;
+    }
+
+    /* set active + show pending state immediately so button feels responsive */
+    self._voiceActive    = true;
+    self._voiceLastMatch = 0;
+    self._updateVoiceBtn();
+    self._setVoiceStatus(T('gencine.voice_requesting','...destûr dixwaze'));
+
+    /* Step 1: Request RECORD_AUDIO at native level (Android only).
+       Capacitor's WebView only grants audio to getUserMedia if the
+       native runtime permission is already approved. */
+    var AudioPerm = window.Capacitor &&
+                    window.Capacitor.Plugins &&
+                    window.Capacitor.Plugins.AudioPermission;
+
+    var nativePermPromise = AudioPerm
+      ? AudioPerm.requestMicPermission()
+      : Promise.resolve({granted: true}); /* iOS / web — no native step needed */
+
+    nativePermPromise.then(function(res){
+      if(!self._voiceActive) return;
+      if(res && res.granted === false){
+        self._stopVoice();
+        self._setVoiceStatus(T('gencine.voice_permission','مایکرۆفۆن destûr bide'));
+        return;
+      }
+      /* Native permission confirmed — launch recognizer directly.
+         Skip getUserMedia: Capacitor WebView onPermissionRequest handles
+         AUDIO_CAPTURE automatically once the native RECORD_AUDIO is granted. */
+      self._launchRecognition(SRClass, T);
     }).catch(function(){
-      var T = window.t || function(k,d){ return d||k; };
-      alert(T('gencine.voice_unsupported','Microphone permission denied.'));
+      if(self._voiceActive) self._launchRecognition(SRClass, T);
     });
   },
 
-  _voiceLoop: function(){
+  _launchRecognition: function(SRClass, T){
     var self = this;
-    if(!self._voiceActive) return;
-    var SR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
-    if(!SR) return;
-    SR.start({
-      language: 'ar-SA',
-      maxResults: 10,
-      popup: false
-    }).then(function(result){
-      if(!self._voiceActive) return;
-      var matches = result && result.matches ? result.matches : [];
-      var best = 0; var bestText = '';
-      for(var i=0;i<matches.length;i++){
-        var n=self._countMatches(matches[i]);
-        if(n>best){best=n;bestText=matches[i];}
+    T = T || window.t || function(k,d){ return d||k; };
+
+    var rec = new SRClass();
+    rec.continuous      = true;
+    rec.interimResults  = true;
+    rec.lang            = 'ar-SA';
+    rec.maxAlternatives = 3;
+    self._recognition   = rec;
+    self._setVoiceStatus(T('gencine.voice_listening','...دابیستم'));
+
+    rec.onresult = function(event){
+      var interim = '', final_ = '';
+      for(var i = event.resultIndex; i < event.results.length; i++){
+        var res = event.results[i];
+        for(var a = 0; a < res.length; a++){
+          if(res.isFinal) final_ += res[a].transcript + ' ';
+          else            interim += res[a].transcript + ' ';
+        }
       }
-      if(best>0){
-        self._showTranscript(bestText, best);
-        for(var j=0;j<best;j++) self._tasbihTap();
+      /* show live feedback */
+      var live = (interim || final_).trim();
+      if(live){
+        var tEl = document.getElementById('tasbihVoiceTranscript');
+        if(tEl){ tEl.textContent = live; tEl.classList.add('visible'); }
       }
-      self._voiceLoop();
-    }).catch(function(){
-      if(self._voiceActive) self._voiceLoop();
-    });
+      /* count only from final results with debounce */
+      if(final_.trim()){
+        var now = Date.now();
+        if(now - self._voiceLastMatch >= self._voiceDebounceMs){
+          var best = 0; var bestText = '';
+          var lastRes = event.results[event.results.length - 1];
+          for(var ai = 0; ai < lastRes.length; ai++){
+            var n = self._countMatches(lastRes[ai].transcript);
+            if(n > best){ best = n; bestText = lastRes[ai].transcript; }
+          }
+          if(!best){ best = self._countMatches(final_); bestText = final_; }
+          if(best > 0){
+            self._voiceLastMatch = now;
+            self._showTranscript(bestText, best);
+            for(var j = 0; j < best; j++) self._tasbihTap();
+          }
+        }
+      }
+    };
+
+    rec.onerror = function(event){
+      if(event.error === 'not-allowed' || event.error === 'permission-denied'){
+        self._stopVoice();
+        var T2 = window.t || function(k,d){ return d||k; };
+        self._setVoiceStatus(T2('gencine.voice_permission','تکایە مۆڵەتا مایکرۆفۆنێ بدە'));
+      }
+      /* no-speech, aborted, network — onend handles restart */
+    };
+
+    rec.onend = function(){
+      if(!self._voiceActive || self._recognition !== rec) return;
+      /* small delay to avoid tight restart loop on rapid errors */
+      setTimeout(function(){
+        if(!self._voiceActive || self._recognition !== rec) return;
+        try{ rec.start(); }catch(e){}
+      }, 300);
+    };
+
+    try{
+      rec.start();
+    }catch(e){
+      self._stopVoice();
+      self._setVoiceStatus(T('gencine.voice_error','هەلەیەک çêbû'));
+    }
   },
 
   _stopVoice: function(){
     var self = this;
+    var T = window.t || function(k,d){ return d||k; };
     self._voiceActive = false;
-    var SR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
-    if(SR){ SR.stop().catch(function(){}); }
+    if(self._recognition){
+      try{ self._recognition.abort(); }catch(e){}
+      self._recognition = null;
+    }
     self._showTranscript('', 0);
     self._updateVoiceBtn();
+    self._setVoiceStatus(T('gencine.voice_hint','تاپ بکە و دکرێکێ بên'));
+  },
+
+  _setVoiceStatus: function(text){
+    var el = document.getElementById('tasbihVoiceStatus');
+    if(el) el.textContent = text;
   },
 
   _showTranscript: function(text, count){
@@ -2236,18 +2335,18 @@ window.GencineUI = {
   },
 
   _updateVoiceBtn: function(){
-    var btn = document.getElementById('tasbihVoiceBtn');
-    var lbl = document.getElementById('tasbihVoiceLbl');
+    var btn  = document.getElementById('tasbihVoiceBtn');
+    var lbl  = document.getElementById('tasbihVoiceLbl');
     var bars = document.getElementById('tasbihVoiceBars');
-    var T = window.t || function(k,d){ return d||k; };
+    var T    = window.t || function(k,d){ return d||k; };
     if(!btn) return;
     if(this._voiceActive){
       btn.classList.add('on');
-      if(lbl) lbl.textContent = T('gencine.voice_listening','...دابیستم');
+      if(lbl)  lbl.textContent = T('gencine.voice_stop','rawestin');
       if(bars){ bars.classList.remove('idle'); bars.classList.add('active'); }
     } else {
       btn.classList.remove('on');
-      if(lbl) lbl.textContent = T('gencine.voice_start','دانگ');
+      if(lbl)  lbl.textContent = T('gencine.voice_start','دانگ');
       if(bars){ bars.classList.remove('active'); bars.classList.add('idle'); }
     }
   }
