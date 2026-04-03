@@ -1124,39 +1124,54 @@ function _getCachedTabItems(){if(!_cachedTabItems)_cachedTabItems=document.query
 function _getCachedTabBtn(name){if(!_cachedTabBtns[name])_cachedTabBtns[name]=document.querySelector('.tab-item[data-tab="'+name+'"]');return _cachedTabBtns[name];}
 App.tab=function(name){
   if(tapGuard('tab',200))return; // prevent rapid repeated tab taps
-  if(name===S.tab&&!S.surah){
+  if(name===S.tab){
     haptic([8]);
     if(name==='quran'){
-      var _qp=document.getElementById('panelQuran');
-      if(_qp)_qp.scrollTo({top:0,behavior:'smooth'});
-      return;
-    }
-    if(name==='gencine'){
-      var _gp=document.getElementById('panelGencine');
-      if(_gp)_gp.scrollTo({top:0,behavior:'smooth'});
+      if(S.surah){
+        // Inside surah: first re-tap scrolls to top, second goes back to grid
+        var _mv=$('mushafView');
+        var _se=(_mv&&_mv.style.display!=='none')?_mv:$('ayahList');
+        if(_se&&_se.scrollTop>20){_se.scrollTo({top:0,behavior:'smooth'});}
+        else{App.backToList();}
+      }else{
+        // On Quran grid: scroll to top
+        var _qp=$('panelQuran');
+        if(_qp&&_qp.scrollTop>20){_qp.scrollTo({top:0,behavior:'smooth'});}
+      }
       return;
     }
     if(name==='islamvoice'){
-      var _ip=document.getElementById('panelIslamvoice');
-      if(_ip)_ip.scrollTo({top:0,behavior:'smooth'});
+      var _ip=$('panelIslamvoice');
+      if(S.ivCurrentSeries){
+        // Inside series view: scroll to top first, then back to home
+        if(_ip&&_ip.scrollTop>20){_ip.scrollTo({top:0,behavior:'smooth'});}
+        else{App.ivBack();}
+      }else{
+        // On video home: scroll to top
+        if(_ip&&_ip.scrollTop>20){_ip.scrollTo({top:0,behavior:'smooth'});}
+      }
+      return;
+    }
+    if(name==='gencine'){
+      var _gp=$('panelGencine');
+      if(window.GencineUI&&GencineUI._view!=='home'){
+        // Inside sub-view: scroll to top first, then go home
+        if(_gp&&_gp.scrollTop>20){_gp.scrollTo({top:0,behavior:'smooth'});}
+        else{GencineUI.goHome();}
+      }else{
+        // On Gencine home: scroll to top
+        if(_gp&&_gp.scrollTop>20){_gp.scrollTo({top:0,behavior:'smooth'});}
+      }
       return;
     }
     if(name==='settings'){
-      var _sp=document.getElementById('panelSettings');
-      if(_sp)_sp.scrollTo({top:0,behavior:'smooth'});
+      var _sp=$('panelSettings');
+      if(_sp&&_sp.scrollTop>20){_sp.scrollTo({top:0,behavior:'smooth'});}
       return;
     }
     return;
   }
   haptic([8]);
-  if(S.surah&&name==='quran'){
-    // First repeated tap: scroll surah page to top. Second tap (already at top): go back to list.
-    var _mv=$('mushafView');
-    var _se=(_mv&&_mv.style.display!=='none')?_mv:$('ayahList');
-    if(_se&&_se.scrollTop>10){_se.scrollTo({top:0,behavior:'smooth'});}
-    else{App.backToList();}
-    return;
-  }
   if(S.surah&&name!=='quran'){_endSession();}
   // Stop prayer countdown and pause sky animations when leaving prayer tab
   if(S.tab==='prayer'&&name!=='prayer'&&window.PrayerUI){
