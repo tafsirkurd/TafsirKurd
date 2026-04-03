@@ -15,6 +15,15 @@ window.ForceUpdate = (function(){
   var CHECK_DEBOUNCE     = 30 * 1000; // 30s between checks
   var _fuBtnBusy         = false;     // prevent double-tap on hard update btn
 
+  // ── Safe translation helper ───────────────────────────────────────────────
+  // Returns the translated string, or null if the key was not found.
+  // window.t() returns the KEY ITSELF when missing (truthy) — this wrapper
+  // converts that to null so || fallback chains work correctly even offline.
+  function tSafe(key) {
+    var v = window.t && window.t(key);
+    return (v && v !== key) ? v : null;
+  }
+
   // ── Semver comparison ─────────────────────────────────────────────────────
   function compareVersions(a, b) {
     var pa = String(a).split('.').map(Number);
@@ -147,12 +156,12 @@ window.ForceUpdate = (function(){
     var title = document.createElement('div');
     title.className = 'fu-banner-title';
     title.setAttribute('data-i18n', 'update.notice_title');
-    title.textContent = window.t ? (window.t('update.notice_title') || window.t('update.title') || 'نوێکردنەوەیەکی نوێ بەردەستە') : 'نوێکردنەوەیەکی نوێ بەردەستە';
+    title.textContent = tSafe('update.notice_title') || tSafe('update.title') || 'ئاپدەیتەکا نوی بەردەستە';
 
     var msg = document.createElement('div');
     msg.className = 'fu-banner-msg';
     // Prefer admin-set release notes; fall back to generic translation
-    var msgText = (whatsNew && whatsNew.trim()) || (window.t && (window.t('update.notice_message') || window.t('update.soft_message'))) || 'وەشانێکی نوێیی بەردەستە.';
+    var msgText = (whatsNew && whatsNew.trim()) || tSafe('update.notice_message') || tSafe('update.soft_message') || 'وەشانەکا نوی بەردەستە.';
     msg.textContent = msgText;
     if (!whatsNew || !whatsNew.trim()) msg.setAttribute('data-i18n', 'update.notice_message');
 
@@ -165,7 +174,7 @@ window.ForceUpdate = (function(){
     var updateBtn = document.createElement('button');
     updateBtn.className = 'fu-banner-btn';
     updateBtn.setAttribute('data-i18n', 'update.notice_btn');
-    updateBtn.textContent = window.t ? (window.t('update.notice_btn') || window.t('update.btn') || 'نوێبکەرەوە') : 'نوێبکەرەوە';
+    updateBtn.textContent = tSafe('update.notice_btn') || tSafe('update.btn') || 'ئاپدەیت بکە';
     updateBtn.onclick = function() {
       openStore();
       snoozeForever(); // clicked → never show again
@@ -176,7 +185,7 @@ window.ForceUpdate = (function(){
     var dismissBtn = document.createElement('button');
     dismissBtn.className = 'fu-banner-dismiss';
     dismissBtn.setAttribute('data-i18n', 'update.notice_later');
-    dismissBtn.textContent = window.t ? (window.t('update.notice_later') || '×') : '×';
+    dismissBtn.textContent = tSafe('update.notice_later') || '×';
     dismissBtn.onclick = function() { snoozeDismiss(); dismissBanner(); };
 
     actions.appendChild(updateBtn);
@@ -221,8 +230,8 @@ window.ForceUpdate = (function(){
     if (localStorage.getItem(UPDATE_NOTIF_KEY) === String(minVersion)) return;
 
     var at = new Date(Date.now() + 24 * 3600 * 1000); // 24 hours from now
-    var title = (window.t && (window.t('update.notice_notification_title') || window.t('update.title'))) || 'نوێکردنەوەیەکی نوێ بەردەستە';
-    var body  = (window.t && window.t('update.notice_notification_body')) || 'ئەپی تافسیر کوردی نوێبکەرەوە — وەشانێکی نوێیی دابەزاوە.';
+    var title = tSafe('update.notice_notification_title') || tSafe('update.title') || 'هەواڵی نوێ بەردەستە.';
+    var body  = tSafe('update.notice_notification_body') || 'وەشانی نوێ هەیە — تکایە ئاپدێت بکە.';
 
     // Cancel any leftover notification from a previous version first
     LN.cancel({ notifications: [{ id: UPDATE_NOTIF_ID }] }).catch(function() {});

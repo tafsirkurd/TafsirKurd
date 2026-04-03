@@ -1617,5 +1617,15 @@ window.BULK_TRANSLATIONS = [
     { key_id: "prayer.save_settings",       kurdish_text: "پاراستنی ڕێکخستنەکان",      category: "prayer",        page: "android" },
     { key_id: "notif.verse_title",          kurdish_text: "ئایەتا ڕۆژێ",               category: "notifications", page: "android" },
     { key_id: "signup.email_reminders_on",  kurdish_text: "بیرانینێن ئیمێلی هاتنە چالاک کرن! تو دێ ڕۆژانە بیرانینێن قورئانێ د ئیمێلا خۆ دا وەرگری", category: "signup", page: "android" },
-    { key_id: "signup.email_reminders_off", kurdish_text: "بیرانینێن ئیمێلی هاتنە گرتن", category: "signup", page: "android" }
+    { key_id: "signup.email_reminders_off", kurdish_text: "بیرانینێن ئیمێلی هاتنە گرتن", category: "signup", page: "android" },
+    { key_id: "update.btn",                            kurdish_text: "ئاپدەیت بکە",                                                                      category: "update", page: "android" },
+    { key_id: "update.title",                          kurdish_text: "ئاپدەیت یا پێدڤییە.",                                                              category: "update", page: "android" },
+    { key_id: "update.message",                        kurdish_text: "ئاپدەیتەکا نوی بەردەستە، بۆ بەردەوامبوونێ هیڤییە ئەپڵیکەیشنی ئاپدەیت بکە.",      category: "update", page: "android" },
+    { key_id: "update.notice_title",                   kurdish_text: "ئاپدەیتەکا نوی بەردەستە",                                                           category: "update", page: "android" },
+    { key_id: "update.notice_message",                 kurdish_text: "وەشانەکا نوی بەردەستە. ئاپدەیت بکە.",                                              category: "update", page: "android" },
+    { key_id: "update.notice_btn",                     kurdish_text: "ئاپدەیت بکە",                                                                      category: "update", page: "android" },
+    { key_id: "update.notice_later",                   kurdish_text: "دویڤدا",                                                                            category: "update", page: "android" },
+    { key_id: "update.notice_notification_title",      kurdish_text: "ئاپدەیتەکا نوی بەردەستە.",                                                          category: "update", page: "android" },
+    { key_id: "update.notice_notification_body",       kurdish_text: "ئەپێ تەفسیرکورد ئاپدەیت بکە — وەشانەکا نوی بەردەستە.",                            category: "update", page: "android" },
+    { key_id: "update.soft_message",                   kurdish_text: "پێشنیارا ئاپدەیتێ. وەشانەکا نوی بەردەستە.",                                        category: "update", page: "android" }
 ];

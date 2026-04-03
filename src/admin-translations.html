@@ -1220,6 +1220,10 @@
                 border-radius: 6px;
                 width: fit-content;
             }
+            .t-badge-wrap {
+                grid-column: 1;
+                grid-row: 3;
+            }
             .t-context {
                 font-size: 11px;
                 margin-top: 4px;
@@ -1459,6 +1463,48 @@
             .history-title { font-size: 14px; }
             .history-stats { padding: 6px 14px; font-size: 11px; }
         }
+
+        /* ===== Translation status indicator (per card) ===== */
+        .t-badge-wrap { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+        .t-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            white-space: nowrap;
+            letter-spacing: 0.01em;
+        }
+        .t-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .t-status--changed { color: #16a34a; }
+        .t-status--changed .t-status-dot { background: #16a34a; }
+        .t-status--default { color: var(--text-tertiary); opacity: 0.55; }
+        .t-status--default .t-status-dot { background: var(--border-medium, #d1d5db); }
+        .t-status--empty   { color: #d97706; }
+        .t-status--empty   .t-status-dot { background: #d97706; }
+        body.dark-mode .t-status--changed { color: #4ade80; }
+        body.dark-mode .t-status--changed .t-status-dot { background: #4ade80; }
+        body.dark-mode .t-status--empty   { color: #fbbf24; }
+        body.dark-mode .t-status--empty   .t-status-dot { background: #fbbf24; }
+
+        /* ===== Category sidebar — changed count ===== */
+        .cat-count-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 1px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .cat-count-changed {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: #16a34a;
+            white-space: nowrap;
+        }
+        body.dark-mode .cat-count-changed { color: #4ade80; }
+        .cat-item.active .cat-count-changed { color: rgba(255,255,255,0.65); }
+        body.dark-mode .cat-item.active .cat-count-changed { color: rgba(0,0,0,0.45); }
 
         /* ===== About Panel ===== */
         .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-tertiary); border-bottom: 1px solid var(--border-light); padding-bottom: 10px; margin: 32px 0 20px; }
@@ -2368,6 +2414,22 @@
             footer:                 { icon: 'layout',       label: 'Footer',         group: 'Other' },
         };
 
+        // ── Translation change-status helpers ──────────────────────────────────
+        // "Changed" = updated_at is more than 2 seconds later than created_at.
+        // The 2s tolerance handles rows where Postgres sets both timestamps in
+        // the same INSERT statement (they land within milliseconds of each other).
+        function isChanged(t) {
+            if (!t.updated_at || !t.created_at) return false;
+            return (new Date(t.updated_at).getTime() - new Date(t.created_at).getTime()) > 2000;
+        }
+
+        // Returns 'changed' | 'empty' | 'default'
+        function getTranslationStatus(t) {
+            if (!t.kurdish_text || !t.kurdish_text.trim()) return 'empty';
+            if (isChanged(t)) return 'changed';
+            return 'default';
+        }
+
         function getChipMeta(slug, isWeb) {
             if (isWeb) {
                 var m = WEB_PAGE_META[slug];
@@ -2694,9 +2756,12 @@
                 return normalizePage(t.page);
             }
 
+            var changedCounts = {};
+            var allChangedCount = 0;
             platformData.forEach(function(t) {
                 var k = getChipKey(t);
                 pageCounts[k] = (pageCounts[k] || 0) + 1;
+                if (isChanged(t)) { changedCounts[k] = (changedCounts[k] || 0) + 1; allChangedCount++; }
             });
 
             if (isSearching) {
@@ -2734,10 +2799,20 @@
                 lbl.textContent = meta.label;
                 btn.appendChild(lbl);
 
+                var cntCol = document.createElement('div');
+                cntCol.className = 'cat-count-col';
                 var cnt = document.createElement('span');
                 cnt.className = 'cat-count';
                 cnt.textContent = displayCount;
-                btn.appendChild(cnt);
+                cntCol.appendChild(cnt);
+                var chg = p === '' ? allChangedCount : (changedCounts[p] || 0);
+                if (chg > 0 && !isSearching) {
+                    var chgLbl = document.createElement('span');
+                    chgLbl.className = 'cat-count-changed';
+                    chgLbl.textContent = chg + ' edited';
+                    cntCol.appendChild(chgLbl);
+                }
+                btn.appendChild(cntCol);
 
                 btn.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
                 return btn;
@@ -2826,7 +2901,9 @@
                 }
                 return normalizePage(t.page);
             }
-            platformData.forEach(function(t) { var k = getKey(t); pageCounts[k] = (pageCounts[k]||0)+1; });
+            var sheetChangedCounts = {};
+            var sheetAllChanged = 0;
+            platformData.forEach(function(t) { var k = getKey(t); pageCounts[k] = (pageCounts[k]||0)+1; if (isChanged(t)) { sheetChangedCounts[k] = (sheetChangedCounts[k]||0)+1; sheetAllChanged++; } });
             if (isWeb) { WEB_PAGES.forEach(function(p) { if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0; }); }
 
             var pages = Object.keys(pageCounts).sort();
@@ -2843,10 +2920,20 @@
                 lbl.className = 'cat-item-label';
                 lbl.textContent = meta.label;
                 btn.appendChild(lbl);
+                var cntCol = document.createElement('div');
+                cntCol.className = 'cat-count-col';
                 var cnt = document.createElement('span');
                 cnt.className = 'cat-count';
                 cnt.textContent = count;
-                btn.appendChild(cnt);
+                cntCol.appendChild(cnt);
+                var chg = p === '' ? sheetAllChanged : (sheetChangedCounts[p] || 0);
+                if (chg > 0) {
+                    var chgLbl = document.createElement('span');
+                    chgLbl.className = 'cat-count-changed';
+                    chgLbl.textContent = chg + ' edited';
+                    cntCol.appendChild(chgLbl);
+                }
+                btn.appendChild(cntCol);
                 btn.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
                 return btn;
             }
@@ -2935,10 +3022,16 @@
                 ? searchMatches.filter(function(t) { return chipKey(t) === activePageFilter; })
                 : searchMatches;
 
-            // Smart rank when searching
+            // Sort: relevance when searching, newest changes first otherwise
             if (search) {
                 matches.sort(function(a, b) {
                     return getSearchScore(b, search) - getSearchScore(a, search);
+                });
+            } else {
+                matches.sort(function(a, b) {
+                    var ua = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+                    var ub = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+                    return ub - ua;
                 });
             }
 
@@ -3105,11 +3198,29 @@
             }
             row.appendChild(contentDiv);
 
-            // Page badge
+            // Page badge + status wrap
+            var badgeWrap = document.createElement('div');
+            badgeWrap.className = 't-badge-wrap';
+
             var pageDiv = document.createElement('div');
             pageDiv.className = 't-page-badge';
             pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? (t.category || 'general') : normalizePage(t.page);
-            row.appendChild(pageDiv);
+            badgeWrap.appendChild(pageDiv);
+
+            var status = getTranslationStatus(t);
+            var statusEl = document.createElement('div');
+            statusEl.className = 't-status t-status--' + status;
+            var statusDot = document.createElement('span');
+            statusDot.className = 't-status-dot';
+            statusEl.appendChild(statusDot);
+            statusEl.appendChild(document.createTextNode(
+                status === 'changed' ? 'Edited' :
+                status === 'empty'   ? '⚠ Empty' :
+                                       'Default'
+            ));
+            badgeWrap.appendChild(statusEl);
+
+            row.appendChild(badgeWrap);
 
             // Actions
             var actionsDiv = document.createElement('div');
