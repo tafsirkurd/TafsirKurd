@@ -133,7 +133,8 @@ window.ForceUpdate = (function(){
   }
 
   // ── Soft update banner ────────────────────────────────────────────────────
-  function showSoftBanner() {
+  // whatsNew: optional string from cfg.update_whats_new (admin-set release notes)
+  function showSoftBanner(whatsNew) {
     if (document.getElementById('fuBanner')) return;
 
     var banner = document.createElement('div');
@@ -150,8 +151,10 @@ window.ForceUpdate = (function(){
 
     var msg = document.createElement('div');
     msg.className = 'fu-banner-msg';
-    msg.setAttribute('data-i18n', 'update.notice_message');
-    msg.textContent = window.t ? (window.t('update.notice_message') || window.t('update.soft_message') || 'وەشانێکی نوێیی بەردەستە.') : 'وەشانێکی نوێیی بەردەستە.';
+    // Prefer admin-set release notes; fall back to generic translation
+    var msgText = (whatsNew && whatsNew.trim()) || (window.t && (window.t('update.notice_message') || window.t('update.soft_message'))) || 'وەشانێکی نوێیی بەردەستە.';
+    msg.textContent = msgText;
+    if (!whatsNew || !whatsNew.trim()) msg.setAttribute('data-i18n', 'update.notice_message');
 
     textWrap.appendChild(title);
     textWrap.appendChild(msg);
@@ -283,7 +286,7 @@ window.ForceUpdate = (function(){
         var reachable = await isStoreReachable(_storeUrl);
         if (!reachable && _storeUrl) {
           console.log('[Update] HARD requested but store unreachable — falling back to SOFT');
-          if (!isSnoozed(cooldown)) showSoftBanner();
+          if (!isSnoozed(cooldown)) showSoftBanner(cfg.update_whats_new);
           return;
         }
         console.log('[Update] HARD — blocking app');
@@ -294,7 +297,7 @@ window.ForceUpdate = (function(){
           return;
         }
         console.log('[Update] SOFT — queuing banner (6s delay)');
-        showSoftBanner();
+        showSoftBanner(cfg.update_whats_new);
         _scheduleUpdateNotification(minVersion); // once per version, 24h later
       }
     } catch(e) {
@@ -592,6 +595,7 @@ function init(){
     applySizes();
     applyKeepAwake();
     initTodayVerses();
+    if(window.AppRating)AppRating.init(); // track launch count + first-launch date
     renderSurahGrid();
     renderContinue();
 
@@ -822,6 +826,7 @@ function init(){
   setTimeout(function(){scheduleStreakReminder();},800);
   setTimeout(function(){checkNewVideoNotif();},1500);
   setTimeout(function(){checkNewBookNotif();},2500);
+  setTimeout(function(){initPushToken();},3000);
   // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
   setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},4000);
   // Athan voice decode is CPU-intensive — delay until after first 3s of interaction
@@ -1119,11 +1124,38 @@ function _getCachedTabBtn(name){if(!_cachedTabBtns[name])_cachedTabBtns[name]=do
 App.tab=function(name){
   if(tapGuard('tab',200))return; // prevent rapid repeated tab taps
   if(name===S.tab&&!S.surah){
-    if(name==='gencine'&&window.GencineUI){GencineUI.render();var _gp=document.getElementById('panelGencine');if(_gp)_gp.scrollTop=0;}
+    haptic([8]);
+    if(name==='quran'){
+      var _qp=document.getElementById('panelQuran');
+      if(_qp)_qp.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+    if(name==='gencine'){
+      var _gp=document.getElementById('panelGencine');
+      if(_gp)_gp.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+    if(name==='islamvoice'){
+      var _ip=document.getElementById('panelIslamvoice');
+      if(_ip)_ip.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+    if(name==='settings'){
+      var _sp=document.getElementById('panelSettings');
+      if(_sp)_sp.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
     return;
   }
   haptic([8]);
-  if(S.surah&&name==='quran'){App.backToList();return}
+  if(S.surah&&name==='quran'){
+    // First repeated tap: scroll surah page to top. Second tap (already at top): go back to list.
+    var _mv=$('mushafView');
+    var _se=(_mv&&_mv.style.display!=='none')?_mv:$('ayahList');
+    if(_se&&_se.scrollTop>10){_se.scrollTo({top:0,behavior:'smooth'});}
+    else{App.backToList();}
+    return;
+  }
   if(S.surah&&name!=='quran'){_endSession();}
   // Stop prayer countdown and pause sky animations when leaving prayer tab
   if(S.tab==='prayer'&&name!=='prayer'&&window.PrayerUI){
@@ -1555,14 +1587,90 @@ function scheduleStreakReminder(){
   }).catch(function(){});
 }
 
+/* ===== REMOTE PUSH TOKEN REGISTRATION ===== */
+/* Registers device with FCM (Android) or APNs via Firebase (iOS).
+   Token is stored in Supabase push_tokens table.
+   Requires:
+     - @capacitor/push-notifications installed (package.json)
+     - google-services.json at android/app/google-services.json
+     - GoogleService-Info.plist at ios/App/App/GoogleService-Info.plist
+     - Push Notifications capability enabled in Xcode for the App target
+*/
+function initPushToken(){
+  var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
+  if(!PP){console.log('[Push] PushNotifications plugin not available');return;}
+  if(!S.supabase){console.warn('[Push] Supabase not ready, skipping token registration');return;}
+
+  PP.requestPermissions().then(function(perm){
+    if(perm.receive!=='granted'){
+      console.log('[Push] permission not granted: '+perm.receive);
+      return;
+    }
+    // Handle incoming push while app is in foreground
+    PP.addListener('pushNotificationReceived',function(notif){
+      console.log('[Push] received foreground notif: '+notif.title);
+      // Foreground: show as local notification so user sees it even with app open
+      var LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;
+      if(LN){
+        LN.schedule({notifications:[{
+          id:Math.floor(Math.random()*100000)+1000,
+          title:notif.title||'',
+          body:notif.body||'',
+          schedule:{at:new Date(Date.now()+200),allowWhileIdle:true},
+          smallIcon:'ic_notification',
+          channelId:'reminder',
+          extra:notif.data||{}
+        }]}).catch(function(){});
+      }
+    });
+
+    // Handle notification tap (app in background or killed)
+    PP.addListener('pushNotificationActionPerformed',function(action){
+      var data=(action.notification&&action.notification.data)||{};
+      console.log('[Push] tapped notif type='+data.type);
+      if(data.type==='islamvoice_episodes')App.tab('islamvoice');
+      else if(data.type==='gencine_books')App.tab('gencine');
+    });
+
+    // Receive FCM/APNs token and store in DB
+    PP.addListener('registration',function(tokenData){
+      var platform=window.Capacitor.getPlatform()||'unknown';
+      var uid=(S.supabase.auth&&S.supabase.auth.user&&S.supabase.auth.user()&&S.supabase.auth.user().id)||null;
+      console.log('[Push] token registered platform='+platform+' len='+tokenData.value.length);
+      S.supabase.from('push_tokens').upsert({
+        token:tokenData.value,
+        platform:platform,
+        user_id:uid,
+        updated_at:new Date().toISOString()
+      },{onConflict:'token'}).then(function(res){
+        if(res.error)console.warn('[Push] upsert error:',res.error.message);
+        else console.log('[Push] token stored in DB ✓');
+      });
+    });
+
+    PP.addListener('registrationError',function(err){
+      console.warn('[Push] registration error:',err.error);
+    });
+
+    PP.register();
+  }).catch(function(e){
+    console.warn('[Push] requestPermissions error:',e&&e.message);
+  });
+}
+
 /* ===== NEW VIDEO NOTIFICATION ===== */
 /* Check on app open if new IslamVoice video was added since last check. ID 31 */
 function checkNewVideoNotif(){
   if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
   if(!S.supabase)return;
-  var lastCheck=localStorage.getItem('lastVideoNotifCheck')||'2000-01-01';
   var now=new Date().toISOString();
-  S.supabase.from('episodes').select('id,title,created_at').gt('created_at',lastCheck).order('created_at',{ascending:false}).limit(1)
+  // First-ever launch: seed with now and skip so we never notify for pre-existing episodes
+  if(!localStorage.getItem('lastVideoNotifCheck')){
+    localStorage.setItem('lastVideoNotifCheck',now);
+    return;
+  }
+  var lastCheck=localStorage.getItem('lastVideoNotifCheck');
+  S.supabase.from('islamvoice_episodes').select('id,title,title_ku,created_at').gt('created_at',lastCheck).order('created_at',{ascending:false}).limit(1)
     .then(function(res){
       localStorage.setItem('lastVideoNotifCheck',now);
       if(!res||!res.data||!res.data.length)return;
@@ -1575,7 +1683,7 @@ function checkNewVideoNotif(){
           LN.schedule({notifications:[{
             id:31,
             title:t('notif.new_video_title')||'ڤیدیۆیەکی نوێ 🎬',
-            body:ep.title||t('notif.new_video_body')||'ڤیدیۆیەکی نوێ زیاد بوو',
+            body:(ep.title_ku||ep.title)||t('notif.new_video_body')||'ڤیدیۆیەکی نوێ زیاد بوو',
             schedule:{at:new Date(Date.now()+3000),allowWhileIdle:true},
             smallIcon:'ic_notification',
             channelId:'reminder',
@@ -4317,8 +4425,15 @@ function _clearGoalCounters(){
 }
 // Full tracking reset — also wipes ayah-level read marks from Quran pages
 function _clearTrackingState(){
+  // Cancel any pending scheduleSave timer so it can't re-write cleared keys
+  if(_progressCleanup){_progressCleanup();_progressCleanup=null;}
   _clearGoalCounters();
-  for(var i=1;i<=114;i++){localStorage.removeItem('surah_progress_'+i);}
+  localStorage.removeItem('lastRead'); // remove continue-reading card source
+  localStorage.setItem('fullResetAt',new Date().toISOString()); // tombstone: prevents cloud from restoring lastRead
+  for(var i=1;i<=114;i++){
+    localStorage.removeItem('surah_progress_'+i); // mushaf mode tracking
+    localStorage.removeItem('surah_read_v3_'+i);  // list/ayah mode tracking
+  }
 }
 
 function getGoal(){
@@ -4404,6 +4519,8 @@ function _endSession(){
     all.push(rec);if(all.length>50)all=all.slice(-50);
     localStorage.setItem('readSessions',JSON.stringify(all));
   }catch(e){}
+  // After a real reading session, check if we should show the smart rating prompt
+  if(window.AppRating)AppRating.checkSmartPrompt();
 }
 function getRecentSessions(){
   try{return JSON.parse(localStorage.getItem('readSessions')||'[]');}catch(e){return[];}
@@ -4731,7 +4848,7 @@ function _doSyncWidgetTranslations(force){
   if(!sb){console.warn('[WidgetT9n] no Supabase client — Supabase not yet initialized');return;}
   sb.from('kurdish_translations')
     .select('key_id,kurdish_text,ios_text,android_text')
-    .eq('page','widgets')
+    .like('key_id','widget.%')
     .then(function(res){
       if(res.error){console.error('[WidgetT9n] DB error:',res.error.message);return;}
       if(!res.data||!res.data.length){console.warn('[WidgetT9n] 0 rows returned — no widget.* keys in DB?');return;}
@@ -4768,15 +4885,12 @@ function syncWidgetTranslations(){ _doSyncWidgetTranslations(false); }
 window.forceWidgetTranslationSync=function(){ _doSyncWidgetTranslations(true); };
 
 function _sharedPrefsSet(key,value){
-  // Android path — synchronous JavascriptInterface bridge
-  if(window.TafsirAndroid){
-    try{window.TafsirAndroid.saveString(key,value);}catch(e){console.warn('[Widget] Android bridge error:',e);}
-    return Promise.resolve();
-  }
-  // iOS path — Capacitor SharedPrefs plugin (App Group UserDefaults)
+  // iOS only — Capacitor SharedPrefs plugin writes to App Group UserDefaults
+  // so the widget extension can read the data without hitting the network.
+  // Android widgets were removed; this path is iOS-only.
   var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefs;
   if(!sp){
-    console.warn('[Widget] _sharedPrefsSet: no bridge available (key='+key+')');
+    console.warn('[Widget] _sharedPrefsSet: SharedPrefs plugin not available (key='+key+')');
     return Promise.reject(new Error('no widget bridge'));
   }
   console.log('[Widget] _sharedPrefsSet key='+key+' valueLen='+value.length);
@@ -4788,7 +4902,7 @@ function _sharedPrefsSet(key,value){
 function pushAyahToWidget(surahNum,ayahNum){
   console.log('[WidgetAyah] pushAyahToWidget called surah='+surahNum+' ayah='+ayahNum);
   var quranSurah=S.quranData&&S.quranData[String(surahNum)];
-  if(!quranSurah||!quranSurah[ayahNum-1]){console.error('[WidgetAyah] quran data missing');toast('داتا نیە');return;}
+  if(!quranSurah||!quranSurah[ayahNum-1]){console.error('[WidgetAyah] quran data missing');toast(t('toast.widget_no_data'));return;}
   var ayah=quranSurah[ayahNum-1];
   var tafsirText='';
   if(S.tafsirData&&S.tafsirData[surahNum-1]){
@@ -4812,11 +4926,11 @@ function pushAyahToWidget(surahNum,ayahNum){
   _sharedPrefsSet('widgetAyahData',payload)
     .then(function(){
       console.log('[WidgetAyah] write SUCCESS ✓');
-      toast('ئایەت بۆ ویجیت زیاد کرا ✓');
+      toast(t('toast.widget_saved'));
     })
     .catch(function(e){
       console.error('[WidgetAyah] write FAILED:',e);
-      toast('ویجیت نیوست ✗');
+      toast(t('toast.widget_error'));
     });
 }
 
@@ -4902,6 +5016,7 @@ App.confirmDeleteGoalFull=function(){
   $('goalConfirmOverlay').classList.remove('on');
   debouncedSync();
   _restartProgressTracking();
+  renderContinue(); // clear the continue-reading card immediately
   toast(t('toast.goal_deleted'));
   haptic([50]);
   renderGoals();
@@ -5127,7 +5242,7 @@ function renderWizardStep(){
 
 /* ===== SETTINGS ===== */
 function mkToggleRow(labelText,isOn,onToggle,subText){
-  var row=el('div','setting-row');
+  var row=el('div','setting-row s-row');
   var left=el('div','setting-label-wrap');
   left.appendChild(el('div','setting-label',labelText));
   if(subText){left.appendChild(el('div','setting-sub',subText));}
@@ -5330,21 +5445,26 @@ async function openAboutSheet(type){
     body.appendChild(cfoQ2);
 
     // ── 8. Closing ───────────────────────────────
-    if(ss.founder_closing){
+    var _cloTitle=(window.t&&window.t('founder_closing_title')!=='founder_closing_title')?window.t('founder_closing_title'):(ss.founder_closing_title||'');
+    var _cloDesc=(window.t&&window.t('founder_closing_desc')!=='founder_closing_desc')?window.t('founder_closing_desc'):(ss.founder_closing_desc||ss.founder_closing||'');
+    if(_cloTitle||_cloDesc){
       var cfoClose=el('div','cfo-closing');
-      cfoClose.appendChild(el('div','cfo-closing-text',ss.founder_closing));
+      if(_cloTitle)cfoClose.appendChild(el('div','cfo-closing-title',_cloTitle));
+      if(_cloDesc)cfoClose.appendChild(el('div','cfo-closing-text',_cloDesc));
       body.appendChild(cfoClose);
     }
   }else{
     titleEl.textContent='تەفسیر کورد';
 
     // ── 1. Hero ──────────────────────────────────
-    var cabHero=el('div','cab-hero');
+    var cabHero=el('div','cfg-sheet-hero');
     var cabAv=el('div','cfg-sheet-avatar');
-    var cabLogo=document.createElement('img');cabLogo.src='/assets/images/logo.png';cabLogo.alt='';
-    cabAv.appendChild(cabLogo);cabHero.appendChild(cabAv);
-    cabHero.appendChild(el('div','cab-title','تەفسیر کورد'));
-    cabHero.appendChild(el('div','cab-sub',ss.about_hero_sub||'پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز'));
+    var appAvUrl=ss.about_avatar_url||'';
+    if(appAvUrl){var cabAvImg=document.createElement('img');cabAvImg.src=appAvUrl;cabAvImg.alt='';cabAv.appendChild(cabAvImg);}
+    else{var cabLogo=document.createElement('img');cabLogo.src='/assets/images/logo.png';cabLogo.alt='';cabAv.appendChild(cabLogo);}
+    cabHero.appendChild(cabAv);
+    cabHero.appendChild(el('div','cfg-sheet-name','تەفسیر کورد'));
+    cabHero.appendChild(el('div','cfg-sheet-role',ss.about_hero_sub||'پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز'));
     body.appendChild(cabHero);
 
     // ── 2. Services ───────────────────────────────
@@ -5411,14 +5531,13 @@ async function openAboutSheet(type){
     cabCardText.appendChild(el('div','cab-book-card-author',ss.about_tafsir_author||'ماموستا تەحسین ئیبراهیم دۆسکی'));
     cabCardText.appendChild(el('div','cab-book-card-desc',ss.about_tafsir_book_desc||'وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.'));
     cabCard.appendChild(cabCardText);
-    var cabCardIc=el('div','cab-book-card-icon');cabCardIc.appendChild(icon('fas fa-book-open-reader'));cabCard.appendChild(cabCardIc);
     body.appendChild(cabCard);
     if(bookImgUrl){var bookImg=document.createElement('img');bookImg.src=bookImgUrl;bookImg.alt='';bookImg.className='cfg-sheet-img';body.appendChild(bookImg);}
   }
 }
 
 function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger){
-  var row=el('div','setting-row');
+  var row=el('div','setting-row s-row');
   row.appendChild(el('div','setting-label',labelText));
   var btn=el('button','hdr-text-btn'+(danger?' danger-btn':''));
   if(btnIcon){btn.appendChild(icon(btnIcon));btn.appendChild(document.createTextNode(' '));}
@@ -5429,7 +5548,7 @@ function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger){
 }
 function mkSliderRow(labelText,value,min,max,step,onInput,onChange){
   var cur=value;
-  var row=el('div','setting-row setting-row--stepper');
+  var row=el('div','setting-row s-row setting-row--stepper');
   row.appendChild(el('div','setting-label',labelText));
   var ctrl=el('div','setting-stepper');
   var minusBtn=el('button','stepper-btn stepper-minus','-');
@@ -5600,7 +5719,7 @@ function renderSettings(){
   var gAudio=el('div','settings-group');
   gAudio.appendChild(el('div','settings-group-title',t('audio.reciter')));
   // Reciter chips row
-  var recRow=el('div','setting-row setting-row--reciter');
+  var recRow=el('div','setting-row s-row setting-row--reciter');
   var recList=el('div','qs-reciter-list');
   recList.style.cssText='padding:4px 0 0;margin:0;';
   RECITERS.forEach(function(r){
@@ -5641,7 +5760,7 @@ function renderSettings(){
     renderSettings();
   },t('settings.haptic_sub')));
   // (9) Daily reminder
-  var remRow=el('div','setting-row');
+  var remRow=el('div','setting-row s-row');
   var remLeft=el('div','setting-label-wrap');
   remLeft.appendChild(el('div','setting-label',t('settings.reminder')));
   remLeft.appendChild(el('div','setting-sub',t('settings.reminder_sub')));
@@ -5672,7 +5791,7 @@ function renderSettings(){
   g3.appendChild(remRow);
 
   // (10) Daily verse notification
-  var dvRow=el('div','setting-row');
+  var dvRow=el('div','setting-row s-row');
   var dvLeft=el('div','setting-label-wrap');
   dvLeft.appendChild(el('div','setting-label',t('settings.daily_verse')));
   dvLeft.appendChild(el('div','setting-sub',t('settings.daily_verse_sub')));
@@ -5709,7 +5828,7 @@ function renderSettings(){
   g4.appendChild(el('div','settings-group-title',t('settings.data')));
   // (6) Sync status
   if(S.user){
-    var syncRow=el('div','setting-row');
+    var syncRow=el('div','setting-row s-row');
     var syncLeft=el('div','setting-label-wrap');
     syncLeft.appendChild(el('div','setting-label',t('settings.sync_label')));
     var syncTs=S.lastSyncTime?new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):t('settings.sync_never');
@@ -5769,23 +5888,38 @@ function renderSettings(){
       navigator.clipboard.writeText(url3).then(function(){toast(t('toast.link_copied'))}).catch(function(){toast(url3)});
     }
   }));
-  // (5) Rate app — only show on Android (iOS App Store link not yet available)
-  if(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')){
-    g5.appendChild(mkBtnRow(t('settings.rate_app'),t('settings.rate_btn'),'fas fa-star',function(){
-      var playUrl='market://details?id=com.tafsirkurd.app';
-      var webUrl='https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
-      try{window.location.href=playUrl}catch(e){window.open(webUrl,'_blank')}
-      setTimeout(function(){window.open(webUrl,'_blank')},500);
-    }));
-  }
+  // (5) Rate app — full-row tappable (both iOS and Android)
+  var _rateRow=el('div','rate-app-row s-row');
+  var _rateLeft=el('div','rate-app-left');
+  var _rateIconBox=el('div','rate-app-icon');
+  _rateIconBox.appendChild(icon('fas fa-star'));
+  var _rateText=el('div','rate-app-text');
+  _rateText.appendChild(el('div','rate-app-label',t('settings.rate_app')));
+  _rateText.appendChild(el('div','rate-app-sub',t('settings.rate_sub')));
+  _rateLeft.appendChild(_rateIconBox);_rateLeft.appendChild(_rateText);
+  _rateRow.appendChild(_rateLeft);
+  var _rateChev=el('span','about-nav-chevron');_rateChev.appendChild(icon('fas fa-chevron-left'));_rateRow.appendChild(_rateChev);
+  on(_rateRow,'click',function(){
+    haptic([8]);
+    toast(t('toast.rating_opening'));
+    localStorage.setItem('ratingPromptDone','true');
+    var _plat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
+    if(_plat==='ios'){
+      window.open('itms-apps://itunes.apple.com/app/id6760433688?action=write-review','_system');
+    }else{
+      // market:// is intercepted by Android as an Intent — opens Play Store app directly
+      window.location.href='market://details?id=com.tafsirkurd.app';
+    }
+  });
+  g5.appendChild(_rateRow);
   content.appendChild(g5);
 
   // ── About Us ─────────────────────────────────
   var g6=el('div','settings-group');
-  g6.appendChild(el('div','settings-group-title','دەربارەمان'));
+  g6.appendChild(el('div','settings-group-title',t('settings.about')));
 
   function mkAboutNavRow(iconClass,label,sub,onClick){
-    var row=el('div','about-nav-row');
+    var row=el('div','about-nav-row s-row');
     var left=el('div','about-nav-left');
     var iconBox=el('div','about-nav-icon');iconBox.appendChild(icon(iconClass));
     left.appendChild(iconBox);
@@ -5804,7 +5938,7 @@ function renderSettings(){
 
   // ── Social Links ─────────────────────────────
   var g7=el('div','settings-group');
-  g7.appendChild(el('div','settings-group-title','ئێمە ل ڤێرە بدۆزە'));
+  g7.appendChild(el('div','settings-group-title',t('settings.social')));
   var SOCIAL_DEFS=[
     {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram'},
     {key:'social_youtube',icon:'fab fa-youtube',label:'YouTube'},
@@ -5938,7 +6072,7 @@ function setUserFromSession(session){
 //   FURTHEST  — take whichever position is further in the Quran (lastRead)
 
 var SYNC_SIMPLE_KEYS=[
-  'lastRead','readingGoal','readLog','readAyahsToday','trackingResetAt',
+  'lastRead','readingGoal','readLog','readAyahsToday','trackingResetAt','fullResetAt',
   'app_bookmarks','iv_watch_progress',
   'showTafsir','bgAudio','theme','keepAwake',
   'app_arSize','app_tfSize','app_lineH',
@@ -6025,13 +6159,23 @@ function mergeSyncData(local,cloud){
     }
   }
 
-  // FURTHEST: last read position — take whichever is deeper in the Quran
+  // FURTHEST: last read position — take whichever is deeper in the Quran,
+  // UNLESS a full reset has happened (fullResetAt) — then use reset-winner's lastRead
   try{
-    var lLR=JSON.parse(local.lastRead||'{}');
-    var cLR=JSON.parse(cloud.lastRead||'{}');
-    var lPos=(lLR.surah||0)*300+(lLR.ayah||0);
-    var cPos=(cLR.surah||0)*300+(cLR.ayah||0);
-    result.lastRead=lPos>=cPos?local.lastRead:cloud.lastRead;
+    var localFull=new Date(local.fullResetAt||0).getTime();
+    var cloudFull=new Date(cloud.fullResetAt||0).getTime();
+    var newestFull=Math.max(localFull,cloudFull);
+    if(newestFull>0){
+      // Full reset happened — the side that owns the newest reset is authoritative for lastRead
+      var fullWinner=cloudFull>=localFull?cloud:local;
+      if(fullWinner.lastRead){result.lastRead=fullWinner.lastRead;}else{delete result.lastRead;}
+    }else{
+      var lLR=JSON.parse(local.lastRead||'{}');
+      var cLR=JSON.parse(cloud.lastRead||'{}');
+      var lPos=(lLR.surah||0)*300+(lLR.ayah||0);
+      var cPos=(cLR.surah||0)*300+(cLR.ayah||0);
+      result.lastRead=lPos>=cPos?local.lastRead:cloud.lastRead;
+    }
   }catch(e){}
 
   result._syncTime=new Date().toISOString();
@@ -7687,8 +7831,12 @@ App.ivPlay=function(episodeId){
     card.appendChild(body);
 
     function openYT(){
-      var B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
-      if(B){B.open({url:ytUrl})}else{window.open(ytUrl,'_blank')}
+      // Try YouTube app via custom scheme first; SFSafariViewController as fallback
+      try{window.open('youtube://watch?v='+videoId,'_system');}catch(e){}
+      setTimeout(function(){
+        var B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+        if(B){B.open({url:ytUrl});}else{window.open(ytUrl,'_blank');}
+      },600);
     }
     on(thumbDiv,'click',openYT);
     on(btn,'click',openYT);
@@ -7704,7 +7852,7 @@ App.ivPlay=function(episodeId){
     wrapper.appendChild(closeBtn);
 
     if(isYouTube){
-      // Android / Web: inline iframe with error overlay fallback
+      // Android / Web: inline iframe, full error detection + native YouTube fallback
       var videoId=ep.video_url;
       var iframe=document.createElement('iframe');
       iframe.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=https://tafsirkurd.com';
@@ -7712,7 +7860,31 @@ App.ivPlay=function(episodeId){
       iframe.allowFullscreen=true;
       wrapper.appendChild(iframe);
 
+      var _ytReady=false;
+      var _ytErrShown=false;
+
+      // Opens YouTube app on Android (native intent), Browser plugin elsewhere
+      function _openYTNative(){
+        var ytUrl='https://www.youtube.com/watch?v='+videoId;
+        var plat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
+        if(plat==='android'){
+          // _system target → Capacitor routes to Android Intent → opens YouTube app if installed
+          try{window.open('vnd.youtube://watch?v='+videoId,'_system');}catch(e){}
+          // Delayed browser fallback in case YouTube app is not installed
+          setTimeout(function(){
+            var B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+            if(B){B.open({url:ytUrl});}
+          },600);
+        }else{
+          var B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+          if(B){B.open({url:ytUrl});}else{window.open(ytUrl,'_blank');}
+        }
+      }
+
       function showYTErr(){
+        if(_ytErrShown)return;
+        _ytErrShown=true;
+        clearTimeout(window._ytTimeout);
         if(wrapper.querySelector('.yt-err-overlay'))return;
         var ov=el('div','yt-err-overlay');
         var ic=icon('fas fa-lock');ic.className+=' yt-err-icon';
@@ -7721,21 +7893,29 @@ App.ivPlay=function(episodeId){
         var ob=el('button','yt-err-btn');
         ob.appendChild(icon('fab fa-youtube'));
         ob.appendChild(document.createTextNode(' '+t('iv.open_in_youtube')));
-        on(ob,'click',function(){
-          var url='https://www.youtube.com/watch?v='+videoId;
-          var B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
-          if(B){B.open({url:url})}else{window.open(url,'_blank')}
-        });
+        on(ob,'click',_openYTNative);
         ov.appendChild(ob);
         wrapper.appendChild(ov);
       }
+
+      // Timeout: if no onReady / onStateChange in 10 s → player is stuck or showing bot-wall
+      if(window._ytTimeout){clearTimeout(window._ytTimeout);window._ytTimeout=null;}
+      window._ytTimeout=setTimeout(function(){
+        if(!_ytReady&&!_ytErrShown)showYTErr();
+      },10000);
+
       if(window._ytErrHandler){window.removeEventListener('message',window._ytErrHandler);window._ytErrHandler=null;}
       window._ytErrHandler=function(e){
         if(!e.data)return;
         try{
           var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
-          var code=d.error||(d.info&&d.info.error);
-          if(d.event==='error'||code){showYTErr();}
+          // Player alive signals — cancel timeout
+          if(d.event==='onReady'||(d.event==='onStateChange'&&d.info!==undefined)){
+            _ytReady=true;
+            clearTimeout(window._ytTimeout);
+          }
+          // onError: info = YT error code (100=not found, 101/150=embed disabled)
+          if(d.event==='onError'){showYTErr();}
         }catch(ex){}
       };
       window.addEventListener('message',window._ytErrHandler);
@@ -7786,8 +7966,9 @@ App.ivCloseVideo=function(){
   // Exit fullscreen if active
   if(document.fullscreenElement)try{document.exitFullscreen()}catch(e){}
   if(document.webkitFullscreenElement)try{document.webkitExitFullscreen()}catch(e){}
-  // Clean up YouTube postMessage error listener
+  // Clean up YouTube postMessage error listener + stuck-player timeout
   if(window._ytErrHandler){window.removeEventListener('message',window._ytErrHandler);window._ytErrHandler=null;}
+  if(window._ytTimeout){clearTimeout(window._ytTimeout);window._ytTimeout=null;}
   // Pause any playing video
   var video=container.querySelector('video');
   if(video){video.pause();video.src=''}

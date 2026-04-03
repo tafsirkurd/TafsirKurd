@@ -31,6 +31,9 @@ const config: CapacitorConfig = {
       backgroundColor: '#0d0d0d',
       fadeOutDuration: 200,
     },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
     LocalNotifications: {
       smallIcon: 'ic_notification',
       iconColor: '#1f5f4a',

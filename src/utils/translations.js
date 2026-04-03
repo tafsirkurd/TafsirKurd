@@ -101,7 +101,7 @@
         }
         return new Promise(function(resolve) {
             var script = document.createElement('script');
-            script.src = '/utils/bulk-translations.js?v=20260224';
+            script.src = '/utils/bulk-translations.js?v=20260403';
             script.onload = function() { buildTextToKey(); resolve(); };
             script.onerror = resolve;
             document.head.appendChild(script);
@@ -339,21 +339,27 @@
         });
 
         // 3. data-t key-based (most reliable — always wins)
+        const _warnedKeys = window._translationWarnedKeys = window._translationWarnedKeys || new Set();
         document.querySelectorAll('[data-t]').forEach(function(el) {
             const key = el.getAttribute('data-t');
             const val = translations[key];
             if (val !== undefined && el.textContent !== val) {
                 el.textContent = val;
                 replacements++;
+            } else if (val === undefined && !_warnedKeys.has(key)) {
+                _warnedKeys.add(key);
+                console.warn('[translations] Missing key in DB:', key);
             }
         });
         document.querySelectorAll('[data-t-placeholder]').forEach(function(el) {
             const key = el.getAttribute('data-t-placeholder');
             if (translations[key]) { el.placeholder = translations[key]; replacements++; }
+            else if (!_warnedKeys.has(key)) { _warnedKeys.add(key); console.warn('[translations] Missing key in DB:', key); }
         });
         document.querySelectorAll('[data-t-title]').forEach(function(el) {
             const key = el.getAttribute('data-t-title');
             if (translations[key]) { el.title = translations[key]; replacements++; }
+            else if (!_warnedKeys.has(key)) { _warnedKeys.add(key); console.warn('[translations] Missing key in DB:', key); }
         });
 
         savePrevious();

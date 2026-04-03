@@ -679,16 +679,16 @@
     <h1 data-t="about_hero_title">تەفسیر کورد</h1>
     <p class="hero-desc" data-t="about_hero_desc">پلاتفۆرمەکا کوردی بۆ خویندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی یا ماموستا تەحسین ئیبراهیم دۆسکی.</p>
     <div class="social-links">
-      <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+      <a id="aboutSocialInstagram" href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
         <i class="fab fa-instagram"></i>
       </a>
-      <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="YouTube">
+      <a id="aboutSocialYoutube" href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="YouTube">
         <i class="fab fa-youtube"></i>
       </a>
-      <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Telegram">
+      <a id="aboutSocialTelegram" href="https://t.me/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Telegram">
         <i class="fab fa-telegram"></i>
       </a>
-      <a href="mailto:tefsirkurd@gmail.com" class="social-link" aria-label="Email">
+      <a id="aboutSocialEmail" href="mailto:tefsirkurd@gmail.com" class="social-link" aria-label="Email">
         <i class="fas fa-envelope"></i>
       </a>
     </div>
@@ -825,6 +825,39 @@
       localStorage.removeItem('tafsir_book_image');
     }
   } catch(e) { /* Silently ignore - image loading is optional */ }
+})();
+</script>
+<script>
+(async function(){
+  var map = {
+    'social_instagram': 'aboutSocialInstagram',
+    'social_youtube':   'aboutSocialYoutube',
+    'social_telegram':  'aboutSocialTelegram',
+    'social_email':     'aboutSocialEmail'
+  };
+  var keys = Object.keys(map);
+  // Try localStorage cache first
+  keys.forEach(function(k){
+    var cached = localStorage.getItem(k);
+    if (cached) { var el = document.getElementById(map[k]); if (el) el.href = cached; }
+  });
+  // Fetch from DB
+  try {
+    var cfg = await fetch('/config').then(function(r){ return r.json(); });
+    if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+    var filter = 'key=in.(' + keys.join(',') + ')';
+    var rows = await fetch(cfg.supabaseUrl + '/rest/v1/site_settings?' + filter + '&select=key,value', {
+      headers: { 'apikey': cfg.supabaseKey, 'Authorization': 'Bearer ' + cfg.supabaseKey }
+    }).then(function(r){ return r.json(); });
+    if (!Array.isArray(rows)) return;
+    rows.forEach(function(row){
+      if (row.key && row.value) {
+        localStorage.setItem(row.key, row.value);
+        var el = document.getElementById(map[row.key]);
+        if (el) el.href = row.value;
+      }
+    });
+  } catch(e) { /* Silently ignore */ }
 })();
 </script>
 </body>

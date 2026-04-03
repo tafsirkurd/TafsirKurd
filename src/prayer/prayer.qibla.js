@@ -17,6 +17,7 @@
   var _ctx         = null;
   var _size        = 0;   // logical canvas size (CSS pixels)
   var _qibla       = 0;
+  var _qiblaSet    = false; // true once location is resolved
   var _smoothH     = 0;
   var _displayH    = 0;   // interpolated heading used for rendering only
   var _headingBuf  = [];
@@ -25,6 +26,10 @@
   var _raf         = null;
   var _onOrient    = null;
   var _isOpen      = false;
+  var _statusEl    = null; // alignment status bar
+  var _calibEl     = null; // Android calibration hint
+  var _canvasWrap  = null; // canvas wrapper for pulse animation
+  var _lastAlignSt = '';   // last state string — avoids DOM churn
 
   function toRad(d) { return d * Math.PI / 180; }
 
@@ -62,6 +67,52 @@
     return (from + diff * k + 360) % 360;
   }
 
+  // Smallest angle between two bearings [0, 180]
+  function angleDiff(a, b) {
+    return Math.abs(((a - b + 540) % 360) - 180);
+  }
+
+  // True if heading buffer has low circular variance (R̄ > 0.65)
+  function headingStable() {
+    if (_headingBuf.length < 8) return true;
+    var ss = 0, cs = 0, n = _headingBuf.length;
+    _headingBuf.forEach(function(h) { ss += Math.sin(toRad(h)); cs += Math.cos(toRad(h)); });
+    return Math.sqrt(ss * ss + cs * cs) / n > 0.65;
+  }
+
+  // Update alignment status bar — only writes DOM when state changes
+  function updateStatus(diff, stable) {
+    if (!_statusEl) return;
+    var state = !stable ? 'unstable' : diff < 5 ? 'aligned' : diff < 22 ? 'near' : 'far';
+    if (state === _lastAlignSt) return;
+    var prev = _lastAlignSt;
+    _lastAlignSt = state;
+
+    // Haptic pulse on entering aligned
+    if (state === 'aligned' && prev !== 'aligned' && window.haptic) window.haptic([15, 10, 15]);
+
+    // Pulse ring on canvas wrap
+    if (_canvasWrap) {
+      if (state === 'aligned') _canvasWrap.classList.add('qibla-pulse');
+      else _canvasWrap.classList.remove('qibla-pulse');
+    }
+
+    var t = window.t;
+    // Signed diff: positive = Qibla is clockwise = turn right
+    var signed = (((_qibla - _displayH) + 540) % 360) - 180;
+    var turnRight = signed > 0;
+
+    _statusEl.className = 'qibla-status ' + state;
+    if (state === 'aligned') {
+      _statusEl.textContent = t ? t('prayer.qibla_aligned') : '✓ رووی بە قیبلەیێ';
+    } else if (state === 'unstable') {
+      _statusEl.textContent = t ? t('prayer.qibla_unstable') : '⚠ کارایی لاواز';
+    } else {
+      // direction arrow — universal, no language needed
+      _statusEl.textContent = turnRight ? '→' : '←';
+    }
+  }
+
   // ── Canvas drawing ───────────────────────────────────────────────────────
 
   function draw() {
@@ -71,132 +122,113 @@
     var qibla   = _qibla;
     var W = _size, H = _size;
     var cx = W / 2, cy = H / 2;
-    var R  = W / 2 - 10;
+    var R  = W / 2 - 8;
     var ctx = _ctx;
+    var aligned = _qiblaSet && angleDiff(heading, qibla) < 5;
 
-    ctx.clearRect(0, 0, _size, _size);
+    ctx.clearRect(0, 0, W, H);
 
-    // ── Subtle outer glow ring ──
-    var glowGrad = ctx.createRadialGradient(cx, cy, R - 4, cx, cy, R + 12);
-    glowGrad.addColorStop(0, 'rgba(255,255,255,0.06)');
-    glowGrad.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.beginPath();
-    ctx.arc(cx, cy, R + 8, 0, Math.PI * 2);
-    ctx.fillStyle = glowGrad;
-    ctx.fill();
+    // ── Subtle radial bg ──
+    var bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    bgGrad.addColorStop(0, 'rgba(20,50,32,0.38)');
+    bgGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = bgGrad; ctx.fill();
+
+    // ── Outer glow halo ──
+    var haloGrad = ctx.createRadialGradient(cx, cy, R - 4, cx, cy, R + 14);
+    haloGrad.addColorStop(0, 'rgba(255,255,255,0.05)');
+    haloGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, R + 10, 0, Math.PI * 2);
+    ctx.fillStyle = haloGrad; ctx.fill();
 
     // ── Compass ring (rotates with device) ──
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(toRad(-heading));
 
-    // Outer ring
-    ctx.beginPath();
-    ctx.arc(0, 0, R, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    // Single thin ring
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+    ctx.lineWidth = 1.5; ctx.stroke();
 
-    // Inner ring
-    ctx.beginPath();
-    ctx.arc(0, 0, R * 0.72, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Degree ticks
-    for (var i = 0; i < 72; i++) {
-      var ang     = toRad(i * 5);
-      var isMajor = i % 18 === 0;
-      var isMed   = i % 9  === 0;
-      var inner   = R * (isMajor ? 0.74 : isMed ? 0.82 : 0.88);
-      ctx.beginPath();
-      ctx.moveTo(Math.sin(ang) * inner, -Math.cos(ang) * inner);
-      ctx.lineTo(Math.sin(ang) * R,     -Math.cos(ang) * R);
-      ctx.strokeStyle = isMajor ? 'rgba(255,255,255,.8)'
-                      : isMed   ? 'rgba(255,255,255,.3)'
-                                : 'rgba(255,255,255,.1)';
-      ctx.lineWidth = isMajor ? 2 : 1;
-      ctx.stroke();
-    }
-
-    // Cardinals — small background circles + letter
-    var cards = [
-      { l: 'N', a: 0,   accent: true  },
-      { l: 'E', a: 90,  accent: false },
-      { l: 'S', a: 180, accent: false },
-      { l: 'W', a: 270, accent: false }
-    ];
-    var fSize = Math.round(R * 0.14);
-    ctx.font = 'bold ' + fSize + 'px sans-serif';
+    // N marker — red dot with "N"
+    var markerDist = R * 0.84;
+    var dotR       = R * 0.075;
+    ctx.beginPath(); ctx.arc(0, -markerDist, dotR, 0, Math.PI * 2);
+    ctx.fillStyle = '#ef4444'; ctx.fill();
+    ctx.font = 'bold ' + Math.round(R * 0.10) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    var cr = R * 0.615;
-    cards.forEach(function(c) {
-      var a = toRad(c.a);
-      var x = Math.sin(a) * cr, y = -Math.cos(a) * cr;
-      // circle bg
-      ctx.beginPath(); ctx.arc(x, y, R * 0.115, 0, Math.PI * 2);
-      ctx.fillStyle = c.accent ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.07)';
-      ctx.fill();
-      ctx.fillStyle = c.accent ? '#ef4444' : 'rgba(255,255,255,.7)';
-      ctx.fillText(c.l, x, y);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('N', 0, -markerDist);
+
+    // E / S / W — tiny dim dots only
+    [90, 180, 270].forEach(function(deg) {
+      var a = toRad(deg);
+      ctx.beginPath();
+      ctx.arc(Math.sin(a) * markerDist, -Math.cos(a) * markerDist, R * 0.028, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fill();
     });
 
     ctx.restore();
 
-    // ── Qibla glow arc (fixed, behind needle) ──
-    ctx.save();
-    ctx.translate(cx, cy);
-    var qaRad = toRad(qibla - heading);
-    ctx.beginPath();
-    ctx.arc(0, 0, R * 0.95, qaRad - 0.18, qaRad + 0.18);
-    ctx.strokeStyle = 'rgba(74,222,128,0.35)';
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.restore();
-
-    // ── Qibla needle ──
+    // ── Qibla beam — fixed direction (doesn't rotate with compass) ──
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(toRad(qibla - heading));
 
-    var nLen  = R * 0.65;
-    var nBase = R * 0.20;
-    var nW    = R * 0.052;
+    // Wide soft glow wedge
+    ctx.beginPath();
+    ctx.moveTo(0, R * 0.12);
+    ctx.lineTo(-R * 0.13, -R * 0.55);
+    ctx.lineTo(0, -R * 0.98);
+    ctx.lineTo( R * 0.13, -R * 0.55);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(74,222,128,' + (aligned ? 0.22 : 0.08) + ')';
+    ctx.fill();
 
-    // Needle glow
+    // Bright inner line
+    ctx.beginPath();
+    ctx.moveTo(0, R * 0.06);
+    ctx.lineTo(0, -R * 0.91);
+    ctx.strokeStyle = aligned ? 'rgba(134,239,172,0.80)' : 'rgba(74,222,128,0.38)';
+    ctx.lineWidth   = aligned ? 2.5 : 1.5;
+    ctx.lineCap = 'round'; ctx.stroke();
+
+    ctx.restore();
+
+    // ── Qibla needle — kite/diamond shape ──
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(toRad(qibla - heading));
+
+    var nLen  = R * 0.58;  // tip
+    var nWide = R * 0.24;  // widest point (dist from center)
+    var nBase = R * 0.10;  // base (slightly above center)
+    var nW    = R * 0.058; // half-width at nWide
+
     ctx.shadowColor = '#4ade80';
-    ctx.shadowBlur  = 20;
+    ctx.shadowBlur  = aligned ? 28 : 14;
 
-    // Arrow head — gradient green
-    var grad = ctx.createLinearGradient(0, -nLen, 0, -nBase);
-    grad.addColorStop(0, '#86efac');
-    grad.addColorStop(1, '#22c55e');
+    var needleGrad = ctx.createLinearGradient(0, -nLen, 0, -nBase);
+    needleGrad.addColorStop(0, aligned ? '#d9f99d' : '#86efac');
+    needleGrad.addColorStop(1, '#22c55e');
+
     ctx.beginPath();
     ctx.moveTo(0, -nLen);
-    ctx.lineTo( nW, -nBase);
-    ctx.lineTo(-nW, -nBase);
+    ctx.lineTo( nW, -nWide);
+    ctx.lineTo(0, -nBase);
+    ctx.lineTo(-nW, -nWide);
     ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
+    ctx.fillStyle = needleGrad; ctx.fill();
 
-    // Arrow shaft
     ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.moveTo( nW * .5,  -nBase);
-    ctx.lineTo(-nW * .5,  -nBase);
-    ctx.lineTo(-nW * .32,  nBase);
-    ctx.lineTo( nW * .32,  nBase);
-    ctx.closePath();
-    ctx.fillStyle = '#166534';
-    ctx.fill();
 
     // Kaaba emoji at tip
-    ctx.font = Math.round(R * 0.17) + 'px sans-serif';
+    ctx.font = Math.round(R * 0.16) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 6;
-    ctx.fillText('\uD83D\uDDD5', 0, -nLen - 2);
+    ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
+    ctx.fillText('\uD83D\uDD4C', 0, -nLen - 2);
     ctx.shadowBlur = 0;
 
     ctx.restore();
@@ -204,11 +236,11 @@
     // ── Center pivot ──
     ctx.save();
     ctx.translate(cx, cy);
-    // Outer ring
-    ctx.beginPath(); ctx.arc(0, 0, R * .092, 0, Math.PI * 2);
+    ctx.shadowColor = '#4ade80'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(0, 0, R * 0.052, 0, Math.PI * 2);
     ctx.fillStyle = '#22c55e'; ctx.fill();
-    // Inner dot
-    ctx.beginPath(); ctx.arc(0, 0, R * .046, 0, Math.PI * 2);
+    ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(0, 0, R * 0.026, 0, Math.PI * 2);
     ctx.fillStyle = '#052e16'; ctx.fill();
     ctx.restore();
   }
@@ -218,6 +250,7 @@
     (function frame() {
       if (!_isOpen) { _raf = null; return; }
       _displayH = circularLerp(_displayH, _smoothH, LERP_K);
+      if (_qiblaSet) updateStatus(angleDiff(_displayH, _qibla), headingStable());
       draw();
       _raf = requestAnimationFrame(frame);
     })();
@@ -260,20 +293,22 @@
     }
   }
 
-  // ── Info chips ─────────────────────────────────────────────────────────
+  // ── Info row ─────────────────────────────────────────────────────────────
 
-  function buildChips(infoEl, qibla, dist, approxStr) {
+  function buildInfo(infoEl, qibla, dist, approxStr) {
     while (infoEl.firstChild) infoEl.removeChild(infoEl.firstChild);
     var t = window.t;
+    var row = document.createElement('div'); row.className = 'qibla-info-row';
     [[t ? t('prayer.qibla_direction') : 'Direction', Math.round(qibla) + '\u00B0'],
      [t ? t('prayer.qibla_distance')  : 'Distance',  dist.toLocaleString() + ' km']
     ].forEach(function(pair) {
-      var chip = document.createElement('div'); chip.className = 'qibla-chip';
-      var lbl  = document.createElement('div'); lbl.className  = 'qibla-chip-label'; lbl.textContent = pair[0];
-      var val  = document.createElement('div'); val.className  = 'qibla-chip-val';   val.textContent = pair[1];
-      chip.appendChild(lbl); chip.appendChild(val);
-      infoEl.appendChild(chip);
+      var item = document.createElement('div'); item.className = 'qibla-info-item';
+      var val  = document.createElement('div'); val.className  = 'qibla-info-val';  val.textContent = pair[1];
+      var lbl  = document.createElement('div'); lbl.className  = 'qibla-info-lbl';  lbl.textContent = pair[0];
+      item.appendChild(val); item.appendChild(lbl);
+      row.appendChild(item);
     });
+    infoEl.appendChild(row);
     if (approxStr) {
       var badge = document.createElement('div');
       badge.className = 'qibla-approx-badge';
@@ -304,7 +339,7 @@
     card.appendChild(hdr);
 
     var dpr  = window.devicePixelRatio || 1;
-    var size = Math.min(Math.round(window.innerWidth * 0.82), 320);
+    var size = Math.min(Math.round(window.innerWidth * 0.86), 340);
     var canvas = document.createElement('canvas');
     canvas.width  = Math.round(size * dpr);
     canvas.height = Math.round(size * dpr);
@@ -317,7 +352,13 @@
     var canvasWrap = document.createElement('div');
     canvasWrap.className = 'qibla-canvas-wrap';
     canvasWrap.appendChild(canvas);
+    _canvasWrap = canvasWrap;
     card.appendChild(canvasWrap);
+
+    _statusEl = document.createElement('div');
+    _statusEl.className = 'qibla-status';
+    _statusEl.id = 'qiblaStatus';
+    card.appendChild(_statusEl);
 
     var infoEl = document.createElement('div');
     infoEl.className = 'qibla-info'; infoEl.id = 'qiblaInfo';
@@ -326,6 +367,30 @@
     loadEl.textContent = window.t ? window.t('prayer.qibla_locating') : '...';
     infoEl.appendChild(loadEl);
     card.appendChild(infoEl);
+
+    // Android calibration hint (shown once per session, dismissed on tap or after 10s)
+    var _t = window.t;
+    _calibEl = document.createElement('div');
+    _calibEl.className = 'qibla-calib'; _calibEl.id = 'qiblaCalib';
+    var calibTitle = document.createElement('div'); calibTitle.className = 'qibla-calib-title';
+    calibTitle.textContent = _t ? _t('prayer.qibla_calib_title') : 'بۆ تەشخیسا باشتر:';
+    _calibEl.appendChild(calibTitle);
+    [
+      _t ? _t('prayer.qibla_calib_1') : '• فۆنت ب ئاستی ئاو بگرە',
+      _t ? _t('prayer.qibla_calib_2') : '• ل مادەی ئاسنی و ئامێرا کارەبایی دوور بخرە',
+      _t ? _t('prayer.qibla_calib_3') : '• ئەگەر لەراست نینە، فۆنت بە شێوەی ٨ بجووڵێنە'
+    ].forEach(function(txt) {
+      var d = document.createElement('div'); d.className = 'qibla-calib-item'; d.textContent = txt;
+      _calibEl.appendChild(d);
+    });
+    var calibClose = document.createElement('button'); calibClose.className = 'qibla-calib-close';
+    calibClose.textContent = '×';
+    calibClose.onclick = function() {
+      _calibEl.classList.remove('on');
+      try { sessionStorage.setItem('qiblaCalibDismissed', '1'); } catch(e) {}
+    };
+    _calibEl.appendChild(calibClose);
+    card.appendChild(_calibEl);
 
     overlay.appendChild(card);
     document.body.appendChild(overlay);
@@ -337,6 +402,27 @@
     _lastSample  = 0;
     _hasAbsolute = false;
     _displayH    = _smoothH;
+    _qiblaSet    = false;
+    _lastAlignSt = '';
+
+    // Re-grab elements (nulled on close, DOM persists across reopens)
+    _statusEl   = document.getElementById('qiblaStatus');
+    _calibEl    = document.getElementById('qiblaCalib');
+    _canvasWrap = document.querySelector('#qiblaModal .qibla-canvas-wrap');
+
+    // Show calibration hint on Android once per session
+    var _plat = window.Capacitor && window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : 'web';
+    if (_plat === 'android' && _calibEl) {
+      try {
+        if (!sessionStorage.getItem('qiblaCalibDismissed')) {
+          _calibEl.classList.add('on');
+          setTimeout(function() {
+            if (_calibEl) { _calibEl.classList.remove('on'); }
+            try { sessionStorage.setItem('qiblaCalibDismissed', '1'); } catch(e) {}
+          }, 10000);
+        }
+      } catch(e) {}
+    }
 
     // Re-attach canvas ctx (nulled on close) and reapply DPR scale
     var canvasEl = document.querySelector('#qiblaModal canvas');
@@ -357,9 +443,10 @@
     if (!infoEl) return;
 
     function onLocation(lat, lon, approx) {
-      _qibla = calcQibla(lat, lon);
-      buildChips(infoEl, _qibla, calcDist(lat, lon),
-                 approx ? (window.t ? window.t('prayer.qibla_approx') : '~') : null);
+      _qibla    = calcQibla(lat, lon);
+      _qiblaSet = true;
+      buildInfo(infoEl, _qibla, calcDist(lat, lon),
+                approx ? (window.t ? window.t('prayer.qibla_approx') : '~') : null);
     }
 
     if (navigator.geolocation) {
@@ -410,6 +497,9 @@
     var modal = document.getElementById('qiblaModal');
     if (modal) modal.classList.remove('open');
     _canvas = null; _ctx = null;
+    _statusEl = null; _calibEl = null; _lastAlignSt = '';
+    if (_canvasWrap) { _canvasWrap.classList.remove('qibla-pulse'); }
+    _canvasWrap = null;
   }
 
   window.PrayerQibla = { open: open, close: close };

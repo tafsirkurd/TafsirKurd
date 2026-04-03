@@ -16,16 +16,16 @@
                         پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
                     </p>
                     <div class="footer-social-icons">
-                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                        <a id="footerSocialInstagram" href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                             <i class="fab fa-instagram"></i>
                         </a>
-                        <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                        <a id="footerSocialYoutube" href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                             <i class="fab fa-youtube"></i>
                         </a>
-                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                        <a id="footerSocialTelegram" href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
                             <i class="fab fa-telegram"></i>
                         </a>
-                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                        <a id="footerSocialPinterest" href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
                             <i class="fab fa-pinterest"></i>
                         </a>
                     </div>
@@ -58,8 +58,8 @@
                     <h3 class="footer-section-title" data-t="footer_connect_title">پەیوەندی</h3>
                     <div class="footer-links">
                         <p class="footer-contact-text" data-t="footer_connect_desc">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
-                        <a href="mailto:tefsirkurd@gmail.com" class="footer-link">
-                            <i class="fas fa-envelope"></i> tefsirkurd@gmail.com
+                        <a id="footerSocialEmail" href="mailto:tefsirkurd@gmail.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> <span id="footerEmailText">tefsirkurd@gmail.com</span>
                         </a>
                         <a href="/#contact" class="footer-link" data-t="footer_link_form">
                             <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
@@ -98,9 +98,62 @@
             if (yearSpan) {
                 yearSpan.textContent = new Date().getFullYear();
             }
+            // Load social links from site_settings
+            loadFooterSocials();
             // Inject app section before footer-bottom
             injectFooterAppSection();
         }
+    }
+
+    async function loadFooterSocials() {
+        const socialMap = {
+            'social_instagram': 'footerSocialInstagram',
+            'social_youtube':   'footerSocialYoutube',
+            'social_telegram':  'footerSocialTelegram',
+            'social_pinterest': 'footerSocialPinterest',
+            'social_email':     'footerSocialEmail'
+        };
+        const keys = Object.keys(socialMap);
+
+        function applySocials(data) {
+            Object.keys(data).forEach(function(k) {
+                var val = data[k];
+                if (!val) return;
+                var elId = socialMap[k];
+                if (!elId) return;
+                var el = document.getElementById(elId);
+                if (el) {
+                    el.href = val;
+                    // For email: update visible text too (strip mailto:)
+                    if (k === 'social_email') {
+                        var txt = document.getElementById('footerEmailText');
+                        if (txt) txt.textContent = val.replace(/^mailto:/, '');
+                    }
+                }
+            });
+        }
+
+        // Apply from localStorage cache immediately
+        var cached = {};
+        keys.forEach(function(k) {
+            var v = localStorage.getItem(k);
+            if (v) cached[k] = v;
+        });
+        if (Object.keys(cached).length) applySocials(cached);
+
+        // Fetch fresh from DB
+        try {
+            var cfg = await fetch('/config').then(function(r) { return r.json(); });
+            if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+            var filter = 'key=in.(' + keys.join(',') + ')';
+            var rows = await fetch(cfg.supabaseUrl + '/rest/v1/site_settings?' + filter + '&select=key,value', {
+                headers: { 'apikey': cfg.supabaseKey, 'Authorization': 'Bearer ' + cfg.supabaseKey }
+            }).then(function(r) { return r.json(); });
+            if (!Array.isArray(rows)) return;
+            var fresh = {};
+            rows.forEach(function(row) { if (row.key && row.value) { fresh[row.key] = row.value; localStorage.setItem(row.key, row.value); } });
+            applySocials(fresh);
+        } catch(e) { /* Silently ignore */ }
     }
 
     function injectFooterAppSection() {

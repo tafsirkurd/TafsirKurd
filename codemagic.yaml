@@ -110,7 +110,7 @@ workflows:
           # 2. Scan for banned plugin references
           echo "Scanning ios/App for removed plugin strings..."
           if grep -R \
-            "CapacitorCommunityKeepAwake\|KeepAwakePlugin\|CapacitorCommunitySpeechRecognition\|SpeechRecognitionPlugin\|CapacitorStatusBar\|StatusBarPlugin\|CapacitorShare\|SharePlugin\|CapacitorPushNotifications\|PushNotificationsPlugin\|CapacitorSplashScreen\|SplashScreenPlugin" \
+            "CapacitorCommunityKeepAwake\|KeepAwakePlugin\|CapacitorCommunitySpeechRecognition\|SpeechRecognitionPlugin\|CapacitorStatusBar\|StatusBarPlugin\|CapacitorShare\|SharePlugin\|CapacitorSplashScreen\|SplashScreenPlugin" \
             ios/App; then
             echo "ERROR: Removed plugins still found in iOS project files — see matches above"
             exit 1

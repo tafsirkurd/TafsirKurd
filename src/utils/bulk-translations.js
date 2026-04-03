@@ -1598,6 +1598,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "adhkar.istikhara",       kurdish_text: "دوعای ئیستیخارە",               category: "adhkar", page: "android" },
 
     // Prayer / Notif / Signup remaining
+    { key_id: "reader.select_surah",     kurdish_text: "سورەتێکە هەڵبژێرە",                 category: "reader",    page: "android" },
     { key_id: "reader.tafsir_empty",     kurdish_text: "تفسیر بردەست نیە",                  category: "reader",    page: "android" },
     { key_id: "toast.network_reconnected", kurdish_text: "ئینتەرنێت گەڕایەوە ✓",           category: "toast",     page: "android" },
     { key_id: "settings.quran_reading_intention", kurdish_text: "ب ناڤێ خودێ ئه‌ز خواندنا قورئانێ ده‌ست پێ دكه‌م", category: "settings", page: "android" },

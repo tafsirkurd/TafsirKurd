@@ -1983,32 +1983,44 @@
 
     voices.forEach(function(voice) {
       var isSelected = voice.id === selected;
+      var isSimple   = voice.id === 'simple';
 
-      var card = cel('div', 'as2-reciter-card' + (isSelected ? ' on' : ''));
+      var card = cel('div', 'as2-reciter-card' + (isSelected ? ' on' : '') + (isSimple ? ' as2-reciter-simple' : ''));
       card.dataset.voiceId = voice.id;
 
-      var wave = cel('div', 'as2-reciter-wave');
-      for (var bi = 0; bi < 5; bi++) {
-        wave.appendChild(cel('div', 'as2-wave-bar'));
+      if (isSimple) {
+        // Bell icon instead of wave bars
+        var bellWrap = cel('div', 'as2-reciter-wave as2-reciter-bell-wrap');
+        var bellI = document.createElement('i');
+        bellI.className = 'fas fa-bell';
+        bellWrap.appendChild(bellI);
+        card.appendChild(bellWrap);
+      } else {
+        var wave = cel('div', 'as2-reciter-wave');
+        for (var bi = 0; bi < 5; bi++) {
+          wave.appendChild(cel('div', 'as2-wave-bar'));
+        }
+        var checkBadge = cel('div', 'as2-reciter-check');
+        var checkI = document.createElement('i');
+        checkI.className = 'fas fa-check';
+        checkBadge.appendChild(checkI);
+        wave.appendChild(checkBadge);
+        card.appendChild(wave);
       }
-      var checkBadge = cel('div', 'as2-reciter-check');
-      var checkI = document.createElement('i');
-      checkI.className = 'fas fa-check';
-      checkBadge.appendChild(checkI);
-      wave.appendChild(checkBadge);
-      card.appendChild(wave);
 
       var nameEl = cel('div', 'as2-reciter-name');
       nameEl.textContent = (voice.nameKey && tStr(voice.nameKey)) || (voice.nameAr || '').split(' ')[0];
       card.appendChild(nameEl);
 
-      var playBtn = cel('button', 'as2-reciter-play');
-      setPreviewBtnIcon(playBtn, 'fas fa-play');
-      playBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        previewVoice(voice, playBtn, card);
-      });
-      card.appendChild(playBtn);
+      if (!isSimple) {
+        var playBtn = cel('button', 'as2-reciter-play');
+        setPreviewBtnIcon(playBtn, 'fas fa-play');
+        playBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          previewVoice(voice, playBtn, card);
+        });
+        card.appendChild(playBtn);
+      }
 
       card.addEventListener('click', function() {
         if (voice.id === getAthanVoice()) return;

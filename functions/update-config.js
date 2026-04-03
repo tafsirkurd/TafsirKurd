@@ -25,12 +25,16 @@ export async function onRequest(context) {
     }
 
     const UPDATE_KEYS = [
-      'update_mode',               // 'off' | 'soft' | 'hard'
-      'min_ios_version',
-      'min_android_version',
+      'update_mode',               // legacy: 'off' | 'soft' | 'hard' (overrides stage when set)
+      'update_stage',              // 'release' | 'soft' | 'enforce'
+      'update_release_time',       // ISO timestamp when soft stage started (for auto-transition timer)
+      'update_enforce_delay_hours',// hours after release_time before soft auto-transitions to hard
+      'min_ios_version',           // minimum required iOS build — trigger update if installed < this
+      'min_android_version',       // minimum required Android build
       'ios_store_url',
       'android_store_url',
       'soft_update_cooldown_days', // days before re-showing soft banner after dismiss
+      'update_whats_new',          // optional short release notes shown in soft banner
       // legacy key — kept for backward compat
       'force_update_enabled',
     ];

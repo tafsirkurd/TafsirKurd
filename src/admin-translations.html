@@ -1584,7 +1584,7 @@
                         <i data-lucide="arrow-up-circle" style="width:16px;height:16px"></i> Updates <span class="tab-count" id="updatesCount">--</span>
                     </button>
                     <button class="platform-tab" onclick="setPlatform('about', this)">
-                        <i data-lucide="info" style="width:16px;height:16px"></i> About
+                        <i data-lucide="info" style="width:16px;height:16px"></i> About <span class="tab-count" id="aboutCount">--</span>
                     </button>
                 </div>
 
@@ -1680,63 +1680,106 @@
                 <!-- ══════════════════════════════ ABOUT PANEL -->
                 <div id="aboutPanel" style="display:none;padding:24px 0 64px">
                 <h3 class="section-divider" style="margin-top:0">About TafsirKurd</h3>
-                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Text shown in the app About TafsirKurd sheet. Stored in <code>site_settings</code>.</p>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Text shown in the app About TafsirKurd sheet. Stored in <code>kurdish_translations</code>.</p>
                 <div class="about-fields-grid">
                     <div class="about-field-card">
+                        <div class="about-field-label">Back Button</div>
+                        <div class="about-field-desc"><code>about_back</code></div>
+                        <span class="status-badge empty" id="status-about_back">Not Set</span>
+                        <input class="about-field-input" id="val-about_back" dir="rtl" placeholder="گەڕانا پشت">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_back')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Page Title</div>
+                        <div class="about-field-desc"><code>about_title_1</code></div>
+                        <span class="status-badge empty" id="status-about_title_1">Not Set</span>
+                        <input class="about-field-input" id="val-about_title_1" dir="rtl" placeholder="دەربارەی مە">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_title_1')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Hero Label</div>
+                        <div class="about-field-desc"><code>about_hero_label</code></div>
+                        <span class="status-badge empty" id="status-about_hero_label">Not Set</span>
+                        <input class="about-field-input" id="val-about_hero_label" dir="rtl" placeholder="تەفسیر کورد">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_hero_label')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Hero Title</div>
+                        <div class="about-field-desc"><code>about_hero_title</code></div>
+                        <span class="status-badge empty" id="status-about_hero_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_hero_title" dir="rtl" placeholder="قورئانا پیرۆز ب زمانێ کوردی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_hero_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Scroll Hint</div>
+                        <div class="about-field-desc"><code>about_scroll</code></div>
+                        <span class="status-badge empty" id="status-about_scroll">Not Set</span>
+                        <input class="about-field-input" id="val-about_scroll" dir="rtl" placeholder="پاشەخست بکە بزانی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_scroll')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
                         <div class="about-field-label">Hero Subtitle</div>
-                        <div class="about-field-desc"><code>about_hero_sub</code></div>
-                        <span class="status-badge empty" id="status-about_hero_sub">Not Set</span>
-                        <input class="about-field-input" id="val-about_hero_sub" dir="rtl" placeholder="پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_hero_sub')">Save</button></div>
+                        <div class="about-field-desc"><code>about_hero_desc</code></div>
+                        <span class="status-badge empty" id="status-about_hero_desc">Not Set</span>
+                        <input class="about-field-input" id="val-about_hero_desc" dir="rtl" placeholder="پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_hero_desc')">Save</button></div>
+                    </div>
+
+                    <div class="about-field-card">
+                        <div class="about-field-label">Tafsir Source — Paragraph 1</div>
+                        <div class="about-field-desc"><code>about_source_desc1</code></div>
+                        <span class="status-badge empty" id="status-about_source_desc1">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_source_desc1" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_source_desc1')">Save</button></div>
                     </div>
                     <div class="about-field-card">
-                        <div class="about-field-label">Intro Text</div>
-                        <div class="about-field-desc"><code>about_app_text</code></div>
-                        <span class="status-badge empty" id="status-about_app_text">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_app_text" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_app_text')">Save</button></div>
-                    </div>
-                    <div class="about-field-card">
-                        <div class="about-field-label">Tafsir Source Text</div>
-                        <div class="about-field-desc">ژێدەرێ تەفسیرێ section — <code>about_tafsir_text</code></div>
-                        <span class="status-badge empty" id="status-about_tafsir_text">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_tafsir_text" dir="rtl" rows="5"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_tafsir_text')">Save</button></div>
+                        <div class="about-field-label">Tafsir Source — Paragraph 2</div>
+                        <div class="about-field-desc"><code>about_source_desc2</code></div>
+                        <span class="status-badge empty" id="status-about_source_desc2">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_source_desc2" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_source_desc2')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Tafsir Author</div>
-                        <div class="about-field-desc"><code>about_tafsir_author</code></div>
-                        <span class="status-badge empty" id="status-about_tafsir_author">Not Set</span>
-                        <input class="about-field-input" id="val-about_tafsir_author" dir="rtl" placeholder="ماموستا تەحسین ئیبراهیم دۆسکی">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_tafsir_author')">Save</button></div>
+                        <div class="about-field-desc"><code>about_source_card_author</code></div>
+                        <span class="status-badge empty" id="status-about_source_card_author">Not Set</span>
+                        <input class="about-field-input" id="val-about_source_card_author" dir="rtl" placeholder="ماموستا تەحسین ئیبراهیم دۆسکی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_source_card_author')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Book Description</div>
-                        <div class="about-field-desc"><code>about_tafsir_book_desc</code></div>
-                        <span class="status-badge empty" id="status-about_tafsir_book_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_tafsir_book_desc" dir="rtl" rows="2"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_tafsir_book_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>about_source_card_desc</code></div>
+                        <span class="status-badge empty" id="status-about_source_card_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_source_card_desc" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_source_card_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
-                        <div class="about-field-label">Declaration Text</div>
-                        <div class="about-field-desc">نە سیاسی، نە حزبی section — <code>about_declaration_text</code></div>
-                        <span class="status-badge empty" id="status-about_declaration_text">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_declaration_text" dir="rtl" rows="4"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_declaration_text')">Save</button></div>
+                        <div class="about-field-label">Declaration — Paragraph 1</div>
+                        <div class="about-field-desc"><code>about_declaration_desc1</code></div>
+                        <span class="status-badge empty" id="status-about_declaration_desc1">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_declaration_desc1" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_declaration_desc1')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Declaration — Paragraph 2</div>
+                        <div class="about-field-desc"><code>about_declaration_desc2</code></div>
+                        <span class="status-badge empty" id="status-about_declaration_desc2">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_declaration_desc2" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_declaration_desc2')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah — Arabic</div>
-                        <div class="about-field-desc"><code>about_quote_ar</code></div>
-                        <span class="status-badge empty" id="status-about_quote_ar">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_quote_ar" dir="rtl" rows="2"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_quote_ar')">Save</button></div>
+                        <div class="about-field-desc"><code>about_quote_arabic</code></div>
+                        <span class="status-badge empty" id="status-about_quote_arabic">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_quote_arabic" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_quote_arabic')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah — Kurdish</div>
-                        <div class="about-field-desc"><code>about_quote_ku</code></div>
-                        <span class="status-badge empty" id="status-about_quote_ku">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_quote_ku" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_quote_ku')">Save</button></div>
+                        <div class="about-field-desc"><code>about_quote_translation</code></div>
+                        <span class="status-badge empty" id="status-about_quote_translation">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_quote_translation" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_quote_translation')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah — Reference</div>
@@ -1747,12 +1790,12 @@
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Stats</div>
-                        <div class="about-field-desc"><code>about_stat1_num</code> / <code>about_stat1_label</code> / <code>about_stat2_num</code> / <code>about_stat2_label</code></div>
+                        <div class="about-field-desc"><code>about_h3_5</code> / <code>about_stat_followers</code> / <code>about_h3_6</code> / <code>about_stat_views</code></div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
-                            <div><span class="status-badge empty" id="status-about_stat1_num" style="font-size:.7rem">stat1_num</span><input class="about-field-input" id="val-about_stat1_num" dir="rtl" placeholder="٦٥ھ+"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_stat1_num')">Save</button></div></div>
-                            <div><span class="status-badge empty" id="status-about_stat1_label" style="font-size:.7rem">stat1_label</span><input class="about-field-input" id="val-about_stat1_label" dir="rtl" placeholder="فۆڵۆوەر"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_stat1_label')">Save</button></div></div>
-                            <div><span class="status-badge empty" id="status-about_stat2_num" style="font-size:.7rem">stat2_num</span><input class="about-field-input" id="val-about_stat2_num" dir="rtl" placeholder="٢٥م+"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_stat2_num')">Save</button></div></div>
-                            <div><span class="status-badge empty" id="status-about_stat2_label" style="font-size:.7rem">stat2_label</span><input class="about-field-input" id="val-about_stat2_label" dir="rtl" placeholder="بینەر"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_stat2_label')">Save</button></div></div>
+                            <div><span class="status-badge empty" id="status-about_h3_5" style="font-size:.7rem">stat1_num</span><input class="about-field-input" id="val-about_h3_5" dir="rtl" placeholder="٦٥ھ+"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_h3_5')">Save</button></div></div>
+                            <div><span class="status-badge empty" id="status-about_stat_followers" style="font-size:.7rem">stat1_label</span><input class="about-field-input" id="val-about_stat_followers" dir="rtl" placeholder="فۆڵۆوەر"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_stat_followers')">Save</button></div></div>
+                            <div><span class="status-badge empty" id="status-about_h3_6" style="font-size:.7rem">stat2_num</span><input class="about-field-input" id="val-about_h3_6" dir="rtl" placeholder="٢٥م+"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_h3_6')">Save</button></div></div>
+                            <div><span class="status-badge empty" id="status-about_stat_views" style="font-size:.7rem">stat2_label</span><input class="about-field-input" id="val-about_stat_views" dir="rtl" placeholder="بینەر"><div class="image-card-actions" style="margin-top:6px"><button class="btn btn-primary" style="font-size:.8rem;padding:6px" onclick="saveAboutText('about_stat_views')">Save</button></div></div>
                         </div>
                     </div>
                 </div>
@@ -1761,38 +1804,38 @@
                 <div class="about-fields-grid">
                     <div class="about-field-card">
                         <div class="about-field-label">Services — Section Label</div>
-                        <div class="about-field-desc"><code>about_svc_label</code></div>
-                        <span class="status-badge empty" id="status-about_svc_label">Not Set</span>
-                        <input class="about-field-input" id="val-about_svc_label" dir="rtl" placeholder="خزمەتگوزاری">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_svc_label')">Save</button></div>
+                        <div class="about-field-desc"><code>about_services_label</code></div>
+                        <span class="status-badge empty" id="status-about_services_label">Not Set</span>
+                        <input class="about-field-input" id="val-about_services_label" dir="rtl" placeholder="خزمەتگوزاری">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_services_label')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Services — Section Title</div>
-                        <div class="about-field-desc"><code>about_svc_title</code></div>
-                        <span class="status-badge empty" id="status-about_svc_title">Not Set</span>
-                        <input class="about-field-input" id="val-about_svc_title" dir="rtl" placeholder="ئەم چ پێشکێش دکەین">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_svc_title')">Save</button></div>
+                        <div class="about-field-desc"><code>about_services_title</code></div>
+                        <span class="status-badge empty" id="status-about_services_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_services_title" dir="rtl" placeholder="ئەم چ پێشکێش دکەین">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_services_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Declaration Title</div>
-                        <div class="about-field-desc"><code>about_decl_title</code></div>
-                        <span class="status-badge empty" id="status-about_decl_title">Not Set</span>
-                        <input class="about-field-input" id="val-about_decl_title" dir="rtl" placeholder="نە سیاسی، نە حزبی">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_decl_title')">Save</button></div>
+                        <div class="about-field-desc"><code>about_declaration_title</code></div>
+                        <span class="status-badge empty" id="status-about_declaration_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_declaration_title" dir="rtl" placeholder="نە سیاسی، نە حزبی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_declaration_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Tafsir Source — Section Label</div>
-                        <div class="about-field-desc"><code>about_tafsir_label</code></div>
-                        <span class="status-badge empty" id="status-about_tafsir_label">Not Set</span>
-                        <input class="about-field-input" id="val-about_tafsir_label" dir="rtl" placeholder="ژێدەرێ تەفسیرێ">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_tafsir_label')">Save</button></div>
+                        <div class="about-field-desc"><code>about_source_title</code></div>
+                        <span class="status-badge empty" id="status-about_source_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_source_title" dir="rtl" placeholder="ژێدەرێ تەفسیرێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_source_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Book Title / Badge</div>
-                        <div class="about-field-desc"><code>about_book_title</code></div>
-                        <span class="status-badge empty" id="status-about_book_title">Not Set</span>
-                        <input class="about-field-input" id="val-about_book_title" dir="rtl" placeholder="تەفسیرا ساناهی">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_book_title')">Save</button></div>
+                        <div class="about-field-desc"><code>about_source_card_title</code></div>
+                        <span class="status-badge empty" id="status-about_source_card_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_source_card_title" dir="rtl" placeholder="تەفسیرا ساناهی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_source_card_title')">Save</button></div>
                     </div>
                 </div>
 
@@ -1801,69 +1844,133 @@
                 <div class="about-fields-grid">
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 1 — Number</div>
-                        <span class="status-badge empty" id="status-about_feat1_num">Not Set</span>
-                        <input class="about-field-input" id="val-about_feat1_num" dir="rtl" placeholder="٠١">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat1_num')">Save</button></div>
+                        <span class="status-badge empty" id="status-about_div_2">Not Set</span>
+                        <input class="about-field-input" id="val-about_div_2" dir="rtl" placeholder="٠١">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_div_2')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 1 — Title</div>
-                        <span class="status-badge empty" id="status-about_feat1_title">Not Set</span>
-                        <input class="about-field-input" id="val-about_feat1_title" dir="rtl" placeholder="خواندنا قورئانێ">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat1_title')">Save</button></div>
+                        <span class="status-badge empty" id="status-about_feature1_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_feature1_title" dir="rtl" placeholder="خواندنا قورئانێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feature1_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 1 — Description</div>
-                        <span class="status-badge empty" id="status-about_feat1_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_feat1_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat1_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>about_feature1_desc</code></div>
+                        <span class="status-badge empty" id="status-about_feature1_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_feature1_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feature1_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 2 — Number</div>
-                        <span class="status-badge empty" id="status-about_feat2_num">Not Set</span>
-                        <input class="about-field-input" id="val-about_feat2_num" dir="rtl" placeholder="٠٢">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat2_num')">Save</button></div>
+                        <span class="status-badge empty" id="status-about_div_3">Not Set</span>
+                        <input class="about-field-input" id="val-about_div_3" dir="rtl" placeholder="٠٢">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_div_3')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 2 — Title</div>
-                        <span class="status-badge empty" id="status-about_feat2_title">Not Set</span>
-                        <input class="about-field-input" id="val-about_feat2_title" dir="rtl" placeholder="دەنگێ ئیسلامێ">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat2_title')">Save</button></div>
+                        <span class="status-badge empty" id="status-about_feature2_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_feature2_title" dir="rtl" placeholder="دەنگێ ئیسلامێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feature2_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 2 — Description</div>
-                        <span class="status-badge empty" id="status-about_feat2_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_feat2_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat2_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>about_feature2_desc</code></div>
+                        <span class="status-badge empty" id="status-about_feature2_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_feature2_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feature2_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 3 — Number</div>
-                        <span class="status-badge empty" id="status-about_feat3_num">Not Set</span>
-                        <input class="about-field-input" id="val-about_feat3_num" dir="rtl" placeholder="٠٣">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat3_num')">Save</button></div>
+                        <span class="status-badge empty" id="status-about_div_4">Not Set</span>
+                        <input class="about-field-input" id="val-about_div_4" dir="rtl" placeholder="٠٣">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_div_4')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 3 — Title</div>
-                        <span class="status-badge empty" id="status-about_feat3_title">Not Set</span>
-                        <input class="about-field-input" id="val-about_feat3_title" dir="rtl" placeholder="نیشانەکرن و پاشەکەفتن">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat3_title')">Save</button></div>
+                        <span class="status-badge empty" id="status-about_feature3_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_feature3_title" dir="rtl" placeholder="نیشانەکرن و پاشەکەفتن">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feature3_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Feature 3 — Description</div>
-                        <span class="status-badge empty" id="status-about_feat3_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-about_feat3_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feat3_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>about_feature3_desc</code></div>
+                        <span class="status-badge empty" id="status-about_feature3_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_feature3_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_feature3_desc')">Save</button></div>
+                    </div>
+                </div>
+
+                <h3 class="section-divider">CTA (دعوەتنامە)</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Call-to-action section shown at the bottom of the About TafsirKurd sheet.</p>
+                <div class="about-fields-grid">
+                    <div class="about-field-card">
+                        <div class="about-field-label">CTA Title</div>
+                        <div class="about-field-desc"><code>about_cta_title</code></div>
+                        <span class="status-badge empty" id="status-about_cta_title">Not Set</span>
+                        <input class="about-field-input" id="val-about_cta_title" dir="rtl" placeholder="دەست پێبکە ئێستا">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_cta_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">CTA Description</div>
+                        <div class="about-field-desc"><code>about_cta_desc</code></div>
+                        <span class="status-badge empty" id="status-about_cta_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-about_cta_desc" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_cta_desc')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">CTA Button — Quran</div>
+                        <div class="about-field-desc"><code>about_cta_quran</code></div>
+                        <span class="status-badge empty" id="status-about_cta_quran">Not Set</span>
+                        <input class="about-field-input" id="val-about_cta_quran" dir="rtl" placeholder="بخوێنە قورئانێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_cta_quran')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">CTA Button — IslamVoice</div>
+                        <div class="about-field-desc"><code>about_cta_islamvoice</code></div>
+                        <span class="status-badge empty" id="status-about_cta_islamvoice">Not Set</span>
+                        <input class="about-field-input" id="val-about_cta_islamvoice" dir="rtl" placeholder="دەنگێ ئیسلامێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('about_cta_islamvoice')">Save</button></div>
                     </div>
                 </div>
 
                 <h3 class="section-divider">About Founder</h3>
-                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Text shown in the app About Founder sheet. Stored in <code>site_settings</code>.</p>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Text shown in the app About Founder sheet. Stored in <code>kurdish_translations</code>.</p>
                 <div class="about-fields-grid">
+                    <div class="about-field-card">
+                        <div class="about-field-label">Back Button</div>
+                        <div class="about-field-desc"><code>founder_back</code></div>
+                        <span class="status-badge empty" id="status-founder_back">Not Set</span>
+                        <input class="about-field-input" id="val-founder_back" dir="rtl" placeholder="گەڕانا پشت">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_back')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Page Title</div>
+                        <div class="about-field-desc"><code>founder_title_1</code></div>
+                        <span class="status-badge empty" id="status-founder_title_1">Not Set</span>
+                        <input class="about-field-input" id="val-founder_title_1" dir="rtl" placeholder="دەربارەی دامەزرێنەر">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_title_1')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Scroll Hint</div>
+                        <div class="about-field-desc"><code>founder_scroll</code></div>
+                        <span class="status-badge empty" id="status-founder_scroll">Not Set</span>
+                        <input class="about-field-input" id="val-founder_scroll" dir="rtl" placeholder="پاشەخست بکە بزانی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_scroll')">Save</button></div>
+                    </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Story — Section Label</div>
                         <div class="about-field-desc"><code>founder_story_label</code></div>
                         <span class="status-badge empty" id="status-founder_story_label">Not Set</span>
                         <input class="about-field-input" id="val-founder_story_label" dir="rtl" placeholder="چیرۆک">
                         <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_story_label')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Story — Section Title</div>
+                        <div class="about-field-desc"><code>founder_story_title</code></div>
+                        <span class="status-badge empty" id="status-founder_story_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_story_title" dir="rtl" placeholder="چیرۆکا دامەزرێنەر">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_story_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey — Section Label</div>
@@ -1887,6 +1994,13 @@
                         <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_values_label')">Save</button></div>
                     </div>
                     <div class="about-field-card">
+                        <div class="about-field-label">Values — Section Title</div>
+                        <div class="about-field-desc"><code>founder_values_title</code></div>
+                        <span class="status-badge empty" id="status-founder_values_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_values_title" dir="rtl" placeholder="پابەندبووناماوەیی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_values_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
                         <div class="about-field-label">Dua — Section Label</div>
                         <div class="about-field-desc"><code>founder_dua_label</code></div>
                         <span class="status-badge empty" id="status-founder_dua_label">Not Set</span>
@@ -1908,151 +2022,165 @@
                         <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_role')">Save</button></div>
                     </div>
                     <div class="about-field-card">
-                        <div class="about-field-label">Bio</div>
-                        <div class="about-field-desc">3 paragraphs separated by blank line — <code>founder_bio</code></div>
-                        <span class="status-badge empty" id="status-founder_bio">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_bio" dir="rtl" rows="8"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_bio')">Save</button></div>
+                        <div class="about-field-label">Story — Paragraph 1</div>
+                        <div class="about-field-desc"><code>founder_story_desc1</code></div>
+                        <span class="status-badge empty" id="status-founder_story_desc1">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_story_desc1" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_story_desc1')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Story — Paragraph 2</div>
+                        <div class="about-field-desc"><code>founder_story_desc2</code></div>
+                        <span class="status-badge empty" id="status-founder_story_desc2">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_story_desc2" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_story_desc2')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Story — Paragraph 3</div>
+                        <div class="about-field-desc"><code>founder_story_desc3</code></div>
+                        <span class="status-badge empty" id="status-founder_story_desc3">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_story_desc3" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_story_desc3')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah 1 — Arabic</div>
-                        <div class="about-field-desc">سوڕەتا هود — <code>founder_quote_ar</code></div>
-                        <span class="status-badge empty" id="status-founder_quote_ar">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_quote_ar" dir="rtl" rows="2"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote_ar')">Save</button></div>
+                        <div class="about-field-desc">سوڕەتا هود — <code>founder_quote1_arabic</code></div>
+                        <span class="status-badge empty" id="status-founder_quote1_arabic">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_quote1_arabic" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote1_arabic')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah 1 — Kurdish</div>
-                        <div class="about-field-desc"><code>founder_quote_ku</code></div>
-                        <span class="status-badge empty" id="status-founder_quote_ku">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_quote_ku" dir="rtl" rows="2"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote_ku')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_quote1_translation</code></div>
+                        <span class="status-badge empty" id="status-founder_quote1_translation">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_quote1_translation" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote1_translation')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah 1 — Reference</div>
-                        <div class="about-field-desc"><code>founder_quote_ref</code></div>
-                        <span class="status-badge empty" id="status-founder_quote_ref">Not Set</span>
-                        <input class="about-field-input" id="val-founder_quote_ref" dir="rtl" placeholder="سوڕەتا هود — ٨٨">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote_ref')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_quote1_ref</code></div>
+                        <span class="status-badge empty" id="status-founder_quote1_ref">Not Set</span>
+                        <input class="about-field-input" id="val-founder_quote1_ref" dir="rtl" placeholder="سوڕەتا هود — ٨٨">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote1_ref')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey Intro</div>
-                        <div class="about-field-desc"><code>founder_journey_intro</code></div>
-                        <span class="status-badge empty" id="status-founder_journey_intro">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_journey_intro" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_journey_intro')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_journey_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_journey_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_journey_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_journey_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 1 — Title</div>
-                        <div class="about-field-desc"><code>founder_j1_title</code></div>
-                        <span class="status-badge empty" id="status-founder_j1_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_j1_title" dir="rtl" placeholder="دەستپێکا هزرێ">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j1_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline1_title</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline1_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_timeline1_title" dir="rtl" placeholder="دەستپێکا هزرێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline1_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 1 — Description</div>
-                        <div class="about-field-desc"><code>founder_j1_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_j1_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_j1_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j1_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline1_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline1_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_timeline1_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline1_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 2 — Title</div>
-                        <div class="about-field-desc"><code>founder_j2_title</code></div>
-                        <span class="status-badge empty" id="status-founder_j2_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_j2_title" dir="rtl" placeholder="دروستکرنا ناڤەڕۆکا ڤیدیویی">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j2_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline2_title</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline2_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_timeline2_title" dir="rtl" placeholder="دروستکرنا ناڤەڕۆکا ڤیدیویی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline2_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 2 — Description</div>
-                        <div class="about-field-desc"><code>founder_j2_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_j2_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_j2_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j2_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline2_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline2_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_timeline2_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline2_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 3 — Title</div>
-                        <div class="about-field-desc"><code>founder_j3_title</code></div>
-                        <span class="status-badge empty" id="status-founder_j3_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_j3_title" dir="rtl" placeholder="دامەزراندنا پلاتفۆرمێ">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j3_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline3_title</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline3_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_timeline3_title" dir="rtl" placeholder="دامەزراندنا پلاتفۆرمێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline3_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 3 — Description</div>
-                        <div class="about-field-desc"><code>founder_j3_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_j3_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_j3_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j3_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline3_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline3_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_timeline3_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline3_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 4 — Title</div>
-                        <div class="about-field-desc"><code>founder_j4_title</code></div>
-                        <span class="status-badge empty" id="status-founder_j4_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_j4_title" dir="rtl" placeholder="گەهشتن ب ملیۆنان بینەران">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j4_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline4_title</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline4_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_timeline4_title" dir="rtl" placeholder="گەهشتن ب ملیۆنان بینەران">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline4_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Journey 4 — Description</div>
-                        <div class="about-field-desc"><code>founder_j4_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_j4_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_j4_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_j4_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_timeline4_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_timeline4_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_timeline4_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_timeline4_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 1 — Title</div>
-                        <div class="about-field-desc"><code>founder_v1_title</code></div>
-                        <span class="status-badge empty" id="status-founder_v1_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_v1_title" dir="rtl" placeholder="ڕازەمەندییا خودای">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v1_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value1_title</code></div>
+                        <span class="status-badge empty" id="status-founder_value1_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_value1_title" dir="rtl" placeholder="ڕازەمەندییا خودای">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value1_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 1 — Description</div>
-                        <div class="about-field-desc"><code>founder_v1_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_v1_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_v1_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v1_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value1_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_value1_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_value1_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value1_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 2 — Title</div>
-                        <div class="about-field-desc"><code>founder_v2_title</code></div>
-                        <span class="status-badge empty" id="status-founder_v2_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_v2_title" dir="rtl" placeholder="خزمەتا قورئانێ">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v2_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value2_title</code></div>
+                        <span class="status-badge empty" id="status-founder_value2_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_value2_title" dir="rtl" placeholder="خزمەتا قورئانێ">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value2_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 2 — Description</div>
-                        <div class="about-field-desc"><code>founder_v2_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_v2_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_v2_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v2_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value2_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_value2_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_value2_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value2_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 3 — Title</div>
-                        <div class="about-field-desc"><code>founder_v3_title</code></div>
-                        <span class="status-badge empty" id="status-founder_v3_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_v3_title" dir="rtl" placeholder="گەهاندن بۆ هەمییان">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v3_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value3_title</code></div>
+                        <span class="status-badge empty" id="status-founder_value3_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_value3_title" dir="rtl" placeholder="گەهاندن بۆ هەمییان">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value3_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 3 — Description</div>
-                        <div class="about-field-desc"><code>founder_v3_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_v3_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_v3_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v3_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value3_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_value3_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_value3_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value3_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 4 — Title</div>
-                        <div class="about-field-desc"><code>founder_v4_title</code></div>
-                        <span class="status-badge empty" id="status-founder_v4_title">Not Set</span>
-                        <input class="about-field-input" id="val-founder_v4_title" dir="rtl" placeholder="خۆگەشەکرن">
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v4_title')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value4_title</code></div>
+                        <span class="status-badge empty" id="status-founder_value4_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_value4_title" dir="rtl" placeholder="خۆگەشەکرن">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value4_title')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Value 4 — Description</div>
-                        <div class="about-field-desc"><code>founder_v4_desc</code></div>
-                        <span class="status-badge empty" id="status-founder_v4_desc">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_v4_desc" dir="rtl" rows="3"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_v4_desc')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_value4_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_value4_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_value4_desc" dir="rtl" rows="3"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_value4_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Dua Title</div>
@@ -2063,24 +2191,24 @@
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Dua Text</div>
-                        <div class="about-field-desc"><code>founder_dua_text</code></div>
-                        <span class="status-badge empty" id="status-founder_dua_text">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_dua_text" dir="rtl" rows="4"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_dua_text')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_dua_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_dua_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_dua_desc" dir="rtl" rows="4"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_dua_desc')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah 2 — Arabic</div>
-                        <div class="about-field-desc">سوڕەتا البقرة — <code>founder_quote2_ar</code></div>
-                        <span class="status-badge empty" id="status-founder_quote2_ar">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_quote2_ar" dir="rtl" rows="2"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote2_ar')">Save</button></div>
+                        <div class="about-field-desc">سوڕەتا البقرة — <code>founder_quote2_arabic</code></div>
+                        <span class="status-badge empty" id="status-founder_quote2_arabic">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_quote2_arabic" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote2_arabic')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah 2 — Kurdish</div>
-                        <div class="about-field-desc"><code>founder_quote2_ku</code></div>
-                        <span class="status-badge empty" id="status-founder_quote2_ku">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_quote2_ku" dir="rtl" rows="2"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote2_ku')">Save</button></div>
+                        <div class="about-field-desc"><code>founder_quote2_translation</code></div>
+                        <span class="status-badge empty" id="status-founder_quote2_translation">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_quote2_translation" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote2_translation')">Save</button></div>
                     </div>
                     <div class="about-field-card">
                         <div class="about-field-label">Ayah 2 — Reference</div>
@@ -2090,11 +2218,18 @@
                         <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_quote2_ref')">Save</button></div>
                     </div>
                     <div class="about-field-card">
-                        <div class="about-field-label">Closing Text</div>
-                        <div class="about-field-desc"><code>founder_closing</code></div>
-                        <span class="status-badge empty" id="status-founder_closing">Not Set</span>
-                        <textarea class="about-field-input" id="val-founder_closing" dir="rtl" rows="2"></textarea>
-                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_closing')">Save</button></div>
+                        <div class="about-field-label">Closing Title</div>
+                        <div class="about-field-desc"><code>founder_closing_title</code></div>
+                        <span class="status-badge empty" id="status-founder_closing_title">Not Set</span>
+                        <input class="about-field-input" id="val-founder_closing_title" dir="rtl">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_closing_title')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Closing Description</div>
+                        <div class="about-field-desc"><code>founder_closing_desc</code></div>
+                        <span class="status-badge empty" id="status-founder_closing_desc">Not Set</span>
+                        <textarea class="about-field-input" id="val-founder_closing_desc" dir="rtl" rows="2"></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('founder_closing_desc')">Save</button></div>
                     </div>
                 </div>
 
@@ -2335,51 +2470,66 @@
             var aboutPanel = document.getElementById('aboutPanel');
             var tBody = document.querySelector('.t-body');
             var statsRow = document.querySelector('.stats-row');
+
             if (platform === 'about') {
                 if (aboutPanel) aboutPanel.style.display = '';
                 if (tBody) tBody.style.display = 'none';
                 if (statsRow) statsRow.style.display = 'none';
+                updateStats();   // update tab badge counts
                 loadAboutFields();
-                return;
+            } else {
+                if (aboutPanel) aboutPanel.style.display = 'none';
+                if (tBody) tBody.style.display = '';
+                if (statsRow) statsRow.style.display = '';
+                updateStats();
+                populatePageFilter();
+                filterTranslations();
             }
-            if (aboutPanel) aboutPanel.style.display = 'none';
-            if (tBody) tBody.style.display = '';
-            if (statsRow) statsRow.style.display = '';
-
-            updateStats();
-            populatePageFilter();
-            filterTranslations();
         }
 
+        const ABOUT_KT_KEYS = [
+            // about.html keys (37)
+            'about_back','about_title_1','about_hero_label','about_hero_title','about_hero_desc','about_scroll',
+            'about_source_title','about_source_desc1','about_source_desc2',
+            'about_source_card_title','about_source_card_author','about_source_card_desc',
+            'about_quote_arabic','about_quote_translation','about_quote_ref',
+            'about_h3_5','about_stat_followers','about_h3_6','about_stat_views',
+            'about_div_2','about_feature1_title','about_feature1_desc',
+            'about_div_3','about_feature2_title','about_feature2_desc',
+            'about_div_4','about_feature3_title','about_feature3_desc',
+            'about_services_label','about_services_title',
+            'about_declaration_title','about_declaration_desc1','about_declaration_desc2',
+            'about_cta_title','about_cta_desc','about_cta_quran','about_cta_islamvoice',
+            // founder.html keys (42)
+            'founder_back','founder_title_1','founder_name','founder_role','founder_scroll',
+            'founder_story_label','founder_story_title','founder_story_desc1','founder_story_desc2','founder_story_desc3',
+            'founder_quote1_arabic','founder_quote1_translation','founder_quote1_ref',
+            'founder_journey_label','founder_journey_title','founder_journey_desc',
+            'founder_timeline1_title','founder_timeline1_desc','founder_timeline2_title','founder_timeline2_desc',
+            'founder_timeline3_title','founder_timeline3_desc','founder_timeline4_title','founder_timeline4_desc',
+            'founder_values_label','founder_values_title',
+            'founder_value1_title','founder_value1_desc','founder_value2_title','founder_value2_desc',
+            'founder_value3_title','founder_value3_desc','founder_value4_title','founder_value4_desc',
+            'founder_dua_label','founder_dua_title','founder_dua_desc',
+            'founder_quote2_arabic','founder_quote2_translation','founder_quote2_ref',
+            'founder_closing_title','founder_closing_desc'
+        ];
         const ABOUT_TEXT_KEYS = [
-            'about_hero_sub','about_app_text',
-            'about_svc_label','about_svc_title','about_decl_title','about_tafsir_label','about_book_title',
-            'about_tafsir_text','about_tafsir_author','about_tafsir_book_desc',
-            'about_declaration_text','about_quote_ar','about_quote_ku','about_quote_ref',
-            'about_stat1_num','about_stat1_label','about_stat2_num','about_stat2_label',
-            'about_feat1_num','about_feat1_title','about_feat1_desc',
-            'about_feat2_num','about_feat2_title','about_feat2_desc',
-            'about_feat3_num','about_feat3_title','about_feat3_desc',
-            'founder_story_label','founder_journey_label','founder_journey_title','founder_values_label','founder_dua_label',
-            'founder_name','founder_role','founder_bio',
-            'founder_quote_ar','founder_quote_ku','founder_quote_ref',
-            'founder_journey_intro',
-            'founder_j1_title','founder_j1_desc','founder_j2_title','founder_j2_desc',
-            'founder_j3_title','founder_j3_desc','founder_j4_title','founder_j4_desc',
-            'founder_v1_title','founder_v1_desc','founder_v2_title','founder_v2_desc',
-            'founder_v3_title','founder_v3_desc','founder_v4_title','founder_v4_desc',
-            'founder_dua_title','founder_dua_text',
-            'founder_quote2_ar','founder_quote2_ku','founder_quote2_ref','founder_closing',
+            ...ABOUT_KT_KEYS,
             'social_instagram','social_youtube','social_tiktok','social_telegram',
             'social_pinterest','social_email','social_website'
         ];
 
         async function loadAboutFields() {
             if (!supabase) return;
-            var res = await supabase.from('site_settings').select('key,value').in('key', ABOUT_TEXT_KEYS);
-            if (res.error || !res.data) return;
+            // Load translation keys from kurdish_translations
+            var ktRes = await supabase.from('kurdish_translations').select('key_id,kurdish_text').in('key_id', ABOUT_KT_KEYS);
+            // Load social links from site_settings
+            var socialKeys = ['social_instagram','social_youtube','social_tiktok','social_telegram','social_pinterest','social_email','social_website'];
+            var ssRes = await supabase.from('site_settings').select('key,value').in('key', socialKeys);
             var map = {};
-            res.data.forEach(function(r) { map[r.key] = r.value; });
+            if (ktRes.data) ktRes.data.forEach(function(r) { map[r.key_id] = r.kurdish_text; });
+            if (ssRes.data) ssRes.data.forEach(function(r) { map[r.key] = r.value; });
             ABOUT_TEXT_KEYS.forEach(function(k) {
                 var el = document.getElementById('val-' + k);
                 var badge = document.getElementById('status-' + k);
@@ -2395,7 +2545,15 @@
             if (!el) return;
             var val = el.value;
             var badge = document.getElementById('status-' + key);
-            var res = await supabase.from('site_settings').upsert({key: key, value: val}, {onConflict: 'key'});
+            var socialKeys = ['social_instagram','social_youtube','social_tiktok','social_telegram','social_pinterest','social_email','social_website'];
+            var res;
+            if (socialKeys.indexOf(key) !== -1) {
+                // Social links → site_settings
+                res = await supabase.from('site_settings').upsert({key: key, value: val}, {onConflict: 'key'});
+            } else {
+                // Translation text → kurdish_translations (upsert by key_id)
+                res = await supabase.from('kurdish_translations').upsert({key_id: key, kurdish_text: val}, {onConflict: 'key_id'});
+            }
             if (res.error) { alert('Save failed: ' + res.error.message); return; }
             if (badge) { badge.textContent = val ? 'Set' : 'Not Set'; badge.className = 'status-badge ' + (val ? 'set' : 'empty'); }
         }
@@ -2410,35 +2568,47 @@
             } else if (activePlatform === 'notifications') {
                 return allTranslations.filter(function(t) { var c = t.category || ''; return c === 'notifications' || c === 'notification'; });
             } else if (activePlatform === 'widgets') {
-                return allTranslations.filter(function(t) { return normalizePage(t.page) === 'widgets'; });
+                // Widget keys live in page='android' but are identified by key_id prefix
+                return allTranslations.filter(function(t) { return (t.key_id || '').startsWith('widget.'); });
             } else if (activePlatform === 'updates') {
-                return allTranslations.filter(function(t) { return normalizePage(t.page) === 'updates'; });
+                // Update keys live in page='android' but are identified by key_id prefix
+                return allTranslations.filter(function(t) { return (t.key_id || '').startsWith('update.'); });
+            } else if (activePlatform === 'about') {
+                return allTranslations.filter(function(t) {
+                    var p = normalizePage(t.page);
+                    return p === 'about' || p === 'founder';
+                });
             } else {
-                // Web = everything except android, ios, widgets, notifications, updates
+                // Web = everything except android, ios, notifications, updates
                 return allTranslations.filter(function(t) {
                     var p = normalizePage(t.page);
                     var c = t.category || '';
-                    return p !== 'android' && p !== 'ios' && p !== 'widgets' && p !== 'updates' && c !== 'notifications' && c !== 'notification';
+                    return p !== 'android' && p !== 'ios' && c !== 'notifications' && c !== 'notification';
                 });
             }
         }
 
         function updatePlatformCounts() {
-            var webCount = 0, mobileCount = 0, notifCount = 0, widgetCnt = 0, updatesCnt = 0;
+            if (!allTranslations.length) return; // data not yet loaded — keep '--' in badges
+            var webCount = 0, mobileCount = 0, notifCount = 0, widgetCnt = 0, updatesCnt = 0, aboutCount = 0;
             allTranslations.forEach(function(t) {
                 var c = t.category || '';
                 var p = normalizePage(t.page);
+                var k = t.key_id || '';
+                // Widgets + updates: identified by key_id prefix (they live in page=android)
+                if (k.startsWith('widget.')) widgetCnt++;
+                if (k.startsWith('update.')) updatesCnt++;
                 if (c === 'notifications' || c === 'notification') { notifCount++; return; }
-                if (p === 'widgets') { widgetCnt++; return; }
-                if (p === 'updates') { updatesCnt++; return; }
-                if (p === 'android' || p === 'ios') mobileCount++;
-                else webCount++;
+                if (p === 'android' || p === 'ios') { mobileCount++; return; }
+                if (p === 'about' || p === 'founder') { aboutCount++; return; }
+                webCount++;
             });
             document.getElementById('webCount').textContent = webCount;
             document.getElementById('androidCount').textContent = mobileCount;
             document.getElementById('notifCount').textContent = notifCount;
             document.getElementById('widgetCount').textContent = widgetCnt;
             document.getElementById('updatesCount').textContent = updatesCnt;
+            document.getElementById('aboutCount').textContent = aboutCount;
         }
 
         function populatePageDropdowns() {
@@ -2454,10 +2624,11 @@
 
         async function loadTranslations() {
             try {
-                // Paginate — Supabase default cap is 1000 rows per request
+                // Paginate — use 500 per batch; this project's PostgREST max_rows is 500,
+                // so requesting 1000 returns only 500 and breaks the loop prematurely.
                 var allData = [];
                 var from = 0;
-                var PAGE_SIZE = 1000;
+                var PAGE_SIZE = 500;
                 while (true) {
                     var result = await supabase
                         .from('kurdish_translations')
@@ -2532,14 +2703,14 @@
                 });
             }
 
-            if (activePlatform === 'web' || activePlatform === 'updates') {
+            if (activePlatform === 'web' || activePlatform === 'updates' || activePlatform === 'about') {
                 WEB_PAGES.forEach(function(p) {
                     if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0;
                 });
             }
 
             var pages = Object.keys(pageCounts).sort();
-            var isWeb = (activePlatform === 'web' || activePlatform === 'updates');
+            var isWeb = (activePlatform === 'web' || activePlatform === 'updates' || activePlatform === 'about');
             var inner = document.getElementById('catSidebarInner');
             inner.textContent = '';
 
@@ -2644,7 +2815,7 @@
         function _populateSheetList() {
             var platformData = getPlatformData();
             var pageCounts = {};
-            var isWeb = (activePlatform === 'web' || activePlatform === 'updates');
+            var isWeb = (activePlatform === 'web' || activePlatform === 'updates' || activePlatform === 'about');
             function getKey(t) {
                 if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
                     var cat = t.category || 'general';
@@ -2709,7 +2880,7 @@
             var labelEl = document.getElementById('mobileFilterLabel');
             var countEl = document.getElementById('mobileFilterCount');
             if (!bar) return;
-            var isWeb = (activePlatform === 'web' || activePlatform === 'updates');
+            var isWeb = (activePlatform === 'web' || activePlatform === 'updates' || activePlatform === 'about');
             var label = activePageFilter
                 ? getChipMeta(activePageFilter, isWeb).label
                 : 'All categories';
@@ -3205,7 +3376,7 @@
                 document.getElementById('newKeyId').value = '';
                 document.getElementById('newKurdishText').value = '';
                 var isWidgetsPlatform = (activePlatform === 'widgets');
-                document.getElementById('newPage').value = (activePlatform === 'web') ? 'all' : (activePlatform === 'notifications' || activePlatform === 'mobile') ? 'android' : activePlatform;
+                document.getElementById('newPage').value = (activePlatform === 'about') ? 'about' : (activePlatform === 'web') ? 'all' : (activePlatform === 'notifications' || activePlatform === 'mobile') ? 'android' : activePlatform;
                 document.getElementById('newContext').value = '';
                 document.getElementById('newWidgetGroupRow').style.display = isWidgetsPlatform ? '' : 'none';
                 document.getElementById('newIosTextRow').style.display = isWidgetsPlatform ? '' : 'none';

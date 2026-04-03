@@ -32,8 +32,10 @@
     return (window.t && key && window.t(key)) || PRAYER_KMR_FB[name] || name;
   }
 
-  /** Available athan voices — id must match res/raw/athan_{id}.mp3 (Android) and athan_{id}.m4a (iOS) */
+  /** Available athan voices — id must match res/raw/athan_{id}.mp3 (Android) and athan_{id}.m4a (iOS).
+   *  Special id 'simple' = no athan audio, OS default notification sound only. */
   var ATHAN_VOICES = [
+    { id: 'simple',   nameAr: '',                      nameKey: 'prayer.voice_simple',  previewUrl: null                      },
     { id: 'mishary',  nameAr: 'مشاری راشد العفاسی', nameKey: 'prayer.voice_mishary', previewUrl: '/audio/athan_mishary.mp3' },
     { id: 'nasser',   nameAr: 'ناصر القطامي',         nameKey: 'prayer.voice_nasser',  previewUrl: '/audio/athan_nasser.mp3'  },
     { id: 'omar',     nameAr: 'عمر هشام العربي',      nameKey: 'prayer.voice_omar',    previewUrl: '/audio/athan_omar.mp3'    },
@@ -62,7 +64,7 @@
   // One channel per voice, pointing to athan_<voice>.mp3 in res/raw/.
   // iOS ignores channels entirely — sound is set directly on the notification.
 
-  var CHANNEL_VER = 'v6';
+  var CHANNEL_VER = 'v7';
 
   async function ensureAllChannels() {
     var LN = getLN();
@@ -84,8 +86,21 @@
 
     var desc = window.t ? window.t('prayer.channel_desc') : 'Prayer time athan alerts';
 
+    // Simple / silent channel — OS default notification sound, no athan audio
+    await LN.createChannel({
+      id: 'athan_simple',
+      name: 'Athan — Simple',
+      description: desc,
+      importance: 3,
+      vibration: true,
+      lights: true,
+      lightColor: '#1f5f4a'
+      // no sound → system default notification tone
+    }).catch(function(e) { console.warn('[Athan] createChannel error:', e && e.message); });
+
     for (var i = 0; i < ATHAN_VOICES.length; i++) {
       var v = ATHAN_VOICES[i];
+      if (v.id === 'simple') continue; // handled above
       await LN.createChannel({
         id: 'athan_' + v.id,
         name: 'Athan — ' + v.nameAr,
@@ -186,13 +201,15 @@
     await cancelAllAthanNotifications();
     await ensureAllChannels();
 
-    var ios   = onIOS();
-    var voice = voiceId || getSelectedVoice();
+    var ios        = onIOS();
+    var voice      = voiceId || getSelectedVoice();
+    var isSimple   = (voice === 'simple');
 
-    // Android: one channel per voice, sound = MP3 filename
+    // 'simple' → OS default notification sound, no athan audio
+    // Android: one channel per voice, sound = MP3 filename in res/raw/
     // iOS: sound = M4A filename (Capacitor passes to UNNotificationSound)
-    var channelId = ios ? 'reminder' : ('athan_' + voice);
-    var soundFile = ios ? ('athan_' + voice + '.caf') : ('athan_' + voice);
+    var channelId = isSimple ? 'athan_simple' : (ios ? 'reminder' : ('athan_' + voice));
+    var soundFile = isSimple ? null : (ios ? ('athan_' + voice + '.caf') : ('athan_' + voice));
 
     var now = new Date();
     var pl  = window.PrayerLogic;
@@ -230,9 +247,9 @@
           schedule: { at: prayerAt, allowWhileIdle: true },
           channelId: channelId,
           smallIcon: 'ic_notification',
-          sound: soundFile,
           extra: { type: 'prayer', name: name, dateISO: dateISO }
         };
+        if (soundFile) { notif.sound = soundFile; }
 
         notifications.push(notif);
         details.push({ id: id, name: name, dateISO: dateISO, timeStr: timings[name], atISO: prayerAt.toISOString() });

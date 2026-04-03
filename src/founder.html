@@ -558,7 +558,7 @@
       <i class="fas fa-user"></i>
     </div>
     <script>
-      (function(){var u=localStorage.getItem('founder_avatar_url');if(u){var a=document.getElementById('founderAvatar');var i=document.createElement('img');i.src=u;i.alt='سامان عبدالرحمن';while(a.firstChild)a.removeChild(a.firstChild);a.appendChild(i);}})();
+      (function(){var u=localStorage.getItem('founder_avatar_url');if(u){var a=document.getElementById('founderAvatar');var i=document.createElement('img');i.src=u;var nameEl=document.querySelector('[data-t="founder_name"]');i.alt=nameEl?nameEl.textContent:'سامان عبدالرحمن';while(a.firstChild)a.removeChild(a.firstChild);a.appendChild(i);}})();
     </script>
     <h1 data-t="founder_name">سامان عبدالرحمن</h1>
     <p class="hero-role" data-t="founder_role">دامەزرێنەرێ تەفسیر کورد</p>

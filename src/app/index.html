@@ -653,6 +653,18 @@ body{background:var(--bg);color:var(--text)}
 .goal-choice-desc{font-size:.72rem;color:var(--text3);line-height:1.4;opacity:.85}
 .goal-confirm-cancel-full{width:100%;height:40px;border-radius:var(--r-l);background:none;font-weight:600;font-size:.82rem;color:var(--text3);cursor:pointer;margin-top:2px}
 .goal-confirm-cancel-full:active{opacity:.6}
+/* Rating popup */
+.rating-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;padding:0 0 env(safe-area-inset-bottom,0);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.rating-overlay.on{display:flex;animation:fadeIn .25s var(--ease)}
+.rating-box{background:var(--bg2);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:32px 24px 28px;width:100%;max-width:480px;text-align:center;animation:ratingBoxIn .35s var(--ease);box-shadow:0 -4px 40px rgba(0,0,0,.15);border:1px solid var(--border)}
+@keyframes ratingBoxIn{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.rating-star{width:60px;height:60px;border-radius:50%;background:rgba(255,180,0,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.6rem;color:#f5a623}
+.rating-title{font-size:1.1rem;font-weight:800;margin-bottom:8px;letter-spacing:-.2px}
+.rating-sub{font-size:.82rem;color:var(--text2);line-height:1.65;margin-bottom:22px;direction:rtl}
+.rating-btn-primary{width:100%;height:50px;border-radius:var(--r-l);background:var(--accent);color:var(--accent-t);font-size:.95rem;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,opacity .15s}
+.rating-btn-primary:active{transform:scale(.96);opacity:.9}
+.rating-btn-later{width:100%;height:40px;border-radius:var(--r-l);background:none;color:var(--text3);font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:opacity .15s}
+.rating-btn-later:active{opacity:.55}
 
 #goalsContent{flex:1;display:flex;flex-direction:column}
 .no-goal{text-align:center;color:var(--text3);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;flex:1;padding-top:16vh}
@@ -788,10 +800,11 @@ body{background:var(--bg);color:var(--text)}
 .theme-card-sub{font-size:.65rem;color:var(--text3);margin-top:1px}
 .theme-card-check{position:absolute;top:10px;inset-inline-start:10px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-t);display:none;align-items:center;justify-content:center;font-size:.6rem}
 .theme-card.on .theme-card-check{display:flex}
-.setting-row{display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);border:1px solid var(--border);margin-bottom:-1px;transition:background .15s}
-.setting-row:first-child{border-radius:var(--r-xl) var(--r-xl) 0 0}
-.setting-row:last-child{border-radius:0 0 var(--r-xl) var(--r-xl);margin-bottom:0}
-.setting-row:only-child{border-radius:var(--r-xl)}
+/* ── Shared settings row base — ALL settings rows use this ── */
+.s-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;min-height:54px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:6px;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.s-row:last-child{margin-bottom:0}
+.s-row:active{background:var(--surface-h)}
+/* setting-row — label + action button layout */
 .setting-row--slider{flex-direction:column;align-items:stretch;gap:8px}
 .setting-row--slider .slider{width:100%}
 .setting-slider-title{display:flex;justify-content:space-between;align-items:center}
@@ -818,13 +831,18 @@ body{background:var(--bg);color:var(--text)}
 .about-ver{font-size:.75rem;color:var(--text3);margin-top:2px}
 .about-desc{font-size:.85rem;color:var(--text2);margin-top:6px}
 /* About nav rows (tappable rows in settings group) */
-.about-nav-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--surface);border:1px solid var(--border);margin-bottom:-1px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
-.about-nav-row:first-child{border-radius:var(--r-xl) var(--r-xl) 0 0}.about-nav-row:last-child{border-radius:0 0 var(--r-xl) var(--r-xl);margin-bottom:0}.about-nav-row:only-child{border-radius:var(--r-xl)}
-.about-nav-row:active{background:var(--surface-h)}
+.about-nav-row{cursor:pointer}
 .about-nav-left{display:flex;align-items:center;gap:10px}
 .about-nav-icon{width:32px;height:32px;border-radius:var(--r-s);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--text2);flex-shrink:0}
 .about-nav-label{font-size:.93rem;font-weight:600;color:var(--text);direction:rtl}
 .about-nav-sub{font-size:.75rem;color:var(--text3);direction:rtl}
+/* Rate app row */
+.rate-app-row{cursor:pointer}
+.rate-app-left{display:flex;align-items:center;gap:12px}
+.rate-app-icon{width:32px;height:32px;border-radius:var(--r-s);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--text2);flex-shrink:0}
+.rate-app-text{display:flex;flex-direction:column;gap:2px}
+.rate-app-label{font-size:.95rem;font-weight:700;color:var(--text);direction:rtl}
+.rate-app-sub{font-size:.75rem;color:var(--text3);direction:rtl}
 /* Social bar */
 .settings-social{display:flex;justify-content:center;gap:10px;padding:18px 0 4px}
 .soc-btn{width:46px;height:46px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.05rem;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .15s}
@@ -1538,6 +1556,8 @@ body{background:var(--bg);color:var(--text)}
 .as2-reciter-play{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:none;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;transition:background-color .15s,color .15s;flex-shrink:0}
 .as2-reciter-play:active{transform:scale(.88)}
 .as2-reciter-card.playing .as2-reciter-play{background:var(--accent);color:#fff}
+.as2-reciter-bell-wrap{display:flex;align-items:center;justify-content:center;height:24px;font-size:1.1rem;color:var(--text3)}
+.as2-reciter-card.on .as2-reciter-bell-wrap{color:var(--accent)}
 /* Duration picker */
 .as2-dur-row{display:flex;gap:6px;padding:0 16px 12px}
 .as2-dur-btn{flex:1;padding:10px 4px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--border);color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background-color .18s,border-color .18s,color .18s,box-shadow .18s;text-align:center}
@@ -1559,20 +1579,33 @@ body{background:var(--bg);color:var(--text)}
 .as2-test-btn{flex:1;padding:11px 12px;background:var(--accent);color:var(--accent-t);border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s,transform .12s}
 .as2-test-btn:active{transform:scale(.96);opacity:.82}
 /* ── Qibla compass modal ── */
-.qibla-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;align-items:center;justify-content:center}
+.qibla-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:10000;align-items:center;justify-content:center}
 .qibla-modal.open{display:flex}
-.qibla-modal-card{background:linear-gradient(160deg,#111 0%,#1e1e1e 100%);border-radius:20px;padding:0 0 24px;width:min(92vw,360px);display:flex;flex-direction:column;align-items:center;overflow:hidden}
-.qibla-modal-hdr{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-.qibla-modal-title{font-size:.9rem;font-weight:600;color:#fff;letter-spacing:.03em}
-.qibla-modal-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
-.qibla-canvas-wrap{padding:20px 0 10px;display:flex;align-items:center;justify-content:center}
-.qibla-info{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:0 16px}
-.qibla-chip{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.07);border-radius:12px;padding:10px 20px;min-width:100px}
-.qibla-chip-label{font-size:.62rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.qibla-chip-val{font-size:1.2rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
-.qibla-approx-badge{font-size:.72rem;color:rgba(255,255,255,.3);align-self:center;padding-top:4px}
-.qibla-loading{font-size:.82rem;color:rgba(255,255,255,.4)}
+.qibla-modal-card{background:linear-gradient(170deg,#0b1a11 0%,#121212 55%,#0e0e0e 100%);border-radius:22px;padding:0 0 20px;width:min(92vw,370px);display:flex;flex-direction:column;align-items:center;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.qibla-modal-hdr{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+.qibla-modal-title{font-size:.9rem;font-weight:600;color:rgba(255,255,255,.9);letter-spacing:.03em}
+.qibla-modal-close{background:rgba(255,255,255,.09);border:none;color:rgba(255,255,255,.7);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
+.qibla-canvas-wrap{padding:16px 0 4px;display:flex;align-items:center;justify-content:center}
+@keyframes qibla-pulse-ring{0%{box-shadow:0 0 0 0 rgba(74,222,128,.40)}70%{box-shadow:0 0 0 22px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+.qibla-pulse{animation:qibla-pulse-ring 1.1s ease-out 2}
+.qibla-status{width:100%;text-align:center;padding:2px 16px 0;font-weight:700;color:transparent;min-height:28px;transition:color .3s}
+.qibla-status.aligned{color:#4ade80;font-size:.82rem;line-height:28px}
+.qibla-status.near,.qibla-status.far{color:#fbbf24;font-size:1.9rem;line-height:1.1}
+.qibla-status.unstable{color:#f87171;font-size:.74rem;line-height:28px}
+.qibla-info{display:flex;flex-direction:column;align-items:center;padding:0 16px;width:100%;box-sizing:border-box}
+.qibla-info-row{display:flex;width:100%;border-top:1px solid rgba(255,255,255,.06);margin-top:6px}
+.qibla-info-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 0}
+.qibla-info-item+.qibla-info-item{border-left:1px solid rgba(255,255,255,.06)}
+.qibla-info-val{font-size:1.25rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;line-height:1}
+.qibla-info-lbl{font-size:.56rem;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.09em;margin-top:4px}
+.qibla-approx-badge{font-size:.7rem;color:rgba(255,255,255,.28);padding-top:2px}
+.qibla-loading{font-size:.82rem;color:rgba(255,255,255,.35)}
 .qibla-no-loc{font-size:.82rem;color:#e55}
+.qibla-calib{display:none;margin:8px 16px 0;background:rgba(255,255,255,.04);border-radius:12px;padding:10px 36px 10px 14px;width:calc(100% - 32px);box-sizing:border-box;position:relative}
+.qibla-calib.on{display:block}
+.qibla-calib-title{font-size:.7rem;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:5px}
+.qibla-calib-item{font-size:.67rem;color:rgba(255,255,255,.3);line-height:1.7}
+.qibla-calib-close{position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(255,255,255,.25);font-size:1rem;cursor:pointer;line-height:1;padding:2px 4px}
 
 /* ===== GENCINE TAB ===== */
 /* Gencine home — cinematic cards */
@@ -1890,7 +1923,7 @@ body{background:var(--bg);color:var(--text)}
   <div class="reader" id="quranReader">
     <div class="reader-placeholder">
       <i class="fas fa-book-open reader-placeholder-icon"></i>
-      <span class="reader-placeholder-text">سورەتێکە هەڵبژێرە</span>
+      <span class="reader-placeholder-text" data-t="reader.select_surah">سورەتێکە هەڵبژێرە</span>
     </div>
     <div class="reader-hdr">
       <button class="back-btn" onclick="App.backToList()"><i class="fas fa-arrow-right"></i></button>
@@ -2258,49 +2291,49 @@ body{background:var(--bg);color:var(--text)}
 <div class="goal-confirm-overlay" id="goalConfirmOverlay" onclick="if(event.target===this)App.closeDeleteConfirm()">
   <div class="goal-confirm-box">
     <span class="goal-confirm-icon"><i class="fas fa-trash-can"></i></span>
-    <div class="goal-confirm-title">ئارمانج بسڕیتەوە؟</div>
-    <div class="goal-confirm-text">چۆن دەتەوێت بکرێت؟</div>
+    <div class="goal-confirm-title" data-i18n="goals.confirm.title">ئارمانج بسڕیتەوە؟</div>
+    <div class="goal-confirm-text" data-i18n="goals.confirm.text">چۆن دەتەوێت بکرێت؟</div>
     <div class="goal-choice-list">
       <button class="goal-choice-btn goal-choice-danger" onclick="App.confirmDeleteGoalFull()">
         <i class="fas fa-rotate-left"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label">سڕینەوە و ریستی هەموو</span>
-          <span class="goal-choice-desc">ئامانج و هەموو ریکۆردەکانی خوێندنەوە دەسڕێنەوە</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.delete_full_label">سڕینەوە و ریستی هەموو</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.delete_full_desc">ئامانج و هەموو ریکۆردەکانی خوێندنەوە دەسڕێنەوە</span>
         </div>
       </button>
       <button class="goal-choice-btn" onclick="App.confirmDeleteGoalKeep()">
         <i class="fas fa-book-open"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label">تەنیا ئامانج بسڕەوە</span>
-          <span class="goal-choice-desc">شوێنی خوێندنەوەم لە قورئاندا دەمێنێتەوە</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.delete_keep_label">تەنیا ئامانج بسڕەوە</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.delete_keep_desc">شوێنی خوێندنەوەم لە قورئاندا دەمێنێتەوە</span>
         </div>
       </button>
     </div>
-    <button class="goal-confirm-cancel-full" onclick="App.closeDeleteConfirm()">پاشگەز</button>
+    <button class="goal-confirm-cancel-full" onclick="App.closeDeleteConfirm()" data-i18n="goals.confirm.cancel">پاشگەز</button>
   </div>
 </div>
 <div class="goal-confirm-overlay" id="goalStartChoiceOverlay" onclick="if(event.target===this)App.closeStartChoice()">
   <div class="goal-confirm-box">
     <span class="goal-confirm-icon" style="background:rgba(var(--accent-rgb),.08);color:var(--accent)"><i class="fas fa-seedling"></i></span>
-    <div class="goal-confirm-title">ئامانجی کۆن هەیە</div>
-    <div class="goal-confirm-text">ئامانجی نوێ چۆن دەستت پێ بکات؟</div>
+    <div class="goal-confirm-title" data-i18n="goals.start_choice.title">ئامانجی کۆن هەیە</div>
+    <div class="goal-confirm-text" data-i18n="goals.start_choice.text">ئامانجی نوێ چۆن دەستت پێ بکات؟</div>
     <div class="goal-choice-list">
       <button class="goal-choice-btn goal-choice-danger" onclick="App.confirmStartFresh()">
         <i class="fas fa-rotate-left"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label">دەستپێکی تازە</span>
-          <span class="goal-choice-desc">ریکۆردەکانی کۆن دەسڕێنەوە و تازە دەستت پێ دەکات</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.fresh_label">دەستپێکی تازە</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.fresh_desc">ریکۆردەکانی کۆن دەسڕێنەوە و تازە دەستت پێ دەکات</span>
         </div>
       </button>
       <button class="goal-choice-btn" onclick="App.confirmStartKeep()">
         <i class="fas fa-book-open"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label">شوێنم بمێنێتەوە</span>
-          <span class="goal-choice-desc">ئامانجی نوێ بکە، شوێنی خوێندنەوەم لە قورئاندا بمێنێتەوە</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.keep_label">شوێنم بمێنێتەوە</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.keep_desc">ئامانجی نوێ بکە، شوێنی خوێندنەوەم لە قورئاندا بمێنێتەوە</span>
         </div>
       </button>
     </div>
-    <button class="goal-confirm-cancel-full" onclick="App.closeStartChoice()">پاشگەز</button>
+    <button class="goal-confirm-cancel-full" onclick="App.closeStartChoice()" data-i18n="goals.confirm.cancel">پاشگەز</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -2315,12 +2348,13 @@ body{background:var(--bg);color:var(--text)}
 <script src="/prayer/prayer.api.js?v=20260326b"></script>
 <script src="/prayer/prayer.logic.js?v=20260326b"></script>
 <script src="/prayer/prayer.notifications.android.js?v=20260326b"></script>
-<script src="/prayer/prayer.qibla.js?v=20260326b"></script>
+<script src="/prayer/prayer.qibla.js?v=20260403b"></script>
 <script src="/prayer/prayer.ui.js?v=20260326b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="/dhikr/dua-data.js?v=20260326b"></script>
 <script src="/dhikr/dhikr.js?v=20260326b"></script>
 <script src="/quran/search.js?v=20260326b"></script>
+<script src="/rating.js?v=20260401a"></script>
 <script src="/app/app.js?v=20260326b"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */

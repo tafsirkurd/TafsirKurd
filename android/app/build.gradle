@@ -66,6 +66,12 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.0"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
 
+    // Firebase Cloud Messaging — push notifications
+    // google-services plugin is applied conditionally below (already present)
+    // Requires android/app/google-services.json from Firebase console
+    implementation platform('com.google.firebase:firebase-bom:33.0.0')
+    implementation 'com.google.firebase:firebase-messaging'
+
 }
 
 apply from: 'capacitor.build.gradle'
