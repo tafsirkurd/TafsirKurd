@@ -825,6 +825,7 @@ function init(){
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);
   setTimeout(function(){checkNewVideoNotif();},1500);
+  setTimeout(function(){_warmAboutCache();},2000);
   setTimeout(function(){checkNewBookNotif();},2500);
   setTimeout(function(){initPushToken();},3000);
   // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
@@ -1187,7 +1188,7 @@ App.tab=function(name){
   if(name==='bookmarks'){var h=_tabHash('bookmarks');if(h!==_renderHash.bm){renderBookmarks();_renderHash.bm=h;}}
   if(name==='goals'){var h=_tabHash('goals');if(h!==_renderHash.goals){renderGoals();_renderHash.goals=h;}}
   if(name==='islamvoice'){var h=_tabHash('islamvoice');if(h!==_renderHash.iv){renderIslamVoice();_renderHash.iv=h;}}
-  if(name==='settings'){var h=_tabHash('settings');if(h!==_renderHash.settings){renderSettings();_renderHash.settings=h;}}
+  if(name==='settings'){var h=_tabHash('settings');if(h!==_renderHash.settings){renderSettings();_renderHash.settings=h;}_warmAboutCache();}
   // Prayer: show panel immediately, defer heavy render + countdown behind rAF
   if(name==='prayer'&&window.PrayerUI){
     requestAnimationFrame(function(){
@@ -5298,6 +5299,19 @@ async function getSiteSettings(force){
 
 /* ===== ABOUT BOTTOM SHEETS ===== */
 var _cfgOverlayEl=null,_cfgSheetEl=null;
+var _aboutImgCache={};
+
+function _warmAboutCache(){
+  getSiteSettings().then(function(ss){
+    [ss.founder_avatar_url,ss.about_avatar_url,ss.tafsir_book_image].forEach(function(url){
+      if(!url||_aboutImgCache[url]!==undefined)return;
+      _aboutImgCache[url]=false;
+      var img=new Image();
+      img.onload=function(){_aboutImgCache[url]=true;};
+      img.src=url;
+    });
+  });
+}
 
 function _ensureCfgSheet(){
   if(_cfgSheetEl)return;
@@ -5340,15 +5354,23 @@ async function openAboutSheet(type){
   hdr.appendChild(titleEl);hdr.appendChild(closeBtn);
   _cfgSheetEl.appendChild(hdr);
   var body=el('div','cfg-sheet-body');
-  var loadEl=el('div','cfg-sheet-role','...');
-  body.appendChild(loadEl);
   _cfgSheetEl.appendChild(body);
 
-  _cfgOverlayEl.classList.add('on');
-  _cfgSheetEl.classList.add('open');
-
-  var ss=await getSiteSettings(true);
-  clear(body);
+  var ss=_ssMemory;
+  if(!ss){
+    var _skEl=el('div','ab-skeleton');
+    _skEl.appendChild(el('div','ab-sk-avatar'));
+    _skEl.appendChild(el('div','ab-sk-line ab-sk-wide'));
+    _skEl.appendChild(el('div','ab-sk-line ab-sk-med'));
+    body.appendChild(_skEl);
+    _cfgOverlayEl.classList.add('on');
+    _cfgSheetEl.classList.add('open');
+    ss=await getSiteSettings();
+    clear(body);
+  }else{
+    _cfgOverlayEl.classList.add('on');
+    _cfgSheetEl.classList.add('open');
+  }
 
   function _addQuote(parent,ar,ref){
     if(!ar)return;
@@ -5369,7 +5391,7 @@ async function openAboutSheet(type){
     var hero=el('div','cfg-sheet-hero');
     var avDiv=el('div','cfg-sheet-avatar');
     var avUrl=ss.founder_avatar_url||'';
-    if(avUrl){var avImg=document.createElement('img');avImg.src=avUrl;avImg.alt='';avDiv.appendChild(avImg);}
+    if(avUrl){var avImg=document.createElement('img');avImg.alt='';avImg.style.opacity=_aboutImgCache[avUrl]?'1':'0';avImg.style.transition='opacity .25s';avImg.onload=function(){avImg.style.opacity='1';};avImg.src=avUrl;avDiv.appendChild(avImg);}
     else{avDiv.appendChild(icon('fas fa-user'));}
     hero.appendChild(avDiv);
     hero.appendChild(el('div','cfg-sheet-name',fname));
@@ -5460,7 +5482,7 @@ async function openAboutSheet(type){
     var cabHero=el('div','cfg-sheet-hero');
     var cabAv=el('div','cfg-sheet-avatar');
     var appAvUrl=ss.about_avatar_url||'';
-    if(appAvUrl){var cabAvImg=document.createElement('img');cabAvImg.src=appAvUrl;cabAvImg.alt='';cabAv.appendChild(cabAvImg);}
+    if(appAvUrl){var cabAvImg=document.createElement('img');cabAvImg.alt='';cabAvImg.style.opacity=_aboutImgCache[appAvUrl]?'1':'0';cabAvImg.style.transition='opacity .25s';cabAvImg.onload=function(){cabAvImg.style.opacity='1';};cabAvImg.src=appAvUrl;cabAv.appendChild(cabAvImg);}
     else{var cabLogo=document.createElement('img');cabLogo.src='/assets/images/logo.png';cabLogo.alt='';cabAv.appendChild(cabLogo);}
     cabHero.appendChild(cabAv);
     cabHero.appendChild(el('div','cfg-sheet-name','تەفسیر کورد'));
@@ -5532,7 +5554,7 @@ async function openAboutSheet(type){
     cabCardText.appendChild(el('div','cab-book-card-desc',ss.about_tafsir_book_desc||'وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.'));
     cabCard.appendChild(cabCardText);
     body.appendChild(cabCard);
-    if(bookImgUrl){var bookImg=document.createElement('img');bookImg.src=bookImgUrl;bookImg.alt='';bookImg.className='cfg-sheet-img';body.appendChild(bookImg);}
+    if(bookImgUrl){var bookImg=document.createElement('img');bookImg.alt='';bookImg.className='cfg-sheet-img';bookImg.style.opacity=_aboutImgCache[bookImgUrl]?'1':'0';bookImg.style.transition='opacity .4s';bookImg.onload=function(){bookImg.style.opacity='1';};bookImg.src=bookImgUrl;body.appendChild(bookImg);}
   }
 }
 

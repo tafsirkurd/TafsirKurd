@@ -865,6 +865,13 @@ body{background:var(--bg);color:var(--text)}
 .cfg-sheet-img{width:calc(100% - 40px);border-radius:12px;object-fit:cover;margin:24px 20px;display:block}
 .cfg-sheet-avatar{width:86px;height:86px;border-radius:50%;overflow:hidden;background:var(--bg2);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);flex-shrink:0}
 .cfg-sheet-avatar img{width:100%;height:100%;object-fit:cover}
+.ab-skeleton{display:flex;flex-direction:column;align-items:center;padding:36px 24px;gap:14px}
+.ab-sk-avatar{width:86px;height:86px;border-radius:50%;background:var(--bg2)}
+.ab-sk-line{height:13px;border-radius:7px;background:var(--bg2)}
+.ab-sk-wide{width:55%}
+.ab-sk-med{width:38%}
+@keyframes ab-shimmer{0%,100%{opacity:.5}50%{opacity:1}}
+.ab-sk-avatar,.ab-sk-line{animation:ab-shimmer 1.2s ease infinite}
 .cfg-sheet-name{font-size:1.15rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:2px;direction:rtl}
 .cfg-sheet-role{font-size:.82rem;color:var(--text3);text-align:center;direction:rtl}
 .cfg-sheet-quote{background:var(--bg2);border-radius:var(--r-l);padding:18px 20px;margin:0 20px 32px;direction:rtl}
