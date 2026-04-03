@@ -427,6 +427,10 @@
             word-break: break-all;
             line-height: 1.4;
         }
+        .t-content {
+            min-width: 0;
+            overflow: hidden;
+        }
         .t-text {
             font-size: 14px;
             color: var(--text-secondary);
@@ -3067,6 +3071,7 @@
 
             // Text + context wrapper
             var contentDiv = document.createElement('div');
+            contentDiv.className = 't-content';
             var textDiv = document.createElement('div');
             textDiv.className = 't-text';
             if (search) {
