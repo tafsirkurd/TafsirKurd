@@ -3022,15 +3022,23 @@
                 ? searchMatches.filter(function(t) { return chipKey(t) === activePageFilter; })
                 : searchMatches;
 
-            // Sort: relevance when searching, newest changes first otherwise
+            // Sort: relevance when searching, newest first (by max of updated_at/created_at) otherwise.
+            // Using MAX so newly added rows (updated_at=null or =created_at) sort by created_at
+            // and appear at the top, not the bottom.
             if (search) {
                 matches.sort(function(a, b) {
                     return getSearchScore(b, search) - getSearchScore(a, search);
                 });
             } else {
                 matches.sort(function(a, b) {
-                    var ua = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-                    var ub = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+                    var ua = Math.max(
+                        a.updated_at ? new Date(a.updated_at).getTime() : 0,
+                        a.created_at ? new Date(a.created_at).getTime() : 0
+                    );
+                    var ub = Math.max(
+                        b.updated_at ? new Date(b.updated_at).getTime() : 0,
+                        b.created_at ? new Date(b.created_at).getTime() : 0
+                    );
                     return ub - ua;
                 });
             }
@@ -3535,16 +3543,18 @@
 
                 logChange('add', { key_id: keyVal, new_text: textVal, page: pageVal });
 
-                // Insert into local array and re-sort — no full DB reload needed
+                // Insert into local array — re-sort newest first so it appears at top
                 allTranslations.push(result.data);
                 allTranslations.sort(function(a, b) {
-                    var pa = (a.page || '').toLowerCase();
-                    var pb = (b.page || '').toLowerCase();
-                    if (pa < pb) return -1;
-                    if (pa > pb) return 1;
-                    var ka = (a.key_id || '').toLowerCase();
-                    var kb = (b.key_id || '').toLowerCase();
-                    return ka < kb ? -1 : ka > kb ? 1 : 0;
+                    var ua = Math.max(
+                        a.updated_at ? new Date(a.updated_at).getTime() : 0,
+                        a.created_at ? new Date(a.created_at).getTime() : 0
+                    );
+                    var ub = Math.max(
+                        b.updated_at ? new Date(b.updated_at).getTime() : 0,
+                        b.created_at ? new Date(b.created_at).getTime() : 0
+                    );
+                    return ub - ua;
                 });
 
                 toggleAddForm();

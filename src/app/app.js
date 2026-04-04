@@ -4,6 +4,15 @@
 (function(){
 'use strict';
 
+// ── Global safe-translation helper ──────────────────────────────────────────
+// window.t() returns the KEY STRING when a key is missing (truthy) — this
+// wrapper converts that case to null so || fallback chains always work,
+// even on first offline launch before Supabase translations have loaded.
+function tSafe(key) {
+  var v = window.t && window.t(key);
+  return (v && v !== key) ? v : null;
+}
+
 /* ===== FORCE UPDATE ===== */
 window.ForceUpdate = (function(){
   var CFG_CACHE_KEY      = 'tk_update_cfg_v2';
@@ -14,15 +23,6 @@ window.ForceUpdate = (function(){
   var _lastCheckTs       = 0;
   var CHECK_DEBOUNCE     = 30 * 1000; // 30s between checks
   var _fuBtnBusy         = false;     // prevent double-tap on hard update btn
-
-  // ── Safe translation helper ───────────────────────────────────────────────
-  // Returns the translated string, or null if the key was not found.
-  // window.t() returns the KEY ITSELF when missing (truthy) — this wrapper
-  // converts that to null so || fallback chains work correctly even offline.
-  function tSafe(key) {
-    var v = window.t && window.t(key);
-    return (v && v !== key) ? v : null;
-  }
 
   // ── Semver comparison ─────────────────────────────────────────────────────
   function compareVersions(a, b) {
@@ -879,58 +879,65 @@ function init(){
   // Normal case: _checkDataReady() triggers _startTabPrerender() ~100ms after start.
   setTimeout(function(){_startTabPrerender();},1500);
 
-  // Smart splash — 5 stages: quran → i18n → gencine → islamvoice → tabs
-  // Progress bar fills as each stage completes. Dismisses only when all ready.
+  // Smart splash — 2 gates: quran data loaded + all tabs pre-rendered.
+  // i18n/gencine/islamvoice removed as gates — they are Supabase-dependent and don't
+  // block meaningful first paint. Tabs gate already implies i18n is applied.
   var _splashStart = Date.now();
-  var _splashMinMs = 600; // reduced: real gates ensure readiness, no need to fake-wait
-  var _splashReady = {quran:false,i18n:false,gencine:false,islamvoice:false,tabs:false};
+  var _splashReady = {quran:false,tabs:false};
   var _splashDismissed = false;
-  var _splashPct = 0; // tracks current progress — only ever increases
-  function _setSplashProgress(pct){
-    if(pct<=_splashPct)return; // never go backwards
-    _splashPct=pct;
-    var fill=document.getElementById('splashBarFill');
-    if(fill)fill.style.width=pct+'%';
-    console.log('[Startup] Progress',pct+'%',Date.now()-_splashStart,'ms',JSON.stringify(_splashReady));
-  }
-  function _checkSplashReady(){
+
+  function _doSplashTransition(){
     if(_splashDismissed)return;
-    var pending=[];
-    if(!_splashReady.quran)pending.push('quran');
-    if(!_splashReady.i18n)pending.push('i18n');
-    if(!_splashReady.gencine)pending.push('gencine');
-    if(!_splashReady.islamvoice)pending.push('islamvoice');
-    if(!_splashReady.tabs)pending.push('tabs');
-    if(pending.length){console.log('[Startup] Waiting for:',pending.join(','));return;}
     _splashDismissed=true;
-    var elapsed=Date.now()-_splashStart;
-    console.log('[Startup] All gates passed — entering app in',Math.max(0,_splashMinMs-elapsed),'ms. Total elapsed:',elapsed,'ms');
-    var delay=Math.max(0,_splashMinMs-elapsed);
-    setTimeout(function(){
-      _setSplashProgress(100);
-      setTimeout(function(){
-        var sp=$('splash');
+    var sp=$('splash');
+    var app=$('app');
+    if(app)app.style.display='flex';
+    // Double rAF: first triggers layout, second ensures browser has painted app content
+    // before splash starts fading — prevents white blank frame.
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
         if(sp)sp.classList.add('hide');
-        var app=$('app');
-        if(app){app.style.display='flex';requestAnimationFrame(function(){app.classList.add('visible');});}
-        try{var sp2=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(sp2)sp2.hide({fadeOutDuration:300});}catch(e){}
-        setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},450);
+        if(app)app.classList.add('visible');
+        setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},400);
         setTimeout(precacheV4Fonts,3000);
         console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
-      },350);
-    },delay);
+      });
+    });
   }
-  window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_setSplashProgress(20);_checkSplashReady();};
-  window._splashReadyI18n       =function(){if(_splashReady.i18n)return;_splashReady.i18n=true;_setSplashProgress(40);_checkSplashReady();};
-  window._splashReadyGencine    =function(){if(_splashReady.gencine)return;_splashReady.gencine=true;_setSplashProgress(60);_checkSplashReady();};
-  window._splashReadyIslamvoice =function(){if(_splashReady.islamvoice)return;_splashReady.islamvoice=true;_setSplashProgress(80);_checkSplashReady();};
-  window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_setSplashProgress(100);_checkSplashReady();};
-  // Gencine failsafe — unblock if Supabase is slow after 15s
-  setTimeout(function(){if(window._splashReadyGencine)window._splashReadyGencine();},15000);
-  // IslamVoice failsafe — unblock if Supabase is slow after 12s
-  setTimeout(function(){if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();},12000);
-  // Overall failsafe — force app visible after 25s no matter what
-  setTimeout(function(){_splashReady.quran=_splashReady.i18n=_splashReady.gencine=_splashReady.islamvoice=_splashReady.tabs=true;_checkSplashReady();},25000);
+
+  function _checkSplashReady(){
+    if(_splashDismissed)return;
+    if(!_splashReady.quran||!_splashReady.tabs)return;
+    console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
+    // Pre-warm app layout one frame before transition starts — gives browser a head start
+    // painting the app before the splash fade begins (3 rAFs total on normal path).
+    var app=$('app');
+    if(app)app.style.display='flex';
+    requestAnimationFrame(function(){_doSplashTransition();});
+  }
+
+  // Video loops continuously — exit driven purely by data readiness
+  var _splashVid=document.getElementById('splashVideo');
+  if(_splashVid){
+    _splashVid.addEventListener('ended',function(){
+      _splashVid.currentTime=0;_splashVid.play().catch(function(){});
+    });
+    // Fade video in over poster once first frame is rendering — smooth image→video handoff
+    _splashVid.addEventListener('playing',function(){_splashVid.style.opacity='1';},{once:true});
+    _splashVid.play().catch(function(){
+      // Autoplay blocked (rare on mobile) — fall through to app after brief pause
+      setTimeout(_doSplashTransition,500);
+    });
+  }
+
+  window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_checkSplashReady();};
+  window._splashReadyI18n       =function(){}; // not a gate — always fires before tabs anyway
+  window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
+  window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
+  window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_checkSplashReady();};
+  // Overall failsafe — force app visible after 12s no matter what
+  setTimeout(function(){_doSplashTransition();},12000);
   // Data always loads async now (no localStorage cache) — splash waits for both files
 }
 
@@ -1695,7 +1702,7 @@ function checkNewVideoNotif(){
     return;
   }
   var lastCheck=localStorage.getItem('lastVideoNotifCheck');
-  S.supabase.from('islamvoice_episodes').select('id,title,title_ku,created_at').gt('created_at',lastCheck).order('created_at',{ascending:false}).limit(1)
+  S.supabase.from('islamvoice_episodes').select('id,title,title_ku,created_at').eq('is_published',true).gt('created_at',lastCheck).order('created_at',{ascending:false}).limit(1)
     .then(function(res){
       localStorage.setItem('lastVideoNotifCheck',now);
       if(!res||!res.data||!res.data.length)return;
@@ -1707,8 +1714,8 @@ function checkNewVideoNotif(){
           LN.cancel({notifications:[{id:31}]}).catch(function(){});
           LN.schedule({notifications:[{
             id:31,
-            title:t('notif.new_video_title')||'ڤیدیۆیەکی نوێ 🎬',
-            body:(ep.title_ku||ep.title)||t('notif.new_video_body')||'ڤیدیۆیەکی نوێ زیاد بوو',
+            title:tSafe('notif.new_video_title')||'ڤیدیۆیەکا نوی 🎬',
+            body:(ep.title_ku||ep.title)||tSafe('notif.new_video_body')||'ڤیدیۆیەکا نوی زێدەبوو',
             schedule:{at:new Date(Date.now()+3000),allowWhileIdle:true},
             smallIcon:'ic_notification',
             channelId:'reminder',
@@ -1744,8 +1751,8 @@ function checkNewBookNotif(){
           LN.cancel({notifications:[{id:32}]}).catch(function(){});
           LN.schedule({notifications:[{
             id:32,
-            title:t('notif.new_book_title')||'کتێبێکی نوێ 📖',
-            body:(book.title_ku||book.title_ar)||t('notif.new_book_body')||'کتێبێکی نوێ زیاد بوو',
+            title:tSafe('notif.new_book_title')||'پەرتوکەکا نوی 📖',
+            body:(book.title_ku||book.title_ar)||tSafe('notif.new_book_body')||'پەرتوکەکا نوی زێدەبوو',
             schedule:{at:new Date(Date.now()+4000),allowWhileIdle:true},
             smallIcon:'ic_notification',
             channelId:'reminder',
@@ -7605,8 +7612,22 @@ function renderIvGrid(){
     return;
   }
 
-  // Sort by display_order
+  // Sort by latest episode date (newest series first), fallback to display_order
+  var _now24h=Date.now()-86400000;
   var sorted=S.ivSeries.slice().sort(function(a,b){
+    var epsA=_ivEpsBySeriesId?(_ivEpsBySeriesId[a.id]||[]):[];
+    var epsB=_ivEpsBySeriesId?(_ivEpsBySeriesId[b.id]||[]):[];
+    function maxDate(eps){
+      var m=0;
+      for(var i=0;i<eps.length;i++){
+        var t2=eps[i].created_at?new Date(eps[i].created_at).getTime():0;
+        if(t2>m)m=t2;
+      }
+      return m;
+    }
+    var da=maxDate(epsA)||0;
+    var db=maxDate(epsB)||0;
+    if(da!==db)return db-da;
     return(a.display_order||999)-(b.display_order||999);
   });
 
@@ -7663,6 +7684,13 @@ function renderIvGrid(){
     body.appendChild(el('div','iv-card-title',series.name_ku||series.name||''));
     if(series.speaker){
       body.appendChild(el('div','iv-card-speaker',series.speaker));
+    }
+    // New-videos badge: count episodes added in last 24h
+    var newEpCount=eps.filter(function(ep){
+      return ep.created_at&&new Date(ep.created_at).getTime()>_now24h;
+    }).length;
+    if(newEpCount>0){
+      body.appendChild(el('div','iv-card-new-badge',newEpCount+' '+(tSafe('iv.new_eps')||'نوی')));
     }
     card.appendChild(body);
 
@@ -8206,6 +8234,11 @@ function ivTrackView(episodeId){
 /* ===== START ===== */
 function startApp(){
   console.log('[Startup] startApp()',Date.now()-_startupT0,'ms');
+  // Hide native splash after one rAF — custom splash is painted by then and takes over.
+  // fadeOutDuration:0 = instant swap (both backgrounds are white — no visible gap).
+  requestAnimationFrame(function(){
+    try{var _ns=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(_ns)_ns.hide({fadeOutDuration:0});}catch(e){}
+  });
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||22)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
