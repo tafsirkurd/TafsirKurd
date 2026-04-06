@@ -39,6 +39,75 @@
     'DuzKhormatou': { lat: 34.8453, lon: 44.9580 }
   };
 
+  // ── Validation ──────────────────────────────────────────────────────────────
+
+  var REQUIRED_PRAYERS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+  function _isValidHHMM(s) {
+    if (typeof s !== 'string') return false;
+    var m = s.trim().split(' ')[0].match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return false;
+    var h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+    return h >= 0 && h <= 23 && min >= 0 && min <= 59;
+  }
+
+  /**
+   * Validate a monthly data object from amozhgary.tv.
+   * Requires: data.days exists, and at least 80% of days in the month have
+   * all six required prayer fields as valid HH:MM strings.
+   */
+  function _validateMonthly(data, year, month) {
+    if (!data || typeof data !== 'object' || !data.days) return false;
+    var days = data.days;
+    var daysInMonth = new Date(year, month, 0).getDate();
+    var validCount = 0;
+    for (var d = 1; d <= daysInMonth; d++) {
+      var day = days[d] || days[String(d)];
+      if (!day) continue;
+      var allValid = true;
+      for (var pi = 0; pi < REQUIRED_PRAYERS.length; pi++) {
+        if (!_isValidHHMM(day[REQUIRED_PRAYERS[pi]])) { allValid = false; break; }
+      }
+      if (allValid) validCount++;
+    }
+    return validCount >= Math.floor(daysInMonth * 0.8);
+  }
+
+  // ── Debug info ──────────────────────────────────────────────────────────────
+
+  function _storeDebugInfo(source, mkey) {
+    try {
+      localStorage.setItem('lastPrayerFetchAt', String(Date.now()));
+      localStorage.setItem('lastPrayerSource',   source);
+      localStorage.setItem('lastPrayerMonthKey', mkey);
+    } catch(e) {}
+  }
+
+  // ── Next-month prefetch ─────────────────────────────────────────────────────
+
+  function _prefetchNextMonthIfNearEnd(city, year, month, day) {
+    var daysInMonth = new Date(year, month, 0).getDate();
+    if (daysInMonth - day > 6) return; // not near end — skip
+    var ny = month === 12 ? year + 1 : year;
+    var nm = month === 12 ? 1 : month + 1;
+    var nextKey = window.PrayerCache.monthKey(city, ny, nm);
+    if (window.PrayerCache.read(nextKey)) return; // already cached
+    var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
+              '&year=' + ny + '&month=' + nm;
+    fetch(url)
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        if (!d || d.error || !_validateMonthly(d, ny, nm)) return;
+        window.PrayerCache.writeWithMeta(nextKey, d, {
+          fetchedAt: Date.now(), source: 'kurd', city: city, year: ny, month: nm
+        });
+        console.log('[PrayerAPI] prefetched next month:', city, ny + '-' + nm);
+      })
+      .catch(function() {});
+  }
+
+  // ── Main fetch ──────────────────────────────────────────────────────────────
+
   /**
    * Fetch prayer times for a city on a specific date.
    * Tries amozhgary.tv monthly data first, falls back to Aladhan method=13.
@@ -70,9 +139,14 @@
         if (!res.ok) throw new Error('HTTP ' + res.status);
         monthly = await res.json();
         if (monthly.error) throw new Error(monthly.error);
-        window.PrayerCache.write(mkey, monthly);
+        if (!_validateMonthly(monthly, year, month)) throw new Error('validation-failed');
+        window.PrayerCache.writeWithMeta(mkey, monthly, {
+          fetchedAt: Date.now(), source: 'kurd', city: city, year: year, month: month
+        });
+        _storeDebugInfo('kurd', mkey);
+        _prefetchNextMonthIfNearEnd(city, year, month, day);
       } catch(e) {
-        // Fall through to Aladhan
+        console.warn('[PrayerAPI] primary fetch failed:', e && e.message, '— falling back to Aladhan');
         monthly = null;
       }
     }
@@ -91,7 +165,9 @@
     }
 
     // ── Fallback: Aladhan method=13 (Diyanet) ──
-    return fetchFromAladhan(city, today, 13);
+    var fallbackResult = await fetchFromAladhan(city, today, 13);
+    _storeDebugInfo('aladhan', mkey);
+    return fallbackResult;
   }
 
   async function fetchFromAladhan(city, dateISO, aladhanMethod) {
@@ -115,9 +191,91 @@
     return json.data; // { timings:{...}, date:{gregorian,hijri} }
   }
 
+  // ── Background refresh ──────────────────────────────────────────────────────
+
+  var STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
+  // In-flight guard keyed by mkey — prevents duplicate concurrent fetches when
+  // render() is called multiple times rapidly while cache is stale (e.g. tab
+  // switch away and back before the first fetch resolves).
+  var _bgInFlight = {};
+
+  /**
+   * Silently re-fetch the monthly cache in the background if it's older than
+   * STALE_MS. If today's timings changed, calls onFreshData(newData).
+   * Never blocks the caller — always fires and forgets.
+   * At most one fetch per mkey is in flight at any time.
+   *
+   * @param {string}   city      — city name
+   * @param {string}   dateISO   — "YYYY-MM-DD"
+   * @param {Function} onFreshData — called with {timings, date} only if today's data changed
+   */
+  function backgroundRefresh(city, dateISO, onFreshData) {
+    var parts = dateISO.split('-').map(Number);
+    var year = parts[0], month = parts[1], day = parts[2];
+    var mkey = window.PrayerCache.monthKey(city, year, month);
+
+    var meta = window.PrayerCache.readMeta(mkey);
+    var age  = (meta && meta.fetchedAt) ? (Date.now() - meta.fetchedAt) : Infinity;
+    if (age < STALE_MS) return; // fresh — nothing to do
+
+    // Only one fetch per month key in flight at a time
+    if (_bgInFlight[mkey]) return;
+    _bgInFlight[mkey] = true;
+
+    console.log('[PrayerAPI] backgroundRefresh: cache is', Math.round(age / 3600000) + 'h old — refreshing', city, dateISO);
+
+    var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
+              '&year=' + year + '&month=' + month;
+
+    fetch(url)
+      .then(function(r) { return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
+      .then(function(fresh) {
+        if (!fresh || fresh.error) throw new Error(fresh && fresh.error ? fresh.error : 'empty');
+        if (!_validateMonthly(fresh, year, month)) throw new Error('validation-failed');
+
+        // Snapshot today's old timings before overwriting
+        var oldMonthly = window.PrayerCache.read(mkey);
+        var oldDay = oldMonthly && oldMonthly.days
+          ? (oldMonthly.days[day] || oldMonthly.days[String(day)]) : null;
+
+        // Always write fresh data with updated fetchedAt
+        window.PrayerCache.writeWithMeta(mkey, fresh, {
+          fetchedAt: Date.now(), source: 'kurd-bg', city: city, year: year, month: month
+        });
+        _storeDebugInfo('kurd-bg', mkey);
+        _prefetchNextMonthIfNearEnd(city, year, month, day);
+
+        // Only notify caller if today's prayer times actually changed
+        var freshDay = fresh.days[day] || fresh.days[String(day)];
+        if (!freshDay) return;
+        if (oldDay && JSON.stringify(oldDay) === JSON.stringify(freshDay)) {
+          console.log('[PrayerAPI] backgroundRefresh: data unchanged for', city, dateISO);
+          return;
+        }
+        console.log('[PrayerAPI] backgroundRefresh: timings changed — notifying UI', city, dateISO);
+        onFreshData({
+          timings: {
+            Fajr: freshDay.Fajr, Sunrise: freshDay.Sunrise, Dhuhr: freshDay.Dhuhr,
+            Asr:  freshDay.Asr,  Maghrib: freshDay.Maghrib, Isha:  freshDay.Isha
+          },
+          date: { hijriStr: freshDay.hijri || null }
+        });
+      })
+      .catch(function(e) {
+        console.log('[PrayerAPI] backgroundRefresh failed (non-fatal):', e && (e.message || e));
+      })
+      .then(function() {
+        // Always release the in-flight lock whether fetch succeeded or failed
+        delete _bgInFlight[mkey];
+      });
+  }
+
+  // ── Public API ──────────────────────────────────────────────────────────────
+
   window.PrayerAPI = {
-    fetchPrayerTimes: fetchPrayerTimes,
-    CITY_COORDS: CITY_COORDS
+    fetchPrayerTimes:  fetchPrayerTimes,
+    backgroundRefresh: backgroundRefresh,
+    CITY_COORDS:       CITY_COORDS
   };
 
 })();

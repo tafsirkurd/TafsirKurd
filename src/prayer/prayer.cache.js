@@ -21,6 +21,22 @@
     write: function(key, data) {
       try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
     },
+    // Write monthly data with metadata envelope (fetchedAt, source, city, year, month).
+    // Stored as: { days:{...}, ...serverFields, _meta:{...} }
+    // Backwards-compatible — callers still read .days as before.
+    writeWithMeta: function(key, data, meta) {
+      try {
+        var stored = {};
+        for (var k in data) { if (Object.prototype.hasOwnProperty.call(data, k)) stored[k] = data[k]; }
+        stored._meta = meta; // always overwrite, even if data already had one
+        localStorage.setItem(key, JSON.stringify(stored));
+      } catch(e) {}
+    },
+    // Returns the _meta object if present, otherwise null.
+    readMeta: function(key) {
+      var stored = this.read(key);
+      return (stored && stored._meta) || null;
+    },
     clear: function(key) {
       try { localStorage.removeItem(key); } catch(e) {}
     }

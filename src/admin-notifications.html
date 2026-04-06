@@ -84,6 +84,7 @@
             text-transform: uppercase;
             letter-spacing: .5px;
         }
+        .status-template  { background: #faf0ff; color: #6b21a8; border: 1px solid #d8b4fe; }
         .status-draft     { background: var(--bg-active); color: var(--text-secondary); }
         .status-scheduled { background: #bee3f8; color: #2b6cb0; }
         .status-sending   { background: #fefcbf; color: #744210; animation: pulse-bg 1.2s ease infinite; }
@@ -386,6 +387,14 @@
                     </div>
                 </div>
 
+                <!-- Templates -->
+                <div id="templates-section" style="display:none;margin-bottom:16px">
+                    <div style="font-size:12px;font-weight:600;color:#6b21a8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                        <i data-lucide="bookmark" style="width:14px;height:14px"></i> Pinned Templates
+                    </div>
+                    <div id="templates-list" style="display:flex;flex-direction:column;gap:8px"></div>
+                </div>
+
                 <!-- Filters -->
                 <div class="filter-row">
                     <select id="status-filter" onchange="applyFilters()">
@@ -549,6 +558,16 @@
                 <div class="form-group">
                     <label class="form-label">Internal Notes <span style="font-size:11px;color:var(--text-tertiary)">(not sent)</span></label>
                     <textarea id="f-notes" class="form-input" rows="2" placeholder="Campaign notes, target info, etc."></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:#faf0ff;border:1px solid #d8b4fe;border-radius:8px">
+                        <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:#7c3aed;cursor:pointer">
+                        <div>
+                            <div style="font-size:13px;font-weight:600;color:#6b21a8">Pin as Template</div>
+                            <div style="font-size:11px;color:#9333ea;margin-top:1px">Stays pinned at the top. Clicking Send always keeps this template intact.</div>
+                        </div>
+                    </label>
                 </div>
 
                 <div id="modal-error" style="color:#e53e3e;font-size:13px;margin-top:8px;display:none"></div>
@@ -758,12 +777,28 @@
         }
 
         function renderTable(list) {
+            // Separate templates from regular notifications
+            var templates = _notifications.filter(function(n) { return n.is_template; });
+            var regular = list.filter(function(n) { return !n.is_template; });
+
+            // Render templates section
+            var section = document.getElementById('templates-section');
+            var tlist = document.getElementById('templates-list');
+            while (tlist.firstChild) tlist.removeChild(tlist.firstChild);
+            if (templates.length && _role !== 'analyst') {
+                section.style.display = 'block';
+                templates.forEach(function(n) { tlist.appendChild(buildTemplateCard(n)); });
+            } else {
+                section.style.display = 'none';
+            }
+
+            // Render regular table
             var tbody = document.getElementById('notif-tbody');
             var count = document.getElementById('result-count');
             while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-            if (count) count.textContent = list.length + ' result' + (list.length !== 1 ? 's' : '');
+            if (count) count.textContent = regular.length + ' result' + (regular.length !== 1 ? 's' : '');
 
-            if (!list.length) {
+            if (!regular.length) {
                 var tr = document.createElement('tr');
                 var td = document.createElement('td');
                 td.colSpan = 7;
@@ -773,11 +808,57 @@
                 td.textContent = 'No notifications found';
                 tr.appendChild(td);
                 tbody.appendChild(tr);
-                return;
+            } else {
+                regular.forEach(function(n) { tbody.appendChild(buildRow(n)); });
             }
-
-            list.forEach(function(n) { tbody.appendChild(buildRow(n)); });
             lucide.createIcons();
+        }
+
+        function buildTemplateCard(n) {
+            var card = document.createElement('div');
+            card.style.cssText = 'background:#faf0ff;border:1px solid #d8b4fe;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+
+            var info = document.createElement('div');
+            info.style.cssText = 'flex:1;min-width:0';
+            var titleEl = document.createElement('div');
+            titleEl.style.cssText = 'font-weight:600;color:#3b0764;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+            titleEl.textContent = n.title;
+            var bodyEl = document.createElement('div');
+            bodyEl.style.cssText = 'font-size:12px;color:#7c3aed;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+            bodyEl.textContent = n.body;
+            info.appendChild(titleEl);
+            info.appendChild(bodyEl);
+
+            var meta = document.createElement('div');
+            meta.style.cssText = 'font-size:11px;color:#9333ea;white-space:nowrap';
+            meta.textContent = labelPlatform(n.platform) + ' · ' + labelAudience(n.audience);
+
+            var btns = document.createElement('div');
+            btns.className = 'action-btns';
+            var sendBtn = makeBtn('Send Now', 'btn-send-green', async function() {
+                if (sendBtn.disabled) return;
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Sending…';
+                try {
+                    var result = await notifAPI('send', { id: n.id });
+                    loadPage();
+                    showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
+                } catch(e) {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send Now';
+                    alert('Send failed: ' + e.message);
+                }
+            });
+            var editBtn = makeBtn('Edit', '', function() { openEditModal(n); });
+            var delBtn = makeBtn('Del', 'btn-danger-sm', function() { deleteNotif(n.id); });
+            btns.appendChild(sendBtn);
+            if (_role !== 'analyst') btns.appendChild(editBtn);
+            if (_role === 'super_admin') btns.appendChild(delBtn);
+
+            card.appendChild(info);
+            card.appendChild(meta);
+            card.appendChild(btns);
+            return card;
         }
 
         function buildRow(n) {
@@ -789,6 +870,14 @@
             badge.className = 'status-badge status-' + n.status;
             badge.textContent = n.status;
             td1.appendChild(badge);
+            if (n.is_template) {
+                var tBadge = document.createElement('span');
+                tBadge.className = 'status-badge status-template';
+                tBadge.style.marginTop = '4px';
+                tBadge.textContent = 'template';
+                td1.appendChild(document.createElement('br'));
+                td1.appendChild(tBadge);
+            }
             tr.appendChild(td1);
 
             // Title + body
@@ -896,7 +985,7 @@
                     btnWrap.appendChild(makeBtn('Edit', '', function() { openEditModal(n); }));
                 }
                 if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
-                    btnWrap.appendChild(makeBtn('Send', 'btn-send-green', function() { confirmSend(n.id); }));
+                    (function() { var b = makeBtn('Send', 'btn-send-green', function() { confirmSend(n.id, b); }); btnWrap.appendChild(b); })();
                 }
                 if (n.status === 'scheduled') {
                     btnWrap.appendChild(makeBtn('Cancel', '', function() { cancelNotif(n.id); }));
@@ -978,6 +1067,7 @@
                 document.getElementById('f-recurrence-day').style.display = 'inline-block';
                 document.getElementById('f-recurrence-day').value = n.recurrence_day != null ? String(n.recurrence_day) : '5';
             }
+            document.getElementById('f-is-template').checked = !!n.is_template;
             onDeepLinkChange();
             updateTokenPreview();
             document.getElementById('create-modal').classList.add('active');
@@ -1001,6 +1091,7 @@
             document.getElementById('rec-none').checked = true;
             document.getElementById('recurrence-group').style.display = 'none';
             document.getElementById('f-recurrence-day').style.display = 'none';
+            document.getElementById('f-is-template').checked = false;
             document.getElementById('title-count').textContent = '0/100';
             document.getElementById('body-count').textContent = '0/300';
             document.getElementById('modal-error').style.display = 'none';
@@ -1065,7 +1156,8 @@
                 scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
                 recurrence: recurrence,
                 recurrence_day: recurrenceDay,
-                notes: document.getElementById('f-notes').value.trim()
+                notes: document.getElementById('f-notes').value.trim(),
+                is_template: document.getElementById('f-is-template').checked
             };
         }
 
@@ -1118,14 +1210,23 @@
         }
 
         // ── Actions ──────────────────────────────────────────────
-        async function confirmSend(id) {
+        var _sending = {};
+        async function confirmSend(id, btn) {
+            if (_sending[id]) return;
             var n = _notifications.find(function(x) { return x.id === id; });
             if (!confirm('Send "' + (n ? n.title : 'this notification') + '" now?\nThis cannot be undone.')) return;
+            _sending[id] = true;
+            if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
             try {
                 var result = await notifAPI('send', { id: id });
                 loadPage();
                 showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
-            } catch(e) { alert('Send failed: ' + e.message); }
+            } catch(e) {
+                if (btn) { btn.disabled = false; btn.textContent = 'Send Now'; }
+                alert('Send failed: ' + e.message);
+            } finally {
+                delete _sending[id];
+            }
         }
 
         async function cancelNotif(id) {
@@ -1210,7 +1311,7 @@
             if (_role !== 'analyst') {
                 if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
                     footer.appendChild(makeBtn('Edit', '', function() { closeDetailModal(); openEditModal(n); }));
-                    var sendBtn = makeBtn('Send Now', 'btn-send-green', function() { closeDetailModal(); confirmSend(n.id); });
+                    var sendBtn = makeBtn('Send Now', 'btn-send-green', function() { closeDetailModal(); confirmSend(n.id, null); });
                     footer.appendChild(sendBtn);
                 }
                 if (n.status === 'sent') {

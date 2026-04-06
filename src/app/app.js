@@ -498,6 +498,11 @@ function prefetchAyahBlob(surah,ayah){
       if(xhr.status===200&&_pfCache[url]===slot){
         slot.blob=URL.createObjectURL(xhr.response);
         slot.xhr=null;
+        // Persist to local cache — fire and forget, never interrupts playback
+        if(window.AudioCache){
+          var _p=url.match(/\/([^/]+)\/(\d{3})(\d{3})\.mp3$/);
+          if(_p)AudioCache.saveBlob(_p[1],parseInt(_p[2],10),parseInt(_p[3],10),xhr.response);
+        }
       }
     };
     xhr.onerror=function(){if(_pfCache[url]===slot)delete _pfCache[url];};
@@ -563,7 +568,6 @@ var S={
   mushafFont:localStorage.getItem('mushafFont')||'qcf4',
   mushafFontSize:(function(){var f=localStorage.getItem('mushafFont')||'qcf4';return parseInt(localStorage.getItem('mushafFontSize_'+f))||(f==='qcf1'?22:20);}()),
   mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||1.8,
-  renderedAyahs:[],renderedTafsirs:{},
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
 
@@ -587,11 +591,39 @@ function init(){
     on(S.audio.el,'ended',function(){App.audioNext()});
     on(S.audio.el,'error',function(){
       if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
-      if(S.audio.surah){
-        var errCode=S.audio.el.error&&S.audio.el.error.code;
-        var msg=(errCode===4||errCode===2)?t('error.audio_unavailable')||'هذا القارئ لا تتوفر له تلاوة لهذه السورة':t('error.audio_load');
-        toast(msg);
+      if(!S.audio.surah)return;
+      var errCode=S.audio.el.error&&S.audio.el.error.code;
+      var currentSrc=S.audio.el.src||'';
+      console.warn('[Audio] error — reciter:'+RECITER+' surah:'+S.audio.surah+' ayah:'+S.audio.ayah
+        +' errCode:'+errCode+' src:'+currentSrc.slice(0,100));
+      // If src was a local cached file — clear it and transparently retry with remote URL.
+      // Local files can fail if the OS evicted them from cache storage.
+      // errCode 4 (SRC_NOT_SUPPORTED) is the typical code when a capacitor:// file is missing.
+      if(currentSrc.indexOf('capacitor://')===0||currentSrc.indexOf('file://')===0){
+        console.warn('[Audio] local file failed — evicting from cache, retrying remote');
+        if(window.AudioCache)AudioCache.clearLocalUri(RECITER,S.audio.surah,S.audio.ayah);
+        var remoteUrl=audioUrl(S.audio.surah,S.audio.ayah);
+        S.audio.el.src=remoteUrl;
+        S.audio.el.play().catch(function(){});
+        return; // transparent retry — no toast shown
       }
+      // errCode 4 = MEDIA_ERR_SRC_NOT_SUPPORTED — reciter has no audio for this surah (404/unsupported)
+      // errCode 2 = MEDIA_ERR_NETWORK — transient network failure (NOT a missing-reciter issue)
+      // errCode 3 = MEDIA_ERR_DECODE — bad file data
+      // errCode 1 = MEDIA_ERR_ABORTED — user/system cancelled (usually silent)
+      var msg;
+      if(errCode===4){
+        msg=t('error.audio_unavailable')||'هذا القارئ لا تتوفر له تلاوة لهذه السورة';
+        console.warn('[Audio] 404/unsupported — url:'+audioUrl(S.audio.surah,S.audio.ayah));
+      } else if(errCode===1){
+        return; // aborted — no toast
+      } else {
+        // code 2 (network) or code 3 (decode) — show a generic load error, not "not available"
+        msg=t('error.audio_load')||'کێشەی بارکردنی دەنگ';
+        console.error('[Audio] load error code:'+errCode+' reciter:'+RECITER
+          +' url:'+audioUrl(S.audio.surah,S.audio.ayah));
+      }
+      toast(msg);
     });
     on(S.audio.el,'waiting',function(){if(S.audio.playing)setAudioIcon('loading')});
     on(S.audio.el,'playing',function(){
@@ -662,6 +694,10 @@ function init(){
             initTodayVerses();
             // Reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
+            // Rebuild prayer panel if active — handles overnight stale date
+            // (tickCountdown uses _currentDateISO; if date changed the countdown is wrong
+            // until render() detects the key mismatch and rebuilds with today's timings)
+            if(window.PrayerUI&&S.tab==='prayer')requestAnimationFrame(function(){PrayerUI.render();});
             // Push fresh widget data if date or city changed since last push
             if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
             pushGoalDataToWidget();
@@ -820,6 +856,8 @@ function init(){
       localStorage.removeItem('athanChannelVer');
       // Create reminder channel immediately at startup
       _ensureReminderChannel(_LN);
+      // Reschedule daily reminder on every launch so 7-day window never expires
+      scheduleReminder(S.dailyReminder, S.reminderTime);
     }catch(e){}
   }
 
@@ -836,11 +874,14 @@ function init(){
   setTimeout(function(){checkNewVideoNotif();},1500);
   setTimeout(function(){_warmAboutCache();},2000);
   setTimeout(function(){checkNewBookNotif();},2500);
+  _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
   // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
   setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},4000);
   // Athan voice decode is CPU-intensive — delay until after first 3s of interaction
   setTimeout(function(){if(window.PrayerUI)PrayerUI.preloadAthanVoices();},3500);
+  // Audio cache warmup — verify manifest entries still exist on disk, populate _uriMap
+  setTimeout(function(){if(window.AudioCache)AudioCache.warmup();},3000);
 
   // Fetch prayer data immediately (no delay) so cache is ready for pre-render below
   if(window.PrayerAPI&&window.PrayerCache&&window.PrayerLogic){
@@ -880,11 +921,42 @@ function init(){
   setTimeout(function(){_startTabPrerender();},1500);
 
   // Smart splash — 2 gates: quran data loaded + all tabs pre-rendered.
-  // i18n/gencine/islamvoice removed as gates — they are Supabase-dependent and don't
-  // block meaningful first paint. Tabs gate already implies i18n is applied.
+  // Hybrid timing: first launch / new version → 3s minimum (full animation).
+  //                repeat same-version launches → immediate exit when data ready.
   var _splashStart = Date.now();
   var _splashReady = {quran:false,tabs:false};
   var _splashDismissed = false;
+  var _splashSeenKey = 'tk_splash_seen';
+  var _splashMinPassed = false;
+
+  // Version check — resolves in <10ms on device (Capacitor bridge call)
+  (function(){
+    try {
+      if (!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.App) {
+        _splashMinPassed=true; return; // web/dev — no minimum
+      }
+      Capacitor.Plugins.App.getInfo().then(function(info){
+        if (localStorage.getItem(_splashSeenKey)===(info.version||'')) {
+          // Repeat launch, same version — exit as soon as data is ready
+          _splashMinPassed=true;
+          _checkSplashReady();
+        }
+        // else: first launch or new version — 3s timer handles it below
+      }).catch(function(){ _splashMinPassed=true; _checkSplashReady(); });
+    } catch(e){ _splashMinPassed=true; }
+  })();
+
+  // 3s minimum — only active for first launch / new version.
+  // Writes the "seen" flag so next launch is instant.
+  setTimeout(function(){
+    if(_splashMinPassed)return; // already cleared (repeat launch)
+    try {
+      if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App)
+        Capacitor.Plugins.App.getInfo().then(function(i){localStorage.setItem(_splashSeenKey,i.version||'');}).catch(function(){});
+    }catch(e){}
+    _splashMinPassed=true;
+    _checkSplashReady();
+  },3000);
 
   function _doSplashTransition(){
     if(_splashDismissed)return;
@@ -899,6 +971,11 @@ function init(){
         console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
         if(sp)sp.classList.add('hide');
         if(app)app.classList.add('visible');
+        // Execute any pending push deep link now that app is fully visible
+        if(_pendingPushDeepLink){
+          var _pl=_pendingPushDeepLink;_pendingPushDeepLink=null;
+          setTimeout(function(){_handlePushDeepLink(_pl.type,_pl.id);},300);
+        }
         setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},400);
         setTimeout(precacheV4Fonts,3000);
         console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
@@ -909,6 +986,8 @@ function init(){
   function _checkSplashReady(){
     if(_splashDismissed)return;
     if(!_splashReady.quran||!_splashReady.tabs)return;
+    if(!_splashReady.video)return; // wait for video to finish playing
+    if(!_splashMinPassed)return; // first launch / new version: wait for 3s minimum
     console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
     // Pre-warm app layout one frame before transition starts — gives browser a head start
     // painting the app before the splash fade begins (3 rAFs total on normal path).
@@ -917,18 +996,22 @@ function init(){
     requestAnimationFrame(function(){_doSplashTransition();});
   }
 
-  // Video loops continuously — exit driven purely by data readiness
+  // Video plays once — app exits splash only after video finishes AND data is ready
   var _splashVid=document.getElementById('splashVideo');
   if(_splashVid){
     _splashVid.addEventListener('ended',function(){
-      _splashVid.currentTime=0;_splashVid.play().catch(function(){});
+      if(_splashReady.video)return;
+      _splashReady.video=true;
+      _checkSplashReady();
     });
-    // Fade video in over poster once first frame is rendering — smooth image→video handoff
-    _splashVid.addEventListener('playing',function(){_splashVid.style.opacity='1';},{once:true});
     _splashVid.play().catch(function(){
-      // Autoplay blocked (rare on mobile) — fall through to app after brief pause
-      setTimeout(_doSplashTransition,500);
+      // Autoplay blocked — mark video gate as passed so app can still load
+      _splashReady.video=true;
+      _checkSplashReady();
     });
+  } else {
+    // No video element — don't block on it
+    _splashReady.video=true;
   }
 
   window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_checkSplashReady();};
@@ -1121,7 +1204,7 @@ function _tabHash(name){
     return JSON.stringify(g)+':'+(log[today]||0)+':'+calcStreak(log)+':'+sl;
   }
   if(name==='settings'){
-    return (S.user?S.user.email:'')+S.darkMode+S.hapticFeedback+S.fontSize+S.keepAwake+S.reminderEnabled+S.reminderTime;
+    return (S.user?S.user.email:'')+':'+S.theme+':'+S.hapticFeedback+':'+S.arSize+':'+S.tfSize+':'+S.keepAwake+':'+S.dailyReminder+':'+S.reminderTime;
   }
   if(name==='islamvoice'){
     return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'')+(S.ivSpeakerFilter||'');
@@ -1203,8 +1286,15 @@ App.tab=function(name){
   // Clear quran search when leaving quran tab; disconnect badge observer to stop background work
   if(S.tab==='quran'&&name!=='quran'){
     var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();
-    if(_surahBadgeObs){_surahBadgeObs.disconnect();_surahBadgeObs=null;_surahGridReady=false;}
+    if(_surahBadgeObs){_surahBadgeObs.disconnect();_surahBadgeObs=null;}
   }
+  // Force-close tasbih picker sheet when leaving gencine — sheet is position:fixed and survives panel hide
+  if(S.tab==='gencine'&&name!=='gencine'&&window.GencineUI){GencineUI.closeSheet();}
+  // Force-close rec-picker on any tab switch — it is a global body overlay and must not survive navigation
+  App.closeRecPicker();
+  // Force-close About sheet and Reader settings on tab switch — both are position:fixed overlays
+  if(typeof closeCfgSheet==='function')closeCfgSheet();
+  App.closeReaderSettings();
   S.tabHistory.push(S.tab);
   S.tab=name;
   // Use cached NodeLists — avoids full DOM scan on every tab switch
@@ -1495,7 +1585,7 @@ function scheduleDailyVerse(enabled,time){
 
   /* Wait until Quran + tafsir data is loaded */
   if(!S.quranData||!S.tafsirData){
-    setTimeout(function(){scheduleDailyVerse(enabled,time);},1200);
+    setTimeout(function(){scheduleDailyVerse(S.dailyVerse,S.dailyVerseTime);},1200);
     return;
   }
 
@@ -1619,6 +1709,93 @@ function scheduleStreakReminder(){
   }).catch(function(){});
 }
 
+/* ===== PUSH TAP LISTENER — registered immediately on startup ===== */
+/* Must not wait 3s — cold-start buffered events are delivered to the
+   first listener registered, so we register it right away. */
+var _pendingPushDeepLink=null; // set by tap listener, consumed after splash
+
+function _initPushTapListener(){
+  var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
+  if(!PP){return;}
+  PP.addListener('pushNotificationActionPerformed',function(action){
+    var data=(action.notification&&action.notification.data)||{};
+    var type=data.type||'';
+    var id=data.id||'';
+    console.log('[Push] tap type='+type+' id='+id);
+    // Store pending link — execute after splash so app is fully visible
+    _pendingPushDeepLink={type:type,id:id};
+    // Also try immediately in case app is already past splash (background state)
+    _handlePushDeepLink(type,id);
+  });
+}
+
+/* ===== PUSH NOTIFICATION DEEP LINK HANDLER ===== */
+/* Polls until the app is fully ready, then navigates.
+   Handles cold starts (app killed) where data isn't loaded yet. */
+function _handlePushDeepLink(type,id){
+  var tries=0;
+  var MAX=60; // 60 × 200ms = 12 seconds max wait
+
+  function ready(){
+    // App core must exist and tabs must be rendered
+    if(typeof App==='undefined'||typeof App.tab!=='function'||typeof App.openSurah!=='function')return false;
+    // For islamvoice: episode list must exist
+    if(type==='islamvoice_episodes'||type==='video')return !!(S.ivEpisodes&&S.ivEpisodes.length);
+    // For gencine: GencineUI must exist
+    if(type==='gencine_books'||type==='gencine')return !!(window.GencineUI);
+    // verse, prayer, update, default — just need App to exist
+    return true;
+  }
+
+  function attempt(){
+    if(!ready()&&tries++<MAX){setTimeout(attempt,200);return;}
+    console.log('[Push] navigating type='+type+' id='+id+' tries='+tries);
+
+    if(type==='verse'&&id){
+      var parts=id.split(':');
+      var s=+parts[0],a=+parts[1];
+      App.tab('quran');
+      setTimeout(function(){App.openSurah(s,a);},300);
+
+    }else if(type==='islamvoice_episodes'||type==='video'){
+      App.tab('islamvoice');
+      if(id){
+        var _ivT=0;
+        var _ivOpen=function(){
+          if(S.ivEpisodes&&S.ivEpisodes.length){
+            var ep=S.ivEpisodes.find(function(e){return String(e.id)===String(id);});
+            if(ep){App.ivShowSeries(ep.series_id);setTimeout(function(){App.ivPlay(ep.id);},200);}
+          }else if(_ivT++<20)setTimeout(_ivOpen,300);
+        };
+        setTimeout(_ivOpen,300);
+      }
+
+    }else if(type==='gencine_books'||type==='gencine'){
+      App.tab('gencine');
+      if(id){
+        var _bkT=0;
+        var _bkOpen=function(){
+          if(window.GencineUI&&GencineUI.openBook(id))return;
+          if(_bkT++<20)setTimeout(_bkOpen,300);
+        };
+        setTimeout(_bkOpen,300);
+      }
+
+    }else if(type==='prayer'){
+      App.tab('prayer');
+
+    }else if(type==='update'){
+      if(window.ForceUpdate)window.ForceUpdate.openStore();
+
+    }else{
+      App.tab('quran');
+    }
+  }
+
+  // Small initial delay so the event doesn't fire before any tab exists
+  setTimeout(attempt,300);
+}
+
 /* ===== REMOTE PUSH TOKEN REGISTRATION ===== */
 /* Registers device with FCM (Android) or APNs via Firebase (iOS).
    Token is stored in Supabase push_tokens table.
@@ -1654,14 +1831,6 @@ function initPushToken(){
           extra:notif.data||{}
         }]}).catch(function(){});
       }
-    });
-
-    // Handle notification tap (app in background or killed)
-    PP.addListener('pushNotificationActionPerformed',function(action){
-      var data=(action.notification&&action.notification.data)||{};
-      console.log('[Push] tapped notif type='+data.type);
-      if(data.type==='islamvoice_episodes')App.tab('islamvoice');
-      else if(data.type==='gencine_books')App.tab('gencine');
     });
 
     // Receive FCM/APNs token and store in DB
@@ -1946,6 +2115,9 @@ function renderSurahGrid(){
       var card=e.target.closest('.surah-card');
       if(card)App.openSurah(+card.dataset.n);
     });
+  }
+  // Recreate observer when null (happens after leaving Quran tab) then connect to current cards
+  if(!_surahBadgeObs){
     _surahBadgeObs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         var badge=entry.target._badge||(entry.target._badge=entry.target.querySelector('.surah-num-badge'));
@@ -1956,11 +2128,8 @@ function renderSurahGrid(){
       });
     },{rootMargin:'0px'});
   }
-  // Always reconnect observer to current cards — old cards may have been removed (e.g. pull-to-refresh)
-  if(_surahBadgeObs){
-    _surahBadgeObs.disconnect();
-    grid.querySelectorAll('.surah-card').forEach(function(card){_surahBadgeObs.observe(card);});
-  }
+  _surahBadgeObs.disconnect();
+  grid.querySelectorAll('.surah-card').forEach(function(card){_surahBadgeObs.observe(card);});
 }
 
 /* ===== CONTINUE READING ===== */
@@ -2018,11 +2187,12 @@ App.backToList=function(){
   var mv=$('mushafView');if(mv){mv.style.display='none';clear(mv);}
   var al=$('ayahList');if(al)al.style.display='';
   var pb=$('mushafPlayBtn');if(pb)pb.style.display='none';
+  if(_progressCleanup){_progressCleanup();_progressCleanup=null;}
   _endSession();
   S.surah=null;
   $('quranReader').classList.remove('on');
   if(window.innerWidth<768){$('quranHome').style.display='';}
-  $('ayahList').scrollTop=0;
+  if(al)al.scrollTop=0;
   renderContinue();
 };
 
@@ -2479,8 +2649,7 @@ function loadMushafPageQCF(pageEl,pageNum){
 function renderAyahs(surahNum,scrollTo){
   var list=$('ayahList');
   clear(list);
-  // Always reset scroll to top when opening a new surah (unless scrollTo is specified)
-  if(!scrollTo){var ayahListEl=$('ayahList');if(ayahListEl)ayahListEl.scrollTop=0;}
+  list.scrollTop=0; // always reset — prevents stale offset from prior view
   var s=SURAHS[surahNum-1];
   if(!s)return;
 
@@ -2500,6 +2669,7 @@ function renderAyahs(surahNum,scrollTo){
           var vs=d.verses||[];
           S.glyphVerses[surahNum]=vs;
           try{localStorage.setItem(_gkey,JSON.stringify(vs));}catch(e){}
+          if(S.surah!==surahNum)return; // user navigated away while fetching — discard
           renderAyahs(surahNum,scrollTo);
         })
         .catch(function(){
@@ -2547,9 +2717,6 @@ function renderAyahs(surahNum,scrollTo){
     }
   }
 
-  // Store for copy modal
-  S.renderedAyahs=ayahs;
-  S.renderedTafsirs=tafsirs;
 
   // bmSet removed — buildCard calls isBookmarked() directly (O(1), no storage read)
 
@@ -2571,29 +2738,32 @@ function renderAyahs(surahNum,scrollTo){
   }
   list.appendChild(hdr);
 
-  // Single delegated click handler — replaces 2 listeners per card
-  on(list,'click',function(e){
-    var plBtn=e.target.closest('[data-play]');
-    var bmBtn=e.target.closest('[data-bm]');
-    var cpBtn=e.target.closest('[data-cp]');
-    var wgtBtn=e.target.closest('[data-wgt]');
-    if(plBtn){
-      var an=+plBtn.dataset.play;
-      haptic([8]);
-      if(S.audio.playing&&S.audio.surah===surahNum&&S.audio.ayah===an){App.audioToggle();}
-      else{playAyah(surahNum,an);}
-    }
-    if(bmBtn){
-      var an2=+bmBtn.dataset.bm;
-      var added=toggleBookmark(surahNum,an2);
-      // Surgical update — toggle classes on this card only, no re-render
-      var bCard=bmBtn.closest('.ayah-card');
-      if(bCard)bCard.classList.toggle('bookmarked',added);
-      bmBtn.classList.toggle('active',added);
-    }
-    if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
-    if(wgtBtn){pushAyahToWidget(surahNum,+wgtBtn.dataset.wgt);}
-  });
+  // Single delegated click handler — added once ever (list is a persistent element)
+  if(!list._clickSetup){
+    list._clickSetup=true;
+    list.addEventListener('click',function(e){
+      var plBtn=e.target.closest('[data-play]');
+      var bmBtn=e.target.closest('[data-bm]');
+      var cpBtn=e.target.closest('[data-cp]');
+      var wgtBtn=e.target.closest('[data-wgt]');
+      if(plBtn){
+        var an=+plBtn.dataset.play;
+        haptic([8]);
+        if(S.audio.playing&&S.audio.surah===S.surah&&S.audio.ayah===an){App.audioToggle();}
+        else{playAyah(S.surah,an);}
+      }
+      if(bmBtn){
+        var an2=+bmBtn.dataset.bm;
+        var added=toggleBookmark(S.surah,an2);
+        // Surgical update — toggle classes on this card only, no re-render
+        var bCard=bmBtn.closest('.ayah-card');
+        if(bCard)bCard.classList.toggle('bookmarked',added);
+        bmBtn.classList.toggle('active',added);
+      }
+      if(cpBtn){App.openCopyModal(S.surah,+cpBtn.dataset.cp);}
+      if(wgtBtn){pushAyahToWidget(S.surah,+wgtBtn.dataset.wgt);}
+    });
+  }
 
   // Hold detection via 400ms timer in touchstart (fires before touchend/touchcancel).
   // This is reliable on Android WebView where long-press triggers touchcancel, not touchend.
@@ -2604,6 +2774,7 @@ function renderAyahs(surahNum,scrollTo){
       var mc=e.target.closest('.ayah-card');
       if(!mc||e.target.closest('[data-play],[data-bm],[data-cp],[data-wgt]'))return;
       _lpCard=mc;_lpX=e.touches[0].clientX;_lpY=e.touches[0].clientY;
+      _tapStartMs=Date.now();_tapMoved=false;
       mc.classList.add('ayah-card--pressing');
       clearTimeout(_lpTimer);
       _lpTimer=setTimeout(function(){
@@ -2617,7 +2788,9 @@ function renderAyahs(surahNum,scrollTo){
     list.addEventListener('touchmove',function(e){
       if(!_lpCard)return;
       var dx=e.touches[0].clientX-_lpX,dy=e.touches[0].clientY-_lpY;
-      if(dx*dx+dy*dy>80){clearTimeout(_lpTimer);_lpTimer=null;_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
+      var dist2=dx*dx+dy*dy;
+      if(dist2>36)_tapMoved=true; // ≥6px movement — will block tap highlight in onclick
+      if(dist2>80){clearTimeout(_lpTimer);_lpTimer=null;_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
     },{passive:true});
     list.addEventListener('touchend',function(){
       clearTimeout(_lpTimer);_lpTimer=null;
@@ -2673,10 +2846,14 @@ function renderAyahs(surahNum,scrollTo){
     copyBtn.dataset.cp=String(ayahNum);
     copyBtn.appendChild(icon('fas fa-copy'));
     actions.appendChild(copyBtn);
-    var wgtBtn=el('button','ayah-act');
-    wgtBtn.dataset.wgt=String(ayahNum);
-    wgtBtn.appendChild(icon('fas fa-star'));
-    actions.appendChild(wgtBtn);
+    // Widget button — iOS only (Android has no widget support)
+    var _isIOS=window.Capacitor&&typeof Capacitor.getPlatform==='function'&&Capacitor.getPlatform()==='ios';
+    if(_isIOS){
+      var wgtBtn=el('button','ayah-act');
+      wgtBtn.dataset.wgt=String(ayahNum);
+      wgtBtn.appendChild(icon('fas fa-star'));
+      actions.appendChild(wgtBtn);
+    }
     head.appendChild(actions);
     card.appendChild(head);
     var arabic=el('div','ayah-arabic');
@@ -2727,10 +2904,13 @@ function renderAyahs(surahNum,scrollTo){
       card.appendChild(taf);
     }
     // Tap to mark: per-card onclick avoids stacking across renderAyahs calls.
-    // Skips action buttons; skips if a hold just fired (suppresses Android's post-hold click).
+    // Guards: skip action buttons; skip if long-press just fired; skip if touch
+    // was too quick (<120ms) or moved ≥6px (likely a scroll or accidental graze).
     card.onclick=function(e){
-      if(e.target.closest('[data-play],[data-bm],[data-cp]'))return;
-      if(Date.now()-_ayahMarkLpAt<700)return;
+      if(e.target.closest('[data-play],[data-bm],[data-cp],[data-wgt]'))return;
+      if(Date.now()-_ayahMarkLpAt<700)return;  // suppress post-long-press click
+      if(_tapMoved)return;                      // touch moved — was a scroll
+      if(Date.now()-_tapStartMs<120)return;     // too quick — accidental graze
       _setAyahMark(surahNum,ayahNum);
     };
     return card;
@@ -2751,20 +2931,23 @@ function renderAyahs(surahNum,scrollTo){
     _sentinelObs.observe(_sentinel);
   }
 
-  function appendBatch(from,to,sync){
+  function appendBatch(from,to,sync,onTarget,targetAyah){
     var end=Math.min(to,total);
     if(sync===false){
       // rAF staggered: 12 cards per frame for subsequent batches
       var SUB=12,cur=from;
       (function renderFrame(){
+        if(S.surah!==surahNum||!nav.parentNode)return; // surah changed while rendering — bail
         var frameEnd=Math.min(cur+SUB-1,end);
         var frag=document.createDocumentFragment();
         for(var i=cur;i<=frameEnd;i++){var c=buildCard(i);if(window._onNewAyahCard)window._onNewAyahCard(c);frag.appendChild(c);}
         list.insertBefore(frag,nav);
+        // Fire scroll callback the frame the target card lands in DOM
+        if(onTarget&&targetAyah&&frameEnd>=targetAyah){var cb=onTarget;onTarget=null;cb();}
         cur=frameEnd+1;
         if(cur<=end&&!document.hidden)requestAnimationFrame(renderFrame);
-        else if(cur<=end){setTimeout(function(){if(!document.hidden)requestAnimationFrame(renderFrame)},200);}
-        else{_renderedTo=end;setupSentinel();}
+        else if(cur<=end){setTimeout(function(){if(!document.hidden)requestAnimationFrame(renderFrame);},200);}
+        else{_renderedTo=end;setupSentinel();if(onTarget){onTarget=null;}}
       })();
     }else{
       // Synchronous for first batch — fast initial render
@@ -2776,8 +2959,8 @@ function renderAyahs(surahNum,scrollTo){
     }
   }
 
-  var initialBatch=scrollTo&&scrollTo>BATCH?scrollTo:BATCH;
-  appendBatch(1,initialBatch,true);
+  // Always sync-render only the first BATCH — never block main thread on large surahs
+  appendBatch(1,BATCH,true);
 
   // Progress
   updateProgress(list,total);
@@ -2793,12 +2976,24 @@ function renderAyahs(surahNum,scrollTo){
     },_remaining);
   }
 
-  // Scroll to ayah
-  if(scrollTo){
-    setTimeout(function(){
-      var cards=list.querySelectorAll('.ayah-card');
-      if(cards[scrollTo-1])cards[scrollTo-1].scrollIntoView({behavior:'smooth',block:'center'});
-    },80);
+  // Jump to target ayah — instant scroll, no smooth animation
+  if(scrollTo&&scrollTo>1){
+    var _jumpDone=false;
+    function _jumpScroll(){
+      if(_jumpDone)return;_jumpDone=true;
+      var card=list.querySelector('[data-ayah="'+scrollTo+'"]');
+      if(!card)return;
+      var lRect=list.getBoundingClientRect();
+      var cRect=card.getBoundingClientRect();
+      list.scrollTop+=cRect.top-lRect.top-Math.max(0,(list.clientHeight-cRect.height)/2);
+    }
+    if(scrollTo<=BATCH){
+      // Card already in DOM — scroll next frame
+      requestAnimationFrame(_jumpScroll);
+    }else{
+      // Render cards up to target async (rAF-batched), scroll the moment target lands
+      appendBatch(BATCH+1,scrollTo+3,false,_jumpScroll,scrollTo);
+    }
   }
 }
 
@@ -2808,7 +3003,9 @@ var _progressCleanup=null;
 var _mushafLazyObs=null;
 // Ayah position marker — 2-minute highlight so user knows where they are
 var _ayahMarkTimer=null;
-var _ayahMarkLpAt=0; // timestamp of last long-press mark, to suppress following click event
+var _ayahMarkLpAt=0;  // timestamp of last long-press mark, to suppress following click event
+var _tapStartMs=0;    // touchstart timestamp — used to require minimum hold duration for tap highlight
+var _tapMoved=false;  // true if touch moved ≥6px — prevents scroll from triggering highlight
 function _setAyahMark(surahNum,ayahNum){
   clearTimeout(_ayahMarkTimer);
   // Remove existing highlight
@@ -3102,6 +3299,7 @@ App.openReaderSettings=function(){
   if(S.mushafMode){App.openMushafSettings();return;}
   $('qsOverlay').classList.add('on');
   var qs=$('qsSheet');
+  qs.style.display='';
   qs.classList.add('on');
   // Push sheet above audio bar if it's visible
   var _ab=$('audioBar');
@@ -3111,7 +3309,9 @@ App.openReaderSettings=function(){
 };
 App.closeReaderSettings=function(){
   $('qsOverlay').classList.remove('on');
-  $('qsSheet').classList.remove('on');
+  var qs=$('qsSheet');
+  qs.classList.remove('on');
+  qs.style.display='none';
 };
 function applyShowTafsir(){
   document.querySelectorAll('.ayah-tafsir').forEach(function(el){
@@ -3255,6 +3455,7 @@ function renderReaderSettings(){
       RECITER=r.id;
       localStorage.setItem('app_reciter',r.id);
       clearPrefetch();
+      if(window.AudioCache)AudioCache.cancelBg();
       updateAudioBarAvatar();
       if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
       renderReaderSettings();
@@ -3395,18 +3596,39 @@ function updateReaderPlayState(surah,ayah,playing){
 
 function playAyah(surah,ayah){
   var url=audioUrl(surah,ayah);
-  // Use prefetched blob if ready — zero-gap playback
+  // Priority 1: local persistent cache (synchronous O(1) — no delay)
+  var localUri=window.AudioCache?AudioCache.getLocalUri(RECITER,surah,ayah):null;
+  // Priority 2: prefetched blob (zero-gap in-memory)
   var src;
   var slot=_pfCache[url];
-  if(slot&&slot.blob){
+  if(localUri){
+    // Serve from local file — WebView-accessible capacitor:// URI
+    src=localUri;
+    // Consume any in-flight prefetch slot to avoid wasted bandwidth
+    if(slot){
+      if(slot.xhr){slot.xhr.abort();}
+      if(slot.blob){URL.revokeObjectURL(slot.blob);}
+      delete _pfCache[url];
+    }
+    AudioCache.touchAccess(RECITER,surah,ayah);
+    console.log('[Audio] local-cache hit — reciter:'+RECITER+' surah:'+surah+' ayah:'+ayah);
+  } else if(slot&&slot.blob){
+    // Serve from in-memory prefetch blob
     src=slot.blob;
     if(_blobToRevoke)URL.revokeObjectURL(_blobToRevoke);
     _blobToRevoke=src;
-    delete _pfCache[url]; // remove from cache (blob now owned by audio element)
+    delete _pfCache[url]; // blob now owned by audio element
+    console.log('[Audio] prefetch-blob hit — reciter:'+RECITER+' surah:'+surah+' ayah:'+ayah);
   } else {
+    // Fall through to remote streaming
     src=url;
-    // Cancel any in-flight XHR for this url since we'll load directly
+    // Cancel any in-flight XHR for this url since we'll stream directly
     if(slot&&slot.xhr){slot.xhr.abort();delete _pfCache[url];}
+    // NOTE: Do NOT fire a parallel fetch here — it would compete with the audio stream
+    // and cause MEDIA_ERR_NETWORK (code 2) on constrained mobile connections.
+    // The prefetchAyahBlob system will cache upcoming ayahs; this one will be cached
+    // the next time it enters the prefetch lookahead window.
+    console.log('[Audio] remote stream — reciter:'+RECITER+' surah:'+surah+' ayah:'+ayah+' url:'+url);
   }
   S.audio.surah=surah;S.audio.ayah=ayah;
   S.audio.el.src=src;
@@ -3423,6 +3645,8 @@ function playAyah(surah,ayah){
   updateMushafPlayBtn();
   // Start prefetching next ayah in background
   prefetchAyahBlob(surah,ayah);
+  // Start persistent background caching for the rest of this surah
+  if(window.AudioCache)AudioCache.startSurahBg(surah,ayah,RECITER);
 }
 
 function getReciterName(){
@@ -3510,6 +3734,7 @@ App.audioClose=function(){
   S.audio.playing=false;S.audio.surah=0;S.audio.ayah=0;
   S.audio.currentRepeat=0;
   clearPrefetch();
+  if(window.AudioCache)AudioCache.cancelBg();
   $('audioBar').classList.remove('on');
   updateReaderPlayState(0,0,false);
   var cards=document.querySelectorAll('.ayah-card.playing');
@@ -3610,9 +3835,8 @@ App.showMushafVerseTafsir=function(vn,sn){
   var existing=$('mushafTafsirSheet');
   if(existing)existing.parentNode.removeChild(existing);
 
-  // Get tafsir text — use renderedTafsirs if same surah, else skip
-  var tafsirs=(sn===S.surah)?(S.renderedTafsirs||{}):{};
-  var txt=tafsirs[vn]||tafsirs[String(vn)]||'';
+  // Get tafsir text — read from canonical tafsirData (works across surah boundaries in mushaf)
+  var txt=getAyahTafsirText(sn,vn);
 
   var ov=el('div','mushaf-tafsir-ov');
   ov.id='mushafTafsirSheet';
@@ -3667,16 +3891,21 @@ App.copyFmtSelect=function(btn,fmt){
   document.querySelectorAll('.copy-fmt-btn').forEach(function(b){b.classList.remove('on')});
   btn.classList.add('on');
 };
+function getAyahTafsirText(surah,ayahNum){
+  if(!S.tafsirData)return'';
+  var td=S.tafsirData[surah-1]||S.tafsirData[String(surah)];if(!td)return'';
+  var tv=td.verses||td;if(!Array.isArray(tv))return'';
+  var v=tv[ayahNum-1];return v?(v.text||v.tafsir||String(v)||''):'';
+}
 function buildCopyText(surah,ayahNum,mode){
-  var raw=S.renderedAyahs[ayahNum-1];
-  var arabic=raw?(raw.text||raw):'';
-  var tafsir=S.renderedTafsirs[ayahNum]||'';
+  var arabic=getAyahArabicText(surah,ayahNum);
+  var tafsir=getAyahTafsirText(surah,ayahNum);
   var lines=[];
   if((mode==='both'||mode==='quran')&&arabic)lines.push(String(ayahNum)+' ﴿ '+arabic+' ﴾');
   if((mode==='both'||mode==='tafsir')&&tafsir)lines.push(tafsir);
   return lines.join('\n');
 }
-var COPY_FOOTER='\n\nTafsirKurd\nhttps://tafsirkurd.com';
+var COPY_FOOTER='\n\nTafsirKurd\nhttps://tafsirkurd.com/links';
 App.copyDo=function(mode){
   var text=buildCopyText(S.copy.surah,S.copy.ayah,mode);
   if(!text)return;
@@ -3997,6 +4226,7 @@ function _attachSheetDrag(sheet,overlay,closeFn,scrollEl){
   // Progressive resistance: linear up to 100px, then increasing drag beyond
   function _resist(dy){return dy<=100?dy*0.85:85+(dy-100)*0.35;}
   sheet.addEventListener('touchstart',function(e){
+    if(!sheet.classList.contains('open'))return; // ignore touches when sheet is closed
     if(scrollEl&&scrollEl.contains(e.target)&&scrollEl.scrollTop>2)return;
     startY=e.touches[0].clientY;dragY=0;active=true;dragging=false;_hist=[];
   },{passive:true});
@@ -4034,10 +4264,11 @@ function _attachSheetDrag(sheet,overlay,closeFn,scrollEl){
     var shouldClose=dragY>80||vel>0.5;
     if(shouldClose){
       sheet.style.transition='transform .24s '+EASE_IN;
-      sheet.style.transform='translateY(100%)';
+      sheet.style.transform='translateY(200%)';
       if(overlay){overlay.style.transition='opacity .24s ease-out';overlay.style.opacity='0';}
-      closeFn();
+      // Delay closeFn so the slide-out animation plays before display:none is applied
       setTimeout(function(){
+        closeFn();
         sheet.style.transition='';sheet.style.transform='';
         if(overlay){overlay.style.transition='';overlay.style.opacity='';}
       },260);
@@ -4058,19 +4289,22 @@ function _attachSheetDrag(sheet,overlay,closeFn,scrollEl){
 
 var _rpDragInited=false;
 App.openRecPicker=function(){
+  // Only open when the full player is actually showing — blocks all rogue call paths
+  var fp=$('fullPlayer');
+  if(!fp||!fp.classList.contains('open'))return;
   _buildRecPicker();
   var ov=$('rpOverlay'),pk=$('recPicker');
   if(!ov||!pk)return;
   if(!_rpDragInited){_rpDragInited=true;_attachSheetDrag(pk,ov,App.closeRecPicker,$('rpList'));}
   haptic([5]);
-  ov.classList.add('open');
-  pk.classList.add('open');
+  ov.style.display='';ov.classList.add('open');
+  pk.style.display='';pk.classList.add('open');
 };
 
 App.closeRecPicker=function(){
   var ov=$('rpOverlay'),pk=$('recPicker');
-  if(ov)ov.classList.remove('open');
-  if(pk)pk.classList.remove('open');
+  if(ov){ov.classList.remove('open');ov.style.display='none';}
+  if(pk){pk.classList.remove('open');pk.style.display='none';}
 };
 
 var _fpDragInited=false;
@@ -4098,6 +4332,8 @@ App.closeFP=function(){
   if(ov)ov.classList.remove('open');
   if(pl)pl.classList.remove('open');
   if(_fpRafId){cancelAnimationFrame(_fpRafId);_fpRafId=null;}
+  // Rec-picker is a child of the full-player flow — close it when the player closes
+  App.closeRecPicker();
 };
 
 /* ===== REPEAT MANAGER ===== */
@@ -5356,6 +5592,7 @@ function _ensureCfgSheet(){
 function closeCfgSheet(){
   if(!_cfgSheetEl)return;
   _cfgSheetEl.classList.remove('open');
+  _cfgSheetEl.style.display='none';
   _cfgOverlayEl.classList.remove('on');
 }
 
@@ -5395,11 +5632,13 @@ async function openAboutSheet(type){
     _skEl.appendChild(el('div','ab-sk-line ab-sk-med'));
     body.appendChild(_skEl);
     _cfgOverlayEl.classList.add('on');
+    _cfgSheetEl.style.display='';
     _cfgSheetEl.classList.add('open');
     ss=await getSiteSettings();
     clear(body);
   }else{
     _cfgOverlayEl.classList.add('on');
+    _cfgSheetEl.style.display='';
     _cfgSheetEl.classList.add('open');
   }
 
@@ -6271,6 +6510,7 @@ function applySyncData(data){
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
   S.dailyReminder=localStorage.getItem('dailyReminder')==='true';
   S.reminderTime=localStorage.getItem('reminderTime')||'08:00';
+  scheduleReminder(S.dailyReminder, S.reminderTime);
   applyTheme();applySizes();
   // Sync in-memory bookmark map with whatever applySyncData wrote to localStorage.
   // Without this, _bmMap lags after a user-switch wipe or realtime push that
@@ -6394,14 +6634,26 @@ function _clearUserLocalData(){
   for(var i=1;i<=114;i++){
     localStorage.removeItem('surah_progress_'+i);
     localStorage.removeItem('surah_scroll_'+i);
+    localStorage.removeItem('surah_read_v3_'+i);  // list-mode read progress
   }
   ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions'].forEach(function(k){localStorage.removeItem(k);});
+  /* Cancel all old user's scheduled notifications */
+  scheduleReminder(false);      // cancels daily Quran reminder IDs 10-16
+  scheduleDailyVerse(false);    // cancels daily verse IDs 20-26
+  scheduleStreakReminder();     // cancels streak ID 30 (streak=0 after log clear → no reschedule)
+  localStorage.removeItem('dailyVerse');
+  localStorage.removeItem('dailyVerseTime');
+  localStorage.removeItem('dailyVerseScheduledDate');
   /* Reset in-memory state to defaults */
   S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;S.showTafsir=true;S.bgAudio=false;
   S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;
   S.hapticFeedback=true;S.dailyReminder=false;S.reminderTime='08:00';
+  S.dailyVerse=false;S.dailyVerseTime='08:00';
   if(S.theme!=='light'){S.theme='light';applyTheme();}
   applySizes();
+  /* Reset in-memory caches that mirror now-cleared localStorage keys */
+  initTodayVerses();  // clears S.todayVerses so new user doesn't inherit old counts
+  _loadBookmarks();   // clears _bmMap so new user doesn't inherit old bookmarks
 }
 
 function startCloudSync(){
@@ -7756,10 +8008,7 @@ function renderIvEpisodes(seriesId){
     var item=el('div','iv-ep-item');
     item.setAttribute('data-ep-id',ep.id);
 
-    // Episode number
-    item.appendChild(el('div','iv-ep-num',String(ep.episode_number||idx+1)));
-
-    // Thumbnail
+    // Thumbnail (full-width 16:9, episode number badge overlaid inside)
     var thumb=el('div','iv-ep-thumb');
     var thumbUrl=ep.thumbnail_url;
     if(!thumbUrl&&ep.video_url&&ep.video_type!=='s3'){
@@ -7774,6 +8023,8 @@ function renderIvEpisodes(seriesId){
     var playIcon=el('div','iv-play-icon');
     playIcon.appendChild(icon('fas fa-play'));
     thumb.appendChild(playIcon);
+    // Episode number badge — overlaid top-right corner
+    thumb.appendChild(el('div','iv-ep-num',String(ep.episode_number||idx+1)));
     item.appendChild(thumb);
 
     // Info

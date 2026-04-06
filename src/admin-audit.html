@@ -40,9 +40,9 @@
             if (role === 'super_admin') {
                 css = '.sidebar-nav{visibility:visible}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
             } else if (role === 'editor') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
             } else if (role === 'custom') {
                 css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
             }
@@ -79,6 +79,7 @@
                 <div class="nav-section">
                     <div class="nav-section-header">Users</div>
                     <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
                     <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
                 </div>
                 <div class="nav-section">
@@ -90,9 +91,7 @@
                     <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
                     <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
                     <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
-                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
-                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
-                    <a href="/admin-audit.html" class="nav-item active"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>                    <a href="/admin-audit.html" class="nav-item active"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
                 </div>
             </nav>
             <div class="sidebar-footer">
@@ -192,7 +191,7 @@
     </div>
 
     <script src="/utils/admin-session-timer-ui.js?v=5"></script>
-    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-auth.js?v=5"></script>
     <script src="/utils/admin-notifications.js"></script>
     <script>
         lucide.createIcons();

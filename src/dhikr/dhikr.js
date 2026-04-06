@@ -526,7 +526,7 @@ function _getAsmaKuOverride(n) {
   return row ? row.ku : null;
 }
 
-var APP_LINK = 'https://tafsirkurd.com';
+var APP_LINK = 'https://tafsirkurd.com/links';
 
 function _mkCopyBtn(text) {
   var btn = document.createElement('button');
@@ -691,6 +691,10 @@ window.GencineUI = {
     this._draw();
   },
 
+  closeSheet: function(){
+    if(this._activeSheet){ this._activeSheet.classList.remove('on'); }
+  },
+
   _updateHeader: function(){
     var backBtn   = document.getElementById('gencineBackBtn');
     var title     = document.getElementById('gencineHdrTitle');
@@ -711,6 +715,10 @@ window.GencineUI = {
     if(!el) return;
     if(this._view !== 'tasbih' && this._voiceActive) this._stopVoice();
     if(this._pdfCleanup){ this._pdfCleanup(); this._pdfCleanup = null; }
+    // Clear sheet reference — DOM removal below already removes it from screen
+    this._activeSheet = null;
+    // Close rec-picker on every Gencine view change — it must never survive navigation within the tab
+    if(window.App && App.closeRecPicker) App.closeRecPicker();
     while(el.firstChild) el.removeChild(el.firstChild);
     var panel = document.getElementById('panelGencine');
     // Don't reset scroll when returning to books — we'll restore saved position
@@ -1111,10 +1119,12 @@ window.GencineUI = {
 
     // Open/close logic
     function openSheet(){
-      sheet.classList.add('on');
-      // Scroll active item into view
+      // Set scroll position before sheet becomes visible — prevents visible snap/jump
       var active = pickerList.querySelector('.tasbih-picker-item.on');
-      if(active) setTimeout(function(){ active.scrollIntoView({block:'center'}); }, 280);
+      if(active){
+        pickerList.scrollTop = (active.offsetTop - pickerList.offsetTop) - (pickerList.clientHeight - active.offsetHeight) / 2;
+      }
+      sheet.classList.add('on');
     }
     changeBtn.onclick = openSheet;
     selCard.onclick = function(e){ if(e.target === selCard || e.target === selAr) openSheet(); };
@@ -1123,6 +1133,9 @@ window.GencineUI = {
     // Prevent scroll inside the picker list from bubbling up and triggering pull-to-refresh
     pickerList.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:true});
     pickerList.addEventListener('touchmove',  function(e){ e.stopPropagation(); }, {passive:true});
+
+    // Store reference so App.tab() can force-close this sheet when leaving the Gencine tab
+    self._activeSheet = sheet;
 
     wrap.appendChild(sheet);
 
@@ -1648,6 +1661,18 @@ window.GencineUI = {
     function countIn(h,n){ if(!n)return 0; var x=0,p=0; while((p=h.indexOf(n,p))!==-1){x++;p+=n.length;} return x; }
     var COMMON = {'الله':1,'اله':1,'لا':1,'في':1,'من':1,'على':1,'و':1,'ب':1,'ل':1};
     var best = 0;
+    /* Pre-check: for long dhikrs (≥4 words), require a non-common word from the
+       second half of the phrase — prevents counting when user hasn't finished yet */
+    var arNorm = self._normalizeAr(dhikr.ar || dhikr.ku || '');
+    var arAllWords = arNorm.split(' ').filter(function(w){ return w.length > 1; });
+    if(arAllWords.length >= 4){
+      var secondHalf = arAllWords.slice(Math.floor(arAllWords.length / 2));
+      var endWord = null;
+      for(var si = 0; si < secondHalf.length; si++){
+        if(!COMMON[secondHalf[si]]){ endWord = secondHalf[si]; break; }
+      }
+      if(endWord && !t.includes(endWord)) return 0;
+    }
     /* S0: hardcoded key — single most distinctive word, bypasses generic filtering */
     if(dhikr.key){
       var c0 = countIn(t, dhikr.key);
@@ -1671,11 +1696,15 @@ window.GencineUI = {
         for(var wi=0;wi<kws.length;wi++){ var wc=countIn(t,kws[wi]); if(wc<minC)minC=wc; }
         if(minC>0&&minC<Infinity&&minC>best)best=minC;
       }
-      /* S4: longest single keyword count */
+      /* S4: longest single keyword — only for single-keyword dhikrs (multi-keyword handled by S3) */
       kws.sort(function(a,b){return b.length-a.length;});
-      var c3=countIn(t,kws[0]); if(c3>best)best=c3;
-      /* S5: any keyword present = at least 1 */
-      if(!best)for(var w=0;w<kws.length;w++){if(t.includes(kws[w])){best=1;break;}}
+      if(kws.length===1){ var c3=countIn(t,kws[0]); if(c3>best)best=c3; }
+      /* S5: majority of keywords present = at least 1 (≥70% required — prevents partial-speech counting) */
+      if(!best){
+        var hitCount=0;
+        for(var w=0;w<kws.length;w++){if(t.includes(kws[w]))hitCount++;}
+        if(hitCount>0&&hitCount>=Math.ceil(kws.length*0.7))best=1;
+      }
     }
     return best;
   },
@@ -2284,6 +2313,7 @@ window.GencineUI = {
     };
 
     var doLoad = function(pdf) {
+      if (self._currentBook !== book) return; // user switched books while loading — discard
       self._pdfDoc = pdf;
       loadingEl.style.display = 'none';
       var slots = [];

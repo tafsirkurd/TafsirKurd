@@ -310,6 +310,166 @@
             background: #b91c1c;
         }
 
+        .summary-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .summary-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: border-color .15s, color .15s, background .15s;
+            white-space: nowrap;
+            font-family: var(--font-family);
+        }
+
+        .summary-chip:hover { border-color: var(--border-dark); color: var(--text-primary); }
+
+        .summary-chip.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--bg-app);
+        }
+
+        .summary-chip.active .chip-dot { opacity: .7; }
+
+        .chip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chip-count {
+            font-size: 11px;
+            opacity: .75;
+        }
+
+        .filter-toggle {
+            padding: 7px 11px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            font-family: var(--font-family);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all .15s;
+        }
+
+        .filter-toggle.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--bg-app);
+        }
+
+        .leaderboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 20px 0 8px;
+        }
+
+        .leaderboard-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+
+        .leaderboard-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .lb-row:last-child { border-bottom: none; }
+
+        .lb-rank {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--bg-active);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .lb-rank.gold   { background: #fbbf24; color: #78350f; }
+        .lb-rank.silver { background: #d1d5db; color: #374151; }
+        .lb-rank.bronze { background: #cd7c2f; color: #fff; }
+
+        .lb-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+        }
+
+        .lb-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .filter-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 2px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-height: 34px;
+        }
+
+        .filter-clear-btn {
+            background: none;
+            border: none;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 0;
+            font-family: var(--font-family);
+            text-decoration: underline;
+        }
+
+        .filter-clear-btn:hover { color: var(--text-primary); }
+
+        @media (max-width: 900px) { .leaderboard-grid { grid-template-columns: 1fr; } }
+
         @media (max-width: 768px) {
             .filter-group { min-width: 0 !important; flex: 1 1 100% !important; }
             .filter-group[style] { flex: 1 1 100% !important; }
@@ -331,9 +491,9 @@
             if (role === 'super_admin') {
                 css = '.sidebar-nav{visibility:visible}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
             } else if (role === 'editor') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
             } else if (role === 'custom') {
                 css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
             }
@@ -403,6 +563,7 @@
                         <i data-lucide="users"></i>
                         <span class="nav-item-label">Users</span>
                     </a>
+                    <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
                     <a href="/admin-reading-stats.html" class="nav-item">
                         <i data-lucide="book-open"></i>
                         <span class="nav-item-label">Reading Stats</span>
@@ -443,12 +604,7 @@
                     <a href="/admin-email-templates.html" class="nav-item">
                         <i data-lucide="mail"></i>
                         <span class="nav-item-label">Email Templates</span>
-                    </a>
-                    <a href="/admin-activity-feed.html" class="nav-item">
-                        <i data-lucide="activity"></i>
-                        <span class="nav-item-label">Activity Feed</span>
-                    </a>
-                </div>
+                    </a>                </div>
             </nav>
 
             <div class="sidebar-footer">
@@ -541,6 +697,9 @@
                     </div>
                 </div>
 
+                <!-- SUMMARY CHIPS -->
+                <div class="summary-chips" id="summaryChips"></div>
+
                 <!-- USER GROWTH CHART -->
                 <div class="card">
                     <div class="card-header">
@@ -560,6 +719,37 @@
                         <input type="text" class="filter-input" id="searchInput" placeholder="Search by name, email, or ID...">
                     </div>
 
+                    <div class="filter-group" style="flex: 0 0 140px;">
+                        <label class="filter-label">Provider</label>
+                        <select class="filter-select" id="providerFilter">
+                            <option value="">All Providers</option>
+                            <option value="google">Google</option>
+                            <option value="apple">Apple</option>
+                            <option value="email">Email</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" style="flex: 0 0 150px;">
+                        <label class="filter-label">Last Active</label>
+                        <select class="filter-select" id="activityFilter">
+                            <option value="">Any Time</option>
+                            <option value="1">Last 24 Hours</option>
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label class="filter-label">Has / Is</label>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:2px">
+                            <button class="filter-toggle" data-key="bookmarks">Bookmarks</button>
+                            <button class="filter-toggle" data-key="progress">Progress</button>
+                            <button class="filter-toggle" data-key="completed">Completed</button>
+                            <button class="filter-toggle" data-key="noprogress">No Progress</button>
+                            <button class="filter-toggle" data-key="active24low">Active 24h + Low Progress</button>
+                        </div>
+                    </div>
+
                     <div class="filter-group" style="flex: 0 0 180px;">
                         <label class="filter-label">Sort By</label>
                         <select class="filter-select" id="sortSelect">
@@ -568,9 +758,11 @@
                             <option value="name_asc">Name A-Z</option>
                             <option value="name_desc">Name Z-A</option>
                             <option value="email_asc">Email A-Z</option>
-                            <option value="progress_desc">Highest Progress</option>
+                            <option value="ayahs_desc">Most Ayahs Read</option>
+                            <option value="streak_desc">Highest Streak</option>
+                            <option value="completed_desc">Most Completed Surahs</option>
+                            <option value="active_desc">Latest Active</option>
                             <option value="progress_asc">Lowest Progress</option>
-                            <option value="active_desc">Most Active</option>
                         </select>
                     </div>
 
@@ -585,6 +777,28 @@
                     </div>
                 </div>
 
+                <!-- LEADERBOARDS -->
+                <div class="leaderboard-grid" id="leaderboardGrid" style="display:none">
+                    <div class="leaderboard-card">
+                        <div class="leaderboard-title">Top 5 — Ayahs Read</div>
+                        <div id="lb-ayahs"></div>
+                    </div>
+                    <div class="leaderboard-card">
+                        <div class="leaderboard-title">Top 5 — Best Streak</div>
+                        <div id="lb-streak"></div>
+                    </div>
+                    <div class="leaderboard-card">
+                        <div class="leaderboard-title">Top 5 — Surahs Completed</div>
+                        <div id="lb-completed"></div>
+                    </div>
+                </div>
+
+                <!-- FILTER STATUS -->
+                <div class="filter-status" id="filterStatus">
+                    <span id="filterResultText"></span>
+                    <button class="filter-clear-btn" id="clearFiltersBtn" style="display:none" onclick="clearAllFilters()">Clear filters</button>
+                </div>
+
                 <!-- USERS TABLE -->
                 <div class="card">
                     <div class="table-container">
@@ -593,12 +807,12 @@
                                 <tr>
                                     <th>User</th>
                                     <th>Email</th>
-                                    <th>User ID</th>
-                                    <th>Reading Progress</th>
-                                    <th>Ayahs Read</th>
+                                    <th>Position</th>
+                                    <th>Progress</th>
+                                    <th>Streak / Surahs</th>
                                     <th>Last Active</th>
                                     <th>Joined</th>
-                                    <th style="width: 100px;"></th>
+                                    <th style="width: 80px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="usersTableBody">
@@ -683,7 +897,7 @@
     </div>
 
     <script src="/utils/admin-session-timer-ui.js?v=5"></script>
-    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-auth.js?v=5"></script>
     <script src="/utils/admin-notifications.js"></script>
     <script>
         // Initialize Lucide icons
@@ -707,6 +921,9 @@
         let perPage = 50;
         let userGrowthChart = null;
         let deleteUserId = null;
+        let activeChip = null;
+        let searchQuery = '';
+        let activeToggles = {};
 
         // Check authentication
         (async () => {
@@ -763,8 +980,19 @@
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('input', debounce(handleSearch, 300));
             document.getElementById('topbar-search').addEventListener('input', debounce(handleSearch, 300));
-            document.getElementById('sortSelect').addEventListener('change', handleSort);
-            document.getElementById('perPageSelect').addEventListener('change', handlePerPageChange);
+            document.getElementById('sortSelect').addEventListener('change', function(e) { handleSort(e); saveFilterState(); });
+            document.getElementById('perPageSelect').addEventListener('change', function(e) { handlePerPageChange(e); saveFilterState(); });
+            document.getElementById('providerFilter').addEventListener('change', function() { currentPage = 1; applyFilters(); });
+            document.getElementById('activityFilter').addEventListener('change', function() { currentPage = 1; applyFilters(); });
+            document.querySelectorAll('.filter-toggle').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var key = btn.dataset.key;
+                    activeToggles[key] = !activeToggles[key];
+                    btn.classList.toggle('active', !!activeToggles[key]);
+                    currentPage = 1;
+                    applyFilters();
+                });
+            });
         }
 
         // Debounce function
@@ -809,20 +1037,26 @@
 
                 // Map API response to expected format
                 allUsers = (data.users || []).map(user => ({
-                    user_id: user.id,
-                    profile_name: user.name,
-                    profile_email: user.email,
-                    profile_picture: user.avatar,
+                    user_id:             user.id,
+                    profile_name:        user.name,
+                    profile_email:       user.email,
+                    profile_picture:     user.avatar,
                     registration_source: user.registration_source,
-                    created_at: user.created_at,
-                    lastActive: user.last_active,
-                    current_surah: user.current_surah,
-                    current_ayah: user.current_ayah,
-                    total_ayahs_read: user.total_ayahs_read,
-                    reading_streak: user.reading_streak,
-                    bookmarks: user.bookmarks,
-                    daily_goal: user.daily_goal,
-                    monthly_goal: user.monthly_goal
+                    created_at:          user.created_at,
+                    lastActive:          user.last_active,
+                    // Reading data parsed from app_data
+                    current_surah:    user.currentSurah  || 0,
+                    current_ayah:     user.currentAyah   || 0,
+                    total_ayahs_read: user.totalAyahsRead || 0,
+                    best_streak:      user.bestStreak     || 0,
+                    bookmarks_count:  user.bookmarksCount || 0,
+                    surahs_started:   user.surahsStarted  || 0,
+                    surahs_completed: user.surahsCompleted|| 0,
+                    reading_goal:     user.readingGoal    || 0,
+                    reciter:          user.reciter        || '',
+                    daily_reminder:   user.dailyReminder  || false,
+                    active_days_30:   user.activeDays30   || 0,
+                    active_days_total:user.activeDaysTotal|| 0,
                 }));
 
                 console.log(`Loaded ${allUsers.length} users`);
@@ -833,7 +1067,9 @@
                 // Render user growth chart
                 renderUserGrowthChart();
 
-                // Apply filters and render table
+                // Restore any persisted filter state, then apply
+                restoreFilterState();
+                renderChips();
                 applyFilters();
 
             } catch (error) {
@@ -858,19 +1094,104 @@
             }).length;
             document.getElementById('activeToday').textContent = activeToday.toLocaleString();
 
-            // Total ayahs read
-            const totalAyahs = allUsers.reduce((sum, user) => {
-                const ayahs = parseInt(user.total_ayahs_read) || 0;
-                return sum + ayahs;
-            }, 0);
+            // Total ayahs read (from readLog via app_data)
+            const totalAyahs = allUsers.reduce((sum, user) => sum + (user.total_ayahs_read || 0), 0);
             document.getElementById('totalAyahs').textContent = totalAyahs.toLocaleString();
 
-            // Average completion (assuming 6236 total ayahs in Quran)
+            // Average completion
             const totalAyahsInQuran = 6236;
             const avgCompletion = allUsers.length > 0
-                ? (totalAyahs / (allUsers.length * totalAyahsInQuran) * 100).toFixed(1)
-                : 0;
+                ? (totalAyahs / (allUsers.length * totalAyahsInQuran) * 100).toFixed(1) : 0;
             document.getElementById('avgCompletion').textContent = avgCompletion + '%';
+            renderChips();
+            renderLeaderboards();
+        }
+
+        // Leaderboards — top 5 by ayahs, streak, completed
+        function renderLeaderboards() {
+            var grid = document.getElementById('leaderboardGrid');
+            if (!grid || allUsers.length === 0) return;
+            grid.style.display = '';
+
+            var medals = ['gold', 'silver', 'bronze', '', ''];
+
+            function buildList(containerId, sorted, valueFn) {
+                var el = document.getElementById(containerId);
+                if (!el) return;
+                while (el.firstChild) el.removeChild(el.firstChild);
+                sorted.slice(0, 5).forEach(function(user, i) {
+                    var row = document.createElement('div');
+                    row.className = 'lb-row';
+                    row.style.cursor = 'pointer';
+                    row.title = 'View user';
+                    row.addEventListener('click', function() { viewUser(user.user_id); });
+                    var rank = document.createElement('div');
+                    rank.className = 'lb-rank' + (medals[i] ? ' ' + medals[i] : '');
+                    rank.textContent = i + 1;
+                    var name = document.createElement('div');
+                    name.className = 'lb-name';
+                    name.textContent = user.profile_name || 'Unknown';
+                    name.title = user.profile_name || '';
+                    var val = document.createElement('div');
+                    val.className = 'lb-value';
+                    val.textContent = valueFn(user);
+                    row.appendChild(rank);
+                    row.appendChild(name);
+                    row.appendChild(val);
+                    el.appendChild(row);
+                });
+            }
+
+            var byAyahs    = allUsers.slice().sort(function(a,b){ return (b.total_ayahs_read||0)-(a.total_ayahs_read||0); });
+            var byStreak   = allUsers.slice().sort(function(a,b){ return (b.best_streak||0)-(a.best_streak||0); });
+            var byComplete = allUsers.slice().sort(function(a,b){ return (b.surahs_completed||0)-(a.surahs_completed||0); });
+
+            buildList('lb-ayahs',    byAyahs,    function(u){ return (u.total_ayahs_read||0).toLocaleString(); });
+            buildList('lb-streak',   byStreak,   function(u){ return (u.best_streak||0) + 'd'; });
+            buildList('lb-completed',byComplete, function(u){ return (u.surahs_completed||0) + ' surahs'; });
+        }
+
+        // Render summary chips
+        function renderChips() {
+            var now = Date.now();
+            var cut24 = new Date(now - 86400000);
+            var defs = [
+                { key: 'google',    label: 'Google',         color: '#4285f4', fn: function(u) { return u.registration_source === 'google'; } },
+                { key: 'apple',     label: 'Apple',          color: '#555',    fn: function(u) { return u.registration_source === 'apple'; } },
+                { key: 'email',     label: 'Email',          color: '#6366f1', fn: function(u) { return u.registration_source === 'email'; } },
+                { key: 'active24h', label: 'Active 24h',     color: '#16a34a', fn: function(u) { return u.lastActive && new Date(u.lastActive) >= cut24; } },
+                { key: 'bookmarks', label: 'Has Bookmarks',  color: '#d97706', fn: function(u) { return u.bookmarks_count > 0; } },
+                { key: 'reminders', label: 'Daily Reminder', color: '#7c3aed', fn: function(u) { return u.daily_reminder; } },
+            ];
+
+            var container = document.getElementById('summaryChips');
+            if (!container) return;
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            defs.forEach(function(def) {
+                var count = allUsers.filter(def.fn).length;
+                var btn = document.createElement('button');
+                btn.className = 'summary-chip' + (activeChip === def.key ? ' active' : '');
+                btn.dataset.chip = def.key;
+                var dot = document.createElement('span');
+                dot.className = 'chip-dot';
+                dot.style.background = def.color;
+                var lbl = document.createElement('span');
+                lbl.textContent = def.label;
+                var cnt = document.createElement('span');
+                cnt.className = 'chip-count';
+                cnt.textContent = count;
+                btn.appendChild(dot);
+                btn.appendChild(lbl);
+                btn.appendChild(cnt);
+                btn.addEventListener('click', function() {
+                    activeChip = (activeChip === def.key) ? null : def.key;
+                    renderChips();
+                    currentPage = 1;
+                    applyFilters();
+                });
+                container.appendChild(btn);
+            });
         }
 
         // Render user growth chart
@@ -971,68 +1292,40 @@
 
         // Handle search
         function handleSearch(e) {
-            const query = e.target.value.toLowerCase().trim();
-
-            if (!query) {
-                filteredUsers = [...allUsers];
-            } else {
-                filteredUsers = allUsers.filter(user => {
-                    return (
-                        (user.profile_name || '').toLowerCase().includes(query) ||
-                        (user.profile_email || '').toLowerCase().includes(query) ||
-                        (user.user_id || '').toLowerCase().includes(query)
-                    );
-                });
-            }
-
-            // Sync both search inputs
+            searchQuery = e.target.value;
             document.getElementById('searchInput').value = e.target.value;
             document.getElementById('topbar-search').value = e.target.value;
-
             currentPage = 1;
-            renderTable();
+            applyFilters();
         }
 
         // Handle sort
         function handleSort(e) {
-            const sortValue = e.target.value;
-            const [field, direction] = sortValue.split('_');
+            sortByValue(e.target.value);
+        }
 
-            filteredUsers.sort((a, b) => {
-                let valA, valB;
+        // Sort filteredUsers by a sort-key string
+        function sortByValue(sortValue) {
+            var parts = sortValue.split('_');
+            var direction = parts.pop();
+            var field = parts.join('_');
 
+            filteredUsers.sort(function(a, b) {
+                var va, vb;
                 switch (field) {
-                    case 'name':
-                        valA = (a.profile_name || '').toLowerCase();
-                        valB = (b.profile_name || '').toLowerCase();
-                        break;
-                    case 'email':
-                        valA = (a.profile_email || '').toLowerCase();
-                        valB = (b.profile_email || '').toLowerCase();
-                        break;
-                    case 'created':
-                        valA = new Date(a.created_at);
-                        valB = new Date(b.created_at);
-                        break;
-                    case 'progress':
-                        valA = calculateProgress(a);
-                        valB = calculateProgress(b);
-                        break;
-                    case 'active':
-                        valA = a.lastActive ? new Date(a.lastActive) : new Date(0);
-                        valB = b.lastActive ? new Date(b.lastActive) : new Date(0);
-                        break;
-                    default:
-                        return 0;
+                    case 'name':     va = (a.profile_name||'').toLowerCase(); vb = (b.profile_name||'').toLowerCase(); break;
+                    case 'email':    va = (a.profile_email||'').toLowerCase(); vb = (b.profile_email||'').toLowerCase(); break;
+                    case 'created':  va = new Date(a.created_at); vb = new Date(b.created_at); break;
+                    case 'progress': va = calculateProgress(a); vb = calculateProgress(b); break;
+                    case 'active':   va = a.lastActive ? new Date(a.lastActive) : new Date(0); vb = b.lastActive ? new Date(b.lastActive) : new Date(0); break;
+                    case 'ayahs':    va = a.total_ayahs_read||0; vb = b.total_ayahs_read||0; break;
+                    case 'streak':   va = a.best_streak||0; vb = b.best_streak||0; break;
+                    case 'completed': va = a.surahs_completed||0; vb = b.surahs_completed||0; break;
+                    default: return 0;
                 }
-
-                if (direction === 'asc') {
-                    return valA > valB ? 1 : valA < valB ? -1 : 0;
-                } else {
-                    return valA < valB ? 1 : valA > valB ? -1 : 0;
-                }
+                if (direction === 'asc') return va > vb ? 1 : va < vb ? -1 : 0;
+                return va < vb ? 1 : va > vb ? -1 : 0;
             });
-
             currentPage = 1;
             renderTable();
         }
@@ -1044,107 +1337,308 @@
             renderTable();
         }
 
-        // Apply filters
+        // Apply all active filters then sort
         function applyFilters() {
-            filteredUsers = [...allUsers];
-            const sortSelect = document.getElementById('sortSelect');
-            if (sortSelect) {
-                handleSort({ target: sortSelect });
-            } else {
-                renderTable();
-            }
+            var q = (searchQuery || '').toLowerCase().trim();
+            var provider = (document.getElementById('providerFilter') || {}).value || '';
+            var actDays = parseInt((document.getElementById('activityFilter') || {}).value) || 0;
+            var cutoff = actDays ? new Date(Date.now() - actDays * 86400000) : null;
+            var cut24 = new Date(Date.now() - 86400000);
+
+            filteredUsers = allUsers.filter(function(user) {
+                if (q && !(
+                    (user.profile_name||'').toLowerCase().includes(q) ||
+                    (user.profile_email||'').toLowerCase().includes(q) ||
+                    (user.user_id||'').toLowerCase().includes(q)
+                )) return false;
+                if (provider && user.registration_source !== provider) return false;
+                if (cutoff && (!user.lastActive || new Date(user.lastActive) < cutoff)) return false;
+                if (activeToggles.bookmarks  && !(user.bookmarks_count > 0)) return false;
+                if (activeToggles.progress   && !(user.total_ayahs_read > 0)) return false;
+                if (activeToggles.completed  && !(user.surahs_completed > 0)) return false;
+                if (activeToggles.noprogress && (user.total_ayahs_read > 0)) return false;
+                if (activeToggles.active24low) {
+                    var recent = user.lastActive && new Date(user.lastActive) >= cut24;
+                    var low = (user.total_ayahs_read || 0) < 50;
+                    if (!(recent && low)) return false;
+                }
+                if (activeChip === 'google'    && user.registration_source !== 'google') return false;
+                if (activeChip === 'apple'     && user.registration_source !== 'apple') return false;
+                if (activeChip === 'email'     && user.registration_source !== 'email') return false;
+                if (activeChip === 'active24h' && (!user.lastActive || new Date(user.lastActive) < cut24)) return false;
+                if (activeChip === 'bookmarks' && !(user.bookmarks_count > 0)) return false;
+                if (activeChip === 'reminders' && !user.daily_reminder) return false;
+                return true;
+            });
+
+            saveFilterState();
+            var sortSelect = document.getElementById('sortSelect');
+            sortByValue(sortSelect ? sortSelect.value : 'created_desc');
         }
 
-        // Calculate reading progress percentage
+        // Persist filter state to localStorage
+        function saveFilterState() {
+            try {
+                localStorage.setItem('admin_users_filters', JSON.stringify({
+                    q:        searchQuery,
+                    provider: (document.getElementById('providerFilter') || {}).value || '',
+                    activity: (document.getElementById('activityFilter') || {}).value || '',
+                    toggles:  activeToggles,
+                    chip:     activeChip,
+                    sort:     (document.getElementById('sortSelect') || {}).value || 'created_desc',
+                    perPage:  perPage
+                }));
+            } catch(e) {}
+        }
+
+        // Restore filter state from localStorage
+        function restoreFilterState() {
+            try {
+                var raw = localStorage.getItem('admin_users_filters');
+                if (!raw) return;
+                var s = JSON.parse(raw);
+                if (s.q) {
+                    searchQuery = s.q;
+                    document.getElementById('searchInput').value = s.q;
+                    document.getElementById('topbar-search').value = s.q;
+                }
+                if (s.provider) document.getElementById('providerFilter').value = s.provider;
+                if (s.activity) document.getElementById('activityFilter').value = s.activity;
+                if (s.sort) document.getElementById('sortSelect').value = s.sort;
+                if (s.perPage) {
+                    perPage = parseInt(s.perPage) || 50;
+                    document.getElementById('perPageSelect').value = s.perPage;
+                }
+                if (s.chip) activeChip = s.chip;
+                if (s.toggles) {
+                    activeToggles = s.toggles;
+                    document.querySelectorAll('.filter-toggle').forEach(function(btn) {
+                        btn.classList.toggle('active', !!activeToggles[btn.dataset.key]);
+                    });
+                }
+            } catch(e) {}
+        }
+
+        // Clear all filters and persisted state
+        function clearAllFilters() {
+            searchQuery = '';
+            activeChip = null;
+            activeToggles = {};
+            var pf = document.getElementById('providerFilter');
+            var af = document.getElementById('activityFilter');
+            var sf = document.getElementById('sortSelect');
+            if (pf) pf.value = '';
+            if (af) af.value = '';
+            if (sf) sf.value = 'created_desc';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('topbar-search').value = '';
+            document.querySelectorAll('.filter-toggle').forEach(function(b) { b.classList.remove('active'); });
+            try { localStorage.removeItem('admin_users_filters'); } catch(e) {}
+            renderChips();
+            currentPage = 1;
+            applyFilters();
+        }
+
+        // Calculate reading progress percentage (from readLog totals)
         function calculateProgress(user) {
-            const totalAyahs = 6236;
-            const ayahsRead = parseInt(user.total_ayahs_read) || 0;
-            return (ayahsRead / totalAyahs * 100);
+            return ((user.total_ayahs_read || 0) / 6236 * 100);
         }
 
-        // Render table
+        // Provider badge DOM element
+        function buildProviderBadge(src) {
+            var map = { google: ['#4285f4','G'], apple: ['#111','🍎'], email: ['#6366f1','@'], unknown: ['#888','?'] };
+            var pair = map[src] || map.unknown;
+            var span = document.createElement('span');
+            span.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:' + pair[0] + ';color:#fff;font-size:10px;font-weight:700;flex-shrink:0';
+            span.title = src || 'unknown';
+            span.textContent = pair[1];
+            return span;
+        }
+
+        const SURAH_NAMES = ['','Al-Fatiha','Al-Baqarah','Aal-Imran','An-Nisa','Al-Maidah','Al-Anam','Al-Araf','Al-Anfal','At-Tawbah','Yunus','Hud','Yusuf','Ar-Rad','Ibrahim','Al-Hijr','An-Nahl','Al-Isra','Al-Kahf','Maryam','Ta-Ha','Al-Anbiya','Al-Hajj','Al-Muminun','An-Nur','Al-Furqan','Ash-Shuara','An-Naml','Al-Qasas','Al-Ankabut','Ar-Rum','Luqman','As-Sajdah','Al-Ahzab','Saba','Fatir','Ya-Sin','As-Saffat','Sad','Az-Zumar','Ghafir','Fussilat','Ash-Shura','Az-Zukhruf','Ad-Dukhan','Al-Jathiyah','Al-Ahqaf','Muhammad','Al-Fath','Al-Hujurat','Qaf','Adh-Dhariyat','At-Tur','An-Najm','Al-Qamar','Ar-Rahman','Al-Waqiah','Al-Hadid','Al-Mujadila','Al-Hashr','Al-Mumtahanah','As-Saff','Al-Jumuah','Al-Munafiqun','At-Taghabun','At-Talaq','At-Tahrim','Al-Mulk','Al-Qalam','Al-Haqqah','Al-Maarij','Nuh','Al-Jinn','Al-Muzzammil','Al-Muddaththir','Al-Qiyamah','Al-Insan','Al-Mursalat','An-Naba','An-Naziat','Abasa','At-Takwir','Al-Infitar','Al-Mutaffifin','Al-Inshiqaq','Al-Buruj','At-Tariq','Al-Ala','Al-Ghashiyah','Al-Fajr','Al-Balad','Ash-Shams','Al-Layl','Ad-Duha','Ash-Sharh','At-Tin','Al-Alaq','Al-Qadr','Al-Bayyinah','Az-Zalzalah','Al-Adiyat','Al-Qariah','At-Takathur','Al-Asr','Al-Humazah','Al-Fil','Quraysh','Al-Maun','Al-Kawthar','Al-Kafirun','An-Nasr','Al-Masad','Al-Ikhlas','Al-Falaq','An-Nas'];
+
+        // Render table using DOM methods only
         function renderTable() {
-            const tbody = document.getElementById('usersTableBody');
-            const start = (currentPage - 1) * perPage;
-            const end = start + perPage;
-            const pageUsers = filteredUsers.slice(start, end);
+            var tbody = document.getElementById('usersTableBody');
+            var start = (currentPage - 1) * perPage;
+            var pageUsers = filteredUsers.slice(start, start + perPage);
+
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
             if (pageUsers.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <i data-lucide="users"></i>
-                                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">No users found</div>
-                                <div style="font-size: 14px;">Try adjusting your search or filters</div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                var tr0 = document.createElement('tr');
+                var td0 = document.createElement('td');
+                td0.colSpan = 8;
+                var empty = document.createElement('div');
+                empty.className = 'empty-state';
+                var ico = document.createElement('i');
+                ico.setAttribute('data-lucide', 'users');
+                var t1 = document.createElement('div');
+                t1.style.cssText = 'font-size:16px;font-weight:600;margin-bottom:8px';
+                t1.textContent = 'No users found';
+                var t2 = document.createElement('div');
+                t2.style.fontSize = '14px';
+                t2.textContent = 'Try adjusting your search or filters';
+                empty.appendChild(ico);
+                empty.appendChild(t1);
+                empty.appendChild(t2);
+                td0.appendChild(empty);
+                tr0.appendChild(td0);
+                tbody.appendChild(tr0);
                 lucide.createIcons();
                 updatePagination();
                 return;
             }
 
-            tbody.innerHTML = pageUsers.map(user => {
-                const progress = calculateProgress(user);
-                const avatar = user.profile_picture ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=80`;
-
-                return `
-                    <tr>
-                        <td>
-                            <div class="user-info">
-                                <img src="${escapeHtml(avatar)}" alt="${escapeHtml(user.profile_name)}" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=80'">
-                                <div class="user-details">
-                                    <div class="user-name">${escapeHtml(user.profile_name)}</div>
-                                    <div class="user-id">${user.user_id.substring(0, 8)}...</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>${escapeHtml(user.profile_email)}</td>
-                        <td style="font-family: monospace; font-size: 12px;">${user.user_id}</td>
-                        <td>
-                            <div style="min-width: 120px;">
-                                <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px;">${progress.toFixed(1)}%</div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
-                                </div>
-                            </div>
-                        </td>
-                        <td style="font-weight: 600;">${(parseInt(user.total_ayahs_read) || 0).toLocaleString()}</td>
-                        <td>${formatDate(user.lastActive)}</td>
-                        <td>${formatDate(user.created_at)}</td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="table-btn" title="View Details" data-action="view" data-userid="${escapeHtml(user.user_id)}">
-                                    <i data-lucide="eye"></i>
-                                </button>
-                                <button class="table-btn" title="Delete User" data-action="delete" data-userid="${escapeHtml(user.user_id)}">
-                                    <i data-lucide="trash-2"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
+            pageUsers.forEach(function(user) { tbody.appendChild(buildUserRow(user)); });
             lucide.createIcons();
             updatePagination();
         }
 
+        // Build a table row element for a user
+        function buildUserRow(user) {
+            var progress = calculateProgress(user);
+            var avatarUrl = user.profile_picture ||
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=80';
+            var surahName = SURAH_NAMES[user.current_surah] || '';
+            var position = user.current_surah > 0 ? (surahName + ' :' + user.current_ayah) : 'Not started';
+
+            var tr = document.createElement('tr');
+
+            // User cell
+            var tdUser = document.createElement('td');
+            var uInfo = document.createElement('div');
+            uInfo.className = 'user-info';
+            var img = document.createElement('img');
+            img.src = avatarUrl;
+            img.alt = user.profile_name;
+            img.className = 'user-avatar';
+            img.onerror = function() {
+                this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=80';
+            };
+            var uDet = document.createElement('div');
+            uDet.className = 'user-details';
+            var nameLine = document.createElement('div');
+            nameLine.className = 'user-name';
+            nameLine.style.cssText = 'display:flex;align-items:center;gap:4px';
+            var nameSpan = document.createElement('span');
+            nameSpan.textContent = user.profile_name;
+            nameLine.appendChild(nameSpan);
+            nameLine.appendChild(buildProviderBadge(user.registration_source));
+            var idLine = document.createElement('div');
+            idLine.className = 'user-id';
+            idLine.textContent = user.user_id.substring(0, 8) + '...';
+            uDet.appendChild(nameLine);
+            uDet.appendChild(idLine);
+            uInfo.appendChild(img);
+            uInfo.appendChild(uDet);
+            tdUser.appendChild(uInfo);
+
+            // Email cell
+            var tdEmail = document.createElement('td');
+            tdEmail.textContent = user.profile_email;
+
+            // Position cell
+            var tdPos = document.createElement('td');
+            tdPos.style.fontSize = '13px';
+            tdPos.textContent = position;
+
+            // Progress cell
+            var tdProg = document.createElement('td');
+            var pWrap = document.createElement('div');
+            pWrap.style.minWidth = '120px';
+            var pLabel = document.createElement('div');
+            pLabel.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:4px';
+            pLabel.textContent = progress.toFixed(1) + '% (' + (user.total_ayahs_read || 0).toLocaleString() + ')';
+            var pBar = document.createElement('div');
+            pBar.className = 'progress-bar';
+            var pFill = document.createElement('div');
+            pFill.className = 'progress-fill';
+            pFill.style.width = Math.min(progress, 100) + '%';
+            pBar.appendChild(pFill);
+            pWrap.appendChild(pLabel);
+            pWrap.appendChild(pBar);
+            tdProg.appendChild(pWrap);
+
+            // Streak / Surahs cell
+            var tdStreak = document.createElement('td');
+            tdStreak.style.fontSize = '13px';
+            var sLine1 = document.createElement('div');
+            sLine1.style.fontWeight = '600';
+            sLine1.textContent = (user.best_streak || 0) + 'd streak';
+            var sLine2 = document.createElement('div');
+            sLine2.style.cssText = 'color:var(--text-secondary);font-size:12px;margin-top:2px';
+            sLine2.textContent = (user.surahs_started || 0) + ' started, ' + (user.surahs_completed || 0) + ' done';
+            tdStreak.appendChild(sLine1);
+            tdStreak.appendChild(sLine2);
+
+            // Last Active cell
+            var tdActive = document.createElement('td');
+            tdActive.textContent = formatDate(user.lastActive);
+
+            // Joined cell
+            var tdJoined = document.createElement('td');
+            tdJoined.textContent = formatDate(user.created_at);
+
+            // Actions cell
+            var tdAct = document.createElement('td');
+            var actWrap = document.createElement('div');
+            actWrap.className = 'table-actions';
+            var btnV = document.createElement('button');
+            btnV.className = 'table-btn';
+            btnV.title = 'View Details';
+            btnV.dataset.action = 'view';
+            btnV.dataset.userid = user.user_id;
+            var iV = document.createElement('i');
+            iV.setAttribute('data-lucide', 'eye');
+            btnV.appendChild(iV);
+            var btnD = document.createElement('button');
+            btnD.className = 'table-btn';
+            btnD.title = 'Delete User';
+            btnD.dataset.action = 'delete';
+            btnD.dataset.userid = user.user_id;
+            var iD = document.createElement('i');
+            iD.setAttribute('data-lucide', 'trash-2');
+            btnD.appendChild(iD);
+            actWrap.appendChild(btnV);
+            actWrap.appendChild(btnD);
+            tdAct.appendChild(actWrap);
+
+            tr.appendChild(tdUser);
+            tr.appendChild(tdEmail);
+            tr.appendChild(tdPos);
+            tr.appendChild(tdProg);
+            tr.appendChild(tdStreak);
+            tr.appendChild(tdActive);
+            tr.appendChild(tdJoined);
+            tr.appendChild(tdAct);
+            return tr;
+        }
+
         // Update pagination
         function updatePagination() {
-            const total = filteredUsers.length;
-            const start = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
-            const end = Math.min(currentPage * perPage, total);
-            const totalPages = Math.ceil(total / perPage);
+            var total = filteredUsers.length;
+            var allTotal = allUsers.length;
+            var start = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
+            var end = Math.min(currentPage * perPage, total);
+            var totalPages = Math.ceil(total / perPage);
+            var isFiltered = total < allTotal;
 
             document.getElementById('paginationInfo').textContent =
-                `Showing ${start}-${end} of ${total} users`;
+                'Showing ' + start + '-' + end + ' of ' + total + ' users';
 
             document.getElementById('prevBtn').disabled = currentPage === 1;
             document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+            // Filter status bar
+            var statusText = document.getElementById('filterResultText');
+            var clearBtn = document.getElementById('clearFiltersBtn');
+            if (statusText) {
+                statusText.textContent = isFiltered
+                    ? total.toLocaleString() + ' of ' + allTotal.toLocaleString() + ' users match current filters'
+                    : allTotal.toLocaleString() + ' users total';
+            }
+            if (clearBtn) clearBtn.style.display = isFiltered ? '' : 'none';
 
             lucide.createIcons();
         }
@@ -1167,68 +1661,105 @@
             }
         }
 
-        // View user details
+        // View user details (DOM-safe)
         function viewUser(userId) {
-            const user = allUsers.find(u => u.user_id === userId);
+            var user = allUsers.find(function(u) { return u.user_id === userId; });
             if (!user) return;
 
-            const progress = calculateProgress(user);
-            const avatar = user.profile_picture ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=120`;
+            var progress = calculateProgress(user);
+            var avatarUrl = user.profile_picture ||
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=120';
+            var surahName = SURAH_NAMES[user.current_surah] || '';
+            var position = user.current_surah > 0 ? (surahName + ' :' + user.current_ayah) : 'Not started';
 
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <img src="${escapeHtml(avatar)}" alt="${escapeHtml(user.profile_name)}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 12px;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=120'">
-                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${escapeHtml(user.profile_name)}</div>
-                    <div style="font-size: 13px; color: var(--text-tertiary);">${escapeHtml(user.profile_email)}</div>
-                </div>
+            var modalBody = document.getElementById('modalBody');
+            while (modalBody.firstChild) modalBody.removeChild(modalBody.firstChild);
 
-                <div class="detail-row">
-                    <div class="detail-label">User ID</div>
-                    <div class="detail-value" style="font-family: monospace; font-size: 12px;">${user.user_id}</div>
-                </div>
+            // Header: avatar + name + badge + email
+            var hdr = document.createElement('div');
+            hdr.style.cssText = 'text-align:center;margin-bottom:24px';
+            var hImg = document.createElement('img');
+            hImg.src = avatarUrl;
+            hImg.alt = user.profile_name;
+            hImg.style.cssText = 'width:80px;height:80px;border-radius:50%;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto';
+            hImg.onerror = function() {
+                this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=120';
+            };
+            var hName = document.createElement('div');
+            hName.style.cssText = 'font-size:18px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:8px';
+            var hNameText = document.createElement('span');
+            hNameText.textContent = user.profile_name;
+            hName.appendChild(hNameText);
+            hName.appendChild(buildProviderBadge(user.registration_source));
+            var hEmail = document.createElement('div');
+            hEmail.style.cssText = 'font-size:13px;color:var(--text-tertiary)';
+            hEmail.textContent = user.profile_email;
+            hdr.appendChild(hImg);
+            hdr.appendChild(hName);
+            hdr.appendChild(hEmail);
+            modalBody.appendChild(hdr);
 
-                <div class="detail-row">
-                    <div class="detail-label">Email</div>
-                    <div class="detail-value">${escapeHtml(user.profile_email)}</div>
-                </div>
+            function addRow(label, value, mono) {
+                var row = document.createElement('div');
+                row.className = 'detail-row';
+                var lbl = document.createElement('div');
+                lbl.className = 'detail-label';
+                lbl.textContent = label;
+                var val = document.createElement('div');
+                val.className = 'detail-value';
+                if (mono) { val.style.fontFamily = 'monospace'; val.style.fontSize = '12px'; }
+                if (value && typeof value === 'object' && value.nodeType) {
+                    val.appendChild(value);
+                } else {
+                    val.textContent = String(value);
+                }
+                row.appendChild(lbl);
+                row.appendChild(val);
+                modalBody.appendChild(row);
+            }
 
-                <div class="detail-row">
-                    <div class="detail-label">Current Position</div>
-                    <div class="detail-value">${user.currentPosition || 'Not started'}</div>
-                </div>
+            // Progress bar element
+            var pEl = document.createElement('div');
+            var pPct = document.createElement('div');
+            pPct.style.cssText = 'font-weight:600;margin-bottom:8px';
+            pPct.textContent = progress.toFixed(2) + '%';
+            var pBar = document.createElement('div');
+            pBar.className = 'progress-bar';
+            var pFill = document.createElement('div');
+            pFill.className = 'progress-fill';
+            pFill.style.width = Math.min(progress, 100) + '%';
+            pBar.appendChild(pFill);
+            pEl.appendChild(pPct);
+            pEl.appendChild(pBar);
 
-                <div class="detail-row">
-                    <div class="detail-label">Ayahs Read</div>
-                    <div class="detail-value" style="font-weight: 600;">${(parseInt(user.total_ayahs_read) || 0).toLocaleString()} / 6,236</div>
-                </div>
+            addRow('User ID', user.user_id, true);
+            addRow('Provider', user.registration_source || 'unknown');
+            addRow('Position', position);
+            addRow('Ayahs Read', (user.total_ayahs_read || 0).toLocaleString() + ' / 6,236');
+            addRow('Completion', pEl);
+            addRow('Best Streak', (user.best_streak || 0) + ' days');
+            addRow('Bookmarks', user.bookmarks_count || 0);
+            addRow('Surahs Started', user.surahs_started || 0);
+            addRow('Surahs Completed', user.surahs_completed || 0);
+            addRow('Reading Goal', user.reading_goal > 0 ? user.reading_goal + ' ayahs/day' : 'Not set');
+            addRow('Reciter', user.reciter || 'Default');
+            addRow('Daily Reminder', user.daily_reminder ? 'On' : 'Off');
+            addRow('Active Days (30d)', user.active_days_30 || 0);
+            addRow('Active Days (all)', user.active_days_total || 0);
+            addRow('Last Active', formatDateFull(user.lastActive));
+            addRow('Account Created', formatDateFull(user.created_at));
 
-                <div class="detail-row">
-                    <div class="detail-label">Completion</div>
-                    <div class="detail-value">
-                        <div style="font-weight: 600; margin-bottom: 8px;">${progress.toFixed(2)}%</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="detail-label">Last Active</div>
-                    <div class="detail-value">${formatDateFull(user.lastActive)}</div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="detail-label">Account Created</div>
-                    <div class="detail-value">${formatDateFull(user.created_at)}</div>
-                </div>
-
-                <div class="detail-row">
-                    <div class="detail-label">Last Updated</div>
-                    <div class="detail-value">${formatDateFull(user.updated_at)}</div>
-                </div>
-            `;
+            // Add delete button to modal footer
+            var footer = document.querySelector('#userModal .modal-footer');
+            var existDel = footer.querySelector('.btn-danger');
+            if (existDel) existDel.remove();
+            var delBtn = document.createElement('button');
+            delBtn.className = 'btn btn-danger';
+            delBtn.textContent = 'Delete User';
+            (function(uid) {
+                delBtn.onclick = function() { closeUserModal(); deleteUser(uid); };
+            })(userId);
+            footer.insertBefore(delBtn, footer.firstChild);
 
             document.getElementById('userModal').classList.add('active');
             lucide.createIcons();
@@ -1300,16 +1831,27 @@
                 return;
             }
 
-            const headers = ['Name', 'Email', 'User ID', 'Ayahs Read', 'Progress %', 'Current Position', 'Last Active', 'Created'];
-            const rows = filteredUsers.map(user => {
-                const progress = calculateProgress(user);
+            var headers = ['Name', 'Email', 'User ID', 'Provider', 'Position', 'Ayahs Read', 'Progress %', 'Best Streak', 'Surahs Started', 'Surahs Completed', 'Bookmarks', 'Active Days 30d', 'Reading Goal', 'Reciter', 'Daily Reminder', 'Last Active', 'Created'];
+            var rows = filteredUsers.map(function(user) {
+                var progress = calculateProgress(user);
+                var surahName = SURAH_NAMES[user.current_surah] || '';
+                var position = user.current_surah > 0 ? (surahName + ' :' + user.current_ayah) : 'Not started';
                 return [
                     user.profile_name,
                     user.profile_email,
                     user.user_id,
-                    parseInt(user.total_ayahs_read) || 0,
+                    user.registration_source || 'unknown',
+                    position,
+                    user.total_ayahs_read || 0,
                     progress.toFixed(2) + '%',
-                    user.currentPosition || 'Not started',
+                    user.best_streak || 0,
+                    user.surahs_started || 0,
+                    user.surahs_completed || 0,
+                    user.bookmarks_count || 0,
+                    user.active_days_30 || 0,
+                    user.reading_goal > 0 ? user.reading_goal + ' ayahs/day' : 'Not set',
+                    user.reciter || 'Default',
+                    user.daily_reminder ? 'On' : 'Off',
                     formatDateFull(user.lastActive),
                     formatDateFull(user.created_at)
                 ];
@@ -1333,18 +1875,27 @@
 
         // Show error
         function showError(message) {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8">
-                        <div class="empty-state">
-                            <i data-lucide="alert-circle"></i>
-                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #dc2626;">Error</div>
-                            <div style="font-size: 14px;">${escapeHtml(message)}</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            var tbody = document.getElementById('usersTableBody');
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+            var tr = document.createElement('tr');
+            var td = document.createElement('td');
+            td.colSpan = 8;
+            var empty = document.createElement('div');
+            empty.className = 'empty-state';
+            var ico = document.createElement('i');
+            ico.setAttribute('data-lucide', 'alert-circle');
+            var t1 = document.createElement('div');
+            t1.style.cssText = 'font-size:16px;font-weight:600;margin-bottom:8px;color:#dc2626';
+            t1.textContent = 'Error';
+            var t2 = document.createElement('div');
+            t2.style.fontSize = '14px';
+            t2.textContent = message;
+            empty.appendChild(ico);
+            empty.appendChild(t1);
+            empty.appendChild(t2);
+            td.appendChild(empty);
+            tr.appendChild(td);
+            tbody.appendChild(tr);
             lucide.createIcons();
         }
 

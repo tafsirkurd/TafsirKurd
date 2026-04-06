@@ -5,7 +5,7 @@ export async function onRequest(context) {
     const url = new URL(request.url);
 
     // ===== RATE LIMITING — admin API endpoints only (not .html pages) =====
-    const adminApiPaths = ['/admin-auth', '/admin-management', '/admin-stats', '/admin-books', '/admin-messages-api', '/admin-users-data'];
+    const adminApiPaths = ['/admin-auth', '/admin-management', '/admin-stats', '/admin-books', '/admin-messages-api', '/admin-users-data', '/admin-translations', '/admin-notifications-api'];
     const isAdminApi = adminApiPaths.some(p => url.pathname === p || url.pathname.startsWith(p + '/'));
 
     if (isAdminApi && request.method === 'POST' && env.ADMIN_KV) {

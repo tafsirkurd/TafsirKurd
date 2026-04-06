@@ -10410,60 +10410,13 @@
                 navigator.serviceWorker.register('/service-worker.js?v=506')
                     .then(registration => {
                         console.log('✅ Service Worker registered successfully:', registration.scope);
-                        // Service worker will auto-update in background (default browser behavior)
-                        // No need to force updates on every page load
                     })
                     .catch(error => {
                         console.log('❌ Service Worker registration failed:', error);
                     });
-
-                // Track geographic visit - DISABLED (not needed)
-                // trackGeoVisit();
             });
 
-            // Track Geographic Visit
-            async function trackGeoVisit() {
-                try {
-                    // Don't track logged-in users (only track real visitors)
-                    const isAuthenticated = localStorage.getItem('isAuthenticated');
-                    if (isAuthenticated === 'true') {
-                        console.log('⏭️ Skipping visitor tracking - user is logged in');
-                        return;
-                    }
-
-                    // Check if already tracked in this session
-                    const lastTracked = sessionStorage.getItem('geo_tracked_time');
-                    const now = Date.now();
-
-                    // Track once per day per user (24 hours = 86400000 ms)
-                    if (lastTracked && (now - parseInt(lastTracked)) < 86400000) {
-                        console.log('📍 Geo tracking: Already tracked in last 24 hours');
-                        return;
-                    }
-
-                    console.log('📍 Geo tracking: Sending visit data...');
-
-                    const response = await fetch('/geo-analytics', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            page_url: window.location.pathname,
-                            referrer: document.referrer || null
-                        })
-                    });
-
-                    const result = await response.json();
-                    console.log('✅ Geo tracking success:', result);
-
-                    // Store timestamp of last tracking
-                    sessionStorage.setItem('geo_tracked_time', now.toString());
-                } catch (error) {
-                    console.error('❌ Geo tracking failed:', error);
-                }
-            }
-
             // Service worker controller change - don't auto-reload to prevent loops
-            // Users will get updates on next manual page visit
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 console.log('✅ Service worker updated - changes will apply on next visit');
             });
@@ -11666,8 +11619,6 @@
         }
     </script>
 
-    <!-- Simple Location Tracker -->
-    <script src="/utils/simple-location-tracker.js" defer></script>
     <script src="/js/app-promo.js?v=20260329" defer></script>
 </body>
 </html>

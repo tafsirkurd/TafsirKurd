@@ -11,50 +11,138 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=10">
     <style>
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .fade-in {
-            animation: fadeIn 0.4s ease forwards;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            to   { opacity: 1; transform: translateY(0); }
         }
+
+        /* Quick actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .quick-action-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 14px 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+        .quick-action-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            background: var(--bg-active);
+        }
+        .quick-action-icon {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            background: var(--bg-hover);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .quick-action-icon svg { width: 16px; height: 16px; }
+        .quick-action-label { font-size: 13px; font-weight: 600; }
+        .quick-action-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+        /* 3-col content grid for dashboard */
+        .content-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 1100px) {
+            .content-grid-3 { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 700px) {
+            .content-grid-3 { grid-template-columns: 1fr; }
+        }
+
+        /* Top readers card */
+        .top-reader-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: background 0.15s;
+        }
+        .top-reader-row:hover { background: var(--bg-secondary); }
+        .tr-rank {
+            font-size: 11px; font-weight: 700;
+            width: 20px; text-align: center; flex-shrink: 0;
+            color: var(--text-tertiary);
+        }
+        .tr-rank.gold   { color: #f59e0b; }
+        .tr-rank.silver { color: #94a3b8; }
+        .tr-rank.bronze { color: #b45309; }
+        .tr-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 600; font-size: 13px; flex-shrink: 0;
+            overflow: hidden;
+        }
+        .tr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .tr-info { flex: 1; min-width: 0; }
+        .tr-name {
+            font-size: 13px; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .tr-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+        .tr-stat { font-size: 13px; font-weight: 600; color: var(--primary); flex-shrink: 0; }
+
+        /* Section label */
+        .section-label {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--text-tertiary);
+            margin-bottom: 14px; margin-top: -4px;
+        }
+
+        /* Metric sub-label */
+        .metric-sub {
+            font-size: 11px; color: var(--text-tertiary);
+            margin-top: 2px; display: flex; align-items: center; gap: 4px;
+        }
+        .metric-sub svg { width: 11px; height: 11px; }
     </style>
     <style id="early-sidebar-hide">
-        /* Hide sidebar nav and restricted content by default until role is confirmed */
         .sidebar-nav { visibility: visible; }
         #recent-messages-card { display: none; }
     </style>
     <script>
-        // Early role-based sidebar hiding - runs before body renders - v3
         (function() {
             var role = sessionStorage.getItem('adminRole');
-            console.log('Early hide script v3 - Role:', role);
             var style = document.getElementById('early-sidebar-hide');
             var css = '.sidebar-nav{visibility:visible}';
-
             if (role === 'super_admin') {
-                // Super admin sees everything
                 css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"],#recent-messages-card{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],#recent-messages-card{display:none!important}';
             } else if (role === 'editor') {
-                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
             } else if (role === 'custom') {
                 css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
             }
-            // If no role yet, sidebar stays hidden until auth check completes
-            if (role) {
-                style.textContent = css;
-            }
+            if (role) style.textContent = css;
         })();
     </script>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
@@ -65,9 +153,7 @@
                     <i data-lucide="chevron-left"></i>
                 </button>
             </div>
-
             <nav class="sidebar-nav">
-                <!-- OVERVIEW -->
                 <div class="nav-section">
                     <div class="nav-section-header">Overview</div>
                     <a href="/admin-dashboard.html" class="nav-item active">
@@ -80,8 +166,6 @@
                         <span class="nav-item-label">Analytics</span>
                     </a>
                 </div>
-
-                <!-- CONTENT -->
                 <div class="nav-section">
                     <div class="nav-section-header">Content</div>
                     <a href="/admin-messages.html" class="nav-item">
@@ -98,28 +182,28 @@
                         <span class="nav-item-label">IslamVoice</span>
                     </a>
                     <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
-                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
-                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item">
+                        <i data-lucide="camera"></i>
+                        <span class="nav-item-label">Site Images</span>
+                    </a>
                     <a href="/admin-translations.html" class="nav-item">
                         <i data-lucide="languages"></i>
                         <span class="nav-item-label">Translations</span>
                     </a>
                 </div>
-
-                <!-- USERS -->
                 <div class="nav-section">
                     <div class="nav-section-header">Users</div>
                     <a href="/admin-users.html" class="nav-item">
                         <i data-lucide="users"></i>
                         <span class="nav-item-label">Users</span>
                     </a>
+                    <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
                     <a href="/admin-reading-stats.html" class="nav-item">
                         <i data-lucide="book-open"></i>
                         <span class="nav-item-label">Reading Stats</span>
                     </a>
                 </div>
-
-                <!-- SYSTEM -->
                 <div class="nav-section">
                     <div class="nav-section-header">System</div>
                     <a href="/admin-account-management.html" class="nav-item">
@@ -138,10 +222,6 @@
                         <i data-lucide="share-2"></i>
                         <span class="nav-item-label">Social Stats</span>
                     </a>
-                    <a href="/admin-bot-protection.html" class="nav-item">
-                        <i data-lucide="shield"></i>
-                        <span class="nav-item-label">Bot Protection</span>
-                    </a>
                     <a href="/admin-database.html" class="nav-item">
                         <i data-lucide="database"></i>
                         <span class="nav-item-label">Database</span>
@@ -150,54 +230,41 @@
                         <i data-lucide="search"></i>
                         <span class="nav-item-label">Search Console</span>
                     </a>
-                    <a href="/admin-email-templates.html" class="nav-item">
-                        <i data-lucide="mail"></i>
-                        <span class="nav-item-label">Email Templates</span>
-                    </a>
-                    <a href="/admin-activity-feed.html" class="nav-item">
-                        <i data-lucide="activity"></i>
-                        <span class="nav-item-label">Activity Feed</span>
+                    <a href="/admin-audit.html" class="nav-item">
+                        <i data-lucide="shield-check"></i>
+                        <span class="nav-item-label">Audit Log</span>
                     </a>
                 </div>
             </nav>
-
             <div class="sidebar-footer">
                 <div class="sidebar-profile">
-                    <div class="sidebar-profile-avatar">
-                        <i data-lucide="user"></i>
-                    </div>
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
                     <div class="sidebar-profile-info">
                         <div class="sidebar-profile-name"></div>
                         <div class="sidebar-profile-email"></div>
                     </div>
-                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout">
+                    <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color 0.2s;" title="Logout">
                         <i data-lucide="log-out"></i>
                     </button>
                 </div>
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
         <main class="main-content">
-            <!-- TOP BAR -->
             <header class="topbar">
-                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
-                    <i data-lucide="menu"></i>
-                </button>
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
                 <div class="topbar-search">
                     <i data-lucide="search"></i>
                     <input type="text" placeholder="Search...">
                 </div>
                 <div class="topbar-actions">
-                    <!-- Session Timer Display -->
                     <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour">
                         <i data-lucide="clock"></i>
                         <span id="sessionTimerText">60:00</span>
                     </div>
-
-                    <button class="topbar-btn" style="position: relative;">
+                    <button class="topbar-btn" style="position:relative;">
                         <i data-lucide="bell"></i>
-                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                        <span id="notification-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;display:none;"></span>
                     </button>
                     <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode">
                         <i data-lucide="moon" id="theme-icon"></i>
@@ -205,110 +272,118 @@
                 </div>
             </header>
 
-            <!-- CONTENT AREA -->
             <div class="content-area">
                 <div class="page-header">
                     <h1 class="page-title">Dashboard</h1>
                     <div class="page-actions">
-                        <button class="btn btn-secondary">
-                            <i data-lucide="download"></i>
-                            Export Report
-                        </button>
-                        <button class="btn btn-primary">
-                            <i data-lucide="plus"></i>
-                            Add New
+                        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()">
+                            <i data-lucide="refresh-cw"></i>
+                            Refresh
                         </button>
                     </div>
                 </div>
 
-                <!-- METRICS -->
+                <!-- METRICS — 6 cards -->
                 <div class="metrics-grid" id="metricsGrid">
                     <div class="metric-card">
                         <div class="metric-value" id="metricUsers">--</div>
                         <div class="metric-label">Total Users</div>
-                        <div class="metric-change" id="metricUsersChange" style="opacity: 0;">
-                            <i data-lucide="trending-up"></i>
-                            <span></span>
-                        </div>
+                        <div class="metric-sub" id="metricUsersSub"></div>
                     </div>
-
                     <div class="metric-card">
-                        <div class="metric-value" id="metricVideos">--</div>
-                        <div class="metric-label">Total Episodes</div>
-                        <div class="metric-change" id="metricVideosChange" style="opacity: 0;">
-                            <i data-lucide="trending-up"></i>
-                            <span></span>
-                        </div>
+                        <div class="metric-value" id="metricActiveToday">--</div>
+                        <div class="metric-label">Active Today</div>
+                        <div class="metric-sub"><i data-lucide="activity"></i><span>app opened today</span></div>
                     </div>
-
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricActive7d">--</div>
+                        <div class="metric-label">Active (7d)</div>
+                        <div class="metric-sub"><i data-lucide="calendar"></i><span>last 7 days</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricActive30d">--</div>
+                        <div class="metric-label">Active (30d)</div>
+                        <div class="metric-sub"><i data-lucide="calendar"></i><span>last 30 days</span></div>
+                    </div>
                     <div class="metric-card">
                         <div class="metric-value" id="metricMessages">--</div>
                         <div class="metric-label">Unread Messages</div>
-                        <div class="metric-change" id="metricMessagesChange" style="opacity: 0;">
-                            <i data-lucide="message-square"></i>
-                            <span></span>
-                        </div>
+                        <div class="metric-sub" id="metricMessagesSub"></div>
                     </div>
-
                     <div class="metric-card">
-                        <div class="metric-value" id="metricActive">--</div>
-                        <div class="metric-label">Active Today</div>
-                        <div class="metric-change" id="metricActiveChange" style="opacity: 0;">
-                            <i data-lucide="user-check"></i>
-                            <span></span>
-                        </div>
+                        <div class="metric-value" id="metricReaders">--</div>
+                        <div class="metric-label">Active Readers</div>
+                        <div class="metric-sub" id="metricReadersSub"></div>
                     </div>
                 </div>
 
-                <!-- CONTENT GRID -->
-                <div class="content-grid">
+                <!-- QUICK ACTIONS — populated from recent page history -->
+                <div class="section-label">Recently Visited</div>
+                <div class="quick-actions" id="quickActionsGrid"></div>
+
+                <!-- 3-COL CONTENT GRID -->
+                <div class="section-label">Live Data</div>
+                <div class="content-grid-3">
                     <!-- Recent Videos -->
                     <div class="card">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; margin-bottom: 4px;">
-                            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-                                <span style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:8px;height:8px;background:#ef4444;border-radius:50%;"></span>
                                 Recent Videos
                             </h3>
-                            <a href="/islamvoice.html" style="font-size: 12px; color: var(--primary); text-decoration: none; padding: 4px 10px; background: var(--bg-active); border-radius: 12px; transition: all 0.2s;">View all →</a>
+                            <a href="/admin-islamvoice-management.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">View all →</a>
                         </div>
                         <div class="card-body" id="recentVideosBody">
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <div style="text-align: center; padding: 40px; color: var(--text-tertiary);">
-                                    <i data-lucide="video" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
-                                    <p style="font-size: 14px;">Loading videos...</p>
-                                </div>
+                            <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
+                                <div style="width:30px;height:30px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
+                                <p style="font-size:13px;">Loading...</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recent Users -->
                     <div class="card">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; margin-bottom: 4px;">
-                            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-                                <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:8px;height:8px;background:#3b82f6;border-radius:50%;"></span>
                                 Recent Users
                             </h3>
-                            <span style="font-size: 12px; color: var(--text-tertiary); padding: 4px 10px; background: var(--bg-active); border-radius: 12px;">Last 5</span>
+                            <a href="/admin-users.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">View all →</a>
                         </div>
                         <div class="card-body" id="recentUsersBody">
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <div style="text-align: center; padding: 40px; color: var(--text-tertiary);">
-                                    <i data-lucide="users" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
-                                    <p style="font-size: 14px;">Loading users...</p>
-                                </div>
+                            <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
+                                <div style="width:30px;height:30px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
+                                <p style="font-size:13px;">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Readers -->
+                    <div class="card">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:8px;height:8px;background:#10b981;border-radius:50%;"></span>
+                                Top Readers
+                            </h3>
+                            <a href="/admin-reading-stats.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">Full stats →</a>
+                        </div>
+                        <div class="card-body" id="topReadersBody">
+                            <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
+                                <div style="width:30px;height:30px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
+                                <p style="font-size:13px;">Loading...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Messages -->
+                <!-- Recent Messages (super_admin only) -->
                 <div class="card" id="recent-messages-card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; margin-bottom: 4px;">
-                        <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-                            <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#10b981;border-radius:50%;"></span>
                             Recent Messages
                         </h3>
-                        <a href="/admin-messages.html" style="font-size: 12px; color: var(--primary); text-decoration: none; padding: 4px 10px; background: var(--bg-active); border-radius: 12px; transition: all 0.2s;">View all →</a>
+                        <a href="/admin-messages.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">View all →</a>
                     </div>
                     <div class="table-container">
                         <table>
@@ -324,16 +399,14 @@
                             </thead>
                             <tbody id="messagesTableBody">
                                 <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px;">
-                                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                                    <td colspan="6" style="text-align:center;padding:40px;">
+                                        <div style="width:40px;height:40px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-
-                <!-- Top Videos (removed to save space) -->
             </div>
         </main>
     </div>
@@ -342,378 +415,480 @@
     <script src="/utils/admin-heartbeat.js?v=2"></script>
     <script src="/utils/admin-session-timer-ui.js?v=5"></script>
     <script src="/utils/admin-loading.js"></script>
-    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-auth.js?v=5"></script>
     <script src="/utils/admin-notifications.js?v=3"></script>
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
 
-        // Check authentication
+        // Build quick-actions from localStorage immediately (no network needed)
+        buildQuickActions();
+
         (async () => {
             const isAuth = await window.adminAuth.checkAuth();
-            if (isAuth) {
-                await loadDashboardData();
-            }
+            if (isAuth) await loadDashboardData();
         })();
 
-        // Sidebar toggle
-        const menuToggle = document.getElementById('menu-toggle');
-        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-        const sidebar = document.getElementById('sidebar');
-
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
         });
 
-        mobileMenuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('mobile-open');
-        });
-
-        // Theme toggle functionality
         const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-
-        // Check saved theme preference
-        const savedTheme = localStorage.getItem('admin-theme');
-        if (savedTheme === 'dark') {
+        const themeIcon   = document.getElementById('theme-icon');
+        if (localStorage.getItem('admin-theme') === 'dark') {
             document.body.classList.add('dark-mode');
             themeIcon.setAttribute('data-lucide', 'sun');
             lucide.createIcons();
         }
-
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
-
-            // Update icon
             themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            lucide.createIcons();
-
-            // Save preference
             localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+            lucide.createIcons();
         });
 
-        // Load dashboard data from Supabase
+        function buildQuickActions() {
+            var container = document.getElementById('quickActionsGrid');
+            if (!container) return;
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            var pages = [];
+            try { pages = JSON.parse(localStorage.getItem('admin_recent_pages') || '[]'); } catch(e) {}
+
+            var recent = pages.slice(0, 6);
+
+            if (recent.length === 0) {
+                var empty = document.createElement('div');
+                empty.style.cssText = 'grid-column:1/-1;color:var(--text-tertiary);font-size:13px;padding:8px 0;';
+                empty.textContent = 'Pages you visit will appear here.';
+                container.appendChild(empty);
+                return;
+            }
+
+            recent.forEach(function(page) {
+                var card = document.createElement('a');
+                card.href = page.href;
+                card.className = 'quick-action-card';
+
+                var iconWrap = document.createElement('div');
+                iconWrap.className = 'quick-action-icon';
+                var icon = document.createElement('i');
+                icon.setAttribute('data-lucide', page.icon);
+                iconWrap.appendChild(icon);
+                card.appendChild(iconWrap);
+
+                var info = document.createElement('div');
+
+                var label = document.createElement('div');
+                label.className = 'quick-action-label';
+                label.textContent = page.label;
+                info.appendChild(label);
+
+                var sub = document.createElement('div');
+                sub.className = 'quick-action-sub';
+                sub.textContent = getTimeAgo(new Date(page.ts));
+                info.appendChild(sub);
+
+                card.appendChild(info);
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function refreshDashboard() {
+            const btn = document.getElementById('refreshBtn');
+            if (btn) btn.disabled = true;
+            loadDashboardData().finally(() => {
+                if (btn) btn.disabled = false;
+            });
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            const intervals = { year:31536000, month:2592000, week:604800, day:86400, hour:3600, minute:60 };
+            for (const [unit, s] of Object.entries(intervals)) {
+                const n = Math.floor(seconds / s);
+                if (n >= 1) return n === 1 ? '1 ' + unit + ' ago' : n + ' ' + unit + 's ago';
+            }
+            return 'Just now';
+        }
+
+        function setMetric(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value !== null && value !== undefined ? value.toLocaleString() : '--';
+                el.closest('.metric-card').classList.add('fade-in');
+            }
+        }
+
         async function loadDashboardData() {
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
 
-            try {
-                // Load user count from auth.users via SQL function
-                const { data: userCountData, error: userCountError } = await supabase
-                    .rpc('get_total_users');
+            const today = new Date(); today.setHours(0,0,0,0);
+            const ago7  = new Date(Date.now() - 7  * 86400000);
+            const ago30 = new Date(Date.now() - 30 * 86400000);
 
-                const metricUsers = document.getElementById('metricUsers');
-                if (!userCountError && userCountData !== null && metricUsers) {
-                    metricUsers.textContent = userCountData.toLocaleString();
-                    metricUsers.closest('.metric-card').classList.add('fade-in');
-                } else if (userCountError) {
-                    console.error('Error loading user count:', userCountError);
-                    if (metricUsers) metricUsers.textContent = '0';
-                }
+            // Fire all queries in parallel
+            const [
+                totalUsersRes,
+                activeTodayRes,
+                active7dRes,
+                active30dRes,
+                unreadMsgRes,
+                videoCountRes,
+                recentMsgsRes,
+                recentVideosRes,
+                recentUsersRes,
+                readingStatsRes
+            ] = await Promise.allSettled([
+                supabase.rpc('get_total_users'),
+                supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', today.toISOString()),
+                supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago7.toISOString()),
+                supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago30.toISOString()),
+                supabase.from('contact_messages').select('*', { count:'exact', head:true }).eq('status','unread'),
+                supabase.from('islamvoice_episodes').select('*', { count:'exact', head:true }),
+                supabase.from('contact_messages').select('*').order('created_at', { ascending:false }).limit(3),
+                supabase.from('islamvoice_episodes').select('id,title,thumbnail_url,created_at').order('created_at', { ascending:false }).limit(5),
+                supabase.rpc('get_recent_users', { limit_count: 5 }),
+                fetchReadingStats()
+            ]);
 
-                // Load episode count
-                const { count: videoCount } = await supabase
-                    .from('islamvoice_episodes')
-                    .select('*', { count: 'exact', head: true });
-
-                const metricVideos = document.getElementById('metricVideos');
-                if (videoCount !== null && metricVideos) {
-                    metricVideos.textContent = videoCount.toLocaleString();
-                    metricVideos.closest('.metric-card').classList.add('fade-in');
-                }
-
-                // Load unread message count
-                const { count: unreadCount } = await supabase
-                    .from('contact_messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('status', 'unread');
-
-                const metricMessages = document.getElementById('metricMessages');
-                if (unreadCount !== null && metricMessages) {
-                    metricMessages.textContent = unreadCount.toLocaleString();
-                    metricMessages.closest('.metric-card').classList.add('fade-in');
-
-                    // Update sidebar messages badge
-                    const messagesBadge = document.getElementById('messages-badge');
-                    if (messagesBadge) {
-                        messagesBadge.textContent = unreadCount > 0 ? unreadCount : '';
-                        messagesBadge.style.display = unreadCount > 0 ? '' : 'none';
-                    }
-                }
-
-                // Active users today - auth.users doesn't track last_active
-                // This would require a custom tracking solution
-                const metricActive = document.getElementById('metricActive');
-                if (metricActive) {
-                    metricActive.textContent = '0';
-                    metricActive.closest('.metric-card').classList.add('fade-in');
-                }
-
-                // Load recent messages
-                const { data: messages } = await supabase
-                    .from('contact_messages')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(3);
-
-                const tbody = document.getElementById('messagesTableBody');
-                if (messages && messages.length > 0 && tbody) {
-                    while (tbody.firstChild) {
-                        tbody.removeChild(tbody.firstChild);
-                    }
-
-                    messages.forEach(msg => {
-                        const tr = document.createElement('tr');
-
-                        const td1 = document.createElement('td');
-                        td1.textContent = msg.name || 'N/A';
-                        tr.appendChild(td1);
-
-                        const td2 = document.createElement('td');
-                        td2.textContent = msg.email || 'N/A';
-                        tr.appendChild(td2);
-
-                        const td3 = document.createElement('td');
-                        td3.textContent = msg.subject || 'No subject';
-                        tr.appendChild(td3);
-
-                        const td4 = document.createElement('td');
-                        const badge = document.createElement('span');
-                        const isRead = msg.status === 'read';
-                        badge.className = isRead ? 'badge badge-success' : 'badge badge-neutral';
-                        badge.textContent = isRead ? 'Read' : 'Unread';
-                        td4.appendChild(badge);
-                        tr.appendChild(td4);
-
-                        const td5 = document.createElement('td');
-                        td5.textContent = new Date(msg.created_at).toLocaleString();
-                        tr.appendChild(td5);
-
-                        const td6 = document.createElement('td');
-                        const actions = document.createElement('div');
-                        actions.className = 'table-actions';
-
-                        const viewBtn = document.createElement('button');
-                        viewBtn.className = 'table-btn';
-                        viewBtn.title = 'View';
-                        viewBtn.onclick = () => window.location.href = '/admin-messages.html';
-                        const viewIcon = document.createElement('i');
-                        viewIcon.setAttribute('data-lucide', 'eye');
-                        viewBtn.appendChild(viewIcon);
-                        actions.appendChild(viewBtn);
-
-                        const replyBtn = document.createElement('button');
-                        replyBtn.className = 'table-btn';
-                        replyBtn.title = 'Reply';
-                        replyBtn.onclick = () => window.location.href = 'mailto:' + msg.email + '?subject=Re: ' + encodeURIComponent(msg.subject || 'Your message');
-                        const replyIcon = document.createElement('i');
-                        replyIcon.setAttribute('data-lucide', 'reply');
-                        replyBtn.appendChild(replyIcon);
-                        actions.appendChild(replyBtn);
-
-                        td6.appendChild(actions);
-                        tr.appendChild(td6);
-
-                        tbody.appendChild(tr);
-                    });
-
-                    lucide.createIcons();
-                    tbody.classList.add('fade-in');
-                } else if (tbody) {
-                    while (tbody.firstChild) {
-                        tbody.removeChild(tbody.firstChild);
-                    }
-                    const tr = document.createElement('tr');
-                    const td = document.createElement('td');
-                    td.setAttribute('colspan', '6');
-                    td.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
-                    td.textContent = 'No messages yet';
-                    tr.appendChild(td);
-                    tbody.appendChild(tr);
-                }
-
-                // Load recent episodes
-                const { data: recentVideos } = await supabase
-                    .from('islamvoice_episodes')
-                    .select('id, title, thumbnail_url, created_at, series_id')
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                const videosBody = document.getElementById('recentVideosBody');
-                if (recentVideos && recentVideos.length > 0 && videosBody) {
-                    while (videosBody.firstChild) {
-                        videosBody.removeChild(videosBody.firstChild);
-                    }
-
-                    const container = document.createElement('div');
-                    container.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
-
-                    recentVideos.forEach(video => {
-                        const item = document.createElement('div');
-                        item.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; transition: background 0.2s; cursor: pointer;';
-                        item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
-                        item.onmouseleave = () => item.style.background = 'transparent';
-                        item.onclick = () => window.location.href = '/islamvoice.html';
-
-                        const thumb = document.createElement('img');
-                        thumb.src = video.thumbnail_url || '/assets/images/placeholder-video.jpg';
-                        thumb.alt = video.title;
-                        thumb.style.cssText = 'width: 60px; height: 40px; border-radius: 6px; object-fit: cover; background: var(--bg-secondary); flex-shrink: 0;';
-                        thumb.onerror = () => thumb.style.display = 'none';
-                        item.appendChild(thumb);
-
-                        const info = document.createElement('div');
-                        info.style.cssText = 'flex: 1; min-width: 0;';
-
-                        const title = document.createElement('div');
-                        title.textContent = video.title;
-                        title.style.cssText = 'font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-                        info.appendChild(title);
-
-                        const meta = document.createElement('div');
-                        meta.style.cssText = 'font-size: 12px; color: var(--text-tertiary); margin-top: 4px;';
-                        const timeAgo = getTimeAgo(new Date(video.created_at));
-                        meta.textContent = timeAgo;
-                        info.appendChild(meta);
-
-                        item.appendChild(info);
-                        container.appendChild(item);
-                    });
-
-                    videosBody.appendChild(container);
-                } else if (videosBody) {
-                    while (videosBody.firstChild) {
-                        videosBody.removeChild(videosBody.firstChild);
-                    }
-                    const emptyState = document.createElement('div');
-                    emptyState.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
-                    const icon = document.createElement('i');
-                    icon.setAttribute('data-lucide', 'video');
-                    icon.style.cssText = 'width: 32px; height: 32px; margin-bottom: 8px;';
-                    const text = document.createElement('p');
-                    text.style.fontSize = '14px';
-                    text.textContent = 'No videos yet';
-                    emptyState.appendChild(icon);
-                    emptyState.appendChild(text);
-                    videosBody.appendChild(emptyState);
-                    lucide.createIcons();
-                }
-
-                // Load recent users
-                const { data: recentUsers, error: usersError } = await supabase.rpc('get_recent_users', { limit_count: 5 });
-
-                const usersBody = document.getElementById('recentUsersBody');
-                if (!usersError && recentUsers && recentUsers.length > 0 && usersBody) {
-                    while (usersBody.firstChild) {
-                        usersBody.removeChild(usersBody.firstChild);
-                    }
-
-                    const container = document.createElement('div');
-                    container.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
-
-                    recentUsers.forEach(user => {
-                        const item = document.createElement('div');
-                        item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 8px; transition: background 0.2s; cursor: pointer;';
-                        item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
-                        item.onmouseleave = () => item.style.background = 'transparent';
-                        item.onclick = () => window.location.href = `/admin-users.html?userId=${user.id}`;
-                        item.title = `View ${user.email}'s profile`;
-
-                        const leftSide = document.createElement('div');
-                        leftSide.style.cssText = 'display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;';
-
-                        // Create avatar - use profile picture if available, otherwise letter
-                        let avatar;
-                        if (user.avatar_url) {
-                            avatar = document.createElement('img');
-                            avatar.src = user.avatar_url;
-                            avatar.alt = user.email || 'User';
-                            avatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;';
-                            avatar.onerror = function() {
-                                // If image fails to load, replace with letter avatar
-                                const letterAvatar = document.createElement('div');
-                                letterAvatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; flex-shrink: 0;';
-                                letterAvatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
-                                this.parentNode.replaceChild(letterAvatar, this);
-                            };
-                        } else {
-                            avatar = document.createElement('div');
-                            avatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; flex-shrink: 0;';
-                            avatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
-                        }
-                        leftSide.appendChild(avatar);
-
-                        const info = document.createElement('div');
-                        info.style.cssText = 'min-width: 0; flex: 1;';
-
-                        const email = document.createElement('div');
-                        email.textContent = user.email || 'No email';
-                        email.style.cssText = 'font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-                        info.appendChild(email);
-
-                        const meta = document.createElement('div');
-                        meta.style.cssText = 'font-size: 12px; color: var(--text-tertiary); margin-top: 2px;';
-                        const timeAgo = getTimeAgo(new Date(user.created_at));
-                        meta.textContent = `Joined ${timeAgo}`;
-                        info.appendChild(meta);
-
-                        leftSide.appendChild(info);
-                        item.appendChild(leftSide);
-
-                        const badge = document.createElement('span');
-                        badge.className = user.email_confirmed_at ? 'badge badge-success' : 'badge badge-neutral';
-                        badge.textContent = user.email_confirmed_at ? 'Verified' : 'Pending';
-                        badge.style.cssText = 'flex-shrink: 0;';
-                        item.appendChild(badge);
-
-                        container.appendChild(item);
-                    });
-
-                    usersBody.appendChild(container);
-                } else if (usersBody) {
-                    while (usersBody.firstChild) {
-                        usersBody.removeChild(usersBody.firstChild);
-                    }
-                    const emptyState = document.createElement('div');
-                    emptyState.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
-                    const icon = document.createElement('i');
-                    icon.setAttribute('data-lucide', 'users');
-                    icon.style.cssText = 'width: 32px; height: 32px; margin-bottom: 8px;';
-                    const text = document.createElement('p');
-                    text.style.fontSize = '14px';
-                    text.textContent = usersError ? 'Error loading users' : 'No users yet';
-                    emptyState.appendChild(icon);
-                    emptyState.appendChild(text);
-                    usersBody.appendChild(emptyState);
-                    lucide.createIcons();
-                }
-
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
+            // --- Metrics ---
+            if (totalUsersRes.status === 'fulfilled' && !totalUsersRes.value.error) {
+                setMetric('metricUsers', totalUsersRes.value.data);
             }
+            if (activeTodayRes.status === 'fulfilled') {
+                setMetric('metricActiveToday', activeTodayRes.value.count);
+            }
+            if (active7dRes.status === 'fulfilled') {
+                setMetric('metricActive7d', active7dRes.value.count);
+            }
+            if (active30dRes.status === 'fulfilled') {
+                setMetric('metricActive30d', active30dRes.value.count);
+            }
+
+            const unreadCount = unreadMsgRes.status === 'fulfilled' ? unreadMsgRes.value.count : null;
+            setMetric('metricMessages', unreadCount);
+            const messagesBadge = document.getElementById('messages-badge');
+            if (messagesBadge && unreadCount > 0) {
+                messagesBadge.textContent = unreadCount;
+                messagesBadge.style.display = '';
+            }
+
+            // (episode count used in metric; quick-actions are history-based)
+
+            // --- Reading stats ---
+            const readingData = readingStatsRes.status === 'fulfilled' ? readingStatsRes.value : null;
+            if (readingData && readingData.stats) {
+                setMetric('metricReaders', readingData.stats.activeReaders);
+                const readersSub = document.getElementById('metricReadersSub');
+                if (readersSub) {
+                    readersSub.textContent = 'avg ' + (readingData.stats.avgProgress || 0) + '% progress';
+                }
+            }
+            buildTopReaders(readingData ? readingData.users : null);
+
+            // --- Recent videos ---
+            const videos = recentVideosRes.status === 'fulfilled' && !recentVideosRes.value.error
+                ? recentVideosRes.value.data : null;
+            buildRecentVideos(videos);
+
+            // --- Recent users ---
+            const users = recentUsersRes.status === 'fulfilled' && !recentUsersRes.value.error
+                ? recentUsersRes.value.data : null;
+            buildRecentUsers(users);
+
+            // --- Recent messages ---
+            const messages = recentMsgsRes.status === 'fulfilled' && !recentMsgsRes.value.error
+                ? recentMsgsRes.value.data : null;
+            buildRecentMessages(messages);
+
+            lucide.createIcons();
         }
 
-        // Helper function to get time ago
-        function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
+        async function fetchReadingStats() {
+            const adminToken = sessionStorage.getItem('adminToken');
+            if (!adminToken) return null;
+            const res = await fetch('/admin-users-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+                body: JSON.stringify({ action: 'get_reading_stats', token: adminToken })
+            });
+            const data = await res.json();
+            return data.success ? data : null;
+        }
 
-            const intervals = {
-                year: 31536000,
-                month: 2592000,
-                week: 604800,
-                day: 86400,
-                hour: 3600,
-                minute: 60
-            };
+        function buildTopReaders(users) {
+            const container = document.getElementById('topReadersBody');
+            if (!container) return;
+            while (container.firstChild) container.removeChild(container.firstChild);
 
-            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-                const interval = Math.floor(seconds / secondsInUnit);
-                if (interval >= 1) {
-                    return interval === 1 ? `1 ${unit} ago` : `${interval} ${unit}s ago`;
-                }
+            if (!users || users.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;';
+                empty.textContent = 'No reading data yet';
+                container.appendChild(empty);
+                return;
             }
-            return 'Just now';
+
+            const top = users.slice().sort((a, b) => (b.ayahsRead || 0) - (a.ayahsRead || 0)).slice(0, 5);
+            const rankClasses = ['gold', 'silver', 'bronze', '', ''];
+            const rankLabels  = ['1st', '2nd', '3rd', '4th', '5th'];
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+
+            top.forEach((u, i) => {
+                const row = document.createElement('a');
+                row.href = '/admin-reading-stats.html';
+                row.className = 'top-reader-row';
+
+                const rank = document.createElement('div');
+                rank.className = 'tr-rank' + (rankClasses[i] ? ' ' + rankClasses[i] : '');
+                rank.textContent = rankLabels[i];
+                row.appendChild(rank);
+
+                const avatar = document.createElement('div');
+                avatar.className = 'tr-avatar';
+                if (u.avatar) {
+                    const img = document.createElement('img');
+                    img.src = u.avatar;
+                    img.alt = '';
+                    img.onerror = function() { this.parentNode.textContent = (u.email || 'U').charAt(0).toUpperCase(); };
+                    avatar.appendChild(img);
+                } else {
+                    avatar.textContent = (u.email || u.name || 'U').charAt(0).toUpperCase();
+                }
+                row.appendChild(avatar);
+
+                const info = document.createElement('div');
+                info.className = 'tr-info';
+
+                const name = document.createElement('div');
+                name.className = 'tr-name';
+                name.textContent = u.name || u.email || 'Unknown';
+                info.appendChild(name);
+
+                const sub = document.createElement('div');
+                sub.className = 'tr-sub';
+                sub.textContent = (u.surahsCompleted || 0) + ' surahs · ' + (u.bestStreak || 0) + 'd streak';
+                info.appendChild(sub);
+
+                row.appendChild(info);
+
+                const stat = document.createElement('div');
+                stat.className = 'tr-stat';
+                stat.textContent = (u.ayahsRead || 0).toLocaleString();
+                row.appendChild(stat);
+
+                wrap.appendChild(row);
+            });
+
+            // Footer note
+            const footer = document.createElement('div');
+            footer.style.cssText = 'font-size:11px;color:var(--text-tertiary);text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light);';
+            footer.textContent = 'ayahs read · all time';
+            wrap.appendChild(footer);
+
+            container.appendChild(wrap);
+        }
+
+        function buildRecentVideos(videos) {
+            const container = document.getElementById('recentVideosBody');
+            if (!container) return;
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            if (!videos || videos.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;';
+                empty.textContent = 'No videos yet';
+                container.appendChild(empty);
+                return;
+            }
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+
+            videos.forEach(video => {
+                const item = document.createElement('div');
+                item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px;transition:background 0.15s;cursor:pointer;';
+                item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
+                item.onmouseleave = () => item.style.background = 'transparent';
+                item.onclick = () => window.location.href = '/admin-islamvoice-management.html';
+
+                const thumb = document.createElement('img');
+                thumb.src = video.thumbnail_url || '/assets/images/logo.png';
+                thumb.alt = video.title;
+                thumb.style.cssText = 'width:56px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--bg-secondary);';
+                thumb.onerror = () => { thumb.style.display = 'none'; };
+                item.appendChild(thumb);
+
+                const info = document.createElement('div');
+                info.style.cssText = 'flex:1;min-width:0;';
+
+                const title = document.createElement('div');
+                title.textContent = video.title;
+                title.style.cssText = 'font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                info.appendChild(title);
+
+                const meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:3px;';
+                meta.textContent = getTimeAgo(new Date(video.created_at));
+                info.appendChild(meta);
+
+                item.appendChild(info);
+                wrap.appendChild(item);
+            });
+
+            container.appendChild(wrap);
+        }
+
+        function buildRecentUsers(users) {
+            const container = document.getElementById('recentUsersBody');
+            if (!container) return;
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            if (!users || users.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;';
+                empty.textContent = 'No users yet';
+                container.appendChild(empty);
+                return;
+            }
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+
+            users.forEach(user => {
+                const item = document.createElement('div');
+                item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px;border-radius:8px;transition:background 0.15s;cursor:pointer;';
+                item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
+                item.onmouseleave = () => item.style.background = 'transparent';
+                item.onclick = () => window.location.href = '/admin-users.html?userId=' + user.id;
+
+                const left = document.createElement('div');
+                left.style.cssText = 'display:flex;align-items:center;gap:10px;min-width:0;flex:1;';
+
+                let avatar;
+                if (user.avatar_url) {
+                    avatar = document.createElement('img');
+                    avatar.src = user.avatar_url;
+                    avatar.alt = '';
+                    avatar.style.cssText = 'width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;';
+                    avatar.onerror = function() {
+                        const d = document.createElement('div');
+                        d.style.cssText = 'width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:13px;flex-shrink:0;';
+                        d.textContent = (user.email || 'U').charAt(0).toUpperCase();
+                        this.parentNode.replaceChild(d, this);
+                    };
+                } else {
+                    avatar = document.createElement('div');
+                    avatar.style.cssText = 'width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:13px;flex-shrink:0;';
+                    avatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
+                }
+                left.appendChild(avatar);
+
+                const info = document.createElement('div');
+                info.style.cssText = 'min-width:0;flex:1;';
+
+                const email = document.createElement('div');
+                email.textContent = user.email || 'No email';
+                email.style.cssText = 'font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                info.appendChild(email);
+
+                const meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px;';
+                meta.textContent = 'Joined ' + getTimeAgo(new Date(user.created_at));
+                info.appendChild(meta);
+
+                left.appendChild(info);
+                item.appendChild(left);
+
+                const badge = document.createElement('span');
+                badge.className = user.email_confirmed_at ? 'badge badge-success' : 'badge badge-neutral';
+                badge.textContent = user.email_confirmed_at ? 'Verified' : 'Pending';
+                badge.style.flexShrink = '0';
+                item.appendChild(badge);
+
+                wrap.appendChild(item);
+            });
+
+            container.appendChild(wrap);
+        }
+
+        function buildRecentMessages(messages) {
+            const tbody = document.getElementById('messagesTableBody');
+            if (!tbody) return;
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+            if (!messages || messages.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.setAttribute('colspan', '6');
+                td.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);';
+                td.textContent = 'No messages yet';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+
+            messages.forEach(msg => {
+                const tr = document.createElement('tr');
+
+                const cells = [
+                    msg.name || 'N/A',
+                    msg.email || 'N/A',
+                    msg.subject || 'No subject'
+                ];
+                cells.forEach(txt => {
+                    const td = document.createElement('td');
+                    td.textContent = txt;
+                    tr.appendChild(td);
+                });
+
+                const td4 = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = msg.status === 'read' ? 'badge badge-success' : 'badge badge-neutral';
+                badge.textContent = msg.status === 'read' ? 'Read' : 'Unread';
+                td4.appendChild(badge);
+                tr.appendChild(td4);
+
+                const td5 = document.createElement('td');
+                td5.textContent = new Date(msg.created_at).toLocaleString();
+                tr.appendChild(td5);
+
+                const td6 = document.createElement('td');
+                const actions = document.createElement('div');
+                actions.className = 'table-actions';
+
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'table-btn';
+                viewBtn.title = 'View';
+                viewBtn.onclick = () => window.location.href = '/admin-messages.html';
+                const vi = document.createElement('i');
+                vi.setAttribute('data-lucide', 'eye');
+                viewBtn.appendChild(vi);
+                actions.appendChild(viewBtn);
+
+                const replyBtn = document.createElement('button');
+                replyBtn.className = 'table-btn';
+                replyBtn.title = 'Reply';
+                replyBtn.onclick = () => window.location.href = 'mailto:' + msg.email + '?subject=Re: ' + encodeURIComponent(msg.subject || '');
+                const ri = document.createElement('i');
+                ri.setAttribute('data-lucide', 'reply');
+                replyBtn.appendChild(ri);
+                actions.appendChild(replyBtn);
+
+                td6.appendChild(actions);
+                tr.appendChild(td6);
+
+                tbody.appendChild(tr);
+            });
         }
     </script>
 </body>

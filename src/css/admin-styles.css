@@ -908,6 +908,15 @@ body[data-role="editor"] .nav-item[href*="activity-feed"] {
     display: none !important;
 }
 
+/* ── Placeholder/dev-only pages — hidden from all roles ──────── */
+.nav-item[href*="header-animation"],
+.nav-item[href*="email-templates"],
+.nav-item[href*="bot-protection"],
+.nav-item[href*="activity-feed"],
+.nav-item[href*="geographic-analytics"] {
+    display: none !important;
+}
+
 /* ── Global overflow guard — nothing should push body wider ──── */
 html, body {
     max-width: 100%;

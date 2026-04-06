@@ -121,7 +121,7 @@ export async function onRequest(context) {
     // ── CREATE ────────────────────────────────────────────────────
     if (action === 'create') {
         const { title, body: msgBody, image_url, platform, audience, deep_link_type, deep_link_id,
-                scheduled_at, recurrence, recurrence_day, notes } = body;
+                scheduled_at, recurrence, recurrence_day, notes, is_template } = body;
 
         if (!title || !msgBody) return json({ error: 'title and body required' }, 400);
 
@@ -139,6 +139,7 @@ export async function onRequest(context) {
                 recurrence: recurrence || 'none',
                 recurrence_day: recurrence_day != null ? recurrence_day : null,
                 notes: notes || null,
+                is_template: is_template === true,
                 created_by: adminEmail,
             })
             .select()
@@ -163,7 +164,7 @@ export async function onRequest(context) {
             return json({ error: 'Can only edit draft or scheduled notifications' }, 400);
 
         const { title, body: msgBody, image_url, platform, audience, deep_link_type, deep_link_id,
-                scheduled_at, recurrence, recurrence_day, notes } = body;
+                scheduled_at, recurrence, recurrence_day, notes, is_template } = body;
 
         const status = scheduled_at ? 'scheduled' : 'draft';
         const { data, error } = await supabase
@@ -179,6 +180,7 @@ export async function onRequest(context) {
                 recurrence: recurrence || 'none',
                 recurrence_day: recurrence_day != null ? recurrence_day : null,
                 notes: notes || null,
+                is_template: is_template === true,
             })
             .eq('id', body.id)
             .select()
@@ -205,10 +207,27 @@ export async function onRequest(context) {
         if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID)
             return json({ error: 'FCM not configured' }, 503);
 
-        // Mark as sending
-        await supabase.from('admin_notifications')
-            .update({ status: 'sending' })
-            .eq('id', body.id);
+        // Templates: create a sent-copy instead of modifying the original
+        const isTemplate = notif.is_template === true;
+        let trackingId = body.id;
+
+        if (isTemplate) {
+            const { data: copy } = await supabase.from('admin_notifications').insert({
+                title: notif.title, body: notif.body, image_url: notif.image_url,
+                platform: notif.platform, audience: notif.audience,
+                deep_link_type: notif.deep_link_type, deep_link_id: notif.deep_link_id,
+                recurrence: notif.recurrence, recurrence_day: notif.recurrence_day,
+                notes: notif.notes, created_by: adminEmail,
+                status: 'sending', is_template: false,
+            }).select().single();
+            if (!copy) return json({ error: 'Failed to create send record' }, 500);
+            trackingId = copy.id;
+        } else {
+            // Mark as sending
+            await supabase.from('admin_notifications')
+                .update({ status: 'sending' })
+                .eq('id', body.id);
+        }
 
         // Get tokens based on audience
         let tokens;
@@ -225,7 +244,7 @@ export async function onRequest(context) {
             await supabase.from('admin_notifications')
                 .update({ status: 'sent', sent_at: new Date().toISOString(),
                           tokens_targeted: 0, tokens_sent: 0, tokens_failed: 0, stale_removed: 0 })
-                .eq('id', body.id);
+                .eq('id', trackingId);
             return json({ success: true, sent: 0, message: 'No registered tokens for this audience' });
         }
 
@@ -236,7 +255,7 @@ export async function onRequest(context) {
         } catch (e) {
             await supabase.from('admin_notifications')
                 .update({ status: 'failed', error_message: 'FCM auth: ' + e.message })
-                .eq('id', body.id);
+                .eq('id', trackingId);
             return json({ error: 'FCM auth error: ' + e.message }, 500);
         }
 
@@ -271,7 +290,7 @@ export async function onRequest(context) {
             await removeStaleTokens(env, staleTokens).catch(() => {});
         }
 
-        // Update notification record
+        // Update sent record
         await supabase.from('admin_notifications').update({
             status: 'sent',
             sent_at: new Date().toISOString(),
@@ -280,7 +299,7 @@ export async function onRequest(context) {
             tokens_failed: failCount,
             stale_removed: staleTokens.length,
             error_message: null,
-        }).eq('id', body.id);
+        }).eq('id', trackingId);
 
         // Auto-schedule next occurrence for recurring notifications
         if (notif.recurrence && notif.recurrence !== 'none') {
@@ -426,7 +445,6 @@ function buildFCMMessage(token, platform, title, body, imageUrl, data) {
             msg.android = {
                 priority: 'high',
                 notification: {
-                    click_action: 'FLUTTER_NOTIFICATION_CLICK',
                     icon: 'ic_notification',
                     color: '#1f5f4a',
                     image_url: imageUrl,
@@ -442,7 +460,7 @@ function buildFCMMessage(token, platform, title, body, imageUrl, data) {
         if (platform === 'android') {
             msg.android = {
                 priority: 'high',
-                notification: { click_action: 'FLUTTER_NOTIFICATION_CLICK', icon: 'ic_notification', color: '#1f5f4a' },
+                notification: { icon: 'ic_notification', color: '#1f5f4a' },
             };
         } else if (platform === 'ios') {
             msg.apns = { payload: { aps: { badge: 1, sound: 'default' } } };

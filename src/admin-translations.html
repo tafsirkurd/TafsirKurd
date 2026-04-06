@@ -1531,9 +1531,9 @@
             if (role === 'super_admin') {
                 css = '.sidebar-nav{visibility:visible}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
             } else if (role === 'editor') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
             } else if (role === 'custom') {
                 css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
             }
@@ -1570,6 +1570,7 @@
                 <div class="nav-section">
                     <div class="nav-section-header">Users</div>
                     <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
                     <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
                 </div>
                 <div class="nav-section">
@@ -1581,9 +1582,7 @@
                     <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
                     <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
                     <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
-                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
-                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
-                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
                 </div>
             </nav>
             <div class="sidebar-footer">
@@ -2343,7 +2342,7 @@
     <div class="toast" id="toast"></div>
 
     <script src="/utils/admin-session-timer-ui.js?v=5"></script>
-    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-auth.js?v=5"></script>
     <script src="/utils/admin-notifications.js"></script>
     <script>
         lucide.createIcons();
@@ -2611,15 +2610,13 @@
             var val = el.value;
             var badge = document.getElementById('status-' + key);
             var socialKeys = ['social_instagram','social_youtube','social_tiktok','social_telegram','social_pinterest','social_email','social_website'];
-            var res;
-            if (socialKeys.indexOf(key) !== -1) {
-                // Social links → site_settings
-                res = await supabase.from('site_settings').upsert({key: key, value: val}, {onConflict: 'key'});
-            } else {
-                // Translation text → kurdish_translations (upsert by key_id)
-                res = await supabase.from('kurdish_translations').upsert({key_id: key, kurdish_text: val}, {onConflict: 'key_id'});
-            }
-            if (res.error) { alert('Save failed: ' + res.error.message); return; }
+            try {
+                if (socialKeys.indexOf(key) !== -1) {
+                    await adminTranslationsAPI('upsert_site_setting', { key: key, value: val });
+                } else {
+                    await adminTranslationsAPI('upsert_by_key', { key_id: key, kurdish_text: val });
+                }
+            } catch(e) { alert('Save failed: ' + e.message); return; }
             if (badge) { badge.textContent = val ? 'Set' : 'Not Set'; badge.className = 'status-badge ' + (val ? 'set' : 'empty'); }
         }
 
@@ -3424,6 +3421,20 @@
             }
         }
 
+        // ── Auth-guarded write proxy ──────────────────────────────────────────
+        async function adminTranslationsAPI(action, payload) {
+            var adminToken = sessionStorage.getItem('adminToken');
+            if (!adminToken) throw new Error('Not authenticated');
+            var res = await fetch('/admin-translations-api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+                body: JSON.stringify(Object.assign({ action: action }, payload))
+            });
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error || 'API error');
+            return data;
+        }
+
         async function saveEdit(id) {
             var keyEl = document.getElementById('editKey-' + id);
             var textEl = document.getElementById('editText-' + id);
@@ -3460,12 +3471,7 @@
                 if (iosEl   !== null) updateObj.ios_text     = iosEl.value.trim()   || null;
                 if (droidEl !== null) updateObj.android_text = droidEl.value.trim() || null;
 
-                var result = await supabase
-                    .from('kurdish_translations')
-                    .update(updateObj)
-                    .eq('id', id);
-
-                if (result.error) throw result.error;
+                await adminTranslationsAPI('update', { id: id, fields: updateObj });
 
                 logChange('edit', { key_id: keyVal, old_key: oldKey !== keyVal ? oldKey : undefined, old_text: oldText, new_text: textVal, page: pageVal });
 
@@ -3533,18 +3539,12 @@
                 } else {
                     insertObj.category = 'general';
                 }
-                var result = await supabase
-                    .from('kurdish_translations')
-                    .insert([insertObj])
-                    .select()
-                    .single();
-
-                if (result.error) throw result.error;
+                var result = await adminTranslationsAPI('insert', { fields: insertObj });
 
                 logChange('add', { key_id: keyVal, new_text: textVal, page: pageVal });
 
                 // Insert into local array — re-sort newest first so it appears at top
-                allTranslations.push(result.data);
+                allTranslations.push(result.row);
                 allTranslations.sort(function(a, b) {
                     var ua = Math.max(
                         a.updated_at ? new Date(a.updated_at).getTime() : 0,
@@ -3576,12 +3576,7 @@
             try {
                 var delItem = allTranslations.find(function(t) { return t.id === id; });
 
-                var result = await supabase
-                    .from('kurdish_translations')
-                    .delete()
-                    .eq('id', id);
-
-                if (result.error) throw result.error;
+                await adminTranslationsAPI('delete', { id: id });
 
                 if (delItem) logChange('delete', { key_id: delItem.key_id, old_text: delItem.kurdish_text, page: delItem.page });
 
@@ -3671,13 +3666,14 @@
                     for (var i = 0; i < rows.length; i += 50) {
                         var batch = rows.slice(i, i + 50);
                         btnLabel.textContent = 'Adding ' + Math.min(i + 50, rows.length) + '/' + rows.length;
-                        var ins = await supabase.from('kurdish_translations').insert(batch);
-                        if (ins.error) {
+                        try {
+                            await adminTranslationsAPI('bulk_insert', { rows: batch });
+                            added += batch.length;
+                        } catch(bulkErr) {
                             for (var j = 0; j < batch.length; j++) {
-                                var single = await supabase.from('kurdish_translations').insert([batch[j]]);
-                                if (single.error) { errors++; } else { added++; }
+                                try { await adminTranslationsAPI('insert', { fields: batch[j] }); added++; } catch(e2) { errors++; }
                             }
-                        } else { added += batch.length; }
+                        }
                     }
                 }
 
@@ -3686,14 +3682,13 @@
                     for (var i = 0; i < fixEntries.length; i += 10) {
                         var chunk = fixEntries.slice(i, i + 10);
                         btnLabel.textContent = 'Fixing ' + Math.min(i + 10, fixEntries.length) + '/' + fixEntries.length;
-                        var results = await Promise.all(chunk.map(function(t) {
-                            return supabase.from('kurdish_translations')
-                                .update({ page: t.page, category: t.category || 'general' })
-                                .eq('key_id', t.key_id);
-                        }));
-                        results.forEach(function(r) {
-                            if (r.error) errors++; else updated++;
-                        });
+                        var batchResult = await adminTranslationsAPI('bulk_update_by_key', {
+                            items: chunk.map(function(t) {
+                                return { key_id: t.key_id, fields: { page: t.page, category: t.category || 'general' } };
+                            })
+                        }).catch(function() { return { updated: 0, errors: chunk.length }; });
+                        updated += batchResult.updated || 0;
+                        errors  += batchResult.errors  || 0;
                     }
                 }
 
@@ -4256,11 +4251,7 @@
             if (liveRow) liveRow.style.opacity = '0.5';
             var oldText = item.kurdish_text;
             try {
-                var result = await supabase
-                    .from('kurdish_translations')
-                    .update({ kurdish_text: value })
-                    .eq('id', id);
-                if (result.error) throw result.error;
+                await adminTranslationsAPI('update', { id: parseInt(id), fields: { kurdish_text: value } });
 
                 logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: value, page: item.page });
                 item.kurdish_text = value;
@@ -4340,12 +4331,8 @@
                 if (!item) return Promise.resolve();
                 var newText = snapshot[id];
                 var oldText = item.kurdish_text; // capture before mutation
-                return supabase
-                    .from('kurdish_translations')
-                    .update({ kurdish_text: newText })
-                    .eq('id', id)
-                    .then(function(r) {
-                        if (r.error) throw r.error;
+                return adminTranslationsAPI('update', { id: parseInt(id), fields: { kurdish_text: newText } })
+                    .then(function() {
                         logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: newText, page: item.page });
                         item.kurdish_text = newText;
                     });

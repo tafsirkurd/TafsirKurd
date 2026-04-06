@@ -58,8 +58,9 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <style>
 
 /* ===== RESET & BASE ===== */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;user-select:none;overscroll-behavior:none}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+input,textarea{-webkit-user-select:text;user-select:text}
 *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
 a{color:inherit;text-decoration:none}
 button,input,select{font-family:inherit;border:none;outline:none;background:none;color:inherit}
@@ -145,7 +146,7 @@ body{background:var(--bg);color:var(--text)}
 /* content-visibility:auto — skips off-screen layout/paint (scroll perf boost) */
 .safe-render .surah-card{content-visibility:auto;contain-intrinsic-size:auto 84px}
 .safe-render .iv-card{content-visibility:auto;contain-intrinsic-size:auto 155px}
-.safe-render .iv-ep-item{content-visibility:auto;contain-intrinsic-size:auto 76px}
+.safe-render .iv-ep-item{content-visibility:auto;contain-intrinsic-size:auto 160px}
 /* mix-blend-mode + filter — theme-aware logo coloring (GPU composite op) */
 .safe-render .hdr-logo img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
 .safe-render .about-section img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
@@ -343,7 +344,6 @@ body{background:var(--bg);color:var(--text)}
 .ayah-act:active{background:var(--bg3);transform:scale(.92)}
 .ayah-act.active{color:var(--text);background:var(--bg3)}
 .ayah-act.active:active{background:var(--bg2);transform:scale(.92)}
-.ayah-act.share-flash{color:var(--accent);background:var(--bg3)}
 .ayah-act[data-play].playing{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
 .ayah-arabic{font-family:var(--font-ar);font-size:var(--ar-size);line-height:var(--line-h);text-align:center;margin-bottom:14px;direction:rtl;user-select:none;-webkit-user-select:none;word-spacing:4px;text-rendering:optimizeSpeed}
 .ayah-tafsir{font-size:var(--tf-size);line-height:1.9;color:var(--text2);user-select:none;-webkit-user-select:none;display:block}
@@ -424,8 +424,8 @@ body{background:var(--bg);color:var(--text)}
 /* ===== FULL PLAYER SHEET ===== */
 .fp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:395;opacity:0;pointer-events:none;transition:opacity .35s var(--ease)}
 .fp-overlay.open{opacity:1;pointer-events:auto}
-.full-player{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--bg);border-radius:20px 20px 0 0;display:flex;flex-direction:column;align-items:center;padding:0 32px calc(36px + var(--safe-b));transform:translateY(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);box-shadow:0 -12px 48px rgba(0,0,0,.35);will-change:transform;max-height:92vh;overflow:hidden}
-.full-player.open{transform:translateY(0)}
+.full-player{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--bg);border-radius:20px 20px 0 0;display:none;flex-direction:column;align-items:center;padding:0 32px calc(36px + var(--safe-b));box-shadow:0 -12px 48px rgba(0,0,0,.35);will-change:transform;max-height:92vh;overflow:hidden}
+.full-player.open{display:flex;animation:slideUp .32s cubic-bezier(.22,1,.36,1)}
 .fp-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:14px 0 22px;flex-shrink:0;cursor:pointer}
 .fp-avatar{width:80px;height:80px;border-radius:50%;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);box-shadow:0 6px 20px rgba(0,0,0,.15);margin-bottom:14px;flex-shrink:0;transition:border-color .3s,transform .12s;-webkit-tap-highlight-color:transparent;position:relative}
 .fp-avatar:active{transform:scale(.96)}
@@ -462,8 +462,8 @@ body{background:var(--bg);color:var(--text)}
 /* Reciter Picker Sheet */
 .rp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:405;opacity:0;pointer-events:none;transition:opacity .28s ease-out}
 .rp-overlay.open{opacity:1;pointer-events:auto}
-.rec-picker{position:fixed;bottom:0;left:0;right:0;z-index:410;background:var(--bg);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.22,1,.36,1);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
-.rec-picker.open{transform:translateY(0)}
+.rec-picker{position:fixed;bottom:0;left:0;right:0;z-index:410;background:var(--bg);border-radius:20px 20px 0 0;display:none;flex-direction:column;overflow:hidden;max-height:80vh}
+.rec-picker.open{display:flex;animation:slideUp .3s cubic-bezier(.22,1,.36,1)}
 .rp-handle-bar{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;flex-shrink:0;cursor:pointer}
 .rp-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .rp-title{font-size:.88rem;font-weight:700;color:var(--text);direction:rtl}
@@ -850,8 +850,8 @@ body{background:var(--bg);color:var(--text)}
 /* About bottom sheet */
 .cfg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:300}
 .cfg-overlay.on{opacity:1;pointer-events:auto}
-.cfg-sheet{position:fixed;left:0;right:0;bottom:0;max-height:92%;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;transform:translateY(105%);transition:transform .3s var(--ease);z-index:301;display:flex;flex-direction:column;overflow:hidden}
-.cfg-sheet.open{transform:translateY(0);min-height:72vh}
+.cfg-sheet{position:fixed;left:0;right:0;bottom:0;max-height:92%;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:301;display:none;flex-direction:column;overflow:hidden}
+.cfg-sheet.open{display:flex;min-height:72vh;animation:slideUp .3s var(--ease)}
 .cfg-sheet-pull{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0;flex-shrink:0}
 .cfg-sheet-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px;flex-shrink:0}
 .cfg-sheet-title{font-size:1rem;font-weight:700;color:var(--text);direction:rtl}
@@ -1069,25 +1069,29 @@ body{background:var(--bg);color:var(--text)}
 .iv-series-hdr .back-btn:active{background:var(--surface-h)}
 .iv-series-title{flex:1;text-align:center;font-size:.95rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px}
 .iv-series-desc{padding:12px 16px;font-size:.8rem;color:var(--text2);line-height:1.6}
-.iv-ep-list{padding:0 16px 24px}
-.iv-ep-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .2s var(--ease)}
-.iv-ep-item:active{transform:scale(.98)}
-.iv-ep-item.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.iv-ep-num{width:28px;height:28px;border-radius:var(--r-s);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
-.iv-ep-thumb{width:64px;height:36px;border-radius:var(--r-s);background:var(--bg3);overflow:hidden;flex-shrink:0;position:relative}
+/* Episode grid — 2-col cards */
+.iv-ep-list{padding:12px 12px 24px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.iv-ep-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;cursor:pointer;transition:transform .2s var(--ease);display:flex;flex-direction:column}
+.iv-ep-item:active{transform:scale(.97)}
+.iv-ep-item.playing{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+/* Thumbnail — 16:9 full-width */
+.iv-ep-thumb{width:100%;aspect-ratio:16/9;background:var(--bg3);overflow:hidden;position:relative;flex-shrink:0}
 .iv-ep-thumb img{width:100%;height:100%;object-fit:cover}
-.iv-ep-thumb .iv-play-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);color:#fff;font-size:.8rem;opacity:0;transition:opacity .2s}
+.iv-ep-thumb .iv-play-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);color:#fff;font-size:1.4rem;opacity:0;transition:opacity .2s}
 .iv-ep-item:hover .iv-play-icon,.iv-ep-item:active .iv-play-icon{opacity:1}
-.iv-ep-info{flex:1;min-width:0}
-.iv-ep-title{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.iv-ep-meta{font-size:.7rem;color:var(--text3);margin-top:2px;display:flex;gap:10px}
-.iv-ep-progress{height:2px;background:var(--bg3);border-radius:1px;margin-top:4px;overflow:hidden}
-.iv-ep-progress-fill{height:100%;background:var(--accent);border-radius:1px}
-.iv-ep-item.watched{border-color:#2ecc71;background:linear-gradient(135deg,var(--surface),rgba(46,204,113,.06))}
-.iv-ep-item.watched .iv-ep-num{background:#2ecc71;color:#fff}
-.iv-watched-badge{display:flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;color:#2ecc71;margin-top:4px}
-/* IV save button on episode rows */
-.iv-ep-save{width:34px;height:34px;background:none;border:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:color .15s,background .15s;flex-shrink:0;font-size:.9rem}
+/* Episode number badge — top corner overlay */
+.iv-ep-num{position:absolute;top:6px;right:6px;min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;backdrop-filter:blur(4px)}
+/* Info block below thumbnail */
+.iv-ep-info{padding:8px 10px 4px;flex:1;min-width:0;display:flex;flex-direction:column}
+.iv-ep-title{font-size:.78rem;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.iv-ep-meta{font-size:.65rem;color:var(--text3);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap}
+.iv-ep-progress{height:3px;background:var(--bg3);border-radius:2px;margin-top:6px;overflow:hidden}
+.iv-ep-progress-fill{height:100%;background:var(--accent);border-radius:2px}
+.iv-ep-item.watched{border-color:#2ecc71}
+.iv-ep-item.watched .iv-ep-num{background:#2ecc71}
+.iv-watched-badge{display:flex;align-items:center;gap:4px;font-size:.62rem;font-weight:700;color:#2ecc71;margin-top:4px}
+/* Save button — bottom row inside card */
+.iv-ep-save{width:30px;height:30px;background:none;border:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:color .15s,background .15s;align-self:flex-end;font-size:.85rem;margin-top:auto;padding:0}
 .iv-ep-save:active{background:var(--bg3)}
 .iv-ep-save.saved{color:var(--accent)}
 /* IV saved/history overlays */
@@ -1152,9 +1156,9 @@ body{background:var(--bg);color:var(--text)}
 /* ===== READER QUICK SETTINGS ===== */
 .qs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:310;display:none;transition:opacity .2s ease}
 .qs-overlay.on{display:block}
-.qs-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:311;max-height:82vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s var(--ease),opacity .2s ease}
+.qs-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:311;max-height:82vh;display:none;flex-direction:column}
 #qsBody{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:calc(var(--safe-b) + 8px)}
-.qs-sheet.on{transform:translateY(0)}
+.qs-sheet.on{display:flex;animation:slideUp .3s var(--ease)}
 .qs-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--border)}
 .qs-hdr span{font-weight:700;font-size:.95rem}
 .qs-close-btn{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;padding:6px;border-radius:var(--r-m)}
@@ -1326,8 +1330,8 @@ body{background:var(--bg);color:var(--text)}
 .sky-bell{background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.8);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .sky-bell--on{background:rgba(255,255,255,.25);color:#fff}
 .sky-bottom-row{position:absolute;bottom:0;left:0;right:0;padding:0 16px 14px;z-index:8;background:linear-gradient(to top,rgba(0,0,0,.54) 0%,transparent 100%);text-align:right}
-.sky-next-name{font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
-.sky-countdown{font-size:2.8rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1;text-shadow:0 2px 16px rgba(0,0,0,.5);display:inline-block}
+.sky-next-name{font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px;transition:color 2s ease,letter-spacing 2s ease}
+.sky-countdown{font-size:2.8rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1;text-shadow:0 2px 16px rgba(0,0,0,.5);display:inline-block;transition:color 1.5s ease,text-shadow 1.5s ease}
 .sky-dates{display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;justify-content:flex-start}
 .sky-dates span{font-size:.7rem;color:rgba(255,255,255,.68);text-shadow:0 1px 4px rgba(0,0,0,.4)}
 .sky-sync{font-size:.6rem;color:rgba(255,220,80,.7);text-shadow:0 1px 3px rgba(0,0,0,.4);margin-top:3px;min-height:0}
@@ -1385,7 +1389,7 @@ body{background:var(--bg);color:var(--text)}
 #prayerContent{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 /* Prayer 2-col grid */
 .prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px calc(var(--tab-h) + var(--safe-b) + 10px);flex:1;align-content:stretch}
-.prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:border-color .2s,background-color .2s,box-shadow .2s}
+.prayer-grid-card{background:linear-gradient(135deg,rgba(var(--sky-tint-rgb,15,20,40),.07) 0%,rgba(var(--sky-tint-rgb,15,20,40),.02) 100%),var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:border-color .2s,background .2s,box-shadow .2s,transform .1s ease}
 .prayer-grid-card--next{background:linear-gradient(145deg,rgba(34,197,94,.12) 0%,rgba(34,197,94,.04) 100%);border-color:var(--accent);box-shadow:0 0 0 1px rgba(34,197,94,.18),0 6px 24px rgba(0,0,0,.2),0 0 20px rgba(34,197,94,.1);animation:prayer-next-pulse 3.5s ease-in-out infinite}
 @keyframes prayer-next-pulse{0%,100%{box-shadow:0 0 0 1px rgba(34,197,94,.18),0 6px 24px rgba(0,0,0,.2),0 0 20px rgba(34,197,94,.1)}50%{box-shadow:0 0 0 1px rgba(34,197,94,.3),0 6px 24px rgba(0,0,0,.2),0 0 30px rgba(34,197,94,.2)}}
 .prayer-grid-card--passed{opacity:.36;filter:saturate(.2)}
@@ -1393,6 +1397,36 @@ body{background:var(--bg);color:var(--text)}
 .prayer-grid-card--next .prayer-grid-name{color:var(--accent)}
 .prayer-grid-time{font-size:1.75rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;direction:ltr;line-height:1;letter-spacing:-.01em}
 .prayer-grid-card--next .prayer-grid-time{color:var(--accent)}
+/* Card tap feedback */
+.prayer-grid-card--tap{transform:scale(0.94)}
+/* Urgency: countdown color + light intensity as prayer approaches */
+.sky-scene.urgency-1 .sky-countdown{color:rgba(255,228,100,1)}
+.sky-scene.urgency-2 .sky-countdown{color:rgba(255,165,60,1);animation:urgency-breathe 2.2s ease-in-out infinite}
+.sky-scene.urgency-2 .sky-bottom-row{filter:drop-shadow(0 0 9px rgba(255,158,50,.18))}
+.sky-scene.urgency-3 .sky-countdown{color:rgba(255,95,75,1);animation:urgency-breathe 1.15s ease-in-out infinite}
+.sky-scene.urgency-3 .sky-bottom-row{filter:drop-shadow(0 0 14px rgba(255,80,55,.26))}
+.sky-scene.urgency-3::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.1);pointer-events:none;z-index:1;border-radius:inherit;transition:opacity .8s}
+@keyframes urgency-breathe{0%,100%{opacity:.88}50%{opacity:1;text-shadow:0 0 20px currentColor,0 2px 14px rgba(0,0,0,.5)}}
+/* Prayer moment stage 1 (0–3 min): full calm */
+.sky-scene.prayer-moment #skyBirds{opacity:0;transition:opacity 3s ease}
+.sky-scene.prayer-moment .sky-aircraft{opacity:0;pointer-events:none}
+.sky-scene.prayer-moment .sky-countdown{color:rgba(255,246,215,1);text-shadow:0 2px 22px rgba(255,224,140,.55),0 2px 12px rgba(0,0,0,.45)}
+.sky-scene.prayer-moment .sky-next-name{color:rgba(255,242,205,.95);letter-spacing:.18em}
+/* Prayer moment stage 2 (3–15 min): soft — birds at 40%, no major events */
+.sky-scene.prayer-soft #skyBirds{opacity:.4;transition:opacity 5s ease}
+.sky-scene.prayer-soft .sky-countdown{color:rgba(255,240,195,.92)}
+/* Entry settle: key layers ease into their initial state on tab open */
+.sky-settle .sky-bg{transition:background .5s ease}
+.sky-settle .sky-stars{transition:opacity .5s ease}
+.sky-settle #skyBirds{transition:opacity .5s ease}
+.sky-settle .sky-cel-wrap{transition:left .5s ease,top .5s ease}
+.sky-settle .sky-aurora{transition:opacity .5s ease}
+/* Minute pulse on countdown */
+@keyframes sky-cd-pulse{0%{transform:scale(1)}18%{transform:scale(1.045)}100%{transform:scale(1)}}
+.sky-cd-pulse{animation:sky-cd-pulse 0.45s ease-out}
+/* Next-prayer name transition */
+@keyframes sky-name-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.sky-name-in{animation:sky-name-in 0.35s ease-out}
 /* Athan status banner */
 .prayer-athan-banner{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 16px;border-radius:12px;cursor:pointer;border:1.5px solid transparent}
 .prayer-athan-banner--on{background:rgba(var(--accent-rgb,34,197,94),.12);border-color:rgba(var(--accent-rgb,34,197,94),.3);color:var(--accent)}
@@ -1901,8 +1935,7 @@ body{background:var(--bg);color:var(--text)}
 </div>
 
 <div class="splash" id="splash">
-  <img id="splashPoster" class="splash-poster" src="/assets/images/logo.png" alt="">
-  <video id="splashVideo" class="splash-video" src="/assets/videos/logo-animation.mp4" muted playsinline preload="auto" disablepictureinpicture></video>
+  <video id="splashVideo" class="splash-video" src="/assets/videos/logo-animation.mp4" poster="/assets/images/logo.png" muted playsinline preload="auto" disablepictureinpicture style="opacity:1"></video>
 </div>
 
 <!-- APP -->
@@ -2079,7 +2112,7 @@ body{background:var(--bg);color:var(--text)}
 
 <!-- READER QUICK SETTINGS -->
 <div class="qs-overlay" id="qsOverlay" onclick="App.closeReaderSettings()"></div>
-<div class="qs-sheet" id="qsSheet">
+<div class="qs-sheet" id="qsSheet" style="display:none">
   <div class="qs-hdr">
     <span data-i18n="settings.appearance">ڕووکار</span>
     <button class="qs-close-btn" onclick="App.closeReaderSettings()"><i class="fas fa-times"></i></button>
@@ -2139,8 +2172,8 @@ body{background:var(--bg);color:var(--text)}
 </div>
 
 <!-- RECITER PICKER SHEET -->
-<div class="rp-overlay" id="rpOverlay" onclick="App.closeRecPicker()"></div>
-<div class="rec-picker" id="recPicker">
+<div class="rp-overlay" id="rpOverlay" onclick="App.closeRecPicker()" style="display:none"></div>
+<div class="rec-picker" id="recPicker" style="display:none">
   <div class="rp-handle-bar" onclick="App.closeRecPicker()"></div>
   <div class="rp-hdr">
     <div class="rp-title" data-i18n="audio.reciter">قاریء</div>
@@ -2365,6 +2398,7 @@ body{background:var(--bg);color:var(--text)}
 <script src="/dhikr/dhikr.js?v=20260326b"></script>
 <script src="/quran/search.js?v=20260326b"></script>
 <script src="/rating.js?v=20260401a"></script>
+<script src="/audio-cache.js?v=20260406a"></script>
 <script src="/app/app.js?v=20260326b"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */

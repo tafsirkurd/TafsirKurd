@@ -25,7 +25,8 @@ const ROLE_PERMISSIONS = {
             'islamvoice-management',
             'backgrounds',
             'translations',
-            'schedule'
+            'schedule',
+            'notifications'
         ],
         canEdit: true,
         canDelete: false
@@ -187,6 +188,9 @@ async function checkAuth() {
             // Hide sidebar items based on role
             // console.log('Auth success - applying sidebar permissions for role:', data.role);
             applySidebarPermissions(data.role);
+
+            // Track this page visit for dashboard quick-actions
+            trackPageVisit();
 
             return data;
         } else {
@@ -481,6 +485,44 @@ function getCurrentPageSlug() {
     const path = window.location.pathname;
     const match = path.match(/\/admin-([^.]+)/);
     return match ? match[1] : null;
+}
+
+const PAGE_INFO = {
+    'dashboard':             { label: 'Dashboard',       icon: 'bar-chart-2'   },
+    'analytics':             { label: 'Analytics',       icon: 'trending-up'   },
+    'messages':              { label: 'Messages',        icon: 'message-square'},
+    'videos':                { label: 'Videos',          icon: 'video'         },
+    'islamvoice-management': { label: 'IslamVoice',      icon: 'radio'         },
+    'gencine':               { label: 'Gencine',         icon: 'gem'           },
+    'links':                 { label: 'Links',           icon: 'link'          },
+    'images':                { label: 'Site Images',     icon: 'camera'        },
+    'translations':          { label: 'Translations',    icon: 'languages'     },
+    'users':                 { label: 'Users',           icon: 'users'         },
+    'reading-stats':         { label: 'Reading Stats',   icon: 'book-open'     },
+    'notifications':         { label: 'Notifications',   icon: 'bell'          },
+    'account-management':    { label: 'Admin Accounts',  icon: 'user-cog'      },
+    'features':              { label: 'Features',        icon: 'layers'        },
+    'schedule':              { label: 'Schedule',        icon: 'calendar'      },
+    'social-stats':          { label: 'Social Stats',    icon: 'share-2'       },
+    'database':              { label: 'Database',        icon: 'database'      },
+    'search-console':        { label: 'Search Console',  icon: 'search'        },
+    'audit':                 { label: 'Audit Log',       icon: 'shield-check'  },
+};
+
+function trackPageVisit() {
+    try {
+        var slug = getCurrentPageSlug();
+        if (!slug || slug === 'dashboard') return;
+        var info = PAGE_INFO[slug];
+        if (!info) return;
+        var key = 'admin_recent_pages';
+        var pages = [];
+        try { pages = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { pages = []; }
+        pages = pages.filter(function(p) { return p.slug !== slug; });
+        pages.unshift({ slug: slug, href: '/admin-' + slug + '.html', label: info.label, icon: info.icon, ts: Date.now() });
+        pages = pages.slice(0, 10);
+        localStorage.setItem(key, JSON.stringify(pages));
+    } catch(e) {}
 }
 
 function showAccessDenied() {

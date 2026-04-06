@@ -135,7 +135,7 @@ function buildMessage(token, platform, title, body, data) {
     if (platform === 'android') {
         base.android = {
             priority: 'high',
-            notification: { click_action: 'FLUTTER_NOTIFICATION_CLICK', icon: 'ic_notification', color: '#1f5f4a' },
+            notification: { icon: 'ic_notification', color: '#1f5f4a' },
         };
     } else if (platform === 'ios') {
         base.apns = {

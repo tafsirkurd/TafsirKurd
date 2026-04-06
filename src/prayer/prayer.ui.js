@@ -42,6 +42,14 @@
   var _issRaf           = null;
   var _carTimeout       = null;
 
+  // ── Prayer moment / urgency / sky-tint state ─────────────────────────────────
+  var _urgencyLevel      = -1;   // 0=>2h calm, 1=30min-2h, 2=<30min, 3=<10min
+  var _prayerMomentUntil = 0;    // ms: full calm (stage 1) active until
+  var _prayerSoftUntil   = 0;    // ms: soft phase (stage 2) active until (3–15 min)
+  var _majorEventActive  = false; // prevents concurrent meteor/ISS/comet
+  var _lastMinuteMark    = '';   // last minute floor — drives countdown pulse
+  var _lastNextName      = '';   // previous next-prayer name — drives moment + name fade
+
   var CITIES = [
     'Sulaymaniyah', 'Erbil', 'Duhok', 'Kirkuk',
     'Halabcha', 'Kfry', 'Rania', 'Koya',
@@ -326,7 +334,7 @@
     var delay = 28000 + Math.random() * 90000;
     _lightningTimeout = setTimeout(function() {
       var ph = _skyPhaseId;
-      if (ph === 'dusk' || ph === 'sunset' || ph === 'isha') _triggerLightning();
+      if ((ph === 'dusk' || ph === 'sunset' || ph === 'isha') && Date.now() >= _prayerSoftUntil) _triggerLightning();
       _scheduleNextLightning();
     }, delay);
   }
@@ -356,10 +364,14 @@
 
   // ── Meteor shower (burst of shooting stars, night only) ─────────────────────
   function _triggerMeteorShower() {
+    if (_majorEventActive || Date.now() < _prayerSoftUntil) return;
+    _majorEventActive = true;
     var count = 3 + Math.floor(Math.random() * 5);
     for (var i = 0; i < count; i++) {
       (function(d) { setTimeout(_triggerShootingStar, d); })(i * (500 + Math.random() * 900));
     }
+    // Release after all stars finish (~count×1400ms + 1s buffer)
+    setTimeout(function() { _majorEventActive = false; }, count * 1400 + 1000);
   }
 
   function _scheduleMeteorShower() {
@@ -446,7 +458,8 @@
   // ── Comet (glowing head + fading tail, diagonal fall) ────────────────────────
   function _triggerComet() {
     var scene = document.getElementById('prayerSkyScene');
-    if (!scene) return;
+    if (!scene || _majorEventActive || Date.now() < _prayerSoftUntil) return;
+    _majorEventActive = true;
     var sx  = 5 + Math.random() * 40;
     var sy  = 4 + Math.random() * 22;
     var dur = 3000 + Math.random() * 2500;
@@ -474,7 +487,7 @@
     var start = Date.now();
     function tick() {
       var p = (Date.now() - start) / dur;
-      if (p >= 1) { if (el.parentNode) el.parentNode.removeChild(el); return; }
+      if (p >= 1) { if (el.parentNode) el.parentNode.removeChild(el); _majorEventActive = false; return; }
       el.style.left    = (sx + p * 38) + '%';
       el.style.top     = (sy + p * 18) + '%';
       el.style.opacity = String(p < 0.14 ? p / 0.14 : p > 0.78 ? (1 - p) / 0.22 : 1);
@@ -496,7 +509,8 @@
   // ── ISS pass (cross shape, faster than satellite) ─────────────────────────────
   function _triggerISS() {
     var scene = document.getElementById('prayerSkyScene');
-    if (!scene || _issRaf) return;
+    if (!scene || _issRaf || _majorEventActive || Date.now() < _prayerSoftUntil) return;
+    _majorEventActive = true;
     var startY = 8 + Math.random() * 26;
     var endY   = startY - 3 - Math.random() * 9;
     var dur    = 9000 + Math.random() * 7000; // 9–16 s
@@ -514,6 +528,7 @@
       if (p >= 1) {
         if (el.parentNode) el.parentNode.removeChild(el);
         _issRaf = null;
+        _majorEventActive = false;
         return;
       }
       el.style.left = (-2 + p * 104) + '%';
@@ -776,9 +791,20 @@
     var datesEl = document.getElementById('skyDates');
     if (datesEl) datesEl.innerHTML = dateLines.map(function(l) { return '<span>' + l + '</span>'; }).join('');
 
+    // Settle animation: mark scene as "settling" so CSS transitions fire on first
+    // _doUpdateSky() call, creating a soft 500ms ease-in when the tab opens.
+    // We defer _doUpdateSky one frame so the browser registers the settle class first.
+    var _settleScene = document.getElementById('prayerSkyScene');
+    if (_settleScene) _settleScene.classList.add('sky-settle');
     _skyPhaseId  = null;
     _skyLastTick = 0;
-    _doUpdateSky();
+    requestAnimationFrame(function() {
+      _doUpdateSky();
+      setTimeout(function() {
+        var s = document.getElementById('prayerSkyScene');
+        if (s) s.classList.remove('sky-settle');
+      }, 700);
+    });
   }
 
   function _doUpdateSky() {
@@ -913,9 +939,20 @@
     }
 
     _skyPhaseId = pid;
+
+    // Sky tint → CSS var on #prayerContent (drives subtle grid card tint)
+    var SKY_TINT_RGB = {
+      night:'15,20,40',   prefajr:'28,12,48',  fajr:'58,25,15',
+      sunrise:'160,90,25',morning:'30,85,145',  noon:'15,70,145',
+      afternoon:'25,80,150', asr:'130,70,15',   sunset:'110,25,15',
+      dusk:'44,16,62',    isha:'10,10,32'
+    };
+    var prayerContent = document.getElementById('prayerContent');
+    if (prayerContent) prayerContent.style.setProperty('--sky-tint-rgb', SKY_TINT_RGB[pid] || '15,20,40');
   }
 
   function tickSky() {
+    if (document.hidden) return; // tab backgrounded — skip sky updates
     var now = Date.now();
     if (now - _skyLastTick < 30000) return; // update every 30s max
     _skyLastTick = now;
@@ -1033,6 +1070,11 @@
     if (_issTimeout)       { clearTimeout(_issTimeout);       _issTimeout = null; }
     if (_issRaf)           { cancelAnimationFrame(_issRaf);   _issRaf = null; }
     if (_carTimeout)       { clearTimeout(_carTimeout);       _carTimeout = null; }
+    _majorEventActive  = false;
+    _urgencyLevel      = -1;
+    _lastMinuteMark    = '';
+    _lastNextName      = '';
+    _prayerSoftUntil   = 0;
     stopGyro();
   }
 
@@ -1068,9 +1110,46 @@
     var cdEl    = _cdEls.cdEl;
     var nameEl  = _cdEls.nameEl;
 
+    var nowMs = now.getTime();
+
     if (next) {
       var cd   = pl.formatCountdown(next.time - now);
       var name = tStr(PRAYER_I18N[next.name] || next.name);
+
+      // ── Urgency level ────────────────────────────────────────────────────────
+      var msLeft = next.time - nowMs;
+      var newUrgency = msLeft > 7200000 ? 0   // >2h: calm
+                     : msLeft > 1800000 ? 1   // 30min–2h: warming
+                     : msLeft > 600000  ? 2   // 10–30min: close
+                     :                    3;  // <10min: imminent
+      if (newUrgency !== _urgencyLevel) {
+        _urgencyLevel = newUrgency;
+        var skScene = document.getElementById('prayerSkyScene');
+        if (skScene) {
+          skScene.classList.remove('urgency-0','urgency-1','urgency-2','urgency-3');
+          skScene.classList.add('urgency-' + _urgencyLevel);
+        }
+      }
+
+      // ── Prayer moment: 3-min calm + 12-min soft phase after prayer starts ──────
+      if (_lastNextName && _lastNextName !== next.name) {
+        _prayerMomentUntil = nowMs + 180000;  // stage 1: full calm 3 min
+        _prayerSoftUntil   = nowMs + 900000;  // stage 2: soft restriction 15 min total
+      }
+
+      // ── Name transition animation ─────────────────────────────────────────────
+      if (_lastNextName !== next.name && _lastNextName !== '') {
+        if (skyName) { skyName.classList.remove('sky-name-in'); void skyName.offsetWidth; skyName.classList.add('sky-name-in'); }
+      }
+      _lastNextName = next.name;
+
+      // ── Minute pulse ─────────────────────────────────────────────────────────
+      var minuteMark = String(Math.floor(msLeft / 60000));
+      if (minuteMark !== _lastMinuteMark) {
+        _lastMinuteMark = minuteMark;
+        if (skyCd) { skyCd.classList.remove('sky-cd-pulse'); void skyCd.offsetWidth; skyCd.classList.add('sky-cd-pulse'); }
+      }
+
       if (skyCd)   skyCd.textContent   = cd;
       if (skyName) skyName.textContent = name;
       if (cdEl)    cdEl.textContent    = cd;
@@ -1088,6 +1167,13 @@
         }
       });
     } else {
+      // All prayers passed — urgency off, no moment
+      if (_urgencyLevel !== 0) {
+        _urgencyLevel = 0;
+        var skScene2 = document.getElementById('prayerSkyScene');
+        if (skScene2) { skScene2.classList.remove('urgency-0','urgency-1','urgency-2','urgency-3'); }
+      }
+
       var cd2, name2;
       if (_tomorrowTimings && _tomorrowDateISO) {
         var fajrAt = pl.parseAsDate(_tomorrowTimings.Fajr, _tomorrowDateISO);
@@ -1106,6 +1192,15 @@
         el.classList.remove('prayer-grid-card--next');
         el.classList.add('prayer-grid-card--passed');
       });
+    }
+
+    // ── Prayer-moment calm state on sky scene ─────────────────────────────────
+    var inMoment = nowMs < _prayerMomentUntil;
+    var inSoft   = !inMoment && nowMs < _prayerSoftUntil;
+    var skSceneMoment = document.getElementById('prayerSkyScene');
+    if (skSceneMoment) {
+      skSceneMoment.classList.toggle('prayer-moment', inMoment);
+      skSceneMoment.classList.toggle('prayer-soft', inSoft);
     }
 
     // Update sky visuals every 30s
@@ -1264,11 +1359,33 @@
       buildPanel(container, cached, city, today);
       startCountdown();
       pushWidgetData(cached, city, today);
+      // Silent background refresh — if cache is stale, re-fetch and update UI+athan
+      // only if today's timings actually changed (no spinner, no flicker).
+      window.PrayerAPI.backgroundRefresh(city, today, function(freshData) {
+        _currentTimings = freshData.timings;
+        _currentData    = freshData;
+        _renderedKey    = null; // force panel rebuild
+        buildPanel(container, freshData, city, today);
+        startCountdown();
+        pushWidgetData(freshData, city, today);
+        if (getAthan()) {
+          fetchDaysData(city, today, 7).then(function(daysData) {
+            if (daysData.length) {
+              window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
+            }
+          });
+        }
+      });
       return;
     }
 
     // ── Slow path: no cache yet ──
-    _renderedKey = null;
+    _renderedKey     = null;
+    // Date/city/format changed — invalidate tomorrow's data so fetchTomorrow() re-fetches
+    // the correct next day. Without this, stale _tomorrowTimings (yesterday's "tomorrow")
+    // blocks fetchTomorrow() via its guard and shows 00:00:00 after Isha on the new day.
+    _tomorrowTimings = null;
+    _tomorrowDateISO = null;
 
     // If offline, use any cached data before showing spinner/error
     if (!navigator.onLine) {
@@ -1527,6 +1644,11 @@
       var timeEl = cel('div', 'prayer-grid-time');
       timeEl.textContent = timeDisplay;
       card.appendChild(timeEl);
+
+      // Tap feedback — scale-down on press, release on lift/cancel
+      card.addEventListener('touchstart', function() { card.classList.add('prayer-grid-card--tap'); }, { passive: true });
+      card.addEventListener('touchend',    function() { card.classList.remove('prayer-grid-card--tap'); });
+      card.addEventListener('touchcancel', function() { card.classList.remove('prayer-grid-card--tap'); });
 
       grid.appendChild(card);
     });
@@ -2288,7 +2410,10 @@
           if (!res.ok) continue;
           var data = await res.json();
           if (data && !data.error && data.days && Object.keys(data.days).length > 0) {
-            Cache.write(mkey, data);
+            Cache.writeWithMeta(mkey, data, {
+              fetchedAt: Date.now(), source: 'kurd-prefetch', city: city,
+              year: ym.year, month: ym.month
+            });
           }
         } catch(e) { /* network error — will retry next foreground */ }
       }

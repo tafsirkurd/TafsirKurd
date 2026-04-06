@@ -1,0 +1,418 @@
+/**
+ * TafsirKurd App Promotion
+ * — First-visit popup (homepage / quran / islamvoice only)
+ * — Footer app section (any page that loads this script)
+ */
+(function () {
+  'use strict';
+
+  var PLAY = 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
+  var IOS  = 'https://apps.apple.com/us/app/tafsirkurd/id6760433688';
+  var ua   = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  var isAnd = /Android/.test(ua);
+
+  /* ── SVG helpers ─────────────────────────────────────────── */
+  function svgEl(w, h, vb) {
+    var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', w); s.setAttribute('height', h);
+    s.setAttribute('viewBox', vb); s.setAttribute('fill', 'currentColor');
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  }
+  function pathEl(d) {
+    var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', d); return p;
+  }
+  function appleIcon() {
+    var s = svgEl(18, 18, '0 0 24 24');
+    s.appendChild(pathEl(
+      'M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 ' +
+      '.77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 ' +
+      '2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 ' +
+      '2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03' +
+      '.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04' +
+      ' 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z'
+    ));
+    return s;
+  }
+  function playIcon() {
+    var s = svgEl(16, 16, '0 0 24 24');
+    s.appendChild(pathEl('M3 20.5v-17c0-.84.94-1.3 1.6-.8l14 8.5c.6.37.6 1.23 0 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z'));
+    return s;
+  }
+
+  /* ── Store button ────────────────────────────────────────── */
+  function storeBtn(label, url, iconFn, cls) {
+    var a = document.createElement('a');
+    a.className = 'tk-promo-btn' + (cls ? ' ' + cls : '');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.setAttribute('aria-label', label);
+    a.appendChild(iconFn());
+    var sp = document.createElement('span'); sp.textContent = label;
+    a.appendChild(sp);
+    return a;
+  }
+
+  /* ── Inject CSS once ─────────────────────────────────────── */
+  function injectCSS() {
+    if (document.getElementById('tk-promo-css')) return;
+    var s = document.createElement('style');
+    s.id = 'tk-promo-css';
+    s.textContent = [
+      /* Shared button */
+      '.tk-promo-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;',
+        'height:46px;padding:0 20px;background:#000;color:#fff;',
+        'border-radius:11px;font-size:.87rem;font-weight:600;',
+        'text-decoration:none;white-space:nowrap;box-sizing:border-box;letter-spacing:.01em;',
+        'transition:opacity .2s,transform .15s;-webkit-tap-highlight-color:transparent;}',
+      '.tk-promo-btn:hover{opacity:.8;transform:translateY(-1px);}',
+      '.tk-promo-btn:active{opacity:.65;transform:none;}',
+      '.tk-promo-btn.tk-light{background:#fff;color:#000;}',
+
+      /* ── Popup overlay ── */
+      '#tk-pp-ov{position:fixed;inset:0;',
+        'background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);',
+        'z-index:99999;display:flex;align-items:center;justify-content:center;',
+        'padding:16px;box-sizing:border-box;',
+        'opacity:0;transition:opacity .3s ease;will-change:opacity;}',
+      '#tk-pp-ov.tk-in{opacity:1;}',
+
+      '#tk-pp-card{',
+        'background:#000;border:1px solid rgba(255,255,255,.1);',
+        'border-radius:22px;overflow:hidden;',
+        'max-width:800px;width:100%;',
+        'display:flex;position:relative;',
+        'box-shadow:0 32px 96px rgba(0,0,0,.9);',
+        'transform:scale(.96) translateY(12px);',
+        'transition:transform .35s cubic-bezier(.16,1,.3,1);will-change:transform;}',
+      '#tk-pp-ov.tk-in #tk-pp-card{transform:scale(1) translateY(0);}',
+
+      /* Close */
+      '#tk-pp-x{position:absolute;top:14px;right:16px;z-index:3;',
+        'background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);',
+        'width:32px;height:32px;border-radius:50%;font-size:19px;line-height:1;',
+        'cursor:pointer;display:flex;align-items:center;justify-content:center;',
+        'transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}',
+      '#tk-pp-x:hover{background:rgba(255,255,255,.16);color:#fff;}',
+
+      /* Image panel */
+      '#tk-pp-img{width:42%;flex-shrink:0;position:relative;overflow:hidden;',
+        'background:linear-gradient(160deg,#111 0%,#000 100%);}',
+      '#tk-pp-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}',
+
+      /* Content panel */
+      '#tk-pp-body{flex:1;padding:52px 44px;display:flex;flex-direction:column;',
+        'justify-content:center;direction:ltr;text-align:left;overflow-y:auto;}',
+      '#tk-pp-logo{display:flex;align-items:center;gap:9px;margin-bottom:28px;}',
+      '#tk-pp-logo img{width:30px;height:30px;border-radius:7px;}',
+      '#tk-pp-logo-name{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.5);',
+        'letter-spacing:.06em;text-transform:uppercase;}',
+      '#tk-pp-h{margin:0 0 12px;font-size:1.75rem;font-weight:700;color:#fff;',
+        'line-height:1.15;letter-spacing:-.025em;}',
+      '#tk-pp-sub{margin:0 0 32px;font-size:.95rem;color:rgba(255,255,255,.5);line-height:1.7;}',
+      '#tk-pp-btns{display:flex;flex-direction:column;gap:10px;}',
+      '#tk-pp-btns .tk-promo-btn{width:100%;}',
+
+      /* no-image: narrower card */
+      '#tk-pp-card.tk-no-img{max-width:460px;}',
+      '#tk-pp-card.tk-no-img #tk-pp-body{padding:52px 44px;}',
+
+      /* mobile */
+      '@media(max-width:620px){',
+        '#tk-pp-card{flex-direction:column;max-width:100%;border-radius:20px;}',
+        '#tk-pp-img{width:100%;height:200px;}',
+        '#tk-pp-img img{position:static;height:200px;width:100%;}',
+        '#tk-pp-body{padding:24px 22px 30px;}',
+        '#tk-pp-h{font-size:1.4rem;}',
+        '#tk-pp-card.tk-no-img{max-width:100%;}',
+        '#tk-pp-x{top:10px;right:12px;}',
+      '}',
+      '@media(max-width:380px){',
+        '#tk-pp-body{padding:20px 18px 26px;}',
+        '#tk-pp-h{font-size:1.25rem;}',
+      '}',
+
+      /* ── Footer app section ── */
+      '#tk-fa{',
+        'padding:22px 0 0;',
+        'margin-bottom:20px;',
+        'border-top:1px solid var(--border,rgba(0,0,0,.08));',
+      '}',
+      '[data-theme="dark"] #tk-fa{border-top-color:rgba(255,255,255,.07);}',
+      '.tk-fa-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}',
+      '.tk-fa-brand{display:flex;align-items:center;gap:11px;min-width:0;}',
+      '.tk-fa-brand img{width:34px;height:34px;border-radius:8px;flex-shrink:0;}',
+      '.tk-fa-info{display:flex;flex-direction:column;gap:2px;}',
+      '.tk-fa-name{font-size:.85rem;font-weight:700;color:var(--text,#000);}',
+      '.tk-fa-desc{font-size:.76rem;color:var(--text-muted,rgba(0,0,0,.45));}',
+      '[data-theme="dark"] .tk-fa-name{color:rgba(255,255,255,.9);}',
+      '[data-theme="dark"] .tk-fa-desc{color:rgba(255,255,255,.4);}',
+      '.tk-fa-btns{display:flex;gap:8px;flex-shrink:0;}',
+      '.tk-fa-btns .tk-promo-btn{',
+        'height:38px;padding:0 14px;font-size:.79rem;',
+        'background:var(--primary,#000);color:var(--accent,#fff);',
+      '}',
+      '[data-theme="dark"] .tk-fa-btns .tk-promo-btn{background:#fff;color:#000;}',
+      '@media(max-width:560px){',
+        '.tk-fa-row{flex-direction:column;align-items:flex-start;}',
+        '.tk-fa-btns{width:100%;}',
+        '.tk-fa-btns .tk-promo-btn{flex:1;}',
+      '}',
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  injectCSS();
+
+  /* ══════════════════════════════════════════════════════════
+   * FOOTER APP SECTION
+   * Injected before .footer-bottom on any page that loads this script
+   * ══════════════════════════════════════════════════════════ */
+  function buildFooterSection() {
+    var wrap = document.createElement('div');
+    wrap.id = 'tk-fa';
+
+    var row = document.createElement('div');
+    row.className = 'tk-fa-row';
+
+    /* Brand */
+    var brand = document.createElement('div');
+    brand.className = 'tk-fa-brand';
+
+    var logo = document.createElement('img');
+    logo.src = '/assets/images/logo.png';
+    logo.alt = 'TafsirKurd';
+    logo.width = 34; logo.height = 34;
+
+    var info = document.createElement('div');
+    info.className = 'tk-fa-info';
+
+    var name = document.createElement('span');
+    name.className = 'tk-fa-name';
+    name.textContent = 'TafsirKurd App';
+
+    var desc = document.createElement('span');
+    desc.className = 'tk-fa-desc';
+    desc.textContent = 'Read, listen, and keep your progress with you.';
+
+    info.appendChild(name);
+    info.appendChild(desc);
+    brand.appendChild(logo);
+    brand.appendChild(info);
+
+    /* Buttons */
+    var btns = document.createElement('div');
+    btns.className = 'tk-fa-btns';
+
+    if (isIOS) {
+      btns.appendChild(storeBtn('App Store', IOS, appleIcon));
+    } else if (isAnd) {
+      btns.appendChild(storeBtn('Google Play', PLAY, playIcon));
+    } else {
+      btns.appendChild(storeBtn('App Store', IOS, appleIcon));
+      btns.appendChild(storeBtn('Google Play', PLAY, playIcon));
+    }
+
+    row.appendChild(brand);
+    row.appendChild(btns);
+    wrap.appendChild(row);
+    return wrap;
+  }
+
+  function injectFooterSection() {
+    if (document.getElementById('tk-fa')) return;
+    var fb = document.querySelector('.footer-bottom');
+    if (!fb || !fb.parentNode) return;
+    fb.parentNode.insertBefore(buildFooterSection(), fb);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectFooterSection);
+  } else {
+    injectFooterSection();
+  }
+
+  /* ══════════════════════════════════════════════════════════
+   * POPUP — only on homepage / quran / islamvoice
+   * ══════════════════════════════════════════════════════════ */
+  var path = window.location.pathname.replace(/\/+$/, '') || '/';
+  var isPopupPage = path === '/' || path === '/quran' || path === '/islamvoice'
+    || path.indexOf('/quran/') === 0 || path.indexOf('/islamvoice/') === 0;
+
+  if (!isPopupPage) return;
+
+  /* State */
+  var K_STATE = 'tk_popup_v2';
+  var K_IMG   = 'tk_popup_img_v1';
+  var IMG_TTL = 6 * 3600 * 1000; // 6 h
+
+  var DISMISS_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
+
+  function isBlocked() {
+    try {
+      var s = JSON.parse(localStorage.getItem(K_STATE));
+      if (!s) return false;
+      if (s.s === 'clicked') return true; // permanent
+      if (s.s === 'dismissed') {
+        if (Date.now() - s.at < DISMISS_TTL) return true; // within 30 days
+        localStorage.removeItem(K_STATE); // expired — allow one more show
+        return false;
+      }
+      return false;
+    } catch (e) { return false; }
+  }
+
+  if (isBlocked()) return;
+
+  function setState(state) {
+    localStorage.setItem(K_STATE, JSON.stringify({ s: state, at: Date.now() }));
+  }
+
+  /* Image URL cache */
+  var imgUrl = null;
+
+  function getCachedImg() {
+    try {
+      var c = JSON.parse(localStorage.getItem(K_IMG));
+      if (c && c.url && Date.now() - c.at < IMG_TTL) return c.url;
+    } catch (e) {}
+    return null;
+  }
+
+  imgUrl = getCachedImg();
+
+  if (!imgUrl) {
+    fetch('/popup-config')
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (d) {
+        if (d && d.imageUrl) {
+          imgUrl = d.imageUrl;
+          localStorage.setItem(K_IMG, JSON.stringify({ url: imgUrl, at: Date.now() }));
+        }
+      })
+      .catch(function () {});
+  }
+
+  /* Build popup DOM */
+  function buildPopup() {
+    var overlay = document.createElement('div');
+    overlay.id = 'tk-pp-ov';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Get the TafsirKurd App');
+
+    var card = document.createElement('div');
+    card.id = 'tk-pp-card';
+    if (!imgUrl) card.classList.add('tk-no-img');
+
+    /* Close button */
+    var closeBtn = document.createElement('button');
+    closeBtn.id = 'tk-pp-x';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.textContent = '\u00d7';
+    card.appendChild(closeBtn);
+
+    /* Image panel */
+    if (imgUrl) {
+      var imgPanel = document.createElement('div');
+      imgPanel.id = 'tk-pp-img';
+      var img = document.createElement('img');
+      img.src = imgUrl;
+      img.alt = 'TafsirKurd App';
+      img.loading = 'eager';
+      img.addEventListener('error', function () {
+        imgPanel.style.display = 'none';
+        card.classList.add('tk-no-img');
+      });
+      imgPanel.appendChild(img);
+      card.appendChild(imgPanel);
+    }
+
+    /* Content */
+    var body = document.createElement('div');
+    body.id = 'tk-pp-body';
+
+    /* Logo bar */
+    var logoBar = document.createElement('div');
+    logoBar.id = 'tk-pp-logo';
+    var logoImg = document.createElement('img');
+    logoImg.src = '/assets/images/logo.png';
+    logoImg.alt = 'TafsirKurd';
+    logoImg.width = 30; logoImg.height = 30;
+    var logoName = document.createElement('span');
+    logoName.id = 'tk-pp-logo-name';
+    logoName.textContent = 'TafsirKurd';
+    logoBar.appendChild(logoImg);
+    logoBar.appendChild(logoName);
+
+    /* Headline */
+    var h = document.createElement('h2');
+    h.id = 'tk-pp-h';
+    h.textContent = 'Get the app.';
+
+    /* Sub */
+    var sub = document.createElement('p');
+    sub.id = 'tk-pp-sub';
+    sub.textContent = 'Read the Qur\u2019an, listen to reciters, and keep your progress with you \u2014 wherever you are.';
+
+    /* Buttons */
+    var btns = document.createElement('div');
+    btns.id = 'tk-pp-btns';
+
+    function addBtn(label, url, iconFn) {
+      var btn = storeBtn(label, url, iconFn, 'tk-light');
+      btn.addEventListener('click', function () { setState('clicked'); });
+      btns.appendChild(btn);
+    }
+
+    if (isIOS) {
+      addBtn('Download on the App Store', IOS, appleIcon);
+    } else if (isAnd) {
+      addBtn('Get it on Google Play', PLAY, playIcon);
+    } else {
+      addBtn('Download on the App Store', IOS, appleIcon);
+      addBtn('Get it on Google Play', PLAY, playIcon);
+    }
+
+    body.appendChild(logoBar);
+    body.appendChild(h);
+    body.appendChild(sub);
+    body.appendChild(btns);
+    card.appendChild(body);
+    overlay.appendChild(card);
+
+    /* Dismiss logic */
+    function dismiss() {
+      setState('dismissed');
+      overlay.classList.remove('tk-in');
+      setTimeout(function () { overlay.remove(); }, 350);
+    }
+
+    closeBtn.addEventListener('click', dismiss);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) dismiss();
+    });
+    document.addEventListener('keydown', function onKey(e) {
+      if (e.key === 'Escape') {
+        dismiss();
+        document.removeEventListener('keydown', onKey);
+      }
+    });
+
+    return overlay;
+  }
+
+  /* Show after 2.5 s */
+  setTimeout(function () {
+    if (isBlocked()) return;
+    var popup = buildPopup();
+    document.body.appendChild(popup);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        popup.classList.add('tk-in');
+      });
+    });
+  }, 2500);
+
+})();
