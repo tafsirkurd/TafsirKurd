@@ -41,6 +41,7 @@ workflows:
             @capacitor/haptics@8.0.1 \
             @capacitor/local-notifications@8.0.1 \
             @capacitor/preferences@8.0.1 \
+            @capacitor/push-notifications@8.0.1 \
             --save --save-exact --legacy-peer-deps
 
       - name: Verify removed plugins absent from node_modules
@@ -50,7 +51,6 @@ workflows:
             @capacitor-community/keep-awake \
             @capacitor-community/speech-recognition \
             @capacitor/share \
-            @capacitor/push-notifications \
             @capacitor/splash-screen; do
             dir="node_modules/${pkg}"
             if [ -d "$dir" ]; then
@@ -71,7 +71,7 @@ workflows:
             pkg=$(basename "$d")
             ver=$(node -p "require('./node_modules/@capacitor/${pkg}/package.json').version" 2>/dev/null || echo "?")
             case "$pkg" in
-              core|ios|android|cli|app|browser|haptics|local-notifications|preferences)
+              core|ios|android|cli|app|browser|haptics|local-notifications|preferences|push-notifications)
                 expected="8.0.1"
                 ;;
               filesystem)
@@ -94,6 +94,11 @@ workflows:
             exit 1
           fi
           echo "All official @capacitor/* versions OK"
+
+      - name: Inject GoogleService-Info.plist
+        script: |
+          echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/App/App/GoogleService-Info.plist
+          echo "GoogleService-Info.plist written ($(wc -c < ios/App/App/GoogleService-Info.plist) bytes)"
 
       - name: Capacitor sync iOS
         script: npx cap sync ios

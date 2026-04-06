@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Notifications - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=10">
+
+    <style>
+        /* ── Core layout — ensures sidebar offset even on cold cache ─ */
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; margin-left: 240px; min-width: 0; overflow-x: hidden; transition: margin-left 0.3s; }
+        .sidebar.collapsed + .main-content { margin-left: 64px; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+
+        /* ── Modal ──────────────────────────────────────────────── */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+        .modal-close {
+            background: transparent; border: none; color: var(--text-secondary);
+            cursor: pointer; padding: 4px; display: flex; align-items: center;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-body { padding: 24px; }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light);
+            display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;
+        }
+
+        /* ── Form ────────────────────────────────────────────────── */
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .form-label {
+            font-size: 11px; font-weight: 600;
+            color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em;
+        }
+        .form-input {
+            width: 100%; padding: 9px 12px;
+            border: 1px solid var(--border-medium); border-radius: 8px;
+            background: var(--bg-app); color: var(--text-primary);
+            font-family: var(--font-family); font-size: 14px;
+            box-sizing: border-box; transition: border-color 0.15s;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); }
+        textarea.form-input { resize: vertical; }
+
+        /* ── Notifications page styles ──────────────────────────── */
+        .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .status-draft     { background: var(--bg-active); color: var(--text-secondary); }
+        .status-scheduled { background: #bee3f8; color: #2b6cb0; }
+        .status-sending   { background: #fefcbf; color: #744210; animation: pulse-bg 1.2s ease infinite; }
+        .status-sent      { background: #c6f6d5; color: #22543d; }
+        .status-failed    { background: #fed7d7; color: #742a2a; }
+        .status-cancelled { background: var(--bg-active); color: var(--text-tertiary); text-decoration: line-through; }
+
+        @keyframes pulse-bg { 0%,100%{opacity:1} 50%{opacity:.65} }
+
+        .notif-stats { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; }
+        .notif-stats .ok  { color: #38a169; }
+        .notif-stats .bad { color: #e53e3e; }
+
+        .deep-link-badge {
+            display: inline-block;
+            background: #ebf4ff;
+            color: #2b6cb0;
+            border-radius: 6px;
+            padding: 1px 7px;
+            font-size: 11px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .filter-row input, .filter-row select {
+            padding: 8px 12px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: var(--font-family);
+        }
+        .filter-row input:focus, .filter-row select:focus { outline: none; border-color: var(--primary); }
+        .filter-row input { min-width: 200px; }
+        .filter-spacer { flex: 1; }
+
+        .token-preview {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-active);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin-top: 4px;
+        }
+        .token-preview.loading { color: var(--text-tertiary); }
+
+        #dl-id-group, #dl-surah-group { display: none; }
+
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 600px) { .form-row-2 { grid-template-columns: 1fr; } }
+
+        .detail-stat-row { display: flex; gap: 24px; flex-wrap: wrap; margin: 12px 0; }
+        .detail-stat { text-align: center; }
+        .detail-stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+        .detail-stat-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; }
+
+        .progress-bar-wrap { background: var(--bg-active); border-radius: 6px; height: 8px; overflow: hidden; margin: 8px 0; }
+        .progress-bar-fill { height: 100%; background: #48bb78; border-radius: 6px; transition: width .4s; }
+
+        .action-btns { display: flex; gap: 4px; flex-wrap: nowrap; }
+        .action-btns .btn { padding: 4px 10px; font-size: 12px; }
+        .btn-send-green { background: #48bb78 !important; color: #fff !important; border-color: #38a169 !important; }
+        .btn-send-green:hover { background: #38a169 !important; }
+        .btn-danger-sm { color: #e53e3e !important; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .stat-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--bg-active); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stat-icon svg { width: 20px; height: 20px; color: var(--text-primary); }
+        .stat-value { font-size: 28px; font-weight: 900; color: var(--text-primary); margin-bottom: 2px; }
+        .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); }
+    </style>
+
+    <style id="early-sidebar-hide">
+        .sidebar-nav { visibility: visible; }
+    </style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+            if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role && style) style.textContent = css;
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Dashboard</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="nav-item">
+                        <i data-lucide="trending-up"></i>
+                        <span class="nav-item-label">Analytics</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item">
+                        <i data-lucide="message-square"></i>
+                        <span class="nav-item-label">Messages</span>
+                        <span class="nav-item-badge" id="messages-badge"></span>
+                    </a>
+                    <a href="/admin-videos.html" class="nav-item">
+                        <i data-lucide="video"></i>
+                        <span class="nav-item-label">Videos</span>
+                    </a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item">
+                        <i data-lucide="radio"></i>
+                        <span class="nav-item-label">IslamVoice</span>
+                    </a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                    <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item">
+                        <i data-lucide="languages"></i>
+                        <span class="nav-item-label">Translations</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item">
+                        <i data-lucide="users"></i>
+                        <span class="nav-item-label">Users</span>
+                    </a>
+                    <a href="/admin-notifications.html" class="nav-item active">
+                        <i data-lucide="bell"></i>
+                        <span class="nav-item-label">Notifications</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="nav-item">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-item-label">Reading Stats</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item">
+                        <i data-lucide="user-cog"></i>
+                        <span class="nav-item-label">Admin Accounts</span>
+                    </a>
+                    <a href="/admin-features.html" class="nav-item">
+                        <i data-lucide="layers"></i>
+                        <span class="nav-item-label">Features</span>
+                    </a>
+                    <a href="/admin-schedule.html" class="nav-item">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-item-label">Schedule</span>
+                    </a>
+                    <a href="/admin-social-stats.html" class="nav-item">
+                        <i data-lucide="share-2"></i>
+                        <span class="nav-item-label">Social Stats</span>
+                    </a>
+                    <a href="/admin-database.html" class="nav-item">
+                        <i data-lucide="database"></i>
+                        <span class="nav-item-label">Database</span>
+                    </a>
+                    <a href="/admin-search-console.html" class="nav-item">
+                        <i data-lucide="search"></i>
+                        <span class="nav-item-label">Search Console</span>
+                    </a>
+                    <a href="/admin-audit.html" class="nav-item">
+                        <i data-lucide="shield-check"></i>
+                        <span class="nav-item-label">Audit Log</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="topbar-search">
+                    <i data-lucide="bell"></i>
+                    <input type="text" placeholder="Search notifications..." id="topbar-search-input" oninput="applyFilters()">
+                </div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour">
+                        <i data-lucide="clock"></i>
+                        <span id="sessionTimerText">60:00</span>
+                    </div>
+                    <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode">
+                        <i data-lucide="moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">Notifications</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadPage()">
+                            <i data-lucide="refresh-cw"></i>
+                            Refresh
+                        </button>
+                        <button class="btn btn-primary" id="new-notif-btn" onclick="openCreateModal()">
+                            <i data-lucide="plus"></i>
+                            New Notification
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i data-lucide="send"></i></div>
+                        <div>
+                            <div class="stat-value" id="stat-total-sent">—</div>
+                            <div class="stat-label">Total Sent</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i data-lucide="smartphone"></i></div>
+                        <div>
+                            <div class="stat-value" id="stat-tokens">—</div>
+                            <div class="stat-label">Active Tokens</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i data-lucide="check-circle"></i></div>
+                        <div>
+                            <div class="stat-value" id="stat-delivery">—</div>
+                            <div class="stat-label">Delivery Rate</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i data-lucide="clock"></i></div>
+                        <div>
+                            <div class="stat-value" id="stat-scheduled">—</div>
+                            <div class="stat-label">Scheduled</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-row">
+                    <select id="status-filter" onchange="applyFilters()">
+                        <option value="">All Statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="sending">Sending</option>
+                        <option value="sent">Sent</option>
+                        <option value="failed">Failed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <select id="platform-filter" onchange="applyFilters()">
+                        <option value="">All Platforms</option>
+                        <option value="all">All</option>
+                        <option value="android">Android</option>
+                        <option value="ios">iOS</option>
+                    </select>
+                    <div class="filter-spacer"></div>
+                    <span id="result-count" style="font-size:13px;color:var(--text-tertiary)"></span>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Title</th>
+                                <th>Target</th>
+                                <th>Deep Link</th>
+                                <th>Date</th>
+                                <th>Delivery</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="notif-tbody">
+                            <tr id="loading-row">
+                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div><!-- /content-area -->
+        </main>
+    </div><!-- /dashboard-container -->
+
+    <!-- ── Create / Edit Modal ────────────────────────────────── -->
+    <div id="create-modal" class="modal" onclick="if(event.target===this)closeCreateModal()">
+        <div class="modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto">
+            <div class="modal-header">
+                <h2 id="modal-title" class="modal-title">New Notification</h2>
+                <button class="modal-close" onclick="closeCreateModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-group">
+                    <label class="form-label">Title <span style="color:#e53e3e">*</span></label>
+                    <input type="text" id="f-title" class="form-input" placeholder="Notification title" maxlength="100">
+                    <span style="font-size:11px;color:var(--text-tertiary)" id="title-count">0/100</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Body <span style="color:#e53e3e">*</span></label>
+                    <textarea id="f-body" class="form-input" rows="3" placeholder="Notification message" maxlength="300" style="resize:vertical"></textarea>
+                    <span style="font-size:11px;color:var(--text-tertiary)" id="body-count">0/300</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Image URL <span style="font-size:11px;color:var(--text-tertiary)">(optional)</span></label>
+                    <input type="url" id="f-image" class="form-input" placeholder="https://...">
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">Platform</label>
+                        <select id="f-platform" class="form-input" onchange="updateTokenPreview()">
+                            <option value="all">All Platforms</option>
+                            <option value="android">Android Only</option>
+                            <option value="ios">iOS Only</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Audience</label>
+                        <select id="f-audience" class="form-input" onchange="updateTokenPreview()">
+                            <option value="all">All Devices</option>
+                            <option value="authenticated">Logged-in Users</option>
+                            <option value="unauthenticated">Anonymous Users</option>
+                            <option value="android">Android Devices</option>
+                            <option value="ios">iOS Devices</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="token-preview" id="token-preview">Select audience to preview token count</div>
+
+                <div class="form-group">
+                    <label class="form-label">Deep Link</label>
+                    <select id="f-dl-type" class="form-input" onchange="onDeepLinkChange()">
+                        <option value="none">None — Open app home</option>
+                        <option value="verse">Quran Verse</option>
+                        <option value="islamvoice">IslamVoice Episode</option>
+                        <option value="gencine">Gencine Item</option>
+                        <option value="video">Video</option>
+                        <option value="streak">Streak Page</option>
+                        <option value="prayer">Prayer Times</option>
+                        <option value="update">Update Prompt</option>
+                    </select>
+                </div>
+
+                <div class="form-row-2" id="dl-surah-group">
+                    <div class="form-group">
+                        <label class="form-label">Surah Number</label>
+                        <input type="number" id="f-dl-surah" class="form-input" min="1" max="114" placeholder="1–114">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ayah Number</label>
+                        <input type="number" id="f-dl-ayah" class="form-input" min="1" placeholder="Ayah #">
+                    </div>
+                </div>
+
+                <div class="form-group" id="dl-id-group">
+                    <label class="form-label" id="dl-id-label">ID</label>
+                    <input type="text" id="f-dl-id" class="form-input" placeholder="Enter ID">
+                </div>
+
+                <!-- Scheduling -->
+                <div class="form-group">
+                    <label class="form-label">Schedule For <span style="font-size:11px;color:var(--text-tertiary)">(blank = save as draft)</span></label>
+                    <input type="datetime-local" id="f-scheduled-at" class="form-input">
+                </div>
+
+                <!-- Recurrence -->
+                <div class="form-group" id="recurrence-group" style="display:none">
+                    <label class="form-label">Repeat</label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-primary)">
+                            <input type="radio" name="recurrence" id="rec-none" value="none" checked> Once
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-primary)">
+                            <input type="radio" name="recurrence" id="rec-daily" value="daily"> Every day
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-primary)">
+                            <input type="radio" name="recurrence" id="rec-weekly" value="weekly"> Weekly on
+                        </label>
+                        <select id="f-recurrence-day" class="form-input" style="width:auto;padding:5px 10px;display:none">
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </div>
+                    <span style="font-size:11px;color:var(--text-tertiary);margin-top:2px">Recurring notifications auto-schedule the next occurrence after each send.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Internal Notes <span style="font-size:11px;color:var(--text-tertiary)">(not sent)</span></label>
+                    <textarea id="f-notes" class="form-input" rows="2" placeholder="Campaign notes, target info, etc."></textarea>
+                </div>
+
+                <div id="modal-error" style="color:#e53e3e;font-size:13px;margin-top:8px;display:none"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn btn-secondary" onclick="saveNotification('draft')">Save Draft</button>
+                <button class="btn btn-primary" id="save-btn" onclick="saveNotification()">
+                    <i data-lucide="save"></i> Save
+                </button>
+                <button class="btn btn-primary btn-send-green" id="save-send-btn" onclick="saveAndSend()">
+                    <i data-lucide="send"></i> Save &amp; Send Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Detail Modal ───────────────────────────────────────── -->
+    <div id="detail-modal" class="modal" onclick="if(event.target===this)closeDetailModal()">
+        <div class="modal-content" style="max-width:520px">
+            <div class="modal-header">
+                <h2 class="modal-title">Notification Details</h2>
+                <button class="modal-close" onclick="closeDetailModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="detail-status-row" style="margin-bottom:12px"></div>
+                <h3 id="detail-title" style="margin:0 0 6px;font-size:18px;color:var(--text-primary)"></h3>
+                <p id="detail-body" style="color:var(--text-secondary);margin:0 0 12px;white-space:pre-wrap"></p>
+
+                <div id="detail-image-wrap" style="margin-bottom:12px;display:none">
+                    <img id="detail-image" style="max-width:100%;border-radius:8px" alt="">
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:12px">
+                    <div><span style="color:var(--text-tertiary)">Platform:</span> <span id="detail-platform"></span></div>
+                    <div><span style="color:var(--text-tertiary)">Audience:</span> <span id="detail-audience"></span></div>
+                    <div><span style="color:var(--text-tertiary)">Deep Link:</span> <span id="detail-deeplink"></span></div>
+                    <div><span style="color:var(--text-tertiary)">Created by:</span> <span id="detail-created-by"></span></div>
+                    <div><span style="color:var(--text-tertiary)">Created:</span> <span id="detail-created-at"></span></div>
+                    <div><span style="color:var(--text-tertiary)">Scheduled:</span> <span id="detail-scheduled-at"></span></div>
+                </div>
+
+                <div id="detail-sent-stats" style="display:none">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px">Delivery Stats</div>
+                    <div class="detail-stat-row">
+                        <div class="detail-stat">
+                            <div class="detail-stat-value" id="detail-targeted">0</div>
+                            <div class="detail-stat-label">Targeted</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value" style="color:#38a169" id="detail-delivered">0</div>
+                            <div class="detail-stat-label">Delivered</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value" style="color:#e53e3e" id="detail-failed">0</div>
+                            <div class="detail-stat-label">Failed</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="detail-stat-value" style="color:var(--text-tertiary)" id="detail-stale">0</div>
+                            <div class="detail-stat-label">Stale Removed</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="detail-progress" style="width:0%"></div>
+                    </div>
+                    <div id="detail-rate" style="font-size:12px;color:var(--text-tertiary);text-align:right"></div>
+                </div>
+
+                <div id="detail-error" style="display:none;background:#fff5f5;border:1px solid #fed7d7;border-radius:6px;padding:8px 12px;font-size:13px;color:#c53030;margin-top:8px"></div>
+                <div id="detail-notes" style="display:none;background:var(--bg-active);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text-secondary);margin-top:8px"></div>
+            </div>
+            <div class="modal-footer" id="detail-footer"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=5"></script>
+    <script>
+        lucide.createIcons();
+
+        var _notifications = [];
+        var _currentEditId = null;
+        var _tokenPreviewTimer = null;
+        var _role = '';
+
+        // ── Auth ─────────────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', function() {
+            window.adminAuth.checkAuth().then(function(data) {
+                if (!data) return;
+                _role = data.role;
+                if (_role === 'analyst') {
+                    var btn = document.getElementById('new-notif-btn');
+                    if (btn) btn.style.display = 'none';
+                }
+                lucide.createIcons();
+                loadPage();
+            });
+
+            document.getElementById('f-title').addEventListener('input', function() {
+                document.getElementById('title-count').textContent = this.value.length + '/100';
+            });
+            document.getElementById('f-body').addEventListener('input', function() {
+                document.getElementById('body-count').textContent = this.value.length + '/300';
+            });
+
+            // Show recurrence options only when a schedule date is set
+            document.getElementById('f-scheduled-at').addEventListener('input', function() {
+                document.getElementById('recurrence-group').style.display = this.value ? 'block' : 'none';
+                if (!this.value) {
+                    document.getElementById('rec-none').checked = true;
+                    document.getElementById('f-recurrence-day').style.display = 'none';
+                }
+            });
+
+            // Weekly day picker visibility
+            document.querySelectorAll('input[name="recurrence"]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    document.getElementById('f-recurrence-day').style.display =
+                        this.value === 'weekly' ? 'inline-block' : 'none';
+                });
+            });
+
+            // Sidebar toggle (desktop collapse)
+            var menuToggle = document.getElementById('menu-toggle');
+            if (menuToggle) menuToggle.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+            });
+            // Mobile menu toggle (topbar)
+            var mobileToggle = document.getElementById('mobile-menu-toggle');
+            if (mobileToggle) mobileToggle.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('mobile-open');
+            });
+            // Theme toggle
+            var themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) themeToggle.addEventListener('click', function() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                var newTheme = isDark ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('adminTheme', newTheme);
+                var icon = document.getElementById('theme-icon');
+                if (icon) { icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun'); lucide.createIcons(); }
+            });
+            // Topbar search syncs with filter
+            var topbarSearch = document.getElementById('topbar-search-input');
+            if (topbarSearch) topbarSearch.addEventListener('input', function() {
+                applyFilters();
+            });
+        });
+
+        // ── API ──────────────────────────────────────────────────
+        async function notifAPI(action, payload) {
+            var token = sessionStorage.getItem('adminToken');
+            var res = await fetch('/admin-notifications-api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+            });
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error || 'API error');
+            return data;
+        }
+
+        // ── Load ─────────────────────────────────────────────────
+        async function loadPage() {
+            loadStats();
+            loadNotifications();
+        }
+
+        async function loadStats() {
+            try {
+                var d = await notifAPI('get_stats');
+                var s = d.stats;
+                document.getElementById('stat-total-sent').textContent = s.totalSent.toLocaleString();
+                document.getElementById('stat-tokens').textContent = s.activeTokens.toLocaleString();
+                document.getElementById('stat-delivery').textContent = s.deliveryRate + '%';
+                document.getElementById('stat-scheduled').textContent = s.totalScheduled;
+            } catch(e) { /* fail silently */ }
+        }
+
+        async function loadNotifications() {
+            var loadRow = document.getElementById('loading-row');
+            if (loadRow) loadRow.style.display = '';
+            try {
+                var d = await notifAPI('list');
+                _notifications = d.notifications || [];
+                renderTable(_notifications);
+            } catch(e) {
+                if (loadRow) loadRow.querySelector('td').textContent = 'Failed: ' + e.message;
+            }
+        }
+
+        // ── Table ────────────────────────────────────────────────
+        function applyFilters() {
+            var topbarSearch = document.getElementById('topbar-search-input');
+            var search = (topbarSearch ? topbarSearch.value : '').toLowerCase();
+            var status = document.getElementById('status-filter').value;
+            var platform = document.getElementById('platform-filter').value;
+
+            var filtered = _notifications.filter(function(n) {
+                if (status && n.status !== status) return false;
+                if (platform && platform !== '' && n.platform !== platform) return false;
+                if (search && !n.title.toLowerCase().includes(search) && !(n.body||'').toLowerCase().includes(search)) return false;
+                return true;
+            });
+            renderTable(filtered);
+        }
+
+        function renderTable(list) {
+            var tbody = document.getElementById('notif-tbody');
+            var count = document.getElementById('result-count');
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+            if (count) count.textContent = list.length + ' result' + (list.length !== 1 ? 's' : '');
+
+            if (!list.length) {
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 7;
+                td.style.textAlign = 'center';
+                td.style.padding = '40px';
+                td.style.color = 'var(--text-tertiary)';
+                td.textContent = 'No notifications found';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+
+            list.forEach(function(n) { tbody.appendChild(buildRow(n)); });
+            lucide.createIcons();
+        }
+
+        function buildRow(n) {
+            var tr = document.createElement('tr');
+
+            // Status
+            var td1 = document.createElement('td');
+            var badge = document.createElement('span');
+            badge.className = 'status-badge status-' + n.status;
+            badge.textContent = n.status;
+            td1.appendChild(badge);
+            tr.appendChild(td1);
+
+            // Title + body
+            var td2 = document.createElement('td');
+            var titleEl = document.createElement('div');
+            titleEl.style.cssText = 'font-weight:600;color:var(--text-primary);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+            titleEl.textContent = n.title;
+            var bodyEl = document.createElement('div');
+            bodyEl.style.cssText = 'font-size:12px;color:var(--text-tertiary);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+            bodyEl.textContent = n.body;
+            td2.appendChild(titleEl);
+            td2.appendChild(bodyEl);
+            tr.appendChild(td2);
+
+            // Target
+            var td3 = document.createElement('td');
+            var platEl = document.createElement('div');
+            platEl.style.fontSize = '13px';
+            platEl.textContent = labelPlatform(n.platform);
+            var audEl = document.createElement('div');
+            audEl.style.cssText = 'font-size:11px;color:var(--text-tertiary)';
+            audEl.textContent = labelAudience(n.audience);
+            td3.appendChild(platEl);
+            td3.appendChild(audEl);
+            tr.appendChild(td3);
+
+            // Deep link
+            var td4 = document.createElement('td');
+            if (n.deep_link_type && n.deep_link_type !== 'none') {
+                var dlBadge = document.createElement('span');
+                dlBadge.className = 'deep-link-badge';
+                dlBadge.textContent = n.deep_link_type + (n.deep_link_id ? ' #' + n.deep_link_id : '');
+                td4.appendChild(dlBadge);
+            } else {
+                td4.style.color = 'var(--text-tertiary)';
+                td4.textContent = '—';
+            }
+            tr.appendChild(td4);
+
+            // Date
+            var td5 = document.createElement('td');
+            td5.style.cssText = 'font-size:12px;white-space:nowrap';
+            if (n.sent_at) {
+                var lbl = document.createElement('div');
+                lbl.style.color = 'var(--text-tertiary)';
+                lbl.textContent = 'Sent:';
+                var val = document.createElement('div');
+                val.textContent = formatDate(n.sent_at);
+                td5.appendChild(lbl); td5.appendChild(val);
+            } else if (n.scheduled_at) {
+                var lbl2 = document.createElement('div');
+                lbl2.style.color = '#2b6cb0';
+                lbl2.textContent = 'Scheduled:';
+                var val2 = document.createElement('div');
+                val2.textContent = formatDate(n.scheduled_at);
+                td5.appendChild(lbl2); td5.appendChild(val2);
+            } else {
+                var val3 = document.createElement('div');
+                val3.textContent = formatDate(n.created_at);
+                td5.appendChild(val3);
+            }
+            if (n.recurrence && n.recurrence !== 'none') {
+                var recBadge = document.createElement('div');
+                recBadge.style.cssText = 'font-size:10px;color:#2b6cb0;margin-top:2px';
+                var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                recBadge.textContent = n.recurrence === 'daily' ? 'Daily'
+                    : 'Weekly · ' + (DAYS[n.recurrence_day] || '');
+                td5.appendChild(recBadge);
+            }
+            tr.appendChild(td5);
+
+            // Delivery
+            var td6 = document.createElement('td');
+            if (n.status === 'sent' && n.tokens_targeted > 0) {
+                var statsEl = document.createElement('div');
+                statsEl.className = 'notif-stats';
+                var okSpan = document.createElement('span');
+                okSpan.className = 'ok';
+                okSpan.textContent = n.tokens_sent + ' ok';
+                var badSpan = document.createElement('span');
+                badSpan.className = 'bad';
+                badSpan.textContent = ' ' + n.tokens_failed + ' fail';
+                statsEl.appendChild(okSpan); statsEl.appendChild(badSpan);
+                var rate = Math.round((n.tokens_sent / n.tokens_targeted) * 100);
+                var rateEl = document.createElement('div');
+                rateEl.style.cssText = 'font-size:11px;color:' + (rate >= 80 ? '#38a169' : rate >= 50 ? '#d69e2e' : '#e53e3e');
+                rateEl.textContent = rate + '%';
+                td6.appendChild(statsEl); td6.appendChild(rateEl);
+            } else {
+                td6.style.color = 'var(--text-tertiary)';
+                td6.textContent = '—';
+            }
+            tr.appendChild(td6);
+
+            // Actions
+            var td7 = document.createElement('td');
+            var btnWrap = document.createElement('div');
+            btnWrap.className = 'action-btns';
+
+            var btnView = makeBtn('View', '', function() { openDetailModal(n.id); });
+            btnWrap.appendChild(btnView);
+
+            if (_role !== 'analyst') {
+                if (n.status === 'draft' || n.status === 'scheduled') {
+                    btnWrap.appendChild(makeBtn('Edit', '', function() { openEditModal(n); }));
+                }
+                if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
+                    btnWrap.appendChild(makeBtn('Send', 'btn-send-green', function() { confirmSend(n.id); }));
+                }
+                if (n.status === 'scheduled') {
+                    btnWrap.appendChild(makeBtn('Cancel', '', function() { cancelNotif(n.id); }));
+                }
+                btnWrap.appendChild(makeBtn('Copy', '', function() { duplicateNotif(n.id); }));
+                if (_role === 'super_admin') {
+                    btnWrap.appendChild(makeBtn('Del', 'btn-danger-sm', function() { deleteNotif(n.id); }));
+                }
+            }
+
+            td7.appendChild(btnWrap);
+            tr.appendChild(td7);
+            return tr;
+        }
+
+        function makeBtn(text, extraClass, handler) {
+            var b = document.createElement('button');
+            b.className = 'btn btn-secondary' + (extraClass ? ' ' + extraClass : '');
+            b.textContent = text;
+            b.style.padding = '3px 9px';
+            b.style.fontSize = '12px';
+            b.onclick = handler;
+            return b;
+        }
+
+        function labelPlatform(p) {
+            return { all: 'All Platforms', android: 'Android', ios: 'iOS' }[p] || p;
+        }
+        function labelAudience(a) {
+            return { all: 'All Devices', android: 'Android', ios: 'iOS',
+                     authenticated: 'Logged-in', unauthenticated: 'Anonymous' }[a] || a;
+        }
+        function formatDate(str) {
+            if (!str) return '—';
+            var d = new Date(str);
+            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ── Create Modal ─────────────────────────────────────────
+        function openCreateModal() {
+            _currentEditId = null;
+            document.getElementById('modal-title').textContent = 'New Notification';
+            clearForm();
+            document.getElementById('create-modal').classList.add('active');
+            document.getElementById('f-title').focus();
+            updateTokenPreview();
+            lucide.createIcons();
+        }
+
+        function openEditModal(n) {
+            _currentEditId = n.id;
+            document.getElementById('modal-title').textContent = 'Edit Notification';
+            clearForm();
+            document.getElementById('f-title').value = n.title || '';
+            document.getElementById('f-body').value = n.body || '';
+            document.getElementById('f-image').value = n.image_url || '';
+            document.getElementById('f-platform').value = n.platform || 'all';
+            document.getElementById('f-audience').value = n.audience || 'all';
+            document.getElementById('f-dl-type').value = n.deep_link_type || 'none';
+            document.getElementById('f-notes').value = n.notes || '';
+            document.getElementById('title-count').textContent = (n.title||'').length + '/100';
+            document.getElementById('body-count').textContent = (n.body||'').length + '/300';
+            if (n.deep_link_type === 'verse' && n.deep_link_id) {
+                var parts = n.deep_link_id.split(':');
+                document.getElementById('f-dl-surah').value = parts[0] || '';
+                document.getElementById('f-dl-ayah').value = parts[1] || '';
+            } else if (n.deep_link_id) {
+                document.getElementById('f-dl-id').value = n.deep_link_id;
+            }
+            if (n.scheduled_at) {
+                document.getElementById('f-scheduled-at').value = n.scheduled_at.slice(0, 16);
+                document.getElementById('recurrence-group').style.display = 'block';
+            }
+            var rec = n.recurrence || 'none';
+            var recEl = document.querySelector('input[name="recurrence"][value="' + rec + '"]');
+            if (recEl) recEl.checked = true;
+            if (rec === 'weekly') {
+                document.getElementById('f-recurrence-day').style.display = 'inline-block';
+                document.getElementById('f-recurrence-day').value = n.recurrence_day != null ? String(n.recurrence_day) : '5';
+            }
+            onDeepLinkChange();
+            updateTokenPreview();
+            document.getElementById('create-modal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-modal').classList.remove('active');
+            document.getElementById('modal-error').style.display = 'none';
+        }
+
+        function clearForm() {
+            ['f-title','f-body','f-image','f-dl-id','f-dl-surah','f-dl-ayah','f-notes'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            document.getElementById('f-platform').value = 'all';
+            document.getElementById('f-audience').value = 'all';
+            document.getElementById('f-dl-type').value = 'none';
+            document.getElementById('f-scheduled-at').value = '';
+            document.getElementById('rec-none').checked = true;
+            document.getElementById('recurrence-group').style.display = 'none';
+            document.getElementById('f-recurrence-day').style.display = 'none';
+            document.getElementById('title-count').textContent = '0/100';
+            document.getElementById('body-count').textContent = '0/300';
+            document.getElementById('modal-error').style.display = 'none';
+            onDeepLinkChange();
+        }
+
+        function onDeepLinkChange() {
+            var type = document.getElementById('f-dl-type').value;
+            document.getElementById('dl-id-group').style.display = 'none';
+            document.getElementById('dl-surah-group').style.display = 'none';
+            if (type === 'verse') {
+                document.getElementById('dl-surah-group').style.display = 'grid';
+            } else if (type === 'islamvoice' || type === 'gencine' || type === 'video') {
+                var labels = { islamvoice: 'Episode ID', gencine: 'Item ID', video: 'Video ID' };
+                document.getElementById('dl-id-label').textContent = labels[type] || 'ID';
+                document.getElementById('dl-id-group').style.display = 'block';
+            }
+        }
+
+        function updateTokenPreview() {
+            clearTimeout(_tokenPreviewTimer);
+            var preview = document.getElementById('token-preview');
+            preview.className = 'token-preview loading';
+            preview.textContent = 'Counting tokens...';
+            _tokenPreviewTimer = setTimeout(async function() {
+                var audience = document.getElementById('f-audience').value;
+                var platform = document.getElementById('f-platform').value;
+                try {
+                    var d = await notifAPI('get_token_count', { audience: audience, platform: platform });
+                    preview.className = 'token-preview';
+                    preview.textContent = d.count.toLocaleString() + ' device' + (d.count !== 1 ? 's' : '') + ' will receive this notification';
+                } catch(e) {
+                    preview.className = 'token-preview';
+                    preview.textContent = 'Could not fetch token count';
+                }
+            }, 500);
+        }
+
+        function getFormData() {
+            var type = document.getElementById('f-dl-type').value;
+            var deepLinkId = '';
+            if (type === 'verse') {
+                var s = document.getElementById('f-dl-surah').value.trim();
+                var a = document.getElementById('f-dl-ayah').value.trim();
+                if (s && a) deepLinkId = s + ':' + a;
+            } else {
+                deepLinkId = document.getElementById('f-dl-id').value.trim();
+            }
+            var scheduledAt = document.getElementById('f-scheduled-at').value;
+            var rec = document.querySelector('input[name="recurrence"]:checked');
+            var recurrence = rec ? rec.value : 'none';
+            var recurrenceDay = recurrence === 'weekly'
+                ? parseInt(document.getElementById('f-recurrence-day').value) : null;
+            return {
+                title: document.getElementById('f-title').value.trim(),
+                body: document.getElementById('f-body').value.trim(),
+                image_url: document.getElementById('f-image').value.trim(),
+                platform: document.getElementById('f-platform').value,
+                audience: document.getElementById('f-audience').value,
+                deep_link_type: type,
+                deep_link_id: deepLinkId,
+                scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+                recurrence: recurrence,
+                recurrence_day: recurrenceDay,
+                notes: document.getElementById('f-notes').value.trim()
+            };
+        }
+
+        async function saveNotification(forceDraft) {
+            var errEl = document.getElementById('modal-error');
+            errEl.style.display = 'none';
+            var fd = getFormData();
+            if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
+            if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
+            if (forceDraft === 'draft') fd.scheduled_at = null;
+            var btn = document.getElementById('save-btn');
+            btn.disabled = true; btn.textContent = 'Saving...';
+            try {
+                var payload = Object.assign({}, fd);
+                if (_currentEditId) payload.id = _currentEditId;
+                await notifAPI(_currentEditId ? 'update' : 'create', payload);
+                closeCreateModal();
+                loadPage();
+            } catch(e) {
+                errEl.textContent = e.message;
+                errEl.style.display = 'block';
+                btn.disabled = false; btn.textContent = 'Save';
+                lucide.createIcons();
+            }
+        }
+
+        async function saveAndSend() {
+            var errEl = document.getElementById('modal-error');
+            errEl.style.display = 'none';
+            var fd = getFormData();
+            if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
+            if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
+            var btn = document.getElementById('save-send-btn');
+            btn.disabled = true; btn.textContent = 'Sending...';
+            try {
+                fd.scheduled_at = null;
+                var payload = Object.assign({}, fd);
+                if (_currentEditId) payload.id = _currentEditId;
+                var saved = await notifAPI(_currentEditId ? 'update' : 'create', payload);
+                var result = await notifAPI('send', { id: saved.notification.id });
+                closeCreateModal();
+                loadPage();
+                showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
+            } catch(e) {
+                errEl.textContent = e.message;
+                errEl.style.display = 'block';
+                btn.disabled = false; btn.textContent = 'Save & Send Now';
+                lucide.createIcons();
+            }
+        }
+
+        // ── Actions ──────────────────────────────────────────────
+        async function confirmSend(id) {
+            var n = _notifications.find(function(x) { return x.id === id; });
+            if (!confirm('Send "' + (n ? n.title : 'this notification') + '" now?\nThis cannot be undone.')) return;
+            try {
+                var result = await notifAPI('send', { id: id });
+                loadPage();
+                showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
+            } catch(e) { alert('Send failed: ' + e.message); }
+        }
+
+        async function cancelNotif(id) {
+            if (!confirm('Cancel this scheduled notification?')) return;
+            try { await notifAPI('cancel', { id: id }); loadPage(); }
+            catch(e) { alert('Cancel failed: ' + e.message); }
+        }
+
+        async function duplicateNotif(id) {
+            try { await notifAPI('duplicate', { id: id }); loadPage(); showToast('Notification duplicated'); }
+            catch(e) { alert('Duplicate failed: ' + e.message); }
+        }
+
+        async function deleteNotif(id) {
+            if (!confirm('Permanently delete this notification?')) return;
+            try { await notifAPI('delete', { id: id }); loadPage(); }
+            catch(e) { alert('Delete failed: ' + e.message); }
+        }
+
+        // ── Detail Modal ─────────────────────────────────────────
+        function openDetailModal(id) {
+            var n = _notifications.find(function(x) { return x.id === id; });
+            if (!n) return;
+
+            var statusRow = document.getElementById('detail-status-row');
+            while (statusRow.firstChild) statusRow.removeChild(statusRow.firstChild);
+            var badge = document.createElement('span');
+            badge.className = 'status-badge status-' + n.status;
+            badge.textContent = n.status;
+            statusRow.appendChild(badge);
+
+            document.getElementById('detail-title').textContent = n.title;
+            document.getElementById('detail-body').textContent = n.body;
+
+            var imgWrap = document.getElementById('detail-image-wrap');
+            if (n.image_url) {
+                document.getElementById('detail-image').src = n.image_url;
+                document.getElementById('detail-image').alt = n.title;
+                imgWrap.style.display = 'block';
+            } else {
+                imgWrap.style.display = 'none';
+            }
+
+            document.getElementById('detail-platform').textContent = labelPlatform(n.platform);
+            document.getElementById('detail-audience').textContent = labelAudience(n.audience);
+            document.getElementById('detail-created-by').textContent = n.created_by || '—';
+            document.getElementById('detail-created-at').textContent = formatDate(n.created_at);
+            document.getElementById('detail-scheduled-at').textContent = n.scheduled_at ? formatDate(n.scheduled_at) : '—';
+
+            var dlEl = document.getElementById('detail-deeplink');
+            dlEl.textContent = (n.deep_link_type && n.deep_link_type !== 'none')
+                ? n.deep_link_type + (n.deep_link_id ? ' #' + n.deep_link_id : '') : '—';
+
+            var statsSection = document.getElementById('detail-sent-stats');
+            if (n.status === 'sent') {
+                statsSection.style.display = 'block';
+                document.getElementById('detail-targeted').textContent = (n.tokens_targeted || 0).toLocaleString();
+                document.getElementById('detail-delivered').textContent = (n.tokens_sent || 0).toLocaleString();
+                document.getElementById('detail-failed').textContent = (n.tokens_failed || 0).toLocaleString();
+                document.getElementById('detail-stale').textContent = (n.stale_removed || 0).toLocaleString();
+                var rate = n.tokens_targeted > 0 ? Math.round((n.tokens_sent / n.tokens_targeted) * 100) : 0;
+                document.getElementById('detail-progress').style.width = rate + '%';
+                document.getElementById('detail-rate').textContent = rate + '% delivery rate';
+            } else {
+                statsSection.style.display = 'none';
+            }
+
+            var errEl = document.getElementById('detail-error');
+            if (n.error_message) { errEl.textContent = 'Error: ' + n.error_message; errEl.style.display = 'block'; }
+            else errEl.style.display = 'none';
+
+            var notesEl = document.getElementById('detail-notes');
+            if (n.notes) { notesEl.textContent = 'Note: ' + n.notes; notesEl.style.display = 'block'; }
+            else notesEl.style.display = 'none';
+
+            var footer = document.getElementById('detail-footer');
+            while (footer.firstChild) footer.removeChild(footer.firstChild);
+
+            var closeBtn = makeBtn('Close', '', closeDetailModal);
+            footer.appendChild(closeBtn);
+
+            if (_role !== 'analyst') {
+                if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
+                    footer.appendChild(makeBtn('Edit', '', function() { closeDetailModal(); openEditModal(n); }));
+                    var sendBtn = makeBtn('Send Now', 'btn-send-green', function() { closeDetailModal(); confirmSend(n.id); });
+                    footer.appendChild(sendBtn);
+                }
+                if (n.status === 'sent') {
+                    footer.appendChild(makeBtn('Resend (Duplicate)', '', function() { closeDetailModal(); duplicateNotif(n.id); }));
+                }
+            }
+
+            document.getElementById('detail-modal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        function showToast(msg) {
+            var t = document.createElement('div');
+            t.textContent = msg;
+            t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#2d3748;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2);pointer-events:none';
+            document.body.appendChild(t);
+            setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 3500);
+        }
+    </script>
+</body>
+</html>
