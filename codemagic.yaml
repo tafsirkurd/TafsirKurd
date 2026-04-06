@@ -230,6 +230,14 @@ workflows:
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
 
+      - name: Notify users of update
+        script: |
+          curl -s -X POST https://tafsirkurd.com/push-notifications \
+            -H "Content-Type: application/json" \
+            -H "X-Push-Secret: $PUSH_SECRET" \
+            -d "{\"title\":\"ئاپدەیتەکا نوی بەردەستە.\",\"body\":\"ئەپێ تەفسیرکورد ئاپدەیت بکە — وەشانەکا نوی بەردەستە.\"}" \
+            && echo "Update notification sent" || echo "Notification failed (non-fatal)"
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
