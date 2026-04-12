@@ -33,8 +33,17 @@
 
         </activity>
 
+        <!-- Fires when user grants/revokes exact-alarm permission in Android Settings.
+             Immediately reschedules athan when permission is granted. -->
+        <receiver
+            android:name=".ExactAlarmPermissionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
-<provider
+        <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
@@ -49,14 +58,21 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Re-schedule athan notifications after device reboot (Capacitor plugin also declares this) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Allows showing system dialog to disable battery optimization for reliable athan alarms -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Required for athan notifications on Android 13+ (API 33+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Required for exact-time prayer alarms on Android 12+ (API 31+).
-         If user denies, app degrades silently (no athan, prayer times still shown). -->
+    <!-- Exact alarm permissions for athan timing accuracy:
+         SCHEDULE_EXACT_ALARM  — Android 12 (API 31-32): user-grantable exact alarms.
+         USE_EXACT_ALARM       — Android 13+ (API 33+): auto-granted to alarm/calendar apps,
+                                  cannot be revoked by user. Both declared so Android picks the
+                                  right one per API level. Without these, Doze can delay athan
+                                  by up to 15 minutes. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Required for voice tasbih speech recognition -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 </manifest>

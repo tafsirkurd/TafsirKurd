@@ -1369,7 +1369,7 @@
         startCountdown();
         pushWidgetData(freshData, city, today);
         if (getAthan()) {
-          fetchDaysData(city, today, 7).then(function(daysData) {
+          fetchDaysData(city, today, 28).then(function(daysData) {
             if (daysData.length) {
               window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
             }
@@ -1780,7 +1780,7 @@
     saveBtn.onclick = function() {
       if (getAthan()) {
         var today2 = window.PrayerLogic.todayBaghdad();
-        fetchDaysData(getCity(), today2, 7).then(function(daysData) {
+        fetchDaysData(getCity(), today2, 28).then(function(daysData) {
           if (daysData.length) {
             window.PrayerNotifications.scheduleAthanMultiDay(daysData, getCity(), getToggles(), true);
           }
@@ -2152,7 +2152,7 @@
         });
         if (getAthan()) {
           var today = window.PrayerLogic.todayBaghdad();
-          fetchDaysData(city, today, 7).then(function(daysData) {
+          fetchDaysData(city, today, 28).then(function(daysData) {
             if (daysData.length) {
               window.PrayerNotifications.scheduleAthanMultiDay(
                 daysData, city, getToggles(), true, voice.id
@@ -2260,7 +2260,7 @@
     // window where 0 notifications are pending if the schedule call fails).
     if (getAthan()) {
       var today = window.PrayerLogic.todayBaghdad();
-      var daysData = await fetchDaysData(city, today, 7);
+      var daysData = await fetchDaysData(city, today, 28);
       if (daysData.length) {
         var res = await window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
         if (res && res.count > 0) {
@@ -2310,7 +2310,7 @@
 
     // Schedule 7 days ahead so athan works without opening the app
     var today = window.PrayerLogic.todayBaghdad();
-    var daysData = await fetchDaysData(city, today, 7);
+    var daysData = await fetchDaysData(city, today, 28);
     if (daysData.length) {
       var res = await window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), granted);
       var count = res && res.count != null ? res.count : 0;
@@ -2318,6 +2318,15 @@
         localStorage.setItem('prayerLastScheduleTs', String(Date.now()));
         if (window.toast) toast(tStr('prayer.scheduled_ok', { count: count }));
         if (window._showNotifSetupHint) window._showNotifSetupHint();
+        // Check battery optimization — most common cause of delayed athan on Samsung
+        var _AA = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.AthanAlarm;
+        if (_AA && _AA.isIgnoringBatteryOpts) {
+          _AA.isIgnoringBatteryOpts().then(function(r) {
+            if (r && r.ignoring === false && window._showBatteryOptWarning) {
+              window._showBatteryOptWarning();
+            }
+          }).catch(function() {});
+        }
       } else {
         if (window.toast) toast(tStr('prayer.scheduled_zero'));
       }
@@ -2332,7 +2341,7 @@
     setToggles(toggles);
     if (getAthan()) {
       var today = window.PrayerLogic.todayBaghdad();
-      var daysData = await fetchDaysData(city, today, 7);
+      var daysData = await fetchDaysData(city, today, 28);
       if (daysData.length) {
         await window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, toggles, true);
       }
@@ -2443,7 +2452,7 @@
     var city  = getCity();
     console.log('[Athan] initScheduleOnStart: scheduling for city=' + city + ' date=' + today);
     try {
-      var daysData = await fetchDaysData(city, today, 7);
+      var daysData = await fetchDaysData(city, today, 28);
       if (!daysData.length) {
         console.warn('[Athan] initScheduleOnStart: no prayer data available — will retry on next foreground');
         return;

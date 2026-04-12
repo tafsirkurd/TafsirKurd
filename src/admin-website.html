@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Website Sections - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=10">
+    <style>
+        /* Section entry animation */
+        .ws-section {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: wsFadeIn 0.4s cubic-bezier(.16,1,.3,1) forwards;
+        }
+        .ws-section:nth-child(1) { animation-delay: .05s; }
+        .ws-section:nth-child(2) { animation-delay: .14s; }
+        .ws-section:nth-child(3) { animation-delay: .23s; }
+        @keyframes wsFadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Two-col layout: preview + settings */
+        .ws-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .ws-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Preview panel */
+        .ws-preview-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .ws-preview-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            padding: 14px 18px 0;
+        }
+        .ws-preview-body {
+            padding: 18px;
+        }
+
+        /* ── Footer app section preview ── */
+        .fa-preview-wrap {
+            padding: 22px 0 0;
+            border-top: 1px solid rgba(0,0,0,.08);
+        }
+        .fa-preview-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .fa-preview-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+        .fa-preview-brand img {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+        }
+        .fa-preview-name {
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .fa-preview-desc {
+            font-size: .76rem;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+        .fa-preview-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .fa-preview-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 38px;
+            padding: 0 14px;
+            font-size: .79rem;
+            font-weight: 600;
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            border-radius: 11px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        /* ── Popup preview ── */
+        .pp-preview-card {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 8px 32px rgba(0,0,0,.35);
+        }
+        .pp-preview-img {
+            width: 38%;
+            flex-shrink: 0;
+            background: #111;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+        .pp-preview-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .pp-preview-img-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: rgba(255,255,255,.2);
+            font-size: 12px;
+            text-align: center;
+            padding: 16px;
+        }
+        .pp-preview-body {
+            flex: 1;
+            padding: 24px 22px;
+        }
+        .pp-preview-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .pp-preview-logo img {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+        }
+        .pp-preview-logo-name {
+            font-size: .72rem;
+            font-weight: 700;
+            color: rgba(255,255,255,.4);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+        .pp-preview-h {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+        .pp-preview-sub {
+            font-size: .82rem;
+            color: rgba(255,255,255,.5);
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+        .pp-preview-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 40px;
+            padding: 0 16px;
+            font-size: .82rem;
+            font-weight: 600;
+            background: #fff;
+            color: #000;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Settings panel */
+        .ws-settings-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .ws-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .ws-field input,
+        .ws-field textarea {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-primary);
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color .15s;
+        }
+        .ws-field input:focus,
+        .ws-field textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .ws-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .ws-toggle-info { flex: 1; }
+        .ws-toggle-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .ws-toggle-desc {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+        /* Toggle switch */
+        .ws-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .ws-switch input { opacity: 0; width: 0; height: 0; }
+        .ws-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border-light);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .ws-slider::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform .2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.2);
+        }
+        .ws-switch input:checked + .ws-slider { background: var(--primary); }
+        .ws-switch input:checked + .ws-slider::before { transform: translateX(20px); }
+
+        .ws-divider {
+            height: 1px;
+            background: var(--border-light);
+            margin: 4px 0;
+        }
+        .ws-save-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity .15s, transform .12s;
+        }
+        .ws-save-btn:hover { opacity: .88; }
+        .ws-save-btn:active { transform: scale(.97); }
+        .ws-save-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+        .ws-link-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: background .15s, color .15s;
+        }
+        .ws-link-btn:hover {
+            background: var(--bg-active);
+            color: var(--primary);
+        }
+        .ws-link-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+        .ws-status {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 0;
+            min-height: 18px;
+            transition: color .2s;
+        }
+        .ws-status.ok { color: #22c55e; }
+        .ws-status.err { color: #ef4444; }
+        .ws-status.saving { color: var(--text-tertiary); }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                <a href="/admin-website.html" class="nav-item active"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
+                <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">System</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color 0.2s;" title="Logout">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="topbar-search">
+                <i data-lucide="search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour">
+                    <i data-lucide="clock"></i>
+                    <span id="sessionTimerText">60:00</span>
+                </div>
+                <button class="topbar-theme-toggle" id="theme-toggle" title="Toggle theme">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Website Sections</h1>
+                    <p class="page-subtitle">Manage the app download footer section and the popup shown to website visitors.</p>
+                </div>
+            </div>
+
+            <!-- ── 1. Footer App Section ── -->
+            <div class="card ws-section">
+                <div class="card-header">
+                    <h2 class="card-title"><i data-lucide="download" style="width:16px;height:16px;margin-inline-end:8px;vertical-align:middle;"></i> Footer App Section</h2>
+                    <p class="card-subtitle">Shown above the footer on every page — invites visitors to download the app.</p>
+                </div>
+                <div class="ws-grid" style="padding:0 24px 24px;">
+                    <!-- Preview -->
+                    <div class="ws-preview-panel">
+                        <div class="ws-preview-label">Live Preview</div>
+                        <div class="ws-preview-body">
+                            <div class="fa-preview-wrap">
+                                <div class="fa-preview-row">
+                                    <div class="fa-preview-brand">
+                                        <img src="/assets/images/logo.png" alt="TafsirKurd">
+                                        <div>
+                                            <div class="fa-preview-name" id="prev-fa-name">TafsirKurd App</div>
+                                            <div class="fa-preview-desc" id="prev-fa-desc">Read, listen, and keep your progress with you.</div>
+                                        </div>
+                                    </div>
+                                    <div class="fa-preview-btns">
+                                        <span class="fa-preview-btn">App Store</span>
+                                        <span class="fa-preview-btn">Google Play</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Settings -->
+                    <div class="ws-settings-panel">
+                        <div class="ws-toggle-row">
+                            <div class="ws-toggle-info">
+                                <div class="ws-toggle-label">Visible</div>
+                                <div class="ws-toggle-desc">Show section on all website pages</div>
+                            </div>
+                            <label class="ws-switch">
+                                <input type="checkbox" id="fa-visible" checked>
+                                <span class="ws-slider"></span>
+                            </label>
+                        </div>
+                        <div class="ws-divider"></div>
+                        <div class="ws-field">
+                            <label>App Name</label>
+                            <input type="text" id="fa-name" value="TafsirKurd App" placeholder="TafsirKurd App" oninput="updateFaPreview()">
+                        </div>
+                        <div class="ws-field">
+                            <label>Description</label>
+                            <input type="text" id="fa-desc" value="Read, listen, and keep your progress with you." placeholder="Short description..." oninput="updateFaPreview()">
+                        </div>
+                        <div class="ws-status" id="fa-status"></div>
+                        <button class="ws-save-btn" onclick="saveFaSection()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 2. App Download Popup ── -->
+            <div class="card ws-section">
+                <div class="card-header">
+                    <h2 class="card-title"><i data-lucide="layout" style="width:16px;height:16px;margin-inline-end:8px;vertical-align:middle;"></i> App Download Popup</h2>
+                    <p class="card-subtitle">Shown to first-time visitors on homepage, Quran, and IslamVoice pages. Fades in after 2.5 seconds.</p>
+                </div>
+                <div class="ws-grid" style="padding:0 24px 24px;">
+                    <!-- Preview -->
+                    <div class="ws-preview-panel">
+                        <div class="ws-preview-label">Live Preview</div>
+                        <div class="ws-preview-body">
+                            <div class="pp-preview-card">
+                                <div class="pp-preview-img" id="pp-preview-img-wrap">
+                                    <div class="pp-preview-img-empty" id="pp-img-empty">No image set —<br>popup uses text-only layout</div>
+                                    <img id="pp-preview-img" src="" alt="" style="display:none">
+                                </div>
+                                <div class="pp-preview-body">
+                                    <div class="pp-preview-logo">
+                                        <img src="/assets/images/logo.png" alt="TafsirKurd">
+                                        <span class="pp-preview-logo-name">TafsirKurd</span>
+                                    </div>
+                                    <div class="pp-preview-h" id="prev-pp-h">Get the app.</div>
+                                    <div class="pp-preview-sub" id="prev-pp-sub">Read the Qur'an, listen to reciters, and keep your progress with you — wherever you are.</div>
+                                    <div class="pp-preview-btn">Download on the App Store</div>
+                                    <div class="pp-preview-btn">Get it on Google Play</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Settings -->
+                    <div class="ws-settings-panel">
+                        <div class="ws-toggle-row">
+                            <div class="ws-toggle-info">
+                                <div class="ws-toggle-label">Enabled</div>
+                                <div class="ws-toggle-desc">Show popup to first-time visitors</div>
+                            </div>
+                            <label class="ws-switch">
+                                <input type="checkbox" id="pp-enabled" checked>
+                                <span class="ws-slider"></span>
+                            </label>
+                        </div>
+                        <div class="ws-divider"></div>
+                        <div class="ws-field">
+                            <label>Headline</label>
+                            <input type="text" id="pp-headline" value="Get the app." placeholder="Get the app." oninput="updatePpPreview()">
+                        </div>
+                        <div class="ws-field">
+                            <label>Subtitle</label>
+                            <textarea id="pp-subtitle" rows="3" placeholder="Description..." oninput="updatePpPreview()">Read the Qur'an, listen to reciters, and keep your progress with you — wherever you are.</textarea>
+                        </div>
+                        <div class="ws-divider"></div>
+                        <a href="/admin-images.html" class="ws-link-btn">
+                            <i data-lucide="image"></i>
+                            Manage popup image (portrait 9:16)
+                        </a>
+                        <div class="ws-status" id="pp-status"></div>
+                        <button class="ws-save-btn" onclick="savePpSection()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 3. Store Links ── -->
+            <div class="card ws-section">
+                <div class="card-header">
+                    <h2 class="card-title"><i data-lucide="smartphone" style="width:16px;height:16px;margin-inline-end:8px;vertical-align:middle;"></i> Store Links</h2>
+                    <p class="card-subtitle">App Store and Google Play URLs used in the footer section and popup.</p>
+                </div>
+                <div style="padding:0 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="ws-field">
+                        <label>App Store URL</label>
+                        <input type="url" id="link-ios" placeholder="https://apps.apple.com/...">
+                    </div>
+                    <div class="ws-field">
+                        <label>Google Play URL</label>
+                        <input type="url" id="link-play" placeholder="https://play.google.com/...">
+                    </div>
+                    <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;">
+                        <div class="ws-status" id="links-status" style="flex:1"></div>
+                        <button class="ws-save-btn" style="width:auto;padding:10px 24px;" onclick="saveLinks()">Save Links</button>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /content-area -->
+    </main>
+</div>
+
+<script src="utils/admin-auth.js"></script>
+<script src="utils/admin-sidebar.js"></script>
+<script>
+(async function () {
+    'use strict';
+
+    const KEYS = {
+        FA_VISIBLE:  'footer_app_visible',
+        FA_NAME:     'footer_app_name',
+        FA_DESC:     'footer_app_desc',
+        PP_ENABLED:  'popup_enabled',
+        PP_HEADLINE: 'popup_headline',
+        PP_SUBTITLE: 'popup_subtitle',
+        PP_IMG:      'app_popup_image_url',
+        IOS_LINK:    'app_store_url',
+        PLAY_LINK:   'play_store_url',
+    };
+
+    let supabase = null;
+
+    /* ── Init ── */
+    async function init() {
+        try {
+            const cfg = await fetch('/config').then(r => r.json());
+            if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+            supabase = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+            await loadAll();
+        } catch (e) {
+            console.error('Website admin init failed:', e);
+        }
+    }
+
+    async function loadAll() {
+        const allKeys = Object.values(KEYS);
+        const { data } = await supabase
+            .from('site_settings')
+            .select('key,value')
+            .in('key', allKeys);
+
+        if (!data) return;
+        const map = {};
+        data.forEach(r => { map[r.key] = r.value; });
+
+        /* Footer section */
+        const faVisible = map[KEYS.FA_VISIBLE] !== 'false';
+        document.getElementById('fa-visible').checked = faVisible;
+        if (map[KEYS.FA_NAME]) document.getElementById('fa-name').value = map[KEYS.FA_NAME];
+        if (map[KEYS.FA_DESC]) document.getElementById('fa-desc').value = map[KEYS.FA_DESC];
+
+        /* Popup */
+        const ppEnabled = map[KEYS.PP_ENABLED] !== 'false';
+        document.getElementById('pp-enabled').checked = ppEnabled;
+        if (map[KEYS.PP_HEADLINE]) document.getElementById('pp-headline').value = map[KEYS.PP_HEADLINE];
+        if (map[KEYS.PP_SUBTITLE]) document.getElementById('pp-subtitle').value = map[KEYS.PP_SUBTITLE];
+
+        /* Popup image preview */
+        if (map[KEYS.PP_IMG]) {
+            const img = document.getElementById('pp-preview-img');
+            img.src = map[KEYS.PP_IMG];
+            img.style.display = 'block';
+            document.getElementById('pp-img-empty').style.display = 'none';
+        }
+
+        /* Store links */
+        if (map[KEYS.IOS_LINK])  document.getElementById('link-ios').value  = map[KEYS.IOS_LINK];
+        if (map[KEYS.PLAY_LINK]) document.getElementById('link-play').value = map[KEYS.PLAY_LINK];
+
+        updateFaPreview();
+        updatePpPreview();
+    }
+
+    /* ── Live preview updaters ── */
+    window.updateFaPreview = function () {
+        document.getElementById('prev-fa-name').textContent = document.getElementById('fa-name').value || 'TafsirKurd App';
+        document.getElementById('prev-fa-desc').textContent = document.getElementById('fa-desc').value || '';
+    };
+    window.updatePpPreview = function () {
+        document.getElementById('prev-pp-h').textContent   = document.getElementById('pp-headline').value || 'Get the app.';
+        document.getElementById('prev-pp-sub').textContent = document.getElementById('pp-subtitle').value || '';
+    };
+
+    /* ── Upsert helper ── */
+    async function upsert(pairs) {
+        const rows = pairs.map(([key, value]) => ({ key, value }));
+        const { error } = await supabase
+            .from('site_settings')
+            .upsert(rows, { onConflict: 'key' });
+        return error;
+    }
+
+    function setStatus(id, msg, type) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.className = 'ws-status ' + (type || '');
+        if (type === 'ok') setTimeout(() => { el.textContent = ''; el.className = 'ws-status'; }, 2500);
+    }
+
+    /* ── Save handlers ── */
+    window.saveFaSection = async function () {
+        const btn = event.currentTarget;
+        btn.disabled = true;
+        setStatus('fa-status', 'Saving…', 'saving');
+        const err = await upsert([
+            [KEYS.FA_VISIBLE, document.getElementById('fa-visible').checked ? 'true' : 'false'],
+            [KEYS.FA_NAME,    document.getElementById('fa-name').value.trim()],
+            [KEYS.FA_DESC,    document.getElementById('fa-desc').value.trim()],
+        ]);
+        btn.disabled = false;
+        if (err) { setStatus('fa-status', 'Error: ' + err.message, 'err'); }
+        else      { setStatus('fa-status', 'Saved', 'ok'); }
+    };
+
+    window.savePpSection = async function () {
+        const btn = event.currentTarget;
+        btn.disabled = true;
+        setStatus('pp-status', 'Saving…', 'saving');
+        const err = await upsert([
+            [KEYS.PP_ENABLED,  document.getElementById('pp-enabled').checked ? 'true' : 'false'],
+            [KEYS.PP_HEADLINE, document.getElementById('pp-headline').value.trim()],
+            [KEYS.PP_SUBTITLE, document.getElementById('pp-subtitle').value.trim()],
+        ]);
+        btn.disabled = false;
+        if (err) { setStatus('pp-status', 'Error: ' + err.message, 'err'); }
+        else      { setStatus('pp-status', 'Saved', 'ok'); }
+    };
+
+    window.saveLinks = async function () {
+        const btn = event.currentTarget;
+        btn.disabled = true;
+        setStatus('links-status', 'Saving…', 'saving');
+        const err = await upsert([
+            [KEYS.IOS_LINK,   document.getElementById('link-ios').value.trim()],
+            [KEYS.PLAY_LINK,  document.getElementById('link-play').value.trim()],
+        ]);
+        btn.disabled = false;
+        if (err) { setStatus('links-status', 'Error: ' + err.message, 'err'); }
+        else      { setStatus('links-status', 'Saved', 'ok'); }
+    };
+
+    init();
+    if (window.lucide) lucide.createIcons();
+})();
+</script>
+</body>
+</html>

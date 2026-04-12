@@ -98,6 +98,7 @@ android/nul
 
 # Sensitive / personal data
 testers.csv
+AuthKey_*.p8
 
 # Local Claude settings
 .claude/

@@ -2,9 +2,9 @@
  * Prayer Athan Notifications — Capacitor LocalNotifications
  *
  * ID formula:  100 + (dayOffset * 5) + PRAYER_IDX[name]
- *   dayOffset: 0–6 (7 days ahead)
+ *   dayOffset: 0–27 (28 days ahead)
  *   PRAYER_IDX: Fajr=0, Dhuhr=1, Asr=2, Maghrib=3, Isha=4
- *   ID range: 100–134  |  Daily reminder: 1 (separate)
+ *   ID range: 100–239  |  Daily reminder: 1 (separate)
  *
  * Audio:
  *   Android — MP3 files in res/raw/athan_<voice>.mp3, one channel per voice
@@ -17,7 +17,7 @@
 
   var PRAYER_IDX = { Fajr: 0, Dhuhr: 1, Asr: 2, Maghrib: 3, Isha: 4 };
   var ID_BASE    = 100;
-  var MAX_DAYS   = 7;
+  var MAX_DAYS   = 28; // 4 weeks — athan fires even if user doesn't open the app for weeks
 
   // Kurdish prayer name fallbacks (used in notification body)
   var PRAYER_KMR_FB = {
@@ -49,10 +49,51 @@
             window.Capacitor.Plugins.LocalNotifications) || null;
   }
 
+  function getAthanAlarmPlugin() {
+    return (window.Capacitor &&
+            window.Capacitor.Plugins &&
+            window.Capacitor.Plugins.AthanAlarm) || null;
+  }
+
   function onIOS() {
     return !!(window.Capacitor && window.Capacitor.getPlatform &&
               window.Capacitor.getPlatform() === 'ios');
   }
+
+  /**
+   * Check native exact-alarm permission via AthanAlarmPlugin.
+   * Returns true on iOS (no restriction), true on Android < API 31,
+   * and the real canScheduleExactAlarms() result on Android 31+.
+   */
+  async function checkExactAlarmAllowed() {
+    if (onIOS()) return true;
+    var plugin = getAthanAlarmPlugin();
+    if (!plugin) return true; // plugin not available — assume OK
+    try {
+      var res = await plugin.canScheduleExact();
+      var allowed = res && res.canSchedule !== false;
+      if (!allowed) {
+        console.warn('[Athan] canScheduleExact() → false (API ' + (res && res.apiLevel) + ') — exact alarms revoked');
+      }
+      return allowed;
+    } catch(e) {
+      return true; // fail open
+    }
+  }
+
+  /**
+   * Open the exact-alarm settings screen directly (Android 12+).
+   * Falls back to app details settings on older devices.
+   */
+  async function openExactAlarmSettings() {
+    var plugin = getAthanAlarmPlugin();
+    if (plugin) {
+      try { await plugin.openExactAlarmSettings(); } catch(e) {}
+    }
+  }
+
+  // Expose for use from app.js warning dialogs
+  window._openExactAlarmSettings = openExactAlarmSettings;
 
   function getSelectedVoice() {
     var v = localStorage.getItem('prayerAthanVoice') || 'mishary';
@@ -64,12 +105,14 @@
   // One channel per voice, pointing to athan_<voice>.mp3 in res/raw/.
   // iOS ignores channels entirely — sound is set directly on the notification.
 
-  var CHANNEL_VER = 'v7';
+  var CHANNEL_VER = 'v8'; // bump forces re-creation on existing installs
 
   async function ensureAllChannels() {
     var LN = getLN();
     if (!LN || !LN.createChannel) return; // iOS doesn't have channels
-    if (localStorage.getItem('athanChannelVer') === CHANNEL_VER) return;
+    // Always re-create channels on each schedule call — Android silently drops channels
+    // if the user clears app data, revokes notification permissions, or on some Samsung
+    // firmware updates. The cost is negligible (~5ms) compared to a missing athan sound.
 
     // Delete all stale channels from previous versions
     var oldIds = ['athan', 'athan2'];
@@ -113,8 +156,7 @@
       }).catch(function(e) { console.warn('[Athan] createChannel error:', e && e.message); });
     }
 
-    localStorage.setItem('athanChannelVer', CHANNEL_VER);
-    console.log('[Athan] notification channels created for', ATHAN_VOICES.length, 'voices');
+    console.log('[Athan] notification channels verified/created for', ATHAN_VOICES.length, 'voices');
   }
 
   // ── Cancel all pending athan notifications ─────────────────────────────────
@@ -185,7 +227,17 @@
       return { count: 0, error: 'no-plugin', details: [] };
     }
 
-    // Permission check — idempotent, no dialog if already granted
+    // Exact-alarm permission check (Android 12+ / API 31+).
+    // Must pass before we call LN.schedule() — otherwise Android silently
+    // downgrades to inexact alarms which Doze can delay by up to 15 minutes.
+    var exactOk = await checkExactAlarmAllowed();
+    if (!exactOk) {
+      console.warn('[Athan] exact alarm permission denied — showing warning to user');
+      if (window._showAthanAlarmPermWarning) window._showAthanAlarmPermWarning();
+      return { count: 0, error: 'exact-alarm-denied', exactDenied: true, details: [] };
+    }
+
+    // Notification permission check — idempotent, no dialog if already granted
     var perm = await LN.requestPermissions().catch(function() { return {}; });
     var permDisplay = perm.display || '';
     var permReceive = perm.receive || '';
@@ -271,15 +323,45 @@
 
     var actualCount = schedErr ? 0 : intendedCount;
 
+    // Verify: spot-check OS pending queue to detect silent exact-alarm fallback.
+    // If we intended to schedule but the OS has 0 athan notifications pending,
+    // exact alarm permission was likely revoked — warn the user.
+    if (!schedErr && intendedCount > 0 && LN.getPending) {
+      try {
+        var pending = await LN.getPending();
+        var pendingAthan = ((pending && pending.notifications) || []).filter(function(n) {
+          return n.id >= ID_BASE && n.id < ID_BASE + MAX_DAYS * 5;
+        });
+        if (pendingAthan.length === 0) {
+          console.warn('[Athan] ⚠️ schedule() returned no error but 0 notifications are pending in OS — exact alarm permission may be revoked');
+          localStorage.setItem('athanExactAlarmWarned', '1');
+          if (window._showAthanAlarmPermWarning) window._showAthanAlarmPermWarning();
+        } else {
+          localStorage.removeItem('athanExactAlarmWarned');
+          console.log('[Athan] OS verification: ' + pendingAthan.length + ' athan notifications confirmed pending');
+        }
+      } catch(e) {
+        console.warn('[Athan] getPending() verification error (non-fatal):', e && e.message);
+      }
+    }
+
     console.log('[Athan] schedule complete: city=' + city + ' voice=' + voice +
                 ' channel=' + channelId + ' count=' + actualCount +
                 (schedErr ? ' ERROR=' + schedErr : ''));
 
     if (actualCount > 0) {
+      var nowTs = Date.now();
       localStorage.setItem('prayerLastScheduleDate', daysData[0].dateISO);
       localStorage.setItem('prayerLastScheduleCount', String(actualCount));
       localStorage.setItem('prayerLastScheduleCity', city);
       try { localStorage.setItem('prayerAthanFireLog', JSON.stringify(details)); } catch(e) {}
+
+      // Mirror timestamp + athan state to native SharedPreferences so
+      // AthanRescheduleWorker (WorkManager) can check without a running WebView.
+      var _plugin = getAthanAlarmPlugin();
+      if (_plugin && _plugin.mirrorScheduleTs) {
+        _plugin.mirrorScheduleTs({ ts: nowTs, athanEnabled: true }).catch(function() {});
+      }
     }
 
     return { count: actualCount, error: schedErr, details: details };
@@ -307,7 +389,7 @@
       return { notifications: [] };
     });
     var all   = (result && result.notifications) || [];
-    var athan = all.filter(function(n) { return n.id >= 100 && n.id <= 134; });
+    var athan = all.filter(function(n) { return n.id >= ID_BASE && n.id < ID_BASE + MAX_DAYS * 5; });
     var NAMES = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
     console.log('═══════════════════════════════════════════════════');

@@ -15,6 +15,18 @@
   var bg={dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc',light:'#fafafa'}[theme]||'#0a0a0a';
   document.documentElement.style.background=bg;
   document.documentElement.style.setProperty('--bg',bg);
+  // Splash background — exact per-theme color, independent of app --bg
+  // light:#ffffff  dark:#000000  noor/parchment:#f3e8cc  sakina/emerald:#0c1c12
+  var _sbg={light:'#ffffff',dark:'#000000',noor:'#f3e8cc',sakina:'#0c1c12'}[theme]||'#ffffff';
+  document.documentElement.style.setProperty('--splash-bg',_sbg);
+  // Theme → splash asset name
+  // light→splash-light  dark→splash-dark  noor→splash-parchment  sakina→splash-emerald
+  var _sm={light:'light',dark:'dark',noor:'parchment',sakina:'emerald'};
+  window._splashName=_sm[theme]||'light';
+  var _pl=document.createElement('link');
+  _pl.rel='preload';_pl.as='video';_pl.type='video/mp4';
+  _pl.href='/assets/videos/splash-'+window._splashName+'.mp4';
+  document.head.appendChild(_pl);
 })();
 // Device-safe rendering detection — default OFF, only enable on confirmed safe devices
 (function(){
@@ -40,19 +52,16 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 }
 </script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preload" href="/assets/videos/logo-animation.mp4" as="video" type="video/mp4">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
 <link rel="preload" href="/assets/icons/genc-hadith-bg.webp" as="image" type="image/webp">
 <link rel="preload" href="/assets/icons/genc-dua-bg.webp" as="image" type="image/webp">
 <link rel="preload" href="/assets/icons/genc-tasbih-bg.webp" as="image" type="image/webp">
 <link rel="preload" href="/assets/icons/genc-asma-bg.webp" as="image" type="image/webp">
 <link rel="preload" href="/assets/icons/genc-books-bg.webp" as="image" type="image/webp">
-<link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin="">
-<link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin="">
-<link rel="preload" href="/assets/fonts/surah-name-v4.woff2?v=16" as="font" type="font/woff2" crossorigin="">
-<link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+<link rel="preload" href="/assets/fonts/hafs.woff2?v=17" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="/assets/fonts/surah-name-v4.woff2?v=17" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="">
+<link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
 <style>
@@ -77,7 +86,7 @@ img{display:block;max-width:100%}
   --shadow-s:0 1px 3px rgba(0,0,0,.06);
   --shadow-m:0 4px 12px rgba(0,0,0,.08);
   --shadow-l:0 12px 32px rgba(0,0,0,.12);
-  --font-ar:'KFGQPC Hafs','Scheherazade New',serif;
+  --font-ar:'KFGQPC Hafs','Scheherazade New','IBM Plex Sans Arabic',sans-serif;
   --font-su:'SurahName',serif;
   --ar-size:2.0rem;--tf-size:1.0rem;--line-h:2.2;--ayah-px:16px;
   --tab-h:60px;--hdr-h:52px;
@@ -152,10 +161,10 @@ body{background:var(--bg);color:var(--text)}
 .safe-render .about-section img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
 
 /* ===== SPLASH ===== */
-.splash{position:fixed;inset:0;z-index:9999;background:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
+.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#ffffff);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
 @keyframes splashIn{from{opacity:0}to{opacity:1}}
 .splash-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .12s ease}
+.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#ffffff);opacity:0;transition:opacity .12s ease}
 .splash.hide{opacity:0;pointer-events:none}
 
 /* ===== APP CONTAINER ===== */
@@ -192,17 +201,15 @@ body{background:var(--bg);color:var(--text)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ===== APP HEADER ===== */
-.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:0 16px;min-height:56px;display:flex;align-items:center;gap:12px}
-[data-theme="dark"] .hdr{background:var(--bg)}
-[data-theme="sakina"] .hdr{background:var(--bg)}
-[data-theme="noor"] .hdr{background:var(--bg)}
-.hdr-logo{display:flex;align-items:center;gap:10px;flex:1}
-.hdr-logo img{width:40px;height:40px;object-fit:contain}
-.hdr-logo span{font-size:1.05rem;font-weight:800;letter-spacing:-.2px}
-.hdr-title{font-size:1.1rem;font-weight:800;flex:1;letter-spacing:-.2px}
-.hdr-btn{width:40px;height:40px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:background .2s,transform .2s}
-.hdr-btn:active{background:var(--surface-h);transform:scale(.9)}
-.hdr-text-btn{height:36px;padding:0 14px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);font-size:.78rem;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;transition:transform .15s var(--ease),opacity .15s}
+.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px}
+.hdr-logo{display:flex;align-items:center;gap:8px;flex:1}
+.hdr-logo img{width:26px;height:26px;object-fit:contain}
+.hdr-logo span{font-size:1.15rem;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+.hdr-title{font-size:1.15rem;font-weight:800;flex:1;letter-spacing:-.3px;color:var(--text)}
+.hdr-btn{width:38px;height:38px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--text2);transition:background .15s,transform .15s}
+.hdr-btn:active{background:var(--surface-h);transform:scale(.88)}
+.hdr-btn.on{background:var(--accent);color:var(--accent-t)}
+.hdr-text-btn{height:34px;padding:0 13px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;transition:transform .12s var(--ease),opacity .12s}
 .hdr-text-btn:active{transform:scale(.92);opacity:.85}
 
 /* ===== SEARCH BAR ===== */
@@ -289,6 +296,12 @@ body{background:var(--bg);color:var(--text)}
 .mushaf-page-ph{padding:40px 0;text-align:center;color:var(--text3);font-size:1.4rem}
 .mushaf-loading{padding:80px 0;text-align:center;color:var(--text3);font-size:1.6rem}
 .mushaf-error{padding:48px 20px;text-align:center;color:var(--danger);font-size:.9rem}
+.mushaf-offline-err{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px}
+.mushaf-offline-err-msg{font-size:.88rem;color:var(--text2);line-height:1.6}
+.mushaf-offline-switch-btn{padding:10px 22px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);font-size:.82rem;font-weight:700;cursor:pointer}
+.mushaf-page-err{color:var(--text3);opacity:.4}
+.mushaf-font-offline{padding:32px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.mushaf-font-offline-msg{font-size:.8rem;color:var(--text3);line-height:1.5}
 /* Mushaf tafsir sheet */
 .mushaf-tafsir-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}
 .mushaf-tafsir-pane{width:100%;min-height:220px;max-height:75vh;background:var(--surface);border-radius:20px 20px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .26s var(--ease)}
@@ -416,6 +429,56 @@ body{background:var(--bg);color:var(--text)}
 .reciter-card-flag{font-size:.9rem;line-height:1}
 .reciter-card-style{font-size:.6rem;padding:1px 5px;border-radius:6px;background:var(--bg3);color:var(--text3);font-weight:700}
 .reciter-card.on .reciter-card-style{background:rgba(0,0,0,.12);color:var(--text2)}
+/* ── Reciter offline download UI ── */
+.reciter-dl-btn{width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--text3);flex-shrink:0;cursor:pointer;transition:background .15s,transform .1s;border:none}
+.reciter-dl-btn:active{transform:scale(.88)}
+.reciter-dl-btn.has-dl{background:var(--success);color:#fff}
+.reciter-dl-btn.partial{background:var(--bg3);color:var(--accent);border:1.5px solid var(--accent)}
+.reciter-dl-btn.corrupt{background:rgba(220,38,38,.12);color:var(--danger)}
+.reciter-dl-btn.downloading{background:var(--accent);color:var(--accent-t)}
+/* Download management sheet */
+.dl-sheet{position:fixed;left:0;right:0;bottom:0;max-height:75%;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:600;display:none;flex-direction:column;overflow:hidden}
+.dl-sheet.open{display:flex;animation:slideUp .3s var(--ease)}
+.dl-sheet-pull{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 4px;flex-shrink:0}
+.dl-sheet-hdr{display:flex;align-items:center;gap:10px;padding:8px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.dl-sheet-name{flex:1;font-size:.95rem;font-weight:700;color:var(--text);direction:rtl}
+.dl-sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--text2);cursor:pointer;border:none}
+.dl-sheet-body{flex:1;overflow-y:auto;padding:16px 16px 40px}
+.dl-status-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.dl-status-lbl{font-size:.78rem;color:var(--text3)}
+.dl-status-val{font-size:.78rem;font-weight:700;color:var(--text2)}
+.dl-progress-wrap{margin-bottom:16px}
+.dl-progress-bar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;margin-bottom:4px}
+.dl-progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+.dl-progress-txt{font-size:.7rem;color:var(--text3);text-align:center}
+.dl-action-btn{width:100%;padding:13px;border-radius:var(--r-m);font-size:.88rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;border:none;transition:transform .1s,opacity .1s}
+.dl-action-btn:active{transform:scale(.97);opacity:.85}
+.dl-action-btn.primary{background:var(--accent);color:var(--accent-t)}
+.dl-action-btn.danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger);margin-top:10px}
+.dl-action-btn.cancel-btn{background:var(--bg3);color:var(--text2);margin-top:10px}
+.dl-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:599;display:none}
+.dl-overlay.on{display:block}
+/* Download scope selector */
+.dl-scope-seg{display:flex;gap:4px;margin-bottom:14px}
+.dl-scope-btn{flex:1;padding:8px 6px;border-radius:var(--r-s);font-size:.78rem;font-weight:600;color:var(--text3);background:var(--bg2);border:none;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-scope-btn.on{background:var(--accent);color:var(--accent-t)}
+/* Wi-Fi row in download sheet */
+.dl-wifi-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-bottom:6px}
+.dl-wifi-lbl{font-size:.82rem;color:var(--text2)}
+/* Corrupt badge */
+.dl-corrupt-badge{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r-s);background:rgba(220,38,38,.1);color:var(--danger);font-size:.78rem;margin-bottom:10px}
+/* Verify integrity row */
+.dl-verify-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);margin-top:6px}
+.dl-verify-lbl{font-size:.72rem;color:var(--text3)}
+.dl-verify-btn{padding:6px 12px;border-radius:var(--r-s);background:var(--bg3);color:var(--text2);font-size:.75rem;font-weight:600;border:none;cursor:pointer}
+.dl-verify-btn:disabled{opacity:.5}
+/* Profile — downloads section */
+.pp-dl-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.pp-dl-row:last-child{border-bottom:none}
+.pp-dl-info{flex:1;min-width:0}
+.pp-dl-name{font-size:.84rem;font-weight:600;color:var(--text);direction:rtl}
+.pp-dl-size{font-size:.72rem;color:var(--text3);margin-top:1px}
+.pp-dl-del{width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--danger);cursor:pointer;border:none;flex-shrink:0}
 .repeat-count-row{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px}
 .repeat-count-btn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:2px solid var(--border);font-size:1.2rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .repeat-count-btn:active{transform:scale(.9)}
@@ -804,6 +867,18 @@ body{background:var(--bg);color:var(--text)}
 .s-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;min-height:54px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:6px;-webkit-tap-highlight-color:transparent;transition:background .15s}
 .s-row:last-child{margin-bottom:0}
 .s-row:active{background:var(--surface-h)}
+/* sync panel card */
+.sync-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:6px;display:flex;flex-direction:column;gap:9px}
+.sync-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sync-card-info{flex:1;min-width:0}
+.sync-card-email{font-size:.79rem;color:var(--text2);direction:ltr;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
+.sync-status-line{font-size:.78rem;font-weight:600;transition:color .3s}
+.sync-divider{height:1px;background:var(--border);margin:1px 0}
+.sync-section-lbl{font-size:.68rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.sync-section-lbl--device{opacity:.7}
+.sync-chips{display:flex;flex-wrap:wrap;gap:5px 6px}
+.sync-chip{font-size:.71rem;padding:3px 9px;border-radius:var(--r-full);background:var(--surface-h);color:var(--text2);display:inline-flex;align-items:center;gap:4px}
+.sync-chip--muted{opacity:.5}
 /* setting-row — label + action button layout */
 .setting-row--slider{flex-direction:column;align-items:stretch;gap:8px}
 .setting-row--slider .slider{width:100%}
@@ -972,6 +1047,13 @@ body{background:var(--bg);color:var(--text)}
 /* Sections */
 .pp-section{padding:0 16px;margin-bottom:0}
 .pp-section-title{font-size:.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:18px 0 8px}
+.pp-section-title-row{display:flex;align-items:center;justify-content:space-between;font-size:.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:18px 0 8px}
+.pp-devices-refresh{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem;padding:4px 6px;border-radius:var(--r-s);line-height:1}
+.pp-devices-refresh:active{color:var(--accent)}
+.pp-devices-refresh:disabled{opacity:.4;pointer-events:none}
+.pp-devices-note{font-size:.72rem;color:var(--text3);padding:6px 0 10px;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.pp-device-badge--online{background:#43a047}
+.pp-device-online-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#43a047;margin-inline-end:5px;vertical-align:middle;flex-shrink:0}
 .pp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);overflow:hidden;margin-bottom:0}
 .pp-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--border)}
 .pp-row:last-child{border-bottom:none}
@@ -984,6 +1066,28 @@ body{background:var(--bg);color:var(--text)}
 .pp-save-btn{height:44px;background:var(--accent);color:var(--accent-t,#fff);border:none;border-radius:var(--r-m);font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer;padding:0 20px;align-self:flex-end;min-width:100px}
 .pp-save-btn:disabled{opacity:.45}
 /* Action buttons */
+/* device list */
+.pp-devices-list{padding:0 16px}
+.pp-devices-loading{font-size:.82rem;color:var(--text3);padding:8px 0;display:flex;align-items:center;gap:8px}
+.pp-devices-empty{font-size:.82rem;color:var(--text3);padding:8px 0}
+.pp-device-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.pp-device-row:last-child{border-bottom:none}
+.pp-device-row--gone{opacity:0;transition:opacity .28s}
+.pp-device-row--stale{opacity:.55}
+.pp-device-row--stale .pp-device-time{font-style:italic}
+.pp-device-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.pp-device-icon{width:32px;height:32px;border-radius:var(--r-m);background:var(--surface-h);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:var(--text2);flex-shrink:0}
+.pp-device-row--current .pp-device-icon{background:var(--accent);color:var(--accent-t)}
+.pp-device-info{min-width:0}
+.pp-device-name{font-size:.85rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pp-device-badge{font-size:.65rem;padding:2px 6px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);font-weight:700}
+.pp-device-time{font-size:.73rem;color:var(--text3);margin-top:1px}
+.pp-device-remove{width:32px;height:32px;border-radius:var(--r-m);background:transparent;border:1px solid var(--border);color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:.85rem}
+.pp-device-remove:active{background:rgba(231,76,60,.12);color:#e74c3c;border-color:#e74c3c}
+.pp-device-remove--confirm{background:rgba(231,76,60,.1);color:#e74c3c;border-color:#e74c3c}
+.pp-device-all-out{margin:10px 16px 0;width:calc(100% - 32px);height:42px;border-radius:var(--r-l);background:transparent;border:1px solid var(--border);color:var(--text3);font-size:.82rem;font-weight:600;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.pp-device-all-out:active{background:rgba(231,76,60,.08);color:#e74c3c;border-color:#e74c3c}
+.pp-device-all-out--confirm{background:rgba(231,76,60,.1);color:#e74c3c;border-color:#e74c3c}
 .pp-actions{padding:0 16px;display:flex;flex-direction:column;gap:8px;margin-top:0}
 .pp-action-btn{width:100%;height:48px;border-radius:var(--r-l);background:var(--surface);border:1px solid var(--border);font-weight:600;font-size:.9rem;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;color:var(--text)}
 .pp-action-btn:active{transform:scale(.98)}
@@ -1686,7 +1790,7 @@ body{background:var(--bg);color:var(--text)}
 .adhkar-card{padding:18px 20px 14px;border-bottom:1px solid var(--border);position:relative;padding-right:26px}
 .adhkar-card::before{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--accent),var(--accent-dim,var(--accent)));border-radius:0 4px 4px 0;opacity:.7}
 .adhkar-card:last-child{border-bottom:none}
-.adhkar-card-ar{font-family:'Scheherazade New',serif;font-size:1.28rem;line-height:2.3;color:var(--text);direction:rtl;text-align:right;margin-bottom:10px}
+.adhkar-card-ar{font-family:'Scheherazade New','IBM Plex Sans Arabic',sans-serif;font-size:1.28rem;line-height:2.3;color:var(--text);direction:rtl;text-align:right;margin-bottom:10px}
 .adhkar-card-footer{display:flex;justify-content:space-between;align-items:center;direction:rtl}
 .adhkar-card-src{font-size:.68rem;color:var(--text3)}
 .adhkar-card-right{display:flex;align-items:center;gap:6px}
@@ -1701,7 +1805,7 @@ body{background:var(--bg);color:var(--text)}
 .dua-card{padding:20px 16px 14px;border-bottom:1px solid var(--border);position:relative;padding-right:22px}
 .dua-card::after{content:'';position:absolute;right:0;top:16px;bottom:16px;width:3px;border-radius:3px;background:var(--accent);opacity:.5}
 .dua-card:last-child{border-bottom:none}
-.dua-card-ar{font-family:'Scheherazade New',serif;font-size:1.3rem;line-height:2.2;color:var(--text);direction:rtl;text-align:right;margin-bottom:10px}
+.dua-card-ar{font-family:'Scheherazade New','IBM Plex Sans Arabic',sans-serif;font-size:1.3rem;line-height:2.2;color:var(--text);direction:rtl;text-align:right;margin-bottom:10px}
 .dua-ayah-num{color:var(--accent);font-family:'KFGQPC Hafs',serif}
 .dua-card-ku{font-size:.84rem;line-height:1.8;color:var(--text2);direction:rtl;text-align:right;padding-top:10px;border-top:1px solid var(--border)}
 .dua-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;direction:rtl}
@@ -1719,7 +1823,7 @@ body{background:var(--bg);color:var(--text)}
 .asma-card{background:var(--bg2);border-radius:var(--r-l);padding:14px 12px 10px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;position:relative;cursor:pointer;transition:border-color .18s}
 .asma-card:active{border-color:var(--accent)}
 .asma-num{position:absolute;top:9px;right:9px;min-width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-t);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1}
-.asma-ar{font-family:'Scheherazade New',serif;font-size:1.22rem;line-height:1.9;color:var(--text);direction:rtl;margin-top:18px}
+.asma-ar{font-family:'Scheherazade New','IBM Plex Sans Arabic',sans-serif;font-size:1.22rem;line-height:1.9;color:var(--text);direction:rtl;margin-top:18px}
 .asma-trans{font-size:.64rem;color:var(--accent);font-weight:600;letter-spacing:.02em}
 .asma-ku{font-size:.72rem;color:var(--text2);direction:rtl;line-height:1.5;margin-top:2px}
 .asma-card-footer{display:flex;justify-content:flex-end;width:100%;margin-top:4px}
@@ -1935,7 +2039,23 @@ body{background:var(--bg);color:var(--text)}
 </div>
 
 <div class="splash" id="splash">
-  <video id="splashVideo" class="splash-video" src="/assets/videos/logo-animation.mp4" poster="/assets/images/logo.png" muted playsinline preload="auto" disablepictureinpicture style="opacity:1"></video>
+  <video id="splashVideo" class="splash-video" muted playsinline preload="auto" disablepictureinpicture style="opacity:1"></video>
+  <script>
+  (function(){
+    var v=document.getElementById('splashVideo');
+    if(!v)return;
+    var n=window._splashName||'light';
+    v.poster='/assets/images/splash-'+n+'.png';
+    v.src='/assets/videos/splash-'+n+'.mp4';
+    v.onerror=function(){
+      v.onerror=null;
+      v.poster='/assets/images/logo.png';
+      v.src='/assets/videos/logo-animation.mp4';
+      v.load();
+    };
+    v.load();
+  })();
+  </script>
 </div>
 
 <!-- APP -->
@@ -1993,7 +2113,7 @@ body{background:var(--bg);color:var(--text)}
 <section class="panel" id="panelBookmarks" data-tab="bookmarks">
   <div class="hdr">
     <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title"><i class="fas fa-bookmark"></i> <span data-i18n="header.bookmarks" data-t="android_span_2">نیشانەکری</span></div>
+    <div class="hdr-title"><span data-i18n="header.bookmarks" data-t="android_span_2">نیشانەکری</span></div>
   </div>
   <div id="bmStats"></div>
   <div id="bmControls"></div>
@@ -2004,7 +2124,7 @@ body{background:var(--bg);color:var(--text)}
 <section class="panel" id="panelGoals" data-tab="goals">
   <div class="hdr">
     <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title"><i class="fas fa-bullseye"></i> <span data-i18n="header.goals" data-t="android_span_3">ئارمانج</span></div>
+    <div class="hdr-title"><span data-i18n="header.goals" data-t="android_span_3">ئارمانج</span></div>
     <button class="hdr-text-btn" onclick="App.openWizard()"><i class="fas fa-plus"></i> <span data-i18n="header.goals_new" data-t="android_span_4">نوی</span></button>
   </div>
   <div id="goalsContent"></div>
@@ -2014,7 +2134,7 @@ body{background:var(--bg);color:var(--text)}
 <section class="panel" id="panelIslamvoice" data-tab="islamvoice">
   <div id="ivHome" class="iv-home">
     <div class="hdr">
-      <div class="hdr-title"><i class="fas fa-video"></i> <span data-i18n="header.islamvoice" data-t="android_span_5">ئیسلام ڤۆیس</span></div>
+      <div class="hdr-title"><span data-i18n="header.islamvoice" data-t="android_span_5">ئیسلام ڤۆیس</span></div>
       <div style="display:flex;gap:2px">
         <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user"></i></button>
         <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو" data-i18n-title="iv.history_title"><i class="fas fa-clock-rotate-left"></i></button>
@@ -2069,7 +2189,7 @@ body{background:var(--bg);color:var(--text)}
 
 <!-- TAB: SETTINGS -->
 <section class="panel" id="panelSettings" data-tab="settings">
-  <div class="hdr"><div class="hdr-title"><i class="fas fa-cog"></i> <span data-i18n="header.settings" data-t="android_span_6">ڕێکخستن</span></div></div>
+  <div class="hdr"><div class="hdr-title"><span data-i18n="header.settings" data-t="android_span_6">ڕێکخستن</span></div></div>
   <div class="settings-content" id="settingsContent"></div>
 </section>
 
@@ -2077,7 +2197,7 @@ body{background:var(--bg);color:var(--text)}
 <section class="panel" id="panelGencine" data-tab="gencine">
   <div class="hdr">
     <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title" id="gencineHdrTitle"><i class="fas fa-gem"></i> <span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
+    <div class="hdr-title" id="gencineHdrTitle"><span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
     <div id="booksHdrBtns" style="display:none;gap:2px">
       <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
       <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
@@ -2091,7 +2211,7 @@ body{background:var(--bg);color:var(--text)}
 <!-- TAB: PRAYER TIMES -->
 <section class="panel" id="panelPrayer" data-tab="prayer">
   <div class="hdr">
-    <div class="hdr-title"><i class="fas fa-mosque"></i> <span data-i18n="header.prayer">کاتا نوێژ</span></div>
+    <div class="hdr-title"><span data-i18n="header.prayer">کاتا نوێژ</span></div>
     <div style="display:flex;gap:4px">
       <button class="hdr-btn" onclick="PrayerUI.openQibla()" title="Qibla"><i class="fas fa-compass"></i></button>
       <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
@@ -2210,6 +2330,15 @@ body{background:var(--bg);color:var(--text)}
 
 <!-- PROFILE PAGE -->
 <div class="profile-panel" id="profilePanel"></div>
+<div class="dl-overlay" id="dlOverlay"></div>
+<div class="dl-sheet" id="dlSheet">
+  <div class="dl-sheet-pull"></div>
+  <div class="dl-sheet-hdr">
+    <div class="dl-sheet-name" id="dlSheetName"></div>
+    <button class="dl-sheet-close" id="dlSheetClose"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="dl-sheet-body" id="dlSheetBody"></div>
+</div>
 
 
 <!-- TAB BAR -->
@@ -2394,11 +2523,11 @@ body{background:var(--bg);color:var(--text)}
 <script src="/prayer/prayer.qibla.js?v=20260403b"></script>
 <script src="/prayer/prayer.ui.js?v=20260326b"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="/dhikr/dua-data.js?v=20260326b"></script>
-<script src="/dhikr/dhikr.js?v=20260326b"></script>
+<!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
 <script src="/quran/search.js?v=20260326b"></script>
 <script src="/rating.js?v=20260401a"></script>
 <script src="/audio-cache.js?v=20260406a"></script>
+<script src="/audio-downloads.js?v=1"></script>
 <script src="/app/app.js?v=20260326b"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */

@@ -368,6 +368,7 @@ var SURAHS=[
 {n:109,en:'Al-Kafirun',ar:'الكافرون',a:6,t:'Meccan'},{n:110,en:'An-Nasr',ar:'النصر',a:3,t:'Medinan'},{n:111,en:'Al-Masad',ar:'المسد',a:5,t:'Meccan'},
 {n:112,en:'Al-Ikhlas',ar:'الإخلاص',a:4,t:'Meccan'},{n:113,en:'Al-Falaq',ar:'الفلق',a:5,t:'Meccan'},{n:114,en:'An-Nas',ar:'الناس',a:6,t:'Meccan'}
 ];
+window.SURAHS=SURAHS; // expose for audio-downloads.js (outside IIFE)
 
 var JUZS={1:1,2:2,3:2,4:3,5:4,6:4,7:5,8:6,9:7,10:8,11:9,12:11,13:12,14:13,15:15,16:17,17:18,18:20,19:21,20:23,21:25,22:27,23:29,24:31,25:34,26:36,27:39,28:46,29:51,30:67};
 
@@ -562,7 +563,7 @@ var S={
   rm:{mode:'single',playCount:2,verseRepeat:1,delay:0,isPlaying:false,currentPlay:0},
   readSession:null,
   todayVerses:null,
-  supabase:null,user:null,syncInterval:null,isSyncing:false,lastSyncTime:0,realtimeChannel:null,
+  supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,lastSyncTime:0,realtimeChannel:null,
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:localStorage.getItem('mushafFont')||'qcf4',
@@ -692,6 +693,33 @@ function init(){
             // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
             // are skipped for today's goal count.
             initTodayVerses();
+            // On every foreground resume: check exact alarm permission via native bridge.
+            // If it was revoked → show warning; if it was just granted → clear rate-limit
+            // and reschedule immediately (covers the case where user came back from Settings).
+            (function(){
+              var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
+              if(_AA&&window.PrayerUI&&window.S&&window.S.prayerAthanEnabled){
+                _AA.canScheduleExact().then(function(r){
+                  if(r&&r.canSchedule===false){
+                    if(window._showAthanAlarmPermWarning)window._showAthanAlarmPermWarning();
+                  } else if(r&&r.canSchedule===true&&localStorage.getItem('athanExactAlarmWarned')){
+                    // Just got permission back — reschedule right now
+                    localStorage.removeItem('athanExactAlarmWarned');
+                    localStorage.removeItem('prayerLastScheduleTs');
+                    PrayerUI.initScheduleOnStart();
+                  }
+                }).catch(function(){});
+                // Check battery optimization on resume — re-check every 7 days in case user
+                // reverted the exemption (Samsung OEM can reset it after OS updates).
+                // Re-check battery opt every 7 days — Samsung OEM can silently revoke exemption
+                var _bwAge=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
+                if(Date.now()-_bwAge>7*24*60*60*1000){
+                  _AA.isIgnoringBatteryOpts&&_AA.isIgnoringBatteryOpts().then(function(r){
+                    if(r&&r.ignoring===false&&window._showBatteryOptWarning)window._showBatteryOptWarning();
+                  }).catch(function(){});
+                }
+              }
+            })();
             // Reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
             // Rebuild prayer panel if active — handles overnight stale date
@@ -977,7 +1005,6 @@ function init(){
           setTimeout(function(){_handlePushDeepLink(_pl.type,_pl.id);},300);
         }
         setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},400);
-        setTimeout(precacheV4Fonts,3000);
         console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
       });
     });
@@ -1166,7 +1193,7 @@ function applySizes(){
   document.documentElement.style.setProperty('--ar-size',S.arSize+'rem');
   document.documentElement.style.setProperty('--tf-size',S.tfSize+'rem');
   document.documentElement.style.setProperty('--line-h',String(S.lineH));
-  var fontVal=S.readerFont==='amiri'?"'Amiri Quran',serif":"'KFGQPC Hafs','Scheherazade New',serif";
+  var fontVal=S.readerFont==='amiri'?"'Amiri Quran','KFGQPC Hafs',sans-serif":"'KFGQPC Hafs','Scheherazade New','IBM Plex Sans Arabic',sans-serif";
   document.documentElement.style.setProperty('--font-ar',fontVal);
 }
 var _qsDimTimer=null;
@@ -1317,8 +1344,36 @@ App.tab=function(name){
       requestAnimationFrame(function(){if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();});
     });
   }
-  if(name==='gencine'&&window.GencineUI){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}}
+  if(name==='gencine'){_loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}});}
 };
+
+/* ===== GENCINE LAZY LOADER ===== */
+// dua-data.js + dhikr.js are not loaded at startup — they're pulled in on first Gencine tab visit.
+// All callers in App.tab guard with window.GencineUI so they're safe until this resolves.
+var _gencineScriptsLoaded = false;
+var _gencineScriptsCbs = [];
+var _gencineScriptsLoading = false;
+function _loadGencineScripts(cb) {
+  if (_gencineScriptsLoaded) { if (cb) cb(); return; }
+  if (cb) _gencineScriptsCbs.push(cb);
+  if (_gencineScriptsLoading) return;
+  _gencineScriptsLoading = true;
+  function _ls(src, next) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = next;
+    s.onerror = next; // fail silently so the tab still opens even on network error
+    document.body.appendChild(s);
+  }
+  _ls('/dhikr/dua-data.js?v=20260326b', function() {
+    _ls('/dhikr/dhikr.js?v=20260326b', function() {
+      _gencineScriptsLoaded = true;
+      _gencineScriptsLoading = false;
+      var cbs = _gencineScriptsCbs.splice(0);
+      cbs.forEach(function(fn) { try { fn(); } catch(e) {} });
+    });
+  });
+}
 
 /* ===== TAP GUARD ===== */
 // Returns true if the call should be IGNORED (too soon after last call)
@@ -1333,12 +1388,19 @@ function tapGuard(key,ms){
 
 /* ===== TOAST ===== */
 var _toastTimer=null;
+var _toastMsg=null;
 function toast(msg){
-  var t=$('toast');
-  clearTimeout(_toastTimer); // prevent stacking: reset timer if called rapidly
-  t.textContent=msg;
-  t.classList.add('on');
-  _toastTimer=setTimeout(function(){t.classList.remove('on');_toastTimer=null;},2500);
+  var el=$('toast');
+  clearTimeout(_toastTimer);
+  // Same message still visible → silently extend, no re-animation (prevents spam)
+  if(msg===_toastMsg&&el.classList.contains('on')){
+    _toastTimer=setTimeout(function(){el.classList.remove('on');_toastTimer=null;_toastMsg=null;},2500);
+    return;
+  }
+  _toastMsg=msg;
+  el.textContent=msg;
+  el.classList.add('on');
+  _toastTimer=setTimeout(function(){el.classList.remove('on');_toastTimer=null;_toastMsg=null;},2500);
 }
 
 /* ===== HAPTIC ===== */
@@ -1646,31 +1708,117 @@ function scheduleDailyVerse(enabled,time){
   }).catch(function(){});
 }
 
-/* Show a one-time battery-optimization guidance dialog on Samsung/Android */
+/* Show a one-time battery-optimization guidance dialog on Android */
 window._showNotifSetupHint=function _showNotifSetupHint(force){
-  if(!window.Capacitor)return; // web — skip
-  if(window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')return; // iOS — no Samsung hint
+  if(!window.Capacitor)return;
+  if(window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')return;
   if(!force&&localStorage.getItem('notifHintShown'))return;
   localStorage.setItem('notifHintShown','1');
-  // Build modal using DOM (no innerHTML)
   var overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding:0 0 var(--safe-b,20px)';
   var card=document.createElement('div');
   card.style.cssText='width:100%;max-width:480px;background:var(--surface,#fff);border-radius:20px 20px 0 0;padding:24px 20px 20px;text-align:center';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text,#000)';
-  title.textContent=t('notif.setup_title')||'ئاگادارکرنەکان فەرمان بکە ✓';
+  title.textContent=t('notif.setup_title')||'ئاگادارکرنەکان ڕێکبخە ✓';
   var msg=document.createElement('div');
-  msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.75;direction:rtl;margin-bottom:18px';
-  msg.textContent=t('notif.setup_body')||'بۆ ئەوەی ئاگادارکرن باش کارببکات، هەڕە:\nSamsung: ڕێکخستن → مەرج → بیتاقورا → بێ ئێشکالە\n(Unrestricted Battery Usage)';
+  msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
+  msg.textContent=t('notif.setup_body')||
+    'بۆ ئەوەی بانگ لە کاتا خۆیدا بێت، ئەم دووان پشتراست بکە:\n\n'+
+    '① بیتاقورا: ڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە\n'+
+    '   (Unrestricted Battery Usage)\n\n'+
+    '② ئالارم و بیرهاتن: ڕێکخستن ← مەرجا تایبەت ← ئالارم\n'+
+    '   (Alarms & Reminders ← فەرمانی ئەپێ بدە)';
   var btn=document.createElement('button');
-  btn.style.cssText='width:100%;padding:13px;background:var(--accent,#000);color:var(--accent-t,#fff);border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
+  btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
   btn.textContent=t('notif.setup_ok')||'تێگەیشتم';
   btn.onclick=function(){overlay.remove();};
   card.appendChild(title);card.appendChild(msg);card.appendChild(btn);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
-}
+};
+
+/* Show battery-optimization guidance — triggered when isIgnoringBatteryOpts() returns false */
+window._showBatteryOptWarning=function(){
+  if(!window.Capacitor)return;
+  if(window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')return;
+  var _warnedAt=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
+  if(Date.now()-_warnedAt<7*24*60*60*1000)return; // shown within last 7 days
+  localStorage.setItem('batteryOptWarnedAt',String(Date.now()));
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9002;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:0 0 var(--safe-b,20px)';
+  var card=document.createElement('div');
+  card.style.cssText='width:100%;max-width:480px;background:var(--surface,#fff);border-radius:20px 20px 0 0;padding:24px 20px 20px;text-align:center';
+  var icon=document.createElement('div');
+  icon.style.cssText='font-size:2rem;margin-bottom:8px';
+  icon.textContent='🔋';
+  var title=document.createElement('div');
+  title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text,#000)';
+  title.textContent='بانگ ڕاستەوخۆ بێت';
+  var msg=document.createElement('div');
+  msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
+  msg.textContent=
+    'بۆ ئەوەی بانگ لە کاتا دروستدا بێت، ئەپ دەبێت لە کۆنترولی بیتاقورادا بێ ئێشکالە بێت.\n\n'+
+    'دوگمەی خوارەوە بکە و "بێ ئێشکالە" (Unrestricted) هەڵبژێرە.';
+  var btn=document.createElement('button');
+  btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
+  btn.textContent='کردنەوەی ڕێکخستن';
+  btn.onclick=function(){
+    overlay.remove();
+    var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
+    if(_AA&&_AA.openBatteryOptSettings)_AA.openBatteryOptSettings().catch(function(){});
+  };
+  var dismissBtn=document.createElement('button');
+  dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
+  dismissBtn.textContent='دواتر';
+  dismissBtn.onclick=function(){overlay.remove();};
+  card.appendChild(icon);card.appendChild(title);card.appendChild(msg);
+  card.appendChild(btn);card.appendChild(dismissBtn);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+};
+
+/* Show exact-alarm-revoked warning — triggered when OS verification finds 0 pending after schedule */
+window._showAthanAlarmPermWarning=function(){
+  if(!window.Capacitor)return;
+  if(window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')return;
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9001;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:0 0 var(--safe-b,20px)';
+  var card=document.createElement('div');
+  card.style.cssText='width:100%;max-width:480px;background:var(--surface,#fff);border-radius:20px 20px 0 0;padding:24px 20px 20px;text-align:center';
+  // Warning icon row
+  var icon=document.createElement('div');
+  icon.style.cssText='font-size:2rem;margin-bottom:8px';
+  icon.textContent='⚠️';
+  var title=document.createElement('div');
+  title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:#b45309';
+  title.textContent='بانگ نادێت — مەرج هەیە';
+  var msg=document.createElement('div');
+  msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
+  msg.textContent=
+    'مەرجا "ئالارم و بیرهاتن" هاتیە لەناوبردن.\n\n'+
+    'بۆ چارەسەرکرنێ:\n'+
+    'ڕێکخستن ← مەرجا تایبەت ← ئالارم و بیرهاتن\n'+
+    '(Alarms & Reminders) ← ئەپێ TafsirKurd فەرمان بکە';
+  var btn=document.createElement('button');
+  btn.style.cssText='width:100%;padding:13px;background:#b45309;color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
+  btn.textContent='هەرە ڕێکخستن';
+  btn.onclick=function(){
+    overlay.remove();
+    // Open exact-alarm settings screen directly via native bridge
+    if(window._openExactAlarmSettings){
+      window._openExactAlarmSettings();
+    }
+  };
+  var dismissBtn=document.createElement('button');
+  dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
+  dismissBtn.textContent='دواتر';
+  dismissBtn.onclick=function(){overlay.remove();};
+  card.appendChild(icon);card.appendChild(title);card.appendChild(msg);
+  card.appendChild(btn);card.appendChild(dismissBtn);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+};
 
 function initDailyVerse(){
   if(!S.dailyVerse)return;
@@ -2222,29 +2370,9 @@ function injectQCFV4Font(pageNum){
   if(_qcfV4FontInjected[pageNum])return;
   _qcfV4FontInjected[pageNum]=true;
   var s=document.createElement('style');
-  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
+  // Local bundled font is primary; remote Cloudflare Worker is fallback only
+  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:url('/assets/fonts/qcf4/p"+pageNum+".woff2') format('woff2'),url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
   document.head.appendChild(s);
-}
-
-// Pre-cache V4 fonts for pages 1-50 silently in background (runs once after first install)
-function precacheV4Fonts(){
-  if(localStorage.getItem('qcfV4Precached')==='1')return;
-  var PAGES=50,BATCH=3,delay=0;
-  for(var p=1;p<=PAGES;p+=BATCH){
-    (function(start){
-      setTimeout(function(){
-        for(var i=start;i<Math.min(start+BATCH,PAGES+1);i++){
-          injectQCFV4Font(i);
-          if(document.fonts&&document.fonts.load){
-            document.fonts.load('1em "QCFv4p'+i+'"').catch(function(){});
-          }
-        }
-      },delay);
-      delay+=400;
-    })(p);
-  }
-  // Mark done after all batches finish
-  setTimeout(function(){localStorage.setItem('qcfV4Precached','1');},PAGES/BATCH*400+2000);
 }
 
 function getMushafPageRange(surahNum){
@@ -2372,6 +2500,11 @@ function renderMushafView(){
       if(panelEl)panelEl.scrollTop=0;
       return true;
     }
+    function _mushafPageErr(pageEl){
+      clear(pageEl);
+      var ph=el('div','mushaf-page-ph mushaf-page-err','—');
+      pageEl.appendChild(ph);
+    }
     if(firstPage){
       firstPage.dataset.loaded='1';
       loadMushafPageQCF(firstPage,pages.start).then(function(){
@@ -2383,10 +2516,10 @@ function renderMushafView(){
             p2.dataset.loaded='1';
             loadMushafPageQCF(p2,pages.start+1).then(function(){
               setTimeout(trimToTargetSurah,100);
-            }).catch(function(){});
+            }).catch(function(){_mushafPageErr(p2);});
           }
         },150);
-      }).catch(function(){});
+      }).catch(function(){_mushafPageErr(firstPage);});
     }
 
     // Lazy-load the rest with a large preload margin
@@ -2403,7 +2536,7 @@ function renderMushafView(){
           loadMushafPageQCF(pe,parseInt(pe.dataset.page)).then(function(){
             if(S.surah!==capturedSurah)return;
             trimPageToSurah(pe);
-          }).catch(function(){});
+          }).catch(function(){_mushafPageErr(pe);});
         })(pageEl);
       });
     },{root:view,rootMargin:'1200px 0px'});
@@ -2438,7 +2571,13 @@ function renderMushafView(){
     }
   }).catch(function(){
     clear(view);
-    view.appendChild(el('div','mushaf-error','Connection error. Try again.'));
+    var errWrap=el('div','mushaf-offline-err');
+    var msg=el('div','mushaf-offline-err-msg',t('mushaf.offline_msg')||'Mushaf mode needs internet on first load.');
+    var switchBtn=el('button','mushaf-offline-switch-btn',t('mushaf.switch_to_reading')||'Switch to reading mode');
+    on(switchBtn,'click',function(){App.toggleMushafMode();});
+    errWrap.appendChild(msg);
+    errWrap.appendChild(switchBtn);
+    view.appendChild(errWrap);
   });
 }
 
@@ -2636,7 +2775,19 @@ function loadMushafPageQCF(pageEl,pageNum){
     };
     var fontFamName=(font==='qcf1')?('QCFv1p'+pageNum):(font==='qcf2'?'QCFv2p'+pageNum:(font==='qcf4'?'QCFv4p'+pageNum:''));
     if(fontFamName&&document.fonts&&document.fonts.load){
-      return document.fonts.load('1em "'+fontFamName+'"').catch(function(){return[];}).then(showContent);
+      return document.fonts.load('1em "'+fontFamName+'"').catch(function(){return[];}).then(function(faces){
+        if(!faces||!faces.length){
+          clear(pageEl);
+          var fe=el('div','mushaf-font-offline');
+          fe.appendChild(el('div','mushaf-font-offline-msg',t('mushaf.font_offline')||'Page font not available offline.'));
+          var fb=el('button','mushaf-offline-switch-btn',t('mushaf.switch_to_reading')||'Switch to reading mode');
+          on(fb,'click',function(){App.toggleMushafMode();});
+          fe.appendChild(fb);
+          pageEl.appendChild(fe);
+          return;
+        }
+        showContent();
+      });
     }
     showContent();
   }).catch(function(){
@@ -3596,8 +3747,10 @@ function updateReaderPlayState(surah,ayah,playing){
 
 function playAyah(surah,ayah){
   var url=audioUrl(surah,ayah);
-  // Priority 1: local persistent cache (synchronous O(1) — no delay)
-  var localUri=window.AudioCache?AudioCache.getLocalUri(RECITER,surah,ayah):null;
+  // Priority 1: user-downloaded offline copy (persistent Directory.Data — never evicted)
+  // Priority 2: transparent LRU cache (Directory.Cache — may be evicted by OS)
+  var localUri=(window.AudioDownloads&&AudioDownloads.getLocalUri(RECITER,surah,ayah))
+              ||(window.AudioCache&&AudioCache.getLocalUri(RECITER,surah,ayah))||null;
   // Priority 2: prefetched blob (zero-gap in-memory)
   var src;
   var slot=_pfCache[url];
@@ -3996,6 +4149,20 @@ function renderAudioSettings(){
     info.appendChild(meta);
     card.appendChild(info);
 
+    // Download button (right side of card — stops propagation so it doesn't select reciter)
+    if(window.AudioDownloads){
+      var dlBtn=el('button','reciter-dl-btn');
+      var _dlSt=AudioDownloads.dlState(r.id);
+      var _isDling=AudioDownloads.isDownloading(r.id);
+      if(_isDling){dlBtn.classList.add('downloading');dlBtn.appendChild(icon('fas fa-spinner fa-spin'));dlBtn.title='Downloading...';}
+      else if(_dlSt==='full'){dlBtn.classList.add('has-dl');dlBtn.appendChild(icon('fas fa-check'));dlBtn.title='Downloaded — tap to manage';}
+      else if(_dlSt==='partial'){dlBtn.classList.add('partial');dlBtn.appendChild(icon('fas fa-arrow-down'));dlBtn.title='Partially downloaded — tap to manage';}
+      else if(_dlSt==='corrupt'){dlBtn.classList.add('corrupt');dlBtn.appendChild(icon('fas fa-triangle-exclamation'));dlBtn.title='Integrity issues — tap to repair';}
+      else{dlBtn.appendChild(icon('fas fa-arrow-down'));dlBtn.title='Download for offline';}
+      on(dlBtn,'click',function(e){e.stopPropagation();openDlSheet(r.id);});
+      card.appendChild(dlBtn);
+    }
+
     on(card,'click',function(){
       RECITER=r.id;
       localStorage.setItem('app_reciter',r.id);
@@ -4010,6 +4177,222 @@ function renderAudioSettings(){
     recGrid.appendChild(card);
   });
   body.appendChild(recGrid);
+}
+
+/* ===== DOWNLOAD SHEET ===== */
+var _dlSheetOpen=false;
+var _dlSheetReciter=null;
+var _dlScope='full'; // 'full' | 'surah' — reset each time sheet opens
+
+function openDlSheet(reciterId){
+  if(!window.AudioDownloads)return;
+  _dlSheetReciter=reciterId;
+  _dlScope='full'; // reset scope to full each time sheet opens
+  var sheet=$('dlSheet'),overlay=$('dlOverlay');
+  if(!sheet)return;
+  var rData=RECITERS.filter(function(r){return r.id===reciterId;})[0]||{name:reciterId,flag:''};
+  $('dlSheetName').textContent=(rData.flag?rData.flag+' ':'')+rData.name;
+  on($('dlSheetClose'),'click',closeDlSheet);
+  on(overlay,'click',closeDlSheet);
+  renderDlSheetBody(reciterId);
+  sheet.classList.add('open');
+  overlay.classList.add('on');
+  _dlSheetOpen=true;
+  // Probe real file sizes from everyayah.com — re-render once we have real data
+  AudioDownloads.probeReciterSize(reciterId,function(bytes){
+    if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);
+  });
+}
+
+function closeDlSheet(){
+  var sheet=$('dlSheet'),overlay=$('dlOverlay');
+  if(sheet)sheet.classList.remove('open');
+  if(overlay)overlay.classList.remove('on');
+  _dlSheetOpen=false;
+  _dlSheetReciter=null;
+}
+
+function _fmtVerifyDate(ts){
+  if(!ts)return'Never';
+  var d=new Date(ts);
+  return d.toLocaleDateString()+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+}
+
+function _dlCbs(reciterId){
+  return {
+    onProgress:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);},
+    onDone:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);renderAudioSettings();toast('Download complete');},
+    onError:function(msg){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);toast('Download stopped: '+msg);},
+    onCancel:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);renderAudioSettings();}
+  };
+}
+
+function renderDlSheetBody(reciterId){
+  var body=$('dlSheetBody');
+  if(!body||!window.AudioDownloads)return;
+  clear(body);
+
+  var AD=AudioDownloads;
+  var stats=AD.getStats(reciterId);
+  var isDling=AD.isDownloading(reciterId);
+  var prog=AD.getProgress(reciterId);
+  var allSurahs=[];for(var i=1;i<=114;i++)allSurahs.push(i);
+  var scopeSurahs=(_dlScope==='surah'&&S.surah)?[S.surah]:allSurahs;
+  var _probed=AD._probeCached(reciterId); // null=pending, false=failed, number=real bytes
+  var estBytes=AD.estimateBytes(reciterId,scopeSurahs);
+  var remBytes=AD.remainingBytes(reciterId,scopeSurahs);
+
+  // ── Scope selector (only when a surah is active) ──
+  if(S.surah&&!isDling){
+    var surahName2=SURAHS&&SURAHS[S.surah-1]?SURAHS[S.surah-1].n:'';
+    var scopeSeg=el('div','dl-scope-seg');
+    ['full','surah'].forEach(function(sc){
+      var lbl2=sc==='full'?'Full Quran':'Surah '+S.surah+(surahName2?' — '+surahName2:'');
+      var btn=el('button','dl-scope-btn'+(_dlScope===sc?' on':''),lbl2);
+      on(btn,'click',function(){if(_dlScope!==sc){_dlScope=sc;renderDlSheetBody(reciterId);}});
+      scopeSeg.appendChild(btn);
+    });
+    body.appendChild(scopeSeg);
+  }
+
+  // ── Wi-Fi toggle ──
+  if(!isDling){
+    var wifiRow=el('div','dl-wifi-row');
+    wifiRow.appendChild(el('span','dl-wifi-lbl','Wi-Fi only'));
+    var toggle=el('div','toggle'+(AD.isWifiOnly()?' on':''));
+    toggle.appendChild(el('div','toggle-knob'));
+    on(toggle,'click',function(){
+      var next=!AD.isWifiOnly();AD.setWifiOnly(next);
+      toggle.classList.toggle('on',next);
+    });
+    wifiRow.appendChild(toggle);
+    body.appendChild(wifiRow);
+  }
+
+  // ── Determine scope state ──
+  var scopeState;
+  if(_dlScope==='surah'&&S.surah){
+    scopeState=AD.isSurahCorrupt(reciterId,S.surah)?'corrupt':
+               AD.isSurahDownloaded(reciterId,S.surah)?'full':
+               (remBytes>0&&remBytes<estBytes)?'partial':'none';
+  } else {
+    scopeState=AD.dlState(reciterId);
+  }
+
+  // ── Corrupt warning ──
+  if(scopeState==='corrupt'&&!isDling){
+    var nCorrupt=_dlScope==='surah'?1:stats.needsRepair.length;
+    var cBadge=el('div','dl-corrupt-badge');
+    cBadge.appendChild(icon('fas fa-triangle-exclamation'));
+    cBadge.appendChild(el('span','',''+nCorrupt+' surah'+(nCorrupt!==1?'s':'')+' failed integrity check'));
+    body.appendChild(cBadge);
+  }
+
+  // ── Status row ──
+  var statusRow=el('div','dl-status-row');
+  var statusLbl=el('div','dl-status-lbl');
+  var statusVal=el('div','dl-status-val');
+  var _sizeReady=(_probed!==undefined); // false while probe in flight
+  if(isDling&&prog){
+    statusLbl.textContent='Downloading...';
+    statusVal.textContent=prog.pct+'%';
+  } else if(scopeState==='full'){
+    statusLbl.textContent=_dlScope==='surah'?'Surah downloaded':'Fully downloaded';
+    statusVal.textContent=AD.fmtBytes(stats.bytes);
+  } else if(scopeState==='partial'){
+    statusLbl.textContent=_dlScope==='surah'?'Partially downloaded':('Partially downloaded ('+stats.surahs+'/114 surahs)');
+    statusVal.textContent=(_sizeReady?'':'\u2248')+AD.fmtBytes(remBytes)+' left';
+  } else if(scopeState==='corrupt'){
+    statusLbl.textContent='Partially downloaded — integrity issues';
+    statusVal.textContent=AD.fmtBytes(stats.bytes);
+  } else {
+    statusLbl.textContent='Not downloaded';
+    statusVal.textContent=_sizeReady?AD.fmtBytes(estBytes):('Measuring\u2026');
+  }
+  statusRow.appendChild(statusLbl);
+  statusRow.appendChild(statusVal);
+  body.appendChild(statusRow);
+
+  // ── Progress bar ──
+  if(isDling&&prog){
+    var pw=el('div','dl-progress-wrap');
+    var pb=el('div','dl-progress-bar');
+    var pf=el('div','dl-progress-fill');
+    pf.style.width=prog.pct+'%';
+    pb.appendChild(pf);pw.appendChild(pb);
+    var surahName3=prog.surah&&SURAHS[prog.surah-1]?SURAHS[prog.surah-1].n:'';
+    pw.appendChild(el('div','dl-progress-txt','Surah '+prog.surah+(surahName3?' — '+surahName3:'')+' · '+prog.done+'/'+prog.total+' ayahs'));
+    body.appendChild(pw);
+    setTimeout(function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);},1000);
+  }
+
+  // ── Actions ──
+  if(!isDling){
+    // Repair button (when corrupt)
+    if(scopeState==='corrupt'){
+      var repairList=(_dlScope==='surah'&&S.surah)?[S.surah]:stats.needsRepair.map(Number);
+      var repBtn=el('button','dl-action-btn primary');
+      repBtn.appendChild(icon('fas fa-wrench'));
+      repBtn.appendChild(document.createTextNode(' Repair ('+repairList.length+' surah'+(repairList.length!==1?'s':'')+')'));
+      on(repBtn,'click',function(){repBtn.disabled=true;AD.downloadSurahs(reciterId,repairList,_dlCbs(reciterId));setTimeout(function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);},400);});
+      body.appendChild(repBtn);
+    }
+
+    // Download / Continue / Re-download
+    var dlIcon=scopeState==='full'?'fas fa-rotate-right':'fas fa-arrow-down';
+    var _szEst=_sizeReady?AD.fmtBytes(estBytes):'…';
+    var _szRem=_sizeReady?AD.fmtBytes(remBytes)+'  left':'…';
+    var dlLabel=scopeState==='full'?'Re-download ('+_szEst+')':
+                scopeState==='partial'?'Continue download ('+_szRem+')':
+                'Download ('+_szEst+')';
+    var dlClass='dl-action-btn'+(scopeState==='corrupt'?' cancel-btn':' primary');
+    var dlBtn2=el('button',dlClass);
+    if(scopeState==='corrupt')dlBtn2.style.marginTop='8px';
+    dlBtn2.appendChild(icon(dlIcon));
+    dlBtn2.appendChild(document.createTextNode(' '+dlLabel));
+    on(dlBtn2,'click',function(){dlBtn2.disabled=true;AD.downloadSurahs(reciterId,scopeSurahs,_dlCbs(reciterId));setTimeout(function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);},400);});
+    body.appendChild(dlBtn2);
+
+    // Verify integrity (shown when there's something downloaded)
+    if(stats.bytes>0){
+      var verifyRow=el('div','dl-verify-row');
+      var verifyLbl=el('span','dl-verify-lbl',stats.verifiedAt?('Last checked: '+_fmtVerifyDate(stats.verifiedAt)):'Integrity not verified');
+      var isVer=AD.isVerifying();
+      var verifyBtn=el('button','dl-verify-btn',isVer?'Checking...':'Verify integrity');
+      verifyBtn.disabled=isVer;
+      on(verifyBtn,'click',function(){
+        verifyBtn.disabled=true;verifyBtn.textContent='Checking...';
+        AD.verifyReciter(reciterId,{
+          onProgress:function(done,total){if(_dlSheetOpen&&_dlSheetReciter===reciterId)verifyBtn.textContent='Checking '+done+'/'+total+'...';},
+          onDone:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);}
+        });
+      });
+      verifyRow.appendChild(verifyLbl);
+      verifyRow.appendChild(verifyBtn);
+      body.appendChild(verifyRow);
+    }
+
+    // Delete
+    if(stats.bytes>0){
+      var delBtn=el('button','dl-action-btn danger');
+      delBtn.appendChild(icon('fas fa-trash'));
+      delBtn.appendChild(document.createTextNode(' Remove download ('+AD.fmtBytes(stats.bytes)+')'));
+      on(delBtn,'click',function(){
+        AD.deleteReciter(reciterId).then(function(){
+          if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);
+          renderAudioSettings();toast('Download removed');
+        });
+      });
+      body.appendChild(delBtn);
+    }
+  } else {
+    // Cancel button while downloading
+    var cancelBtn=el('button','dl-action-btn cancel-btn');
+    cancelBtn.appendChild(icon('fas fa-stop'));
+    cancelBtn.appendChild(document.createTextNode(' Cancel download'));
+    on(cancelBtn,'click',function(){AD.cancel(reciterId);renderAudioSettings();});
+    body.appendChild(cancelBtn);
+  }
 }
 
 /* ===== FULL PLAYER ===== */
@@ -4188,6 +4571,19 @@ function _buildRecPicker(){
     // Checkmark
     var chk=el('div','rp-check');chk.appendChild(el('i','fas fa-check'));
     item.appendChild(chk);
+    // Download button
+    if(window.AudioDownloads){
+      var rpDlBtn=el('button','reciter-dl-btn');
+      var rpDlSt=AudioDownloads.dlState(r.id);
+      var rpDling=AudioDownloads.isDownloading(r.id);
+      if(rpDling){rpDlBtn.classList.add('downloading');rpDlBtn.appendChild(icon('fas fa-spinner fa-spin'));rpDlBtn.title='Downloading...';}
+      else if(rpDlSt==='full'){rpDlBtn.classList.add('has-dl');rpDlBtn.appendChild(icon('fas fa-check'));rpDlBtn.title='Downloaded';}
+      else if(rpDlSt==='partial'){rpDlBtn.classList.add('partial');rpDlBtn.appendChild(icon('fas fa-arrow-down'));rpDlBtn.title='Partially downloaded';}
+      else if(rpDlSt==='corrupt'){rpDlBtn.classList.add('corrupt');rpDlBtn.appendChild(icon('fas fa-triangle-exclamation'));rpDlBtn.title='Needs repair';}
+      else{rpDlBtn.appendChild(icon('fas fa-arrow-down'));rpDlBtn.title='Download for offline';}
+      on(rpDlBtn,'click',function(e){e.stopPropagation();App.closeRecPicker();openDlSheet(r.id);});
+      item.appendChild(rpDlBtn);
+    }
     // Click
     on(item,'click',function(){
       haptic([8]);
@@ -6118,23 +6514,52 @@ function renderSettings(){
   // ── Data & Sync ──────────────────────────────
   var g4=el('div','settings-group');
   g4.appendChild(el('div','settings-group-title',t('settings.data')));
-  // (6) Sync status
+  // (6) Sync status panel
   if(S.user){
-    var syncRow=el('div','setting-row s-row');
-    var syncLeft=el('div','setting-label-wrap');
-    syncLeft.appendChild(el('div','setting-label',t('settings.sync_label')));
-    var syncTs=S.lastSyncTime?new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):t('settings.sync_never');
-    syncLeft.appendChild(el('div','setting-sub',t('settings.sync_last')+' '+syncTs));
-    syncRow.appendChild(syncLeft);
-    var syncBtn=el('button','hdr-text-btn');
-    syncBtn.appendChild(icon('fas fa-cloud-arrow-up'));
-    syncBtn.appendChild(document.createTextNode(' '+t('settings.sync_btn')));
-    on(syncBtn,'click',function(){
-      syncToCloud();
-      toast(t('toast.sync_started'));
+    var syncCard=el('div','sync-card');
+
+    // Top row: email + live status + action button
+    var cardTop=el('div','sync-card-top');
+    var cardInfo=el('div','sync-card-info');
+    cardInfo.appendChild(el('div','sync-card-email',S.user.email||''));
+    _syncPanelStatusEl=el('div','sync-status-line');
+    cardInfo.appendChild(_syncPanelStatusEl);
+    cardTop.appendChild(cardInfo);
+    _syncPanelBtnEl=el('button','hdr-text-btn');
+    on(_syncPanelBtnEl,'click',function(){syncToCloud();});
+    cardTop.appendChild(_syncPanelBtnEl);
+    syncCard.appendChild(cardTop);
+    _updateSyncPanelStatus();
+
+    // What syncs
+    syncCard.appendChild(el('div','sync-divider'));
+    syncCard.appendChild(el('div','sync-section-lbl',t('settings.sync_what_syncs')));
+    var chips1=el('div','sync-chips');
+    [
+      ['fas fa-book-open',t('settings.sync_item_reading')],
+      ['fas fa-bookmark', t('settings.sync_item_bookmarks')],
+      ['fas fa-bullseye', t('settings.sync_item_goals')],
+      ['fas fa-mosque',   t('settings.sync_item_prayer')],
+      ['fas fa-heart',    t('settings.sync_item_saved')],
+      ['fas fa-sliders',  t('settings.sync_item_settings')]
+    ].forEach(function(d){
+      var chip=el('span','sync-chip');
+      chip.appendChild(icon(d[0]));
+      chip.appendChild(document.createTextNode(' '+d[1]));
+      chips1.appendChild(chip);
     });
-    syncRow.appendChild(syncBtn);
-    g4.appendChild(syncRow);
+    syncCard.appendChild(chips1);
+
+    // Device-only
+    syncCard.appendChild(el('div','sync-divider'));
+    syncCard.appendChild(el('div','sync-section-lbl sync-section-lbl--device',t('settings.sync_device_only')));
+    var chips2=el('div','sync-chips');
+    [t('settings.sync_device_cache'),t('settings.sync_device_notif'),t('settings.sync_device_sched')].forEach(function(lbl){
+      chips2.appendChild(el('span','sync-chip sync-chip--muted',lbl));
+    });
+    syncCard.appendChild(chips2);
+
+    g4.appendChild(syncCard);
   }
   // (8) Export bookmarks
   g4.appendChild(mkBtnRow(t('settings.export_bookmarks'),t('settings.export_btn'),'fas fa-download',function(){
@@ -6358,6 +6783,149 @@ function setUserFromSession(session){
 
 /* --- Cloud Sync --- */
 /* ===== PRODUCTION SYNC SYSTEM ===== */
+
+// ── Sync panel live-update helpers ─────────────────────────────────────────
+var _syncPanelStatusEl=null;
+var _syncPanelBtnEl=null;
+
+function _syncStatusInfo(){
+  if(!S.user)return null;
+  if(!navigator.onLine)return{dot:'⚠',txt:t('settings.sync_status_offline'),col:'#f09000'};
+  if(S.isSyncing)return{dot:'⟳',txt:t('settings.sync_status_syncing'),col:'var(--text3)'};
+  if(S.syncFailed)return{dot:'✕',txt:t('settings.sync_status_failed'),col:'#e53935'};
+  if(S.lastSyncTime){
+    var ts=new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    return{dot:'✓',txt:(t('settings.sync_last')||'')+' '+ts,col:'#43a047'};
+  }
+  return{dot:'○',txt:t('settings.sync_never'),col:'var(--text3)'};
+}
+
+function _updateSyncPanelStatus(){
+  if(!_syncPanelStatusEl)return;
+  var info=_syncStatusInfo();
+  if(!info)return;
+  _syncPanelStatusEl.textContent=info.dot+' '+info.txt;
+  _syncPanelStatusEl.style.color=info.col;
+  if(!_syncPanelBtnEl)return;
+  _syncPanelBtnEl.disabled=S.isSyncing||!navigator.onLine;
+  clear(_syncPanelBtnEl);
+  _syncPanelBtnEl.appendChild(icon(S.syncFailed?'fas fa-redo':'fas fa-cloud-arrow-up'));
+  _syncPanelBtnEl.appendChild(document.createTextNode(' '+(S.syncFailed?t('settings.sync_retry_btn'):t('settings.sync_btn'))));
+}
+
+// ── Device / Session management ────────────────────────────────────────────
+
+function _getDeviceId(){
+  var id=localStorage.getItem('_deviceId');
+  if(!id){
+    id='dk_'+Math.random().toString(36).slice(2,10)+'_'+Date.now().toString(36);
+    localStorage.setItem('_deviceId',id);
+  }
+  return id;
+}
+
+function _getDeviceInfo(){
+  var platform='web',label='Web';
+  if(window.Capacitor&&Capacitor.getPlatform){
+    platform=Capacitor.getPlatform();
+  }
+  var ua=navigator.userAgent||'';
+  if(platform==='android'){
+    label='Android Phone';
+  }else if(platform==='ios'){
+    label=/iPad/.test(ua)?'iPad':'iPhone';
+  }else{
+    if(/Edg\//.test(ua))label='Edge Browser';
+    else if(/Chrome\//.test(ua))label='Chrome Browser';
+    else if(/Firefox\//.test(ua))label='Firefox Browser';
+    else if(/Safari\//.test(ua))label='Safari Browser';
+    else label='Web Browser';
+  }
+  return{platform:platform,label:label};
+}
+
+function _timeAgo(date){
+  var s=Math.floor((Date.now()-date.getTime())/1000);
+  if(s<90)return t('profile.time_now')||'ئێستا';
+  var m=Math.floor(s/60);
+  if(m<60)return m+' '+(t('profile.time_min')||'خولەک');
+  var h=Math.floor(m/60);
+  if(h<24)return h+' '+(t('profile.time_hour')||'کاتژمێر');
+  var d=Math.floor(h/24);
+  if(d<8)return d+' '+(t('profile.time_day')||'ڕۆژ');
+  return date.toLocaleDateString();
+}
+
+var _sessionHeartbeatInterval=null;
+var _sessionFgHandler=null;
+var _sessionRevChannel=null;
+
+function _sessionTouchActive(){
+  if(!S.supabase||!S.user)return;
+  S.supabase.from('user_sessions')
+    .update({last_active_at:new Date().toISOString()})
+    .eq('user_id',S.user.id).eq('device_id',_getDeviceId())
+    .then(function(){});
+}
+
+function _registerSession(){
+  if(!S.supabase||!S.user)return;
+  var info=_getDeviceInfo();
+  S.supabase.from('user_sessions').upsert({
+    user_id:S.user.id,
+    device_id:_getDeviceId(),
+    platform:info.platform,
+    device_label:info.label,
+    last_active_at:new Date().toISOString()
+  },{onConflict:'user_id,device_id',ignoreDuplicates:false})
+  .then(function(r){
+    if(r.error){console.error('Session register:',r.error);return;}
+    // Prune sessions idle for more than 30 days (except this device)
+    var cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+    S.supabase.from('user_sessions').delete()
+      .eq('user_id',S.user.id).lt('last_active_at',cutoff).neq('device_id',_getDeviceId())
+      .then(function(){});
+  });
+}
+
+function _startSessionHeartbeat(){
+  if(_sessionHeartbeatInterval)clearInterval(_sessionHeartbeatInterval);
+  _sessionHeartbeatInterval=setInterval(_sessionTouchActive,5*60*1000);
+  _sessionFgHandler=function(){if(!document.hidden)_sessionTouchActive();};
+  document.addEventListener('visibilitychange',_sessionFgHandler);
+}
+
+function _stopSessionHeartbeat(){
+  if(_sessionHeartbeatInterval){clearInterval(_sessionHeartbeatInterval);_sessionHeartbeatInterval=null;}
+  if(_sessionFgHandler){document.removeEventListener('visibilitychange',_sessionFgHandler);_sessionFgHandler=null;}
+}
+
+function _subscribeSessionRevocation(){
+  if(!S.supabase||!S.user||_sessionRevChannel)return;
+  var myDeviceId=_getDeviceId();
+  _sessionRevChannel=S.supabase
+    .channel('sess-rev-'+S.user.id)
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'user_sessions',
+      filter:'user_id=eq.'+S.user.id},function(payload){
+      if(payload.old&&payload.old.device_id===myDeviceId){
+        toast(t('profile.session_revoked')||'چوونا دەرەوەکراوی ل ئامێرا دی');
+        setTimeout(function(){S.supabase.auth.signOut();},1500);
+      }
+    }).subscribe();
+}
+
+function _unsubscribeSessionRevocation(){
+  if(_sessionRevChannel){
+    try{S.supabase.removeChannel(_sessionRevChannel);}catch(e){}
+    _sessionRevChannel=null;
+  }
+}
+
+function _removeCurrentDeviceSession(){
+  if(!S.supabase||!S.user)return;
+  S.supabase.from('user_sessions').delete()
+    .eq('user_id',S.user.id).eq('device_id',_getDeviceId()).then(function(){});
+}
 // Field categories:
 //   ADDITIVE  — always union across devices (never lose data)
 //   LWW       — last-write-wins (settings, scroll positions)
@@ -6365,29 +6933,26 @@ function setUserFromSession(session){
 
 var SYNC_SIMPLE_KEYS=[
   'lastRead','readingGoal','readLog','readAyahsToday','trackingResetAt','fullResetAt',
-  'app_bookmarks','iv_watch_progress',
+  'app_bookmarks','iv_watch_progress','iv_saved_eps',
   'showTafsir','bgAudio','theme','keepAwake',
   'app_arSize','app_tfSize','app_lineH',
   'app_reciter','app_speed','app_repeat','app_repeatCount',
   'autoAdvance','scrollFollowsAudio','hapticFeedback',
-  'dailyReminder','reminderTime'
+  'dailyReminder','reminderTime','dailyVerse','dailyVerseTime',
+  'bestStreak',
+  'mushafMode','readerFont','mushafFont','mushafLineH',
+  'mushafFontSize_qcf1','mushafFontSize_qcf2','mushafFontSize_qcf4',
+  'book_saved',
+  'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
+  'prayerAthanVoice','prayerTimeFormat',
+  'tasbihDhikr','tasbihTarget'
 ];
 
 // ── Merge helpers ─────────────────────────────────────────────────────────────
 
-// Bookmarks: union by (surah:ayah), newest note wins on conflict
-function _mergeBookmarks(aStr,bStr){
-  try{
-    var a=JSON.parse(aStr||'[]');var b=JSON.parse(bStr||'[]');
-    if(!Array.isArray(a))a=[];if(!Array.isArray(b))b=[];
-    var map={};
-    a.concat(b).forEach(function(bm){
-      var id=bm.surah+':'+bm.ayah;
-      if(!map[id]||(bm.ts||0)>(map[id].ts||0))map[id]=bm;
-    });
-    return JSON.stringify(Object.values(map));
-  }catch(e){return aStr||bStr||'[]'}
-}
+// NOTE: bookmarks use LWW (last-write-wins) — see mergeSyncData.
+// Additive union was removed because it prevented deletions from propagating:
+// removing a bookmark on one device would be restored by the union on other devices.
 
 // readLog: per-date max (keep highest ayah count for each day)
 // sinceMs: if provided, discard entries with dates before this timestamp
@@ -6422,12 +6987,11 @@ function mergeSyncData(local,cloud){
   if(!cloud)return local;
   var lTime=new Date(local._syncTime||0).getTime();
   var cTime=new Date(cloud._syncTime||0).getTime();
-  // Start with the newer set as LWW base for settings
-  var base=cTime>=lTime?cloud:local;
+  // Start with the newer set as LWW base for settings.
+  // Strict >: when timestamps are equal, cloud IS what we last pushed — local wins
+  // because the user may have changed settings after that push without syncing yet.
+  var base=cTime>lTime?cloud:local;
   var result=Object.assign({},base);
-
-  // ADDITIVE: bookmarks — always union
-  result.app_bookmarks=_mergeBookmarks(local.app_bookmarks,cloud.app_bookmarks);
 
   // Determine if either side has a reset — the newer reset wins
   var localReset=new Date(local.trackingResetAt||0).getTime();
@@ -6449,6 +7013,13 @@ function mergeSyncData(local,cloud){
     } else if(local[pk]||cloud[pk]){
       result[pk]=_mergeProgress(local[pk],cloud[pk]);
     }
+  }
+
+  // surah_read_v3: take whichever side has read further (max value) per surah
+  for(var j=1;j<=114;j++){
+    var vrk='surah_read_v3_'+j;
+    var lrv=parseInt(local[vrk]||'0');var crv=parseInt(cloud[vrk]||'0');
+    if(lrv>0||crv>0){result[vrk]=String(Math.max(lrv,crv));}
   }
 
   // FURTHEST: last read position — take whichever is deeper in the Quran,
@@ -6483,10 +7054,11 @@ function gatherSyncData(){
     if(v!==null)data[k]=v;
   });
   for(var i=1;i<=114;i++){
-    var pk='surah_progress_'+i;var sk='surah_scroll_'+i;
-    var pv=localStorage.getItem(pk);var sv=localStorage.getItem(sk);
+    var pk='surah_progress_'+i;var sk='surah_scroll_'+i;var rk='surah_read_v3_'+i;
+    var pv=localStorage.getItem(pk);var sv=localStorage.getItem(sk);var rv=localStorage.getItem(rk);
     if(pv!==null)data[pk]=pv;
     if(sv!==null)data[sk]=sv;
+    if(rv!==null)data[rk]=rv;
   }
   // _syncTime set by caller so reads never pollute the timestamp
   return data;
@@ -6510,7 +7082,19 @@ function applySyncData(data){
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
   S.dailyReminder=localStorage.getItem('dailyReminder')==='true';
   S.reminderTime=localStorage.getItem('reminderTime')||'08:00';
+  S.dailyVerse=localStorage.getItem('dailyVerse')==='true';
+  S.dailyVerseTime=localStorage.getItem('dailyVerseTime')||'08:00';
+  S.mushafMode=localStorage.getItem('mushafMode')==='true';
+  S.readerFont=localStorage.getItem('readerFont')||'hafs';
+  S.mushafFont=localStorage.getItem('mushafFont')||'qcf4';
+  S.mushafFontSize=parseInt(localStorage.getItem('mushafFontSize_'+S.mushafFont))||(S.mushafFont==='qcf1'?22:20);
+  S.mushafLineH=parseFloat(localStorage.getItem('mushafLineH'))||1.8;
+  S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
+  S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
+  S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?true:localStorage.getItem('prayerAthanEnabled')==='true';
+  S.prayerToggles=(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return{}}})();
   scheduleReminder(S.dailyReminder, S.reminderTime);
+  scheduleDailyVerse(S.dailyVerse, S.dailyVerseTime);
   applyTheme();applySizes();
   // Sync in-memory bookmark map with whatever applySyncData wrote to localStorage.
   // Without this, _bmMap lags after a user-switch wipe or realtime push that
@@ -6536,6 +7120,7 @@ function syncToCloud(){
   var now=Date.now();
   if(now-S.lastSyncTime<5000)return;
   S.isSyncing=true;
+  _updateSyncPanelStatus(); // show "syncing…" immediately
   var payload=gatherSyncData();
   payload._syncTime=new Date().toISOString();
   S.supabase.from('user_data').upsert({
@@ -6545,16 +7130,19 @@ function syncToCloud(){
   },{onConflict:'user_id',ignoreDuplicates:false}).then(function(resp){
     if(resp.error){
       console.error('Sync error:',resp.error);
-      _schedSyncRetry(); // retry with backoff
+      S.syncFailed=true;
+      _schedSyncRetry();
     }else{
       S.lastSyncTime=Date.now();
+      S.syncFailed=false;
       localStorage.setItem('_lastSyncTime',payload._syncTime);
-      _syncRetryDelay=2000; // reset backoff on success
+      _syncRetryDelay=2000;
     }
   }).catch(function(e){
     console.error('Sync failed:',e);
+    S.syncFailed=true;
     _schedSyncRetry();
-  }).finally(function(){S.isSyncing=false});
+  }).finally(function(){S.isSyncing=false;_updateSyncPanelStatus();});
 }
 
 function _schedSyncRetry(){
@@ -6594,6 +7182,7 @@ function loadFromCloud(cb){
 
 // ── Realtime (instant cross-device push) ─────────────────────────────────────
 
+var _lastLiveToastAt=0;
 function subscribeRealtime(){
   if(!S.supabase||!S.user||S.realtimeChannel)return;
   S.realtimeChannel=S.supabase
@@ -6614,7 +7203,12 @@ function subscribeRealtime(){
       applySyncData(merged);
       localStorage.setItem('_lastSyncTime',merged._syncTime);
       renderCurrentTab();
-      toast(t('toast.synced_live'));
+      // Throttle: show live-sync toast at most once every 6 seconds
+      var now=Date.now();
+      if(now-_lastLiveToastAt>6000){
+        toast(t('toast.synced_live'));
+        _lastLiveToastAt=now;
+      }
     })
     .subscribe();
 }
@@ -6630,6 +7224,7 @@ function unsubscribeRealtime(){
 
 /* Clear all user-specific local data (called when a different account logs in) */
 function _clearUserLocalData(){
+  _syncPanelStatusEl=null;_syncPanelBtnEl=null;S.syncFailed=false;
   SYNC_SIMPLE_KEYS.forEach(function(k){localStorage.removeItem(k);});
   for(var i=1;i<=114;i++){
     localStorage.removeItem('surah_progress_'+i);
@@ -6669,12 +7264,18 @@ function startCloudSync(){
     subscribeRealtime();
   });
   document.addEventListener('visibilitychange',syncOnHide);
+  // Register this device and start heartbeat
+  _registerSession();
+  _startSessionHeartbeat();
+  _subscribeSessionRevocation();
 }
 
 function stopCloudSync(){
   if(S.syncInterval){clearInterval(S.syncInterval);S.syncInterval=null}
   document.removeEventListener('visibilitychange',syncOnHide);
   unsubscribeRealtime();
+  _stopSessionHeartbeat();
+  _unsubscribeSessionRevocation();
 }
 
 function syncOnHide(){if(document.hidden&&S.user)syncToCloud()}
@@ -7174,6 +7775,7 @@ App.closeLogin=function(){
 App.logout=function(){
   if(!S.supabase)return;
   if(!confirm(t('profile.confirm_logout')))return;
+  _removeCurrentDeviceSession(); // clean up before sign-out
   S.supabase.auth.signOut().then(function(){
     S.user=null;
     stopCloudSync();
@@ -7239,8 +7841,9 @@ function renderProfile(panel){
   hero.appendChild(el('div','pp-name-display',S.user.name||''));
   hero.appendChild(el('div','pp-email-display',S.user.email||''));
   var heroSync=el('div','pp-hero-sync');
-  heroSync.appendChild(icon('fas fa-cloud-upload-alt'));
-  heroSync.appendChild(document.createTextNode(' '+t('profile.synced')));
+  var _hsi=_syncStatusInfo();
+  if(_hsi){heroSync.style.color=_hsi.col;heroSync.textContent=_hsi.dot+' '+_hsi.txt;}
+  else{heroSync.appendChild(icon('fas fa-cloud-upload-alt'));heroSync.appendChild(document.createTextNode(' '+t('profile.synced')));}
   hero.appendChild(heroSync);
   // Stats row
   var statsRow=el('div','pp-stats');
@@ -7368,6 +7971,173 @@ function renderProfile(panel){
     body.appendChild(passSec);
   }
 
+  // ── Your Devices ──────────────────────────────
+  var devSec=el('div','pp-section');
+  // Title row with refresh button
+  var devTitleRow=el('div','pp-section-title-row');
+  devTitleRow.appendChild(el('span',null,t('profile.devices_title')));
+  var devRefreshBtn=el('button','pp-devices-refresh');
+  devRefreshBtn.title=t('profile.devices_refresh')||'نوێکردنەوە';
+  devRefreshBtn.appendChild(icon('fas fa-rotate-right'));
+  devTitleRow.appendChild(devRefreshBtn);
+  devSec.appendChild(devTitleRow);
+  var devList=el('div','pp-devices-list');
+  devSec.appendChild(devList);
+  // "Log out all others" button lives below devList; keep a ref so loadDevices can update it
+  var _devAllOutHolder=el('div',null);
+  devSec.appendChild(_devAllOutHolder);
+  // Note: devices only appear after they open this version of the app
+  var devNote=el('div','pp-devices-note');
+  devNote.appendChild(icon('fas fa-circle-info'));
+  devNote.appendChild(document.createTextNode(' '+(t('profile.devices_note')||'ئامێرەکان دەکەونە لیستەکە کاتێک نوێترین وەشانی ئەپ کردنەوە')));
+  devSec.appendChild(devNote);
+  body.appendChild(devSec);
+
+  var STALE_MS=14*24*60*60*1000; // 14 days
+  var ONLINE_MS=10*60*1000;       // 10 min = "active now"
+
+  function _loadDevices(){
+    clear(devList);
+    var devLoading=el('div','pp-devices-loading');
+    devLoading.appendChild(icon('fas fa-circle-notch fa-spin'));
+    devLoading.appendChild(document.createTextNode(' '+t('profile.devices_loading')));
+    devList.appendChild(devLoading);
+    devRefreshBtn.disabled=true;
+
+    S.supabase.from('user_sessions')
+      .select('id,device_id,platform,device_label,last_active_at,created_at')
+      .eq('user_id',S.user.id)
+      .order('last_active_at',{ascending:false})
+      .then(function(resp){
+        devRefreshBtn.disabled=false;
+        clear(devList);
+        clear(_devAllOutHolder);
+        if(resp.error||!resp.data||!resp.data.length){
+          devList.appendChild(el('div','pp-devices-empty',t('profile.devices_none')));
+          return;
+        }
+        var myId=_getDeviceId();
+        resp.data.forEach(function(sess){
+          var isThis=sess.device_id===myId;
+          var lastActive=new Date(sess.last_active_at);
+          var age=Date.now()-lastActive.getTime();
+          var isOnline=age<ONLINE_MS;
+          var isStale=!isThis&&age>STALE_MS;
+          var rowCls='pp-device-row'+(isThis?' pp-device-row--current':'')+(isStale?' pp-device-row--stale':'');
+          var row=el('div',rowCls);
+          var dLeft=el('div','pp-device-left');
+          var dIco=el('div','pp-device-icon');
+          dIco.appendChild(icon(
+            sess.platform==='android'?'fas fa-mobile-screen-button':
+            sess.platform==='ios'?'fab fa-apple':'fas fa-desktop'));
+          dLeft.appendChild(dIco);
+          var dInfo=el('div','pp-device-info');
+          var dName=el('div','pp-device-name',sess.device_label||sess.platform||'Web');
+          if(isThis){dName.appendChild(el('span','pp-device-badge',t('profile.this_device')));}
+          else if(isOnline){dName.appendChild(el('span','pp-device-badge pp-device-badge--online',t('profile.device_online')||'چالاک'));}
+          dInfo.appendChild(dName);
+          // Time row: relative + absolute date for older entries
+          var timeEl=el('div','pp-device-time');
+          if(isThis){
+            timeEl.textContent=t('profile.time_now')||'ئێستا';
+          }else if(isOnline){
+            var dot=el('span','pp-device-online-dot');
+            timeEl.appendChild(dot);
+            timeEl.appendChild(document.createTextNode(t('profile.device_active_now')||'ئێستا چالاکە'));
+          }else{
+            var rel=_timeAgo(lastActive);
+            var abs=lastActive.toLocaleDateString()+' '+lastActive.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+            if(isStale){
+              timeEl.textContent=rel+' — '+(t('profile.device_stale')||'(inactive)');
+            }else{
+              timeEl.textContent=rel+' · '+abs;
+            }
+          }
+          dInfo.appendChild(timeEl);
+          dLeft.appendChild(dInfo);
+          row.appendChild(dLeft);
+          if(!isThis){
+            var rmBtn=el('button','pp-device-remove');
+            rmBtn.title=t('profile.device_remove')||'دەرکردن';
+            rmBtn.appendChild(icon('fas fa-right-from-bracket'));
+            (function(sid,rowEl,btn){
+              var confirmed=false,timer=null;
+              function reset(){
+                confirmed=false;clearTimeout(timer);
+                btn.className='pp-device-remove';
+                clear(btn);btn.appendChild(icon('fas fa-right-from-bracket'));
+              }
+              on(btn,'click',function(){
+                if(!confirmed){
+                  confirmed=true;
+                  btn.className='pp-device-remove pp-device-remove--confirm';
+                  clear(btn);btn.appendChild(icon('fas fa-check'));
+                  timer=setTimeout(reset,3000);
+                }else{
+                  clearTimeout(timer);btn.disabled=true;
+                  S.supabase.from('user_sessions').delete()
+                    .eq('id',sid).eq('user_id',S.user.id)
+                    .then(function(r){
+                      if(r.error){btn.disabled=false;reset();return;}
+                      rowEl.classList.add('pp-device-row--gone');
+                      setTimeout(function(){if(rowEl.parentNode)rowEl.parentNode.removeChild(rowEl);},280);
+                    });
+                }
+              });
+            })(sess.id,row,rmBtn);
+            row.appendChild(rmBtn);
+          }
+          devList.appendChild(row);
+        });
+        var otherCount=resp.data.filter(function(s){return s.device_id!==myId;}).length;
+        if(otherCount>0){
+          var allOutBtn=el('button','pp-device-all-out');
+          allOutBtn.appendChild(icon('fas fa-circle-xmark'));
+          allOutBtn.appendChild(document.createTextNode(' '+t('profile.logout_all_others')));
+          (function(btn){
+            var confirmed=false,timer=null;
+            function reset(){
+              confirmed=false;clearTimeout(timer);
+              btn.className='pp-device-all-out';
+              clear(btn);
+              btn.appendChild(icon('fas fa-circle-xmark'));
+              btn.appendChild(document.createTextNode(' '+t('profile.logout_all_others')));
+            }
+            on(btn,'click',function(){
+              if(!confirmed){
+                confirmed=true;
+                btn.className='pp-device-all-out pp-device-all-out--confirm';
+                clear(btn);
+                btn.appendChild(icon('fas fa-check'));
+                btn.appendChild(document.createTextNode(' '+t('profile.logout_all_confirm')));
+                timer=setTimeout(reset,3000);
+              }else{
+                clearTimeout(timer);btn.disabled=true;
+                S.supabase.from('user_sessions').delete()
+                  .eq('user_id',S.user.id).neq('device_id',myId)
+                  .then(function(r){
+                    if(r.error){btn.disabled=false;reset();return;}
+                    Array.from(devList.querySelectorAll('.pp-device-row:not(.pp-device-row--current)')).forEach(function(rw){
+                      if(rw.parentNode)rw.parentNode.removeChild(rw);
+                    });
+                    btn.style.display='none';
+                    toast(t('profile.logout_all_done'));
+                  });
+              }
+            });
+          })(allOutBtn);
+          _devAllOutHolder.appendChild(allOutBtn);
+        }
+      }).catch(function(){
+        devRefreshBtn.disabled=false;
+        clear(devList);
+        devList.appendChild(el('div','pp-devices-empty',t('profile.devices_error')));
+      });
+  }
+
+  on(devRefreshBtn,'click',_loadDevices);
+  _loadDevices();
+
   // ── Actions ───────────────────────────────────
   var actSec=el('div','pp-section');
   actSec.appendChild(el('div','pp-section-title',t('profile.actions')));
@@ -7384,6 +8154,52 @@ function renderProfile(panel){
   logoutBtn.appendChild(document.createTextNode(' '+t('profile.logout')));
   on(logoutBtn,'click',function(){App.logout();App.closeProfile();});
   actWrap.appendChild(logoutBtn);
+
+  // ── Downloads / Storage ─────────────────────────────────
+  if(window.AudioDownloads){
+    var dlStats=AudioDownloads.getAllStats();
+    var dlSec=el('div','pp-section');
+    dlSec.appendChild(el('div','pp-section-title','Downloads'));
+    var dlCard=el('div','pp-card');
+    if(!dlStats.length){
+      dlCard.appendChild(el('div','pp-row-label','No downloaded reciters yet. Tap the ↓ button on any reciter to download for offline.'));
+    } else {
+      var totalBytes=dlStats.reduce(function(s,r){return s+r.bytes;},0);
+      var totalRow=el('div','pp-row');
+      totalRow.appendChild(el('div','pp-row-label','Storage used'));
+      totalRow.appendChild(el('div','pp-row-value',AudioDownloads.fmtBytes(totalBytes)));
+      dlCard.appendChild(totalRow);
+      dlCard.appendChild(el('div','pp-row-label',''));// spacer
+      dlStats.forEach(function(r){
+        var row=el('div','pp-dl-row');
+        var info=el('div','pp-dl-info');
+        info.appendChild(el('div','pp-dl-name',(r.flag?r.flag+' ':'')+r.name));
+        info.appendChild(el('div','pp-dl-size',AudioDownloads.fmtBytes(r.bytes)+(r.full?' · Full Quran':' · '+r.surahs+' surahs')));
+        row.appendChild(info);
+        var ppDlMgr=el('button','pp-dl-del');
+        ppDlMgr.appendChild(icon('fas fa-download'));
+        ppDlMgr.title='Manage download';
+        ppDlMgr.style.color='var(--accent)';
+        (function(rid){on(ppDlMgr,'click',function(){App.closeProfile();openDlSheet(rid);});})(r.id);
+        row.appendChild(ppDlMgr);
+        var delBtn=el('button','pp-dl-del');
+        delBtn.appendChild(icon('fas fa-trash'));
+        delBtn.title='Remove download';
+        (function(rid){
+          on(delBtn,'click',function(){
+            AudioDownloads.deleteReciter(rid).then(function(){
+              renderProfile(panel);
+              toast('Download removed');
+            });
+          });
+        })(r.id);
+        row.appendChild(delBtn);
+        dlCard.appendChild(row);
+      });
+    }
+    dlSec.appendChild(dlCard);
+    body.appendChild(dlSec);
+  }
 
   // Separator before destructive action
   actWrap.appendChild(el('div','pp-actions-sep'));
