@@ -2,15 +2,25 @@
  * TafsirKurd App Promotion
  * — First-visit popup (homepage / quran / islamvoice only)
  * — Footer app section (any page that loads this script)
+ *
+ * Texts and URLs come from /popup-config (site_settings in Supabase).
+ * Hardcoded values are used as defaults if the fetch fails or a field is empty.
  */
 (function () {
   'use strict';
 
-  var PLAY = 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
-  var IOS  = 'https://apps.apple.com/us/app/tafsirkurd/id6760433688';
+  var DEFAULT_PLAY = 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
+  var DEFAULT_IOS  = 'https://apps.apple.com/us/app/tafsirkurd/id6760433688';
   var ua   = navigator.userAgent || '';
   var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
   var isAnd = /Android/.test(ua);
+
+  /* ── Fetch all site settings early ──────────────────────────── */
+  var _cfg = null;
+  var _cfgReady = fetch('/popup-config')
+    .then(function (r) { return r.ok ? r.json() : {}; })
+    .then(function (d) { _cfg = d || {}; })
+    .catch(function () { _cfg = {}; });
 
   /* ── SVG helpers ─────────────────────────────────────────── */
   function svgEl(w, h, vb) {
@@ -167,9 +177,14 @@
 
   /* ══════════════════════════════════════════════════════════
    * FOOTER APP SECTION
-   * Injected before .footer-bottom on any page that loads this script
    * ══════════════════════════════════════════════════════════ */
   function buildFooterSection() {
+    var cfg = _cfg || {};
+    var appName = cfg.footerName || 'TafsirKurd App';
+    var appDesc = cfg.footerDesc || 'Read, listen, and keep your progress with you.';
+    var iosUrl  = cfg.iosUrl    || DEFAULT_IOS;
+    var playUrl = cfg.playUrl   || DEFAULT_PLAY;
+
     var wrap = document.createElement('div');
     wrap.id = 'tk-fa';
 
@@ -190,11 +205,11 @@
 
     var name = document.createElement('span');
     name.className = 'tk-fa-name';
-    name.textContent = 'TafsirKurd App';
+    name.textContent = appName;
 
     var desc = document.createElement('span');
     desc.className = 'tk-fa-desc';
-    desc.textContent = 'Read, listen, and keep your progress with you.';
+    desc.textContent = appDesc;
 
     info.appendChild(name);
     info.appendChild(desc);
@@ -206,12 +221,12 @@
     btns.className = 'tk-fa-btns';
 
     if (isIOS) {
-      btns.appendChild(storeBtn('App Store', IOS, appleIcon));
+      btns.appendChild(storeBtn('App Store', iosUrl, appleIcon));
     } else if (isAnd) {
-      btns.appendChild(storeBtn('Google Play', PLAY, playIcon));
+      btns.appendChild(storeBtn('Google Play', playUrl, playIcon));
     } else {
-      btns.appendChild(storeBtn('App Store', IOS, appleIcon));
-      btns.appendChild(storeBtn('Google Play', PLAY, playIcon));
+      btns.appendChild(storeBtn('App Store', iosUrl, appleIcon));
+      btns.appendChild(storeBtn('Google Play', playUrl, playIcon));
     }
 
     row.appendChild(brand);
@@ -221,10 +236,14 @@
   }
 
   function injectFooterSection() {
-    if (document.getElementById('tk-fa')) return;
-    var fb = document.querySelector('.footer-bottom');
-    if (!fb || !fb.parentNode) return;
-    fb.parentNode.insertBefore(buildFooterSection(), fb);
+    _cfgReady.then(function () {
+      var cfg = _cfg || {};
+      if (cfg.footerVisible === false) return; // hidden via admin
+      if (document.getElementById('tk-fa')) return;
+      var fb = document.querySelector('.footer-bottom');
+      if (!fb || !fb.parentNode) return;
+      fb.parentNode.insertBefore(buildFooterSection(), fb);
+    });
   }
 
   if (document.readyState === 'loading') {
@@ -244,19 +263,16 @@
 
   /* State */
   var K_STATE = 'tk_popup_v2';
-  var K_IMG   = 'tk_popup_img_v1';
-  var IMG_TTL = 6 * 3600 * 1000; // 6 h
-
   var DISMISS_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
 
   function isBlocked() {
     try {
       var s = JSON.parse(localStorage.getItem(K_STATE));
       if (!s) return false;
-      if (s.s === 'clicked') return true; // permanent
+      if (s.s === 'clicked') return true;
       if (s.s === 'dismissed') {
-        if (Date.now() - s.at < DISMISS_TTL) return true; // within 30 days
-        localStorage.removeItem(K_STATE); // expired — allow one more show
+        if (Date.now() - s.at < DISMISS_TTL) return true;
+        localStorage.removeItem(K_STATE);
         return false;
       }
       return false;
@@ -269,33 +285,15 @@
     localStorage.setItem(K_STATE, JSON.stringify({ s: state, at: Date.now() }));
   }
 
-  /* Image URL cache */
-  var imgUrl = null;
-
-  function getCachedImg() {
-    try {
-      var c = JSON.parse(localStorage.getItem(K_IMG));
-      if (c && c.url && Date.now() - c.at < IMG_TTL) return c.url;
-    } catch (e) {}
-    return null;
-  }
-
-  imgUrl = getCachedImg();
-
-  if (!imgUrl) {
-    fetch('/popup-config')
-      .then(function (r) { return r.ok ? r.json() : {}; })
-      .then(function (d) {
-        if (d && d.imageUrl) {
-          imgUrl = d.imageUrl;
-          localStorage.setItem(K_IMG, JSON.stringify({ url: imgUrl, at: Date.now() }));
-        }
-      })
-      .catch(function () {});
-  }
-
   /* Build popup DOM */
   function buildPopup() {
+    var cfg = _cfg || {};
+    var headline = cfg.popupHeadline || 'Get the app.';
+    var subtitle = cfg.popupSubtitle || 'Read the Qur\u2019an, listen to reciters, and keep your progress with you \u2014 wherever you are.';
+    var imgUrl   = cfg.imageUrl || null;
+    var iosUrl   = cfg.iosUrl   || DEFAULT_IOS;
+    var playUrl  = cfg.playUrl  || DEFAULT_PLAY;
+
     var overlay = document.createElement('div');
     overlay.id = 'tk-pp-ov';
     overlay.setAttribute('role', 'dialog');
@@ -349,12 +347,12 @@
     /* Headline */
     var h = document.createElement('h2');
     h.id = 'tk-pp-h';
-    h.textContent = 'Get the app.';
+    h.textContent = headline;
 
     /* Sub */
     var sub = document.createElement('p');
     sub.id = 'tk-pp-sub';
-    sub.textContent = 'Read the Qur\u2019an, listen to reciters, and keep your progress with you \u2014 wherever you are.';
+    sub.textContent = subtitle;
 
     /* Buttons */
     var btns = document.createElement('div');
@@ -367,12 +365,12 @@
     }
 
     if (isIOS) {
-      addBtn('Download on the App Store', IOS, appleIcon);
+      addBtn('Download on the App Store', iosUrl, appleIcon);
     } else if (isAnd) {
-      addBtn('Get it on Google Play', PLAY, playIcon);
+      addBtn('Get it on Google Play', playUrl, playIcon);
     } else {
-      addBtn('Download on the App Store', IOS, appleIcon);
-      addBtn('Get it on Google Play', PLAY, playIcon);
+      addBtn('Download on the App Store', iosUrl, appleIcon);
+      addBtn('Get it on Google Play', playUrl, playIcon);
     }
 
     body.appendChild(logoBar);
@@ -403,14 +401,19 @@
     return overlay;
   }
 
-  /* Show after 2.5 s */
+  /* Show after 2.5 s — config fetch is done well before then */
   setTimeout(function () {
     if (isBlocked()) return;
-    var popup = buildPopup();
-    document.body.appendChild(popup);
-    requestAnimationFrame(function () {
+    _cfgReady.then(function () {
+      var cfg = _cfg || {};
+      if (cfg.popupEnabled === false) return; // disabled via admin
+      if (isBlocked()) return;
+      var popup = buildPopup();
+      document.body.appendChild(popup);
       requestAnimationFrame(function () {
-        popup.classList.add('tk-in');
+        requestAnimationFrame(function () {
+          popup.classList.add('tk-in');
+        });
       });
     });
   }, 2500);
