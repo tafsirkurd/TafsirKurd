@@ -2407,6 +2407,7 @@
             search:        { icon: 'search',           label: 'Search',         group: 'Screens' },
             // Media
             audio:         { icon: 'headphones',       label: 'Audio',          group: 'Media' },
+            download:      { icon: 'download',         label: 'Downloads',      group: 'Media' },
             content:       { icon: 'file-text',        label: 'Content',        group: 'Media' },
             // Account
             auth:          { icon: 'log-in',           label: 'Auth',           group: 'Account' },
@@ -2441,20 +2442,17 @@
             footer:                 { icon: 'layout',       label: 'Footer',         group: 'Other' },
         };
 
-        // ── Translation change-status helpers ──────────────────────────────────
-        // "Changed" = updated_at is more than 2 seconds later than created_at.
-        // The 2s tolerance handles rows where Postgres sets both timestamps in
-        // the same INSERT statement (they land within milliseconds of each other).
-        function isChanged(t) {
-            if (!t.updated_at || !t.created_at) return false;
-            return (new Date(t.updated_at).getTime() - new Date(t.created_at).getTime()) > 2000;
-        }
-
-        // Returns 'changed' | 'empty' | 'default'
+        // ── Translation status ──────────────────────────────────────────────────
+        // "translated" = text contains actual Kurdish/Arabic characters (U+0600–U+06FF).
+        // "default"    = text exists but is still English placeholder (no Kurdish chars).
+        // "empty"      = no text at all.
+        // We intentionally do NOT use updated_at vs created_at — those timestamps
+        // get touched by bulk page-fix imports and produce massive false-positives.
+        var _kurdishRe = /[\u0600-\u06FF]/;
         function getTranslationStatus(t) {
             if (!t.kurdish_text || !t.kurdish_text.trim()) return 'empty';
-            if (isChanged(t)) return 'changed';
-            return 'default';
+            if (_kurdishRe.test(t.kurdish_text)) return 'changed'; // has Kurdish chars = translated
+            return 'default'; // English placeholder — not yet translated
         }
 
         function getChipMeta(slug, isWeb) {
@@ -3270,9 +3268,9 @@
             statusDot.className = 't-status-dot';
             statusEl.appendChild(statusDot);
             statusEl.appendChild(document.createTextNode(
-                status === 'changed' ? 'Edited' :
+                status === 'changed' ? 'Translated' :
                 status === 'empty'   ? '⚠ Empty' :
-                                       'Default'
+                                       'Needs translation'
             ));
             badgeWrap.appendChild(statusEl);
 
