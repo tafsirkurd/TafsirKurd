@@ -224,6 +224,29 @@
         }
         .filter-clear.visible { display: flex; }
 
+        /* ===== Sort button ===== */
+        .sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+            font-family: inherit;
+            flex-shrink: 0;
+        }
+        .sort-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .sort-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(59,130,246,0.06); }
+        body.dark-mode .sort-btn.active { background: rgba(59,130,246,0.12); }
+        .sort-btn svg { width: 15px; height: 15px; }
+
         /* ===== Two-column body layout ===== */
         .t-body {
             display: flex;
@@ -1659,6 +1682,10 @@
                         <input type="text" id="searchInput" placeholder="Search by key or text..." oninput="onSearchInput()">
                         <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
                     </div>
+                    <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
+                        <i data-lucide="arrow-down-narrow-wide"></i>
+                        <span id="sortLabel">Newest</span>
+                    </button>
                 </div>
                 <button class="mobile-filter-bar" id="mobileFilterBar" onclick="openFilterSheet()">
                     <i data-lucide="filter" style="width:16px;height:16px"></i>
@@ -2464,6 +2491,7 @@
         let canDelete = true;
         let editingId = null;
         let activePlatform = 'web';
+        let sortOrder = 'newest'; // 'newest' | 'az'
         let quickEditMode = false;
         let quickEditDirty = {}; // { id: newText } — only changed rows
 
@@ -2990,6 +3018,17 @@
             _searchDebounce = setTimeout(filterTranslations, 220);
         }
 
+        function toggleSort() {
+            sortOrder = (sortOrder === 'newest') ? 'az' : 'newest';
+            var btn = document.getElementById('sortBtn');
+            var lbl = document.getElementById('sortLabel');
+            var icon = btn ? btn.querySelector('[data-lucide]') : null;
+            if (lbl) lbl.textContent = sortOrder === 'newest' ? 'Newest' : 'A–Z';
+            if (icon) icon.setAttribute('data-lucide', sortOrder === 'newest' ? 'arrow-down-narrow-wide' : 'arrow-down-a-z');
+            if (btn) { btn.classList.toggle('active', sortOrder === 'newest'); lucide.createIcons({ nodes: [icon] }); }
+            filterTranslations();
+        }
+
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             document.getElementById('searchClear').classList.remove('visible');
@@ -3020,14 +3059,17 @@
                 ? searchMatches.filter(function(t) { return chipKey(t) === activePageFilter; })
                 : searchMatches;
 
-            // Sort: relevance when searching, newest first (by max of updated_at/created_at) otherwise.
-            // Using MAX so newly added rows (updated_at=null or =created_at) sort by created_at
-            // and appear at the top, not the bottom.
+            // Sort: relevance when searching, otherwise by sortOrder toggle (newest / A-Z).
             if (search) {
                 matches.sort(function(a, b) {
                     return getSearchScore(b, search) - getSearchScore(a, search);
                 });
+            } else if (sortOrder === 'az') {
+                matches.sort(function(a, b) {
+                    return (a.key_id || '').localeCompare(b.key_id || '');
+                });
             } else {
+                // newest first — MAX(updated_at, created_at) so new rows appear at top
                 matches.sort(function(a, b) {
                     var ua = Math.max(
                         a.updated_at ? new Date(a.updated_at).getTime() : 0,
@@ -3544,19 +3586,8 @@
 
                 logChange('add', { key_id: keyVal, new_text: textVal, page: pageVal });
 
-                // Insert into local array — re-sort newest first so it appears at top
+                // Insert into local array — filterTranslations() will re-sort per sortOrder
                 allTranslations.push(result.row);
-                allTranslations.sort(function(a, b) {
-                    var ua = Math.max(
-                        a.updated_at ? new Date(a.updated_at).getTime() : 0,
-                        a.created_at ? new Date(a.created_at).getTime() : 0
-                    );
-                    var ub = Math.max(
-                        b.updated_at ? new Date(b.updated_at).getTime() : 0,
-                        b.created_at ? new Date(b.created_at).getTime() : 0
-                    );
-                    return ub - ua;
-                });
 
                 toggleAddForm();
                 updateStats();
