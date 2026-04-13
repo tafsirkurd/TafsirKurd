@@ -3531,12 +3531,13 @@
                     item.kurdish_text = textVal;
                     item.page = pageVal;
                     item.context = ctxVal || '';
+                    item.updated_at = new Date().toISOString(); // push to top of Newest sort
                     if (iosEl   !== null) item.ios_text     = iosEl.value.trim()   || null;
                     if (droidEl !== null) item.android_text = droidEl.value.trim() || null;
                 }
 
                 editingId = null;
-                renderPage();
+                filterTranslations(); // re-sort so edited item moves to top in Newest mode
                 showToast('Saved');
             } catch (err) {
                 console.error('Save error:', err);
