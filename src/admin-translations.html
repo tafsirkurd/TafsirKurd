@@ -3025,11 +3025,14 @@
             if (lbl) lbl.textContent = sortOrder === 'newest' ? 'Newest' : 'A–Z';
             if (btn) {
                 btn.classList.toggle('active', sortOrder === 'newest');
-                var icon = btn.querySelector('[data-lucide]');
-                if (icon) {
-                    icon.setAttribute('data-lucide', sortOrder === 'newest' ? 'arrow-down-narrow-wide' : 'arrow-down-a-z');
-                    lucide.createIcons({ nodes: [btn] });
-                }
+                // Lucide replaces <i data-lucide> with <svg> at render time,
+                // so we must replace the svg with a fresh <i> then re-render.
+                var oldIcon = btn.querySelector('svg, i');
+                var newI = document.createElement('i');
+                newI.setAttribute('data-lucide', sortOrder === 'newest' ? 'arrow-down-narrow-wide' : 'arrow-down-a-z');
+                if (oldIcon) btn.replaceChild(newI, oldIcon);
+                else btn.insertBefore(newI, btn.firstChild);
+                lucide.createIcons({ nodes: [btn] });
             }
             filterTranslations();
         }
@@ -3216,9 +3219,9 @@
             var contentDiv = document.createElement('div');
             var textDiv = document.createElement('div');
             textDiv.className = 't-text';
+            textDiv.dir = 'rtl';
             if (search) {
                 highlightText(textDiv, t.kurdish_text, search);
-                textDiv.dir = 'rtl';
             } else {
                 textDiv.textContent = t.kurdish_text;
             }
@@ -3371,6 +3374,7 @@
             var textArea = document.createElement('textarea');
             textArea.id = 'editText-' + t.id;
             textArea.value = t.kurdish_text;
+            textArea.dir = 'rtl';
             textField.appendChild(textLabel);
             textField.appendChild(textArea);
             form.appendChild(textField);
