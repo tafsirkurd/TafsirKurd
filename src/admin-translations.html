@@ -2785,7 +2785,7 @@
             platformData.forEach(function(t) {
                 var k = getChipKey(t);
                 pageCounts[k] = (pageCounts[k] || 0) + 1;
-                if (isChanged(t)) { changedCounts[k] = (changedCounts[k] || 0) + 1; allChangedCount++; }
+                if (getTranslationStatus(t) === 'changed') { changedCounts[k] = (changedCounts[k] || 0) + 1; allChangedCount++; }
             });
 
             if (isSearching) {
@@ -2833,7 +2833,7 @@
                 if (chg > 0 && !isSearching) {
                     var chgLbl = document.createElement('span');
                     chgLbl.className = 'cat-count-changed';
-                    chgLbl.textContent = chg + ' edited';
+                    chgLbl.textContent = chg + ' translated';
                     cntCol.appendChild(chgLbl);
                 }
                 btn.appendChild(cntCol);
@@ -2927,7 +2927,7 @@
             }
             var sheetChangedCounts = {};
             var sheetAllChanged = 0;
-            platformData.forEach(function(t) { var k = getKey(t); pageCounts[k] = (pageCounts[k]||0)+1; if (isChanged(t)) { sheetChangedCounts[k] = (sheetChangedCounts[k]||0)+1; sheetAllChanged++; } });
+            platformData.forEach(function(t) { var k = getKey(t); pageCounts[k] = (pageCounts[k]||0)+1; if (getTranslationStatus(t) === 'changed') { sheetChangedCounts[k] = (sheetChangedCounts[k]||0)+1; sheetAllChanged++; } });
             if (isWeb) { WEB_PAGES.forEach(function(p) { if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0; }); }
 
             var pages = Object.keys(pageCounts).sort();
@@ -2954,7 +2954,7 @@
                 if (chg > 0) {
                     var chgLbl = document.createElement('span');
                     chgLbl.className = 'cat-count-changed';
-                    chgLbl.textContent = chg + ' edited';
+                    chgLbl.textContent = chg + ' translated';
                     cntCol.appendChild(chgLbl);
                 }
                 btn.appendChild(cntCol);
