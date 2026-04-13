@@ -608,6 +608,12 @@ body.dark-mode .sidebar-logo-img {
     letter-spacing: -0.4px;
 }
 
+.page-subtitle {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
 .page-actions {
     display: flex;
     align-items: center;
@@ -724,6 +730,12 @@ body.dark-mode .sidebar-logo-img {
     font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.card-subtitle {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
 }
 
 .card-body {
