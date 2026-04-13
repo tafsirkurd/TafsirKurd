@@ -3022,10 +3022,15 @@
             sortOrder = (sortOrder === 'newest') ? 'az' : 'newest';
             var btn = document.getElementById('sortBtn');
             var lbl = document.getElementById('sortLabel');
-            var icon = btn ? btn.querySelector('[data-lucide]') : null;
             if (lbl) lbl.textContent = sortOrder === 'newest' ? 'Newest' : 'A–Z';
-            if (icon) icon.setAttribute('data-lucide', sortOrder === 'newest' ? 'arrow-down-narrow-wide' : 'arrow-down-a-z');
-            if (btn) { btn.classList.toggle('active', sortOrder === 'newest'); lucide.createIcons({ nodes: [icon] }); }
+            if (btn) {
+                btn.classList.toggle('active', sortOrder === 'newest');
+                var icon = btn.querySelector('[data-lucide]');
+                if (icon) {
+                    icon.setAttribute('data-lucide', sortOrder === 'newest' ? 'arrow-down-narrow-wide' : 'arrow-down-a-z');
+                    lucide.createIcons({ nodes: [btn] });
+                }
+            }
             filterTranslations();
         }
 
