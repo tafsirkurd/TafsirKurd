@@ -4,12 +4,24 @@
     <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="utils/theme-loader.js"></script>
+    <script src="/utils/theme-loader.js"></script>
     <title>Website Sections - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=10">
+    <style id="early-sidebar-hide">.sidebar-nav{visibility:hidden}</style>
+    <script>
+        (function(){
+            var role=sessionStorage.getItem('adminRole');
+            var style=document.getElementById('early-sidebar-hide');
+            var css='.sidebar-nav{visibility:visible}';
+            if(role==='analyst') css+='.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"]{display:none!important}';
+            else if(role==='editor') css+='.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"]{display:none!important}';
+            else if(role==='custom') css+='.nav-item{display:none!important}';
+            if(role) style.textContent=css;
+        })();
+    </script>
     <style>
         /* Section entry animation */
         .ws-section {
@@ -395,7 +407,7 @@
                     <i data-lucide="clock"></i>
                     <span id="sessionTimerText">60:00</span>
                 </div>
-                <button class="topbar-theme-toggle" id="theme-toggle" title="Toggle theme">
+                <button class="topbar-btn" id="theme-toggle" title="Toggle theme">
                     <i data-lucide="moon" id="theme-icon"></i>
                 </button>
             </div>
@@ -551,8 +563,37 @@
     </main>
 </div>
 
-<script src="utils/admin-auth.js"></script>
-<script src="utils/admin-sidebar.js"></script>
+<script src="/utils/device-fingerprint.js"></script>
+<script src="/utils/admin-heartbeat.js?v=2"></script>
+<script src="/utils/admin-session-timer-ui.js?v=5"></script>
+<script src="/utils/admin-loading.js"></script>
+<script src="/utils/admin-auth.js?v=5"></script>
+<script src="/utils/admin-notifications.js?v=3"></script>
+<script>
+    lucide.createIcons();
+
+    document.getElementById('menu-toggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+    document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('mobile-open');
+    });
+
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon   = document.getElementById('theme-icon');
+    if (localStorage.getItem('admin-theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        lucide.createIcons();
+    }
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        lucide.createIcons();
+        localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+    });
+</script>
 <script>
 (async function () {
     'use strict';
@@ -693,7 +734,6 @@
     };
 
     init();
-    if (window.lucide) lucide.createIcons();
 })();
 </script>
 </body>
