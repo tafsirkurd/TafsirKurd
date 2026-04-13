@@ -99,7 +99,7 @@
             font-size: .79rem;
             font-weight: 600;
             background: var(--text-primary);
-            color: var(--bg-primary);
+            color: var(--bg-app);
             border-radius: 11px;
             text-decoration: none;
             white-space: nowrap;
@@ -209,7 +209,7 @@
         .ws-field textarea {
             width: 100%;
             padding: 9px 12px;
-            background: var(--bg-secondary);
+            background: var(--bg-hover);
             border: 1px solid var(--border-light);
             border-radius: 8px;
             font-size: 13px;
@@ -298,7 +298,7 @@
             align-items: center;
             gap: 7px;
             padding: 9px 12px;
-            background: var(--bg-secondary);
+            background: var(--bg-hover);
             border: 1px solid var(--border-light);
             border-radius: 8px;
             font-size: 12px;
@@ -396,7 +396,7 @@
                     <span id="sessionTimerText">60:00</span>
                 </div>
                 <button class="topbar-theme-toggle" id="theme-toggle" title="Toggle theme">
-                    <i data-lucide="moon"></i>
+                    <i data-lucide="moon" id="theme-icon"></i>
                 </button>
             </div>
         </header>
@@ -573,6 +573,8 @@
 
     /* ── Init ── */
     async function init() {
+        const auth = await window.adminAuth.checkAuth();
+        if (!auth) return;
         try {
             const cfg = await fetch('/config').then(r => r.json());
             if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
