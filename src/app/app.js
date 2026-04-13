@@ -4154,11 +4154,11 @@ function renderAudioSettings(){
       var dlBtn=el('button','reciter-dl-btn');
       var _dlSt=AudioDownloads.dlState(r.id);
       var _isDling=AudioDownloads.isDownloading(r.id);
-      if(_isDling){dlBtn.classList.add('downloading');dlBtn.appendChild(icon('fas fa-spinner fa-spin'));dlBtn.title='Downloading...';}
-      else if(_dlSt==='full'){dlBtn.classList.add('has-dl');dlBtn.appendChild(icon('fas fa-check'));dlBtn.title='Downloaded — tap to manage';}
-      else if(_dlSt==='partial'){dlBtn.classList.add('partial');dlBtn.appendChild(icon('fas fa-arrow-down'));dlBtn.title='Partially downloaded — tap to manage';}
-      else if(_dlSt==='corrupt'){dlBtn.classList.add('corrupt');dlBtn.appendChild(icon('fas fa-triangle-exclamation'));dlBtn.title='Integrity issues — tap to repair';}
-      else{dlBtn.appendChild(icon('fas fa-arrow-down'));dlBtn.title='Download for offline';}
+      if(_isDling){dlBtn.classList.add('downloading');dlBtn.appendChild(icon('fas fa-spinner fa-spin'));dlBtn.title=t('dl.tip_downloading');}
+      else if(_dlSt==='full'){dlBtn.classList.add('has-dl');dlBtn.appendChild(icon('fas fa-check'));dlBtn.title=t('dl.tip_downloaded');}
+      else if(_dlSt==='partial'){dlBtn.classList.add('partial');dlBtn.appendChild(icon('fas fa-arrow-down'));dlBtn.title=t('dl.tip_partial');}
+      else if(_dlSt==='corrupt'){dlBtn.classList.add('corrupt');dlBtn.appendChild(icon('fas fa-triangle-exclamation'));dlBtn.title=t('dl.tip_corrupt');}
+      else{dlBtn.appendChild(icon('fas fa-arrow-down'));dlBtn.title=t('dl.tip_offline');}
       on(dlBtn,'click',function(e){e.stopPropagation();openDlSheet(r.id);});
       card.appendChild(dlBtn);
     }
@@ -4221,8 +4221,8 @@ function _fmtVerifyDate(ts){
 function _dlCbs(reciterId){
   return {
     onProgress:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);},
-    onDone:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);renderAudioSettings();toast('Download complete');},
-    onError:function(msg){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);toast('Download stopped: '+msg);},
+    onDone:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);renderAudioSettings();toast(t('toast.dl_complete'));},
+    onError:function(msg){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);toast(t('toast.dl_stopped')+': '+msg);},
     onCancel:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);renderAudioSettings();}
   };
 }
@@ -4247,7 +4247,7 @@ function renderDlSheetBody(reciterId){
     var surahName2=SURAHS&&SURAHS[S.surah-1]?SURAHS[S.surah-1].n:'';
     var scopeSeg=el('div','dl-scope-seg');
     ['full','surah'].forEach(function(sc){
-      var lbl2=sc==='full'?'Full Quran':'Surah '+S.surah+(surahName2?' — '+surahName2:'');
+      var lbl2=sc==='full'?t('dl.full_quran'):'Surah '+S.surah+(surahName2?' — '+surahName2:'');
       var btn=el('button','dl-scope-btn'+(_dlScope===sc?' on':''),lbl2);
       on(btn,'click',function(){if(_dlScope!==sc){_dlScope=sc;renderDlSheetBody(reciterId);}});
       scopeSeg.appendChild(btn);
@@ -4258,7 +4258,7 @@ function renderDlSheetBody(reciterId){
   // ── Wi-Fi toggle ──
   if(!isDling){
     var wifiRow=el('div','dl-wifi-row');
-    wifiRow.appendChild(el('span','dl-wifi-lbl','Wi-Fi only'));
+    wifiRow.appendChild(el('span','dl-wifi-lbl',t('dl.wifi_only')));
     var toggle=el('div','toggle'+(AD.isWifiOnly()?' on':''));
     toggle.appendChild(el('div','toggle-knob'));
     on(toggle,'click',function(){
@@ -4284,7 +4284,7 @@ function renderDlSheetBody(reciterId){
     var nCorrupt=_dlScope==='surah'?1:stats.needsRepair.length;
     var cBadge=el('div','dl-corrupt-badge');
     cBadge.appendChild(icon('fas fa-triangle-exclamation'));
-    cBadge.appendChild(el('span','',''+nCorrupt+' surah'+(nCorrupt!==1?'s':'')+' failed integrity check'));
+    cBadge.appendChild(el('span','',''+nCorrupt+' '+t('dl.surah_word')+(nCorrupt!==1?'s':'')+' '+t('dl.failed_check')));
     body.appendChild(cBadge);
   }
 
@@ -4294,20 +4294,20 @@ function renderDlSheetBody(reciterId){
   var statusVal=el('div','dl-status-val');
   var _sizeReady=(_probed!==undefined); // false while probe in flight
   if(isDling&&prog){
-    statusLbl.textContent='Downloading...';
+    statusLbl.textContent=t('dl.downloading');
     statusVal.textContent=prog.pct+'%';
   } else if(scopeState==='full'){
-    statusLbl.textContent=_dlScope==='surah'?'Surah downloaded':'Fully downloaded';
+    statusLbl.textContent=_dlScope==='surah'?t('dl.surah_downloaded'):t('dl.fully_downloaded');
     statusVal.textContent=AD.fmtBytes(stats.bytes);
   } else if(scopeState==='partial'){
-    statusLbl.textContent=_dlScope==='surah'?'Partially downloaded':('Partially downloaded ('+stats.surahs+'/114 surahs)');
-    statusVal.textContent=(_sizeReady?'':'\u2248')+AD.fmtBytes(remBytes)+' left';
+    statusLbl.textContent=_dlScope==='surah'?t('dl.partial'):(t('dl.partial')+' ('+stats.surahs+'/114 '+t('dl.surahs')+')');
+    statusVal.textContent=(_sizeReady?'':'\u2248')+AD.fmtBytes(remBytes)+' '+t('dl.left');
   } else if(scopeState==='corrupt'){
-    statusLbl.textContent='Partially downloaded — integrity issues';
+    statusLbl.textContent=t('dl.partial_issues');
     statusVal.textContent=AD.fmtBytes(stats.bytes);
   } else {
-    statusLbl.textContent='Not downloaded';
-    statusVal.textContent=_sizeReady?AD.fmtBytes(estBytes):('Measuring\u2026');
+    statusLbl.textContent=t('dl.not_downloaded');
+    statusVal.textContent=_sizeReady?AD.fmtBytes(estBytes):t('dl.measuring');
   }
   statusRow.appendChild(statusLbl);
   statusRow.appendChild(statusVal);
@@ -4333,7 +4333,7 @@ function renderDlSheetBody(reciterId){
       var repairList=(_dlScope==='surah'&&S.surah)?[S.surah]:stats.needsRepair.map(Number);
       var repBtn=el('button','dl-action-btn primary');
       repBtn.appendChild(icon('fas fa-wrench'));
-      repBtn.appendChild(document.createTextNode(' Repair ('+repairList.length+' surah'+(repairList.length!==1?'s':'')+')'));
+      repBtn.appendChild(document.createTextNode(' '+t('dl.repair')+' ('+repairList.length+' '+t('dl.surah_word')+(repairList.length!==1?'s':'')+')'));
       on(repBtn,'click',function(){repBtn.disabled=true;AD.downloadSurahs(reciterId,repairList,_dlCbs(reciterId));setTimeout(function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);},400);});
       body.appendChild(repBtn);
     }
@@ -4341,10 +4341,10 @@ function renderDlSheetBody(reciterId){
     // Download / Continue / Re-download
     var dlIcon=scopeState==='full'?'fas fa-rotate-right':'fas fa-arrow-down';
     var _szEst=_sizeReady?AD.fmtBytes(estBytes):'…';
-    var _szRem=_sizeReady?AD.fmtBytes(remBytes)+'  left':'…';
-    var dlLabel=scopeState==='full'?'Re-download ('+_szEst+')':
-                scopeState==='partial'?'Continue download ('+_szRem+')':
-                'Download ('+_szEst+')';
+    var _szRem=_sizeReady?AD.fmtBytes(remBytes)+' '+t('dl.left'):'…';
+    var dlLabel=scopeState==='full'?t('dl.redownload_btn')+' ('+_szEst+')':
+                scopeState==='partial'?t('dl.continue_btn')+' ('+_szRem+')':
+                t('dl.download_btn')+' ('+_szEst+')';
     var dlClass='dl-action-btn'+(scopeState==='corrupt'?' cancel-btn':' primary');
     var dlBtn2=el('button',dlClass);
     if(scopeState==='corrupt')dlBtn2.style.marginTop='8px';
@@ -4356,14 +4356,14 @@ function renderDlSheetBody(reciterId){
     // Verify integrity (shown when there's something downloaded)
     if(stats.bytes>0){
       var verifyRow=el('div','dl-verify-row');
-      var verifyLbl=el('span','dl-verify-lbl',stats.verifiedAt?('Last checked: '+_fmtVerifyDate(stats.verifiedAt)):'Integrity not verified');
+      var verifyLbl=el('span','dl-verify-lbl',stats.verifiedAt?(t('dl.last_checked')+': '+_fmtVerifyDate(stats.verifiedAt)):t('dl.not_verified'));
       var isVer=AD.isVerifying();
-      var verifyBtn=el('button','dl-verify-btn',isVer?'Checking...':'Verify integrity');
+      var verifyBtn=el('button','dl-verify-btn',isVer?t('dl.verifying'):t('dl.verify'));
       verifyBtn.disabled=isVer;
       on(verifyBtn,'click',function(){
-        verifyBtn.disabled=true;verifyBtn.textContent='Checking...';
+        verifyBtn.disabled=true;verifyBtn.textContent=t('dl.verifying');
         AD.verifyReciter(reciterId,{
-          onProgress:function(done,total){if(_dlSheetOpen&&_dlSheetReciter===reciterId)verifyBtn.textContent='Checking '+done+'/'+total+'...';},
+          onProgress:function(done,total){if(_dlSheetOpen&&_dlSheetReciter===reciterId)verifyBtn.textContent=t('dl.verifying')+' '+done+'/'+total+'...';},
           onDone:function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);}
         });
       });
@@ -4376,11 +4376,11 @@ function renderDlSheetBody(reciterId){
     if(stats.bytes>0){
       var delBtn=el('button','dl-action-btn danger');
       delBtn.appendChild(icon('fas fa-trash'));
-      delBtn.appendChild(document.createTextNode(' Remove download ('+AD.fmtBytes(stats.bytes)+')'));
+      delBtn.appendChild(document.createTextNode(' '+t('dl.remove')+' ('+AD.fmtBytes(stats.bytes)+')'));
       on(delBtn,'click',function(){
         AD.deleteReciter(reciterId).then(function(){
           if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);
-          renderAudioSettings();toast('Download removed');
+          renderAudioSettings();toast(t('toast.dl_removed'));
         });
       });
       body.appendChild(delBtn);
@@ -4389,7 +4389,7 @@ function renderDlSheetBody(reciterId){
     // Cancel button while downloading
     var cancelBtn=el('button','dl-action-btn cancel-btn');
     cancelBtn.appendChild(icon('fas fa-stop'));
-    cancelBtn.appendChild(document.createTextNode(' Cancel download'));
+    cancelBtn.appendChild(document.createTextNode(' '+t('dl.cancel')));
     on(cancelBtn,'click',function(){AD.cancel(reciterId);renderAudioSettings();});
     body.appendChild(cancelBtn);
   }
@@ -4576,11 +4576,11 @@ function _buildRecPicker(){
       var rpDlBtn=el('button','reciter-dl-btn');
       var rpDlSt=AudioDownloads.dlState(r.id);
       var rpDling=AudioDownloads.isDownloading(r.id);
-      if(rpDling){rpDlBtn.classList.add('downloading');rpDlBtn.appendChild(icon('fas fa-spinner fa-spin'));rpDlBtn.title='Downloading...';}
-      else if(rpDlSt==='full'){rpDlBtn.classList.add('has-dl');rpDlBtn.appendChild(icon('fas fa-check'));rpDlBtn.title='Downloaded';}
-      else if(rpDlSt==='partial'){rpDlBtn.classList.add('partial');rpDlBtn.appendChild(icon('fas fa-arrow-down'));rpDlBtn.title='Partially downloaded';}
-      else if(rpDlSt==='corrupt'){rpDlBtn.classList.add('corrupt');rpDlBtn.appendChild(icon('fas fa-triangle-exclamation'));rpDlBtn.title='Needs repair';}
-      else{rpDlBtn.appendChild(icon('fas fa-arrow-down'));rpDlBtn.title='Download for offline';}
+      if(rpDling){rpDlBtn.classList.add('downloading');rpDlBtn.appendChild(icon('fas fa-spinner fa-spin'));rpDlBtn.title=t('dl.tip_downloading');}
+      else if(rpDlSt==='full'){rpDlBtn.classList.add('has-dl');rpDlBtn.appendChild(icon('fas fa-check'));rpDlBtn.title=t('dl.tip_downloaded_s');}
+      else if(rpDlSt==='partial'){rpDlBtn.classList.add('partial');rpDlBtn.appendChild(icon('fas fa-arrow-down'));rpDlBtn.title=t('dl.tip_partial_s');}
+      else if(rpDlSt==='corrupt'){rpDlBtn.classList.add('corrupt');rpDlBtn.appendChild(icon('fas fa-triangle-exclamation'));rpDlBtn.title=t('dl.tip_corrupt_s');}
+      else{rpDlBtn.appendChild(icon('fas fa-arrow-down'));rpDlBtn.title=t('dl.tip_offline');}
       on(rpDlBtn,'click',function(e){e.stopPropagation();App.closeRecPicker();openDlSheet(r.id);});
       item.appendChild(rpDlBtn);
     }
@@ -8159,14 +8159,14 @@ function renderProfile(panel){
   if(window.AudioDownloads){
     var dlStats=AudioDownloads.getAllStats();
     var dlSec=el('div','pp-section');
-    dlSec.appendChild(el('div','pp-section-title','Downloads'));
+    dlSec.appendChild(el('div','pp-section-title',t('dl.section')));
     var dlCard=el('div','pp-card');
     if(!dlStats.length){
-      dlCard.appendChild(el('div','pp-row-label','No downloaded reciters yet. Tap the ↓ button on any reciter to download for offline.'));
+      dlCard.appendChild(el('div','pp-row-label',t('dl.no_reciters')));
     } else {
       var totalBytes=dlStats.reduce(function(s,r){return s+r.bytes;},0);
       var totalRow=el('div','pp-row');
-      totalRow.appendChild(el('div','pp-row-label','Storage used'));
+      totalRow.appendChild(el('div','pp-row-label',t('dl.storage_used')));
       totalRow.appendChild(el('div','pp-row-value',AudioDownloads.fmtBytes(totalBytes)));
       dlCard.appendChild(totalRow);
       dlCard.appendChild(el('div','pp-row-label',''));// spacer
@@ -8174,22 +8174,22 @@ function renderProfile(panel){
         var row=el('div','pp-dl-row');
         var info=el('div','pp-dl-info');
         info.appendChild(el('div','pp-dl-name',(r.flag?r.flag+' ':'')+r.name));
-        info.appendChild(el('div','pp-dl-size',AudioDownloads.fmtBytes(r.bytes)+(r.full?' · Full Quran':' · '+r.surahs+' surahs')));
+        info.appendChild(el('div','pp-dl-size',AudioDownloads.fmtBytes(r.bytes)+(r.full?' · '+t('dl.full_quran'):' · '+r.surahs+' '+t('dl.surahs'))));
         row.appendChild(info);
         var ppDlMgr=el('button','pp-dl-del');
         ppDlMgr.appendChild(icon('fas fa-download'));
-        ppDlMgr.title='Manage download';
+        ppDlMgr.title=t('dl.manage');
         ppDlMgr.style.color='var(--accent)';
         (function(rid){on(ppDlMgr,'click',function(){App.closeProfile();openDlSheet(rid);});})(r.id);
         row.appendChild(ppDlMgr);
         var delBtn=el('button','pp-dl-del');
         delBtn.appendChild(icon('fas fa-trash'));
-        delBtn.title='Remove download';
+        delBtn.title=t('dl.remove');
         (function(rid){
           on(delBtn,'click',function(){
             AudioDownloads.deleteReciter(rid).then(function(){
               renderProfile(panel);
-              toast('Download removed');
+              toast(t('toast.dl_removed'));
             });
           });
         })(r.id);

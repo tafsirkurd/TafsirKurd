@@ -135,7 +135,7 @@
   function canDownload() {
     if (!isWifiOnly()) return { ok: true };
     if (_onWifi()) return { ok: true };
-    return { ok: false, reason: 'Wi-Fi only mode is on. Connect to Wi-Fi or disable the setting.' };
+    return { ok: false, reason: (window.t&&window.t('dl.wifi_blocked'))||'Wi-Fi only mode is on. Connect to Wi-Fi or disable the setting.' };
   }
 
   // ── Size measurement ─────────────────────────────────────────────────────────

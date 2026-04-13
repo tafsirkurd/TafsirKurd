@@ -6,10 +6,8 @@
   "tabs.settings": "ڕێکخستن",
   "tabs.prayer": "نوێژ",
   "tabs.gencine": "گەنجینە",
-
   "header.prayer": "کاتا نوێژ",
   "header.gencine": "گەنجینەیا ئایینی",
-
   "gencine.adhkar": "زکیر",
   "gencine.adhkar_sub": "زکرێن بەیانی، ئێوار و زیاتر",
   "gencine.adhkar_empty": "هیچ زکرێک نییە",
@@ -125,14 +123,13 @@
   "gencine.voice_stop": "وەستاندن",
   "gencine.voice_listening": "...دەبیستم",
   "gencine.voice_unsupported": "دەنگ li vê cîhazê nayê piştgirîkirin.",
-
   "prayer.fajr": "فەجر",
   "prayer.sunrise": "ڕۆژهەلات",
   "prayer.dhuhr": "نیوەڕۆ",
   "prayer.asr": "ئێوارەی",
   "prayer.maghrib": "ئاوابوون",
   "prayer.isha": "عیشا",
-  "prayer.next": "نوێژا داهاتو",
+  "prayer.next": "داهاتوو",
   "prayer.tomorrow": "سبەیکو",
   "prayer.city_label": "شار",
   "prayer.method_label": "ڕێبازا حیساب",
@@ -167,7 +164,6 @@
   "prayer.format_24h": "24h",
   "prayer.format_12h": "12h",
   "prayer.prayers_label": "نوێژەکان",
-  "prayer.next": "داهاتوو",
   "prayer.save_settings": "پاراستنی ڕێکخستنەکان",
   "prayer.settings_saved": "ڕێکخستنەکان پارایستران",
   "prayer.reset_settings": "گەڕانەوە بۆ پێشووەکەی",
@@ -185,19 +181,16 @@
   "prayer.qibla_calib_1": "• فۆنت ب ئاستی ئاو بگرە",
   "prayer.qibla_calib_2": "• ل مادەی ئاسنی و ئامێرا کارەبایی دوور بخرە",
   "prayer.qibla_calib_3": "• ئەگەر لەراست نینە، فۆنت بە شێوەی ٨ بجووڵێنە",
-
   "header.bookmarks": "نیشانکرین",
   "header.goals": "ئارمانج",
   "header.goals_new": "نوی",
   "header.islamvoice": "ئیسلام ڤۆیس",
   "header.settings": "ڕێکخستن",
   "header.audio_settings": "ڕێکخستنا دەنگی",
-
   "search.placeholder": "لێگەڕیان...",
   "search.bookmarks": "لێگەڕیان ل نیشانان...",
   "search.divider_surah": "سوور",
   "search.divider_ayah": "ئایەت",
-
   "reader.ayah": "ئایەت",
   "reader.ayah_count": "${count}/${total} ئایەت",
   "reader.prev_surah": "سورەتا پێشیێ",
@@ -206,11 +199,9 @@
   "reader.juz_label": "جزء",
   "reader.continue": "بەردەوامکرن ل خواندنێ",
   "reader.ayah_num": "ئایەت ${num}",
-
   "sidebar.surah": "سورەت",
   "sidebar.juz": "جوز",
   "sidebar.juz_num": "جوزا ${num}",
-
   "toast.copied": "ھاتیە کۆپیکرن",
   "toast.bookmark_added": "هاتە نیشانکرن",
   "toast.bookmark_removed": "ژێبرنا نیشانێ",
@@ -225,7 +216,6 @@
   "toast.repeat_done": "دووبارەکرن تەمام بوو",
   "toast.repeat_stopped": "دووبارەکرن راوەستیا",
   "toast.no_verse": "ئایەت دیار نەکریە",
-
   "error.audio_load": "خەلەتی ل دەنگی دا هەیە",
   "error.audio_unavailable": "ئەم قاری بۆ ئەم سورەتێ بەردەست نییە",
   "error.data_load": " خەلەتی ل بارکرنا داتایێ دا یە",
@@ -246,12 +236,10 @@
   "auth.err_token_invalid": "Koda te şaş e. Kontrol bike û dûbaré biceribîne.",
   "auth.resend_code": "Koda nû bişîne",
   "auth.code_resent": "Koda nû hat şandin.",
-
   "goals.empty.title": "ئارمانجەکێ ژبۆ خۆ دابنێ",
   "goals.empty.subtitle": "ڕۆژانە چەند ئایەتەک بخوینە",
   "goals.empty.motivate": "پێنگاڤێت بچویک، گوھۆڕینەکا مەزن",
   "goals.empty.start": "دەستپێبکە",
-
   "goals.streak.continuous": "ڕۆژا بەردەوام",
   "goals.streak.start_today": "ئەڤرۆ دەست پێبکە",
   "goals.streak.on_track": "ل ڕێکێدای",
@@ -262,13 +250,11 @@
   "goals.streak.week": "ھەفتەیەک بەردەوام!",
   "goals.streak.best": "باشترین:",
   "goals.streak.days": "${count} ڕۆژ",
-
   "goals.progress.complete": "تەمام بوو — جزاك الله خيرا",
   "goals.progress.almost": "تو یێ نێزیکی!",
   "goals.progress.continue": "بەردەوام بە — ھەر ئایەتەک یا گرنگە",
   "goals.progress.start_today": "ئەڤرۆ دەست ب خواندنێ بکە",
   "goals.progress.auto_track": "ئۆتۆماتیکی تۆماردبیت",
-
   "goals.card.name": "ئارمانجا خواندنێ",
   "goals.card.daily": "${count} ئایەت ل ڕۆژەکێدا",
   "goals.stats.total": "سەرجەمێ گشتی",
@@ -276,7 +262,6 @@
   "goals.stats.best": "باشترین",
   "goals.stats.complete": "تەمام",
   "goals.stats.days": "ڕۆژ",
-
   "goals.heatmap.title": "ڕۆژژمێر",
   "goals.heatmap.active_days": "ڕۆژا چالاک",
   "goals.heatmap.complete_days": "ڕۆژا تەمام",
@@ -286,7 +271,6 @@
   "goals.session.surah": "سوور",
   "goals.session.ayahs": "ئایەت",
   "goals.session.time": "کات",
-
   "goals.months.1": "هەیڤا ١",
   "goals.months.2": "هەیڤا ٢",
   "goals.months.3": "هەیڤا ٣",
@@ -299,7 +283,6 @@
   "goals.months.10": "هەیڤا ١٠",
   "goals.months.11": "هەیڤا ١١",
   "goals.months.12": "هەیڤا ١٢",
-
   "goals.days.0": "شەمبی",
   "goals.days.1": "ئێک شەمبی",
   "goals.days.2": "دوو شەمبی",
@@ -307,14 +290,12 @@
   "goals.days.4": "چار شەمبی",
   "goals.days.5": "پێنج شەمبی",
   "goals.days.6": "ئەینی",
-
   "goals.delete.warn": "ئەڤە ھەمی داتایێن خواندنێ ژ ناڤ دبەت",
   "goals.delete.button": "ئارمانجا خو ژ ناڤ ببە",
   "goals.delete.confirm_title": "ئارمانجا خو ژ ناڤ ببە؟",
   "goals.delete.confirm_text": "ھەمی داتایێن خواندنێ و بەردەوامیێ ژ ناڤ دچن. زڤڕین بو ئەڤی کاری نینە.",
   "goals.delete.cancel": "نەخێر",
   "goals.delete.confirm": "ژ ناڤ ببە",
-
   "wizard.step": "پێنگاڤا ${current} ژ ${total}",
   "wizard.select_title": "ئارمانجەکێ ب ھەڵبژێرە",
   "wizard.select_desc": "ئارمانجەکێ ب ھەڵبژێرە ژبۆ خواندنا ڕۆژانە",
@@ -345,7 +326,6 @@
   "wizard.detail.khatm": "خاتم",
   "wizard.detail.start": "نوکە",
   "wizard.detail.begin": "دەستپێکرن",
-
   "settings.theme_light": "ڕووناک",
   "settings.theme_dark": "تاریکی",
   "settings.theme_sakina": "سکینە",
@@ -434,7 +414,6 @@
   "notif.reminder_msg_11": "قورئانێ بخوێنە — بیانوکا تو باشترین دکەت 🌅",
   "notif.reminder_msg_12": "ئاگرا ئیمانێ بدە — ئیمڕۆ قورئانێ بخوێنە ⭐",
   "notif.reminder_msg_13": "سەعادەتا ئەم دنیایێ — قورئانێ تاوەکو دلێ تو 💫",
-
   "profile.guest": "بکارهێنەر",
   "profile.login_prompt": "ژبۆ هەلگرتنا داتایی، هەرە دژوورڤە",
   "profile.login": "چوونا دژوورڤە",
@@ -471,7 +450,6 @@
   "profile.confirm_no": "نەخێر",
   "profile.login_first": "هیڤیە دەستپێکێ هەڕە دژوورڤە",
   "profile.view_profile": "پرۆفایل ببینە",
-
   "auth.login": "چوونا دژوورڤە",
   "auth.email_conflict_email": "⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا ئیمەیل. تکایە ب ئیمەیل بچۆ ژوورەوە.",
   "auth.email_conflict_google": "⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا Google. تکایە ب Google بچۆ ژوورەوە.",
@@ -495,7 +473,6 @@
   "auth.otp_placeholder": "کۆدێ پشتڕاستکرنێ",
   "auth.verify": "پشتڕاستکرن",
   "auth.enter_code": "هیڤیە کۆدی بنڤیسە",
-
   "repeat.title": "دووبارەکرن",
   "repeat.single": "ئایەتەک",
   "repeat.range": "مەودا",
@@ -513,13 +490,11 @@
   "repeat.start": "دەستپێکرن",
   "repeat.status": "دووبارەکرن ${current}/${total}",
   "repeat.active": "دووبارەکرن...",
-
   "audio.reciter": "خواندەڤان",
   "audio.speed": "لەزاتی",
   "audio.style_murattal": "مورتل",
   "audio.style_mujawwad": "مجود",
   "audio.style_hadr": "حدر",
-
   "iv.loading": "بارکرن...",
   "iv.loading_spinner": "چاڤەڕێبە...",
   "iv.new_badge": "نوی",
@@ -551,7 +526,6 @@
   "iv.error.load": "خەلەتی ل بارکرنا ڤیدیۆیا دا",
   "iv.error.load_retry": "خەلەتی ل بارکرنا ڤیدیۆیان دا یە، دوبارە هەول بدە.",
   "iv.search_placeholder": "ل زنجیرە، یان بەش بگەڕیە...",
-
   "bookmarks.total": "هەمی نیشان",
   "bookmarks.surahs": "سورەت",
   "bookmarks.notes": "تێبینی",
@@ -563,9 +537,7 @@
   "bookmarks.sort.newest": "نویترین",
   "bookmarks.sort.oldest": "کەڤنترین",
   "bookmarks.sort.surah": "سورەت",
-
   "surah.card.ayah_count": "ئایەت",
-
   "onboarding.title": "ب خێر بێی | TafsirKurd",
   "onboarding.slide1.title": "سوپاس بۆ باوەڕی یا تە ب مە!",
   "onboarding.slide1.subtitle": "تو نوکە بەشەکی ژ کومەلگەھەکا تایبەت",
@@ -590,7 +562,6 @@
   "onboarding.btn_start": "دەستپێکرن",
   "onboarding.skip": "راکێشان و دەستپێکرن",
   "onboarding.welcome": "ب خێر بێی ${name}!",
-
   "copy.title": "کۆپیکرن",
   "copy.both": "قورئان + تەفسیر",
   "copy.quran_only": "قورئان تەنها",
@@ -602,7 +573,6 @@
   "copy.fmt_tafsir": "تەفسیر",
   "copy.copy_btn": "کۆپیکرن",
   "copy.back": "گەڕانەڤە",
-
   "qs.mushaf_settings_title": "ڕێکخستنی مووشەف",
   "qs.quran_font_section": "خەتی قورئانی",
   "qs.font_size_label": "قەبارەی نووسین",
@@ -614,7 +584,6 @@
   "qs.jump_to": "ببڕە بۆ ئایەت",
   "qs.go": "برۆ",
   "qs.jump_audio": "ببڕە بۆ ئایەتی دەنگ",
-
   "iv.deleted": "سڕایەوە",
   "iv.done": "تەواو بووە",
   "iv.history_cleared": "مێژوو پاک کرایەوە",
@@ -692,7 +661,6 @@
   "iv.all": "هەمی",
   "iv.confirm_delete_comment": "دڵنیایت لە سڕینەوەی ئەم شیرۆڤەیە؟",
   "iv.confirm_delete_video": "ئایا تو دڵنیای کە دڤێت ئەڤ ڤیدیۆیێ بسڕیتەڤە؟\n\n\"${title}\"\n\nئەڤ کار ناکرێ پاشتر بگەڕێنەڤە!",
-
   "prayer.city_duhok": "دهۆک",
   "prayer.city_erbil": "هەولێر",
   "prayer.city_sulaymaniyah": "سلێمانی",
@@ -726,17 +694,14 @@
   "prayer.city_mandali": "مەندەلی",
   "prayer.city_qarahanjir": "قەرەهەنجیر",
   "prayer.city_duzkhormatou": "دوز خورماتوو",
-
   "prayer.voice_simple": "ئاگاداری سادە",
   "prayer.voice_mishary": "مشاری راشد العفاسی",
   "prayer.voice_nasser": "ناصر القطامي",
   "prayer.voice_omar": "عمر هشام العربي",
   "prayer.voice_peshawa": "پیشەوا",
   "prayer.voice_raad": "راعد محمد الكردي",
-
   "signup.email_reminders_on": "بیرانینێن ئیمێلی هاتنە چالاک کرن! تو دێ ڕۆژانە بیرانینێن قورئانێ د ئیمێلا خۆ دا وەرگری",
   "signup.email_reminders_off": "بیرانینێن ئیمێلی هاتنە گرتن",
-
   "update.title": "نوێکردنەوەیەکی نوێ بەردەستە",
   "update.message": "وەشانێکی نوێیی دابەزاوە. بۆ بەهترین ئەزموون نوێیت بکەرەوە.",
   "update.soft_message": "وەشانێکی نوێیی بەردەستە.",
@@ -747,14 +712,11 @@
   "update.notice_later": "دواتر",
   "update.notice_notification_title": "نوێکردنەوەیەکی نوێ بەردەستە",
   "update.notice_notification_body": "ئەپی تافسیر کوردی نوێبکەرەوە — وەشانێکی نوێیی دابەزاوە.",
-
   "settings.about": "دەربارەمان",
   "settings.social": "ئێمە ل ڤێرە بدۆزە",
-
   "toast.widget_saved": "ئایەت بۆ ویجیت زیاد کرا",
   "toast.widget_error": "ویجیت نیوست",
   "toast.widget_no_data": "داتا نیە",
-
   "goals.confirm.title": "ئارمانج بسڕیتەوە؟",
   "goals.confirm.text": "چۆن دەتەوێت بکرێت؟",
   "goals.confirm.cancel": "پاشگەز",
@@ -768,7 +730,6 @@
   "goals.choice.fresh_desc": "ریکۆردەکانی کۆن دەسڕێنەوە و تازە دەستت پێ دەکات",
   "goals.choice.keep_label": "شوێنم بمێنێتەوە",
   "goals.choice.keep_desc": "ئامانجی نوێ بکە، شوێنی خوێندنەوەم لە قورئاندا بمێنێتەوە",
-
   "widget.prayer.fajr": "سپێدە",
   "widget.prayer.sunrise": "ڕوژهەلات",
   "widget.prayer.dhuhr": "نیڤرۆ",
@@ -784,13 +745,11 @@
   "widget.prayer.lock_desc": "نڤێژا بهێت د لۆک سکرینێدا.",
   "widget.prayer.all_done": "نڤێژ تەمامبوون",
   "widget.prayer.no_data": "داتا نینە",
-
   "widget.ayah.empty_title": "چ ئایەت نەهاتینە هەلبژارتن",
   "widget.ayah.empty_hint": "ئایەتەکێ هەلبژێرە",
   "widget.ayah.lock_fallback": "پەرتوکا پیرۆز",
   "widget.ayah.widget_name": "ئایەتا قورئانێ",
   "widget.ayah.widget_desc": "ئایەتا تە هەلبژارتی نیشان بدە",
-
   "widget.goal.empty_title": "ئارمانجا ئەڤرۆ",
   "widget.goal.empty_hint": "موبایلێ ڤەمرینە بۆ دیتنێ!",
   "widget.goal.lock_fallback": "ئامانجا ئیرۆ",
@@ -800,5 +759,45 @@
   "widget.goal.completed": "تە ئارمانجا خۆ تەمامکر! 🤍",
   "widget.goal.motivate": "بەردەوام بە، تۆ دشێی!",
   "widget.goal.widget_name": "ئارمانجا ئەڤرۆ",
-  "widget.goal.widget_desc": "دیارکرنا هویرکارییان"
+  "widget.goal.widget_desc": "دیارکرنا هویرکارییان",
+  "dl.section": "Downloads",
+  "dl.storage_used": "Storage used",
+  "dl.no_reciters": "No downloaded reciters yet. Tap the ↓ button on any reciter to download for offline.",
+  "dl.full_quran": "Full Quran",
+  "dl.surahs": "surahs",
+  "dl.manage": "Manage download",
+  "dl.remove": "Remove download",
+  "dl.not_downloaded": "Not downloaded",
+  "dl.measuring": "Measuring…",
+  "dl.downloading": "Downloading…",
+  "dl.fully_downloaded": "Fully downloaded",
+  "dl.surah_downloaded": "Surah downloaded",
+  "dl.partial": "Partially downloaded",
+  "dl.partial_surahs": "Partially downloaded ({n}/114 surahs)",
+  "dl.partial_issues": "Partially downloaded — integrity issues",
+  "dl.left": "left",
+  "dl.failed_check": "failed integrity check",
+  "dl.wifi_only": "Wi-Fi only",
+  "dl.wifi_blocked": "Wi-Fi only mode is on. Connect to Wi-Fi or disable the setting.",
+  "dl.verify": "Verify integrity",
+  "dl.verifying": "Checking…",
+  "dl.last_checked": "Last checked",
+  "dl.not_verified": "Integrity not verified",
+  "dl.repair": "Repair",
+  "dl.surah_word": "surah",
+  "dl.download_btn": "Download",
+  "dl.continue_btn": "Continue download",
+  "dl.redownload_btn": "Re-download",
+  "dl.cancel": "Cancel download",
+  "dl.tip_downloading": "Downloading…",
+  "dl.tip_downloaded": "Downloaded — tap to manage",
+  "dl.tip_downloaded_s": "Downloaded",
+  "dl.tip_partial": "Partially downloaded — tap to manage",
+  "dl.tip_partial_s": "Partially downloaded",
+  "dl.tip_corrupt": "Integrity issues — tap to repair",
+  "dl.tip_corrupt_s": "Needs repair",
+  "dl.tip_offline": "Download for offline",
+  "toast.dl_complete": "Download complete",
+  "toast.dl_removed": "Download removed",
+  "toast.dl_stopped": "Download stopped"
 }
