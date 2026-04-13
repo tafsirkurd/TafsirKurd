@@ -4295,6 +4295,7 @@
 
                 logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: value, page: item.page });
                 item.kurdish_text = value;
+                item.updated_at = new Date().toISOString();
 
                 var pendingNew = quickEditDirty[id];
                 var hasPending = pendingNew !== undefined && pendingNew !== value;
@@ -4375,6 +4376,7 @@
                     .then(function() {
                         logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: newText, page: item.page });
                         item.kurdish_text = newText;
+                        item.updated_at = new Date().toISOString();
                     });
             }));
 
