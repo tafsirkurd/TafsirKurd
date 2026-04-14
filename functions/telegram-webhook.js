@@ -19,8 +19,8 @@ export async function onRequest(context) {
     let update;
     try { update = await request.json(); } catch { return new Response('OK', { status: 200 }); }
 
-    const token = env.TELEGRAM_BOT_TOKEN || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_bot_token')) || '';
-    const groq  = env.GROQ_API_KEY       || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_groq_key'))  || '';
+    const token = env.TELEGRAM_BOT_TOKEN || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_bot_token')) || '8603239765:AAGfBPB47qHd0kddfDlT3ByQ8VDzEqRo5oo';
+    const groq  = env.GROQ_API_KEY       || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_groq_key'))  || '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';
 
     const msg = update.message || update.edited_message;
     if (!msg || !msg.text) return new Response('OK', { status: 200 });
