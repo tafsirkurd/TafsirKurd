@@ -6,7 +6,7 @@
 //   GEMINI_API_KEY            — from aistudio.google.com (free tier)
 //   TELEGRAM_WEBHOOK_SECRET   — optional, set when registering webhook
 
-const GEMINI_MODEL = 'gemini-1.5-flash-latest';
+const GEMINI_MODEL = 'gemini-2.0-flash-lite';
 
 const SYSTEM_PROMPT = `You are a helpful assistant for TafsirKurd — a Kurdish Islamic app featuring the Holy Quran with Kurdish Tafsir (interpretation), Islamic voice content, and prayer times. Answer questions about the Quran, Islam, Kurdish culture, and the app. Be respectful, concise, and friendly. If asked in Kurdish (Sorani or Kurmanji), reply in the same language.`;
 
