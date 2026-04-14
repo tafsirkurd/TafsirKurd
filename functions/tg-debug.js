@@ -17,6 +17,11 @@ export async function onRequest(context) {
     // Check or set webhook
     let webhookInfo = null;
     if (checkWebhook && kvToken) {
+        await fetch(`https://api.telegram.org/bot${kvToken}/setWebhook`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: 'https://tafsirkurd.com/telegram-webhook', drop_pending_updates: true }),
+        });
         const res = await fetch(`https://api.telegram.org/bot${kvToken}/getWebhookInfo`);
         webhookInfo = await res.json();
     }
