@@ -13,17 +13,13 @@ export async function onRequest(context) {
     const kvToken  = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_bot_token')  : null;
     const kvGemini = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_gemini_key') : null;
 
-    // Test Gemini
+    // List available models
     let geminiTest = null;
     if (testMsg && kvGemini) {
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${kvGemini}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: testMsg }] }] }),
-            });
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${kvGemini}`);
             const data = await res.json();
-            geminiTest = res.ok ? data.candidates[0].content.parts[0].text : JSON.stringify(data);
+            geminiTest = (data.models || []).map(m => m.name).filter(n => n.includes('flash') || n.includes('pro'));
         } catch(e) { geminiTest = 'Error: ' + e.message; }
     }
 
