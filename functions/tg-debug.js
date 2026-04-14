@@ -20,7 +20,7 @@ export async function onRequest(context) {
         const setRes = await fetch(`https://api.telegram.org/bot${kvToken}/setWebhook`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: 'https://tafsirkurd.com/telegram-bot', drop_pending_updates: true }),
+            body: JSON.stringify({ url: 'https://tafsirkurd.pages.dev/telegram-webhook', drop_pending_updates: true }),
         });
         const setData = await setRes.json();
         const res = await fetch(`https://api.telegram.org/bot${kvToken}/getWebhookInfo`);
