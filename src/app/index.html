@@ -18,18 +18,6 @@
   document.documentElement.style.colorScheme=(theme==='dark'||theme==='sakina')?'dark':'light';
   document.documentElement.style.setProperty('--bg',bg);
   document.documentElement.classList.add('preload');
-  // Splash background — exact per-theme color, independent of app --bg
-  // light:#ffffff  dark:#000000  noor/parchment:#f3e8cc  sakina/emerald:#0c1c12
-  var _sbg={light:'#ffffff',dark:'#000000',noor:'#f3e8cc',sakina:'#0c1c12'}[theme]||'#ffffff';
-  document.documentElement.style.setProperty('--splash-bg',_sbg);
-  // Theme → splash asset name
-  // light→splash-light  dark→splash-dark  noor→splash-parchment  sakina→splash-emerald
-  var _sm={light:'light',dark:'dark',noor:'parchment',sakina:'emerald'};
-  window._splashName=_sm[theme]||'light';
-  var _pl=document.createElement('link');
-  _pl.rel='preload';_pl.as='video';_pl.type='video/mp4';
-  _pl.href='/assets/videos/splash-'+window._splashName+'.mp4';
-  document.head.appendChild(_pl);
 })();
 // Device-safe rendering detection — default OFF, only enable on confirmed safe devices
 (function(){
