@@ -1,36 +1,39 @@
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
-    const token  = url.searchParams.get('token');
-    const gemini = url.searchParams.get('gemini');
+    const token = url.searchParams.get('token');
+    const groq  = url.searchParams.get('groq');
     const testMsg = url.searchParams.get('test');
 
-    if (token && gemini && env.ADMIN_KV) {
-        await env.ADMIN_KV.put('tg_bot_token',  token);
-        await env.ADMIN_KV.put('tg_gemini_key', gemini);
+    if (env.ADMIN_KV) {
+        if (token) await env.ADMIN_KV.put('tg_bot_token', token);
+        if (groq)  await env.ADMIN_KV.put('tg_groq_key',  groq);
     }
 
-    const kvToken  = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_bot_token')  : null;
-    const kvGemini = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_gemini_key') : null;
+    const kvToken = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_bot_token') : null;
+    const kvGroq  = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_groq_key')  : null;
 
-    // Test Gemini
-    let geminiTest = null;
-    if (testMsg && kvGemini) {
+    let groqTest = null;
+    if (testMsg && kvGroq) {
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${kvGemini}`, {
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: testMsg }] }] }),
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + kvGroq },
+                body: JSON.stringify({
+                    model: 'llama-3.1-8b-instant',
+                    max_tokens: 100,
+                    messages: [{ role: 'user', content: testMsg }],
+                }),
             });
             const data = await res.json();
-            geminiTest = res.ok ? data.candidates[0].content.parts[0].text : JSON.stringify(data);
-        } catch(e) { geminiTest = 'Error: ' + e.message; }
+            groqTest = res.ok ? data.choices[0].message.content : JSON.stringify(data);
+        } catch(e) { groqTest = 'Error: ' + e.message; }
     }
 
     return new Response(JSON.stringify({
         hasKV: !!env.ADMIN_KV,
-        kvToken:  kvToken  ? kvToken.slice(0, 15)  + '...' : null,
-        kvGemini: kvGemini ? kvGemini.slice(0, 10) + '...' : null,
-        geminiTest,
+        kvToken: kvToken ? kvToken.slice(0, 15) + '...' : null,
+        kvGroq:  kvGroq  ? kvGroq.slice(0, 10)  + '...' : null,
+        groqTest,
     }, null, 2), { headers: { 'Content-Type': 'application/json' } });
 }
