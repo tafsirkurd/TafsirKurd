@@ -1183,6 +1183,7 @@ function applyTheme(){
   document.documentElement.style.background=bg;
   document.documentElement.style.setProperty('--bg',bg);
   localStorage.setItem('theme',S.theme);
+  _nativeSyncTheme(S.theme);
   if(window.Capacitor&&window.Capacitor.Plugins.StatusBar){
     var isDark=S.theme==='dark'||S.theme==='sakina';
     try{window.Capacitor.Plugins.StatusBar.setStyle({style:isDark?'DARK':'LIGHT'})}catch(e){}
@@ -5559,6 +5560,23 @@ function _sharedPrefsSet(key,value){
   }
   console.log('[Widget] _sharedPrefsSet key='+key+' valueLen='+value.length);
   return sp.set({key:key,value:value});
+}
+
+// Persist the active theme to native storage so cold-launch backgrounds match.
+// iOS reads from App Group UserDefaults (set by _sharedPrefsSet above) before WebView starts.
+// Android reads from CapacitorStorage SharedPreferences in MainActivity.onCreate.
+// Called every time applyTheme() runs — keeps native storage in sync automatically.
+function _nativeSyncTheme(theme){
+  try{
+    var plugins=window.Capacitor&&window.Capacitor.Plugins;
+    if(!plugins)return;
+    // Android + iOS: Capacitor Preferences (CapacitorStorage SharedPrefs / UserDefaults.standard)
+    if(plugins.Preferences){
+      plugins.Preferences.set({key:'appTheme',value:theme}).catch(function(){});
+    }
+    // iOS only: App Group UserDefaults — readable by AppDelegate before WebView starts
+    _sharedPrefsSet('appTheme',theme);
+  }catch(e){}
 }
 
 // Push selected ayah + tafsir to iOS widget via shared App Group.

@@ -7,7 +7,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Set window background to match the saved theme so the very first
+        // native frame after the launch screen already has the right color.
+        // Theme is written to App Group UserDefaults by _nativeSyncTheme() in app.js
+        // (via _sharedPrefsSet). Fallback: Capacitor Preferences (UserDefaults.standard).
+        let themeKey = "appTheme"
+        let savedTheme: String =
+            UserDefaults(suiteName: "group.com.tafsirkurd.app")?.string(forKey: themeKey)
+            ?? UserDefaults.standard.string(forKey: "CapacitorStorage." + themeKey)
+            ?? "dark"
+        let themeColor: UIColor
+        switch savedTheme {
+        case "light":  themeColor = UIColor(red: 250/255, green: 250/255, blue: 250/255, alpha: 1)
+        case "sakina": themeColor = UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1)
+        case "noor":   themeColor = UIColor(red: 244/255, green: 232/255, blue: 204/255, alpha: 1)
+        default:       themeColor = UIColor(red:  10/255, green:  10/255, blue:  10/255, alpha: 1) // dark
+        }
+        window?.backgroundColor = themeColor
         return true
     }
 

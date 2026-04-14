@@ -1,6 +1,8 @@
 package com.tafsirkurd.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -24,6 +26,25 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AudioPermissionPlugin.class);
         registerPlugin(AthanAlarmPlugin.class);
         super.onCreate(savedInstanceState);
+
+        // Set WebView and window background to match the user's saved theme immediately
+        // after the bridge initialises — eliminates the color flash between splash and app.
+        // Theme is written to CapacitorStorage SharedPreferences by _nativeSyncTheme() in app.js.
+        try {
+            SharedPreferences themePrefs = getSharedPreferences("CapacitorStorage", MODE_PRIVATE);
+            String savedTheme = themePrefs.getString("appTheme", "dark");
+            int themeColor;
+            switch (savedTheme) {
+                case "light":  themeColor = Color.parseColor("#fafafa"); break;
+                case "sakina": themeColor = Color.parseColor("#0c1c12"); break;
+                case "noor":   themeColor = Color.parseColor("#f4e8cc"); break;
+                default:       themeColor = Color.parseColor("#0a0a0a"); break; // dark
+            }
+            getBridge().getWebView().setBackgroundColor(themeColor);
+            getWindow().getDecorView().setBackgroundColor(themeColor);
+        } catch (Exception e) {
+            Log.w("ThemeInit", "Could not apply saved theme color: " + e.getMessage());
+        }
 
         // Request battery optimization exemption so athan alarms are never killed by OS.
         // Shows a one-time system dialog: "Allow TafsirKurd to always run in background?"
