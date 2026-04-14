@@ -59,6 +59,11 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 
 /* Suppress all transitions on first paint to eliminate theme flash */
 html.preload *,html.preload *::before,html.preload *::after{transition:none!important;animation:none!important}
+/* Splash animations must run immediately — exempt from preload suppression */
+html.preload .splash-ring{animation:splashRingOut 1.8s cubic-bezier(0,.5,.5,1) forwards!important}
+html.preload .splash-ring.splash-ring-2{animation:splashRingOut 1.8s cubic-bezier(0,.5,.5,1) .35s forwards!important}
+html.preload .splash-logo{animation:splashLogoIn .55s cubic-bezier(.34,1.56,.64,1) both!important}
+html.preload .splash-label{animation:splashLabelIn .45s ease-out .4s both!important}
 /* ===== RESET & BASE ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
