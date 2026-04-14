@@ -1,0 +1,16 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - img "TafsirKurd" [ref=e5]
+    - heading "Admin Login" [level=1] [ref=e6]
+    - paragraph [ref=e7]: TafsirKurd Dashboard
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]: Email
+      - textbox "Enter your email" [ref=e12]
+    - generic [ref=e13]:
+      - generic [ref=e14]: Password
+      - textbox "Enter your password" [active] [ref=e15]
+    - button "Sign In" [ref=e18] [cursor=pointer]:
+      - img [ref=e19]
+      - generic [ref=e22]: Sign In
+  - generic [ref=e23]: Secure admin access • TafsirKurd © 2026
