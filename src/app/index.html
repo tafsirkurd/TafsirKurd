@@ -2039,11 +2039,12 @@ body{background:var(--bg);color:var(--text)}
     var v=document.getElementById('splashVideo');
     if(!v)return;
     var n=window._splashName||'light';
-    v.poster='/assets/images/splash-'+n+'.png';
+    var isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
+    if(!isIOS)v.poster='/assets/images/splash-'+n+'.png';
     v.src='/assets/videos/splash-'+n+'.mp4';
     v.onerror=function(){
       v.onerror=null;
-      v.poster='/assets/images/logo.png';
+      if(!isIOS)v.poster='/assets/images/logo.png';
       v.src='/assets/videos/logo-animation.mp4';
       v.load();
     };
