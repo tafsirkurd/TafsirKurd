@@ -974,7 +974,7 @@ function init(){
     } catch(e){ _splashMinPassed=true; }
   })();
 
-  // 3s minimum — only active for first launch / new version.
+  // 2s minimum — only active for first launch / new version (matches CSS animation duration).
   // Writes the "seen" flag so next launch is instant.
   setTimeout(function(){
     if(_splashMinPassed)return; // already cleared (repeat launch)
@@ -984,7 +984,7 @@ function init(){
     }catch(e){}
     _splashMinPassed=true;
     _checkSplashReady();
-  },3000);
+  },2000);
 
   function _doSplashTransition(){
     if(_splashDismissed)return;
@@ -1013,33 +1013,19 @@ function init(){
   function _checkSplashReady(){
     if(_splashDismissed)return;
     if(!_splashReady.quran||!_splashReady.tabs)return;
-    if(!_splashReady.video)return; // wait for video to finish playing
-    if(!_splashMinPassed)return; // first launch / new version: wait for 3s minimum
+    if(!_splashReady.anim)return; // wait for CSS animation minimum
+    if(!_splashMinPassed)return; // first launch / new version: wait for 2s minimum
     console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
-    // Pre-warm app layout one frame before transition starts — gives browser a head start
-    // painting the app before the splash fade begins (3 rAFs total on normal path).
     var app=$('app');
     if(app)app.style.display='flex';
     requestAnimationFrame(function(){_doSplashTransition();});
   }
 
-  // Video plays once — app exits splash only after video finishes AND data is ready
-  var _splashVid=document.getElementById('splashVideo');
-  if(_splashVid){
-    _splashVid.addEventListener('ended',function(){
-      if(_splashReady.video)return;
-      _splashReady.video=true;
-      _checkSplashReady();
-    });
-    _splashVid.play().catch(function(){
-      // Autoplay blocked — mark video gate as passed so app can still load
-      _splashReady.video=true;
-      _checkSplashReady();
-    });
-  } else {
-    // No video element — don't block on it
-    _splashReady.video=true;
-  }
+  // CSS animation gate — 2s minimum so the ring+logo animation plays fully
+  setTimeout(function(){
+    _splashReady.anim=true;
+    _checkSplashReady();
+  }, 2000);
 
   window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_checkSplashReady();};
   window._splashReadyI18n       =function(){}; // not a gate — always fires before tabs anyway

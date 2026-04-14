@@ -100,11 +100,8 @@ img{display:block;max-width:100%}
   --ease:cubic-bezier(.16,1,.3,1);
   --r-s:8px;--r-m:12px;--r-l:16px;--r-xl:20px;--r-full:9999px;
   --accent-glow:rgba(0,0,0,.1);
-  /* Logo theming — filter colorizes, blend-mode dissolves the white tile into the background */
-  --logo-filter:none;
-  --logo-blend:multiply;
-  /* Mushaf QCF glyph fonts render black pixels; filter re-colorizes them per theme */
-  --mushaf-filter:none;
+  --logo-filter:none;--logo-blend:multiply;--mushaf-filter:none;
+  --splash-bg:#fafafa;--splash-ring:rgba(0,0,0,.15);--splash-text:rgba(0,0,0,.75);
 }
 [data-theme="dark"]{
   --bg:#0a0a0a;--bg2:#161616;--bg3:#050505;
@@ -116,10 +113,8 @@ img{display:block;max-width:100%}
   --shadow-m:0 4px 12px rgba(0,0,0,.4);
   --shadow-l:0 12px 32px rgba(0,0,0,.6);
   --accent-glow:rgba(255,255,255,.07);
-  /* Dark: invert to white calligraphy; screen dissolves black tile into dark bg */
-  --logo-filter:invert(1);
-  --logo-blend:screen;
-  --mushaf-filter:invert(1);
+  --logo-filter:invert(1);--logo-blend:screen;--mushaf-filter:invert(1);
+  --splash-bg:#0a0a0a;--splash-ring:rgba(255,255,255,.2);--splash-text:rgba(255,255,255,.85);
 }
 /* ── Sakina: deep emerald night × gold ── */
 [data-theme="sakina"]{
@@ -132,10 +127,8 @@ img{display:block;max-width:100%}
   --shadow-m:0 4px 14px rgba(0,0,0,.55);
   --shadow-l:0 12px 36px rgba(0,0,0,.75);
   --accent-glow:rgba(201,168,76,.28);
-  /* Sakina: invert→white, sepia+saturate+hue-rotate→gold (#c9a84c range); screen dissolves tile into dark green */
-  --logo-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);
-  --logo-blend:screen;
-  --mushaf-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);
+  --logo-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);--logo-blend:screen;--mushaf-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);
+  --splash-bg:#0c1c12;--splash-ring:rgba(201,168,76,.35);--splash-text:rgba(240,230,200,.9);
 }
 /* ── Noor: warm parchment × deep green ── */
 [data-theme="noor"]{
@@ -148,9 +141,8 @@ img{display:block;max-width:100%}
   --shadow-m:0 4px 12px rgba(0,0,0,.09);
   --shadow-l:0 12px 32px rgba(0,0,0,.14);
   --accent-glow:rgba(26,92,58,.14);
-  /* Noor: slight warm sepia tints calligraphy to dark olive-brown; multiply dissolves white tile into parchment */
-  --logo-filter:sepia(0.35) brightness(0.88);
-  --logo-blend:multiply;
+  --logo-filter:sepia(0.35) brightness(0.88);--logo-blend:multiply;
+  --splash-bg:#f4e8cc;--splash-ring:rgba(26,92,58,.25);--splash-text:rgba(26,14,4,.8);
 }
 
 body{background:var(--bg);color:var(--text)}
@@ -166,11 +158,18 @@ body{background:var(--bg);color:var(--text)}
 .safe-render .about-section img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
 
 /* ===== SPLASH ===== */
-.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#ffffff);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
-@keyframes splashIn{from{opacity:0}to{opacity:1}}
-.splash-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#ffffff);opacity:0;transition:opacity .12s ease}
+.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .4s ease-in-out;will-change:opacity}
 .splash.hide{opacity:0;pointer-events:none}
+/* Ring */
+.splash-ring{position:absolute;width:110px;height:110px;border-radius:50%;border:1.5px solid var(--splash-ring,rgba(255,255,255,.22));animation:splashRingOut 1.8s cubic-bezier(0,.5,.5,1) forwards}
+.splash-ring-2{width:110px;height:110px;animation-delay:.35s;opacity:0;animation:splashRingOut 1.8s cubic-bezier(0,.5,.5,1) .35s forwards}
+@keyframes splashRingOut{0%{transform:scale(.7);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+/* Logo */
+.splash-logo{width:82px;height:82px;border-radius:20px;object-fit:contain;position:relative;z-index:1;animation:splashLogoIn .55s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes splashLogoIn{0%{transform:scale(.55);opacity:0}100%{transform:scale(1);opacity:1}}
+/* Label */
+.splash-label{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.3px;color:var(--splash-text,rgba(255,255,255,.88));margin-top:18px;position:relative;z-index:1;animation:splashLabelIn .45s ease-out .4s both}
+@keyframes splashLabelIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
 
 /* ===== APP CONTAINER ===== */
 .app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t);opacity:0;transition:opacity .15s ease-out;will-change:opacity;transform:translateZ(0)}
@@ -2045,23 +2044,10 @@ body{background:var(--bg);color:var(--text)}
 </div>
 
 <div class="splash" id="splash">
-  <video id="splashVideo" class="splash-video" muted playsinline preload="auto" disablepictureinpicture style="opacity:1"></video>
-  <script>
-  (function(){
-    var v=document.getElementById('splashVideo');
-    if(!v)return;
-    var n=window._splashName||'light';
-    v.poster='/assets/images/splash-'+n+'.png';
-    v.src='/assets/videos/splash-'+n+'.mp4';
-    v.onerror=function(){
-      v.onerror=null;
-      v.poster='/assets/images/logo.png';
-      v.src='/assets/videos/logo-animation.mp4';
-      v.load();
-    };
-    v.load();
-  })();
-  </script>
+  <div class="splash-ring"></div>
+  <div class="splash-ring splash-ring-2"></div>
+  <img src="/assets/images/logo.png" class="splash-logo" alt="">
+  <span class="splash-label">تەفسیر کورد</span>
 </div>
 
 <!-- APP -->
