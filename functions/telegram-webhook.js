@@ -30,6 +30,14 @@ export async function onRequest(context) {
         return new Response('Bad Request', { status: 400 });
     }
 
+    // Read keys from env or KV fallback
+    const token  = env.TELEGRAM_BOT_TOKEN  || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_bot_token'))  || '';
+    const gemini = env.GEMINI_API_KEY      || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_gemini_key')) || '';
+
+    if (!token || !gemini) {
+        return new Response('OK', { status: 200 });
+    }
+
     const msg = update.message || update.edited_message;
     if (!msg || !msg.text) {
         return new Response('OK', { status: 200 });
@@ -39,7 +47,7 @@ export async function onRequest(context) {
     const text   = msg.text.trim();
 
     if (text === '/start') {
-        await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId,
+        await sendMessage(token, chatId,
             'سڵاو! 👋 من یاریدەدەری تەفسیر کوردم. پرسیارەکەت بنووسە.\n\nHello! I am the TafsirKurd assistant. Ask me anything!'
         );
         return new Response('OK', { status: 200 });
@@ -50,7 +58,7 @@ export async function onRequest(context) {
     }
 
     // Typing indicator
-    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendChatAction`, {
+    await fetch(`https://api.telegram.org/bot${token}/sendChatAction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: chatId, action: 'typing' }),
@@ -58,13 +66,13 @@ export async function onRequest(context) {
 
     let reply;
     try {
-        reply = await askGemini(env.GEMINI_API_KEY, text);
+        reply = await askGemini(gemini, text);
     } catch (e) {
         reply = 'Sorry, I could not process your message right now. Please try again.';
         console.error('Gemini error:', e);
     }
 
-    await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, reply);
+    await sendMessage(token, chatId, reply);
 
     return new Response('OK', { status: 200 });
 }
