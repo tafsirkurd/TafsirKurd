@@ -14,9 +14,15 @@ export async function onRequest(context) {
     const kvToken = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_bot_token') : null;
     const kvGroq  = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_groq_key')  : null;
 
-    // Check webhook info
+    // Check or set webhook
     let webhookInfo = null;
     if (checkWebhook && kvToken) {
+        // Always re-set the webhook
+        await fetch(`https://api.telegram.org/bot${kvToken}/setWebhook`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: 'https://tafsirkurd.com/telegram-webhook' }),
+        });
         const res = await fetch(`https://api.telegram.org/bot${kvToken}/getWebhookInfo`);
         webhookInfo = await res.json();
     }
