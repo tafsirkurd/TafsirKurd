@@ -6,10 +6,9 @@ const SECRET = 'TK-relay-2026';
 const HEARTBEAT_TTL = 120; // seconds — if no heartbeat, Claude Code is away
 
 const SYSTEM =
-    'تۆ یاریدەدەری زیرەک و بەکەڵکی ماڵپەڕی TafsirKurd ئەی. ' +
-    'ئەگەر بەکارهێنەر بە کوردی سۆرانی نووسی، بە کوردی سۆرانی وەڵام بدەرەوە. ' +
-    'ئەگەر بە ئینگلیزی یان زمانێکی تر نووسی، بە هەمان زمان وەڵام بدەرەوە. ' +
-    'وەڵامەکانت کورت و ڕوون و بەسوود بن.';
+    'You are a helpful AI assistant for TafsirKurd website. ' +
+    'Always reply in English only, regardless of what language the user writes in. ' +
+    'Keep your answers short, clear, and helpful.';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -28,26 +27,18 @@ export async function onRequest(context) {
         const text = msg.text.trim();
         const token = await env.ADMIN_KV?.get('tg_bot_token');
 
-        // Check if Claude Code is active (heartbeat)
-        const heartbeat = parseInt(await env.ADMIN_KV?.get('tg_heartbeat') || '0');
-        const now = Math.floor(Date.now() / 1000);
-        const claudeActive = (now - heartbeat) < HEARTBEAT_TTL;
+        // Always save to inbox so Claude Code can also see it
+        const existing = await env.ADMIN_KV?.get('tg_inbox', 'json') || [];
+        existing.push({
+            id: msg.message_id,
+            chatId,
+            user: msg.from?.username || msg.from?.first_name || 'unknown',
+            text,
+            ts: msg.date,
+        });
+        await env.ADMIN_KV?.put('tg_inbox', JSON.stringify(existing.slice(-50)));
 
-        if (claudeActive) {
-            // Claude Code is open — queue for Claude to handle
-            const existing = await env.ADMIN_KV?.get('tg_inbox', 'json') || [];
-            existing.push({
-                id: msg.message_id,
-                chatId,
-                user: msg.from?.username || msg.from?.first_name || 'unknown',
-                text,
-                ts: msg.date,
-            });
-            await env.ADMIN_KV?.put('tg_inbox', JSON.stringify(existing.slice(-50)));
-            return new Response('OK');
-        }
-
-        // Claude Code is away — reply with Groq AI
+        // Also reply immediately with Groq AI
         const groqKey = await env.ADMIN_KV?.get('tg_groq_key');
         if (!groqKey || !token) return new Response('OK');
 
