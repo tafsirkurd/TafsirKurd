@@ -1,19 +1,18 @@
-// Cloudflare Pages Function — Telegram ↔ Claude AI webhook
-// Receives messages from Telegram, sends to Claude, replies back.
+// Cloudflare Pages Function — Telegram ↔ Gemini AI webhook
+// Receives messages from Telegram, sends to Gemini, replies back.
 //
 // Required env secrets:
-//   TELEGRAM_BOT_TOKEN  — from BotFather
-//   TELEGRAM_WEBHOOK_SECRET — random string you set when registering webhook
-//   ANTHROPIC_API_KEY   — from console.anthropic.com
+//   TELEGRAM_BOT_TOKEN        — from BotFather
+//   GEMINI_API_KEY            — from aistudio.google.com (free tier)
+//   TELEGRAM_WEBHOOK_SECRET   — optional, set when registering webhook
 
-const CLAUDE_MODEL = 'claude-haiku-4-5-20251001'; // fast + cheap for chat
+const GEMINI_MODEL = 'gemini-1.5-flash';
 
 const SYSTEM_PROMPT = `You are a helpful assistant for TafsirKurd — a Kurdish Islamic app featuring the Holy Quran with Kurdish Tafsir (interpretation), Islamic voice content, and prayer times. Answer questions about the Quran, Islam, Kurdish culture, and the app. Be respectful, concise, and friendly. If asked in Kurdish (Sorani or Kurmanji), reply in the same language.`;
 
 export async function onRequest(context) {
     const { request, env } = context;
 
-    // Telegram sends POST only
     if (request.method !== 'POST') {
         return new Response('OK', { status: 200 });
     }
@@ -31,7 +30,6 @@ export async function onRequest(context) {
         return new Response('Bad Request', { status: 400 });
     }
 
-    // Only handle text messages
     const msg = update.message || update.edited_message;
     if (!msg || !msg.text) {
         return new Response('OK', { status: 200 });
@@ -40,75 +38,66 @@ export async function onRequest(context) {
     const chatId = msg.chat.id;
     const text   = msg.text.trim();
 
-    // Ignore bot commands except /start
-    if (text.startsWith('/') && text !== '/start') {
-        return new Response('OK', { status: 200 });
-    }
-
-    // /start greeting
     if (text === '/start') {
         await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId,
-            'سڵاو! 👋 Ez alîkarê TafsirKurd im. Ji min bipirse.\n\nبە خێرهاتیت! من یاریدەدەری تەفسیر کوردم. پرسیارەکەت بنووسە.'
+            'سڵاو! 👋 من یاریدەدەری تەفسیر کوردم. پرسیارەکەت بنووسە.\n\nHello! I am the TafsirKurd assistant. Ask me anything!'
         );
         return new Response('OK', { status: 200 });
     }
 
-    // Send typing indicator
+    if (text.startsWith('/')) {
+        return new Response('OK', { status: 200 });
+    }
+
+    // Typing indicator
     await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendChatAction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: chatId, action: 'typing' }),
     });
 
-    // Call Claude
     let reply;
     try {
-        reply = await askClaude(env.ANTHROPIC_API_KEY, text);
+        reply = await askGemini(env.GEMINI_API_KEY, text);
     } catch (e) {
         reply = 'Sorry, I could not process your message right now. Please try again.';
-        console.error('Claude error:', e);
+        console.error('Gemini error:', e);
     }
 
-    // Send reply back to Telegram
     await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, reply);
 
     return new Response('OK', { status: 200 });
 }
 
-async function askClaude(apiKey, userMessage) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+async function askGemini(apiKey, userMessage) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+    const res = await fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            model: CLAUDE_MODEL,
-            max_tokens: 1024,
-            system: SYSTEM_PROMPT,
-            messages: [{ role: 'user', content: userMessage }],
+            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+            generationConfig: { maxOutputTokens: 1024 },
         }),
     });
 
     if (!res.ok) {
-        throw new Error('Anthropic API ' + res.status);
+        const err = await res.text();
+        throw new Error('Gemini API ' + res.status + ': ' + err);
     }
 
     const data = await res.json();
-    return data.content[0].text;
+    return data.candidates[0].content.parts[0].text;
 }
 
 async function sendMessage(token, chatId, text) {
-    // Telegram message limit is 4096 chars
-    const chunk = text.slice(0, 4096);
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             chat_id: chatId,
-            text: chunk,
-            parse_mode: 'Markdown',
+            text: text.slice(0, 4096),
         }),
     });
 }
