@@ -16,14 +16,22 @@ export async function onRequest(context) {
         return new Response('OK', { status: 200 });
     }
 
-    let update;
-    try { update = await request.json(); } catch { return new Response('OK', { status: 200 }); }
+    const bodyText = await request.text();
+    const token = '8603239765:AAGfBPB47qHd0kddfDlT3ByQ8VDzEqRo5oo';
 
-    const token = env.TELEGRAM_BOT_TOKEN || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_bot_token')) || '8603239765:AAGfBPB47qHd0kddfDlT3ByQ8VDzEqRo5oo';
-    const groq  = env.GROQ_API_KEY       || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_groq_key'))  || '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';
+    let update;
+    try { update = JSON.parse(bodyText); } catch {
+        await sendMessage(token, 5737599664, 'parse error: ' + bodyText.slice(0, 100));
+        return new Response('OK', { status: 200 });
+    }
 
     const msg = update.message || update.edited_message;
-    if (!msg || !msg.text) return new Response('OK', { status: 200 });
+    if (!msg || !msg.text) {
+        await sendMessage(token, 5737599664, 'no text. update keys: ' + Object.keys(update).join(', '));
+        return new Response('OK', { status: 200 });
+    }
+
+    const groq = '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';
 
     const chatId = msg.chat.id;
     const text   = msg.text.trim();
