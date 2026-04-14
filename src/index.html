@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <!-- Theme loader inline to prevent flash - no network request -->
   <script>
-    (function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();
+    (function(){
+      var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}'),theme=t||(p.darkMode?'dark':'light');
+      var bg=theme==='dark'?'#0a0a0a':'#fafafa';
+      var el=document.documentElement;
+      el.setAttribute('data-theme',theme);
+      el.style.background=bg;
+      el.style.backgroundColor=bg;
+      el.style.colorScheme=theme==='dark'?'dark':'light';
+      el.classList.add('preload');
+    })();
   </script>
   <script src="/utils/platform.js"></script>
   <script>
@@ -199,6 +208,12 @@
 
   <!-- Critical CSS - Inline for instant rendering -->
   <style>
+/* Suppress all transitions on first paint to eliminate theme flash */
+html.preload *, html.preload *::before, html.preload *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
 :root {
     --primary: #000000;
     --primary-light: #333333;
@@ -253,7 +268,7 @@ body {
     color: var(--text);
     line-height: 1.6;
     overflow-x: hidden;
-    transition: background-color var(--transition-medium), color var(--transition-medium);
+    transition: color var(--transition-medium);
     padding-bottom: 0;
     position: relative;
     min-height: 100vh;
@@ -4469,6 +4484,8 @@ window.addEventListener('error', function(e) {
   </script>
 
   <!-- Text Highlighter for Admin Panel -->
+  <!-- Remove preload class after first paint to re-enable transitions -->
+  <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 
 <body dir="rtl">

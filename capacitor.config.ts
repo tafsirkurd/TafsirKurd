@@ -15,11 +15,11 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'never',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#0a0a0a',
     scheme: 'capacitor',
   },
   android: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#0a0a0a',
   },
   plugins: {
     SplashScreen: {
@@ -28,7 +28,7 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       splashImmersive: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: '#0a0a0a',
       fadeOutDuration: 200,
     },
     PushNotifications: {

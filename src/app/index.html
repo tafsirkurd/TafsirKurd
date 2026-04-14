@@ -14,7 +14,10 @@
   // Kill white flash: set bg on html+body immediately before any CSS class renders
   var bg={dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc',light:'#fafafa'}[theme]||'#0a0a0a';
   document.documentElement.style.background=bg;
+  document.documentElement.style.backgroundColor=bg;
+  document.documentElement.style.colorScheme=(theme==='dark'||theme==='sakina')?'dark':'light';
   document.documentElement.style.setProperty('--bg',bg);
+  document.documentElement.classList.add('preload');
   // Splash background — exact per-theme color, independent of app --bg
   // light:#ffffff  dark:#000000  noor/parchment:#f3e8cc  sakina/emerald:#0c1c12
   var _sbg={light:'#ffffff',dark:'#000000',noor:'#f3e8cc',sakina:'#0c1c12'}[theme]||'#ffffff';
@@ -66,6 +69,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 
 <style>
 
+/* Suppress all transitions on first paint to eliminate theme flash */
+html.preload *,html.preload *::before,html.preload *::after{transition:none!important;animation:none!important}
 /* ===== RESET & BASE ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
@@ -2016,6 +2021,7 @@ body{background:var(--bg);color:var(--text)}
   .surah-reader-header{border-radius:0!important}
 }
 </style>
+<script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 <body>
 

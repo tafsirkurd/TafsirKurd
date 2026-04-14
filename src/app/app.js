@@ -6048,9 +6048,11 @@ async function openAboutSheet(type){
   function _addBlocks(parent,text){
     (text||'').split('\n\n').filter(Boolean).forEach(function(p){parent.appendChild(el('div','cfg-sheet-para',p));});
   }
+  // Read from kurdish_translations first (where admin saves), fall back to site_settings
+  function _ft(key,fb){var v=window.t&&window.t(key);return(v&&v!==key)?v:(fb||'');}
 
   if(type==='founder'){
-    var fname=ss.founder_name||'سامان عبدالرحمن عادل';
+    var fname=_ft('founder_name',ss.founder_name)||'سامان عبدالرحمن عادل';
     titleEl.textContent=fname;
 
     // ── 1. Hero ──────────────────────────────────
@@ -6061,33 +6063,35 @@ async function openAboutSheet(type){
     else{avDiv.appendChild(icon('fas fa-user'));}
     hero.appendChild(avDiv);
     hero.appendChild(el('div','cfg-sheet-name',fname));
-    hero.appendChild(el('div','cfg-sheet-role',ss.founder_role||'دامەزرێنەرێ تەفسیر کورد'));
+    hero.appendChild(el('div','cfg-sheet-role',_ft('founder_role',ss.founder_role)||'دامەزرێنەرێ تەفسیر کورد'));
     body.appendChild(hero);
 
     // ── 2. Story ─────────────────────────────────
     var cfoStory=el('div','cfo-section');
-    cfoStory.appendChild(el('div','cab-sec-label',ss.founder_story_label||'چیرۆک'));
+    cfoStory.appendChild(el('div','cab-sec-label',_ft('founder_story_label',ss.founder_story_label)||'چیرۆک'));
     cfoStory.appendChild(el('div','cfo-bio-name',fname));
-    (ss.founder_bio||'').split('\n\n').filter(Boolean).forEach(function(p){cfoStory.appendChild(el('div','cfo-para',p));});
+    (_ft('founder_bio',ss.founder_bio)||'').split('\n\n').filter(Boolean).forEach(function(p){cfoStory.appendChild(el('div','cfo-para',p));});
     body.appendChild(cfoStory);
 
     // ── 3. Quote 1 ───────────────────────────────
     var cfoQ1=el('div','cfo-ayah');
-    cfoQ1.appendChild(el('div','cfo-ayah-ar',ss.founder_quote_ar||'إِنْ أُرِيدُ إِلَّا الْإِصْلَاحَ مَا اسْتَطَعْتُ ۚ وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ'));
-    if(ss.founder_quote_ku){var qku=el('div','cfo-ayah-ku');qku.textContent='"'+ss.founder_quote_ku+'"';cfoQ1.appendChild(qku);}
-    cfoQ1.appendChild(el('div','cfo-ayah-ref',ss.founder_quote_ref||'سوڕەتا هود — ٨٨'));
+    cfoQ1.appendChild(el('div','cfo-ayah-ar',_ft('founder_quote_ar',ss.founder_quote_ar)||'إِنْ أُرِيدُ إِلَّا الْإِصْلَاحَ مَا اسْتَطَعْتُ ۚ وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ'));
+    var _qku=_ft('founder_quote_ku',ss.founder_quote_ku);
+    if(_qku){var qku=el('div','cfo-ayah-ku');qku.textContent='"'+_qku+'"';cfoQ1.appendChild(qku);}
+    cfoQ1.appendChild(el('div','cfo-ayah-ref',_ft('founder_quote_ref',ss.founder_quote_ref)||'سوڕەتا هود — ٨٨'));
     body.appendChild(cfoQ1);
 
     // ── 4. Journey ───────────────────────────────
     var cfoJrn=el('div','cfo-section');
-    cfoJrn.appendChild(el('div','cab-sec-label',ss.founder_journey_label||'گەشت'));
-    cfoJrn.appendChild(el('div','cab-sec-title',ss.founder_journey_title||'ڕێکا تەفسیر کورد'));
-    if(ss.founder_journey_intro)cfoJrn.appendChild(el('div','cfo-para',ss.founder_journey_intro));
+    cfoJrn.appendChild(el('div','cab-sec-label',_ft('founder_journey_label',ss.founder_journey_label)||'گەشت'));
+    cfoJrn.appendChild(el('div','cab-sec-title',_ft('founder_journey_title',ss.founder_journey_title)||'ڕێکا تەفسیر کورد'));
+    var _jIntro=_ft('founder_journey_intro',ss.founder_journey_intro);
+    if(_jIntro)cfoJrn.appendChild(el('div','cfo-para',_jIntro));
     var JOURNEY=[
-      {t:ss.founder_j1_title||'دەستپێکا هزرێ',d:ss.founder_j1_desc||'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
-      {t:ss.founder_j2_title||'دروستکرنا ناڤەڕۆکا ڤیدیویی',d:ss.founder_j2_desc||'دەستپێکرنا دروستکرنا ڤیدیویێن ئیسلامی یێن کورت بۆ تۆڕێن جڤاکی وەک ئینستاگرام و تیکتۆک، ب شێوازەکێ بالکێش کو بگەهیتە نەوەیێ نوی یێ کوردان.'},
-      {t:ss.founder_j3_title||'دامەزراندنا پلاتفۆرمێ',d:ss.founder_j3_desc||'دروستکرنا مالپەڕەکا تەمام بۆ خواندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی، ب تایبەتمەندیێن مۆدێرن وەک شوێنکەفتنا خواندنێ و نیشانەکرن.'},
-      {t:ss.founder_j4_title||'گەهشتن ب ملیۆنان بینەران',d:ss.founder_j4_desc||'ب ڕێکا ئینستاگرام، تیکتۆک و یوتوب گەهشتینە زێدەتر ژ ٢٥ ملیۆن بینەر و ٦٥ هزار فۆڵۆوەران. ئەڤ ژمارە نیشانا پێدڤییا کوردانە بۆ ناڤەڕۆکەکا ئیسلامی زمانێ وان بخو.'}
+      {t:_ft('founder_j1_title',ss.founder_j1_title)||'دەستپێکا هزرێ',d:_ft('founder_j1_desc',ss.founder_j1_desc)||'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
+      {t:_ft('founder_j2_title',ss.founder_j2_title)||'دروستکرنا ناڤەڕۆکا ڤیدیویی',d:_ft('founder_j2_desc',ss.founder_j2_desc)||'دەستپێکرنا دروستکرنا ڤیدیویێن ئیسلامی یێن کورت بۆ تۆڕێن جڤاکی وەک ئینستاگرام و تیکتۆک، ب شێوازەکێ بالکێش کو بگەهیتە نەوەیێ نوی یێ کوردان.'},
+      {t:_ft('founder_j3_title',ss.founder_j3_title)||'دامەزراندنا پلاتفۆرمێ',d:_ft('founder_j3_desc',ss.founder_j3_desc)||'دروستکرنا مالپەڕەکا تەمام بۆ خواندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی، ب تایبەتمەندیێن مۆدێرن وەک شوێنکەفتنا خواندنێ و نیشانەکرن.'},
+      {t:_ft('founder_j4_title',ss.founder_j4_title)||'گەهشتن ب ملیۆنان بینەران',d:_ft('founder_j4_desc',ss.founder_j4_desc)||'ب ڕێکا ئینستاگرام، تیکتۆک و یوتوب گەهشتینە زێدەتر ژ ٢٥ ملیۆن بینەر و ٦٥ هزار فۆڵۆوەران. ئەڤ ژمارە نیشانا پێدڤییا کوردانە بۆ ناڤەڕۆکەکا ئیسلامی زمانێ وان بخو.'}
     ];
     var tl=el('div','cfo-timeline');
     JOURNEY.forEach(function(j){
@@ -6102,12 +6106,12 @@ async function openAboutSheet(type){
 
     // ── 5. Values ────────────────────────────────
     var cfoVals=el('div','cfo-section');
-    cfoVals.appendChild(el('div','cab-sec-label',ss.founder_values_label||'پابەندبوون'));
+    cfoVals.appendChild(el('div','cab-sec-label',_ft('founder_values_label',ss.founder_values_label)||'پابەندبوون'));
     var VALUES=[
-      {t:ss.founder_v1_title||'ڕازەمەندییا خودای',d:ss.founder_v1_desc||'ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن دونیاییدا ناگەڕین، هیڤییا مە بتنێ قەبویلبوونا ژلایێ خوداییە.'},
-      {t:ss.founder_v2_title||'خزمەتا قورئانێ',d:ss.founder_v2_desc||'خزمەتکرنا پەرتوکا خودای و گەهاندنا مانایێن قورئانێ بۆ هەمی کوردان ب شێوازەکێ ڕوون و سادە و بێ ئاڵۆزی.'},
-      {t:ss.founder_v3_title||'گەهاندن بۆ هەمییان',d:ss.founder_v3_desc||'دروستکرنا پلاتفۆرمەکا دیجیتاڵ کو بەردەستە بۆ هەمی کوردان ل هەر جهەکی، بێ سنوور و بێ جیاوازی.'},
-      {t:ss.founder_v4_title||'خۆگەشەکرن',d:ss.founder_v4_desc||'فێربوون و گەشەکرنا پێزانینێن ئایینی، و پارڤەکرنا وان دگەل گەلێ خۆ ب شێوازەکێ ڕەوان.'}
+      {t:_ft('founder_v1_title',ss.founder_v1_title)||'ڕازەمەندییا خودای',d:_ft('founder_v1_desc',ss.founder_v1_desc)||'ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن دونیاییدا ناگەڕین، هیڤییا مە بتنێ قەبویلبوونا ژلایێ خوداییە.'},
+      {t:_ft('founder_v2_title',ss.founder_v2_title)||'خزمەتا قورئانێ',d:_ft('founder_v2_desc',ss.founder_v2_desc)||'خزمەتکرنا پەرتوکا خودای و گەهاندنا مانایێن قورئانێ بۆ هەمی کوردان ب شێوازەکێ ڕوون و سادە و بێ ئاڵۆزی.'},
+      {t:_ft('founder_v3_title',ss.founder_v3_title)||'گەهاندن بۆ هەمییان',d:_ft('founder_v3_desc',ss.founder_v3_desc)||'دروستکرنا پلاتفۆرمەکا دیجیتاڵ کو بەردەستە بۆ هەمی کوردان ل هەر جهەکی، بێ سنوور و بێ جیاوازی.'},
+      {t:_ft('founder_v4_title',ss.founder_v4_title)||'خۆگەشەکرن',d:_ft('founder_v4_desc',ss.founder_v4_desc)||'فێربوون و گەشەکرنا پێزانینێن ئایینی، و پارڤەکرنا وان دگەل گەلێ خۆ ب شێوازەکێ ڕەوان.'}
     ];
     var valList=el('div','cfo-values');
     VALUES.forEach(function(v){
@@ -6120,21 +6124,22 @@ async function openAboutSheet(type){
 
     // ── 6. Dua ───────────────────────────────────
     var cfoDua=el('div','cfo-dua');
-    cfoDua.appendChild(el('div','cfo-dua-label',ss.founder_dua_label||'دوعا'));
-    cfoDua.appendChild(el('div','cfo-dua-title',ss.founder_dua_title||'دوعا بۆ بینەرێن مە'));
-    cfoDua.appendChild(el('div','cfo-dua-text',ss.founder_dua_text||''));
+    cfoDua.appendChild(el('div','cfo-dua-label',_ft('founder_dua_label',ss.founder_dua_label)||'دوعا'));
+    cfoDua.appendChild(el('div','cfo-dua-title',_ft('founder_dua_title',ss.founder_dua_title)||'دوعا بۆ بینەرێن مە'));
+    cfoDua.appendChild(el('div','cfo-dua-text',_ft('founder_dua_text',ss.founder_dua_text)||''));
     body.appendChild(cfoDua);
 
     // ── 7. Quote 2 ───────────────────────────────
     var cfoQ2=el('div','cfo-ayah');
-    cfoQ2.appendChild(el('div','cfo-ayah-ar',ss.founder_quote2_ar||'رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ'));
-    if(ss.founder_quote2_ku){var qku2=el('div','cfo-ayah-ku');qku2.textContent='"'+ss.founder_quote2_ku+'"';cfoQ2.appendChild(qku2);}
-    cfoQ2.appendChild(el('div','cfo-ayah-ref',ss.founder_quote2_ref||'سوڕەتا البقرة — ١٢٧'));
+    cfoQ2.appendChild(el('div','cfo-ayah-ar',_ft('founder_quote2_ar',ss.founder_quote2_ar)||'رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ'));
+    var _qku2=_ft('founder_quote2_ku',ss.founder_quote2_ku);
+    if(_qku2){var qku2=el('div','cfo-ayah-ku');qku2.textContent='"'+_qku2+'"';cfoQ2.appendChild(qku2);}
+    cfoQ2.appendChild(el('div','cfo-ayah-ref',_ft('founder_quote2_ref',ss.founder_quote2_ref)||'سوڕەتا البقرة — ١٢٧'));
     body.appendChild(cfoQ2);
 
     // ── 8. Closing ───────────────────────────────
-    var _cloTitle=(window.t&&window.t('founder_closing_title')!=='founder_closing_title')?window.t('founder_closing_title'):(ss.founder_closing_title||'');
-    var _cloDesc=(window.t&&window.t('founder_closing_desc')!=='founder_closing_desc')?window.t('founder_closing_desc'):(ss.founder_closing_desc||ss.founder_closing||'');
+    var _cloTitle=_ft('founder_closing_title',ss.founder_closing_title);
+    var _cloDesc=_ft('founder_closing_desc',ss.founder_closing_desc||ss.founder_closing);
     if(_cloTitle||_cloDesc){
       var cfoClose=el('div','cfo-closing');
       if(_cloTitle)cfoClose.appendChild(el('div','cfo-closing-title',_cloTitle));
@@ -6152,17 +6157,17 @@ async function openAboutSheet(type){
     else{var cabLogo=document.createElement('img');cabLogo.src='/assets/images/logo.png';cabLogo.alt='';cabAv.appendChild(cabLogo);}
     cabHero.appendChild(cabAv);
     cabHero.appendChild(el('div','cfg-sheet-name','تەفسیر کورد'));
-    cabHero.appendChild(el('div','cfg-sheet-role',ss.about_hero_sub||'پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز'));
+    cabHero.appendChild(el('div','cfg-sheet-role',_ft('about_hero_sub',ss.about_hero_sub)||'پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز'));
     body.appendChild(cabHero);
 
     // ── 2. Services ───────────────────────────────
     var cabSvc=el('div','cab-section');
-    cabSvc.appendChild(el('div','cab-sec-label',ss.about_svc_label||'خزمەتگوزاری'));
-    cabSvc.appendChild(el('div','cab-sec-title',ss.about_svc_title||'ئەم چ پێشکێش دکەین'));
+    cabSvc.appendChild(el('div','cab-sec-label',_ft('about_svc_label',ss.about_svc_label)||'خزمەتگوزاری'));
+    cabSvc.appendChild(el('div','cab-sec-title',_ft('about_svc_title',ss.about_svc_title)||'ئەم چ پێشکێش دکەین'));
     var FEATS=[
-      {num:ss.about_feat1_num||'٠١',title:ss.about_feat1_title||'خواندنا قورئانێ',desc:ss.about_feat1_desc||'خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.'},
-      {num:ss.about_feat2_num||'٠٢',title:ss.about_feat2_title||'دەنگێ ئیسلامێ',desc:ss.about_feat2_desc||'ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.'},
-      {num:ss.about_feat3_num||'٠٣',title:ss.about_feat3_title||'نیشانەکرن و پاشەکەفتن',desc:ss.about_feat3_desc||'شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.'}
+      {num:_ft('about_feat1_num',ss.about_feat1_num)||'٠١',title:_ft('about_feat1_title',ss.about_feat1_title)||'خواندنا قورئانێ',desc:_ft('about_feat1_desc',ss.about_feat1_desc)||'خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.'},
+      {num:_ft('about_feat2_num',ss.about_feat2_num)||'٠٢',title:_ft('about_feat2_title',ss.about_feat2_title)||'دەنگێ ئیسلامێ',desc:_ft('about_feat2_desc',ss.about_feat2_desc)||'ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.'},
+      {num:_ft('about_feat3_num',ss.about_feat3_num)||'٠٣',title:_ft('about_feat3_title',ss.about_feat3_title)||'نیشانەکرن و پاشەکەفتن',desc:_ft('about_feat3_desc',ss.about_feat3_desc)||'شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.'}
     ];
     FEATS.forEach(function(f){
       var card=el('div','cab-feat');
@@ -6177,7 +6182,7 @@ async function openAboutSheet(type){
 
     // ── 3. Stats ──────────────────────────────────
     var cabStats=el('div','cab-stats');
-    [[ss.about_stat1_num||'٦٥ھ+',ss.about_stat1_label||'فۆڵۆوەر'],[ss.about_stat2_num||'٢٥م+',ss.about_stat2_label||'بینەر']].forEach(function(s){
+    [[_ft('about_stat1_num',ss.about_stat1_num)||'٦٥ھ+',_ft('about_stat1_label',ss.about_stat1_label)||'فۆڵۆوەر'],[_ft('about_stat2_num',ss.about_stat2_num)||'٢٥م+',_ft('about_stat2_label',ss.about_stat2_label)||'بینەر']].forEach(function(s){
       var st=el('div','cab-stat');
       st.appendChild(el('span','cab-stat-num',s[0]));
       st.appendChild(el('span','cab-stat-label',s[1]));
@@ -6187,24 +6192,26 @@ async function openAboutSheet(type){
 
     // ── 4. Ayah ───────────────────────────────────
     var cabAyah=el('div','cab-ayah-wrap');
-    cabAyah.appendChild(el('div','cab-ayah-ar',ss.about_quote_ar||'وَمَنْ أَحْسَنُ قَوْلًا مِّمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا وَقَالَ إِنَّنِي مِنَ الْمُسْلِمِينَ'));
-    if(ss.about_quote_ku)cabAyah.appendChild(el('div','cab-ayah-ku','"'+ss.about_quote_ku+'"'));
-    cabAyah.appendChild(el('div','cab-ayah-ref',ss.about_quote_ref||'سوڕەتا فصلت — ٣٣'));
+    cabAyah.appendChild(el('div','cab-ayah-ar',_ft('about_quote_ar',ss.about_quote_ar)||'وَمَنْ أَحْسَنُ قَوْلًا مِّمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا وَقَالَ إِنَّنِي مِنَ الْمُسْلِمِينَ'));
+    var _abQku=_ft('about_quote_ku',ss.about_quote_ku);
+    if(_abQku)cabAyah.appendChild(el('div','cab-ayah-ku','"'+_abQku+'"'));
+    cabAyah.appendChild(el('div','cab-ayah-ref',_ft('about_quote_ref',ss.about_quote_ref)||'سوڕەتا فصلت — ٣٣'));
     body.appendChild(cabAyah);
 
     // ── 5. Declaration ────────────────────────────
     var cabDecl=el('div','cab-decl');
-    cabDecl.appendChild(el('div','cab-decl-title',ss.about_decl_title||'نە سیاسی، نە حزبی'));
-    (ss.about_declaration_text||'').split('\n\n').filter(Boolean).forEach(function(p){
+    cabDecl.appendChild(el('div','cab-decl-title',_ft('about_decl_title',ss.about_decl_title)||'نە سیاسی، نە حزبی'));
+    (_ft('about_declaration_text',ss.about_declaration_text)||'').split('\n\n').filter(Boolean).forEach(function(p){
       cabDecl.appendChild(el('div','cab-decl-para',p));
     });
     body.appendChild(cabDecl);
 
     // ── 6. Tafsir source ──────────────────────────
-    if(ss.about_tafsir_text){
+    var _tafsirText=_ft('about_tafsir_text',ss.about_tafsir_text);
+    if(_tafsirText){
       var cabTafsir=el('div','cab-section');
-      cabTafsir.appendChild(el('div','cab-sec-label',ss.about_tafsir_label||'ژێدەرێ تەفسیرێ'));
-      (ss.about_tafsir_text).split('\n\n').filter(Boolean).forEach(function(p){
+      cabTafsir.appendChild(el('div','cab-sec-label',_ft('about_tafsir_label',ss.about_tafsir_label)||'ژێدەرێ تەفسیرێ'));
+      _tafsirText.split('\n\n').filter(Boolean).forEach(function(p){
         cabTafsir.appendChild(el('div','cab-decl-para',p));
       });
       body.appendChild(cabTafsir);
@@ -6214,10 +6221,11 @@ async function openAboutSheet(type){
     var bookImgUrl=ss.tafsir_book_image||'';
     var cabCard=el('div','cab-book-card');
     var cabCardText=el('div','cab-book-card-text');
-    cabCardText.appendChild(el('div','cab-book-card-badge',ss.about_book_title||'تەفسیرا ساناهی'));
-    cabCardText.appendChild(el('div','cab-book-card-title',ss.about_book_title||'تەفسیرا ساناهی'));
-    cabCardText.appendChild(el('div','cab-book-card-author',ss.about_tafsir_author||'ماموستا تەحسین ئیبراهیم دۆسکی'));
-    cabCardText.appendChild(el('div','cab-book-card-desc',ss.about_tafsir_book_desc||'وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.'));
+    var _bookTitle=_ft('about_book_title',ss.about_book_title)||'تەفسیرا ساناهی';
+    cabCardText.appendChild(el('div','cab-book-card-badge',_bookTitle));
+    cabCardText.appendChild(el('div','cab-book-card-title',_bookTitle));
+    cabCardText.appendChild(el('div','cab-book-card-author',_ft('about_tafsir_author',ss.about_tafsir_author)||'ماموستا تەحسین ئیبراهیم دۆسکی'));
+    cabCardText.appendChild(el('div','cab-book-card-desc',_ft('about_tafsir_book_desc',ss.about_tafsir_book_desc)||'وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.'));
     cabCard.appendChild(cabCardText);
     body.appendChild(cabCard);
     if(bookImgUrl){var bookImg=document.createElement('img');bookImg.alt='';bookImg.className='cfg-sheet-img';bookImg.style.opacity=_aboutImgCache[bookImgUrl]?'1':'0';bookImg.style.transition='opacity .4s';bookImg.onload=function(){bookImg.style.opacity='1';};bookImg.src=bookImgUrl;body.appendChild(bookImg);}
@@ -6697,7 +6705,7 @@ function renderSettings(){
   about.appendChild(verEl);
   if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){
     Capacitor.Plugins.App.getInfo().then(function(info){
-      if(info&&info.version)verEl.textContent='v'+info.version+' ('+info.build+')';
+      if(info&&info.version)verEl.textContent='v'+info.version;
     }).catch(function(){});
   }
   about.appendChild(el('div','about-desc',t('settings.about_desc')));
