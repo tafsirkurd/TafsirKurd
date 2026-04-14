@@ -1,15 +1,16 @@
 // One-time use: registers the Telegram webhook from Cloudflare's servers
-// Visit /register-telegram-webhook once, then this file can be deleted
+// Usage: /register-telegram-webhook?token=YOUR_BOT_TOKEN
 
 export async function onRequest(context) {
-    const { env } = context;
-
-    const webhookUrl = 'https://tafsirkurd.com/telegram-webhook';
-    const token = env.TELEGRAM_BOT_TOKEN;
+    const { request, env } = context;
+    const url = new URL(request.url);
+    const token = url.searchParams.get('token') || env.TELEGRAM_BOT_TOKEN;
 
     if (!token) {
-        return new Response('TELEGRAM_BOT_TOKEN not set', { status: 500 });
+        return new Response('Pass ?token=YOUR_BOT_TOKEN in the URL', { status: 400 });
     }
+
+    const webhookUrl = 'https://tafsirkurd.com/telegram-webhook';
 
     const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
         method: 'POST',
