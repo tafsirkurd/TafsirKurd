@@ -60,6 +60,9 @@ export async function onRequest(context) {
         } catch(e) { groqTest = 'Error: ' + e.message; }
     }
 
+    const lastCall = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_last_call') : null;
+    const lastBody = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_last_body') : null;
+
     return new Response(JSON.stringify({
         hasKV: !!env.ADMIN_KV,
         kvToken: kvToken ? kvToken.slice(0, 15) + '...' : null,
@@ -67,5 +70,7 @@ export async function onRequest(context) {
         webhookInfo,
         webhookTest,
         groqTest,
+        lastCall,
+        lastBody,
     }, null, 2), { headers: { 'Content-Type': 'application/json' } });
 }
