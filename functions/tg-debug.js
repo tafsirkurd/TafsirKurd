@@ -27,6 +27,21 @@ export async function onRequest(context) {
         webhookInfo = await res.json();
     }
 
+    // Simulate a Telegram message to our own webhook
+    let webhookTest = null;
+    if (testMsg && kvToken) {
+        const fakeUpdate = {
+            update_id: 1,
+            message: { message_id: 1, chat: { id: 5737599664, type: 'private' }, from: { id: 5737599664 }, text: testMsg, date: Date.now() }
+        };
+        const res = await fetch('https://tafsirkurd.com/telegram-webhook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fakeUpdate),
+        });
+        webhookTest = 'webhook status: ' + res.status + ' ' + await res.text();
+    }
+
     // Test Groq
     let groqTest = null;
     if (testMsg && kvGroq) {
@@ -50,6 +65,7 @@ export async function onRequest(context) {
         kvToken: kvToken ? kvToken.slice(0, 15) + '...' : null,
         kvGroq:  kvGroq  ? kvGroq.slice(0, 10)  + '...' : null,
         webhookInfo,
+        webhookTest,
         groqTest,
     }, null, 2), { headers: { 'Content-Type': 'application/json' } });
 }
