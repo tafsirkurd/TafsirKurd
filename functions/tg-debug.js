@@ -17,13 +17,14 @@ export async function onRequest(context) {
     // Check or set webhook
     let webhookInfo = null;
     if (checkWebhook && kvToken) {
-        await fetch(`https://api.telegram.org/bot${kvToken}/setWebhook`, {
+        const setRes = await fetch(`https://api.telegram.org/bot${kvToken}/setWebhook`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: 'https://tafsirkurd.com/telegram-webhook', drop_pending_updates: true }),
         });
+        const setData = await setRes.json();
         const res = await fetch(`https://api.telegram.org/bot${kvToken}/getWebhookInfo`);
-        webhookInfo = await res.json();
+        webhookInfo = { setResult: setData, info: await res.json() };
     }
 
     // Simulate a Telegram message to our own webhook
