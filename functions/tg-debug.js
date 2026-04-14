@@ -4,6 +4,7 @@ export async function onRequest(context) {
     const token = url.searchParams.get('token');
     const groq  = url.searchParams.get('groq');
     const testMsg = url.searchParams.get('test');
+    const checkWebhook = url.searchParams.get('webhook');
 
     if (env.ADMIN_KV) {
         if (token) await env.ADMIN_KV.put('tg_bot_token', token);
@@ -13,6 +14,14 @@ export async function onRequest(context) {
     const kvToken = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_bot_token') : null;
     const kvGroq  = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_groq_key')  : null;
 
+    // Check webhook info
+    let webhookInfo = null;
+    if (checkWebhook && kvToken) {
+        const res = await fetch(`https://api.telegram.org/bot${kvToken}/getWebhookInfo`);
+        webhookInfo = await res.json();
+    }
+
+    // Test Groq
     let groqTest = null;
     if (testMsg && kvGroq) {
         try {
@@ -34,6 +43,7 @@ export async function onRequest(context) {
         hasKV: !!env.ADMIN_KV,
         kvToken: kvToken ? kvToken.slice(0, 15) + '...' : null,
         kvGroq:  kvGroq  ? kvGroq.slice(0, 10)  + '...' : null,
+        webhookInfo,
         groqTest,
     }, null, 2), { headers: { 'Content-Type': 'application/json' } });
 }
