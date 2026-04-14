@@ -1,9 +1,18 @@
 export async function onRequest(context) {
     const { request, env } = context;
+
+    if (env.ADMIN_KV) {
+        await env.ADMIN_KV.put('tg_last_call', request.method + ' ' + new Date().toISOString());
+    }
+
     if (request.method !== 'POST') return new Response('OK', { status: 200 });
 
+    let bodyText = '';
+    try { bodyText = await request.text(); } catch {}
+    if (env.ADMIN_KV) await env.ADMIN_KV.put('tg_last_body', bodyText.slice(0, 500));
+
     let body;
-    try { body = await request.json(); } catch { return new Response('OK'); }
+    try { body = JSON.parse(bodyText); } catch { return new Response('OK'); }
 
     const msg = body.message || body.edited_message;
     if (!msg || !msg.text) return new Response('OK');
