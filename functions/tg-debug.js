@@ -55,6 +55,28 @@ export async function onRequest(context) {
         } catch (e) { groqTest = 'Error: ' + e.message; }
     }
 
+    // Simulate a fake Telegram message directly to the Worker
+    const ping = url.searchParams.get('ping');
+    let pingTest = null;
+    if (ping && kvToken) {
+        const fakeUpdate = {
+            update_id: 999,
+            message: {
+                message_id: 999, chat: { id: 5737599664, type: 'private' },
+                from: { id: 5737599664 }, text: ping, date: Math.floor(Date.now()/1000)
+            }
+        };
+        try {
+            const res = await fetch('https://tafsirkurd-telegram.tefsirkurd.workers.dev', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Bot-Api-Secret-Token': 'debug' },
+                body: JSON.stringify(fakeUpdate),
+            });
+            const body = await res.text();
+            pingTest = { status: res.status, body };
+        } catch (e) { pingTest = 'Error: ' + e.message; }
+    }
+
     const lastCall = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_last_call') : null;
     const lastBody = env.ADMIN_KV ? await env.ADMIN_KV.get('tg_last_body') : null;
 
@@ -66,6 +88,7 @@ export async function onRequest(context) {
         },
         webhookInfo,
         groqTest,
+        pingTest,
         lastCall,
         lastBody,
         actions: {
@@ -73,6 +96,7 @@ export async function onRequest(context) {
             delWebhook:  '?webhook=del   → clear webhook (plugin mode)',
             checkInfo:   '?webhook=info  → check current webhook status',
             testGroq:    '?test=hello    → test Groq response',
+            pingWorker:  '?ping=hello    → simulate msg to Worker directly',
         },
     }, null, 2), { headers: { 'Content-Type': 'application/json' } });
 }
