@@ -1,9 +1,5 @@
 // Cloudflare Pages Function — Telegram ↔ Groq AI webhook
-// Receives messages from Telegram, sends to Groq (free), replies back.
-//
-// Keys stored in ADMIN_KV:
-//   tg_bot_token  — Telegram bot token
-//   tg_groq_key   — Groq API key (free at console.groq.com)
+// Uses webhook reply method (returns JSON response) instead of outbound API calls
 
 const GROQ_MODEL = 'llama-3.1-8b-instant';
 
@@ -12,58 +8,44 @@ const SYSTEM_PROMPT = `You are a helpful assistant for TafsirKurd — a Kurdish 
 export async function onRequest(context) {
     const { request, env } = context;
 
-    if (request.method !== 'POST') {
-        return new Response('OK', { status: 200 });
-    }
-
-    const bodyText = await request.text();
-    const token = '8603239765:AAGfBPB47qHd0kddfDlT3ByQ8VDzEqRo5oo';
+    if (request.method !== 'POST') return new Response('OK', { status: 200 });
 
     let update;
-    try { update = JSON.parse(bodyText); } catch {
-        await sendMessage(token, 5737599664, 'parse error: ' + bodyText.slice(0, 100));
-        return new Response('OK', { status: 200 });
-    }
+    try { update = await request.json(); } catch { return new Response('OK', { status: 200 }); }
 
     const msg = update.message || update.edited_message;
-    if (!msg || !msg.text) {
-        await sendMessage(token, 5737599664, 'no text. update keys: ' + Object.keys(update).join(', '));
-        return new Response('OK', { status: 200 });
-    }
-
-    const groq = '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';
+    if (!msg || !msg.text) return new Response('OK', { status: 200 });
 
     const chatId = msg.chat.id;
     const text   = msg.text.trim();
 
-    // Debug: report what we have
-    if (!token || !groq) {
-        if (token) await sendMessage(token, chatId, '⚠️ Debug: groq key missing. hasKV=' + !!env.ADMIN_KV);
-        return new Response('OK', { status: 200 });
-    }
+    const groq = env.GROQ_API_KEY || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_groq_key')) || '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';
 
     if (text === '/start') {
-        await sendMessage(token, chatId, 'سڵاو! 👋 من یاریدەدەری تەفسیر کوردم. پرسیارەکەت بنووسە.\n\nHello! I am the TafsirKurd assistant. Ask me anything!');
-        return new Response('OK', { status: 200 });
+        return tgReply(chatId, 'سڵاو! 👋 من یاریدەدەری تەفسیر کوردم. پرسیارەکەت بنووسە.\n\nHello! I am the TafsirKurd assistant. Ask me anything!');
     }
     if (text.startsWith('/')) return new Response('OK', { status: 200 });
-
-    await fetch(`https://api.telegram.org/bot${token}/sendChatAction`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, action: 'typing' }),
-    });
 
     let reply;
     try {
         reply = await askGroq(groq, text);
     } catch (e) {
-        reply = 'Sorry, I could not process your message right now. Please try again.';
-        console.error('Groq error:', e);
+        reply = 'Sorry, could not process your message. Please try again.';
     }
 
-    await sendMessage(token, chatId, reply);
-    return new Response('OK', { status: 200 });
+    return tgReply(chatId, reply);
+}
+
+// Returns reply directly in response body — no outbound fetch needed
+function tgReply(chatId, text) {
+    return new Response(JSON.stringify({
+        method: 'sendMessage',
+        chat_id: chatId,
+        text: text.slice(0, 4096),
+    }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+    });
 }
 
 async function askGroq(apiKey, userMessage) {
@@ -82,20 +64,7 @@ async function askGroq(apiKey, userMessage) {
             ],
         }),
     });
-
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error('Groq API ' + res.status + ': ' + err);
-    }
-
+    if (!res.ok) throw new Error('Groq ' + res.status);
     const data = await res.json();
     return data.choices[0].message.content;
-}
-
-async function sendMessage(token, chatId, text) {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: text.slice(0, 4096) }),
-    });
 }
