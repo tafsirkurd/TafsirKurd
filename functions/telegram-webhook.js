@@ -22,13 +22,17 @@ export async function onRequest(context) {
     const token = env.TELEGRAM_BOT_TOKEN || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_bot_token')) || '';
     const groq  = env.GROQ_API_KEY       || (env.ADMIN_KV && await env.ADMIN_KV.get('tg_groq_key'))  || '';
 
-    if (!token || !groq) return new Response('OK', { status: 200 });
-
     const msg = update.message || update.edited_message;
     if (!msg || !msg.text) return new Response('OK', { status: 200 });
 
     const chatId = msg.chat.id;
     const text   = msg.text.trim();
+
+    // Debug: report what we have
+    if (!token || !groq) {
+        if (token) await sendMessage(token, chatId, '⚠️ Debug: groq key missing. hasKV=' + !!env.ADMIN_KV);
+        return new Response('OK', { status: 200 });
+    }
 
     if (text === '/start') {
         await sendMessage(token, chatId, 'سڵاو! 👋 من یاریدەدەری تەفسیر کوردم. پرسیارەکەت بنووسە.\n\nHello! I am the TafsirKurd assistant. Ask me anything!');
