@@ -124,42 +124,60 @@ export async function onRequest(context) {
         });
     }
 
-    // --- STREAM: SSE live push to terminal ---
+    // --- STREAM: SSE direct Telegram long-poll proxy (no KV on critical path) ---
     if (action === 'stream') {
         if (url.searchParams.get('secret') !== SECRET)
             return new Response('Forbidden', { status: 403 });
 
-        const since = parseInt(url.searchParams.get('since') || '0')
-                      || (Math.floor(Date.now() / 1000) - 10);
+        const token = await env.ADMIN_KV?.get('tg_bot_token');
+        if (!token) return new Response('No token', { status: 500 });
 
+        // Switch to long-polling mode — delete webhook so getUpdates works
+        await fetch(`https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=false`);
+
+        let offset = parseInt(url.searchParams.get('offset') || '0');
         const encoder = new TextEncoder();
-        let lastTs = since;
         let closed = false;
-        let pingCount = 0;
 
         const stream = new ReadableStream({
             async start(controller) {
                 controller.enqueue(encoder.encode(': connected\n\n'));
 
                 while (!closed) {
-                    await new Promise(r => setTimeout(r, 500));
                     try {
-                        const inbox = await env.ADMIN_KV?.get('tg_inbox', 'json') || [];
-                        const newMsgs = inbox.filter(m => m.ts > lastTs);
-                        for (const msg of newMsgs) {
-                            controller.enqueue(encoder.encode(`data: ${JSON.stringify(msg)}\n\n`));
-                            lastTs = msg.ts;
+                        // Long-poll Telegram directly — responds instantly when a message arrives
+                        const tgRes = await fetch(
+                            `https://api.telegram.org/bot${token}/getUpdates?timeout=20&offset=${offset}&allowed_updates=%5B%22message%22%5D`
+                        );
+                        if (!tgRes.ok) {
+                            await new Promise(r => setTimeout(r, 2000));
+                            continue;
                         }
-                        // Keep-alive ping every ~20s
-                        if (++pingCount % 40 === 0) {
-                            controller.enqueue(encoder.encode(': ping\n\n'));
+                        const data = await tgRes.json();
+                        if (data.ok) {
+                            for (const update of data.result) {
+                                const msg = update.message;
+                                if (msg?.text) {
+                                    const event = {
+                                        updateId: update.update_id,
+                                        chatId: msg.chat.id,
+                                        user: msg.from?.username || msg.from?.first_name || 'unknown',
+                                        text: msg.text,
+                                        ts: msg.date,
+                                    };
+                                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+                                }
+                                offset = update.update_id + 1;
+                            }
                         }
-                    } catch {
-                        controller.close();
-                        closed = true;
-                        return;
+                    } catch (e) {
+                        if (!closed) {
+                            controller.enqueue(encoder.encode(`: retry\n\n`));
+                            await new Promise(r => setTimeout(r, 2000));
+                        }
                     }
                 }
+                controller.close();
             },
             cancel() { closed = true; },
         });
@@ -169,7 +187,6 @@ export async function onRequest(context) {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',
                 'X-Accel-Buffering': 'no',
-                'Access-Control-Allow-Origin': '*',
             },
         });
     }
