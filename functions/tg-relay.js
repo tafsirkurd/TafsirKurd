@@ -27,7 +27,17 @@ export async function onRequest(context) {
         const text = msg.text.trim();
         const token = await env.ADMIN_KV?.get('tg_bot_token');
 
-        // Always save to inbox so Claude Code can also see it
+        // If /groq command — reply with Groq immediately, don't queue
+        if (text.startsWith('/groq')) {
+            const userMsg = text.slice(5).trim();
+            if (!userMsg) return sendTg(token, chatId, 'Usage: /groq <your message>');
+            const groqKey = await env.ADMIN_KV?.get('tg_groq_key');
+            if (!groqKey) return new Response('OK');
+            const reply = await callGroq(groqKey, userMsg);
+            return sendTg(token, chatId, reply);
+        }
+
+        // Otherwise save to inbox for Claude Code to handle
         const existing = await env.ADMIN_KV?.get('tg_inbox', 'json') || [];
         existing.push({
             id: msg.message_id,
@@ -38,16 +48,19 @@ export async function onRequest(context) {
         });
         await env.ADMIN_KV?.put('tg_inbox', JSON.stringify(existing.slice(-50)));
 
-        // Also reply immediately with Groq AI
-        const groqKey = await env.ADMIN_KV?.get('tg_groq_key');
-        if (!groqKey || !token) return new Response('OK');
+        // Check if Claude Code is away — fallback to Groq
+        const heartbeat = parseInt(await env.ADMIN_KV?.get('tg_heartbeat') || '0');
+        const now = Math.floor(Date.now() / 1000);
+        const claudeAway = (now - heartbeat) > HEARTBEAT_TTL;
 
-        if (text.startsWith('/start')) {
-            return sendTg(token, chatId, '👋 سڵاو! من بۆتی TafsirKurd ئەم. چۆن یارمەتیت دەدەم؟');
+        if (claudeAway) {
+            const groqKey = await env.ADMIN_KV?.get('tg_groq_key');
+            if (!groqKey || !token) return new Response('OK');
+            const reply = await callGroq(groqKey, text);
+            return sendTg(token, chatId, reply);
         }
 
-        const reply = await callGroq(groqKey, text);
-        return sendTg(token, chatId, reply);
+        return new Response('OK');
     }
 
     // --- HEARTBEAT (Claude Code pings this to say "I'm alive") ---
