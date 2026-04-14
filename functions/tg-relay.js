@@ -124,6 +124,56 @@ export async function onRequest(context) {
         });
     }
 
+    // --- STREAM: SSE live push to terminal ---
+    if (action === 'stream') {
+        if (url.searchParams.get('secret') !== SECRET)
+            return new Response('Forbidden', { status: 403 });
+
+        const since = parseInt(url.searchParams.get('since') || '0')
+                      || (Math.floor(Date.now() / 1000) - 10);
+
+        const encoder = new TextEncoder();
+        let lastTs = since;
+        let closed = false;
+        let pingCount = 0;
+
+        const stream = new ReadableStream({
+            async start(controller) {
+                controller.enqueue(encoder.encode(': connected\n\n'));
+
+                while (!closed) {
+                    await new Promise(r => setTimeout(r, 500));
+                    try {
+                        const inbox = await env.ADMIN_KV?.get('tg_inbox', 'json') || [];
+                        const newMsgs = inbox.filter(m => m.ts > lastTs);
+                        for (const msg of newMsgs) {
+                            controller.enqueue(encoder.encode(`data: ${JSON.stringify(msg)}\n\n`));
+                            lastTs = msg.ts;
+                        }
+                        // Keep-alive ping every ~20s
+                        if (++pingCount % 40 === 0) {
+                            controller.enqueue(encoder.encode(': ping\n\n'));
+                        }
+                    } catch {
+                        controller.close();
+                        closed = true;
+                        return;
+                    }
+                }
+            },
+            cancel() { closed = true; },
+        });
+
+        return new Response(stream, {
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'X-Accel-Buffering': 'no',
+                'Access-Control-Allow-Origin': '*',
+            },
+        });
+    }
+
     return new Response('Telegram relay OK', { status: 200 });
 }
 
