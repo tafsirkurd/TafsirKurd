@@ -1,17 +1,13 @@
 /**
  * Smart Daily Companion — TafsirKurd
- * Hybrid slider: time-active adhkar first, daily rotating items fill the rest.
+ * Always 4 cards in fixed order:
+ *   1. Ayah of the day (Quran verse — opens tafsir)
+ *   2. Hadith of the day
+ *   3. Zceer — time-smart adhkar (right adhkar for the current time)
+ *   4. Book of the day
  *
- * Time items only appear when TRULY inside their window:
- *   Fajr→Dhuhr   = morning + waking
- *   Asr→Isha     = evening
- *   Isha→Fajr    = sleep
- *   Friday       = friday + salawat
- *   Thu night    = salawat
- *
- * Remaining slots (up to 3 total) filled with seed-based daily items:
- *   ayah · hadith · dua · book · gencine section
- *   — same content all day, fresh each new day.
+ * Daily content (dua/hadith/book) is seeded by date — same all day, fresh tomorrow.
+ * Zceer slot is time-aware: morning/evening/sleep/friday/salawat or random fallback.
  */
 (function(window) {
   'use strict';
@@ -66,7 +62,7 @@
   ];
 
   /* ══════════════════════════════════════════════
-     SURAH REFERENCE DATA  (for ayah-of-day card)
+     SURAH REFERENCE DATA
   ══════════════════════════════════════════════ */
   var SURAH_NAMES = [
     'فاتحە','بەقەرە','ئالی عیمران','نیسا','مائیدە','ئەنعام','ئەعراف','ئەنفال',
@@ -303,7 +299,7 @@
     try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
   }
 
-  /* ── Ayah of the day ── */
+  /* ── Ayah of the day (slot 1) ── */
   function _buildAyahItem() {
     var flat = _seededIdx(6236, 1);
     var rem  = flat, surah = 1, ayah = 1;
@@ -324,7 +320,7 @@
     return {
       _type:'daily', id:'ayah_day', icon:'fas fa-book-quran', tag:'ئایەتا ڕۆژێ',
       title:    arText ? (arText.length > 58 ? arText.slice(0, 58) + '\u2026' : arText) : ref,
-      subtitle: arText ? ref : 'ببینی تەفسیرا ئایەتێ',
+      subtitle: arText ? ref : surahName + ' \u2022 ئایەت ' + ayah,
       nav: function() {
         if (window.App && App.tab && App.openSurah) {
           App.tab('quran');
@@ -357,28 +353,6 @@
     };
   }
 
-  /* ── Dua of the day ── */
-  function _buildDuaItem() {
-    var duas = _readCache('gencine_duas_v3');
-    if (!duas || !duas.length) return null;
-    var idx = _seededIdx(duas.length, 3);
-    var d   = duas[idx];
-    if (!d) return null;
-    var text = (d.ar || '').trim();
-    if (text.length > 58) text = text.slice(0, 58) + '\u2026';
-    return {
-      _type:'daily', id:'dua_day', icon:'fa-solid fa-person-praying', tag:'دوعایا ڕۆژێ',
-      title:    text || 'دوعا',
-      subtitle: d.source || d.category_key || 'دوعا',
-      nav: function(gencineUI) {
-        if (!gencineUI) return;
-        gencineUI._view   = 'dua';
-        gencineUI._duaCat = d.category_key || 'quran';
-        gencineUI._draw();
-      }
-    };
-  }
-
   /* ── Book of the day ── */
   function _buildBookItem() {
     var books = _readCache('gencine_books_v3');
@@ -397,71 +371,31 @@
     };
   }
 
-  /* ── Gencine section to explore today ── */
-  var _EXPLORE = [
-    { key:'hadith', icon:'fas fa-scroll',              tag:'حەدیس',     title:'حەدیسێن پێغەمبەرێ \uFDFA', sub:'فەرمودێن ئیسلامی' },
-    { key:'dua',    icon:'fa-solid fa-person-praying', tag:'دوعا',      title:'دوعاهای قورئانی',           sub:'داواکاری لای خوا' },
-    { key:'asma',   icon:'fas fa-star-and-crescent',   tag:'ناوێن خوا', title:'٩٩ ناوێن گەورەیێ خوا',    sub:'ئەسماءالحسنی'   },
-    { key:'books',  icon:'fas fa-book-open',           tag:'کتێب',      title:'کتێبێن ئیسلامی',            sub:'خواندنا دینی'   },
-    { key:'tasbih', icon:'fas fa-rotate',              tag:'تەسبیح',    title:'تەسبیحا دیجیتالی',         sub:'ژمارتنا زکرێ'   }
-  ];
-
-  function _buildGencineItem() {
-    var s = _EXPLORE[_seededIdx(_EXPLORE.length, 5)];
-    return {
-      _type:'daily', id:'gencine_day', icon:s.icon, tag:s.tag,
-      title:s.title, subtitle:s.sub,
-      nav: function(gencineUI) { if (gencineUI && gencineUI.section) gencineUI.section(s.key); }
-    };
-  }
-
-  /* Optional builders rotate daily by seed.
-     Ayah is always slot-1. Gencine is the guaranteed fallback.  */
-  var _OPTIONAL_BUILDERS = [_buildHadithItem, _buildDuaItem, _buildBookItem, _buildGencineItem];
-
-  function _getDailyItems(count) {
-    if (count <= 0) return [];
-
-    /* Priority list: ayah → today's rotating optional → next optional → gencine */
-    var oi = _seededIdx(_OPTIONAL_BUILDERS.length, 7);
-    var candidates = [
-      _buildAyahItem,
-      _OPTIONAL_BUILDERS[oi],
-      _OPTIONAL_BUILDERS[(oi + 1) % _OPTIONAL_BUILDERS.length],
-      _buildGencineItem
-    ];
-
-    var result = [], seen = {};
-    for (var i = 0; i < candidates.length && result.length < count; i++) {
-      try {
-        var item = candidates[i]();
-        if (item && !seen[item.id]) {
-          seen[item.id] = true;
-          result.push(item);
-        }
-      } catch(e) {}
-    }
-    return result;
-  }
-
   /* ══════════════════════════════════════════════
-     HYBRID SELECTION — getItemsNow()
-     Time items: only when genuinely in their window.
-     Daily items: fill remaining slots to reach 3.
+     FIXED SLOT ORDER — always 4 cards:
+       1. Ayah of the day
+       2. Hadith of the day
+       3. Zceer (time-smart adhkar)
+       4. Book of the day
   ══════════════════════════════════════════════ */
   function getItemsNow() {
-    var timeItems  = _getTimeItems();
-    var timeCount  = Math.min(2, timeItems.length);
-    var dailyItems = _getDailyItems(3 - timeCount);
-
     var result = [];
-    for (var i = 0; i < timeCount; i++) {
-      /* Wrap as a hybrid item so _buildCard can dispatch correctly */
-      result.push({ _type:'adhkar', _adhkarItem: timeItems[i] });
+
+    /* Slot 1 — Ayah of the day */
+    try { var ay = _buildAyahItem(); if (ay) result.push(ay); } catch(e) {}
+
+    /* Slot 2 — Hadith */
+    try { var h = _buildHadithItem(); if (h) result.push(h);    } catch(e) {}
+
+    /* Slot 3 — Zceer (time-aware) */
+    var timeItems = _getTimeItems();
+    if (timeItems.length) {
+      result.push({ _type:'adhkar', _adhkarItem: timeItems[0] });
     }
-    for (var j = 0; j < dailyItems.length; j++) {
-      result.push(dailyItems[j]);
-    }
+
+    /* Slot 4 — Book */
+    try { var b = _buildBookItem();   if (b) result.push(b);    } catch(e) {}
+
     return result;
   }
 
