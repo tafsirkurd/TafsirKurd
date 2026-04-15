@@ -1367,11 +1367,13 @@ function _loadGencineScripts(cb) {
     document.body.appendChild(s);
   }
   _ls('/dhikr/dua-data.js?v=20260326b', function() {
-    _ls('/dhikr/dhikr.js?v=20260326b', function() {
-      _gencineScriptsLoaded = true;
-      _gencineScriptsLoading = false;
-      var cbs = _gencineScriptsCbs.splice(0);
-      cbs.forEach(function(fn) { try { fn(); } catch(e) {} });
+    _ls('/dhikr/smart-dhikr.js?v=1', function() {
+      _ls('/dhikr/dhikr.js?v=20260326b', function() {
+        _gencineScriptsLoaded = true;
+        _gencineScriptsLoading = false;
+        var cbs = _gencineScriptsCbs.splice(0);
+        cbs.forEach(function(fn) { try { fn(); } catch(e) {} });
+      });
     });
   });
 }
