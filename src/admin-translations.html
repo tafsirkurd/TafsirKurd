@@ -1402,6 +1402,9 @@
         body.dark-mode .t-row.qe-dirty { border-color: #d97706; background: #1c1500; }
         .t-row.is-marked { border-left: 3px solid #f59e0b; background: #fffdf5; }
         body.dark-mode .t-row.is-marked { border-left-color: #d97706; background: #161000; }
+        .t-btn.approve { }
+        .t-btn.approve.is-approved { color: #16a34a; }
+        body.dark-mode .t-btn.approve.is-approved { color: #4ade80; }
         @keyframes qeSavedFlash {
             0%   { border-color: #22c55e; background: #f0fdf4; }
             100% { border-color: var(--border-light); background: var(--bg-surface); }
@@ -2761,8 +2764,8 @@
                 // Update button state
                 btn.classList.toggle('is-marked', newVal);
                 btn.title = newVal ? 'Unmark' : 'Mark for Nareen';
-                // Update row highlight
-                var rowEl = document.getElementById('row-' + id);
+                // Update row highlight — walk up DOM from button (reliable even if ID lookup fails)
+                var rowEl = btn.closest('.t-row') || document.getElementById('row-' + id);
                 if (rowEl) rowEl.classList.toggle('is-marked', newVal);
                 // Update count badge
                 document.getElementById('markedCount').textContent = allTranslations.filter(function(t) { return t.marked; }).length;
@@ -2771,6 +2774,21 @@
                 showToast(newVal ? '🔖 Marked for Nareen' : 'Mark removed');
             } catch(e) {
                 showToast('Failed to update mark');
+            }
+        }
+
+        async function toggleApprove(id, currentlyApproved, btn) {
+            var newVal = !currentlyApproved;
+            try {
+                var result = await adminTranslationsAPI('update', { id: id, fields: { approved: newVal } });
+                if (!result.success) throw new Error('failed');
+                var row = allTranslations.find(function(t) { return t.id === id; });
+                if (row) row.approved = newVal;
+                btn.classList.toggle('is-approved', newVal);
+                btn.title = newVal ? 'Approved — click to undo' : 'Approve';
+                showToast(newVal ? '\u2705 Approved' : 'Approval removed');
+            } catch(e) {
+                showToast('Failed to update approval');
             }
         }
 
@@ -3385,6 +3403,21 @@
                 });
                 actionsDiv.appendChild(markBtn);
             })(t.id, t.marked);
+
+            // Approve button
+            (function(tid, tApproved) {
+                var approveBtn = document.createElement('button');
+                approveBtn.className = 't-btn approve' + (tApproved ? ' is-approved' : '');
+                approveBtn.title = tApproved ? 'Approved \u2014 click to undo' : 'Approve';
+                approveBtn.textContent = '\u2713';
+                approveBtn.style.fontSize = '16px';
+                approveBtn.style.fontWeight = '700';
+                approveBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleApprove(tid, approveBtn.classList.contains('is-approved'), approveBtn);
+                });
+                actionsDiv.appendChild(approveBtn);
+            })(t.id, t.approved);
 
             if (canEdit) {
                 var editBtn = document.createElement('button');
