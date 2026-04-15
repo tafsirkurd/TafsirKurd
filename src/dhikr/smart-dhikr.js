@@ -1,13 +1,14 @@
 /**
- * Smart Daily Companion — TafsirKurd
- * Always 4 cards in fixed order:
- *   1. Ayah of the day (Quran verse — opens tafsir)
- *   2. Hadith of the day
- *   3. Zceer — time-smart adhkar (right adhkar for the current time)
+ * Smart Daily Companion — TafsirKurd  v11
+ * 3–4 cards, each a different content type:
+ *   1. Time-based adhkar  (only when a genuine time window is active right now)
+ *   2. Ayah of the day    (Quran verse — opens tafsir)
+ *   3. Hadith of the day
  *   4. Book of the day
  *
- * Daily content (dua/hadith/book) is seeded by date — same all day, fresh tomorrow.
- * Zceer slot is time-aware: morning/evening/sleep/friday/salawat or random fallback.
+ * Daily content (hadith/book) is seeded by date — same all day, fresh tomorrow.
+ * Adhkar slot only appears during morning / evening / sleep / Friday windows.
+ * When no time window is active the slider shows 3 fully-distinct content types.
  */
 (function(window) {
   'use strict';
@@ -270,7 +271,9 @@
     var maghribMin = (prayers && _toMinutes(prayers.Maghrib) >= 0) ? _toMinutes(prayers.Maghrib) : 18 * 60;
     var state      = _getState();
 
-    var active = TIME_ITEMS
+    /* Return at most 1 — the highest-priority genuinely-active item.
+       No fallback: when no window is active, return [] so the slot is omitted. */
+    return TIME_ITEMS
       .filter(function(item) {
         return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin);
       })
@@ -278,16 +281,8 @@
         return { item: item, score: _scoreTimeItem(item, state) };
       })
       .sort(function(a, b) { return b.score - a.score; })
-      .slice(0, 2)
+      .slice(0, 1)
       .map(function(x) { return x.item; });
-
-    /* No active time window → pick 1 random adhkar seeded by today */
-    if (!active.length) {
-      var pool = FALLBACK_ITEMS.filter(function(item) { return _catHasData(item.categoryKey); });
-      if (pool.length) active = [ pool[_seededIdx(pool.length, 9)] ];
-    }
-
-    return active;
   }
 
   /* ══════════════════════════════════════════════
@@ -389,28 +384,30 @@
   }
 
   /* ══════════════════════════════════════════════
-     FIXED SLOT ORDER — always 4 cards:
-       1. Ayah of the day
-       2. Hadith of the day
-       3. Zceer (time-smart adhkar)
+     SLOT ORDER — 3 or 4 fully distinct content types:
+       1. Adhkar (time-aware)   — only when a time window is active
+       2. Ayah of the day
+       3. Hadith of the day
        4. Book of the day
+     Each slot is a different semantic type; no type repeats.
   ══════════════════════════════════════════════ */
   function getItemsNow() {
     var result = [];
 
-    /* Slot 1 — Ayah of the day */
+    /* Slot 1 — adhkar only when a genuine time window is active right now */
+    var timeItems = _getTimeItems();
+    if (timeItems.length) {
+      result.push({ _type: 'adhkar', _adhkarItem: timeItems[0] });
+    }
+
+    /* Slot 2 — Ayah of the day */
     try { var ay = _buildAyahItem(); if (ay) result.push(ay); } catch(e) {}
 
-    /* Slot 2 — Hadith */
-    try { var h = _buildHadithItem(); if (h) result.push(h);    } catch(e) {}
+    /* Slot 3 — Hadith of the day */
+    try { var h = _buildHadithItem(); if (h) result.push(h); } catch(e) {}
 
-    /* Slot 3 — Zceer (time-aware, always guaranteed) */
-    var timeItems = _getTimeItems();
-    var zceerItem = timeItems.length ? timeItems[0] : FALLBACK_ITEMS[3]; /* salawat as absolute last resort */
-    result.push({ _type:'adhkar', _adhkarItem: zceerItem });
-
-    /* Slot 4 — Book */
-    try { var b = _buildBookItem();   if (b) result.push(b);    } catch(e) {}
+    /* Slot 4 — Book of the day */
+    try { var b = _buildBookItem(); if (b) result.push(b); } catch(e) {}
 
     return result;
   }
