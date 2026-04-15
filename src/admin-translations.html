@@ -1400,6 +1400,8 @@
         .qe-textarea:focus { outline: none; }
         .t-row.qe-dirty { border-color: #f59e0b; background: #fffbeb; }
         body.dark-mode .t-row.qe-dirty { border-color: #d97706; background: #1c1500; }
+        .t-row.is-marked { border-left: 3px solid #f59e0b; background: #fffdf5; }
+        body.dark-mode .t-row.is-marked { border-left-color: #d97706; background: #161000; }
         @keyframes qeSavedFlash {
             0%   { border-color: #22c55e; background: #f0fdf4; }
             100% { border-color: var(--border-light); background: var(--bg-surface); }
@@ -2759,6 +2761,9 @@
                 // Update button state
                 btn.classList.toggle('is-marked', newVal);
                 btn.title = newVal ? 'Unmark' : 'Mark for Nareen';
+                // Update row highlight
+                var rowEl = document.getElementById('row-' + id);
+                if (rowEl) rowEl.classList.toggle('is-marked', newVal);
                 // Update count badge
                 document.getElementById('markedCount').textContent = allTranslations.filter(function(t) { return t.marked; }).length;
                 // If in marked view and unmarked, remove the row
@@ -3262,7 +3267,7 @@
 
             items.forEach(function(t) {
                 var row = document.createElement('div');
-                row.className = 't-row';
+                row.className = 't-row' + (t.marked ? ' is-marked' : '');
                 row.id = 'row-' + t.id;
 
                 if (quickEditMode) {
