@@ -33,7 +33,7 @@
     {
       id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
       labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێواربوون',
-      subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێvarê xwe bi zikirê xwe bike',
+      subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێوارا خوە ب زکرێ بکە',
       timeTag: 'ئێواربوون', basePriority: 80,
       timeWindow: { start:'Asr',   end:'Isha',    fs:15*60+30,  fe:21*60,    wraps:false }
     },
@@ -559,9 +559,14 @@
       dots.forEach(function(d, i) { d.classList.toggle('sd-dot-active', i === current); });
     }
 
+    function isAlive() { return document.body && document.body.contains(track); }
+
     function resetAuto() {
       if (autoTimer) clearInterval(autoTimer);
-      autoTimer = setInterval(function() { goTo(current + 1); }, INTERVAL);
+      autoTimer = setInterval(function() {
+        if (!isAlive()) { clearInterval(autoTimer); autoTimer = null; return; }
+        goTo(current + 1);
+      }, INTERVAL);
     }
 
     track.addEventListener('touchstart', function(e) {
@@ -580,13 +585,15 @@
 
     resetAuto();
 
-    document.addEventListener('visibilitychange', function() {
+    function _onVisibility() {
+      if (!isAlive()) { document.removeEventListener('visibilitychange', _onVisibility); return; }
       if (document.hidden) {
         if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
       } else if (!touching) {
         resetAuto();
       }
-    });
+    }
+    document.addEventListener('visibilitychange', _onVisibility);
   }
 
   /* ══════════════════════════════════════════════
