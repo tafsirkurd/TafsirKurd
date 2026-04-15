@@ -415,27 +415,31 @@
     };
   }
 
-  /* Seeded Fisher-Yates — determines which daily types appear today */
-  function _seededShuffle(arr) {
-    var a = arr.slice();
-    var s = Math.abs(_daySeed() * 1664525 + 1013904223) % 2147483647;
-    for (var i = a.length - 1; i > 0; i--) {
-      s = (s * 1664525 + 1013904223) % 2147483647;
-      var j = s % (i + 1);
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-  }
-
-  var _DAILY_BUILDERS = [_buildAyahItem, _buildHadithItem, _buildDuaItem, _buildBookItem, _buildGencineItem];
+  /* Optional builders rotate daily by seed.
+     Ayah is always slot-1. Gencine is the guaranteed fallback.  */
+  var _OPTIONAL_BUILDERS = [_buildHadithItem, _buildDuaItem, _buildBookItem, _buildGencineItem];
 
   function _getDailyItems(count) {
     if (count <= 0) return [];
-    var shuffled = _seededShuffle(_DAILY_BUILDERS);
-    var result = [];
-    for (var i = 0; i < shuffled.length && result.length < count; i++) {
-      var item = shuffled[i]();
-      if (item) result.push(item);
+
+    /* Priority list: ayah → today's rotating optional → next optional → gencine */
+    var oi = _seededIdx(_OPTIONAL_BUILDERS.length, 7);
+    var candidates = [
+      _buildAyahItem,
+      _OPTIONAL_BUILDERS[oi],
+      _OPTIONAL_BUILDERS[(oi + 1) % _OPTIONAL_BUILDERS.length],
+      _buildGencineItem
+    ];
+
+    var result = [], seen = {};
+    for (var i = 0; i < candidates.length && result.length < count; i++) {
+      try {
+        var item = candidates[i]();
+        if (item && !seen[item.id]) {
+          seen[item.id] = true;
+          result.push(item);
+        }
+      } catch(e) {}
     }
     return result;
   }
