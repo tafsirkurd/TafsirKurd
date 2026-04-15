@@ -1,136 +1,100 @@
 /**
- * Smart Daily Dhikr System — TafsirKurd
- * Selects the right adhkar based on time, day, and daily state.
- * Renders a premium slider at the top of the Gencine home screen.
+ * Smart Daily Companion — TafsirKurd
+ * Hybrid slider: time-active adhkar first, daily rotating items fill the rest.
+ *
+ * Time items only appear when TRULY inside their window:
+ *   Fajr→Dhuhr   = morning + waking
+ *   Asr→Isha     = evening
+ *   Isha→Fajr    = sleep
+ *   Friday       = friday + salawat
+ *   Thu night    = salawat
+ *
+ * Remaining slots (up to 3 total) filled with seed-based daily items:
+ *   ayah · hadith · dua · book · gencine section
+ *   — same content all day, fresh each new day.
  */
 (function(window) {
   'use strict';
 
-  /* ═══════════════════════════════════════════
-     ITEM DEFINITIONS
-     Each item maps to an adhkar category.
-     basePriority = baseline relevance (0–100).
-     Time/day boosts are added on top.
-  ═══════════════════════════════════════════ */
-  var ITEMS = [
+  /* ══════════════════════════════════════════════
+     ADHKAR TIME ITEMS
+  ══════════════════════════════════════════════ */
+  var TIME_ITEMS = [
     {
-      id: 'morning',
-      categoryKey: 'morning',
-      icon: 'fas fa-sun',
-      labelKey: 'adhkar.morning',
-      labelFallback: 'زکرێن بەیانیکردن',
-      subtitleKey: 'gencine.smart.morning_hint',
-      subtitleFallback: 'ڕۆژا خوه ب زکرێ دەستپێکە',
-      timeTag: 'بەیانیکردن',
-      basePriority: 80,
-      /* Active: Fajr → Dhuhr  (fallback 05:00–11:30) */
-      timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
+      id: 'morning', categoryKey: 'morning', icon: 'fas fa-sun',
+      labelKey: 'adhkar.morning', labelFallback: 'زکرێن بەیانیکردن',
+      subtitleKey: 'gencine.smart.morning_hint', subtitleFallback: 'ڕۆژا خوه ب زکرێ دەستپێکە',
+      timeTag: 'بەیانیکردن', basePriority: 80,
+      timeWindow: { start:'Fajr',  end:'Dhuhr',   fs:5*60,      fe:11*60+30, wraps:false }
     },
     {
-      id: 'waking',
-      categoryKey: 'waking',
-      icon: 'fas fa-cloud-sun',
-      labelKey: 'adhkar.waking',
-      labelFallback: 'دوای هاتنا خوو',
-      subtitleKey: 'gencine.smart.waking_hint',
-      subtitleFallback: 'دوای هاتنا خووێ بخوێنە',
-      timeTag: 'بەیانیکردن',
-      basePriority: 55,
-      /* Active: Fajr → Sunrise+1h  (fallback 05:00–08:00) */
-      timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
+      id: 'waking', categoryKey: 'waking', icon: 'fas fa-cloud-sun',
+      labelKey: 'adhkar.waking', labelFallback: 'دوای هاتنا خوو',
+      subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'دوای هاتنا خووێ بخوێنە',
+      timeTag: 'بەیانیکردن', basePriority: 55,
+      timeWindow: { start:'Fajr',  end:'Sunrise',  fs:5*60,      fe:8*60,     wraps:false }
     },
     {
-      id: 'evening',
-      categoryKey: 'evening',
-      icon: 'fas fa-moon',
-      labelKey: 'adhkar.evening',
-      labelFallback: 'زکرێن ئێواربوون',
-      subtitleKey: 'gencine.smart.evening_hint',
-      subtitleFallback: 'ئێvarê xwe bi zikirê xwe bike',
-      timeTag: 'ئێواربوون',
-      basePriority: 80,
-      /* Active: Asr → Isha  (fallback 15:30–21:00) */
-      timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
+      id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
+      labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێواربوون',
+      subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێvarê xwe bi zikirê xwe bike',
+      timeTag: 'ئێواربوون', basePriority: 80,
+      timeWindow: { start:'Asr',   end:'Isha',    fs:15*60+30,  fe:21*60,    wraps:false }
     },
     {
-      id: 'sleep',
-      categoryKey: 'sleep',
-      icon: 'fas fa-bed',
-      labelKey: 'adhkar.sleep',
-      labelFallback: 'دوای خەوکردن',
-      subtitleKey: 'gencine.smart.sleep_hint',
-      subtitleFallback: 'پێش خەوکردنێ بخوێنە',
-      timeTag: 'شەو',
-      basePriority: 75,
-      /* Active: Isha → Fajr  (fallback 21:00–05:00, wraps midnight) */
-      timeWindow: { start: 'Isha', end: 'Fajr', fs: 21*60, fe: 5*60, wraps: true }
+      id: 'sleep', categoryKey: 'sleep', icon: 'fas fa-bed',
+      labelKey: 'adhkar.sleep', labelFallback: 'دوای خەوکردن',
+      subtitleKey: 'gencine.smart.sleep_hint', subtitleFallback: 'پێش خەوکردنێ بخوێنە',
+      timeTag: 'شەو', basePriority: 75,
+      timeWindow: { start:'Isha',  end:'Fajr',    fs:21*60,     fe:5*60,     wraps:true  }
     },
     {
-      id: 'friday',
-      categoryKey: 'friday',
-      icon: 'fas fa-calendar-day',
-      labelKey: 'adhkar.friday',
-      labelFallback: 'ڕۆژا ئینانێ',
-      subtitleKey: 'gencine.smart.friday_hint',
-      subtitleFallback: 'ڕۆژا ئینانێ ئەمڕۆ یە',
-      timeTag: 'ئینانی',
-      basePriority: 10,
-      dayBoostDays: [5],       /* 0=Sun … 5=Fri … 6=Sat */
-      dayBoostAmount: 90
+      id: 'friday', categoryKey: 'friday', icon: 'fas fa-calendar-day',
+      labelKey: 'adhkar.friday', labelFallback: 'ڕۆژا ئینانێ',
+      subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ڕۆژا ئینانێ ئەمڕۆ یە',
+      timeTag: 'ئینانی', basePriority: 80,
+      dayBoostDays: [5]                          /* only on Friday */
     },
     {
-      id: 'salawat',
-      categoryKey: 'salawat',
-      icon: 'fas fa-star-and-crescent',
-      labelKey: 'adhkar.salawat',
-      labelFallback: 'سەلاوات',
-      subtitleKey: 'gencine.smart.salawat_hint',
-      subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر ﷺ',
-      timeTag: null,
-      basePriority: 45,
-      dayBoostDays: [5],       /* Friday */
-      dayBoostAmount: 60,
-      thursdayNightBoost: 50   /* Thursday after Maghrib */
-    },
-    {
-      id: 'after_prayer',
-      categoryKey: 'after_prayer',
-      icon: 'fas fa-hands-praying',
-      labelKey: 'adhkar.after_prayer',
-      labelFallback: 'دوای نوێژ',
-      subtitleKey: 'gencine.smart.after_prayer_hint',
-      subtitleFallback: 'زکرێن دوای نوێژکردن',
-      timeTag: null,
-      basePriority: 42
-    },
-    {
-      id: 'forgiveness',
-      categoryKey: 'forgiveness',
-      icon: 'fas fa-dove',
-      labelKey: 'adhkar.forgiveness',
-      labelFallback: 'داواکاری لێبوردن',
-      subtitleKey: 'gencine.smart.forgiveness_hint',
-      subtitleFallback: 'ئیستیخفارەکە زیادە بکە',
-      timeTag: null,
-      basePriority: 40
-    },
-    {
-      id: 'protection',
-      categoryKey: 'protection',
-      icon: 'fas fa-shield-halved',
-      labelKey: 'adhkar.protection',
-      labelFallback: 'پاراستن',
-      subtitleKey: 'gencine.smart.protection_hint',
-      subtitleFallback: 'زکرێن پاراستن و حەمایەتێ',
-      timeTag: null,
-      basePriority: 38
+      id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
+      labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
+      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر ﷺ',
+      timeTag: null, basePriority: 75,
+      dayBoostDays: [5],                         /* Friday */
+      thursdayNightBoost: true                   /* Thursday after Maghrib */
     }
   ];
 
-  /* ═══════════════════════════════════════════
-     TIME HELPERS
-  ═══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════
+     SURAH REFERENCE DATA  (for ayah-of-day card)
+  ══════════════════════════════════════════════ */
+  var SURAH_NAMES = [
+    'فاتحە','بەقەرە','ئالی عیمران','نیسا','مائیدە','ئەنعام','ئەعراف','ئەنفال',
+    'توبە','یونس','هود','یوسف','ڕەعد','ئیبراهیم','حیجر','نەحل','ئیسرا','کەهف',
+    'مەریەم','تاها','ئەنبیا','حەج','مومینون','نور','فورقان','شوعەرا','نەمل',
+    'قەسەس','عەنکەبوت','ڕوم','لوقمان','سەجدە','ئەحزاب','سەبا','فاتیر','یاسین',
+    'سافات','ساد','زومەر','غافیر','فوسیلەت','شورا','زوخروف','دوخان','جاسیە',
+    'ئەحقاف','موحەممەد','فەتح','حوجورات','قاف','زاریات','تور','نەجم','قەمەر',
+    'ڕەحمان','واقیعە','حەدید','موجادیلە','حەشر','مومتەحینە','سەف','جومعە',
+    'موناقیقون','تەغابون','تەلاق','تەحریم','مولک','قەلەم','هاققە','مەعاریج',
+    'نوح','جین','موزەممیل','موددەسیر','قیامەت','ئینسان','موڕسەلات','نەبا',
+    'نازیعات','عەبەسە','تەکویر','ئینفیتار','موتەففیفین','ئینشیقاق','بوروج',
+    'تارق','ئەعلا','غاشیە','فەجر','بەلەد','شەمس','لێل','دوحا','شەرح','تین',
+    'عەلەق','قەدر','بەیینە','زەلزەلە','عادیات','قارعە','تەکاسور','عەسر',
+    'هومەزە','فیل','قورێش','ماعون','کەوسەر','کافیرون','نەسر','مەسەد','ئیخلاس',
+    'فەلەق','ناس'
+  ];
+  var SURAH_SIZES = [
+    7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,
+    112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,
+    59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,
+    52,52,44,28,28,20,56,40,31,50,40,31,27,55,33,43,9,21,16,26,17,19,28,8,11,
+    11,8,3,5,4,8,6,11,4,8,7,4,5,6,7,3,6,3,5,4,5,6
+  ];
 
+  /* ══════════════════════════════════════════════
+     TIME HELPERS
+  ══════════════════════════════════════════════ */
   function _toMinutes(hhmm) {
     if (!hhmm || typeof hhmm !== 'string') return -1;
     var p = hhmm.split(':');
@@ -145,30 +109,34 @@
   }
 
   /* Is `cur` (minutes since midnight) in [s, e)?
-     wraps=true: window crosses midnight (e.g. 22:00 → 05:00) */
+     wraps=true handles windows that cross midnight (e.g. 21:00–05:00) */
   function _inRange(cur, s, e, wraps) {
     if (s < 0 || e < 0) return false;
     return wraps ? (cur >= s || cur < e) : (cur >= s && cur < e);
   }
 
-  /* ═══════════════════════════════════════════
-     PRAYER TIMES
-     Reads cached data that the prayer tab already fetched.
-  ═══════════════════════════════════════════ */
+  function _daySeed() {
+    var d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
+  function _seededIdx(length, salt) {
+    if (!length) return 0;
+    return Math.abs(_daySeed() * 31 + salt * 7919) % length;
+  }
+
+  /* ══════════════════════════════════════════════
+     PRAYER TIMES  (reads the cache the prayer tab fills)
+  ══════════════════════════════════════════════ */
   function _getPrayerTimings() {
     try {
       var city   = localStorage.getItem('prayerCity')   || 'Duhok';
       var method = parseInt(localStorage.getItem('prayerMethod') || '13', 10);
       var today  = new Date();
       var dayNum = String(today.getDate());
-
-      /* Monthly cache (amozhgary.tv) */
       var mk = 'prayer-kurd2:' + city + ':' + today.getFullYear() + ':' + (today.getMonth() + 1);
       var monthly = JSON.parse(localStorage.getItem(mk));
-      if (monthly && monthly.days && monthly.days[dayNum] && monthly.days[dayNum].Fajr) {
-        return monthly.days[dayNum];
-      }
-      /* Per-day cache */
+      if (monthly && monthly.days && monthly.days[dayNum] && monthly.days[dayNum].Fajr) return monthly.days[dayNum];
       var dk = 'prayer3:' + city + ':' + method + ':' + _todayISO();
       var daily = JSON.parse(localStorage.getItem(dk));
       if (daily && daily.timings && daily.timings.Fajr) return daily.timings;
@@ -176,45 +144,9 @@
     return null;
   }
 
-  /* ═══════════════════════════════════════════
-     SCORING
-  ═══════════════════════════════════════════ */
-  function _score(item, nowMin, dow, prayerTimes, maghribMin, state) {
-    var s = item.basePriority;
-
-    /* Time-window boost (+100 when active) */
-    if (item.timeWindow) {
-      var tw = item.timeWindow;
-      var tStart = (prayerTimes && _toMinutes(prayerTimes[tw.start]) >= 0)
-                    ? _toMinutes(prayerTimes[tw.start]) : tw.fs;
-      var tEnd   = (prayerTimes && _toMinutes(prayerTimes[tw.end]) >= 0)
-                    ? _toMinutes(prayerTimes[tw.end])   : tw.fe;
-      if (_inRange(nowMin, tStart, tEnd, tw.wraps)) s += 100;
-    }
-
-    /* Day-of-week boost (e.g. Friday) */
-    if (item.dayBoostDays && item.dayBoostDays.indexOf(dow) >= 0) {
-      s += (item.dayBoostAmount || 0);
-    }
-
-    /* Thursday-night salawat boost */
-    if (item.thursdayNightBoost && dow === 4 && nowMin >= maghribMin) {
-      s += item.thursdayNightBoost;
-    }
-
-    /* Daily-completion penalty — already done, push it down */
-    if (state.completed.indexOf(item.id) >= 0) s -= 60;
-
-    /* Opened-today penalty — mild, let other items surface */
-    if (state.opened.indexOf(item.id) >= 0) s -= 15;
-
-    return s;
-  }
-
-  /* ═══════════════════════════════════════════
+  /* ══════════════════════════════════════════════
      STATE  (today's opens + completions)
-     Keyed by date so it auto-resets every day.
-  ═══════════════════════════════════════════ */
+  ══════════════════════════════════════════════ */
   var _STATE_KEY = 'sd_daily_v1';
 
   function _getState() {
@@ -225,8 +157,8 @@
     return { date: _todayISO(), opened: [], completed: [] };
   }
 
-  function _saveState(state) {
-    try { localStorage.setItem(_STATE_KEY, JSON.stringify(state)); } catch(e) {}
+  function _saveState(s) {
+    try { localStorage.setItem(_STATE_KEY, JSON.stringify(s)); } catch(e) {}
   }
 
   function _markOpened(id) {
@@ -238,89 +170,309 @@
   function _markCompleted(id) {
     var s = _getState();
     if (s.completed.indexOf(id) < 0) s.completed.push(id);
-    if (s.opened.indexOf(id) < 0) s.opened.push(id);
+    if (s.opened.indexOf(id)    < 0) s.opened.push(id);
     _saveState(s);
     _updateStreak(id);
   }
 
-  /* ═══════════════════════════════════════════
-     STREAKS  (days-in-a-row completed)
-  ═══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════
+     STREAKS
+  ══════════════════════════════════════════════ */
   function _getStreak(id) {
-    try {
-      return JSON.parse(localStorage.getItem('sd_streak_' + id)) || { count: 0, lastDate: null };
-    } catch(e) {
-      return { count: 0, lastDate: null };
-    }
+    try { return JSON.parse(localStorage.getItem('sd_streak_' + id)) || { count:0, lastDate:null }; }
+    catch(e) { return { count:0, lastDate:null }; }
   }
 
   function _updateStreak(id) {
     var streak = _getStreak(id);
     var today  = _todayISO();
     if (streak.lastDate === today) return streak;
-    var prev   = new Date(Date.now() - 86400000);
-    var yest   = prev.getFullYear()
-               + '-' + String(prev.getMonth() + 1).padStart(2, '0')
-               + '-' + String(prev.getDate()).padStart(2, '0');
-    streak.count = (streak.lastDate === yest) ? streak.count + 1 : 1;
+    var prev = new Date(Date.now() - 86400000);
+    var yest = prev.getFullYear() + '-' + String(prev.getMonth() + 1).padStart(2, '0') + '-' + String(prev.getDate()).padStart(2, '0');
+    streak.count    = (streak.lastDate === yest) ? streak.count + 1 : 1;
     streak.lastDate = today;
     try { localStorage.setItem('sd_streak_' + id, JSON.stringify(streak)); } catch(e) {}
     return streak;
   }
 
-  /* ═══════════════════════════════════════════
+  /* ══════════════════════════════════════════════
      CATEGORY DATA CHECK
-     Only show a card if the category actually
-     has adhkar entries in the DB cache.
-  ═══════════════════════════════════════════ */
+  ══════════════════════════════════════════════ */
   function _catHasData(catKey) {
     try {
       var cached = JSON.parse(localStorage.getItem('gencine_adhkar_v1'));
-      /* Cache not loaded yet — assume yes so we don't hide things on first open */
       if (!cached || !Array.isArray(cached)) return true;
       return cached.some(function(a) { return a.category_key === catKey && a.active !== false; });
     } catch(e) { return true; }
   }
 
-  /* ═══════════════════════════════════════════
-     MAIN RANKING — getItemsNow()
-     Returns top 1–3 items for the current moment.
-  ═══════════════════════════════════════════ */
-  function getItemsNow() {
-    var now        = new Date();
-    var nowMin     = now.getHours() * 60 + now.getMinutes();
-    var dow        = now.getDay();  /* 0=Sun, 1=Mon … 5=Fri, 6=Sat */
-    var prayers    = _getPrayerTimings();
-    var maghribMin = (prayers && _toMinutes(prayers.Maghrib) >= 0)
-                      ? _toMinutes(prayers.Maghrib) : 18 * 60;
-    var state      = _getState();
-
-    var scored = ITEMS
-      .filter(function(item) { return _catHasData(item.categoryKey); })
-      .map(function(item) {
-        return { item: item, score: _score(item, nowMin, dow, prayers, maghribMin, state) };
-      });
-    scored.sort(function(a, b) { return b.score - a.score; });
-
-    return scored
-      .filter(function(x) { return x.score > 0; })
-      .slice(0, 3)
-      .map(function(x) { return x.item; });
+  /* ══════════════════════════════════════════════
+     TIME ITEM SELECTION
+     An item is "active" only if it is genuinely
+     inside its time window or day condition right now.
+     Generic items (after_prayer etc.) are excluded —
+     they are not time-specific so they never appear here.
+  ══════════════════════════════════════════════ */
+  function _isTimeActive(item, nowMin, dow, prayers, maghribMin) {
+    /* Time-window items */
+    if (item.timeWindow) {
+      var tw = item.timeWindow;
+      var ts = (prayers && _toMinutes(prayers[tw.start]) >= 0) ? _toMinutes(prayers[tw.start]) : tw.fs;
+      var te = (prayers && _toMinutes(prayers[tw.end])   >= 0) ? _toMinutes(prayers[tw.end])   : tw.fe;
+      return _inRange(nowMin, ts, te, tw.wraps);
+    }
+    /* Friday items */
+    if (item.dayBoostDays && item.dayBoostDays.indexOf(dow) >= 0) return true;
+    /* Thursday night salawat */
+    if (item.thursdayNightBoost && dow === 4 && nowMin >= maghribMin) return true;
+    return false;
   }
 
-  /* ═══════════════════════════════════════════
-     UI — CARD BUILDER
-  ═══════════════════════════════════════════ */
-  function _buildCard(item, gencineUI) {
-    var T     = window.t || function(k, d) { return d || k; };
-    var state = _getState();
-    var done  = state.completed.indexOf(item.id) >= 0;
+  function _scoreTimeItem(item, state) {
+    var s = item.basePriority;
+    if (state.completed.indexOf(item.id) >= 0) s -= 60;
+    if (state.opened.indexOf(item.id)    >= 0) s -= 15;
+    return s;
+  }
+
+  /* Non-time-specific adhkar shown as a daily-seeded fallback
+     when no time window is currently active.                    */
+  var FALLBACK_ITEMS = [
+    {
+      id: 'after_prayer', categoryKey: 'after_prayer', icon: 'fas fa-hands-praying',
+      labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
+      subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
+      timeTag: null, basePriority: 42
+    },
+    {
+      id: 'forgiveness', categoryKey: 'forgiveness', icon: 'fas fa-dove',
+      labelKey: 'adhkar.forgiveness', labelFallback: 'داواکاری لێبوردن',
+      subtitleKey: 'gencine.smart.forgiveness_hint', subtitleFallback: 'ئیستیخفارەکە زیادە بکە',
+      timeTag: null, basePriority: 40
+    },
+    {
+      id: 'protection', categoryKey: 'protection', icon: 'fas fa-shield-halved',
+      labelKey: 'adhkar.protection', labelFallback: 'پاراستن',
+      subtitleKey: 'gencine.smart.protection_hint', subtitleFallback: 'زکرێن پاراستن و حەمایەتێ',
+      timeTag: null, basePriority: 38
+    },
+    {
+      id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
+      labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
+      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر ﷺ',
+      timeTag: null, basePriority: 45
+    }
+  ];
+
+  /* Returns up to 2 currently time-active adhkar (highest priority first).
+     Falls back to 1 seeded-random adhkar when nothing is time-active.     */
+  function _getTimeItems() {
+    var now        = new Date();
+    var nowMin     = now.getHours() * 60 + now.getMinutes();
+    var dow        = now.getDay();
+    var prayers    = _getPrayerTimings();
+    var maghribMin = (prayers && _toMinutes(prayers.Maghrib) >= 0) ? _toMinutes(prayers.Maghrib) : 18 * 60;
+    var state      = _getState();
+
+    var active = TIME_ITEMS
+      .filter(function(item) {
+        return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin);
+      })
+      .map(function(item) {
+        return { item: item, score: _scoreTimeItem(item, state) };
+      })
+      .sort(function(a, b) { return b.score - a.score; })
+      .slice(0, 2)
+      .map(function(x) { return x.item; });
+
+    /* No active time window → pick 1 random adhkar seeded by today */
+    if (!active.length) {
+      var pool = FALLBACK_ITEMS.filter(function(item) { return _catHasData(item.categoryKey); });
+      if (pool.length) active = [ pool[_seededIdx(pool.length, 9)] ];
+    }
+
+    return active;
+  }
+
+  /* ══════════════════════════════════════════════
+     DAILY ITEMS SYSTEM
+     Each type is seeded independently — same pick all
+     day, different pick tomorrow.
+  ══════════════════════════════════════════════ */
+  function _readCache(key) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
+  }
+
+  /* ── Ayah of the day ── */
+  function _buildAyahItem() {
+    var flat = _seededIdx(6236, 1);
+    var rem  = flat, surah = 1, ayah = 1;
+    for (var i = 0; i < SURAH_SIZES.length; i++) {
+      if (rem < SURAH_SIZES[i]) { surah = i + 1; ayah = rem + 1; break; }
+      rem -= SURAH_SIZES[i];
+    }
+    var surahName = SURAH_NAMES[surah - 1] || ('سورە ' + surah);
+    var ref = surahName + ' \u2022 ' + ayah;
+    var arText = '';
+    try {
+      if (window.S && window.S.quranData) {
+        var sArr = window.S.quranData[String(surah)];
+        if (sArr && sArr[ayah - 1]) arText = sArr[ayah - 1].ar || '';
+      }
+    } catch(e) {}
+    var s = surah, a = ayah;
+    return {
+      _type:'daily', id:'ayah_day', icon:'fas fa-book-quran', tag:'ئایەتا ڕۆژێ',
+      title:    arText ? (arText.length > 58 ? arText.slice(0, 58) + '\u2026' : arText) : ref,
+      subtitle: arText ? ref : 'ببینی تەفسیرا ئایەتێ',
+      nav: function() {
+        if (window.App && App.tab && App.openSurah) {
+          App.tab('quran');
+          setTimeout(function() { App.openSurah(s, a); }, 300);
+        }
+      }
+    };
+  }
+
+  /* ── Hadith of the day ── */
+  function _buildHadithItem() {
+    var hadiths = _readCache('gencine_hadiths_v2');
+    if (!hadiths || !hadiths.length) return null;
+    var idx = _seededIdx(hadiths.length, 2);
+    var h   = hadiths[idx];
+    if (!h) return null;
+    var preview = (h.ku || h.ar || '').trim();
+    if (preview.length > 58) preview = preview.slice(0, 58) + '\u2026';
+    return {
+      _type:'daily', id:'hadith_day', icon:'fas fa-scroll', tag:'حەدیسا ڕۆژێ',
+      title:    h.title || preview,
+      subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
+      nav: function(gencineUI) {
+        if (!gencineUI) return;
+        gencineUI._view          = 'hadith';
+        gencineUI._hadithSearch  = '';
+        gencineUI._hadithDetailIdx = idx;
+        gencineUI._draw();
+      }
+    };
+  }
+
+  /* ── Dua of the day ── */
+  function _buildDuaItem() {
+    var duas = _readCache('gencine_duas_v3');
+    if (!duas || !duas.length) return null;
+    var idx = _seededIdx(duas.length, 3);
+    var d   = duas[idx];
+    if (!d) return null;
+    var text = (d.ar || '').trim();
+    if (text.length > 58) text = text.slice(0, 58) + '\u2026';
+    return {
+      _type:'daily', id:'dua_day', icon:'fa-solid fa-person-praying', tag:'دوعایا ڕۆژێ',
+      title:    text || 'دوعا',
+      subtitle: d.source || d.category_key || 'دوعا',
+      nav: function(gencineUI) {
+        if (!gencineUI) return;
+        gencineUI._view   = 'dua';
+        gencineUI._duaCat = d.category_key || 'quran';
+        gencineUI._draw();
+      }
+    };
+  }
+
+  /* ── Book of the day ── */
+  function _buildBookItem() {
+    var books = _readCache('gencine_books_v3');
+    if (!books || !books.length) return null;
+    var b = books[_seededIdx(books.length, 4)];
+    if (!b) return null;
+    return {
+      _type:'daily', id:'book_day', icon:'fas fa-book-open', tag:'کتێبا ڕۆژێ',
+      title:    b.title_ku || b.title_ar || 'کتێب',
+      subtitle: b.author_ku || 'بخوێنە',
+      nav: function(gencineUI) {
+        if (!gencineUI) return;
+        gencineUI._view = 'books';
+        gencineUI._draw();
+      }
+    };
+  }
+
+  /* ── Gencine section to explore today ── */
+  var _EXPLORE = [
+    { key:'hadith', icon:'fas fa-scroll',              tag:'حەدیس',     title:'حەدیسێن پێغەمبەرێ \uFDFA', sub:'فەرمودێن ئیسلامی' },
+    { key:'dua',    icon:'fa-solid fa-person-praying', tag:'دوعا',      title:'دوعاهای قورئانی',           sub:'داواکاری لای خوا' },
+    { key:'asma',   icon:'fas fa-star-and-crescent',   tag:'ناوێن خوا', title:'٩٩ ناوێن گەورەیێ خوا',    sub:'ئەسماءالحسنی'   },
+    { key:'books',  icon:'fas fa-book-open',           tag:'کتێب',      title:'کتێبێن ئیسلامی',            sub:'خواندنا دینی'   },
+    { key:'tasbih', icon:'fas fa-rotate',              tag:'تەسبیح',    title:'تەسبیحا دیجیتالی',         sub:'ژمارتنا زکرێ'   }
+  ];
+
+  function _buildGencineItem() {
+    var s = _EXPLORE[_seededIdx(_EXPLORE.length, 5)];
+    return {
+      _type:'daily', id:'gencine_day', icon:s.icon, tag:s.tag,
+      title:s.title, subtitle:s.sub,
+      nav: function(gencineUI) { if (gencineUI && gencineUI.section) gencineUI.section(s.key); }
+    };
+  }
+
+  /* Seeded Fisher-Yates — determines which daily types appear today */
+  function _seededShuffle(arr) {
+    var a = arr.slice();
+    var s = Math.abs(_daySeed() * 1664525 + 1013904223) % 2147483647;
+    for (var i = a.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) % 2147483647;
+      var j = s % (i + 1);
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  var _DAILY_BUILDERS = [_buildAyahItem, _buildHadithItem, _buildDuaItem, _buildBookItem, _buildGencineItem];
+
+  function _getDailyItems(count) {
+    if (count <= 0) return [];
+    var shuffled = _seededShuffle(_DAILY_BUILDERS);
+    var result = [];
+    for (var i = 0; i < shuffled.length && result.length < count; i++) {
+      var item = shuffled[i]();
+      if (item) result.push(item);
+    }
+    return result;
+  }
+
+  /* ══════════════════════════════════════════════
+     HYBRID SELECTION — getItemsNow()
+     Time items: only when genuinely in their window.
+     Daily items: fill remaining slots to reach 3.
+  ══════════════════════════════════════════════ */
+  function getItemsNow() {
+    var timeItems  = _getTimeItems();
+    var timeCount  = Math.min(2, timeItems.length);
+    var dailyItems = _getDailyItems(3 - timeCount);
+
+    var result = [];
+    for (var i = 0; i < timeCount; i++) {
+      /* Wrap as a hybrid item so _buildCard can dispatch correctly */
+      result.push({ _type:'adhkar', _adhkarItem: timeItems[i] });
+    }
+    for (var j = 0; j < dailyItems.length; j++) {
+      result.push(dailyItems[j]);
+    }
+    return result;
+  }
+
+  /* ══════════════════════════════════════════════
+     UI — CARD BUILDERS
+  ══════════════════════════════════════════════ */
+  function _buildAdhkarCard(item, gencineUI) {
+    var T      = window.t || function(k, d) { return d || k; };
+    var state  = _getState();
+    var done   = state.completed.indexOf(item.id) >= 0;
     var streak = _getStreak(item.id);
 
     var card = document.createElement('div');
     card.className = 'sd-card' + (done ? ' sd-card-done' : '');
 
-    /* Icon */
     var iconWrap = document.createElement('div');
     iconWrap.className = 'sd-icon';
     var ico = document.createElement('i');
@@ -328,11 +480,9 @@
     iconWrap.appendChild(ico);
     card.appendChild(iconWrap);
 
-    /* Content */
     var content = document.createElement('div');
     content.className = 'sd-content';
 
-    /* Time-tag / day-tag pill */
     if (item.timeTag) {
       var tag = document.createElement('span');
       tag.className = 'sd-tag';
@@ -340,13 +490,11 @@
       content.appendChild(tag);
     }
 
-    /* Title */
     var title = document.createElement('div');
     title.className = 'sd-title';
     title.textContent = T(item.labelKey, item.labelFallback);
     content.appendChild(title);
 
-    /* Subtitle */
     var sub = document.createElement('div');
     sub.className = 'sd-sub' + (done ? ' sd-sub-done' : '');
     if (done) {
@@ -357,10 +505,8 @@
       sub.textContent = T(item.subtitleKey, item.subtitleFallback);
     }
     content.appendChild(sub);
-
     card.appendChild(content);
 
-    /* Chevron */
     var arrow = document.createElement('div');
     arrow.className = 'sd-arrow';
     var chev = document.createElement('i');
@@ -368,7 +514,6 @@
     arrow.appendChild(chev);
     card.appendChild(arrow);
 
-    /* Tap → open adhkar category */
     card.addEventListener('click', function() {
       _markOpened(item.id);
       if (gencineUI) {
@@ -378,26 +523,71 @@
         gencineUI._draw();
       }
     });
-
     return card;
   }
 
-  /* ═══════════════════════════════════════════
-     UI — SLIDER CONTROLLER
-  ═══════════════════════════════════════════ */
-  function _initSlider(track, dotsEl, count) {
-    if (count <= 1) {
-      if (dotsEl) dotsEl.style.display = 'none';
-      return;
-    }
+  function _buildDailyCard(item, gencineUI) {
+    var card = document.createElement('div');
+    card.className = 'sd-card';
 
-    var current    = 0;
-    var autoTimer  = null;
-    var INTERVAL   = 9000;
-    var touching   = false;
+    var iconWrap = document.createElement('div');
+    iconWrap.className = 'sd-icon';
+    var ico = document.createElement('i');
+    ico.className = item.icon;
+    iconWrap.appendChild(ico);
+    card.appendChild(iconWrap);
+
+    var content = document.createElement('div');
+    content.className = 'sd-content';
+
+    var tag = document.createElement('span');
+    tag.className = 'sd-tag';
+    tag.textContent = item.tag;
+    content.appendChild(tag);
+
+    var title = document.createElement('div');
+    title.className = 'sd-title';
+    title.textContent = item.title;
+    content.appendChild(title);
+
+    var sub = document.createElement('div');
+    sub.className = 'sd-sub';
+    sub.textContent = item.subtitle;
+    content.appendChild(sub);
+
+    card.appendChild(content);
+
+    var arrow = document.createElement('div');
+    arrow.className = 'sd-arrow';
+    var chev = document.createElement('i');
+    chev.className = 'fas fa-chevron-left';
+    arrow.appendChild(chev);
+    card.appendChild(arrow);
+
+    card.addEventListener('click', function() {
+      _markOpened(item.id);
+      item.nav(gencineUI);
+    });
+    return card;
+  }
+
+  function _buildCard(hybridItem, gencineUI) {
+    if (hybridItem._type === 'adhkar') return _buildAdhkarCard(hybridItem._adhkarItem, gencineUI);
+    return _buildDailyCard(hybridItem, gencineUI);
+  }
+
+  /* ══════════════════════════════════════════════
+     UI — SLIDER CONTROLLER
+  ══════════════════════════════════════════════ */
+  function _initSlider(track, dotsEl, count) {
+    if (count <= 1) { if (dotsEl) dotsEl.style.display = 'none'; return; }
+
+    var current     = 0;
+    var autoTimer   = null;
+    var INTERVAL    = 9000;
+    var touching    = false;
     var touchStartX = 0;
 
-    /* Build dot indicators */
     var dots = [];
     for (var i = 0; i < count; i++) {
       var dot = document.createElement('span');
@@ -412,9 +602,7 @@
     function goTo(idx) {
       current = ((idx % count) + count) % count;
       track.style.transform = 'translateX(-' + (current * 100) + '%)';
-      dots.forEach(function(d, i) {
-        d.classList.toggle('sd-dot-active', i === current);
-      });
+      dots.forEach(function(d, i) { d.classList.toggle('sd-dot-active', i === current); });
     }
 
     function resetAuto() {
@@ -422,7 +610,6 @@
       autoTimer = setInterval(function() { goTo(current + 1); }, INTERVAL);
     }
 
-    /* Touch — pause on touch, advance/retreat on swipe */
     track.addEventListener('touchstart', function(e) {
       touchStartX = e.touches[0].clientX;
       touching = true;
@@ -439,7 +626,6 @@
 
     resetAuto();
 
-    /* Pause when Gencine tab becomes invisible */
     document.addEventListener('visibilitychange', function() {
       if (document.hidden) {
         if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
@@ -449,10 +635,9 @@
     });
   }
 
-  /* ═══════════════════════════════════════════
-     RENDER — returns the full section DOM node
-     Pass the GencineUI instance for tap navigation.
-  ═══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════ */
   function render(gencineUI) {
     var items = getItemsNow();
     if (!items.length) return null;
@@ -461,7 +646,6 @@
     var section = document.createElement('div');
     section.className = 'sd-section';
 
-    /* ── Section header ── */
     var hdr = document.createElement('div');
     hdr.className = 'sd-hdr';
     var hdrText = document.createElement('span');
@@ -470,10 +654,8 @@
     hdr.appendChild(hdrText);
     section.appendChild(hdr);
 
-    /* ── Slider ── */
     var wrapper = document.createElement('div');
     wrapper.className = 'sd-wrapper';
-
     var track = document.createElement('div');
     track.className = 'sd-track';
 
@@ -487,12 +669,10 @@
     wrapper.appendChild(track);
     section.appendChild(wrapper);
 
-    /* ── Dot indicators ── */
     var dots = document.createElement('div');
     dots.className = 'sd-dots';
     section.appendChild(dots);
 
-    /* Init after paint so layout is settled */
     var initOnce = false;
     function tryInit() {
       if (initOnce) return;
@@ -508,19 +688,15 @@
     return section;
   }
 
-  /* ═══════════════════════════════════════════
+  /* ══════════════════════════════════════════════
      PUBLIC API
-     SmartDhikr is also usable by the notification
-     system later — getItemsNow() returns the same
-     ranked list that drives the UI.
-  ═══════════════════════════════════════════ */
+  ══════════════════════════════════════════════ */
   window.SmartDhikr = {
-    getItemsNow:   getItemsNow,
-    markOpened:    _markOpened,
-    markCompleted: _markCompleted,
-    getStreak:     _getStreak,
-    render:        render,
-    /* For testing / notifications */
+    getItemsNow:       getItemsNow,
+    markOpened:        _markOpened,
+    markCompleted:     _markCompleted,
+    getStreak:         _getStreak,
+    render:            render,
     _getPrayerTimings: _getPrayerTimings,
     _todayISO:         _todayISO,
     _getState:         _getState

@@ -1367,7 +1367,7 @@ function _loadGencineScripts(cb) {
     document.body.appendChild(s);
   }
   _ls('/dhikr/dua-data.js?v=20260326b', function() {
-    _ls('/dhikr/smart-dhikr.js?v=1', function() {
+    _ls('/dhikr/smart-dhikr.js?v=5', function() {
       _ls('/dhikr/dhikr.js?v=20260326b', function() {
         _gencineScriptsLoaded = true;
         _gencineScriptsLoading = false;

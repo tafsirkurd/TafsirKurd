@@ -614,11 +614,7 @@ window.GencineUI = {
     var self = this;
     this._loadState();
 
-    /* Skip redraw only if home is already rendered with DB-sourced content */
     var el = $('gencineContent');
-    if (_dbLoaded && this._view === 'home' && el && el.firstChild && this._homeEl) {
-      return;
-    }
 
     this._view = 'home';
     this._hadithDetailIdx = null;
@@ -744,6 +740,12 @@ window.GencineUI = {
 
   /* ═══════════════════ HOME ═══════════════════ */
   _renderHome: function(container){
+    /* Smart daily companion — always fresh (time-aware) */
+    if (window.SmartDhikr) {
+      var smartEl = SmartDhikr.render(this);
+      if (smartEl) container.appendChild(smartEl);
+    }
+
     if (this._homeEl) { container.appendChild(this._homeEl); return; }
     /* Show spinner until DB sections arrive — never show hardcoded sort */
     if (!_dbSections) {
@@ -853,12 +855,6 @@ window.GencineUI = {
   },
 
   _renderAdhkarGrid: function(container){
-    /* Smart daily dhikr section at top of adhkar view */
-    if (window.SmartDhikr) {
-      var smartEl = SmartDhikr.render(this);
-      if (smartEl) container.appendChild(smartEl);
-    }
-
     var self = this;
     var T = window.t || function(k,d){ return d||k; };
     var catKeys = _getAdhkarCatKeys();
