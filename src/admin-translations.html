@@ -1406,6 +1406,11 @@
         body.dark-mode .t-btn.approve.is-approved { color: #4ade80; }
         .t-row.is-approved { border-left: 3px solid #16a34a; background: #f0fdf4; }
         body.dark-mode .t-row.is-approved { border-left-color: #4ade80; background: #052e16; }
+        body.select-mode .t-row { cursor: pointer; }
+        body.select-mode .t-row:hover { border-color: #16a34a; }
+        .t-row.is-selected { border-color: #16a34a !important; box-shadow: 0 0 0 2px rgba(22,163,74,0.25); }
+        body.dark-mode .t-row.is-selected { box-shadow: 0 0 0 2px rgba(74,222,128,0.2); }
+        #selectModeBtn.sel-active { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
         @keyframes qeSavedFlash {
             0%   { border-color: #22c55e; background: #f0fdf4; }
             100% { border-color: var(--border-light); background: var(--bg-surface); }
@@ -1672,6 +1677,7 @@
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
                             <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
                             <button class="btn btn-secondary" onclick="toggleQuickEdit()" id="quickEditBtn" title="Quick edit mode" style="display:none"><i data-lucide="zap"></i><span>Quick Edit</span></button>
+                            <button class="btn btn-secondary" onclick="toggleSelectMode()" id="selectModeBtn" title="Select rows to bulk approve"><i data-lucide="check-square"></i><span>Select</span></button>
                         </div>
                         <div class="action-sep"></div>
                         <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn" title="Add a new translation key"><i data-lucide="plus"></i><span>Add New</span></button>
@@ -1781,6 +1787,14 @@
 
                 <div class="translation-list" id="translationList">
                     <div class="empty-state"><p>Loading...</p></div>
+                </div>
+
+                <!-- Bulk approve bar -->
+                <div id="bulkBar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:16px;padding:12px 20px;display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18)">
+                    <span id="bulkCount" style="font-size:14px;font-weight:600;color:var(--text-primary)">0 selected</span>
+                    <button class="btn btn-secondary" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="bulkApprove(true)">✓ Approve</button>
+                    <button class="btn btn-secondary" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="bulkApprove(false)">✕ Unapprove</button>
+                    <button class="btn btn-secondary" onclick="toggleSelectMode()">Cancel</button>
                 </div>
 
                 <div class="pagination" id="pagination">
@@ -2524,6 +2538,8 @@
         let sortOrder = 'newest'; // 'newest' | 'az'
         let quickEditMode = false;
         let quickEditDirty = {}; // { id: newText } — only changed rows
+        let selectMode = false;
+        let selectedIds = new Set();
 
         (async () => {
             const auth = await window.adminAuth.checkAuth();
@@ -2793,6 +2809,61 @@
             } catch(e) {
                 showToast('Failed to update approval');
             }
+        }
+
+        function toggleSelectMode() {
+            selectMode = !selectMode;
+            selectedIds.clear();
+            document.body.classList.toggle('select-mode', selectMode);
+            var btn = document.getElementById('selectModeBtn');
+            if (btn) {
+                btn.classList.toggle('sel-active', selectMode);
+                btn.querySelector('span').textContent = selectMode ? 'Done' : 'Select';
+            }
+            updateBulkBar();
+            // Re-render so rows pick up click handlers
+            filterTranslations();
+        }
+
+        function toggleRowSelection(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            var rowEl = document.getElementById('row-' + id);
+            if (rowEl) rowEl.classList.toggle('is-selected', selectedIds.has(id));
+            updateBulkBar();
+        }
+
+        function updateBulkBar() {
+            var bar = document.getElementById('bulkBar');
+            if (!bar) return;
+            if (selectMode) {
+                bar.style.display = 'flex';
+                document.getElementById('bulkCount').textContent = selectedIds.size + ' selected';
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        async function bulkApprove(newVal) {
+            if (selectedIds.size === 0) return;
+            var ids = Array.from(selectedIds);
+            var done = 0;
+            showToast('Updating ' + ids.length + ' rows\u2026');
+            for (var i = 0; i < ids.length; i++) {
+                try {
+                    var result = await adminTranslationsAPI('update', { id: ids[i], fields: { approved: newVal } });
+                    if (result.success) {
+                        var row = allTranslations.find(function(t) { return t.id === ids[i]; });
+                        if (row) row.approved = newVal;
+                        done++;
+                    }
+                } catch(e) {}
+            }
+            showToast('\u2705 ' + done + ' rows ' + (newVal ? 'approved' : 'unapproved'));
+            toggleSelectMode(); // exits select mode and re-renders
         }
 
         function populatePageDropdowns() {
@@ -3308,6 +3379,15 @@
         }
 
         function buildDisplayRow(row, t) {
+            // Select mode: clicking anywhere on the row toggles selection
+            if (selectMode) {
+                if (selectedIds.has(t.id)) row.classList.add('is-selected');
+                row.addEventListener('click', function(e) {
+                    if (e.target.closest('button') && !e.target.closest('.approve')) return; // let action btns work
+                    toggleRowSelection(t.id);
+                });
+            }
+
             var search = document.getElementById('searchInput').value.toLowerCase().trim();
 
             // Key (tap to copy)
