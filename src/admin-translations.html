@@ -2829,13 +2829,6 @@
                 cnt.className = 'cat-count';
                 cnt.textContent = displayCount;
                 cntCol.appendChild(cnt);
-                var chg = p === '' ? allChangedCount : (changedCounts[p] || 0);
-                if (chg > 0 && !isSearching) {
-                    var chgLbl = document.createElement('span');
-                    chgLbl.className = 'cat-count-changed';
-                    chgLbl.textContent = chg + ' translated';
-                    cntCol.appendChild(chgLbl);
-                }
                 btn.appendChild(cntCol);
 
                 btn.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
@@ -3261,18 +3254,6 @@
             pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? (t.category || 'general') : normalizePage(t.page);
             badgeWrap.appendChild(pageDiv);
 
-            var status = getTranslationStatus(t);
-            var statusEl = document.createElement('div');
-            statusEl.className = 't-status t-status--' + status;
-            var statusDot = document.createElement('span');
-            statusDot.className = 't-status-dot';
-            statusEl.appendChild(statusDot);
-            statusEl.appendChild(document.createTextNode(
-                status === 'changed' ? 'Translated' :
-                status === 'empty'   ? '⚠ Empty' :
-                                       'Needs translation'
-            ));
-            badgeWrap.appendChild(statusEl);
 
             row.appendChild(badgeWrap);
 

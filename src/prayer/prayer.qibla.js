@@ -265,20 +265,29 @@
   function startOrientation() {
     if (_onOrient) return;
     _onOrient = function(e) {
-      if (e.alpha === null || e.alpha === undefined) return;
-      if (e.absolute) { _hasAbsolute = true; }
-      else if (_hasAbsolute) { return; }
-
       var now = Date.now();
       if (now - _lastSample < THROTTLE) return;
-      _lastSample = now;
 
       var raw;
-      if (typeof e.webkitCompassHeading !== 'undefined') {
+      // iOS: webkitCompassHeading is the clockwise magnetic bearing from True North.
+      // Check this FIRST — on iOS 17+ both deviceorientationabsolute (no webkitCompassHeading)
+      // and deviceorientation (has webkitCompassHeading) fire. The absolute event sets
+      // _hasAbsolute=true and would cause subsequent deviceorientation events to be skipped,
+      // but those events carry the only correct iOS heading value. Prioritising
+      // webkitCompassHeading bypasses that race entirely.
+      if (typeof e.webkitCompassHeading !== 'undefined' &&
+          e.webkitCompassHeading !== null &&
+          !isNaN(e.webkitCompassHeading)) {
         raw = e.webkitCompassHeading;
       } else {
+        // Android / non-iOS: prefer absolute orientation events; fall back to relative.
+        if (e.alpha === null || e.alpha === undefined) return;
+        if (e.absolute) { _hasAbsolute = true; }
+        else if (_hasAbsolute) { return; }
         raw = (360 - e.alpha) % 360;
       }
+
+      _lastSample = now;
       addHeading(raw);
     };
     window.addEventListener('deviceorientationabsolute', _onOrient, true);
