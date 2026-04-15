@@ -25,14 +25,17 @@
         }
 
         // Calculate elapsed and remaining time
-        const SESSION_TIMEOUT = 60 * 60 * 1000; // 60 minutes — must match admin-heartbeat.js
+        const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours — must match admin-heartbeat.js
         const startTime = new Date(sessionStart).getTime();
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, SESSION_TIMEOUT - elapsed);
 
-        const remainingMinutes = Math.floor(remaining / 60000);
+        const remainingHours = Math.floor(remaining / 3600000);
+        const remainingMinutes = Math.floor((remaining % 3600000) / 60000);
         const remainingSeconds = Math.floor((remaining % 60000) / 1000);
-        const formattedTime = `${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        const formattedTime = remainingHours > 0
+            ? `${remainingHours}:${remainingMinutes.toString().padStart(2,'0')}:${remainingSeconds.toString().padStart(2,'0')}`
+            : `${remainingMinutes}:${remainingSeconds.toString().padStart(2,'0')}`;
 
         // Update timer text
         timerText.textContent = formattedTime;
