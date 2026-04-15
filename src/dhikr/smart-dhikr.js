@@ -84,8 +84,8 @@
     7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,
     112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,
     59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,
-    52,52,44,28,28,20,56,40,31,50,40,31,27,55,33,43,9,21,16,26,17,19,28,8,11,
-    11,8,3,5,4,8,6,11,4,8,7,4,5,6,7,3,6,3,5,4,5,6
+    52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,
+    11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6
   ];
 
   /* ══════════════════════════════════════════════
@@ -404,11 +404,10 @@
     /* Slot 2 — Hadith */
     try { var h = _buildHadithItem(); if (h) result.push(h);    } catch(e) {}
 
-    /* Slot 3 — Zceer (time-aware) */
+    /* Slot 3 — Zceer (time-aware, always guaranteed) */
     var timeItems = _getTimeItems();
-    if (timeItems.length) {
-      result.push({ _type:'adhkar', _adhkarItem: timeItems[0] });
-    }
+    var zceerItem = timeItems.length ? timeItems[0] : FALLBACK_ITEMS[3]; /* salawat as absolute last resort */
+    result.push({ _type:'adhkar', _adhkarItem: zceerItem });
 
     /* Slot 4 — Book */
     try { var b = _buildBookItem();   if (b) result.push(b);    } catch(e) {}
