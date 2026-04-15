@@ -29,7 +29,10 @@
   var _statusEl    = null; // alignment status bar
   var _calibEl     = null; // Android calibration hint
   var _canvasWrap  = null; // canvas wrapper for pulse animation
-  var _lastAlignSt = '';   // last state string — avoids DOM churn
+  var _lastAlignSt     = '';     // last state string — avoids DOM churn
+  var _compassReceived = false;  // true once first heading arrives
+  var _noDataTimer     = null;   // fires if compass stays silent after open
+  var _permDenied      = false;  // iOS motion permission was refused
 
   function toRad(d) { return d * Math.PI / 180; }
 
@@ -51,6 +54,10 @@
 
   // Circular mean for stable heading from buffer
   function addHeading(raw) {
+    if (!_compassReceived) {
+      _compassReceived = true;
+      if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
+    }
     _headingBuf.push(raw);
     if (_headingBuf.length > BUF_SIZE) _headingBuf.shift();
     var sinSum = 0, cosSum = 0;
@@ -83,7 +90,11 @@
   // Update alignment status bar — only writes DOM when state changes
   function updateStatus(diff, stable) {
     if (!_statusEl) return;
-    var state = !stable ? 'unstable' : diff < 5 ? 'aligned' : diff < 22 ? 'near' : 'far';
+    var state = _permDenied        ? 'denied'   :
+                !_compassReceived  ? 'nodata'   :
+                !stable            ? 'unstable' :
+                diff < 5           ? 'aligned'  :
+                diff < 22          ? 'near'     : 'far';
     if (state === _lastAlignSt) return;
     var prev = _lastAlignSt;
     _lastAlignSt = state;
@@ -104,9 +115,13 @@
 
     _statusEl.className = 'qibla-status ' + state;
     if (state === 'aligned') {
-      _statusEl.textContent = t ? t('prayer.qibla_aligned') : '✓ رووی بە قیبلەیێ';
+      _statusEl.textContent = t ? t('prayer.qibla_aligned')  : '✓ رووی بە قیبلەیێ';
     } else if (state === 'unstable') {
-      _statusEl.textContent = t ? t('prayer.qibla_unstable') : '⚠ کارایی لاواز';
+      _statusEl.textContent = t ? t('prayer.qibla_unstable') : '⚠ تەلەفون ب شێوەی ٨ بجووڵێنە';
+    } else if (state === 'nodata') {
+      _statusEl.textContent = t ? t('prayer.qibla_nodata')   : '↻ تەلەفون ب شێوەی ٨ بجووڵێنە';
+    } else if (state === 'denied') {
+      _statusEl.textContent = t ? t('prayer.qibla_denied')   : '⚙ Settings › Privacy › Motion';
     } else {
       // direction arrow — universal, no language needed
       _statusEl.textContent = turnRight ? '→' : '←';
@@ -250,7 +265,10 @@
     (function frame() {
       if (!_isOpen) { _raf = null; return; }
       _displayH = circularLerp(_displayH, _smoothH, LERP_K);
+      // Always drive status when qibla is set — includes 'denied'/'nodata' states
+      // so the user sees feedback even before compass data arrives.
       if (_qiblaSet) updateStatus(angleDiff(_displayH, _qibla), headingStable());
+      else if (_permDenied || !_compassReceived) updateStatus(180, false);
       draw();
       _raf = requestAnimationFrame(frame);
     })();
@@ -264,25 +282,29 @@
 
   function startOrientation() {
     if (_onOrient) return;
+
+    // Detect iOS once — Capacitor exposes getPlatform(); UA covers Safari testing
+    var plat  = window.Capacitor && window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : 'web';
+    var isIos = plat === 'ios' || /iPhone|iPad|iPod/.test(navigator.userAgent);
+
     _onOrient = function(e) {
       var now = Date.now();
       if (now - _lastSample < THROTTLE) return;
 
       var raw;
-      // iOS: webkitCompassHeading is the clockwise magnetic bearing from True North.
-      // Check this FIRST — on iOS 17+ both deviceorientationabsolute (no webkitCompassHeading)
-      // and deviceorientation (has webkitCompassHeading) fire. The absolute event sets
-      // _hasAbsolute=true and would cause subsequent deviceorientation events to be skipped,
-      // but those events carry the only correct iOS heading value. Prioritising
-      // webkitCompassHeading bypasses that race entirely.
-      if (typeof e.webkitCompassHeading !== 'undefined' &&
-          e.webkitCompassHeading !== null &&
-          !isNaN(e.webkitCompassHeading)) {
-        // webkitCompassHeading is already corrected for portrait orientation by iOS —
-        // use it directly on all platforms (no offset needed).
+      if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
+        // iOS (and WebKit on macOS): True North, clockwise — use directly, no offset
         raw = e.webkitCompassHeading;
+      } else if (isIos) {
+        // iOS but this event lacks webkitCompassHeading — skip entirely.
+        // NEVER fall back to e.alpha on iOS: iOS alpha is measured from the
+        // device's arbitrary startup orientation (not from North) and produces
+        // a wrong, slowly-drifting heading when fed into (360 - alpha) % 360.
+        return;
       } else {
-        // Android / non-iOS: prefer absolute orientation events; fall back to relative.
+        // Android: absolute alpha is True North-relative (0 = North, clockwise
+        // when mapped via (360 - alpha) % 360).
+        // Prefer absolute events; discard relative ones once absolute is seen.
         if (e.alpha === null || e.alpha === undefined) return;
         if (e.absolute) { _hasAbsolute = true; }
         else if (_hasAbsolute) { return; }
@@ -292,8 +314,21 @@
       _lastSample = now;
       addHeading(raw);
     };
-    window.addEventListener('deviceorientationabsolute', _onOrient, true);
-    window.addEventListener('deviceorientation',         _onOrient, true);
+
+    if (isIos) {
+      // iOS: ONLY register 'deviceorientation' — it carries webkitCompassHeading.
+      //
+      // Root-cause fix: on iOS 17+ 'deviceorientationabsolute' fires FIRST (~5 ms
+      // ahead of 'deviceorientation') and its payload lacks webkitCompassHeading.
+      // Without this split, the 50 ms throttle (_lastSample) lets the wrong alpha
+      // event win every tick and the correct iOS event gets dropped every time.
+      window.addEventListener('deviceorientation', _onOrient, true);
+    } else {
+      // Android: prefer absolute (True North); also register relative as fallback
+      // for devices that never fire the absolute variant.
+      window.addEventListener('deviceorientationabsolute', _onOrient, true);
+      window.addEventListener('deviceorientation',         _onOrient, true);
+    }
   }
 
   function stopOrientation() {
@@ -408,13 +443,30 @@
   }
 
   function _startAfterPermission(cityCoords) {
-    _isOpen      = true;
-    _headingBuf  = [];
-    _lastSample  = 0;
-    _hasAbsolute = false;
-    _displayH    = _smoothH;
-    _qiblaSet    = false;
-    _lastAlignSt = '';
+    _isOpen          = true;
+    _headingBuf      = [];
+    _lastSample      = 0;
+    _hasAbsolute     = false;
+    _displayH        = _smoothH;
+    _qiblaSet        = false;
+    _lastAlignSt     = '';
+    _compassReceived = false;
+
+    // After 5 s without any heading data, surface a hint rather than staying
+    // silent. For 'denied', this is the first the user learns permission is off.
+    if (_noDataTimer) clearTimeout(_noDataTimer);
+    _noDataTimer = setTimeout(function() {
+      _noDataTimer = null;
+      if (!_isOpen || _compassReceived) return;
+      _lastAlignSt = '';          // force status re-render
+      updateStatus(180, false);   // diff=180 → not aligned; _permDenied / !_compassReceived state takes priority
+      // Show figure-8 calibration card if it's a data issue (not a permission issue)
+      if (!_permDenied && _calibEl) {
+        try {
+          if (!sessionStorage.getItem('qiblaCalibDismissed')) _calibEl.classList.add('on');
+        } catch(e) {}
+      }
+    }, 5000);
 
     // Re-grab elements (nulled on close, DOM persists across reopens)
     _statusEl   = document.getElementById('qiblaStatus');
@@ -487,16 +539,20 @@
     var titleEl = document.getElementById('qiblaModalTitle');
     if (titleEl) titleEl.textContent = t ? t('prayer.qibla_title') : 'Qibla';
 
-    // iOS 13+ requires explicit permission before DeviceOrientationEvent fires
+    // iOS 13+ requires explicit permission before DeviceOrientationEvent fires.
+    // Must be called inside a user-gesture handler (tap) — which open() always is.
     if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
       DeviceOrientationEvent.requestPermission().then(function(state) {
+        _permDenied = (state !== 'granted');
         _startAfterPermission(cityCoords);
       }).catch(function() {
-        // Permission denied — compass won't rotate but location still works
+        // Thrown if called outside a gesture, or if permanently denied
+        _permDenied = true;
         _startAfterPermission(cityCoords);
       });
     } else {
+      _permDenied = false;
       _startAfterPermission(cityCoords);
     }
   }
@@ -505,6 +561,9 @@
     _isOpen = false;
     stopDraw();
     stopOrientation();
+    if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
+    _compassReceived = false;
+    _permDenied      = false;
     var modal = document.getElementById('qiblaModal');
     if (modal) modal.classList.remove('open');
     _canvas = null; _ctx = null;
