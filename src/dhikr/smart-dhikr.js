@@ -299,7 +299,7 @@
     try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
   }
 
-  /* ── Ayah of the day (slot 1) ── */
+  /* ── Slot 1: Ayah of the day ── */
   function _buildAyahItem() {
     var flat = _seededIdx(6236, 1);
     var rem  = flat, surah = 1, ayah = 1;
@@ -308,19 +308,11 @@
       rem -= SURAH_SIZES[i];
     }
     var surahName = SURAH_NAMES[surah - 1] || ('سورە ' + surah);
-    var ref = surahName + ' \u2022 ' + ayah;
-    var arText = '';
-    try {
-      if (window.S && window.S.quranData) {
-        var sArr = window.S.quranData[String(surah)];
-        if (sArr && sArr[ayah - 1]) arText = sArr[ayah - 1].ar || '';
-      }
-    } catch(e) {}
     var s = surah, a = ayah;
     return {
       _type:'daily', id:'ayah_day', icon:'fas fa-book-quran', tag:'ئایەتا ڕۆژێ',
-      title:    arText ? (arText.length > 58 ? arText.slice(0, 58) + '\u2026' : arText) : ref,
-      subtitle: arText ? ref : surahName + ' \u2022 ئایەت ' + ayah,
+      title:    surahName,
+      subtitle: 'ئایەت ' + ayah,
       nav: function() {
         if (window.App && App.tab && App.openSurah) {
           App.tab('quran');
@@ -330,35 +322,60 @@
     };
   }
 
-  /* ── Hadith of the day ── */
+  /* ── Slot 2: Hadith of the day ── */
   function _buildHadithItem() {
     var hadiths = _readCache('gencine_hadiths_v2');
-    if (!hadiths || !hadiths.length) return null;
+    /* Fallback when cache not yet loaded */
+    if (!hadiths || !hadiths.length) {
+      return {
+        _type:'daily', id:'hadith_day', icon:'fas fa-scroll', tag:'حەدیسا ڕۆژێ',
+        title: 'حەدیسێن پێغەمبەرێ \uFDFA',
+        subtitle: 'بخوێنە',
+        nav: function(gencineUI) {
+          if (!gencineUI) return;
+          gencineUI._view = 'hadith';
+          gencineUI._hadithSearch = '';
+          gencineUI._hadithDetailIdx = null;
+          gencineUI._draw();
+        }
+      };
+    }
     var idx = _seededIdx(hadiths.length, 2);
     var h   = hadiths[idx];
-    if (!h) return null;
     var preview = (h.ku || h.ar || '').trim();
-    if (preview.length > 58) preview = preview.slice(0, 58) + '\u2026';
+    if (preview.length > 55) preview = preview.slice(0, 55) + '\u2026';
     return {
       _type:'daily', id:'hadith_day', icon:'fas fa-scroll', tag:'حەدیسا ڕۆژێ',
       title:    h.title || preview,
       subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
       nav: function(gencineUI) {
         if (!gencineUI) return;
-        gencineUI._view          = 'hadith';
-        gencineUI._hadithSearch  = '';
+        gencineUI._view            = 'hadith';
+        gencineUI._hadithSearch    = '';
         gencineUI._hadithDetailIdx = idx;
         gencineUI._draw();
       }
     };
   }
 
-  /* ── Book of the day ── */
+  /* ── Slot 4: Book of the day ── */
   function _buildBookItem() {
     var books = _readCache('gencine_books_v3');
-    if (!books || !books.length) return null;
+    /* Fallback when cache not yet loaded */
+    if (!books || !books.length) {
+      return {
+        _type:'daily', id:'book_day', icon:'fas fa-book-open', tag:'کتێبا ڕۆژێ',
+        title: 'کتێبێن ئیسلامی',
+        subtitle: 'بخوێنە',
+        nav: function(gencineUI) {
+          if (!gencineUI) return;
+          gencineUI._view = 'books';
+          gencineUI._draw();
+        }
+      };
+    }
     var b = books[_seededIdx(books.length, 4)];
-    if (!b) return null;
+    if (!b) b = books[0];
     return {
       _type:'daily', id:'book_day', icon:'fas fa-book-open', tag:'کتێبا ڕۆژێ',
       title:    b.title_ku || b.title_ar || 'کتێب',
