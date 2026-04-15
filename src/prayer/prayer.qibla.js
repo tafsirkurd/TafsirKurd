@@ -278,7 +278,16 @@
       if (typeof e.webkitCompassHeading !== 'undefined' &&
           e.webkitCompassHeading !== null &&
           !isNaN(e.webkitCompassHeading)) {
-        raw = e.webkitCompassHeading;
+        // On iPhone (WKWebView/Capacitor), webkitCompassHeading is referenced to
+        // the device X-axis (right edge) rather than the Y-axis (top edge) in
+        // portrait mode — consistently 90° clockwise of the true bearing.
+        // Apply +90 correction for iOS Capacitor builds only.
+        var _isIosNative = window.Capacitor &&
+                           window.Capacitor.getPlatform &&
+                           window.Capacitor.getPlatform() === 'ios';
+        raw = _isIosNative
+          ? (e.webkitCompassHeading + 90) % 360
+          : e.webkitCompassHeading;
       } else {
         // Android / non-iOS: prefer absolute orientation events; fall back to relative.
         if (e.alpha === null || e.alpha === undefined) return;
