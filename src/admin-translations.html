@@ -2850,20 +2850,17 @@
         async function bulkApprove(newVal) {
             if (selectedIds.size === 0) return;
             var ids = Array.from(selectedIds);
-            var done = 0;
-            showToast('Updating ' + ids.length + ' rows\u2026');
+            // Update in-memory immediately so re-render is instant
+            ids.forEach(function(id) {
+                var row = allTranslations.find(function(t) { return t.id === id; });
+                if (row) row.approved = newVal;
+            });
+            toggleSelectMode(); // exits select mode, clears selection, re-renders with green cards
+            showToast((newVal ? '\u2705 ' : '\u274c ') + ids.length + ' rows ' + (newVal ? 'approved' : 'unapproved'));
+            // Sync to DB in background
             for (var i = 0; i < ids.length; i++) {
-                try {
-                    var result = await adminTranslationsAPI('update', { id: ids[i], fields: { approved: newVal } });
-                    if (result.success) {
-                        var row = allTranslations.find(function(t) { return t.id === ids[i]; });
-                        if (row) row.approved = newVal;
-                        done++;
-                    }
-                } catch(e) {}
+                try { await adminTranslationsAPI('update', { id: ids[i], fields: { approved: newVal } }); } catch(e) {}
             }
-            showToast('\u2705 ' + done + ' rows ' + (newVal ? 'approved' : 'unapproved'));
-            toggleSelectMode(); // exits select mode and re-renders
         }
 
         function populatePageDropdowns() {
