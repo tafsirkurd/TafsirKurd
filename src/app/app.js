@@ -8189,24 +8189,24 @@ function renderProfile(panel){
     dlSec.appendChild(el('div','pp-section-title',t('dl.section')));
     var dlCard=el('div','pp-card');
     if(!dlStats.length){
-      dlCard.appendChild(el('div','pp-row-label',t('dl.no_reciters')));
+      var emptyRow=el('div','pp-row');
+      emptyRow.appendChild(el('div','pp-row-label',t('dl.no_reciters')));
+      dlCard.appendChild(emptyRow);
     } else {
       var totalBytes=dlStats.reduce(function(s,r){return s+r.bytes;},0);
       var totalRow=el('div','pp-row');
       totalRow.appendChild(el('div','pp-row-label',t('dl.storage_used')));
       totalRow.appendChild(el('div','pp-row-value',AudioDownloads.fmtBytes(totalBytes)));
       dlCard.appendChild(totalRow);
-      dlCard.appendChild(el('div','pp-row-label',''));// spacer
       dlStats.forEach(function(r){
         var row=el('div','pp-dl-row');
         var info=el('div','pp-dl-info');
         info.appendChild(el('div','pp-dl-name',(r.flag?r.flag+' ':'')+r.name));
         info.appendChild(el('div','pp-dl-size',AudioDownloads.fmtBytes(r.bytes)+(r.full?' · '+t('dl.full_quran'):' · '+r.surahs+' '+t('dl.surahs'))));
         row.appendChild(info);
-        var ppDlMgr=el('button','pp-dl-del');
-        ppDlMgr.appendChild(icon('fas fa-download'));
+        var ppDlMgr=el('button','pp-dl-mgr');
+        ppDlMgr.appendChild(icon('fas fa-sliders'));
         ppDlMgr.title=t('dl.manage');
-        ppDlMgr.style.color='var(--accent)';
         (function(rid){on(ppDlMgr,'click',function(){App.closeProfile();openDlSheet(rid);});})(r.id);
         row.appendChild(ppDlMgr);
         var delBtn=el('button','pp-dl-del');
