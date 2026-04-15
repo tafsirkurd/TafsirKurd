@@ -269,6 +269,20 @@
   }
 
   /* ═══════════════════════════════════════════
+     CATEGORY DATA CHECK
+     Only show a card if the category actually
+     has adhkar entries in the DB cache.
+  ═══════════════════════════════════════════ */
+  function _catHasData(catKey) {
+    try {
+      var cached = JSON.parse(localStorage.getItem('gencine_adhkar_v1'));
+      /* Cache not loaded yet — assume yes so we don't hide things on first open */
+      if (!cached || !Array.isArray(cached)) return true;
+      return cached.some(function(a) { return a.category_key === catKey && a.active !== false; });
+    } catch(e) { return true; }
+  }
+
+  /* ═══════════════════════════════════════════
      MAIN RANKING — getItemsNow()
      Returns top 1–3 items for the current moment.
   ═══════════════════════════════════════════ */
@@ -281,9 +295,11 @@
                       ? _toMinutes(prayers.Maghrib) : 18 * 60;
     var state      = _getState();
 
-    var scored = ITEMS.map(function(item) {
-      return { item: item, score: _score(item, nowMin, dow, prayers, maghribMin, state) };
-    });
+    var scored = ITEMS
+      .filter(function(item) { return _catHasData(item.categoryKey); })
+      .map(function(item) {
+        return { item: item, score: _score(item, nowMin, dow, prayers, maghribMin, state) };
+      });
     scored.sort(function(a, b) { return b.score - a.score; });
 
     return scored
