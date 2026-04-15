@@ -744,12 +744,6 @@ window.GencineUI = {
 
   /* ═══════════════════ HOME ═══════════════════ */
   _renderHome: function(container){
-    /* Smart daily dhikr section — always fresh, never part of the cached home grid */
-    if (window.SmartDhikr) {
-      var smartEl = SmartDhikr.render(this);
-      if (smartEl) container.appendChild(smartEl);
-    }
-
     if (this._homeEl) { container.appendChild(this._homeEl); return; }
     /* Show spinner until DB sections arrive — never show hardcoded sort */
     if (!_dbSections) {
@@ -859,6 +853,12 @@ window.GencineUI = {
   },
 
   _renderAdhkarGrid: function(container){
+    /* Smart daily dhikr section at top of adhkar view */
+    if (window.SmartDhikr) {
+      var smartEl = SmartDhikr.render(this);
+      if (smartEl) container.appendChild(smartEl);
+    }
+
     var self = this;
     var T = window.t || function(k,d){ return d||k; };
     var catKeys = _getAdhkarCatKeys();
