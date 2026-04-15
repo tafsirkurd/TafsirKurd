@@ -1402,9 +1402,10 @@
         body.dark-mode .t-row.qe-dirty { border-color: #d97706; background: #1c1500; }
         .t-row.is-marked { border-left: 3px solid #f59e0b; background: #fffdf5; }
         body.dark-mode .t-row.is-marked { border-left-color: #d97706; background: #161000; }
-        .t-btn.approve { }
         .t-btn.approve.is-approved { color: #16a34a; }
         body.dark-mode .t-btn.approve.is-approved { color: #4ade80; }
+        .t-row.is-approved { border-left: 3px solid #16a34a; background: #f0fdf4; }
+        body.dark-mode .t-row.is-approved { border-left-color: #4ade80; background: #052e16; }
         @keyframes qeSavedFlash {
             0%   { border-color: #22c55e; background: #f0fdf4; }
             100% { border-color: var(--border-light); background: var(--bg-surface); }
@@ -2786,6 +2787,8 @@
                 if (row) row.approved = newVal;
                 btn.classList.toggle('is-approved', newVal);
                 btn.title = newVal ? 'Approved — click to undo' : 'Approve';
+                var rowEl = btn.closest('.t-row') || document.getElementById('row-' + id);
+                if (rowEl) rowEl.classList.toggle('is-approved', newVal);
                 showToast(newVal ? '\u2705 Approved' : 'Approval removed');
             } catch(e) {
                 showToast('Failed to update approval');
@@ -3285,7 +3288,7 @@
 
             items.forEach(function(t) {
                 var row = document.createElement('div');
-                row.className = 't-row' + (t.marked ? ' is-marked' : '');
+                row.className = 't-row' + (t.marked ? ' is-marked' : '') + (t.approved ? ' is-approved' : '');
                 row.id = 'row-' + t.id;
 
                 if (quickEditMode) {
