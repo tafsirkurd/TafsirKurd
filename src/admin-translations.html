@@ -505,7 +505,29 @@
         body.dark-mode .t-btn.delete:hover {
             background: #1c0a0a;
         }
+        .t-btn.mark.is-marked { color: #f59e0b; }
+        .t-btn.mark:hover { background: #fffbeb; color: #d97706; }
+        body.dark-mode .t-btn.mark:hover { background: #1c1200; color: #fbbf24; }
+        body.dark-mode .t-btn.mark.is-marked { color: #fbbf24; }
         .t-btn svg { width: 15px; height: 15px; }
+        .platform-tab.marked-platform-tab.active { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+        .platform-tab.marked-platform-tab:hover:not(.active) { border-color: #f59e0b; color: #d97706; }
+        .platform-tab.marked-platform-tab .tab-count { background: rgba(0,0,0,0.15); }
+        .t-platform-src { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+        .t-platform-src.src-web         { background: #eff6ff; color: #1d4ed8; }
+        .t-platform-src.src-mobile      { background: #f0fdf4; color: #166534; }
+        .t-platform-src.src-notifications { background: #fef3c7; color: #92400e; }
+        .t-platform-src.src-widgets     { background: #fdf4ff; color: #7e22ce; }
+        .t-platform-src.src-updates     { background: #f0f9ff; color: #0369a1; }
+        .t-platform-src.src-about       { background: #f9fafb; color: #374151; }
+        body.dark-mode .t-platform-src.src-web         { background: #0c1a2e; color: #93c5fd; }
+        body.dark-mode .t-platform-src.src-mobile      { background: #052e16; color: #86efac; }
+        body.dark-mode .t-platform-src.src-notifications { background: #1c1200; color: #fcd34d; }
+        body.dark-mode .t-platform-src.src-widgets     { background: #2e1065; color: #d8b4fe; }
+        body.dark-mode .t-platform-src.src-updates     { background: #0c1a2e; color: #7dd3fc; }
+        body.dark-mode .t-platform-src.src-about       { background: #1f2937; color: #9ca3af; }
+        .t-mark-note { font-size: 11px; color: #d97706; margin-top: 3px; font-style: italic; }
+        body.dark-mode .t-mark-note { color: #fbbf24; }
 
         /* ===== Inline Edit Form ===== */
         .edit-form {
@@ -1665,6 +1687,9 @@
                     <button class="platform-tab" onclick="setPlatform('about', this)">
                         <i data-lucide="info" style="width:16px;height:16px"></i> About <span class="tab-count" id="aboutCount">--</span>
                     </button>
+                    <button class="platform-tab marked-platform-tab" onclick="setPlatform('marked', this)">
+                        🔖 Marked <span class="tab-count" id="markedCount">--</span>
+                    </button>
                 </div>
 
                 <div class="stats-row">
@@ -2667,6 +2692,8 @@
                     var p = normalizePage(t.page);
                     return p === 'about' || p === 'founder';
                 });
+            } else if (activePlatform === 'marked') {
+                return allTranslations.filter(function(t) { return t.marked; });
             } else {
                 // Web = everything except android, ios, notifications, updates
                 return allTranslations.filter(function(t) {
@@ -2698,6 +2725,43 @@
             document.getElementById('widgetCount').textContent = widgetCnt;
             document.getElementById('updatesCount').textContent = updatesCnt;
             document.getElementById('aboutCount').textContent = aboutCount;
+            document.getElementById('markedCount').textContent = allTranslations.filter(function(t) { return t.marked; }).length;
+        }
+
+        function getTranslationPlatformSrc(t) {
+            var k = t.key_id || '', c = t.category || '', p = normalizePage(t.page);
+            if (k.startsWith('widget.')) return 'widgets';
+            if (k.startsWith('update.')) return 'updates';
+            if (c === 'notifications' || c === 'notification') return 'notifications';
+            if (p === 'android' || p === 'ios') return 'mobile';
+            if (p === 'about' || p === 'founder') return 'about';
+            return 'web';
+        }
+
+        var _platformSrcLabel = { web: '🌐 Web', mobile: '📱 Mobile', notifications: '🔔 Notifs', widgets: '🟦 Widgets', updates: '⬆ Updates', about: 'ℹ️ About' };
+
+        async function toggleMark(id, currentlyMarked, btn) {
+            var newVal = !currentlyMarked;
+            var email = sessionStorage.getItem('adminEmail') || '';
+            var fields = newVal
+                ? { marked: true, marked_by: email, marked_at: new Date().toISOString() }
+                : { marked: false, marked_by: null, marked_at: null, mark_note: null };
+            try {
+                var result = await adminTranslationsAPI('update', { id: id, fields: fields });
+                if (!result.success) throw new Error('failed');
+                var row = allTranslations.find(function(t) { return t.id === id; });
+                if (row) Object.assign(row, fields);
+                // Update button state
+                btn.classList.toggle('is-marked', newVal);
+                btn.title = newVal ? 'Unmark' : 'Mark for Nareen';
+                // Update count badge
+                document.getElementById('markedCount').textContent = allTranslations.filter(function(t) { return t.marked; }).length;
+                // If in marked view and unmarked, remove the row
+                if (activePlatform === 'marked' && !newVal) filterTranslations();
+                showToast(newVal ? '🔖 Marked for Nareen' : 'Mark removed');
+            } catch(e) {
+                showToast('Failed to update mark');
+            }
         }
 
         function populatePageDropdowns() {
@@ -2744,8 +2808,12 @@
         function updateStats() {
             var platformData = getPlatformData();
             document.getElementById('totalTranslations').textContent = platformData.length;
-            document.getElementById('pagesLabel').textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? 'categories' : 'pages';
-            if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
+            document.getElementById('pagesLabel').textContent = activePlatform === 'marked' ? 'platforms' : (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? 'categories' : 'pages';
+            if (activePlatform === 'marked') {
+                var srcs = [];
+                platformData.forEach(function(t) { var s = getTranslationPlatformSrc(t); if (srcs.indexOf(s) === -1) srcs.push(s); });
+                document.getElementById('totalPages').textContent = srcs.length;
+            } else if (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') {
                 // For app platforms, count categories
                 var cats = [];
                 platformData.forEach(function(t) {
@@ -2767,6 +2835,27 @@
         var activePageFilter = '';
 
         function populatePageFilter(filteredData) {
+            // Marked view: single "All" entry, no sub-filters
+            if (activePlatform === 'marked') {
+                var inner = document.getElementById('catSidebarInner');
+                inner.textContent = '';
+                var platformData = getPlatformData();
+                var btn = document.createElement('button');
+                btn.className = 'cat-item active';
+                var lbl = document.createElement('span');
+                lbl.className = 'cat-item-label';
+                lbl.textContent = 'All';
+                btn.appendChild(lbl);
+                var cntWrap = document.createElement('div');
+                cntWrap.className = 'cat-count-col';
+                var cnt = document.createElement('span');
+                cnt.className = 'cat-count';
+                cnt.textContent = platformData.length;
+                cntWrap.appendChild(cnt);
+                btn.appendChild(cntWrap);
+                inner.appendChild(btn);
+                return;
+            }
             var platformData = getPlatformData();
             var pageCounts = {};
             var matchCounts = {};
@@ -3249,17 +3338,43 @@
             var badgeWrap = document.createElement('div');
             badgeWrap.className = 't-badge-wrap';
 
+            if (activePlatform === 'marked') {
+                var src = getTranslationPlatformSrc(t);
+                var srcBadge = document.createElement('span');
+                srcBadge.className = 't-platform-src src-' + src;
+                srcBadge.textContent = _platformSrcLabel[src] || src;
+                badgeWrap.appendChild(srcBadge);
+            }
             var pageDiv = document.createElement('div');
             pageDiv.className = 't-page-badge';
-            pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? (t.category || 'general') : normalizePage(t.page);
+            pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? (t.category || 'general') : (normalizePage(t.page) || t.category || '');
             badgeWrap.appendChild(pageDiv);
-
+            if (t.mark_note) {
+                var noteDiv = document.createElement('div');
+                noteDiv.className = 't-mark-note';
+                noteDiv.textContent = '\uD83D\uDCDD ' + t.mark_note;
+                badgeWrap.appendChild(noteDiv);
+            }
 
             row.appendChild(badgeWrap);
 
             // Actions
             var actionsDiv = document.createElement('div');
             actionsDiv.className = 't-actions';
+
+            // Mark button
+            (function(tid, tMarked) {
+                var markBtn = document.createElement('button');
+                markBtn.className = 't-btn mark' + (tMarked ? ' is-marked' : '');
+                markBtn.title = tMarked ? 'Unmark' : 'Mark for Nareen';
+                markBtn.textContent = '\uD83D\uDD16';
+                markBtn.style.fontSize = '14px';
+                markBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleMark(tid, markBtn.classList.contains('is-marked'), markBtn);
+                });
+                actionsDiv.appendChild(markBtn);
+            })(t.id, t.marked);
 
             if (canEdit) {
                 var editBtn = document.createElement('button');
