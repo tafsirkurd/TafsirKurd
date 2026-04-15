@@ -1457,7 +1457,7 @@ function scheduleReminder(enabled,time){
     var msg=_getReminderMsg(_getDayOfYear(schedDate));
     notifications.push({
       id:10+d,
-      title:'Tafsir Kurd 📖',
+      title:'TafsirKurd',
       body:msg,
       schedule:{at:schedDate,allowWhileIdle:true},
       smallIcon:'ic_notification',
