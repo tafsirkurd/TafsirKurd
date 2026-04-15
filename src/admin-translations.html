@@ -510,9 +510,11 @@
         body.dark-mode .t-btn.mark:hover { background: #1c1200; color: #fbbf24; }
         body.dark-mode .t-btn.mark.is-marked { color: #fbbf24; }
         .t-btn svg { width: 15px; height: 15px; }
-        .platform-tab.marked-platform-tab.active { background: #f59e0b; border-color: #f59e0b; color: #fff; }
-        .platform-tab.marked-platform-tab:hover:not(.active) { border-color: #f59e0b; color: #d97706; }
-        .platform-tab.marked-platform-tab .tab-count { background: rgba(0,0,0,0.15); }
+        .marked-header-btn { gap: 6px; }
+        .marked-header-btn:hover { border-color: #f59e0b !important; color: #d97706 !important; }
+        .marked-header-btn.active { background: #f59e0b !important; border-color: #f59e0b !important; color: #fff !important; }
+        body.dark-mode .marked-header-btn:hover { color: #fbbf24 !important; }
+        body.dark-mode .marked-header-btn.active { background: #b45309 !important; border-color: #b45309 !important; }
         .t-platform-src { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
         .t-platform-src.src-web         { background: #eff6ff; color: #1d4ed8; }
         .t-platform-src.src-mobile      { background: #f0fdf4; color: #166534; }
@@ -1658,6 +1660,8 @@
                 <div class="page-header">
                     <h1 class="page-title">Translations</h1>
                     <div class="page-actions">
+                        <button class="btn btn-secondary marked-header-btn" id="markedHeaderBtn" onclick="setPlatform('marked', this)" title="Show keys marked for Nareen">🔖 <span>Marked</span> <span class="tab-count" id="markedCount" style="background:rgba(245,158,11,0.18);color:#d97706">--</span></button>
+                        <div class="action-sep"></div>
                         <div class="action-group">
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
                             <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
@@ -1686,9 +1690,6 @@
                     </button>
                     <button class="platform-tab" onclick="setPlatform('about', this)">
                         <i data-lucide="info" style="width:16px;height:16px"></i> About <span class="tab-count" id="aboutCount">--</span>
-                    </button>
-                    <button class="platform-tab marked-platform-tab" onclick="setPlatform('marked', this)">
-                        🔖 Marked <span class="tab-count" id="markedCount">--</span>
                     </button>
                 </div>
 
@@ -2585,9 +2586,13 @@
             document.querySelectorAll('.platform-tab').forEach(function(tab) {
                 tab.classList.remove('active');
             });
+            var markedHeaderBtn = document.getElementById('markedHeaderBtn');
+            if (markedHeaderBtn) markedHeaderBtn.classList.remove('active');
             if (btn) {
                 btn.classList.add('active');
-                btn.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
+                if (btn.classList.contains('platform-tab')) {
+                    btn.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
+                }
             }
 
             var aboutPanel = document.getElementById('aboutPanel');
