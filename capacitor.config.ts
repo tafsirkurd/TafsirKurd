@@ -15,7 +15,6 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'never',
-    backgroundColor: '#0a0a0a',
     scheme: 'capacitor',
   },
   android: {

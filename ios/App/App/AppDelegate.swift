@@ -23,7 +23,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         case "noor":   themeColor = UIColor(red: 244/255, green: 232/255, blue: 204/255, alpha: 1)
         default:       themeColor = UIColor(red:  10/255, green:  10/255, blue:  10/255, alpha: 1) // dark
         }
-        window?.backgroundColor = themeColor
+        // UIWindow.appearance() sets the background on ALL windows before they are
+        // created — including Capacitor's UIWindow — so the very first native frame
+        // after the launch screen already has the correct theme color.
+        UIWindow.appearance().backgroundColor = themeColor
         return true
     }
 
