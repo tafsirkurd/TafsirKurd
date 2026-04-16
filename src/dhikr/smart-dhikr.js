@@ -544,8 +544,12 @@
     }
 
     function _syncDots() {
+      /* Remove active from all first, then add to current only.
+         Explicit two-step avoids any toggle edge case and guarantees
+         exactly one active dot at all times.                        */
       for (var j = 0; j < count; j++)
-        dots[j].classList.toggle('sd-dot-active', j === current);
+        dots[j].classList.remove('sd-dot-active');
+      dots[current].classList.add('sd-dot-active');
     }
 
     function _goTo(idx, anim) {
@@ -654,20 +658,18 @@
 
   /* ─────────────────────────────────────────────
      DAILY REFRESH COUNTDOWN
-     Shows time remaining until next UTC midnight —
-     the exact moment the daily seed flips.
-     Updates every minute; self-cleans when removed.
+     Shows time remaining until next Baghdad midnight.
+     Updates every minute; self-cleans when removed from DOM.
   ───────────────────────────────────────────── */
   function _buildCountdown() {
     var el = _mk('div', 'sd-refresh');
 
-    /* Next 00:00 Baghdad time expressed as Unix ms.
-       Baghdad = UTC+3: midnight Baghdad = (day+1 00:00 UTC) − 3 h.  */
+    /* Next 00:00 Baghdad = next UTC-day-start minus 3 h */
     function _msUntilBaghdadMidnight() {
-      var d    = _baghdadDate();                        /* current Baghdad date/time */
+      var d = _baghdadDate();
       var nextMidnightUTC =
         Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1)
-        - _BAGHDAD_OFFSET_MS;                          /* shift back to UTC wall-clock */
+        - _BAGHDAD_OFFSET_MS;
       return nextMidnightUTC - Date.now();
     }
 
@@ -683,7 +685,7 @@
         clearInterval(_tid);
         return;
       }
-      el.textContent = 'نوێکرنەوەی ڕۆژانە لە: ' + _fmt(_msUntilBaghdadMidnight());
+      el.textContent = '\u29d6 نوێ دەبێتەوە لە: ' + _fmt(_msUntilBaghdadMidnight());
     }
 
     _update();
@@ -693,12 +695,26 @@
   }
 
   /* ─────────────────────────────────────────────
+     SECTION CACHE
+     One section element per Baghdad day.
+     Returning the same DOM node on pull-to-refresh
+     preserves slider position + timer — no visual reset.
+  ───────────────────────────────────────────── */
+  var _sectionCache = { el: null, seed: null };
+
+  /* ─────────────────────────────────────────────
      RENDER
      Returns section element.
-     Slider initialised via double-RAF after caller
-     appends element to the live DOM.
+     Same Baghdad day → returns cached element so
+     pull-to-refresh does not reset the slider.
+     New day or first call → builds fresh.
   ───────────────────────────────────────────── */
   function render(gencineUI) {
+    var seed = _daySeed();
+    if (_sectionCache.el && _sectionCache.seed === seed) {
+      return _sectionCache.el;
+    }
+
     var items = getItemsNow();  /* always 4 */
     var T       = window.t || function(k, d) { return d || k; };
     var section = _mk('div', 'sd-section');
@@ -738,6 +754,8 @@
       });
     });
 
+    _sectionCache.el   = section;
+    _sectionCache.seed = seed;
     return section;
   }
 
