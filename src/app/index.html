@@ -1811,7 +1811,8 @@ body{background:var(--bg);color:var(--text)}
 .sd-arrow{color:var(--text3);font-size:.7rem;flex-shrink:0;opacity:.55}
 /* Progress bar — position:absolute inside overflow:hidden wrapper; corners auto-clipped */
 .sd-progress{position:absolute;bottom:0;left:0;right:0;height:3px;pointer-events:none}
-.sd-bar{height:100%;width:0%;background:var(--accent);opacity:.65}
+/* scaleX(0→1) from right → bar fills right-to-left (RTL time flow) */
+.sd-bar{height:100%;width:100%;background:var(--accent);opacity:.65;transform:scaleX(0);transform-origin:right center}
 .sd-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 2px}
 .sd-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer}
 .sd-dot-active{width:20px;border-radius:3px;background:var(--accent)}

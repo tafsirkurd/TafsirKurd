@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion — TafsirKurd  v13
+ * Smart Daily Companion — TafsirKurd  v14
  * 3–4 cards, each a different content type:
  *   1. Time-based adhkar  (only when a genuine time window is active right now)
  *   2. Ayah of the day    (Quran verse — opens tafsir)
@@ -536,14 +536,17 @@
     progress.appendChild(bar);
     wrapper.appendChild(progress);
 
-    /* ── Dots ── */
-    var dots = [];
-    for (var i = 0; i < count; i++) {
+    /* ── Dots — rendered right→left for RTL ──
+       Iterate count-1..0 so dot[0] lands on the RIGHT and dot[count-1]
+       on the LEFT.  dots[] is still indexed by slide number so _updateDots
+       and click handlers need no change — only the visual order flips.   */
+    var dots = new Array(count);
+    for (var i = count - 1; i >= 0; i--) {
       var dot = document.createElement('span');
       dot.className = 'sd-dot' + (i === 0 ? ' sd-dot-active' : '');
       (function(idx) { dot.addEventListener('click', function() { goTo(idx, true); }); })(i);
       dotsEl.appendChild(dot);
-      dots.push(dot);
+      dots[i] = dot;
     }
 
     function isAlive() { return document.body && document.body.contains(track); }
@@ -584,7 +587,7 @@
       _progAccum  = 0;
       _progPaused = false;
       bar.style.transition = 'none';
-      bar.style.width      = '0%';
+      bar.style.transform  = 'scaleX(0)';  /* right→left: start collapsed from right */
       if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
       _progStart = performance.now();
       _rafId = requestAnimationFrame(_tickProgress);
@@ -608,7 +611,7 @@
       if (_progPaused || !isAlive()) return;
       var elapsed = _progAccum + (performance.now() - _progStart);
       var pct     = Math.min(elapsed / SLIDE_DURATION, 1);
-      bar.style.width = (pct * 100) + '%';
+      bar.style.transform = 'scaleX(' + pct + ')';  /* grows right→left */
       if (pct >= 1) {
         goTo(current + 1, true);   /* auto-advance; _resetProgress called inside goTo */
         return;
