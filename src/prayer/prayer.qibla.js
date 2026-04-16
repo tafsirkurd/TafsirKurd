@@ -317,7 +317,9 @@
         if (now - _lastAbs < THROTTLE) return;
         _hasAbsolute = true;
         _lastAbs = now;
-        addHeading((360 - e.alpha) % 360);
+        // Android WebView alpha is offset +90° from true compass bearing:
+        // alpha=0 → top points West, so bearing = (alpha - 90 + 360) % 360
+        addHeading((e.alpha + 270) % 360);
       };
 
       _onOrientRel = function(e) {            // relative fallback — ignored once absolute fires
@@ -326,7 +328,7 @@
         var now = Date.now();
         if (now - _lastRel < THROTTLE) return;
         _lastRel = now;
-        addHeading((360 - e.alpha) % 360);
+        addHeading((e.alpha + 270) % 360);
       };
 
       window.addEventListener('deviceorientationabsolute', _onOrient, true);
