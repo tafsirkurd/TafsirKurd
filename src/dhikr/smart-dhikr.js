@@ -1,14 +1,12 @@
 /**
- * Smart Daily Companion — TafsirKurd  v14
- * 3–4 cards, each a different content type:
- *   1. Time-based adhkar  (only when a genuine time window is active right now)
- *   2. Ayah of the day    (Quran verse — opens tafsir)
+ * Smart Daily Companion — TafsirKurd  v15
+ * Clean rebuild. Real horizontal slider, RTL, dots + progress bar, swipe.
+ *
+ * Slides (up to 4):
+ *   1. Time-based adhkar  (only when a genuine time window is active)
+ *   2. Ayah of the day
  *   3. Hadith of the day
  *   4. Book of the day
- *
- * Daily content (hadith/book) is seeded by date — same all day, fresh tomorrow.
- * Adhkar slot only appears during morning / evening / sleep / Friday windows.
- * When no time window is active the slider shows 3 fully-distinct content types.
  */
 (function(window) {
   'use strict';
@@ -50,15 +48,15 @@
       labelKey: 'adhkar.friday', labelFallback: 'ڕۆژا ئینانێ',
       subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ڕۆژا ئینانێ ئەمڕۆ یە',
       timeTag: 'ئینانی', basePriority: 80,
-      dayBoostDays: [5]                          /* only on Friday */
+      dayBoostDays: [5]
     },
     {
       id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
       labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
-      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر ﷺ',
+      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
       timeTag: null, basePriority: 75,
-      dayBoostDays: [5],                         /* Friday */
-      thursdayNightBoost: true                   /* Thursday after Maghrib */
+      dayBoostDays: [5],
+      thursdayNightBoost: true
     }
   ];
 
@@ -105,8 +103,6 @@
       + '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  /* Is `cur` (minutes since midnight) in [s, e)?
-     wraps=true handles windows that cross midnight (e.g. 21:00–05:00) */
   function _inRange(cur, s, e, wraps) {
     if (s < 0 || e < 0) return false;
     return wraps ? (cur >= s || cur < e) : (cur >= s && cur < e);
@@ -123,7 +119,7 @@
   }
 
   /* ══════════════════════════════════════════════
-     PRAYER TIMES  (reads the cache the prayer tab fills)
+     PRAYER TIMES
   ══════════════════════════════════════════════ */
   function _getPrayerTimings() {
     try {
@@ -142,7 +138,7 @@
   }
 
   /* ══════════════════════════════════════════════
-     STATE  (today's opens + completions)
+     STATE
   ══════════════════════════════════════════════ */
   var _STATE_KEY = 'sd_daily_v1';
 
@@ -205,22 +201,15 @@
 
   /* ══════════════════════════════════════════════
      TIME ITEM SELECTION
-     An item is "active" only if it is genuinely
-     inside its time window or day condition right now.
-     Generic items (after_prayer etc.) are excluded —
-     they are not time-specific so they never appear here.
   ══════════════════════════════════════════════ */
   function _isTimeActive(item, nowMin, dow, prayers, maghribMin) {
-    /* Time-window items */
     if (item.timeWindow) {
       var tw = item.timeWindow;
       var ts = (prayers && _toMinutes(prayers[tw.start]) >= 0) ? _toMinutes(prayers[tw.start]) : tw.fs;
       var te = (prayers && _toMinutes(prayers[tw.end])   >= 0) ? _toMinutes(prayers[tw.end])   : tw.fe;
       return _inRange(nowMin, ts, te, tw.wraps);
     }
-    /* Friday items */
     if (item.dayBoostDays && item.dayBoostDays.indexOf(dow) >= 0) return true;
-    /* Thursday night salawat */
     if (item.thursdayNightBoost && dow === 4 && nowMin >= maghribMin) return true;
     return false;
   }
@@ -232,37 +221,6 @@
     return s;
   }
 
-  /* Non-time-specific adhkar shown as a daily-seeded fallback
-     when no time window is currently active.                    */
-  var FALLBACK_ITEMS = [
-    {
-      id: 'after_prayer', categoryKey: 'after_prayer', icon: 'fas fa-hands-praying',
-      labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
-      subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
-      timeTag: null, basePriority: 42
-    },
-    {
-      id: 'forgiveness', categoryKey: 'forgiveness', icon: 'fas fa-dove',
-      labelKey: 'adhkar.forgiveness', labelFallback: 'داواکاری لێبوردن',
-      subtitleKey: 'gencine.smart.forgiveness_hint', subtitleFallback: 'ئیستیخفارەکە زیادە بکە',
-      timeTag: null, basePriority: 40
-    },
-    {
-      id: 'protection', categoryKey: 'protection', icon: 'fas fa-shield-halved',
-      labelKey: 'adhkar.protection', labelFallback: 'پاراستن',
-      subtitleKey: 'gencine.smart.protection_hint', subtitleFallback: 'زکرێن پاراستن و حەمایەتێ',
-      timeTag: null, basePriority: 38
-    },
-    {
-      id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
-      labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
-      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر ﷺ',
-      timeTag: null, basePriority: 45
-    }
-  ];
-
-  /* Returns up to 2 currently time-active adhkar (highest priority first).
-     Falls back to 1 seeded-random adhkar when nothing is time-active.     */
   function _getTimeItems() {
     var now        = new Date();
     var nowMin     = now.getHours() * 60 + now.getMinutes();
@@ -270,31 +228,23 @@
     var prayers    = _getPrayerTimings();
     var maghribMin = (prayers && _toMinutes(prayers.Maghrib) >= 0) ? _toMinutes(prayers.Maghrib) : 18 * 60;
     var state      = _getState();
-
-    /* Return at most 1 — the highest-priority genuinely-active item.
-       No fallback: when no window is active, return [] so the slot is omitted. */
     return TIME_ITEMS
       .filter(function(item) {
         return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin);
       })
-      .map(function(item) {
-        return { item: item, score: _scoreTimeItem(item, state) };
-      })
+      .map(function(item) { return { item: item, score: _scoreTimeItem(item, state) }; })
       .sort(function(a, b) { return b.score - a.score; })
       .slice(0, 1)
       .map(function(x) { return x.item; });
   }
 
   /* ══════════════════════════════════════════════
-     DAILY ITEMS SYSTEM
-     Each type is seeded independently — same pick all
-     day, different pick tomorrow.
+     DAILY ITEMS
   ══════════════════════════════════════════════ */
   function _readCache(key) {
     try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
   }
 
-  /* ── Slot 1: Ayah of the day ── */
   function _buildAyahItem() {
     var flat = _seededIdx(6236, 1);
     var rem  = flat, surah = 1, ayah = 1;
@@ -306,8 +256,7 @@
     var s = surah, a = ayah;
     return {
       _type:'daily', id:'ayah_day', icon:'fas fa-book-quran', tag:'ئایەتا ڕۆژێ',
-      title:    surahName,
-      subtitle: 'ئایەت ' + ayah,
+      title: surahName, subtitle: 'ئایەت ' + ayah,
       nav: function() {
         if (window.App && App.tab && App.openSurah) {
           App.tab('quran');
@@ -317,24 +266,18 @@
     };
   }
 
-  /* ── Slot 2: Hadith of the day ──
-     Daily-seeded pick from the loaded hadith list.
-     Returns null when cache not yet populated — slot is skipped cleanly.
-     Tapping opens the exact seeded hadith in detail view (_hadithDetailIdx). */
   function _buildHadithItem() {
     var hadiths = _readCache('gencine_hadiths_v2');
-    if (!hadiths || !hadiths.length) return null;   /* skip — no generic shortcut */
+    if (!hadiths || !hadiths.length) return null;
     var idx     = _seededIdx(hadiths.length, 2);
     var h       = hadiths[idx];
     var preview = (h.ku || h.ar || '').trim();
     if (preview.length > 55) preview = preview.slice(0, 55) + '\u2026';
     return {
       _type:'daily', id:'hadith_day', icon:'fas fa-scroll', tag:'حەدیسا ڕۆژێ',
-      title:    h.title || preview,
-      subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
+      title: h.title || preview, subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
       nav: function(gencineUI) {
         if (!gencineUI) return;
-        /* Open the exact seeded hadith directly in detail view */
         gencineUI._view            = 'hadith';
         gencineUI._hadithSearch    = '';
         gencineUI._hadithDetailIdx = idx;
@@ -343,64 +286,39 @@
     };
   }
 
-  /* ── Slot 4: Book of the day ──
-     Daily-seeded pick from the loaded books list.
-     Returns null when cache not yet populated — slot is skipped cleanly.
-     Tapping calls GencineUI.openBook(id) which opens the exact book reader. */
   function _buildBookItem() {
     var books = _readCache('gencine_books_v3');
-    if (!books || !books.length) return null;   /* skip — no generic shortcut */
+    if (!books || !books.length) return null;
     var b = books[_seededIdx(books.length, 4)];
     if (!b) b = books[0];
     var bookId = b.id;
     return {
       _type:'daily', id:'book_day', icon:'fas fa-book-open', tag:'کتێبا ڕۆژێ',
-      title:    b.title_ku || b.title_ar || 'کتێب',
-      subtitle: b.author_ku || 'بخوێنە',
+      title: b.title_ku || b.title_ar || 'کتێب', subtitle: b.author_ku || 'بخوێنە',
       nav: function(gencineUI) {
         if (!gencineUI) return;
-        /* openBook() sets _view='book-reader', assigns _currentBook, calls _draw() */
         gencineUI.openBook(bookId);
       }
     };
   }
 
-  /* ══════════════════════════════════════════════
-     SLOT ORDER — 3 or 4 fully distinct content types:
-       1. Adhkar (time-aware)   — only when a time window is active
-       2. Ayah of the day
-       3. Hadith of the day
-       4. Book of the day
-     Each slot is a different semantic type; no type repeats.
-  ══════════════════════════════════════════════ */
   function getItemsNow() {
     var result = [];
-
-    /* Slot 1 — adhkar only when a genuine time window is active right now */
     var timeItems = _getTimeItems();
-    if (timeItems.length) {
-      result.push({ _type: 'adhkar', _adhkarItem: timeItems[0] });
-    }
-
-    /* Slot 2 — Ayah of the day */
-    try { var ay = _buildAyahItem(); if (ay) result.push(ay); } catch(e) {}
-
-    /* Slot 3 — Hadith of the day */
-    try { var h = _buildHadithItem(); if (h) result.push(h); } catch(e) {}
-
-    /* Slot 4 — Book of the day */
-    try { var b = _buildBookItem(); if (b) result.push(b); } catch(e) {}
-
+    if (timeItems.length) result.push({ _type: 'adhkar', _adhkarItem: timeItems[0] });
+    try { var ay = _buildAyahItem();   if (ay) result.push(ay); } catch(e) {}
+    try { var h  = _buildHadithItem(); if (h)  result.push(h);  } catch(e) {}
+    try { var b  = _buildBookItem();   if (b)  result.push(b);  } catch(e) {}
     return result;
   }
 
   /* ══════════════════════════════════════════════
-     UI — CARD BUILDERS
+     CARD BUILDERS
   ══════════════════════════════════════════════ */
   function _buildAdhkarCard(item, gencineUI) {
-    var T      = window.t || function(k, d) { return d || k; };
-    var state  = _getState();
-    var done   = state.completed.indexOf(item.id) >= 0;
+    var T     = window.t || function(k, d) { return d || k; };
+    var state = _getState();
+    var done  = state.completed.indexOf(item.id) >= 0;
     var streak = _getStreak(item.id);
 
     var card = document.createElement('div');
@@ -442,9 +360,7 @@
 
     var arrow = document.createElement('div');
     arrow.className = 'sd-arrow';
-    var chev = document.createElement('i');
-    chev.className = 'fas fa-chevron-left';
-    arrow.appendChild(chev);
+    arrow.appendChild(Object.assign(document.createElement('i'), { className: 'fas fa-chevron-left' }));
     card.appendChild(arrow);
 
     card.addEventListener('click', function() {
@@ -465,36 +381,19 @@
 
     var iconWrap = document.createElement('div');
     iconWrap.className = 'sd-icon';
-    var ico = document.createElement('i');
-    ico.className = item.icon;
-    iconWrap.appendChild(ico);
+    iconWrap.appendChild(Object.assign(document.createElement('i'), { className: item.icon }));
     card.appendChild(iconWrap);
 
     var content = document.createElement('div');
     content.className = 'sd-content';
-
-    var tag = document.createElement('span');
-    tag.className = 'sd-tag';
-    tag.textContent = item.tag;
-    content.appendChild(tag);
-
-    var title = document.createElement('div');
-    title.className = 'sd-title';
-    title.textContent = item.title;
-    content.appendChild(title);
-
-    var sub = document.createElement('div');
-    sub.className = 'sd-sub';
-    sub.textContent = item.subtitle;
-    content.appendChild(sub);
-
+    content.appendChild(Object.assign(document.createElement('span'), { className: 'sd-tag',   textContent: item.tag      }));
+    content.appendChild(Object.assign(document.createElement('div'),  { className: 'sd-title', textContent: item.title    }));
+    content.appendChild(Object.assign(document.createElement('div'),  { className: 'sd-sub',   textContent: item.subtitle }));
     card.appendChild(content);
 
     var arrow = document.createElement('div');
     arrow.className = 'sd-arrow';
-    var chev = document.createElement('i');
-    chev.className = 'fas fa-chevron-left';
-    arrow.appendChild(chev);
+    arrow.appendChild(Object.assign(document.createElement('i'), { className: 'fas fa-chevron-left' }));
     card.appendChild(arrow);
 
     card.addEventListener('click', function() {
@@ -510,235 +409,251 @@
   }
 
   /* ══════════════════════════════════════════════
-     UI — SLIDER CONTROLLER  v12
-     Motion model:
-       - LTR flex track (direction:ltr on wrapper), standard translateX(-n*W)
-       - During drag: transition:none, 1:1 finger tracking
-       - At edges: rubber-band resistance (25% of excess delta applied)
-       - On release: snap with 320ms cubic-bezier(0.25,0.46,0.45,0.94)
-       - Threshold: 18% of card width to commit slide change
-       - Progress bar: RAF-based, 12s per slide, pause on touch, resume on release
-       - Swipe left → next (natural), swipe right → prev
+     SLIDER CONTROLLER  v15  (clean rebuild)
+
+     DOM structure enforced:
+       .sd-wrapper           overflow:hidden, position:relative, border-radius
+         .sd-track           display:flex, will-change:transform
+           .sd-slide × N     min-width:100%, flex-shrink:0
+         .sd-progress        position:absolute, bottom:0, left:0, right:0, h:3px
+           .sd-bar           fills right→left via scaleX + transform-origin:right
+       .sd-dots              OUTSIDE wrapper (flex row, below card)
+
+     Init:
+       Called with double-RAF after section is appended to DOM.
+       Uses track.children.length (actual DOM count) not items.length.
+
+     RTL dots:
+       Rendered count-1 → 0 so dot[0] is rightmost (slide 1 in RTL).
+
+     Swipe:
+       - 6px axis intent window
+       - horizontal confirmed → preventDefault() blocks scroll + PTR
+       - vertical → immediate release, page scrolls freely
+       - 18% width threshold to commit
+       - rubber-band at edges (25% of excess)
+
+     Progress:
+       - RAF-based, 12s per slide
+       - pauses on touchstart, resumes on touchend
+       - scaleX(0→1), transform-origin:right center (fills right→left)
   ══════════════════════════════════════════════ */
   function _initSlider(wrapper, track, dotsEl, count) {
-    console.log('[SmartDhikr] _initSlider — count:', count, 'wrapperW:', wrapper.clientWidth, wrapper.offsetWidth);
-    if (count <= 1) { if (dotsEl) dotsEl.style.display = 'none'; return; }
+    /* count is passed as a hint but we verify against real DOM */
+    var realCount = track.children.length;
+    console.log('[SD v15] _initSlider count:', count, 'realCount:', realCount, 'wW:', wrapper.clientWidth);
 
-    var current       = 0;
-    var SLIDE_DURATION = 12000;  /* ms per slide for auto-advance */
-    var SNAP_CURVE    = 'cubic-bezier(0.25,0.46,0.45,0.94)';
-    var SNAP_MS       = 320;
+    if (realCount <= 1) {
+      if (dotsEl) dotsEl.style.display = 'none';
+      return;
+    }
 
-    /* ── Progress bar ── */
-    var progress = document.createElement('div');
-    progress.className = 'sd-progress';
+    count = realCount;  /* use actual DOM count */
+
+    var current      = 0;
+    var DURATION     = 12000;
+    var SNAP_MS      = 320;
+    var SNAP_EASE    = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+
+    /* ── progress bar (created here, appended inside wrapper) ── */
+    var progressEl = document.createElement('div');
+    progressEl.className = 'sd-progress';
     var bar = document.createElement('div');
     bar.className = 'sd-bar';
-    progress.appendChild(bar);
-    wrapper.appendChild(progress);
+    progressEl.appendChild(bar);
+    wrapper.appendChild(progressEl);
 
-    /* ── Dots — rendered right→left for RTL ──
-       Iterate count-1..0 so dot[0] lands on the RIGHT and dot[count-1]
-       on the LEFT.  dots[] is still indexed by slide number so _updateDots
-       and click handlers need no change — only the visual order flips.   */
+    /* ── dots (rendered right→left: last dot appended first = leftmost visually) ── */
     var dots = new Array(count);
     for (var i = count - 1; i >= 0; i--) {
       var dot = document.createElement('span');
       dot.className = 'sd-dot' + (i === 0 ? ' sd-dot-active' : '');
-      (function(idx) { dot.addEventListener('click', function() { goTo(idx, true); }); })(i);
+      /* closure to capture i */
+      (function(idx) {
+        dot.addEventListener('click', function() { _goTo(idx, true); });
+      })(i);
       dotsEl.appendChild(dot);
       dots[i] = dot;
     }
 
-    function isAlive() { return document.body && document.body.contains(track); }
-
-    function _getW() {
+    /* ── helpers ── */
+    function _alive()  { return document.body && document.body.contains(track); }
+    function _width()  {
       var w = wrapper.clientWidth || wrapper.offsetWidth;
-      return w || (window.innerWidth - 32);
+      return w > 0 ? w : (window.innerWidth - 32);
     }
 
-    function _applyTransform(px, animated) {
+    function _snap(px, animated) {
       track.style.transition = animated
-        ? ('transform ' + SNAP_MS + 'ms ' + SNAP_CURVE)
+        ? 'transform ' + SNAP_MS + 'ms ' + SNAP_EASE
         : 'none';
       track.style.transform = 'translateX(' + px + 'px)';
     }
 
     function _updateDots() {
-      dots.forEach(function(d, i) { d.classList.toggle('sd-dot-active', i === current); });
-    }
-
-    /* goTo: snap to slide idx.
-       animated=false → instant (used on init).
-       restartProg=false → don't reset progress (used on init tick). */
-    function goTo(idx, animated, restartProg) {
-      current = ((idx % count) + count) % count;
-      _applyTransform(-current * _getW(), animated !== false);
-      _updateDots();
-      if (restartProg !== false) { _resetProgress(); }
-    }
-
-    /* ── Progress bar — RAF-based so pause/resume is clean ── */
-    var _rafId     = null;
-    var _progStart = 0;
-    var _progAccum = 0;   /* accumulated ms before any pause */
-    var _progPaused = false;
-
-    function _resetProgress() {
-      _progAccum  = 0;
-      _progPaused = false;
-      bar.style.transition = 'none';
-      bar.style.transform  = 'scaleX(0)';  /* right→left: start collapsed from right */
-      if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
-      _progStart = performance.now();
-      _rafId = requestAnimationFrame(_tickProgress);
-    }
-
-    function _pauseProgress() {
-      if (_progPaused) return;
-      _progPaused = true;
-      _progAccum += performance.now() - _progStart;
-      if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
-    }
-
-    function _resumeProgress() {
-      if (!_progPaused) return;
-      _progPaused = false;
-      _progStart  = performance.now();
-      _rafId = requestAnimationFrame(_tickProgress);
-    }
-
-    function _tickProgress() {
-      if (_progPaused || !isAlive()) return;
-      var elapsed = _progAccum + (performance.now() - _progStart);
-      var pct     = Math.min(elapsed / SLIDE_DURATION, 1);
-      bar.style.transform = 'scaleX(' + pct + ')';  /* grows right→left */
-      if (pct >= 1) {
-        goTo(current + 1, true);   /* auto-advance; _resetProgress called inside goTo */
-        return;
+      for (var j = 0; j < count; j++) {
+        dots[j].classList.toggle('sd-dot-active', j === current);
       }
-      _rafId = requestAnimationFrame(_tickProgress);
     }
 
-    /* ── Drag / swipe ──
-       Gesture intent detection (horizontal vs vertical) prevents fighting
-       with page scroll and pull-to-refresh:
-       - touchmove is NON-passive so we can call e.preventDefault()
-       - first 6 px of movement decide the axis
-       - horizontal confirmed → preventDefault() locks out scroll + PTR
-       - vertical detected    → release drag state, page scrolls freely
-    ── */
-    var _isDragging      = false;
-    var _dragStartX      = 0;
-    var _dragStartY      = 0;
-    var _dragBaseX       = 0;
-    var _gestureDecided  = false;   /* has axis been committed yet? */
-    var _gestureHoriz    = false;   /* true = horizontal drag confirmed */
-    var INTENT_PX        = 6;       /* pixels before committing to an axis */
+    /* ── goto slide ── */
+    function _goTo(idx, animated) {
+      current = ((idx % count) + count) % count;
+      _snap(-current * _width(), animated !== false);
+      _updateDots();
+      _resetProg();
+    }
+
+    /* ── RAF-based progress ── */
+    var _raf       = null;
+    var _progStart = 0;
+    var _progAccum = 0;
+    var _paused    = false;
+
+    function _resetProg() {
+      _progAccum = 0;
+      _paused    = false;
+      bar.style.transition = 'none';
+      bar.style.transform  = 'scaleX(0)';
+      if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+      _progStart = performance.now();
+      _raf = requestAnimationFrame(_tick);
+    }
+
+    function _pauseProg() {
+      if (_paused) return;
+      _paused     = true;
+      _progAccum += performance.now() - _progStart;
+      if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+    }
+
+    function _resumeProg() {
+      if (!_paused) return;
+      _paused    = false;
+      _progStart = performance.now();
+      _raf = requestAnimationFrame(_tick);
+    }
+
+    function _tick() {
+      if (_paused || !_alive()) return;
+      var elapsed = _progAccum + (performance.now() - _progStart);
+      var pct     = Math.min(elapsed / DURATION, 1);
+      bar.style.transform = 'scaleX(' + pct + ')';
+      if (pct >= 1) { _goTo(current + 1, true); return; }
+      _raf = requestAnimationFrame(_tick);
+    }
+
+    /* ── swipe / drag ── */
+    var _drag    = false;
+    var _sx      = 0;
+    var _sy      = 0;
+    var _baseX   = 0;
+    var _decided = false;
+    var _horiz   = false;
+    var INTENT   = 6;
 
     track.addEventListener('touchstart', function(e) {
-      _isDragging     = true;
-      _dragStartX     = e.touches[0].clientX;
-      _dragStartY     = e.touches[0].clientY;
-      _dragBaseX      = -current * _getW();
-      _gestureDecided = false;
-      _gestureHoriz   = false;
+      _drag    = true;
+      _sx      = e.touches[0].clientX;
+      _sy      = e.touches[0].clientY;
+      _baseX   = -current * _width();
+      _decided = false;
+      _horiz   = false;
       track.style.transition = 'none';
-      _pauseProgress();
+      _pauseProg();
     }, { passive: true });
 
-    /* NON-passive: allows e.preventDefault() to block scroll and PTR */
     track.addEventListener('touchmove', function(e) {
-      if (!_isDragging) return;
-      var dx  = e.touches[0].clientX - _dragStartX;
-      var dy  = e.touches[0].clientY - _dragStartY;
+      if (!_drag) return;
+      var dx = e.touches[0].clientX - _sx;
+      var dy = e.touches[0].clientY - _sy;
 
-      /* Axis detection: wait for INTENT_PX of movement in any direction */
-      if (!_gestureDecided) {
-        if (Math.abs(dx) < INTENT_PX && Math.abs(dy) < INTENT_PX) return;
-        _gestureDecided = true;
-        _gestureHoriz   = Math.abs(dx) >= Math.abs(dy);
-        if (!_gestureHoriz) {
-          /* Vertical intent — stop tracking, let page scroll own this touch */
-          _isDragging = false;
-          _resumeProgress();
+      if (!_decided) {
+        if (Math.abs(dx) < INTENT && Math.abs(dy) < INTENT) return;
+        _decided = true;
+        _horiz   = Math.abs(dx) >= Math.abs(dy);
+        if (!_horiz) {
+          /* vertical — release drag, let page scroll */
+          _drag = false;
+          _resumeProg();
           return;
         }
       }
 
-      if (!_gestureHoriz) return;
+      if (!_horiz) return;
+      e.preventDefault();  /* block scroll + pull-to-refresh */
 
-      /* Horizontal confirmed: prevent page scroll and pull-to-refresh */
-      e.preventDefault();
-
-      var W   = _getW();
-      var raw = _dragBaseX + dx;
+      var W   = _width();
+      var raw = _baseX + dx;
       var min = -(count - 1) * W;
       var max = 0;
-      var clamped;
-      if (raw > max)      { clamped = max + (raw - max) * 0.25; }
-      else if (raw < min) { clamped = min + (raw - min) * 0.25; }
-      else                { clamped = raw; }
+      var clamped = raw > max ? max + (raw - max) * 0.25
+                  : raw < min ? min + (raw - min) * 0.25
+                  : raw;
       track.style.transform = 'translateX(' + clamped + 'px)';
     }, { passive: false });
 
-    function _onDragEnd(e) {
-      if (!_isDragging) return;
-      _isDragging = false;
-      /* Vertical gesture already released drag state in touchmove; this path
-         only runs for genuine horizontal drags */
-      var endX = (e.changedTouches && e.changedTouches[0])
-                   ? e.changedTouches[0].clientX
-                   : _dragStartX;
-      var dx = endX - _dragStartX;
-      var W  = _getW();
+    function _onEnd(e) {
+      if (!_drag) return;
+      _drag = false;
+      var endX = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : _sx;
+      var dx   = endX - _sx;
+      var W    = _width();
       if (Math.abs(dx) > W * 0.18) {
-        goTo(dx < 0 ? current + 1 : current - 1, true);
+        _goTo(dx < 0 ? current + 1 : current - 1, true);
       } else {
-        goTo(current, true);
+        _goTo(current, true);
       }
     }
 
-    track.addEventListener('touchend',    _onDragEnd, { passive: true });
-    track.addEventListener('touchcancel', _onDragEnd, { passive: true });
+    track.addEventListener('touchend',    _onEnd, { passive: true });
+    track.addEventListener('touchcancel', _onEnd, { passive: true });
 
-    /* ── Visibility: pause progress when tab hidden ── */
-    function _onVisibility() {
-      if (!isAlive()) { document.removeEventListener('visibilitychange', _onVisibility); return; }
-      if (document.hidden) { _pauseProgress(); } else { _resumeProgress(); }
+    /* ── visibility: pause when tab hidden ── */
+    function _onVis() {
+      if (!_alive()) { document.removeEventListener('visibilitychange', _onVis); return; }
+      if (document.hidden) { _pauseProg(); } else { _resumeProg(); }
     }
-    document.addEventListener('visibilitychange', _onVisibility);
+    document.addEventListener('visibilitychange', _onVis);
 
-    /* ── Init: snap to 0 instantly, start progress after element paints ── */
-    goTo(0, false, false);
-    setTimeout(function() {
-      if (isAlive()) { _resetProgress(); }
-    }, 80);
+    /* ── init: snap to slide 0, start progress ── */
+    _snap(-0, false);
+    _updateDots();
+    _resetProg();
+
+    console.log('[SD v15] slider ready — count:', count, 'width:', _width());
   }
 
   /* ══════════════════════════════════════════════
      RENDER
+     Returns the section element.
+     Slider is initialised via double-RAF AFTER the
+     caller appends the element to the live DOM.
   ══════════════════════════════════════════════ */
   function render(gencineUI) {
     var items = getItemsNow();
-    console.log('[SmartDhikr] render — items:', items.length, items.map(function(x){return x.id;}));
+    console.log('[SD v15] render — items:', items.length, items.map(function(x) { return x.id || (x._adhkarItem && x._adhkarItem.id); }));
     if (!items.length) return null;
 
-    var T       = window.t || function(k, d) { return d || k; };
+    /* ── section wrapper ── */
     var section = document.createElement('div');
     section.className = 'sd-section';
-    section.dataset.sdCount = items.length;
 
+    /* ── header ── */
+    var T = window.t || function(k, d) { return d || k; };
     var hdr = document.createElement('div');
     hdr.className = 'sd-hdr';
-    var hdrText = document.createElement('span');
-    hdrText.className = 'sd-hdr-label';
-    hdrText.textContent = T('gencine.smart.section_title', 'یادکرینا ڕۆژانە');
-    hdr.appendChild(hdrText);
+    hdr.appendChild(Object.assign(document.createElement('span'), {
+      className: 'sd-hdr-label',
+      textContent: T('gencine.smart.section_title', 'یادکرینا ڕۆژانە')
+    }));
     section.appendChild(hdr);
 
+    /* ── slider wrapper (clips the track) ── */
     var wrapper = document.createElement('div');
     wrapper.className = 'sd-wrapper';
+
+    /* ── track (all slides in one horizontal flex row) ── */
     var track = document.createElement('div');
     track.className = 'sd-track';
 
@@ -750,24 +665,27 @@
     });
 
     wrapper.appendChild(track);
+    /* note: sd-progress is created and appended by _initSlider after DOM insertion */
     section.appendChild(wrapper);
 
-    var dots = document.createElement('div');
-    dots.className = 'sd-dots';
-    section.appendChild(dots);
+    /* ── dots (outside wrapper so overflow:hidden does not clip them) ── */
+    var dotsEl = document.createElement('div');
+    dotsEl.className = 'sd-dots';
+    section.appendChild(dotsEl);
 
-    var initOnce = false;
-    function tryInit() {
-      if (initOnce) return;
-      initOnce = true;
-      console.log('[SmartDhikr] tryInit — inDOM:', document.body.contains(wrapper), 'count:', items.length, 'wW:', wrapper.clientWidth);
-      _initSlider(wrapper, track, dots, items.length);
+    /* ── init after double-RAF (guarantees wrapper is in DOM and has been laid out) ── */
+    var _inited = false;
+    function _tryInit() {
+      if (_inited) return;
+      _inited = true;
+      console.log('[SD v15] tryInit — inDOM:', !!(document.body && document.body.contains(wrapper)), 'wW:', wrapper.clientWidth);
+      _initSlider(wrapper, track, dotsEl, items.length);
     }
-    if (document.readyState !== 'loading') {
-      setTimeout(tryInit, 0);
-    } else {
-      document.addEventListener('DOMContentLoaded', tryInit);
-    }
+
+    /* Double RAF: first fires before paint, second fires after layout is committed */
+    requestAnimationFrame(function() {
+      requestAnimationFrame(_tryInit);
+    });
 
     return section;
   }
@@ -776,14 +694,11 @@
      PUBLIC API
   ══════════════════════════════════════════════ */
   window.SmartDhikr = {
-    getItemsNow:       getItemsNow,
-    markOpened:        _markOpened,
-    markCompleted:     _markCompleted,
-    getStreak:         _getStreak,
-    render:            render,
-    _getPrayerTimings: _getPrayerTimings,
-    _todayISO:         _todayISO,
-    _getState:         _getState
+    getItemsNow:    getItemsNow,
+    markOpened:     _markOpened,
+    markCompleted:  _markCompleted,
+    getStreak:      _getStreak,
+    render:         render
   };
 
-})(window);
+}(window));

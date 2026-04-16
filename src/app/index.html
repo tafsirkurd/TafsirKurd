@@ -1793,12 +1793,13 @@ body{background:var(--bg);color:var(--text)}
 .sd-section{padding:16px 16px 0;direction:rtl}
 .sd-hdr{display:flex;align-items:center;margin-bottom:10px}
 .sd-hdr-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
-/* direction:ltr on wrapper breaks RTL flex cascade so slides stack L→R naturally */
+/* wrapper: overflow:hidden clips the horizontal track; position:relative anchors sd-progress */
 .sd-wrapper{overflow:hidden;border-radius:18px;position:relative;direction:ltr;width:100%}
-/* No CSS transition here — JS manages it (none during drag, 320ms on snap) */
+/* track: horizontal flex; JS applies translateX to move between slides */
 .sd-track{display:flex;will-change:transform;direction:ltr;-webkit-user-select:none;user-select:none}
-.sd-slide{min-width:100%;width:100%;box-sizing:border-box;flex-shrink:0}
-/* direction:rtl re-established on card for RTL text / icon layout */
+/* each slide exactly fills the wrapper width — no shrink, no grow */
+.sd-slide{min-width:100%;width:100%;box-sizing:border-box;flex-shrink:0;flex-grow:0}
+/* card inside each slide */
 .sd-card{display:flex;align-items:center;gap:12px;padding:16px 14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;position:relative;overflow:hidden;direction:rtl}
 .sd-card:active{opacity:.72}
 .sd-card-done{opacity:.55}
@@ -1809,12 +1810,12 @@ body{background:var(--bg);color:var(--text)}
 .sd-sub{font-size:.75rem;color:var(--text3);margin-top:3px;line-height:1.35}
 .sd-sub-done{color:var(--accent);font-weight:600}
 .sd-arrow{color:var(--text3);font-size:.7rem;flex-shrink:0;opacity:.55}
-/* Progress bar — position:absolute inside overflow:hidden wrapper; corners auto-clipped */
-.sd-progress{position:absolute;bottom:0;left:0;right:0;height:3px;pointer-events:none;background:rgba(128,128,128,0.12)}
-/* scaleX(0→1) from right → bar fills right-to-left (RTL time flow) */
-.sd-bar{height:100%;width:100%;background:var(--accent);opacity:.82;transform:scaleX(0);transform-origin:right center}
-.sd-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 2px}
-.sd-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.28;transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer}
+/* progress bar: absolute at card bottom, fills right to left */
+.sd-progress{position:absolute;bottom:0;left:0;right:0;height:3px;pointer-events:none;background:rgba(128,128,128,0.15)}
+.sd-bar{height:100%;width:100%;background:var(--accent);opacity:.85;transform:scaleX(0);transform-origin:right center}
+/* dots: below wrapper, RTL visual order handled by reversed DOM append in JS */
+.sd-dots{display:flex;justify-content:center;gap:7px;padding:10px 0 4px;direction:ltr}
+.sd-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.25;transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer;flex-shrink:0}
 .sd-dot-active{width:22px;border-radius:3.5px;opacity:1}
 /* Dua — tab bar */
 .dua-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;scrollbar-width:none}
