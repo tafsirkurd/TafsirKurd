@@ -263,9 +263,9 @@
 
     // 'simple' → OS default notification sound, no athan audio
     // Android: one channel per voice, sound = MP3 filename in res/raw/
-    // iOS: sound = M4A filename bundled in app root (athan_<voice>.m4a)
+    // iOS: sound = CAF filename bundled in app root (athan_<voice>.caf, PCM 16-bit 44100 Hz)
     var channelId = isSimple ? 'athan_simple' : (ios ? 'reminder' : ('athan_' + voice));
-    var soundFile = isSimple ? null : (ios ? ('athan_' + voice + '.m4a') : ('athan_' + voice));
+    var soundFile = isSimple ? null : (ios ? ('athan_' + voice + '.caf') : ('athan_' + voice));
 
     // iOS hard cap: 64 notifications per app. 12 days × 5 = 60 — safely under limit.
     // Android has no such restriction.
@@ -438,7 +438,7 @@
     if (!permOk) { console.warn('[Athan TEST] permission not granted — test will not fire'); }
     var ios   = onIOS();
     var voice = getSelectedVoice();
-    var soundFile = (voice === 'simple') ? null : (ios ? ('athan_' + voice + '.m4a') : ('athan_' + voice));
+    var soundFile = (voice === 'simple') ? null : (ios ? ('athan_' + voice + '.caf') : ('athan_' + voice));
     var at = new Date(Date.now() + 60 * 1000);
     var notif = {
       id: 9999,
