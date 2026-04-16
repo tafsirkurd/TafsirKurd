@@ -1794,10 +1794,10 @@ body{background:var(--bg);color:var(--text)}
 .sd-hdr{display:flex;align-items:center;margin-bottom:10px}
 .sd-hdr-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
 /* direction:ltr on wrapper breaks RTL flex cascade so slides stack L→R naturally */
-.sd-wrapper{overflow:hidden;border-radius:18px;position:relative;direction:ltr}
+.sd-wrapper{overflow:hidden;border-radius:18px;position:relative;direction:ltr;width:100%}
 /* No CSS transition here — JS manages it (none during drag, 320ms on snap) */
 .sd-track{display:flex;will-change:transform;direction:ltr;-webkit-user-select:none;user-select:none}
-.sd-slide{min-width:100%;box-sizing:border-box;flex-shrink:0}
+.sd-slide{min-width:100%;width:100%;box-sizing:border-box;flex-shrink:0}
 /* direction:rtl re-established on card for RTL text / icon layout */
 .sd-card{display:flex;align-items:center;gap:12px;padding:16px 14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;position:relative;overflow:hidden;direction:rtl}
 .sd-card:active{opacity:.72}

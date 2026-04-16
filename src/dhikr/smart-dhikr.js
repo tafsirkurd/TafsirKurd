@@ -521,6 +521,7 @@
        - Swipe left → next (natural), swipe right → prev
   ══════════════════════════════════════════════ */
   function _initSlider(wrapper, track, dotsEl, count) {
+    console.log('[SmartDhikr] _initSlider — count:', count, 'wrapperW:', wrapper.clientWidth, wrapper.offsetWidth);
     if (count <= 1) { if (dotsEl) dotsEl.style.display = 'none'; return; }
 
     var current       = 0;
@@ -720,11 +721,13 @@
   ══════════════════════════════════════════════ */
   function render(gencineUI) {
     var items = getItemsNow();
+    console.log('[SmartDhikr] render — items:', items.length, items.map(function(x){return x.id;}));
     if (!items.length) return null;
 
     var T       = window.t || function(k, d) { return d || k; };
     var section = document.createElement('div');
     section.className = 'sd-section';
+    section.dataset.sdCount = items.length;
 
     var hdr = document.createElement('div');
     hdr.className = 'sd-hdr';
@@ -757,6 +760,7 @@
     function tryInit() {
       if (initOnce) return;
       initOnce = true;
+      console.log('[SmartDhikr] tryInit — inDOM:', document.body.contains(wrapper), 'count:', items.length, 'wW:', wrapper.clientWidth);
       _initSlider(wrapper, track, dots, items.length);
     }
     if (document.readyState !== 'loading') {
