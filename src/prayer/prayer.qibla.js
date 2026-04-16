@@ -29,6 +29,8 @@
   var _statusEl    = null; // alignment status bar
   var _calibEl     = null; // Android calibration hint
   var _canvasWrap  = null; // canvas wrapper for pulse animation
+  var _debugEl     = null; // temporary on-screen debug readout (remove after validation)
+  var _lastRaw     = 0;    // most recent raw heading (for debug display)
   var _lastAlignSt     = '';     // last state string — avoids DOM churn
   var _compassReceived = false;  // true once first heading arrives
   var _noDataTimer     = null;   // fires if compass stays silent after open
@@ -54,6 +56,7 @@
 
   // Circular mean for stable heading from buffer
   function addHeading(raw) {
+    _lastRaw = raw;
     if (!_compassReceived) {
       _compassReceived = true;
       if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
@@ -66,6 +69,18 @@
       cosSum += Math.cos(toRad(h));
     });
     _smoothH = ((Math.atan2(sinSum, cosSum) * 180 / Math.PI) + 360) % 360;
+
+    // Debug: log every 20th sample to console (throttled to avoid spam)
+    if (_headingBuf.length % 20 === 0) {
+      var drawAngle = ((_qibla - _smoothH) + 360) % 360;
+      console.log('[Qibla DEBUG]' +
+        ' rawHeading=' + raw.toFixed(1) +
+        ' smoothed=' + _smoothH.toFixed(1) +
+        ' qiblaBearing=' + _qibla.toFixed(1) +
+        ' drawAngle=' + drawAngle.toFixed(1) +
+        ' ringRotation=' + (360 - _smoothH).toFixed(1) +
+        ' src=webkitCompassHeading(no-offset)');
+    }
   }
 
   // Shortest-arc lerp between two compass angles
@@ -270,6 +285,25 @@
       if (_qiblaSet) updateStatus(angleDiff(_displayH, _qibla), headingStable());
       else if (_permDenied || !_compassReceived) updateStatus(180, false);
       draw();
+
+      // Update on-screen debug readout (temporary — remove after validation)
+      if (_debugEl && _compassReceived) {
+        var drawAngle = ((_qibla - _displayH) + 360) % 360;
+        _debugEl.textContent =
+          'rawHeading:       ' + _lastRaw.toFixed(1) + '°\n' +
+          'correctedHeading: ' + _lastRaw.toFixed(1) + '° (no offset)\n' +
+          'smoothed:         ' + _smoothH.toFixed(1) + '°\n' +
+          'displayHeading:   ' + _displayH.toFixed(1) + '°\n' +
+          'qiblaBearing:     ' + _qibla.toFixed(1) + '°\n' +
+          'drawAngle:        ' + drawAngle.toFixed(1) + '° (needle)\n' +
+          'ringRotation:     ' + ((360 - _displayH) % 360).toFixed(1) + '°\n' +
+          'iosSource:        webkitCompassHeading';
+      } else if (_debugEl && !_compassReceived && !_permDenied) {
+        _debugEl.textContent = 'waiting for compass...';
+      } else if (_debugEl && _permDenied) {
+        _debugEl.textContent = 'permission denied';
+      }
+
       _raf = requestAnimationFrame(frame);
     })();
   }
@@ -293,10 +327,23 @@
 
       var raw;
       if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
-        // iOS WKWebView: webkitCompassHeading measures from device X-axis (right edge
-        // in portrait = 90° ahead of top). +90 converts to "bearing of device top".
-        // Empirically confirmed: without +90, rotating phone 90° makes compass correct.
-        raw = (e.webkitCompassHeading + 90) % 360;
+        // webkitCompassHeading: bearing of the device Y-axis (TOP of phone in portrait),
+        // measured clockwise from magnetic north. Range 0–360.
+        //   0   = top of phone points North
+        //   90  = top of phone points East
+        //   180 = top of phone points South
+        //   270 = top of phone points West
+        //
+        // The draw code uses rotate(-heading) for the ring and rotate(qibla-heading)
+        // for the needle — both expect exactly this value with NO offset.
+        //
+        // HISTORY: +90 was added, removed, and re-added multiple times. The audit
+        // (Apr 2026) confirms it is WRONG:
+        //   - With +90: phone pointing at Qibla → needle shows 270° (hard left)
+        //   - Without +90: phone pointing at Qibla → needle shows 0° (straight up) ✓
+        // The "+90 made it look right" observation came from testing where the phone
+        // was held 90° rotated, not from a valid calibration.
+        raw = e.webkitCompassHeading; // correct: no offset
       } else if (isIos) {
         // iOS but this event lacks webkitCompassHeading — skip entirely.
         // NEVER fall back to e.alpha on iOS: iOS alpha is measured from the
@@ -416,6 +463,16 @@
     infoEl.appendChild(loadEl);
     card.appendChild(infoEl);
 
+    // Temporary debug readout — visible on-device, remove after validation
+    var debugEl = document.createElement('div');
+    debugEl.id = 'qiblaDebug';
+    debugEl.style.cssText = 'font:11px/1.5 monospace;color:#4ade80;background:rgba(0,0,0,.72);' +
+      'border-radius:8px;padding:8px 10px;margin:0 0 6px;text-align:left;direction:ltr;' +
+      'white-space:pre;letter-spacing:.01em;';
+    debugEl.textContent = 'waiting for compass...';
+    card.appendChild(debugEl);
+    _debugEl = debugEl;
+
     // Android calibration hint (shown once per session, dismissed on tap or after 10s)
     var _t = window.t;
     _calibEl = document.createElement('div');
@@ -473,6 +530,7 @@
     // Re-grab elements (nulled on close, DOM persists across reopens)
     _statusEl   = document.getElementById('qiblaStatus');
     _calibEl    = document.getElementById('qiblaCalib');
+    _debugEl    = document.getElementById('qiblaDebug');
     _canvasWrap = document.querySelector('#qiblaModal .qibla-canvas-wrap');
 
     // Show calibration hint on Android once per session
@@ -569,7 +627,7 @@
     var modal = document.getElementById('qiblaModal');
     if (modal) modal.classList.remove('open');
     _canvas = null; _ctx = null;
-    _statusEl = null; _calibEl = null; _lastAlignSt = '';
+    _statusEl = null; _calibEl = null; _debugEl = null; _lastAlignSt = '';
     if (_canvasWrap) { _canvasWrap.classList.remove('qibla-pulse'); }
     _canvasWrap = null;
   }
