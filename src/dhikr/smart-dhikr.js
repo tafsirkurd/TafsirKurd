@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v20
+ * Smart Daily Companion  v21
  * Always exactly 4 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2. Ayah of the day        (Baghdad-seeded, salt 1)
@@ -523,15 +523,15 @@
     prog.appendChild(bar);
     wrapper.appendChild(prog);
 
-    /* ── dots (reversed DOM order → dot[0] rightmost = RTL card 1) ── */
-    var dots = new Array(count);
-    for (var i = count - 1; i >= 0; i--) {
+    /* ── dots (normal order: dot[0] leftmost → swipe left = active moves left→right) ── */
+    var dots = [];
+    for (var i = 0; i < count; i++) {
       var dot = _mk('span', 'sd-dot' + (i === 0 ? ' sd-dot-active' : ''));
       (function(idx) {
         dot.addEventListener('click', function() { _goTo(idx, true); });
       }(i));
       dotsEl.appendChild(dot);
-      dots[i] = dot;
+      dots.push(dot);
     }
 
     /* ── helpers ── */
