@@ -1810,12 +1810,12 @@ body{background:var(--bg);color:var(--text)}
 .sd-sub-done{color:var(--accent);font-weight:600}
 .sd-arrow{color:var(--text3);font-size:.7rem;flex-shrink:0;opacity:.55}
 /* Progress bar — position:absolute inside overflow:hidden wrapper; corners auto-clipped */
-.sd-progress{position:absolute;bottom:0;left:0;right:0;height:3px;pointer-events:none}
+.sd-progress{position:absolute;bottom:0;left:0;right:0;height:3px;pointer-events:none;background:rgba(128,128,128,0.12)}
 /* scaleX(0→1) from right → bar fills right-to-left (RTL time flow) */
-.sd-bar{height:100%;width:100%;background:var(--accent);opacity:.65;transform:scaleX(0);transform-origin:right center}
+.sd-bar{height:100%;width:100%;background:var(--accent);opacity:.82;transform:scaleX(0);transform-origin:right center}
 .sd-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 2px}
-.sd-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer}
-.sd-dot-active{width:20px;border-radius:3px;background:var(--accent)}
+.sd-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.28;transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer}
+.sd-dot-active{width:22px;border-radius:3.5px;opacity:1}
 /* Dua — tab bar */
 .dua-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;scrollbar-width:none}
 .dua-tab-btn{flex-shrink:0;padding:10px 14px;font-size:.82rem;font-weight:600;background:none;color:var(--text3);border:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
