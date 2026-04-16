@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v18
+ * Smart Daily Companion  v19
  * Always exactly 4 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2. Ayah of the day        (Baghdad-seeded, salt 1)
@@ -669,7 +669,7 @@
      until Baghdad midnight, updated every second.
   ───────────────────────────────────────────── */
   function _buildCountdown() {
-    var el = _mk('div', 'sd-refresh');
+    var el = _mk('span', 'sd-chip');
 
     function _msUntilBaghdadMidnight() {
       var d = _baghdadDate();
@@ -728,13 +728,11 @@
     var T       = window.t || function(k, d) { return d || k; };
     var section = _mk('div', 'sd-section');
 
-    /* header */
+    /* header row — RTL flex: title on right, countdown chip on left */
     var hdr = _mk('div', 'sd-hdr');
     hdr.appendChild(_mk('span', 'sd-hdr-label', T('gencine.smart.section_title', 'یادکرینا ڕۆژانە')));
+    hdr.appendChild(_buildCountdown());
     section.appendChild(hdr);
-
-    /* daily refresh countdown — above the card, left-aligned, pure HH:MM:SS */
-    section.appendChild(_buildCountdown());
 
     /* wrapper + track */
     var wrapper = _mk('div', 'sd-wrapper');
