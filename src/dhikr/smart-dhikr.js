@@ -323,7 +323,10 @@
   ───────────────────────────────────────────── */
   function _buildHadithItem() {
     var hadiths = (function() {
-      try { return JSON.parse(localStorage.getItem('gencine_hadiths_v2')); } catch(e) { return null; }
+      try {
+        var raw = JSON.parse(localStorage.getItem('gencine_hadiths_v2'));
+        return (raw && Array.isArray(raw.data)) ? raw.data : raw; /* unwrap {ts,data} envelope */
+      } catch(e) { return null; }
     }());
 
     if (hadiths && hadiths.length) {
@@ -363,7 +366,10 @@
   ───────────────────────────────────────────── */
   function _buildBookItem() {
     var books = (function() {
-      try { return JSON.parse(localStorage.getItem('gencine_books_v3')); } catch(e) { return null; }
+      try {
+        var raw = JSON.parse(localStorage.getItem('gencine_books_v3'));
+        return (raw && Array.isArray(raw.data)) ? raw.data : raw; /* unwrap {ts,data} envelope */
+      } catch(e) { return null; }
     }());
 
     if (books && books.length) {
