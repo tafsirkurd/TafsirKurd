@@ -593,7 +593,13 @@
       if (_paused || !_alive()) return;
       var pct = Math.min((_accum + performance.now() - _tStart) / DURATION, 1);
       bar.style.transform = 'scaleX(' + pct + ')';
-      if (pct >= 1) { _goTo(current + 1, true); return; }
+      if (pct >= 1) {
+        var next = current + 1;
+        /* Loop wrap (last → first): no animation — instant snap so the
+           track does not slide backwards through all cards.            */
+        _goTo(next, next < count);
+        return;
+      }
       _raf = requestAnimationFrame(_tick);
     }
 
@@ -658,13 +664,13 @@
 
   /* ─────────────────────────────────────────────
      DAILY REFRESH COUNTDOWN
-     Shows time remaining until next Baghdad midnight.
-     Updates every minute; self-cleans when removed from DOM.
+     Pure HH:MM:SS timer above the card.
+     No label, no icon — just the time remaining
+     until Baghdad midnight, updated every second.
   ───────────────────────────────────────────── */
   function _buildCountdown() {
     var el = _mk('div', 'sd-refresh');
 
-    /* Next 00:00 Baghdad = next UTC-day-start minus 3 h */
     function _msUntilBaghdadMidnight() {
       var d = _baghdadDate();
       var nextMidnightUTC =
@@ -677,7 +683,10 @@
       var total = Math.max(0, Math.floor(ms / 1000));
       var h = Math.floor(total / 3600);
       var m = Math.floor((total % 3600) / 60);
-      return h + 'h ' + String(m).padStart(2, '0') + 'm';
+      var s = total % 60;
+      return String(h).padStart(2, '0') + ':'
+           + String(m).padStart(2, '0') + ':'
+           + String(s).padStart(2, '0');
     }
 
     function _update() {
@@ -685,11 +694,11 @@
         clearInterval(_tid);
         return;
       }
-      el.textContent = '\u29d6 نوێ دەبێتەوە لە: ' + _fmt(_msUntilBaghdadMidnight());
+      el.textContent = _fmt(_msUntilBaghdadMidnight());
     }
 
     _update();
-    var _tid = setInterval(_update, 60000);
+    var _tid = setInterval(_update, 1000);
 
     return el;
   }
@@ -724,6 +733,9 @@
     hdr.appendChild(_mk('span', 'sd-hdr-label', T('gencine.smart.section_title', 'یادکرینا ڕۆژانە')));
     section.appendChild(hdr);
 
+    /* daily refresh countdown — above the card, left-aligned, pure HH:MM:SS */
+    section.appendChild(_buildCountdown());
+
     /* wrapper + track */
     var wrapper = _mk('div', 'sd-wrapper');
     var track   = _mk('div', 'sd-track');
@@ -741,9 +753,6 @@
     /* dots — outside wrapper so overflow:hidden doesn't clip them */
     var dotsEl = _mk('div', 'sd-dots');
     section.appendChild(dotsEl);
-
-    /* daily refresh countdown — below dots, separate from the 10s bar */
-    section.appendChild(_buildCountdown());
 
     /* double-RAF: guarantees wrapper is in DOM + layout committed */
     var _done = false;
