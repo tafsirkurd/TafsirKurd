@@ -1,68 +1,95 @@
 /**
- * Smart Daily Companion — TafsirKurd  v15
- * Clean rebuild. Real horizontal slider, RTL, dots + progress bar, swipe.
- *
- * Slides (up to 4):
- *   1. Time-based adhkar  (only when a genuine time window is active)
- *   2. Ayah of the day
- *   3. Hadith of the day
- *   4. Book of the day
+ * Smart Daily Companion  v16
+ * Always exactly 4 cards:
+ *   1. Zikr of current time   (time-aware, always present via fallback)
+ *   2. Ayah of the day        (seeded, salt 1)
+ *   3. Hadith of the day      (seeded, salt 2)
+ *   4. Book of the day        (seeded, salt 4)
  */
 (function(window) {
   'use strict';
 
-  /* ══════════════════════════════════════════════
-     ADHKAR TIME ITEMS
-  ══════════════════════════════════════════════ */
+  /* ─────────────────────────────────────────────
+     TIME ITEMS  (card 1 — time-aware zikr)
+  ───────────────────────────────────────────── */
   var TIME_ITEMS = [
     {
       id: 'morning', categoryKey: 'morning', icon: 'fas fa-sun',
       labelKey: 'adhkar.morning', labelFallback: 'زکرێن بەیانیکردن',
       subtitleKey: 'gencine.smart.morning_hint', subtitleFallback: 'ڕۆژا خوه ب زکرێ دەستپێکە',
-      timeTag: 'بەیانیکردن', basePriority: 80,
-      timeWindow: { start:'Fajr',  end:'Dhuhr',   fs:5*60,      fe:11*60+30, wraps:false }
+      timeTag: 'بەیانیکردن',
+      timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
     },
     {
       id: 'waking', categoryKey: 'waking', icon: 'fas fa-cloud-sun',
       labelKey: 'adhkar.waking', labelFallback: 'دوای هاتنا خوو',
       subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'دوای هاتنا خووێ بخوێنە',
-      timeTag: 'بەیانیکردن', basePriority: 55,
-      timeWindow: { start:'Fajr',  end:'Sunrise',  fs:5*60,      fe:8*60,     wraps:false }
+      timeTag: 'بەیانیکردن',
+      timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
     },
     {
       id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
       labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێواربوون',
       subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێوارا خوە ب زکرێ بکە',
-      timeTag: 'ئێواربوون', basePriority: 80,
-      timeWindow: { start:'Asr',   end:'Isha',    fs:15*60+30,  fe:21*60,    wraps:false }
+      timeTag: 'ئێواربوون',
+      timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
     },
     {
       id: 'sleep', categoryKey: 'sleep', icon: 'fas fa-bed',
       labelKey: 'adhkar.sleep', labelFallback: 'دوای خەوکردن',
       subtitleKey: 'gencine.smart.sleep_hint', subtitleFallback: 'پێش خەوکردنێ بخوێنە',
-      timeTag: 'شەو', basePriority: 75,
-      timeWindow: { start:'Isha',  end:'Fajr',    fs:21*60,     fe:5*60,     wraps:true  }
+      timeTag: 'شەو',
+      timeWindow: { start: 'Isha', end: 'Fajr', fs: 21*60, fe: 5*60, wraps: true }
     },
     {
       id: 'friday', categoryKey: 'friday', icon: 'fas fa-calendar-day',
       labelKey: 'adhkar.friday', labelFallback: 'ڕۆژا ئینانێ',
       subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ڕۆژا ئینانێ ئەمڕۆ یە',
-      timeTag: 'ئینانی', basePriority: 80,
+      timeTag: 'ئینانی',
       dayBoostDays: [5]
     },
     {
       id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
       labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
       subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
-      timeTag: null, basePriority: 75,
+      timeTag: null,
       dayBoostDays: [5],
       thursdayNightBoost: true
     }
   ];
 
-  /* ══════════════════════════════════════════════
-     SURAH REFERENCE DATA
-  ══════════════════════════════════════════════ */
+  /* Fallback pool used when no time window is active.
+     Picked by daily seed so it stays fixed all day.    */
+  var FALLBACK_ZIKR = [
+    {
+      id: 'after_prayer', categoryKey: 'after_prayer', icon: 'fas fa-hands-praying',
+      labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
+      subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
+      timeTag: null
+    },
+    {
+      id: 'forgiveness', categoryKey: 'forgiveness', icon: 'fas fa-dove',
+      labelKey: 'adhkar.forgiveness', labelFallback: 'داواکاری لێبوردن',
+      subtitleKey: 'gencine.smart.forgiveness_hint', subtitleFallback: 'ئیستیخفارەکە زیادە بکە',
+      timeTag: null
+    },
+    {
+      id: 'protection', categoryKey: 'protection', icon: 'fas fa-shield-halved',
+      labelKey: 'adhkar.protection', labelFallback: 'پاراستن',
+      subtitleKey: 'gencine.smart.protection_hint', subtitleFallback: 'زکرێن پاراستن و حەمایەتێ',
+      timeTag: null
+    },
+    {
+      id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
+      labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
+      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
+      timeTag: null
+    }
+  ];
+
+  /* ─────────────────────────────────────────────
+     SURAH DATA
+  ───────────────────────────────────────────── */
   var SURAH_NAMES = [
     'فاتحە','بەقەرە','ئالی عیمران','نیسا','مائیدە','ئەنعام','ئەعراف','ئەنفال',
     'توبە','یونس','هود','یوسف','ڕەعد','ئیبراهیم','حیجر','نەحل','ئیسرا','کەهف',
@@ -87,10 +114,10 @@
     11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6
   ];
 
-  /* ══════════════════════════════════════════════
+  /* ─────────────────────────────────────────────
      TIME HELPERS
-  ══════════════════════════════════════════════ */
-  function _toMinutes(hhmm) {
+  ───────────────────────────────────────────── */
+  function _toMin(hhmm) {
     if (!hhmm || typeof hhmm !== 'string') return -1;
     var p = hhmm.split(':');
     return p.length < 2 ? -1 : parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
@@ -113,14 +140,15 @@
     return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   }
 
+  /* Deterministic daily index — same result all day, changes next day */
   function _seededIdx(length, salt) {
     if (!length) return 0;
     return Math.abs(_daySeed() * 31 + salt * 7919) % length;
   }
 
-  /* ══════════════════════════════════════════════
+  /* ─────────────────────────────────────────────
      PRAYER TIMES
-  ══════════════════════════════════════════════ */
+  ───────────────────────────────────────────── */
   function _getPrayerTimings() {
     try {
       var city   = localStorage.getItem('prayerCity')   || 'Duhok';
@@ -129,7 +157,8 @@
       var dayNum = String(today.getDate());
       var mk = 'prayer-kurd2:' + city + ':' + today.getFullYear() + ':' + (today.getMonth() + 1);
       var monthly = JSON.parse(localStorage.getItem(mk));
-      if (monthly && monthly.days && monthly.days[dayNum] && monthly.days[dayNum].Fajr) return monthly.days[dayNum];
+      if (monthly && monthly.days && monthly.days[dayNum] && monthly.days[dayNum].Fajr)
+        return monthly.days[dayNum];
       var dk = 'prayer3:' + city + ':' + method + ':' + _todayISO();
       var daily = JSON.parse(localStorage.getItem(dk));
       if (daily && daily.timings && daily.timings.Fajr) return daily.timings;
@@ -137,9 +166,9 @@
     return null;
   }
 
-  /* ══════════════════════════════════════════════
-     STATE
-  ══════════════════════════════════════════════ */
+  /* ─────────────────────────────────────────────
+     STATE / STREAKS
+  ───────────────────────────────────────────── */
   var _STATE_KEY = 'sd_daily_v1';
 
   function _getState() {
@@ -168,12 +197,9 @@
     _updateStreak(id);
   }
 
-  /* ══════════════════════════════════════════════
-     STREAKS
-  ══════════════════════════════════════════════ */
   function _getStreak(id) {
-    try { return JSON.parse(localStorage.getItem('sd_streak_' + id)) || { count:0, lastDate:null }; }
-    catch(e) { return { count:0, lastDate:null }; }
+    try { return JSON.parse(localStorage.getItem('sd_streak_' + id)) || { count: 0, lastDate: null }; }
+    catch(e) { return { count: 0, lastDate: null }; }
   }
 
   function _updateStreak(id) {
@@ -181,16 +207,18 @@
     var today  = _todayISO();
     if (streak.lastDate === today) return streak;
     var prev = new Date(Date.now() - 86400000);
-    var yest = prev.getFullYear() + '-' + String(prev.getMonth() + 1).padStart(2, '0') + '-' + String(prev.getDate()).padStart(2, '0');
+    var yest  = prev.getFullYear() + '-'
+      + String(prev.getMonth() + 1).padStart(2, '0') + '-'
+      + String(prev.getDate()).padStart(2, '0');
     streak.count    = (streak.lastDate === yest) ? streak.count + 1 : 1;
     streak.lastDate = today;
     try { localStorage.setItem('sd_streak_' + id, JSON.stringify(streak)); } catch(e) {}
     return streak;
   }
 
-  /* ══════════════════════════════════════════════
+  /* ─────────────────────────────────────────────
      CATEGORY DATA CHECK
-  ══════════════════════════════════════════════ */
+  ───────────────────────────────────────────── */
   function _catHasData(catKey) {
     try {
       var cached = JSON.parse(localStorage.getItem('gencine_adhkar_v1'));
@@ -199,14 +227,14 @@
     } catch(e) { return true; }
   }
 
-  /* ══════════════════════════════════════════════
-     TIME ITEM SELECTION
-  ══════════════════════════════════════════════ */
+  /* ─────────────────────────────────────────────
+     TIME-ACTIVE CHECK
+  ───────────────────────────────────────────── */
   function _isTimeActive(item, nowMin, dow, prayers, maghribMin) {
     if (item.timeWindow) {
       var tw = item.timeWindow;
-      var ts = (prayers && _toMinutes(prayers[tw.start]) >= 0) ? _toMinutes(prayers[tw.start]) : tw.fs;
-      var te = (prayers && _toMinutes(prayers[tw.end])   >= 0) ? _toMinutes(prayers[tw.end])   : tw.fe;
+      var ts = (prayers && _toMin(prayers[tw.start]) >= 0) ? _toMin(prayers[tw.start]) : tw.fs;
+      var te = (prayers && _toMin(prayers[tw.end])   >= 0) ? _toMin(prayers[tw.end])   : tw.fe;
       return _inRange(nowMin, ts, te, tw.wraps);
     }
     if (item.dayBoostDays && item.dayBoostDays.indexOf(dow) >= 0) return true;
@@ -214,37 +242,44 @@
     return false;
   }
 
-  function _scoreTimeItem(item, state) {
-    var s = item.basePriority;
+  function _scoreItem(item, state) {
+    var s = item.basePriority || 50;
     if (state.completed.indexOf(item.id) >= 0) s -= 60;
     if (state.opened.indexOf(item.id)    >= 0) s -= 15;
     return s;
   }
 
-  function _getTimeItems() {
+  /* ─────────────────────────────────────────────
+     CARD 1 — ZIKR OF CURRENT TIME
+     Always returns exactly one item.
+     Priority: time-active window > daily-seeded fallback.
+  ───────────────────────────────────────────── */
+  function _getZikrItem() {
     var now        = new Date();
     var nowMin     = now.getHours() * 60 + now.getMinutes();
     var dow        = now.getDay();
     var prayers    = _getPrayerTimings();
-    var maghribMin = (prayers && _toMinutes(prayers.Maghrib) >= 0) ? _toMinutes(prayers.Maghrib) : 18 * 60;
+    var maghribMin = (prayers && _toMin(prayers.Maghrib) >= 0) ? _toMin(prayers.Maghrib) : 18 * 60;
     var state      = _getState();
-    return TIME_ITEMS
+
+    var active = TIME_ITEMS
       .filter(function(item) {
         return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin);
       })
-      .map(function(item) { return { item: item, score: _scoreTimeItem(item, state) }; })
-      .sort(function(a, b) { return b.score - a.score; })
-      .slice(0, 1)
-      .map(function(x) { return x.item; });
+      .map(function(item) { return { item: item, score: _scoreItem(item, state) }; })
+      .sort(function(a, b) { return b.score - a.score; });
+
+    /* Time window found — use highest-priority active item */
+    if (active.length) return active[0].item;
+
+    /* No time window active — use daily-seeded fallback (salt 3) */
+    return FALLBACK_ZIKR[_seededIdx(FALLBACK_ZIKR.length, 3)];
   }
 
-  /* ══════════════════════════════════════════════
-     DAILY ITEMS
-  ══════════════════════════════════════════════ */
-  function _readCache(key) {
-    try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
-  }
-
+  /* ─────────────────────────────────────────────
+     CARD 2 — AYAH OF THE DAY  (salt 1)
+     Always available — no network needed.
+  ───────────────────────────────────────────── */
   function _buildAyahItem() {
     var flat = _seededIdx(6236, 1);
     var rem  = flat, surah = 1, ayah = 1;
@@ -255,7 +290,8 @@
     var surahName = SURAH_NAMES[surah - 1] || ('سورە ' + surah);
     var s = surah, a = ayah;
     return {
-      _type:'daily', id:'ayah_day', icon:'fas fa-book-quran', tag:'ئایەتا ڕۆژێ',
+      _type: 'daily', id: 'ayah_day',
+      icon: 'fas fa-book-quran', tag: 'ئایەتا ڕۆژێ',
       title: surahName, subtitle: 'ئایەت ' + ayah,
       nav: function() {
         if (window.App && App.tab && App.openSurah) {
@@ -266,101 +302,126 @@
     };
   }
 
+  /* ─────────────────────────────────────────────
+     CARD 3 — HADITH OF THE DAY  (salt 2)
+     Opens the exact seeded hadith in detail view.
+     If data not yet cached: card is shown but opens
+     hadith list — refreshes to exact on next _draw.
+  ───────────────────────────────────────────── */
   function _buildHadithItem() {
-    var hadiths = _readCache('gencine_hadiths_v2');
-    if (!hadiths || !hadiths.length) return null;
-    var idx     = _seededIdx(hadiths.length, 2);
-    var h       = hadiths[idx];
-    var preview = (h.ku || h.ar || '').trim();
-    if (preview.length > 55) preview = preview.slice(0, 55) + '\u2026';
+    var hadiths = (function() {
+      try { return JSON.parse(localStorage.getItem('gencine_hadiths_v2')); } catch(e) { return null; }
+    }());
+
+    if (hadiths && hadiths.length) {
+      var idx     = _seededIdx(hadiths.length, 2);
+      var h       = hadiths[idx];
+      var preview = (h.ku || h.ar || '').trim();
+      if (preview.length > 55) preview = preview.slice(0, 55) + '\u2026';
+      return {
+        _type: 'daily', id: 'hadith_day',
+        icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
+        title:    h.title || preview,
+        subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
+        nav: function(ui) {
+          if (!ui) return;
+          ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = idx; ui._draw();
+        }
+      };
+    }
+
+    /* Cache empty — placeholder, navigates to hadith list until data loads */
     return {
-      _type:'daily', id:'hadith_day', icon:'fas fa-scroll', tag:'حەدیسا ڕۆژێ',
-      title: h.title || preview, subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
-      nav: function(gencineUI) {
-        if (!gencineUI) return;
-        gencineUI._view            = 'hadith';
-        gencineUI._hadithSearch    = '';
-        gencineUI._hadithDetailIdx = idx;
-        gencineUI._draw();
+      _type: 'daily', id: 'hadith_day',
+      icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
+      title:    'حەدیسا ڕۆژێ',
+      subtitle: 'دابەزێنا داتا...',
+      nav: function(ui) {
+        if (!ui) return;
+        ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = null; ui._draw();
       }
     };
   }
 
+  /* ─────────────────────────────────────────────
+     CARD 4 — BOOK OF THE DAY  (salt 4)
+     Opens the exact seeded book directly.
+     If data not yet cached: placeholder until data loads.
+  ───────────────────────────────────────────── */
   function _buildBookItem() {
-    var books = _readCache('gencine_books_v3');
-    if (!books || !books.length) return null;
-    var b = books[_seededIdx(books.length, 4)];
-    if (!b) b = books[0];
-    var bookId = b.id;
+    var books = (function() {
+      try { return JSON.parse(localStorage.getItem('gencine_books_v3')); } catch(e) { return null; }
+    }());
+
+    if (books && books.length) {
+      var b      = books[_seededIdx(books.length, 4)] || books[0];
+      var bookId = b.id;
+      return {
+        _type: 'daily', id: 'book_day',
+        icon: 'fas fa-book-open', tag: 'کتێبا ڕۆژێ',
+        title:    b.title_ku || b.title_ar || 'کتێب',
+        subtitle: b.author_ku || 'بخوێنە',
+        nav: function(ui) { if (ui) ui.openBook(bookId); }
+      };
+    }
+
+    /* Cache empty — placeholder until data loads */
     return {
-      _type:'daily', id:'book_day', icon:'fas fa-book-open', tag:'کتێبا ڕۆژێ',
-      title: b.title_ku || b.title_ar || 'کتێب', subtitle: b.author_ku || 'بخوێنە',
-      nav: function(gencineUI) {
-        if (!gencineUI) return;
-        gencineUI.openBook(bookId);
-      }
+      _type: 'daily', id: 'book_day',
+      icon: 'fas fa-book-open', tag: 'کتێبا ڕۆژێ',
+      title:    'کتێبا ڕۆژێ',
+      subtitle: 'دابەزێنا داتا...',
+      nav: function(ui) { if (ui) { ui._view = 'books'; ui._draw(); } }
     };
   }
 
+  /* ─────────────────────────────────────────────
+     getItemsNow — ALWAYS exactly 4 items, fixed order
+  ───────────────────────────────────────────── */
   function getItemsNow() {
-    var result = [];
-    var timeItems = _getTimeItems();
-    if (timeItems.length) result.push({ _type: 'adhkar', _adhkarItem: timeItems[0] });
-    try { var ay = _buildAyahItem();   if (ay) result.push(ay); } catch(e) {}
-    try { var h  = _buildHadithItem(); if (h)  result.push(h);  } catch(e) {}
-    try { var b  = _buildBookItem();   if (b)  result.push(b);  } catch(e) {}
-    return result;
+    return [
+      { _type: 'adhkar', _adhkarItem: _getZikrItem() },   /* card 1: zikr    */
+      _buildAyahItem(),                                    /* card 2: ayah    */
+      _buildHadithItem(),                                  /* card 3: hadith  */
+      _buildBookItem()                                     /* card 4: book    */
+    ];
   }
 
-  /* ══════════════════════════════════════════════
+  /* ─────────────────────────────────────────────
      CARD BUILDERS
-  ══════════════════════════════════════════════ */
+  ───────────────────────────────────────────── */
+  function _mk(tag, cls, text) {
+    var el = document.createElement(tag);
+    if (cls)  el.className   = cls;
+    if (text) el.textContent = text;
+    return el;
+  }
+
   function _buildAdhkarCard(item, gencineUI) {
-    var T     = window.t || function(k, d) { return d || k; };
-    var state = _getState();
-    var done  = state.completed.indexOf(item.id) >= 0;
+    var T      = window.t || function(k, d) { return d || k; };
+    var state  = _getState();
+    var done   = state.completed.indexOf(item.id) >= 0;
     var streak = _getStreak(item.id);
 
-    var card = document.createElement('div');
-    card.className = 'sd-card' + (done ? ' sd-card-done' : '');
+    var card    = _mk('div', 'sd-card' + (done ? ' sd-card-done' : ''));
+    var iWrap   = _mk('div', 'sd-icon');
+    iWrap.appendChild(_mk('i', item.icon));
+    card.appendChild(iWrap);
 
-    var iconWrap = document.createElement('div');
-    iconWrap.className = 'sd-icon';
-    var ico = document.createElement('i');
-    ico.className = item.icon;
-    iconWrap.appendChild(ico);
-    card.appendChild(iconWrap);
+    var content = _mk('div', 'sd-content');
+    if (item.timeTag) content.appendChild(_mk('span', 'sd-tag', item.timeTag));
+    content.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
 
-    var content = document.createElement('div');
-    content.className = 'sd-content';
-
-    if (item.timeTag) {
-      var tag = document.createElement('span');
-      tag.className = 'sd-tag';
-      tag.textContent = item.timeTag;
-      content.appendChild(tag);
-    }
-
-    var title = document.createElement('div');
-    title.className = 'sd-title';
-    title.textContent = T(item.labelKey, item.labelFallback);
-    content.appendChild(title);
-
-    var sub = document.createElement('div');
-    sub.className = 'sd-sub' + (done ? ' sd-sub-done' : '');
-    if (done) {
-      sub.textContent = T('gencine.smart.done_today', 'ئەمڕۆ تەواو بوو');
-    } else if (streak.count >= 2) {
-      sub.textContent = streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ پەی هەم');
-    } else {
-      sub.textContent = T(item.subtitleKey, item.subtitleFallback);
-    }
-    content.appendChild(sub);
+    var subText = done
+      ? T('gencine.smart.done_today', 'ئەمڕۆ تەواو بوو')
+      : streak.count >= 2
+        ? streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ پەی هەم')
+        : T(item.subtitleKey, item.subtitleFallback);
+    content.appendChild(_mk('div', 'sd-sub' + (done ? ' sd-sub-done' : ''), subText));
     card.appendChild(content);
 
-    var arrow = document.createElement('div');
-    arrow.className = 'sd-arrow';
-    arrow.appendChild(Object.assign(document.createElement('i'), { className: 'fas fa-chevron-left' }));
+    var arrow = _mk('div', 'sd-arrow');
+    arrow.appendChild(_mk('i', 'fas fa-chevron-left'));
     card.appendChild(arrow);
 
     card.addEventListener('click', function() {
@@ -376,24 +437,19 @@
   }
 
   function _buildDailyCard(item, gencineUI) {
-    var card = document.createElement('div');
-    card.className = 'sd-card';
+    var card    = _mk('div', 'sd-card');
+    var iWrap   = _mk('div', 'sd-icon');
+    iWrap.appendChild(_mk('i', item.icon));
+    card.appendChild(iWrap);
 
-    var iconWrap = document.createElement('div');
-    iconWrap.className = 'sd-icon';
-    iconWrap.appendChild(Object.assign(document.createElement('i'), { className: item.icon }));
-    card.appendChild(iconWrap);
-
-    var content = document.createElement('div');
-    content.className = 'sd-content';
-    content.appendChild(Object.assign(document.createElement('span'), { className: 'sd-tag',   textContent: item.tag      }));
-    content.appendChild(Object.assign(document.createElement('div'),  { className: 'sd-title', textContent: item.title    }));
-    content.appendChild(Object.assign(document.createElement('div'),  { className: 'sd-sub',   textContent: item.subtitle }));
+    var content = _mk('div', 'sd-content');
+    content.appendChild(_mk('span', 'sd-tag',   item.tag));
+    content.appendChild(_mk('div',  'sd-title', item.title));
+    content.appendChild(_mk('div',  'sd-sub',   item.subtitle));
     card.appendChild(content);
 
-    var arrow = document.createElement('div');
-    arrow.className = 'sd-arrow';
-    arrow.appendChild(Object.assign(document.createElement('i'), { className: 'fas fa-chevron-left' }));
+    var arrow = _mk('div', 'sd-arrow');
+    arrow.appendChild(_mk('i', 'fas fa-chevron-left'));
     card.appendChild(arrow);
 
     card.addEventListener('click', function() {
@@ -404,161 +460,137 @@
   }
 
   function _buildCard(hybridItem, gencineUI) {
-    if (hybridItem._type === 'adhkar') return _buildAdhkarCard(hybridItem._adhkarItem, gencineUI);
+    if (hybridItem._type === 'adhkar')
+      return _buildAdhkarCard(hybridItem._adhkarItem, gencineUI);
     return _buildDailyCard(hybridItem, gencineUI);
   }
 
-  /* ══════════════════════════════════════════════
-     SLIDER CONTROLLER  v15  (clean rebuild)
+  /* ─────────────────────────────────────────────
+     SLIDER  v16
 
-     DOM structure enforced:
-       .sd-wrapper           overflow:hidden, position:relative, border-radius
-         .sd-track           display:flex, will-change:transform
-           .sd-slide × N     min-width:100%, flex-shrink:0
-         .sd-progress        position:absolute, bottom:0, left:0, right:0, h:3px
-           .sd-bar           fills right→left via scaleX + transform-origin:right
-       .sd-dots              OUTSIDE wrapper (flex row, below card)
+     DOM layout:
+       .sd-wrapper  (overflow:hidden, border-radius, position:relative)
+         .sd-track  (display:flex, will-change:transform)
+           .sd-slide × 4
+         .sd-progress  (position:absolute bottom:0, created here)
+           .sd-bar     (scaleX 0→1, transform-origin:right → fills RTL)
+       .sd-dots  (outside wrapper, flex row)
+         .sd-dot × 4  (DOM order reversed: dot[0] rightmost = RTL card 1)
 
      Init:
-       Called with double-RAF after section is appended to DOM.
-       Uses track.children.length (actual DOM count) not items.length.
+       Double requestAnimationFrame after section is appended to DOM.
+       Uses track.children.length (real DOM count) as authoritative count.
 
      RTL dots:
-       Rendered count-1 → 0 so dot[0] is rightmost (slide 1 in RTL).
+       Appended count-1 → 0 so dot[0] is last appended = rightmost in flex.
+       Active class moves right → left as slides advance.
 
-     Swipe:
-       - 6px axis intent window
-       - horizontal confirmed → preventDefault() blocks scroll + PTR
-       - vertical → immediate release, page scrolls freely
-       - 18% width threshold to commit
-       - rubber-band at edges (25% of excess)
-
-     Progress:
-       - RAF-based, 12s per slide
-       - pauses on touchstart, resumes on touchend
-       - scaleX(0→1), transform-origin:right center (fills right→left)
-  ══════════════════════════════════════════════ */
+     Progress bar:
+       transform-origin: right center
+       scaleX(0 → 1) fills bar right → left over 12 s.
+       Pauses on touchstart, resumes + resets on touchend.
+  ───────────────────────────────────────────── */
   function _initSlider(wrapper, track, dotsEl, count) {
-    /* count is passed as a hint but we verify against real DOM */
     var realCount = track.children.length;
-    console.log('[SD v15] _initSlider count:', count, 'realCount:', realCount, 'wW:', wrapper.clientWidth);
+    console.log('[SD v16] init — passed:', count, 'real:', realCount, 'wW:', wrapper.clientWidth);
 
     if (realCount <= 1) {
-      if (dotsEl) dotsEl.style.display = 'none';
+      dotsEl.style.display = 'none';
       return;
     }
+    count = realCount;
 
-    count = realCount;  /* use actual DOM count */
+    var current  = 0;
+    var DURATION = 12000;
+    var SNAP_MS  = 320;
+    var SNAP_FN  = 'cubic-bezier(0.25,0.46,0.45,0.94)';
 
-    var current      = 0;
-    var DURATION     = 12000;
-    var SNAP_MS      = 320;
-    var SNAP_EASE    = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+    /* ── progress bar ── */
+    var prog = _mk('div', 'sd-progress');
+    var bar  = _mk('div', 'sd-bar');
+    prog.appendChild(bar);
+    wrapper.appendChild(prog);
 
-    /* ── progress bar (created here, appended inside wrapper) ── */
-    var progressEl = document.createElement('div');
-    progressEl.className = 'sd-progress';
-    var bar = document.createElement('div');
-    bar.className = 'sd-bar';
-    progressEl.appendChild(bar);
-    wrapper.appendChild(progressEl);
-
-    /* ── dots (rendered right→left: last dot appended first = leftmost visually) ── */
+    /* ── dots (reversed DOM order → dot[0] rightmost = RTL card 1) ── */
     var dots = new Array(count);
     for (var i = count - 1; i >= 0; i--) {
-      var dot = document.createElement('span');
-      dot.className = 'sd-dot' + (i === 0 ? ' sd-dot-active' : '');
-      /* closure to capture i */
+      var dot = _mk('span', 'sd-dot' + (i === 0 ? ' sd-dot-active' : ''));
       (function(idx) {
         dot.addEventListener('click', function() { _goTo(idx, true); });
-      })(i);
+      }(i));
       dotsEl.appendChild(dot);
       dots[i] = dot;
     }
 
     /* ── helpers ── */
-    function _alive()  { return document.body && document.body.contains(track); }
-    function _width()  {
-      var w = wrapper.clientWidth || wrapper.offsetWidth;
-      return w > 0 ? w : (window.innerWidth - 32);
+    function _alive() { return !!(document.body && document.body.contains(track)); }
+    function _W()     { var w = wrapper.clientWidth || wrapper.offsetWidth; return w > 0 ? w : window.innerWidth - 32; }
+
+    function _applyX(px, anim) {
+      track.style.transition = anim ? 'transform ' + SNAP_MS + 'ms ' + SNAP_FN : 'none';
+      track.style.transform  = 'translateX(' + px + 'px)';
     }
 
-    function _snap(px, animated) {
-      track.style.transition = animated
-        ? 'transform ' + SNAP_MS + 'ms ' + SNAP_EASE
-        : 'none';
-      track.style.transform = 'translateX(' + px + 'px)';
-    }
-
-    function _updateDots() {
-      for (var j = 0; j < count; j++) {
+    function _syncDots() {
+      for (var j = 0; j < count; j++)
         dots[j].classList.toggle('sd-dot-active', j === current);
-      }
     }
 
-    /* ── goto slide ── */
-    function _goTo(idx, animated) {
+    function _goTo(idx, anim) {
       current = ((idx % count) + count) % count;
-      _snap(-current * _width(), animated !== false);
-      _updateDots();
+      _applyX(-current * _W(), anim !== false);
+      _syncDots();
       _resetProg();
     }
 
-    /* ── RAF-based progress ── */
-    var _raf       = null;
-    var _progStart = 0;
-    var _progAccum = 0;
-    var _paused    = false;
+    /* ── RAF progress (right → left) ── */
+    var _raf    = null;
+    var _tStart = 0;
+    var _accum  = 0;
+    var _paused = false;
 
     function _resetProg() {
-      _progAccum = 0;
-      _paused    = false;
+      _accum  = 0;
+      _paused = false;
       bar.style.transition = 'none';
       bar.style.transform  = 'scaleX(0)';
       if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
-      _progStart = performance.now();
+      _tStart = performance.now();
       _raf = requestAnimationFrame(_tick);
     }
 
     function _pauseProg() {
       if (_paused) return;
-      _paused     = true;
-      _progAccum += performance.now() - _progStart;
+      _paused  = true;
+      _accum  += performance.now() - _tStart;
       if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
     }
 
     function _resumeProg() {
       if (!_paused) return;
-      _paused    = false;
-      _progStart = performance.now();
+      _paused = false;
+      _tStart = performance.now();
       _raf = requestAnimationFrame(_tick);
     }
 
     function _tick() {
       if (_paused || !_alive()) return;
-      var elapsed = _progAccum + (performance.now() - _progStart);
-      var pct     = Math.min(elapsed / DURATION, 1);
+      var pct = Math.min((_accum + performance.now() - _tStart) / DURATION, 1);
       bar.style.transform = 'scaleX(' + pct + ')';
       if (pct >= 1) { _goTo(current + 1, true); return; }
       _raf = requestAnimationFrame(_tick);
     }
 
-    /* ── swipe / drag ── */
+    /* ── swipe ── */
     var _drag    = false;
-    var _sx      = 0;
-    var _sy      = 0;
-    var _baseX   = 0;
-    var _decided = false;
-    var _horiz   = false;
+    var _sx = 0, _sy = 0, _baseX = 0;
+    var _decided = false, _horiz = false;
     var INTENT   = 6;
 
     track.addEventListener('touchstart', function(e) {
-      _drag    = true;
-      _sx      = e.touches[0].clientX;
-      _sy      = e.touches[0].clientY;
-      _baseX   = -current * _width();
-      _decided = false;
-      _horiz   = false;
+      _drag = true; _decided = false; _horiz = false;
+      _sx = e.touches[0].clientX; _sy = e.touches[0].clientY;
+      _baseX = -current * _W();
       track.style.transition = 'none';
       _pauseProg();
     }, { passive: true });
@@ -572,21 +604,13 @@
         if (Math.abs(dx) < INTENT && Math.abs(dy) < INTENT) return;
         _decided = true;
         _horiz   = Math.abs(dx) >= Math.abs(dy);
-        if (!_horiz) {
-          /* vertical — release drag, let page scroll */
-          _drag = false;
-          _resumeProg();
-          return;
-        }
+        if (!_horiz) { _drag = false; _resumeProg(); return; }
       }
-
       if (!_horiz) return;
-      e.preventDefault();  /* block scroll + pull-to-refresh */
+      e.preventDefault();
 
-      var W   = _width();
-      var raw = _baseX + dx;
-      var min = -(count - 1) * W;
-      var max = 0;
+      var W = _W(), raw = _baseX + dx;
+      var min = -(count - 1) * W, max = 0;
       var clamped = raw > max ? max + (raw - max) * 0.25
                   : raw < min ? min + (raw - min) * 0.25
                   : raw;
@@ -594,111 +618,89 @@
     }, { passive: false });
 
     function _onEnd(e) {
-      if (!_drag) return;
-      _drag = false;
+      if (!_drag) return; _drag = false;
       var endX = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : _sx;
-      var dx   = endX - _sx;
-      var W    = _width();
-      if (Math.abs(dx) > W * 0.18) {
-        _goTo(dx < 0 ? current + 1 : current - 1, true);
-      } else {
-        _goTo(current, true);
-      }
+      Math.abs(endX - _sx) > _W() * 0.18
+        ? _goTo(endX < _sx ? current + 1 : current - 1, true)
+        : _goTo(current, true);
     }
-
     track.addEventListener('touchend',    _onEnd, { passive: true });
     track.addEventListener('touchcancel', _onEnd, { passive: true });
 
-    /* ── visibility: pause when tab hidden ── */
+    /* ── visibility ── */
     function _onVis() {
       if (!_alive()) { document.removeEventListener('visibilitychange', _onVis); return; }
-      if (document.hidden) { _pauseProg(); } else { _resumeProg(); }
+      document.hidden ? _pauseProg() : _resumeProg();
     }
     document.addEventListener('visibilitychange', _onVis);
 
-    /* ── init: snap to slide 0, start progress ── */
-    _snap(-0, false);
-    _updateDots();
+    /* ── start ── */
+    _applyX(0, false);
+    _syncDots();
     _resetProg();
-
-    console.log('[SD v15] slider ready — count:', count, 'width:', _width());
+    console.log('[SD v16] ready — count:', count, 'width:', _W());
   }
 
-  /* ══════════════════════════════════════════════
+  /* ─────────────────────────────────────────────
      RENDER
-     Returns the section element.
-     Slider is initialised via double-RAF AFTER the
-     caller appends the element to the live DOM.
-  ══════════════════════════════════════════════ */
+     Returns section element.
+     Slider initialised via double-RAF after caller
+     appends element to the live DOM.
+  ───────────────────────────────────────────── */
   function render(gencineUI) {
-    var items = getItemsNow();
-    console.log('[SD v15] render — items:', items.length, items.map(function(x) { return x.id || (x._adhkarItem && x._adhkarItem.id); }));
-    if (!items.length) return null;
+    var items = getItemsNow();  /* always 4 */
+    console.log('[SD v16] render — items:', items.length,
+      items.map(function(x) { return x.id || (x._adhkarItem && x._adhkarItem.id); }));
 
-    /* ── section wrapper ── */
-    var section = document.createElement('div');
-    section.className = 'sd-section';
+    var T       = window.t || function(k, d) { return d || k; };
+    var section = _mk('div', 'sd-section');
 
-    /* ── header ── */
-    var T = window.t || function(k, d) { return d || k; };
-    var hdr = document.createElement('div');
-    hdr.className = 'sd-hdr';
-    hdr.appendChild(Object.assign(document.createElement('span'), {
-      className: 'sd-hdr-label',
-      textContent: T('gencine.smart.section_title', 'یادکرینا ڕۆژانە')
-    }));
+    /* header */
+    var hdr = _mk('div', 'sd-hdr');
+    hdr.appendChild(_mk('span', 'sd-hdr-label', T('gencine.smart.section_title', 'یادکرینا ڕۆژانە')));
     section.appendChild(hdr);
 
-    /* ── slider wrapper (clips the track) ── */
-    var wrapper = document.createElement('div');
-    wrapper.className = 'sd-wrapper';
-
-    /* ── track (all slides in one horizontal flex row) ── */
-    var track = document.createElement('div');
-    track.className = 'sd-track';
+    /* wrapper + track */
+    var wrapper = _mk('div', 'sd-wrapper');
+    var track   = _mk('div', 'sd-track');
 
     items.forEach(function(item) {
-      var slide = document.createElement('div');
-      slide.className = 'sd-slide';
+      var slide = _mk('div', 'sd-slide');
       slide.appendChild(_buildCard(item, gencineUI));
       track.appendChild(slide);
     });
 
     wrapper.appendChild(track);
-    /* note: sd-progress is created and appended by _initSlider after DOM insertion */
+    /* sd-progress is created inside _initSlider after DOM insertion */
     section.appendChild(wrapper);
 
-    /* ── dots (outside wrapper so overflow:hidden does not clip them) ── */
-    var dotsEl = document.createElement('div');
-    dotsEl.className = 'sd-dots';
+    /* dots — outside wrapper so overflow:hidden doesn't clip them */
+    var dotsEl = _mk('div', 'sd-dots');
     section.appendChild(dotsEl);
 
-    /* ── init after double-RAF (guarantees wrapper is in DOM and has been laid out) ── */
-    var _inited = false;
-    function _tryInit() {
-      if (_inited) return;
-      _inited = true;
-      console.log('[SD v15] tryInit — inDOM:', !!(document.body && document.body.contains(wrapper)), 'wW:', wrapper.clientWidth);
-      _initSlider(wrapper, track, dotsEl, items.length);
-    }
-
-    /* Double RAF: first fires before paint, second fires after layout is committed */
+    /* double-RAF: guarantees wrapper is in DOM + layout committed */
+    var _done = false;
     requestAnimationFrame(function() {
-      requestAnimationFrame(_tryInit);
+      requestAnimationFrame(function() {
+        if (_done) return; _done = true;
+        console.log('[SD v16] tryInit — inDOM:', !!(document.body && document.body.contains(wrapper)),
+          'wW:', wrapper.clientWidth);
+        _initSlider(wrapper, track, dotsEl, items.length);
+      });
     });
 
     return section;
   }
 
-  /* ══════════════════════════════════════════════
+  /* ─────────────────────────────────────────────
      PUBLIC API
-  ══════════════════════════════════════════════ */
+  ───────────────────────────────────────────── */
   window.SmartDhikr = {
-    getItemsNow:    getItemsNow,
-    markOpened:     _markOpened,
-    markCompleted:  _markCompleted,
-    getStreak:      _getStreak,
-    render:         render
+    getItemsNow:   getItemsNow,
+    markOpened:    _markOpened,
+    markCompleted: _markCompleted,
+    getStreak:     _getStreak,
+    render:        render
   };
 
 }(window));
