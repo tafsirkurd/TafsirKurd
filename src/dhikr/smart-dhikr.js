@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v19
+ * Smart Daily Companion  v20
  * Always exactly 4 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2. Ayah of the day        (Baghdad-seeded, salt 1)
@@ -555,6 +555,15 @@
     function _goTo(idx, anim) {
       current = ((idx % count) + count) % count;
       _applyX(-current * _W(), anim !== false);
+      /* On instant wrap (anim===false): suppress dot CSS transitions so dots
+         also jump immediately — prevents track snapping while dots animate
+         in the opposite direction, which creates the "misaligned" feeling. */
+      if (anim === false) {
+        for (var j = 0; j < count; j++) dots[j].style.transition = 'none';
+        requestAnimationFrame(function() {
+          for (var j = 0; j < count; j++) dots[j].style.transition = '';
+        });
+      }
       _syncDots();
       _resetProg();
     }
@@ -709,7 +718,7 @@
      Returning the same DOM node on pull-to-refresh
      preserves slider position + timer — no visual reset.
   ───────────────────────────────────────────── */
-  var _sectionCache = { el: null, seed: null };
+  var _sectionCache = { el: null, seed: null, hasData: false };
 
   /* ─────────────────────────────────────────────
      RENDER
@@ -719,12 +728,25 @@
      New day or first call → builds fresh.
   ───────────────────────────────────────────── */
   function render(gencineUI) {
-    var seed = _daySeed();
+    var seed    = _daySeed();
+    var hasData = !!(localStorage.getItem('gencine_hadiths_v2') &&
+                     localStorage.getItem('gencine_books_v3'));
+    /* Cache hit: same day AND (data was already full OR still no data).
+       Only rebuild mid-day if cache was built with placeholders but real
+       data has now loaded — this is what makes hadith/book show real content. */
     if (_sectionCache.el && _sectionCache.seed === seed) {
-      return _sectionCache.el;
+      if (_sectionCache.hasData || !hasData) return _sectionCache.el;
+      /* fall through: cache had placeholders, data just arrived → rebuild */
     }
 
     var items = getItemsNow();  /* always 4 */
+    /* Debug: log card types to console so any missing slot is immediately visible */
+    try {
+      console.log('[SmartDhikr]', items.length, 'cards →',
+        items.map(function(i) {
+          return i._type === 'adhkar' ? 'zikr' : (i.id || i._type);
+        }).join(', '));
+    } catch(e) {}
     var T       = window.t || function(k, d) { return d || k; };
     var section = _mk('div', 'sd-section');
 
@@ -761,8 +783,9 @@
       });
     });
 
-    _sectionCache.el   = section;
-    _sectionCache.seed = seed;
+    _sectionCache.el      = section;
+    _sectionCache.seed    = seed;
+    _sectionCache.hasData = hasData;
     return section;
   }
 
