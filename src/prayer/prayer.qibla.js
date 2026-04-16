@@ -293,8 +293,10 @@
 
       var raw;
       if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
-        // iOS (and WebKit on macOS): True North, clockwise — use directly, no offset
-        raw = e.webkitCompassHeading;
+        // iOS WKWebView: webkitCompassHeading measures from device X-axis (right edge
+        // in portrait = 90° ahead of top). +90 converts to "bearing of device top".
+        // Empirically confirmed: without +90, rotating phone 90° makes compass correct.
+        raw = (e.webkitCompassHeading + 90) % 360;
       } else if (isIos) {
         // iOS but this event lacks webkitCompassHeading — skip entirely.
         // NEVER fall back to e.alpha on iOS: iOS alpha is measured from the

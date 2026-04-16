@@ -552,7 +552,9 @@
 
     function goTo(idx) {
       current = ((idx % count) + count) % count;
-      track.style.transform = 'translateX(-' + (current * 100) + '%)';
+      // RTL flex: slide[0] is at x=0..W, slide[1] at x=-W..0 (overflows LEFT).
+      // Positive translateX pulls track RIGHT → reveals slides that overflow left.
+      track.style.transform = 'translateX(' + (current * 100) + '%)';
       dots.forEach(function(d, i) { d.classList.toggle('sd-dot-active', i === current); });
     }
 
