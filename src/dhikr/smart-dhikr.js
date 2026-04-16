@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion — TafsirKurd  v11
+ * Smart Daily Companion — TafsirKurd  v12
  * 3–4 cards, each a different content type:
  *   1. Time-based adhkar  (only when a genuine time window is active right now)
  *   2. Ayah of the day    (Quran verse — opens tafsir)
@@ -528,71 +528,176 @@
   }
 
   /* ══════════════════════════════════════════════
-     UI — SLIDER CONTROLLER
+     UI — SLIDER CONTROLLER  v12
+     Motion model:
+       - LTR flex track (direction:ltr on wrapper), standard translateX(-n*W)
+       - During drag: transition:none, 1:1 finger tracking
+       - At edges: rubber-band resistance (25% of excess delta applied)
+       - On release: snap with 320ms cubic-bezier(0.25,0.46,0.45,0.94)
+       - Threshold: 18% of card width to commit slide change
+       - Progress bar: RAF-based, 12s per slide, pause on touch, resume on release
+       - Swipe left → next (natural), swipe right → prev
   ══════════════════════════════════════════════ */
-  function _initSlider(track, dotsEl, count) {
+  function _initSlider(wrapper, track, dotsEl, count) {
     if (count <= 1) { if (dotsEl) dotsEl.style.display = 'none'; return; }
 
-    var current     = 0;
-    var autoTimer   = null;
-    var INTERVAL    = 9000;
-    var touching    = false;
-    var touchStartX = 0;
+    var current       = 0;
+    var SLIDE_DURATION = 12000;  /* ms per slide for auto-advance */
+    var SNAP_CURVE    = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+    var SNAP_MS       = 320;
 
+    /* ── Progress bar ── */
+    var progress = document.createElement('div');
+    progress.className = 'sd-progress';
+    var bar = document.createElement('div');
+    bar.className = 'sd-bar';
+    progress.appendChild(bar);
+    wrapper.appendChild(progress);
+
+    /* ── Dots ── */
     var dots = [];
     for (var i = 0; i < count; i++) {
       var dot = document.createElement('span');
       dot.className = 'sd-dot' + (i === 0 ? ' sd-dot-active' : '');
-      (function(idx) {
-        dot.addEventListener('click', function() { goTo(idx); resetAuto(); });
-      })(i);
+      (function(idx) { dot.addEventListener('click', function() { goTo(idx, true); }); })(i);
       dotsEl.appendChild(dot);
       dots.push(dot);
     }
 
-    function goTo(idx) {
-      current = ((idx % count) + count) % count;
-      // RTL flex: slide[0] is at x=0..W, slide[1] at x=-W..0 (overflows LEFT).
-      // Positive translateX pulls track RIGHT → reveals slides that overflow left.
-      track.style.transform = 'translateX(' + (current * 100) + '%)';
+    function isAlive() { return document.body && document.body.contains(track); }
+
+    function _getW() {
+      var w = wrapper.clientWidth || wrapper.offsetWidth;
+      return w || (window.innerWidth - 32);
+    }
+
+    function _applyTransform(px, animated) {
+      track.style.transition = animated
+        ? ('transform ' + SNAP_MS + 'ms ' + SNAP_CURVE)
+        : 'none';
+      track.style.transform = 'translateX(' + px + 'px)';
+    }
+
+    function _updateDots() {
       dots.forEach(function(d, i) { d.classList.toggle('sd-dot-active', i === current); });
     }
 
-    function isAlive() { return document.body && document.body.contains(track); }
-
-    function resetAuto() {
-      if (autoTimer) clearInterval(autoTimer);
-      autoTimer = setInterval(function() {
-        if (!isAlive()) { clearInterval(autoTimer); autoTimer = null; return; }
-        goTo(current + 1);
-      }, INTERVAL);
+    /* goTo: snap to slide idx.
+       animated=false → instant (used on init).
+       restartProg=false → don't reset progress (used on init tick). */
+    function goTo(idx, animated, restartProg) {
+      current = ((idx % count) + count) % count;
+      _applyTransform(-current * _getW(), animated !== false);
+      _updateDots();
+      if (restartProg !== false) { _resetProgress(); }
     }
+
+    /* ── Progress bar — RAF-based so pause/resume is clean ── */
+    var _rafId     = null;
+    var _progStart = 0;
+    var _progAccum = 0;   /* accumulated ms before any pause */
+    var _progPaused = false;
+
+    function _resetProgress() {
+      _progAccum  = 0;
+      _progPaused = false;
+      bar.style.transition = 'none';
+      bar.style.width      = '0%';
+      if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
+      _progStart = performance.now();
+      _rafId = requestAnimationFrame(_tickProgress);
+    }
+
+    function _pauseProgress() {
+      if (_progPaused) return;
+      _progPaused = true;
+      _progAccum += performance.now() - _progStart;
+      if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
+    }
+
+    function _resumeProgress() {
+      if (!_progPaused) return;
+      _progPaused = false;
+      _progStart  = performance.now();
+      _rafId = requestAnimationFrame(_tickProgress);
+    }
+
+    function _tickProgress() {
+      if (_progPaused || !isAlive()) return;
+      var elapsed = _progAccum + (performance.now() - _progStart);
+      var pct     = Math.min(elapsed / SLIDE_DURATION, 1);
+      bar.style.width = (pct * 100) + '%';
+      if (pct >= 1) {
+        goTo(current + 1, true);   /* auto-advance; _resetProgress called inside goTo */
+        return;
+      }
+      _rafId = requestAnimationFrame(_tickProgress);
+    }
+
+    /* ── Drag / swipe ── */
+    var _isDragging  = false;
+    var _dragStartX  = 0;
+    var _dragBaseX   = 0;
 
     track.addEventListener('touchstart', function(e) {
-      touchStartX = e.touches[0].clientX;
-      touching = true;
-      if (autoTimer) clearInterval(autoTimer);
+      _isDragging = true;
+      _dragStartX = e.touches[0].clientX;
+      _dragBaseX  = -current * _getW();
+      track.style.transition = 'none';
+      _pauseProgress();
     }, { passive: true });
 
-    track.addEventListener('touchend', function(e) {
-      if (!touching) return;
-      touching = false;
-      var dx = touchStartX - e.changedTouches[0].clientX;
-      if (Math.abs(dx) > 45) goTo(dx > 0 ? current + 1 : current - 1);
-      resetAuto();
+    track.addEventListener('touchmove', function(e) {
+      if (!_isDragging) return;
+      var dx  = e.touches[0].clientX - _dragStartX;
+      var W   = _getW();
+      var raw = _dragBaseX + dx;
+      var min = -(count - 1) * W;
+      var max = 0;
+      /* Rubber-band at edges: apply only 25% of excess delta */
+      var clamped;
+      if (raw > max) {
+        clamped = max + (raw - max) * 0.25;
+      } else if (raw < min) {
+        clamped = min + (raw - min) * 0.25;
+      } else {
+        clamped = raw;
+      }
+      track.style.transform = 'translateX(' + clamped + 'px)';
     }, { passive: true });
 
-    resetAuto();
+    function _onDragEnd(e) {
+      if (!_isDragging) return;
+      _isDragging = false;
+      var endX = (e.changedTouches && e.changedTouches[0])
+                   ? e.changedTouches[0].clientX
+                   : _dragStartX;
+      var dx  = endX - _dragStartX;
+      var W   = _getW();
+      /* Commit slide change if drag exceeds 18% of card width */
+      if (Math.abs(dx) > W * 0.18) {
+        goTo(dx < 0 ? current + 1 : current - 1, true);
+      } else {
+        goTo(current, true);   /* snap back */
+      }
+      /* goTo → _resetProgress already running; nothing else to do */
+    }
 
+    track.addEventListener('touchend',    _onDragEnd, { passive: true });
+    track.addEventListener('touchcancel', _onDragEnd, { passive: true });
+
+    /* ── Visibility: pause progress when tab hidden ── */
     function _onVisibility() {
       if (!isAlive()) { document.removeEventListener('visibilitychange', _onVisibility); return; }
-      if (document.hidden) {
-        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-      } else if (!touching) {
-        resetAuto();
-      }
+      if (document.hidden) { _pauseProgress(); } else { _resumeProgress(); }
     }
     document.addEventListener('visibilitychange', _onVisibility);
+
+    /* ── Init: snap to 0 instantly, start progress after element paints ── */
+    goTo(0, false, false);
+    setTimeout(function() {
+      if (isAlive()) { _resetProgress(); }
+    }, 80);
   }
 
   /* ══════════════════════════════════════════════
@@ -637,7 +742,7 @@
     function tryInit() {
       if (initOnce) return;
       initOnce = true;
-      _initSlider(track, dots, items.length);
+      _initSlider(wrapper, track, dots, items.length);
     }
     if (document.readyState !== 'loading') {
       setTimeout(tryInit, 0);
