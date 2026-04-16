@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion — TafsirKurd  v12
+ * Smart Daily Companion — TafsirKurd  v13
  * 3–4 cards, each a different content type:
  *   1. Time-based adhkar  (only when a genuine time window is active right now)
  *   2. Ayah of the day    (Quran verse — opens tafsir)
@@ -317,26 +317,15 @@
     };
   }
 
-  /* ── Slot 2: Hadith of the day ── */
+  /* ── Slot 2: Hadith of the day ──
+     Daily-seeded pick from the loaded hadith list.
+     Returns null when cache not yet populated — slot is skipped cleanly.
+     Tapping opens the exact seeded hadith in detail view (_hadithDetailIdx). */
   function _buildHadithItem() {
     var hadiths = _readCache('gencine_hadiths_v2');
-    /* Fallback when cache not yet loaded */
-    if (!hadiths || !hadiths.length) {
-      return {
-        _type:'daily', id:'hadith_day', icon:'fas fa-scroll', tag:'حەدیسا ڕۆژێ',
-        title: 'حەدیسێن پێغەمبەرێ \uFDFA',
-        subtitle: 'بخوێنە',
-        nav: function(gencineUI) {
-          if (!gencineUI) return;
-          gencineUI._view = 'hadith';
-          gencineUI._hadithSearch = '';
-          gencineUI._hadithDetailIdx = null;
-          gencineUI._draw();
-        }
-      };
-    }
-    var idx = _seededIdx(hadiths.length, 2);
-    var h   = hadiths[idx];
+    if (!hadiths || !hadiths.length) return null;   /* skip — no generic shortcut */
+    var idx     = _seededIdx(hadiths.length, 2);
+    var h       = hadiths[idx];
     var preview = (h.ku || h.ar || '').trim();
     if (preview.length > 55) preview = preview.slice(0, 55) + '\u2026';
     return {
@@ -345,6 +334,7 @@
       subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
       nav: function(gencineUI) {
         if (!gencineUI) return;
+        /* Open the exact seeded hadith directly in detail view */
         gencineUI._view            = 'hadith';
         gencineUI._hadithSearch    = '';
         gencineUI._hadithDetailIdx = idx;
@@ -353,32 +343,24 @@
     };
   }
 
-  /* ── Slot 4: Book of the day ── */
+  /* ── Slot 4: Book of the day ──
+     Daily-seeded pick from the loaded books list.
+     Returns null when cache not yet populated — slot is skipped cleanly.
+     Tapping calls GencineUI.openBook(id) which opens the exact book reader. */
   function _buildBookItem() {
     var books = _readCache('gencine_books_v3');
-    /* Fallback when cache not yet loaded */
-    if (!books || !books.length) {
-      return {
-        _type:'daily', id:'book_day', icon:'fas fa-book-open', tag:'کتێبا ڕۆژێ',
-        title: 'کتێبێن ئیسلامی',
-        subtitle: 'بخوێنە',
-        nav: function(gencineUI) {
-          if (!gencineUI) return;
-          gencineUI._view = 'books';
-          gencineUI._draw();
-        }
-      };
-    }
+    if (!books || !books.length) return null;   /* skip — no generic shortcut */
     var b = books[_seededIdx(books.length, 4)];
     if (!b) b = books[0];
+    var bookId = b.id;
     return {
       _type:'daily', id:'book_day', icon:'fas fa-book-open', tag:'کتێبا ڕۆژێ',
       title:    b.title_ku || b.title_ar || 'کتێب',
       subtitle: b.author_ku || 'بخوێنە',
       nav: function(gencineUI) {
         if (!gencineUI) return;
-        gencineUI._view = 'books';
-        gencineUI._draw();
+        /* openBook() sets _view='book-reader', assigns _currentBook, calls _draw() */
+        gencineUI.openBook(bookId);
       }
     };
   }
@@ -634,53 +616,83 @@
       _rafId = requestAnimationFrame(_tickProgress);
     }
 
-    /* ── Drag / swipe ── */
-    var _isDragging  = false;
-    var _dragStartX  = 0;
-    var _dragBaseX   = 0;
+    /* ── Drag / swipe ──
+       Gesture intent detection (horizontal vs vertical) prevents fighting
+       with page scroll and pull-to-refresh:
+       - touchmove is NON-passive so we can call e.preventDefault()
+       - first 6 px of movement decide the axis
+       - horizontal confirmed → preventDefault() locks out scroll + PTR
+       - vertical detected    → release drag state, page scrolls freely
+    ── */
+    var _isDragging      = false;
+    var _dragStartX      = 0;
+    var _dragStartY      = 0;
+    var _dragBaseX       = 0;
+    var _gestureDecided  = false;   /* has axis been committed yet? */
+    var _gestureHoriz    = false;   /* true = horizontal drag confirmed */
+    var INTENT_PX        = 6;       /* pixels before committing to an axis */
 
     track.addEventListener('touchstart', function(e) {
-      _isDragging = true;
-      _dragStartX = e.touches[0].clientX;
-      _dragBaseX  = -current * _getW();
+      _isDragging     = true;
+      _dragStartX     = e.touches[0].clientX;
+      _dragStartY     = e.touches[0].clientY;
+      _dragBaseX      = -current * _getW();
+      _gestureDecided = false;
+      _gestureHoriz   = false;
       track.style.transition = 'none';
       _pauseProgress();
     }, { passive: true });
 
+    /* NON-passive: allows e.preventDefault() to block scroll and PTR */
     track.addEventListener('touchmove', function(e) {
       if (!_isDragging) return;
       var dx  = e.touches[0].clientX - _dragStartX;
+      var dy  = e.touches[0].clientY - _dragStartY;
+
+      /* Axis detection: wait for INTENT_PX of movement in any direction */
+      if (!_gestureDecided) {
+        if (Math.abs(dx) < INTENT_PX && Math.abs(dy) < INTENT_PX) return;
+        _gestureDecided = true;
+        _gestureHoriz   = Math.abs(dx) >= Math.abs(dy);
+        if (!_gestureHoriz) {
+          /* Vertical intent — stop tracking, let page scroll own this touch */
+          _isDragging = false;
+          _resumeProgress();
+          return;
+        }
+      }
+
+      if (!_gestureHoriz) return;
+
+      /* Horizontal confirmed: prevent page scroll and pull-to-refresh */
+      e.preventDefault();
+
       var W   = _getW();
       var raw = _dragBaseX + dx;
       var min = -(count - 1) * W;
       var max = 0;
-      /* Rubber-band at edges: apply only 25% of excess delta */
       var clamped;
-      if (raw > max) {
-        clamped = max + (raw - max) * 0.25;
-      } else if (raw < min) {
-        clamped = min + (raw - min) * 0.25;
-      } else {
-        clamped = raw;
-      }
+      if (raw > max)      { clamped = max + (raw - max) * 0.25; }
+      else if (raw < min) { clamped = min + (raw - min) * 0.25; }
+      else                { clamped = raw; }
       track.style.transform = 'translateX(' + clamped + 'px)';
-    }, { passive: true });
+    }, { passive: false });
 
     function _onDragEnd(e) {
       if (!_isDragging) return;
       _isDragging = false;
+      /* Vertical gesture already released drag state in touchmove; this path
+         only runs for genuine horizontal drags */
       var endX = (e.changedTouches && e.changedTouches[0])
                    ? e.changedTouches[0].clientX
                    : _dragStartX;
-      var dx  = endX - _dragStartX;
-      var W   = _getW();
-      /* Commit slide change if drag exceeds 18% of card width */
+      var dx = endX - _dragStartX;
+      var W  = _getW();
       if (Math.abs(dx) > W * 0.18) {
         goTo(dx < 0 ? current + 1 : current - 1, true);
       } else {
-        goTo(current, true);   /* snap back */
+        goTo(current, true);
       }
-      /* goTo → _resetProgress already running; nothing else to do */
     }
 
     track.addEventListener('touchend',    _onDragEnd, { passive: true });
