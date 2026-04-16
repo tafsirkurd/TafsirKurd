@@ -23,6 +23,7 @@
   var _headingBuf  = [];
   var _lastSample  = 0;
   var _hasAbsolute = false;
+  var _lastRaw     = 0;
   var _raf         = null;
   var _onOrient    = null;
   var _onOrientRel = null; // Android relative-event fallback (separate handler, no throttle race)
@@ -55,6 +56,7 @@
 
   // Circular mean for stable heading from buffer
   function addHeading(raw) {
+    _lastRaw = raw;
     if (!_compassReceived) {
       _compassReceived = true;
       if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
@@ -259,6 +261,7 @@
     ctx.beginPath(); ctx.arc(0, 0, R * 0.026, 0, Math.PI * 2);
     ctx.fillStyle = '#052e16'; ctx.fill();
     ctx.restore();
+
   }
 
   function startDraw() {
@@ -317,9 +320,9 @@
         if (now - _lastAbs < THROTTLE) return;
         _hasAbsolute = true;
         _lastAbs = now;
-        // Android WebView alpha is offset +90° from true compass bearing:
-        // alpha=0 → top points West, so bearing = (alpha - 90 + 360) % 360
-        addHeading((e.alpha + 270) % 360);
+        // Android WebView alpha offset: bearing = (alpha + 65) % 360
+        // Calibrated: alpha=130 when bearing=195° → offset = 65
+        addHeading((e.alpha + 65) % 360);
       };
 
       _onOrientRel = function(e) {            // relative fallback — ignored once absolute fires
@@ -328,7 +331,7 @@
         var now = Date.now();
         if (now - _lastRel < THROTTLE) return;
         _lastRel = now;
-        addHeading((e.alpha + 270) % 360);
+        addHeading((e.alpha + 65) % 360);
       };
 
       window.addEventListener('deviceorientationabsolute', _onOrient, true);
@@ -393,7 +396,8 @@
     titleEl.textContent = window.t ? window.t('prayer.qibla_title') : 'Qibla';
     var closeBtn = document.createElement('button');
     closeBtn.className = 'qibla-modal-close';
-    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    var closeBtnIcon = document.createElement('i'); closeBtnIcon.className = 'fas fa-times';
+    closeBtn.appendChild(closeBtnIcon);
     closeBtn.onclick = close;
     hdr.appendChild(titleEl); hdr.appendChild(closeBtn);
     card.appendChild(hdr);
