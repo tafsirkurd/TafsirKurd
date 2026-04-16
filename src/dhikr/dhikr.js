@@ -319,6 +319,33 @@ var _dbAdhkar   = null;   /* [{category_key, ar, repeat, source, sort_order}] */
 var _dbBooks    = [];
 var _loadingDb  = false;
 var _dbLoaded   = false;
+var _skeletonShown = false; /* true while skeleton is visible — triggers fade-in on first real render */
+
+function _buildSkeleton() {
+  function _sk(tag, cls) { var e = document.createElement(tag); e.className = cls; return e; }
+  var wrap = _sk('div', 'genc-skel');
+
+  /* ── Smart slider skeleton ── */
+  var smart = _sk('div', 'genc-skel-smart');
+  var hdr = _sk('div', 'genc-skel-smart-hdr');
+  hdr.appendChild(_sk('div', 'genc-skel-smart-label skel-block'));
+  hdr.appendChild(_sk('div', 'genc-skel-smart-chip skel-block'));
+  smart.appendChild(hdr);
+  smart.appendChild(_sk('div', 'genc-skel-card skel-block'));
+  var dots = _sk('div', 'genc-skel-dots');
+  for (var d = 0; d < 4; d++) {
+    dots.appendChild(_sk('div', 'genc-skel-dot skel-block' + (d === 0 ? ' genc-skel-dot-active' : '')));
+  }
+  smart.appendChild(dots);
+  wrap.appendChild(smart);
+
+  /* ── Grid card skeletons ── */
+  var cards = _sk('div', 'genc-skel-cards');
+  for (var c = 0; c < 3; c++) cards.appendChild(_sk('div', 'genc-skel-gcard skel-block'));
+  wrap.appendChild(cards);
+
+  return wrap;
+}
 
 function _readCache(key) {
   try {
@@ -746,14 +773,29 @@ window.GencineUI = {
       if (smartEl) container.appendChild(smartEl);
     }
 
-    if (this._homeEl) { container.appendChild(this._homeEl); return; }
-    /* Show spinner until DB sections arrive — never show hardcoded sort */
-    if (!_dbSections) {
-      var ld = document.createElement('div');
-      ld.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:80px 0;color:var(--text3)';
-      ld.appendChild(Object.assign(document.createElement('i'), {className:'fas fa-spinner fa-spin'}));
-      container.appendChild(ld);
+    if (this._homeEl) {
+      /* Fade in real content if skeleton was showing before */
+      if (_skeletonShown) {
+        _skeletonShown = false;
+        container.classList.remove('genc-fade-in');
+        void container.offsetWidth; /* force reflow so animation restarts */
+        container.classList.add('genc-fade-in');
+      }
+      container.appendChild(this._homeEl);
       return;
+    }
+    /* Show skeleton until DB sections arrive */
+    if (!_dbSections) {
+      _skeletonShown = true;
+      container.appendChild(_buildSkeleton());
+      return;
+    }
+    /* Fade in on first real render after skeleton */
+    if (_skeletonShown) {
+      _skeletonShown = false;
+      container.classList.remove('genc-fade-in');
+      void container.offsetWidth;
+      container.classList.add('genc-fade-in');
     }
     var self = this;
     var home = document.createElement('div');

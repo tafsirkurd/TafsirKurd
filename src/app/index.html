@@ -1925,6 +1925,22 @@ body{background:var(--bg);color:var(--text)}
 .genc-coming-icon{font-size:3rem;color:var(--accent)}
 .genc-coming-title{font-size:1.3rem;font-weight:800;color:var(--text)}
 .genc-coming-sub{font-size:.88rem;color:var(--text3);line-height:1.7;direction:rtl}
+/* ── Gencine Skeleton ── */
+@keyframes skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-block{background:linear-gradient(90deg,var(--bg2) 0%,var(--bg3) 50%,var(--bg2) 100%);background-size:200% 100%;animation:skel-shimmer 1.6s ease-in-out infinite}
+.genc-skel{display:flex;flex-direction:column;padding-bottom:32px}
+.genc-skel-smart{padding:16px 16px 0}
+.genc-skel-smart-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.genc-skel-smart-label{height:11px;width:96px;border-radius:6px}
+.genc-skel-smart-chip{height:26px;width:78px;border-radius:20px}
+.genc-skel-card{height:92px;border-radius:18px}
+.genc-skel-dots{display:flex;justify-content:center;gap:7px;padding:10px 0 4px}
+.genc-skel-dot{width:7px;height:7px;border-radius:50%}
+.genc-skel-dot-active{width:22px;border-radius:3.5px}
+.genc-skel-cards{display:flex;flex-direction:column;gap:14px;padding:20px 16px 0}
+.genc-skel-gcard{height:150px;border-radius:24px}
+@keyframes genc-fade-in{from{opacity:0}to{opacity:1}}
+.genc-fade-in{animation:genc-fade-in .22s ease forwards}
 /* ── Books ── */
 .book-cat-row{display:flex;gap:6px;padding:10px 16px 4px;overflow-x:auto;scrollbar-width:none}
 .book-cat-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600;background:var(--bg2);color:var(--text2);border:none;cursor:pointer;transition:all .2s}
