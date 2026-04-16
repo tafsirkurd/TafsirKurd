@@ -2489,14 +2489,6 @@
 
   // ─── Export ────────────────────────────────────────────────────────────────
 
-  function openQibla() {
-    if (!window.PrayerQibla) return;
-    var city   = getCity();
-    var coords = window.PrayerAPI && window.PrayerAPI.CITY_COORDS
-                 ? window.PrayerAPI.CITY_COORDS[city] : null;
-    window.PrayerQibla.open(coords);
-  }
-
   // Called by App.tab('prayer') after the panel becomes visible.
   // Belt-and-suspenders: ensures countdown is always ticking when user sees the tab.
   function ensureCountdown() {
@@ -2513,7 +2505,6 @@
     ensureCountdown: ensureCountdown,
     invalidate: function(){ _renderedKey = null; },
     openSettings: openSettings,
-    openQibla: openQibla,
     initScheduleOnStart: initScheduleOnStart,
     pushWidgetIfStale: pushWidgetIfStale,
     prefetchAllCities: prefetchAllCities,

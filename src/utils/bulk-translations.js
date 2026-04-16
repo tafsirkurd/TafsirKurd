@@ -1217,13 +1217,6 @@ window.BULK_TRANSLATIONS = [
     { key_id: "prayer.error",          kurdish_text: "هەلەیەک هەیە. دووباره هەوڵبدە.",       category: "prayer",     page: "android" },
     { key_id: "prayer.retry",          kurdish_text: "دووباره هەوڵبدە",                      category: "prayer",     page: "android" },
     { key_id: "prayer.settings_title", kurdish_text: "ڕێکخستنێن نوێژ",                       category: "prayer",     page: "android" },
-    { key_id: "prayer.qibla_title",    kurdish_text: "ئیستیقامەتا قیبلە",                    category: "prayer",     page: "android" },
-    { key_id: "prayer.qibla_direction",kurdish_text: "ئاراستە",                              category: "prayer",     page: "android" },
-    { key_id: "prayer.qibla_distance", kurdish_text: "دووری",                                category: "prayer",     page: "android" },
-    { key_id: "prayer.qibla_approx",   kurdish_text: "نزیکەوە",                              category: "prayer",     page: "android" },
-    { key_id: "prayer.qibla_locating", kurdish_text: "دیارکرنا شوین...",                     category: "prayer",     page: "android" },
-    { key_id: "prayer.qibla_no_loc",   kurdish_text: "ناکارە بوی دیارکرنا شوین",            category: "prayer",     page: "android" },
-
     // ===== Copy Modal =====
     { key_id: "copy.title",       kurdish_text: "کۆپیکرن",                category: "copy",   page: "android" },
     { key_id: "copy.both",        kurdish_text: "قورئان + تەفسیر",        category: "copy",   page: "android" },

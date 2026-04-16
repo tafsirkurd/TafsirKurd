@@ -11,7 +11,6 @@ const PRECACHE = [
   '/prayer/prayer.logic.js',
   '/prayer/prayer.notifications.android.js',
   '/prayer/prayer.ui.js',
-  '/prayer/prayer.qibla.js',
   // Gencine module
   '/dhikr/dhikr.js',
   '/dhikr/dua-data.js',

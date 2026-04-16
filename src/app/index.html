@@ -1718,34 +1718,6 @@ body{background:var(--bg);color:var(--text)}
 .as2-test-row{display:flex;padding:0 16px 14px}
 .as2-test-btn{flex:1;padding:11px 12px;background:var(--accent);color:var(--accent-t);border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s,transform .12s}
 .as2-test-btn:active{transform:scale(.96);opacity:.82}
-/* ── Qibla compass modal ── */
-.qibla-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:10000;align-items:center;justify-content:center}
-.qibla-modal.open{display:flex}
-.qibla-modal-card{background:linear-gradient(170deg,#0b1a11 0%,#121212 55%,#0e0e0e 100%);border-radius:22px;padding:0 0 20px;width:min(92vw,370px);display:flex;flex-direction:column;align-items:center;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7)}
-.qibla-modal-hdr{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
-.qibla-modal-title{font-size:.9rem;font-weight:600;color:rgba(255,255,255,.9);letter-spacing:.03em}
-.qibla-modal-close{background:rgba(255,255,255,.09);border:none;color:rgba(255,255,255,.7);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
-.qibla-canvas-wrap{padding:16px 0 4px;display:flex;align-items:center;justify-content:center}
-@keyframes qibla-pulse-ring{0%{box-shadow:0 0 0 0 rgba(74,222,128,.40)}70%{box-shadow:0 0 0 22px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
-.qibla-pulse{animation:qibla-pulse-ring 1.1s ease-out 2}
-.qibla-status{width:100%;text-align:center;padding:2px 16px 0;font-weight:700;color:transparent;min-height:28px;transition:color .3s}
-.qibla-status.aligned{color:#4ade80;font-size:.82rem;line-height:28px}
-.qibla-status.near,.qibla-status.far{color:#fbbf24;font-size:1.9rem;line-height:1.1}
-.qibla-status.unstable{color:#f87171;font-size:.74rem;line-height:28px}
-.qibla-info{display:flex;flex-direction:column;align-items:center;padding:0 16px;width:100%;box-sizing:border-box}
-.qibla-info-row{display:flex;width:100%;border-top:1px solid rgba(255,255,255,.06);margin-top:6px}
-.qibla-info-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 0}
-.qibla-info-item+.qibla-info-item{border-left:1px solid rgba(255,255,255,.06)}
-.qibla-info-val{font-size:1.25rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;line-height:1}
-.qibla-info-lbl{font-size:.56rem;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.09em;margin-top:4px}
-.qibla-approx-badge{font-size:.7rem;color:rgba(255,255,255,.28);padding-top:2px}
-.qibla-loading{font-size:.82rem;color:rgba(255,255,255,.35)}
-.qibla-no-loc{font-size:.82rem;color:#e55}
-.qibla-calib{display:none;margin:8px 16px 0;background:rgba(255,255,255,.04);border-radius:12px;padding:10px 36px 10px 14px;width:calc(100% - 32px);box-sizing:border-box;position:relative}
-.qibla-calib.on{display:block}
-.qibla-calib-title{font-size:.7rem;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:5px}
-.qibla-calib-item{font-size:.67rem;color:rgba(255,255,255,.3);line-height:1.7}
-.qibla-calib-close{position:absolute;top:8px;right:10px;background:none;border:none;color:rgba(255,255,255,.25);font-size:1rem;cursor:pointer;line-height:1;padding:2px 4px}
 
 /* ===== GENCINE TAB ===== */
 /* Gencine home — cinematic cards */
@@ -2254,7 +2226,6 @@ body{background:var(--bg);color:var(--text)}
   <div class="hdr">
     <div class="hdr-title"><span data-i18n="header.prayer">کاتا نوێژ</span></div>
     <div style="display:flex;gap:4px">
-      <button class="hdr-btn" onclick="PrayerUI.openQibla()" title="Qibla"><i class="fas fa-compass"></i></button>
       <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
     </div>
   </div>
@@ -2561,7 +2532,6 @@ body{background:var(--bg);color:var(--text)}
 <script src="/prayer/prayer.api.js?v=20260326b"></script>
 <script src="/prayer/prayer.logic.js?v=20260326b"></script>
 <script src="/prayer/prayer.notifications.android.js?v=20260416"></script>
-<script src="/prayer/prayer.qibla.js?v=20260416i"></script>
 <script src="/prayer/prayer.ui.js?v=20260416"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
