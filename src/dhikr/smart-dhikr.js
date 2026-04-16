@@ -1,14 +1,13 @@
 /**
- * Smart Daily Companion  v17
+ * Smart Daily Companion  v18
  * Always exactly 4 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
- *   2. Ayah of the day        (UTC-seeded, salt 1)
- *   3. Hadith of the day      (UTC-seeded, salt 2)
- *   4. Book of the day        (UTC-seeded, salt 4)
+ *   2. Ayah of the day        (Baghdad-seeded, salt 1)
+ *   3. Hadith of the day      (Baghdad-seeded, salt 2)
+ *   4. Book of the day        (Baghdad-seeded, salt 4)
  *
- * Daily cards (2-4) use UTC date as seed so ALL users worldwide
- * see the same ayah/hadith/book on the same calendar day.
- * Cards change at UTC midnight (00:00 UTC).
+ * Daily cards (2-4) use Asia/Baghdad date as seed (UTC+3, no DST).
+ * All users see the same daily cards; refresh at 00:00 Baghdad time.
  */
 (function(window) {
   'use strict';
@@ -139,10 +138,18 @@
     return wraps ? (cur >= s || cur < e) : (cur >= s && cur < e);
   }
 
-  /* UTC date — same number for every user on the same calendar day,
-     regardless of timezone.  Changes at 00:00 UTC.               */
+  /* Baghdad date (Asia/Baghdad = UTC+3, no DST).
+     Shift now by +3 h then read the UTC fields — equivalent to
+     reading local date in Baghdad.  Same result for every user
+     on the same Baghdad calendar day; changes at 00:00 Baghdad. */
+  var _BAGHDAD_OFFSET_MS = 3 * 60 * 60 * 1000;   /* UTC+3, fixed */
+
+  function _baghdadDate() {
+    return new Date(Date.now() + _BAGHDAD_OFFSET_MS);
+  }
+
   function _daySeed() {
-    var d = new Date();
+    var d = _baghdadDate();
     return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
   }
 
@@ -654,11 +661,14 @@
   function _buildCountdown() {
     var el = _mk('div', 'sd-refresh');
 
-    function _msUntilUtcMidnight() {
-      var now = Date.now();
-      var d   = new Date();
-      var next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
-      return next - now;
+    /* Next 00:00 Baghdad time expressed as Unix ms.
+       Baghdad = UTC+3: midnight Baghdad = (day+1 00:00 UTC) − 3 h.  */
+    function _msUntilBaghdadMidnight() {
+      var d    = _baghdadDate();                        /* current Baghdad date/time */
+      var nextMidnightUTC =
+        Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1)
+        - _BAGHDAD_OFFSET_MS;                          /* shift back to UTC wall-clock */
+      return nextMidnightUTC - Date.now();
     }
 
     function _fmt(ms) {
@@ -673,7 +683,7 @@
         clearInterval(_tid);
         return;
       }
-      el.textContent = 'نوێکرنەوەی ڕۆژانە لە: ' + _fmt(_msUntilUtcMidnight());
+      el.textContent = 'نوێکرنەوەی ڕۆژانە لە: ' + _fmt(_msUntilBaghdadMidnight());
     }
 
     _update();
