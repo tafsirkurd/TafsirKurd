@@ -17,7 +17,11 @@
 
   var PRAYER_IDX = { Fajr: 0, Dhuhr: 1, Asr: 2, Maghrib: 3, Isha: 4 };
   var ID_BASE    = 100;
-  var MAX_DAYS   = 28; // 4 weeks — athan fires even if user doesn't open the app for weeks
+  var MAX_DAYS   = 28; // Android: 28 days (no system limit)
+  // iOS hard-limits all apps to 64 pending local notifications.
+  // 12 days × 5 prayers = 60 notifications — safely under the limit.
+  // Kept at 12 (not 13) to leave 4 slots free for daily reminders or other uses.
+  var MAX_DAYS_IOS = 12;
 
   // Kurdish prayer name fallbacks (used in notification body)
   var PRAYER_KMR_FB = {
@@ -259,16 +263,23 @@
 
     // 'simple' → OS default notification sound, no athan audio
     // Android: one channel per voice, sound = MP3 filename in res/raw/
-    // iOS: sound = M4A filename (Capacitor passes to UNNotificationSound)
+    // iOS: sound = M4A filename bundled in app root (athan_<voice>.m4a)
     var channelId = isSimple ? 'athan_simple' : (ios ? 'reminder' : ('athan_' + voice));
-    var soundFile = isSimple ? null : (ios ? ('athan_' + voice + '.caf') : ('athan_' + voice));
+    var soundFile = isSimple ? null : (ios ? ('athan_' + voice + '.m4a') : ('athan_' + voice));
+
+    // iOS hard cap: 64 notifications per app. 12 days × 5 = 60 — safely under limit.
+    // Android has no such restriction.
+    var dayLimit  = ios ? MAX_DAYS_IOS : MAX_DAYS;
+    console.log('[Athan] scheduling: platform=' + (ios ? 'iOS' : 'Android') +
+                ' voice=' + voice + ' sound=' + (soundFile || 'default') +
+                ' days=' + Math.min(daysData.length, dayLimit) + ' (cap=' + dayLimit + ')');
 
     var now = new Date();
     var pl  = window.PrayerLogic;
     var notifications = [];
     var details = [];
 
-    for (var dayOffset = 0; dayOffset < daysData.length && dayOffset < MAX_DAYS; dayOffset++) {
+    for (var dayOffset = 0; dayOffset < daysData.length && dayOffset < dayLimit; dayOffset++) {
       var dayData = daysData[dayOffset];
       var timings = dayData.timings;
       var dateISO = dayData.dateISO;
@@ -323,22 +334,22 @@
 
     var actualCount = schedErr ? 0 : intendedCount;
 
-    // Verify: spot-check OS pending queue to detect silent exact-alarm fallback.
-    // If we intended to schedule but the OS has 0 athan notifications pending,
-    // exact alarm permission was likely revoked — warn the user.
+    // Verify: spot-check OS pending queue to confirm notifications landed.
+    // On Android: 0 pending → exact alarm permission was silently revoked → warn user.
+    // On iOS: not applicable (exact alarms don't exist; ios limit is handled above).
     if (!schedErr && intendedCount > 0 && LN.getPending) {
       try {
         var pending = await LN.getPending();
         var pendingAthan = ((pending && pending.notifications) || []).filter(function(n) {
           return n.id >= ID_BASE && n.id < ID_BASE + MAX_DAYS * 5;
         });
-        if (pendingAthan.length === 0) {
-          console.warn('[Athan] ⚠️ schedule() returned no error but 0 notifications are pending in OS — exact alarm permission may be revoked');
+        console.log('[Athan] OS verification: ' + pendingAthan.length + ' athan notifications confirmed pending (intended=' + intendedCount + ')');
+        if (pendingAthan.length === 0 && !ios) {
+          console.warn('[Athan] ⚠️ 0 pending on Android — exact alarm permission may be revoked');
           localStorage.setItem('athanExactAlarmWarned', '1');
           if (window._showAthanAlarmPermWarning) window._showAthanAlarmPermWarning();
-        } else {
+        } else if (pendingAthan.length > 0) {
           localStorage.removeItem('athanExactAlarmWarned');
-          console.log('[Athan] OS verification: ' + pendingAthan.length + ' athan notifications confirmed pending');
         }
       } catch(e) {
         console.warn('[Athan] getPending() verification error (non-fatal):', e && e.message);
@@ -415,6 +426,41 @@
     return athan;
   }
 
+  // ── Quick test: schedule one notification 60 seconds from now ─────────────
+  // Usage: await PrayerNotifications.scheduleTestNotification()
+
+  async function scheduleTestNotification() {
+    var LN = getLN();
+    if (!LN) { console.warn('[Athan TEST] LocalNotifications plugin not available'); return null; }
+    var perm = await LN.requestPermissions().catch(function() { return {}; });
+    console.log('[Athan TEST] permission:', JSON.stringify(perm));
+    var permOk = (perm.display === 'granted' || perm.receive === 'granted');
+    if (!permOk) { console.warn('[Athan TEST] permission not granted — test will not fire'); }
+    var ios   = onIOS();
+    var voice = getSelectedVoice();
+    var soundFile = (voice === 'simple') ? null : (ios ? ('athan_' + voice + '.m4a') : ('athan_' + voice));
+    var at = new Date(Date.now() + 60 * 1000);
+    var notif = {
+      id: 9999,
+      title: window.t ? window.t('prayer.notif_title') : 'بانگ',
+      body: 'Test — if you see this, notifications work! (' + at.toLocaleTimeString() + ')',
+      schedule: { at: at, allowWhileIdle: true },
+      channelId: (voice === 'simple') ? 'athan_simple' : (ios ? 'reminder' : ('athan_' + voice)),
+      extra: { type: 'test' }
+    };
+    if (soundFile) notif.sound = soundFile;
+    var err = null;
+    await LN.schedule({ notifications: [notif] }).catch(function(e) {
+      err = e && (e.message || String(e));
+      console.error('[Athan TEST] schedule() error:', err);
+    });
+    if (!err) {
+      console.log('[Athan TEST] ✓ test notification scheduled — fires at:', at.toLocaleString(),
+                  '| sound=' + (soundFile || 'default') + ' | platform=' + (ios ? 'iOS' : 'Android'));
+    }
+    return err ? null : at;
+  }
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
   window.PrayerNotifications = {
@@ -424,7 +470,8 @@
     scheduleAthanMultiDay: scheduleAthanMultiDay,
     ensureAllChannels: ensureAllChannels,
     getSelectedVoice: getSelectedVoice,
-    debugPendingNotifications: debugPendingNotifications
+    debugPendingNotifications: debugPendingNotifications,
+    scheduleTestNotification: scheduleTestNotification
   };
 
 })();
