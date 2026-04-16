@@ -1518,9 +1518,11 @@
   function buildLoading(container) {
     stopCountdown();
     clearEl(container);
-    var d = cel('div', 'prayer-status');
-    d.textContent = tStr('prayer.loading');
-    container.appendChild(d);
+    var wrap = cel('div', 'prayer-skel');
+    var sk = function(cls) { var e = cel('div', cls + ' skel-block'); return e; };
+    wrap.appendChild(sk('prayer-skel-countdown'));
+    for (var i = 0; i < 5; i++) wrap.appendChild(sk('prayer-skel-row'));
+    container.appendChild(wrap);
   }
 
   function buildError(container) {

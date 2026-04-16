@@ -1241,10 +1241,8 @@ body{background:var(--bg);color:var(--text)}
 .yt-err-icon{font-size:2rem;opacity:.55}
 .yt-err-msg{font-size:.85rem;opacity:.75;line-height:1.7;direction:rtl;max-width:240px}
 .yt-err-btn{padding:10px 24px;background:#ff0000;color:#fff;border:none;border-radius:20px;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;margin-top:4px}
-.iv-center-loading{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;color:var(--text3);text-align:center;padding:24px}
-.iv-center-loading.on{display:flex}
-.iv-center-loading i{font-size:2rem;margin-bottom:12px;animation:spin 1s linear infinite}
-.iv-center-loading p{font-size:.9rem}
+.iv-center-loading{display:none}
+.iv-center-loading.on{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .iv-empty{grid-column:1/-1;text-align:center;padding:48px 24px;color:var(--text3);min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .iv-empty i{font-size:2.5rem;margin-bottom:12px;display:block}
@@ -1897,9 +1895,21 @@ body{background:var(--bg);color:var(--text)}
 .genc-coming-icon{font-size:3rem;color:var(--accent)}
 .genc-coming-title{font-size:1.3rem;font-weight:800;color:var(--text)}
 .genc-coming-sub{font-size:.88rem;color:var(--text3);line-height:1.7;direction:rtl}
-/* ── Gencine Skeleton ── */
+/* ── Global Skeleton ── */
 @keyframes skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel-block{background:linear-gradient(90deg,var(--bg2) 0%,var(--bg3) 50%,var(--bg2) 100%);background-size:200% 100%;animation:skel-shimmer 1.6s ease-in-out infinite}
+/* Prayer skeleton */
+.prayer-skel{display:flex;flex-direction:column;padding:16px;gap:10px}
+.prayer-skel-countdown{height:88px;border-radius:18px;margin-bottom:4px}
+.prayer-skel-row{height:56px;border-radius:14px}
+/* Islam Voice skeleton */
+.iv-skel{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px}
+.iv-skel-card{border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.iv-skel-thumb{aspect-ratio:16/9}
+.iv-skel-body{padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+.iv-skel-title{height:13px;border-radius:5px;width:85%}
+.iv-skel-title2{height:11px;border-radius:5px;width:60%}
+.iv-skel-speaker{height:10px;border-radius:5px;width:48%;margin-top:2px}
 .genc-skel{display:flex;flex-direction:column;padding-bottom:32px}
 .genc-skel-smart{padding:16px 16px 0}
 .genc-skel-smart-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}

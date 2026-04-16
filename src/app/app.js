@@ -8686,8 +8686,20 @@ function renderIvLoading(){
   var ld=$('ivLoading');
   clear(ld);
   ld.classList.add('on');
-  ld.appendChild(icon('fas fa-spinner'));
-  ld.appendChild(el('p','',t('iv.loading')));
+  // Skeleton: 6 cards matching the 2-column iv-grid layout
+  var wrap=el('div','iv-skel');
+  function sk(cls){var e=document.createElement('div');e.className=cls+' skel-block';return e;}
+  for(var i=0;i<6;i++){
+    var card=el('div','iv-skel-card');
+    card.appendChild(sk('iv-skel-thumb'));
+    var body=el('div','iv-skel-body');
+    body.appendChild(sk('iv-skel-title'));
+    body.appendChild(sk('iv-skel-title2'));
+    body.appendChild(sk('iv-skel-speaker'));
+    card.appendChild(body);
+    wrap.appendChild(card);
+  }
+  ld.appendChild(wrap);
 }
 
 function renderIvGrid(){
