@@ -1,10 +1,14 @@
 /**
- * Smart Daily Companion  v16
+ * Smart Daily Companion  v17
  * Always exactly 4 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
- *   2. Ayah of the day        (seeded, salt 1)
- *   3. Hadith of the day      (seeded, salt 2)
- *   4. Book of the day        (seeded, salt 4)
+ *   2. Ayah of the day        (UTC-seeded, salt 1)
+ *   3. Hadith of the day      (UTC-seeded, salt 2)
+ *   4. Book of the day        (UTC-seeded, salt 4)
+ *
+ * Daily cards (2-4) use UTC date as seed so ALL users worldwide
+ * see the same ayah/hadith/book on the same calendar day.
+ * Cards change at UTC midnight (00:00 UTC).
  */
 (function(window) {
   'use strict';
@@ -135,9 +139,11 @@
     return wraps ? (cur >= s || cur < e) : (cur >= s && cur < e);
   }
 
+  /* UTC date — same number for every user on the same calendar day,
+     regardless of timezone.  Changes at 00:00 UTC.               */
   function _daySeed() {
     var d = new Date();
-    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
   }
 
   /* Deterministic daily index — same result all day, changes next day */
@@ -487,12 +493,11 @@
 
      Progress bar:
        transform-origin: right center
-       scaleX(0 → 1) fills bar right → left over 12 s.
+       scaleX(0 → 1) fills bar right → left over 10 s.
        Pauses on touchstart, resumes + resets on touchend.
   ───────────────────────────────────────────── */
   function _initSlider(wrapper, track, dotsEl, count) {
     var realCount = track.children.length;
-    console.log('[SD v16] init — passed:', count, 'real:', realCount, 'wW:', wrapper.clientWidth);
 
     if (realCount <= 1) {
       dotsEl.style.display = 'none';
@@ -501,7 +506,7 @@
     count = realCount;
 
     var current  = 0;
-    var DURATION = 12000;
+    var DURATION = 10000;  /* 10 s per card */
     var SNAP_MS  = 320;
     var SNAP_FN  = 'cubic-bezier(0.25,0.46,0.45,0.94)';
 
@@ -638,7 +643,6 @@
     _applyX(0, false);
     _syncDots();
     _resetProg();
-    console.log('[SD v16] ready — count:', count, 'width:', _W());
   }
 
   /* ─────────────────────────────────────────────
@@ -649,9 +653,6 @@
   ───────────────────────────────────────────── */
   function render(gencineUI) {
     var items = getItemsNow();  /* always 4 */
-    console.log('[SD v16] render — items:', items.length,
-      items.map(function(x) { return x.id || (x._adhkarItem && x._adhkarItem.id); }));
-
     var T       = window.t || function(k, d) { return d || k; };
     var section = _mk('div', 'sd-section');
 
@@ -683,8 +684,6 @@
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         if (_done) return; _done = true;
-        console.log('[SD v16] tryInit — inDOM:', !!(document.body && document.body.contains(wrapper)),
-          'wW:', wrapper.clientWidth);
         _initSlider(wrapper, track, dotsEl, items.length);
       });
     });
