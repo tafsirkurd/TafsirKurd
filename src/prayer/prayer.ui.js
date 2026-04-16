@@ -1960,6 +1960,92 @@
     buildVoicePicker(reciterWrap, city);
     container.appendChild(reciterWrap);
 
+    // ── Notification diagnostics ──────────────────────────────────
+    // Shows pending count + fires a 60-second test notification so the
+    // user can verify the full pipeline (permission → schedule → fire → sound)
+    // without needing Xcode or Safari Web Inspector.
+    if (window.PrayerNotifications) {
+      var diagWrap = cel('div', 'as2-diag-wrap');
+
+      // Status line — updated after actions
+      var diagStatus = cel('div', 'as2-diag-status');
+      diagStatus.textContent = tStr('prayer.diag_tap_check', 'بمکە بۆ پشکنین');
+      diagWrap.appendChild(diagStatus);
+
+      // Button row
+      var diagRow = cel('div', 'as2-diag-row');
+
+      // "Check count" button
+      var checkBtn = cel('button', 'as2-diag-btn');
+      checkBtn.textContent = tStr('prayer.diag_check', '📋 ژمارەی نوتیفیکەیشن');
+      checkBtn.onclick = function() {
+        checkBtn.disabled = true;
+        checkBtn.textContent = '...';
+        var LN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
+        if (!LN || !LN.getPending) {
+          diagStatus.textContent = 'LocalNotifications plugin not available';
+          checkBtn.disabled = false;
+          checkBtn.textContent = tStr('prayer.diag_check', '📋 ژمارەی نوتیفیکەیشن');
+          return;
+        }
+        LN.getPending().then(function(result) {
+          var all   = (result && result.notifications) || [];
+          var athan = all.filter(function(n) { return n.id >= 100 && n.id < 240; });
+          athan.sort(function(a, b) { return a.id - b.id; });
+          var NAMES = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+          var lines = ['📊 کۆی پێنج نوێژ: ' + athan.length + ' / ' + all.length + ' total'];
+          var shown = 0;
+          for (var ii = 0; ii < athan.length && shown < 5; ii++) {
+            var n = athan[ii];
+            var pName = NAMES[(n.id - 100) % 5] || '?';
+            var at = (n.schedule && n.schedule.at) ? new Date(n.schedule.at) : null;
+            var timeStr = at ? (at.toLocaleDateString() + ' ' + at.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})) : '?';
+            lines.push('• ' + pName + ': ' + timeStr);
+            shown++;
+          }
+          if (athan.length > 5) lines.push('... + ' + (athan.length - 5) + ' more');
+          var lastCity = localStorage.getItem('prayerLastScheduleCity') || '?';
+          var lastDate = localStorage.getItem('prayerLastScheduleDate') || '?';
+          lines.push('📍 ' + lastCity + ' | ' + lastDate);
+          diagStatus.textContent = lines.join('\n');
+          checkBtn.disabled = false;
+          checkBtn.textContent = tStr('prayer.diag_check', '📋 ژمارەی نوتیفیکەیشن');
+        }).catch(function(e) {
+          diagStatus.textContent = 'getPending error: ' + (e && e.message);
+          checkBtn.disabled = false;
+          checkBtn.textContent = tStr('prayer.diag_check', '📋 ژمارەی نوتیفیکەیشن');
+        });
+      };
+      diagRow.appendChild(checkBtn);
+
+      // "Test 60s" button
+      var testBtn = cel('button', 'as2-diag-btn as2-diag-btn--test');
+      testBtn.textContent = tStr('prayer.diag_test', '🔔 تێست ٦٠ چرکە');
+      testBtn.onclick = function() {
+        testBtn.disabled = true;
+        testBtn.textContent = '...';
+        window.PrayerNotifications.scheduleTestNotification().then(function(at) {
+          if (at) {
+            var timeStr = at.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            diagStatus.textContent = '✓ نوتیفیکەیشن بۆ ' + timeStr + ' خەمڵاندرا\n' +
+                                     'گوێ بدە بۆ ئاتانی ' + window.PrayerNotifications.getSelectedVoice() + ' پاش ٦٠ چرکە';
+          } else {
+            diagStatus.textContent = '✗ تێست سەرکەوتوو نەبوو — مۆڵەت پشکنەرەوە';
+          }
+          testBtn.disabled = false;
+          testBtn.textContent = tStr('prayer.diag_test', '🔔 تێست ٦٠ چرکە');
+        }).catch(function(e) {
+          diagStatus.textContent = '✗ Error: ' + (e && e.message);
+          testBtn.disabled = false;
+          testBtn.textContent = tStr('prayer.diag_test', '🔔 تێست ٦٠ چرکە');
+        });
+      };
+      diagRow.appendChild(testBtn);
+
+      diagWrap.appendChild(diagRow);
+      container.appendChild(diagWrap);
+    }
+
   }
 
   /**
