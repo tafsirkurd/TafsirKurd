@@ -646,6 +646,43 @@
   }
 
   /* ─────────────────────────────────────────────
+     DAILY REFRESH COUNTDOWN
+     Shows time remaining until next UTC midnight —
+     the exact moment the daily seed flips.
+     Updates every minute; self-cleans when removed.
+  ───────────────────────────────────────────── */
+  function _buildCountdown() {
+    var el = _mk('div', 'sd-refresh');
+
+    function _msUntilUtcMidnight() {
+      var now = Date.now();
+      var d   = new Date();
+      var next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+      return next - now;
+    }
+
+    function _fmt(ms) {
+      var total = Math.max(0, Math.floor(ms / 1000));
+      var h = Math.floor(total / 3600);
+      var m = Math.floor((total % 3600) / 60);
+      return h + 'h ' + String(m).padStart(2, '0') + 'm';
+    }
+
+    function _update() {
+      if (!document.body || !document.body.contains(el)) {
+        clearInterval(_tid);
+        return;
+      }
+      el.textContent = 'نوێکرنەوەی ڕۆژانە لە: ' + _fmt(_msUntilUtcMidnight());
+    }
+
+    _update();
+    var _tid = setInterval(_update, 60000);
+
+    return el;
+  }
+
+  /* ─────────────────────────────────────────────
      RENDER
      Returns section element.
      Slider initialised via double-RAF after caller
@@ -678,6 +715,9 @@
     /* dots — outside wrapper so overflow:hidden doesn't clip them */
     var dotsEl = _mk('div', 'sd-dots');
     section.appendChild(dotsEl);
+
+    /* daily refresh countdown — below dots, separate from the 10s bar */
+    section.appendChild(_buildCountdown());
 
     /* double-RAF: guarantees wrapper is in DOM + layout committed */
     var _done = false;
