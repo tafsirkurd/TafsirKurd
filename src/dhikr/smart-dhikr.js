@@ -58,6 +58,65 @@
       timeTag: null,
       dayBoostDays: [5],
       thursdayNightBoost: true
+    },
+
+    /* ── Ramadan ── */
+    {
+      id: 'fasting', categoryKey: 'fasting', icon: 'fas fa-moon',
+      labelKey: 'adhkar.fasting', labelFallback: 'ڕوژی',
+      subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕوژیدارییەکت خوا قبوڵ بکات',
+      timeTag: 'ڕەمەزان', basePriority: 60,
+      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
+        return h.month === 9 && nowMin >= fajrMin && nowMin < maghribMin;
+      }
+    },
+    {
+      id: 'breaking_fast', categoryKey: 'breaking_fast', icon: 'fas fa-utensils',
+      labelKey: 'adhkar.breaking_fast', labelFallback: 'کردنەوەی ڕوژی',
+      subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ئیفتارا خوش',
+      timeTag: 'ئیفتار', basePriority: 80,
+      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
+        return h.month === 9 && nowMin >= maghribMin && nowMin < maghribMin + 45;
+      }
+    },
+    {
+      id: 'lailat_qadr', categoryKey: 'lailat_qadr', icon: 'fas fa-star',
+      labelKey: 'adhkar.lailat_qadr', labelFallback: 'شەوا قەدرێ',
+      subtitleKey: 'gencine.smart.lailat_qadr_hint', subtitleFallback: 'شەوا هەزار مانگ',
+      timeTag: 'لێلەتول قەدر', basePriority: 80,
+      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
+        if (h.month !== 9) return false;
+        /* nights 21-29: show after Maghrib of day 20-28, or before Fajr on days 21-29 */
+        var isNight = nowMin >= maghribMin || nowMin < fajrMin;
+        if (h.day >= 21 && h.day <= 29 && isNight) return true;
+        if (h.day === 20 && nowMin >= maghribMin)   return true; /* night 21 starts */
+        return false;
+      }
+    },
+
+    /* ── Dhul Hijjah ── */
+    {
+      id: 'dhul_hijjah', categoryKey: 'dhul_hijjah', icon: 'fas fa-kaaba',
+      labelKey: 'adhkar.dhul_hijjah', labelFallback: 'ذوالحیجە',
+      subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دهە ڕۆژێن گەورە',
+      timeTag: 'ذوالحیجە', basePriority: 70,
+      hijriCond: function(h) { return h.month === 12 && h.day >= 1 && h.day <= 8; }
+    },
+    {
+      id: 'arafat', categoryKey: 'arafat', icon: 'fas fa-kaaba',
+      labelKey: 'adhkar.arafat', labelFallback: 'ڕۆژا عەرەفە',
+      subtitleKey: 'gencine.smart.arafat_hint', subtitleFallback: 'باشترین ڕۆژی ساڵ',
+      timeTag: 'عەرەفە', basePriority: 85,
+      hijriCond: function(h) { return h.month === 12 && h.day === 9; }
+    },
+
+    /* ── Rain (Duhok area) ── */
+    {
+      id: 'rain', categoryKey: 'rain', icon: 'fas fa-cloud-rain',
+      labelKey: 'adhkar.rain', labelFallback: 'کاتی باران',
+      subtitleKey: 'gencine.smart.rain_hint', subtitleFallback: 'باران دکەت — دوعا بکە',
+      timeTag: 'باران', basePriority: 55,
+      rainCond: true
     }
   ];
 
@@ -132,6 +191,62 @@
     52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,
     11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6
   ];
+
+  /* ─────────────────────────────────────────────
+     HIJRI CALENDAR  (tabular / civil algorithm)
+     Pass _baghdadDate() so day changes at Baghdad midnight.
+  ───────────────────────────────────────────── */
+  function _toHijri(date) {
+    var y = date.getUTCFullYear(), m = date.getUTCMonth() + 1, d = date.getUTCDate();
+    var a = Math.floor((14 - m) / 12);
+    var yy = y + 4800 - a, mm = m + 12 * a - 3;
+    var jdn = d + Math.floor((153 * mm + 2) / 5) + 365 * yy +
+              Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+    var l = jdn - 1948440 + 10632;
+    var n = Math.floor((l - 1) / 10631);
+    l = l - 10631 * n + 354;
+    var j = Math.floor((10985 - l) / 5316) * Math.floor((50 * l) / 17719) +
+            Math.floor(l / 5670) * Math.floor((43 * l) / 15238);
+    l = l - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
+        Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+    return {
+      year:  30 * n + j - 30,
+      month: Math.floor((24 * l) / 709),
+      day:   l - Math.floor((709 * Math.floor((24 * l) / 709)) / 24)
+    };
+  }
+
+  /* ─────────────────────────────────────────────
+     RAIN DETECTION  (Duhok area, cached 1 h)
+     Open-Meteo — no API key required.
+  ───────────────────────────────────────────── */
+  var _RAIN_KEY = 'sd_rain_v1';
+  var _RAIN_TTL = 60 * 60 * 1000;
+
+  function _isRaining() {
+    try {
+      var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
+      if (c && (Date.now() - c.ts) < _RAIN_TTL) return !!c.raining;
+    } catch(e) {}
+    return false;
+  }
+
+  function _fetchRain() {
+    try {
+      var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
+      if (c && (Date.now() - c.ts) < _RAIN_TTL) return; /* cache fresh */
+    } catch(e) {}
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code&timezone=Asia%2FBaghdad')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var cur  = data.current || {};
+        var prec = cur.precipitation || 0;
+        var code = cur.weather_code  || 0;
+        /* weather codes: 51-67 drizzle/rain, 80-82 showers, 95-99 thunderstorm */
+        var raining = prec > 0 || (code >= 51 && code <= 99);
+        try { localStorage.setItem(_RAIN_KEY, JSON.stringify({ts: Date.now(), raining: raining})); } catch(e2) {}
+      }).catch(function() {});
+  }
 
   /* ─────────────────────────────────────────────
      TIME HELPERS
@@ -259,7 +374,7 @@
   /* ─────────────────────────────────────────────
      TIME-ACTIVE CHECK
   ───────────────────────────────────────────── */
-  function _isTimeActive(item, nowMin, dow, prayers, maghribMin) {
+  function _isTimeActive(item, nowMin, dow, prayers, maghribMin, fajrMin) {
     if (item.timeWindow) {
       var tw = item.timeWindow;
       var ts = (prayers && _toMin(prayers[tw.start]) >= 0) ? _toMin(prayers[tw.start]) : tw.fs;
@@ -268,6 +383,11 @@
     }
     if (item.dayBoostDays && item.dayBoostDays.indexOf(dow) >= 0) return true;
     if (item.thursdayNightBoost && dow === 4 && nowMin >= maghribMin) return true;
+    if (item.hijriCond) {
+      var h = _toHijri(_baghdadDate());
+      return item.hijriCond(h, nowMin, fajrMin, maghribMin);
+    }
+    if (item.rainCond) return _isRaining();
     return false;
   }
 
@@ -284,16 +404,19 @@
      Priority: time-active window > daily-seeded fallback.
   ───────────────────────────────────────────── */
   function _getZikrItem() {
+    _fetchRain(); /* background refresh — never blocks rendering */
+
     var now        = new Date();
     var nowMin     = now.getHours() * 60 + now.getMinutes();
     var dow        = now.getDay();
     var prayers    = _getPrayerTimings();
     var maghribMin = (prayers && _toMin(prayers.Maghrib) >= 0) ? _toMin(prayers.Maghrib) : 18 * 60;
+    var fajrMin    = (prayers && _toMin(prayers.Fajr)    >= 0) ? _toMin(prayers.Fajr)    :  5 * 60;
     var state      = _getState();
 
     var active = TIME_ITEMS
       .filter(function(item) {
-        return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin);
+        return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin, fajrMin);
       })
       .map(function(item) { return { item: item, score: _scoreItem(item, state) }; })
       .sort(function(a, b) { return b.score - a.score; });
@@ -435,9 +558,9 @@
   /* Read adhkar for a category from the localStorage cache */
   function _getAdhkarFromCache(catKey) {
     try {
-      var cached = JSON.parse(localStorage.getItem('gencine_adhkar_v1'));
-      if (!cached || !Array.isArray(cached)) return [];
-      return cached.filter(function(a) { return a.category_key === catKey && a.active !== false; });
+      var raw = JSON.parse(localStorage.getItem('gencine_adhkar_v1'));
+      var list = (raw && Array.isArray(raw.data)) ? raw.data : (Array.isArray(raw) ? raw : []);
+      return list.filter(function(a) { return a.category_key === catKey && a.active !== false; });
     } catch(e) { return []; }
   }
 
@@ -454,41 +577,38 @@
     var featured    = adhkarList.length ? adhkarList[_seededIdx(adhkarList.length, 5)] : null;
     var totalCount  = adhkarList.length;
 
-    /* Card root */
+    /* Card root — same flex-row layout as other cards */
     var cls = 'sd-card sd-card-zikr' + (done ? ' sd-card-done' : '') + (isFriday ? ' sd-card-friday' : '');
     var card = _mk('div', cls);
 
-    /* ── Row 1: icon + tags + arrow ── */
-    var header = _mk('div', 'sd-zikr-header');
-
+    /* icon */
     var iWrap = _mk('div', 'sd-icon');
     iWrap.appendChild(_mk('i', item.icon));
-    header.appendChild(iWrap);
+    card.appendChild(iWrap);
 
-    var tagsEl = _mk('div', 'sd-zikr-tags');
-    if (item.timeTag) tagsEl.appendChild(_mk('span', 'sd-tag', item.timeTag));
-    if (totalCount > 0) tagsEl.appendChild(_mk('span', 'sd-zikr-count', totalCount + ' ' + T('gencine.smart.zikr_count_label', 'زکر')));
-    header.appendChild(tagsEl);
+    /* body — same as sd-content on other cards */
+    var body = _mk('div', 'sd-zikr-body');
 
-    var arrow = _mk('div', 'sd-arrow');
-    arrow.appendChild(_mk('i', 'fas fa-chevron-left'));
-    header.appendChild(arrow);
+    /* tag row: time tag + count badge */
+    var tagRow = _mk('div', '');
+    if (item.timeTag) tagRow.appendChild(_mk('span', 'sd-tag', item.timeTag));
+    if (totalCount > 0) tagRow.appendChild(_mk('span', 'sd-zikr-count', totalCount + ' ' + T('gencine.smart.zikr_count_label', 'زکر')));
+    body.appendChild(tagRow);
 
-    card.appendChild(header);
-
-    /* ── Row 2: Arabic text preview (hidden when done) ── */
+    /* Arabic text preview (hidden when done) */
     if (featured && featured.ar && !done) {
       var arEl  = _mk('div', 'sd-zikr-ar');
       var arTxt = featured.ar.replace(/\s+/g, ' ').trim();
-      /* clamp to ~100 chars — CSS line-clamp handles the rest */
       if (arTxt.length > 110) arTxt = arTxt.slice(0, 110) + '…';
       arEl.textContent = arTxt;
-      card.appendChild(arEl);
+      body.appendChild(arEl);
+    } else if (done) {
+      body.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
     }
 
-    /* ── Row 3: Kurdish label + badge ── */
+    /* footer: Kurdish label + badge + source */
     var footer = _mk('div', 'sd-zikr-footer');
-    footer.appendChild(_mk('div', 'sd-zikr-title', T(item.labelKey, item.labelFallback)));
+    footer.appendChild(_mk('span', 'sd-zikr-title', T(item.labelKey, item.labelFallback)));
 
     var badge;
     if (done) {
@@ -499,13 +619,10 @@
       badge = _mk('span', 'sd-zikr-badge sd-zikr-badge-repeat', '× ' + featured.repeat);
     }
     if (badge) footer.appendChild(badge);
+    if (featured && featured.source && !done) footer.appendChild(_mk('span', 'sd-zikr-source', featured.source));
+    body.appendChild(footer);
 
-    card.appendChild(footer);
-
-    /* ── Source line (shown under footer when data exists) ── */
-    if (featured && featured.source && !done) {
-      card.appendChild(_mk('div', 'sd-zikr-source', featured.source));
-    }
+    card.appendChild(body);
 
     card.addEventListener('click', function() {
       _markOpened(item.id);
