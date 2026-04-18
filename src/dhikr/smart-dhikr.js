@@ -432,34 +432,80 @@
     return el;
   }
 
+  /* Read adhkar for a category from the localStorage cache */
+  function _getAdhkarFromCache(catKey) {
+    try {
+      var cached = JSON.parse(localStorage.getItem('gencine_adhkar_v1'));
+      if (!cached || !Array.isArray(cached)) return [];
+      return cached.filter(function(a) { return a.category_key === catKey && a.active !== false; });
+    } catch(e) { return []; }
+  }
+
   function _buildAdhkarCard(item, gencineUI) {
     var T      = window.t || function(k, d) { return d || k; };
     var state  = _getState();
     var done   = state.completed.indexOf(item.id) >= 0;
     var streak = _getStreak(item.id);
+    var isFriday = item.id === 'friday' || item.id === 'salawat';
 
-    var card    = _mk('div', 'sd-card' + (done ? ' sd-card-done' : ''));
-    var iWrap   = _mk('div', 'sd-icon');
+    /* Load actual adhkar from cache so we can show a real preview */
+    var adhkarList  = _getAdhkarFromCache(item.categoryKey);
+    /* Pick one dhikr for the day using a separate salt (5) — same all day, changes daily */
+    var featured    = adhkarList.length ? adhkarList[_seededIdx(adhkarList.length, 5)] : null;
+    var totalCount  = adhkarList.length;
+
+    /* Card root */
+    var cls = 'sd-card sd-card-zikr' + (done ? ' sd-card-done' : '') + (isFriday ? ' sd-card-friday' : '');
+    var card = _mk('div', cls);
+
+    /* ── Row 1: icon + tags + arrow ── */
+    var header = _mk('div', 'sd-zikr-header');
+
+    var iWrap = _mk('div', 'sd-icon');
     iWrap.appendChild(_mk('i', item.icon));
-    card.appendChild(iWrap);
+    header.appendChild(iWrap);
 
-    var content = _mk('div', 'sd-content');
-    if (item.timeTag) content.appendChild(_mk('span', 'sd-tag', item.timeTag));
-    var titleZone = _mk('div', 'sd-title-zone');
-    titleZone.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
-    content.appendChild(titleZone);
-
-    var subText = done
-      ? T('gencine.smart.done_today', 'ئەمڕۆ تەواو بوو')
-      : streak.count >= 2
-        ? streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ پەی هەم')
-        : T(item.subtitleKey, item.subtitleFallback);
-    content.appendChild(_mk('div', 'sd-sub' + (done ? ' sd-sub-done' : ''), subText));
-    card.appendChild(content);
+    var tagsEl = _mk('div', 'sd-zikr-tags');
+    if (item.timeTag) tagsEl.appendChild(_mk('span', 'sd-tag', item.timeTag));
+    if (totalCount > 0) tagsEl.appendChild(_mk('span', 'sd-zikr-count', totalCount + ' ' + T('gencine.smart.zikr_count_label', 'زکر')));
+    header.appendChild(tagsEl);
 
     var arrow = _mk('div', 'sd-arrow');
     arrow.appendChild(_mk('i', 'fas fa-chevron-left'));
-    card.appendChild(arrow);
+    header.appendChild(arrow);
+
+    card.appendChild(header);
+
+    /* ── Row 2: Arabic text preview (hidden when done) ── */
+    if (featured && featured.ar && !done) {
+      var arEl  = _mk('div', 'sd-zikr-ar');
+      var arTxt = featured.ar.replace(/\s+/g, ' ').trim();
+      /* clamp to ~100 chars — CSS line-clamp handles the rest */
+      if (arTxt.length > 110) arTxt = arTxt.slice(0, 110) + '…';
+      arEl.textContent = arTxt;
+      card.appendChild(arEl);
+    }
+
+    /* ── Row 3: Kurdish label + badge ── */
+    var footer = _mk('div', 'sd-zikr-footer');
+    footer.appendChild(_mk('div', 'sd-zikr-title', T(item.labelKey, item.labelFallback)));
+
+    var badge;
+    if (done) {
+      badge = _mk('span', 'sd-zikr-badge sd-zikr-badge-done', T('gencine.smart.done_today', 'ئەمڕۆ ✓'));
+    } else if (streak.count >= 2) {
+      badge = _mk('span', 'sd-zikr-badge sd-zikr-badge-streak', streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ 🔥'));
+    } else if (featured && (featured.repeat || 1) > 1) {
+      badge = _mk('span', 'sd-zikr-badge sd-zikr-badge-repeat', '× ' + featured.repeat);
+    }
+    if (badge) footer.appendChild(badge);
+
+    card.appendChild(footer);
+
+    /* ── Source line (shown under footer when data exists) ── */
+    if (featured && featured.source && !done) {
+      card.appendChild(_mk('div', 'sd-zikr-source', featured.source));
+    }
 
     card.addEventListener('click', function() {
       _markOpened(item.id);
