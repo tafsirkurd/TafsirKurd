@@ -565,7 +565,7 @@
   }
 
   function _buildAdhkarCard(item, gencineUI) {
-    var T      = window.t || function(k, d) { return d || k; };
+    var T = function(k, d) { var r = window.t ? window.t(k) : k; return (r && r !== k) ? r : (d || k); };
     var state  = _getState();
     var done   = state.completed.indexOf(item.id) >= 0;
     var streak = _getStreak(item.id);
@@ -577,8 +577,8 @@
     var featured    = adhkarList.length ? adhkarList[_seededIdx(adhkarList.length, 5)] : null;
     var totalCount  = adhkarList.length;
 
-    /* Card root — same flex-row layout as other cards */
-    var cls = 'sd-card sd-card-zikr' + (done ? ' sd-card-done' : '') + (isFriday ? ' sd-card-friday' : '');
+    /* Card — identical structure to _buildDailyCard so height is exactly the same */
+    var cls = 'sd-card' + (done ? ' sd-card-done' : '') + (isFriday ? ' sd-card-friday' : '');
     var card = _mk('div', cls);
 
     /* icon */
@@ -586,43 +586,43 @@
     iWrap.appendChild(_mk('i', item.icon));
     card.appendChild(iWrap);
 
-    /* body — same as sd-content on other cards */
-    var body = _mk('div', 'sd-zikr-body');
+    /* content — same class as other cards */
+    var content = _mk('div', 'sd-content');
 
-    /* tag row: time tag + count badge */
-    var tagRow = _mk('div', '');
-    if (item.timeTag) tagRow.appendChild(_mk('span', 'sd-tag', item.timeTag));
-    if (totalCount > 0) tagRow.appendChild(_mk('span', 'sd-zikr-count', totalCount + ' ' + T('gencine.smart.zikr_count_label', 'زکر')));
-    body.appendChild(tagRow);
+    /* tag row: time tag + count badge inline */
+    var tagWrap = document.createElement('div');
+    if (item.timeTag) tagWrap.appendChild(_mk('span', 'sd-tag', item.timeTag));
+    if (totalCount > 0) tagWrap.appendChild(_mk('span', 'sd-zikr-count', totalCount + ' ' + T('gencine.smart.zikr_count_label', 'زکر')));
+    content.appendChild(tagWrap);
 
-    /* Arabic text preview (hidden when done) */
+    /* title zone — same min-height as other cards */
+    var titleZone = _mk('div', 'sd-title-zone');
     if (featured && featured.ar && !done) {
       var arEl  = _mk('div', 'sd-zikr-ar');
       var arTxt = featured.ar.replace(/\s+/g, ' ').trim();
-      if (arTxt.length > 110) arTxt = arTxt.slice(0, 110) + '…';
+      if (arTxt.length > 100) arTxt = arTxt.slice(0, 100) + '…';
       arEl.textContent = arTxt;
-      body.appendChild(arEl);
-    } else if (done) {
-      body.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
+      titleZone.appendChild(arEl);
+    } else {
+      titleZone.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
     }
+    content.appendChild(titleZone);
 
-    /* footer: Kurdish label + badge + source */
-    var footer = _mk('div', 'sd-zikr-footer');
-    footer.appendChild(_mk('span', 'sd-zikr-title', T(item.labelKey, item.labelFallback)));
-
-    var badge;
+    /* sub line — Kurdish label + badge + source, same as sd-sub on other cards */
+    var subEl = _mk('div', 'sd-sub' + (done ? ' sd-sub-done' : ''));
     if (done) {
-      badge = _mk('span', 'sd-zikr-badge sd-zikr-badge-done', T('gencine.smart.done_today', 'ئەمڕۆ ✓'));
+      subEl.textContent = T('gencine.smart.done_today', 'ئەمڕۆ تەواو بوو');
     } else if (streak.count >= 2) {
-      badge = _mk('span', 'sd-zikr-badge sd-zikr-badge-streak', streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ 🔥'));
-    } else if (featured && (featured.repeat || 1) > 1) {
-      badge = _mk('span', 'sd-zikr-badge sd-zikr-badge-repeat', '× ' + featured.repeat);
+      subEl.textContent = streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ پەی هەم 🔥');
+    } else {
+      var subParts = [T(item.labelKey, item.labelFallback)];
+      if (featured && (featured.repeat || 1) > 1) subParts.push('× ' + featured.repeat);
+      if (featured && featured.source)             subParts.push(featured.source);
+      subEl.textContent = subParts.join('  ·  ');
     }
-    if (badge) footer.appendChild(badge);
-    if (featured && featured.source && !done) footer.appendChild(_mk('span', 'sd-zikr-source', featured.source));
-    body.appendChild(footer);
+    content.appendChild(subEl);
 
-    card.appendChild(body);
+    card.appendChild(content);
 
     card.addEventListener('click', function() {
       _markOpened(item.id);
