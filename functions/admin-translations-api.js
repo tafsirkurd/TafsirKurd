@@ -59,12 +59,27 @@ export async function onRequest(context) {
             return json({ success: true, row: data });
         }
 
-        // ── DELETE one row by numeric ID ──────────────────────────────────
+        // ── DELETE one row by numeric ID + permanently block its key_id ──
         if (action === 'delete') {
             const { id } = body;
             if (!id) return json({ error: 'id required' }, 400, corsHeaders);
+
+            // Fetch key_id before deleting so we can block it
+            const { data: row } = await supabase
+                .from('kurdish_translations')
+                .select('key_id')
+                .eq('id', id)
+                .single();
+
             const { error } = await supabase.from('kurdish_translations').delete().eq('id', id);
             if (error) return json({ error: error.message }, 500, corsHeaders);
+
+            // Block key_id so import can never re-insert it
+            if (row?.key_id) {
+                await supabase.from('deleted_translation_keys')
+                    .upsert({ key_id: row.key_id }, { onConflict: 'key_id' });
+            }
+
             return json({ success: true });
         }
 

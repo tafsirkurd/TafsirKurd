@@ -3830,7 +3830,7 @@
         // ===== Delete =====
         async function deleteTranslation(id) {
             if (!canDelete) return;
-            if (!confirm('Delete this translation?')) return;
+            if (!confirm('Delete this translation permanently? It will never be re-imported.')) return;
 
             try {
                 var delItem = allTranslations.find(function(t) { return t.id === id; });
@@ -3874,7 +3874,7 @@
                 });
                 if (!window.BULK_TRANSLATIONS) throw new Error('No data');
 
-                // 2. Fetch ALL existing entries with key_id + page
+                // 2. Fetch ALL existing entries with key_id + page, and the blocklist
                 btnLabel.textContent = 'Checking...';
                 var existingMap = {};
                 var offset = 0;
@@ -3889,6 +3889,13 @@
                     offset += 1000;
                 }
 
+                // Fetch permanently deleted key_ids (blocklist)
+                var blockedKeys = {};
+                var bRes = await supabase.from('deleted_translation_keys').select('key_id');
+                if (!bRes.error && bRes.data) {
+                    bRes.data.forEach(function(r) { blockedKeys[r.key_id] = true; });
+                }
+
                 // 3. Deduplicate BULK_TRANSLATIONS by key_id
                 var seenKeys = {};
                 var uniqueEntries = [];
@@ -3900,12 +3907,15 @@
                 });
                 var dupes = window.BULK_TRANSLATIONS.length - uniqueEntries.length;
 
-                // 4. Split: new entries, entries needing page fix, already correct
+                // 4. Split: new entries, entries needing page fix, already correct, blocked
                 var newEntries = [];
                 var fixEntries = [];
                 var skipped = 0;
+                var blocked = 0;
                 uniqueEntries.forEach(function(t) {
-                    if (!(t.key_id in existingMap)) {
+                    if (blockedKeys[t.key_id]) {
+                        blocked++;  // permanently deleted — never re-import
+                    } else if (!(t.key_id in existingMap)) {
                         newEntries.push(t);
                     } else if (existingMap[t.key_id] !== t.page) {
                         fixEntries.push(t);
@@ -3913,7 +3923,7 @@
                         skipped++;
                     }
                 });
-                console.log('[Import] New:', newEntries.length, 'Fix page:', fixEntries.length, 'OK:', skipped, 'Dupes:', dupes);
+                console.log('[Import] New:', newEntries.length, 'Fix page:', fixEntries.length, 'OK:', skipped, 'Blocked:', blocked, 'Dupes:', dupes);
 
                 var added = 0, updated = 0, errors = 0;
 
@@ -3951,7 +3961,7 @@
                     }
                 }
 
-                var msg = 'Added ' + added + ', Fixed ' + updated + ', OK ' + skipped + (errors ? ', ERRORS ' + errors : '');
+                var msg = 'Added ' + added + ', Fixed ' + updated + ', OK ' + skipped + (blocked ? ', Blocked ' + blocked : '') + (errors ? ', ERRORS ' + errors : '');
                 console.log('[Import] Done:', msg);
                 showToast(msg);
                 await loadTranslations();
