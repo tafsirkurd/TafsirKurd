@@ -195,6 +195,54 @@ const TRANSLATIONS_SEED = [
     { key_id: 'nav.home', kurdish_text: 'سەرەکی', category: 'nav', page: 'all', context: 'Home nav link' },
     { key_id: 'nav.quran', kurdish_text: 'قورئان', category: 'nav', page: 'all', context: 'Quran nav link' },
     { key_id: 'nav.islamvoice', kurdish_text: 'ئیسلام ڤۆیس', category: 'nav', page: 'all', context: 'Islamic Voice nav link' },
+
+    // ==========================================
+    // ISLAMVOICE — COMMENTS & LIKES (2026-04-18)
+    // ==========================================
+    { key_id: 'iv.comment_added',       kurdish_text: '✅ شیرۆڤە زیادکرا!',                               category: 'islamvoice', page: 'android', context: 'Comment submitted toast' },
+    { key_id: 'iv.comment_deleted',     kurdish_text: 'شیرۆڤە سڕایەوە',                                    category: 'islamvoice', page: 'android', context: 'Comment deleted toast' },
+    { key_id: 'iv.comment_required',    kurdish_text: 'تکایە شیرۆڤەیەک بنووسە',                            category: 'islamvoice', page: 'android', context: 'Validation: empty comment' },
+    { key_id: 'iv.comment_too_long',    kurdish_text: 'شیرۆڤە زۆر درێژە (زۆرینە ٥٠٠ پیت)',                category: 'islamvoice', page: 'android', context: 'Validation: comment over 500 chars' },
+    { key_id: 'iv.comments_load_error', kurdish_text: 'هەڵەیەک ڕوویدا لە بارکردنی شیرۆڤەکان',            category: 'islamvoice', page: 'android', context: 'Comments fetch error' },
+    { key_id: 'iv.comments_title',      kurdish_text: 'شیرۆڤەکان',                                         category: 'islamvoice', page: 'android', context: 'Comments modal title' },
+    { key_id: 'iv.like_btn',            kurdish_text: 'حەزلێبکە',                                           category: 'islamvoice', page: 'android', context: 'Like button (not liked)' },
+    { key_id: 'iv.like_success',        kurdish_text: '❤️ حەزکرا!',                                        category: 'islamvoice', page: 'android', context: 'Like toast' },
+    { key_id: 'iv.liked_btn',           kurdish_text: 'حەزلێکری',                                           category: 'islamvoice', page: 'android', context: 'Like button (liked state)' },
+    { key_id: 'iv.no_comments',         kurdish_text: 'هیچ شیرۆڤەیەک نییە. یەکەم کەس بە کە شیرۆڤە دەکات!', category: 'islamvoice', page: 'android', context: 'Empty comments list' },
+
+    // ==========================================
+    // MUSHAF MODE (2026-04-18)
+    // ==========================================
+    { key_id: 'mushaf.font_offline',      kurdish_text: 'ستایلا پەڕینێ نەکەتە دەست بی ئینتەرنەت.',  category: 'mushaf', page: 'android', context: 'Font not available offline' },
+    { key_id: 'mushaf.offline_msg',       kurdish_text: 'دەم یەکەم جار یە پێویستە ئینتەرنەت.',       category: 'mushaf', page: 'android', context: 'Mushaf needs internet on first load' },
+    { key_id: 'mushaf.switch_to_reading', kurdish_text: 'بەرەو دیمەنا خوێندنێ',                      category: 'mushaf', page: 'android', context: 'Button: switch to reading mode' },
+
+    // ==========================================
+    // PROFILE — TIME DISPLAY & SESSION (2026-04-18)
+    // ==========================================
+    { key_id: 'profile.session_revoked', kurdish_text: 'چوونا دەرەوە ل ئامێرا دی کرا',  category: 'profile', page: 'android', context: 'Toast: session revoked on another device' },
+    { key_id: 'profile.time_day',        kurdish_text: 'ڕۆژ',                              category: 'profile', page: 'android', context: 'Unit: day(s)' },
+    { key_id: 'profile.time_hour',       kurdish_text: 'کاتژمێر',                          category: 'profile', page: 'android', context: 'Unit: hour(s)' },
+    { key_id: 'profile.time_min',        kurdish_text: 'خولەک',                             category: 'profile', page: 'android', context: 'Unit: minute(s)' },
+
+    // ==========================================
+    // SETTINGS — SYNC PANEL (2026-04-18)
+    // ==========================================
+    { key_id: 'settings.sync_what_syncs',     kurdish_text: 'چ دێتە هاوکارکرن',               category: 'settings', page: 'android', context: 'Section label: what syncs' },
+    { key_id: 'settings.sync_item_reading',   kurdish_text: 'پێشکەوتنا خوێندنێ',              category: 'settings', page: 'android', context: 'Sync item: reading progress' },
+    { key_id: 'settings.sync_item_bookmarks', kurdish_text: 'نیشانکرن',                       category: 'settings', page: 'android', context: 'Sync item: bookmarks' },
+    { key_id: 'settings.sync_item_goals',     kurdish_text: 'ئارمانج',                        category: 'settings', page: 'android', context: 'Sync item: goals' },
+    { key_id: 'settings.sync_item_prayer',    kurdish_text: 'کات و ئاگادارکرن نوێژ',          category: 'settings', page: 'android', context: 'Sync item: prayer times & notifs' },
+    { key_id: 'settings.sync_item_saved',     kurdish_text: 'ڤیدیۆیێن پاراستی',               category: 'settings', page: 'android', context: 'Sync item: saved videos' },
+    { key_id: 'settings.sync_item_settings',  kurdish_text: 'ڕێکخستن',                        category: 'settings', page: 'android', context: 'Sync item: app settings' },
+    { key_id: 'settings.sync_device_only',    kurdish_text: 'تەنها ل ئامێرê',                 category: 'settings', page: 'android', context: 'Section label: device-only items' },
+    { key_id: 'settings.sync_device_cache',   kurdish_text: 'کاشێکردنا دەنگ',                 category: 'settings', page: 'android', context: 'Device-only: audio cache' },
+    { key_id: 'settings.sync_device_notif',   kurdish_text: 'ئاگادارکرنا دینامیکی',            category: 'settings', page: 'android', context: 'Device-only: dynamic notifications' },
+    { key_id: 'settings.sync_device_sched',   kurdish_text: 'خشتا نوێژ',                      category: 'settings', page: 'android', context: 'Device-only: prayer schedule' },
+    { key_id: 'settings.sync_status_offline', kurdish_text: 'نەگیهاتنا ئینتەرنەت',            category: 'settings', page: 'android', context: 'Sync status: no internet' },
+    { key_id: 'settings.sync_status_syncing', kurdish_text: 'هاوکارکرن...',                   category: 'settings', page: 'android', context: 'Sync status: in progress' },
+    { key_id: 'settings.sync_status_failed',  kurdish_text: 'هاوکارکرن سەرنەکەوت',            category: 'settings', page: 'android', context: 'Sync status: failed' },
+    { key_id: 'settings.sync_retry_btn',      kurdish_text: 'دووبارە هەوڵبدە',                category: 'settings', page: 'android', context: 'Retry sync button label' },
 ];
 
 // Function to seed the database (run in browser console on admin page)

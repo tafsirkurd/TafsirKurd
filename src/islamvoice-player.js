@@ -1279,9 +1279,10 @@
     function playYouTubeVideo(videoId, title, episodeId) {
         console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
 
-        // On native app (Android/iOS), use Chrome Custom Tab (in-app overlay, shares Chrome cookies)
+        // On Android native, use Chrome Custom Tab (in-app overlay)
         const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-        if (isNative) {
+        const platform = (window.Capacitor && window.Capacitor.getPlatform) ? window.Capacitor.getPlatform() : 'web';
+        if (isNative && platform === 'android') {
             trackVideoView(episodeId);
             addToWatchHistory(episodeId, false);
             updateBadgeCounts();
@@ -1290,11 +1291,11 @@
             if (Browser && Browser.open) {
                 Browser.open({ url: ytUrl, presentationStyle: 'fullscreen' });
             } else {
-                // Fallback: open in YouTube app
                 window.open(ytUrl, '_system');
             }
             return;
         }
+        // On iOS native: fall through to inline iframe — try to play first, YouTube button as fallback
 
         // Track view
         trackVideoView(episodeId);
@@ -1350,6 +1351,31 @@
         iframe.allowFullscreen = true;
         iframe.referrerPolicy = 'no-referrer-when-downgrade';
         wrapper.appendChild(iframe);
+
+        // iOS fallback: if iframe can't autoplay, show YouTube button after short delay
+        if (isNative && platform === 'ios') {
+            const ytFallback = document.createElement('button');
+            const ytIcon = document.createElement('i');
+            ytIcon.className = 'fab fa-youtube';
+            ytIcon.style.cssText = 'margin-left:6px;font-size:18px;vertical-align:middle;';
+            const ytLabel = document.createTextNode(' بکە لە یوتیوب');
+            ytFallback.appendChild(ytIcon);
+            ytFallback.appendChild(ytLabel);
+            ytFallback.style.cssText = 'display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:101;background:#ff0000;color:#fff;border:none;border-radius:24px;padding:10px 22px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;direction:rtl;';
+            ytFallback.onclick = function(e) {
+                e.stopPropagation();
+                const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+                if (Browser && Browser.open) {
+                    Browser.open({ url: ytUrl, presentationStyle: 'fullscreen' });
+                } else {
+                    window.open(ytUrl, '_system');
+                }
+            };
+            wrapper.appendChild(ytFallback);
+            // Show fallback button after 3s — gives autoplay a chance first
+            setTimeout(function() { ytFallback.style.display = 'block'; }, 3000);
+        }
 
         // Close button
         const closeBtn = document.createElement('button');

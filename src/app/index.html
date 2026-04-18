@@ -1480,6 +1480,81 @@ body{background:var(--bg);color:var(--text)}
 .sky-const{stroke:rgba(180,200,255,0.11);stroke-width:0.4}
 /* Pause ALL sky animations when prayer tab is not active — huge GPU/battery win */
 .sky-scene.sky-paused,.sky-scene.sky-paused *{animation-play-state:paused !important}
+/* ── Qibla theme tokens ──────────────────────────────────────────────── */
+:root,[data-theme="light"]{--qibla-glow-rgb:0,128,64;--qibla-compass-bg:#ededf4}
+[data-theme="dark"]{--qibla-glow-rgb:212,175,55;--qibla-compass-bg:#0e0e18}
+[data-theme="sakina"]{--qibla-glow-rgb:201,168,76;--qibla-compass-bg:#07120a}
+[data-theme="noor"]{--qibla-glow-rgb:26,92,58;--qibla-compass-bg:#e6dabb}
+/* ── Qibla backdrop ──────────────────────────────────────────────────── */
+#qiblaOverlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding-bottom:8vh;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s ease}
+#qiblaOverlay.qibla-open{background:rgba(0,0,0,.52);pointer-events:auto}
+/* ── Qibla modal card ────────────────────────────────────────────────── */
+#qiblaModal{position:relative;background:var(--bg2);border:1px solid var(--border);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.55),0 0 0 .5px var(--border);width:min(88vmin,360px);padding:44px 16px 26px;display:flex;flex-direction:column;align-items:center;opacity:0;transform:scale(.93) translateY(8px);transition:opacity .32s ease,transform .32s cubic-bezier(.22,1,.36,1)}
+#qiblaOverlay.qibla-open #qiblaModal{opacity:1;transform:scale(1) translateY(0)}
+#qiblaCloseBtn{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:.68rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s}
+#qiblaCloseBtn:active{background:var(--bg3);border-color:var(--border2,var(--border))}
+[data-theme="light"] #qiblaCloseBtn,[data-theme="noor"] #qiblaCloseBtn{border-color:rgba(0,0,0,.22);color:var(--text2)}
+/* ── Qibla compass wrap ──────────────────────────────────────────────── */
+#qiblaWrap{display:flex;align-items:center;justify-content:center;position:relative;width:100%;padding:2px 0}
+#qiblaWrap::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 50%,rgba(var(--qibla-glow-rgb),.2) 0%,transparent 70%);pointer-events:none;opacity:.13;animation:qibla-ambient 3.8s ease-in-out infinite}
+@keyframes qibla-ambient{0%,100%{opacity:.12}50%{opacity:.22}}
+#qiblaCompass{position:relative;width:min(64vmin,280px);height:min(64vmin,280px);transform-origin:center;border-radius:50%;background:var(--qibla-compass-bg)}
+[data-theme="light"] #qiblaCompass{background:radial-gradient(circle at 40% 38%,#f5f5fc 0%,#e3e3ec 100%);box-shadow:inset 0 2px 18px rgba(0,0,0,.10),inset 0 0 0 .5px rgba(0,0,0,.07)}
+[data-theme="noor"] #qiblaCompass{background:radial-gradient(circle at 40% 38%,#ede2cb 0%,#d9cdb4 100%);box-shadow:inset 0 2px 18px rgba(0,0,0,.10),inset 0 0 0 .5px rgba(0,0,0,.07)}
+@keyframes qibla-align-pulse{0%{transform:scale(1)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
+#qiblaCompass.qibla-compass--pulse{animation:qibla-align-pulse .65s cubic-bezier(.22,1,.36,1) forwards}
+#qiblaGlow{position:absolute;inset:-6px;border-radius:50%;border:1.5px solid transparent;pointer-events:none}
+#qiblaWorld{position:absolute;inset:0;border-radius:50%;will-change:transform}
+.qibla-dial{position:absolute;inset:0;width:100%;height:100%}
+/* Tick marks — color driven by CSS per theme (no JS stroke attr) */
+#qiblaDial .tick-maj{stroke-width:1.8px;stroke:rgba(255,255,255,.38)}
+#qiblaDial .tick-med{stroke-width:1.4px;stroke:rgba(255,255,255,.22)}
+#qiblaDial .tick-10{stroke-width:.9px;stroke:rgba(255,255,255,.11)}
+#qiblaDial .tick-5{stroke-width:.9px;stroke:rgba(255,255,255,.06)}
+#qiblaDial .tick-north{stroke-width:1.8px;stroke:rgba(240,210,140,.38)}
+[data-theme="light"] #qiblaDial .tick-maj{stroke:rgba(0,0,0,.42)}
+[data-theme="light"] #qiblaDial .tick-med{stroke:rgba(0,0,0,.26)}
+[data-theme="light"] #qiblaDial .tick-10{stroke:rgba(0,0,0,.14)}
+[data-theme="light"] #qiblaDial .tick-5{stroke:rgba(0,0,0,.07)}
+[data-theme="light"] #qiblaDial .tick-north{stroke:rgba(0,100,50,.58)}
+[data-theme="sakina"] #qiblaDial .tick-maj{stroke:rgba(201,168,76,.52)}
+[data-theme="sakina"] #qiblaDial .tick-med{stroke:rgba(201,168,76,.30)}
+[data-theme="sakina"] #qiblaDial .tick-10{stroke:rgba(201,168,76,.15)}
+[data-theme="sakina"] #qiblaDial .tick-5{stroke:rgba(201,168,76,.08)}
+[data-theme="sakina"] #qiblaDial .tick-north{stroke:rgba(240,210,140,.58)}
+[data-theme="noor"] #qiblaDial .tick-maj{stroke:rgba(26,92,58,.52)}
+[data-theme="noor"] #qiblaDial .tick-med{stroke:rgba(26,92,58,.30)}
+[data-theme="noor"] #qiblaDial .tick-10{stroke:rgba(26,92,58,.16)}
+[data-theme="noor"] #qiblaDial .tick-5{stroke:rgba(26,92,58,.08)}
+[data-theme="noor"] #qiblaDial .tick-north{stroke:rgba(26,92,58,.62)}
+/* Concentric rings */
+.qibla-ring{stroke:rgba(255,255,255,.09)}
+[data-theme="light"] .qibla-ring{stroke:rgba(0,0,0,.14)}
+[data-theme="sakina"] .qibla-ring{stroke:rgba(201,168,76,.18)}
+[data-theme="noor"] .qibla-ring{stroke:rgba(26,92,58,.17)}
+/* Kaaba arm + icon */
+.qibla-kaaba-arm{position:absolute;left:calc(50% - 1px);bottom:50%;height:47%;width:2px;transform-origin:1px 100%}
+/* Faint arm rod — makes direction legible at a glance */
+.qibla-kaaba-arm::after{content:'';position:absolute;top:28px;bottom:4px;left:0;right:0;margin:0 auto;width:1px;background:linear-gradient(to bottom,rgba(var(--qibla-glow-rgb),.45) 0%,rgba(var(--qibla-glow-rgb),0) 100%)}
+.qibla-kaaba-icon{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:3px;border:2px solid rgba(var(--qibla-glow-rgb),1);background:linear-gradient(145deg,rgba(var(--qibla-glow-rgb),.22) 0%,rgba(0,0,0,.7) 100%);box-shadow:0 0 24px rgba(var(--qibla-glow-rgb),.7),0 0 10px rgba(var(--qibla-glow-rgb),.45),inset 0 1px 1px rgba(255,255,255,.16),inset 0 -1px 1px rgba(0,0,0,.5);transition:box-shadow .5s ease}
+[data-theme="light"] .qibla-kaaba-icon,[data-theme="noor"] .qibla-kaaba-icon{box-shadow:0 0 18px rgba(var(--qibla-glow-rgb),.55),0 0 6px rgba(var(--qibla-glow-rgb),.35),0 2px 8px rgba(0,0,0,.22),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -1px 1px rgba(0,0,0,.2)}
+.qibla-kaaba-icon.qibla-aligned{animation:qibla-kaaba-pulse 1.7s ease-in-out infinite}
+@keyframes qibla-kaaba-pulse{0%,100%{box-shadow:0 0 24px rgba(var(--qibla-glow-rgb),.7),0 0 10px rgba(var(--qibla-glow-rgb),.45)}50%{box-shadow:0 0 40px rgba(var(--qibla-glow-rgb),1),0 0 18px rgba(var(--qibla-glow-rgb),.7),0 0 60px rgba(var(--qibla-glow-rgb),.25)}}
+/* Needle — theme-aware */
+.qibla-needle{position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);width:11%;height:auto;pointer-events:none;filter:drop-shadow(0 0 9px rgba(255,255,255,.65)) drop-shadow(0 0 3px rgba(255,255,255,.3))}
+.qibla-needle .np{fill:rgba(255,255,255,.96)}
+.qibla-needle .ns{fill:rgba(255,255,255,.65)}
+.qibla-needle .nc{fill:rgba(255,255,255,.40)}
+[data-theme="light"] .qibla-needle,[data-theme="noor"] .qibla-needle{filter:drop-shadow(0 0 5px rgba(0,0,0,.35))}
+[data-theme="light"] .qibla-needle .np,[data-theme="noor"] .qibla-needle .np{fill:rgba(0,0,0,.85)}
+[data-theme="light"] .qibla-needle .ns,[data-theme="noor"] .qibla-needle .ns{fill:rgba(0,0,0,.58)}
+[data-theme="light"] .qibla-needle .nc,[data-theme="noor"] .qibla-needle .nc{fill:rgba(0,0,0,.36)}
+/* Center pin */
+.qibla-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--bg2);border:2px solid rgba(var(--qibla-glow-rgb),.75);box-shadow:0 0 0 2.5px rgba(var(--qibla-glow-rgb),.22),0 1px 6px rgba(0,0,0,.7);z-index:10;pointer-events:none}
+/* Loading */
+#qiblaLoading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.qibla-spinner{width:30px;height:30px;border:1.5px solid var(--border);border-top-color:var(--text3);border-radius:50%;animation:qibla-spin 1s linear infinite}
+@keyframes qibla-spin{to{transform:rotateZ(360deg)}}
 /* Prayer panel — no scroll, exact fit */
 #panelPrayer{overflow:hidden;padding-bottom:0}
 #prayerContent{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
@@ -1759,35 +1834,56 @@ body{background:var(--bg);color:var(--text)}
 .adhkar-card-src{font-size:.68rem;color:var(--text3)}
 .adhkar-card-right{display:flex;align-items:center;gap:6px}
 .adhkar-card-repeat{background:var(--accent);color:var(--accent-t);border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:700}
-/* ── Smart Daily Dhikr v12 ── */
+/* ── Smart Daily Dhikr ── */
 .sd-section{padding:16px 16px 0;direction:rtl}
-.sd-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sd-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .sd-hdr-label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
-.sd-chip{font-size:.69rem;font-weight:600;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:.05em;color:var(--text);background:var(--bg3);border:1px solid var(--border);padding:4px 11px;border-radius:20px;direction:ltr;white-space:nowrap}
-/* wrapper: overflow:hidden clips the horizontal track; position:relative anchors sd-progress */
-.sd-wrapper{overflow:hidden;border-radius:18px;position:relative;direction:ltr;width:100%}
-/* track: horizontal flex; JS applies translateX to move between slides */
-.sd-track{display:flex;will-change:transform;direction:ltr;-webkit-user-select:none;user-select:none}
-/* each slide exactly fills the wrapper width — no shrink, no grow */
+/* chip: RTL label + LTR numeric time, no bidi tricks needed */
+.sd-chip{display:inline-flex;align-items:center;gap:4px;font-size:.62rem;font-weight:600;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:4px 10px;border-radius:20px;white-space:nowrap;direction:rtl}
+.sd-chip-lbl{color:var(--text3)}
+.sd-chip-time{color:var(--text);direction:ltr;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";letter-spacing:.04em}
+/* sd-card-outer: clips progress bar corners to card radius. Contains wrapper + progress bar.
+   overflow:hidden here is safe — the composited sd-track is nested one level deeper inside
+   sd-wrapper which already provides the rectangular clip; outer only clips the progress strip. */
+.sd-card-outer{position:relative;border-radius:18px;overflow:hidden}
+/* wrapper: rectangular clip only — NO border-radius (GPU perf on Android WebView) */
+.sd-wrapper{overflow:hidden;position:relative;direction:ltr;width:100%}
+.sd-track{display:flex;will-change:transform;direction:ltr;-webkit-user-select:none;user-select:none;-webkit-backface-visibility:hidden;backface-visibility:hidden;touch-action:pan-y}
 .sd-slide{min-width:100%;width:100%;box-sizing:border-box;flex-shrink:0;flex-grow:0}
-/* card inside each slide */
-.sd-card{display:flex;align-items:center;gap:12px;padding:16px 14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;position:relative;overflow:hidden;direction:rtl}
-.sd-card:active{opacity:.72}
+/* Card: fixed min-height so all cards are the same height */
+.sd-card{display:flex;align-items:center;gap:12px;padding:14px 14px 16px;min-height:88px;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .15s ease;position:relative;overflow:hidden;direction:rtl}
+.sd-card:active{transform:scale(0.97);opacity:.82;transition-duration:.08s}
 .sd-card-done{opacity:.55}
 .sd-icon{width:44px;height:44px;border-radius:13px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:var(--accent);flex-shrink:0}
 .sd-content{flex:1;min-width:0;direction:rtl;text-align:right}
 .sd-tag{display:inline-block;font-size:.63rem;font-weight:700;letter-spacing:.05em;color:var(--accent);background:var(--accent-glow);padding:2px 8px;border-radius:20px;margin-bottom:4px}
-.sd-title{font-size:.98rem;font-weight:800;color:var(--text);line-height:1.3}
+/* Title zone: reserves 2-line height and vertically centers shorter text within it.
+   No dead gap below 1-line titles — text sits in the middle of the zone, not the top. */
+.sd-title-zone{min-height:calc(0.98rem * 1.3 * 2);display:flex;align-items:center}
+.sd-title{font-size:.98rem;font-weight:800;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;width:100%}
 .sd-sub{font-size:.75rem;color:var(--text3);margin-top:3px;line-height:1.35}
 .sd-sub-done{color:var(--accent);font-weight:600}
 .sd-arrow{color:var(--text3);font-size:.7rem;flex-shrink:0;opacity:.55}
-/* progress bar: absolute at card bottom, fills right to left */
-.sd-progress{position:absolute;bottom:0;left:0;right:0;height:3px;pointer-events:none;background:rgba(128,128,128,0.15)}
-.sd-bar{height:100%;width:100%;background:var(--accent);opacity:.85;transform:scaleX(0);transform-origin:right center}
-/* dots: below wrapper, RTL visual order handled by reversed DOM append in JS */
-.sd-dots{display:flex;justify-content:center;gap:7px;padding:10px 0 4px;direction:ltr}
-.sd-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.28;transition:width .18s cubic-bezier(.4,0,.2,1),border-radius .18s cubic-bezier(.4,0,.2,1),opacity .18s cubic-bezier(.4,0,.2,1);cursor:pointer;flex-shrink:0}
-.sd-dot-active{width:22px;border-radius:3.5px;opacity:1}
+/* Progress bar: absolute at bottom of sd-card-outer, clipped by its border-radius */
+.sd-progress{position:absolute;bottom:0;left:0;right:0;height:3px;pointer-events:none}
+.sd-bar{height:100%;width:100%;background:var(--accent);opacity:.65;transform:scaleX(0);transform-origin:right center}
+/* dots — no bottom border or shadow leakage */
+.sd-dots{display:flex;justify-content:center;gap:7px;padding:10px 0 2px;direction:ltr}
+.sd-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.22;transition:width .22s cubic-bezier(.4,0,.2,1),height .22s cubic-bezier(.4,0,.2,1),border-radius .22s cubic-bezier(.4,0,.2,1),opacity .22s ease;cursor:pointer;flex-shrink:0}
+.sd-dot-active{width:22px;height:8px;border-radius:4px;opacity:1}
+/* skeleton */
+.sd-skel-card{display:flex;align-items:center;gap:12px;padding:16px 14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:18px;direction:rtl}
+.sd-skel-icon{width:44px;height:44px;border-radius:13px;flex-shrink:0}
+.sd-skel-body{flex:1;display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.sd-skel-tag{height:15px;border-radius:20px;width:32%}
+.sd-skel-title{height:16px;border-radius:6px;width:70%}
+.sd-skel-sub{height:12px;border-radius:5px;width:48%}
+/* entrance — section + per-card stagger (delay set via inline style in JS) */
+@keyframes sd-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sd-enter{animation:sd-enter .2s cubic-bezier(.22,1,.36,1) both}
+/* translateZ(0) in both keyframes: fill-mode:both locks the 'to' state, so GPU layer must be in 'to' */
+@keyframes sd-card-in{from{opacity:0;transform:translateZ(0) translateY(6px)}to{opacity:1;transform:translateZ(0)}}
+.sd-card-in{animation:sd-card-in .2s cubic-bezier(.22,1,.36,1) both}
 /* Dua — tab bar */
 .dua-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;scrollbar-width:none}
 .dua-tab-btn{flex-shrink:0;padding:10px 14px;font-size:.82rem;font-weight:600;background:none;color:var(--text3);border:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
@@ -2236,6 +2332,7 @@ body{background:var(--bg);color:var(--text)}
   <div class="hdr">
     <div class="hdr-title"><span data-i18n="header.prayer">کاتا نوێژ</span></div>
     <div style="display:flex;gap:4px">
+      <button class="hdr-btn" onclick="QiblaUI.open()" title="Qibla"><i class="fas fa-location-arrow"></i></button>
       <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
     </div>
   </div>
@@ -2364,6 +2461,35 @@ body{background:var(--bg);color:var(--text)}
 
 
 <!-- TAB BAR -->
+<!-- Qibla modal — tap outside (backdrop) to close -->
+<div id="qiblaOverlay" onclick="QiblaUI.close()">
+  <div id="qiblaModal" onclick="event.stopPropagation()">
+    <button id="qiblaCloseBtn" onclick="QiblaUI.close()"><i class="fas fa-times"></i></button>
+    <div id="qiblaWrap">
+      <div id="qiblaCompass">
+        <div id="qiblaGlow"></div>
+        <div id="qiblaWorld">
+          <svg class="qibla-dial" id="qiblaDial" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+            <circle class="qibla-ring" cx="100" cy="100" r="95" stroke-width=".8"/>
+            <circle class="qibla-ring" cx="100" cy="100" r="72" stroke-width=".6" opacity=".55"/>
+            <circle class="qibla-ring" cx="100" cy="100" r="46" stroke-width=".5" opacity=".33"/>
+          </svg>
+          <div id="qiblaKaabaArm" class="qibla-kaaba-arm">
+            <div class="qibla-kaaba-icon" id="qiblaKaabaIcon"></div>
+          </div>
+        </div>
+        <!-- Needle: arrowhead (.np) + shaft (.ns) + counter-weight (.nc) -->
+        <svg class="qibla-needle" viewBox="0 0 22 92" fill="none" aria-hidden="true">
+          <polygon class="np" points="11,1 20,32 11,25 2,32"/>
+          <rect class="ns" x="10.5" y="25" width="1.5" height="48" rx=".75"/>
+          <polygon class="nc" points="11,73 18,85 11,91 4,85"/>
+        </svg>
+        <div class="qibla-pin"></div>
+        <div id="qiblaLoading"><div class="qibla-spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
 <nav class="tabbar">
   <button class="tab-item on" data-tab="quran" onclick="App.tab('quran')"><i class="fas fa-book"></i><span data-i18n="tabs.quran" data-t="android_span_12">قورئان</span></button>
   <button class="tab-item" data-tab="islamvoice" onclick="App.tab('islamvoice')"><i class="fas fa-video"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
@@ -2549,6 +2675,7 @@ body{background:var(--bg);color:var(--text)}
 <script src="/rating.js?v=20260401a"></script>
 <script src="/audio-cache.js?v=20260406a"></script>
 <script src="/audio-downloads.js?v=1"></script>
+<script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/app/app.js?v=20260326b"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */

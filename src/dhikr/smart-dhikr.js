@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v21
+ * Smart Daily Companion  v30
  * Always exactly 4 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2. Ayah of the day        (Baghdad-seeded, salt 1)
@@ -108,6 +108,22 @@
     'عەلەق','قەدر','بەیینە','زەلزەلە','عادیات','قارعە','تەکاسور','عەسر',
     'هومەزە','فیل','قورێش','ماعون','کەوسەر','کافیرون','نەسر','مەسەد','ئیخلاس',
     'فەلەق','ناس'
+  ];
+  var SURAH_NAMES_AR = [
+    'الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال',
+    'التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف',
+    'مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل',
+    'القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس',
+    'الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية',
+    'الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','الطور','النجم','القمر',
+    'الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة',
+    'المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج',
+    'نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ',
+    'النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج',
+    'الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين',
+    'العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر',
+    'الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص',
+    'الفلق','الناس'
   ];
   var SURAH_SIZES = [
     7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,
@@ -300,7 +316,7 @@
       if (rem < SURAH_SIZES[i]) { surah = i + 1; ayah = rem + 1; break; }
       rem -= SURAH_SIZES[i];
     }
-    var surahName = SURAH_NAMES[surah - 1] || ('سورە ' + surah);
+    var surahName = SURAH_NAMES_AR[surah - 1] || SURAH_NAMES[surah - 1] || ('سورة ' + surah);
     var s = surah, a = ayah;
     return {
       _type: 'daily', id: 'ayah_day',
@@ -429,7 +445,9 @@
 
     var content = _mk('div', 'sd-content');
     if (item.timeTag) content.appendChild(_mk('span', 'sd-tag', item.timeTag));
-    content.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
+    var titleZone = _mk('div', 'sd-title-zone');
+    titleZone.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
+    content.appendChild(titleZone);
 
     var subText = done
       ? T('gencine.smart.done_today', 'ئەمڕۆ تەواو بوو')
@@ -462,9 +480,11 @@
     card.appendChild(iWrap);
 
     var content = _mk('div', 'sd-content');
-    content.appendChild(_mk('span', 'sd-tag',   item.tag));
-    content.appendChild(_mk('div',  'sd-title', item.title));
-    content.appendChild(_mk('div',  'sd-sub',   item.subtitle));
+    content.appendChild(_mk('span', 'sd-tag', item.tag));
+    var titleZone = _mk('div', 'sd-title-zone');
+    titleZone.appendChild(_mk('div', 'sd-title', item.title));
+    content.appendChild(titleZone);
+    content.appendChild(_mk('div', 'sd-sub', item.subtitle));
     card.appendChild(content);
 
     var arrow = _mk('div', 'sd-arrow');
@@ -485,104 +505,135 @@
   }
 
   /* ─────────────────────────────────────────────
-     SLIDER  v16
+     SLIDER  v17
 
-     DOM layout:
-       .sd-wrapper  (overflow:hidden, border-radius, position:relative)
-         .sd-track  (display:flex, will-change:transform)
-           .sd-slide × 4
-         .sd-progress  (position:absolute bottom:0, created here)
-           .sd-bar     (scaleX 0→1, transform-origin:right → fills RTL)
-       .sd-dots  (outside wrapper, flex row)
-         .sd-dot × 4  (DOM order reversed: dot[0] rightmost = RTL card 1)
+     DOM layout (after render() builds it):
+       .sd-wrapper  (overflow:hidden, rectangular — NO border-radius for GPU perf)
+         .sd-track  (display:flex ltr)
+           [cs0]  clone of real first slide — at DOM pos 0
+           [sN-1] real last slide
+           [sN-2]
+           ...
+           [s0]   real first slide — at DOM pos N
+           [csN-1] clone of real last slide — at DOM pos N+1
+         .sd-progress  (position:absolute bottom:0 — sits flush at card base)
+           .sd-bar
+       .sd-dots
 
-     Init:
-       Double requestAnimationFrame after section is appended to DOM.
-       Uses track.children.length (real DOM count) as authoritative count.
+     RTL infinite loop:
+       Slides are in REVERSED DOM order so that "forward" = translateX increases
+       (track moves RIGHT), which feels natural in RTL (new card from left).
+       Real first slide s0 sits at DOM pos N; translateX = -(N-current)*W.
 
-     RTL dots:
-       Appended count-1 → 0 so dot[0] is last appended = rightmost in flex.
-       Active class moves right → left as slides advance.
+       When advancing past last slide:
+         animate to cs0 (pos 0, translateX=0) → transitionend → jump to s0 (translateX=-N*W)
+       When going before first:
+         animate to csN-1 (pos N+1, translateX=-(N+1)*W) → jump to sN-1 (translateX=-W)
+       User never sees a jump — both clone and original are visually identical.
+
+     Swipe — RTL semantics:
+       Finger RIGHT (dx>0) → track follows right → reveals lower DOM index = next
+       logical slide (current+1). Natural for RTL reading direction.
+       Finger LEFT  (dx<0) → prev (current-1).
 
      Progress bar:
-       transform-origin: right center
-       scaleX(0 → 1) fills bar right → left over 10 s.
-       Pauses on touchstart, resumes + resets on touchend.
+       position:absolute bottom:0 inside wrapper — rides the bottom edge of the card.
   ───────────────────────────────────────────── */
   function _initSlider(wrapper, track, dotsEl, count) {
-    var realCount = track.children.length;
+    if (count <= 1) { dotsEl.style.display = 'none'; return; }
 
-    if (realCount <= 1) {
-      dotsEl.style.display = 'none';
-      return;
-    }
-    count = realCount;
-
-    var current  = 0;
-    var DURATION = 10000;  /* 10 s per card */
+    var DURATION = 10000;
     var SNAP_MS  = 320;
-    var SNAP_FN  = 'cubic-bezier(0.25,0.46,0.45,0.94)';
+    var SNAP_FN  = 'cubic-bezier(0.22,1,0.36,1)';
+    var current  = 0;   /* logical index 0..count-1 */
 
-    /* ── progress bar ── */
+    /* ── progress bar — inside sd-card-outer, clipped by its border-radius ── */
     var prog = _mk('div', 'sd-progress');
     var bar  = _mk('div', 'sd-bar');
     prog.appendChild(bar);
-    wrapper.appendChild(prog);
+    wrapper.parentNode.appendChild(prog);   /* wrapper.parentNode = sd-card-outer */
 
-    /* ── dots (normal order: dot[0] leftmost → swipe left = active moves left→right) ── */
+    /* ── dots: RTL order (count-1 → 0) so dot[0] ends up rightmost ── */
     var dots = [];
-    for (var i = 0; i < count; i++) {
-      var dot = _mk('span', 'sd-dot' + (i === 0 ? ' sd-dot-active' : ''));
+    for (var i = count - 1; i >= 0; i--) {
       (function(idx) {
+        var dot = _mk('span', 'sd-dot' + (idx === 0 ? ' sd-dot-active' : ''));
         dot.addEventListener('click', function() { _goTo(idx, true); });
+        dotsEl.appendChild(dot);
+        dots[idx] = dot;
       }(i));
-      dotsEl.appendChild(dot);
-      dots.push(dot);
     }
 
-    /* ── helpers ── */
     function _alive() { return !!(document.body && document.body.contains(track)); }
     function _W()     { var w = wrapper.clientWidth || wrapper.offsetWidth; return w > 0 ? w : window.innerWidth - 32; }
 
+    /* translateX for logical slide `cur`:
+       s0 is at DOM pos `count` (after prepended clone).
+       formula: -(count - cur) * W                          */
+    function _posX(cur) { return -(count - cur) * _W(); }
+
     function _applyX(px, anim) {
       track.style.transition = anim ? 'transform ' + SNAP_MS + 'ms ' + SNAP_FN : 'none';
-      track.style.transform  = 'translateX(' + px + 'px)';
+      track.style.transform  = 'translate3d(' + px + 'px,0,0)';
     }
 
     function _syncDots() {
-      /* Remove active from all first, then add to current only.
-         Explicit two-step avoids any toggle edge case and guarantees
-         exactly one active dot at all times.                        */
-      for (var j = 0; j < count; j++)
-        dots[j].classList.remove('sd-dot-active');
+      for (var j = 0; j < count; j++) dots[j].classList.remove('sd-dot-active');
       dots[current].classList.add('sd-dot-active');
     }
 
-    function _goTo(idx, anim) {
-      current = ((idx % count) + count) % count;
-      _applyX(-current * _W(), anim !== false);
-      /* On instant wrap (anim===false): suppress dot CSS transitions so dots
-         also jump immediately — prevents track snapping while dots animate
-         in the opposite direction, which creates the "misaligned" feeling. */
-      if (anim === false) {
-        for (var j = 0; j < count; j++) dots[j].style.transition = 'none';
-        requestAnimationFrame(function() {
-          for (var j = 0; j < count; j++) dots[j].style.transition = '';
-        });
+    /* Pending transitionend handler for silent teleport after infinite wrap */
+    var _teleportFn = null;
+    function _cancelTeleport() {
+      if (_teleportFn) {
+        track.removeEventListener('transitionend', _teleportFn);
+        _teleportFn = null;
       }
+    }
+
+    function _goTo(idx, anim) {
+      _cancelTeleport();
+      var dest, teleportX, isWrap = false;
+
+      if (idx >= count) {
+        /* forward wrap: animate to clone-of-first (DOM pos 0, translateX=0) */
+        dest      = 0;
+        teleportX = _posX(0);   /* = -count*W, real s0 */
+        current   = 0;
+        isWrap    = true;
+      } else if (idx < 0) {
+        /* backward wrap: animate to clone-of-last (DOM pos count+1) */
+        dest      = -(count + 1) * _W();
+        teleportX = _posX(count - 1);   /* = -W, real sN-1 */
+        current   = count - 1;
+        isWrap    = true;
+      } else {
+        current = idx;
+        dest    = _posX(current);
+      }
+
       _syncDots();
+      _applyX(dest, anim !== false);
+
+      /* After animation reaches clone, instantly jump to the real slide.
+         transitionend fires once per property — guard with _cancelTeleport. */
+      if (isWrap && anim !== false) {
+        var tX = teleportX;
+        _teleportFn = function() {
+          _cancelTeleport();
+          _applyX(tX, false);
+        };
+        track.addEventListener('transitionend', _teleportFn);
+      }
+
       _resetProg();
     }
 
-    /* ── RAF progress (right → left) ── */
-    var _raf    = null;
-    var _tStart = 0;
-    var _accum  = 0;
-    var _paused = false;
+    /* ── RAF progress ── */
+    var _raf = null, _tStart = 0, _accum = 0, _paused = false;
 
     function _resetProg() {
-      _accum  = 0;
-      _paused = false;
+      _accum = 0; _paused = false;
       bar.style.transition = 'none';
       bar.style.transform  = 'scaleX(0)';
       if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
@@ -592,8 +643,8 @@
 
     function _pauseProg() {
       if (_paused) return;
-      _paused  = true;
-      _accum  += performance.now() - _tStart;
+      _paused = true;
+      _accum += performance.now() - _tStart;
       if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
     }
 
@@ -608,35 +659,40 @@
       if (_paused || !_alive()) return;
       var pct = Math.min((_accum + performance.now() - _tStart) / DURATION, 1);
       bar.style.transform = 'scaleX(' + pct + ')';
-      if (pct >= 1) {
-        var next = current + 1;
-        /* Loop wrap (last → first): no animation — instant snap so the
-           track does not slide backwards through all cards.            */
-        _goTo(next, next < count);
-        return;
-      }
+      if (pct >= 1) { _goTo(current + 1, true); return; }
       _raf = requestAnimationFrame(_tick);
     }
 
+    /* Read the ACTUAL visual X of the track mid-animation (for touch-interrupt) */
+    function _readX() {
+      var t = window.getComputedStyle(track).transform;
+      if (!t || t === 'none') return _posX(0);
+      var m = t.match(/matrix.*\((.+)\)/);
+      return m ? (parseFloat(m[1].split(',')[4]) || _posX(0)) : _posX(0);
+    }
+
     /* ── swipe ── */
-    var _drag    = false;
-    var _sx = 0, _sy = 0, _baseX = 0;
+    var _drag = false, _sx = 0, _sy = 0, _baseX = 0;
     var _decided = false, _horiz = false;
-    var INTENT   = 6;
+    var INTENT = 5;
+    var _vx = 0, _vtLast = 0, _xLast = 0;
 
     track.addEventListener('touchstart', function(e) {
+      _cancelTeleport();
+      var actualX = _readX();
       _drag = true; _decided = false; _horiz = false;
       _sx = e.touches[0].clientX; _sy = e.touches[0].clientY;
-      _baseX = -current * _W();
+      _baseX = actualX;
+      _vx = 0; _vtLast = performance.now(); _xLast = _sx;
       track.style.transition = 'none';
+      track.style.transform  = 'translate3d(' + actualX + 'px,0,0)';
       _pauseProg();
     }, { passive: true });
 
     track.addEventListener('touchmove', function(e) {
       if (!_drag) return;
-      var dx = e.touches[0].clientX - _sx;
-      var dy = e.touches[0].clientY - _sy;
-
+      var cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+      var dx = cx - _sx, dy = cy - _sy;
       if (!_decided) {
         if (Math.abs(dx) < INTENT && Math.abs(dy) < INTENT) return;
         _decided = true;
@@ -644,35 +700,44 @@
         if (!_horiz) { _drag = false; _resumeProg(); return; }
       }
       if (!_horiz) return;
-      e.preventDefault();
-
+      var now = performance.now(), dt = now - _vtLast;
+      if (dt > 0) { _vx = (cx - _xLast) / dt; }
+      _vtLast = now; _xLast = cx;
+      /* Clamp: clone-of-first at right (translateX=0), clone-of-last at left */
       var W = _W(), raw = _baseX + dx;
-      var min = -(count - 1) * W, max = 0;
+      var min = -(count + 1) * W, max = 0;
       var clamped = raw > max ? max + (raw - max) * 0.25
                   : raw < min ? min + (raw - min) * 0.25
                   : raw;
-      track.style.transform = 'translateX(' + clamped + 'px)';
-    }, { passive: false });
+      track.style.transform = 'translate3d(' + clamped + 'px,0,0)';
+    }, { passive: true });
 
     function _onEnd(e) {
       if (!_drag) return; _drag = false;
-      var endX = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : _sx;
-      Math.abs(endX - _sx) > _W() * 0.18
-        ? _goTo(endX < _sx ? current + 1 : current - 1, true)
-        : _goTo(current, true);
+      var endX    = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : _sx;
+      var delta   = endX - _sx;
+      var W       = _W();
+      var vxFresh = (performance.now() - _vtLast) < 80 ? _vx : 0;
+      var flick   = Math.abs(vxFresh) > 0.3;
+      if (flick || Math.abs(delta) > W * 0.18) {
+        /* RTL: swipe right (delta>0 / vx>0) = next (+1), swipe left = prev (-1) */
+        var dir = (vxFresh !== 0) ? (vxFresh > 0 ? 1 : -1) : (delta > 0 ? 1 : -1);
+        _goTo(current + dir, true);
+      } else {
+        _goTo(current, true);
+      }
     }
     track.addEventListener('touchend',    _onEnd, { passive: true });
     track.addEventListener('touchcancel', _onEnd, { passive: true });
 
-    /* ── visibility ── */
     function _onVis() {
       if (!_alive()) { document.removeEventListener('visibilitychange', _onVis); return; }
       document.hidden ? _pauseProg() : _resumeProg();
     }
     document.addEventListener('visibilitychange', _onVis);
 
-    /* ── start ── */
-    _applyX(0, false);
+    /* ── start at real first slide (DOM pos count, translateX = -count*W) ── */
+    _applyX(_posX(0), false);
     _syncDots();
     _resetProg();
   }
@@ -684,7 +749,11 @@
      until Baghdad midnight, updated every second.
   ───────────────────────────────────────────── */
   function _buildCountdown() {
-    var el = _mk('span', 'sd-chip');
+    var chip    = _mk('span', 'sd-chip');
+    var lbl     = _mk('span', 'sd-chip-lbl', 'تا نوێکردنەوە:');
+    var timeEl  = _mk('span', 'sd-chip-time');
+    chip.appendChild(lbl);
+    chip.appendChild(timeEl);
 
     function _msUntilBaghdadMidnight() {
       var d = _baghdadDate();
@@ -705,17 +774,48 @@
     }
 
     function _update() {
-      if (!document.body || !document.body.contains(el)) {
-        clearInterval(_tid);
-        return;
-      }
-      el.textContent = _fmt(_msUntilBaghdadMidnight());
+      timeEl.textContent = _fmt(_msUntilBaghdadMidnight());
     }
 
     _update();
     var _tid = setInterval(_update, 1000);
 
-    return el;
+    return chip;
+  }
+
+  /* ─────────────────────────────────────────────
+     SKELETON  — shown while section is loading.
+     Mirrors real card geometry so the transition
+     from skeleton → real is seamless.
+  ───────────────────────────────────────────── */
+  function _buildSkelSection() {
+    var section = _mk('div', 'sd-section');
+
+    /* header row skeleton */
+    var hdr = _mk('div', 'sd-hdr');
+    hdr.appendChild(_mk('span', 'sd-hdr-label', '\u200b')); /* zero-width to hold height */
+    section.appendChild(hdr);
+
+    /* one skeleton card (matches slider height) */
+    var wrapper = _mk('div', 'sd-wrapper');
+    var card    = _mk('div', 'sd-skel-card');
+    card.appendChild(_mk('div', 'sd-skel-icon skel-block'));
+    var body = _mk('div', 'sd-skel-body');
+    body.appendChild(_mk('div', 'sd-skel-tag skel-block'));
+    body.appendChild(_mk('div', 'sd-skel-title skel-block'));
+    body.appendChild(_mk('div', 'sd-skel-sub skel-block'));
+    card.appendChild(body);
+    wrapper.appendChild(card);
+    var outer = _mk('div', 'sd-card-outer');
+    outer.appendChild(wrapper);
+    section.appendChild(outer);
+
+    /* dots skeleton */
+    var dotsEl = _mk('div', 'sd-dots');
+    for (var i = 0; i < 4; i++) dotsEl.appendChild(_mk('span', 'sd-dot' + (i === 0 ? ' sd-dot-active' : '')));
+    section.appendChild(dotsEl);
+
+    return section;
   }
 
   /* ─────────────────────────────────────────────
@@ -746,15 +846,15 @@
     }
 
     var items = getItemsNow();  /* always 4 */
-    /* Debug: log card types to console so any missing slot is immediately visible */
     try {
       console.log('[SmartDhikr]', items.length, 'cards →',
         items.map(function(i) {
           return i._type === 'adhkar' ? 'zikr' : (i.id || i._type);
         }).join(', '));
     } catch(e) {}
+
     var T       = window.t || function(k, d) { return d || k; };
-    var section = _mk('div', 'sd-section');
+    var section = _mk('div', 'sd-section sd-enter');
 
     /* header row — RTL flex: title on right, countdown chip on left */
     var hdr = _mk('div', 'sd-hdr');
@@ -772,11 +872,32 @@
       track.appendChild(slide);
     });
 
-    wrapper.appendChild(track);
-    /* sd-progress is created inside _initSlider after DOM insertion */
-    section.appendChild(wrapper);
+    /* ── Reverse slide order for RTL (forward = track moves RIGHT) ──
+       DOM before: [s0][s1][s2][s3]
+       DOM after:  [s3][s2][s1][s0]
+       Appending an existing node moves it to the end — no innerHTML needed. */
+    var slides = Array.prototype.slice.call(track.children);
+    slides.reverse();
+    slides.forEach(function(s) { track.appendChild(s); });
 
-    /* dots — outside wrapper so overflow:hidden doesn't clip them */
+    /* ── Clone first + last for infinite loop ──────────────────────
+       Prepend clone of s0 (shown when wrapping forward past last slide).
+       Append  clone of sN-1 (shown when wrapping backward past first).
+       Result: [cs0][sN-1]...[s1][s0][csN-1]
+       cloneNode(true) copies DOM structure; event listeners are NOT copied
+       (fine — clones are visible for only ~320ms during the wrap anim).   */
+    var cs0  = track.lastChild.cloneNode(true);   /* clone of s0  */
+    var csLast = track.firstChild.cloneNode(true); /* clone of sN-1 */
+    track.insertBefore(cs0, track.firstChild);
+    track.appendChild(csLast);
+
+    wrapper.appendChild(track);
+    /* sd-card-outer clips progress bar to card radius — progress appended here by _initSlider */
+    var outer = _mk('div', 'sd-card-outer');
+    outer.appendChild(wrapper);
+    section.appendChild(outer);
+
+    /* dots — outside card shell so they sit below it */
     var dotsEl = _mk('div', 'sd-dots');
     section.appendChild(dotsEl);
 
@@ -799,11 +920,12 @@
      PUBLIC API
   ───────────────────────────────────────────── */
   window.SmartDhikr = {
-    getItemsNow:   getItemsNow,
-    markOpened:    _markOpened,
-    markCompleted: _markCompleted,
-    getStreak:     _getStreak,
-    render:        render
+    getItemsNow:      getItemsNow,
+    markOpened:       _markOpened,
+    markCompleted:    _markCompleted,
+    getStreak:        _getStreak,
+    render:           render,
+    buildSkelSection: _buildSkelSection
   };
 
 }(window));

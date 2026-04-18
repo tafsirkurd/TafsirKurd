@@ -1660,5 +1660,39 @@ window.BULK_TRANSLATIONS = [
     { key_id: "dl.tip_offline",       kurdish_text: "ژبۆ گوهداری بێ ئینترنەتێ داخستن",                                                                    category: "download", page: "android" },
     { key_id: "toast.dl_complete",    kurdish_text: "داخستن تەمام بوو",                                                                                     category: "download", page: "android" },
     { key_id: "toast.dl_removed",     kurdish_text: "داخستن هاتە ژێبرن",                                                                                   category: "download", page: "android" },
-    { key_id: "toast.dl_stopped",     kurdish_text: "داخستن هاتە وەستاندن",                                                                                category: "download", page: "android" }
+    { key_id: "toast.dl_stopped",     kurdish_text: "داخستن هاتە وەستاندن",                                                                                category: "download", page: "android" },
+
+    // ==========================================
+    // MUSHAF MODE (2026-04-18)
+    // ==========================================
+    { key_id: "mushaf.font_offline",      kurdish_text: "ستایلا پەڕینێ نەکەتە دەست بی ئینتەرنەت.", category: "mushaf", page: "android" },
+    { key_id: "mushaf.offline_msg",       kurdish_text: "دەم یەکەم جار یە پێویستە ئینتەرنەت.",      category: "mushaf", page: "android" },
+    { key_id: "mushaf.switch_to_reading", kurdish_text: "بەرەو دیمەنا خوێندنێ",                     category: "mushaf", page: "android" },
+
+    // ==========================================
+    // PROFILE — TIME & SESSION (2026-04-18)
+    // ==========================================
+    { key_id: "profile.session_revoked", kurdish_text: "چوونا دەرەوە ل ئامێرا دی کرا", category: "profile", page: "android" },
+    { key_id: "profile.time_day",        kurdish_text: "ڕۆژ",                             category: "profile", page: "android" },
+    { key_id: "profile.time_hour",       kurdish_text: "کاتژمێر",                         category: "profile", page: "android" },
+    { key_id: "profile.time_min",        kurdish_text: "خولەک",                            category: "profile", page: "android" },
+
+    // ==========================================
+    // SETTINGS — SYNC PANEL (2026-04-18)
+    // ==========================================
+    { key_id: "settings.sync_what_syncs",     kurdish_text: "چ دێتە هاوکارکرن",          category: "settings", page: "android" },
+    { key_id: "settings.sync_item_reading",   kurdish_text: "پێشکەوتنا خوێندنێ",         category: "settings", page: "android" },
+    { key_id: "settings.sync_item_bookmarks", kurdish_text: "نیشانکرن",                  category: "settings", page: "android" },
+    { key_id: "settings.sync_item_goals",     kurdish_text: "ئارمانج",                   category: "settings", page: "android" },
+    { key_id: "settings.sync_item_prayer",    kurdish_text: "کات و ئاگادارکرن نوێژ",     category: "settings", page: "android" },
+    { key_id: "settings.sync_item_saved",     kurdish_text: "ڤیدیۆیێن پاراستی",          category: "settings", page: "android" },
+    { key_id: "settings.sync_item_settings",  kurdish_text: "ڕێکخستن",                   category: "settings", page: "android" },
+    { key_id: "settings.sync_device_only",    kurdish_text: "تەنها ل ئامێرê",            category: "settings", page: "android" },
+    { key_id: "settings.sync_device_cache",   kurdish_text: "کاشێکردنا دەنگ",            category: "settings", page: "android" },
+    { key_id: "settings.sync_device_notif",   kurdish_text: "ئاگادارکرنا دینامیکی",       category: "settings", page: "android" },
+    { key_id: "settings.sync_device_sched",   kurdish_text: "خشتا نوێژ",                 category: "settings", page: "android" },
+    { key_id: "settings.sync_status_offline", kurdish_text: "نەگیهاتنا ئینتەرنەت",       category: "settings", page: "android" },
+    { key_id: "settings.sync_status_syncing", kurdish_text: "هاوکارکرن...",              category: "settings", page: "android" },
+    { key_id: "settings.sync_status_failed",  kurdish_text: "هاوکارکرن سەرنەکەوت",       category: "settings", page: "android" },
+    { key_id: "settings.sync_retry_btn",      kurdish_text: "دووبارە هەوڵبدە",           category: "settings", page: "android" }
 ];

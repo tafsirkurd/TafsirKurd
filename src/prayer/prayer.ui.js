@@ -118,7 +118,7 @@
   function setCity(v)    { if (window.S) S.prayerCity = v;         localStorage.setItem('prayerCity', v); }
   function setAthan(v)   { if (window.S) S.prayerAthanEnabled = v; localStorage.setItem('prayerAthanEnabled', String(v)); }
   function setToggles(v) { if (window.S) S.prayerToggles = v;      localStorage.setItem('prayerToggles', JSON.stringify(v)); }
-  function getAthanVoice()    { return localStorage.getItem('prayerAthanVoice') || 'mishary'; }
+  function getAthanVoice()    { return localStorage.getItem('prayerAthanVoice') || 'nasser'; }
   function setAthanVoice(v)   { localStorage.setItem('prayerAthanVoice', v); }
   function setFormat(v)       { localStorage.setItem('prayerTimeFormat', v); }
 
@@ -1798,7 +1798,7 @@
       var allOn = {};
       window.PrayerLogic.NOTIF_PRAYERS.forEach(function(n) { allOn[n] = true; });
       setToggles(allOn);
-      setAthanVoice('mishary');
+      setAthanVoice('nasser');
       if (_currentTimings && _currentDateISO) {
         _athanSettingsKey = null; // force rebuild after reset
         updateAthanSettings(_currentTimings, getCity(), _currentDateISO);

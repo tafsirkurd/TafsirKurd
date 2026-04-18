@@ -40,8 +40,8 @@
    *  Special id 'simple' = no athan audio, OS default notification sound only. */
   var ATHAN_VOICES = [
     { id: 'simple',   nameAr: '',                      nameKey: 'prayer.voice_simple',  previewUrl: null                      },
-    { id: 'mishary',  nameAr: 'مشاری راشد العفاسی', nameKey: 'prayer.voice_mishary', previewUrl: '/audio/athan_mishary.mp3' },
     { id: 'nasser',   nameAr: 'ناصر القطامي',         nameKey: 'prayer.voice_nasser',  previewUrl: '/audio/athan_nasser.mp3'  },
+    { id: 'mishary',  nameAr: 'مشاری راشد العفاسی', nameKey: 'prayer.voice_mishary', previewUrl: '/audio/athan_mishary.mp3' },
     { id: 'omar',     nameAr: 'عمر هشام العربي',      nameKey: 'prayer.voice_omar',    previewUrl: '/audio/athan_omar.mp3'    },
     { id: 'peshawa',  nameAr: 'پیشەوا',               nameKey: 'prayer.voice_peshawa', previewUrl: '/audio/athan_peshawa.mp3' },
     { id: 'raad',     nameAr: 'راعد محمد الكردي',     nameKey: 'prayer.voice_raad',    previewUrl: '/audio/athan_raad.mp3'    }
@@ -100,8 +100,8 @@
   window._openExactAlarmSettings = openExactAlarmSettings;
 
   function getSelectedVoice() {
-    var v = localStorage.getItem('prayerAthanVoice') || 'mishary';
-    return ATHAN_VOICES.find(function(x) { return x.id === v; }) ? v : 'mishary';
+    var v = localStorage.getItem('prayerAthanVoice') || 'nasser';
+    return ATHAN_VOICES.find(function(x) { return x.id === v; }) ? v : 'nasser';
   }
 
   // ── Channel management ─────────────────────────────────────────────────────

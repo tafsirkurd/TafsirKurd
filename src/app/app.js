@@ -373,8 +373,8 @@ window.SURAHS=SURAHS; // expose for audio-downloads.js (outside IIFE)
 var JUZS={1:1,2:2,3:2,4:3,5:4,6:4,7:5,8:6,9:7,10:8,11:9,12:11,13:12,14:13,15:15,16:17,17:18,18:20,19:21,20:23,21:25,22:27,23:29,24:31,25:34,26:36,27:39,28:46,29:51,30:67};
 
 var RECITERS=[
-  {id:'Alafasy_128kbps',              name:'مشاري العفاسي',              flag:'🇰🇼',style:'murattal'},
   {id:'Nasser_Alqatami_128kbps',      name:'ناصر القطامي',               flag:'🇰🇼',style:'murattal'},
+  {id:'Alafasy_128kbps',              name:'مشاري العفاسي',              flag:'🇰🇼',style:'murattal'},
   {id:'ahmed_ibn_ali_al_ajamy_128kbps',         name:'أحمد العجمي',       flag:'🇰🇼',style:'murattal'},
   {id:'MaherAlMuaiqly128kbps',        name:'ماهر المعيقلي',              flag:'🇸🇦',style:'murattal'},
   {id:'Abdurrahmaan_As-Sudais_192kbps',name:'عبد الرحمن السديس',         flag:'🇸🇦',style:'murattal'},
@@ -399,7 +399,7 @@ var RECITERS=[
 ];
 // Migrate old broken reciter IDs → correct ones
 (function(){var map={'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar':'ahmed_ibn_ali_al_ajamy_128kbps','Ahmed_ibn_Ali_al-Ajamy_128kbps':'ahmed_ibn_ali_al_ajamy_128kbps'};var cur=localStorage.getItem('app_reciter');if(cur&&map[cur]){localStorage.setItem('app_reciter',map[cur]);localStorage.removeItem('reciter_photos_cache');}})();
-var RECITER=localStorage.getItem('app_reciter')||'Alafasy_128kbps';
+var RECITER=localStorage.getItem('app_reciter')||'Nasser_Alqatami_128kbps';
 // Load from localStorage cache instantly — no async wait
 var RECITER_PHOTOS=(function(){try{return JSON.parse(localStorage.getItem('reciter_photos_cache')||'{}')}catch(e){return {}}}());
 // Tracks which reciter IDs have their images fully decoded in browser memory this session
@@ -1238,8 +1238,8 @@ function _tabHash(name){
     return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'')+(S.ivSpeakerFilter||'');
   }
   if(name==='gencine'){
-    // Version key — bumped when DB data reloads so hash forces re-render
-    return 'g:'+(window._gencineDbVersion||0);
+    // Version key + date — forces re-render on DB reload OR new day
+    return 'g:'+(window._gencineDbVersion||0)+':'+new Date().toDateString();
   }
   return null;
 }
@@ -1367,7 +1367,7 @@ function _loadGencineScripts(cb) {
     document.body.appendChild(s);
   }
   _ls('/dhikr/dua-data.js?v=20260326b', function() {
-    _ls('/dhikr/smart-dhikr.js?v=22', function() {
+    _ls('/dhikr/smart-dhikr.js?v=31', function() {
       _ls('/dhikr/dhikr.js?v=20260416', function() {
         _gencineScriptsLoaded = true;
         _gencineScriptsLoading = false;
@@ -2325,6 +2325,7 @@ App.openSurah=function(num,scrollTo){
     var btn=$('mushafToggleBtn');if(btn)btn.classList.add('on');
     var al=$('ayahList');if(al)al.style.display='none';
     var mv=$('mushafView');if(mv){mv.style.display='';renderMushafView();}
+    if(scrollTo&&scrollTo>1)_scrollMushafToAyah(num,scrollTo,0);
   }
 };
 
@@ -2411,6 +2412,61 @@ function _getPageFields(){
 }
 
 
+// Returns the first ayah number currently visible in the normal ayah list
+function _visibleAyahInList(){
+  var list=$('ayahList');
+  if(!list)return null;
+  var listRect=list.getBoundingClientRect();
+  var cards=list.querySelectorAll('.ayah-card[data-ayah]');
+  for(var i=0;i<cards.length;i++){
+    var r=cards[i].getBoundingClientRect();
+    if(r.bottom>listRect.top+8&&r.top<listRect.bottom-8)return parseInt(cards[i].dataset.ayah)||null;
+  }
+  return null;
+}
+
+// Returns the topmost ayah number currently visible in mushaf view
+function _visibleAyahInMushaf(){
+  var view=$('mushafView');
+  if(!view||!S.surah)return null;
+  var vRect=view.getBoundingClientRect();
+  var best=null,bestTop=Infinity;
+  var vels=window._mushafVerseElements||{};
+  Object.keys(vels).forEach(function(k){
+    var parts=k.split(':');
+    if(parseInt(parts[0])!==S.surah)return;
+    (vels[k]||[]).forEach(function(e){
+      if(!view.contains(e))return;
+      var r=e.getBoundingClientRect();
+      if(r.bottom>vRect.top&&r.top<vRect.bottom&&r.top<bestTop){bestTop=r.top;best=parseInt(parts[1]);}
+    });
+  });
+  return best;
+}
+
+// Polls until mushaf has rendered the target ayah then scrolls to it (max ~2s)
+// Scroll a container to center an element — explicit scrollTop, safe on iOS
+function _scrollElToCenter(container,el){
+  if(!container||!el)return;
+  var elRect=el.getBoundingClientRect();
+  var cRect=container.getBoundingClientRect();
+  container.scrollTop+=elRect.top-cRect.top-(container.clientHeight-el.offsetHeight)/2;
+}
+
+function _scrollMushafToAyah(surah,ayah,attempts){
+  if(!surah||!ayah)return;
+  attempts=attempts||0;
+  if(attempts>20)return;
+  var key=String(surah)+':'+String(ayah);
+  var view=$('mushafView');
+  var els=window._mushafVerseElements&&window._mushafVerseElements[key];
+  if(els&&els.length&&view&&view.contains(els[0])){
+    _scrollElToCenter(view,els[0]);
+    return;
+  }
+  setTimeout(function(){_scrollMushafToAyah(surah,ayah,attempts+1);},100);
+}
+
 App.toggleMushafMode=function(){
   S.mushafMode=!S.mushafMode;
   localStorage.setItem('mushafMode',String(S.mushafMode));
@@ -2421,13 +2477,24 @@ App.toggleMushafMode=function(){
   var mushafView=$('mushafView');
   if(playBtn){updateMushafPlayBtn();}
   if(S.mushafMode){
+    // Capture position before hiding normal list
+    var fromAyah=_visibleAyahInList()||1;
     if(ayahList)ayahList.style.display='none';
     if(mushafView){mushafView.style.display='';renderMushafView();}
+    // After mushaf renders, scroll to where user was
+    _scrollMushafToAyah(S.surah,fromAyah,0);
   }else{
+    // Capture position before hiding mushaf
+    var fromAyahM=_visibleAyahInMushaf()||1;
+    if(mushafView){mushafView.style.display='none';clear(mushafView);}
     if(ayahList)ayahList.style.display='';
     var s2=SURAHS[(S.surah||1)-1];
     updateProgress(ayahList,s2?s2.a:0);
-    if(mushafView){mushafView.style.display='none';clear(mushafView);}
+    // Scroll normal list to where user was in mushaf — explicit scrollTop, safe on iOS
+    requestAnimationFrame(function(){
+      var card=ayahList&&ayahList.querySelector('.ayah-card[data-ayah="'+fromAyahM+'"]');
+      _scrollElToCenter(ayahList,card);
+    });
   }
 };
 
