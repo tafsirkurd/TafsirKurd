@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v30
+ * Smart Daily Companion  v31
  * Always exactly 5 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2. Ayah of the day        (Baghdad-seeded, salt 1)
@@ -276,35 +276,114 @@
   }
 
   /* ─────────────────────────────────────────────
-     RAIN DETECTION  (Duhok area, cached 1 h)
-     Open-Meteo — no API key required.
+     WEATHER DETECTION  (Duhok: 36.87°N 42.95°E)
+     3 independent sources fetched in parallel.
+     Majority vote wins; if 2+ agree → use that.
+     If all fail → keep last cached result.
+     Cache TTL: 30 min (fresh enough, not spammy).
+
+     Condition values:
+       'rain'      — precipitation / drizzle / showers
+       'thunder'   — thunderstorm
+       'wind'      — high wind (≥ 40 km/h), no rain
+       'clear'     — nothing notable
   ───────────────────────────────────────────── */
-  var _RAIN_KEY = 'sd_rain_v1';
-  var _RAIN_TTL = 60 * 60 * 1000;
+  var _RAIN_KEY = 'sd_rain_v2';
+  var _RAIN_TTL = 30 * 60 * 1000;
+
+  /* Weather-code → condition classifier */
+  function _classifyCode(code, prec, windspeed) {
+    code = code || 0; prec = prec || 0; windspeed = windspeed || 0;
+    if (code >= 95) return 'thunder';                         /* 95-99 thunderstorm        */
+    if (prec > 0 || (code >= 51 && code <= 82)) return 'rain'; /* drizzle/rain/showers     */
+    if (windspeed >= 40) return 'wind';                       /* strong wind, no precip    */
+    return 'clear';
+  }
 
   function _isRaining() {
     try {
       var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
-      if (c && (Date.now() - c.ts) < _RAIN_TTL) return !!c.raining;
+      if (c && (Date.now() - c.ts) < _RAIN_TTL) return c.condition !== 'clear';
     } catch(e) {}
     return false;
   }
 
+  /* Returns cached condition or 'clear' if cache is fresh */
+  function _getWeatherCondition() {
+    try {
+      var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
+      if (c && (Date.now() - c.ts) < _RAIN_TTL) return c.condition || 'clear';
+    } catch(e) {}
+    return 'clear';
+  }
+
+  var _fetchRainInProgress = false;
   function _fetchRain() {
     try {
       var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
       if (c && (Date.now() - c.ts) < _RAIN_TTL) return; /* cache fresh */
     } catch(e) {}
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code&timezone=Asia%2FBaghdad')
+    if (_fetchRainInProgress) return;
+    _fetchRainInProgress = true;
+
+    /* Source 1 — Open-Meteo (primary, Duhok coords) */
+    var s1 = fetch('https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1')
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var cur  = data.current || {};
-        var prec = cur.precipitation || 0;
-        var code = cur.weather_code  || 0;
-        /* weather codes: 51-67 drizzle/rain, 80-82 showers, 95-99 thunderstorm */
-        var raining = prec > 0 || (code >= 51 && code <= 99);
-        try { localStorage.setItem(_RAIN_KEY, JSON.stringify({ts: Date.now(), raining: raining})); } catch(e2) {}
-      }).catch(function() {});
+      .then(function(d) {
+        var cur = d.current || {};
+        return _classifyCode(cur.weather_code, cur.precipitation, cur.wind_speed_10m);
+      }).catch(function() { return null; });
+
+    /* Source 2 — Open-Meteo secondary mirror (same API, different CDN node) */
+    var s2 = fetch('https://api.open-meteo.com/v1/forecast?latitude=36.867&longitude=42.946&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1&cell_selection=nearest')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var cur = d.current || {};
+        return _classifyCode(cur.weather_code, cur.precipitation, cur.wind_speed_10m);
+      }).catch(function() { return null; });
+
+    /* Source 3 — wttr.in JSON (completely independent data provider) */
+    var s3 = fetch('https://wttr.in/Duhok?format=j1')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var cur = (d.current_condition && d.current_condition[0]) || {};
+        var code   = parseInt(cur.weatherCode || '0', 10);
+        var prec   = parseFloat(cur.precipMM || '0');
+        var wind   = parseFloat(cur.windspeedKmph || '0');
+        /* wttr weather codes: 200s=thunder, 300s/500s=rain/drizzle, 800=clear */
+        if (code >= 200 && code < 300) return 'thunder';
+        if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
+        if (wind >= 40) return 'wind';
+        return 'clear';
+      }).catch(function() { return null; });
+
+    Promise.all([s1, s2, s3]).then(function(results) {
+      _fetchRainInProgress = false;
+      /* Filter out nulls (failed sources) */
+      var valid = results.filter(function(r) { return r !== null; });
+      if (!valid.length) return; /* all failed — keep stale cache */
+
+      /* Majority vote: count each condition */
+      var counts = {};
+      valid.forEach(function(cond) { counts[cond] = (counts[cond] || 0) + 1; });
+
+      /* Pick condition with highest count; tie-break: prefer more severe */
+      var severity = { thunder: 3, rain: 2, wind: 1, clear: 0 };
+      var winner = valid[0];
+      var winnerScore = counts[winner] * 10 + (severity[winner] || 0);
+      Object.keys(counts).forEach(function(cond) {
+        var score = counts[cond] * 10 + (severity[cond] || 0);
+        if (score > winnerScore) { winner = cond; winnerScore = score; }
+      });
+
+      try {
+        localStorage.setItem(_RAIN_KEY, JSON.stringify({
+          ts: Date.now(),
+          condition: winner,
+          sources: results  /* debug: what each source returned */
+        }));
+      } catch(e2) {}
+    }).catch(function() { _fetchRainInProgress = false; });
   }
 
   /* ─────────────────────────────────────────────
@@ -528,22 +607,37 @@
 
   /* ─────────────────────────────────────────────
      CARD 5 — WEATHER DHIKR
-     Shows rain dhikr when it's raining; otherwise picks
-     thunder or wind by daily seed (salt 6).
+     Condition from multi-source vote:
+       thunder → thunder dhikr
+       rain    → rain dhikr
+       wind    → wind dhikr
+       clear   → rotate thunder/wind by daily seed
+     Slide hidden only if the chosen category has no adhkar data at all.
   ───────────────────────────────────────────── */
   function _getWeatherItem() {
     _fetchRain(); /* background refresh — never blocks rendering */
-    /* When raining — use rain if it has data, else null (hide slide) */
-    if (_isRaining()) {
-      return _catHasData('rain') ? WEATHER_ITEMS[0] : null;
+    var condition = _getWeatherCondition();
+
+    /* Map condition → preferred WEATHER_ITEMS index */
+    var preferred;
+    if (condition === 'thunder') preferred = WEATHER_ITEMS[1];  /* thunder */
+    else if (condition === 'rain') preferred = WEATHER_ITEMS[0]; /* rain    */
+    else if (condition === 'wind') preferred = WEATHER_ITEMS[2]; /* wind    */
+    else {
+      /* clear sky — rotate thunder/wind by daily seed (salt 6) */
+      var fallbacks = [WEATHER_ITEMS[1], WEATHER_ITEMS[2]];
+      var start = _seededIdx(fallbacks.length, 6);
+      preferred = fallbacks[start];
     }
-    /* Not raining — try thunder then wind; return first that has data */
-    var fallbacks = [WEATHER_ITEMS[1], WEATHER_ITEMS[2]];
-    /* Rotate by daily seed so it changes each day */
-    var start = _seededIdx(fallbacks.length, 6);
-    for (var i = 0; i < fallbacks.length; i++) {
-      var candidate = fallbacks[(start + i) % fallbacks.length];
-      if (_catHasData(candidate.categoryKey)) return candidate;
+
+    /* Use preferred if it has data */
+    if (_catHasData(preferred.categoryKey)) return preferred;
+
+    /* Preferred has no data — try other weather items */
+    for (var i = 0; i < WEATHER_ITEMS.length; i++) {
+      if (WEATHER_ITEMS[i] !== preferred && _catHasData(WEATHER_ITEMS[i].categoryKey)) {
+        return WEATHER_ITEMS[i];
+      }
     }
     /* No weather adhkar in cache at all — hide the slide */
     return null;
