@@ -134,137 +134,94 @@
             font-size: 12px; color: #b91c1c;
         }
 
-        /* ── phone mockup ── */
-        .phone-wrap {
-            position: sticky; top: 24px;
-        }
-        .phone-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-tertiary); margin-bottom: 12px; }
+        /* ── phone mockup frame ── */
+        .phone-wrap { position: sticky; top: 24px; }
+        .phone-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-tertiary); margin-bottom: 8px; }
+        /* phone frame — theme-aware via CSS variables set in JS */
         .phone {
-            background: #07100a;
+            /* exact app theme vars, default = dark */
+            --pm-bg: #0a0a0a; --pm-bg2: #161616; --pm-bg3: #050505;
+            --pm-text: #ffffff; --pm-text2: #b0b0b0; --pm-text3: #666666;
+            --pm-border: #2a2a2a;
+            --pm-accent: #ffffff; --pm-accent-t: #000000;
+            --pm-fu-glow: rgba(38,100,58,.22); --pm-fu-ring: rgba(56,130,78,.3);
             border-radius: 28px;
-            padding: 26px 18px 24px;
-            border: 1px solid rgba(255,255,255,.07);
+            padding: 20px 16px 18px;
+            border: 1px solid var(--pm-border);
             box-shadow: 0 8px 40px rgba(0,0,0,.22);
             position: relative; overflow: hidden;
+            background: var(--pm-bg);
+            transition: background .35s, border-color .35s;
         }
-        .phone::before {
-            content: '';
-            position: absolute; inset: 0; pointer-events: none;
-            background: radial-gradient(ellipse 75% 45% at 50% 28%, rgba(34,100,52,.2) 0%, transparent 65%);
-        }
-        .pm-wordmark { font-size: 8px; font-weight: 700; letter-spacing: .22em; color: rgba(255,255,255,.25); text-transform: uppercase; text-align: center; margin-bottom: 18px; }
-        /* rings */
-        .pm-rings { position: relative; width: 76px; height: 76px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
-        .pm-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(52,120,70,.28); animation: pm-breath 3.8s ease-in-out infinite; }
-        .pm-ring-1 { width: 76px;  height: 76px; }
-        .pm-ring-2 { width: 100px; height: 100px; animation-delay: .8s; opacity: .6; }
-        .pm-ring-3 { width: 124px; height: 124px; animation-delay: 1.6s; opacity: .3; }
-        @keyframes pm-breath { 0%,100%{transform:scale(1)}50%{transform:scale(1.05)} }
-        .pm-icon { width: 54px; height: 54px; border-radius: 15px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; z-index: 1; box-shadow: 0 0 28px rgba(34,100,52,.18); }
-        .pm-icon img { width: 34px; height: 34px; object-fit: contain; }
-        /* text */
-        .pm-title { font-size: 14px; font-weight: 800; color: #f0f0f0; text-align: center; margin-bottom: 4px; }
-        .pm-msg   { font-size: 9px; color: rgba(255,255,255,.4); text-align: center; line-height: 1.6; margin-bottom: 12px; }
-        /* version row */
-        .pm-ver { display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 12px; }
-        .pm-ver-old { font-size: 9px; font-weight: 600; color: rgba(255,255,255,.28); background: rgba(255,255,255,.06); padding: 3px 9px; border-radius: 20px; }
-        .pm-ver-arrow { font-size: 9px; color: rgba(255,255,255,.18); }
-        .pm-ver-new { font-size: 9px; font-weight: 700; color: #5ddc8c; background: rgba(52,140,78,.18); border: 1px solid rgba(52,140,78,.28); padding: 3px 9px; border-radius: 20px; }
-        /* bullets */
-        .pm-bullets { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 9px; padding: 10px 12px; margin-bottom: 12px; }
-        .pm-bullets-hdr { font-size: 7px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 7px; }
-        .pm-bullet { display: flex; align-items: flex-start; gap: 6px; font-size: 8.5px; color: rgba(255,255,255,.55); line-height: 1.5; margin-bottom: 4px; }
-        .pm-bullet:last-child { margin-bottom: 0; }
-        .pm-bullet::before { content: '✦'; color: rgba(52,140,78,.65); font-size: 6.5px; flex-shrink: 0; margin-top: 2px; }
-        /* button */
-        .pm-btn { width: 100%; padding: 10px; background: linear-gradient(135deg,#2a6e48,#3a9460); color: #fff; font-size: 10px; font-weight: 700; border: none; border-radius: 9px; text-align: center; }
+        /* flash animation on theme/mode switch */
+        .phone.pm-flash { animation: pm-flash-in .3s ease; }
+        @keyframes pm-flash-in { 0%{opacity:.55;transform:scale(.975)} 100%{opacity:1;transform:scale(1)} }
 
-        /* ── phone CSS variables (defaults = dark theme) ── */
-        .phone {
-            --pm-bg: #07100a;
-            --pm-text: #f0f0f0;
-            --pm-text-muted: rgba(255,255,255,.4);
-            --pm-text-dim: rgba(255,255,255,.55);
-            --pm-text-faint: rgba(255,255,255,.28);
-            --pm-accent: #5ddc8c;
-            --pm-accent-bg: rgba(52,140,78,.18);
-            --pm-accent-border: rgba(52,140,78,.28);
-            --pm-accent-star: rgba(52,140,78,.65);
-            --pm-ring: rgba(52,120,70,.28);
-            --pm-card-bg: rgba(255,255,255,.04);
-            --pm-card-border: rgba(255,255,255,.07);
-            --pm-icon-bg: rgba(255,255,255,.06);
-            --pm-icon-border: rgba(255,255,255,.1);
-            --pm-ver-old-bg: rgba(255,255,255,.06);
-            --pm-ver-old-color: rgba(255,255,255,.28);
-            --pm-ver-arrow: rgba(255,255,255,.18);
-            --pm-btn-a: #2a6e48;
-            --pm-btn-b: #3a9460;
-            --pm-wordmark: rgba(255,255,255,.25);
-            --pm-phone-border: rgba(255,255,255,.07);
-            --pm-glow-color: rgba(34,100,52,.2);
-            transition: background .35s, border-color .35s, box-shadow .35s;
-        }
-        /* apply theme colors via CSS variables */
-        .phone { background: var(--pm-bg); border-color: var(--pm-phone-border); }
-        .phone::before { background: radial-gradient(ellipse 75% 45% at 50% 28%, var(--pm-glow-color) 0%, transparent 65%); }
-        .pm-wordmark { color: var(--pm-wordmark); transition: color .35s; }
-        .pm-ring { border-color: var(--pm-ring); transition: border-color .35s; }
-        .pm-icon { background: var(--pm-icon-bg); border-color: var(--pm-icon-border); box-shadow: 0 0 28px var(--pm-icon-bg); transition: background .35s, border-color .35s; }
-        .pm-title { color: var(--pm-text); transition: color .35s; }
-        .pm-msg  { color: var(--pm-text-muted); transition: color .35s; }
-        .pm-ver-old { background: var(--pm-ver-old-bg); color: var(--pm-ver-old-color); transition: background .35s, color .35s; }
-        .pm-ver-arrow { color: var(--pm-ver-arrow); transition: color .35s; }
-        .pm-ver-new { color: var(--pm-accent); background: var(--pm-accent-bg); border-color: var(--pm-accent-border); transition: color .35s, background .35s, border-color .35s; }
-        .pm-bullets { background: var(--pm-card-bg); border-color: var(--pm-card-border); transition: background .35s, border-color .35s; }
-        .pm-bullets-hdr { color: var(--pm-text-faint); transition: color .35s; }
-        .pm-bullet { color: var(--pm-text-dim); transition: color .35s; }
-        .pm-bullet::before { color: var(--pm-accent-star); transition: color .35s; }
-        .pm-btn { background: linear-gradient(135deg, var(--pm-btn-a), var(--pm-btn-b)); color: var(--pm-btn-text, #fff); transition: background .35s, color .35s; }
+        /* ── preview tabs (admin UI, not themed) ── */
+        .pm-tabs-row { display: flex; gap: 5px; margin-bottom: 7px; }
+        .pm-tab { flex:1; padding:5px 4px; font-size:11px; font-weight:600; border:1px solid var(--border-light); border-radius:7px; background:var(--bg-surface); color:var(--text-secondary); cursor:pointer; text-align:center; transition:border-color .15s,background .15s,color .15s; }
+        .pm-tab:hover { border-color:var(--border-medium); color:var(--text-primary); }
+        .pm-tab.active { border-color:var(--accent,#2e7d50); background:rgba(46,125,80,.08); color:var(--accent,#2e7d50); }
+        .pm-mode-row { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:10px; }
+        .pm-mode-tab { padding:5px 8px; font-size:11px; font-weight:500; border:1px solid var(--border-light); border-radius:7px; background:var(--bg-surface); color:var(--text-secondary); cursor:pointer; text-align:center; transition:border-color .15s,background .15s,color .15s; }
+        .pm-mode-tab.active { border-color:var(--accent,#2e7d50); background:rgba(46,125,80,.08); color:var(--accent,#2e7d50); font-weight:600; }
 
-        /* ── phone theme/mode tabs ── */
-        .pm-tabs-row { display: flex; gap: 5px; margin-bottom: 8px; }
-        .pm-tab {
-            flex: 1; padding: 6px 4px; font-size: 11px; font-weight: 600;
-            border: 1px solid var(--border-light); border-radius: 7px;
-            background: var(--bg-surface); color: var(--text-secondary);
-            cursor: pointer; text-align: center;
-            transition: border-color .15s, background .15s, color .15s;
-        }
-        .pm-tab:hover { border-color: var(--border-medium); color: var(--text-primary); }
-        .pm-tab.active { border-color: var(--accent, #2e7d50); background: rgba(46,125,80,.08); color: var(--accent, #2e7d50); }
-        .pm-mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; }
-        .pm-mode-tab {
-            padding: 5px 8px; font-size: 11px; font-weight: 500;
-            border: 1px solid var(--border-light); border-radius: 7px;
-            background: var(--bg-surface); color: var(--text-secondary);
-            cursor: pointer; text-align: center;
-            transition: border-color .15s, background .15s, color .15s;
-        }
-        .pm-mode-tab.active { border-color: var(--accent, #2e7d50); background: rgba(46,125,80,.08); color: var(--accent, #2e7d50); font-weight: 600; }
+        /* ── fu-overlay replica (enforce preview) ── */
+        /* glow — matches .fu-bg-glow */
+        .pm-fu-bg { position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse 65% 42% at 50% 32%, var(--pm-fu-glow) 0%, transparent 68%); transition:background .35s; }
+        /* wordmark — matches .fu-wordmark */
+        .pm-fu-wm { font-size:6.5px; font-weight:700; letter-spacing:.22em; color:var(--pm-text3); text-transform:uppercase; text-align:center; margin-bottom:12px; transition:color .35s; }
+        /* hero — matches .fu-hero / .fu-ring / .fu-hero-badge */
+        .pm-fu-hero { position:relative; width:64px; height:64px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+        .pm-fu-ring { position:absolute; border-radius:50%; border:1px solid var(--pm-fu-ring); animation:pm-fu-ripple 3.2s ease-out infinite; transition:border-color .35s; }
+        .pm-fu-r1 { width:64px;  height:64px;  animation-delay:0s; }
+        .pm-fu-r2 { width:86px;  height:86px;  animation-delay:.8s; }
+        .pm-fu-r3 { width:108px; height:108px; animation-delay:1.6s; }
+        .pm-fu-r4 { width:130px; height:130px; animation-delay:2.4s; }
+        @keyframes pm-fu-ripple { 0%{transform:scale(.82);opacity:.72} 60%{transform:scale(1);opacity:.28} 100%{transform:scale(1.08);opacity:0} }
+        .pm-fu-badge { width:48px; height:48px; border-radius:13px; background:var(--pm-bg2); border:1px solid var(--pm-border); display:flex; align-items:center; justify-content:center; z-index:1; animation:pm-fu-badge-glow 4s ease-in-out infinite; transition:background .35s,border-color .35s; }
+        @keyframes pm-fu-badge-glow { 0%,100%{box-shadow:0 4px 12px rgba(0,0,0,.2),0 0 14px var(--pm-fu-glow)} 50%{box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 28px var(--pm-fu-glow)} }
+        .pm-fu-img { width:30px; height:30px; object-fit:contain; }
+        /* text — matches .fu-title / .fu-msg */
+        .pm-fu-title { font-size:13px; font-weight:800; color:var(--pm-text); text-align:center; margin-bottom:3px; direction:rtl; transition:color .35s; }
+        .pm-fu-msg { font-size:7.5px; color:var(--pm-text2); text-align:center; line-height:1.7; margin-bottom:9px; direction:rtl; transition:color .35s; }
+        /* version row — matches .fu-ver-row */
+        .pm-fu-ver { display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:9px; }
+        .pm-fu-ver-old { font-size:7.5px; font-weight:600; color:var(--pm-text3); background:var(--pm-bg2); border:1px solid var(--pm-border); padding:2px 8px; border-radius:20px; transition:color .35s,background .35s,border-color .35s; }
+        .pm-fu-ver-arrow { font-size:8px; color:var(--pm-text3); transition:color .35s; }
+        .pm-fu-ver-new { font-size:7.5px; font-weight:700; color:var(--pm-accent-t); background:var(--pm-accent); padding:2px 8px; border-radius:20px; transition:color .35s,background .35s; }
+        /* what's new card — matches .fu-news-card */
+        .pm-fu-card { width:100%; background:var(--pm-bg2); border:1px solid var(--pm-border); border-radius:10px; padding:8px 10px; margin-bottom:9px; transition:background .35s,border-color .35s; }
+        .pm-fu-card-hdr { font-size:6px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--pm-text3); margin-bottom:7px; direction:rtl; transition:color .35s; }
+        .pm-fu-item { display:flex; align-items:flex-start; gap:5px; font-size:7.5px; color:var(--pm-text2); line-height:1.5; direction:rtl; margin-bottom:4px; transition:color .35s; }
+        .pm-fu-item:last-child { margin-bottom:0; }
+        .pm-fu-item::before { content:'✦'; color:var(--pm-accent); opacity:.65; font-size:5.5px; flex-shrink:0; margin-top:2px; transition:color .35s; }
+        /* CTA — matches .fu-cta */
+        .pm-fu-cta { width:100%; padding:9px; background:var(--pm-accent); color:var(--pm-accent-t); font-size:9px; font-weight:700; border:none; border-radius:10px; text-align:center; box-shadow:0 4px 16px var(--pm-fu-glow); transition:background .35s,color .35s,box-shadow .35s; }
 
-        /* ── phone slide animation ── */
-        .phone { position: relative; }
-        .phone.pm-theme-flash { animation: pm-flash .32s ease; }
-        @keyframes pm-flash { 0%{opacity:.6;transform:scale(.985)} 100%{opacity:1;transform:scale(1)} }
-
-        /* ── soft banner preview ── */
-        .pm-soft-screen { display: flex; flex-direction: column; gap: 7px; }
-        .pm-soft-appbar { height: 22px; background: var(--pm-card-bg); border-radius: 6px; }
-        .pm-soft-content { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-        .pm-soft-row { height: 9px; border-radius: 4px; background: var(--pm-card-bg); }
-        .pm-soft-row.wide  { width: 100%; }
-        .pm-soft-row.mid   { width: 72%; }
-        .pm-soft-row.short { width: 48%; }
-        .pm-soft-banner {
-            background: var(--pm-card-bg); border: 1px solid var(--pm-accent-border);
-            border-radius: 12px; padding: 10px 11px; margin-top: 6px;
-        }
-        .pm-soft-banner-title { font-size: 9px; font-weight: 700; color: var(--pm-text); margin-bottom: 3px; }
-        .pm-soft-banner-msg   { font-size: 8px; color: var(--pm-text-muted); line-height: 1.5; margin-bottom: 8px; }
-        .pm-soft-banner-btns  { display: flex; gap: 6px; }
-        .pm-soft-banner-dismiss { flex: 1; padding: 5px; font-size: 8px; font-weight: 600; text-align: center; border-radius: 7px; background: var(--pm-ver-old-bg); color: var(--pm-ver-old-color); }
-        .pm-soft-banner-update  { flex: 2; padding: 5px; font-size: 8px; font-weight: 700; text-align: center; border-radius: 7px; background: linear-gradient(135deg, var(--pm-btn-a), var(--pm-btn-b)); color: var(--pm-btn-text, #fff); }
+        /* ── soft banner replica ── */
+        /* simulated app screen */
+        .pm-sb-screen { display:flex; flex-direction:column; }
+        /* app header bar — matches .hdr */
+        .pm-sb-hdr { height:26px; background:var(--pm-bg); border-bottom:1px solid var(--pm-border); display:flex; align-items:center; padding:0 10px; gap:6px; margin:-20px -16px 10px; transition:background .35s,border-color .35s; }
+        .pm-sb-hdr-logo { width:14px; height:14px; border-radius:3px; background:var(--pm-bg2); border:1px solid var(--pm-border); transition:background .35s; }
+        .pm-sb-hdr-name { font-size:8px; font-weight:800; color:var(--pm-text); letter-spacing:-.2px; transition:color .35s; }
+        /* content skeleton */
+        .pm-sb-content { flex:1; display:flex; flex-direction:column; gap:5px; padding:0 0 6px; }
+        .pm-sb-row { height:8px; border-radius:3px; background:var(--pm-bg2); border:1px solid var(--pm-border); transition:background .35s; }
+        .pm-sb-block { border-radius:8px; background:var(--pm-bg2); border:1px solid var(--pm-border); transition:background .35s; }
+        /* banner — matches .fu-banner */
+        .pm-sb-banner { background:var(--pm-bg2); border:1px solid var(--pm-border); border-radius:14px; padding:10px 11px; box-shadow:0 10px 32px rgba(0,0,0,.35); margin:0 -2px; transition:background .35s,border-color .35s; }
+        .pm-sb-banner-top { display:flex; align-items:center; gap:7px; margin-bottom:3px; }
+        /* dot — matches .fu-banner-dot */
+        .pm-sb-dot { width:7px; height:7px; border-radius:50%; background:var(--pm-accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--pm-accent) 22%,transparent); flex-shrink:0; transition:background .35s; }
+        .pm-sb-banner-title { font-size:8.5px; font-weight:700; color:var(--pm-text); direction:rtl; transition:color .35s; }
+        .pm-sb-banner-msg { font-size:7.5px; color:var(--pm-text2); direction:rtl; margin-bottom:8px; transition:color .35s; }
+        .pm-sb-btns { display:flex; gap:6px; }
+        /* dismiss — matches .fu-banner-dismiss */
+        .pm-sb-dismiss { width:24px; height:24px; border-radius:50%; background:var(--pm-bg3); color:var(--pm-text2); font-size:10px; display:flex; align-items:center; justify-content:center; transition:background .35s,color .35s; }
+        /* update btn — matches .fu-banner-btn */
+        .pm-sb-update { flex:1; padding:5px 8px; border-radius:8px; background:var(--pm-accent); color:var(--pm-accent-t); font-size:7.5px; font-weight:700; text-align:center; transition:background .35s,color .35s; }
 
         /* ── save row ── */
         .save-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 24px 24px; }
@@ -497,55 +454,62 @@
                         <button class="pm-mode-tab"         data-pm-mode="soft"    onclick="setPreviewMode('soft')">Soft banner</button>
                     </div>
 
-                    <!-- ENFORCE: full overlay phone -->
+                    <!-- ENFORCE: full overlay — mirrors .fu-overlay -->
                     <div class="phone" id="pmPhoneEnforce">
-                        <div class="pm-wordmark">TafsirKurd</div>
-                        <div class="pm-rings">
-                            <div class="pm-ring pm-ring-3"></div>
-                            <div class="pm-ring pm-ring-2"></div>
-                            <div class="pm-ring pm-ring-1"></div>
-                            <div class="pm-icon">
-                                <img src="/assets/images/logo.png" alt="" onerror="this.style.opacity=0">
+                        <div class="pm-fu-bg"></div>
+                        <div class="pm-fu-wm">TafsirKurd</div>
+                        <div class="pm-fu-hero">
+                            <div class="pm-fu-ring pm-fu-r4"></div>
+                            <div class="pm-fu-ring pm-fu-r3"></div>
+                            <div class="pm-fu-ring pm-fu-r2"></div>
+                            <div class="pm-fu-ring pm-fu-r1"></div>
+                            <div class="pm-fu-badge">
+                                <img src="/assets/images/logo.png" class="pm-fu-img" alt="" onerror="this.style.opacity=0">
                             </div>
                         </div>
-                        <div class="pm-title">نوێکردنەوەی پێویستە</div>
-                        <div class="pm-msg">وەشانێکی نوێیی بەردەستە.<br>تکایە بەرنامە نوێبکەرەوە.</div>
-                        <div class="pm-ver">
-                            <span class="pm-ver-old" id="pmOld">v—</span>
-                            <span class="pm-ver-arrow">›</span>
-                            <span class="pm-ver-new" id="pmNew">v—</span>
+                        <div class="pm-fu-title">نوێکردنەوەی پێویستە</div>
+                        <div class="pm-fu-msg">وەشانێکی نوێیی بەردەستە.<br>تکایە بەرنامە نوێبکەرەوە.</div>
+                        <div class="pm-fu-ver">
+                            <span class="pm-fu-ver-old" id="pmOld">v—</span>
+                            <span class="pm-fu-ver-arrow">›</span>
+                            <span class="pm-fu-ver-new" id="pmNew">v—</span>
                         </div>
-                        <div class="pm-bullets">
-                            <div class="pm-bullets-hdr">چی نوێبوو</div>
+                        <div class="pm-fu-card">
+                            <div class="pm-fu-card-hdr">چی نوێبوو</div>
                             <div id="pmBullets">
-                                <div class="pm-bullet">بەهێزترین بکرن و ئەزموونی نوێتر</div>
-                                <div class="pm-bullet">خوێندنی قورئان باشتر بوو</div>
-                                <div class="pm-bullet">ئاگادارکرنەوەکان باشتر بوون</div>
+                                <div class="pm-fu-item">بەهێزترین بکرن و ئەزموونی نوێتر</div>
+                                <div class="pm-fu-item">خوێندنی قورئان باشتر بوو</div>
+                                <div class="pm-fu-item">ئاگادارکرنەوەکان باشتر بوون</div>
                             </div>
                         </div>
-                        <div class="pm-btn">نوێبکەرەوە ↗</div>
+                        <div class="pm-fu-cta">نوێبکەرەوە ↗</div>
                     </div>
 
-                    <!-- SOFT: banner phone -->
+                    <!-- SOFT: banner — mirrors .fu-banner floating above app content -->
                     <div class="phone" id="pmPhoneSoft" style="display:none;">
-                        <div class="pm-wordmark">TafsirKurd</div>
-                        <div class="pm-soft-screen">
-                            <div class="pm-soft-appbar"></div>
-                            <div class="pm-soft-content">
-                                <div class="pm-soft-row wide"></div>
-                                <div class="pm-soft-row mid"></div>
-                                <div class="pm-soft-row wide" style="margin-top:4px;height:44px;border-radius:8px;opacity:.6"></div>
-                                <div class="pm-soft-row short" style="margin-top:2px;"></div>
-                                <div class="pm-soft-row wide" style="height:32px;border-radius:8px;opacity:.5"></div>
-                                <div class="pm-soft-row mid"></div>
-                                <div class="pm-soft-row wide" style="height:28px;border-radius:8px;opacity:.4"></div>
+                        <div class="pm-sb-screen">
+                            <div class="pm-sb-hdr">
+                                <div class="pm-sb-hdr-logo"></div>
+                                <div class="pm-sb-hdr-name">TafsirKurd</div>
                             </div>
-                            <div class="pm-soft-banner">
-                                <div class="pm-soft-banner-title">نوێکردنەوەی بەردەستە ✦</div>
-                                <div class="pm-soft-banner-msg" id="pmSoftMsg">وەشانێکی نوێیی بەردەستە</div>
-                                <div class="pm-soft-banner-btns">
-                                    <div class="pm-soft-banner-dismiss">دواتر</div>
-                                    <div class="pm-soft-banner-update">نوێبکەرەوە ↗</div>
+                            <div class="pm-sb-content">
+                                <div class="pm-sb-row" style="width:100%"></div>
+                                <div class="pm-sb-row" style="width:70%"></div>
+                                <div class="pm-sb-block" style="height:46px;margin-top:2px;opacity:.85"></div>
+                                <div class="pm-sb-row" style="width:50%"></div>
+                                <div class="pm-sb-block" style="height:34px;opacity:.65"></div>
+                                <div class="pm-sb-row" style="width:75%"></div>
+                                <div class="pm-sb-block" style="height:28px;opacity:.45"></div>
+                            </div>
+                            <div class="pm-sb-banner">
+                                <div class="pm-sb-banner-top">
+                                    <div class="pm-sb-dot"></div>
+                                    <div class="pm-sb-banner-title">نوێکردنەوەی بەردەستە</div>
+                                </div>
+                                <div class="pm-sb-banner-msg" id="pmSoftMsg">وەشانێکی نوێیی بەردەستە</div>
+                                <div class="pm-sb-btns">
+                                    <div class="pm-sb-dismiss">×</div>
+                                    <div class="pm-sb-update">نوێبکەرەوە ↗</div>
                                 </div>
                             </div>
                         </div>
@@ -570,51 +534,35 @@
         lucide.createIcons();
     }
 
-    /* ── preview themes ── */
+    /* ── preview themes — exact app CSS variable values from :root / [data-theme] ── */
     var PREVIEW_THEMES = {
         dark: {
-            bg:'#07100a', text:'#f0f0f0', textMuted:'rgba(255,255,255,.4)', textDim:'rgba(255,255,255,.55)',
-            textFaint:'rgba(255,255,255,.28)', accent:'#5ddc8c', accentBg:'rgba(52,140,78,.18)',
-            accentBorder:'rgba(52,140,78,.28)', accentStar:'rgba(52,140,78,.65)', ring:'rgba(52,120,70,.28)',
-            cardBg:'rgba(255,255,255,.04)', cardBorder:'rgba(255,255,255,.07)',
-            iconBg:'rgba(255,255,255,.06)', iconBorder:'rgba(255,255,255,.1)',
-            verOldBg:'rgba(255,255,255,.06)', verOldColor:'rgba(255,255,255,.28)',
-            verArrow:'rgba(255,255,255,.18)', btnA:'#2a6e48', btnB:'#3a9460', btnText:'#fff',
-            wordmark:'rgba(255,255,255,.25)', phoneBorder:'rgba(255,255,255,.07)',
-            glowColor:'rgba(34,100,52,.2)'
+            bg:'#0a0a0a', bg2:'#161616', bg3:'#050505',
+            text:'#ffffff', text2:'#b0b0b0', text3:'#666666',
+            border:'#2a2a2a',
+            accent:'#ffffff', accentT:'#000000',
+            fuGlow:'rgba(38,100,58,.22)', fuRing:'rgba(56,130,78,.3)'
         },
         light: {
-            bg:'#eff5f0', text:'#1a2e22', textMuted:'rgba(0,0,0,.5)', textDim:'rgba(0,0,0,.65)',
-            textFaint:'rgba(0,0,0,.35)', accent:'#1a7a40', accentBg:'rgba(26,122,64,.12)',
-            accentBorder:'rgba(26,122,64,.28)', accentStar:'rgba(26,122,64,.55)', ring:'rgba(26,122,64,.2)',
-            cardBg:'rgba(0,0,0,.04)', cardBorder:'rgba(0,0,0,.09)',
-            iconBg:'rgba(0,0,0,.05)', iconBorder:'rgba(0,0,0,.1)',
-            verOldBg:'rgba(0,0,0,.06)', verOldColor:'rgba(0,0,0,.38)',
-            verArrow:'rgba(0,0,0,.2)', btnA:'#1a7a40', btnB:'#2a9a58', btnText:'#fff',
-            wordmark:'rgba(0,0,0,.18)', phoneBorder:'rgba(0,0,0,.08)',
-            glowColor:'rgba(26,122,64,.1)'
+            bg:'#fafafa', bg2:'#ffffff', bg3:'#f0f0f0',
+            text:'#000000', text2:'#555555', text3:'#999999',
+            border:'#e8e8e8',
+            accent:'#000000', accentT:'#ffffff',
+            fuGlow:'rgba(26,92,58,.12)', fuRing:'rgba(26,92,58,.22)'
         },
         sakina: {
-            bg:'#060e18', text:'#e0eeff', textMuted:'rgba(180,210,255,.45)', textDim:'rgba(180,210,255,.58)',
-            textFaint:'rgba(180,210,255,.3)', accent:'#64b3f4', accentBg:'rgba(50,120,200,.18)',
-            accentBorder:'rgba(50,120,200,.32)', accentStar:'rgba(100,180,255,.6)', ring:'rgba(40,90,180,.28)',
-            cardBg:'rgba(100,180,255,.04)', cardBorder:'rgba(100,180,255,.08)',
-            iconBg:'rgba(100,180,255,.07)', iconBorder:'rgba(100,180,255,.14)',
-            verOldBg:'rgba(100,180,255,.07)', verOldColor:'rgba(180,210,255,.32)',
-            verArrow:'rgba(180,210,255,.2)', btnA:'#1a4a8a', btnB:'#2a6ecc', btnText:'#fff',
-            wordmark:'rgba(180,210,255,.22)', phoneBorder:'rgba(100,180,255,.1)',
-            glowColor:'rgba(30,80,160,.25)'
+            bg:'#0c1c12', bg2:'#112318', bg3:'#081410',
+            text:'#f0e6c8', text2:'#a89268', text3:'#6b5c3e',
+            border:'#1e3828',
+            accent:'#c9a84c', accentT:'#0c1c12',
+            fuGlow:'rgba(201,168,76,.18)', fuRing:'rgba(201,168,76,.3)'
         },
         noor: {
-            bg:'#120a04', text:'#fff5e0', textMuted:'rgba(255,220,150,.45)', textDim:'rgba(255,220,150,.58)',
-            textFaint:'rgba(255,220,150,.3)', accent:'#f5c842', accentBg:'rgba(200,150,30,.18)',
-            accentBorder:'rgba(200,150,30,.32)', accentStar:'rgba(245,200,66,.6)', ring:'rgba(160,110,10,.28)',
-            cardBg:'rgba(255,200,100,.04)', cardBorder:'rgba(255,200,100,.09)',
-            iconBg:'rgba(255,200,100,.07)', iconBorder:'rgba(255,200,100,.14)',
-            verOldBg:'rgba(255,200,100,.07)', verOldColor:'rgba(255,220,150,.32)',
-            verArrow:'rgba(255,220,150,.2)', btnA:'#96540a', btnB:'#c07018', btnText:'#fff',
-            wordmark:'rgba(255,220,150,.22)', phoneBorder:'rgba(255,200,100,.09)',
-            glowColor:'rgba(150,90,10,.22)'
+            bg:'#f4e8cc', bg2:'#fdf4e3', bg3:'#eddfc0',
+            text:'#1a0e04', text2:'#5c3d1a', text3:'#9b7650',
+            border:'#d9c9a8',
+            accent:'#1a5c3a', accentT:'#fdf4e3',
+            fuGlow:'rgba(26,92,58,.1)', fuRing:'rgba(26,92,58,.2)'
         }
     };
     var _previewTheme = 'dark';
@@ -651,31 +599,19 @@
     function _applyThemeToPhone(phone) {
         var th = PREVIEW_THEMES[_previewTheme] || PREVIEW_THEMES.dark;
         var s  = phone.style;
-        s.setProperty('--pm-bg',           th.bg);
-        s.setProperty('--pm-text',         th.text);
-        s.setProperty('--pm-text-muted',   th.textMuted);
-        s.setProperty('--pm-text-dim',     th.textDim);
-        s.setProperty('--pm-text-faint',   th.textFaint);
-        s.setProperty('--pm-accent',       th.accent);
-        s.setProperty('--pm-accent-bg',    th.accentBg);
-        s.setProperty('--pm-accent-border',th.accentBorder);
-        s.setProperty('--pm-accent-star',  th.accentStar);
-        s.setProperty('--pm-ring',         th.ring);
-        s.setProperty('--pm-card-bg',      th.cardBg);
-        s.setProperty('--pm-card-border',  th.cardBorder);
-        s.setProperty('--pm-icon-bg',      th.iconBg);
-        s.setProperty('--pm-icon-border',  th.iconBorder);
-        s.setProperty('--pm-ver-old-bg',   th.verOldBg);
-        s.setProperty('--pm-ver-old-color',th.verOldColor);
-        s.setProperty('--pm-ver-arrow',    th.verArrow);
-        s.setProperty('--pm-btn-a',        th.btnA);
-        s.setProperty('--pm-btn-b',        th.btnB);
-        s.setProperty('--pm-btn-text',     th.btnText);
-        s.setProperty('--pm-wordmark',     th.wordmark);
-        s.setProperty('--pm-phone-border', th.phoneBorder);
-        s.setProperty('--pm-glow-color',   th.glowColor);
-        s.background = th.bg;
-        s.borderColor = th.phoneBorder;
+        s.setProperty('--pm-bg',       th.bg);
+        s.setProperty('--pm-bg2',      th.bg2);
+        s.setProperty('--pm-bg3',      th.bg3);
+        s.setProperty('--pm-text',     th.text);
+        s.setProperty('--pm-text2',    th.text2);
+        s.setProperty('--pm-text3',    th.text3);
+        s.setProperty('--pm-border',   th.border);
+        s.setProperty('--pm-accent',   th.accent);
+        s.setProperty('--pm-accent-t', th.accentT);
+        s.setProperty('--pm-fu-glow',  th.fuGlow);
+        s.setProperty('--pm-fu-ring',  th.fuRing);
+        s.background   = th.bg;
+        s.borderColor  = th.border;
     }
 
     function _applyPreviewStyles() {
@@ -687,9 +623,9 @@
     }
 
     function _triggerFlash(phone) {
-        phone.classList.remove('pm-theme-flash');
-        void phone.offsetWidth; /* reflow */
-        phone.classList.add('pm-theme-flash');
+        phone.classList.remove('pm-flash');
+        void phone.offsetWidth;
+        phone.classList.add('pm-flash');
     }
 
     function syncPreview() {
@@ -716,7 +652,7 @@
         ];
         bullets.forEach(function(b) {
             var d = document.createElement('div');
-            d.className = 'pm-bullet';
+            d.className = 'pm-fu-item';
             d.textContent = b;
             div.appendChild(d);
         });
