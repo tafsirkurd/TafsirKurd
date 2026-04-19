@@ -14,13 +14,23 @@
  *   _headingSmooth accumulates continuously (unbounded int) — no 0/360 wrap glitch.
  *   Each frame: _headingSmooth += shortestDelta(normSmooth, rawHeading) × 0.12
  *   Lerp factor 0.12 ≈ 60% of the way in 8 frames @ 60fps → ~133ms settle.
+ *
+ * iOS permission flow:
+ *   1. open() called (must be from onclick — user gesture)
+ *   2. If permission needed → show "tap to enable" button (stays in gesture context)
+ *   3. Button click → requestPermission() → granted → attach sensor
+ *   4. If denied → show Settings guidance
+ *   5. No-data timer: if sensor attached but no readings after 4s → show calibration hint
  */
 (function () {
   'use strict';
 
   var KAABA_LAT = 21.4225;
   var KAABA_LON = 39.8262;
-  var IS_IOS    = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+  /* Use Capacitor platform when available — more reliable than UA parsing */
+  var IS_IOS = (window.Capacitor && window.Capacitor.getPlatform
+                  ? window.Capacitor.getPlatform() === 'ios'
+                  : /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream);
 
   /* ── build compass dial tick marks ──────────────────────────────────────── */
   function _buildDial(svgEl) {
@@ -58,6 +68,7 @@
   var _animId        = null;
   var _sensorFn      = null;
   var _fallbackTimer = null;
+  var _noDataTimer   = null;   // fires if sensor attached but no readings after 4s
   /* settle physics */
   var _settleOffset  = 0;
   var _settleActive  = false;
@@ -108,6 +119,13 @@
       raw = (360 - e.alpha + 360) % 360;
     }
     _headingRaw = raw;
+    /* Cancel no-data hint timer — we're getting readings */
+    if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
+    /* If loading spinner is still visible (first reading), hide it */
+    var loading = document.getElementById('qiblaLoading');
+    if (loading && loading.style.display !== 'none') {
+      _showCompass();
+    }
   }
 
   function _attachSensor() {
@@ -127,16 +145,114 @@
   }
 
   function _requestSensor() {
-    /* Must be called within a user-gesture stack — App.tab() tap satisfies this */
     if (IS_IOS &&
         typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission()
-        .then(function (r) { if (r === 'granted') _attachSensor(); })
-        .catch(function () {});
+      /* iOS 13+ requires explicit permission. Show a tap-to-enable button so the
+         actual requestPermission() call happens directly inside a button onclick
+         (guaranteed gesture context). */
+      _showIosPermissionPrompt();
     } else {
+      /* Android or older iOS — attach directly */
       _attachSensor();
     }
+  }
+
+  /* ── iOS permission prompt ───────────────────────────────────────────── */
+  function _showIosPermissionPrompt() {
+    var loading = document.getElementById('qiblaLoading');
+    if (!loading) { _doRequestPermission(); return; }
+
+    /* Replace spinner with a tap-to-enable button */
+    while (loading.firstChild) loading.removeChild(loading.firstChild);
+    loading.style.display = 'flex';
+    loading.style.flexDirection = 'column';
+    loading.style.gap = '10px';
+
+    var btn = document.createElement('button');
+    btn.style.cssText = 'background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);'
+      + 'color:#fff;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;';
+    btn.textContent = 'چالاک کردنی پێلاو';  /* Enable Compass */
+
+    var hint = document.createElement('div');
+    hint.style.cssText = 'font-size:11px;color:rgba(255,255,255,.55);text-align:center;max-width:160px;';
+    hint.textContent = 'Enable motion access for iOS';
+
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      _doRequestPermission();
+    };
+
+    loading.appendChild(btn);
+    loading.appendChild(hint);
+  }
+
+  function _doRequestPermission() {
+    DeviceOrientationEvent.requestPermission()
+      .then(function(r) {
+        if (r === 'granted') {
+          /* Restore spinner while we wait for first reading */
+          var loading = document.getElementById('qiblaLoading');
+          if (loading) {
+            while (loading.firstChild) loading.removeChild(loading.firstChild);
+            loading.style.flexDirection = '';
+            loading.style.gap = '';
+            var sp = document.createElement('div');
+            sp.className = 'qibla-spinner';
+            loading.appendChild(sp);
+            loading.style.display = 'flex';
+          }
+          _attachSensor();
+          /* No-data safety: if sensor is attached but webkitCompassHeading stays
+             null for 4 s (device not calibrated / flat on table), show a hint. */
+          _noDataTimer = setTimeout(function() {
+            if (_started && _headingRaw === null) _showNoDataHint();
+          }, 4000);
+        } else {
+          _showPermissionDenied();
+        }
+      })
+      .catch(function() { _showPermissionDenied(); });
+  }
+
+  function _showPermissionDenied() {
+    var loading = document.getElementById('qiblaLoading');
+    if (!loading) return;
+    while (loading.firstChild) loading.removeChild(loading.firstChild);
+    loading.style.display = 'flex';
+    loading.style.flexDirection = 'column';
+    loading.style.gap = '8px';
+
+    var icon = document.createElement('div');
+    icon.style.cssText = 'font-size:22px;';
+    icon.textContent = '⚠️';
+
+    var msg = document.createElement('div');
+    msg.style.cssText = 'font-size:12px;color:rgba(255,255,255,.75);text-align:center;max-width:170px;line-height:1.5;';
+    msg.textContent = 'Motion access denied. Go to iOS Settings → Privacy → Motion & Fitness → enable for this app.';
+
+    loading.appendChild(icon);
+    loading.appendChild(msg);
+  }
+
+  function _showNoDataHint() {
+    var loading = document.getElementById('qiblaLoading');
+    if (!loading) return;
+    while (loading.firstChild) loading.removeChild(loading.firstChild);
+    loading.style.display = 'flex';
+    loading.style.flexDirection = 'column';
+    loading.style.gap = '8px';
+
+    var icon = document.createElement('div');
+    icon.style.cssText = 'font-size:22px;';
+    icon.textContent = '🧭';
+
+    var msg = document.createElement('div');
+    msg.style.cssText = 'font-size:12px;color:rgba(255,255,255,.75);text-align:center;max-width:170px;line-height:1.5;';
+    msg.textContent = 'Hold the phone upright and move it in a figure-8 to calibrate the compass.';
+
+    loading.appendChild(icon);
+    loading.appendChild(msg);
   }
 
   /* ═══════════════════════════════════════════════════
@@ -354,6 +470,17 @@
     if (_animId)       { cancelAnimationFrame(_animId);  _animId       = null; }
     if (_fallbackTimer){ clearTimeout(_fallbackTimer);   _fallbackTimer = null; }
     if (_alignTimer)   { clearTimeout(_alignTimer);      _alignTimer   = null; }
+    if (_noDataTimer)  { clearTimeout(_noDataTimer);     _noDataTimer  = null; }
+    /* Reset loading element to plain spinner for next open */
+    var loading = document.getElementById('qiblaLoading');
+    if (loading) {
+      while (loading.firstChild) loading.removeChild(loading.firstChild);
+      loading.style.flexDirection = '';
+      loading.style.gap = '';
+      var sp = document.createElement('div');
+      sp.className = 'qibla-spinner';
+      loading.appendChild(sp);
+    }
     _headingRaw   = null;
     _aligned      = false;
     _settleOffset = 0;
