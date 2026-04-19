@@ -269,6 +269,7 @@ export async function onRequest(context) {
 
         // Get APNs JWT (only needed for raw iOS tokens)
         let apnsJwt = null;
+        let apnsJwtError = null;
         if (apnsTokens.length > 0 && env.APNS_KEY_P8) {
             try {
                 apnsJwt = await getAPNsJWT(
@@ -276,7 +277,9 @@ export async function onRequest(context) {
                     env.APNS_KEY_ID  || 'KLG2RRCRNR',
                     env.APNS_TEAM_ID || '8KA7UDSC9D'
                 );
-            } catch (e) { /* continue — FCM tokens can still succeed */ }
+            } catch (e) {
+                apnsJwtError = 'APNs JWT error: ' + e.message;
+            }
         }
 
         // Build data payload for deep link
@@ -284,6 +287,7 @@ export async function onRequest(context) {
 
         const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
         const staleTokens = [];
+        const apnsErrors = [];
         let successCount = 0, failCount = 0;
 
         await Promise.allSettled([
@@ -306,12 +310,18 @@ export async function onRequest(context) {
             }),
             // APNs direct sends (raw iOS device tokens)
             ...apnsTokens.map(async ({ token }) => {
-                if (!apnsJwt) { failCount++; return; }
+                if (!apnsJwt) {
+                    apnsErrors.push(apnsJwtError || 'JWT not generated');
+                    failCount++;
+                    return;
+                }
                 const res = await sendApns(token, notif.title, notif.body, data, apnsJwt, 'com.tafsirkurd.app');
                 if (res.ok) {
                     successCount++;
                 } else {
-                    const err = await res.json().catch(() => ({}));
+                    const errText = await res.text().catch(() => '');
+                    const err = JSON.parse(errText || '{}');
+                    apnsErrors.push(`APNs ${res.status}: ${err?.reason || errText}`);
                     if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') {
                         staleTokens.push(token);
                     }
@@ -333,7 +343,7 @@ export async function onRequest(context) {
             tokens_sent: successCount,
             tokens_failed: failCount,
             stale_removed: staleTokens.length,
-            error_message: null,
+            error_message: apnsErrors.length ? apnsErrors[0] : null,
         }).eq('id', trackingId);
 
         // Auto-schedule next occurrence for recurring notifications
