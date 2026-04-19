@@ -69,6 +69,7 @@
   var _sensorFn      = null;
   var _fallbackTimer = null;
   var _noDataTimer   = null;   // fires if sensor attached but no readings after 4s
+  var _compassListener = null; // native Compass plugin listener (iOS)
   /* settle physics */
   var _settleOffset  = 0;
   var _settleActive  = false;
@@ -152,22 +153,61 @@
   }
 
   function _detachSensor() {
-    if (!_sensorFn) return;
-    window.removeEventListener('deviceorientationabsolute', _sensorFn, true);
-    window.removeEventListener('deviceorientation',         _sensorFn, true);
-    _sensorFn = null;
+    /* Native iOS compass */
+    if (_compassListener) {
+      try { _compassListener.remove(); } catch(e) {}
+      _compassListener = null;
+      var CP = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Compass;
+      if (CP) CP.stop().catch(function(){});
+    }
+    /* Web DeviceOrientation */
+    if (_sensorFn) {
+      window.removeEventListener('deviceorientationabsolute', _sensorFn, true);
+      window.removeEventListener('deviceorientation',         _sensorFn, true);
+      _sensorFn = null;
+    }
   }
 
   function _requestSensor() {
-    if (IS_IOS &&
-        typeof DeviceOrientationEvent !== 'undefined' &&
+    /* On iOS in Capacitor: use native CLLocationManager heading — more reliable
+       than webkitCompassHeading which is often null/wrong in WKWebView. */
+    var CP = IS_IOS && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Compass;
+    if (CP) {
+      CP.start().then(function(res) {
+        if (!_started) return;
+        if (res && res.status === 'granted') {
+          _compassListener = CP.addListener('headingUpdate', function(data) {
+            if (!_started) return;
+            var heading = data.heading;
+            if (heading == null || heading < 0) return;
+            _headingRaw = heading;
+            if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
+            var loading = document.getElementById('qiblaLoading');
+            if (loading && loading.style.display !== 'none') _showCompass();
+          });
+        } else if (res && res.status === 'denied') {
+          _showPermissionDenied();
+        } else {
+          /* plugin unavailable — fall back to DeviceOrientationEvent */
+          _requestSensorWeb();
+        }
+      }).catch(function() {
+        _requestSensorWeb();
+      });
+    } else if (IS_IOS) {
+      _requestSensorWeb();
+    } else {
+      /* Android — attach directly */
+      _attachSensor();
+    }
+  }
+
+  function _requestSensorWeb() {
+    /* Web fallback: DeviceOrientationEvent (requires user gesture on iOS 13+) */
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
-      /* iOS 13+ requires explicit permission. Show a tap-to-enable button so the
-         actual requestPermission() call happens directly inside a button onclick
-         (guaranteed gesture context). */
       _showIosPermissionPrompt();
     } else {
-      /* Android or older iOS — attach directly */
       _attachSensor();
     }
   }
