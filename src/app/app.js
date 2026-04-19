@@ -2058,7 +2058,7 @@ function initPushToken(){
       localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
       localStorage.setItem('push_token_platform',platform);
       if(!token){_pushLog('ERROR: empty token');return;}
-      fetch('/register-push-token',{
+      fetch('https://tafsirkurd.com/register-push-token',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({token:token,platform:platform})
