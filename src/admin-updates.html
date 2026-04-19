@@ -439,6 +439,24 @@
             b.classList.toggle('active', b.dataset.s === s);
         });
         document.getElementById('enforceWarn').style.display = s === 'enforce' ? 'flex' : 'none';
+        
+        // Dark mode
+        (function() {
+            var tt = document.getElementById('theme-toggle');
+            var ti = document.getElementById('theme-icon');
+            if (!tt) return;
+            if (localStorage.getItem('admin-theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                if (ti) ti.setAttribute('data-lucide', 'sun');
+            }
+            tt.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                var dark = document.body.classList.contains('dark-mode');
+                if (ti) ti.setAttribute('data-lucide', dark ? 'sun' : 'moon');
+                localStorage.setItem('admin-theme', dark ? 'dark' : 'light');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
+        })();
         lucide.createIcons();
     }
 
