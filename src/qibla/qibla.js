@@ -106,12 +106,26 @@
   /* ═══════════════════════════════════════════════════
      SENSOR
   ═══════════════════════════════════════════════════ */
+  /* Returns the current screen rotation angle (0=portrait, 90=landscape-left,
+     270=landscape-right). Used to correct webkitCompassHeading which is always
+     relative to the physical device top, not the screen top. */
+  function _screenAngle() {
+    if (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') {
+      return window.screen.orientation.angle;
+    }
+    if (typeof window.orientation === 'number') {
+      return (window.orientation + 360) % 360;
+    }
+    return 0;
+  }
+
   function _onOrientation(e) {
     var raw;
     if (IS_IOS) {
-      /* webkitCompassHeading: 0=North, increases clockwise — use directly */
+      /* webkitCompassHeading: 0=North clockwise, measured from physical device top.
+         Subtract screen angle so heading is relative to screen top instead. */
       if (e.webkitCompassHeading == null) return;
-      raw = e.webkitCompassHeading;
+      raw = (e.webkitCompassHeading - _screenAngle() + 360) % 360;
     } else {
       /* DeviceOrientationAbsolute: alpha=0→North, increases counter-clockwise.
          Convert to CW compass heading: (360 - alpha) % 360 */
@@ -444,6 +458,13 @@
 
     /* Request sensor within this user-gesture call stack (iOS permission) */
     _requestSensor();
+
+    /* On orientation change reset heading smooth so compass doesn't jump */
+    window.addEventListener('orientationchange', function _oc() {
+      if (!_started) { window.removeEventListener('orientationchange', _oc); return; }
+      _headingRaw = null;
+      _headingSmooth = 0;
+    });
 
     /* Get location → set bearing → show compass */
     _getLocation(function (lat, lon) {
