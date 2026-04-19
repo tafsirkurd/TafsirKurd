@@ -130,8 +130,87 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- ═══════════════ UPDATE SETTINGS ═══════════════ -->
+                <div class="page-header" style="margin-top:40px;">
+                    <h1 class="page-title">Version &amp; Update Control</h1>
+                    <div class="page-actions">
+                        <span id="updateCfgStatus" style="font-size:13px;color:var(--text-secondary);"></span>
+                        <button class="btn btn-secondary" onclick="loadUpdateConfig()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                        <button class="btn btn-primary" onclick="saveUpdateConfig()" id="saveUpdateBtn"><i data-lucide="save"></i>Save</button>
+                    </div>
+                </div>
+
+                <div class="card" style="padding:0;overflow:hidden;">
+                    <!-- Stage banner -->
+                    <div id="updateStageBanner" style="display:none;padding:12px 24px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border-light);"></div>
+
+                    <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+                        <!-- Stage selector -->
+                        <div style="grid-column:1/-1;">
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Update Stage</label>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="stageGroup">
+                                <button class="stage-pill" data-stage="release" onclick="setStage('release')">🟢 Release — off</button>
+                                <button class="stage-pill" data-stage="soft"    onclick="setStage('soft')">🟡 Soft — dismissible banner</button>
+                                <button class="stage-pill" data-stage="enforce" onclick="setStage('enforce')">🔴 Enforce — hard block</button>
+                            </div>
+                        </div>
+
+                        <!-- Versions -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Latest Version (published)</label>
+                            <input type="text" id="uc_latest"   class="form-input" placeholder="e.g. 0.86.9">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Min iOS Version (blocks below)</label>
+                            <input type="text" id="uc_min_ios"  class="form-input" placeholder="e.g. 0.80.0">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Min Android Version (blocks below)</label>
+                            <input type="text" id="uc_min_and"  class="form-input" placeholder="e.g. 0.80.0">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Soft → Enforce After (hours)</label>
+                            <input type="number" id="uc_delay"  class="form-input" placeholder="e.g. 48" min="0">
+                        </div>
+
+                        <!-- Store URLs -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">iOS Store URL</label>
+                            <input type="url" id="uc_ios_url"  class="form-input" placeholder="https://apps.apple.com/...">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Android Store URL</label>
+                            <input type="url" id="uc_and_url"  class="form-input" placeholder="https://play.google.com/...">
+                        </div>
+
+                        <!-- Release time (for soft auto-transition) -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Release Time (for auto-transition)</label>
+                            <input type="datetime-local" id="uc_release_time" class="form-input">
+                            <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">Auto-transitions soft → enforce after delay hours from this time.</p>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Soft Banner Cooldown (days)</label>
+                            <input type="number" id="uc_cooldown" class="form-input" placeholder="7" min="1">
+                        </div>
+
+                        <!-- What's new -->
+                        <div style="grid-column:1/-1;">
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">What's New (one bullet per line, shown on forced update screen)</label>
+                            <textarea id="uc_whats_new" class="form-input" rows="4" style="resize:vertical;font-size:13px;" placeholder="Faster performance and smoother experience&#10;Improved Quran reading and navigation&#10;Better notifications and reliability"></textarea>
+                            <p style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">One bullet per line. Leave empty to use default fallback text.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
+
+        <style>
+        .stage-pill{padding:8px 16px;border-radius:20px;border:1px solid var(--border-light);background:var(--bg-surface);color:var(--text-primary);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+        .stage-pill.active{background:var(--text-primary);color:var(--bg-app);border-color:var(--text-primary)}
+        </style>
     </div>
     <div class="modal" id="modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
         <div class="modal-content" style="background:var(--bg-surface);border-radius:12px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;">
@@ -170,7 +249,7 @@
     <script>
         lucide.createIcons();
         let features = [];
-        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadFeatures(); })();
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) { loadFeatures(); loadUpdateConfig(); } })();
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
         const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
@@ -353,6 +432,108 @@
             await supabase.from('features').delete().eq('id', id);
             loadFeatures();
         }
+
+        // ─── Update Config ────────────────────────────────────────────────────
+        var _currentStage = 'release';
+        function setStage(stage) {
+            _currentStage = stage;
+            document.querySelectorAll('.stage-pill').forEach(function(p) {
+                p.classList.toggle('active', p.dataset.stage === stage);
+            });
+            var banner = document.getElementById('updateStageBanner');
+            if (stage === 'enforce') {
+                banner.style.display = ''; banner.style.background = 'rgba(220,53,69,.12)'; banner.style.color = '#dc3545';
+                banner.textContent = '🔴 ENFORCE — all users below min version will be hard-blocked immediately.';
+            } else if (stage === 'soft') {
+                banner.style.display = ''; banner.style.background = 'rgba(255,193,7,.1)'; banner.style.color = '#b38600';
+                banner.textContent = '🟡 SOFT — dismissible banner shown to outdated users. Auto-transitions to enforce after delay.';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        async function loadUpdateConfig() {
+            var supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            var status = document.getElementById('updateCfgStatus');
+            status.textContent = 'Loading…';
+            var KEYS = ['update_stage','latest_version','min_ios_version','min_android_version',
+                        'ios_store_url','android_store_url','update_release_time',
+                        'update_enforce_delay_hours','soft_update_cooldown_days','update_whats_new'];
+            var { data } = await supabase.from('site_settings').select('key,value').in('key', KEYS);
+            var cfg = {};
+            (data || []).forEach(function(r){ cfg[r.key] = r.value; });
+
+            setStage(cfg.update_stage || 'release');
+            document.getElementById('uc_latest').value    = cfg.latest_version || '';
+            document.getElementById('uc_min_ios').value   = cfg.min_ios_version || '';
+            document.getElementById('uc_min_and').value   = cfg.min_android_version || '';
+            document.getElementById('uc_ios_url').value   = cfg.ios_store_url || '';
+            document.getElementById('uc_and_url').value   = cfg.android_store_url || '';
+            document.getElementById('uc_delay').value     = cfg.update_enforce_delay_hours || '';
+            document.getElementById('uc_cooldown').value  = cfg.soft_update_cooldown_days || '';
+
+            // Parse whats_new — store as newline text in textarea
+            var wn = cfg.update_whats_new || '';
+            try { var arr = JSON.parse(wn); if (Array.isArray(arr)) wn = arr.join('\n'); } catch(e) {}
+            document.getElementById('uc_whats_new').value = wn;
+
+            // Release time — convert ISO to datetime-local
+            if (cfg.update_release_time) {
+                try {
+                    var d = new Date(cfg.update_release_time);
+                    var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+                    document.getElementById('uc_release_time').value = local;
+                } catch(e) {}
+            }
+            status.textContent = 'Loaded ✓';
+            setTimeout(function(){ status.textContent = ''; }, 2000);
+        }
+
+        async function saveUpdateConfig() {
+            var supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            var btn = document.getElementById('saveUpdateBtn');
+            btn.disabled = true;
+            var status = document.getElementById('updateCfgStatus');
+            status.textContent = 'Saving…';
+
+            // Build whats_new as JSON array from textarea
+            var wnRaw = document.getElementById('uc_whats_new').value.trim();
+            var wnVal = wnRaw ? JSON.stringify(wnRaw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean)) : '';
+
+            // Release time back to ISO
+            var rtVal = '';
+            var rtInput = document.getElementById('uc_release_time').value;
+            if (rtInput) { try { rtVal = new Date(rtInput).toISOString(); } catch(e) {} }
+
+            var rows = [
+                { key: 'update_stage',               value: _currentStage },
+                { key: 'latest_version',              value: document.getElementById('uc_latest').value.trim() },
+                { key: 'min_ios_version',             value: document.getElementById('uc_min_ios').value.trim() },
+                { key: 'min_android_version',         value: document.getElementById('uc_min_and').value.trim() },
+                { key: 'ios_store_url',               value: document.getElementById('uc_ios_url').value.trim() },
+                { key: 'android_store_url',           value: document.getElementById('uc_and_url').value.trim() },
+                { key: 'update_enforce_delay_hours',  value: document.getElementById('uc_delay').value.trim() },
+                { key: 'soft_update_cooldown_days',   value: document.getElementById('uc_cooldown').value.trim() },
+                { key: 'update_whats_new',            value: wnVal },
+                { key: 'update_release_time',         value: rtVal },
+            ];
+
+            var errors = 0;
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i];
+                var { error } = await supabase.from('site_settings')
+                    .upsert({ key: r.key, value: r.value }, { onConflict: 'key' });
+                if (error) errors++;
+            }
+
+            btn.disabled = false;
+            status.textContent = errors ? ('⚠ ' + errors + ' errors') : 'Saved ✓';
+            setTimeout(function(){ status.textContent = ''; }, 3000);
+        }
+
+        // Load update config (called from the existing auth IIFE below)
     </script>
 </body>
 </html>

@@ -29,6 +29,7 @@ export async function onRequest(context) {
       'update_stage',              // 'release' | 'soft' | 'enforce'
       'update_release_time',       // ISO timestamp when soft stage started (for auto-transition timer)
       'update_enforce_delay_hours',// hours after release_time before soft auto-transitions to hard
+      'latest_version',            // current published version (informational, shown in UI)
       'min_ios_version',           // minimum required iOS build — trigger update if installed < this
       'min_android_version',       // minimum required Android build
       'ios_store_url',

@@ -120,15 +120,50 @@ window.ForceUpdate = (function(){
   }
 
   // ── Hard update UI ────────────────────────────────────────────────────────
-  function showHard() {
+  function _parseWhatsNew(raw) {
+    if (!raw) return [];
+    try { var p = JSON.parse(raw); if (Array.isArray(p)) return p.filter(Boolean); } catch(e) {}
+    return raw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+  }
+
+  function showHard(version, minVersion, cfg) {
     var o = document.getElementById('fuOverlay');
     if (!o || o.classList.contains('on')) return;
+
+    // Populate version row
+    var curEl = document.getElementById('fuCurrentVer');
+    var minEl = document.getElementById('fuMinVer');
+    if (curEl) curEl.textContent = version ? 'v' + version : '';
+    if (minEl) minEl.textContent = minVersion ? 'v' + minVersion : '';
+    var verRow = o.querySelector('.fu-ver-row');
+    if (verRow) verRow.style.display = (version || minVersion) ? '' : 'none';
+
+    // What's new bullets (from config or defaults)
+    var bullets = cfg ? _parseWhatsNew(cfg.update_whats_new) : [];
+    if (!bullets.length) bullets = [
+      tSafe('update.default_bullet1') || 'بەهێزترین بکرن و ئەزموونی نوێتر',
+      tSafe('update.default_bullet2') || 'خوێندنی قورئان و ناڤبڕین باشتر بوو',
+      tSafe('update.default_bullet3') || 'ئاگادارکرنەوەکان و پشکنینەکان باشتر بوون',
+    ];
+    var list = document.getElementById('fuNewsList');
+    var card = document.getElementById('fuNewsCard');
+    if (list && card) {
+      while (list.firstChild) list.removeChild(list.firstChild);
+      bullets.forEach(function(b) {
+        var li = document.createElement('li');
+        li.className = 'fu-news-item';
+        li.textContent = b;
+        list.appendChild(li);
+      });
+      card.style.display = '';
+    }
+
     document.body.style.overflow    = 'hidden';
     document.body.style.touchAction = 'none';
     o.classList.add('on');
     requestAnimationFrame(function(){ o.classList.add('fu-visible'); });
     if (window.i18n) window.i18n.applyTranslations();
-    // Wire button with loading state + double-tap guard
+
     var btn = document.getElementById('fuHardBtn');
     if (btn) {
       btn.onclick = function() {
@@ -299,7 +334,7 @@ window.ForceUpdate = (function(){
           return;
         }
         console.log('[Update] HARD — blocking app');
-        showHard();
+        showHard(version, minVersion, cfg);
       } else if (mode === 'soft') {
         if (isSnoozed(cooldown)) {
           console.log('[Update] SOFT — snoozed (cooldown active or permanent)');
