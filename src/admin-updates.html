@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="utils/theme-loader.js"></script>
-    <title>Update Control — TafsirKurd Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Updates — TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=11">
@@ -16,222 +16,48 @@
     <script src="/utils/admin-session-timer-ui.js"></script>
     <script src="/utils/admin-notifications.js"></script>
     <style>
-    /* ══════════════════════════════════════════
-       UPDATE CONTROL — bespoke styles
-    ══════════════════════════════════════════ */
+        .stage-row { display: flex; gap: 8px; }
+        .stage-btn {
+            flex: 1; padding: 12px 8px; border: 1.5px solid var(--border-light);
+            border-radius: 10px; background: var(--bg-surface); cursor: pointer;
+            font-size: 13px; font-weight: 500; color: var(--text-secondary);
+            text-align: center; transition: all .15s; line-height: 1.4;
+        }
+        .stage-btn:hover { border-color: var(--border-medium); color: var(--text-primary); }
+        .stage-btn.active.release { border-color: #22c55e; background: rgba(34,197,94,.08); color: #15803d; font-weight: 600; }
+        .stage-btn.active.soft    { border-color: #f59e0b; background: rgba(245,158,11,.08); color: #92400e; font-weight: 600; }
+        .stage-btn.active.enforce { border-color: #ef4444; background: rgba(239,68,68,.08); color: #991b1b; font-weight: 600; }
+        .stage-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+        .stage-dot.release { background: #22c55e; }
+        .stage-dot.soft    { background: #f59e0b; }
+        .stage-dot.enforce { background: #ef4444; }
 
-    /* Hero header */
-    .uc-hero {
-        background: var(--bg-surface);
-        border-bottom: 1px solid var(--border-light);
-        padding: 28px 32px 24px;
-        display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
-        flex-wrap: wrap;
-    }
-    .uc-hero-left h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1.2; margin-bottom: 4px; }
-    .uc-hero-left p  { font-size: 13px; color: var(--text-tertiary); }
-    .uc-live-badge {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
-        transition: background .2s, color .2s;
-    }
-    .uc-live-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .uc-live-badge.release { background: rgba(34,197,94,.12); color: #15803d; }
-    .uc-live-badge.release::before { background: #22c55e; }
-    .uc-live-badge.soft    { background: rgba(245,158,11,.12); color: #92400e; }
-    .uc-live-badge.soft::before    { background: #f59e0b; animation: pulse-dot 1.4s ease-in-out infinite; }
-    .uc-live-badge.enforce { background: rgba(239,68,68,.12);  color: #991b1b; }
-    .uc-live-badge.enforce::before { background: #ef4444; animation: pulse-dot .8s ease-in-out infinite; }
-    @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.7); } }
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+        .field p { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
 
-    /* Layout */
-    .uc-layout {
-        display: grid;
-        grid-template-columns: 1fr 340px;
-        gap: 0;
-        min-height: calc(100vh - 120px);
-    }
-    .uc-main  { padding: 28px 28px 120px; overflow-y: auto; }
-    .uc-aside { border-left: 1px solid var(--border-light); padding: 28px 24px 28px; position: sticky; top: 0; height: calc(100vh - 120px); overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .enforce-warn {
+            display: none; align-items: center; gap: 8px;
+            padding: 10px 14px; border-radius: 8px; margin-top: 10px;
+            background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
+            font-size: 12px; color: #991b1b;
+        }
 
-    /* Section labels */
-    .uc-section { margin-bottom: 28px; }
-    .uc-section-label {
-        font-size: 11px; font-weight: 700; letter-spacing: .1em;
-        text-transform: uppercase; color: var(--text-tertiary);
-        margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-    }
-    .uc-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border-light); }
+        .section-title {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--text-tertiary);
+            padding-bottom: 10px; border-bottom: 1px solid var(--border-light);
+            margin-bottom: 16px;
+        }
 
-    /* Stage selector */
-    .stage-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-    .stage-btn {
-        position: relative; border: 1.5px solid var(--border-light);
-        border-radius: 14px; padding: 18px 16px 16px;
-        cursor: pointer; transition: all .18s;
-        background: var(--bg-surface); text-align: left; overflow: hidden;
-    }
-    .stage-btn:hover { border-color: var(--border-medium); transform: translateY(-1px); box-shadow: var(--shadow-m, 0 4px 12px rgba(0,0,0,.08)); }
-    .stage-btn.active { transform: translateY(-1px); box-shadow: var(--shadow-m, 0 4px 12px rgba(0,0,0,.08)); }
-    .stage-btn.active.release { border-color: #22c55e; background: rgba(34,197,94,.04); }
-    .stage-btn.active.soft    { border-color: #f59e0b; background: rgba(245,158,11,.04); }
-    .stage-btn.active.enforce { border-color: #ef4444; background: rgba(239,68,68,.04); }
-    .stage-btn-icon {
-        width: 36px; height: 36px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 16px; margin-bottom: 12px;
-    }
-    .stage-btn.release .stage-btn-icon { background: rgba(34,197,94,.12);  color: #15803d; }
-    .stage-btn.soft    .stage-btn-icon { background: rgba(245,158,11,.12); color: #92400e; }
-    .stage-btn.enforce .stage-btn-icon { background: rgba(239,68,68,.12);  color: #991b1b; }
-    .stage-btn-name { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-    .stage-btn-desc { font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
-    .stage-btn-check {
-        position: absolute; top: 12px; right: 12px;
-        width: 20px; height: 20px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 10px; opacity: 0; transition: opacity .15s;
-    }
-    .stage-btn.active .stage-btn-check { opacity: 1; }
-    .stage-btn.active.release .stage-btn-check { background: #22c55e; color: #fff; }
-    .stage-btn.active.soft    .stage-btn-check { background: #f59e0b; color: #fff; }
-    .stage-btn.active.enforce .stage-btn-check { background: #ef4444; color: #fff; }
-
-    /* Version inputs */
-    .ver-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .ver-field { position: relative; }
-    .ver-field label {
-        display: flex; align-items: center; gap: 6px;
-        font-size: 11px; font-weight: 600; color: var(--text-tertiary);
-        text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
-    }
-    .ver-field .platform-badge {
-        padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;
-        text-transform: none; letter-spacing: 0;
-    }
-    .ver-field .platform-badge.ios     { background: rgba(59,130,246,.12); color: #1d4ed8; }
-    .ver-field .platform-badge.android { background: rgba(34,197,94,.12);  color: #15803d; }
-    .ver-field .platform-badge.both    { background: rgba(139,92,246,.12); color: #6d28d9; }
-    .ver-input-wrap { position: relative; }
-    .ver-input-wrap input { padding-left: 32px; font-family: 'SF Mono','Fira Code',monospace; font-size: 13px; }
-    .ver-input-prefix {
-        position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
-        font-size: 12px; color: var(--text-tertiary); pointer-events: none; font-weight: 600;
-    }
-
-    /* URL fields */
-    .url-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .url-field label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-    .url-field label svg { flex-shrink: 0; }
-
-    /* Soft accordion */
-    .soft-section {
-        border: 1px solid var(--border-light); border-radius: 12px;
-        overflow: hidden; transition: opacity .2s;
-    }
-    .soft-section.dimmed { opacity: .45; pointer-events: none; }
-    .soft-section-hdr {
-        padding: 14px 18px; background: var(--bg-hover);
-        display: flex; align-items: center; gap: 10px;
-        font-size: 13px; font-weight: 600; color: var(--text-primary);
-        border-bottom: 1px solid var(--border-light);
-    }
-    .soft-section-body { padding: 20px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .soft-field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-    .soft-field p     { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; line-height: 1.5; }
-    .soft-field.full  { grid-column: 1 / -1; }
-
-    /* What's new */
-    .whats-new-wrap textarea {
-        font-size: 13px; line-height: 1.7; resize: vertical;
-        font-family: inherit; min-height: 120px;
-    }
-    .whats-new-preview { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-    .whats-new-bullet {
-        display: flex; align-items: flex-start; gap: 8px;
-        font-size: 12px; color: var(--text-secondary); line-height: 1.5;
-    }
-    .whats-new-bullet::before { content: '✦'; color: #22c55e; font-size: 9px; margin-top: 3px; flex-shrink: 0; }
-
-    /* Aside: phone mockup */
-    .phone-mockup {
-        background: #0a0f0c;
-        border-radius: 24px;
-        padding: 24px 18px 28px;
-        border: 1px solid rgba(255,255,255,.08);
-        box-shadow: 0 8px 32px rgba(0,0,0,.25);
-        position: relative; overflow: hidden;
-    }
-    .phone-mockup::before {
-        content: '';
-        position: absolute; inset: 0;
-        background: radial-gradient(ellipse 80% 50% at 50% 30%, rgba(38,100,58,.18) 0%, transparent 70%);
-        pointer-events: none;
-    }
-    .mock-wordmark { font-size: 9px; font-weight: 700; letter-spacing: .22em; color: rgba(255,255,255,.28); text-transform: uppercase; text-align: center; margin-bottom: 18px; }
-    .mock-rings { position: relative; width: 72px; height: 72px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; }
-    .mock-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(56,130,78,.3); animation: m-breathe 3.6s ease-in-out infinite; }
-    .mock-ring-1 { width: 72px; height: 72px; }
-    .mock-ring-2 { width: 94px; height: 94px; animation-delay: .7s; opacity: .65; }
-    .mock-ring-3 { width: 116px; height: 116px; animation-delay: 1.4s; opacity: .35; }
-    @keyframes m-breathe { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
-    .mock-badge {
-        width: 52px; height: 52px; border-radius: 14px;
-        background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
-        display: flex; align-items: center; justify-content: center; z-index: 1;
-        box-shadow: 0 0 28px rgba(38,100,58,.2);
-    }
-    .mock-badge img { width: 34px; height: 34px; object-fit: contain; }
-    .mock-title { font-size: 13px; font-weight: 800; color: #f2f2f2; text-align: center; margin-bottom: 4px; }
-    .mock-msg   { font-size: 9px; color: rgba(255,255,255,.45); text-align: center; line-height: 1.6; margin-bottom: 14px; }
-    .mock-ver-row { display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 14px; }
-    .mock-ver-old { font-size: 9px; font-weight: 600; color: rgba(255,255,255,.28); background: rgba(255,255,255,.07); padding: 3px 9px; border-radius: 20px; }
-    .mock-ver-arrow { color: rgba(255,255,255,.2); font-size: 9px; }
-    .mock-ver-new { font-size: 9px; font-weight: 700; color: #5ddc8c; background: rgba(56,130,78,.18); border: 1px solid rgba(56,130,78,.28); padding: 3px 9px; border-radius: 20px; }
-    .mock-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; }
-    .mock-card-hdr { font-size: 7px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 8px; }
-    .mock-bullet { display: flex; gap: 6px; font-size: 8.5px; color: rgba(255,255,255,.6); line-height: 1.5; margin-bottom: 5px; }
-    .mock-bullet::before { content: '✦'; color: rgba(56,130,78,.65); font-size: 7px; flex-shrink: 0; margin-top: 1px; }
-    .mock-cta { width: 100%; padding: 11px; background: linear-gradient(135deg, #2a6e48, #3a9460); color: #fff; font-size: 10px; font-weight: 700; border: none; border-radius: 10px; text-align: center; }
-
-    /* Aside: meta cards */
-    .uc-meta-card { background: var(--bg-hover); border-radius: 12px; padding: 16px; }
-    .uc-meta-card-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 12px; }
-    .uc-meta-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border-light); }
-    .uc-meta-row:last-child { border-bottom: none; }
-    .uc-meta-key { font-size: 12px; color: var(--text-tertiary); }
-    .uc-meta-val { font-size: 12px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-
-    /* Save bar */
-    .uc-save-bar {
-        position: fixed; bottom: 0; left: 260px; right: 0; z-index: 50;
-        background: var(--bg-app); border-top: 1px solid var(--border-light);
-        padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
-        gap: 16px; backdrop-filter: blur(8px);
-    }
-    .uc-save-status { font-size: 13px; color: var(--text-tertiary); min-width: 120px; }
-    .uc-save-status.ok  { color: #15803d; font-weight: 500; }
-    .uc-save-status.err { color: #991b1b; font-weight: 500; }
-
-    /* Responsive */
-    @media (max-width: 1100px) {
-        .uc-layout { grid-template-columns: 1fr; }
-        .uc-aside { display: none; }
-        .uc-save-bar { left: 0; }
-    }
-    @media (max-width: 700px) {
-        .stage-grid { grid-template-columns: 1fr; }
-        .ver-grid   { grid-template-columns: 1fr; }
-        .url-grid   { grid-template-columns: 1fr; }
-        .soft-section-body { grid-template-columns: 1fr; }
-        .uc-hero { padding: 20px; }
-        .uc-main { padding: 20px 20px 120px; }
-    }
+        @media (max-width: 600px) {
+            .field-row { grid-template-columns: 1fr; }
+            .stage-row { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 <div class="dashboard-container">
-    <!-- ═══ SIDEBAR ═══ -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">
@@ -289,8 +115,7 @@
         </div>
     </aside>
 
-    <!-- ═══ MAIN ═══ -->
-    <main class="main-content" style="padding:0;display:flex;flex-direction:column;">
+    <main class="main-content">
         <header class="topbar">
             <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
             <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search..."></div>
@@ -304,385 +129,224 @@
             </div>
         </header>
 
-        <!-- Hero -->
-        <div class="uc-hero">
-            <div class="uc-hero-left">
-                <h1>Update Control</h1>
-                <p>Remote version gate — changes take effect within 5 minutes, no app rebuild needed</p>
+        <div class="content-area">
+            <div class="page-header">
+                <h1 class="page-title">Updates</h1>
+                <div class="page-actions">
+                    <span id="saveStatus" style="font-size:13px;color:var(--text-tertiary);"></span>
+                    <button class="btn btn-secondary" onclick="loadConfig()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    <button class="btn btn-primary"   onclick="saveConfig()" id="saveBtn"><i data-lucide="save"></i>Save</button>
+                </div>
             </div>
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <span class="uc-live-badge release" id="heroBadge">Release</span>
-                <button class="btn btn-secondary" onclick="loadConfig()" style="gap:6px;"><i data-lucide="refresh-cw"></i>Refresh</button>
-                <button class="btn btn-primary" onclick="saveConfig()" id="saveBtn" style="gap:6px;"><i data-lucide="upload-cloud"></i>Publish</button>
+
+            <!-- Stage -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="section-title">Update Stage</div>
+                <div class="stage-row">
+                    <button class="stage-btn release active" data-stage="release" onclick="setStage('release')">
+                        <span class="stage-dot release"></span>Release<br>
+                        <small style="font-weight:400;opacity:.7;">No prompt</small>
+                    </button>
+                    <button class="stage-btn soft" data-stage="soft" onclick="setStage('soft')">
+                        <span class="stage-dot soft"></span>Soft<br>
+                        <small style="font-weight:400;opacity:.7;">Dismissible banner</small>
+                    </button>
+                    <button class="stage-btn enforce" data-stage="enforce" onclick="setStage('enforce')">
+                        <span class="stage-dot enforce"></span>Enforce<br>
+                        <small style="font-weight:400;opacity:.7;">Hard block</small>
+                    </button>
+                </div>
+                <div class="enforce-warn" id="enforceWarn">
+                    <i data-lucide="alert-triangle" style="width:15px;height:15px;flex-shrink:0;"></i>
+                    Users below the minimum version will be hard-blocked immediately after saving.
+                </div>
             </div>
+
+            <!-- Versions -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="section-title">Versions</div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Latest Published Version</label>
+                        <input type="text" id="uc_latest" class="form-input" placeholder="e.g. 0.87.0">
+                        <p>Shown to users on the update screen.</p>
+                    </div>
+                    <div class="field">
+                        <label>Min iOS Version</label>
+                        <input type="text" id="uc_min_ios" class="form-input" placeholder="e.g. 0.82.0">
+                        <p>iOS users below this are blocked.</p>
+                    </div>
+                    <div class="field">
+                        <label>Min Android Version</label>
+                        <input type="text" id="uc_min_and" class="form-input" placeholder="e.g. 0.82.0">
+                        <p>Android users below this are blocked.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Store URLs -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="section-title">Store URLs</div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>App Store (iOS)</label>
+                        <input type="url" id="uc_ios_url" class="form-input" placeholder="https://apps.apple.com/...">
+                    </div>
+                    <div class="field">
+                        <label>Play Store (Android)</label>
+                        <input type="url" id="uc_and_url" class="form-input" placeholder="https://play.google.com/...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soft settings -->
+            <div class="card" id="softCard" style="margin-bottom:16px;display:none;">
+                <div class="section-title">Soft Stage — Auto-escalation</div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Release Time</label>
+                        <input type="datetime-local" id="uc_release_time" class="form-input">
+                        <p>When the soft stage started.</p>
+                    </div>
+                    <div class="field">
+                        <label>Escalate to Enforce after (hours)</label>
+                        <input type="number" id="uc_delay" class="form-input" placeholder="e.g. 48" min="0">
+                        <p>Leave empty to never auto-escalate.</p>
+                    </div>
+                    <div class="field">
+                        <label>Banner cooldown (days)</label>
+                        <input type="number" id="uc_cooldown" class="form-input" placeholder="7" min="1">
+                        <p>Days before re-showing after dismiss.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What's new -->
+            <div class="card" style="margin-bottom:24px;">
+                <div class="section-title">What's New</div>
+                <div class="field">
+                    <label>Bullet points — one per line</label>
+                    <textarea id="uc_whats_new" class="form-input" rows="4"
+                        style="resize:vertical;font-size:13px;line-height:1.6;"
+                        placeholder="Faster performance and smoother experience&#10;Improved Quran reading and navigation&#10;Better notifications and reliability"></textarea>
+                    <p>Shown on the forced update screen. Leave empty for default Kurdish text.</p>
+                </div>
+            </div>
+
         </div>
-
-        <!-- Two-column layout -->
-        <div class="uc-layout" style="flex:1;">
-
-            <!-- LEFT: config form -->
-            <div class="uc-main">
-
-                <!-- 1. Stage -->
-                <div class="uc-section">
-                    <div class="uc-section-label">Update Stage</div>
-                    <div class="stage-grid">
-                        <button class="stage-btn release active" data-stage="release" onclick="setStage('release')">
-                            <div class="stage-btn-check">✓</div>
-                            <div class="stage-btn-icon"><i data-lucide="check-circle"></i></div>
-                            <div class="stage-btn-name">Release</div>
-                            <div class="stage-btn-desc">No prompt. All users open the app normally.</div>
-                        </button>
-                        <button class="stage-btn soft" data-stage="soft" onclick="setStage('soft')">
-                            <div class="stage-btn-check">✓</div>
-                            <div class="stage-btn-icon"><i data-lucide="bell"></i></div>
-                            <div class="stage-btn-name">Soft</div>
-                            <div class="stage-btn-desc">Dismissible banner. Escalates after delay.</div>
-                        </button>
-                        <button class="stage-btn enforce" data-stage="enforce" onclick="setStage('enforce')">
-                            <div class="stage-btn-check">✓</div>
-                            <div class="stage-btn-icon"><i data-lucide="lock"></i></div>
-                            <div class="stage-btn-name">Enforce</div>
-                            <div class="stage-btn-desc">Hard block. No way in without updating.</div>
-                        </button>
-                    </div>
-                    <!-- Enforce warning -->
-                    <div id="enforceWarn" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;font-size:13px;color:#991b1b;display:none;align-items:center;gap:8px;">
-                        <i data-lucide="alert-triangle" style="flex-shrink:0;width:16px;height:16px;"></i>
-                        Users below the minimum version will be immediately hard-blocked after you publish.
-                    </div>
-                </div>
-
-                <!-- 2. Versions -->
-                <div class="uc-section">
-                    <div class="uc-section-label">Versions</div>
-                    <div class="ver-grid">
-                        <div class="ver-field">
-                            <label>Latest Published <span class="platform-badge both">All</span></label>
-                            <div class="ver-input-wrap">
-                                <span class="ver-input-prefix">v</span>
-                                <input type="text" id="uc_latest" class="form-input" placeholder="0.87.0" oninput="syncPreview()">
-                            </div>
-                        </div>
-                        <div class="ver-field">
-                            <label>Min iOS <span class="platform-badge ios">iOS</span></label>
-                            <div class="ver-input-wrap">
-                                <span class="ver-input-prefix">v</span>
-                                <input type="text" id="uc_min_ios" class="form-input" placeholder="0.82.0" oninput="syncPreview()">
-                            </div>
-                        </div>
-                        <div class="ver-field">
-                            <label>Min Android <span class="platform-badge android">Android</span></label>
-                            <div class="ver-input-wrap">
-                                <span class="ver-input-prefix">v</span>
-                                <input type="text" id="uc_min_and" class="form-input" placeholder="0.82.0" oninput="syncPreview()">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Store URLs -->
-                <div class="uc-section">
-                    <div class="uc-section-label">Store URLs</div>
-                    <div class="url-grid">
-                        <div class="url-field">
-                            <label><i data-lucide="apple" style="width:13px;height:13px;"></i>App Store (iOS)</label>
-                            <input type="url" id="uc_ios_url" class="form-input" placeholder="https://apps.apple.com/app/...">
-                        </div>
-                        <div class="url-field">
-                            <label><i data-lucide="smartphone" style="width:13px;height:13px;"></i>Play Store (Android)</label>
-                            <input type="url" id="uc_and_url" class="form-input" placeholder="https://play.google.com/store/apps/...">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. Soft settings -->
-                <div class="uc-section">
-                    <div class="uc-section-label">Soft Stage Settings</div>
-                    <div class="soft-section" id="softSection">
-                        <div class="soft-section-hdr">
-                            <i data-lucide="timer" style="width:15px;height:15px;color:#f59e0b;"></i>
-                            Auto-escalation — Soft automatically becomes Enforce after the delay
-                        </div>
-                        <div class="soft-section-body">
-                            <div class="soft-field">
-                                <label>Release Time</label>
-                                <input type="datetime-local" id="uc_release_time" class="form-input">
-                                <p>When the soft stage started. The countdown begins here.</p>
-                            </div>
-                            <div class="soft-field">
-                                <label>Escalate after (hours)</label>
-                                <input type="number" id="uc_delay" class="form-input" placeholder="48" min="0">
-                                <p>Leave empty to never auto-escalate.</p>
-                            </div>
-                            <div class="soft-field">
-                                <label>Banner cooldown (days)</label>
-                                <input type="number" id="uc_cooldown" class="form-input" placeholder="7" min="1">
-                                <p>Days before showing the banner again after a user dismisses it.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 5. What's new -->
-                <div class="uc-section">
-                    <div class="uc-section-label">What's New</div>
-                    <div class="whats-new-wrap">
-                        <textarea id="uc_whats_new" class="form-input"
-                            placeholder="Faster performance and smoother experience&#10;Improved Quran reading and navigation&#10;Better notifications and reliability"
-                            oninput="syncBullets()"></textarea>
-                        <div class="whats-new-preview" id="bulletPreview" style="display:none;"></div>
-                    </div>
-                    <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px;">One bullet per line. Shown on the forced update screen. Leave empty to use default Kurdish text.</p>
-                </div>
-
-            </div><!-- /uc-main -->
-
-            <!-- RIGHT: preview aside -->
-            <div class="uc-aside">
-
-                <!-- Phone mockup -->
-                <div>
-                    <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:12px;">Screen Preview</div>
-                    <div class="phone-mockup">
-                        <div class="mock-wordmark">TafsirKurd</div>
-                        <div class="mock-rings">
-                            <div class="mock-ring mock-ring-3"></div>
-                            <div class="mock-ring mock-ring-2"></div>
-                            <div class="mock-ring mock-ring-1"></div>
-                            <div class="mock-badge">
-                                <img src="/assets/images/logo.png" alt="" onerror="this.style.display='none'">
-                            </div>
-                        </div>
-                        <div class="mock-title">نوێکردنەوەی پێویستە</div>
-                        <div class="mock-msg">وەشانێکی نوێیی بەردەستە.<br>تکایە بۆ بەردەوامبوون بەرنامە نوێبکەرەوە.</div>
-                        <div class="mock-ver-row">
-                            <span class="mock-ver-old" id="mockCurVer">v?</span>
-                            <span class="mock-ver-arrow">›</span>
-                            <span class="mock-ver-new" id="mockMinVer">v?</span>
-                        </div>
-                        <div class="mock-card">
-                            <div class="mock-card-hdr">چی نوێبوو</div>
-                            <div id="mockBullets">
-                                <div class="mock-bullet">بەهێزترین بکرن و ئەزموونی نوێتر</div>
-                                <div class="mock-bullet">خوێندنی قورئان و ناڤبڕین باشتر بوو</div>
-                                <div class="mock-bullet">ئاگادارکرنەوەکان باشتر بوون</div>
-                            </div>
-                        </div>
-                        <div class="mock-cta">نوێبکەرەوە ↗</div>
-                    </div>
-                </div>
-
-                <!-- Live config summary -->
-                <div class="uc-meta-card">
-                    <div class="uc-meta-card-title">Live Config</div>
-                    <div class="uc-meta-row"><span class="uc-meta-key">Stage</span><span class="uc-meta-val" id="metaStage">—</span></div>
-                    <div class="uc-meta-row"><span class="uc-meta-key">Latest</span><span class="uc-meta-val" id="metaLatest">—</span></div>
-                    <div class="uc-meta-row"><span class="uc-meta-key">Min iOS</span><span class="uc-meta-val" id="metaMinIos">—</span></div>
-                    <div class="uc-meta-row"><span class="uc-meta-key">Min Android</span><span class="uc-meta-val" id="metaMinAnd">—</span></div>
-                    <div class="uc-meta-row"><span class="uc-meta-key">Auto-escalate</span><span class="uc-meta-val" id="metaEscalate">—</span></div>
-                </div>
-
-            </div><!-- /uc-aside -->
-        </div><!-- /uc-layout -->
-
-        <!-- Sticky save bar -->
-        <div class="uc-save-bar">
-            <span class="uc-save-status" id="saveStatus"></span>
-            <div style="display:flex;gap:10px;align-items:center;">
-                <button class="btn btn-secondary" onclick="loadConfig()"><i data-lucide="rotate-ccw"></i>Discard</button>
-                <button class="btn btn-primary" onclick="saveConfig()" id="saveBtn2" style="gap:6px;min-width:130px;">
-                    <i data-lucide="upload-cloud"></i>Publish changes
-                </button>
-            </div>
-        </div>
-
     </main>
 </div>
 
 <script>
-var _stage = 'release';
+    var _stage = 'release';
 
-function setStage(s) {
-    _stage = s;
-    // Cards
-    document.querySelectorAll('.stage-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.stage === s);
+    function setStage(s) {
+        _stage = s;
+        document.querySelectorAll('.stage-btn').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.stage === s);
+        });
+        var warn = document.getElementById('enforceWarn');
+        if (warn) warn.style.display = s === 'enforce' ? 'flex' : 'none';
+        var soft = document.getElementById('softCard');
+        if (soft) soft.style.display = s === 'soft' ? '' : 'none';
+        lucide.createIcons();
+    }
+
+    async function loadConfig() {
+        var supabase = window.adminAuth.getSupabase();
+        if (!supabase) return;
+        var status = document.getElementById('saveStatus');
+        status.textContent = 'Loading…';
+
+        var KEYS = ['update_stage','latest_version','min_ios_version','min_android_version',
+                    'ios_store_url','android_store_url','update_release_time',
+                    'update_enforce_delay_hours','soft_update_cooldown_days','update_whats_new'];
+        var { data } = await supabase.from('site_settings').select('key,value').in('key', KEYS);
+        var cfg = {};
+        (data || []).forEach(function(r) { cfg[r.key] = r.value; });
+
+        setStage(cfg.update_stage || 'release');
+        document.getElementById('uc_latest').value   = cfg.latest_version || '';
+        document.getElementById('uc_min_ios').value  = cfg.min_ios_version || '';
+        document.getElementById('uc_min_and').value  = cfg.min_android_version || '';
+        document.getElementById('uc_ios_url').value  = cfg.ios_store_url || '';
+        document.getElementById('uc_and_url').value  = cfg.android_store_url || '';
+        document.getElementById('uc_delay').value    = cfg.update_enforce_delay_hours || '';
+        document.getElementById('uc_cooldown').value = cfg.soft_update_cooldown_days || '';
+
+        var wn = cfg.update_whats_new || '';
+        try { var arr = JSON.parse(wn); if (Array.isArray(arr)) wn = arr.join('\n'); } catch(e) {}
+        document.getElementById('uc_whats_new').value = wn;
+
+        if (cfg.update_release_time) {
+            try {
+                var d = new Date(cfg.update_release_time);
+                document.getElementById('uc_release_time').value =
+                    new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            } catch(e) {}
+        }
+        status.textContent = '';
+    }
+
+    async function saveConfig() {
+        var supabase = window.adminAuth.getSupabase();
+        if (!supabase) return;
+        var btn = document.getElementById('saveBtn');
+        var status = document.getElementById('saveStatus');
+        btn.disabled = true;
+        status.style.color = 'var(--text-tertiary)';
+        status.textContent = 'Saving…';
+
+        var wnRaw = document.getElementById('uc_whats_new').value.trim();
+        var wnVal = wnRaw
+            ? JSON.stringify(wnRaw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean))
+            : '';
+        var rtVal = '';
+        var rtInput = document.getElementById('uc_release_time').value;
+        if (rtInput) { try { rtVal = new Date(rtInput).toISOString(); } catch(e) {} }
+
+        var rows = [
+            { key: 'update_stage',               value: _stage },
+            { key: 'latest_version',             value: document.getElementById('uc_latest').value.trim() },
+            { key: 'min_ios_version',            value: document.getElementById('uc_min_ios').value.trim() },
+            { key: 'min_android_version',        value: document.getElementById('uc_min_and').value.trim() },
+            { key: 'ios_store_url',              value: document.getElementById('uc_ios_url').value.trim() },
+            { key: 'android_store_url',          value: document.getElementById('uc_and_url').value.trim() },
+            { key: 'update_enforce_delay_hours', value: document.getElementById('uc_delay').value.trim() },
+            { key: 'soft_update_cooldown_days',  value: document.getElementById('uc_cooldown').value.trim() },
+            { key: 'update_whats_new',           value: wnVal },
+            { key: 'update_release_time',        value: rtVal },
+        ];
+
+        var errors = 0;
+        for (var i = 0; i < rows.length; i++) {
+            var result = await supabase.from('site_settings')
+                .upsert({ key: rows[i].key, value: rows[i].value }, { onConflict: 'key' });
+            if (result.error) errors++;
+        }
+
+        btn.disabled = false;
+        if (errors) {
+            status.style.color = '#b91c1c';
+            status.textContent = '⚠ ' + errors + ' error(s)';
+        } else {
+            status.style.color = '#15803d';
+            status.textContent = '✓ Saved';
+            setTimeout(function() { status.textContent = ''; }, 3000);
+        }
+    }
+
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
     });
-    // Hero badge
-    var badge = document.getElementById('heroBadge');
-    var labels = { release: 'Release', soft: 'Soft — banner', enforce: 'Enforce — hard block' };
-    badge.textContent = labels[s] || s;
-    badge.className = 'uc-live-badge ' + s;
-    // Enforce warning
-    var warn = document.getElementById('enforceWarn');
-    if (warn) { warn.style.display = s === 'enforce' ? 'flex' : 'none'; }
-    // Soft section dimming
-    var soft = document.getElementById('softSection');
-    if (soft) soft.classList.toggle('dimmed', s !== 'soft');
-    // Meta
-    document.getElementById('metaStage').textContent = labels[s] || s;
-    lucide.createIcons();
-}
+    document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('mobile-open');
+    });
 
-function syncPreview() {
-    var latest = document.getElementById('uc_latest').value.trim();
-    var minIos  = document.getElementById('uc_min_ios').value.trim();
-    var minAnd  = document.getElementById('uc_min_and').value.trim();
-
-    var cur = document.getElementById('mockCurVer');
-    var min = document.getElementById('mockMinVer');
-    if (cur) cur.textContent = minIos ? 'v' + minIos : (minAnd ? 'v' + minAnd : 'v?');
-    if (min) min.textContent = latest ? 'v' + latest : 'v?';
-
-    document.getElementById('metaLatest').textContent  = latest  ? 'v' + latest  : '—';
-    document.getElementById('metaMinIos').textContent  = minIos  ? 'v' + minIos  : '—';
-    document.getElementById('metaMinAnd').textContent  = minAnd  ? 'v' + minAnd  : '—';
-}
-
-function syncBullets() {
-    var raw = document.getElementById('uc_whats_new').value;
-    var lines = raw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
-    var preview = document.getElementById('bulletPreview');
-    var mockDiv = document.getElementById('mockBullets');
-
-    // Sidebar preview
-    if (lines.length) {
-        preview.style.display = 'flex';
-        while (preview.firstChild) preview.removeChild(preview.firstChild);
-        lines.forEach(function(l) {
-            var d = document.createElement('div');
-            d.className = 'whats-new-bullet';
-            d.textContent = l;
-            preview.appendChild(d);
-        });
-    } else {
-        preview.style.display = 'none';
-    }
-
-    // Phone mockup bullets
-    if (mockDiv) {
-        while (mockDiv.firstChild) mockDiv.removeChild(mockDiv.firstChild);
-        var bullets = lines.length ? lines.slice(0, 3) : ['بەهێزترین بکرن و ئەزموونی نوێتر', 'خوێندنی قورئان باشتر بوو', 'ئاگادارکرنەوەکان باشتر بوون'];
-        bullets.forEach(function(b) {
-            var d = document.createElement('div');
-            d.className = 'mock-bullet';
-            d.textContent = b;
-            mockDiv.appendChild(d);
-        });
-    }
-}
-
-function _setMeta(key, value) {
-    var el = document.getElementById(key);
-    if (el) el.textContent = value || '—';
-}
-
-async function loadConfig() {
-    var supabase = window.adminAuth.getSupabase();
-    if (!supabase) return;
-    var status = document.getElementById('saveStatus');
-    status.textContent = 'Loading…'; status.className = 'uc-save-status';
-
-    var KEYS = ['update_stage','latest_version','min_ios_version','min_android_version',
-                'ios_store_url','android_store_url','update_release_time',
-                'update_enforce_delay_hours','soft_update_cooldown_days','update_whats_new'];
-    var { data } = await supabase.from('site_settings').select('key,value').in('key', KEYS);
-    var cfg = {};
-    (data || []).forEach(function(r) { cfg[r.key] = r.value; });
-
-    setStage(cfg.update_stage || 'release');
-    document.getElementById('uc_latest').value   = cfg.latest_version || '';
-    document.getElementById('uc_min_ios').value  = cfg.min_ios_version || '';
-    document.getElementById('uc_min_and').value  = cfg.min_android_version || '';
-    document.getElementById('uc_ios_url').value  = cfg.ios_store_url || '';
-    document.getElementById('uc_and_url').value  = cfg.android_store_url || '';
-    document.getElementById('uc_delay').value    = cfg.update_enforce_delay_hours || '';
-    document.getElementById('uc_cooldown').value = cfg.soft_update_cooldown_days || '';
-
-    var wn = cfg.update_whats_new || '';
-    try { var arr = JSON.parse(wn); if (Array.isArray(arr)) wn = arr.join('\n'); } catch(e) {}
-    document.getElementById('uc_whats_new').value = wn;
-
-    if (cfg.update_release_time) {
-        try {
-            var d = new Date(cfg.update_release_time);
-            document.getElementById('uc_release_time').value =
-                new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-        } catch(e) {}
-    }
-
-    // Escalation summary
-    if (cfg.update_enforce_delay_hours && cfg.update_release_time) {
-        var releaseTs = new Date(cfg.update_release_time).getTime();
-        var delayMs   = parseFloat(cfg.update_enforce_delay_hours) * 3600000;
-        var enforceAt = new Date(releaseTs + delayMs);
-        _setMeta('metaEscalate', enforceAt > new Date()
-            ? 'In ' + Math.ceil((enforceAt - Date.now()) / 3600000) + 'h'
-            : 'Elapsed');
-    } else {
-        _setMeta('metaEscalate', 'Manual only');
-    }
-
-    syncPreview(); syncBullets();
-    status.textContent = ''; lucide.createIcons();
-}
-
-async function saveConfig() {
-    var supabase = window.adminAuth.getSupabase();
-    if (!supabase) return;
-    var btns = [document.getElementById('saveBtn'), document.getElementById('saveBtn2')];
-    var status = document.getElementById('saveStatus');
-    btns.forEach(function(b){ if(b) b.disabled = true; });
-    status.className = 'uc-save-status';
-    status.textContent = 'Publishing…';
-
-    var wnRaw = document.getElementById('uc_whats_new').value.trim();
-    var wnVal = wnRaw
-        ? JSON.stringify(wnRaw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean))
-        : '';
-
-    var rtVal = '';
-    var rtInput = document.getElementById('uc_release_time').value;
-    if (rtInput) { try { rtVal = new Date(rtInput).toISOString(); } catch(e) {} }
-
-    var rows = [
-        { key: 'update_stage',               value: _stage },
-        { key: 'latest_version',             value: document.getElementById('uc_latest').value.trim() },
-        { key: 'min_ios_version',            value: document.getElementById('uc_min_ios').value.trim() },
-        { key: 'min_android_version',        value: document.getElementById('uc_min_and').value.trim() },
-        { key: 'ios_store_url',              value: document.getElementById('uc_ios_url').value.trim() },
-        { key: 'android_store_url',          value: document.getElementById('uc_and_url').value.trim() },
-        { key: 'update_enforce_delay_hours', value: document.getElementById('uc_delay').value.trim() },
-        { key: 'soft_update_cooldown_days',  value: document.getElementById('uc_cooldown').value.trim() },
-        { key: 'update_whats_new',           value: wnVal },
-        { key: 'update_release_time',        value: rtVal },
-    ];
-
-    var errors = 0;
-    for (var i = 0; i < rows.length; i++) {
-        var r = rows[i];
-        var result = await supabase.from('site_settings')
-            .upsert({ key: r.key, value: r.value }, { onConflict: 'key' });
-        if (result.error) errors++;
-    }
-
-    btns.forEach(function(b){ if(b) b.disabled = false; });
-    if (errors) {
-        status.className = 'uc-save-status err';
-        status.textContent = '⚠ ' + errors + ' error(s) — check permissions';
-    } else {
-        status.className = 'uc-save-status ok';
-        status.textContent = '✓ Published — takes effect within 5 min';
-        setTimeout(function(){ status.textContent = ''; status.className = 'uc-save-status'; }, 4000);
-    }
-    lucide.createIcons();
-}
-
-(async function() {
-    var auth = await window.adminAuth.checkAuth();
-    if (auth) { loadConfig(); lucide.createIcons(); }
-})();
+    (async function() {
+        var auth = await window.adminAuth.checkAuth();
+        if (auth) { loadConfig(); lucide.createIcons(); }
+    })();
 </script>
 </body>
 </html>
