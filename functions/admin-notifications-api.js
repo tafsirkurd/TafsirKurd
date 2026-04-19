@@ -248,42 +248,77 @@ export async function onRequest(context) {
             return json({ success: true, sent: 0, message: 'No registered tokens for this audience' });
         }
 
-        // Get FCM access token
-        let accessToken;
-        try {
-            accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT);
-        } catch (e) {
-            await supabase.from('admin_notifications')
-                .update({ status: 'failed', error_message: 'FCM auth: ' + e.message })
-                .eq('id', trackingId);
-            return json({ error: 'FCM auth error: ' + e.message }, 500);
+        // Split tokens: raw APNs device tokens (64 hex chars) vs FCM registration tokens
+        const apnsTokens = tokens.filter(t => isApnsToken(t.token));
+        const fcmTokens  = tokens.filter(t => !isApnsToken(t.token));
+
+        // Get FCM access token (only needed for FCM tokens)
+        let accessToken = null;
+        if (fcmTokens.length > 0 && env.FCM_SERVICE_ACCOUNT) {
+            try {
+                accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT);
+            } catch (e) {
+                if (!apnsTokens.length) {
+                    await supabase.from('admin_notifications')
+                        .update({ status: 'failed', error_message: 'FCM auth: ' + e.message })
+                        .eq('id', trackingId);
+                    return json({ error: 'FCM auth error: ' + e.message }, 500);
+                }
+            }
+        }
+
+        // Get APNs JWT (only needed for raw iOS tokens)
+        let apnsJwt = null;
+        if (apnsTokens.length > 0 && env.APNS_KEY_P8) {
+            try {
+                apnsJwt = await getAPNsJWT(
+                    env.APNS_KEY_P8,
+                    env.APNS_KEY_ID  || 'KLG2RRCRNR',
+                    env.APNS_TEAM_ID || '8KA7UDSC9D'
+                );
+            } catch (e) { /* continue — FCM tokens can still succeed */ }
         }
 
         // Build data payload for deep link
         const data = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
 
-        // Send to all tokens
         const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
         const staleTokens = [];
         let successCount = 0, failCount = 0;
 
-        await Promise.allSettled(tokens.map(async ({ token, platform }) => {
-            const message = buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, data);
-            const res = await fetch(FCM_URL, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message }),
-            });
-            if (res.ok) {
-                successCount++;
-            } else {
-                const err = await res.json().catch(() => ({}));
-                if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') {
-                    staleTokens.push(token);
+        await Promise.allSettled([
+            // FCM sends (Android tokens + any iOS FCM tokens)
+            ...fcmTokens.map(async ({ token, platform }) => {
+                if (!accessToken) { failCount++; return; }
+                const message = buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, data);
+                const res = await fetch(FCM_URL, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message }),
+                });
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(token);
+                    failCount++;
                 }
-                failCount++;
-            }
-        }));
+            }),
+            // APNs direct sends (raw iOS device tokens)
+            ...apnsTokens.map(async ({ token }) => {
+                if (!apnsJwt) { failCount++; return; }
+                const res = await sendApns(token, notif.title, notif.body, data, apnsJwt, 'com.tafsirkurd.app');
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') {
+                        staleTokens.push(token);
+                    }
+                    failCount++;
+                }
+            }),
+        ]);
 
         // Remove stale tokens
         if (staleTokens.length) {
@@ -532,4 +567,48 @@ function nextOccurrence(recurrence, recurrenceDay) {
 async function importRSAKey(pem) {
     return crypto.subtle.importKey('pkcs8', pemToDer(pem),
         { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+}
+
+// ── APNs direct delivery (for raw iOS device tokens) ────────────────
+
+function isApnsToken(token) {
+    // Raw APNs device tokens are exactly 64 lowercase hex characters
+    return /^[0-9a-f]{64}$/i.test(token);
+}
+
+async function importECKey(pem) {
+    return crypto.subtle.importKey('pkcs8', pemToDer(pem),
+        { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+}
+
+async function getAPNsJWT(keyP8, keyId, teamId) {
+    const key = await importECKey(keyP8);
+    const now = Math.floor(Date.now() / 1000);
+    const header  = b64url(JSON.stringify({ alg: 'ES256', kid: keyId }));
+    const payload = b64url(JSON.stringify({ iss: teamId, iat: now }));
+    const sigInput = `${header}.${payload}`;
+    const sig = await crypto.subtle.sign(
+        { name: 'ECDSA', hash: 'SHA-256' },
+        key,
+        new TextEncoder().encode(sigInput)
+    );
+    return `${sigInput}.${b64urlRaw(sig)}`;
+}
+
+async function sendApns(deviceToken, title, body, extraData, jwt, bundleId) {
+    const apsPayload = {
+        aps: { alert: { title, body }, badge: 1, sound: 'default' },
+        ...extraData,
+    };
+    return fetch(`https://api.push.apple.com/3/device/${deviceToken}`, {
+        method: 'POST',
+        headers: {
+            authorization: `bearer ${jwt}`,
+            'apns-topic': bundleId,
+            'apns-push-type': 'alert',
+            'apns-priority': '10',
+            'content-type': 'application/json',
+        },
+        body: JSON.stringify(apsPayload),
+    });
 }
