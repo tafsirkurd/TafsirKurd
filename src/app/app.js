@@ -326,8 +326,14 @@ window.ForceUpdate = (function(){
       console.log('[Update] v=' + version + ' min=' + (minVersion||'—') + ' stage=' + stage + ' mode=' + mode + ' outdated=' + outdated + ' platform=' + platform);
 
       if (mode === 'off' || !minVersion || !outdated) {
-        _cancelUpdateNotification(); // version is current — clear any pending reminder
-        console.log('[Update] No action needed');
+        _cancelUpdateNotification();
+        // If hard overlay is showing but user has now updated (or admin lifted block), dismiss it
+        var overlay = document.getElementById('fuOverlay');
+        if (overlay && overlay.classList.contains('on')) {
+          overlay.classList.remove('fu-visible');
+          setTimeout(function(){ overlay.classList.remove('on'); document.body.style.overflow = ''; document.body.style.touchAction = ''; }, 400);
+          console.log('[Update] Block lifted — overlay dismissed');
+        }
         return;
       }
 
