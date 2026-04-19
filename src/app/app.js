@@ -317,7 +317,9 @@ window.ForceUpdate = (function(){
 
       var mode       = resolveMode(cfg);
       var minVersion = platform === 'ios' ? cfg.min_ios_version : cfg.min_android_version;
-      _storeUrl      = platform === 'ios' ? (cfg.ios_store_url || '') : (cfg.android_store_url || '');
+      _storeUrl      = platform === 'ios'
+        ? (cfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
+        : (cfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
 
       var stage      = cfg.update_stage || cfg.update_mode || 'off';
       var cooldown   = cfg.soft_update_cooldown_days;

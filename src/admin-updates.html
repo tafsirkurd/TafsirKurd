@@ -434,26 +434,30 @@
                     </div>
                 </div>
 
-                <!-- Store URLs -->
+                <!-- Store URLs — hardcoded, shown as info only -->
                 <div class="uc-card">
                     <div class="uc-card-hdr">
                         <div class="uc-card-icon purple"><i data-lucide="link"></i></div>
                         <div>
                             <div class="uc-card-title">Store URLs</div>
-                            <div class="uc-card-subtitle">Where the Update button sends users</div>
+                            <div class="uc-card-subtitle">Hardcoded — no action needed</div>
                         </div>
                     </div>
-                    <div class="uc-card-body" style="display:flex;flex-direction:column;gap:14px;">
-                        <div>
-                            <label class="f-label">App Store (iOS)</label>
-                            <input type="url" id="uc_ios_url" class="form-input" placeholder="https://apps.apple.com/...">
+                    <div class="uc-card-body" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-hover);border-radius:9px;border:1px solid var(--border-light);">
+                            <span style="font-size:16px;">🍎</span>
+                            <span style="font-size:12px;color:var(--text-secondary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">apps.apple.com/us/app/tafsirkurd/id6760433688</span>
+                            <span style="font-size:11px;font-weight:600;color:#16a34a;">Auto ✓</span>
                         </div>
-                        <div>
-                            <label class="f-label">Play Store (Android)</label>
-                            <input type="url" id="uc_and_url" class="form-input" placeholder="https://play.google.com/...">
+                        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-hover);border-radius:9px;border:1px solid var(--border-light);">
+                            <span style="font-size:16px;">🤖</span>
+                            <span style="font-size:12px;color:var(--text-secondary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">play.google.com/store/apps/details?id=com.tafsirkurd.app</span>
+                            <span style="font-size:11px;font-weight:600;color:#16a34a;">Auto ✓</span>
                         </div>
                     </div>
                 </div>
+                <input type="hidden" id="uc_ios_url">
+                <input type="hidden" id="uc_and_url">
                 </div><!-- /uc-cards-pair -->
 
                 <!-- What's new -->
