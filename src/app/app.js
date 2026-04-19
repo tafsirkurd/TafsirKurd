@@ -216,9 +216,15 @@ window.ForceUpdate = (function(){
       dismissBanner();
     };
 
+    var dismissBtn = document.createElement('button');
+    dismissBtn.className = 'fu-banner-dismiss';
+    dismissBtn.textContent = '×';
+    dismissBtn.onclick = function() { snoozeDismiss(); dismissBanner(); };
+
     banner.appendChild(dot);
     banner.appendChild(textWrap);
     banner.appendChild(updateBtn);
+    banner.appendChild(dismissBtn);
     document.body.appendChild(banner);
 
     setTimeout(function(){ banner.classList.add('fu-banner-in'); }, 1500);
