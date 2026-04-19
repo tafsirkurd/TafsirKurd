@@ -35,21 +35,25 @@
             .uc-preview-col { display: none; }
         }
 
-        /* ── platform pills ── */
-        .platform-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
-        .plat-pill {
-            padding: 9px 10px; border: 1.5px solid var(--border-light);
-            border-radius: 10px; background: var(--bg-surface);
-            cursor: pointer; font-size: 13px; font-weight: 500;
-            color: var(--text-secondary); text-align: center;
-            transition: border-color .15s, background .15s, color .15s;
-            display: flex; flex-direction: column; align-items: center; gap: 3px;
+        /* ── save dialog ── */
+        .save-dialog-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9999; align-items:center; justify-content:center; }
+        .save-dialog-backdrop.on { display:flex; }
+        .save-dialog { background:var(--bg-surface); border:1px solid var(--border-light); border-radius:16px; padding:24px; width:320px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+        .save-dialog-title { font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+        .save-dialog-sub { font-size:12px; color:var(--text-tertiary); margin-bottom:18px; }
+        .save-dialog-opts { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+        .save-dialog-opt {
+            display:flex; align-items:center; gap:12px; padding:13px 16px;
+            border:1.5px solid var(--border-light); border-radius:11px;
+            background:var(--bg-hover); cursor:pointer; text-align:left;
+            transition:border-color .15s, background .15s;
         }
-        .plat-pill small { font-size: 11px; opacity: .65; font-weight: 400; }
-        .plat-pill:hover { border-color: var(--border-medium); color: var(--text-primary); }
-        .plat-pill.active { border-color:#3b82f6; background:rgba(59,130,246,.07); color:#1d4ed8; font-weight:600; }
-        .ver-field { transition: opacity .2s; }
-        .ver-field.dimmed { opacity: .3; pointer-events: none; }
+        .save-dialog-opt:hover { border-color:var(--border-medium); background:var(--bg-active); }
+        .save-dialog-opt-icon { font-size:22px; flex-shrink:0; }
+        .save-dialog-opt-text strong { display:block; font-size:13px; font-weight:600; color:var(--text-primary); }
+        .save-dialog-opt-text span   { font-size:11px; color:var(--text-tertiary); }
+        .save-dialog-cancel { width:100%; padding:9px; border:1px solid var(--border-light); border-radius:9px; background:transparent; color:var(--text-secondary); font-size:13px; cursor:pointer; transition:background .15s; }
+        .save-dialog-cancel:hover { background:var(--bg-hover); }
 
         /* ── stage pills ── */
         .stage-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
@@ -341,7 +345,7 @@
             <div style="display:flex;align-items:center;gap:10px;">
                 <span id="saveMsg" class="save-msg"></span>
                 <button class="btn btn-secondary" onclick="loadConfig()"><i data-lucide="refresh-cw"></i>Refresh</button>
-                <button class="btn btn-primary" onclick="saveConfig()" id="saveBtn"><i data-lucide="save"></i>Save</button>
+                <button class="btn btn-primary" onclick="openSaveDialog()" id="saveBtn"><i data-lucide="save"></i>Save</button>
             </div>
         </div>
 
@@ -370,17 +374,7 @@
                                 🔴 Enforce<small>Hard block</small>
                             </button>
                         </div>
-                        <div class="platform-row">
-                            <button class="plat-pill active" data-p="both"    onclick="setPlatform('both')">
-                                🌍 Both<small>iOS + Android</small>
-                            </button>
-                            <button class="plat-pill"         data-p="ios"     onclick="setPlatform('ios')">
-                                🍎 iOS only<small>Android skipped</small>
-                            </button>
-                            <button class="plat-pill"         data-p="android" onclick="setPlatform('android')">
-                                🤖 Android only<small>iOS skipped</small>
-                            </button>
-                        </div>
+
                         <div class="enforce-warn" id="enforceWarn">
                             <i data-lucide="alert-triangle" style="width:14px;height:14px;flex-shrink:0;"></i>
                             Users below the minimum version will be blocked immediately after saving.
@@ -571,6 +565,38 @@
     </main>
 </div>
 
+<!-- Save → platform dialog -->
+<div class="save-dialog-backdrop" id="saveDialog">
+    <div class="save-dialog">
+        <div class="save-dialog-title">Send update to…</div>
+        <div class="save-dialog-sub">Who should receive this update?</div>
+        <div class="save-dialog-opts">
+            <button class="save-dialog-opt" onclick="confirmSave('both')">
+                <span class="save-dialog-opt-icon">🌍</span>
+                <div class="save-dialog-opt-text">
+                    <strong>Both platforms</strong>
+                    <span>iOS and Android users</span>
+                </div>
+            </button>
+            <button class="save-dialog-opt" onclick="confirmSave('ios')">
+                <span class="save-dialog-opt-icon">🍎</span>
+                <div class="save-dialog-opt-text">
+                    <strong>iOS only</strong>
+                    <span>Android users are not affected</span>
+                </div>
+            </button>
+            <button class="save-dialog-opt" onclick="confirmSave('android')">
+                <span class="save-dialog-opt-icon">🤖</span>
+                <div class="save-dialog-opt-text">
+                    <strong>Android only</strong>
+                    <span>iOS users are not affected</span>
+                </div>
+            </button>
+        </div>
+        <button class="save-dialog-cancel" onclick="closeSaveDialog()">Cancel</button>
+    </div>
+</div>
+
 <script>
     var _stage    = 'release';
     var _platform = 'both';
@@ -587,13 +613,28 @@
 
     function setPlatform(p) {
         _platform = p;
-        document.querySelectorAll('.plat-pill').forEach(function(b) {
-            b.classList.toggle('active', b.dataset.p === p);
-        });
-        document.getElementById('vfIos').classList.toggle('dimmed',     p === 'android');
-        document.getElementById('vfAndroid').classList.toggle('dimmed', p === 'ios');
         syncPlatformImpact();
     }
+
+    function openSaveDialog() {
+        document.getElementById('saveDialog').classList.add('on');
+    }
+
+    function closeSaveDialog() {
+        document.getElementById('saveDialog').classList.remove('on');
+    }
+
+    function confirmSave(platform) {
+        closeSaveDialog();
+        _platform = platform;
+        syncPlatformImpact();
+        saveConfig();
+    }
+
+    /* close on backdrop click */
+    document.getElementById('saveDialog').addEventListener('click', function(e) {
+        if (e.target === this) closeSaveDialog();
+    });
 
     /* ── preview themes — exact app CSS variable values from :root / [data-theme] ── */
     var PREVIEW_THEMES = {
