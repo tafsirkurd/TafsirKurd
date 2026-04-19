@@ -385,32 +385,10 @@
                     </div>
                 </div>
 
-                <!-- Soft settings (hidden unless soft) -->
-                <div class="uc-card" id="softCard" style="display:none;">
-                    <div class="uc-card-hdr">
-                        <div class="uc-card-icon gray"><i data-lucide="clock"></i></div>
-                        <div>
-                            <div class="uc-card-title">Soft — Auto-escalation</div>
-                            <div class="uc-card-subtitle">Automatically moves to Enforce after the delay</div>
-                        </div>
-                    </div>
-                    <div class="uc-card-body">
-                        <div class="three-col">
-                            <div>
-                                <label class="f-label">Release time</label>
-                                <input type="datetime-local" id="uc_release_time" class="form-input">
-                            </div>
-                            <div>
-                                <label class="f-label">Escalate after (hours)</label>
-                                <input type="number" id="uc_delay" class="form-input" placeholder="48" min="0">
-                            </div>
-                            <div>
-                                <label class="f-label">Banner cooldown (days)</label>
-                                <input type="number" id="uc_cooldown" class="form-input" placeholder="7" min="1">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- hidden inputs kept for save compat -->
+                <input type="hidden" id="uc_release_time">
+                <input type="hidden" id="uc_delay" value="0">
+                <input type="hidden" id="uc_cooldown" value="7">
 
             </div><!-- /uc-form-col -->
 
@@ -461,7 +439,6 @@
             b.classList.toggle('active', b.dataset.s === s);
         });
         document.getElementById('enforceWarn').style.display = s === 'enforce' ? 'flex' : 'none';
-        document.getElementById('softCard').style.display    = s === 'soft'    ? ''    : 'none';
         lucide.createIcons();
     }
 
