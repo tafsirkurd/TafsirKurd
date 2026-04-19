@@ -2021,10 +2021,10 @@ function _pushDebugAlert(msg){
   var LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;
   if(LN){
     LN.schedule({notifications:[{
-      id:99001,
+      id:Math.floor(Math.random()*90000)+10000,
       title:'Push Debug',
       body:msg,
-      schedule:{at:new Date(Date.now()+500),allowWhileIdle:true},
+      schedule:{at:new Date(Date.now()+1000),allowWhileIdle:true},
       channelId:'reminder'
     }]}).catch(function(){});
   }
@@ -2043,10 +2043,12 @@ function _pushLog(msg){
 
 function initPushToken(){
   var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
-  if(!PP){_pushLog('plugin not available');return;}
+  if(!PP){_pushDebugAlert('STEP1 FAIL: PushNotifications plugin not available');return;}
+  _pushDebugAlert('STEP1 OK: plugin found, calling requestPermissions…');
 
   PP.requestPermissions().then(function(perm){
     _pushLog('requestPermissions result: '+perm.receive);
+    _pushDebugAlert('STEP2: permission='+perm.receive);
     if(perm.receive!=='granted'){return;}
 
     // Handle incoming push while app is in foreground
@@ -2102,6 +2104,7 @@ function initPushToken(){
     });
 
     _pushLog('calling PP.register()');
+    _pushDebugAlert('STEP3: calling PP.register()…');
     PP.register();
   }).catch(function(e){
     _pushLog('requestPermissions EXCEPTION: '+(e&&e.message));
