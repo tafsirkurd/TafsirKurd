@@ -81,20 +81,22 @@ window.ForceUpdate = (function(){
   }
 
   // ── Snooze helpers ────────────────────────────────────────────────────────
-  function isSnoozed(cooldownDays) {
+  function isSnoozed(cooldownDays, minVersion) {
     try {
       var s = JSON.parse(localStorage.getItem(SOFT_SNOOZE_KEY));
       if (!s) return false;
-      if (s.permanent) return true; // clicked Update — permanent suppress
+      // If admin pushed a new min_version, ignore old snooze
+      if (minVersion && s.ver && s.ver !== String(minVersion)) return false;
+      if (s.permanent) return true;
       var days = parseFloat(cooldownDays) || 7;
       return (Date.now() - s.at) < days * 86400000;
     } catch(e) { return false; }
   }
-  function snoozeDismiss() {
-    try { localStorage.setItem(SOFT_SNOOZE_KEY, JSON.stringify({ at: Date.now(), permanent: false })); } catch(e) {}
+  function snoozeDismiss(minVersion) {
+    try { localStorage.setItem(SOFT_SNOOZE_KEY, JSON.stringify({ at: Date.now(), permanent: false, ver: String(minVersion||'') })); } catch(e) {}
   }
-  function snoozeForever() {
-    try { localStorage.setItem(SOFT_SNOOZE_KEY, JSON.stringify({ at: Date.now(), permanent: true })); } catch(e) {}
+  function snoozeForever(minVersion) {
+    try { localStorage.setItem(SOFT_SNOOZE_KEY, JSON.stringify({ at: Date.now(), permanent: true, ver: String(minVersion||'') })); } catch(e) {}
   }
 
   // ── Store safety check ────────────────────────────────────────────────────
@@ -179,7 +181,7 @@ window.ForceUpdate = (function(){
 
   // ── Soft update banner ────────────────────────────────────────────────────
   // whatsNew: optional string from cfg.update_whats_new (admin-set release notes)
-  function showSoftBanner(whatsNew) {
+  function showSoftBanner(whatsNew, minVersion) {
     if (document.getElementById('fuBanner')) return;
 
     var banner = document.createElement('div');
@@ -211,7 +213,7 @@ window.ForceUpdate = (function(){
     updateBtn.textContent = tSafe('update.notice_btn') || 'ئاپدەیت';
     updateBtn.onclick = function() {
       openStore();
-      snoozeForever();
+      snoozeForever(minVersion);
       _cancelUpdateNotification();
       dismissBanner();
     };
@@ -219,7 +221,7 @@ window.ForceUpdate = (function(){
     var dismissBtn = document.createElement('button');
     dismissBtn.className = 'fu-banner-dismiss';
     dismissBtn.textContent = '×';
-    dismissBtn.onclick = function() { snoozeDismiss(); dismissBanner(); };
+    dismissBtn.onclick = function() { snoozeDismiss(minVersion); dismissBanner(); };
 
     banner.appendChild(dot);
     banner.appendChild(textWrap);
@@ -337,18 +339,18 @@ window.ForceUpdate = (function(){
         }
         if (!reachable) {
           console.log('[Update] HARD requested but store URL missing — falling back to SOFT');
-          if (!isSnoozed(cooldown)) showSoftBanner(cfg.update_whats_new);
+          if (!isSnoozed(cooldown, minVersion)) showSoftBanner(cfg.update_whats_new, minVersion);
           return;
         }
         console.log('[Update] HARD — blocking app');
         showHard(version, minVersion, cfg);
       } else if (mode === 'soft') {
-        if (isSnoozed(cooldown)) {
+        if (isSnoozed(cooldown, minVersion)) {
           console.log('[Update] SOFT — snoozed (cooldown active or permanent)');
           return;
         }
         console.log('[Update] SOFT — queuing banner (6s delay)');
-        showSoftBanner(cfg.update_whats_new);
+        showSoftBanner(cfg.update_whats_new, minVersion);
         _scheduleUpdateNotification(minVersion); // once per version, 24h later
       }
     } catch(e) {
