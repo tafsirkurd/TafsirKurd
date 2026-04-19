@@ -902,18 +902,18 @@ window.GencineUI = {
     var catKeys = _getAdhkarCatKeys();
 
     var GROUPS = [
-      { label: 'ڕۆժeانە',        keys: ['morning','evening','waking','sleep'] },
-      { label: 'نوێժ',           keys: ['adhan','opening_prayer','ruku','rising_ruku','sujood','between_sujood','tashahhud','after_prayer','qunut'] },
-      { label: 'خواردن',         keys: ['eating_before','eating_after','fasting','breaking_fast'] },
-      { label: 'مالبیا و جێ',   keys: ['house_enter','house_exit','bathroom_enter','bathroom_exit','masjid_enter','masjid_exit','marketplace','vehicle'] },
-      { label: 'گەشت',           keys: ['travel','travel_return'] },
-      { label: 'حەج',            keys: ['talbiyah','safa_marwa','zamzam','entering_makkah','arafat','dhul_hijjah'] },
-      { label: 'ڕەمەزان',       keys: ['fasting','breaking_fast','lailat_qadr'] },
-      { label: 'هەوا',           keys: ['rain','thunder','wind','eclipse'] },
-      { label: 'تەندروستی',     keys: ['illness','pain','ruqyah','visiting_sick','condolence'] },
-      { label: 'کاتی تایبەت',   keys: ['friday','salawat','lailat_qadr','new_moon'] },
-      { label: 'ժیانی ڕۆժeانە',  keys: ['wudu','dressing','mirror','new_clothes','sneeze','anger','fear','debt','charity','distress','forgiveness','protection','before_quran','gratitude','nightmare','istikhara','wedding','newborn','kaffarah','grave'] },
-      { label: 'دیکە',           keys: [] }
+      { labelKey: 'adhkar.group.daily',   label: 'ڕۆژانە',         keys: ['morning','evening','waking','sleep'] },
+      { labelKey: 'adhkar.group.prayer',  label: 'نوێژ',            keys: ['adhan','opening_prayer','ruku','rising_ruku','sujood','between_sujood','tashahhud','after_prayer','qunut'] },
+      { labelKey: 'adhkar.group.food',    label: 'خواردن',          keys: ['eating_before','eating_after','fasting','breaking_fast'] },
+      { labelKey: 'adhkar.group.places',  label: 'مالبیا و جێ',    keys: ['house_enter','house_exit','bathroom_enter','bathroom_exit','masjid_enter','masjid_exit','marketplace','vehicle'] },
+      { labelKey: 'adhkar.group.travel',  label: 'گەشت',            keys: ['travel','travel_return'] },
+      { labelKey: 'adhkar.group.hajj',    label: 'حەج',             keys: ['talbiyah','safa_marwa','zamzam','entering_makkah','arafat','dhul_hijjah'] },
+      { labelKey: 'adhkar.group.ramadan', label: 'ڕەمەزان',        keys: ['fasting','breaking_fast','lailat_qadr'] },
+      { labelKey: 'adhkar.group.weather', label: 'هەوا',            keys: ['rain','thunder','wind','eclipse'] },
+      { labelKey: 'adhkar.group.health',  label: 'تەندروستی',      keys: ['illness','pain','ruqyah','visiting_sick','condolence'] },
+      { labelKey: 'adhkar.group.special', label: 'کاتی تایبەت',    keys: ['friday','salawat','lailat_qadr','new_moon'] },
+      { labelKey: 'adhkar.group.life',    label: 'ژیانی ڕۆژانە',   keys: ['wudu','dressing','mirror','new_clothes','sneeze','anger','fear','debt','charity','distress','forgiveness','protection','before_quran','gratitude','nightmare','istikhara','wedding','newborn','kaffarah','grave'] },
+      { labelKey: 'adhkar.group.other',   label: 'دیکە',            keys: [] }
     ];
 
     var keyToGroup = {};
@@ -939,7 +939,7 @@ window.GencineUI = {
 
       var hdr = document.createElement('div');
       hdr.className = 'adhkar-list-hdr';
-      hdr.textContent = group.label;
+      hdr.textContent = T(group.labelKey, group.label);
       section.appendChild(hdr);
 
       var rows = document.createElement('div');

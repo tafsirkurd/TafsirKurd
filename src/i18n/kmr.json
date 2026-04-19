@@ -851,5 +851,17 @@
   "gencine.smart.before_quran_hint": "پێش دەستپێکردنا قورئانێ",
   "gencine.smart.distress_hint": "دوعا لە کاتی زەحمەت",
   "gencine.smart.istikhara_hint": "داواکاری ڕێنمایی",
-  "gencine.smart.adhan_hint": "دوعای دوای ئەزان"
+  "gencine.smart.adhan_hint": "دوعای دوای ئەزان",
+  "adhkar.group.daily":   "ڕۆژانە",
+  "adhkar.group.prayer":  "نوێژ",
+  "adhkar.group.food":    "خواردن",
+  "adhkar.group.places":  "مالبیا و جێ",
+  "adhkar.group.travel":  "گەشت",
+  "adhkar.group.hajj":    "حەج",
+  "adhkar.group.ramadan": "ڕەمەزان",
+  "adhkar.group.weather": "هەوا",
+  "adhkar.group.health":  "تەندروستی",
+  "adhkar.group.special": "کاتی تایبەت",
+  "adhkar.group.life":    "ژیانی ڕۆژانە",
+  "adhkar.group.other":   "دیکە"
 }
