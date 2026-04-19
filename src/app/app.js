@@ -326,10 +326,11 @@ window.ForceUpdate = (function(){
       }
 
       if (mode === 'hard') {
-        // Store safety check — fall back to soft if store unreachable
-        var reachable = await isStoreReachable(_storeUrl);
-        if (!reachable && _storeUrl) {
-          console.log('[Update] HARD requested but store unreachable — falling back to SOFT');
+        // Store safety check — fall back to soft if URL missing or store unreachable.
+        // Guard covers both: no URL configured AND URL present but network down.
+        var reachable = _storeUrl ? await isStoreReachable(_storeUrl) : false;
+        if (!reachable) {
+          console.log('[Update] HARD requested but store unreachable or URL missing — falling back to SOFT');
           if (!isSnoozed(cooldown)) showSoftBanner(cfg.update_whats_new);
           return;
         }
@@ -834,6 +835,7 @@ function init(){
     try{
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.addListener('backButton',function(){
+          if($('fuOverlay')&&$('fuOverlay').classList.contains('on')){return} // hard block — back does nothing
           if($('profilePanel')&&$('profilePanel').classList.contains('on')){App.closeProfile();return}
           if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return}
           if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
