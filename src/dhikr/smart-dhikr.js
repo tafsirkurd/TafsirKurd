@@ -1,10 +1,11 @@
 /**
  * Smart Daily Companion  v30
- * Always exactly 4 cards:
+ * Always exactly 5 cards:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2. Ayah of the day        (Baghdad-seeded, salt 1)
  *   3. Hadith of the day      (Baghdad-seeded, salt 2)
  *   4. Book of the day        (Baghdad-seeded, salt 4)
+ *   5. Weather dhikr          (rain when raining, thunder/wind otherwise)
  *
  * Daily cards (2-4) use Asia/Baghdad date as seed (UTC+3, no DST).
  * All users see the same daily cards; refresh at 00:00 Baghdad time.
@@ -16,46 +17,62 @@
      TIME ITEMS  (card 1 — time-aware zikr)
   ───────────────────────────────────────────── */
   var TIME_ITEMS = [
+    /* ── Prayer windows (highest priority — override morning/evening) ── */
+    {
+      id: 'masjid_enter', categoryKey: 'masjid_enter', icon: 'fas fa-mosque',
+      labelKey: 'adhkar.masjid_enter', labelFallback: 'چوونا مزگەوتێ',
+      subtitleKey: 'gencine.smart.masjid_hint', subtitleFallback: 'کاتا چوونا مزگەوتێ',
+      timeTag: 'مزگەوت', basePriority: 90,
+      prayerOffset: 0   /* 0–20 min after each athan */
+    },
+    {
+      id: 'after_prayer', categoryKey: 'after_prayer', icon: 'fas fa-hands-praying',
+      labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
+      subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
+      timeTag: 'دوای نوێژ', basePriority: 85,
+      prayerOffset: 20  /* 20–40 min after each athan */
+    },
+
     {
       id: 'morning', categoryKey: 'morning', icon: 'fas fa-sun',
       labelKey: 'adhkar.morning', labelFallback: 'زکرێن بەیانیکردن',
       subtitleKey: 'gencine.smart.morning_hint', subtitleFallback: 'ڕۆژا خوه ب زکرێ دەستپێکە',
-      timeTag: 'بەیانیکردن',
+      timeTag: 'بەیانیکردن', basePriority: 50,
       timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
     },
     {
       id: 'waking', categoryKey: 'waking', icon: 'fas fa-cloud-sun',
       labelKey: 'adhkar.waking', labelFallback: 'دوای هاتنا خوو',
       subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'دوای هاتنا خووێ بخوێنە',
-      timeTag: 'بەیانیکردن',
+      timeTag: 'بەیانیکردن', basePriority: 58, /* beats morning when both active (Fajr→Sunrise) */
       timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
     },
     {
       id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
       labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێواربوون',
       subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێوارا خوە ب زکرێ بکە',
-      timeTag: 'ئێواربوون',
+      timeTag: 'ئێواربوون', basePriority: 50,
       timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
     },
     {
       id: 'sleep', categoryKey: 'sleep', icon: 'fas fa-bed',
       labelKey: 'adhkar.sleep', labelFallback: 'دوای خەوکردن',
       subtitleKey: 'gencine.smart.sleep_hint', subtitleFallback: 'پێش خەوکردنێ بخوێنە',
-      timeTag: 'شەو',
+      timeTag: 'شەو', basePriority: 50,
       timeWindow: { start: 'Isha', end: 'Fajr', fs: 21*60, fe: 5*60, wraps: true }
     },
     {
       id: 'friday', categoryKey: 'friday', icon: 'fas fa-calendar-day',
       labelKey: 'adhkar.friday', labelFallback: 'ڕۆژا ئینانێ',
       subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ڕۆژا ئینانێ ئەمڕۆ یە',
-      timeTag: 'ئینانی',
+      timeTag: 'ئینانی', basePriority: 65, /* intentionally beats morning/evening on Friday */
       dayBoostDays: [5]
     },
     {
       id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
       labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
       subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
-      timeTag: null,
+      timeTag: null, basePriority: 60, /* beats morning/evening but loses to friday */
       dayBoostDays: [5],
       thursdayNightBoost: true
     },
@@ -74,7 +91,7 @@
       id: 'breaking_fast', categoryKey: 'breaking_fast', icon: 'fas fa-utensils',
       labelKey: 'adhkar.breaking_fast', labelFallback: 'کردنەوەی ڕوژی',
       subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ئیفتارا خوش',
-      timeTag: 'ئیفتار', basePriority: 80,
+      timeTag: 'ئیفتار', basePriority: 95, /* highest — iftar beats even prayer windows */
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= maghribMin && nowMin < maghribMin + 45;
       }
@@ -110,25 +127,37 @@
       hijriCond: function(h) { return h.month === 12 && h.day === 9; }
     },
 
-    /* ── Rain (Duhok area) ── */
+  ];
+
+  /* ─────────────────────────────────────────────
+     WEATHER ITEMS  (card 5 — dedicated weather slide)
+     Rain when raining, otherwise thunder or wind as fallback.
+  ───────────────────────────────────────────── */
+  var WEATHER_ITEMS = [
     {
       id: 'rain', categoryKey: 'rain', icon: 'fas fa-cloud-rain',
       labelKey: 'adhkar.rain', labelFallback: 'کاتی باران',
       subtitleKey: 'gencine.smart.rain_hint', subtitleFallback: 'باران دکەت — دوعا بکە',
-      timeTag: 'باران', basePriority: 55,
-      rainCond: true
+      timeTag: 'باران'
+    },
+    {
+      id: 'thunder', categoryKey: 'thunder', icon: 'fas fa-bolt',
+      labelKey: 'adhkar.thunder', labelFallback: 'دەمی هەورووبرووسکە',
+      subtitleKey: 'gencine.smart.thunder_hint', subtitleFallback: 'زکرێن هەورووبرووسکە',
+      timeTag: 'هەوا'
+    },
+    {
+      id: 'wind', categoryKey: 'wind', icon: 'fas fa-wind',
+      labelKey: 'adhkar.wind', labelFallback: 'دەمی باد',
+      subtitleKey: 'gencine.smart.wind_hint', subtitleFallback: 'زکرێن کاتی باد',
+      timeTag: 'هەوا'
     }
   ];
 
-  /* Fallback pool used when no time window is active.
-     Picked by daily seed so it stays fixed all day.    */
+  /* Fallback pool — used when no time window is active (e.g. midday weekday).
+     Picked by daily seed → same all day, changes tomorrow.
+     8 items = 8-day cycle. after_prayer removed (covered by prayer window). */
   var FALLBACK_ZIKR = [
-    {
-      id: 'after_prayer', categoryKey: 'after_prayer', icon: 'fas fa-hands-praying',
-      labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
-      subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
-      timeTag: null
-    },
     {
       id: 'forgiveness', categoryKey: 'forgiveness', icon: 'fas fa-dove',
       labelKey: 'adhkar.forgiveness', labelFallback: 'داواکاری لێبوردن',
@@ -145,6 +174,36 @@
       id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
       labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
       subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
+      timeTag: null
+    },
+    {
+      id: 'gratitude', categoryKey: 'gratitude', icon: 'fas fa-star',
+      labelKey: 'adhkar.gratitude', labelFallback: 'سوپاسگوزاری',
+      subtitleKey: 'gencine.smart.gratitude_hint', subtitleFallback: 'سوپاسا خواێ بکە',
+      timeTag: null
+    },
+    {
+      id: 'before_quran', categoryKey: 'before_quran', icon: 'fas fa-book-open-reader',
+      labelKey: 'adhkar.before_quran', labelFallback: 'پێش خوێندنا قورئانێ',
+      subtitleKey: 'gencine.smart.before_quran_hint', subtitleFallback: 'پێش دەستپێکردنا قورئانێ',
+      timeTag: null
+    },
+    {
+      id: 'distress', categoryKey: 'distress', icon: 'fas fa-hand-holding-heart',
+      labelKey: 'adhkar.distress', labelFallback: 'کاتی زەحمەت',
+      subtitleKey: 'gencine.smart.distress_hint', subtitleFallback: 'دوعا لە کاتی زەحمەت',
+      timeTag: null
+    },
+    {
+      id: 'istikhara', categoryKey: 'istikhara', icon: 'fas fa-compass',
+      labelKey: 'adhkar.istikhara', labelFallback: 'ئیستیخارە',
+      subtitleKey: 'gencine.smart.istikhara_hint', subtitleFallback: 'داواکاری ڕێنمایی',
+      timeTag: null
+    },
+    {
+      id: 'adhan', categoryKey: 'adhan', icon: 'fas fa-bullhorn',
+      labelKey: 'adhkar.adhan', labelFallback: 'دوعای ئەزان',
+      subtitleKey: 'gencine.smart.adhan_hint', subtitleFallback: 'دوعای دوای ئەزان',
       timeTag: null
     }
   ];
@@ -381,6 +440,19 @@
       var te = (prayers && _toMin(prayers[tw.end])   >= 0) ? _toMin(prayers[tw.end])   : tw.fe;
       return _inRange(nowMin, ts, te, tw.wraps);
     }
+    /* prayerOffset: active for 20 min starting `offset` minutes after each of the 5 prayers */
+    if (item.prayerOffset !== undefined) {
+      var PRAYERS = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+      for (var pi = 0; pi < PRAYERS.length; pi++) {
+        var base = prayers ? _toMin(prayers[PRAYERS[pi]]) : -1;
+        if (base < 0) continue;
+        var ws = (base + item.prayerOffset) % (24 * 60);
+        var we = (ws + 20) % (24 * 60);
+        var wraps = we < ws;
+        if (_inRange(nowMin, ws, we, wraps)) return true;
+      }
+      return false;
+    }
     if (item.dayBoostDays && item.dayBoostDays.indexOf(dow) >= 0) return true;
     if (item.thursdayNightBoost && dow === 4 && nowMin >= maghribMin) return true;
     if (item.hijriCond) {
@@ -421,11 +493,60 @@
       .map(function(item) { return { item: item, score: _scoreItem(item, state) }; })
       .sort(function(a, b) { return b.score - a.score; });
 
-    /* Time window found — use highest-priority active item */
-    if (active.length) return active[0].item;
+    var fallback = FALLBACK_ZIKR[_seededIdx(FALLBACK_ZIKR.length, 3)];
 
-    /* No time window active — use daily-seeded fallback (salt 3) */
-    return FALLBACK_ZIKR[_seededIdx(FALLBACK_ZIKR.length, 3)];
+    /* If the top winner is a prayer-offset item already completed today,
+       yield to fallback — user already read it, no point repeating it
+       just because they opened the app again within the same window.      */
+    var winner = active.length ? active[0].item : null;
+    var winnerExhausted = winner
+      && winner.prayerOffset !== undefined
+      && state.completed.indexOf(winner.id) >= 0;
+
+    /* ── Debug log ── */
+    try {
+      var dbgT = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+      if (active.length) {
+        console.log('[SmartZikr] ' + dbgT + ' — candidates:');
+        active.forEach(function(c) {
+          var mark = (!winnerExhausted && c === active[0]) ? '✓' : ' ';
+          console.log('  ' + mark + ' ' + c.item.id + ' score=' + c.score);
+        });
+        if (winnerExhausted) {
+          console.log('[SmartZikr] winner ' + winner.id + ' already completed → fallback: ' + fallback.id);
+        } else {
+          console.log('[SmartZikr] winner → ' + winner.id);
+        }
+      } else {
+        console.log('[SmartZikr] ' + dbgT + ' — no active window → fallback: ' + fallback.id);
+      }
+    } catch(e) {}
+
+    if (!active.length || winnerExhausted) return fallback;
+    return winner;
+  }
+
+  /* ─────────────────────────────────────────────
+     CARD 5 — WEATHER DHIKR
+     Shows rain dhikr when it's raining; otherwise picks
+     thunder or wind by daily seed (salt 6).
+  ───────────────────────────────────────────── */
+  function _getWeatherItem() {
+    _fetchRain(); /* background refresh — never blocks rendering */
+    /* When raining — use rain if it has data, else null (hide slide) */
+    if (_isRaining()) {
+      return _catHasData('rain') ? WEATHER_ITEMS[0] : null;
+    }
+    /* Not raining — try thunder then wind; return first that has data */
+    var fallbacks = [WEATHER_ITEMS[1], WEATHER_ITEMS[2]];
+    /* Rotate by daily seed so it changes each day */
+    var start = _seededIdx(fallbacks.length, 6);
+    for (var i = 0; i < fallbacks.length; i++) {
+      var candidate = fallbacks[(start + i) % fallbacks.length];
+      if (_catHasData(candidate.categoryKey)) return candidate;
+    }
+    /* No weather adhkar in cache at all — hide the slide */
+    return null;
   }
 
   /* ─────────────────────────────────────────────
@@ -534,15 +655,21 @@
   }
 
   /* ─────────────────────────────────────────────
-     getItemsNow — ALWAYS exactly 4 items, fixed order
+     getItemsNow — 4 or 5 items depending on weather data
   ───────────────────────────────────────────── */
   function getItemsNow() {
-    return [
-      { _type: 'adhkar', _adhkarItem: _getZikrItem() },   /* card 1: zikr    */
-      _buildAyahItem(),                                    /* card 2: ayah    */
-      _buildHadithItem(),                                  /* card 3: hadith  */
-      _buildBookItem()                                     /* card 4: book    */
+    var items = [
+      { _type: 'adhkar', _adhkarItem: _getZikrItem() }    /* card 1: zikr    */
     ];
+    /* card 2: weather dhikr — only added when data exists */
+    var weatherItem = _getWeatherItem();
+    if (weatherItem) {
+      items.push({ _type: 'adhkar', _adhkarItem: weatherItem });
+    }
+    items.push(_buildAyahItem());                          /* card 3: ayah    */
+    items.push(_buildHadithItem());                        /* card 4: hadith  */
+    items.push(_buildBookItem());                          /* card 5: book    */
+    return items;
   }
 
   /* ─────────────────────────────────────────────

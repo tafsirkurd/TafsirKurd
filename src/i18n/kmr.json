@@ -843,5 +843,13 @@
   "settings.sync_status_offline": "نەگیهاتنا ئینتەرنەت",
   "settings.sync_status_syncing": "هاوکارکرن...",
   "settings.sync_status_failed": "هاوکارکرن سەرنەکەوت",
-  "settings.sync_retry_btn": "دووبارە هەوڵبدە"
+  "settings.sync_retry_btn": "دووبارە هەوڵبدە",
+  "gencine.smart.thunder_hint": "زکرێن هەورووبرووسکە",
+  "gencine.smart.wind_hint": "زکرێن کاتی باد",
+  "gencine.smart.masjid_hint": "کاتا چوونا مزگەوتێ",
+  "gencine.smart.gratitude_hint": "سوپاسا خواێ بکە",
+  "gencine.smart.before_quran_hint": "پێش دەستپێکردنا قورئانێ",
+  "gencine.smart.distress_hint": "دوعا لە کاتی زەحمەت",
+  "gencine.smart.istikhara_hint": "داواکاری ڕێنمایی",
+  "gencine.smart.adhan_hint": "دوعای دوای ئەزان"
 }

@@ -1818,7 +1818,19 @@ body{background:var(--bg);color:var(--text)}
 .genc-back-btn i{font-size:.85rem}
 .genc-back-label{font-size:1rem;font-weight:700;color:var(--text)}
 /* Adhkar section — grid */
-.adhkar-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 16px 40px}
+.adhkar-list-wrap{padding:8px 0 40px}
+.adhkar-list-section{margin-bottom:24px}
+.adhkar-list-hdr{font-size:.72rem;font-weight:700;color:var(--text3);letter-spacing:.05em;padding:0 20px 8px;direction:rtl;text-transform:uppercase}
+.adhkar-list-rows{background:var(--bg2);border-radius:16px;margin:0 12px;overflow:hidden;border:1px solid var(--border)}
+.adhkar-list-row{width:100%;display:flex;align-items:center;gap:12px;padding:13px 14px;background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;direction:rtl;-webkit-tap-highlight-color:transparent;text-align:right;transition:background .12s}
+.adhkar-list-row-last{border-bottom:none}
+.adhkar-list-row:active{background:var(--bg3)}
+.adhkar-list-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+.adhkar-list-label{flex:1;font-size:.88rem;font-weight:600;color:var(--text);line-height:1.3}
+.adhkar-list-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.adhkar-list-count{font-size:.72rem;font-weight:600;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px}
+.adhkar-list-chev{font-size:.65rem;color:var(--text3)}
+.adhkar-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 4px}
 .adhkar-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:20px 12px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;border:1px solid var(--border);transition:transform .15s,opacity .15s;-webkit-tap-highlight-color:transparent;text-align:center;font-family:inherit}
 .adhkar-grid-card:active{transform:scale(.95);opacity:.75}
 .adhkar-grid-icon{width:56px;height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.45rem;flex-shrink:0;background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}

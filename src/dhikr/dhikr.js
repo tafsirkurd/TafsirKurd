@@ -900,46 +900,97 @@ window.GencineUI = {
     var self = this;
     var T = window.t || function(k,d){ return d||k; };
     var catKeys = _getAdhkarCatKeys();
-    var grid = document.createElement('div');
-    grid.className = 'adhkar-grid';
 
-    catKeys.forEach(function(key){
-      var count = _getAdhkar(key).length;
-      var label = (window.t && window.t('adhkar.' + key)) || ADHKAR_CAT_LABELS[key] || key;
-      var meta  = ADHKAR_ICONS[key] || { icon:'fas fa-circle', color:'#888' };
+    var GROUPS = [
+      { label: 'ڕۆժeانە',        keys: ['morning','evening','waking','sleep'] },
+      { label: 'نوێժ',           keys: ['adhan','opening_prayer','ruku','rising_ruku','sujood','between_sujood','tashahhud','after_prayer','qunut'] },
+      { label: 'خواردن',         keys: ['eating_before','eating_after','fasting','breaking_fast'] },
+      { label: 'مالبیا و جێ',   keys: ['house_enter','house_exit','bathroom_enter','bathroom_exit','masjid_enter','masjid_exit','marketplace','vehicle'] },
+      { label: 'گەشت',           keys: ['travel','travel_return'] },
+      { label: 'حەج',            keys: ['talbiyah','safa_marwa','zamzam','entering_makkah','arafat','dhul_hijjah'] },
+      { label: 'ڕەمەزان',       keys: ['fasting','breaking_fast','lailat_qadr'] },
+      { label: 'هەوا',           keys: ['rain','thunder','wind','eclipse'] },
+      { label: 'تەندروستی',     keys: ['illness','pain','ruqyah','visiting_sick','condolence'] },
+      { label: 'کاتی تایبەت',   keys: ['friday','salawat','lailat_qadr','new_moon'] },
+      { label: 'ժیانی ڕۆժeانە',  keys: ['wudu','dressing','mirror','new_clothes','sneeze','anger','fear','debt','charity','distress','forgiveness','protection','before_quran','gratitude','nightmare','istikhara','wedding','newborn','kaffarah','grave'] },
+      { label: 'دیکە',           keys: [] }
+    ];
 
-      var card = document.createElement('button');
-      card.className = 'adhkar-grid-card';
-      card.onclick = function(){
-        self._adhkarView = 'list';
-        self._adhkarCat  = key;
-        self._draw();
-      };
-
-      /* icon circle — uses accent color from CSS */
-      var iconWrap = document.createElement('div');
-      iconWrap.className = 'adhkar-grid-icon';
-      var ico = document.createElement('i');
-      ico.className = meta.icon;
-      iconWrap.appendChild(ico);
-
-      /* label */
-      var lbl = document.createElement('div');
-      lbl.className = 'adhkar-grid-label';
-      lbl.textContent = label;
-
-      /* count */
-      var cnt = document.createElement('div');
-      cnt.className = 'adhkar-grid-count';
-      cnt.textContent = count + ' ' + T('gencine.dhikr_unit', 'زکر');
-
-      card.appendChild(iconWrap);
-      card.appendChild(lbl);
-      card.appendChild(cnt);
-      grid.appendChild(card);
+    var keyToGroup = {};
+    GROUPS.forEach(function(g, gi) {
+      g.keys.forEach(function(k) { if (!keyToGroup[k]) keyToGroup[k] = gi; });
     });
 
-    container.appendChild(grid);
+    var grouped = GROUPS.map(function() { return []; });
+    catKeys.forEach(function(key) {
+      var gi = (keyToGroup[key] !== undefined) ? keyToGroup[key] : GROUPS.length - 1;
+      grouped[gi].push(key);
+    });
+
+    var wrap = document.createElement('div');
+    wrap.className = 'adhkar-list-wrap';
+
+    GROUPS.forEach(function(group, gi) {
+      var keys = grouped[gi];
+      if (!keys.length) return;
+
+      var section = document.createElement('div');
+      section.className = 'adhkar-list-section';
+
+      var hdr = document.createElement('div');
+      hdr.className = 'adhkar-list-hdr';
+      hdr.textContent = group.label;
+      section.appendChild(hdr);
+
+      var rows = document.createElement('div');
+      rows.className = 'adhkar-list-rows';
+
+      keys.forEach(function(key, ki) {
+        var count = _getAdhkar(key).length;
+        var label = (window.t && window.t('adhkar.' + key)) || ADHKAR_CAT_LABELS[key] || key;
+        var meta  = ADHKAR_ICONS[key] || { icon:'fas fa-circle' };
+
+        var row = document.createElement('button');
+        row.className = 'adhkar-list-row' + (ki === keys.length - 1 ? ' adhkar-list-row-last' : '');
+        row.onclick = function() {
+          self._adhkarView = 'list';
+          self._adhkarCat  = key;
+          self._draw();
+        };
+
+        var iconWrap = document.createElement('div');
+        iconWrap.className = 'adhkar-list-icon';
+        var ico = document.createElement('i');
+        ico.className = meta.icon;
+        iconWrap.appendChild(ico);
+
+        var lbl = document.createElement('div');
+        lbl.className = 'adhkar-list-label';
+        lbl.textContent = label;
+
+        var right = document.createElement('div');
+        right.className = 'adhkar-list-right';
+        if (count) {
+          var cnt = document.createElement('span');
+          cnt.className = 'adhkar-list-count';
+          cnt.textContent = count;
+          right.appendChild(cnt);
+        }
+        var chev = document.createElement('i');
+        chev.className = 'fas fa-chevron-left adhkar-list-chev';
+        right.appendChild(chev);
+
+        row.appendChild(iconWrap);
+        row.appendChild(lbl);
+        row.appendChild(right);
+        rows.appendChild(row);
+      });
+
+      section.appendChild(rows);
+      wrap.appendChild(section);
+    });
+
+    container.appendChild(wrap);
   },
 
   _renderAdhkarCatList: function(container){
