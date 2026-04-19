@@ -51,8 +51,26 @@
         .stage-pill.active.s { border-color:#f59e0b; background:rgba(245,158,11,.07); color:#92400e; font-weight:600; }
         .stage-pill.active.e { border-color:#ef4444; background:rgba(239,68,68,.07); color:#991b1b; font-weight:600; }
 
+        /* ── inputs ── */
+        .form-input {
+            width: 100%; box-sizing: border-box;
+            padding: 10px 13px;
+            background: var(--bg-tertiary, #1a1a1a);
+            border: 1.5px solid var(--border, #2a2a2a);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 13.5px;
+            font-family: inherit;
+            transition: border-color .18s, box-shadow .18s;
+            outline: none;
+        }
+        .form-input::placeholder { color: var(--text-tertiary, #555); }
+        .form-input:focus {
+            border-color: var(--accent, #2e7d50);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #2e7d50) 15%, transparent);
+        }
         /* ── field helpers ── */
-        .f-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+        .f-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; letter-spacing: .02em; }
         .f-hint  { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
