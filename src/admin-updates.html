@@ -55,8 +55,8 @@
         .form-input {
             width: 100%; box-sizing: border-box;
             padding: 10px 13px;
-            background: var(--bg-tertiary, #f4f4f4);
-            border: 1.5px solid var(--border, #ddd);
+            background: var(--bg-hover);
+            border: 1.5px solid var(--border-light);
             border-radius: 10px;
             color: var(--text-primary);
             font-size: 13.5px;
@@ -64,7 +64,7 @@
             transition: border-color .18s, box-shadow .18s;
             outline: none;
         }
-        .form-input::placeholder { color: var(--text-tertiary, #aaa); }
+        .form-input::placeholder { color: var(--text-tertiary); }
         .form-input:focus {
             border-color: var(--accent, #2e7d50);
             box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #2e7d50) 15%, transparent);
@@ -78,17 +78,17 @@
         .wn-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
         .wn-row { display: flex; align-items: center; gap: 8px; }
         .wn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-        .wn-input { flex: 1; background: var(--bg-tertiary, #f4f4f4); border: 1.5px solid var(--border, #ddd); border-radius: 10px; padding: 10px 13px; font-size: 13.5px; font-family: inherit; color: var(--text-primary); outline: none; transition: border-color .18s, box-shadow .18s; }
-        .wn-input::placeholder { color: var(--text-tertiary, #aaa); }
+        .wn-input { flex: 1; background: var(--bg-hover); border: 1.5px solid var(--border-light); border-radius: 10px; padding: 10px 13px; font-size: 13.5px; font-family: inherit; color: var(--text-primary); outline: none; transition: border-color .18s, box-shadow .18s; }
+        .wn-input::placeholder { color: var(--text-tertiary); }
         .wn-input:focus { border-color: var(--accent, #2e7d50); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #2e7d50) 15%, transparent); }
         .wn-del { width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s, color .15s; }
         .wn-del:hover { background: #ff444420; color: #ff4444; }
-        .wn-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1px dashed var(--border); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; width: 100%; justify-content: center; transition: border-color .15s, color .15s; }
+        .wn-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1px dashed var(--border-medium); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; width: 100%; justify-content: center; transition: border-color .15s, color .15s; }
         .wn-add-btn:hover { border-color: var(--accent); color: var(--accent); }
         .wn-add-btn svg { width: 14px; height: 14px; }
         .ver-btns { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
-        .ver-btn { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer; transition: background .15s, color .15s; }
-        .ver-btn:hover { background: var(--border); color: var(--text-primary); }
+        .ver-btn { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-hover); color: var(--text-secondary); cursor: pointer; transition: background .15s, color .15s; }
+        .ver-btn:hover { background: var(--bg-active); color: var(--text-primary); }
         .ver-btn.accent { border-color: var(--accent); color: var(--accent); background: transparent; }
         .ver-btn.accent:hover { background: var(--accent); color: #fff; }
 
