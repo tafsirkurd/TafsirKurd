@@ -20,12 +20,18 @@
         .uc-body {
             display: grid;
             grid-template-columns: 1fr 300px;
-            gap: 24px;
+            grid-template-rows: auto auto 1fr;
+            gap: 20px;
             padding: 24px;
             align-items: start;
         }
+        .uc-stage-row  { grid-column: 1 / -1; }
+        .uc-form-col   { display: flex; flex-direction: column; gap: 20px; }
+        .uc-cards-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .uc-preview-col { position: sticky; top: 24px; }
         @media (max-width: 960px) {
             .uc-body { grid-template-columns: 1fr; }
+            .uc-cards-pair { grid-template-columns: 1fr; }
             .uc-preview-col { display: none; }
         }
 
@@ -249,12 +255,11 @@
             </div>
         </div>
 
-        <!-- two-column body -->
+        <!-- body grid -->
         <div class="uc-body">
 
-            <!-- LEFT: form -->
-            <div>
-                <!-- Stage -->
+            <!-- Stage — full width top row -->
+            <div class="uc-stage-row">
                 <div class="uc-card">
                     <div class="uc-card-hdr">
                         <div class="uc-card-icon green"><i data-lucide="zap"></i></div>
@@ -281,8 +286,13 @@
                         </div>
                     </div>
                 </div>
+            </div><!-- /uc-stage-row -->
 
-                <!-- Versions -->
+            <!-- LEFT: form col -->
+            <div class="uc-form-col">
+
+                <!-- Versions + Store URLs side by side -->
+                <div class="uc-cards-pair">
                 <div class="uc-card">
                     <div class="uc-card-hdr">
                         <div class="uc-card-icon blue"><i data-lucide="tag"></i></div>
@@ -291,30 +301,28 @@
                             <div class="uc-card-subtitle">Users below Min version are blocked</div>
                         </div>
                     </div>
-                    <div class="uc-card-body">
-                        <div class="three-col">
-                            <div>
-                                <label class="f-label">Latest published</label>
-                                <input type="text" id="uc_latest" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
-                                <div class="ver-btns">
-                                    <button class="ver-btn" onclick="bumpVersion('patch')">+patch</button>
-                                    <button class="ver-btn" onclick="bumpVersion('minor')">+minor</button>
-                                    <button class="ver-btn" onclick="bumpVersion('major')">+major</button>
-                                </div>
+                    <div class="uc-card-body" style="display:flex;flex-direction:column;gap:14px;">
+                        <div>
+                            <label class="f-label">Latest published</label>
+                            <input type="text" id="uc_latest" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
+                            <div class="ver-btns">
+                                <button class="ver-btn" onclick="bumpVersion('patch')">+patch</button>
+                                <button class="ver-btn" onclick="bumpVersion('minor')">+minor</button>
+                                <button class="ver-btn" onclick="bumpVersion('major')">+major</button>
                             </div>
-                            <div>
-                                <label class="f-label">Min iOS</label>
-                                <input type="text" id="uc_min_ios" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
-                                <div class="ver-btns">
-                                    <button class="ver-btn accent" onclick="setMinToLatest('uc_min_ios')">= Latest</button>
-                                </div>
+                        </div>
+                        <div>
+                            <label class="f-label">Min iOS</label>
+                            <input type="text" id="uc_min_ios" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
+                            <div class="ver-btns">
+                                <button class="ver-btn accent" onclick="setMinToLatest('uc_min_ios')">= Latest</button>
                             </div>
-                            <div>
-                                <label class="f-label">Min Android</label>
-                                <input type="text" id="uc_min_and" class="form-input" placeholder="2.2.2">
-                                <div class="ver-btns">
-                                    <button class="ver-btn accent" onclick="setMinToLatest('uc_min_and')">= Latest</button>
-                                </div>
+                        </div>
+                        <div>
+                            <label class="f-label">Min Android</label>
+                            <input type="text" id="uc_min_and" class="form-input" placeholder="2.2.2">
+                            <div class="ver-btns">
+                                <button class="ver-btn accent" onclick="setMinToLatest('uc_min_and')">= Latest</button>
                             </div>
                         </div>
                     </div>
@@ -329,19 +337,18 @@
                             <div class="uc-card-subtitle">Where the Update button sends users</div>
                         </div>
                     </div>
-                    <div class="uc-card-body">
-                        <div class="two-col">
-                            <div>
-                                <label class="f-label">App Store (iOS)</label>
-                                <input type="url" id="uc_ios_url" class="form-input" placeholder="https://apps.apple.com/...">
-                            </div>
-                            <div>
-                                <label class="f-label">Play Store (Android)</label>
-                                <input type="url" id="uc_and_url" class="form-input" placeholder="https://play.google.com/...">
-                            </div>
+                    <div class="uc-card-body" style="display:flex;flex-direction:column;gap:14px;">
+                        <div>
+                            <label class="f-label">App Store (iOS)</label>
+                            <input type="url" id="uc_ios_url" class="form-input" placeholder="https://apps.apple.com/...">
+                        </div>
+                        <div>
+                            <label class="f-label">Play Store (Android)</label>
+                            <input type="url" id="uc_and_url" class="form-input" placeholder="https://play.google.com/...">
                         </div>
                     </div>
                 </div>
+                </div><!-- /uc-cards-pair -->
 
                 <!-- What's new -->
                 <div class="uc-card">
@@ -385,7 +392,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
+
+            </div><!-- /uc-form-col -->
 
             <!-- RIGHT: preview -->
             <div class="uc-preview-col">
