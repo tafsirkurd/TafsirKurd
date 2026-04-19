@@ -57,6 +57,10 @@ public class SharedPrefsPlugin: CAPPlugin {
             WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdAyahWidget")
             WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdGoalWidget")
             NSLog("[SharedPrefs] widgetTranslations reload done")
+        } else if key == "widgetAccentColor" {
+            NSLog("[SharedPrefs] accent color updated — reloading all widget timelines")
+            WidgetCenter.shared.reloadAllTimelines()
+            NSLog("[SharedPrefs] accent reload done")
         } else {
             NSLog("[SharedPrefs] key=%@ has no widget reload handler", key)
         }

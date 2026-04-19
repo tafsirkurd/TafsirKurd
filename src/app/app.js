@@ -5704,6 +5704,11 @@ function _nativeSyncTheme(theme){
     }
     // iOS only: App Group UserDefaults — readable by AppDelegate before WebView starts
     _sharedPrefsSet('appTheme',theme);
+    // iOS only: write accent hex so widgets can follow the app theme highlight color.
+    // Only the accent/highlight changes — widget bg and text colors are fixed.
+    var accentMap={dark:'#ffffff',light:'#000000',sakina:'#c9a84c',noor:'#1a5c3a'};
+    var accentHex=accentMap[theme]||'#26bd69';
+    _sharedPrefsSet('widgetAccentColor',accentHex);
   }catch(e){}
 }
 

@@ -82,15 +82,41 @@ private func kn(_ name: String) -> String {
 // MARK: — Design system
 
 private enum DS {
-    static let bg1       = Color(red: 0.055, green: 0.065, blue: 0.055)
-    static let bg2       = Color(red: 0.035, green: 0.042, blue: 0.035)
-    static let accent    = Color(red: 0.14,  green: 0.74,  blue: 0.41)
-    static let accentDim = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.07)
-    static let accentMid = Color(red: 0.16,  green: 0.80,  blue: 0.44, opacity: 0.14)
-    static let t1        = Color.white
-    static let t2        = Color(white: 1, opacity: 0.50)
-    static let t3        = Color(white: 1, opacity: 0.28)
-    static let sep       = Color(white: 1, opacity: 0.07)
+    static let bg1 = Color(red: 0.055, green: 0.065, blue: 0.055)
+    static let bg2 = Color(red: 0.035, green: 0.042, blue: 0.035)
+    static let t1  = Color.white
+    static let t2  = Color(white: 1, opacity: 0.50)
+    static let t3  = Color(white: 1, opacity: 0.28)
+    static let sep = Color(white: 1, opacity: 0.07)
+
+    // Accent follows the app theme — reads `widgetAccentColor` from App Group UserDefaults.
+    // Written by _nativeSyncTheme() in app.js every time the user switches theme.
+    // Falls back to the original bright green if the key is absent.
+    private static func accentComponents() -> (Double, Double, Double) {
+        guard let ud  = UserDefaults(suiteName: kAppGroup),
+              let hex = ud.string(forKey: "widgetAccentColor"), hex.count >= 7
+        else { return (0.14, 0.74, 0.41) }
+        let h = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        guard h.count == 6, let val = UInt64(h, radix: 16) else { return (0.14, 0.74, 0.41) }
+        return (
+            Double((val >> 16) & 0xFF) / 255.0,
+            Double((val >>  8) & 0xFF) / 255.0,
+            Double( val        & 0xFF) / 255.0
+        )
+    }
+
+    static var accent: Color {
+        let (r, g, b) = accentComponents()
+        return Color(red: r, green: g, blue: b)
+    }
+    static var accentDim: Color {
+        let (r, g, b) = accentComponents()
+        return Color(red: r, green: g, blue: b).opacity(0.07)
+    }
+    static var accentMid: Color {
+        let (r, g, b) = accentComponents()
+        return Color(red: r, green: g, blue: b).opacity(0.14)
+    }
 }
 
 private var widgetGradient: LinearGradient {
