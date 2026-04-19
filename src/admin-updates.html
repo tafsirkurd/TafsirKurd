@@ -223,6 +223,17 @@
         /* update btn — matches .fu-banner-btn */
         .pm-sb-update { flex:1; padding:5px 8px; border-radius:8px; background:var(--pm-accent); color:var(--pm-accent-t); font-size:7.5px; font-weight:700; text-align:center; transition:background .35s,color .35s; }
 
+        /* ── platform impact ── */
+        .platform-impact { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .pi-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 9px; background: var(--bg-hover); border: 1px solid var(--border-light); }
+        .pi-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); min-width: 58px; display: flex; align-items: center; gap: 5px; }
+        .pi-status { font-size: 12px; font-weight: 500; line-height: 1.3; }
+        .pi-status.ok      { color: #16a34a; }
+        .pi-status.soft    { color: #d97706; }
+        .pi-status.enforce { color: #dc2626; }
+        .pi-status.warn    { color: #9333ea; }
+        @media (max-width: 640px) { .platform-impact { grid-template-columns: 1fr; } }
+
         /* ── save row ── */
         .save-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 24px 24px; }
         .save-msg { font-size: 13px; }
@@ -347,6 +358,17 @@
                             <i data-lucide="alert-triangle" style="width:14px;height:14px;flex-shrink:0;"></i>
                             Users below the minimum version will be blocked immediately after saving.
                         </div>
+                        <!-- platform impact -->
+                        <div class="platform-impact">
+                            <div class="pi-row">
+                                <div class="pi-label"><span>🍎</span> iOS</div>
+                                <div class="pi-status ok" id="piIos">🟢 No prompt</div>
+                            </div>
+                            <div class="pi-row">
+                                <div class="pi-label"><span>🤖</span> Android</div>
+                                <div class="pi-status ok" id="piAndroid">🟢 No prompt</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div><!-- /uc-stage-row -->
@@ -383,7 +405,7 @@
                         </div>
                         <div>
                             <label class="f-label">Min Android</label>
-                            <input type="text" id="uc_min_and" class="form-input" placeholder="2.2.2">
+                            <input type="text" id="uc_min_and" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
                             <div class="ver-btns">
                                 <button class="ver-btn accent" onclick="setMinToLatest('uc_min_and')">= Latest</button>
                             </div>
@@ -531,6 +553,7 @@
             b.classList.toggle('active', b.dataset.s === s);
         });
         document.getElementById('enforceWarn').style.display = s === 'enforce' ? 'flex' : 'none';
+        syncPlatformImpact();
         lucide.createIcons();
     }
 
@@ -633,6 +656,48 @@
         var minIos  = document.getElementById('uc_min_ios').value.trim();
         document.getElementById('pmOld').textContent = minIos  ? 'v' + minIos  : 'v—';
         document.getElementById('pmNew').textContent = latest  ? 'v' + latest  : 'v—';
+        syncPlatformImpact();
+    }
+
+    /* ── platform impact ── */
+    function syncPlatformImpact() {
+        var latest = document.getElementById('uc_latest').value.trim();
+        var minIos  = document.getElementById('uc_min_ios').value.trim();
+        var minAnd  = document.getElementById('uc_min_and').value.trim();
+        _setPiStatus('piIos',     _stage, minIos, latest);
+        _setPiStatus('piAndroid', _stage, minAnd, latest);
+    }
+
+    function _setPiStatus(id, stage, minVer, latest) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (stage === 'release' || !minVer) {
+            el.className = 'pi-status ok';
+            el.textContent = stage === 'release' ? '🟢 No prompt' : '🟢 No prompt — min version not set';
+            return;
+        }
+        if (latest && _verCmp(latest, minVer) < 0) {
+            el.className = 'pi-status warn';
+            el.textContent = '⚠ Config error: latest (' + latest + ') < min (' + minVer + ')';
+            return;
+        }
+        if (stage === 'enforce') {
+            el.className = 'pi-status enforce';
+            el.textContent = '🔴 Hard block — users below v' + minVer;
+        } else {
+            el.className = 'pi-status soft';
+            el.textContent = '🟡 Soft banner — users below v' + minVer;
+        }
+    }
+
+    function _verCmp(a, b) {
+        var pa = a.split('.').map(Number);
+        var pb = b.split('.').map(Number);
+        for (var i = 0; i < 3; i++) {
+            var d = (pa[i] || 0) - (pb[i] || 0);
+            if (d !== 0) return d;
+        }
+        return 0;
     }
 
     function wnGetLines() {
