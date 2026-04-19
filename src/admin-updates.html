@@ -51,6 +51,16 @@
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
         @media (max-width: 640px) { .two-col,.three-col { grid-template-columns: 1fr; } }
+        .wn-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+        .wn-row { display: flex; align-items: center; gap: 8px; }
+        .wn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+        .wn-input { flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; font-size: 13px; color: var(--text-primary); outline: none; transition: border-color .15s; }
+        .wn-input:focus { border-color: var(--accent); }
+        .wn-del { width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s, color .15s; }
+        .wn-del:hover { background: #ff444420; color: #ff4444; }
+        .wn-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1px dashed var(--border); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; width: 100%; justify-content: center; transition: border-color .15s, color .15s; }
+        .wn-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .wn-add-btn svg { width: 14px; height: 14px; }
         .ver-btns { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
         .ver-btn { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer; transition: background .15s, color .15s; }
         .ver-btn:hover { background: var(--border); color: var(--text-primary); }
@@ -343,11 +353,9 @@
                         </div>
                     </div>
                     <div class="uc-card-body">
-                        <textarea id="uc_whats_new" class="form-input" rows="4"
-                            style="resize:vertical;font-size:13px;line-height:1.7;"
-                            placeholder="Faster performance and smoother experience&#10;Improved Quran reading and navigation&#10;Better notifications and reliability"
-                            oninput="syncBullets()"></textarea>
-                        <p class="f-hint" style="margin-top:6px;">Leave empty to use default Kurdish text.</p>
+                        <div id="wnList" class="wn-list"></div>
+                        <button class="wn-add-btn" onclick="wnAddRow()"><i data-lucide="plus"></i> Add bullet</button>
+                        <p class="f-hint" style="margin-top:8px;">Leave empty to use default Kurdish text.</p>
                     </div>
                 </div>
 
@@ -437,9 +445,13 @@
         document.getElementById('pmNew').textContent = latest  ? 'v' + latest  : 'v—';
     }
 
+    function wnGetLines() {
+        return Array.from(document.querySelectorAll('.wn-input'))
+            .map(function(i){ return i.value.trim(); }).filter(Boolean);
+    }
+
     function syncBullets() {
-        var lines = document.getElementById('uc_whats_new').value
-            .split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+        var lines = wnGetLines();
         var div = document.getElementById('pmBullets');
         if (!div) return;
         while (div.firstChild) div.removeChild(div.firstChild);
@@ -454,6 +466,55 @@
             d.textContent = b;
             div.appendChild(d);
         });
+    }
+
+    function wnMakeDelIcon() {
+        var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('width','14'); svg.setAttribute('height','14');
+        svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none');
+        svg.setAttribute('stroke','currentColor'); svg.setAttribute('stroke-width','2');
+        svg.setAttribute('stroke-linecap','round'); svg.setAttribute('stroke-linejoin','round');
+        var l1 = document.createElementNS('http://www.w3.org/2000/svg','line');
+        l1.setAttribute('x1','18'); l1.setAttribute('y1','6'); l1.setAttribute('x2','6'); l1.setAttribute('y2','18');
+        var l2 = document.createElementNS('http://www.w3.org/2000/svg','line');
+        l2.setAttribute('x1','6'); l2.setAttribute('y1','6'); l2.setAttribute('x2','18'); l2.setAttribute('y2','18');
+        svg.appendChild(l1); svg.appendChild(l2);
+        return svg;
+    }
+
+    function wnAddRow(value) {
+        var list = document.getElementById('wnList');
+        var row = document.createElement('div');
+        row.className = 'wn-row';
+        var dot = document.createElement('div');
+        dot.className = 'wn-dot';
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'wn-input';
+        inp.placeholder = 'What changed…';
+        inp.value = value || '';
+        inp.oninput = syncBullets;
+        inp.onkeydown = function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); wnAddRow(); }
+        };
+        var del = document.createElement('button');
+        del.className = 'wn-del';
+        del.title = 'Remove';
+        del.appendChild(wnMakeDelIcon());
+        del.onclick = function() { list.removeChild(row); syncBullets(); };
+        row.appendChild(dot);
+        row.appendChild(inp);
+        row.appendChild(del);
+        list.appendChild(row);
+        if (document.activeElement !== document.body) inp.focus();
+        syncBullets();
+    }
+
+    function wnSetLines(lines) {
+        var list = document.getElementById('wnList');
+        while (list.firstChild) list.removeChild(list.firstChild);
+        (lines.length ? lines : []).forEach(function(l){ wnAddRow(l); });
+        syncBullets();
     }
 
     function bumpVersion(type) {
@@ -493,8 +554,9 @@
         document.getElementById('uc_cooldown').value = cfg.soft_update_cooldown_days || '';
 
         var wn = cfg.update_whats_new || '';
-        try { var a = JSON.parse(wn); if (Array.isArray(a)) wn = a.join('\n'); } catch(e){}
-        document.getElementById('uc_whats_new').value = wn;
+        var wnLines = [];
+        try { var a = JSON.parse(wn); if (Array.isArray(a)) wnLines = a.filter(Boolean); } catch(e){ wnLines = wn.split('\n').map(function(s){return s.trim();}).filter(Boolean); }
+        wnSetLines(wnLines);
 
         if (cfg.update_release_time) {
             try {
@@ -513,8 +575,8 @@
         var msg = document.getElementById('saveMsg');
         btn.disabled = true; msg.className = 'save-msg'; msg.textContent = 'Saving…';
 
-        var wnRaw = document.getElementById('uc_whats_new').value.trim();
-        var wnVal = wnRaw ? JSON.stringify(wnRaw.split('\n').map(function(s){return s.trim();}).filter(Boolean)) : '';
+        var wnLines = wnGetLines();
+        var wnVal = wnLines.length ? JSON.stringify(wnLines) : '';
         var rtVal = '';
         var rtIn = document.getElementById('uc_release_time').value;
         if (rtIn) { try { rtVal = new Date(rtIn).toISOString(); } catch(e){} }
