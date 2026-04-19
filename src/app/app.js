@@ -81,10 +81,15 @@ window.ForceUpdate = (function(){
   }
 
   // ── Snooze helpers ────────────────────────────────────────────────────────
-  function isSnoozed(cooldownDays, minVersion) {
+  function isSnoozed(cooldownDays, minVersion, sentAt) {
     try {
       var s = JSON.parse(localStorage.getItem(SOFT_SNOOZE_KEY));
       if (!s) return false;
+      // If admin re-sent after user dismissed, show again
+      if (sentAt) {
+        var sentTs = new Date(sentAt).getTime();
+        if (!isNaN(sentTs) && sentTs > s.at) return false;
+      }
       // If admin pushed a new min_version, ignore old snooze
       if (minVersion && s.ver && s.ver !== String(minVersion)) return false;
       if (s.permanent) return true;
@@ -339,13 +344,13 @@ window.ForceUpdate = (function(){
         }
         if (!reachable) {
           console.log('[Update] HARD requested but store URL missing — falling back to SOFT');
-          if (!isSnoozed(cooldown, minVersion)) showSoftBanner(cfg.update_whats_new, minVersion);
+          if (!isSnoozed(cooldown, minVersion, cfg.update_sent_at)) showSoftBanner(cfg.update_whats_new, minVersion);
           return;
         }
         console.log('[Update] HARD — blocking app');
         showHard(version, minVersion, cfg);
       } else if (mode === 'soft') {
-        if (isSnoozed(cooldown, minVersion)) {
+        if (isSnoozed(cooldown, minVersion, cfg.update_sent_at)) {
           console.log('[Update] SOFT — snoozed (cooldown active or permanent)');
           return;
         }

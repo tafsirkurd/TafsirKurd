@@ -36,6 +36,7 @@ export async function onRequest(context) {
       'android_store_url',
       'soft_update_cooldown_days', // days before re-showing soft banner after dismiss
       'update_whats_new',          // optional short release notes shown in soft banner
+      'update_sent_at',            // ISO timestamp updated on every admin save — resets user snooze
       // legacy key — kept for backward compat
       'force_update_enabled',
     ];
