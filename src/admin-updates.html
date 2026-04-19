@@ -78,8 +78,9 @@
         .wn-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
         .wn-row { display: flex; align-items: center; gap: 8px; }
         .wn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-        .wn-input { flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; font-size: 13px; color: var(--text-primary); outline: none; transition: border-color .15s; }
-        .wn-input:focus { border-color: var(--accent); }
+        .wn-input { flex: 1; background: var(--bg-tertiary, #1a1a1a); border: 1.5px solid var(--border, #2a2a2a); border-radius: 10px; padding: 10px 13px; font-size: 13.5px; font-family: inherit; color: var(--text-primary); outline: none; transition: border-color .18s, box-shadow .18s; }
+        .wn-input::placeholder { color: var(--text-tertiary, #555); }
+        .wn-input:focus { border-color: var(--accent, #2e7d50); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #2e7d50) 15%, transparent); }
         .wn-del { width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s, color .15s; }
         .wn-del:hover { background: #ff444420; color: #ff4444; }
         .wn-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; border: 1px dashed var(--border); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; width: 100%; justify-content: center; transition: border-color .15s, color .15s; }
