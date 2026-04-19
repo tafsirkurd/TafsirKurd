@@ -603,7 +603,7 @@ async function sendApns(deviceToken, title, body, extraData, jwt, bundleId) {
     return fetch(`https://api.push.apple.com/3/device/${deviceToken}`, {
         method: 'POST',
         headers: {
-            authorization: `bearer ${jwt}`,
+            authorization: `Bearer ${jwt}`,
             'apns-topic': bundleId,
             'apns-push-type': 'alert',
             'apns-priority': '10',
