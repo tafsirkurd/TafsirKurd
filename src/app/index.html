@@ -205,8 +205,9 @@ body{background:var(--bg);color:var(--text)}
 .fu-cta:active{transform:scale(.97);opacity:.88}
 .fu-cta.fu-btn-loading{opacity:.5;pointer-events:none}
 /* ===== SOFT UPDATE BANNER ===== */
-.fu-banner{position:fixed;bottom:calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 14px);left:16px;right:16px;z-index:9998;background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:12px 14px 12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.2);transform:translateY(calc(100% + 32px));transition:transform .38s cubic-bezier(.34,1.26,.64,1);pointer-events:none}
-.fu-banner.fu-banner-in{transform:translateY(0);pointer-events:auto}
+.fu-banner{position:fixed;bottom:calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 14px);left:16px;right:16px;z-index:9998;background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:12px 14px 12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.2);transform:translateY(calc(100% + 48px));opacity:0;transition:transform .5s cubic-bezier(.22,.8,.36,1),opacity .4s ease;pointer-events:none;will-change:transform,opacity}
+.fu-banner.fu-banner-in{transform:translateY(0);opacity:1;pointer-events:auto}
+.fu-banner.fu-banner-out{transform:translateY(calc(100% + 48px));opacity:0;pointer-events:none}
 .fu-banner-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
 .fu-banner-text{flex:1;min-width:0}
 .fu-banner-title{font-size:.84rem;font-weight:700;color:var(--text);direction:rtl}

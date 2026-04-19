@@ -241,7 +241,8 @@ window.ForceUpdate = (function(){
     var banner = document.getElementById('fuBanner');
     if (!banner) return;
     banner.classList.remove('fu-banner-in');
-    setTimeout(function(){ if (banner.parentNode) banner.parentNode.removeChild(banner); }, 320);
+    banner.classList.add('fu-banner-out');
+    setTimeout(function(){ if (banner.parentNode) banner.parentNode.removeChild(banner); }, 520);
   }
 
   // ── Update reminder notification ──────────────────────────────────────────
