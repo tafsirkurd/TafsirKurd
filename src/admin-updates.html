@@ -55,8 +55,8 @@
         .form-input {
             width: 100%; box-sizing: border-box;
             padding: 10px 13px;
-            background: var(--bg-tertiary, #1a1a1a);
-            border: 1.5px solid var(--border, #2a2a2a);
+            background: var(--bg-tertiary, #f4f4f4);
+            border: 1.5px solid var(--border, #ddd);
             border-radius: 10px;
             color: var(--text-primary);
             font-size: 13.5px;
@@ -64,7 +64,7 @@
             transition: border-color .18s, box-shadow .18s;
             outline: none;
         }
-        .form-input::placeholder { color: var(--text-tertiary, #555); }
+        .form-input::placeholder { color: var(--text-tertiary, #aaa); }
         .form-input:focus {
             border-color: var(--accent, #2e7d50);
             box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #2e7d50) 15%, transparent);
@@ -78,8 +78,8 @@
         .wn-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
         .wn-row { display: flex; align-items: center; gap: 8px; }
         .wn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-        .wn-input { flex: 1; background: var(--bg-tertiary, #1a1a1a); border: 1.5px solid var(--border, #2a2a2a); border-radius: 10px; padding: 10px 13px; font-size: 13.5px; font-family: inherit; color: var(--text-primary); outline: none; transition: border-color .18s, box-shadow .18s; }
-        .wn-input::placeholder { color: var(--text-tertiary, #555); }
+        .wn-input { flex: 1; background: var(--bg-tertiary, #f4f4f4); border: 1.5px solid var(--border, #ddd); border-radius: 10px; padding: 10px 13px; font-size: 13.5px; font-family: inherit; color: var(--text-primary); outline: none; transition: border-color .18s, box-shadow .18s; }
+        .wn-input::placeholder { color: var(--text-tertiary, #aaa); }
         .wn-input:focus { border-color: var(--accent, #2e7d50); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #2e7d50) 15%, transparent); }
         .wn-del { width: 28px; height: 28px; border-radius: 7px; border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s, color .15s; }
         .wn-del:hover { background: #ff444420; color: #ff4444; }
@@ -178,6 +178,93 @@
         .pm-bullet::before { content: '✦'; color: rgba(52,140,78,.65); font-size: 6.5px; flex-shrink: 0; margin-top: 2px; }
         /* button */
         .pm-btn { width: 100%; padding: 10px; background: linear-gradient(135deg,#2a6e48,#3a9460); color: #fff; font-size: 10px; font-weight: 700; border: none; border-radius: 9px; text-align: center; }
+
+        /* ── phone CSS variables (defaults = dark theme) ── */
+        .phone {
+            --pm-bg: #07100a;
+            --pm-text: #f0f0f0;
+            --pm-text-muted: rgba(255,255,255,.4);
+            --pm-text-dim: rgba(255,255,255,.55);
+            --pm-text-faint: rgba(255,255,255,.28);
+            --pm-accent: #5ddc8c;
+            --pm-accent-bg: rgba(52,140,78,.18);
+            --pm-accent-border: rgba(52,140,78,.28);
+            --pm-accent-star: rgba(52,140,78,.65);
+            --pm-ring: rgba(52,120,70,.28);
+            --pm-card-bg: rgba(255,255,255,.04);
+            --pm-card-border: rgba(255,255,255,.07);
+            --pm-icon-bg: rgba(255,255,255,.06);
+            --pm-icon-border: rgba(255,255,255,.1);
+            --pm-ver-old-bg: rgba(255,255,255,.06);
+            --pm-ver-old-color: rgba(255,255,255,.28);
+            --pm-ver-arrow: rgba(255,255,255,.18);
+            --pm-btn-a: #2a6e48;
+            --pm-btn-b: #3a9460;
+            --pm-wordmark: rgba(255,255,255,.25);
+            --pm-phone-border: rgba(255,255,255,.07);
+            --pm-glow-color: rgba(34,100,52,.2);
+            transition: background .35s, border-color .35s, box-shadow .35s;
+        }
+        /* apply theme colors via CSS variables */
+        .phone { background: var(--pm-bg); border-color: var(--pm-phone-border); }
+        .phone::before { background: radial-gradient(ellipse 75% 45% at 50% 28%, var(--pm-glow-color) 0%, transparent 65%); }
+        .pm-wordmark { color: var(--pm-wordmark); transition: color .35s; }
+        .pm-ring { border-color: var(--pm-ring); transition: border-color .35s; }
+        .pm-icon { background: var(--pm-icon-bg); border-color: var(--pm-icon-border); box-shadow: 0 0 28px var(--pm-icon-bg); transition: background .35s, border-color .35s; }
+        .pm-title { color: var(--pm-text); transition: color .35s; }
+        .pm-msg  { color: var(--pm-text-muted); transition: color .35s; }
+        .pm-ver-old { background: var(--pm-ver-old-bg); color: var(--pm-ver-old-color); transition: background .35s, color .35s; }
+        .pm-ver-arrow { color: var(--pm-ver-arrow); transition: color .35s; }
+        .pm-ver-new { color: var(--pm-accent); background: var(--pm-accent-bg); border-color: var(--pm-accent-border); transition: color .35s, background .35s, border-color .35s; }
+        .pm-bullets { background: var(--pm-card-bg); border-color: var(--pm-card-border); transition: background .35s, border-color .35s; }
+        .pm-bullets-hdr { color: var(--pm-text-faint); transition: color .35s; }
+        .pm-bullet { color: var(--pm-text-dim); transition: color .35s; }
+        .pm-bullet::before { color: var(--pm-accent-star); transition: color .35s; }
+        .pm-btn { background: linear-gradient(135deg, var(--pm-btn-a), var(--pm-btn-b)); color: var(--pm-btn-text, #fff); transition: background .35s, color .35s; }
+
+        /* ── phone theme/mode tabs ── */
+        .pm-tabs-row { display: flex; gap: 5px; margin-bottom: 8px; }
+        .pm-tab {
+            flex: 1; padding: 6px 4px; font-size: 11px; font-weight: 600;
+            border: 1px solid var(--border-light); border-radius: 7px;
+            background: var(--bg-surface); color: var(--text-secondary);
+            cursor: pointer; text-align: center;
+            transition: border-color .15s, background .15s, color .15s;
+        }
+        .pm-tab:hover { border-color: var(--border-medium); color: var(--text-primary); }
+        .pm-tab.active { border-color: var(--accent, #2e7d50); background: rgba(46,125,80,.08); color: var(--accent, #2e7d50); }
+        .pm-mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+        .pm-mode-tab {
+            padding: 5px 8px; font-size: 11px; font-weight: 500;
+            border: 1px solid var(--border-light); border-radius: 7px;
+            background: var(--bg-surface); color: var(--text-secondary);
+            cursor: pointer; text-align: center;
+            transition: border-color .15s, background .15s, color .15s;
+        }
+        .pm-mode-tab.active { border-color: var(--accent, #2e7d50); background: rgba(46,125,80,.08); color: var(--accent, #2e7d50); font-weight: 600; }
+
+        /* ── phone slide animation ── */
+        .phone { position: relative; }
+        .phone.pm-theme-flash { animation: pm-flash .32s ease; }
+        @keyframes pm-flash { 0%{opacity:.6;transform:scale(.985)} 100%{opacity:1;transform:scale(1)} }
+
+        /* ── soft banner preview ── */
+        .pm-soft-screen { display: flex; flex-direction: column; gap: 7px; }
+        .pm-soft-appbar { height: 22px; background: var(--pm-card-bg); border-radius: 6px; }
+        .pm-soft-content { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .pm-soft-row { height: 9px; border-radius: 4px; background: var(--pm-card-bg); }
+        .pm-soft-row.wide  { width: 100%; }
+        .pm-soft-row.mid   { width: 72%; }
+        .pm-soft-row.short { width: 48%; }
+        .pm-soft-banner {
+            background: var(--pm-card-bg); border: 1px solid var(--pm-accent-border);
+            border-radius: 12px; padding: 10px 11px; margin-top: 6px;
+        }
+        .pm-soft-banner-title { font-size: 9px; font-weight: 700; color: var(--pm-text); margin-bottom: 3px; }
+        .pm-soft-banner-msg   { font-size: 8px; color: var(--pm-text-muted); line-height: 1.5; margin-bottom: 8px; }
+        .pm-soft-banner-btns  { display: flex; gap: 6px; }
+        .pm-soft-banner-dismiss { flex: 1; padding: 5px; font-size: 8px; font-weight: 600; text-align: center; border-radius: 7px; background: var(--pm-ver-old-bg); color: var(--pm-ver-old-color); }
+        .pm-soft-banner-update  { flex: 2; padding: 5px; font-size: 8px; font-weight: 700; text-align: center; border-radius: 7px; background: linear-gradient(135deg, var(--pm-btn-a), var(--pm-btn-b)); color: var(--pm-btn-text, #fff); }
 
         /* ── save row ── */
         .save-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 24px 24px; }
@@ -396,7 +483,22 @@
             <div class="uc-preview-col">
                 <div class="phone-wrap">
                     <div class="phone-label">Screen preview</div>
-                    <div class="phone">
+
+                    <!-- Theme tabs -->
+                    <div class="pm-tabs-row">
+                        <button class="pm-tab active" data-pm-theme="dark"   onclick="setPreviewTheme('dark')">Dark</button>
+                        <button class="pm-tab"         data-pm-theme="light"  onclick="setPreviewTheme('light')">Light</button>
+                        <button class="pm-tab"         data-pm-theme="sakina" onclick="setPreviewTheme('sakina')">Sakina</button>
+                        <button class="pm-tab"         data-pm-theme="noor"   onclick="setPreviewTheme('noor')">Noor</button>
+                    </div>
+                    <!-- Mode toggle -->
+                    <div class="pm-mode-row">
+                        <button class="pm-mode-tab active" data-pm-mode="enforce" onclick="setPreviewMode('enforce')">Full overlay</button>
+                        <button class="pm-mode-tab"         data-pm-mode="soft"    onclick="setPreviewMode('soft')">Soft banner</button>
+                    </div>
+
+                    <!-- ENFORCE: full overlay phone -->
+                    <div class="phone" id="pmPhoneEnforce">
                         <div class="pm-wordmark">TafsirKurd</div>
                         <div class="pm-rings">
                             <div class="pm-ring pm-ring-3"></div>
@@ -423,6 +525,32 @@
                         </div>
                         <div class="pm-btn">نوێبکەرەوە ↗</div>
                     </div>
+
+                    <!-- SOFT: banner phone -->
+                    <div class="phone" id="pmPhoneSoft" style="display:none;">
+                        <div class="pm-wordmark">TafsirKurd</div>
+                        <div class="pm-soft-screen">
+                            <div class="pm-soft-appbar"></div>
+                            <div class="pm-soft-content">
+                                <div class="pm-soft-row wide"></div>
+                                <div class="pm-soft-row mid"></div>
+                                <div class="pm-soft-row wide" style="margin-top:4px;height:44px;border-radius:8px;opacity:.6"></div>
+                                <div class="pm-soft-row short" style="margin-top:2px;"></div>
+                                <div class="pm-soft-row wide" style="height:32px;border-radius:8px;opacity:.5"></div>
+                                <div class="pm-soft-row mid"></div>
+                                <div class="pm-soft-row wide" style="height:28px;border-radius:8px;opacity:.4"></div>
+                            </div>
+                            <div class="pm-soft-banner">
+                                <div class="pm-soft-banner-title">نوێکردنەوەی بەردەستە ✦</div>
+                                <div class="pm-soft-banner-msg" id="pmSoftMsg">وەشانێکی نوێیی بەردەستە</div>
+                                <div class="pm-soft-banner-btns">
+                                    <div class="pm-soft-banner-dismiss">دواتر</div>
+                                    <div class="pm-soft-banner-update">نوێبکەرەوە ↗</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -439,25 +567,129 @@
             b.classList.toggle('active', b.dataset.s === s);
         });
         document.getElementById('enforceWarn').style.display = s === 'enforce' ? 'flex' : 'none';
-        
-        // Dark mode
-        (function() {
-            var tt = document.getElementById('theme-toggle');
-            var ti = document.getElementById('theme-icon');
-            if (!tt) return;
-            if (localStorage.getItem('admin-theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-                if (ti) ti.setAttribute('data-lucide', 'sun');
-            }
-            tt.addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                var dark = document.body.classList.contains('dark-mode');
-                if (ti) ti.setAttribute('data-lucide', dark ? 'sun' : 'moon');
-                localStorage.setItem('admin-theme', dark ? 'dark' : 'light');
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-            });
-        })();
         lucide.createIcons();
+    }
+
+    /* ── preview themes ── */
+    var PREVIEW_THEMES = {
+        dark: {
+            bg:'#07100a', text:'#f0f0f0', textMuted:'rgba(255,255,255,.4)', textDim:'rgba(255,255,255,.55)',
+            textFaint:'rgba(255,255,255,.28)', accent:'#5ddc8c', accentBg:'rgba(52,140,78,.18)',
+            accentBorder:'rgba(52,140,78,.28)', accentStar:'rgba(52,140,78,.65)', ring:'rgba(52,120,70,.28)',
+            cardBg:'rgba(255,255,255,.04)', cardBorder:'rgba(255,255,255,.07)',
+            iconBg:'rgba(255,255,255,.06)', iconBorder:'rgba(255,255,255,.1)',
+            verOldBg:'rgba(255,255,255,.06)', verOldColor:'rgba(255,255,255,.28)',
+            verArrow:'rgba(255,255,255,.18)', btnA:'#2a6e48', btnB:'#3a9460', btnText:'#fff',
+            wordmark:'rgba(255,255,255,.25)', phoneBorder:'rgba(255,255,255,.07)',
+            glowColor:'rgba(34,100,52,.2)'
+        },
+        light: {
+            bg:'#eff5f0', text:'#1a2e22', textMuted:'rgba(0,0,0,.5)', textDim:'rgba(0,0,0,.65)',
+            textFaint:'rgba(0,0,0,.35)', accent:'#1a7a40', accentBg:'rgba(26,122,64,.12)',
+            accentBorder:'rgba(26,122,64,.28)', accentStar:'rgba(26,122,64,.55)', ring:'rgba(26,122,64,.2)',
+            cardBg:'rgba(0,0,0,.04)', cardBorder:'rgba(0,0,0,.09)',
+            iconBg:'rgba(0,0,0,.05)', iconBorder:'rgba(0,0,0,.1)',
+            verOldBg:'rgba(0,0,0,.06)', verOldColor:'rgba(0,0,0,.38)',
+            verArrow:'rgba(0,0,0,.2)', btnA:'#1a7a40', btnB:'#2a9a58', btnText:'#fff',
+            wordmark:'rgba(0,0,0,.18)', phoneBorder:'rgba(0,0,0,.08)',
+            glowColor:'rgba(26,122,64,.1)'
+        },
+        sakina: {
+            bg:'#060e18', text:'#e0eeff', textMuted:'rgba(180,210,255,.45)', textDim:'rgba(180,210,255,.58)',
+            textFaint:'rgba(180,210,255,.3)', accent:'#64b3f4', accentBg:'rgba(50,120,200,.18)',
+            accentBorder:'rgba(50,120,200,.32)', accentStar:'rgba(100,180,255,.6)', ring:'rgba(40,90,180,.28)',
+            cardBg:'rgba(100,180,255,.04)', cardBorder:'rgba(100,180,255,.08)',
+            iconBg:'rgba(100,180,255,.07)', iconBorder:'rgba(100,180,255,.14)',
+            verOldBg:'rgba(100,180,255,.07)', verOldColor:'rgba(180,210,255,.32)',
+            verArrow:'rgba(180,210,255,.2)', btnA:'#1a4a8a', btnB:'#2a6ecc', btnText:'#fff',
+            wordmark:'rgba(180,210,255,.22)', phoneBorder:'rgba(100,180,255,.1)',
+            glowColor:'rgba(30,80,160,.25)'
+        },
+        noor: {
+            bg:'#120a04', text:'#fff5e0', textMuted:'rgba(255,220,150,.45)', textDim:'rgba(255,220,150,.58)',
+            textFaint:'rgba(255,220,150,.3)', accent:'#f5c842', accentBg:'rgba(200,150,30,.18)',
+            accentBorder:'rgba(200,150,30,.32)', accentStar:'rgba(245,200,66,.6)', ring:'rgba(160,110,10,.28)',
+            cardBg:'rgba(255,200,100,.04)', cardBorder:'rgba(255,200,100,.09)',
+            iconBg:'rgba(255,200,100,.07)', iconBorder:'rgba(255,200,100,.14)',
+            verOldBg:'rgba(255,200,100,.07)', verOldColor:'rgba(255,220,150,.32)',
+            verArrow:'rgba(255,220,150,.2)', btnA:'#96540a', btnB:'#c07018', btnText:'#fff',
+            wordmark:'rgba(255,220,150,.22)', phoneBorder:'rgba(255,200,100,.09)',
+            glowColor:'rgba(150,90,10,.22)'
+        }
+    };
+    var _previewTheme = 'dark';
+    var _previewMode  = 'enforce';
+
+    function setPreviewTheme(t) {
+        _previewTheme = t;
+        document.querySelectorAll('.pm-tab').forEach(function(b){
+            b.classList.toggle('active', b.dataset.pmTheme === t);
+        });
+        _applyPreviewStyles();
+    }
+
+    function setPreviewMode(m) {
+        _previewMode = m;
+        document.querySelectorAll('.pm-mode-tab').forEach(function(b){
+            b.classList.toggle('active', b.dataset.pmMode === m);
+        });
+        var enforce = document.getElementById('pmPhoneEnforce');
+        var soft    = document.getElementById('pmPhoneSoft');
+        if (m === 'soft') {
+            enforce.style.display = 'none';
+            soft.style.display = '';
+            _applyThemeToPhone(soft);
+            _triggerFlash(soft);
+        } else {
+            soft.style.display = 'none';
+            enforce.style.display = '';
+            _applyThemeToPhone(enforce);
+            _triggerFlash(enforce);
+        }
+    }
+
+    function _applyThemeToPhone(phone) {
+        var th = PREVIEW_THEMES[_previewTheme] || PREVIEW_THEMES.dark;
+        var s  = phone.style;
+        s.setProperty('--pm-bg',           th.bg);
+        s.setProperty('--pm-text',         th.text);
+        s.setProperty('--pm-text-muted',   th.textMuted);
+        s.setProperty('--pm-text-dim',     th.textDim);
+        s.setProperty('--pm-text-faint',   th.textFaint);
+        s.setProperty('--pm-accent',       th.accent);
+        s.setProperty('--pm-accent-bg',    th.accentBg);
+        s.setProperty('--pm-accent-border',th.accentBorder);
+        s.setProperty('--pm-accent-star',  th.accentStar);
+        s.setProperty('--pm-ring',         th.ring);
+        s.setProperty('--pm-card-bg',      th.cardBg);
+        s.setProperty('--pm-card-border',  th.cardBorder);
+        s.setProperty('--pm-icon-bg',      th.iconBg);
+        s.setProperty('--pm-icon-border',  th.iconBorder);
+        s.setProperty('--pm-ver-old-bg',   th.verOldBg);
+        s.setProperty('--pm-ver-old-color',th.verOldColor);
+        s.setProperty('--pm-ver-arrow',    th.verArrow);
+        s.setProperty('--pm-btn-a',        th.btnA);
+        s.setProperty('--pm-btn-b',        th.btnB);
+        s.setProperty('--pm-btn-text',     th.btnText);
+        s.setProperty('--pm-wordmark',     th.wordmark);
+        s.setProperty('--pm-phone-border', th.phoneBorder);
+        s.setProperty('--pm-glow-color',   th.glowColor);
+        s.background = th.bg;
+        s.borderColor = th.phoneBorder;
+    }
+
+    function _applyPreviewStyles() {
+        var activePhone = _previewMode === 'soft'
+            ? document.getElementById('pmPhoneSoft')
+            : document.getElementById('pmPhoneEnforce');
+        _applyThemeToPhone(activePhone);
+        _triggerFlash(activePhone);
+    }
+
+    function _triggerFlash(phone) {
+        phone.classList.remove('pm-theme-flash');
+        void phone.offsetWidth; /* reflow */
+        phone.classList.add('pm-theme-flash');
     }
 
     function syncPreview() {
@@ -632,9 +864,28 @@
     document.getElementById('menu-toggle').addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('collapsed'); });
     document.getElementById('mobile-menu-toggle').addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('mobile-open'); });
 
+    /* ── dark mode toggle ── */
+    (function() {
+        var tt = document.getElementById('theme-toggle');
+        var ti = document.getElementById('theme-icon');
+        if (!tt) return;
+        tt.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            var dark = document.body.classList.contains('dark-mode');
+            if (ti) ti.setAttribute('data-lucide', dark ? 'sun' : 'moon');
+            localStorage.setItem('admin-theme', dark ? 'dark' : 'light');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    })();
+
     (async function(){
         var auth = await window.adminAuth.checkAuth();
-        if (auth) { loadConfig(); lucide.createIcons(); }
+        if (auth) {
+            loadConfig();
+            lucide.createIcons();
+            /* init preview with dark theme */
+            _applyThemeToPhone(document.getElementById('pmPhoneEnforce'));
+        }
     })();
 </script>
 </body>
