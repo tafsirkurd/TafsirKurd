@@ -51,6 +51,11 @@
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
         @media (max-width: 640px) { .two-col,.three-col { grid-template-columns: 1fr; } }
+        .ver-btns { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+        .ver-btn { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer; transition: background .15s, color .15s; }
+        .ver-btn:hover { background: var(--border); color: var(--text-primary); }
+        .ver-btn.accent { border-color: var(--accent); color: var(--accent); background: transparent; }
+        .ver-btn.accent:hover { background: var(--accent); color: #fff; }
 
         /* ── card section ── */
         .uc-card {
@@ -280,15 +285,26 @@
                         <div class="three-col">
                             <div>
                                 <label class="f-label">Latest published</label>
-                                <input type="text" id="uc_latest" class="form-input" placeholder="0.87.0" oninput="syncPreview()">
+                                <input type="text" id="uc_latest" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
+                                <div class="ver-btns">
+                                    <button class="ver-btn" onclick="bumpVersion('patch')">+patch</button>
+                                    <button class="ver-btn" onclick="bumpVersion('minor')">+minor</button>
+                                    <button class="ver-btn" onclick="bumpVersion('major')">+major</button>
+                                </div>
                             </div>
                             <div>
                                 <label class="f-label">Min iOS</label>
-                                <input type="text" id="uc_min_ios" class="form-input" placeholder="0.82.0" oninput="syncPreview()">
+                                <input type="text" id="uc_min_ios" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
+                                <div class="ver-btns">
+                                    <button class="ver-btn accent" onclick="setMinToLatest('uc_min_ios')">= Latest</button>
+                                </div>
                             </div>
                             <div>
                                 <label class="f-label">Min Android</label>
-                                <input type="text" id="uc_min_and" class="form-input" placeholder="0.82.0">
+                                <input type="text" id="uc_min_and" class="form-input" placeholder="2.2.2">
+                                <div class="ver-btns">
+                                    <button class="ver-btn accent" onclick="setMinToLatest('uc_min_and')">= Latest</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -438,6 +454,23 @@
             d.textContent = b;
             div.appendChild(d);
         });
+    }
+
+    function bumpVersion(type) {
+        var el = document.getElementById('uc_latest');
+        var parts = (el.value.trim() || '0.0.0').split('.').map(Number);
+        while (parts.length < 3) parts.push(0);
+        if (type === 'major') { parts[0]++; parts[1] = 0; parts[2] = 0; }
+        else if (type === 'minor') { parts[1]++; parts[2] = 0; }
+        else { parts[2]++; }
+        el.value = parts.join('.');
+        syncPreview();
+    }
+
+    function setMinToLatest(fieldId) {
+        var latest = document.getElementById('uc_latest').value.trim();
+        if (latest) document.getElementById(fieldId).value = latest;
+        syncPreview();
     }
 
     async function loadConfig() {
