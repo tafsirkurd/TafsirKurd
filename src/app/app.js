@@ -45,7 +45,7 @@ window.ForceUpdate = (function(){
   }
   async function fetchConfig() {
     try {
-      var r = await fetch('/update-config', { cache: 'no-cache' });
+      var r = await fetch('https://tafsirkurd.com/update-config', { cache: 'no-cache' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       var cfg = await r.json();
       if (cfg && !cfg.error) { writeCache(cfg); return cfg; }
