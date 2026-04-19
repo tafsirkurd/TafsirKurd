@@ -2028,11 +2028,6 @@ function _pushLog(msg){
 function initPushToken(){
   var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
   if(!PP){_pushLog('plugin not available');return;}
-  if(!S.supabase){
-    _pushLog('Supabase not ready — will retry in 5s');
-    setTimeout(function(){initPushToken();},5000);
-    return;
-  }
 
   PP.requestPermissions().then(function(perm){
     _pushLog('requestPermissions result: '+perm.receive);
@@ -2055,7 +2050,7 @@ function initPushToken(){
       }
     });
 
-    // Receive APNs/FCM token and store in DB
+    // Receive APNs/FCM token and store in DB via server endpoint (bypasses RLS)
     PP.addListener('registration',function(tokenData){
       var platform=window.Capacitor.getPlatform()||'unknown';
       var token=tokenData.value||'';
@@ -2063,21 +2058,20 @@ function initPushToken(){
       localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
       localStorage.setItem('push_token_platform',platform);
       if(!token){_pushLog('ERROR: empty token');return;}
-      S.supabase.from('push_tokens').upsert({
-        token:token,
-        platform:platform,
-        user_id:null,
-        updated_at:new Date().toISOString()
-      },{onConflict:'token'}).then(function(res){
+      fetch('/register-push-token',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:token,platform:platform})
+      }).then(function(r){return r.json();}).then(function(res){
         if(res.error){
-          _pushLog('upsert FAILED: '+res.error.message+' code='+res.error.code);
-          localStorage.setItem('push_upsert_error',res.error.message);
+          _pushLog('register FAILED: '+res.error);
+          localStorage.setItem('push_reg_api_error',res.error);
         } else {
-          _pushLog('token stored in DB OK');
-          localStorage.removeItem('push_upsert_error');
+          _pushLog('token stored in DB OK via server');
+          localStorage.removeItem('push_reg_api_error');
         }
       }).catch(function(e){
-        _pushLog('upsert EXCEPTION: '+(e&&e.message));
+        _pushLog('register EXCEPTION: '+(e&&e.message));
       });
     });
 
