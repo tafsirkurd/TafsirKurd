@@ -53,8 +53,38 @@
         @media (max-width: 640px) { .two-col,.three-col { grid-template-columns: 1fr; } }
 
         /* ── card section ── */
-        .uc-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
-        .uc-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-tertiary); margin-bottom: 16px; }
+        .uc-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-s, 0 1px 3px rgba(0,0,0,.05));
+        }
+        .uc-card-hdr {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-hover, rgba(0,0,0,.02));
+        }
+        .uc-card-icon {
+            width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .uc-card-icon svg { width: 14px; height: 14px; }
+        .uc-card-icon.green  { background: rgba(34,197,94,.12);  color: #16a34a; }
+        .uc-card-icon.blue   { background: rgba(59,130,246,.12); color: #2563eb; }
+        .uc-card-icon.orange { background: rgba(245,158,11,.12); color: #d97706; }
+        .uc-card-icon.purple { background: rgba(139,92,246,.12); color: #7c3aed; }
+        .uc-card-icon.gray   { background: rgba(100,116,139,.1); color: #64748b; }
+        .uc-card-title {
+            font-size: 13px; font-weight: 600;
+            color: var(--text-primary); line-height: 1;
+        }
+        .uc-card-subtitle {
+            font-size: 11px; color: var(--text-tertiary); margin-top: 1px;
+        }
+        .uc-card-body { padding: 18px; }
 
         /* ── enforce warn ── */
         .enforce-warn {
@@ -211,83 +241,123 @@
             <div>
                 <!-- Stage -->
                 <div class="uc-card">
-                    <div class="uc-card-title">Stage</div>
-                    <div class="stage-row">
-                        <button class="stage-pill r active" data-s="release" onclick="setStage('release')">
-                            🟢 Release<small>No prompt</small>
-                        </button>
-                        <button class="stage-pill s" data-s="soft" onclick="setStage('soft')">
-                            🟡 Soft<small>Dismissible banner</small>
-                        </button>
-                        <button class="stage-pill e" data-s="enforce" onclick="setStage('enforce')">
-                            🔴 Enforce<small>Hard block</small>
-                        </button>
+                    <div class="uc-card-hdr">
+                        <div class="uc-card-icon green"><i data-lucide="zap"></i></div>
+                        <div>
+                            <div class="uc-card-title">Update Stage</div>
+                            <div class="uc-card-subtitle">Controls what users see when they open the app</div>
+                        </div>
                     </div>
-                    <div class="enforce-warn" id="enforceWarn">
-                        <i data-lucide="alert-triangle" style="width:14px;height:14px;flex-shrink:0;"></i>
-                        Users below the minimum version will be blocked immediately.
+                    <div class="uc-card-body">
+                        <div class="stage-row">
+                            <button class="stage-pill r active" data-s="release" onclick="setStage('release')">
+                                🟢 Release<small>No prompt</small>
+                            </button>
+                            <button class="stage-pill s" data-s="soft" onclick="setStage('soft')">
+                                🟡 Soft<small>Dismissible banner</small>
+                            </button>
+                            <button class="stage-pill e" data-s="enforce" onclick="setStage('enforce')">
+                                🔴 Enforce<small>Hard block</small>
+                            </button>
+                        </div>
+                        <div class="enforce-warn" id="enforceWarn">
+                            <i data-lucide="alert-triangle" style="width:14px;height:14px;flex-shrink:0;"></i>
+                            Users below the minimum version will be blocked immediately after saving.
+                        </div>
                     </div>
                 </div>
 
                 <!-- Versions -->
                 <div class="uc-card">
-                    <div class="uc-card-title">Versions</div>
-                    <div class="three-col">
+                    <div class="uc-card-hdr">
+                        <div class="uc-card-icon blue"><i data-lucide="tag"></i></div>
                         <div>
-                            <label class="f-label">Latest version</label>
-                            <input type="text" id="uc_latest" class="form-input" placeholder="0.87.0" oninput="syncPreview()">
+                            <div class="uc-card-title">Versions</div>
+                            <div class="uc-card-subtitle">Users below Min version are blocked</div>
                         </div>
-                        <div>
-                            <label class="f-label">Min iOS</label>
-                            <input type="text" id="uc_min_ios" class="form-input" placeholder="0.82.0" oninput="syncPreview()">
-                        </div>
-                        <div>
-                            <label class="f-label">Min Android</label>
-                            <input type="text" id="uc_min_and" class="form-input" placeholder="0.82.0">
+                    </div>
+                    <div class="uc-card-body">
+                        <div class="three-col">
+                            <div>
+                                <label class="f-label">Latest published</label>
+                                <input type="text" id="uc_latest" class="form-input" placeholder="0.87.0" oninput="syncPreview()">
+                            </div>
+                            <div>
+                                <label class="f-label">Min iOS</label>
+                                <input type="text" id="uc_min_ios" class="form-input" placeholder="0.82.0" oninput="syncPreview()">
+                            </div>
+                            <div>
+                                <label class="f-label">Min Android</label>
+                                <input type="text" id="uc_min_and" class="form-input" placeholder="0.82.0">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Store URLs -->
                 <div class="uc-card">
-                    <div class="uc-card-title">Store URLs</div>
-                    <div class="two-col">
+                    <div class="uc-card-hdr">
+                        <div class="uc-card-icon purple"><i data-lucide="link"></i></div>
                         <div>
-                            <label class="f-label">App Store (iOS)</label>
-                            <input type="url" id="uc_ios_url" class="form-input" placeholder="https://apps.apple.com/...">
+                            <div class="uc-card-title">Store URLs</div>
+                            <div class="uc-card-subtitle">Where the Update button sends users</div>
                         </div>
-                        <div>
-                            <label class="f-label">Play Store (Android)</label>
-                            <input type="url" id="uc_and_url" class="form-input" placeholder="https://play.google.com/...">
+                    </div>
+                    <div class="uc-card-body">
+                        <div class="two-col">
+                            <div>
+                                <label class="f-label">App Store (iOS)</label>
+                                <input type="url" id="uc_ios_url" class="form-input" placeholder="https://apps.apple.com/...">
+                            </div>
+                            <div>
+                                <label class="f-label">Play Store (Android)</label>
+                                <input type="url" id="uc_and_url" class="form-input" placeholder="https://play.google.com/...">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- What's new -->
                 <div class="uc-card">
-                    <div class="uc-card-title">What's New <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;">— one bullet per line</span></div>
-                    <textarea id="uc_whats_new" class="form-input" rows="4"
-                        style="resize:vertical;font-size:13px;line-height:1.7;"
-                        placeholder="Faster performance and smoother experience&#10;Improved Quran reading and navigation&#10;Better notifications and reliability"
-                        oninput="syncBullets()"></textarea>
-                    <p class="f-hint">Leave empty to use default Kurdish text.</p>
+                    <div class="uc-card-hdr">
+                        <div class="uc-card-icon orange"><i data-lucide="list"></i></div>
+                        <div>
+                            <div class="uc-card-title">What's New</div>
+                            <div class="uc-card-subtitle">Shown as bullets on the update screen — one per line</div>
+                        </div>
+                    </div>
+                    <div class="uc-card-body">
+                        <textarea id="uc_whats_new" class="form-input" rows="4"
+                            style="resize:vertical;font-size:13px;line-height:1.7;"
+                            placeholder="Faster performance and smoother experience&#10;Improved Quran reading and navigation&#10;Better notifications and reliability"
+                            oninput="syncBullets()"></textarea>
+                        <p class="f-hint" style="margin-top:6px;">Leave empty to use default Kurdish text.</p>
+                    </div>
                 </div>
 
                 <!-- Soft settings (hidden unless soft) -->
                 <div class="uc-card" id="softCard" style="display:none;">
-                    <div class="uc-card-title">Soft — Auto-escalation</div>
-                    <div class="three-col">
+                    <div class="uc-card-hdr">
+                        <div class="uc-card-icon gray"><i data-lucide="clock"></i></div>
                         <div>
-                            <label class="f-label">Release time</label>
-                            <input type="datetime-local" id="uc_release_time" class="form-input">
+                            <div class="uc-card-title">Soft — Auto-escalation</div>
+                            <div class="uc-card-subtitle">Automatically moves to Enforce after the delay</div>
                         </div>
-                        <div>
-                            <label class="f-label">Escalate after (hours)</label>
-                            <input type="number" id="uc_delay" class="form-input" placeholder="48" min="0">
-                        </div>
-                        <div>
-                            <label class="f-label">Banner cooldown (days)</label>
-                            <input type="number" id="uc_cooldown" class="form-input" placeholder="7" min="1">
+                    </div>
+                    <div class="uc-card-body">
+                        <div class="three-col">
+                            <div>
+                                <label class="f-label">Release time</label>
+                                <input type="datetime-local" id="uc_release_time" class="form-input">
+                            </div>
+                            <div>
+                                <label class="f-label">Escalate after (hours)</label>
+                                <input type="number" id="uc_delay" class="form-input" placeholder="48" min="0">
+                            </div>
+                            <div>
+                                <label class="f-label">Banner cooldown (days)</label>
+                                <input type="number" id="uc_cooldown" class="form-input" placeholder="7" min="1">
+                            </div>
                         </div>
                     </div>
                 </div>
