@@ -12,7 +12,8 @@
         "format": "echo 'Formatting code...'",
         "cap:sync": "npx cap sync && node scripts/verify-assets.js",
         "cap:ios": "npx cap open ios",
-        "cap:android": "npx cap open android"
+        "cap:android": "npx cap open android",
+        "android:live": "node scripts/android-live.js"
     },
     "repository": {
         "type": "git",

@@ -20,6 +20,11 @@
         </pin-set>
     </domain-config>
 
+    <!-- Allow cleartext for local dev server (localhost only) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+
     <!-- Block all cleartext traffic -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>

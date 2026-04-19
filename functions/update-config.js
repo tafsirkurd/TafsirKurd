@@ -9,7 +9,7 @@ export async function onRequest(context) {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Content-Type': 'application/json',
-    'Cache-Control': 'public, max-age=300', // 5-min CDN cache
+    'Cache-Control': 'public, max-age=30', // 30s CDN cache
   };
 
   if (request.method === 'OPTIONS') {

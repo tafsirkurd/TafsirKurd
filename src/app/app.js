@@ -21,7 +21,7 @@ window.ForceUpdate = (function(){
   var UPDATE_NOTIF_ID    = 50;                   // LocalNotification ID — free slot (1=reminder,10-16,20-26,30-32,100-134=athan,200=test)
   var _storeUrl          = '';
   var _lastCheckTs       = 0;
-  var CHECK_DEBOUNCE     = 30 * 1000; // 30s between checks
+  var CHECK_DEBOUNCE     = 10 * 1000; // 10s between checks
   var _fuBtnBusy         = false;     // prevent double-tap on hard update btn
 
   // ── Semver comparison ─────────────────────────────────────────────────────
@@ -59,7 +59,8 @@ window.ForceUpdate = (function(){
   function resolveMode(cfg) {
     // Legacy compat: update_mode takes priority if present
     if (cfg.update_mode && cfg.update_mode !== 'off') {
-      return cfg.update_mode; // 'soft' | 'hard'
+      // Normalise: 'enforce' → 'hard'
+      return cfg.update_mode === 'enforce' ? 'hard' : cfg.update_mode;
     }
     if (cfg.force_update_enabled === 'true') return 'hard';
 
@@ -185,52 +186,42 @@ window.ForceUpdate = (function(){
     banner.id = 'fuBanner';
     banner.className = 'fu-banner';
 
+    var dot = document.createElement('div');
+    dot.className = 'fu-banner-dot';
+
     var textWrap = document.createElement('div');
     textWrap.className = 'fu-banner-text';
 
     var title = document.createElement('div');
     title.className = 'fu-banner-title';
     title.setAttribute('data-i18n', 'update.notice_title');
-    title.textContent = tSafe('update.notice_title') || tSafe('update.title') || 'ئاپدەیتەکا نوی بەردەستە';
+    title.textContent = tSafe('update.notice_title') || 'وەشانێکی نوی هەیە';
 
     var msg = document.createElement('div');
     msg.className = 'fu-banner-msg';
-    // Prefer admin-set release notes; fall back to generic translation
-    var msgText = (whatsNew && whatsNew.trim()) || tSafe('update.notice_message') || tSafe('update.soft_message') || 'وەشانەکا نوی بەردەستە.';
+    var msgText = (whatsNew && whatsNew.trim()) || tSafe('update.notice_message') || 'تکایە ئاپدەیت بکە';
     msg.textContent = msgText;
-    if (!whatsNew || !whatsNew.trim()) msg.setAttribute('data-i18n', 'update.notice_message');
 
     textWrap.appendChild(title);
     textWrap.appendChild(msg);
 
-    var actions = document.createElement('div');
-    actions.className = 'fu-banner-actions';
-
     var updateBtn = document.createElement('button');
     updateBtn.className = 'fu-banner-btn';
     updateBtn.setAttribute('data-i18n', 'update.notice_btn');
-    updateBtn.textContent = tSafe('update.notice_btn') || tSafe('update.btn') || 'ئاپدەیت بکە';
+    updateBtn.textContent = tSafe('update.notice_btn') || 'ئاپدەیت';
     updateBtn.onclick = function() {
       openStore();
-      snoozeForever(); // clicked → never show again
-      _cancelUpdateNotification(); // user is going to update — no need to remind 24h later
+      snoozeForever();
+      _cancelUpdateNotification();
       dismissBanner();
     };
 
-    var dismissBtn = document.createElement('button');
-    dismissBtn.className = 'fu-banner-dismiss';
-    dismissBtn.setAttribute('data-i18n', 'update.notice_later');
-    dismissBtn.textContent = tSafe('update.notice_later') || '×';
-    dismissBtn.onclick = function() { snoozeDismiss(); dismissBanner(); };
-
-    actions.appendChild(updateBtn);
-    actions.appendChild(dismissBtn);
+    banner.appendChild(dot);
     banner.appendChild(textWrap);
-    banner.appendChild(actions);
+    banner.appendChild(updateBtn);
     document.body.appendChild(banner);
 
-    // Slide in after short delay — not instant on app open
-    setTimeout(function(){ banner.classList.add('fu-banner-in'); }, 6000);
+    setTimeout(function(){ banner.classList.add('fu-banner-in'); }, 1500);
   }
 
   function dismissBanner() {
@@ -299,6 +290,7 @@ window.ForceUpdate = (function(){
     if (now - _lastCheckTs < CHECK_DEBOUNCE) return;
     _lastCheckTs = now;
 
+
     try {
       if (!window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.App) return;
       var info     = await Capacitor.Plugins.App.getInfo();
@@ -327,10 +319,18 @@ window.ForceUpdate = (function(){
 
       if (mode === 'hard') {
         // Store safety check — fall back to soft if URL missing or store unreachable.
-        // Guard covers both: no URL configured AND URL present but network down.
-        var reachable = _storeUrl ? await isStoreReachable(_storeUrl) : false;
+        // Skip the check if no store URL configured (avoid hanging fetch).
+        var reachable;
+        if (!_storeUrl) {
+          reachable = false;
+        } else {
+          reachable = await Promise.race([
+            isStoreReachable(_storeUrl),
+            new Promise(function(r){ setTimeout(function(){ r(true); }, 2000); }) // assume reachable after 2s
+          ]);
+        }
         if (!reachable) {
-          console.log('[Update] HARD requested but store unreachable or URL missing — falling back to SOFT');
+          console.log('[Update] HARD requested but store URL missing — falling back to SOFT');
           if (!isSnoozed(cooldown)) showSoftBanner(cfg.update_whats_new);
           return;
         }
@@ -9456,6 +9456,8 @@ function startApp(){
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
   // Force-update check runs early — parallel with i18n, non-blocking
   ForceUpdate.check();
+  // Re-check every 12s so admin changes appear within ~12s of saving
+  setInterval(function(){ ForceUpdate.check(); }, 12000);
 
   if(window.i18n){
     i18n.initLang().then(function(){

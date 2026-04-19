@@ -205,14 +205,13 @@ body{background:var(--bg);color:var(--text)}
 .fu-cta:active{transform:scale(.97);opacity:.88}
 .fu-cta.fu-btn-loading{opacity:.5;pointer-events:none}
 /* ===== SOFT UPDATE BANNER ===== */
-.fu-banner{position:fixed;bottom:calc(var(--tab-h,60px) + 12px);left:12px;right:12px;z-index:9998;background:var(--bg2,#161616);border:1px solid var(--border,#2a2a2a);border-radius:var(--r-l,14px);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.45);transform:translateY(120%);transition:transform .32s cubic-bezier(.34,1.3,.64,1),opacity .3s;opacity:0;pointer-events:none}
-.fu-banner.fu-banner-in{transform:translateY(0);opacity:1;pointer-events:auto}
+.fu-banner{position:fixed;bottom:calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 14px);left:16px;right:16px;z-index:9998;background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:12px 14px 12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.2);transform:translateY(calc(100% + 32px));transition:transform .38s cubic-bezier(.34,1.26,.64,1);pointer-events:none}
+.fu-banner.fu-banner-in{transform:translateY(0);pointer-events:auto}
+.fu-banner-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
 .fu-banner-text{flex:1;min-width:0}
-.fu-banner-title{font-size:.82rem;font-weight:700;color:var(--text,#f0f0f0);direction:rtl;margin-bottom:2px}
-.fu-banner-msg{font-size:.76rem;color:var(--text2,#999);direction:rtl;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fu-banner-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.fu-banner-btn{padding:8px 14px;border-radius:var(--r-m,10px);background:var(--accent,#2e7d50);color:var(--accent-t,#fff);font-size:.78rem;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
-.fu-banner-dismiss{width:28px;height:28px;border-radius:50%;background:var(--bg3,#232323);color:var(--text2,#999);font-size:1rem;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.fu-banner-title{font-size:.84rem;font-weight:700;color:var(--text);direction:rtl}
+.fu-banner-msg{font-size:.75rem;color:var(--text2);direction:rtl;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.fu-banner-btn{padding:8px 16px;border-radius:12px;background:var(--accent);color:var(--accent-t);font-size:.8rem;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;flex-shrink:0}
 
 /* ===== TAB PANELS ===== */
 .panel{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px)}
@@ -2740,7 +2739,7 @@ body{background:var(--bg);color:var(--text)}
 <script src="/audio-cache.js?v=20260406a"></script>
 <script src="/audio-downloads.js?v=1"></script>
 <script src="/qibla/qibla.js?v=20260417"></script>
-<script src="/app/app.js?v=20260326b"></script>
+<script src="/app/app.js?v=20260419"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
