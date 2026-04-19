@@ -35,6 +35,22 @@
             .uc-preview-col { display: none; }
         }
 
+        /* ── platform pills ── */
+        .platform-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+        .plat-pill {
+            padding: 9px 10px; border: 1.5px solid var(--border-light);
+            border-radius: 10px; background: var(--bg-surface);
+            cursor: pointer; font-size: 13px; font-weight: 500;
+            color: var(--text-secondary); text-align: center;
+            transition: border-color .15s, background .15s, color .15s;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+        }
+        .plat-pill small { font-size: 11px; opacity: .65; font-weight: 400; }
+        .plat-pill:hover { border-color: var(--border-medium); color: var(--text-primary); }
+        .plat-pill.active { border-color:#3b82f6; background:rgba(59,130,246,.07); color:#1d4ed8; font-weight:600; }
+        .ver-field { transition: opacity .2s; }
+        .ver-field.dimmed { opacity: .3; pointer-events: none; }
+
         /* ── stage pills ── */
         .stage-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
         .stage-pill {
@@ -354,6 +370,17 @@
                                 🔴 Enforce<small>Hard block</small>
                             </button>
                         </div>
+                        <div class="platform-row">
+                            <button class="plat-pill active" data-p="both"    onclick="setPlatform('both')">
+                                🌍 Both<small>iOS + Android</small>
+                            </button>
+                            <button class="plat-pill"         data-p="ios"     onclick="setPlatform('ios')">
+                                🍎 iOS only<small>Android skipped</small>
+                            </button>
+                            <button class="plat-pill"         data-p="android" onclick="setPlatform('android')">
+                                🤖 Android only<small>iOS skipped</small>
+                            </button>
+                        </div>
                         <div class="enforce-warn" id="enforceWarn">
                             <i data-lucide="alert-triangle" style="width:14px;height:14px;flex-shrink:0;"></i>
                             Users below the minimum version will be blocked immediately after saving.
@@ -396,14 +423,14 @@
                                 <button class="ver-btn" onclick="bumpVersion('major')">+major</button>
                             </div>
                         </div>
-                        <div>
+                        <div class="ver-field" id="vfIos">
                             <label class="f-label">Min iOS</label>
                             <input type="text" id="uc_min_ios" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
                             <div class="ver-btns">
                                 <button class="ver-btn accent" onclick="setMinToLatest('uc_min_ios')">= Latest</button>
                             </div>
                         </div>
-                        <div>
+                        <div class="ver-field" id="vfAndroid">
                             <label class="f-label">Min Android</label>
                             <input type="text" id="uc_min_and" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
                             <div class="ver-btns">
@@ -545,7 +572,8 @@
 </div>
 
 <script>
-    var _stage = 'release';
+    var _stage    = 'release';
+    var _platform = 'both';
 
     function setStage(s) {
         _stage = s;
@@ -555,6 +583,16 @@
         document.getElementById('enforceWarn').style.display = s === 'enforce' ? 'flex' : 'none';
         syncPlatformImpact();
         lucide.createIcons();
+    }
+
+    function setPlatform(p) {
+        _platform = p;
+        document.querySelectorAll('.plat-pill').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.p === p);
+        });
+        document.getElementById('vfIos').classList.toggle('dimmed',     p === 'android');
+        document.getElementById('vfAndroid').classList.toggle('dimmed', p === 'ios');
+        syncPlatformImpact();
     }
 
     /* ── preview themes — exact app CSS variable values from :root / [data-theme] ── */
@@ -662,8 +700,8 @@
     /* ── platform impact ── */
     function syncPlatformImpact() {
         var latest = document.getElementById('uc_latest').value.trim();
-        var minIos  = document.getElementById('uc_min_ios').value.trim();
-        var minAnd  = document.getElementById('uc_min_and').value.trim();
+        var minIos  = (_platform === 'android') ? '' : document.getElementById('uc_min_ios').value.trim();
+        var minAnd  = (_platform === 'ios')     ? '' : document.getElementById('uc_min_and').value.trim();
         _setPiStatus('piIos',     _stage, minIos, latest);
         _setPiStatus('piAndroid', _stage, minAnd, latest);
     }
@@ -808,6 +846,13 @@
         document.getElementById('uc_delay').value    = cfg.update_enforce_delay_hours || '';
         document.getElementById('uc_cooldown').value = cfg.soft_update_cooldown_days || '';
 
+        /* derive platform from saved min versions */
+        var hasIos = !!(cfg.min_ios_version  && cfg.min_ios_version.trim());
+        var hasAnd = !!(cfg.min_android_version && cfg.min_android_version.trim());
+        if (hasIos && !hasAnd) setPlatform('ios');
+        else if (hasAnd && !hasIos) setPlatform('android');
+        else setPlatform('both');
+
         var wn = cfg.update_whats_new || '';
         var wnLines = [];
         try { var a = JSON.parse(wn); if (Array.isArray(a)) wnLines = a.filter(Boolean); } catch(e){ wnLines = wn.split('\n').map(function(s){return s.trim();}).filter(Boolean); }
@@ -836,12 +881,15 @@
         var rtIn = document.getElementById('uc_release_time').value;
         if (rtIn) { try { rtVal = new Date(rtIn).toISOString(); } catch(e){} }
 
+        var minIosSave = _platform === 'android' ? '' : document.getElementById('uc_min_ios').value.trim();
+        var minAndSave = _platform === 'ios'     ? '' : document.getElementById('uc_min_and').value.trim();
+
         var rows = [
             {key:'update_stage',               value:_stage},
             {key:'update_mode',                value:'off'},
             {key:'latest_version',             value:document.getElementById('uc_latest').value.trim()},
-            {key:'min_ios_version',            value:document.getElementById('uc_min_ios').value.trim()},
-            {key:'min_android_version',        value:document.getElementById('uc_min_and').value.trim()},
+            {key:'min_ios_version',            value:minIosSave},
+            {key:'min_android_version',        value:minAndSave},
             {key:'ios_store_url',              value:document.getElementById('uc_ios_url').value.trim()},
             {key:'android_store_url',          value:document.getElementById('uc_and_url').value.trim()},
             {key:'update_enforce_delay_hours', value:document.getElementById('uc_delay').value.trim()},
