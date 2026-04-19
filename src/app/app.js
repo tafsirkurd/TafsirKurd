@@ -2015,20 +2015,32 @@ function _handlePushDeepLink(type,id){
      - GoogleService-Info.plist at ios/App/App/GoogleService-Info.plist
      - Push Notifications capability enabled in Xcode for the App target
 */
+function _pushLog(msg){
+  try{
+    var logs=JSON.parse(localStorage.getItem('push_debug')||'[]');
+    logs.push(new Date().toISOString().slice(11,19)+' '+msg);
+    if(logs.length>30)logs=logs.slice(-30);
+    localStorage.setItem('push_debug',JSON.stringify(logs));
+  }catch(e){}
+  console.log('[Push] '+msg);
+}
+
 function initPushToken(){
   var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
-  if(!PP){console.log('[Push] PushNotifications plugin not available');return;}
-  if(!S.supabase){console.warn('[Push] Supabase not ready, skipping token registration');return;}
+  if(!PP){_pushLog('plugin not available');return;}
+  if(!S.supabase){
+    _pushLog('Supabase not ready — will retry in 5s');
+    setTimeout(function(){initPushToken();},5000);
+    return;
+  }
 
   PP.requestPermissions().then(function(perm){
-    if(perm.receive!=='granted'){
-      console.log('[Push] permission not granted: '+perm.receive);
-      return;
-    }
+    _pushLog('requestPermissions result: '+perm.receive);
+    if(perm.receive!=='granted'){return;}
+
     // Handle incoming push while app is in foreground
     PP.addListener('pushNotificationReceived',function(notif){
       console.log('[Push] received foreground notif: '+notif.title);
-      // Foreground: show as local notification so user sees it even with app open
       var LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;
       if(LN){
         LN.schedule({notifications:[{
@@ -2043,29 +2055,41 @@ function initPushToken(){
       }
     });
 
-    // Receive FCM/APNs token and store in DB
+    // Receive APNs/FCM token and store in DB
     PP.addListener('registration',function(tokenData){
       var platform=window.Capacitor.getPlatform()||'unknown';
-      var uid=(S.supabase.auth&&S.supabase.auth.user&&S.supabase.auth.user()&&S.supabase.auth.user().id)||null;
-      console.log('[Push] token registered platform='+platform+' len='+tokenData.value.length);
+      var token=tokenData.value||'';
+      _pushLog('registration event fired platform='+platform+' tokenLen='+token.length);
+      localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
+      localStorage.setItem('push_token_platform',platform);
+      if(!token){_pushLog('ERROR: empty token');return;}
       S.supabase.from('push_tokens').upsert({
-        token:tokenData.value,
+        token:token,
         platform:platform,
-        user_id:uid,
+        user_id:null,
         updated_at:new Date().toISOString()
       },{onConflict:'token'}).then(function(res){
-        if(res.error)console.warn('[Push] upsert error:',res.error.message);
-        else console.log('[Push] token stored in DB ✓');
+        if(res.error){
+          _pushLog('upsert FAILED: '+res.error.message+' code='+res.error.code);
+          localStorage.setItem('push_upsert_error',res.error.message);
+        } else {
+          _pushLog('token stored in DB OK');
+          localStorage.removeItem('push_upsert_error');
+        }
+      }).catch(function(e){
+        _pushLog('upsert EXCEPTION: '+(e&&e.message));
       });
     });
 
     PP.addListener('registrationError',function(err){
-      console.warn('[Push] registration error:',err.error);
+      _pushLog('registrationError: '+(err&&err.error));
+      localStorage.setItem('push_reg_error',err&&err.error);
     });
 
+    _pushLog('calling PP.register()');
     PP.register();
   }).catch(function(e){
-    console.warn('[Push] requestPermissions error:',e&&e.message);
+    _pushLog('requestPermissions EXCEPTION: '+(e&&e.message));
   });
 }
 
