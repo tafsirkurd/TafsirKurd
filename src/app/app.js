@@ -2015,22 +2015,6 @@ function _handlePushDeepLink(type,id){
      - GoogleService-Info.plist at ios/App/App/GoogleService-Info.plist
      - Push Notifications capability enabled in Xcode for the App target
 */
-function _pushDebugAlert(msg){
-  // Shows a local notification so push registration state is visible on device
-  // without needing Xcode/Safari devtools. Remove once push is confirmed working.
-  var LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;
-  if(LN){
-    LN.schedule({notifications:[{
-      id:Math.floor(Math.random()*90000)+10000,
-      title:'Push Debug',
-      body:msg,
-      schedule:{at:new Date(Date.now()+1000),allowWhileIdle:true},
-      channelId:'reminder'
-    }]}).catch(function(){});
-  }
-  _pushLog('[DEBUG] '+msg);
-}
-
 function _pushLog(msg){
   try{
     var logs=JSON.parse(localStorage.getItem('push_debug')||'[]');
@@ -2043,12 +2027,10 @@ function _pushLog(msg){
 
 function initPushToken(){
   var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
-  if(!PP){_pushDebugAlert('STEP1 FAIL: PushNotifications plugin not available');return;}
-  _pushDebugAlert('STEP1 OK: plugin found, calling requestPermissions…');
+  if(!PP){_pushLog('plugin not available');return;}
 
   PP.requestPermissions().then(function(perm){
     _pushLog('requestPermissions result: '+perm.receive);
-    _pushDebugAlert('STEP2: permission='+perm.receive);
     if(perm.receive!=='granted'){return;}
 
     // Handle incoming push while app is in foreground
@@ -2075,8 +2057,7 @@ function initPushToken(){
       _pushLog('registration event fired platform='+platform+' tokenLen='+token.length);
       localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
       localStorage.setItem('push_token_platform',platform);
-      if(!token){_pushDebugAlert('registration event fired but token is EMPTY');return;}
-      _pushDebugAlert('token received len='+token.length+' — storing…');
+      if(!token){_pushLog('ERROR: empty token');return;}
       fetch('https://tafsirkurd.com/register-push-token',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -2085,26 +2066,21 @@ function initPushToken(){
         if(res.error){
           _pushLog('register FAILED: '+res.error);
           localStorage.setItem('push_reg_api_error',res.error);
-          _pushDebugAlert('STORE FAILED: '+res.error);
         } else {
           _pushLog('token stored in DB OK via server');
           localStorage.removeItem('push_reg_api_error');
-          _pushDebugAlert('token stored in DB OK ✓');
         }
       }).catch(function(e){
         _pushLog('register EXCEPTION: '+(e&&e.message));
-        _pushDebugAlert('fetch EXCEPTION: '+(e&&e.message));
       });
     });
 
     PP.addListener('registrationError',function(err){
       _pushLog('registrationError: '+(err&&err.error));
       localStorage.setItem('push_reg_error',err&&err.error);
-      _pushDebugAlert('registrationError: '+(err&&err.error));
     });
 
     _pushLog('calling PP.register()');
-    _pushDebugAlert('STEP3: calling PP.register()…');
     PP.register();
   }).catch(function(e){
     _pushLog('requestPermissions EXCEPTION: '+(e&&e.message));
