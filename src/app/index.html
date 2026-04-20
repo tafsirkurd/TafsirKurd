@@ -224,6 +224,11 @@ body{background:var(--bg);color:var(--text)}
 #panelQuran{padding-bottom:0}
 #quranHome{padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px)}
 .panel.on{display:flex}
+/* Prayer panel: always in layout tree (position:absolute when hidden) so the
+   sky scene's 300 nodes are never discarded — tab switch is visibility-only,
+   zero layout cost instead of full reflow on every open */
+#panelPrayer{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px);position:absolute;inset:0;top:var(--hdr-h,56px);bottom:var(--tab-h,56px);visibility:hidden;pointer-events:none;z-index:0}
+#panelPrayer.on{position:relative;inset:unset;visibility:visible;pointer-events:auto;z-index:auto;flex:1}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ===== APP HEADER ===== */
