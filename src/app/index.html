@@ -1491,6 +1491,16 @@ body{background:var(--bg);color:var(--text)}
 .sky-wind.active{opacity:1}
 @keyframes sky-wind-streak{0%{transform:translateX(-110%);opacity:0}20%{opacity:.45}80%{opacity:.35}100%{transform:translateX(160%);opacity:0}}
 .sky-wind-streak{position:absolute;border-radius:2px;background:linear-gradient(to right,transparent,rgba(210,235,255,.6),transparent)}
+/* Snow */
+.sky-snow{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:6;opacity:0;transition:opacity 2.5s ease}
+.sky-snow.active{opacity:1}
+@keyframes sky-flake-fall{0%{transform:translateY(-12px) translateX(0);opacity:.9}45%{transform:translateY(48vh) translateX(13px);opacity:.75}100%{transform:translateY(115vh) translateX(-9px);opacity:.1}}
+.sky-flake{position:absolute;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 0 4px rgba(255,255,255,.55)}
+/* Lightning bolts (thunder) */
+.sky-lightning{position:absolute;inset:0;pointer-events:none;z-index:9;overflow:hidden;opacity:0;transition:opacity 1.5s}
+.sky-lightning.active{opacity:1}
+@keyframes sky-bolt-strike{0%,85%,100%{opacity:0}86%{opacity:1}88%{opacity:0}90%{opacity:.8}92%{opacity:0}}
+.sky-bolt{position:absolute;filter:drop-shadow(0 0 7px rgba(255,230,55,.95)) drop-shadow(0 0 2px rgba(255,255,200,.9))}
 /* Hot air balloon */
 .sky-balloon{position:absolute;pointer-events:none;z-index:5;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.30))}
 /* Floating lanterns (dusk / night) */

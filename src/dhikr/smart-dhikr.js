@@ -284,26 +284,30 @@
 
      Condition values:
        'rain'      — precipitation / drizzle / showers
+       'snow'      — snowfall / sleet / ice pellets
        'thunder'   — thunderstorm
-       'wind'      — high wind (≥ 40 km/h), no rain
+       'wind'      — high wind (≥ 40 km/h), no precip
        'clear'     — nothing notable
   ───────────────────────────────────────────── */
   var _RAIN_KEY = 'sd_rain_v2';
   var _RAIN_TTL = 30 * 60 * 1000;
 
-  /* Weather-code → condition classifier */
+  /* Weather-code → condition classifier (WMO codes, Open-Meteo scale) */
   function _classifyCode(code, prec, windspeed) {
     code = code || 0; prec = prec || 0; windspeed = windspeed || 0;
-    if (code >= 95) return 'thunder';                         /* 95-99 thunderstorm        */
-    if (prec > 0 || (code >= 51 && code <= 82)) return 'rain'; /* drizzle/rain/showers     */
-    if (windspeed >= 40) return 'wind';                       /* strong wind, no precip    */
+    if (code >= 95) return 'thunder';                                    /* 95-99 thunderstorm    */
+    if (code === 71 || code === 73 || code === 75 || code === 77 ||
+        code === 85 || code === 86 || code === 56 || code === 57 ||
+        code === 66 || code === 67) return 'snow';                       /* snow / freezing rain  */
+    if (prec > 0 || (code >= 51 && code <= 82)) return 'rain';          /* drizzle/rain/showers  */
+    if (windspeed >= 40) return 'wind';                                  /* strong wind, no precip*/
     return 'clear';
   }
 
   function _isRaining() {
     try {
       var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
-      if (c && (Date.now() - c.ts) < _RAIN_TTL) return c.condition !== 'clear';
+      if (c && (Date.now() - c.ts) < _RAIN_TTL) return c.condition === 'rain' || c.condition === 'snow' || c.condition === 'thunder';
     } catch(e) {}
     return false;
   }
@@ -326,13 +330,16 @@
   }
 
   /* wttr.in parser (JSON v1) — works for both city-name and coord URLs */
+  var _WTTR_SNOW = {179:1,227:1,230:1,323:1,326:1,329:1,332:1,335:1,338:1,350:1,362:1,365:1,368:1,371:1,374:1,377:1};
   function _wttrFetch(url) {
     return fetch(url).then(function(r){return r.json();}).then(function(d){
       var cur = (d.current_condition && d.current_condition[0]) || {};
       var code = parseInt(cur.weatherCode || '0', 10);
       var prec = parseFloat(cur.precipMM || '0');
       var wind = parseFloat(cur.windspeedKmph || '0');
+      if (code === 392 || code === 395) return 'thunder';         /* snow with thunder */
       if (code >= 200 && code < 300) return 'thunder';
+      if (_WTTR_SNOW[code]) return 'snow';
       if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
       if (wind >= 40) return 'wind';
       return 'clear';
@@ -379,7 +386,8 @@
         var prec = (n1h.details && n1h.details.precipitation_amount) || 0;
         var wind = inst.wind_speed || 0; /* m/s */
         if (sym.indexOf('thunder') !== -1) return 'thunder';
-        if (sym.indexOf('rain') !== -1 || sym.indexOf('sleet') !== -1 || sym.indexOf('shower') !== -1 || prec > 0) return 'rain';
+        if (sym.indexOf('snow') !== -1 || sym.indexOf('sleet') !== -1) return 'snow';
+        if (sym.indexOf('rain') !== -1 || sym.indexOf('shower') !== -1 || prec > 0) return 'rain';
         if (wind >= 11) return 'wind'; /* 11 m/s ≈ 40 km/h */
         return 'clear';
       }).catch(function() { return null; });
@@ -391,7 +399,8 @@
         var ds   = (d.dataseries && d.dataseries[0]) || {};
         var prec = ds.prec_type || 'none';
         var wspd = (ds.wind10m && ds.wind10m.speed) || 1; /* 1-8 scale; 7≥50 km/h */
-        if (prec === 'rain' || prec === 'frzr' || prec === 'icepellets' || prec === 'snow') return 'rain';
+        if (prec === 'snow') return 'snow';
+        if (prec === 'rain' || prec === 'frzr' || prec === 'icepellets') return 'rain';
         if (wspd >= 7) return 'wind';
         return 'clear';
       }).catch(function() { return null; });
@@ -407,7 +416,7 @@
       valid.forEach(function(cond) { counts[cond] = (counts[cond] || 0) + 1; });
 
       /* Pick condition with highest count; tie-break: prefer more severe */
-      var severity = { thunder: 3, rain: 2, wind: 1, clear: 0 };
+      var severity = { thunder: 3, rain: 2, snow: 2, wind: 1, clear: 0 };
       var winner = valid[0];
       var winnerScore = counts[winner] * 10 + (severity[winner] || 0);
       Object.keys(counts).forEach(function(cond) {

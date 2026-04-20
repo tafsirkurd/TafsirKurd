@@ -201,10 +201,14 @@
   function _classifyWeatherCode(code, prec, wind) {
     code = code || 0; prec = prec || 0; wind = wind || 0;
     if (code >= 95) return 'thunder';
+    if (code === 71 || code === 73 || code === 75 || code === 77 ||
+        code === 85 || code === 86 || code === 56 || code === 57 ||
+        code === 66 || code === 67) return 'snow';
     if (prec > 0 || (code >= 51 && code <= 82)) return 'rain';
     if (wind >= 40) return 'wind';
     return 'clear';
   }
+  var _PW_SNOW = {179:1,227:1,230:1,323:1,326:1,329:1,332:1,335:1,338:1,350:1,362:1,365:1,368:1,371:1,374:1,377:1};
   function _omFetchPW(url) {
     return fetch(url).then(function(r){return r.json();}).then(function(d){
       var c=d.current||{};return _classifyWeatherCode(c.weather_code,c.precipitation,c.wind_speed_10m);
@@ -214,7 +218,9 @@
     return fetch(url).then(function(r){return r.json();}).then(function(d){
       var cur=(d.current_condition&&d.current_condition[0])||{};
       var code=parseInt(cur.weatherCode||'0',10),prec=parseFloat(cur.precipMM||'0'),wind=parseFloat(cur.windspeedKmph||'0');
+      if(code===392||code===395)return 'thunder';
       if(code>=200&&code<300)return 'thunder';
+      if(_PW_SNOW[code])return 'snow';
       if(prec>0||(code>=300&&code<600))return 'rain';
       if(wind>=40)return 'wind';
       return 'clear';
@@ -249,7 +255,8 @@
         var prec=(n1h.details&&n1h.details.precipitation_amount)||0;
         var wind=inst.wind_speed||0;
         if(sym.indexOf('thunder')!==-1)return 'thunder';
-        if(sym.indexOf('rain')!==-1||sym.indexOf('sleet')!==-1||sym.indexOf('shower')!==-1||prec>0)return 'rain';
+        if(sym.indexOf('snow')!==-1||sym.indexOf('sleet')!==-1)return 'snow';
+        if(sym.indexOf('rain')!==-1||sym.indexOf('shower')!==-1||prec>0)return 'rain';
         if(wind>=11)return 'wind';
         return 'clear';
       }).catch(function(){return null;});
@@ -258,7 +265,8 @@
         var ds=(d.dataseries&&d.dataseries[0])||{};
         var prec=ds.prec_type||'none';
         var wspd=(ds.wind10m&&ds.wind10m.speed)||1;
-        if(prec==='rain'||prec==='frzr'||prec==='icepellets'||prec==='snow')return 'rain';
+        if(prec==='snow')return 'snow';
+        if(prec==='rain'||prec==='frzr'||prec==='icepellets')return 'rain';
         if(wspd>=7)return 'wind';
         return 'clear';
       }).catch(function(){return null;});
@@ -267,7 +275,7 @@
       _weatherFetchInProgress = false;
       var valid = results.filter(function(r){return r!==null;});
       if (!valid.length) return;
-      var counts = {}, severity = {thunder:3,rain:2,wind:1,clear:0};
+      var counts = {}, severity = {thunder:3,rain:2,snow:2,wind:1,clear:0};
       valid.forEach(function(c){counts[c]=(counts[c]||0)+1;});
       var winner = valid[0], winnerScore = counts[winner]*10+(severity[winner]||0);
       Object.keys(counts).forEach(function(c){
@@ -840,8 +848,10 @@
       '<div class="sky-fog" id="skyFog"></div>' +
       '<div class="sky-rainbow" id="skyRainbow"></div>' +
       '<div class="sky-rain" id="skyRain"></div>' +
-      '<div class="sky-thunder-flash" id="skyThunderFlash"></div>' +
+      '<div class="sky-snow" id="skySnow"></div>' +
       '<div class="sky-wind" id="skyWind"></div>' +
+      '<div class="sky-lightning" id="skyLightning"></div>' +
+      '<div class="sky-thunder-flash" id="skyThunderFlash"></div>' +
       horizSVG +
       '<div class="sky-top-row">' +
         '<div class="sky-city">' + (getCityLabel(city)) + '</div>' +
@@ -881,6 +891,40 @@
         _streak.style.cssText = 'top:' + (8+Math.random()*76).toFixed(1) + '%;width:' + (55+Math.random()*110).toFixed(0) + 'px;height:' + (1+Math.random()*2).toFixed(1) + 'px;animation:sky-wind-streak ' + _wdur + 's linear -' + _wdel + 's infinite';
         _windEl.appendChild(_streak);
       }
+    }
+
+    // Populate snowflakes (60 particles, slow sway)
+    var _snowEl = document.getElementById('skySnow');
+    if (_snowEl) {
+      for (var _si = 0; _si < 60; _si++) {
+        var _flake = document.createElement('div');
+        _flake.className = 'sky-flake';
+        var _fs = (3 + Math.random() * 5).toFixed(1);
+        var _fdur = (4.5 + Math.random() * 5).toFixed(2);
+        var _fdel = (Math.random() * parseFloat(_fdur)).toFixed(2);
+        _flake.style.cssText = 'left:' + (Math.random()*103).toFixed(1) + '%;top:' + (Math.random()*100).toFixed(1) + '%;width:' + _fs + 'px;height:' + _fs + 'px;animation:sky-flake-fall ' + _fdur + 's ease-in -' + _fdel + 's infinite';
+        _snowEl.appendChild(_flake);
+      }
+    }
+
+    // Populate lightning bolts (5 bolts at varied x positions)
+    var _lgEl = document.getElementById('skyLightning');
+    if (_lgEl) {
+      var _boltXY = [[11,7],[29,14],[49,6],[68,17],[84,9]];
+      _boltXY.forEach(function(pos) {
+        var _bolt = document.createElement('div');
+        _bolt.className = 'sky-bolt';
+        var _bdur = (4.5 + Math.random() * 6).toFixed(1);
+        var _bdel = (Math.random() * 7).toFixed(2);
+        _bolt.style.cssText = 'left:' + pos[0] + '%;top:' + pos[1] + '%;animation:sky-bolt-strike ' + _bdur + 's ease -' + _bdel + 's infinite';
+        var _svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        _svg.setAttribute('viewBox','0 0 28 90'); _svg.setAttribute('width','28'); _svg.setAttribute('height','90');
+        var _poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        _poly.setAttribute('points','18,0 7,40 17,40 5,90');
+        _poly.setAttribute('stroke','rgba(255,240,70,0.95)'); _poly.setAttribute('stroke-width','2.5');
+        _poly.setAttribute('fill','none'); _poly.setAttribute('stroke-linecap','round'); _poly.setAttribute('stroke-linejoin','round');
+        _svg.appendChild(_poly); _bolt.appendChild(_svg); _lgEl.appendChild(_bolt);
+      });
     }
 
     // Kick off background weather fetch when Duhok is selected
@@ -1037,7 +1081,7 @@
       rainbow.style.opacity = String(rbOp);
     }
 
-    // Weather overlay — rain / thunder / wind (Duhok only)
+    // Weather overlay — rain / snow / thunder / wind (Duhok only)
     var _weatherCond = 'clear';
     if (getCity() === 'Duhok') {
       try {
@@ -1045,28 +1089,39 @@
         if (_wd && (Date.now() - _wd.ts) < 30 * 60 * 1000) _weatherCond = _wd.condition || 'clear';
       } catch(e) {}
     }
-    var _skyRainEl = document.getElementById('skyRain');
-    var _skyFlash  = document.getElementById('skyThunderFlash');
-    var _skyWindEl = document.getElementById('skyWind');
-    var _isRain    = _weatherCond === 'rain' || _weatherCond === 'thunder';
-    if (_skyRainEl) _skyRainEl.classList.toggle('active', _isRain);
-    if (_skyWindEl) _skyWindEl.classList.toggle('active', _weatherCond === 'wind');
+    var _wRain    = _weatherCond === 'rain'    || _weatherCond === 'thunder';
+    var _wSnow    = _weatherCond === 'snow';
+    var _wWind    = _weatherCond === 'wind';
+    var _wThunder = _weatherCond === 'thunder';
+
+    var _skyRainEl  = document.getElementById('skyRain');
+    var _skySnowEl  = document.getElementById('skySnow');
+    var _skyWindEl  = document.getElementById('skyWind');
+    var _skyLgEl    = document.getElementById('skyLightning');
+    var _skyFlash   = document.getElementById('skyThunderFlash');
+
+    if (_skyRainEl)  _skyRainEl.classList.toggle('active', _wRain);
+    if (_skySnowEl)  _skySnowEl.classList.toggle('active', _wSnow);
+    if (_skyWindEl)  _skyWindEl.classList.toggle('active', _wWind);
+    if (_skyLgEl)    _skyLgEl.classList.toggle('active', _wThunder);
+
+    // Thunder: sky-wide flash strobe
     if (_skyFlash) {
-      if (_weatherCond === 'thunder') {
+      if (_wThunder) {
         if (!_skyFlash.style.animation) {
-          _skyFlash.style.animation = 'sky-flash ' + (6 + Math.random() * 8).toFixed(1) + 's ease infinite';
+          _skyFlash.style.animation = 'sky-flash ' + (5 + Math.random() * 7).toFixed(1) + 's ease infinite';
         }
       } else {
         _skyFlash.style.animation = '';
       }
     }
-    // Boost cloud opacity during rain/thunder
-    if (_isRain) {
-      ['skyCloudA','skyCloudB','skyCloudC'].forEach(function(cid) {
-        var cl = document.getElementById(cid);
-        if (cl) cl.style.opacity = String(Math.min(1, (ph.cl || 0) + 0.38));
-      });
-    }
+
+    // Cloud boost: thunder darkest, rain dark, snow/wind slightly boosted, clear = phase default
+    var _cloudBoost = _wThunder ? 0.55 : _wRain ? 0.38 : _wSnow ? 0.22 : _wWind ? 0.12 : 0;
+    ['skyCloudA','skyCloudB','skyCloudC'].forEach(function(cid) {
+      var cl = document.getElementById(cid);
+      if (cl) cl.style.opacity = _cloudBoost > 0 ? String(Math.min(1, (ph.cl || 0) + _cloudBoost)) : String(ph.cl || 0);
+    });
 
     // Cirrus clouds (high-altitude, daytime only)
     var cirrus = document.getElementById('skyCloudD');
