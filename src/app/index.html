@@ -1544,78 +1544,67 @@ body{background:var(--bg);color:var(--text)}
 /* Pause ALL sky animations when prayer tab is not active — huge GPU/battery win */
 .sky-scene.sky-paused,.sky-scene.sky-paused *{animation-play-state:paused !important}
 /* ── Qibla theme tokens ──────────────────────────────────────────────── */
-:root,[data-theme="light"]{--qibla-glow-rgb:0,128,64;--qibla-compass-bg:#ededf4}
-[data-theme="dark"]{--qibla-glow-rgb:212,175,55;--qibla-compass-bg:#0e0e18}
-[data-theme="sakina"]{--qibla-glow-rgb:201,168,76;--qibla-compass-bg:#07120a}
-[data-theme="noor"]{--qibla-glow-rgb:26,92,58;--qibla-compass-bg:#e6dabb}
+:root,[data-theme="light"]{--qibla-glow-rgb:0,128,64;--qibla-compass-bg:#ededf4;--qibla-tick:rgba(0,0,0,.32);--qibla-tick-faint:rgba(0,0,0,.12);--qibla-north-fill:rgba(0,100,50,.65);--qibla-ring-stroke:rgba(0,0,0,.10);--qibla-bezel:rgba(0,0,0,.08);--qibla-needle-pri:rgba(0,0,0,.85);--qibla-needle-shaft:rgba(0,0,0,.50);--qibla-needle-tail:rgba(0,0,0,.28);--qibla-needle-glow:drop-shadow(0 0 5px rgba(0,0,0,.30));--qibla-pin-bg:#fff;--qibla-kaaba-bg:rgba(0,0,0,.65)}
+[data-theme="dark"]{--qibla-glow-rgb:212,175,55;--qibla-compass-bg:#0e0e18;--qibla-tick:rgba(255,255,255,.30);--qibla-tick-faint:rgba(255,255,255,.08);--qibla-north-fill:rgba(240,210,140,.50);--qibla-ring-stroke:rgba(255,255,255,.07);--qibla-bezel:rgba(255,255,255,.06);--qibla-needle-pri:rgba(255,255,255,.95);--qibla-needle-shaft:rgba(255,255,255,.55);--qibla-needle-tail:rgba(255,255,255,.30);--qibla-needle-glow:drop-shadow(0 0 8px rgba(255,255,255,.55)) drop-shadow(0 0 3px rgba(255,255,255,.25));--qibla-pin-bg:#161616;--qibla-kaaba-bg:rgba(0,0,0,.70)}
+[data-theme="sakina"]{--qibla-glow-rgb:201,168,76;--qibla-compass-bg:#07120a;--qibla-tick:rgba(201,168,76,.40);--qibla-tick-faint:rgba(201,168,76,.10);--qibla-north-fill:rgba(240,210,140,.55);--qibla-ring-stroke:rgba(201,168,76,.14);--qibla-bezel:rgba(201,168,76,.10);--qibla-needle-pri:rgba(240,220,160,.92);--qibla-needle-shaft:rgba(201,168,76,.55);--qibla-needle-tail:rgba(201,168,76,.30);--qibla-needle-glow:drop-shadow(0 0 8px rgba(201,168,76,.50)) drop-shadow(0 0 3px rgba(201,168,76,.20));--qibla-pin-bg:#112318;--qibla-kaaba-bg:rgba(0,0,0,.65)}
+[data-theme="noor"]{--qibla-glow-rgb:26,92,58;--qibla-compass-bg:#e6dabb;--qibla-tick:rgba(26,92,58,.40);--qibla-tick-faint:rgba(26,92,58,.12);--qibla-north-fill:rgba(26,92,58,.65);--qibla-ring-stroke:rgba(26,92,58,.13);--qibla-bezel:rgba(26,92,58,.10);--qibla-needle-pri:rgba(26,92,58,.88);--qibla-needle-shaft:rgba(26,92,58,.50);--qibla-needle-tail:rgba(26,92,58,.30);--qibla-needle-glow:drop-shadow(0 0 5px rgba(26,92,58,.35));--qibla-pin-bg:#fdf4e3;--qibla-kaaba-bg:rgba(26,92,58,.18)}
 /* ── Qibla backdrop ──────────────────────────────────────────────────── */
 #qiblaOverlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding-bottom:8vh;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s ease}
-#qiblaOverlay.qibla-open{background:rgba(0,0,0,.52);pointer-events:auto}
+#qiblaOverlay.qibla-open{background:rgba(0,0,0,.55);pointer-events:auto}
 /* ── Qibla modal card ────────────────────────────────────────────────── */
 #qiblaModal{position:relative;background:var(--bg2);border:1px solid var(--border);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.55),0 0 0 .5px var(--border);width:min(88vmin,360px);padding:44px 16px 26px;display:flex;flex-direction:column;align-items:center;opacity:0;transform:scale(.93) translateY(8px);transition:opacity .32s ease,transform .32s cubic-bezier(.22,1,.36,1);will-change:transform,opacity}
 #qiblaOverlay.qibla-open #qiblaModal{opacity:1;transform:scale(1) translateY(0)}
 #qiblaCloseBtn{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:.68rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s}
 #qiblaCloseBtn:active{background:var(--bg3);border-color:var(--border2,var(--border))}
-[data-theme="light"] #qiblaCloseBtn,[data-theme="noor"] #qiblaCloseBtn{border-color:rgba(0,0,0,.22);color:var(--text2)}
 /* ── Qibla compass wrap ──────────────────────────────────────────────── */
 #qiblaWrap{display:flex;align-items:center;justify-content:center;position:relative;width:100%;padding:2px 0}
-#qiblaWrap::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 50%,rgba(var(--qibla-glow-rgb),.2) 0%,transparent 70%);pointer-events:none;opacity:.13;animation:qibla-ambient 3.8s ease-in-out infinite}
-@keyframes qibla-ambient{0%,100%{opacity:.12}50%{opacity:.22}}
+#qiblaWrap::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 50%,rgba(var(--qibla-glow-rgb),.18) 0%,transparent 70%);pointer-events:none;opacity:.10;animation:qibla-ambient 4s ease-in-out infinite}
+@keyframes qibla-ambient{0%,100%{opacity:.08}50%{opacity:.18}}
+/* ── Compass face ────────────────────────────────────────────────────── */
 #qiblaCompass{position:relative;width:min(64vmin,280px);height:min(64vmin,280px);transform-origin:center;border-radius:50%;background:var(--qibla-compass-bg)}
-[data-theme="light"] #qiblaCompass{background:radial-gradient(circle at 40% 38%,#f5f5fc 0%,#e3e3ec 100%);box-shadow:inset 0 2px 18px rgba(0,0,0,.10),inset 0 0 0 .5px rgba(0,0,0,.07)}
-[data-theme="noor"] #qiblaCompass{background:radial-gradient(circle at 40% 38%,#ede2cb 0%,#d9cdb4 100%);box-shadow:inset 0 2px 18px rgba(0,0,0,.10),inset 0 0 0 .5px rgba(0,0,0,.07)}
-@keyframes qibla-align-pulse{0%{transform:scale(1)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
-#qiblaCompass.qibla-compass--pulse{animation:qibla-align-pulse .65s cubic-bezier(.22,1,.36,1) forwards}
-#qiblaGlow{position:absolute;inset:-6px;border-radius:50%;border:1.5px solid transparent;pointer-events:none}
+[data-theme="light"] #qiblaCompass{background:radial-gradient(circle at 40% 38%,#f5f5fc 0%,#e3e3ec 100%);box-shadow:inset 0 2px 18px rgba(0,0,0,.08),inset 0 0 0 .5px rgba(0,0,0,.05)}
+[data-theme="noor"] #qiblaCompass{background:radial-gradient(circle at 40% 38%,#ede2cb 0%,#d9cdb4 100%);box-shadow:inset 0 2px 18px rgba(0,0,0,.08),inset 0 0 0 .5px rgba(0,0,0,.05)}
+@keyframes qibla-align-pulse{0%{transform:scale(1)}45%{transform:scale(1.035)}100%{transform:scale(1)}}
+#qiblaCompass.qibla-compass--pulse{animation:qibla-align-pulse .6s cubic-bezier(.22,1,.36,1) forwards}
+/* ── Bezel ring (decorative, static) ─────────────────────────────────── */
+.qibla-bezel{position:absolute;inset:-1px;border-radius:50%;border:1px solid var(--qibla-bezel);pointer-events:none}
+/* ── Glow ring (JS-driven) ───────────────────────────────────────────── */
+#qiblaGlow{position:absolute;inset:-7px;border-radius:50%;border:1.5px solid transparent;pointer-events:none;transition:border-color .3s ease,box-shadow .3s ease}
+/* ── World (rotates) ─────────────────────────────────────────────────── */
 #qiblaWorld{position:absolute;inset:0;border-radius:50%;will-change:transform}
 .qibla-dial{position:absolute;inset:0;width:100%;height:100%}
-/* Tick marks — color driven by CSS per theme (no JS stroke attr) */
-#qiblaDial .tick-maj{stroke-width:1.8px;stroke:rgba(255,255,255,.38)}
-#qiblaDial .tick-med{stroke-width:1.4px;stroke:rgba(255,255,255,.22)}
-#qiblaDial .tick-10{stroke-width:.9px;stroke:rgba(255,255,255,.11)}
-#qiblaDial .tick-5{stroke-width:.9px;stroke:rgba(255,255,255,.06)}
-#qiblaDial .tick-north{stroke-width:1.8px;stroke:rgba(240,210,140,.38)}
-[data-theme="light"] #qiblaDial .tick-maj{stroke:rgba(0,0,0,.42)}
-[data-theme="light"] #qiblaDial .tick-med{stroke:rgba(0,0,0,.26)}
-[data-theme="light"] #qiblaDial .tick-10{stroke:rgba(0,0,0,.14)}
-[data-theme="light"] #qiblaDial .tick-5{stroke:rgba(0,0,0,.07)}
-[data-theme="light"] #qiblaDial .tick-north{stroke:rgba(0,100,50,.58)}
-[data-theme="sakina"] #qiblaDial .tick-maj{stroke:rgba(201,168,76,.52)}
-[data-theme="sakina"] #qiblaDial .tick-med{stroke:rgba(201,168,76,.30)}
-[data-theme="sakina"] #qiblaDial .tick-10{stroke:rgba(201,168,76,.15)}
-[data-theme="sakina"] #qiblaDial .tick-5{stroke:rgba(201,168,76,.08)}
-[data-theme="sakina"] #qiblaDial .tick-north{stroke:rgba(240,210,140,.58)}
-[data-theme="noor"] #qiblaDial .tick-maj{stroke:rgba(26,92,58,.52)}
-[data-theme="noor"] #qiblaDial .tick-med{stroke:rgba(26,92,58,.30)}
-[data-theme="noor"] #qiblaDial .tick-10{stroke:rgba(26,92,58,.16)}
-[data-theme="noor"] #qiblaDial .tick-5{stroke:rgba(26,92,58,.08)}
-[data-theme="noor"] #qiblaDial .tick-north{stroke:rgba(26,92,58,.62)}
-/* Concentric rings */
-.qibla-ring{stroke:rgba(255,255,255,.09)}
-[data-theme="light"] .qibla-ring{stroke:rgba(0,0,0,.14)}
-[data-theme="sakina"] .qibla-ring{stroke:rgba(201,168,76,.18)}
-[data-theme="noor"] .qibla-ring{stroke:rgba(26,92,58,.17)}
-/* Kaaba arm + icon */
+/* ── Tick marks (minimal: cardinal + intermediate, CSS-driven) ─────── */
+#qiblaDial .tick-cardinal{stroke:var(--qibla-tick);stroke-linecap:round}
+#qiblaDial .tick-inter{stroke:var(--qibla-tick-faint);stroke-linecap:round}
+.qibla-north-marker{fill:var(--qibla-north-fill)}
+/* ── Concentric guide rings ──────────────────────────────────────────── */
+.qibla-ring{stroke:var(--qibla-ring-stroke);fill:none}
+.qibla-ring--inner{opacity:.6}
+.qibla-ring--core{opacity:.35}
+/* ── Kaaba arm + diamond icon ────────────────────────────────────────── */
 .qibla-kaaba-arm{position:absolute;left:calc(50% - 1px);bottom:50%;height:47%;width:2px;transform-origin:1px 100%}
-/* Faint arm rod — makes direction legible at a glance */
-.qibla-kaaba-arm::after{content:'';position:absolute;top:28px;bottom:4px;left:0;right:0;margin:0 auto;width:1px;background:linear-gradient(to bottom,rgba(var(--qibla-glow-rgb),.45) 0%,rgba(var(--qibla-glow-rgb),0) 100%)}
-.qibla-kaaba-icon{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:3px;border:2px solid rgba(var(--qibla-glow-rgb),1);background:linear-gradient(145deg,rgba(var(--qibla-glow-rgb),.22) 0%,rgba(0,0,0,.7) 100%);box-shadow:0 0 24px rgba(var(--qibla-glow-rgb),.7),0 0 10px rgba(var(--qibla-glow-rgb),.45),inset 0 1px 1px rgba(255,255,255,.16),inset 0 -1px 1px rgba(0,0,0,.5);transition:box-shadow .5s ease}
-[data-theme="light"] .qibla-kaaba-icon,[data-theme="noor"] .qibla-kaaba-icon{box-shadow:0 0 18px rgba(var(--qibla-glow-rgb),.55),0 0 6px rgba(var(--qibla-glow-rgb),.35),0 2px 8px rgba(0,0,0,.22),inset 0 1px 1px rgba(255,255,255,.5),inset 0 -1px 1px rgba(0,0,0,.2)}
-.qibla-kaaba-icon.qibla-aligned{animation:qibla-kaaba-pulse 1.7s ease-in-out infinite}
-@keyframes qibla-kaaba-pulse{0%,100%{box-shadow:0 0 24px rgba(var(--qibla-glow-rgb),.7),0 0 10px rgba(var(--qibla-glow-rgb),.45)}50%{box-shadow:0 0 40px rgba(var(--qibla-glow-rgb),1),0 0 18px rgba(var(--qibla-glow-rgb),.7),0 0 60px rgba(var(--qibla-glow-rgb),.25)}}
-/* Needle — theme-aware */
-.qibla-needle{position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);width:11%;height:auto;pointer-events:none;filter:drop-shadow(0 0 9px rgba(255,255,255,.65)) drop-shadow(0 0 3px rgba(255,255,255,.3))}
-.qibla-needle .np{fill:rgba(255,255,255,.96)}
-.qibla-needle .ns{fill:rgba(255,255,255,.65)}
-.qibla-needle .nc{fill:rgba(255,255,255,.40)}
-[data-theme="light"] .qibla-needle,[data-theme="noor"] .qibla-needle{filter:drop-shadow(0 0 5px rgba(0,0,0,.35))}
-[data-theme="light"] .qibla-needle .np,[data-theme="noor"] .qibla-needle .np{fill:rgba(0,0,0,.85)}
-[data-theme="light"] .qibla-needle .ns,[data-theme="noor"] .qibla-needle .ns{fill:rgba(0,0,0,.58)}
-[data-theme="light"] .qibla-needle .nc,[data-theme="noor"] .qibla-needle .nc{fill:rgba(0,0,0,.36)}
-/* Center pin */
-.qibla-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--bg2);border:2px solid rgba(var(--qibla-glow-rgb),.75);box-shadow:0 0 0 2.5px rgba(var(--qibla-glow-rgb),.22),0 1px 6px rgba(0,0,0,.7);z-index:10;pointer-events:none}
-/* Loading */
+.qibla-kaaba-arm::after{content:'';position:absolute;top:30px;bottom:6px;left:0;right:0;margin:0 auto;width:1px;background:linear-gradient(to bottom,rgba(var(--qibla-glow-rgb),.35) 0%,rgba(var(--qibla-glow-rgb),0) 100%)}
+.qibla-kaaba-icon{position:absolute;top:4px;left:50%;transform:translateX(-50%) rotate(45deg);width:16px;height:16px;border-radius:2.5px;border:1.5px solid rgba(var(--qibla-glow-rgb),.9);background:var(--qibla-kaaba-bg);box-shadow:0 0 20px rgba(var(--qibla-glow-rgb),.6),0 0 8px rgba(var(--qibla-glow-rgb),.35),inset 0 0 4px rgba(var(--qibla-glow-rgb),.15);transition:box-shadow .5s ease,transform .3s ease}
+[data-theme="light"] .qibla-kaaba-icon,[data-theme="noor"] .qibla-kaaba-icon{box-shadow:0 0 14px rgba(var(--qibla-glow-rgb),.45),0 0 5px rgba(var(--qibla-glow-rgb),.25),0 2px 6px rgba(0,0,0,.18),inset 0 0 3px rgba(var(--qibla-glow-rgb),.1)}
+.qibla-kaaba-icon.qibla-aligned{animation:qibla-kaaba-pulse 1.8s ease-in-out infinite}
+@keyframes qibla-kaaba-pulse{0%,100%{box-shadow:0 0 20px rgba(var(--qibla-glow-rgb),.6),0 0 8px rgba(var(--qibla-glow-rgb),.35)}50%{box-shadow:0 0 36px rgba(var(--qibla-glow-rgb),1),0 0 16px rgba(var(--qibla-glow-rgb),.65),0 0 52px rgba(var(--qibla-glow-rgb),.2)}}
+/* ── Needle (fixed, theme-aware) ─────────────────────────────────────── */
+.qibla-needle{position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);width:10%;height:auto;pointer-events:none;filter:var(--qibla-needle-glow)}
+.qibla-needle .np{fill:var(--qibla-needle-pri)}
+.qibla-needle .ns{fill:var(--qibla-needle-shaft)}
+.qibla-needle .nc{fill:var(--qibla-needle-tail)}
+/* ── Center pin ──────────────────────────────────────────────────────── */
+.qibla-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--qibla-pin-bg);border:1.5px solid rgba(var(--qibla-glow-rgb),.7);box-shadow:0 0 0 2px rgba(var(--qibla-glow-rgb),.18),0 1px 5px rgba(0,0,0,.6);z-index:10;pointer-events:none}
+/* ── Loading (pulse ring, no text) ───────────────────────────────────── */
 #qiblaLoading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.qibla-pulse-ring{width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(var(--qibla-glow-rgb),.5);animation:qibla-pulse 1.6s ease-in-out infinite}
+@keyframes qibla-pulse{0%{transform:scale(.85);opacity:.7}50%{transform:scale(1.15);opacity:.2}100%{transform:scale(.85);opacity:.7}}
+/* ── Error/calibration icon (no text) ────────────────────────────────── */
+.qibla-error-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:rgba(var(--qibla-glow-rgb),.7);font-size:22px;animation:qibla-shake 2s ease-in-out infinite}
+@keyframes qibla-shake{0%,100%{transform:rotate(0deg)}15%{transform:rotate(-8deg)}30%{transform:rotate(8deg)}45%{transform:rotate(-5deg)}60%{transform:rotate(5deg)}75%{transform:rotate(0deg)}}
+/* ── Permission prompt (icon-only button) ────────────────────────────── */
+.qibla-perm-btn{width:48px;height:48px;border-radius:50%;background:rgba(var(--qibla-glow-rgb),.12);border:1.5px solid rgba(var(--qibla-glow-rgb),.4);color:rgba(var(--qibla-glow-rgb),1);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:qibla-perm-breathe 2s ease-in-out infinite}
+@keyframes qibla-perm-breathe{0%,100%{box-shadow:0 0 0 0 rgba(var(--qibla-glow-rgb),.3)}50%{box-shadow:0 0 0 10px rgba(var(--qibla-glow-rgb),0)}}
 .qibla-spinner{width:30px;height:30px;border:1.5px solid var(--border);border-top-color:var(--text3);border-radius:50%;animation:qibla-spin 1s linear infinite}
 @keyframes qibla-spin{to{transform:rotateZ(360deg)}}
 /* Prayer panel — no scroll, exact fit */
@@ -2567,24 +2556,25 @@ body{background:var(--bg);color:var(--text)}
     <div id="qiblaWrap">
       <div id="qiblaCompass">
         <div id="qiblaGlow"></div>
+        <div class="qibla-bezel"></div>
         <div id="qiblaWorld">
           <svg class="qibla-dial" id="qiblaDial" viewBox="0 0 200 200" fill="none" aria-hidden="true">
-            <circle class="qibla-ring" cx="100" cy="100" r="95" stroke-width=".8"/>
-            <circle class="qibla-ring" cx="100" cy="100" r="72" stroke-width=".6" opacity=".55"/>
-            <circle class="qibla-ring" cx="100" cy="100" r="46" stroke-width=".5" opacity=".33"/>
+            <circle class="qibla-ring" cx="100" cy="100" r="94" stroke-width=".7"/>
+            <circle class="qibla-ring qibla-ring--inner" cx="100" cy="100" r="70" stroke-width=".5"/>
+            <circle class="qibla-ring qibla-ring--core" cx="100" cy="100" r="44" stroke-width=".4"/>
+            <polygon class="qibla-north-marker" points="100,7 96.5,15 103.5,15"/>
           </svg>
           <div id="qiblaKaabaArm" class="qibla-kaaba-arm">
             <div class="qibla-kaaba-icon" id="qiblaKaabaIcon"></div>
           </div>
         </div>
-        <!-- Needle: arrowhead (.np) + shaft (.ns) + counter-weight (.nc) -->
         <svg class="qibla-needle" viewBox="0 0 22 92" fill="none" aria-hidden="true">
-          <polygon class="np" points="11,1 20,32 11,25 2,32"/>
-          <rect class="ns" x="10.5" y="25" width="1.5" height="48" rx=".75"/>
-          <polygon class="nc" points="11,73 18,85 11,91 4,85"/>
+          <polygon class="np" points="11,2 15,28 11,24 7,28"/>
+          <rect class="ns" x="10.2" y="24" width="1.6" height="42" rx=".8"/>
+          <circle class="nc" cx="11" cy="78" r="5"/>
         </svg>
         <div class="qibla-pin"></div>
-        <div id="qiblaLoading"><div class="qibla-spinner"></div></div>
+        <div id="qiblaLoading"><div class="qibla-pulse-ring"></div></div>
       </div>
     </div>
   </div>

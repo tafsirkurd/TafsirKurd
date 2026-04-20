@@ -24,19 +24,18 @@
                   ? window.Capacitor.getPlatform() === 'ios'
                   : /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream);
 
-  /* ── build compass dial tick marks ──────────────────────────────────────── */
+  /* ── build compass dial — 12 minimal marks (luxury watch style) ────────── */
   function _buildDial(svgEl) {
     var ns = 'http://www.w3.org/2000/svg';
-    var cx = 100, cy = 100, r0 = 95;
-    for (var i = 0; i < 72; i++) {
-      var deg = i * 5;
+    var cx = 100, cy = 100, r0 = 94;
+    for (var i = 0; i < 12; i++) {
+      var deg = i * 30;
+      if (deg === 0) continue; // north handled by triangle in HTML
       var rad = deg * Math.PI / 180;
-      var isMaj = deg % 90 === 0;
-      var isMed = !isMaj && deg % 45 === 0;
-      var is10  = !isMaj && !isMed && deg % 10 === 0;
-      var r1    = isMaj ? 82 : isMed ? 86 : is10 ? 89 : 92;
-      var sw    = isMaj ? 1.8  : isMed ? 1.4  : 0.9;
-      var cls   = deg === 0 ? 'tick-north' : isMaj ? 'tick-maj' : isMed ? 'tick-med' : is10 ? 'tick-10' : 'tick-5';
+      var isCardinal = deg % 90 === 0;
+      var r1  = isCardinal ? 83 : 87;
+      var sw  = isCardinal ? 1.6 : 1.0;
+      var cls = isCardinal ? 'tick-cardinal' : 'tick-inter';
       var x1 = cx + r0 * Math.sin(rad), y1 = cy - r0 * Math.cos(rad);
       var x2 = cx + r1 * Math.sin(rad), y2 = cy - r1 * Math.cos(rad);
       var ln = document.createElementNS(ns, 'line');
@@ -283,32 +282,21 @@
 
   /* ── iOS web permission prompt ─────────────────────────────────────────── */
   function _showIosPermissionPrompt() {
-    // Only show if compass is still loading (no data yet)
     if (_headingRaw !== null) return;
     var loading = document.getElementById('qiblaLoading');
     if (!loading) { _doRequestPermission(); return; }
 
     while (loading.firstChild) loading.removeChild(loading.firstChild);
     loading.style.display = 'flex';
-    loading.style.flexDirection = 'column';
-    loading.style.gap = '10px';
 
     var btn = document.createElement('button');
-    btn.style.cssText = 'background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);'
-      + 'color:#fff;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;';
-    btn.textContent = '\u0686\u0627\u0644\u0627\u06A9 \u06A9\u0631\u062F\u0646\u06CC \u067E\u06CE\u0644\u0627\u0648';
-
-    var hint = document.createElement('div');
-    hint.style.cssText = 'font-size:11px;color:rgba(255,255,255,.55);text-align:center;max-width:160px;';
-    hint.textContent = 'Enable motion access for iOS';
-
+    btn.className = 'qibla-perm-btn';
+    btn.innerHTML = '<i class="fas fa-compass"></i>';
     btn.onclick = function(e) {
       e.stopPropagation();
       _doRequestPermission();
     };
-
     loading.appendChild(btn);
-    loading.appendChild(hint);
   }
 
   function _doRequestPermission() {
@@ -318,11 +306,9 @@
           var loading = document.getElementById('qiblaLoading');
           if (loading) {
             while (loading.firstChild) loading.removeChild(loading.firstChild);
-            loading.style.flexDirection = '';
-            loading.style.gap = '';
-            var sp = document.createElement('div');
-            sp.className = 'qibla-spinner';
-            loading.appendChild(sp);
+            var pr = document.createElement('div');
+            pr.className = 'qibla-pulse-ring';
+            loading.appendChild(pr);
             loading.style.display = 'flex';
           }
           _attachWebSensor();
@@ -334,45 +320,29 @@
   }
 
   function _showPermissionDenied() {
-    if (_headingRaw !== null) return; // already getting data from native
+    if (_headingRaw !== null) return;
     var loading = document.getElementById('qiblaLoading');
     if (!loading) return;
     while (loading.firstChild) loading.removeChild(loading.firstChild);
     loading.style.display = 'flex';
-    loading.style.flexDirection = 'column';
-    loading.style.gap = '8px';
 
     var icon = document.createElement('div');
-    icon.style.cssText = 'font-size:22px;';
-    icon.textContent = '\u26A0\uFE0F';
-
-    var msg = document.createElement('div');
-    msg.style.cssText = 'font-size:12px;color:rgba(255,255,255,.75);text-align:center;max-width:170px;line-height:1.5;';
-    msg.textContent = 'Motion access denied. Go to iOS Settings \u2192 Privacy \u2192 Motion & Fitness \u2192 enable for this app.';
-
+    icon.className = 'qibla-error-icon';
+    icon.innerHTML = '<i class="fas fa-lock"></i>';
     loading.appendChild(icon);
-    loading.appendChild(msg);
   }
 
   function _showNoDataHint() {
-    if (_headingRaw !== null) return; // data arrived, ignore
+    if (_headingRaw !== null) return;
     var loading = document.getElementById('qiblaLoading');
     if (!loading) return;
     while (loading.firstChild) loading.removeChild(loading.firstChild);
     loading.style.display = 'flex';
-    loading.style.flexDirection = 'column';
-    loading.style.gap = '8px';
 
     var icon = document.createElement('div');
-    icon.style.cssText = 'font-size:22px;';
-    icon.textContent = '\uD83E\uDDED';
-
-    var msg = document.createElement('div');
-    msg.style.cssText = 'font-size:12px;color:rgba(255,255,255,.75);text-align:center;max-width:170px;line-height:1.5;';
-    msg.textContent = 'Hold the phone upright and move it in a figure-8 to calibrate the compass.';
-
+    icon.className = 'qibla-error-icon';
+    icon.innerHTML = '<i class="fas fa-sync-alt"></i>';
     loading.appendChild(icon);
-    loading.appendChild(msg);
   }
 
   /* ═══════════════════════════════════════════════════
@@ -587,11 +557,9 @@
     var loading = document.getElementById('qiblaLoading');
     if (loading) {
       while (loading.firstChild) loading.removeChild(loading.firstChild);
-      loading.style.flexDirection = '';
-      loading.style.gap = '';
-      var sp = document.createElement('div');
-      sp.className = 'qibla-spinner';
-      loading.appendChild(sp);
+      var pr = document.createElement('div');
+      pr.className = 'qibla-pulse-ring';
+      loading.appendChild(pr);
     }
     _headingRaw   = null;
     _aligned      = false;
