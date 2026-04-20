@@ -226,10 +226,15 @@ workflows:
 
       - name: Set build number
         script: |
-          BUILD_NUM=$(grep CURRENT_PROJECT_VERSION ios/App/App.xcodeproj/project.pbxproj | head -1 | grep -o '[0-9]*')
-          echo "Setting CFBundleVersion to $BUILD_NUM"
-          cd ios/App
-          xcrun agvtool new-version -all "$BUILD_NUM"
+          set -e
+          BUILD_NUM=$(grep -m1 'CURRENT_PROJECT_VERSION' ios/App/App.xcodeproj/project.pbxproj | tr -dc '0-9')
+          echo "Build number from pbxproj: [$BUILD_NUM]"
+          # Stamp pbxproj via agvtool
+          cd ios/App && xcrun agvtool new-version -all "$BUILD_NUM" && cd ../..
+          # Also stamp Info.plist directly (bypasses variable substitution)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" ios/App/App/TafsirKurdWidget/Info.plist 2>/dev/null || true
+          echo "CFBundleVersion now: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' ios/App/App/Info.plist)"
 
       - name: Build iOS
         script: |
