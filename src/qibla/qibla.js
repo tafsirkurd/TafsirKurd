@@ -70,6 +70,7 @@
   var _fallbackTimer = null;
   var _noDataTimer   = null;   // fires if sensor attached but no readings after 4s
   var _compassListener = null; // native Compass plugin listener (iOS)
+  var _orientationFn   = null; // orientationchange handler — stored for explicit removal
   /* settle physics */
   var _settleOffset  = 0;
   var _settleActive  = false;
@@ -508,11 +509,14 @@
     _requestSensor();
 
     /* On orientation change reset heading smooth so compass doesn't jump */
-    window.addEventListener('orientationchange', function _oc() {
-      if (!_started) { window.removeEventListener('orientationchange', _oc); return; }
-      _headingRaw = null;
-      _headingSmooth = 0;
-    });
+    if (!_orientationFn) {
+      _orientationFn = function() {
+        if (!_started) return;
+        _headingRaw = null;
+        _headingSmooth = 0;
+      };
+      window.addEventListener('orientationchange', _orientationFn);
+    }
 
     /* Get location → set bearing → show compass */
     _getLocation(function (lat, lon) {
@@ -536,10 +540,11 @@
 
     _started = false;
     _detachSensor();
-    if (_animId)       { cancelAnimationFrame(_animId);  _animId       = null; }
-    if (_fallbackTimer){ clearTimeout(_fallbackTimer);   _fallbackTimer = null; }
-    if (_alignTimer)   { clearTimeout(_alignTimer);      _alignTimer   = null; }
-    if (_noDataTimer)  { clearTimeout(_noDataTimer);     _noDataTimer  = null; }
+    if (_animId)        { cancelAnimationFrame(_animId);  _animId        = null; }
+    if (_fallbackTimer) { clearTimeout(_fallbackTimer);   _fallbackTimer = null; }
+    if (_alignTimer)    { clearTimeout(_alignTimer);      _alignTimer    = null; }
+    if (_noDataTimer)   { clearTimeout(_noDataTimer);     _noDataTimer   = null; }
+    if (_orientationFn) { window.removeEventListener('orientationchange', _orientationFn); _orientationFn = null; }
     /* Reset loading element to plain spinner for next open */
     var loading = document.getElementById('qiblaLoading');
     if (loading) {

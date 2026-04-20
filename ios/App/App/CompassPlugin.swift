@@ -36,19 +36,10 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
                 self.locationManager = lm
             }
 
-            let status = CLLocationManager.authorizationStatus()
-            if status == .denied || status == .restricted {
-                call.resolve(["status": "denied"])
-                return
-            }
-
-            // Request When In Use if not yet determined (usually already granted for Geolocation)
-            if status == .notDetermined {
-                self.locationManager?.requestWhenInUseAuthorization()
-            }
-
+            // Heading (magnetometer) does not require location authorization.
+            // trueHeading needs location for declination, but we fall back to
+            // magneticHeading in didUpdateHeading, so no permission needed here.
             self.locationManager?.startUpdatingHeading()
-            NSLog("[Compass] startUpdatingHeading called")
             call.resolve(["status": "granted"])
         }
     }

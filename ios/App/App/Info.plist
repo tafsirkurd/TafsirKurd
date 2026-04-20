@@ -65,6 +65,8 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ئەم ئەپە شوێن بکار تینێت دا ئاراستەی قیبلە و دەمێن نوژێ حیساب بکێت</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ئەم ئەپە ب دەنگا تە ئیزنا دەخوازێت دا بتوانی ئایەتێن قورئانێ ب دەنگ بژمێری</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
