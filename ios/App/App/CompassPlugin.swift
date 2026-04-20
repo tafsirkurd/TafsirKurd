@@ -22,33 +22,29 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
     private var locationManager: CLLocationManager?
 
     @objc func start(_ call: CAPPluginCall) {
+        // Capacitor 8 calls plugin methods on the main thread — no dispatch needed.
         guard CLLocationManager.headingAvailable() else {
+            NSLog("[Compass] headingAvailable() == false — device has no compass")
             call.resolve(["status": "unavailable"])
             return
         }
 
-        DispatchQueue.main.async {
-            if self.locationManager == nil {
-                let lm = CLLocationManager()
-                lm.delegate = self
-                lm.headingFilter = 0.5          // notify every 0.5° change
-                lm.headingOrientation = .portrait
-                self.locationManager = lm
-            }
-
-            // Heading (magnetometer) does not require location authorization.
-            // trueHeading needs location for declination, but we fall back to
-            // magneticHeading in didUpdateHeading, so no permission needed here.
-            self.locationManager?.startUpdatingHeading()
-            call.resolve(["status": "granted"])
+        if locationManager == nil {
+            let lm = CLLocationManager()
+            lm.delegate = self
+            lm.headingFilter = 1.0  // notify on every 1° change
+            locationManager = lm
+            NSLog("[Compass] CLLocationManager created")
         }
+
+        locationManager?.startUpdatingHeading()
+        NSLog("[Compass] startUpdatingHeading called")
+        call.resolve(["status": "granted"])
     }
 
     @objc func stop(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
-            self.locationManager?.stopUpdatingHeading()
-            NSLog("[Compass] stopUpdatingHeading called")
-        }
+        locationManager?.stopUpdatingHeading()
+        NSLog("[Compass] stopUpdatingHeading called")
         call.resolve()
     }
 

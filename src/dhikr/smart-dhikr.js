@@ -1090,7 +1090,10 @@
     }
 
     function _tick() {
-      if (_paused || !_alive()) return;
+      if (_paused) return;
+      /* Element temporarily removed from DOM (e.g. user navigated away and back).
+         Keep the loop alive so it auto-resumes when the section re-enters DOM. */
+      if (!_alive()) { _raf = requestAnimationFrame(_tick); return; }
       var pct = Math.min((_accum + performance.now() - _tStart) / DURATION, 1);
       bar.style.transform = 'scaleX(' + pct + ')';
       if (pct >= 1) { _goTo(current + 1, true); return; }
@@ -1172,6 +1175,16 @@
     _applyX(_posX(0), false);
     _syncDots();
     _resetProg();
+
+    /* Expose resume hook on wrapper — called by render() when returning the
+       cached section to DOM after within-tab navigation (e.g. back from adhkar). */
+    wrapper._resumeSlider = function() {
+      _paused = false;
+      _accum  = 0;
+      _tStart = performance.now();
+      if (_raf) cancelAnimationFrame(_raf);
+      _raf = requestAnimationFrame(_tick);
+    };
   }
 
   /* ─────────────────────────────────────────────
@@ -1273,7 +1286,13 @@
        Only rebuild mid-day if cache was built with placeholders but real
        data has now loaded — this is what makes hadith/book show real content. */
     if (_sectionCache.el && _sectionCache.seed === seed) {
-      if (_sectionCache.hasData || !hasData) return _sectionCache.el;
+      if (_sectionCache.hasData || !hasData) {
+        /* Resume slider progress bar — it may have stopped while the section
+           was outside the DOM during within-tab navigation. */
+        var _cw = _sectionCache.el.querySelector('.sd-wrapper');
+        if (_cw && _cw._resumeSlider) _cw._resumeSlider();
+        return _sectionCache.el;
+      }
       /* fall through: cache had placeholders, data just arrived → rebuild */
     }
 
