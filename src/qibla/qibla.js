@@ -183,7 +183,9 @@
             if (!_started) return;
             var heading = data.heading;
             if (heading == null || heading < 0) return;
-            _headingRaw = heading;
+            /* CLLocationManager heading is relative to physical device top (portrait).
+               Subtract screen angle so heading matches the current screen top. */
+            _headingRaw = (heading - _screenAngle() + 360) % 360;
             if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
             var loading = document.getElementById('qiblaLoading');
             if (loading && loading.style.display !== 'none') _showCompass();

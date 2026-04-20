@@ -1275,6 +1275,23 @@
         }
     };
 
+    // Open video in the native YouTube app (iOS/Android) — no in-app browser
+    function openInYouTubeApp(videoId) {
+        // youtube:// deep-link opens the YouTube app directly on iOS & Android
+        const deepLink = `youtube://www.youtube.com/watch?v=${videoId}`;
+        const webUrl   = `https://www.youtube.com/watch?v=${videoId}`;
+        const AppPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+        if (AppPlugin && AppPlugin.openUrl) {
+            // openUrl uses UIApplication.open — will prefer YouTube app via Universal Links
+            AppPlugin.openUrl({ url: deepLink }).catch(function() {
+                // deep-link failed (app not installed) — try https which iOS routes to YouTube app too
+                AppPlugin.openUrl({ url: webUrl }).catch(function(){});
+            });
+        } else {
+            window.open(deepLink, '_system');
+        }
+    }
+
     // Play YouTube video - simple iframe for all browsers
     function playYouTubeVideo(videoId, title, episodeId) {
         console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
@@ -1325,7 +1342,11 @@
         });
 
         if (!clickedCard) {
-            window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+            if (isNative && platform === 'ios') {
+                openInYouTubeApp(videoId);
+            } else {
+                window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+            }
             return;
         }
 
@@ -1364,13 +1385,7 @@
             ytFallback.style.cssText = 'display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:101;background:#ff0000;color:#fff;border:none;border-radius:24px;padding:10px 22px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;direction:rtl;';
             ytFallback.onclick = function(e) {
                 e.stopPropagation();
-                const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
-                const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
-                if (Browser && Browser.open) {
-                    Browser.open({ url: ytUrl, presentationStyle: 'fullscreen' });
-                } else {
-                    window.open(ytUrl, '_system');
-                }
+                openInYouTubeApp(videoId);
             };
             wrapper.appendChild(ytFallback);
             // Show fallback button after 3s — gives autoplay a chance first
