@@ -224,6 +224,13 @@ workflows:
           done
           echo "All 5 .caf files ready."
 
+      - name: Set build number
+        script: |
+          BUILD_NUM=$(grep CURRENT_PROJECT_VERSION ios/App/App.xcodeproj/project.pbxproj | head -1 | grep -o '[0-9]*')
+          echo "Setting CFBundleVersion to $BUILD_NUM"
+          cd ios/App
+          xcrun agvtool new-version -all "$BUILD_NUM"
+
       - name: Build iOS
         script: |
           xcode-project build-ipa \
