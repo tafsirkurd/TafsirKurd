@@ -484,6 +484,8 @@
   function open() {
     var overlay = document.getElementById('qiblaOverlay');
     if (overlay) overlay.classList.add('qibla-open');
+    // Pause prayer sky + countdown so they don't compete with qibla animation
+    if (window.PrayerUI && PrayerUI._pauseSkyForQibla) PrayerUI._pauseSkyForQibla();
 
     if (_started) return;
     _started       = true;
@@ -496,10 +498,14 @@
     _settleActive  = false;
     _prevDiff      = 180;
     if (_alignTimer) { clearTimeout(_alignTimer); _alignTimer = null; }
-    _glowRgb = (getComputedStyle(document.documentElement)
-                  .getPropertyValue('--qibla-glow-rgb') || '212,175,55').trim();
+    _initDom(); // DOM refs first — needed by everything below
 
-    _initDom();
+    // Defer getComputedStyle out of the animation frame so it doesn't
+    // block the overlay transition on the same frame
+    setTimeout(function() {
+      _glowRgb = (getComputedStyle(document.documentElement)
+                    .getPropertyValue('--qibla-glow-rgb') || '212,175,55').trim();
+    }, 0);
 
     if (_loading) { _loading.style.display = 'flex'; }
     if (_compass) { _compass.style.transition = 'none'; _compass.style.opacity = '0'; }
@@ -562,6 +568,8 @@
     _prevDiff     = 180;
     if (_glow)      _glow.classList.remove('qibla-glow--on');
     if (_kaabaIcon) _kaabaIcon.classList.remove('qibla-aligned');
+    // Resume prayer sky + countdown after qibla closes
+    if (window.PrayerUI && PrayerUI._resumeSkyForQibla) PrayerUI._resumeSkyForQibla();
   }
 
   window.QiblaUI = { open: open, close: close };

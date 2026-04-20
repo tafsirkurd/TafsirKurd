@@ -2449,12 +2449,9 @@
   }
 
   function openSettings() {
-    // The bell button only exists after buildPanel() has run, which always
-    // calls updateAthanSettings() while the sheet is hidden. Content is
-    // guaranteed pre-built before the user can tap.
-    // Opening path does zero DOM work: just pause background RAF loops,
-    // then hand the overlay transition to the compositor.
     _pauseSkyAnimations();
+    // Pause countdown interval — its 1s DOM work competes with sheet slide animation
+    if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
     var overlay = document.getElementById('prayerSettingsOverlay');
     if (overlay) overlay.classList.add('open');
   }
@@ -2464,6 +2461,8 @@
     var overlay = document.getElementById('prayerSettingsOverlay');
     if (overlay) overlay.classList.remove('open');
     _resumeSkyAnimations();
+    // Restart countdown after sheet close animation finishes (350ms)
+    setTimeout(function() { if (!_countdownInterval && _currentTimings) startCountdown(); }, 350);
   }
 
   function buildToggleRow(parent, label, isOn, onChange, extraClass) {
@@ -2758,6 +2757,14 @@
     ensureCountdown: ensureCountdown,
     invalidate: function(){ _renderedKey = null; },
     openSettings: openSettings,
+    _pauseSkyForQibla: function() {
+      _pauseSkyAnimations();
+      if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
+    },
+    _resumeSkyForQibla: function() {
+      _resumeSkyAnimations();
+      setTimeout(function() { if (!_countdownInterval && _currentTimings) startCountdown(); }, 350);
+    },
     initScheduleOnStart: initScheduleOnStart,
     pushWidgetIfStale: pushWidgetIfStale,
     prefetchAllCities: prefetchAllCities,
