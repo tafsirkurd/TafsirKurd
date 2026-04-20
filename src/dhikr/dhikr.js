@@ -2285,6 +2285,7 @@ window.GencineUI = {
 
     /* cleanup when navigating away */
     self._pdfCleanup = function(){
+      if(self._pdfPageObs){ self._pdfPageObs.disconnect(); self._pdfPageObs = null; }
       badge.remove(); restoreBtn.remove();
       if(fsBtn) fsBtn.onclick = null;
       if(hdr){ hdr.style.background=''; hdr.style.backdropFilter=''; hdr.style.webkitBackdropFilter=''; }
@@ -2439,6 +2440,7 @@ window.GencineUI = {
           if (n < pdf.numPages && slots[n]) renderPage(n + 1, slots[n], pdf);
         });
       }, { rootMargin: '400px 0px', threshold: 0 });
+      self._pdfPageObs = obs;
       slots.forEach(function(s) { obs.observe(s); });
       renderPage(1, slots[0], pdf);
       if (slots[1]) renderPage(2, slots[1], pdf);

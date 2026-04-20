@@ -1316,8 +1316,10 @@ var _cachedPanels=null,_cachedTabItems=null,_cachedTabBtns={};
 function _getCachedPanels(){if(!_cachedPanels)_cachedPanels=document.querySelectorAll('.panel');return _cachedPanels;}
 function _getCachedTabItems(){if(!_cachedTabItems)_cachedTabItems=document.querySelectorAll('.tab-item');return _cachedTabItems;}
 function _getCachedTabBtn(name){if(!_cachedTabBtns[name])_cachedTabBtns[name]=document.querySelector('.tab-item[data-tab="'+name+'"]');return _cachedTabBtns[name];}
+// Track pending tab rAF renders so we can cancel them if user switches again
+var _pendingTabRaf=null;
 App.tab=function(name){
-  if(tapGuard('tab',200))return; // prevent rapid repeated tab taps
+  if(tapGuard('tab',80))return; // 80ms guard — fast enough for rapid switching
   if(name===S.tab){
     haptic([8]);
     if(name==='quran'){
@@ -1366,62 +1368,64 @@ App.tab=function(name){
     return;
   }
   haptic([8]);
-  if(S.surah&&name!=='quran'){_endSession();}
-  // Stop prayer countdown and pause sky animations when leaving prayer tab
-  if(S.tab==='prayer'&&name!=='prayer'&&window.PrayerUI){
-    PrayerUI.stopCountdown();
-    var _skyEl=document.getElementById('prayerSkyScene');
-    if(_skyEl)_skyEl.classList.add('sky-paused');
-  }
-  // Prayer panel stays in layout tree always (visibility:hidden when inactive)
-  // so no layout cost on tab switch — just unpause animations after one frame
+
+  // Cancel any pending rAF render from a previous fast tab switch
+  if(_pendingTabRaf){cancelAnimationFrame(_pendingTabRaf);_pendingTabRaf=null;}
+
+  var _prevTab=S.tab;
+  S.tabHistory.push(_prevTab);
+  S.tab=name;
+
+  // ── Show new panel instantly — only touch the previous + new panel, not ALL panels ──
+  var prevPanel=$('panel'+_prevTab.charAt(0).toUpperCase()+_prevTab.slice(1));
+  if(prevPanel)prevPanel.classList.remove('on');
+  var panel=$('panel'+name.charAt(0).toUpperCase()+name.slice(1));
+  if(panel)panel.classList.add('on');
+
+  // ── Tab bar icon ──
+  var prevBtnName=(_prevTab==='goals'||_prevTab==='bookmarks')?'quran':_prevTab;
+  var prevBtn=_getCachedTabBtn(prevBtnName);
+  if(prevBtn)prevBtn.classList.remove('on');
+  var tabBtnName=(name==='goals'||name==='bookmarks')?'quran':name;
+  var tabBtn=_getCachedTabBtn(tabBtnName);
+  if(tabBtn)tabBtn.classList.add('on');
+
+  // ── Prayer: unpause sky in next frame ──
   if(name==='prayer'){
     requestAnimationFrame(function(){
       var _skyEl=document.getElementById('prayerSkyScene');
       if(_skyEl)_skyEl.classList.remove('sky-paused');
     });
   }
-  // Clear quran search when leaving quran tab; disconnect badge observer to stop background work
-  if(S.tab==='quran'&&name!=='quran'){
-    var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();
-    if(_surahBadgeObs){_surahBadgeObs.disconnect();_surahBadgeObs=null;}
-  }
-  // Force-close tasbih picker sheet when leaving gencine — sheet is position:fixed and survives panel hide
-  if(S.tab==='gencine'&&name!=='gencine'&&window.GencineUI){GencineUI.closeSheet();}
-  // Force-close rec-picker on any tab switch — it is a global body overlay and must not survive navigation
-  App.closeRecPicker();
-  // Force-close About sheet and Reader settings on tab switch — both are position:fixed overlays
-  if(typeof closeCfgSheet==='function')closeCfgSheet();
-  App.closeReaderSettings();
-  S.tabHistory.push(S.tab);
-  S.tab=name;
-  // Use cached NodeLists — avoids full DOM scan on every tab switch
-  _getCachedPanels().forEach(function(p){p.classList.remove('on')});
-  _getCachedTabItems().forEach(function(t){t.classList.remove('on')});
-  var panel=$('panel'+name.charAt(0).toUpperCase()+name.slice(1));
-  if(panel)panel.classList.add('on');
-  var tabBtnName=(name==='goals'||name==='bookmarks')?'quran':name;
-  var tabBtn=_getCachedTabBtn(tabBtnName);
-  if(tabBtn)tabBtn.classList.add('on');
 
-  // Defer renders to rAF so panel is visible before JS render blocks the main thread
-  if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){requestAnimationFrame(function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');});}}
-  if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){requestAnimationFrame(function(){renderGoals();_renderHash.goals=_tabHash('goals');});}}
-  if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){requestAnimationFrame(function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');});}}
-  if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){requestAnimationFrame(function(){renderSettings();_renderHash.settings=_tabHash('settings');});}requestAnimationFrame(function(){_warmAboutCache();});}
-  // Prayer: panel is always in layout — just resume countdown + render in next frame
-  if(name==='prayer'&&window.PrayerUI){
-    requestAnimationFrame(function(){
-      PrayerUI.render();
-      if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
-    });
-  }
-  if(name==='gencine'){_loadGencineScripts(function(){
-    requestAnimationFrame(function(){
-      var _gh=_tabHash('gencine');
-      if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
-    });
-  });}
+  // ── Defer all cleanup + renders to next frame so tab switch paints first ──
+  _pendingTabRaf=requestAnimationFrame(function(){
+    _pendingTabRaf=null;
+
+    // Cleanup from previous tab
+    if(_prevTab==='prayer'&&name!=='prayer'&&window.PrayerUI){
+      PrayerUI.stopCountdown();
+      var _skyEl2=document.getElementById('prayerSkyScene');
+      if(_skyEl2)_skyEl2.classList.add('sky-paused');
+    }
+    if(_prevTab==='quran'&&name!=='quran'){
+      var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();
+      if(_surahBadgeObs){_surahBadgeObs.disconnect();}
+    }
+    if(_prevTab==='gencine'&&name!=='gencine'&&window.GencineUI){GencineUI.closeSheet();}
+    if(S.surah&&name!=='quran'){_endSession();}
+    App.closeRecPicker();
+    if(typeof closeCfgSheet==='function')closeCfgSheet();
+    App.closeReaderSettings();
+
+    // Renders for new tab
+    if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}}
+    if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){renderGoals();_renderHash.goals=_tabHash('goals');}}
+    if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}}
+    if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){renderSettings();_renderHash.settings=_tabHash('settings');}_warmAboutCache();}
+    if(name==='prayer'&&window.PrayerUI){PrayerUI.render();if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();}
+    if(name==='gencine'){_loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});}
+  });
 };
 
 /* ===== GENCINE LAZY LOADER ===== */
