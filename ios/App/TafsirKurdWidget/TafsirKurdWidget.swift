@@ -304,7 +304,7 @@ private struct LiveCountdown: View {
                 Text(WT.t("widget.prayer.now", "ئێستا"))
             } else {
                 Text(to, style: .timer)
-                + Text(" " + WT.t("widget.prayer.time_left", "یێت ماین"))
+                + Text(" " + WT.t("widget.prayer.time_left", "یێن ماین"))
             }
         }
         .font(.system(size: fontSize, weight: .light).monospacedDigit())
