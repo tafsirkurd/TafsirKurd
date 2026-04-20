@@ -317,6 +317,30 @@
     return 'clear';
   }
 
+  /* Shared Open-Meteo parser — same WMO weather_code scale for all models */
+  function _omFetch(url) {
+    return fetch(url).then(function(r){return r.json();}).then(function(d){
+      var c = d.current || {};
+      return _classifyCode(c.weather_code, c.precipitation, c.wind_speed_10m);
+    }).catch(function(){return null;});
+  }
+
+  /* wttr.in parser (JSON v1) — works for both city-name and coord URLs */
+  function _wttrFetch(url) {
+    return fetch(url).then(function(r){return r.json();}).then(function(d){
+      var cur = (d.current_condition && d.current_condition[0]) || {};
+      var code = parseInt(cur.weatherCode || '0', 10);
+      var prec = parseFloat(cur.precipMM || '0');
+      var wind = parseFloat(cur.windspeedKmph || '0');
+      if (code >= 200 && code < 300) return 'thunder';
+      if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
+      if (wind >= 40) return 'wind';
+      return 'clear';
+    }).catch(function(){return null;});
+  }
+
+  var _OM = 'https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1';
+
   var _fetchRainInProgress = false;
   function _fetchRain() {
     try {
@@ -326,43 +350,29 @@
     if (_fetchRainInProgress) return;
     _fetchRainInProgress = true;
 
-    /* Source 1 — Open-Meteo (primary, Duhok coords) */
-    var s1 = fetch('https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        var cur = d.current || {};
-        return _classifyCode(cur.weather_code, cur.precipitation, cur.wind_speed_10m);
-      }).catch(function() { return null; });
+    /* 10 independent sources — 6 meteorological models via Open-Meteo,
+       wttr.in ×2, Norwegian Met Office, and 7timer.info                */
 
-    /* Source 2 — Open-Meteo secondary mirror (same API, different CDN node) */
-    var s2 = fetch('https://api.open-meteo.com/v1/forecast?latitude=36.867&longitude=42.946&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1&cell_selection=nearest')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        var cur = d.current || {};
-        return _classifyCode(cur.weather_code, cur.precipitation, cur.wind_speed_10m);
-      }).catch(function() { return null; });
+    /* Sources 1-6 — Open-Meteo serving 6 different agency models */
+    var s1 = _omFetch(_OM);                                                   /* best-match (auto) */
+    var s2 = _omFetch(_OM + '&models=ecmwf_ifs025');                          /* ECMWF IFS 0.25° */
+    var s3 = _omFetch(_OM + '&models=gfs_seamless');                          /* US NOAA GFS */
+    var s4 = _omFetch(_OM + '&models=icon_seamless');                         /* German DWD ICON */
+    var s5 = _omFetch(_OM + '&models=gem_seamless');                          /* Canadian CMC GEM */
+    var s6 = _omFetch(_OM + '&models=meteofrance_seamless');                  /* Météo-France */
 
-    /* Source 3 — wttr.in JSON by city name */
-    var s3 = fetch('https://wttr.in/Duhok?format=j1')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        var cur = (d.current_condition && d.current_condition[0]) || {};
-        var code   = parseInt(cur.weatherCode || '0', 10);
-        var prec   = parseFloat(cur.precipMM || '0');
-        var wind   = parseFloat(cur.windspeedKmph || '0');
-        if (code >= 200 && code < 300) return 'thunder';
-        if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
-        if (wind >= 40) return 'wind';
-        return 'clear';
-      }).catch(function() { return null; });
+    /* Source 7 — wttr.in by city name */
+    var s7 = _wttrFetch('https://wttr.in/Duhok?format=j1');
 
-    /* Source 4 — Norwegian Met Office (met.no) — fully independent provider */
-    var s4 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95', {
-        headers: { 'User-Agent': 'TafsirKurdApp/1.0 tefsirkurd@gmail.com' }
-      })
+    /* Source 8 — wttr.in by exact Duhok coordinates */
+    var s8 = _wttrFetch('https://wttr.in/36.87,42.95?format=j1');
+
+    /* Source 9 — Norwegian Met Office (fully independent provider) */
+    var s9 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95',
+        { headers: { 'User-Agent': 'TafsirKurdApp/1.0 tefsirkurd@gmail.com' } })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        var ts = (d.properties && d.properties.timeseries && d.properties.timeseries[0]) || {};
+        var ts   = (d.properties && d.properties.timeseries && d.properties.timeseries[0]) || {};
         var inst = (ts.data && ts.data.instant && ts.data.instant.details) || {};
         var n1h  = (ts.data && ts.data.next_1_hours) || {};
         var sym  = (n1h.summary && n1h.summary.symbol_code) || '';
@@ -374,21 +384,19 @@
         return 'clear';
       }).catch(function() { return null; });
 
-    /* Source 5 — wttr.in by exact Duhok coordinates (different resolution path) */
-    var s5 = fetch('https://wttr.in/36.87,42.95?format=j1')
+    /* Source 10 — 7timer.info CIVIL product (independent forecast provider) */
+    var s10 = fetch('https://www.7timer.info/bin/api.pl?lon=42.95&lat=36.87&product=civil&output=json')
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        var cur = (d.current_condition && d.current_condition[0]) || {};
-        var code   = parseInt(cur.weatherCode || '0', 10);
-        var prec   = parseFloat(cur.precipMM || '0');
-        var wind   = parseFloat(cur.windspeedKmph || '0');
-        if (code >= 200 && code < 300) return 'thunder';
-        if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
-        if (wind >= 40) return 'wind';
+        var ds   = (d.dataseries && d.dataseries[0]) || {};
+        var prec = ds.prec_type || 'none';
+        var wspd = (ds.wind10m && ds.wind10m.speed) || 1; /* 1-8 scale; 7≥50 km/h */
+        if (prec === 'rain' || prec === 'frzr' || prec === 'icepellets' || prec === 'snow') return 'rain';
+        if (wspd >= 7) return 'wind';
         return 'clear';
       }).catch(function() { return null; });
 
-    Promise.all([s1, s2, s3, s4, s5]).then(function(results) {
+    Promise.all([s1, s2, s3, s4, s5, s6, s7, s8, s9, s10]).then(function(results) {
       _fetchRainInProgress = false;
       /* Filter out nulls (failed sources) */
       var valid = results.filter(function(r) { return r !== null; });
