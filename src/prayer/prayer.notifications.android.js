@@ -109,7 +109,7 @@
   // One channel per voice, pointing to athan_<voice>.mp3 in res/raw/.
   // iOS ignores channels entirely — sound is set directly on the notification.
 
-  var CHANNEL_VER = 'v8'; // bump forces re-creation on existing installs
+  var CHANNEL_VER = 'v9'; // bump forces re-creation on existing installs
 
   async function ensureAllChannels() {
     var LN = getLN();
@@ -138,7 +138,7 @@
       id: 'athan_simple',
       name: 'Athan — Simple',
       description: desc,
-      importance: 3,
+      importance: 5,
       vibration: true,
       lights: true,
       lightColor: '#1f5f4a'
@@ -307,7 +307,7 @@
           id: id,
           title: title,
           body: body,
-          schedule: { at: prayerAt, allowWhileIdle: true },
+          schedule: { at: prayerAt, allowWhileIdle: true, exact: true },
           channelId: channelId,
           smallIcon: 'ic_notification',
           extra: { type: 'prayer', name: name, dateISO: dateISO }
