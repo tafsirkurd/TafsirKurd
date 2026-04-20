@@ -1148,13 +1148,15 @@
     // During rain/thunder suppress stars (overcast sky)
     if (stars) stars.style.opacity = (_wRain || _wThunder) ? '0' : String(ph.s);
 
-    // Cirrus clouds (high-altitude, daytime only)
+    // Cirrus clouds (high-altitude, daytime only) — hidden during rain/thunder (thick overcast)
     var cirrus = document.getElementById('skyCloudD');
     if (cirrus) {
-      var cirOp = pid === 'morning' || pid === 'noon' || pid === 'afternoon' ? 0.50
+      var cirOp = (_wRain || _wThunder) ? 0
+                : pid === 'morning' || pid === 'noon' || pid === 'afternoon' ? 0.50
                 : pid === 'asr' || pid === 'sunrise' ? 0.32 : 0;
-      cirrus.style.opacity = String(cirOp);
-      cirrus.style.color = cloudColor;
+      // During snow/wind: cirrus stays but takes weather cloud color
+      cirrus.style.opacity = _cloudBoost > 0 ? String(Math.min(1, cirOp + _cloudBoost * 0.5)) : String(cirOp);
+      cirrus.style.color   = _useCloudColor ? _weatherCloudColor : cloudColor;
     }
 
     // Venus — evening star (dusk/isha) or morning star (prefajr/fajr)

@@ -444,7 +444,7 @@
       id: 9999,
       title: window.t ? window.t('prayer.notif_title') : 'بانگ',
       body: 'Test — if you see this, notifications work! (' + at.toLocaleTimeString() + ')',
-      schedule: { at: at, allowWhileIdle: true },
+      schedule: { at: at, allowWhileIdle: true, exact: true },
       channelId: (voice === 'simple') ? 'athan_simple' : (ios ? 'reminder' : ('athan_' + voice)),
       extra: { type: 'test' }
     };

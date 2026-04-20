@@ -1213,7 +1213,7 @@
     }
 
     _update();
-    var _tid = setInterval(_update, 1000);
+    chip._countdownTid = setInterval(_update, 1000);
 
     return chip;
   }
@@ -1344,6 +1344,15 @@
         _initSlider(wrapper, track, dotsEl, items.length);
       });
     });
+
+    // Clear stale countdown interval from previous cached section before replacing
+    if (_sectionCache.el) {
+      var _oldChip = _sectionCache.el.querySelector('.sd-chip');
+      if (_oldChip && _oldChip._countdownTid) {
+        clearInterval(_oldChip._countdownTid);
+        _oldChip._countdownTid = null;
+      }
+    }
 
     _sectionCache.el      = section;
     _sectionCache.seed    = seed;
