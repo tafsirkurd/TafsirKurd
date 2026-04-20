@@ -821,6 +821,7 @@
 
     scene.innerHTML =
       '<div class="sky-bg" id="skyBg"></div>' +
+      '<div class="sky-weather-dim" id="skyWeatherDim"></div>' +
       '<div class="sky-hz" id="skyHz"></div>' +
       '<div class="sky-nebula" id="skyNebula"></div>' +
       '<div class="sky-milkyway" id="skyMilkyway"></div>' +
@@ -1085,14 +1086,26 @@
     var _weatherCond = 'clear';
     if (getCity() === 'Duhok') {
       try {
-        var _wd = JSON.parse(localStorage.getItem('sd_rain_v2'));
-        if (_wd && (Date.now() - _wd.ts) < 30 * 60 * 1000) _weatherCond = _wd.condition || 'clear';
+        var _wdata = JSON.parse(localStorage.getItem('sd_rain_v2'));
+        if (_wdata && (Date.now() - _wdata.ts) < 30 * 60 * 1000) _weatherCond = _wdata.condition || 'clear';
       } catch(e) {}
     }
     var _wRain    = _weatherCond === 'rain'    || _weatherCond === 'thunder';
     var _wSnow    = _weatherCond === 'snow';
     var _wWind    = _weatherCond === 'wind';
     var _wThunder = _weatherCond === 'thunder';
+
+    // Sky dimming overlay — makes sky look overcast/stormy
+    var _dimEl = document.getElementById('skyWeatherDim');
+    if (_dimEl) {
+      var _dimBg = _wThunder ? 'rgba(18,18,28,.54)'
+                 : _wRain    ? 'rgba(28,32,42,.30)'
+                 : _wSnow    ? 'rgba(195,210,228,.16)'
+                 : _wWind    ? 'rgba(195,215,235,.07)'
+                 : 'rgba(0,0,0,0)';
+      _dimEl.style.background = _dimBg;
+      _dimEl.style.opacity = (_wThunder || _wRain || _wSnow || _wWind) ? '1' : '0';
+    }
 
     var _skyRainEl  = document.getElementById('skyRain');
     var _skySnowEl  = document.getElementById('skySnow');
@@ -1116,12 +1129,24 @@
       }
     }
 
-    // Cloud boost: thunder darkest, rain dark, snow/wind slightly boosted, clear = phase default
-    var _cloudBoost = _wThunder ? 0.55 : _wRain ? 0.38 : _wSnow ? 0.22 : _wWind ? 0.12 : 0;
+    // Cloud colour: override to match weather (dark gray storm, pale blue snow)
+    var _weatherCloudColor = _wThunder ? 'rgba(42,42,52,.96)'
+                           : _wRain    ? 'rgba(88,98,112,.92)'
+                           : _wSnow    ? 'rgba(210,220,232,.88)'
+                           : _wWind    ? 'rgba(155,165,180,.80)'
+                           : cloudColor;
+    // Cloud opacity boost per condition; clear resets to phase value
+    var _cloudBoost = _wThunder ? 0.55 : _wRain ? 0.38 : _wSnow ? 0.22 : _wWind ? 0.14 : 0;
+    var _useCloudColor = (_wThunder || _wRain || _wSnow || _wWind);
     ['skyCloudA','skyCloudB','skyCloudC'].forEach(function(cid) {
       var cl = document.getElementById(cid);
-      if (cl) cl.style.opacity = _cloudBoost > 0 ? String(Math.min(1, (ph.cl || 0) + _cloudBoost)) : String(ph.cl || 0);
+      if (!cl) return;
+      cl.style.color   = _useCloudColor ? _weatherCloudColor : cloudColor;
+      cl.style.opacity = _cloudBoost > 0 ? String(Math.min(1, (ph.cl || 0) + _cloudBoost)) : String(ph.cl || 0);
     });
+
+    // During rain/thunder suppress stars (overcast sky)
+    if (stars) stars.style.opacity = (_wRain || _wThunder) ? '0' : String(ph.s);
 
     // Cirrus clouds (high-altitude, daytime only)
     var cirrus = document.getElementById('skyCloudD');
@@ -1164,6 +1189,7 @@
     if (now - _skyLastTick < 30000) return; // update every 30s max
     _skyLastTick = now;
     _doUpdateSky();
+    if (getCity() === 'Duhok') _fetchPrayerWeather(); // re-fetch when cache expires (30 min TTL)
     if (!_shootTimeout)    _scheduleNextShoot();
     if (!_aircraftTimeout) _scheduleNextAircraft();
     if (!_satelliteTimeout) _scheduleNextSatellite();
