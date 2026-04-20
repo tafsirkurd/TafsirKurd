@@ -1365,10 +1365,17 @@ App.tab=function(name){
     var _skyEl=document.getElementById('prayerSkyScene');
     if(_skyEl)_skyEl.classList.add('sky-paused');
   }
-  // Resume sky animations when entering prayer tab
+  // Resume sky animations when entering prayer tab — deferred so panel
+  // paints static content first THEN unpauses 30+ GPU animation layers.
+  // Removing sky-paused in the same frame as display:none→flex causes the
+  // browser to allocate all GPU layers + layout 300 nodes in one frame (jank).
   if(name==='prayer'){
-    var _skyEl=document.getElementById('prayerSkyScene');
-    if(_skyEl)_skyEl.classList.remove('sky-paused');
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        var _skyEl=document.getElementById('prayerSkyScene');
+        if(_skyEl)_skyEl.classList.remove('sky-paused');
+      });
+    });
   }
   // Clear quran search when leaving quran tab; disconnect badge observer to stop background work
   if(S.tab==='quran'&&name!=='quran'){
@@ -1398,11 +1405,14 @@ App.tab=function(name){
   if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){requestAnimationFrame(function(){renderGoals();_renderHash.goals=_tabHash('goals');});}}
   if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){requestAnimationFrame(function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');});}}
   if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){requestAnimationFrame(function(){renderSettings();_renderHash.settings=_tabHash('settings');});}requestAnimationFrame(function(){_warmAboutCache();});}
-  // Prayer: show panel immediately, defer heavy render + countdown behind rAF
+  // Prayer: show panel immediately, render deferred 2 frames so the browser
+  // paints the static skeleton before JS does any DOM work.
   if(name==='prayer'&&window.PrayerUI){
     requestAnimationFrame(function(){
-      PrayerUI.render();
-      requestAnimationFrame(function(){if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();});
+      requestAnimationFrame(function(){
+        PrayerUI.render();
+        if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
+      });
     });
   }
   if(name==='gencine'){_loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}});}

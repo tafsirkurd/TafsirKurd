@@ -1393,7 +1393,7 @@ body{background:var(--bg);color:var(--text)}
   --ph-bell:rgba(244,232,204,.12);--ph-bell-t:rgba(244,232,204,.5);--ph-bell-on:rgba(244,232,204,.22);
 }
 /* ── Sky Scene ── */
-.sky-scene{position:relative;height:268px;overflow:hidden;background:#020815}
+.sky-scene{position:relative;height:268px;overflow:hidden;background:#020815;contain:strict;will-change:transform}
 .sky-bg{position:absolute;inset:0;transition:background 12s linear}
 .sky-hz{position:absolute;bottom:0;left:0;right:0;height:60%;pointer-events:none;transition:opacity 8s}
 /* Stars — 3 twinkling speed variants */
