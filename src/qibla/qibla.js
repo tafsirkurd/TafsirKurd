@@ -1,33 +1,25 @@
-/* Qibla Compass — clean rebuild
+/* Qibla Compass — bulletproof rebuild
  *
- * Heading sources:
- *   iOS  → webkitCompassHeading (true-north bearing, 0=N CW, no offset needed)
- *   Android → deviceorientationabsolute alpha (0=N, CCW) → CW heading = (360-alpha)%360
+ * Sensor strategy (iOS Capacitor):
+ *   1. Start native CompassPlugin (CLLocationManager heading)
+ *   2. Listen for 'headingUpdate' events (push from native)
+ *   3. ALSO poll getHeading() every 100ms as backup (in case events don't fire)
+ *   4. If neither works after 4s → try web DeviceOrientationEvent
+ *   5. If nothing works after 8s → show calibration hint
+ *
+ * Android:
+ *   Uses deviceorientationabsolute event directly.
  *
  * Rotation model:
  *   The WORLD element rotates by -heading each frame.
- *   The Kaaba arm is a child of the world, pre-rotated by qiblaBearing (set once).
- *   Net arm position = qiblaBearing - heading.
- *   When heading === qiblaBearing → arm at 0° = top = behind fixed needle. ✓
- *
- * Smoothing:
- *   _headingSmooth accumulates continuously (unbounded int) — no 0/360 wrap glitch.
- *   Each frame: _headingSmooth += shortestDelta(normSmooth, rawHeading) × 0.12
- *   Lerp factor 0.12 ≈ 60% of the way in 8 frames @ 60fps → ~133ms settle.
- *
- * iOS permission flow:
- *   1. open() called (must be from onclick — user gesture)
- *   2. If permission needed → show "tap to enable" button (stays in gesture context)
- *   3. Button click → requestPermission() → granted → attach sensor
- *   4. If denied → show Settings guidance
- *   5. No-data timer: if sensor attached but no readings after 4s → show calibration hint
+ *   The Kaaba arm is a child of the world, pre-rotated by qiblaBearing.
+ *   When heading === qiblaBearing → arm at top = behind fixed needle. ✓
  */
 (function () {
   'use strict';
 
   var KAABA_LAT = 21.4225;
   var KAABA_LON = 39.8262;
-  /* Use Capacitor platform when available — more reliable than UA parsing */
   var IS_IOS = (window.Capacitor && window.Capacitor.getPlatform
                   ? window.Capacitor.getPlatform() === 'ios'
                   : /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream);
@@ -36,15 +28,14 @@
   function _buildDial(svgEl) {
     var ns = 'http://www.w3.org/2000/svg';
     var cx = 100, cy = 100, r0 = 95;
-    for (var i = 0; i < 72; i++) {          // every 5°
+    for (var i = 0; i < 72; i++) {
       var deg = i * 5;
       var rad = deg * Math.PI / 180;
-      var isMaj = deg % 90 === 0;           // N/E/S/W
-      var isMed = !isMaj && deg % 45 === 0; // diagonals
+      var isMaj = deg % 90 === 0;
+      var isMed = !isMaj && deg % 45 === 0;
       var is10  = !isMaj && !isMed && deg % 10 === 0;
       var r1    = isMaj ? 82 : isMed ? 86 : is10 ? 89 : 92;
       var sw    = isMaj ? 1.8  : isMed ? 1.4  : 0.9;
-      /* Class drives color per theme via CSS — no hardcoded stroke */
       var cls   = deg === 0 ? 'tick-north' : isMaj ? 'tick-maj' : isMed ? 'tick-med' : is10 ? 'tick-10' : 'tick-5';
       var x1 = cx + r0 * Math.sin(rad), y1 = cy - r0 * Math.cos(rad);
       var x2 = cx + r1 * Math.sin(rad), y2 = cy - r1 * Math.cos(rad);
@@ -60,17 +51,18 @@
 
   /* ── state ── */
   var _started       = false;
-  var _bearing       = null;   // Qibla bearing (0–360°)
-  var _headingRaw    = null;   // latest sensor value (0–360°)
-  var _headingSmooth = 0;      // continuous accumulator (no modulo — avoids wrap glitch)
+  var _bearing       = null;
+  var _headingRaw    = null;
+  var _headingSmooth = 0;
   var _aligned       = false;
   var _hapticLock    = false;
   var _animId        = null;
   var _sensorFn      = null;
   var _fallbackTimer = null;
-  var _noDataTimer   = null;   // fires if sensor attached but no readings after 4s
-  var _compassListener = null; // native Compass plugin listener (iOS)
-  var _orientationFn   = null; // orientationchange handler — stored for explicit removal
+  var _noDataTimer   = null;
+  var _compassListener = null;
+  var _orientationFn   = null;
+  var _pollInterval    = null;   // polling interval for getHeading()
   /* settle physics */
   var _settleOffset  = 0;
   var _settleActive  = false;
@@ -79,25 +71,24 @@
 
   /* ── DOM refs ── */
   var _world, _arm, _glow, _compass, _loading, _kaabaIcon;
-  var _prevProx = 0; // previous proximity value — avoids redundant style updates
-  var _glowRgb  = '212,175,55'; // set from CSS var --qibla-glow-rgb on open()
+  var _prevProx = 0;
+  var _glowRgb  = '212,175,55';
 
   /* ═══════════════════════════════════════════════════
-     BEARING  (forward azimuth to Kaaba)
+     BEARING
   ═══════════════════════════════════════════════════ */
   function _calcBearing(lat1, lon1) {
     var R  = Math.PI / 180;
-    var φ1 = lat1 * R, φ2 = KAABA_LAT * R;
-    var Δλ = (KAABA_LON - lon1) * R;
-    var x  = Math.sin(Δλ) * Math.cos(φ2);
-    var y  = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    var p1 = lat1 * R, p2 = KAABA_LAT * R;
+    var dl = (KAABA_LON - lon1) * R;
+    var x  = Math.sin(dl) * Math.cos(p2);
+    var y  = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
     return ((Math.atan2(x, y) * 180 / Math.PI) + 360) % 360;
   }
 
   /* ═══════════════════════════════════════════════════
      ANGLE MATH
   ═══════════════════════════════════════════════════ */
-  // Shortest signed delta from `a` to `b` (-180…+180)
   function _delta(a, b) {
     var d = b - a;
     while (d >  180) d -= 360;
@@ -106,11 +97,8 @@
   }
 
   /* ═══════════════════════════════════════════════════
-     SENSOR
+     SENSOR — screen rotation correction
   ═══════════════════════════════════════════════════ */
-  /* Returns the current screen rotation angle (0=portrait, 90=landscape-left,
-     270=landscape-right). Used to correct webkitCompassHeading which is always
-     relative to the physical device top, not the screen top. */
   function _screenAngle() {
     if (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') {
       return window.screen.orientation.angle;
@@ -121,30 +109,123 @@
     return 0;
   }
 
-  function _onOrientation(e) {
-    var raw;
-    if (IS_IOS) {
-      /* webkitCompassHeading: 0=North clockwise, measured from physical device top.
-         Subtract screen angle so heading is relative to screen top instead. */
-      if (e.webkitCompassHeading == null) return;
-      raw = (e.webkitCompassHeading - _screenAngle() + 360) % 360;
-    } else {
-      /* DeviceOrientationAbsolute: alpha=0→North, increases counter-clockwise.
-         Convert to CW compass heading: (360 - alpha) % 360 */
-      if (e.alpha == null) return;
-      raw = (360 - e.alpha + 360) % 360;
-    }
-    _headingRaw = raw;
-    /* Cancel no-data hint timer — we're getting readings */
-    if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
-    /* If loading spinner is still visible (first reading), hide it */
-    var loading = document.getElementById('qiblaLoading');
-    if (loading && loading.style.display !== 'none') {
+  function _setHeading(raw) {
+    _headingRaw = (raw - _screenAngle() + 360) % 360;
+    /* First reading — hide loading, show compass */
+    if (_loading && _loading.style.display !== 'none') {
       _showCompass();
     }
   }
 
-  function _attachSensor() {
+  /* ═══════════════════════════════════════════════════
+     SENSOR — native Capacitor plugin (iOS)
+  ═══════════════════════════════════════════════════ */
+  function _getCompassPlugin() {
+    if (!IS_IOS) return null;
+    if (!window.Capacitor) return null;
+    if (!window.Capacitor.Plugins) return null;
+    return window.Capacitor.Plugins.Compass || null;
+  }
+
+  function _startNativeCompass() {
+    var CP = _getCompassPlugin();
+    if (!CP) {
+      console.log('[Qibla] No native Compass plugin — skipping');
+      return;
+    }
+
+    console.log('[Qibla] Starting native Compass plugin...');
+
+    // Method 1: Event listener (push)
+    try {
+      CP.addListener('headingUpdate', function(data) {
+        if (!_started) return;
+        if (data && data.heading != null && data.heading >= 0) {
+          _setHeading(data.heading);
+        }
+      }).then(function(handle) {
+        _compassListener = handle;
+        console.log('[Qibla] headingUpdate listener attached');
+      }).catch(function(e) {
+        console.log('[Qibla] addListener failed:', e);
+      });
+    } catch(e) {
+      console.log('[Qibla] addListener exception:', e);
+    }
+
+    // Call start() to begin heading updates
+    CP.start().then(function(res) {
+      console.log('[Qibla] Compass.start() result:', JSON.stringify(res));
+      if (!_started) return;
+
+      if (res && res.status === 'granted') {
+        // Method 2: Poll getHeading() every 100ms as backup
+        // This guarantees we get data even if notifyListeners is broken
+        _startPolling(CP);
+      } else if (res && res.status === 'denied') {
+        console.log('[Qibla] Compass denied — trying web fallback');
+        _tryWebFallback();
+      } else if (res && res.status === 'unavailable') {
+        console.log('[Qibla] Compass unavailable — trying web fallback');
+        _tryWebFallback();
+      }
+    }).catch(function(e) {
+      console.log('[Qibla] Compass.start() failed:', e, '— trying web fallback');
+      _tryWebFallback();
+    });
+
+    // Safety net: if no data after 4s from native, also try web
+    _noDataTimer = setTimeout(function() {
+      if (_started && _headingRaw === null) {
+        console.log('[Qibla] No native data after 4s — trying web fallback too');
+        _tryWebFallback();
+      }
+    }, 4000);
+  }
+
+  function _startPolling(CP) {
+    if (_pollInterval) return; // already polling
+    if (!CP || !CP.getHeading) {
+      console.log('[Qibla] getHeading not available — relying on events only');
+      return;
+    }
+    console.log('[Qibla] Starting getHeading() polling as backup');
+    _pollInterval = setInterval(function() {
+      if (!_started) { _stopPolling(); return; }
+      CP.getHeading().then(function(data) {
+        if (!_started) return;
+        if (data && data.heading != null && data.heading >= 0) {
+          _setHeading(data.heading);
+        }
+      }).catch(function() {});
+    }, 100);
+  }
+
+  function _stopPolling() {
+    if (_pollInterval) {
+      clearInterval(_pollInterval);
+      _pollInterval = null;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════
+     SENSOR — web DeviceOrientation fallback
+  ═══════════════════════════════════════════════════ */
+  function _onOrientation(e) {
+    var raw;
+    if (IS_IOS) {
+      if (e.webkitCompassHeading == null) return;
+      raw = e.webkitCompassHeading;
+    } else {
+      if (e.alpha == null) return;
+      raw = (360 - e.alpha + 360) % 360;
+    }
+    _setHeading(raw);
+  }
+
+  function _attachWebSensor() {
+    if (_sensorFn) return; // already attached
+    console.log('[Qibla] Attaching web DeviceOrientation sensor');
     _sensorFn = _onOrientation;
     var useAbs = !IS_IOS && ('ondeviceorientationabsolute' in window);
     window.addEventListener(
@@ -154,15 +235,15 @@
   }
 
   function _detachSensor() {
-    /* Native iOS compass — removeAllListeners clears every registered headingUpdate
-       listener so stale handles from prior sessions don't pile up in the bridge */
-    var CP = IS_IOS && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Compass;
+    // Stop native
+    var CP = _getCompassPlugin();
     if (CP) {
-      if (CP.removeAllListeners) CP.removeAllListeners().catch(function(){});
-      CP.stop().catch(function(){});
+      try { if (CP.removeAllListeners) CP.removeAllListeners().catch(function(){}); } catch(e) {}
+      try { CP.stop().catch(function(){}); } catch(e) {}
     }
     _compassListener = null;
-    /* Web DeviceOrientation */
+    _stopPolling();
+    // Stop web
     if (_sensorFn) {
       window.removeEventListener('deviceorientationabsolute', _sensorFn, true);
       window.removeEventListener('deviceorientation',         _sensorFn, true);
@@ -170,65 +251,43 @@
     }
   }
 
-  function _requestSensor() {
-    /* On iOS in Capacitor: use native CLLocationManager heading — more reliable
-       than webkitCompassHeading which is often null/wrong in WKWebView. */
-    var CP = IS_IOS && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Compass;
-    if (CP) {
-      CP.start().then(function(res) {
-        if (!_started) return;
-        if (res && res.status === 'granted') {
-          /* addListener returns Promise<handle> in Capacitor 4 — store handle via .then() */
-          CP.addListener('headingUpdate', function(data) {
-            if (!_started) return;
-            var heading = data.heading;
-            if (heading == null || heading < 0) return;
-            /* CLLocationManager heading is relative to physical device top (portrait).
-               Subtract screen angle so heading matches the current screen top. */
-            _headingRaw = (heading - _screenAngle() + 360) % 360;
-            if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
-            var loading = document.getElementById('qiblaLoading');
-            if (loading && loading.style.display !== 'none') _showCompass();
-          }).then(function(handle) {
-            _compassListener = handle;
-          }).catch(function(){});
-          /* Show calibration hint if no readings arrive within 4s */
-          _noDataTimer = setTimeout(function() {
-            if (_started && _headingRaw === null) _showNoDataHint();
-          }, 4000);
-        } else if (res && res.status === 'denied') {
-          _showPermissionDenied();
-        } else {
-          /* plugin unavailable — fall back to DeviceOrientationEvent */
-          _requestSensorWeb();
-        }
-      }).catch(function() {
-        _requestSensorWeb();
-      });
-    } else if (IS_IOS) {
-      _requestSensorWeb();
-    } else {
-      /* Android — attach directly */
-      _attachSensor();
-    }
-  }
-
-  function _requestSensorWeb() {
-    /* Web fallback: DeviceOrientationEvent (requires user gesture on iOS 13+) */
+  function _tryWebFallback() {
+    if (_sensorFn) return; // already attached
     if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // iOS 13+ — needs user gesture. Show button.
       _showIosPermissionPrompt();
     } else {
-      _attachSensor();
+      _attachWebSensor();
     }
   }
 
-  /* ── iOS permission prompt ───────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════
+     SENSOR — main entry
+  ═══════════════════════════════════════════════════ */
+  function _requestSensor() {
+    if (IS_IOS) {
+      _startNativeCompass();
+    } else {
+      // Android — attach web sensor directly
+      _attachWebSensor();
+    }
+
+    // Absolute last resort: if nothing works after 8s, show hint
+    setTimeout(function() {
+      if (_started && _headingRaw === null) {
+        _showNoDataHint();
+      }
+    }, 8000);
+  }
+
+  /* ── iOS web permission prompt ─────────────────────────────────────────── */
   function _showIosPermissionPrompt() {
+    // Only show if compass is still loading (no data yet)
+    if (_headingRaw !== null) return;
     var loading = document.getElementById('qiblaLoading');
     if (!loading) { _doRequestPermission(); return; }
 
-    /* Replace spinner with a tap-to-enable button */
     while (loading.firstChild) loading.removeChild(loading.firstChild);
     loading.style.display = 'flex';
     loading.style.flexDirection = 'column';
@@ -237,7 +296,7 @@
     var btn = document.createElement('button');
     btn.style.cssText = 'background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);'
       + 'color:#fff;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;';
-    btn.textContent = 'چالاک کردنی پێلاو';  /* Enable Compass */
+    btn.textContent = '\u0686\u0627\u0644\u0627\u06A9 \u06A9\u0631\u062F\u0646\u06CC \u067E\u06CE\u0644\u0627\u0648';
 
     var hint = document.createElement('div');
     hint.style.cssText = 'font-size:11px;color:rgba(255,255,255,.55);text-align:center;max-width:160px;';
@@ -256,7 +315,6 @@
     DeviceOrientationEvent.requestPermission()
       .then(function(r) {
         if (r === 'granted') {
-          /* Restore spinner while we wait for first reading */
           var loading = document.getElementById('qiblaLoading');
           if (loading) {
             while (loading.firstChild) loading.removeChild(loading.firstChild);
@@ -267,12 +325,7 @@
             loading.appendChild(sp);
             loading.style.display = 'flex';
           }
-          _attachSensor();
-          /* No-data safety: if sensor is attached but webkitCompassHeading stays
-             null for 4 s (device not calibrated / flat on table), show a hint. */
-          _noDataTimer = setTimeout(function() {
-            if (_started && _headingRaw === null) _showNoDataHint();
-          }, 4000);
+          _attachWebSensor();
         } else {
           _showPermissionDenied();
         }
@@ -281,6 +334,7 @@
   }
 
   function _showPermissionDenied() {
+    if (_headingRaw !== null) return; // already getting data from native
     var loading = document.getElementById('qiblaLoading');
     if (!loading) return;
     while (loading.firstChild) loading.removeChild(loading.firstChild);
@@ -290,17 +344,18 @@
 
     var icon = document.createElement('div');
     icon.style.cssText = 'font-size:22px;';
-    icon.textContent = '⚠️';
+    icon.textContent = '\u26A0\uFE0F';
 
     var msg = document.createElement('div');
     msg.style.cssText = 'font-size:12px;color:rgba(255,255,255,.75);text-align:center;max-width:170px;line-height:1.5;';
-    msg.textContent = 'Motion access denied. Go to iOS Settings → Privacy → Motion & Fitness → enable for this app.';
+    msg.textContent = 'Motion access denied. Go to iOS Settings \u2192 Privacy \u2192 Motion & Fitness \u2192 enable for this app.';
 
     loading.appendChild(icon);
     loading.appendChild(msg);
   }
 
   function _showNoDataHint() {
+    if (_headingRaw !== null) return; // data arrived, ignore
     var loading = document.getElementById('qiblaLoading');
     if (!loading) return;
     while (loading.firstChild) loading.removeChild(loading.firstChild);
@@ -310,7 +365,7 @@
 
     var icon = document.createElement('div');
     icon.style.cssText = 'font-size:22px;';
-    icon.textContent = '🧭';
+    icon.textContent = '\uD83E\uDDED';
 
     var msg = document.createElement('div');
     msg.style.cssText = 'font-size:12px;color:rgba(255,255,255,.75);text-align:center;max-width:170px;line-height:1.5;';
@@ -354,11 +409,6 @@
     var normSmooth = ((_headingSmooth % 360) + 360) % 360;
     var rawDiff    = Math.abs(_delta(normSmooth, _headingRaw));
 
-    /* ── Lerp curve: faster far away, magnetically slow near Qibla ───────
-       >20°  → 0.16 (quick sweep)
-       10–20° → 0.12–0.16 (eases in)
-       5–10° → 0.05–0.12 (magnetic pull-down)
-       <5°   → 0.05 (crawl to lock)  */
     var lerpFactor = rawDiff > 20 ? 0.16
                    : rawDiff > 10 ? 0.12 + (rawDiff - 10) / 10 * 0.04
                    : rawDiff > 5  ? 0.05 + (rawDiff - 5) / 5 * 0.07
@@ -366,15 +416,11 @@
 
     var prevSmooth = _headingSmooth;
     _headingSmooth += _delta(normSmooth, _headingRaw) * lerpFactor;
-    var dHeading   = _headingSmooth - prevSmooth;  // velocity this frame
+    var dHeading   = _headingSmooth - prevSmooth;
 
-    /* ── Settle physics: overshoot + spring-back when crossing 3° ────────
-       Triggered once per alignment entry. Offset decays at 0.80/frame
-       (~250–300ms to settle). Applied additively to the world rotation.  */
     if (!_settleActive && rawDiff < 3 && _prevDiff >= 3) {
-      _settleOffset = dHeading * -40;                    // amplify velocity
+      _settleOffset = dHeading * -40;
       _settleOffset = Math.max(-1.8, Math.min(1.8, _settleOffset));
-      /* Guarantee minimum feel even when lerp has nearly stalled */
       if (Math.abs(_settleOffset) < 0.4) {
         _settleOffset = dHeading >= 0 ? -0.4 : 0.4;
       }
@@ -392,12 +438,10 @@
 
     _world.style.transform = 'rotateZ(' + (-_headingSmooth + _settleOffset) + 'deg)';
 
-    /* ── Proximity-driven glow (0 at 10°, 1 at 0°) ───────────────────── */
     var normH = ((_headingSmooth % 360) + 360) % 360;
     var diff  = Math.abs(_delta(normH, _bearing));
     var prox  = diff < 10 ? 1 - diff / 10 : 0;
 
-    /* Only update DOM when prox changes by >1% — avoids redundant paints */
     if (Math.abs(prox - _prevProx) > 0.01) {
       _prevProx = prox;
       if (_glow) {
@@ -414,10 +458,6 @@
       }
     }
 
-    /* ── Alignment with hysteresis + 120ms anticipation delay ───────────
-       Enter at <3°, exit at >3.5° — prevents flickering at the boundary.
-       The 120ms timer confirms the user held alignment before triggering
-       the visual/haptic feedback.                                         */
     var nowOn = _aligned ? diff < 3.5 : diff < 3;
 
     if (nowOn && !_aligned && !_alignTimer) {
@@ -450,7 +490,6 @@
       if (_compass)   _compass.classList.remove('qibla-compass--pulse');
     }
 
-    /* Cancel pending alignment if user drifted back out before 120ms */
     if (!nowOn && _alignTimer) {
       clearTimeout(_alignTimer);
       _alignTimer = null;
@@ -467,7 +506,6 @@
     _compass   = document.getElementById('qiblaCompass');
     _loading   = document.getElementById('qiblaLoading');
     _kaabaIcon = document.getElementById('qiblaKaabaIcon');
-    /* Build tick marks once */
     var dial = document.getElementById('qiblaDial');
     if (dial && !dial.dataset.built) { _buildDial(dial); dial.dataset.built = '1'; }
   }
@@ -486,7 +524,6 @@
   function open() {
     var overlay = document.getElementById('qiblaOverlay');
     if (overlay) overlay.classList.add('qibla-open');
-    // Pause prayer sky + countdown so they don't compete with qibla animation
     if (window.PrayerUI && PrayerUI._pauseSkyForQibla) PrayerUI._pauseSkyForQibla();
 
     if (_started) return;
@@ -500,10 +537,8 @@
     _settleActive  = false;
     _prevDiff      = 180;
     if (_alignTimer) { clearTimeout(_alignTimer); _alignTimer = null; }
-    _initDom(); // DOM refs first — needed by everything below
+    _initDom();
 
-    // Defer getComputedStyle out of the animation frame so it doesn't
-    // block the overlay transition on the same frame
     setTimeout(function() {
       _glowRgb = (getComputedStyle(document.documentElement)
                     .getPropertyValue('--qibla-glow-rgb') || '212,175,55').trim();
@@ -513,10 +548,8 @@
     if (_compass) { _compass.style.transition = 'none'; _compass.style.opacity = '0'; }
     if (_glow)    { _glow.classList.remove('qibla-glow--on'); }
 
-    /* Request sensor within this user-gesture call stack (iOS permission) */
     _requestSensor();
 
-    /* On orientation change reset heading smooth so compass doesn't jump */
     if (!_orientationFn) {
       _orientationFn = function() {
         if (!_started) return;
@@ -526,15 +559,13 @@
       window.addEventListener('orientationchange', _orientationFn);
     }
 
-    /* Get location → set bearing → show compass */
     _getLocation(function (lat, lon) {
       if (!_started) return;
       _bearing = _calcBearing(lat, lon);
       if (_arm) _arm.style.transform = 'rotateZ(' + _bearing + 'deg)';
-      _showCompass();
+      // Only show compass if we also have heading data, or after fallback timer
     });
 
-    /* Fallback: show compass after 3 s even if geolocation hangs */
     _fallbackTimer = setTimeout(function () {
       if (_started && _compass && _compass.style.opacity !== '1') _showCompass();
     }, 3000);
@@ -553,7 +584,6 @@
     if (_alignTimer)    { clearTimeout(_alignTimer);      _alignTimer    = null; }
     if (_noDataTimer)   { clearTimeout(_noDataTimer);     _noDataTimer   = null; }
     if (_orientationFn) { window.removeEventListener('orientationchange', _orientationFn); _orientationFn = null; }
-    /* Reset loading element to plain spinner for next open */
     var loading = document.getElementById('qiblaLoading');
     if (loading) {
       while (loading.firstChild) loading.removeChild(loading.firstChild);
@@ -570,7 +600,6 @@
     _prevDiff     = 180;
     if (_glow)      _glow.classList.remove('qibla-glow--on');
     if (_kaabaIcon) _kaabaIcon.classList.remove('qibla-aligned');
-    // Resume prayer sky + countdown after qibla closes
     if (window.PrayerUI && PrayerUI._resumeSkyForQibla) PrayerUI._resumeSkyForQibla();
   }
 
