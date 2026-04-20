@@ -1061,6 +1061,7 @@
     var INTENT = 5;
     var _vx = 0, _vtLast = 0, _xLast = 0;
 
+    /* ── swipe — non-passive so we can preventDefault vertical scroll ── */
     track.addEventListener('touchstart', function(e) {
       _cancelTeleport();
       var actualX = _readX();
@@ -1071,7 +1072,7 @@
       track.style.transition = 'none';
       track.style.transform  = 'translate3d(' + actualX + 'px,0,0)';
       _pauseProg();
-    }, { passive: true });
+    }, { passive: false });
 
     track.addEventListener('touchmove', function(e) {
       if (!_drag) return;
@@ -1084,6 +1085,8 @@
         if (!_horiz) { _drag = false; _resumeProg(); return; }
       }
       if (!_horiz) return;
+      /* Block page scroll while dragging horizontally */
+      e.preventDefault();
       var now = performance.now(), dt = now - _vtLast;
       if (dt > 0) { _vx = (cx - _xLast) / dt; }
       _vtLast = now; _xLast = cx;
@@ -1094,7 +1097,7 @@
                   : raw < min ? min + (raw - min) * 0.25
                   : raw;
       track.style.transform = 'translate3d(' + clamped + 'px,0,0)';
-    }, { passive: true });
+    }, { passive: false });
 
     function _onEnd(e) {
       if (!_drag) return; _drag = false;
@@ -1111,8 +1114,8 @@
         _goTo(current, true);
       }
     }
-    track.addEventListener('touchend',    _onEnd, { passive: true });
-    track.addEventListener('touchcancel', _onEnd, { passive: true });
+    track.addEventListener('touchend',    _onEnd, { passive: false });
+    track.addEventListener('touchcancel', _onEnd, { passive: false });
 
     function _onVis() {
       if (!_alive()) { document.removeEventListener('visibilitychange', _onVis); return; }
