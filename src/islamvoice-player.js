@@ -1364,33 +1364,46 @@
         wrapper.style.cssText = 'position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;';
         wrapper.onclick = e => e.stopPropagation();
 
-        // Simple iframe
+        // Plan A: Force inline playback via YouTube embed iframe
         const iframe = document.createElement('iframe');
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=https://tafsirkurd.com&widget_referrer=https://tafsirkurd.com`;
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
         iframe.style.cssText = 'width:100%; height:100%; border:none;';
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups');
         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
         iframe.allowFullscreen = true;
         iframe.referrerPolicy = 'no-referrer-when-downgrade';
-        wrapper.appendChild(iframe);
 
-        // iOS fallback: if iframe can't autoplay, show YouTube button after short delay
+        // Plan B (iOS only): If iframe fails to load, show YouTube app button
         if (isNative && platform === 'ios') {
-            const ytFallback = document.createElement('button');
-            const ytIcon = document.createElement('i');
-            ytIcon.className = 'fab fa-youtube';
-            ytIcon.style.cssText = 'margin-left:6px;font-size:18px;vertical-align:middle;';
-            const ytLabel = document.createTextNode(' بکە لە یوتیوب');
-            ytFallback.appendChild(ytIcon);
-            ytFallback.appendChild(ytLabel);
-            ytFallback.style.cssText = 'display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:101;background:#ff0000;color:#fff;border:none;border-radius:24px;padding:10px 22px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;direction:rtl;';
-            ytFallback.onclick = function(e) {
-                e.stopPropagation();
+            var iframeLoaded = false;
+            iframe.onload = function() { iframeLoaded = true; };
+            iframe.onerror = function() {
+                // iframe blocked — go straight to YouTube app
                 openInYouTubeApp(videoId);
+                wrapper.remove();
+                if (thumbnail) thumbnail.style.display = '';
+                clickedCard.classList.remove('now-playing');
             };
-            wrapper.appendChild(ytFallback);
-            // Show fallback button after 3s — gives autoplay a chance first
-            setTimeout(function() { ytFallback.style.display = 'block'; }, 3000);
+            // Safety net: if iframe didn't load after 6s, show YouTube app button
+            setTimeout(function() {
+                if (!iframeLoaded && wrapper.parentNode) {
+                    var ytFallback = document.createElement('button');
+                    var ytIcon = document.createElement('i');
+                    ytIcon.className = 'fab fa-youtube';
+                    ytIcon.style.cssText = 'margin-left:6px;font-size:18px;vertical-align:middle;';
+                    ytFallback.appendChild(ytIcon);
+                    ytFallback.appendChild(document.createTextNode(' بکە لە یوتیوب'));
+                    ytFallback.style.cssText = 'position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:101;background:#ff0000;color:#fff;border:none;border-radius:24px;padding:10px 22px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;direction:rtl;';
+                    ytFallback.onclick = function(e) {
+                        e.stopPropagation();
+                        openInYouTubeApp(videoId);
+                    };
+                    wrapper.appendChild(ytFallback);
+                }
+            }, 6000);
         }
+
+        wrapper.appendChild(iframe);
 
         // Close button
         const closeBtn = document.createElement('button');

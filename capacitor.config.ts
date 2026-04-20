@@ -11,6 +11,8 @@ const config: CapacitorConfig = {
       'everyayah.com',
       'api.quran.com',
       'api.aladhan.com',
+      'www.youtube-nocookie.com',
+      'www.youtube.com',
     ],
   },
   ios: {
