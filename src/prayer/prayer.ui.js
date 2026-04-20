@@ -348,8 +348,9 @@
     el.className = 'sky-aircraft';
     el.innerHTML = '<div class="sky-ac-trail"></div><div class="sky-ac-body">' +
       '<div class="sky-ac-r"></div><div class="sky-ac-w"></div></div>';
-    el.style.cssText = 'top:' + startY + '%;left:-4%';
+    el.style.cssText = 'position:absolute;top:0;left:0;will-change:transform';
     scene.appendChild(el);
+    var sceneW = scene.offsetWidth || 400;
     var start = Date.now();
     function tick() {
       var p = (Date.now() - start) / dur;
@@ -358,8 +359,9 @@
         _aircraftRaf = null;
         return;
       }
-      el.style.left = (-4 + p * 110) + '%';
-      el.style.top  = (startY + (endY - startY) * p) + '%';
+      var tx = (-4 + p * 110) / 100 * sceneW;
+      var ty = (startY + (endY - startY) * p) / 100 * sceneW;
+      el.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)';
       _aircraftRaf = requestAnimationFrame(tick);
     }
     _aircraftRaf = requestAnimationFrame(tick);
@@ -383,8 +385,9 @@
     var endY   = startY + Math.random() * 6 - 3;
     var dur    = 22000 + Math.random() * 14000; // 22–36 s, slower than aircraft
     var el = document.createElement('div');
-    el.style.cssText = 'position:absolute;width:2px;height:2px;background:rgba(255,255,255,0.92);border-radius:50%;top:' + startY + '%;left:-1%;z-index:6;pointer-events:none;box-shadow:0 0 3px rgba(255,255,255,0.75)';
+    el.style.cssText = 'position:absolute;width:2px;height:2px;background:rgba(255,255,255,0.92);border-radius:50%;top:0;left:0;z-index:6;pointer-events:none;will-change:transform';
     scene.appendChild(el);
+    var sceneW = scene.offsetWidth || 400;
     var start = Date.now();
     function tick() {
       var p = (Date.now() - start) / dur;
@@ -393,8 +396,9 @@
         _satelliteRaf = null;
         return;
       }
-      el.style.left = (-1 + p * 102) + '%';
-      el.style.top  = (startY + (endY - startY) * p) + '%';
+      var tx = (-1 + p * 102) / 100 * sceneW;
+      var ty = (startY + (endY - startY) * p) / 100 * sceneW;
+      el.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)';
       _satelliteRaf = requestAnimationFrame(tick);
     }
     _satelliteRaf = requestAnimationFrame(tick);
@@ -496,8 +500,9 @@
       '</svg>';
     var startY = 20 + Math.random() * 20;
     var dur = 80000 + Math.random() * 40000; // 80–120 s
-    el.style.cssText = 'position:absolute;top:' + startY + '%;left:106%;z-index:5;pointer-events:none';
+    el.style.cssText = 'position:absolute;top:0;left:0;z-index:5;pointer-events:none;will-change:transform';
     scene.appendChild(el);
+    var sceneW = scene.offsetWidth || 400; var sceneH = scene.offsetHeight || 268;
     var start = Date.now();
     function tick() {
       var p = (Date.now() - start) / dur;
@@ -506,8 +511,9 @@
         _balloonRaf = null;
         return;
       }
-      el.style.left = (106 - p * 120) + '%';
-      el.style.top  = (startY - Math.sin(p * Math.PI) * 9 + Math.sin(p * 22) * 1.4) + '%';
+      var tx = (106 - p * 120) / 100 * sceneW;
+      var ty = (startY - Math.sin(p * Math.PI) * 9 + Math.sin(p * 22) * 1.4) / 100 * sceneH;
+      el.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)';
       _balloonRaf = requestAnimationFrame(tick);
     }
     _balloonRaf = requestAnimationFrame(tick);
@@ -583,8 +589,8 @@
     function tick() {
       var p = (Date.now() - start) / dur;
       if (p >= 1) { if (el.parentNode) el.parentNode.removeChild(el); _majorEventActive = false; return; }
-      el.style.left    = (sx + p * 38) + '%';
-      el.style.top     = (sy + p * 18) + '%';
+      var _csw = scene.offsetWidth||400; var _csh = scene.offsetHeight||268;
+      el.style.transform = 'translate(' + ((sx+p*38)/100*_csw).toFixed(1) + 'px,' + ((sy+p*18)/100*_csh).toFixed(1) + 'px)';
       el.style.opacity = String(p < 0.14 ? p / 0.14 : p > 0.78 ? (1 - p) / 0.22 : 1);
       requestAnimationFrame(tick);
     }
@@ -610,7 +616,7 @@
     var endY   = startY - 3 - Math.random() * 9;
     var dur    = 9000 + Math.random() * 7000; // 9–16 s
     var el = document.createElement('div');
-    el.style.cssText = 'position:absolute;top:' + startY + '%;left:-2%;z-index:6;pointer-events:none;filter:drop-shadow(0 0 3px rgba(255,255,200,0.88))';
+    el.style.cssText = 'position:absolute;top:0;left:0;z-index:6;pointer-events:none;will-change:transform';
     el.innerHTML =
       '<svg width="10" height="6" viewBox="0 0 10 6">' +
       '<rect x="0" y="2" width="10" height="2" fill="rgba(255,255,195,0.94)" rx="1"/>' +
@@ -626,8 +632,8 @@
         _majorEventActive = false;
         return;
       }
-      el.style.left = (-2 + p * 104) + '%';
-      el.style.top  = (startY + (endY - startY) * p) + '%';
+      var _sw = scene.offsetWidth || 400; var _sh = scene.offsetHeight || 268;
+      el.style.transform = 'translate(' + ((-2 + p * 104)/100*_sw).toFixed(1) + 'px,' + ((startY + (endY-startY)*p)/100*_sh).toFixed(1) + 'px)';
       _issRaf = requestAnimationFrame(tick);
     }
     _issRaf = requestAnimationFrame(tick);
@@ -663,8 +669,7 @@
     if (ph !== 'night' && ph !== 'isha' && ph !== 'dusk' && ph !== 'prefajr') return;
     var goRight = Math.random() > 0.5;
     var el = document.createElement('div');
-    el.style.cssText = 'position:absolute;bottom:2.6%;z-index:9;pointer-events:none;' +
-      (goRight ? 'left:-3%' : 'right:-3%');
+    el.style.cssText = 'position:absolute;bottom:2.6%;left:0;z-index:9;pointer-events:none;will-change:transform';
     var clr = goRight ? 'rgba(255,238,170,0.90)' : 'rgba(255,50,50,0.90)';
     el.innerHTML = '<div style="display:flex;gap:3px">' +
       '<div style="width:2px;height:1.5px;background:' + clr + ';box-shadow:0 0 3px ' + clr + ';border-radius:1px"></div>' +
@@ -676,8 +681,9 @@
     function tick() {
       var p = (Date.now() - start) / dur;
       if (p >= 1) { if (el.parentNode) el.parentNode.removeChild(el); return; }
-      if (goRight) el.style.left  = (-3 + p * 106) + '%';
-      else         el.style.right = (-3 + p * 106) + '%';
+      var _cw = scene.offsetWidth || 400;
+      var _cx = goRight ? (-3 + p * 106) / 100 * _cw : (_cw - (-3 + p * 106) / 100 * _cw);
+      el.style.transform = 'translateX(' + _cx.toFixed(1) + 'px)';
       requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
@@ -1240,7 +1246,7 @@
     // Layer 4 — Clouds (vertical only — horizontal fights CSS drift animation)
     ['skyCloudA','skyCloudB','skyCloudC','skyCloudD'].forEach(function(id) {
       var cl = document.getElementById(id);
-      if (cl) cl.style.marginTop = (y * 0.08).toFixed(2) + 'px';
+      if (cl) cl.style.transform = cl.style.transform.replace(/\s*translateY\([^)]*\)/,'') + ' translateY(' + (y * 0.08).toFixed(2) + 'px)';
     });
 
     // Layer 5 — Sun/moon (mid-depth)
@@ -1331,6 +1337,7 @@
   }
 
   function tickCountdown() {
+    if (document.hidden) return; // backgrounded — skip, saves battery
     if (!_currentTimings || !_currentDateISO) return;
 
     var now  = new Date();
@@ -1447,8 +1454,8 @@
       skSceneMoment.classList.toggle('prayer-soft', inSoft);
     }
 
-    // Update sky visuals every 30s
-    tickSky();
+    // Update sky visuals every 30s — only enter tickSky if 30s have elapsed (avoids function call overhead)
+    if (Date.now() - _skyLastTick >= 30000) tickSky();
   }
 
   async function fetchTomorrow() {

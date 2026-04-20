@@ -1153,7 +1153,8 @@ function _startTabPrerender(){
     function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
     function(){renderGoals();_renderHash.goals=_tabHash('goals');},
     function(){renderSettings();_renderHash.settings=_tabHash('settings');},
-    function(){if(window.PrayerUI)PrayerUI.render();},
+    function(){if(window.PrayerUI){PrayerUI.render();// Pause sky animations — pre-rendered but not the active tab
+      requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},
     function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
     function(){if(window.GencineUI)GencineUI.render();}
   ];
@@ -1392,10 +1393,11 @@ App.tab=function(name){
   var tabBtn=_getCachedTabBtn(tabBtnName);
   if(tabBtn)tabBtn.classList.add('on');
 
-  if(name==='bookmarks'){var h=_tabHash('bookmarks');if(h!==_renderHash.bm){renderBookmarks();_renderHash.bm=h;}}
-  if(name==='goals'){var h=_tabHash('goals');if(h!==_renderHash.goals){renderGoals();_renderHash.goals=h;}}
-  if(name==='islamvoice'){var h=_tabHash('islamvoice');if(h!==_renderHash.iv){renderIslamVoice();_renderHash.iv=h;}}
-  if(name==='settings'){var h=_tabHash('settings');if(h!==_renderHash.settings){renderSettings();_renderHash.settings=h;}_warmAboutCache();}
+  // Defer renders to rAF so panel is visible before JS render blocks the main thread
+  if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){requestAnimationFrame(function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');});}}
+  if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){requestAnimationFrame(function(){renderGoals();_renderHash.goals=_tabHash('goals');});}}
+  if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){requestAnimationFrame(function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');});}}
+  if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){requestAnimationFrame(function(){renderSettings();_renderHash.settings=_tabHash('settings');});}requestAnimationFrame(function(){_warmAboutCache();});}
   // Prayer: show panel immediately, defer heavy render + countdown behind rAF
   if(name==='prayer'&&window.PrayerUI){
     requestAnimationFrame(function(){

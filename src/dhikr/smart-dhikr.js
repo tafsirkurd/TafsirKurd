@@ -1004,7 +1004,9 @@
        formula: -(count - cur) * W                          */
     function _posX(cur) { return -(count - cur) * _W(); }
 
+    var _trackX = _posX(0); // JS-tracked position — avoids getComputedStyle reads
     function _applyX(px, anim) {
+      _trackX = px;
       track.style.transition = anim ? 'transform ' + SNAP_MS + 'ms ' + SNAP_FN : 'none';
       track.style.transform  = 'translate3d(' + px + 'px,0,0)';
     }
@@ -1095,13 +1097,8 @@
       _raf = requestAnimationFrame(_tick);
     }
 
-    /* Read the ACTUAL visual X of the track mid-animation (for touch-interrupt) */
-    function _readX() {
-      var t = window.getComputedStyle(track).transform;
-      if (!t || t === 'none') return _posX(0);
-      var m = t.match(/matrix.*\((.+)\)/);
-      return m ? (parseFloat(m[1].split(',')[4]) || _posX(0)) : _posX(0);
-    }
+    /* Read current track X — JS-tracked to avoid layout-flushing getComputedStyle */
+    function _readX() { return _trackX; }
 
     /* ── swipe ── */
     var _drag = false, _sx = 0, _sy = 0, _baseX = 0;
