@@ -31,7 +31,7 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
             if self.locationManager == nil {
                 let lm = CLLocationManager()
                 lm.delegate = self
-                lm.headingFilter = 1.0          // notify every 1° change
+                lm.headingFilter = 0.5          // notify every 0.5° change
                 lm.headingOrientation = .portrait
                 self.locationManager = lm
             }
@@ -66,7 +66,6 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
         // trueHeading requires a GPS fix; falls back to magneticHeading when unavailable (-1)
         let heading = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
         let accuracy = newHeading.headingAccuracy
-        NSLog("[Compass] heading=%.1f accuracy=%.1f", heading, accuracy)
         notifyListeners("headingUpdate", data: [
             "heading":  heading,
             "accuracy": accuracy

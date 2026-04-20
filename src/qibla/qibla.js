@@ -153,13 +153,14 @@
   }
 
   function _detachSensor() {
-    /* Native iOS compass */
-    if (_compassListener) {
-      try { _compassListener.remove(); } catch(e) {}
-      _compassListener = null;
-      var CP = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Compass;
-      if (CP) CP.stop().catch(function(){});
+    /* Native iOS compass — removeAllListeners clears every registered headingUpdate
+       listener so stale handles from prior sessions don't pile up in the bridge */
+    var CP = IS_IOS && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Compass;
+    if (CP) {
+      if (CP.removeAllListeners) CP.removeAllListeners().catch(function(){});
+      CP.stop().catch(function(){});
     }
+    _compassListener = null;
     /* Web DeviceOrientation */
     if (_sensorFn) {
       window.removeEventListener('deviceorientationabsolute', _sensorFn, true);
@@ -176,7 +177,8 @@
       CP.start().then(function(res) {
         if (!_started) return;
         if (res && res.status === 'granted') {
-          _compassListener = CP.addListener('headingUpdate', function(data) {
+          /* addListener returns Promise<handle> in Capacitor 4 — store handle via .then() */
+          CP.addListener('headingUpdate', function(data) {
             if (!_started) return;
             var heading = data.heading;
             if (heading == null || heading < 0) return;
@@ -184,7 +186,13 @@
             if (_noDataTimer) { clearTimeout(_noDataTimer); _noDataTimer = null; }
             var loading = document.getElementById('qiblaLoading');
             if (loading && loading.style.display !== 'none') _showCompass();
-          });
+          }).then(function(handle) {
+            _compassListener = handle;
+          }).catch(function(){});
+          /* Show calibration hint if no readings arrive within 4s */
+          _noDataTimer = setTimeout(function() {
+            if (_started && _headingRaw === null) _showNoDataHint();
+          }, 4000);
         } else if (res && res.status === 'denied') {
           _showPermissionDenied();
         } else {
@@ -317,7 +325,7 @@
       navigator.geolocation.getCurrentPosition(
         function (p) { cb(p.coords.latitude, p.coords.longitude); },
         function ()  { _cityFallback(cb); },
-        { timeout: 8000, maximumAge: 600000, enableHighAccuracy: false }
+        { timeout: 2000, maximumAge: 600000, enableHighAccuracy: false }
       );
     } else {
       _cityFallback(cb);
