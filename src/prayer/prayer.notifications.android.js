@@ -109,8 +109,6 @@
   // One channel per voice, pointing to athan_<voice>.mp3 in res/raw/.
   // iOS ignores channels entirely — sound is set directly on the notification.
 
-  var CHANNEL_VER = 'v9'; // bump forces re-creation on existing installs
-
   async function ensureAllChannels() {
     var LN = getLN();
     if (!LN || !LN.createChannel) return; // iOS doesn't have channels
@@ -170,12 +168,12 @@
     if (!LN) return;
     var ids = [];
     for (var i = 0; i < MAX_DAYS * 5; i++) {
-      ids.push({ id: ID_BASE + i }); // IDs 100–134
+      ids.push({ id: ID_BASE + i }); // IDs 100–239
     }
     await LN.cancel({ notifications: ids }).catch(function(e) {
       console.warn('[Athan] cancel error (non-fatal):', e && e.message);
     });
-    console.log('[Athan] cancelled all athan notification slots (IDs 100–134)');
+    console.log('[Athan] cancelled all athan notification slots (IDs 100–239)');
   }
 
   // ── Scheduling mutex ───────────────────────────────────────────────────────
@@ -405,7 +403,7 @@
 
     console.log('═══════════════════════════════════════════════════');
     console.log('[Athan DEBUG] Total OS-pending notifications:', all.length);
-    console.log('[Athan DEBUG] Athan slots pending (IDs 100–134):', athan.length);
+    console.log('[Athan DEBUG] Athan slots pending (IDs 100–239):', athan.length);
     if (athan.length === 0) {
       console.warn('[Athan DEBUG] ⚠️  NO athan notifications are pending in the OS!');
     }

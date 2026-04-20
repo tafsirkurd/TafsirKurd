@@ -935,12 +935,11 @@ function init(){
   }
 
   // Ensure notification channels exist on Android (capacitor.config channels[] is iOS-only)
+  // Note: requestPermissions() is NOT called here — _doSchedule() handles it at the right
+  // time (after athan data is ready), preventing a premature dialog on top of the splash.
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications){
     try{
       var _LN=window.Capacitor.Plugins.LocalNotifications;
-      _LN.requestPermissions().catch(function(){});
-      // Force-recreate athan channels in case they were missing after install
-      localStorage.removeItem('athanChannelVer');
       // Create reminder channel immediately at startup
       _ensureReminderChannel(_LN);
       // Reschedule daily reminder on every launch so 7-day window never expires
