@@ -1,0 +1,1 @@
+(async()=>{const r=await adminTranslationsAPI('bulk_update_by_key',{items:[{key_id:'prayer.method_diyanet',fields:{kurdish_text:'دیانەت — تورکیا'}},{key_id:'prayer.method_mwl',fields:{kurdish_text:'لیگا جیھانی موسلمانان'}},{key_id:'prayer.method_uaq',fields:{kurdish_text:'ئوم الکورا'}}]});console.log('Result:',r);})().catch(e=>console.error('Error:',e));
