@@ -2449,20 +2449,30 @@
   }
 
   function openSettings() {
-    _pauseSkyAnimations();
-    // Pause countdown interval — its 1s DOM work competes with sheet slide animation
-    if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
+    // Show overlay FIRST — sheet slide starts immediately on this frame
     var overlay = document.getElementById('prayerSettingsOverlay');
     if (overlay) overlay.classList.add('open');
+    // Pause sky in next frame — compositor already has the sheet transition queued,
+    // so pausing 30+ CSS animations now won't affect the slide smoothness
+    if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
+    requestAnimationFrame(function() {
+      _pauseSkyAnimations();
+      var scene = document.getElementById('prayerSkyScene');
+      if (scene) scene.classList.add('sky-paused'); // stop all 30+ CSS animations too
+    });
   }
 
   function closeSettings() {
     stopPreview();
     var overlay = document.getElementById('prayerSettingsOverlay');
     if (overlay) overlay.classList.remove('open');
-    _resumeSkyAnimations();
-    // Restart countdown after sheet close animation finishes (350ms)
-    setTimeout(function() { if (!_countdownInterval && _currentTimings) startCountdown(); }, 350);
+    // Resume sky CSS animations + RAF loops after close transition (280ms)
+    setTimeout(function() {
+      var scene = document.getElementById('prayerSkyScene');
+      if (scene) scene.classList.remove('sky-paused');
+      _resumeSkyAnimations();
+      if (!_countdownInterval && _currentTimings) startCountdown();
+    }, 300);
   }
 
   function buildToggleRow(parent, label, isOn, onChange, extraClass) {
@@ -2758,12 +2768,20 @@
     invalidate: function(){ _renderedKey = null; },
     openSettings: openSettings,
     _pauseSkyForQibla: function() {
-      _pauseSkyAnimations();
       if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
+      requestAnimationFrame(function() {
+        _pauseSkyAnimations();
+        var scene = document.getElementById('prayerSkyScene');
+        if (scene) scene.classList.add('sky-paused');
+      });
     },
     _resumeSkyForQibla: function() {
-      _resumeSkyAnimations();
-      setTimeout(function() { if (!_countdownInterval && _currentTimings) startCountdown(); }, 350);
+      setTimeout(function() {
+        var scene = document.getElementById('prayerSkyScene');
+        if (scene) scene.classList.remove('sky-paused');
+        _resumeSkyAnimations();
+        if (!_countdownInterval && _currentTimings) startCountdown();
+      }, 300);
     },
     initScheduleOnStart: initScheduleOnStart,
     pushWidgetIfStale: pushWidgetIfStale,
