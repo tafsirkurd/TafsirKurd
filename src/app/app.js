@@ -962,6 +962,14 @@ function init(){
   setTimeout(function(){checkNewBookNotif();},2500);
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
+  // Preload Gencine scripts in background so first tab open is instant (scripts are 190KB)
+  setTimeout(function(){_loadGencineScripts(function(){
+    // Pre-render only if user hasn't already opened the tab
+    if(window.GencineUI&&S.tab!=='gencine'){
+      var _gh=_tabHash('gencine');
+      if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
+    }
+  });},3000);
   // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
   setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},4000);
   // Athan voice decode is CPU-intensive — delay until after first 3s of interaction
@@ -1408,7 +1416,12 @@ App.tab=function(name){
       if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
     });
   }
-  if(name==='gencine'){_loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}});}
+  if(name==='gencine'){_loadGencineScripts(function(){
+    requestAnimationFrame(function(){
+      var _gh=_tabHash('gencine');
+      if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
+    });
+  });}
 };
 
 /* ===== GENCINE LAZY LOADER ===== */
@@ -1422,23 +1435,28 @@ function _loadGencineScripts(cb) {
   if (cb) _gencineScriptsCbs.push(cb);
   if (_gencineScriptsLoading) return;
   _gencineScriptsLoading = true;
+
   function _ls(src, next) {
     var s = document.createElement('script');
     s.src = src;
     s.onload = next;
-    s.onerror = next; // fail silently so the tab still opens even on network error
+    s.onerror = next;
     document.body.appendChild(s);
   }
-  _ls('/dhikr/dua-data.js?v=20260326b', function() {
-    _ls('/dhikr/smart-dhikr.js?v=31', function() {
-      _ls('/dhikr/dhikr.js?v=20260416', function() {
-        _gencineScriptsLoaded = true;
-        _gencineScriptsLoading = false;
-        var cbs = _gencineScriptsCbs.splice(0);
-        cbs.forEach(function(fn) { try { fn(); } catch(e) {} });
-      });
-    });
-  });
+
+  function _done() {
+    _gencineScriptsLoaded = true;
+    _gencineScriptsLoading = false;
+    var cbs = _gencineScriptsCbs.splice(0);
+    cbs.forEach(function(fn) { try { fn(); } catch(e) {} });
+  }
+
+  // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
+  // then load dhikr.js only after both finish (it depends on both)
+  var _p1 = false, _p2 = false;
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260416', _done); }
+  _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=31',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
