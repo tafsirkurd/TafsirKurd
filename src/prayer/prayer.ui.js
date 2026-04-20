@@ -193,6 +193,82 @@
   var _skyPhaseId  = null;
   var _skyLastTick = 0;
 
+  /* ── Duhok weather (5-source majority vote, shared sd_rain_v2 cache) ── */
+  var _WEATHER_KEY = 'sd_rain_v2';
+  var _WEATHER_TTL = 30 * 60 * 1000;
+  var _weatherFetchInProgress = false;
+  function _classifyWeatherCode(code, prec, wind) {
+    code = code || 0; prec = prec || 0; wind = wind || 0;
+    if (code >= 95) return 'thunder';
+    if (prec > 0 || (code >= 51 && code <= 82)) return 'rain';
+    if (wind >= 40) return 'wind';
+    return 'clear';
+  }
+  function _fetchPrayerWeather() {
+    try {
+      var _wc = JSON.parse(localStorage.getItem(_WEATHER_KEY));
+      if (_wc && (Date.now() - _wc.ts) < _WEATHER_TTL) return;
+    } catch(e) {}
+    if (_weatherFetchInProgress) return;
+    _weatherFetchInProgress = true;
+
+    var s1 = fetch('https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1')
+      .then(function(r){return r.json();}).then(function(d){var c=d.current||{};return _classifyWeatherCode(c.weather_code,c.precipitation,c.wind_speed_10m);}).catch(function(){return null;});
+
+    var s2 = fetch('https://api.open-meteo.com/v1/forecast?latitude=36.867&longitude=42.946&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1&cell_selection=nearest')
+      .then(function(r){return r.json();}).then(function(d){var c=d.current||{};return _classifyWeatherCode(c.weather_code,c.precipitation,c.wind_speed_10m);}).catch(function(){return null;});
+
+    var s3 = fetch('https://wttr.in/Duhok?format=j1')
+      .then(function(r){return r.json();}).then(function(d){
+        var cur=(d.current_condition&&d.current_condition[0])||{};
+        var code=parseInt(cur.weatherCode||'0',10),prec=parseFloat(cur.precipMM||'0'),wind=parseFloat(cur.windspeedKmph||'0');
+        if(code>=200&&code<300)return 'thunder';
+        if(prec>0||(code>=300&&code<600))return 'rain';
+        if(wind>=40)return 'wind';
+        return 'clear';
+      }).catch(function(){return null;});
+
+    var s4 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95',{headers:{'User-Agent':'TafsirKurdApp/1.0 tefsirkurd@gmail.com'}})
+      .then(function(r){return r.json();}).then(function(d){
+        var ts=(d.properties&&d.properties.timeseries&&d.properties.timeseries[0])||{};
+        var inst=(ts.data&&ts.data.instant&&ts.data.instant.details)||{};
+        var n1h=(ts.data&&ts.data.next_1_hours)||{};
+        var sym=(n1h.summary&&n1h.summary.symbol_code)||'';
+        var prec=(n1h.details&&n1h.details.precipitation_amount)||0;
+        var wind=inst.wind_speed||0;
+        if(sym.indexOf('thunder')!==-1)return 'thunder';
+        if(sym.indexOf('rain')!==-1||sym.indexOf('sleet')!==-1||sym.indexOf('shower')!==-1||prec>0)return 'rain';
+        if(wind>=11)return 'wind';
+        return 'clear';
+      }).catch(function(){return null;});
+
+    var s5 = fetch('https://wttr.in/36.87,42.95?format=j1')
+      .then(function(r){return r.json();}).then(function(d){
+        var cur=(d.current_condition&&d.current_condition[0])||{};
+        var code=parseInt(cur.weatherCode||'0',10),prec=parseFloat(cur.precipMM||'0'),wind=parseFloat(cur.windspeedKmph||'0');
+        if(code>=200&&code<300)return 'thunder';
+        if(prec>0||(code>=300&&code<600))return 'rain';
+        if(wind>=40)return 'wind';
+        return 'clear';
+      }).catch(function(){return null;});
+
+    Promise.all([s1,s2,s3,s4,s5]).then(function(results){
+      _weatherFetchInProgress = false;
+      var valid = results.filter(function(r){return r!==null;});
+      if (!valid.length) return;
+      var counts = {}, severity = {thunder:3,rain:2,wind:1,clear:0};
+      valid.forEach(function(c){counts[c]=(counts[c]||0)+1;});
+      var winner = valid[0], winnerScore = counts[winner]*10+(severity[winner]||0);
+      Object.keys(counts).forEach(function(c){
+        var score = counts[c]*10+(severity[c]||0);
+        if (score > winnerScore){winner=c;winnerScore=score;}
+      });
+      try { localStorage.setItem(_WEATHER_KEY, JSON.stringify({ts:Date.now(),condition:winner,sources:results})); } catch(e){}
+      // Refresh sky if prayer tab is active
+      _doUpdateSky();
+    }).catch(function(){_weatherFetchInProgress=false;});
+  }
+
   function _skyPhaseName(timings, dateISO, now) {
     var pl  = window.PrayerLogic;
     var fj  = pl.parseAsDate(timings.Fajr,    dateISO).getTime();
@@ -612,6 +688,7 @@
   function buildSkyScene(container, data, city, today) {
     var scene = cel('div', 'sky-scene');
     scene.id = 'prayerSkyScene';
+    scene.dataset.city = city;
 
     // Stars SVG — 60 stars with twinkling, color tints, and constellation lines
     var starSVG = '<svg class="sky-stars" viewBox="0 0 400 75" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">';
@@ -751,6 +828,9 @@
       '<div class="sky-godrays" id="skyGodRays"></div>' +
       '<div class="sky-fog" id="skyFog"></div>' +
       '<div class="sky-rainbow" id="skyRainbow"></div>' +
+      '<div class="sky-rain" id="skyRain"></div>' +
+      '<div class="sky-thunder-flash" id="skyThunderFlash"></div>' +
+      '<div class="sky-wind" id="skyWind"></div>' +
       horizSVG +
       '<div class="sky-top-row">' +
         '<div class="sky-city">' + (getCityLabel(city)) + '</div>' +
@@ -764,6 +844,36 @@
       '</div>';
 
     container.appendChild(scene);
+
+    // Populate rain drops (80 randomised streaks) — createElement avoids innerHTML XSS
+    var _rainEl = document.getElementById('skyRain');
+    if (_rainEl) {
+      for (var _ri = 0; _ri < 80; _ri++) {
+        var _drop = document.createElement('div');
+        _drop.className = 'sky-drop';
+        var _rh = (18 + Math.random() * 26).toFixed(0);
+        var _rd = (0.45 + Math.random() * 0.75).toFixed(2);
+        var _rde = (Math.random() * parseFloat(_rd)).toFixed(2);
+        _drop.style.cssText = 'left:' + (Math.random()*102).toFixed(1) + '%;top:' + (Math.random()*100).toFixed(1) + '%;height:' + _rh + 'px;animation:sky-drop-fall ' + _rd + 's linear -' + _rde + 's infinite';
+        _rainEl.appendChild(_drop);
+      }
+    }
+
+    // Populate wind streaks (25 randomised lines) — createElement avoids innerHTML XSS
+    var _windEl = document.getElementById('skyWind');
+    if (_windEl) {
+      for (var _wi = 0; _wi < 25; _wi++) {
+        var _streak = document.createElement('div');
+        _streak.className = 'sky-wind-streak';
+        var _wdur = (1.0 + Math.random() * 2.0).toFixed(2);
+        var _wdel = (Math.random() * parseFloat(_wdur)).toFixed(2);
+        _streak.style.cssText = 'top:' + (8+Math.random()*76).toFixed(1) + '%;width:' + (55+Math.random()*110).toFixed(0) + 'px;height:' + (1+Math.random()*2).toFixed(1) + 'px;animation:sky-wind-streak ' + _wdur + 's linear -' + _wdel + 's infinite';
+        _windEl.appendChild(_streak);
+      }
+    }
+
+    // Kick off background weather fetch when Duhok is selected
+    if (city === 'Duhok') _fetchPrayerWeather();
 
     // Oversize stars & horizon so parallax never reveals empty edges.
     // Stars at 0.15x gyro (max ~±1.4px) get 8px buffer (2% of 400px) — huge margin.
@@ -914,6 +1024,37 @@
     if (rainbow) {
       var rbOp = pid === 'sunrise' ? 0.85 : pid === 'morning' ? 0.55 : 0;
       rainbow.style.opacity = String(rbOp);
+    }
+
+    // Weather overlay — rain / thunder / wind (Duhok only)
+    var _weatherCond = 'clear';
+    if (getCity() === 'Duhok') {
+      try {
+        var _wd = JSON.parse(localStorage.getItem('sd_rain_v2'));
+        if (_wd && (Date.now() - _wd.ts) < 30 * 60 * 1000) _weatherCond = _wd.condition || 'clear';
+      } catch(e) {}
+    }
+    var _skyRainEl = document.getElementById('skyRain');
+    var _skyFlash  = document.getElementById('skyThunderFlash');
+    var _skyWindEl = document.getElementById('skyWind');
+    var _isRain    = _weatherCond === 'rain' || _weatherCond === 'thunder';
+    if (_skyRainEl) _skyRainEl.classList.toggle('active', _isRain);
+    if (_skyWindEl) _skyWindEl.classList.toggle('active', _weatherCond === 'wind');
+    if (_skyFlash) {
+      if (_weatherCond === 'thunder') {
+        if (!_skyFlash.style.animation) {
+          _skyFlash.style.animation = 'sky-flash ' + (6 + Math.random() * 8).toFixed(1) + 's ease infinite';
+        }
+      } else {
+        _skyFlash.style.animation = '';
+      }
+    }
+    // Boost cloud opacity during rain/thunder
+    if (_isRain) {
+      ['skyCloudA','skyCloudB','skyCloudC'].forEach(function(cid) {
+        var cl = document.getElementById(cid);
+        if (cl) cl.style.opacity = String(Math.min(1, (ph.cl || 0) + 0.38));
+      });
     }
 
     // Cirrus clouds (high-altitude, daytime only)

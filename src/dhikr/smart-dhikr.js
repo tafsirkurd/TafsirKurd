@@ -342,7 +342,7 @@
         return _classifyCode(cur.weather_code, cur.precipitation, cur.wind_speed_10m);
       }).catch(function() { return null; });
 
-    /* Source 3 — wttr.in JSON (completely independent data provider) */
+    /* Source 3 — wttr.in JSON by city name */
     var s3 = fetch('https://wttr.in/Duhok?format=j1')
       .then(function(r) { return r.json(); })
       .then(function(d) {
@@ -350,14 +350,45 @@
         var code   = parseInt(cur.weatherCode || '0', 10);
         var prec   = parseFloat(cur.precipMM || '0');
         var wind   = parseFloat(cur.windspeedKmph || '0');
-        /* wttr weather codes: 200s=thunder, 300s/500s=rain/drizzle, 800=clear */
         if (code >= 200 && code < 300) return 'thunder';
         if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
         if (wind >= 40) return 'wind';
         return 'clear';
       }).catch(function() { return null; });
 
-    Promise.all([s1, s2, s3]).then(function(results) {
+    /* Source 4 — Norwegian Met Office (met.no) — fully independent provider */
+    var s4 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95', {
+        headers: { 'User-Agent': 'TafsirKurdApp/1.0 tefsirkurd@gmail.com' }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var ts = (d.properties && d.properties.timeseries && d.properties.timeseries[0]) || {};
+        var inst = (ts.data && ts.data.instant && ts.data.instant.details) || {};
+        var n1h  = (ts.data && ts.data.next_1_hours) || {};
+        var sym  = (n1h.summary && n1h.summary.symbol_code) || '';
+        var prec = (n1h.details && n1h.details.precipitation_amount) || 0;
+        var wind = inst.wind_speed || 0; /* m/s */
+        if (sym.indexOf('thunder') !== -1) return 'thunder';
+        if (sym.indexOf('rain') !== -1 || sym.indexOf('sleet') !== -1 || sym.indexOf('shower') !== -1 || prec > 0) return 'rain';
+        if (wind >= 11) return 'wind'; /* 11 m/s ≈ 40 km/h */
+        return 'clear';
+      }).catch(function() { return null; });
+
+    /* Source 5 — wttr.in by exact Duhok coordinates (different resolution path) */
+    var s5 = fetch('https://wttr.in/36.87,42.95?format=j1')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var cur = (d.current_condition && d.current_condition[0]) || {};
+        var code   = parseInt(cur.weatherCode || '0', 10);
+        var prec   = parseFloat(cur.precipMM || '0');
+        var wind   = parseFloat(cur.windspeedKmph || '0');
+        if (code >= 200 && code < 300) return 'thunder';
+        if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
+        if (wind >= 40) return 'wind';
+        return 'clear';
+      }).catch(function() { return null; });
+
+    Promise.all([s1, s2, s3, s4, s5]).then(function(results) {
       _fetchRainInProgress = false;
       /* Filter out nulls (failed sources) */
       var valid = results.filter(function(r) { return r !== null; });
