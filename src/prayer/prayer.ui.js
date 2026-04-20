@@ -1061,7 +1061,8 @@
       lights.style.opacity = String(lightsOp);
     }
 
-    // God rays / crepuscular rays (sunrise / fajr / sunset / asr)
+    // God rays / crepuscular rays (sunrise / fajr / sunset / asr) — hidden during storms
+    // NOTE: godrays CSS animation uses transform:scaleX (not opacity) so JS opacity works
     var godrays = document.getElementById('skyGodRays');
     if (godrays) {
       var grOp = pid === 'sunrise' ? 0.92 : pid === 'fajr' ? 0.60 : pid === 'sunset' ? 0.88 : pid === 'asr' ? 0.42 : 0;
@@ -1075,7 +1076,7 @@
       fog.style.opacity = String(fogOp);
     }
 
-    // Rainbow arc (sunrise → morning)
+    // Rainbow arc (sunrise → morning) — hidden during heavy weather
     var rainbow = document.getElementById('skyRainbow');
     if (rainbow) {
       var rbOp = pid === 'sunrise' ? 0.85 : pid === 'morning' ? 0.55 : 0;
@@ -1145,8 +1146,16 @@
       cl.style.opacity = _cloudBoost > 0 ? String(Math.min(1, (ph.cl || 0) + _cloudBoost)) : String(ph.cl || 0);
     });
 
-    // During rain/thunder suppress stars (overcast sky)
+    // During rain/thunder suppress stars, god rays, birds (overcast sky, birds shelter)
     if (stars) stars.style.opacity = (_wRain || _wThunder) ? '0' : String(ph.s);
+    if (godrays) godrays.style.opacity = (_wRain || _wThunder || _wSnow) ? '0' : godrays.style.opacity;
+    if (birds)   birds.style.opacity   = (_wRain || _wThunder)            ? '0' : String(ph.br);
+    // Dim sun/moon during overcast — cloud cover hides direct celestial light
+    if (glowEl) glowEl.style.opacity = (_wRain || _wThunder) ? '0.18' : '1';
+    if (sunRays) sunRays.style.opacity = (_wRain || _wThunder || _wSnow) ? '0' : (pos.isSun ? '1' : '0');
+    // Rainbow and fog don't appear during active weather (overridden below phase-set value)
+    if (rainbow && (_wRain || _wThunder || _wSnow || _wWind)) rainbow.style.opacity = '0';
+    if (fog    && (_wRain || _wThunder || _wSnow))            fog.style.opacity     = '0';
 
     // Cirrus clouds (high-altitude, daytime only) — hidden during rain/thunder (thick overcast)
     var cirrus = document.getElementById('skyCloudD');

@@ -1512,9 +1512,9 @@ body{background:var(--bg);color:var(--text)}
 .sky-lantern{position:absolute;width:7px;height:9px;background:rgba(255,195,50,0.92);border-radius:45% 45% 65% 65%;box-shadow:0 0 8px rgba(255,165,0,0.90),0 0 20px rgba(255,130,0,0.42);pointer-events:none;z-index:6;animation:sky-lant 9s ease-out forwards}
 /* Moon surface craters / mare texture */
 .sky-cel-moon::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle 30% at 38% 36%,rgba(0,0,0,0.14) 0%,transparent 100%),radial-gradient(circle 18% at 67% 27%,rgba(0,0,0,0.11) 0%,transparent 100%),radial-gradient(circle 22% at 54% 68%,rgba(0,0,0,0.12) 0%,transparent 100%),radial-gradient(circle 12% at 22% 72%,rgba(0,0,0,0.09) 0%,transparent 100%),radial-gradient(circle 8% at 78% 55%,rgba(0,0,0,0.08) 0%,transparent 100%)}
-/* God rays / crepuscular rays */
-@keyframes sky-gdr{0%{opacity:.35}50%{opacity:.65}100%{opacity:.35}}
-.sky-godrays{position:absolute;bottom:0;left:0;right:0;height:100%;pointer-events:none;z-index:2;transition:opacity 6s;animation:sky-gdr 5s ease-in-out infinite;background:repeating-conic-gradient(from 270deg at 50% 108%,rgba(255,195,80,0.055) 0deg,transparent 3.5deg,rgba(255,215,110,0.045) 5.5deg,transparent 8deg)}
+/* God rays / crepuscular rays — opacity controlled by JS; animation uses scale not opacity */
+@keyframes sky-gdr{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.04)}}
+.sky-godrays{position:absolute;bottom:0;left:0;right:0;height:100%;pointer-events:none;z-index:1;transition:opacity 6s;animation:sky-gdr 5s ease-in-out infinite;background:repeating-conic-gradient(from 270deg at 50% 108%,rgba(255,195,80,0.055) 0deg,transparent 3.5deg,rgba(255,215,110,0.045) 5.5deg,transparent 8deg)}
 /* Fireflies */
 @keyframes sky-ff{0%,100%{opacity:0;transform:scale(0.7)}45%{opacity:1;transform:scale(1.3)}58%{opacity:0.9;transform:scale(1.1)}}
 .sky-firefly{position:absolute;width:3px;height:3px;background:rgba(185,255,100,0.92);border-radius:50%;box-shadow:0 0 5px rgba(160,255,70,0.88),0 0 13px rgba(110,240,50,0.44);pointer-events:none;z-index:7;animation:sky-ff var(--ffd,2s) ease-in-out infinite var(--ffdl,0s)}
