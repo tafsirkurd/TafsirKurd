@@ -683,6 +683,10 @@ window.GencineUI = {
 
   /* ── called by section nav buttons ── */
   section: function(name){
+    if (this._view === 'home') {
+      var _pg = document.getElementById('panelGencine');
+      if (_pg) this._homeScrollPos = _pg.scrollTop;
+    }
     this._view = name;
     if (name === 'hadith') { this._hadithDetailIdx = null; this._hadithSearch = ''; }
     if (name === 'adhkar') { this._adhkarView = 'grid'; }
@@ -744,11 +748,18 @@ window.GencineUI = {
     if(window.App && App.closeRecPicker) App.closeRecPicker();
     while(el.firstChild) el.removeChild(el.firstChild);
     var panel = document.getElementById('panelGencine');
-    // Don't reset scroll when returning to books — we'll restore saved position
     var restoringBooks = (this._view === 'books' && this._booksScrollPos != null);
-    if(panel && !restoringBooks) panel.scrollTop = 0;
+    var restoringHome  = (this._view === 'home'  && this._homeScrollPos  != null);
+    if(panel && !restoringBooks && !restoringHome) panel.scrollTop = 0;
     this._updateHeader();
-    if(this._view === 'home')         this._renderHome(el);
+    if(this._view === 'home'){
+      this._renderHome(el);
+      if(restoringHome){
+        var _savedHome = this._homeScrollPos;
+        this._homeScrollPos = null;
+        if(panel) setTimeout(function(){ panel.scrollTop = _savedHome; }, 0);
+      }
+    }
     else if(this._view === 'adhkar')  this._renderAdhkar(el);
     else if(this._view === 'dua')     this._renderDua(el);
     else if(this._view === 'tasbih')  this._renderTasbih(el);

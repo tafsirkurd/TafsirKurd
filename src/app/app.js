@@ -2389,6 +2389,7 @@ App.openSurah=function(num,scrollTo){
   var s=SURAHS[num-1]; // bounds-check before any state mutation
   if(!s){console.warn('[openSurah] invalid surah num:',num);return;}
   haptic([8]);
+  var _pq=$('panelQuran');if(_pq)S._quranListScroll=_pq.scrollTop;
   _startSession(num);
   S.surah=num;
   $('readerName').textContent=s.en+' - '+s.ar;
@@ -2422,6 +2423,7 @@ App.backToList=function(){
   $('quranReader').classList.remove('on');
   if(window.innerWidth<768){$('quranHome').style.display='';}
   if(al)al.scrollTop=0;
+  if(S._quranListScroll!=null){var _pq=$('panelQuran');if(_pq)setTimeout(function(){_pq.scrollTop=S._quranListScroll;S._quranListScroll=null;},0);}
   renderContinue();
 };
 
@@ -8969,6 +8971,7 @@ function renderIvGrid(){
 }
 
 App.ivShowSeries=function(seriesId){
+  var _piv=$('panelIslamvoice');if(_piv)S._ivHomeScroll=_piv.scrollTop;
   S.ivCurrentSeries=seriesId;
   $('ivHome').style.display='none';
   $('ivSeriesView').classList.add('on');
@@ -9106,6 +9109,7 @@ App.ivBack=function(){
   S.ivCurrentSeries=null;
   $('ivSeriesView').classList.remove('on');
   $('ivHome').style.display='';
+  if(S._ivHomeScroll!=null){var _piv=$('panelIslamvoice');if(_piv)setTimeout(function(){_piv.scrollTop=S._ivHomeScroll;S._ivHomeScroll=null;},0);}
 };
 
 App.ivPlay=function(episodeId){
