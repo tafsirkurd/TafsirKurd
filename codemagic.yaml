@@ -22,7 +22,7 @@ workflows:
       - name: Full clean
         script: |
           rm -rf node_modules package-lock.json
-          rm -rf ios/App/Pods ios/App/Podfile.lock ios/App/DerivedData
+          rm -rf ios/App/Pods ios/App/DerivedData
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
       - name: Install dependencies
