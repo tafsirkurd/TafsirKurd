@@ -170,17 +170,17 @@
             display: inline-flex; align-items: center; gap: 4px;
             font-family: var(--font-family); line-height: 1.4;
         }
-        .sched-chip:hover { border-color: var(--primary); color: var(--primary); background: rgba(124,58,237,0.06); }
-        .sched-chip.active { background: var(--primary); color: #fff !important; border-color: var(--primary); }
+        .sched-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-active); }
+        .sched-chip.active { background: var(--primary); color: var(--bg-app) !important; border-color: var(--primary); }
         .sched-pick-wrap { position: relative; display: inline-flex; }
         .sched-pick-wrap input[type="date"],
         .sched-pick-wrap input[type="time"] {
             position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
             cursor: pointer; z-index: 2; box-sizing: border-box;
         }
-        .sched-foot { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; background: var(--bg-secondary); gap: 8px; font-size: 12px; }
+        .sched-foot { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; background: var(--bg-hover); gap: 8px; font-size: 12px; border-top: 1px solid var(--border-light); }
         .sched-foot-clear { background: none; border: none; cursor: pointer; color: var(--text-tertiary); display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 2px 8px; border-radius: 5px; transition: all 0.13s; font-family: var(--font-family); }
-        .sched-foot-clear:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+        .sched-foot-clear:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
 
         .stats-grid {
             display: grid;
@@ -635,11 +635,11 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom:0">
-                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:#faf0ff;border:1px solid #d8b4fe;border-radius:8px">
-                        <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:#7c3aed;cursor:pointer">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:var(--bg-active);border:1px solid var(--border-medium);border-radius:8px">
+                        <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
                         <div>
-                            <div style="font-size:13px;font-weight:600;color:#6b21a8">Pin as Template</div>
-                            <div style="font-size:11px;color:#9333ea;margin-top:1px">Stays pinned at the top. Clicking Send always keeps this template intact.</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Pin as Template</div>
+                            <div style="font-size:11px;color:var(--text-secondary);margin-top:1px">Stays pinned at the top. Clicking Send always keeps this template intact.</div>
                         </div>
                     </label>
                 </div>
@@ -710,7 +710,7 @@
                     <div id="detail-rate" style="font-size:12px;color:var(--text-tertiary);text-align:right"></div>
                 </div>
 
-                <div id="detail-error" style="display:none;background:#fff5f5;border:1px solid #fed7d7;border-radius:6px;padding:8px 12px;font-size:13px;color:#c53030;margin-top:8px"></div>
+                <div id="detail-error" style="display:none;background:var(--bg-active);border:1px solid var(--border-medium);border-radius:6px;padding:8px 12px;font-size:13px;color:#e53e3e;margin-top:8px"></div>
                 <div id="detail-notes" style="display:none;background:var(--bg-active);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text-secondary);margin-top:8px"></div>
             </div>
             <div class="modal-footer" id="detail-footer"></div>
@@ -892,21 +892,21 @@
 
         function buildTemplateCard(n) {
             var card = document.createElement('div');
-            card.style.cssText = 'background:#faf0ff;border:1px solid #d8b4fe;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+            card.style.cssText = 'background:var(--bg-active);border:1px solid var(--border-medium);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
 
             var info = document.createElement('div');
             info.style.cssText = 'flex:1;min-width:0';
             var titleEl = document.createElement('div');
-            titleEl.style.cssText = 'font-weight:600;color:#3b0764;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+            titleEl.style.cssText = 'font-weight:600;color:var(--text-primary);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
             titleEl.textContent = n.title;
             var bodyEl = document.createElement('div');
-            bodyEl.style.cssText = 'font-size:12px;color:#7c3aed;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+            bodyEl.style.cssText = 'font-size:12px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
             bodyEl.textContent = n.body;
             info.appendChild(titleEl);
             info.appendChild(bodyEl);
 
             var meta = document.createElement('div');
-            meta.style.cssText = 'font-size:11px;color:#9333ea;white-space:nowrap';
+            meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);white-space:nowrap';
             meta.textContent = labelPlatform(n.platform) + ' · ' + labelAudience(n.audience);
 
             var btns = document.createElement('div');
