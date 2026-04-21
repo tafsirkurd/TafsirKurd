@@ -47,6 +47,10 @@
         @media(max-width:640px){.cp-grid{grid-template-columns:1fr;gap:12px}}
         .cp-footer{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
         .fld-label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:6px}
+        .pw-wrap{position:relative}
+        .pw-wrap .form-input{padding-right:40px}
+        .pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:color .15s}
+        .pw-toggle:hover{color:var(--text-secondary)}
 
         /* ── Kill All button ──────────────────────────────────── */
         .kill-all-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(239,68,68,.07);color:#dc2626;border:1px solid rgba(239,68,68,.18);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
@@ -290,15 +294,24 @@
                     <div class="cp-grid">
                         <div>
                             <label class="fld-label">Current Password</label>
-                            <input type="password" id="cpCurrent" class="form-input" placeholder="Current password" style="width:100%">
+                            <div class="pw-wrap">
+                                <input type="password" id="cpCurrent" class="form-input" placeholder="Current password" style="width:100%">
+                                <button type="button" class="pw-toggle" onclick="togglePw(this)"><i data-lucide="eye"></i></button>
+                            </div>
                         </div>
                         <div>
                             <label class="fld-label">New Password</label>
-                            <input type="password" id="cpNew" class="form-input" placeholder="Min 8 characters" style="width:100%">
+                            <div class="pw-wrap">
+                                <input type="password" id="cpNew" class="form-input" placeholder="Min 8 characters" style="width:100%">
+                                <button type="button" class="pw-toggle" onclick="togglePw(this)"><i data-lucide="eye"></i></button>
+                            </div>
                         </div>
                         <div>
                             <label class="fld-label">Confirm New</label>
-                            <input type="password" id="cpConfirm" class="form-input" placeholder="Repeat new password" style="width:100%">
+                            <div class="pw-wrap">
+                                <input type="password" id="cpConfirm" class="form-input" placeholder="Repeat new password" style="width:100%">
+                                <button type="button" class="pw-toggle" onclick="togglePw(this)"><i data-lucide="eye"></i></button>
+                            </div>
                         </div>
                     </div>
                     <div class="cp-footer">
@@ -1131,6 +1144,15 @@
             var token = sessionStorage.getItem('adminToken');
             await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'revoke-all-other-sessions', token }) });
             loadActiveSessions();
+        }
+
+        /* ══ TOGGLE PASSWORD VISIBILITY ══════════════════════ */
+        function togglePw(btn) {
+            var input = btn.parentElement.querySelector('input');
+            var isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.innerHTML = isHidden ? '<i data-lucide="eye-off"></i>' : '<i data-lucide="eye"></i>';
+            if (window.lucide) lucide.createIcons();
         }
 
         /* ══ CHANGE PASSWORD ══════════════════════════════════ */
