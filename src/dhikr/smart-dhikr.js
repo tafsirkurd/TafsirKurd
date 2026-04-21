@@ -48,6 +48,13 @@
       timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
     },
     {
+      id: 'sunrise', categoryKey: 'morning', icon: 'fas fa-sun',
+      labelKey: 'adhkar.sunrise', labelFallback: 'نوێژا ئیشراق',
+      subtitleKey: 'gencine.smart.sunrise_hint', subtitleFallback: 'کاتا نوێژا هەتاوهاتن',
+      timeTag: 'ئیشراق', basePriority: 62, /* beats morning+waking in its window */
+      sunriseWindow: 60 /* show for 60 min after Sunrise */
+    },
+    {
       id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
       labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێواربوون',
       subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێوارا خوە ب زکرێ بکە',
@@ -562,6 +569,15 @@
       var ts = (prayers && _toMin(prayers[tw.start]) >= 0) ? _toMin(prayers[tw.start]) : tw.fs;
       var te = (prayers && _toMin(prayers[tw.end])   >= 0) ? _toMin(prayers[tw.end])   : tw.fe;
       return _inRange(nowMin, ts, te, tw.wraps);
+    }
+    /* sunriseWindow: active for N minutes after Sunrise */
+    if (item.sunriseWindow) {
+      var sr = prayers ? _toMin(prayers['Sunrise']) : -1;
+      if (sr >= 0) {
+        var srEnd = (sr + item.sunriseWindow) % (24 * 60);
+        return _inRange(nowMin, sr, srEnd, false);
+      }
+      return false;
     }
     /* prayerOffset: active for 20 min starting `offset` minutes after each of the 5 prayers */
     if (item.prayerOffset !== undefined) {
