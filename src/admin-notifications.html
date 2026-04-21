@@ -793,6 +793,7 @@
         // ── API ──────────────────────────────────────────────────
         async function notifAPI(action, payload) {
             var token = sessionStorage.getItem('adminToken');
+            if (!token) { window.adminAuth && window.adminAuth.checkAuth(); throw new Error('Not logged in'); }
             var res = await fetch('/admin-notifications-api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -803,6 +804,11 @@
                 throw new Error('Server error (' + res.status + '). Check Cloudflare deployment.');
             }
             var data = await res.json();
+            if (res.status === 401 || res.status === 403) {
+                // Session expired — re-verify auth (will redirect to login if needed)
+                if (window.adminAuth) window.adminAuth.checkAuth();
+                throw new Error('Session expired. Please refresh the page and log in again.');
+            }
             if (!data.success) throw new Error(data.error || 'API error');
             return data;
         }
