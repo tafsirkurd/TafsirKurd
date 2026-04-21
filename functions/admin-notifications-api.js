@@ -21,6 +21,40 @@ export async function onRequest(context) {
     let body;
     try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
+    // ── PROCESS SCHEDULED (cron — no admin auth, CRON_SECRET only) ──
+    if (body.action === 'process_scheduled') {
+        const cronSecret = env.CRON_SECRET;
+        const authHeader = request.headers.get('Authorization') || '';
+        if (!cronSecret || authHeader !== `Bearer ${cronSecret}`)
+            return json({ error: 'Unauthorized' }, 401);
+
+        const { data: due } = await supabase
+            .from('admin_notifications')
+            .select('*')
+            .eq('status', 'scheduled')
+            .lte('scheduled_at', new Date().toISOString())
+            .limit(20);
+
+        if (!due?.length) return json({ success: true, processed: 0 });
+
+        const results = [];
+        for (const notif of due) {
+            // Atomically claim the notification (prevent double-send)
+            const { data: claimed } = await supabase
+                .from('admin_notifications')
+                .update({ status: 'sending' })
+                .eq('id', notif.id)
+                .eq('status', 'scheduled')
+                .select()
+                .single();
+            if (!claimed) continue; // already claimed by another run
+
+            const r = await doSend(supabase, env, notif, notif.id, 'cron');
+            results.push({ id: notif.id, ...r });
+        }
+        return json({ success: true, processed: results.length, results });
+    }
+
     const token = ((request.headers.get('Authorization') || '').replace('Bearer ', '') || body.token || '').trim();
     if (!token) return json({ error: 'No token' }, 401);
 
@@ -195,24 +229,14 @@ export async function onRequest(context) {
     if (action === 'send') {
         if (!body.id) return json({ error: 'id required' }, 400);
 
-        const { data: notif } = await supabase
-            .from('admin_notifications')
-            .select('*')
-            .eq('id', body.id)
-            .single();
-
+        const { data: notif } = await supabase.from('admin_notifications').select('*').eq('id', body.id).single();
         if (!notif) return json({ error: 'Not found' }, 404);
         if (notif.status === 'sending') return json({ error: 'Already sending' }, 400);
         if (notif.status === 'cancelled') return json({ error: 'Cannot send cancelled notification' }, 400);
+        if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID) return json({ error: 'FCM not configured' }, 503);
 
-        if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID)
-            return json({ error: 'FCM not configured' }, 503);
-
-        // Templates: create a sent-copy instead of modifying the original
-        const isTemplate = notif.is_template === true;
         let trackingId = body.id;
-
-        if (isTemplate) {
+        if (notif.is_template) {
             const { data: copy } = await supabase.from('admin_notifications').insert({
                 title: notif.title, body: notif.body, image_url: notif.image_url,
                 platform: notif.platform, audience: notif.audience,
@@ -224,154 +248,13 @@ export async function onRequest(context) {
             if (!copy) return json({ error: 'Failed to create send record' }, 500);
             trackingId = copy.id;
         } else {
-            // Mark as sending
-            await supabase.from('admin_notifications')
-                .update({ status: 'sending' })
-                .eq('id', body.id);
+            await supabase.from('admin_notifications').update({ status: 'sending' }).eq('id', body.id);
         }
 
-        // Get tokens based on audience
-        let tokens;
-        try {
-            tokens = await getTokensForAudience(env, notif.audience, notif.platform);
-        } catch (e) {
-            await supabase.from('admin_notifications')
-                .update({ status: 'failed', error_message: 'Token fetch failed: ' + e.message })
-                .eq('id', body.id);
-            return json({ error: 'Token fetch failed: ' + e.message }, 500);
-        }
-
-        if (!tokens.length) {
-            await supabase.from('admin_notifications')
-                .update({ status: 'sent', sent_at: new Date().toISOString(),
-                          tokens_targeted: 0, tokens_sent: 0, tokens_failed: 0, stale_removed: 0 })
-                .eq('id', trackingId);
-            return json({ success: true, sent: 0, message: 'No registered tokens for this audience' });
-        }
-
-        // Split tokens: raw APNs device tokens (64 hex chars) vs FCM registration tokens
-        const apnsTokens = tokens.filter(t => isApnsToken(t.token));
-        const fcmTokens  = tokens.filter(t => !isApnsToken(t.token));
-
-        // Get FCM access token (only needed for FCM tokens)
-        let accessToken = null;
-        if (fcmTokens.length > 0 && env.FCM_SERVICE_ACCOUNT) {
-            try {
-                accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT);
-            } catch (e) {
-                if (!apnsTokens.length) {
-                    await supabase.from('admin_notifications')
-                        .update({ status: 'failed', error_message: 'FCM auth: ' + e.message })
-                        .eq('id', trackingId);
-                    return json({ error: 'FCM auth error: ' + e.message }, 500);
-                }
-            }
-        }
-
-        // Get APNs JWT (only needed for raw iOS tokens)
-        let apnsJwt = null;
-        let apnsJwtError = null;
-        if (apnsTokens.length > 0 && env.APNS_KEY_P8) {
-            try {
-                apnsJwt = await getAPNsJWT(
-                    env.APNS_KEY_P8,
-                    env.APNS_KEY_ID  || 'KLG2RRCRNR',
-                    env.APNS_TEAM_ID || '8KA7UDSC9D'
-                );
-            } catch (e) {
-                apnsJwtError = 'APNs JWT error: ' + e.message;
-            }
-        }
-
-        // Build data payload for deep link
-        const data = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
-
-        const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
-        const staleTokens = [];
-        const apnsErrors = [];
-        let successCount = 0, failCount = 0;
-
-        await Promise.allSettled([
-            // FCM sends (Android tokens + any iOS FCM tokens)
-            ...fcmTokens.map(async ({ token, platform }) => {
-                if (!accessToken) { failCount++; return; }
-                const message = buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, data);
-                const res = await fetch(FCM_URL, {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message }),
-                });
-                if (res.ok) {
-                    successCount++;
-                } else {
-                    const err = await res.json().catch(() => ({}));
-                    if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(token);
-                    failCount++;
-                }
-            }),
-            // APNs direct sends (raw iOS device tokens)
-            ...apnsTokens.map(async ({ token }) => {
-                if (!apnsJwt) {
-                    apnsErrors.push(apnsJwtError || 'JWT not generated');
-                    failCount++;
-                    return;
-                }
-                const res = await sendApns(token, notif.title, notif.body, data, apnsJwt, 'com.tafsirkurd.app');
-                if (res.ok) {
-                    successCount++;
-                } else {
-                    const errText = await res.text().catch(() => '');
-                    const err = JSON.parse(errText || '{}');
-                    apnsErrors.push(`APNs ${res.status}: ${err?.reason || errText}`);
-                    if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') {
-                        staleTokens.push(token);
-                    }
-                    failCount++;
-                }
-            }),
-        ]);
-
-        // Remove stale tokens
-        if (staleTokens.length) {
-            await removeStaleTokens(env, staleTokens).catch(() => {});
-        }
-
-        // Update sent record
-        await supabase.from('admin_notifications').update({
-            status: 'sent',
-            sent_at: new Date().toISOString(),
-            tokens_targeted: tokens.length,
-            tokens_sent: successCount,
-            tokens_failed: failCount,
-            stale_removed: staleTokens.length,
-            error_message: apnsErrors.length ? apnsErrors[0] : null,
-        }).eq('id', trackingId);
-
-        // Auto-schedule next occurrence for recurring notifications
-        if (notif.recurrence && notif.recurrence !== 'none') {
-            const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
-            if (nextAt) {
-                await supabase.from('admin_notifications').insert({
-                    title: notif.title,
-                    body: notif.body,
-                    image_url: notif.image_url,
-                    platform: notif.platform,
-                    audience: notif.audience,
-                    deep_link_type: notif.deep_link_type,
-                    deep_link_id: notif.deep_link_id,
-                    recurrence: notif.recurrence,
-                    recurrence_day: notif.recurrence_day,
-                    notes: notif.notes,
-                    created_by: adminEmail,
-                    status: 'scheduled',
-                    scheduled_at: nextAt,
-                }).catch(() => {});
-            }
-        }
-
-        return json({ success: true, sent: successCount, failed: failCount,
-                      total: tokens.length, stale_removed: staleTokens.length,
-                      next_scheduled: notif.recurrence !== 'none' ? true : false });
+        const r = await doSend(supabase, env, notif, trackingId, adminEmail);
+        if (r.error) return json({ error: r.error }, 500);
+        return json({ success: true, sent: r.sent, failed: r.failed, total: r.total,
+                      stale_removed: r.stale_removed, next_scheduled: notif.recurrence !== 'none' });
     }
 
     // ── CANCEL ────────────────────────────────────────────────────
@@ -433,6 +316,109 @@ export async function onRequest(context) {
 
 function json(obj, status = 200) {
     return new Response(JSON.stringify(obj), { status, headers: CORS });
+}
+
+async function doSend(supabase, env, notif, trackingId, sentBy) {
+    // Get tokens
+    let tokens;
+    try { tokens = await getTokensForAudience(env, notif.audience, notif.platform); }
+    catch (e) {
+        await supabase.from('admin_notifications')
+            .update({ status: 'failed', error_message: 'Token fetch: ' + e.message })
+            .eq('id', trackingId);
+        return { error: 'Token fetch failed: ' + e.message };
+    }
+
+    if (!tokens.length) {
+        await supabase.from('admin_notifications')
+            .update({ status: 'sent', sent_at: new Date().toISOString(),
+                      tokens_targeted: 0, tokens_sent: 0, tokens_failed: 0, stale_removed: 0 })
+            .eq('id', trackingId);
+        return { sent: 0, failed: 0, total: 0, stale_removed: 0 };
+    }
+
+    const apnsTokens = tokens.filter(t => isApnsToken(t.token));
+    const fcmTokens  = tokens.filter(t => !isApnsToken(t.token));
+
+    let accessToken = null;
+    if (fcmTokens.length && env.FCM_SERVICE_ACCOUNT) {
+        try { accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT); }
+        catch (e) {
+            if (!apnsTokens.length) {
+                await supabase.from('admin_notifications')
+                    .update({ status: 'failed', error_message: 'FCM auth: ' + e.message })
+                    .eq('id', trackingId);
+                return { error: 'FCM auth error: ' + e.message };
+            }
+        }
+    }
+
+    let apnsJwt = null, apnsJwtError = null;
+    if (apnsTokens.length && env.APNS_KEY_P8) {
+        try { apnsJwt = await getAPNsJWT(env.APNS_KEY_P8, env.APNS_KEY_ID || 'KLG2RRCRNR', env.APNS_TEAM_ID || '8KA7UDSC9D'); }
+        catch (e) { apnsJwtError = 'APNs JWT: ' + e.message; }
+    }
+
+    const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
+    const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
+    const staleTokens = [], apnsErrors = [];
+    let successCount = 0, failCount = 0;
+
+    await Promise.allSettled([
+        ...fcmTokens.map(async ({ token, platform }) => {
+            if (!accessToken) { failCount++; return; }
+            const res = await fetch(FCM_URL, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, deepLinkData) }),
+            });
+            if (res.ok) { successCount++; }
+            else {
+                const err = await res.json().catch(() => ({}));
+                if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(token);
+                failCount++;
+            }
+        }),
+        ...apnsTokens.map(async ({ token }) => {
+            if (!apnsJwt) { apnsErrors.push(apnsJwtError || 'JWT missing'); failCount++; return; }
+            const res = await sendApns(token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
+            if (res.ok) { successCount++; }
+            else {
+                const errText = await res.text().catch(() => '');
+                const err = JSON.parse(errText || '{}');
+                apnsErrors.push(`APNs ${res.status}: ${err?.reason || errText}`);
+                if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') staleTokens.push(token);
+                failCount++;
+            }
+        }),
+    ]);
+
+    if (staleTokens.length) await removeStaleTokens(env, staleTokens).catch(() => {});
+
+    await supabase.from('admin_notifications').update({
+        status: 'sent', sent_at: new Date().toISOString(),
+        tokens_targeted: tokens.length, tokens_sent: successCount,
+        tokens_failed: failCount, stale_removed: staleTokens.length,
+        error_message: apnsErrors.length ? apnsErrors[0] : null,
+    }).eq('id', trackingId);
+
+    // Auto-schedule next occurrence for recurring notifications
+    if (notif.recurrence && notif.recurrence !== 'none') {
+        const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
+        if (nextAt) {
+            await supabase.from('admin_notifications').insert({
+                title: notif.title, body: notif.body, image_url: notif.image_url,
+                platform: notif.platform, audience: notif.audience,
+                deep_link_type: notif.deep_link_type, deep_link_id: notif.deep_link_id,
+                recurrence: notif.recurrence, recurrence_day: notif.recurrence_day,
+                notes: notif.notes, created_by: sentBy || 'cron',
+                status: 'scheduled', scheduled_at: nextAt,
+                is_template: false,
+            }).catch(() => {});
+        }
+    }
+
+    return { sent: successCount, failed: failCount, total: tokens.length, stale_removed: staleTokens.length };
 }
 
 async function getTokensForAudience(env, audience, platform) {
