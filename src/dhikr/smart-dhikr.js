@@ -20,7 +20,7 @@
     /* ── Prayer windows (highest priority — override morning/evening) ── */
     {
       id: 'masjid_enter', categoryKey: 'masjid_enter', icon: 'fas fa-mosque',
-      labelKey: 'adhkar.masjid_enter', labelFallback: 'چوونا مزگەوتێ',
+      labelKey: 'adhkar.masjid_enter', labelFallback: 'چونا مزگەوت',
       subtitleKey: 'gencine.smart.masjid_hint', subtitleFallback: 'کاتا چوونا مزگەوتێ',
       timeTag: 'مزگەوت', basePriority: 90,
       prayerOffset: 0   /* 0–20 min after each athan */
@@ -87,7 +87,7 @@
     /* ── Ramadan ── */
     {
       id: 'fasting', categoryKey: 'fasting', icon: 'fas fa-moon',
-      labelKey: 'adhkar.fasting', labelFallback: 'ڕوژی',
+      labelKey: 'adhkar.fasting', labelFallback: 'نیەتا ڕۆژوو',
       subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕوژیدارییەکت خوا قبوڵ بکات',
       timeTag: 'ڕەمەزان', basePriority: 60,
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
@@ -96,7 +96,7 @@
     },
     {
       id: 'breaking_fast', categoryKey: 'breaking_fast', icon: 'fas fa-utensils',
-      labelKey: 'adhkar.breaking_fast', labelFallback: 'کردنەوەی ڕوژی',
+      labelKey: 'adhkar.breaking_fast', labelFallback: 'کاتا ئیفتارێ',
       subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ئیفتارا خوش',
       timeTag: 'ئیفتار', basePriority: 95, /* highest — iftar beats even prayer windows */
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
@@ -121,14 +121,14 @@
     /* ── Dhul Hijjah ── */
     {
       id: 'dhul_hijjah', categoryKey: 'dhul_hijjah', icon: 'fas fa-kaaba',
-      labelKey: 'adhkar.dhul_hijjah', labelFallback: 'ذوالحیجە',
+      labelKey: 'adhkar.dhul_hijjah', labelFallback: 'دەیا ذولحیجەیێ',
       subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دهە ڕۆژێن گەورە',
       timeTag: 'ذوالحیجە', basePriority: 70,
       hijriCond: function(h) { return h.month === 12 && h.day >= 1 && h.day <= 8; }
     },
     {
       id: 'arafat', categoryKey: 'arafat', icon: 'fas fa-kaaba',
-      labelKey: 'adhkar.arafat', labelFallback: 'ڕۆژا عەرەفە',
+      labelKey: 'adhkar.arafat', labelFallback: 'دوعای عەرەفاتێ',
       subtitleKey: 'gencine.smart.arafat_hint', subtitleFallback: 'باشترین ڕۆژی ساڵ',
       timeTag: 'عەرەفە', basePriority: 85,
       hijriCond: function(h) { return h.month === 12 && h.day === 9; }
@@ -143,19 +143,19 @@
   var WEATHER_ITEMS = [
     {
       id: 'rain', categoryKey: 'rain', icon: 'fas fa-cloud-rain',
-      labelKey: 'adhkar.rain', labelFallback: 'کاتی باران',
+      labelKey: 'adhkar.rain', labelFallback: 'باران',
       subtitleKey: 'gencine.smart.rain_hint', subtitleFallback: 'باران دکەت — دوعا بکە',
       timeTag: 'باران'
     },
     {
       id: 'thunder', categoryKey: 'thunder', icon: 'fas fa-bolt',
-      labelKey: 'adhkar.thunder', labelFallback: 'دەمی هەورووبرووسکە',
+      labelKey: 'adhkar.thunder', labelFallback: 'کاتا برووسکێ',
       subtitleKey: 'gencine.smart.thunder_hint', subtitleFallback: 'زکرێن هەورووبرووسکە',
       timeTag: 'هەوا'
     },
     {
       id: 'wind', categoryKey: 'wind', icon: 'fas fa-wind',
-      labelKey: 'adhkar.wind', labelFallback: 'دەمی باد',
+      labelKey: 'adhkar.wind', labelFallback: 'کاتا هەوایی',
       subtitleKey: 'gencine.smart.wind_hint', subtitleFallback: 'زکرێن کاتی باد',
       timeTag: 'هەوا'
     }
@@ -168,7 +168,7 @@
     {
       id: 'forgiveness', categoryKey: 'forgiveness', icon: 'fas fa-dove',
       labelKey: 'adhkar.forgiveness', labelFallback: 'داواکاری لێبوردن',
-      subtitleKey: 'gencine.smart.forgiveness_hint', subtitleFallback: 'ئیستیخفارەکە زیادە بکە',
+      subtitleKey: 'gencine.smart.forgiveness_hint', subtitleFallback: 'ئیستیغفارەکە زیادە بکە',
       timeTag: null
     },
     {
@@ -191,25 +191,25 @@
     },
     {
       id: 'before_quran', categoryKey: 'before_quran', icon: 'fas fa-book-open-reader',
-      labelKey: 'adhkar.before_quran', labelFallback: 'پێش خوێندنا قورئانێ',
+      labelKey: 'adhkar.before_quran', labelFallback: 'بەرا خوێندنا قورئانێ',
       subtitleKey: 'gencine.smart.before_quran_hint', subtitleFallback: 'پێش دەستپێکردنا قورئانێ',
       timeTag: null
     },
     {
       id: 'distress', categoryKey: 'distress', icon: 'fas fa-hand-holding-heart',
-      labelKey: 'adhkar.distress', labelFallback: 'کاتی زەحمەت',
+      labelKey: 'adhkar.distress', labelFallback: 'پەریشانی',
       subtitleKey: 'gencine.smart.distress_hint', subtitleFallback: 'دوعا لە کاتی زەحمەت',
       timeTag: null
     },
     {
       id: 'istikhara', categoryKey: 'istikhara', icon: 'fas fa-compass',
-      labelKey: 'adhkar.istikhara', labelFallback: 'ئیستیخارە',
+      labelKey: 'adhkar.istikhara', labelFallback: 'دوعای ئیستیخارە',
       subtitleKey: 'gencine.smart.istikhara_hint', subtitleFallback: 'داواکاری ڕێنمایی',
       timeTag: null
     },
     {
       id: 'adhan', categoryKey: 'adhan', icon: 'fas fa-bullhorn',
-      labelKey: 'adhkar.adhan', labelFallback: 'دوعای ئەزان',
+      labelKey: 'adhkar.adhan', labelFallback: 'دوای ئەزان',
       subtitleKey: 'gencine.smart.adhan_hint', subtitleFallback: 'دوعای دوای ئەزان',
       timeTag: null
     }
