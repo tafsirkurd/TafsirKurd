@@ -122,6 +122,40 @@
   function setAthanVoice(v)   { localStorage.setItem('prayerAthanVoice', v); }
   function setFormat(v)       { localStorage.setItem('prayerTimeFormat', v); }
 
+  // ── Prayer Reminder settings ──────────────────────────────────────────────
+  function getReminderEnabled() { return localStorage.getItem('prayerReminderEnabled') !== 'false'; }
+  function setReminderEnabled(v) { localStorage.setItem('prayerReminderEnabled', v ? 'true' : 'false'); }
+  function getReminderOffset()  { return parseInt(localStorage.getItem('prayerReminderOffset') || '20') || 20; }
+  function setReminderOffset(v) { localStorage.setItem('prayerReminderOffset', String(v)); }
+
+  async function fetchReminderConfig() {
+    try {
+      var res = await fetch('/admin-notifications-api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get_reminder_config' })
+      });
+      if (res.ok) {
+        var data = await res.json();
+        if (data.success && data.config) {
+          localStorage.setItem('prayerReminderConfig', JSON.stringify(data.config));
+        }
+      }
+    } catch(e) { /* silently fail — device uses cached/default text */ }
+  }
+
+  async function rescheduleReminders(city) {
+    var PN = window.PrayerNotifications;
+    if (!PN || !PN.scheduleReminderMultiDay) return;
+    try {
+      var today    = window.PrayerLogic.todayBaghdad();
+      var daysData = await fetchDaysData(city, today, 28);
+      if (daysData.length) {
+        await PN.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
+      }
+    } catch(e) { console.warn('[Reminder] reschedule error:', e); }
+  }
+
   function clearEl(el) { while (el.firstChild) el.removeChild(el.firstChild); }
   function cel(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
 
@@ -1621,9 +1655,10 @@
         pushWidgetData(freshData, city, today);
         if (getAthan()) {
           fetchDaysData(city, today, 28).then(function(daysData) {
-            if (daysData.length) {
-              window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
-            }
+            if (!daysData.length) return;
+            window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
+            window.PrayerNotifications.scheduleReminderMultiDay &&
+              window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
           });
         }
       });
@@ -2207,6 +2242,62 @@
     });
     container.appendChild(prayerWrap);
 
+    // ── Prayer Reminder ───────────────────────────────────────────
+    var remEnabled = getReminderEnabled();
+    var remOffset  = getReminderOffset();
+    container.appendChild(secTitle(tStr('prayer.reminder_label') || 'بیرخستنەوە', ' as2-dimable' + (isOn ? '' : ' as2-dim')));
+
+    var remCard = cel('div', 'as2-reminder-card as2-dimable' + (isOn ? '' : ' as2-dim'));
+
+    var remTop  = cel('div', 'as2-reminder-top');
+    var remLeft = cel('div', 'as2-reminder-left');
+    var remTitle = cel('div', 'as2-reminder-title');
+    remTitle.textContent = tStr('prayer.reminder_title') || 'پێش نوێژ بیرت بخاتەوە';
+    var remDesc = cel('div', 'as2-reminder-desc');
+    remDesc.textContent = remEnabled
+      ? (tStr('prayer.reminder_on_hint') || 'یادەوەری چالاکە')
+      : (tStr('prayer.reminder_off_hint') || 'ببەستە بۆ چالاکبوون');
+    remLeft.appendChild(remTitle);
+    remLeft.appendChild(remDesc);
+    var remTog = cel('div', 'toggle toggle--sm' + (remEnabled ? ' on' : ''));
+    remTog.appendChild(cel('div', 'toggle-knob'));
+    remTop.appendChild(remLeft);
+    remTop.appendChild(remTog);
+    remCard.appendChild(remTop);
+
+    var offsetRow = cel('div', 'as2-reminder-offset' + (remEnabled ? '' : ' as2-hidden'));
+    var offsetLabel = cel('div', 'as2-reminder-offset-label');
+    offsetLabel.textContent = tStr('prayer.reminder_offset_label') || 'خولەک پێش نوێژ';
+    var offsetChips = cel('div', 'as2-offset-chips');
+    [5, 10, 15, 20, 30, 45, 60].forEach(function(min) {
+      var chip = cel('button', 'as2-offset-chip' + (remOffset === min ? ' active' : ''));
+      chip.type = 'button';
+      chip.textContent = String(min);
+      chip.addEventListener('click', function() {
+        offsetChips.querySelectorAll('.as2-offset-chip').forEach(function(c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        setReminderOffset(min);
+        rescheduleReminders(city);
+      });
+      offsetChips.appendChild(chip);
+    });
+    offsetRow.appendChild(offsetLabel);
+    offsetRow.appendChild(offsetChips);
+    remCard.appendChild(offsetRow);
+
+    remTog.addEventListener('click', function() {
+      var nowOn = !remTog.classList.contains('on');
+      remTog.classList.toggle('on', nowOn);
+      remDesc.textContent = nowOn
+        ? (tStr('prayer.reminder_on_hint') || 'یادەوەری چالاکە')
+        : (tStr('prayer.reminder_off_hint') || 'ببەستە بۆ چالاکبوون');
+      setReminderEnabled(nowOn);
+      offsetRow.classList.toggle('as2-hidden', !nowOn);
+      rescheduleReminders(city);
+    });
+
+    container.appendChild(remCard);
+
     // ── Reciter ───────────────────────────────────────────────────
     container.appendChild(secTitle(tStr('prayer.voice_label'), ' as2-dimable' + (isOn ? '' : ' as2-dim')));
     var reciterWrap = cel('div', 'as2-dimable' + (isOn ? '' : ' as2-dim'));
@@ -2529,6 +2620,8 @@
           localStorage.setItem('prayerLastScheduleTs', String(Date.now()));
           console.log('[Athan] city changed → rescheduled', res.count, 'notifications for', city);
         }
+        window.PrayerNotifications.scheduleReminderMultiDay &&
+          window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
       }
     }
   }
@@ -2549,6 +2642,8 @@
 
     if (!val) {
       await window.PrayerNotifications.cancelAllAthanNotifications();
+      window.PrayerNotifications.cancelAllReminderNotifications &&
+        window.PrayerNotifications.cancelAllReminderNotifications();
       if (window.toast) toast(tStr('prayer.athan_off'));
       return;
     }
@@ -2575,6 +2670,8 @@
     var daysData = await fetchDaysData(city, today, 28);
     if (daysData.length) {
       var res = await window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), granted);
+      window.PrayerNotifications.scheduleReminderMultiDay &&
+        window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
       var count = res && res.count != null ? res.count : 0;
       if (count > 0) {
         localStorage.setItem('prayerLastScheduleTs', String(Date.now()));
@@ -2606,6 +2703,8 @@
       var daysData = await fetchDaysData(city, today, 28);
       if (daysData.length) {
         await window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, toggles, true);
+        window.PrayerNotifications.scheduleReminderMultiDay &&
+          window.PrayerNotifications.scheduleReminderMultiDay(daysData, toggles, getReminderOffset());
       }
     }
   }
@@ -2700,7 +2799,16 @@
    * Only runs once per day (tracks prayerLastScheduleDate).
    */
   async function initScheduleOnStart() {
-    if (!getAthan()) return;
+    fetchReminderConfig(); // refresh cached reminder text in background (fire-and-forget)
+    if (!getAthan()) {
+      // Still reschedule reminders even if athan is off (reminders are independent)
+      var _today2 = window.PrayerLogic.todayBaghdad();
+      var _daysData2 = await fetchDaysData(getCity(), _today2, 28).catch(function() { return []; });
+      if (_daysData2.length && window.PrayerNotifications && window.PrayerNotifications.scheduleReminderMultiDay) {
+        window.PrayerNotifications.scheduleReminderMultiDay(_daysData2, getToggles(), getReminderOffset());
+      }
+      return;
+    }
     // Rate-limit: reschedule at most once per 15 min.
     // This prevents the cancel+schedule race when app opens + immediately resumes.
     // On a new calendar day, lastTs will be from yesterday (> 15 min) → always runs.
@@ -2720,6 +2828,9 @@
         return;
       }
       var res = await window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
+      // Also schedule reminders (independent of athan — uses its own enabled/offset settings)
+      window.PrayerNotifications.scheduleReminderMultiDay &&
+        window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
       // Update timestamp only on actual success (count > 0 and no error).
       // On error or permission denied: leave timestamp unset so we retry in 15 min.
       // On count=0 (all prayers already passed today but future days have no data):

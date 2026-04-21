@@ -1820,6 +1820,19 @@ body{background:var(--bg);color:var(--text)}
 .as2-reciter-card.on .as2-reciter-name{color:var(--accent)}
 .as2-reciter-play{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:none;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;transition:background-color .15s,color .15s;flex-shrink:0}
 .as2-reciter-play:active{transform:scale(.88)}
+/* Prayer Reminder section */
+.as2-reminder-card{margin:0 16px 12px;border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--bg2)}
+.as2-reminder-top{display:flex;align-items:center;gap:14px;padding:14px 14px;cursor:pointer}
+.as2-reminder-left{flex:1;min-width:0;direction:rtl}
+.as2-reminder-title{font-size:.88rem;font-weight:700;color:var(--text)}
+.as2-reminder-desc{font-size:.72rem;color:var(--text3);margin-top:2px}
+.as2-reminder-offset{padding:4px 14px 12px;border-top:1px solid var(--border)}
+.as2-reminder-offset-label{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;direction:rtl;padding:8px 0 6px}
+.as2-offset-chips{display:flex;gap:6px;flex-wrap:wrap}
+.as2-offset-chip{flex-shrink:0;padding:7px 13px;border-radius:16px;background:var(--bg3);border:1.5px solid var(--border);color:var(--text2);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background .18s,border-color .18s,color .18s}
+.as2-offset-chip.active{background:var(--accent);border-color:var(--accent);color:var(--accent-t)}
+.as2-offset-chip:active{transform:scale(.93)}
+.as2-hidden{display:none!important}
 .as2-reciter-card.playing .as2-reciter-play{background:var(--accent);color:#fff}
 .as2-reciter-bell-wrap{display:flex;align-items:center;justify-content:center;height:24px;font-size:1.1rem;color:var(--text3)}
 .as2-reciter-card.on .as2-reciter-bell-wrap{color:var(--accent)}

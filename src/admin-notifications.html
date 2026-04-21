@@ -157,6 +157,30 @@
         .btn-send-green:hover { background: #38a169 !important; }
         .btn-danger-sm { color: #e53e3e !important; }
 
+        /* ── Prayer Reminder config section ─────────────────────── */
+        .reminder-config-section { margin-bottom: 24px; }
+        .reminder-config-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px; background: var(--bg-surface); border: 1px solid var(--border-medium);
+            border-radius: 10px; cursor: pointer; user-select: none;
+            transition: background 0.15s;
+        }
+        .reminder-config-header:hover { background: var(--bg-hover); }
+        .reminder-config-header-left { display: flex; align-items: center; gap: 10px; }
+        .reminder-config-header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .reminder-config-header-sub   { font-size: 12px; color: var(--text-tertiary); margin-top: 1px; }
+        .reminder-config-body { display: none; border: 1px solid var(--border-medium); border-top: none; border-radius: 0 0 10px 10px; padding: 20px; background: var(--bg-app); }
+        .reminder-config-body.open { display: block; }
+        .reminder-config-section.open .reminder-config-header { border-radius: 10px 10px 0 0; }
+        .reminder-prayer-block { margin-bottom: 18px; }
+        .reminder-prayer-block:last-child { margin-bottom: 0; }
+        .reminder-prayer-name { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .reminder-prayer-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .reminder-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 600px) { .reminder-fields { grid-template-columns: 1fr; } }
+        .reminder-placeholder-hint { font-size: 11px; color: var(--text-tertiary); margin-top: 12px; }
+        .reminder-placeholder-hint code { background: var(--bg-active); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+
         /* ── Schedule Picker ─────────────────────────────────────── */
         .sched-picker { background: var(--bg-app); border: 1px solid var(--border-medium); border-radius: 10px; overflow: hidden; }
         .sched-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border-light); }
@@ -423,6 +447,34 @@
                         <i data-lucide="bookmark" style="width:14px;height:14px"></i> Pinned Templates
                     </div>
                     <div id="templates-list" style="display:flex;flex-direction:column;gap:8px"></div>
+                </div>
+
+                <!-- Prayer Reminder Text Config -->
+                <div class="reminder-config-section" id="reminder-config-section">
+                    <div class="reminder-config-header" onclick="toggleReminderConfig()">
+                        <div class="reminder-config-header-left">
+                            <i data-lucide="bell-ring" style="width:16px;height:16px;color:var(--text-secondary)"></i>
+                            <div>
+                                <div class="reminder-config-header-title">Prayer Reminder Notification Texts</div>
+                                <div class="reminder-config-header-sub">Customize the title &amp; body sent to users before each prayer</div>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-down" id="reminder-config-chevron" style="width:16px;height:16px;color:var(--text-tertiary);transition:transform 0.2s"></i>
+                    </div>
+                    <div class="reminder-config-body" id="reminder-config-body">
+                        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">
+                            These texts appear in the local reminder notification on user devices.
+                            Use <code style="background:var(--bg-active);padding:1px 5px;border-radius:4px;font-size:11px">{prayer}</code> for the prayer name and
+                            <code style="background:var(--bg-active);padding:1px 5px;border-radius:4px;font-size:11px">{minutes}</code> for the offset.
+                        </div>
+                        <div id="reminder-prayers-form"></div>
+                        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+                            <button class="btn btn-primary" onclick="saveReminderConfig(this)">
+                                <i data-lucide="save" style="width:14px;height:14px"></i> Save Reminder Texts
+                            </button>
+                            <span id="reminder-save-status" style="font-size:12px;color:var(--text-tertiary)"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Filters -->
@@ -739,6 +791,14 @@
                 }
                 lucide.createIcons();
                 loadPage();
+                // Pre-load reminder config silently (no auth needed for get)
+                fetch('/admin-notifications-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get_reminder_config' })
+                }).then(function(r) { return r.json(); })
+                  .then(function(d) { if (d.success) _reminderConfig = d.config; })
+                  .catch(function() {});
             });
 
             document.getElementById('f-title').addEventListener('input', function() {
@@ -1538,6 +1598,95 @@
         function closeDetailModal() {
             document.getElementById('detail-modal').classList.remove('active');
         }
+
+        // ── Prayer Reminder Config ────────────────────────────────
+        var PRAYER_REMINDER_COLORS = { Fajr: '#6366f1', Dhuhr: '#f59e0b', Asr: '#10b981', Maghrib: '#f97316', Isha: '#8b5cf6' };
+        var _reminderConfig = null;
+
+        function toggleReminderConfig() {
+            var section = document.getElementById('reminder-config-section');
+            var body    = document.getElementById('reminder-config-body');
+            var chevron = document.getElementById('reminder-config-chevron');
+            var open = body.classList.toggle('open');
+            section.classList.toggle('open', open);
+            chevron.style.transform = open ? 'rotate(180deg)' : '';
+            if (open && !_reminderConfig) loadReminderConfig();
+        }
+
+        async function loadReminderConfig() {
+            var form = document.getElementById('reminder-prayers-form');
+            form.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">Loading...</div>';
+            try {
+                var data = await notifAPI('get_reminder_config', {});
+                _reminderConfig = data.config;
+                buildReminderForm(data.config);
+            } catch(e) {
+                form.innerHTML = '<div style="color:#e53e3e;font-size:13px">Failed to load: ' + e.message + '</div>';
+            }
+        }
+
+        function buildReminderForm(config) {
+            var form = document.getElementById('reminder-prayers-form');
+            form.innerHTML = '';
+            var prayers = [
+                { key: 'fajr',    label: 'Fajr (بەیانی)'  },
+                { key: 'dhuhr',   label: 'Dhuhr (نیڤرو)'  },
+                { key: 'asr',     label: 'Asr (ئێوارە)'   },
+                { key: 'maghrib', label: 'Maghrib (ئاوابوون)' },
+                { key: 'isha',    label: 'Isha (عیشا)'    },
+            ];
+            prayers.forEach(function(p) {
+                var tpl = (config && config[p.key]) || {};
+                var block = document.createElement('div');
+                block.className = 'reminder-prayer-block';
+                var colors = { fajr:'#6366f1', dhuhr:'#f59e0b', asr:'#10b981', maghrib:'#f97316', isha:'#8b5cf6' };
+                block.innerHTML =
+                    '<div class="reminder-prayer-name">' +
+                    '<span class="reminder-prayer-dot" style="background:' + (colors[p.key]||'#999') + '"></span>' +
+                    p.label + '</div>' +
+                    '<div class="reminder-fields">' +
+                    '<div><label class="form-label">Title</label>' +
+                    '<input class="form-input" id="rem-title-' + p.key + '" value="' + escHtml(tpl.title || '') + '" placeholder="بیرخستنەوەی نوێژ"></div>' +
+                    '<div><label class="form-label">Body</label>' +
+                    '<input class="form-input" id="rem-body-' + p.key + '" value="' + escHtml(tpl.body || '') + '" placeholder="نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک"></div>' +
+                    '</div>';
+                form.appendChild(block);
+                if (p.key !== 'isha') {
+                    var sep = document.createElement('hr');
+                    sep.style.cssText = 'border:none;border-top:1px solid var(--border-light);margin:14px 0';
+                    form.appendChild(sep);
+                }
+            });
+        }
+
+        function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+        async function saveReminderConfig(btn) {
+            var keys = ['fajr','dhuhr','asr','maghrib','isha'];
+            var config = {};
+            keys.forEach(function(k) {
+                var t = document.getElementById('rem-title-' + k);
+                var b = document.getElementById('rem-body-' + k);
+                if (t && b) config[k] = { title: t.value.trim(), body: b.value.trim() };
+            });
+            btn.disabled = true; btn.textContent = 'Saving...';
+            var status = document.getElementById('reminder-save-status');
+            try {
+                await notifAPI('update_reminder_config', { config: config });
+                _reminderConfig = config;
+                status.textContent = 'Saved ✓';
+                status.style.color = '#38a169';
+                setTimeout(function() { status.textContent = ''; }, 3000);
+            } catch(e) {
+                status.textContent = 'Error: ' + e.message;
+                status.style.color = '#e53e3e';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="save" style="width:14px;height:14px;vertical-align:-2px"></i> Save Reminder Texts';
+                lucide.createIcons();
+            }
+        }
+
 
         function showToast(msg) {
             var t = document.createElement('div');

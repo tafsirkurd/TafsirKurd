@@ -176,6 +176,117 @@
     console.log('[Athan] cancelled all athan notification slots (IDs 100–239)');
   }
 
+  // ── Prayer Reminder notifications (IDs 300–439, separate from athan 100–239) ──
+
+  var REMINDER_ID_BASE = 300;
+  var REMINDER_CHANNEL = 'prayer_reminder';
+
+  // Default Kurdish texts — overridden by admin config cached in prayerReminderConfig
+  var REMINDER_DEFAULTS = {
+    fajr:    { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
+    dhuhr:   { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
+    asr:     { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
+    maghrib: { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
+    isha:    { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
+  };
+
+  async function ensureReminderChannel() {
+    var LN = getLN();
+    if (!LN || !LN.createChannel) return;
+    await LN.createChannel({
+      id: REMINDER_CHANNEL,
+      name: 'Prayer Reminders',
+      description: 'Reminds you before each prayer',
+      importance: 4,
+      vibration: true,
+      lights: true,
+      lightColor: '#f5a623',
+    }).catch(function() {});
+  }
+
+  async function cancelAllReminderNotifications() {
+    var LN = getLN();
+    if (!LN) return;
+    var ids = [];
+    for (var i = 0; i < MAX_DAYS * 5; i++) {
+      ids.push({ id: REMINDER_ID_BASE + i }); // IDs 300–439
+    }
+    await LN.cancel({ notifications: ids }).catch(function(e) {
+      console.warn('[Reminder] cancel error (non-fatal):', e && e.message);
+    });
+  }
+
+  async function scheduleReminderMultiDay(daysData, toggles, offsetMin) {
+    await cancelAllReminderNotifications();
+    var enabled = localStorage.getItem('prayerReminderEnabled') !== 'false';
+    if (!enabled) { console.log('[Reminder] disabled — skipping schedule'); return { count: 0 }; }
+
+    var offset = parseInt(offsetMin) || 20;
+    var LN = getLN();
+    if (!LN) return { count: 0, error: 'no-plugin' };
+
+    var perm = await LN.requestPermissions().catch(function() { return {}; });
+    var permOk = perm.display === 'granted' || perm.receive === 'granted' ||
+                 perm.display === 'prompt-with-rationale';
+    if (!permOk) return { count: 0, error: 'permission-denied' };
+
+    await ensureReminderChannel();
+
+    // Load admin-configured texts (cached by prayer.ui.js fetchReminderConfig)
+    var configCache = {};
+    try { var raw = localStorage.getItem('prayerReminderConfig'); if (raw) configCache = JSON.parse(raw); } catch(e) {}
+
+    var ios      = onIOS();
+    var dayLimit = ios ? MAX_DAYS_IOS : MAX_DAYS;
+    var now      = new Date();
+    var pl       = window.PrayerLogic;
+    var notifications = [];
+
+    for (var dayOffset = 0; dayOffset < daysData.length && dayOffset < dayLimit; dayOffset++) {
+      var dayData = daysData[dayOffset];
+      var timings = dayData.timings;
+      var dateISO = dayData.dateISO;
+      if (!timings) continue;
+
+      for (var i = 0; i < pl.NOTIF_PRAYERS.length; i++) {
+        var name = pl.NOTIF_PRAYERS[i];
+        if (toggles[name] === false) continue;
+        if (!timings[name]) continue;
+
+        var prayerAt   = pl.parseAsDate(timings[name], dateISO);
+        var reminderAt = new Date(prayerAt.getTime() - offset * 60 * 1000);
+        if (reminderAt <= now) continue; // skip past times
+
+        var id        = REMINDER_ID_BASE + dayOffset * 5 + PRAYER_IDX[name];
+        var pName     = prayerName(name);
+        var key       = name.toLowerCase();
+        var tpl       = configCache[key] || REMINDER_DEFAULTS[key] || REMINDER_DEFAULTS.fajr;
+        var title     = String(tpl.title || REMINDER_DEFAULTS.fajr.title);
+        var body      = String(tpl.body  || REMINDER_DEFAULTS.fajr.body)
+                          .replace(/{prayer}/g, pName)
+                          .replace(/{minutes}/g, String(offset));
+
+        notifications.push({
+          id: id,
+          title: title,
+          body: body,
+          schedule: { at: reminderAt, allowWhileIdle: true, exact: true },
+          channelId: ios ? 'reminder' : REMINDER_CHANNEL,
+          smallIcon: 'ic_notification',
+          extra: { type: 'prayer_reminder', name: name, dateISO: dateISO, offset: offset }
+        });
+      }
+    }
+
+    if (notifications.length > 0) {
+      await LN.schedule({ notifications: notifications }).catch(function(e) {
+        console.warn('[Reminder] schedule error:', e && e.message);
+      });
+    }
+    console.log('[Reminder] scheduled', notifications.length, 'reminders (offset=' + offset + 'min)');
+    return { count: notifications.length };
+  }
+
   // ── Scheduling mutex ───────────────────────────────────────────────────────
 
   var _schedulingLock = null;
@@ -470,7 +581,10 @@
     ensureAllChannels: ensureAllChannels,
     getSelectedVoice: getSelectedVoice,
     debugPendingNotifications: debugPendingNotifications,
-    scheduleTestNotification: scheduleTestNotification
+    scheduleTestNotification: scheduleTestNotification,
+    // Reminder
+    cancelAllReminderNotifications: cancelAllReminderNotifications,
+    scheduleReminderMultiDay: scheduleReminderMultiDay,
   };
 
 })();
