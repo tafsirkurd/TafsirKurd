@@ -1305,6 +1305,10 @@
         function closeCreateModal() {
             document.getElementById('create-modal').classList.remove('active');
             document.getElementById('modal-error').style.display = 'none';
+            var sb = document.getElementById('save-btn');
+            if (sb) { sb.disabled = false; sb.innerHTML = '<i data-lucide="save"></i> Save'; lucide.createIcons(); }
+            var ssb = document.getElementById('save-send-btn');
+            if (ssb) { ssb.disabled = false; ssb.innerHTML = '<i data-lucide="send"></i> Save &amp; Send Now'; lucide.createIcons(); }
         }
 
         function clearForm() {
@@ -1394,23 +1398,28 @@
             var fd = getFormData();
             if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
             if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
-            // drafts preserve scheduled_at — null only if user cleared the field
             var btn = document.getElementById('save-btn');
+            var draftBtn = document.querySelector('.modal-footer .btn-secondary[onclick*="saveNotification"]');
             btn.disabled = true; btn.textContent = 'Saving...';
+            if (draftBtn) draftBtn.disabled = true;
+            var success = false;
             try {
                 var payload = Object.assign({}, fd);
                 if (_currentEditId) payload.id = _currentEditId;
                 await notifAPI(_currentEditId ? 'update' : 'create', payload);
+                success = true;
                 closeCreateModal();
                 loadPage();
             } catch(e) {
                 errEl.textContent = e.message;
                 errEl.style.display = 'block';
-                btn.disabled = false;
-                btn.textContent = '';
-                var ic = document.createElement('i'); ic.setAttribute('data-lucide', 'save'); btn.appendChild(ic);
-                btn.appendChild(document.createTextNode(' Save'));
-                lucide.createIcons();
+            } finally {
+                if (!success) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="save"></i> Save';
+                    if (draftBtn) draftBtn.disabled = false;
+                    lucide.createIcons();
+                }
             }
         }
 
