@@ -411,18 +411,20 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
 
     // Auto-schedule next occurrence for recurring notifications
     if (notif.recurrence && notif.recurrence !== 'none') {
-        const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
-        if (nextAt) {
-            await supabase.from('admin_notifications').insert({
-                title: notif.title, body: notif.body, image_url: notif.image_url,
-                platform: notif.platform, audience: notif.audience,
-                deep_link_type: notif.deep_link_type, deep_link_id: notif.deep_link_id,
-                recurrence: notif.recurrence, recurrence_day: notif.recurrence_day,
-                notes: notif.notes, created_by: sentBy || 'cron',
-                status: 'scheduled', scheduled_at: nextAt,
-                is_template: false,
-            }).catch(() => {});
-        }
+        try {
+            const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
+            if (nextAt) {
+                const { error: insErr } = await supabase.from('admin_notifications').insert({
+                    title: notif.title, body: notif.body, image_url: notif.image_url || null,
+                    platform: notif.platform || 'all', audience: notif.audience || 'all',
+                    deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
+                    recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
+                    notes: notif.notes || null, created_by: sentBy || 'cron',
+                    status: 'scheduled', scheduled_at: nextAt, is_template: false,
+                });
+                if (insErr) console.error('Next occurrence insert failed:', insErr.message);
+            }
+        } catch (e) { console.error('nextOccurrence error:', e.message); }
     }
 
     return { sent: successCount, failed: failCount, total: tokens.length, stale_removed: staleTokens.length };
