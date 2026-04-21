@@ -609,7 +609,7 @@
                 </div>
 
                 <!-- Recurrence -->
-                <div class="form-group" id="recurrence-group" style="display:none">
+                <div class="form-group" id="recurrence-group">
                     <label class="form-label">Repeat</label>
                     <div style="display:flex;gap:8px;flex-wrap:wrap">
                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-primary)">
@@ -1234,7 +1234,6 @@
                     + dateStr + ' at ' + timeStr + '</span>'
                     + (isPast ? '<span style="color:#e53e3e;font-size:0.82em;margin-left:8px">⚠️ This time is in the past</span>' : '');
                 clearBtn.style.display = 'inline-flex';
-                document.getElementById('recurrence-group').style.display = 'block';
             } else if (_sd) {
                 inp.value = '';
                 summary.innerHTML = '<span style="color:var(--text-secondary)">Date set — pick a time above</span>';
@@ -1252,7 +1251,6 @@
             document.querySelectorAll('.sched-chip').forEach(function(c) { c.classList.remove('active'); });
             document.getElementById('sched-summary').innerHTML = '<span style="color:var(--text-tertiary)">Not scheduled — will save as draft</span>';
             document.getElementById('sched-clear-btn').style.display = 'none';
-            document.getElementById('recurrence-group').style.display = 'none';
             document.getElementById('rec-none').checked = true;
             document.getElementById('f-recurrence-day').style.display = 'none';
         }
