@@ -1128,7 +1128,7 @@
     var _weatherCond = 'clear';
     if (getCity() === 'Duhok') {
       try {
-        var _wdata = JSON.parse(localStorage.getItem('sd_rain_v2'));
+        var _wdata = JSON.parse(localStorage.getItem(_WEATHER_KEY));
         if (_wdata && (Date.now() - _wdata.ts) < 30 * 60 * 1000) _weatherCond = _wdata.condition || 'clear';
       } catch(e) {}
     }
