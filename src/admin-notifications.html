@@ -1288,7 +1288,6 @@
             } else if (n.deep_link_id) {
                 document.getElementById('f-dl-id').value = n.deep_link_id;
             }
-            schedInitPicker(n.scheduled_at || null);
             var rec = n.recurrence || 'none';
             var recEl = document.querySelector('input[name="recurrence"][value="' + rec + '"]');
             if (recEl) recEl.checked = true;
@@ -1296,6 +1295,7 @@
                 document.getElementById('f-recurrence-day').style.display = 'inline-block';
                 document.getElementById('f-recurrence-day').value = n.recurrence_day != null ? String(n.recurrence_day) : '5';
             }
+            schedInitPicker(n.scheduled_at || null);
             document.getElementById('f-is-template').checked = !!n.is_template;
             onDeepLinkChange();
             updateTokenPreview();
