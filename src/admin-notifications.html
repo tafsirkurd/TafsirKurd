@@ -1268,8 +1268,9 @@
         }
 
         function openEditModal(n) {
-            _currentEditId = n.id;
-            document.getElementById('modal-title').textContent = 'Edit Notification';
+            var editable = n.status === 'draft' || n.status === 'scheduled';
+            _currentEditId = editable ? n.id : null;
+            document.getElementById('modal-title').textContent = editable ? 'Edit Notification' : 'New Notification (copy)';
             clearForm();
             document.getElementById('f-title').value = n.title || '';
             document.getElementById('f-body').value = n.body || '';
