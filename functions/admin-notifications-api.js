@@ -348,7 +348,7 @@ export async function onRequest(context) {
 
         // Auto-schedule next occurrence for recurring notifications
         if (notif.recurrence && notif.recurrence !== 'none') {
-            const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day);
+            const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
             if (nextAt) {
                 await supabase.from('admin_notifications').insert({
                     title: notif.title,
@@ -554,21 +554,25 @@ function pemToDer(pem) {
     return buf.buffer;
 }
 // Returns the next ISO timestamp for a recurring notification
-function nextOccurrence(recurrence, recurrenceDay) {
+function nextOccurrence(recurrence, recurrenceDay, scheduledAt) {
     const now = new Date();
+    // Preserve the original HH:MM from the notification's scheduled_at
+    const refTime = scheduledAt ? new Date(scheduledAt) : null;
+    const h = refTime ? refTime.getUTCHours() : 9;
+    const m = refTime ? refTime.getUTCMinutes() : 0;
     if (recurrence === 'daily') {
         const next = new Date(now);
         next.setUTCDate(next.getUTCDate() + 1);
-        next.setUTCHours(9, 0, 0, 0); // 09:00 UTC next day
+        next.setUTCHours(h, m, 0, 0);
         return next.toISOString();
     }
     if (recurrence === 'weekly' && recurrenceDay != null) {
         const next = new Date(now);
-        const currentDay = next.getUTCDay(); // 0=Sun
+        const currentDay = next.getUTCDay();
         let daysUntil = (recurrenceDay - currentDay + 7) % 7;
-        if (daysUntil === 0) daysUntil = 7; // same day → next week
+        if (daysUntil === 0) daysUntil = 7;
         next.setUTCDate(next.getUTCDate() + daysUntil);
-        next.setUTCHours(9, 0, 0, 0);
+        next.setUTCHours(h, m, 0, 0);
         return next.toISOString();
     }
     return null;

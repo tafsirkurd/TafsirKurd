@@ -530,8 +530,15 @@
 
                 <!-- Scheduling -->
                 <div class="form-group">
-                    <label class="form-label">Schedule For <span style="font-size:11px;color:var(--text-tertiary)">(blank = save as draft)</span></label>
+                    <label class="form-label">Schedule For <span style="font-size:11px;color:var(--text-tertiary)">(leave blank to save as unscheduled draft)</span></label>
                     <input type="datetime-local" id="f-scheduled-at" class="form-input">
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+                        <button type="button" class="btn btn-sm" onclick="setScheduleOffset(1)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">+1h</button>
+                        <button type="button" class="btn btn-sm" onclick="setScheduleOffset(3)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">+3h</button>
+                        <button type="button" class="btn btn-sm" onclick="setScheduleTomorrow(9)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">Tomorrow 9am</button>
+                        <button type="button" class="btn btn-sm" onclick="setScheduleTomorrow(18)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">Tomorrow 6pm</button>
+                        <button type="button" class="btn btn-sm" onclick="clearSchedule()" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-tertiary)">Clear</button>
+                    </div>
                 </div>
 
                 <!-- Recurrence -->
@@ -1035,6 +1042,40 @@
         }
 
         // ── Create Modal ─────────────────────────────────────────
+        function scheduledAtToInput(d) {
+            var pad = function(n) { return String(n).padStart(2, '0'); };
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+                + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+
+        function setScheduleOffset(hours) {
+            var d = new Date(Date.now() + hours * 3600 * 1000);
+            d.setSeconds(0, 0);
+            document.getElementById('f-scheduled-at').value = scheduledAtToInput(d);
+            document.getElementById('recurrence-group').style.display = 'block';
+        }
+
+        function setScheduleTomorrow(hour) {
+            var d = new Date();
+            d.setDate(d.getDate() + 1);
+            d.setHours(hour, 0, 0, 0);
+            document.getElementById('f-scheduled-at').value = scheduledAtToInput(d);
+            document.getElementById('recurrence-group').style.display = 'block';
+        }
+
+        function clearSchedule() {
+            document.getElementById('f-scheduled-at').value = '';
+            document.getElementById('recurrence-group').style.display = 'none';
+            document.getElementById('rec-none').checked = true;
+            document.getElementById('f-recurrence-day').style.display = 'none';
+        }
+
+        function getDefaultScheduledAt() {
+            var ms = 15 * 60 * 1000;
+            var d = new Date(Math.ceil(Date.now() / ms) * ms);
+            return scheduledAtToInput(d);
+        }
+
         function openCreateModal() {
             _currentEditId = null;
             document.getElementById('modal-title').textContent = 'New Notification';
@@ -1096,9 +1137,9 @@
             document.getElementById('f-platform').value = 'all';
             document.getElementById('f-audience').value = 'all';
             document.getElementById('f-dl-type').value = 'none';
-            document.getElementById('f-scheduled-at').value = '';
+            document.getElementById('f-scheduled-at').value = getDefaultScheduledAt();
             document.getElementById('rec-none').checked = true;
-            document.getElementById('recurrence-group').style.display = 'none';
+            document.getElementById('recurrence-group').style.display = 'block';
             document.getElementById('f-recurrence-day').style.display = 'none';
             document.getElementById('f-is-template').checked = false;
             document.getElementById('title-count').textContent = '0/100';
@@ -1176,7 +1217,7 @@
             var fd = getFormData();
             if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
             if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
-            if (forceDraft === 'draft') fd.scheduled_at = null;
+            // drafts preserve scheduled_at — null only if user cleared the field
             var btn = document.getElementById('save-btn');
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
