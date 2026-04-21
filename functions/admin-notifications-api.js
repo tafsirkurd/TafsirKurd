@@ -21,27 +21,6 @@ export async function onRequest(context) {
     let body;
     try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
-    // ── PUBLIC: get prayer reminder config (no admin auth needed) ─────
-    if (body.action === 'get_reminder_config') {
-        const REMINDER_DEFAULTS = {
-            fajr:    { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
-            dhuhr:   { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
-            asr:     { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
-            maghrib: { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
-            isha:    { title: 'بیرخستنەوەی نوێژ', body: 'نوێژا {prayer} دێ پێ بکەت لە {minutes} خولەک' },
-        };
-        const { data: cfgRow } = await supabase
-            .from('admin_notifications')
-            .select('body')
-            .eq('deep_link_type', 'prayer_reminder_config')
-            .maybeSingle();
-        let config = Object.assign({}, REMINDER_DEFAULTS);
-        if (cfgRow?.body) {
-            try { config = Object.assign({}, REMINDER_DEFAULTS, JSON.parse(cfgRow.body)); } catch(e) {}
-        }
-        return json({ success: true, config });
-    }
-
     const token = ((request.headers.get('Authorization') || '').replace('Bearer ', '') || body.token || '').trim();
     if (!token) return json({ error: 'No token' }, 401);
 
@@ -139,31 +118,6 @@ export async function onRequest(context) {
 
     // ── WRITE OPERATIONS — require editor or super_admin ──────────
     if (!isWriter) return json({ error: 'Insufficient permissions' }, 403);
-
-    // ── UPDATE REMINDER CONFIG ────────────────────────────────────
-    if (action === 'update_reminder_config') {
-        if (!body.config || typeof body.config !== 'object')
-            return json({ error: 'config object required' }, 400);
-        const configStr = JSON.stringify(body.config);
-        const { data: existing } = await supabase
-            .from('admin_notifications')
-            .select('id')
-            .eq('deep_link_type', 'prayer_reminder_config')
-            .maybeSingle();
-        if (existing) {
-            await supabase.from('admin_notifications')
-                .update({ body: configStr, notes: 'Prayer reminder text templates' })
-                .eq('id', existing.id);
-        } else {
-            await supabase.from('admin_notifications').insert({
-                title: '__reminder_config__', body: configStr,
-                deep_link_type: 'prayer_reminder_config', status: 'draft',
-                platform: 'all', audience: 'all',
-                notes: 'Prayer reminder text templates', created_by: adminEmail,
-            });
-        }
-        return json({ success: true });
-    }
 
     // ── CREATE ────────────────────────────────────────────────────
     if (action === 'create') {

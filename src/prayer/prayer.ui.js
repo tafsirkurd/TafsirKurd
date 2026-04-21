@@ -128,20 +128,21 @@
   function getReminderOffset()  { return parseInt(localStorage.getItem('prayerReminderOffset') || '20') || 20; }
   function setReminderOffset(v) { localStorage.setItem('prayerReminderOffset', String(v)); }
 
-  async function fetchReminderConfig() {
-    try {
-      var res = await fetch('/admin-notifications-api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'get_reminder_config' })
-      });
-      if (res.ok) {
-        var data = await res.json();
-        if (data.success && data.config) {
-          localStorage.setItem('prayerReminderConfig', JSON.stringify(data.config));
-        }
-      }
-    } catch(e) { /* silently fail — device uses cached/default text */ }
+  function fetchReminderConfig() {
+    if (!window.t) return;
+    var prayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+    var config = {};
+    var hasAny = false;
+    prayers.forEach(function(p) {
+      var titleKey = 'prayer_reminder.' + p + '.title';
+      var bodyKey  = 'prayer_reminder.' + p + '.body';
+      var title = window.t(titleKey);
+      var body  = window.t(bodyKey);
+      config[p] = {};
+      if (title !== titleKey) { config[p].title = title; hasAny = true; }
+      if (body  !== bodyKey)  { config[p].body  = body;  hasAny = true; }
+    });
+    if (hasAny) localStorage.setItem('prayerReminderConfig', JSON.stringify(config));
   }
 
   async function rescheduleReminders(city) {
@@ -2799,7 +2800,8 @@
    * Only runs once per day (tracks prayerLastScheduleDate).
    */
   async function initScheduleOnStart() {
-    fetchReminderConfig(); // refresh cached reminder text in background (fire-and-forget)
+    fetchReminderConfig();
+    document.addEventListener('i18n:updated', fetchReminderConfig);
     if (!getAthan()) {
       // Still reschedule reminders even if athan is off (reminders are independent)
       var _today2 = window.PrayerLogic.todayBaghdad();
