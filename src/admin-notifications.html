@@ -1202,10 +1202,10 @@
         }
 
         function schedPickTime(h, m) {
-            document.querySelectorAll('#sched-time-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
-            _sh = h; _sm = m;
             var btn = document.getElementById('sched-t' + h);
-            if (btn) btn.classList.add('active');
+            var alreadyActive = btn && btn.classList.contains('active');
+            document.querySelectorAll('#sched-time-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            if (alreadyActive) { _sh = null; _sm = null; } else { _sh = h; _sm = m; if (btn) btn.classList.add('active'); }
             schedSync();
         }
 
