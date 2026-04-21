@@ -39,18 +39,25 @@ export async function onRequest(context) {
 
         const results = [];
         for (const notif of due) {
-            // Atomically claim the notification (prevent double-send)
-            const { data: claimed } = await supabase
-                .from('admin_notifications')
-                .update({ status: 'sending' })
-                .eq('id', notif.id)
-                .eq('status', 'scheduled')
-                .select()
-                .single();
-            if (!claimed) continue; // already claimed by another run
+            try {
+                // Atomically claim the notification (prevent double-send)
+                const { data: claimed } = await supabase
+                    .from('admin_notifications')
+                    .update({ status: 'sending' })
+                    .eq('id', notif.id)
+                    .eq('status', 'scheduled')
+                    .select()
+                    .single();
+                if (!claimed) continue; // already claimed by another run
 
-            const r = await doSend(supabase, env, notif, notif.id, 'cron');
-            results.push({ id: notif.id, ...r });
+                const r = await doSend(supabase, env, notif, notif.id, 'cron');
+                results.push({ id: notif.id, ...r });
+            } catch (e) {
+                await supabase.from('admin_notifications')
+                    .update({ status: 'failed', error_message: 'Cron error: ' + e.message })
+                    .eq('id', notif.id).catch(() => {});
+                results.push({ id: notif.id, error: e.message });
+            }
         }
         return json({ success: true, processed: results.length, results });
     }
