@@ -854,18 +854,28 @@
         async function notifAPI(action, payload) {
             var token = sessionStorage.getItem('adminToken');
             if (!token) { window.adminAuth && window.adminAuth.checkAuth(); throw new Error('Not logged in'); }
-            var res = await fetch('/admin-notifications-api', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify(Object.assign({ action: action }, payload || {}))
-            });
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 20000);
+            var res;
+            try {
+                res = await fetch('/admin-notifications-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify(Object.assign({ action: action }, payload || {})),
+                    signal: controller.signal
+                });
+            } catch (fetchErr) {
+                clearTimeout(timeoutId);
+                if (fetchErr.name === 'AbortError') throw new Error('Request timed out. Please try again.');
+                throw new Error('Network error. Check your connection.');
+            }
+            clearTimeout(timeoutId);
             var ct = res.headers.get('content-type') || '';
             if (!ct.includes('application/json')) {
                 throw new Error('Server error (' + res.status + '). Check Cloudflare deployment.');
             }
             var data = await res.json();
             if (res.status === 401 || res.status === 403) {
-                // Session expired — re-verify auth (will redirect to login if needed)
                 if (window.adminAuth) window.adminAuth.checkAuth();
                 throw new Error('Session expired. Please refresh the page and log in again.');
             }
@@ -1271,7 +1281,10 @@
                 var d = new Date(val);
                 var timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                 var dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                summary.innerHTML = '<span style="color:var(--primary);font-weight:600">' + dateStr + ' at ' + timeStr + '</span>';
+                var isPast = d < new Date();
+                summary.innerHTML = '<span style="color:' + (isPast ? '#e53e3e' : 'var(--primary)') + ';font-weight:600">'
+                    + dateStr + ' at ' + timeStr + '</span>'
+                    + (isPast ? '<span style="color:#e53e3e;font-size:0.82em;margin-left:8px">⚠️ This time is in the past</span>' : '');
                 clearBtn.style.display = 'inline-flex';
                 document.getElementById('recurrence-group').style.display = 'block';
             } else if (_sd) {
