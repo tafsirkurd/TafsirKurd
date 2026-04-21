@@ -157,6 +157,31 @@
         .btn-send-green:hover { background: #38a169 !important; }
         .btn-danger-sm { color: #e53e3e !important; }
 
+        /* ── Schedule Picker ─────────────────────────────────────── */
+        .sched-picker { background: var(--bg-app); border: 1px solid var(--border-medium); border-radius: 10px; overflow: hidden; }
+        .sched-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border-light); }
+        .sched-row-lbl { font-size: 10px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; width: 34px; flex-shrink: 0; }
+        .sched-chips { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+        .sched-chip {
+            padding: 4px 13px; font-size: 12px; font-weight: 500;
+            border: 1px solid var(--border); border-radius: 20px;
+            background: var(--bg-surface); color: var(--text-primary);
+            cursor: pointer; transition: all 0.13s; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 4px;
+            font-family: var(--font-family); line-height: 1.4;
+        }
+        .sched-chip:hover { border-color: var(--primary); color: var(--primary); background: rgba(124,58,237,0.06); }
+        .sched-chip.active { background: var(--primary); color: #fff !important; border-color: var(--primary); }
+        .sched-pick-wrap { position: relative; display: inline-flex; }
+        .sched-pick-wrap input[type="date"],
+        .sched-pick-wrap input[type="time"] {
+            position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
+            cursor: pointer; z-index: 2; box-sizing: border-box;
+        }
+        .sched-foot { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; background: var(--bg-secondary); gap: 8px; font-size: 12px; }
+        .sched-foot-clear { background: none; border: none; cursor: pointer; color: var(--text-tertiary); display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 2px 8px; border-radius: 5px; transition: all 0.13s; font-family: var(--font-family); }
+        .sched-foot-clear:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -530,15 +555,52 @@
 
                 <!-- Scheduling -->
                 <div class="form-group">
-                    <label class="form-label">Schedule For <span style="font-size:11px;color:var(--text-tertiary)">(leave blank to save as unscheduled draft)</span></label>
-                    <input type="datetime-local" id="f-scheduled-at" class="form-input">
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-                        <button type="button" class="btn btn-sm" onclick="setScheduleOffset(1)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">+1h</button>
-                        <button type="button" class="btn btn-sm" onclick="setScheduleOffset(3)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">+3h</button>
-                        <button type="button" class="btn btn-sm" onclick="setScheduleTomorrow(9)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">Tomorrow 9am</button>
-                        <button type="button" class="btn btn-sm" onclick="setScheduleTomorrow(18)" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-primary)">Tomorrow 6pm</button>
-                        <button type="button" class="btn btn-sm" onclick="clearSchedule()" style="padding:3px 9px;font-size:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text-tertiary)">Clear</button>
+                    <label class="form-label">Schedule For</label>
+                    <div class="sched-picker">
+                        <!-- Date row -->
+                        <div class="sched-row" id="sched-date-row">
+                            <span class="sched-row-lbl">Date</span>
+                            <div class="sched-chips">
+                                <button type="button" class="sched-chip" id="sched-d0" onclick="schedPickDay(0)">Today</button>
+                                <button type="button" class="sched-chip" id="sched-d1" onclick="schedPickDay(1)">Tomorrow</button>
+                                <button type="button" class="sched-chip" id="sched-d2" onclick="schedPickDay(2)">—</button>
+                                <span class="sched-pick-wrap">
+                                    <button type="button" class="sched-chip" id="sched-d-custom" style="pointer-events:none">
+                                        <i data-lucide="calendar" style="width:12px;height:12px"></i> Pick
+                                    </button>
+                                    <input type="date" id="sched-date-hidden" onchange="schedPickCustomDate(this.value)">
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Time row -->
+                        <div class="sched-row" id="sched-time-row">
+                            <span class="sched-row-lbl">Time</span>
+                            <div class="sched-chips">
+                                <button type="button" class="sched-chip" id="sched-t6"  onclick="schedPickTime(6,0)">6 AM</button>
+                                <button type="button" class="sched-chip" id="sched-t8"  onclick="schedPickTime(8,0)">8 AM</button>
+                                <button type="button" class="sched-chip" id="sched-t9"  onclick="schedPickTime(9,0)">9 AM</button>
+                                <button type="button" class="sched-chip" id="sched-t12" onclick="schedPickTime(12,0)">12 PM</button>
+                                <button type="button" class="sched-chip" id="sched-t15" onclick="schedPickTime(15,0)">3 PM</button>
+                                <button type="button" class="sched-chip" id="sched-t18" onclick="schedPickTime(18,0)">6 PM</button>
+                                <button type="button" class="sched-chip" id="sched-t20" onclick="schedPickTime(20,0)">8 PM</button>
+                                <span class="sched-pick-wrap">
+                                    <button type="button" class="sched-chip" style="pointer-events:none">
+                                        <i data-lucide="clock" style="width:12px;height:12px"></i> Other
+                                    </button>
+                                    <input type="time" id="sched-time-hidden" onchange="schedPickCustomTime(this.value)">
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Footer summary -->
+                        <div class="sched-foot">
+                            <div id="sched-summary"><span style="color:var(--text-tertiary)">Not scheduled — will save as draft</span></div>
+                            <button type="button" class="sched-foot-clear" id="sched-clear-btn" onclick="clearSchedule()" style="display:none">
+                                <i data-lucide="x" style="width:12px;height:12px"></i> Clear
+                            </button>
+                        </div>
                     </div>
+                    <!-- Hidden value read by getFormData() -->
+                    <input type="datetime-local" id="f-scheduled-at" style="display:none">
                 </div>
 
                 <!-- Recurrence -->
@@ -686,14 +748,12 @@
                 document.getElementById('body-count').textContent = this.value.length + '/300';
             });
 
-            // Show recurrence options only when a schedule date is set
-            document.getElementById('f-scheduled-at').addEventListener('input', function() {
-                document.getElementById('recurrence-group').style.display = this.value ? 'block' : 'none';
-                if (!this.value) {
-                    document.getElementById('rec-none').checked = true;
-                    document.getElementById('f-recurrence-day').style.display = 'none';
-                }
-            });
+            // Schedule picker: set day+2 label on page load
+            (function() {
+                var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                var d = new Date(); d.setDate(d.getDate() + 2);
+                document.getElementById('sched-d2').textContent = days[d.getDay()];
+            })();
 
             // Weekly day picker visibility
             document.querySelectorAll('input[name="recurrence"]').forEach(function(radio) {
@@ -1042,38 +1102,132 @@
         }
 
         // ── Create Modal ─────────────────────────────────────────
-        function scheduledAtToInput(d) {
-            var pad = function(n) { return String(n).padStart(2, '0'); };
-            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
-                + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        // ── Schedule Picker state ────────────────────────────────
+        var _sd = null; // 'YYYY-MM-DD'
+        var _sh = null; // 0-23
+        var _sm = null; // 0-59
+        function _sp(n) { return String(n).padStart(2, '0'); }
+
+        function schedInitPicker(isoStr) {
+            // Reset all chip highlights
+            document.querySelectorAll('.sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            // Refresh day+2 label
+            var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            var d2 = new Date(); d2.setDate(d2.getDate() + 2);
+            document.getElementById('sched-d2').textContent = days[d2.getDay()];
+
+            if (isoStr) {
+                // Load from existing value (local time from the ISO string)
+                var d = new Date(isoStr);
+                _sd = isoStr.slice(0, 10);
+                _sh = d.getHours(); _sm = d.getMinutes();
+            } else {
+                // Default: pick the first future preset time slot (with 30 min buffer)
+                var presets = [6, 8, 9, 12, 15, 18, 20];
+                var now = new Date();
+                var bufH = now.getHours() + (now.getMinutes() >= 30 ? 1 : 0);
+                var nextH = null;
+                for (var i = 0; i < presets.length; i++) {
+                    if (presets[i] > bufH) { nextH = presets[i]; break; }
+                }
+                if (nextH !== null) {
+                    _sd = now.getFullYear() + '-' + _sp(now.getMonth()+1) + '-' + _sp(now.getDate());
+                    _sh = nextH; _sm = 0;
+                } else {
+                    var tom = new Date(now); tom.setDate(tom.getDate() + 1);
+                    _sd = tom.getFullYear() + '-' + _sp(tom.getMonth()+1) + '-' + _sp(tom.getDate());
+                    _sh = 9; _sm = 0;
+                }
+            }
+            // Highlight matching date chip
+            var now2 = new Date();
+            var makeDS = function(offset) {
+                var x = new Date(now2); x.setDate(x.getDate() + offset);
+                return x.getFullYear() + '-' + _sp(x.getMonth()+1) + '-' + _sp(x.getDate());
+            };
+            if (_sd === makeDS(0)) document.getElementById('sched-d0').classList.add('active');
+            else if (_sd === makeDS(1)) document.getElementById('sched-d1').classList.add('active');
+            else if (_sd === makeDS(2)) document.getElementById('sched-d2').classList.add('active');
+            // Highlight matching time chip
+            var tBtn = document.getElementById('sched-t' + _sh);
+            if (tBtn && _sm === 0) tBtn.classList.add('active');
+            schedSync();
         }
 
-        function setScheduleOffset(hours) {
-            var d = new Date(Date.now() + hours * 3600 * 1000);
-            d.setSeconds(0, 0);
-            document.getElementById('f-scheduled-at').value = scheduledAtToInput(d);
-            document.getElementById('recurrence-group').style.display = 'block';
+        function schedPickDay(offset) {
+            document.querySelectorAll('#sched-date-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            if (typeof offset === 'number') {
+                var d = new Date(); d.setDate(d.getDate() + offset);
+                _sd = d.getFullYear() + '-' + _sp(d.getMonth()+1) + '-' + _sp(d.getDate());
+                var btn = document.getElementById('sched-d' + offset);
+                if (btn) btn.classList.add('active');
+            }
+            schedSync();
         }
 
-        function setScheduleTomorrow(hour) {
-            var d = new Date();
-            d.setDate(d.getDate() + 1);
-            d.setHours(hour, 0, 0, 0);
-            document.getElementById('f-scheduled-at').value = scheduledAtToInput(d);
-            document.getElementById('recurrence-group').style.display = 'block';
+        function schedPickCustomDate(val) {
+            if (!val) return;
+            document.querySelectorAll('#sched-date-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            _sd = val;
+            // Highlight if it matches a standard offset
+            var now2 = new Date();
+            for (var i = 0; i <= 2; i++) {
+                var x = new Date(now2); x.setDate(x.getDate() + i);
+                var ds = x.getFullYear() + '-' + _sp(x.getMonth()+1) + '-' + _sp(x.getDate());
+                if (ds === val) { document.getElementById('sched-d' + i).classList.add('active'); break; }
+            }
+            schedSync();
+        }
+
+        function schedPickTime(h, m) {
+            document.querySelectorAll('#sched-time-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            _sh = h; _sm = m;
+            var btn = document.getElementById('sched-t' + h);
+            if (btn) btn.classList.add('active');
+            schedSync();
+        }
+
+        function schedPickCustomTime(val) {
+            if (!val) return;
+            document.querySelectorAll('#sched-time-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            var parts = val.split(':');
+            _sh = parseInt(parts[0]); _sm = parseInt(parts[1] || 0);
+            schedSync();
+        }
+
+        function schedSync() {
+            var inp = document.getElementById('f-scheduled-at');
+            var summary = document.getElementById('sched-summary');
+            var clearBtn = document.getElementById('sched-clear-btn');
+            if (_sd && _sh !== null) {
+                var val = _sd + 'T' + _sp(_sh) + ':' + _sp(_sm || 0);
+                inp.value = val;
+                var d = new Date(val);
+                var timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                var dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                summary.innerHTML = '<span style="color:var(--primary);font-weight:600">' + dateStr + ' at ' + timeStr + '</span>';
+                clearBtn.style.display = 'inline-flex';
+                document.getElementById('recurrence-group').style.display = 'block';
+            } else if (_sd) {
+                inp.value = '';
+                summary.innerHTML = '<span style="color:var(--text-secondary)">Date set — pick a time above</span>';
+                clearBtn.style.display = 'inline-flex';
+            } else {
+                inp.value = '';
+                summary.innerHTML = '<span style="color:var(--text-tertiary)">Not scheduled — will save as draft</span>';
+                clearBtn.style.display = 'none';
+            }
         }
 
         function clearSchedule() {
+            _sd = null; _sh = null; _sm = null;
             document.getElementById('f-scheduled-at').value = '';
+            document.querySelectorAll('.sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            document.getElementById('sched-summary').innerHTML = '<span style="color:var(--text-tertiary)">Not scheduled — will save as draft</span>';
+            document.getElementById('sched-clear-btn').style.display = 'none';
             document.getElementById('recurrence-group').style.display = 'none';
             document.getElementById('rec-none').checked = true;
             document.getElementById('f-recurrence-day').style.display = 'none';
-        }
-
-        function getDefaultScheduledAt() {
-            var ms = 15 * 60 * 1000;
-            var d = new Date(Math.ceil(Date.now() / ms) * ms);
-            return scheduledAtToInput(d);
         }
 
         function openCreateModal() {
@@ -1106,10 +1260,7 @@
             } else if (n.deep_link_id) {
                 document.getElementById('f-dl-id').value = n.deep_link_id;
             }
-            if (n.scheduled_at) {
-                document.getElementById('f-scheduled-at').value = n.scheduled_at.slice(0, 16);
-                document.getElementById('recurrence-group').style.display = 'block';
-            }
+            schedInitPicker(n.scheduled_at || null);
             var rec = n.recurrence || 'none';
             var recEl = document.querySelector('input[name="recurrence"][value="' + rec + '"]');
             if (recEl) recEl.checked = true;
@@ -1137,9 +1288,8 @@
             document.getElementById('f-platform').value = 'all';
             document.getElementById('f-audience').value = 'all';
             document.getElementById('f-dl-type').value = 'none';
-            document.getElementById('f-scheduled-at').value = getDefaultScheduledAt();
+            schedInitPicker(null);
             document.getElementById('rec-none').checked = true;
-            document.getElementById('recurrence-group').style.display = 'block';
             document.getElementById('f-recurrence-day').style.display = 'none';
             document.getElementById('f-is-template').checked = false;
             document.getElementById('title-count').textContent = '0/100';
