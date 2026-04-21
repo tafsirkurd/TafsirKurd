@@ -52,7 +52,7 @@
       labelKey: 'adhkar.sunrise', labelFallback: 'نوێژا ئیشراق',
       subtitleKey: 'gencine.smart.sunrise_hint', subtitleFallback: 'کاتا نوێژا هەتاوهاتن',
       timeTag: 'ئیشراق', basePriority: 62, /* beats morning+waking in its window */
-      sunriseWindow: 60 /* show for 60 min after Sunrise */
+      sunriseWindow: { before: 30, after: 30 } /* 30 min before and after Sunrise */
     },
     {
       id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
@@ -570,12 +570,13 @@
       var te = (prayers && _toMin(prayers[tw.end])   >= 0) ? _toMin(prayers[tw.end])   : tw.fe;
       return _inRange(nowMin, ts, te, tw.wraps);
     }
-    /* sunriseWindow: active for N minutes after Sunrise */
+    /* sunriseWindow: active N min before and after Sunrise */
     if (item.sunriseWindow) {
       var sr = prayers ? _toMin(prayers['Sunrise']) : -1;
       if (sr >= 0) {
-        var srEnd = (sr + item.sunriseWindow) % (24 * 60);
-        return _inRange(nowMin, sr, srEnd, false);
+        var srStart = (sr - item.sunriseWindow.before + 24 * 60) % (24 * 60);
+        var srEnd   = (sr + item.sunriseWindow.after) % (24 * 60);
+        return _inRange(nowMin, srStart, srEnd, false);
       }
       return false;
     }
