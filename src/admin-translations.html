@@ -4540,6 +4540,12 @@
                 }
                 updateQeBar();
 
+                // Auto-unmark if this row was marked
+                if (item.marked) {
+                    var markBtn = liveRow ? liveRow.querySelector('.t-btn.mark.is-marked') : null;
+                    if (markBtn) toggleMark(parseInt(id), true, markBtn);
+                }
+
                 if (hasPending) {
                     // New value typed while save was in flight — auto-save it immediately.
                     // Delete _qeSaving first so the recursive call isn't blocked.
