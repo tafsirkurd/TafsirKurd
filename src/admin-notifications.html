@@ -731,6 +731,10 @@
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                 body: JSON.stringify(Object.assign({ action: action }, payload || {}))
             });
+            var ct = res.headers.get('content-type') || '';
+            if (!ct.includes('application/json')) {
+                throw new Error('Server error (' + res.status + '). Check Cloudflare deployment.');
+            }
             var data = await res.json();
             if (!data.success) throw new Error(data.error || 'API error');
             return data;
@@ -1184,7 +1188,10 @@
             } catch(e) {
                 errEl.textContent = e.message;
                 errEl.style.display = 'block';
-                btn.disabled = false; btn.textContent = 'Save';
+                btn.disabled = false;
+                btn.textContent = '';
+                var ic = document.createElement('i'); ic.setAttribute('data-lucide', 'save'); btn.appendChild(ic);
+                btn.appendChild(document.createTextNode(' Save'));
                 lucide.createIcons();
             }
         }
@@ -1209,7 +1216,10 @@
             } catch(e) {
                 errEl.textContent = e.message;
                 errEl.style.display = 'block';
-                btn.disabled = false; btn.textContent = 'Save & Send Now';
+                btn.disabled = false;
+                btn.textContent = '';
+                var ic2 = document.createElement('i'); ic2.setAttribute('data-lucide', 'send'); btn.appendChild(ic2);
+                btn.appendChild(document.createTextNode(' Save & Send Now'));
                 lucide.createIcons();
             }
         }
