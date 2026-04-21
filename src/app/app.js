@@ -6820,7 +6820,9 @@ function renderSettings(){
   _rateIconBox.appendChild(icon('fas fa-star'));
   var _rateText=el('div','rate-app-text');
   _rateText.appendChild(el('div','rate-app-label',t('settings.rate_app')));
-  _rateText.appendChild(el('div','rate-app-sub',t('settings.rate_sub')));
+  var _ratePlat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
+  var _rateSub=_ratePlat==='ios'?'لەسەر App Store هەڵسەنگاندن بکە':t('settings.rate_sub');
+  _rateText.appendChild(el('div','rate-app-sub',_rateSub));
   _rateLeft.appendChild(_rateIconBox);_rateLeft.appendChild(_rateText);
   _rateRow.appendChild(_rateLeft);
   var _rateChev=el('span','about-nav-chevron');_rateChev.appendChild(icon('fas fa-chevron-left'));_rateRow.appendChild(_rateChev);
