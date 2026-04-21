@@ -1144,22 +1144,7 @@
                 _sd = isoStr.slice(0, 10);
                 _sh = d.getHours(); _sm = d.getMinutes();
             } else {
-                // Default: pick the first future preset time slot (with 30 min buffer)
-                var presets = [6, 8, 9, 12, 15, 18, 20];
-                var now = new Date();
-                var bufH = now.getHours() + (now.getMinutes() >= 30 ? 1 : 0);
-                var nextH = null;
-                for (var i = 0; i < presets.length; i++) {
-                    if (presets[i] > bufH) { nextH = presets[i]; break; }
-                }
-                if (nextH !== null) {
-                    _sd = now.getFullYear() + '-' + _sp(now.getMonth()+1) + '-' + _sp(now.getDate());
-                    _sh = nextH; _sm = 0;
-                } else {
-                    var tom = new Date(now); tom.setDate(tom.getDate() + 1);
-                    _sd = tom.getFullYear() + '-' + _sp(tom.getMonth()+1) + '-' + _sp(tom.getDate());
-                    _sh = 9; _sm = 0;
-                }
+                _sd = null; _sh = null; _sm = null;
             }
             // Highlight matching date chip
             var now2 = new Date();
