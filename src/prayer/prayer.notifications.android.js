@@ -289,6 +289,7 @@
         if (!timings[name]) continue;
 
         var prayerAt = pl.parseAsDate(timings[name], dateISO);
+        prayerAt = new Date(prayerAt.getTime() - 2000); // fire 2s early
         if (prayerAt <= now) {
           console.log('[Athan] SKIP (past):', name, dateISO, timings[name]);
           continue;
