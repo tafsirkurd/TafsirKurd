@@ -538,7 +538,7 @@
 
     _fallbackTimer = setTimeout(function () {
       if (_started && _compass && _compass.style.opacity !== '1') _showCompass();
-    }, 3000);
+    }, 1500);
 
     _loop();
   }

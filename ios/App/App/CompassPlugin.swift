@@ -12,7 +12,7 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
     private var isRunning = false
 
     @objc func start(_ call: CAPPluginCall) {
-        NSLog("[Compass] start() called")
+        NSLog("[Compass] start() called (thread: %@)", Thread.current.description)
 
         guard CLLocationManager.headingAvailable() else {
             NSLog("[Compass] headingAvailable() == false")
@@ -20,26 +20,31 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
             return
         }
 
-        if locationManager == nil {
-            let lm = CLLocationManager()
-            lm.delegate = self
-            lm.headingFilter = kCLHeadingFilterNone  // report EVERY change
-            lm.desiredAccuracy = kCLLocationAccuracyBest
-            locationManager = lm
-            NSLog("[Compass] CLLocationManager created")
+        // CLLocationManager MUST run on main thread (needs active run loop)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
+            if self.locationManager == nil {
+                let lm = CLLocationManager()
+                lm.delegate = self
+                lm.headingFilter = kCLHeadingFilterNone
+                lm.desiredAccuracy = kCLLocationAccuracyBest
+                self.locationManager = lm
+                NSLog("[Compass] CLLocationManager created on MAIN thread")
+            }
+
+            let authStatus = self.locationManager!.authorizationStatus
+            NSLog("[Compass] auth status: %d", authStatus.rawValue)
+
+            if authStatus == .notDetermined {
+                self.pendingCall = call
+                self.locationManager?.requestWhenInUseAuthorization()
+                NSLog("[Compass] requesting location authorization")
+                return
+            }
+
+            self.beginHeading(call: call)
         }
-
-        let authStatus = locationManager!.authorizationStatus
-        NSLog("[Compass] current auth status: %d", authStatus.rawValue)
-
-        if authStatus == .notDetermined {
-            pendingCall = call
-            locationManager?.requestWhenInUseAuthorization()
-            NSLog("[Compass] requesting location authorization")
-            return
-        }
-
-        beginHeading(call: call)
     }
 
     private func beginHeading(call: CAPPluginCall) {
@@ -55,7 +60,7 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
 
         lm.startUpdatingLocation()
         lm.startUpdatingHeading()
-        NSLog("[Compass] started heading + location updates")
+        NSLog("[Compass] started heading + location updates on MAIN thread")
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
             self?.locationManager?.stopUpdatingLocation()
@@ -64,7 +69,6 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
         call.resolve(["status": "granted"])
     }
 
-    /// JS can poll this if event listeners don't work
     @objc func getHeading(_ call: CAPPluginCall) {
         call.resolve([
             "heading": lastHeading,
@@ -73,10 +77,13 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
     }
 
     @objc func stop(_ call: CAPPluginCall) {
-        isRunning = false
-        locationManager?.stopUpdatingHeading()
-        locationManager?.stopUpdatingLocation()
-        NSLog("[Compass] stopped")
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.isRunning = false
+            self.locationManager?.stopUpdatingHeading()
+            self.locationManager?.stopUpdatingLocation()
+            NSLog("[Compass] stopped")
+        }
         call.resolve()
     }
 
@@ -94,6 +101,7 @@ public class CompassPlugin: CAPPlugin, CLLocationManagerDelegate {
         let accuracy = newHeading.headingAccuracy
         lastHeading = heading
         lastAccuracy = accuracy
+        NSLog("[Compass] heading: %.1f  accuracy: %.1f", heading, accuracy)
         notifyListeners("headingUpdate", data: [
             "heading": heading,
             "accuracy": accuracy
