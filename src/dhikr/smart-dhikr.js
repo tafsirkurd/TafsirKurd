@@ -289,7 +289,7 @@
        'wind'      — high wind (≥ 40 km/h), no precip
        'clear'     — nothing notable
   ───────────────────────────────────────────── */
-  var _RAIN_KEY = 'sd_rain_v2';
+  var _RAIN_KEY = 'sd_rain_v3';
   var _RAIN_TTL = 30 * 60 * 1000;
 
   /* Weather-code → condition classifier (WMO codes, Open-Meteo scale) */
@@ -299,7 +299,7 @@
     if (code === 71 || code === 73 || code === 75 || code === 77 ||
         code === 85 || code === 86 || code === 56 || code === 57 ||
         code === 66 || code === 67) return 'snow';                       /* snow / freezing rain  */
-    if (prec > 0 || (code >= 51 && code <= 82)) return 'rain';          /* drizzle/rain/showers  */
+    if (prec >= 0.5 || (code >= 51 && code <= 82)) return 'rain';       /* ≥0.5mm or rain codes  */
     if (windspeed >= 40) return 'wind';                                  /* strong wind, no precip*/
     return 'clear';
   }
@@ -340,7 +340,7 @@
       if (code === 392 || code === 395) return 'thunder';         /* snow with thunder */
       if (code >= 200 && code < 300) return 'thunder';
       if (_WTTR_SNOW[code]) return 'snow';
-      if (prec > 0 || (code >= 300 && code < 600)) return 'rain';
+      if (prec >= 0.5 || (code >= 300 && code < 600)) return 'rain';
       if (wind >= 40) return 'wind';
       return 'clear';
     }).catch(function(){return null;});
@@ -387,7 +387,7 @@
         var wind = inst.wind_speed || 0; /* m/s */
         if (sym.indexOf('thunder') !== -1) return 'thunder';
         if (sym.indexOf('snow') !== -1 || sym.indexOf('sleet') !== -1) return 'snow';
-        if (sym.indexOf('rain') !== -1 || sym.indexOf('shower') !== -1 || prec > 0) return 'rain';
+        if (sym.indexOf('rain') !== -1 || sym.indexOf('shower') !== -1 || prec >= 0.5) return 'rain';
         if (wind >= 11) return 'wind'; /* 11 m/s ≈ 40 km/h */
         return 'clear';
       }).catch(function() { return null; });
@@ -411,17 +411,13 @@
       var valid = results.filter(function(r) { return r !== null; });
       if (!valid.length) return; /* all failed — keep stale cache */
 
-      /* Majority vote: count each condition */
+      /* Strict-majority vote: non-clear needs >50% of valid sources */
       var counts = {};
       valid.forEach(function(cond) { counts[cond] = (counts[cond] || 0) + 1; });
-
-      /* Pick condition with highest count; tie-break: prefer more severe */
-      var severity = { thunder: 3, rain: 2, snow: 2, wind: 1, clear: 0 };
-      var winner = valid[0];
-      var winnerScore = counts[winner] * 10 + (severity[winner] || 0);
-      Object.keys(counts).forEach(function(cond) {
-        var score = counts[cond] * 10 + (severity[cond] || 0);
-        if (score > winnerScore) { winner = cond; winnerScore = score; }
+      var majority = Math.floor(valid.length / 2) + 1;
+      var winner = 'clear';
+      ['thunder', 'snow', 'rain', 'wind'].forEach(function(cond) {
+        if ((counts[cond] || 0) >= majority) winner = cond;
       });
 
       try {
