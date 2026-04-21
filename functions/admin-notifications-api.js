@@ -32,6 +32,7 @@ export async function onRequest(context) {
             .from('admin_notifications')
             .select('*')
             .eq('status', 'scheduled')
+            .eq('is_template', false)
             .lte('scheduled_at', new Date().toISOString())
             .limit(20);
 
