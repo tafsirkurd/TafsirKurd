@@ -14,7 +14,7 @@ jobs:
           RESPONSE=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
             -X POST https://tafsirkurd.com/admin-notifications-api \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Authorization: Bearer ${{ secrets.NOTIF_CRON_SECRET }}" \
             -d '{"action":"process_scheduled"}')
           cat /tmp/resp.json
           if [ "$RESPONSE" != "200" ]; then
