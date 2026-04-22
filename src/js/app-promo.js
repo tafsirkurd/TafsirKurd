@@ -383,12 +383,12 @@
     return overlay;
   }
 
-  /* Show after 2.5 s — config fetch is done well before then */
-  setTimeout(function () {
+  /* Show only after preloader is gone + 1.5s for entrance animations */
+  function schedulePopup() {
     if (isBlocked()) return;
     _cfgReady.then(function () {
       var cfg = _cfg || {};
-      if (cfg.popupEnabled === false) return; // disabled via admin
+      if (cfg.popupEnabled === false) return;
       if (isBlocked()) return;
       var popup = buildPopup();
       document.body.appendChild(popup);
@@ -398,6 +398,25 @@
         });
       });
     });
-  }, 2500);
+  }
+
+  function waitForPreloader() {
+    var preloader = document.getElementById('preloader');
+    if (!preloader || preloader.style.display === 'none') {
+      setTimeout(schedulePopup, 1500);
+      return;
+    }
+    var obs = new MutationObserver(function () {
+      if (preloader.style.display === 'none') {
+        obs.disconnect();
+        setTimeout(schedulePopup, 1500);
+      }
+    });
+    obs.observe(preloader, { attributes: true, attributeFilter: ['style'] });
+    // Safety: show anyway after 8s no matter what
+    setTimeout(function () { obs.disconnect(); schedulePopup(); }, 8000);
+  }
+
+  waitForPreloader();
 
 })();
