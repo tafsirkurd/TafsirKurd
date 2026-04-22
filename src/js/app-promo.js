@@ -131,7 +131,7 @@
       /* mobile */
       '@media(max-width:620px){',
         '#tk-pp-card{flex-direction:column;max-width:100%;border-radius:20px;}',
-        '#tk-pp-img{width:100%;aspect-ratio:7/10;max-height:280px;}',
+        '#tk-pp-img{width:100%;aspect-ratio:5/3;}',
         '#tk-pp-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}',
         '#tk-pp-body{padding:24px 22px 30px;}',
         '#tk-pp-h{font-size:1.4rem;}',
