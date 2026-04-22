@@ -412,12 +412,15 @@ body.no-scroll {
 }
 
 .preloader-logo {
-    width: 55px;
-    height: 55px;
+    width: 100px;
+    height: 100px;
     margin-bottom: 30px;
     animation: logoFade 2s ease-in-out infinite;
     filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
     object-fit: contain;
+}
+[data-theme="dark"] .preloader-logo {
+    filter: invert(1) brightness(1.2) drop-shadow(0 10px 30px rgba(255,255,255,0.1));
 }
 
 @keyframes logoFade {
