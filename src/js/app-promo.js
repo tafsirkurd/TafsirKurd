@@ -259,10 +259,13 @@
 
   /* State */
   var K_STATE = 'tk_popup_v2';
+  var K_SESSION = 'tk_popup_shown';
   var DISMISS_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
 
   function isBlocked() {
     try {
+      // Already shown this session — don't show again
+      if (sessionStorage.getItem(K_SESSION)) return true;
       var s = JSON.parse(localStorage.getItem(K_STATE));
       if (!s) return false;
       if (s.s === 'clicked') return true;
@@ -392,6 +395,7 @@
       if (isBlocked()) return;
       var popup = buildPopup();
       document.body.appendChild(popup);
+      try { sessionStorage.setItem(K_SESSION, '1'); } catch(e) {}
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
           popup.classList.add('tk-in');
