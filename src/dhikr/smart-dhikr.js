@@ -816,8 +816,8 @@
     var items = [
       { _type: 'adhkar', _adhkarItem: _getZikrItem() }    /* card 1: zikr    */
     ];
-    /* card 2: weather dhikr — only added when data exists */
-    var weatherItem = _getWeatherItem();
+    /* card 2: weather dhikr — only added when data exists and weather is active */
+    var weatherItem = (_getWeatherCondition() !== 'clear') ? _getWeatherItem() : null;
     if (weatherItem) {
       items.push({ _type: 'adhkar', _adhkarItem: weatherItem });
     }
