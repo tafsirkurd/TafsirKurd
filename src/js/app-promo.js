@@ -91,8 +91,8 @@
       '#tk-pp-card{',
         'background:#000;border:1px solid rgba(255,255,255,.1);',
         'border-radius:22px;overflow:hidden;',
-        'max-width:800px;width:100%;',
-        'display:flex;position:relative;',
+        'max-width:600px;width:100%;',
+        'display:flex;flex-direction:column;position:relative;',
         'box-shadow:0 32px 96px rgba(0,0,0,.9);',
         'transform:scale(.96) translateY(12px);',
         'transition:transform .35s cubic-bezier(.16,1,.3,1);will-change:transform;}',
@@ -107,15 +107,15 @@
       '#tk-pp-x:hover{background:rgba(255,255,255,.16);color:#fff;}',
 
       /* Image panel */
-      '#tk-pp-img{width:55%;flex-shrink:0;position:relative;overflow:hidden;',
+      '#tk-pp-img{width:100%;aspect-ratio:5/3;position:relative;overflow:hidden;',
         'background:linear-gradient(160deg,#111 0%,#000 100%);}',
       '#tk-pp-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}',
 
       /* Content panel */
-      '#tk-pp-body{flex:1;padding:52px 44px;display:flex;flex-direction:column;',
+      '#tk-pp-body{flex:1;padding:32px 36px 36px;display:flex;flex-direction:column;',
         'justify-content:center;direction:ltr;text-align:left;overflow-y:auto;}',
       '#tk-pp-logo{display:flex;align-items:center;gap:9px;margin-bottom:28px;}',
-      '#tk-pp-logo img{width:30px;height:30px;border-radius:7px;filter:invert(1);}',
+      '#tk-pp-logo img{width:44px;height:44px;border-radius:10px;filter:invert(1);}',
       '#tk-pp-logo-name{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.5);',
         'letter-spacing:.06em;text-transform:uppercase;}',
       '#tk-pp-h{margin:0 0 12px;font-size:1.75rem;font-weight:700;color:#fff;',
@@ -337,7 +337,7 @@
     var logoImg = document.createElement('img');
     logoImg.src = '/assets/images/logo.png';
     logoImg.alt = 'TafsirKurd';
-    logoImg.width = 30; logoImg.height = 30;
+    logoImg.width = 44; logoImg.height = 44;
     var logoName = document.createElement('span');
     logoName.id = 'tk-pp-logo-name';
     logoName.textContent = 'TafsirKurd';
