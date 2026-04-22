@@ -583,12 +583,6 @@
                 themeIcon.setAttribute('data-lucide', 'sun');
                 lucide.createIcons();
             }
-            document.getElementById('theme-toggle').addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDark = document.body.classList.contains('dark-mode');
-                themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-                lucide.createIcons();
-                localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
             });
         })();
 

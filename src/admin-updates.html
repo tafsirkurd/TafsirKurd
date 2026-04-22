@@ -958,19 +958,6 @@
     document.getElementById('menu-toggle').addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('collapsed'); });
     document.getElementById('mobile-menu-toggle').addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('mobile-open'); });
 
-    /* ── dark mode toggle ── */
-    (function() {
-        var tt = document.getElementById('theme-toggle');
-        var ti = document.getElementById('theme-icon');
-        if (!tt) return;
-        tt.addEventListener('click', function() {
-            document.body.classList.toggle('dark-mode');
-            var dark = document.body.classList.contains('dark-mode');
-            if (ti) ti.setAttribute('data-lucide', dark ? 'sun' : 'moon');
-            localStorage.setItem('admin-theme', dark ? 'dark' : 'light');
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        });
-    })();
 
     (async function(){
         var auth = await window.adminAuth.checkAuth();

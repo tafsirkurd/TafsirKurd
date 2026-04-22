@@ -957,34 +957,6 @@
             sidebar.classList.toggle('mobile-open');
         });
 
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-
-        // Check saved theme preference (default to light mode)
-        const savedTheme = localStorage.getItem('admin-theme') || 'light';
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.setAttribute('data-lucide', 'sun');
-            lucide.createIcons();
-        }
-
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-
-            // Update icon
-            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            lucide.createIcons();
-
-            // Save preference
-            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
-
-            // Recreate chart with new theme
-            if (userGrowthChart && allUsers.length > 0) {
-                renderUserGrowthChart();
-            }
-        });
 
         // Setup event listeners
         function setupEventListeners() {

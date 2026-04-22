@@ -780,15 +780,6 @@
                 document.getElementById('sidebar').classList.toggle('mobile-open');
             });
             // Theme toggle
-            var themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) themeToggle.addEventListener('click', function() {
-                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                var newTheme = isDark ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('adminTheme', newTheme);
-                var icon = document.getElementById('theme-icon');
-                if (icon) { icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun'); lucide.createIcons(); }
-            });
             // Topbar search syncs with filter
             var topbarSearch = document.getElementById('topbar-search-input');
             if (topbarSearch) topbarSearch.addEventListener('input', function() {

@@ -156,17 +156,6 @@
         (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadTables(); })();
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
-        const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
-        const savedTheme = localStorage.getItem('admin-theme') || 'light';
-        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun');
-            lucide.createIcons(); }
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            lucide.createIcons();
-            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
-        });
         async function loadTables() {
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) return;

@@ -294,15 +294,6 @@
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
 
-        const savedTheme = localStorage.getItem('admin-theme') || 'light';
-        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('theme-icon').setAttribute('data-lucide', 'sun'); lucide.createIcons(); }
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            document.getElementById('theme-icon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
-            lucide.createIcons();
-        });
     </script>
 </body>
 </html>
