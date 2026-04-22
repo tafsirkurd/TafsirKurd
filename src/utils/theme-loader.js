@@ -4,7 +4,7 @@
 (function () {
     var NEXT  = { light: 'dark', dark: 'sakina', sakina: 'noor', noor: 'light' };
     // Icon shown while ON that theme (represents the current state)
-    var ICONS = { light: 'sun', dark: 'moon', sakina: 'star', noor: 'sun-dim' };
+    var ICONS = { light: 'sun', dark: 'moon', sakina: 'star', noor: 'sunrise' };
 
     function _saved() {
         try { return localStorage.getItem('admin-theme') || 'light'; } catch (e) { return 'light'; }
