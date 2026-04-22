@@ -290,8 +290,7 @@
     var cfg = _cfg || {};
     var headline = cfg.popupHeadline || 'Get the app.';
     var subtitle = cfg.popupSubtitle || 'Read the Qur\u2019an, listen to reciters, and keep your progress with you \u2014 wherever you are.';
-    var isMobile = window.innerWidth <= 620;
-    var imgUrl   = (isMobile && cfg.imageMobileUrl) ? cfg.imageMobileUrl : (cfg.imageUrl || null);
+    var imgUrl   = cfg.imageMobileUrl || cfg.imageUrl || null;
     var iosUrl   = cfg.iosUrl   || DEFAULT_IOS;
     var playUrl  = cfg.playUrl  || DEFAULT_PLAY;
 
