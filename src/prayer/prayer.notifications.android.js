@@ -19,9 +19,10 @@
   var ID_BASE    = 100;
   var MAX_DAYS   = 28; // Android: 28 days (no system limit)
   // iOS hard-limits all apps to 64 pending local notifications.
-  // 12 days × 5 prayers = 60 notifications — safely under the limit.
-  // Kept at 12 (not 13) to leave 4 slots free for daily reminders or other uses.
-  var MAX_DAYS_IOS = 12;
+  // When only athan OR only reminders are active: 12 days × 5 = 60 (4 slots spare).
+  // When BOTH athan + reminders are active:       6 days × 5 × 2 = 60 (4 slots spare).
+  var MAX_DAYS_IOS       = 12;
+  var MAX_DAYS_IOS_BOTH  = 6;  // shared budget when athan + reminders both active
 
   // Kurdish prayer name fallbacks (used in notification body)
   var PRAYER_KMR_FB = {
@@ -237,7 +238,9 @@
     try { var raw = localStorage.getItem('prayerReminderConfig'); if (raw) configCache = JSON.parse(raw); } catch(e) {}
 
     var ios      = onIOS();
-    var dayLimit = ios ? MAX_DAYS_IOS : MAX_DAYS;
+    // iOS 64-notification cap: share budget with athan when both are active.
+    var _athanOn = localStorage.getItem('prayerAthanEnabled') !== 'false';
+    var dayLimit = ios ? (_athanOn ? MAX_DAYS_IOS_BOTH : MAX_DAYS_IOS) : MAX_DAYS;
     var now      = new Date();
     var pl       = window.PrayerLogic;
     var notifications = [];
@@ -266,15 +269,18 @@
                           .replace(/{prayer}/g, pName)
                           .replace(/{minutes}/g, String(offset));
 
-        notifications.push({
+        var remNotif = {
           id: id,
           title: title,
           body: body,
           schedule: { at: reminderAt, allowWhileIdle: true, exact: true },
           channelId: ios ? 'reminder' : REMINDER_CHANNEL,
           smallIcon: 'ic_notification',
+          sound: ios ? 'default' : undefined, // iOS: play default alert sound (not silent)
           extra: { type: 'prayer_reminder', name: name, dateISO: dateISO, offset: offset }
-        });
+        };
+        if (!ios) delete remNotif.sound; // Android: sound comes from channel
+        notifications.push(remNotif);
       }
     }
 
@@ -376,9 +382,10 @@
     var channelId = isSimple ? 'athan_simple' : (ios ? 'reminder' : ('athan_' + voice));
     var soundFile = isSimple ? null : (ios ? ('athan_' + voice + '.caf') : ('athan_' + voice));
 
-    // iOS hard cap: 64 notifications per app. 12 days × 5 = 60 — safely under limit.
+    // iOS hard cap: 64 notifications per app. Share budget with reminders if both active.
     // Android has no such restriction.
-    var dayLimit  = ios ? MAX_DAYS_IOS : MAX_DAYS;
+    var reminderOn = localStorage.getItem('prayerReminderEnabled') !== 'false';
+    var dayLimit  = ios ? (reminderOn ? MAX_DAYS_IOS_BOTH : MAX_DAYS_IOS) : MAX_DAYS;
     console.log('[Athan] scheduling: platform=' + (ios ? 'iOS' : 'Android') +
                 ' voice=' + voice + ' sound=' + (soundFile || 'default') +
                 ' days=' + Math.min(daysData.length, dayLimit) + ' (cap=' + dayLimit + ')');

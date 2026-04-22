@@ -2067,14 +2067,17 @@
     var saveBtn = cel('button', 'as2-save-btn');
     saveBtn.textContent = tStr('prayer.save_settings') || 'پاراستنی ڕێکخستنەکان';
     saveBtn.onclick = function() {
-      if (getAthan()) {
-        var today2 = window.PrayerLogic.todayBaghdad();
-        fetchDaysData(getCity(), today2, 28).then(function(daysData) {
-          if (daysData.length) {
-            window.PrayerNotifications.scheduleAthanMultiDay(daysData, getCity(), getToggles(), true);
-          }
-        });
-      }
+      var today2 = window.PrayerLogic.todayBaghdad();
+      fetchDaysData(getCity(), today2, 28).then(function(daysData) {
+        if (!daysData.length) return;
+        if (getAthan()) {
+          window.PrayerNotifications.scheduleAthanMultiDay(daysData, getCity(), getToggles(), true);
+        }
+        // Always reschedule reminders (independent of athan)
+        if (window.PrayerNotifications.scheduleReminderMultiDay) {
+          window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
+        }
+      });
       closeSettings();
       if (window.toast) toast(tStr('prayer.settings_saved') || 'ڕێکخستنەکان پارایستران');
     };
