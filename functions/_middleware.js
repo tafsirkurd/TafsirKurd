@@ -10,16 +10,16 @@ export async function onRequest(context) {
 
     if (isAdminApi && request.method === 'POST' && env.ADMIN_KV) {
         const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-        const bucket = Math.floor(Date.now() / 60000); // 1-minute rolling window
+        const bucket = Math.floor(Date.now() / 300000); // 5-minute rolling window
         const key = `ratelimit:${clientIP}:${bucket}`;
         const current = parseInt(await env.ADMIN_KV.get(key) || '0');
-        if (current >= 60) { // max 60 requests/min per IP
+        if (current >= 300) { // max 300 requests/5min per IP
             return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
                 status: 429,
-                headers: { 'Content-Type': 'application/json', 'Retry-After': '60' }
+                headers: { 'Content-Type': 'application/json', 'Retry-After': '300' }
             });
         }
-        await env.ADMIN_KV.put(key, String(current + 1), { expirationTtl: 120 });
+        await env.ADMIN_KV.put(key, String(current + 1), { expirationTtl: 600 });
     }
 
     // Only process islamvoice pages with video param

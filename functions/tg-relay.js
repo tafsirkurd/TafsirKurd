@@ -5,6 +5,11 @@
 const SECRET = 'TK-relay-2026';
 const HEARTBEAT_TTL = 120; // seconds — if no heartbeat, Claude Code is away
 
+// Module-level cache to reduce KV reads (valid for the lifetime of this isolate)
+let _tokenCache = null;
+let _groqKeyCache = null;
+let _lastHeartbeatWrite = 0; // Unix seconds — throttle heartbeat writes to once/60s
+
 const SYSTEM =
     'You are a helpful AI assistant for TafsirKurd website. ' +
     'Always reply in English only, regardless of what language the user writes in. ' +
@@ -25,13 +30,15 @@ export async function onRequest(context) {
 
         const chatId = msg.chat.id;
         const text = msg.text.trim();
-        const token = await env.ADMIN_KV?.get('tg_bot_token');
+        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
+        const token = _tokenCache;
 
         // If /groq command — reply with Groq immediately, don't queue
         if (text.startsWith('/groq')) {
             const userMsg = text.slice(5).trim();
             if (!userMsg) return sendTg(token, chatId, 'Usage: /groq <your message>');
-            const groqKey = await env.ADMIN_KV?.get('tg_groq_key');
+            if (!_groqKeyCache) _groqKeyCache = await env.ADMIN_KV?.get('tg_groq_key');
+            const groqKey = _groqKeyCache;
             if (!groqKey) return new Response('OK');
             const reply = await callGroq(groqKey, userMsg);
             return sendTg(token, chatId, reply);
@@ -54,7 +61,8 @@ export async function onRequest(context) {
         const claudeAway = (now - heartbeat) > HEARTBEAT_TTL;
 
         if (claudeAway) {
-            const groqKey = await env.ADMIN_KV?.get('tg_groq_key');
+            if (!_groqKeyCache) _groqKeyCache = await env.ADMIN_KV?.get('tg_groq_key');
+            const groqKey = _groqKeyCache;
             if (!groqKey || !token) return new Response('OK');
             const reply = await callGroq(groqKey, text);
             return sendTg(token, chatId, reply);
@@ -66,15 +74,21 @@ export async function onRequest(context) {
     // --- HEARTBEAT (Claude Code pings this to say "I'm alive") ---
     if (action === 'ping') {
         const now = Math.floor(Date.now() / 1000);
-        await env.ADMIN_KV?.put('tg_heartbeat', String(now));
+        if (now - _lastHeartbeatWrite >= 60) {
+            await env.ADMIN_KV?.put('tg_heartbeat', String(now));
+            _lastHeartbeatWrite = now;
+        }
         return new Response('OK');
     }
 
     // --- READ inbox ---
     if (action === 'read') {
-        // Also write heartbeat when Claude Code reads
+        // Also write heartbeat when Claude Code reads — throttled to once/60s
         const now = Math.floor(Date.now() / 1000);
-        await env.ADMIN_KV?.put('tg_heartbeat', String(now));
+        if (now - _lastHeartbeatWrite >= 60) {
+            await env.ADMIN_KV?.put('tg_heartbeat', String(now));
+            _lastHeartbeatWrite = now;
+        }
 
         const inbox = await env.ADMIN_KV?.get('tg_inbox', 'json') || [];
         const lastRead = parseInt(await env.ADMIN_KV?.get('tg_last_read') || '0');
@@ -98,7 +112,8 @@ export async function onRequest(context) {
         const text = url.searchParams.get('text');
         if (!chatId || !text) return new Response('Missing params', { status: 400 });
 
-        const token = await env.ADMIN_KV?.get('tg_bot_token');
+        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
+        const token = _tokenCache;
         const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -111,7 +126,8 @@ export async function onRequest(context) {
 
     // --- SETUP webhook ---
     if (action === 'setup') {
-        const token = await env.ADMIN_KV?.get('tg_bot_token');
+        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
+        const token = _tokenCache;
         const webhookUrl = new URL(request.url);
         webhookUrl.search = '';
         const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
@@ -129,7 +145,8 @@ export async function onRequest(context) {
         if (url.searchParams.get('secret') !== SECRET)
             return new Response('Forbidden', { status: 403 });
 
-        const token = await env.ADMIN_KV?.get('tg_bot_token');
+        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
+        const token = _tokenCache;
         if (!token) return new Response('No token', { status: 500 });
 
         // Switch to long-polling mode — delete webhook so getUpdates works
