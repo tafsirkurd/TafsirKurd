@@ -40,6 +40,46 @@ body.dark-mode, html.dark-mode body {
     --primary-hover: #CCCCCC;
 }
 
+/* Sakina — deep emerald night × gold */
+body[data-admin-theme="sakina"],
+html[data-admin-theme="sakina"] body {
+    --bg-app: #0c1c12;
+    --bg-surface: #162d1f;
+    --bg-hover: #1c3827;
+    --bg-active: #243d2e;
+
+    --text-primary: #f0e6c8;
+    --text-secondary: #a89268;
+    --text-tertiary: #6b5c3e;
+
+    --border-light: #1e3828;
+    --border-medium: #2c5038;
+    --border-dark: #3a6048;
+
+    --primary: #c9a84c;
+    --primary-hover: #b8943e;
+}
+
+/* Noor — warm parchment × deep green */
+body[data-admin-theme="noor"],
+html[data-admin-theme="noor"] body {
+    --bg-app: #f4e8cc;
+    --bg-surface: #fdf4e3;
+    --bg-hover: #f0e2c4;
+    --bg-active: #e8d4a8;
+
+    --text-primary: #1a0e04;
+    --text-secondary: #5c3d1a;
+    --text-tertiary: #9b7650;
+
+    --border-light: #d9c9a8;
+    --border-medium: #c9b490;
+    --border-dark: #b89e78;
+
+    --primary: #1a5c3a;
+    --primary-hover: #164d31;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -122,6 +162,12 @@ body {
 }
 body.dark-mode .sidebar-logo-img {
     filter: invert(1);
+}
+body[data-admin-theme="sakina"] .sidebar-logo-img {
+    filter: invert(1) sepia(0.4) hue-rotate(20deg) brightness(0.85);
+}
+body[data-admin-theme="noor"] .sidebar-logo-img {
+    filter: sepia(0.35) brightness(0.88);
 }
 
 .sidebar-logo-text {
@@ -308,6 +354,16 @@ html.dark-mode body .sidebar-profile-avatar {
     background: #2a2a2a;
     color: #ffffff;
     border: 1px solid #3a3a3a;
+}
+body[data-admin-theme="sakina"] .sidebar-profile-avatar {
+    background: #1c3827;
+    color: #f0e6c8;
+    border: 1px solid #2c5038;
+}
+body[data-admin-theme="noor"] .sidebar-profile-avatar {
+    background: #e8d4a8;
+    color: #1a0e04;
+    border: 1px solid #d9c9a8;
 }
 
 .sidebar-profile-info {

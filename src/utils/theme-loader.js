@@ -1,32 +1,66 @@
-// Admin Theme Loader + Sidebar Scroll Persistence
-// Runs immediately in <head> — must stay small and synchronous
+// Admin Theme Loader — light / dark / sakina / noor
+// Runs immediately in <head> — synchronous flash prevention + DOMContentLoaded wiring
 
-(function() {
-    // ── 1. Flash prevention: apply dark mode to <html> before first paint ──
+(function () {
+    var NEXT  = { light: 'dark', dark: 'sakina', sakina: 'noor', noor: 'light' };
+    // Icon shown while ON that theme (represents the current state)
+    var ICONS = { light: 'sun', dark: 'moon', sakina: 'star', noor: 'sun-dim' };
+
+    function _saved() {
+        try { return localStorage.getItem('admin-theme') || 'light'; } catch (e) { return 'light'; }
+    }
+
+    function _applyTheme(theme) {
+        var isDark = theme === 'dark' || theme === 'sakina';
+
+        // Body classes + attribute
+        document.body.classList.toggle('dark-mode', isDark);
+        document.body.setAttribute('data-admin-theme', theme);
+
+        // Html stays in sync (flash prevention for next load)
+        document.documentElement.classList.toggle('dark-mode', isDark);
+        document.documentElement.setAttribute('data-admin-theme', theme);
+
+        // Icon
+        var ti = document.getElementById('theme-icon');
+        if (ti) {
+            ti.setAttribute('data-lucide', ICONS[theme] || 'sun');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        try { localStorage.setItem('admin-theme', theme); } catch (e) {}
+    }
+
+    // ── 1. Flash prevention: run synchronously before first paint ──
     try {
-        var savedTheme = localStorage.getItem('admin-theme');
-        if (savedTheme === 'dark') {
+        var t0 = _saved();
+        if (t0 === 'dark' || t0 === 'sakina') {
             document.documentElement.classList.add('dark-mode');
         }
+        document.documentElement.setAttribute('data-admin-theme', t0);
     } catch (e) {}
 
-    // ── 2. After DOM ready ──
+    // ── 2. DOM ready ──
     document.addEventListener('DOMContentLoaded', function () {
+        _applyTheme(_saved());
 
-        // 2a. Move dark-mode class from <html> to <body> so body.dark-mode rules apply
-        if (document.documentElement.classList.contains('dark-mode')) {
-            document.body.classList.add('dark-mode');
+        // Replace toggle button to strip old per-page listeners, add new one
+        var btn = document.getElementById('theme-toggle');
+        if (btn) {
+            var nb = btn.cloneNode(true);
+            btn.parentNode.replaceChild(nb, btn);
+            nb.addEventListener('click', function () {
+                _applyTheme(NEXT[_saved()] || 'dark');
+            });
         }
 
-        // 2b. Keep html.dark-mode in sync whenever body.dark-mode is toggled
-        //     (so the flash prevention works on the NEXT page load too)
+        // Keep html.dark-mode in sync whenever body class changes
         if (window.MutationObserver) {
             new MutationObserver(function () {
-                var isDark = document.body.classList.contains('dark-mode');
-                document.documentElement.classList.toggle('dark-mode', isDark);
+                document.documentElement.classList.toggle(
+                    'dark-mode', document.body.classList.contains('dark-mode')
+                );
             }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
         }
-
-        // Sidebar active item scroll is handled by admin-auth.js revealSidebar()
     });
 })();
