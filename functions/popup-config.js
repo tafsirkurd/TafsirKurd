@@ -3,6 +3,7 @@
 
 const KEYS = [
   'app_popup_image_url',
+  'app_popup_image_mobile_url',
   'footer_app_visible',
   'footer_app_name',
   'footer_app_desc',
@@ -47,7 +48,8 @@ export async function onRequest(context) {
     if (Array.isArray(data)) data.forEach(function(r) { map[r.key] = r.value; });
 
     const payload = {
-      imageUrl:      map['app_popup_image_url'] || null,
+      imageUrl:      map['app_popup_image_url']        || null,
+      imageMobileUrl: map['app_popup_image_mobile_url'] || null,
       footerVisible: map['footer_app_visible'] !== 'false',
       footerName:    map['footer_app_name']    || null,
       footerDesc:    map['footer_app_desc']    || null,
