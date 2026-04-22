@@ -5,10 +5,22 @@
 const SECRET = 'TK-relay-2026';
 const HEARTBEAT_TTL = 120; // seconds — if no heartbeat, Claude Code is away
 
-// Module-level cache to reduce KV reads (valid for the lifetime of this isolate)
+// Module-level cache — token/key cached per isolate lifetime; heartbeat write throttled
 let _tokenCache = null;
 let _groqKeyCache = null;
-let _lastHeartbeatWrite = 0; // Unix seconds — throttle heartbeat writes to once/60s
+let _lastHeartbeatWrite = 0;
+
+// Prefer env var secrets (no KV read), fall back to KV for existing deployments
+async function getToken(env) {
+    if (env.TG_BOT_TOKEN) return env.TG_BOT_TOKEN;
+    if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
+    return _tokenCache;
+}
+async function getGroqKey(env) {
+    if (env.TG_GROQ_KEY) return env.TG_GROQ_KEY;
+    if (!_groqKeyCache) _groqKeyCache = await env.ADMIN_KV?.get('tg_groq_key');
+    return _groqKeyCache;
+}
 
 const SYSTEM =
     'You are a helpful AI assistant for TafsirKurd website. ' +
@@ -30,15 +42,13 @@ export async function onRequest(context) {
 
         const chatId = msg.chat.id;
         const text = msg.text.trim();
-        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
-        const token = _tokenCache;
+        const token = await getToken(env);
 
         // If /groq command — reply with Groq immediately, don't queue
         if (text.startsWith('/groq')) {
             const userMsg = text.slice(5).trim();
             if (!userMsg) return sendTg(token, chatId, 'Usage: /groq <your message>');
-            if (!_groqKeyCache) _groqKeyCache = await env.ADMIN_KV?.get('tg_groq_key');
-            const groqKey = _groqKeyCache;
+            const groqKey = await getGroqKey(env);
             if (!groqKey) return new Response('OK');
             const reply = await callGroq(groqKey, userMsg);
             return sendTg(token, chatId, reply);
@@ -61,8 +71,7 @@ export async function onRequest(context) {
         const claudeAway = (now - heartbeat) > HEARTBEAT_TTL;
 
         if (claudeAway) {
-            if (!_groqKeyCache) _groqKeyCache = await env.ADMIN_KV?.get('tg_groq_key');
-            const groqKey = _groqKeyCache;
+            const groqKey = await getGroqKey(env);
             if (!groqKey || !token) return new Response('OK');
             const reply = await callGroq(groqKey, text);
             return sendTg(token, chatId, reply);
@@ -112,8 +121,7 @@ export async function onRequest(context) {
         const text = url.searchParams.get('text');
         if (!chatId || !text) return new Response('Missing params', { status: 400 });
 
-        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
-        const token = _tokenCache;
+        const token = await getToken(env);
         const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -126,8 +134,7 @@ export async function onRequest(context) {
 
     // --- SETUP webhook ---
     if (action === 'setup') {
-        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
-        const token = _tokenCache;
+        const token = await getToken(env);
         const webhookUrl = new URL(request.url);
         webhookUrl.search = '';
         const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
@@ -145,8 +152,7 @@ export async function onRequest(context) {
         if (url.searchParams.get('secret') !== SECRET)
             return new Response('Forbidden', { status: 403 });
 
-        if (!_tokenCache) _tokenCache = await env.ADMIN_KV?.get('tg_bot_token');
-        const token = _tokenCache;
+        const token = await getToken(env);
         if (!token) return new Response('No token', { status: 500 });
 
         // Switch to long-polling mode — delete webhook so getUpdates works

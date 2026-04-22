@@ -4,24 +4,6 @@ export async function onRequest(context) {
     const { request, env, next } = context;
     const url = new URL(request.url);
 
-    // ===== RATE LIMITING — admin API endpoints only (not .html pages) =====
-    const adminApiPaths = ['/admin-auth', '/admin-management', '/admin-stats', '/admin-books', '/admin-messages-api', '/admin-users-data', '/admin-translations', '/admin-notifications-api'];
-    const isAdminApi = adminApiPaths.some(p => url.pathname === p || url.pathname.startsWith(p + '/'));
-
-    if (isAdminApi && request.method === 'POST' && env.ADMIN_KV) {
-        const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-        const bucket = Math.floor(Date.now() / 300000); // 5-minute rolling window
-        const key = `ratelimit:${clientIP}:${bucket}`;
-        const current = parseInt(await env.ADMIN_KV.get(key) || '0');
-        if (current >= 300) { // max 300 requests/5min per IP
-            return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
-                status: 429,
-                headers: { 'Content-Type': 'application/json', 'Retry-After': '300' }
-            });
-        }
-        await env.ADMIN_KV.put(key, String(current + 1), { expirationTtl: 600 });
-    }
-
     // Only process islamvoice pages with video param
     if (!url.pathname.includes('islamvoice') || !url.searchParams.get('video')) {
         return next();
