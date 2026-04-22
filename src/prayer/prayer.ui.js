@@ -108,7 +108,7 @@
   function markCityBad(c) { var b = getBadCities(); if (b.indexOf(c) === -1) { b.push(c); try { localStorage.setItem(_BAD_KEY, JSON.stringify(b)); } catch(e) {} } }
   function markCityGood(c) { var b = getBadCities().filter(function(x){ return x !== c; }); try { localStorage.setItem(_BAD_KEY, JSON.stringify(b)); } catch(e) {} }
 
-  function getAthan()   { if (window.S) return S.prayerAthanEnabled; var v = localStorage.getItem('prayerAthanEnabled'); return v === null ? true : v === 'true'; }
+  function getAthan()   { if (window.S) return S.prayerAthanEnabled; var v = localStorage.getItem('prayerAthanEnabled'); return v === null ? !(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') : v === 'true'; }
   function getToggles() {
     if (window.S && S.prayerToggles) return S.prayerToggles;
     try { return JSON.parse(localStorage.getItem('prayerToggles') || '{}'); } catch(e) { return {}; }
@@ -123,7 +123,7 @@
   function setFormat(v)       { localStorage.setItem('prayerTimeFormat', v); }
 
   // ── Prayer Reminder settings ──────────────────────────────────────────────
-  function getReminderEnabled() { return localStorage.getItem('prayerReminderEnabled') !== 'false'; }
+  function getReminderEnabled() { var v = localStorage.getItem('prayerReminderEnabled'); if (v === null) return !(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios'); return v !== 'false'; }
   function setReminderEnabled(v) { localStorage.setItem('prayerReminderEnabled', v ? 'true' : 'false'); }
   function getReminderOffset()  { return parseInt(localStorage.getItem('prayerReminderOffset') || '20') || 20; }
   function setReminderOffset(v) { localStorage.setItem('prayerReminderOffset', String(v)); }

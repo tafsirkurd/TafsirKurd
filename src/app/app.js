@@ -611,7 +611,7 @@ var S={
   dailyVerseTime:localStorage.getItem('dailyVerseTime')||'08:00',
   prayerCity:localStorage.getItem('prayerCity')||'Duhok',
   prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'13'),
-  prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')===null?true:localStorage.getItem('prayerAthanEnabled')==='true',
+  prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')):localStorage.getItem('prayerAthanEnabled')==='true',
   prayerToggles:(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return {}}}()),
   theme:localStorage.getItem('theme')||(JSON.parse(localStorage.getItem('userPreferences')||'{}').darkMode?'dark':'light'),
   arSize:parseFloat(localStorage.getItem('app_arSize'))||2.0,
@@ -7301,7 +7301,7 @@ function applySyncData(data){
   S.mushafLineH=parseFloat(localStorage.getItem('mushafLineH'))||1.8;
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
-  S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?true:localStorage.getItem('prayerAthanEnabled')==='true';
+  S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')):localStorage.getItem('prayerAthanEnabled')==='true';
   S.prayerToggles=(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return{}}})();
   scheduleReminder(S.dailyReminder, S.reminderTime);
   scheduleDailyVerse(S.dailyVerse, S.dailyVerseTime);
