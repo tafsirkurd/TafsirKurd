@@ -114,10 +114,6 @@
       /* Content panel */
       '#tk-pp-body{flex:1;padding:32px 36px 36px;display:flex;flex-direction:column;',
         'justify-content:center;overflow-y:auto;}',
-      '#tk-pp-logo{display:flex;align-items:center;gap:9px;margin-bottom:28px;}',
-      '#tk-pp-logo img{width:44px;height:44px;border-radius:10px;filter:invert(1);}',
-      '#tk-pp-logo-name{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.5);',
-        'letter-spacing:.06em;text-transform:uppercase;}',
       '#tk-pp-h{margin:0 0 12px;font-size:1.75rem;font-weight:700;color:#fff;direction:rtl;text-align:right;',
         'line-height:1.15;letter-spacing:-.025em;}',
       '#tk-pp-sub{margin:0 0 32px;font-size:.95rem;color:rgba(255,255,255,.5);line-height:1.7;direction:rtl;text-align:right;}',
@@ -331,19 +327,6 @@
     var body = document.createElement('div');
     body.id = 'tk-pp-body';
 
-    /* Logo bar */
-    var logoBar = document.createElement('div');
-    logoBar.id = 'tk-pp-logo';
-    var logoImg = document.createElement('img');
-    logoImg.src = '/assets/images/logo.png';
-    logoImg.alt = 'TafsirKurd';
-    logoImg.width = 44; logoImg.height = 44;
-    var logoName = document.createElement('span');
-    logoName.id = 'tk-pp-logo-name';
-    logoName.textContent = 'TafsirKurd';
-    logoBar.appendChild(logoImg);
-    logoBar.appendChild(logoName);
-
     /* Headline */
     var h = document.createElement('h2');
     h.id = 'tk-pp-h';
@@ -373,7 +356,6 @@
       addBtn('Get it on Google Play', playUrl, playIcon);
     }
 
-    body.appendChild(logoBar);
     body.appendChild(h);
     body.appendChild(sub);
     body.appendChild(btns);
