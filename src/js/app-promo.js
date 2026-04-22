@@ -115,7 +115,7 @@
       '#tk-pp-body{flex:1;padding:52px 44px;display:flex;flex-direction:column;',
         'justify-content:center;direction:ltr;text-align:left;overflow-y:auto;}',
       '#tk-pp-logo{display:flex;align-items:center;gap:9px;margin-bottom:28px;}',
-      '#tk-pp-logo img{width:30px;height:30px;border-radius:7px;}',
+      '#tk-pp-logo img{width:30px;height:30px;border-radius:7px;filter:invert(1);}',
       '#tk-pp-logo-name{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.5);',
         'letter-spacing:.06em;text-transform:uppercase;}',
       '#tk-pp-h{margin:0 0 12px;font-size:1.75rem;font-weight:700;color:#fff;',
