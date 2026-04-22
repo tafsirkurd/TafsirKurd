@@ -460,7 +460,7 @@
                 </div>
 
                 <h3 class="section-divider">App Popup</h3>
-                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Image shown in the app-download popup on the website (homepage, Quran, IslamVoice). Best dimensions: portrait phone screenshot — recommended 9:16. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Image shown in the app-download popup on the website (homepage, Quran, IslamVoice). Best dimensions: <strong>3:4 portrait</strong> — e.g. 750×1000px. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
                 <div class="images-grid">
                     <div class="image-card" data-key="app_popup_image_url">
                         <div class="image-card-preview" id="preview-app_popup_image_url" style="aspect-ratio:9/16;max-width:200px;margin:0 auto;">
@@ -468,7 +468,7 @@
                         </div>
                         <div class="image-card-body">
                             <div class="image-card-title">App Popup Image</div>
-                            <div class="image-card-desc">Portrait image shown in the app download popup (9:16 recommended — phone screenshot or mockup)</div>
+                            <div class="image-card-desc">Portrait image shown in the app download popup (3:4 recommended — matches the popup panel ratio)</div>
                             <span class="status-badge empty" id="status-app_popup_image_url">Not Set</span>
                             <input type="url" class="image-card-url" id="url-app_popup_image_url" placeholder="Paste image URL...">
                             <div class="image-card-actions">
@@ -678,7 +678,7 @@
             login_hero_quran_image: 9 / 16,
             login_hero_islamvoice_image: 9 / 16,
             tafsir_book_image: 3 / 4,
-            app_popup_image_url: 9 / 16
+            app_popup_image_url: 3 / 4
         };
 
         const CROP_TITLES = {
@@ -688,7 +688,7 @@
             login_hero_quran_image: 'Crop Login Hero — Quran (9:16)',
             login_hero_islamvoice_image: 'Crop Login Hero — IslamVoice (9:16)',
             tafsir_book_image: 'Crop Tafsir Book (3:4)',
-            app_popup_image_url: 'Crop App Popup Image (9:16)'
+            app_popup_image_url: 'Crop App Popup Image (3:4)'
         };
 
         function pickFile(key) {
