@@ -462,29 +462,12 @@
                 <h3 class="section-divider">App Popup</h3>
                 <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Images shown in the app-download popup. Desktop uses portrait, mobile uses landscape. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
                 <div class="images-grid">
-                    <div class="image-card" data-key="app_popup_image_url">
-                        <div class="image-card-preview" id="preview-app_popup_image_url" style="aspect-ratio:7/10;max-width:200px;margin:0 auto;">
-                            <div class="placeholder"><i data-lucide="smartphone"></i></div>
-                        </div>
-                        <div class="image-card-body">
-                            <div class="image-card-title">App Popup Image — Desktop</div>
-                            <div class="image-card-desc">Portrait — 700×1000px (7:10)</div>
-                            <span class="status-badge empty" id="status-app_popup_image_url">Not Set</span>
-                            <input type="url" class="image-card-url" id="url-app_popup_image_url" placeholder="Paste image URL...">
-                            <div class="image-card-actions">
-                                <button class="btn btn-secondary" onclick="pickFile('app_popup_image_url')">Upload</button>
-                                <button class="btn btn-primary" onclick="saveImage('app_popup_image_url')">Save</button>
-                                <button class="btn btn-danger" onclick="removeImage('app_popup_image_url')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
-                            </div>
-                            <input type="file" class="upload-input" id="file-app_popup_image_url" accept="image/*" onchange="handleUpload('app_popup_image_url', this)">
-                        </div>
-                    </div>
-                    <div class="image-card" data-key="app_popup_image_mobile_url">
+<div class="image-card" data-key="app_popup_image_mobile_url">
                         <div class="image-card-preview" id="preview-app_popup_image_mobile_url" style="aspect-ratio:5/3;margin:0 auto;">
                             <div class="placeholder"><i data-lucide="smartphone"></i></div>
                         </div>
                         <div class="image-card-body">
-                            <div class="image-card-title">App Popup Image — Mobile</div>
+                            <div class="image-card-title">App Popup Image</div>
                             <div class="image-card-desc">Landscape — 1000×600px (5:3)</div>
                             <span class="status-badge empty" id="status-app_popup_image_mobile_url">Not Set</span>
                             <input type="url" class="image-card-url" id="url-app_popup_image_mobile_url" placeholder="Paste image URL...">
@@ -531,7 +514,7 @@
         const R2_WORKER_URL = 'https://tafsirkurd-images.tefsirkurd.workers.dev';
         const R2_UPLOAD_SECRET = 'tk_r2_img_2026_K8mX3pW7nR9vJ4sQ';
 
-        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image', 'app_popup_image_url', 'app_popup_image_mobile_url'];
+        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image', 'app_popup_image_mobile_url'];
         const TEXT_KEYS = [
             'about_hero_sub','about_app_text','about_tafsir_text','about_tafsir_author','about_tafsir_book_desc',
             'about_declaration_text','about_quote_ar','about_quote_ku','about_quote_ref',
@@ -695,7 +678,6 @@
             login_hero_quran_image: 9 / 16,
             login_hero_islamvoice_image: 9 / 16,
             tafsir_book_image: 3 / 4,
-            app_popup_image_url: 7 / 10,
             app_popup_image_mobile_url: 5 / 3
         };
 
@@ -706,8 +688,7 @@
             login_hero_quran_image: 'Crop Login Hero — Quran (9:16)',
             login_hero_islamvoice_image: 'Crop Login Hero — IslamVoice (9:16)',
             tafsir_book_image: 'Crop Tafsir Book (3:4)',
-            app_popup_image_url: 'Crop App Popup Image — Desktop (7:10)',
-            app_popup_image_mobile_url: 'Crop App Popup Image — Mobile (5:3)'
+            app_popup_image_mobile_url: 'Crop App Popup Image (5:3)'
         };
 
         function pickFile(key) {
