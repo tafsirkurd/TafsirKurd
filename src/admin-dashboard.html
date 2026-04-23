@@ -667,7 +667,14 @@
 
                 const sub = document.createElement('div');
                 sub.className = 'tr-sub';
-                sub.textContent = (u.surahsCompleted || 0) + ' surahs · ' + (u.bestStreak || 0) + 'd streak';
+                const surahs = u.surahsCompleted || 0;
+                const streak = u.bestStreak || 0;
+                if (surahs > 0 || streak > 0) {
+                    const parts = [];
+                    if (surahs > 0) parts.push(surahs + ' surahs');
+                    if (streak > 0) parts.push(streak + 'd streak');
+                    sub.textContent = parts.join(' · ');
+                }
                 info.appendChild(sub);
 
                 row.appendChild(info);
