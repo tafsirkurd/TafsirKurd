@@ -10,6 +10,24 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=13">
+    <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="header-animation"],.nav-item[href*="admin-website"],.nav-item[href*="images"],.nav-item[href*="translations"],.nav-item[href*="admin-links"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="audit"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) style.textContent = css;
+        })();
+    </script>
     <script src="/utils/admin-auth-v2.js"></script>
     <script src="/utils/admin-loading.js"></script>
     <script src="/utils/admin-heartbeat.js"></script>
