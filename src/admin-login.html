@@ -161,7 +161,11 @@
             box-shadow: 0 2px 12px rgba(0,0,0,.06);
         }
 
-        .login-brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .login-brand-logo img { width: 100%; height: 100%; object-fit: contain; transition: filter .3s; }
+
+        body.dark-mode .login-brand-logo img { filter: invert(1); }
+        body[data-admin-theme="sakina"] .login-brand-logo img { filter: invert(1) sepia(0.4) hue-rotate(20deg) brightness(0.85); }
+        body[data-admin-theme="noor"]   .login-brand-logo img { filter: sepia(0.35) brightness(0.88); }
 
         .login-brand-name {
             font-size: 20px;
