@@ -31,7 +31,8 @@
             overflow: hidden;
             padding: 48px 40px;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
+            justify-content: center;
         }
 
         body[data-admin-theme="sakina"] .brand-panel { background: #071410; }
@@ -65,6 +66,8 @@
         .brand-heading {
             position: relative;
             z-index: 1;
+            text-align: center;
+            width: 100%;
         }
 
         .brand-title {
@@ -117,7 +120,10 @@
         .brand-stat-sub  { font-size: 11px; color: #475569; margin-top: 1px; }
 
         .brand-footer {
-            position: relative;
+            position: absolute;
+            bottom: 28px;
+            left: 0; right: 0;
+            text-align: center;
             z-index: 1;
             font-size: 11px;
             color: #334155;
