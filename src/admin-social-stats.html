@@ -198,9 +198,18 @@
                     </div>
                 </div>
                 <div class="metrics-grid">
-                    <div class="metric-card"><div class="metric-value" id="total">0</div><div class="metric-label">Total Stats</div></div>
-                    <div class="metric-card"><div class="metric-value" id="totalFollowers">0</div><div class="metric-label">Total Followers</div></div>
-                    <div class="metric-card"><div class="metric-value" id="totalViews">0</div><div class="metric-label">Total Views</div></div>
+                    <div class="metric-card" style="border-left:3px solid #8b5cf6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#8b5cf618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="share-2" style="width:17px;height:17px;color:#8b5cf6;"></i></div>
+                        <div class="metric-value" id="total">0</div><div class="metric-label">Total Stats</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #3b82f6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#3b82f618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="users" style="width:17px;height:17px;color:#3b82f6;"></i></div>
+                        <div class="metric-value" id="totalFollowers">0</div><div class="metric-label">Total Followers</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #14b8a6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#14b8a618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="eye" style="width:17px;height:17px;color:#14b8a6;"></i></div>
+                        <div class="metric-value" id="totalViews">0</div><div class="metric-label">Total Views</div>
+                    </div>
                 </div>
                 <div class="card">
                     <div class="table-container">
@@ -284,9 +293,9 @@
                     icon.className = s.icon_class;
                     icon.style.fontSize = '20px';
                     if (s.icon_class.includes('instagram')) icon.style.color = '#E4405F';
-                    else if (s.icon_class.includes('tiktok')) icon.style.color = '#000';
+                    else if (s.icon_class.includes('tiktok')) icon.style.color = '#374151';
                     else if (s.icon_class.includes('youtube')) icon.style.color = '#FF0000';
-                    else icon.style.color = 'var(--primary)';
+                    else icon.style.color = '#8b5cf6';
                     tdIcon.appendChild(icon);
                 } else {
                     tdIcon.textContent = s.icon_class || '—';
@@ -310,7 +319,7 @@
                 // Value with unit
                 const tdValue = document.createElement('td');
                 const valueSpan = document.createElement('span');
-                valueSpan.style.cssText = 'font-size:18px;font-weight:700;color:var(--primary);';
+                valueSpan.style.cssText = 'font-size:18px;font-weight:700;color:#3b82f6;';
                 valueSpan.textContent = (s.stat_value || 0).toLocaleString();
                 tdValue.appendChild(valueSpan);
                 tr.appendChild(tdValue);

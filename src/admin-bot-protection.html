@@ -426,40 +426,29 @@
 
                 <!-- METRICS -->
                 <div class="metrics-grid">
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-left:3px solid #3b82f6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#3b82f618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="users" style="width:17px;height:17px;color:#3b82f6;"></i></div>
                         <div class="metric-value" id="metricUsers">0</div>
                         <div class="metric-label">Total Users</div>
-                        <div class="metric-change positive">
-                            <i data-lucide="users"></i>
-                            <span id="metricNewUsers">0 new this week</span>
-                        </div>
+                        <div class="metric-change positive"><span id="metricNewUsers" style="font-size:12px;color:var(--text-tertiary);">0 new this week</span></div>
                     </div>
-
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-left:3px solid #10b981;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#10b98118;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="shield-check" style="width:17px;height:17px;color:#10b981;"></i></div>
                         <div class="metric-value" id="metricSessions">0</div>
                         <div class="metric-label">Admin Sessions (24h)</div>
-                        <div class="metric-change positive">
-                            <i data-lucide="shield"></i>
-                            <span>Authenticated access</span>
-                        </div>
+                        <div class="metric-change positive"><span style="font-size:12px;color:var(--text-tertiary);">Authenticated access</span></div>
                     </div>
-
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-left:3px solid #f59e0b;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#f59e0b18;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="message-square" style="width:17px;height:17px;color:#f59e0b;"></i></div>
                         <div class="metric-value" id="metricMessages">0</div>
                         <div class="metric-label">Contact Messages</div>
-                        <div class="metric-change positive">
-                            <i data-lucide="message-square"></i>
-                            <span id="metricMessages24h">0 today</span>
-                        </div>
+                        <div class="metric-change positive"><span id="metricMessages24h" style="font-size:12px;color:var(--text-tertiary);">0 today</span></div>
                     </div>
-
-                    <div class="metric-card">
+                    <div class="metric-card" style="border-left:3px solid #8b5cf6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#8b5cf618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="radio" style="width:17px;height:17px;color:#8b5cf6;"></i></div>
                         <div class="metric-value" id="metricEpisodes">0</div>
                         <div class="metric-label">IslamVoice Episodes</div>
-                        <div class="metric-change">
-                            <i data-lucide="video"></i>
-                            <span>Content protected</span>
-                        </div>
+                        <div class="metric-change"><span style="font-size:12px;color:var(--text-tertiary);">Content protected</span></div>
                     </div>
                 </div>
 
@@ -589,17 +578,6 @@
     <script src="/utils/admin-notifications.js"></script>
     <script>
         lucide.createIcons();
-
-        // Theme toggle
-        (function() {
-            const themeIcon = document.getElementById('theme-icon');
-            if (localStorage.getItem('admin-theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-                themeIcon.setAttribute('data-lucide', 'sun');
-                lucide.createIcons();
-            }
-            });
-        })();
 
         // Check authentication and load data
         (async () => {

@@ -214,6 +214,25 @@
                     </div>
                 </div>
 
+                <div class="metrics-grid" style="margin-bottom:24px;">
+                    <div class="metric-card" style="border-left:3px solid #3b82f6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#3b82f618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="shield-check" style="width:17px;height:17px;color:#3b82f6;"></i></div>
+                        <div class="metric-value" id="statTotal">—</div><div class="metric-label">Total Entries</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #10b981;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#10b98118;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="check-circle" style="width:17px;height:17px;color:#10b981;"></i></div>
+                        <div class="metric-value" id="statLogins">—</div><div class="metric-label">Successful Logins</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #f59e0b;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#f59e0b18;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="alert-triangle" style="width:17px;height:17px;color:#f59e0b;"></i></div>
+                        <div class="metric-value" id="statWarnings">—</div><div class="metric-label">Warnings</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #ef4444;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#ef444418;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="x-octagon" style="width:17px;height:17px;color:#ef4444;"></i></div>
+                        <div class="metric-value" id="statCritical">—</div><div class="metric-label">Critical Events</div>
+                    </div>
+                </div>
+
                 <div class="card" style="padding:20px">
                     <div class="audit-filters">
                         <select class="audit-filter-select" id="filterSeverity" onchange="applyFilters()">
@@ -316,6 +335,7 @@
                 var data = await res.json();
                 allLogs = data.logs || [];
                 page = 1;
+                updateSummaryCards();
                 applyFilters();
             } catch(e) {
                 document.getElementById('auditBody').textContent = '';
@@ -328,6 +348,14 @@
                 errRow.appendChild(errTd);
                 document.getElementById('auditBody').appendChild(errRow);
             }
+        }
+
+        function updateSummaryCards() {
+            document.getElementById('statTotal').textContent = allLogs.length.toLocaleString();
+            document.getElementById('statLogins').textContent = allLogs.filter(function(l) { return l.action === 'login_success' || l.action === 'login_success_2fa'; }).length.toLocaleString();
+            document.getElementById('statWarnings').textContent = allLogs.filter(function(l) { return l.severity === 'warning'; }).length.toLocaleString();
+            document.getElementById('statCritical').textContent = allLogs.filter(function(l) { return l.severity === 'critical'; }).length.toLocaleString();
+            lucide.createIcons();
         }
 
         function applyFilters() {

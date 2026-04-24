@@ -346,11 +346,22 @@
         }
     }
 
+    function hookTopbarSearch() {
+        var searchInput = document.querySelector('.topbar-search input');
+        if (!searchInput) return;
+        searchInput.addEventListener('focus', function () {
+            this.blur();
+            open();
+        });
+        searchInput.style.cursor = 'pointer';
+    }
+
     // ── Init ──────────────────────────────────────────────────────
     function init() {
         buildStyles();
         buildDOM();
         injectTopbarTrigger();
+        hookTopbarSearch();
         document.addEventListener('keydown', onGlobalKey);
     }
 

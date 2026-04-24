@@ -202,9 +202,18 @@
                     </div>
                 </div>
                 <div class="metrics-grid">
-                    <div class="metric-card"><div class="metric-value" id="total">0</div><div class="metric-label">Total Features</div></div>
-                    <div class="metric-card"><div class="metric-value" id="active">0</div><div class="metric-label">Active</div></div>
-                    <div class="metric-card"><div class="metric-value" id="inactive">0</div><div class="metric-label">Inactive</div></div>
+                    <div class="metric-card" style="border-left:3px solid #3b82f6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#3b82f618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="layers" style="width:17px;height:17px;color:#3b82f6;"></i></div>
+                        <div class="metric-value" id="total">0</div><div class="metric-label">Total Features</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #10b981;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#10b98118;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="check-circle" style="width:17px;height:17px;color:#10b981;"></i></div>
+                        <div class="metric-value" id="active">0</div><div class="metric-label">Active</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #ef4444;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#ef444418;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="x-circle" style="width:17px;height:17px;color:#ef4444;"></i></div>
+                        <div class="metric-value" id="inactive">0</div><div class="metric-label">Inactive</div>
+                    </div>
                 </div>
                 <div class="card">
                     <div class="table-container">
@@ -294,7 +303,7 @@
                     const icon = document.createElement('i');
                     icon.className = f.icon_class;
                     icon.style.fontSize = '18px';
-                    icon.style.color = 'var(--primary)';
+                    icon.style.color = '#3b82f6';
                     tdIcon.appendChild(icon);
                 } else {
                     tdIcon.textContent = f.icon_class || '—';

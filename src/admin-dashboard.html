@@ -947,11 +947,14 @@
             var recent = pages.slice(0, 6);
 
             if (recent.length === 0) {
-                var empty = document.createElement('div');
-                empty.style.cssText = 'grid-column:1/-1;color:var(--text-tertiary);font-size:13px;padding:8px 0;';
-                empty.textContent = 'Pages you visit will appear here.';
-                container.appendChild(empty);
-                return;
+                recent = [
+                    { href: '/admin-dashboard.html',         icon: 'bar-chart-2',    label: 'Dashboard',      ts: null },
+                    { href: '/admin-messages.html',           icon: 'message-square', label: 'Messages',       ts: null },
+                    { href: '/admin-users.html',              icon: 'users',          label: 'Users',          ts: null },
+                    { href: '/admin-videos.html',             icon: 'video',          label: 'Videos',         ts: null },
+                    { href: '/admin-analytics.html',          icon: 'trending-up',    label: 'Analytics',      ts: null },
+                    { href: '/admin-account-management.html', icon: 'user-cog',       label: 'Admin Accounts', ts: null },
+                ];
             }
 
             recent.forEach(function(page) {
@@ -975,7 +978,7 @@
 
                 var sub = document.createElement('div');
                 sub.className = 'quick-action-sub';
-                sub.textContent = getTimeAgo(new Date(page.ts));
+                sub.textContent = page.ts ? getTimeAgo(new Date(page.ts)) : 'Quick access';
                 info.appendChild(sub);
 
                 card.appendChild(info);
@@ -1372,6 +1375,9 @@
 
             var unreadCount = cnt(4);
             setMetric('metricMessages', unreadCount);
+            if (unreadCount > 0) {
+                document.title = '(' + unreadCount + ') Dashboard - TafsirKurd Admin';
+            }
 
             var messagesBadge = document.getElementById('messages-badge');
             if (messagesBadge && unreadCount > 0) {

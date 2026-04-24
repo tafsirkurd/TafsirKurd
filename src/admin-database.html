@@ -12,10 +12,12 @@
     <link rel="stylesheet" href="/css/admin-styles.css?v=13">
     <style>
         .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px; }
-        .table-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
-        .table-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-        .table-card-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
-        .table-card-count { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .table-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 10px; padding: 18px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+        .table-card:hover { border-left-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,.12); }
+        .table-card-icon { width: 32px; height: 32px; border-radius: 8px; background: #3b82f618; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .table-card-icon i { width: 15px; height: 15px; color: #3b82f6; }
+        .table-card-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); font-family: monospace; }
+        .table-card-count { font-size: 26px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; line-height: 1; }
         .table-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); }
         @media (max-width: 768px) {
             .table-grid { grid-template-columns: 1fr; }
@@ -250,13 +252,22 @@
                 const card = document.createElement('div');
                 card.className = 'table-card';
                 card.onclick = () => viewTable(table);
+
+                const iconWrap = document.createElement('div');
+                iconWrap.className = 'table-card-icon';
+                const ic = document.createElement('i');
+                ic.setAttribute('data-lucide', 'database');
+                iconWrap.appendChild(ic);
+                card.appendChild(iconWrap);
+
                 const name = document.createElement('div');
                 name.className = 'table-card-name';
                 name.textContent = table;
                 card.appendChild(name);
                 const countDiv = document.createElement('div');
                 countDiv.className = 'table-card-count';
-                countDiv.textContent = error ? 'Error' : (count || 0).toLocaleString();
+                countDiv.textContent = error ? '—' : (count || 0).toLocaleString();
+                if (error) countDiv.style.color = 'var(--text-tertiary)';
                 card.appendChild(countDiv);
                 const label = document.createElement('div');
                 label.className = 'table-card-label';
