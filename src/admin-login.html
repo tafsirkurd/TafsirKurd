@@ -4,8 +4,10 @@
     <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js?v=2"></script>
     <title>Admin Login - TafsirKurd</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin-styles.css?v=13">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
@@ -13,17 +15,18 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0f172a;
             min-height: 100vh;
             display: flex;
+            background: var(--bg-app);
+            color: var(--text-primary);
         }
 
-        /* ── Left branding panel ── */
+        /* ── Left branding panel (always dark) ── */
         .brand-panel {
             display: none;
-            width: 420px;
+            width: 400px;
             flex-shrink: 0;
-            background: linear-gradient(145deg, #0f172a 0%, #1e293b 60%, #0f2744 100%);
+            background: #0d1520;
             position: relative;
             overflow: hidden;
             padding: 48px 40px;
@@ -31,207 +34,200 @@
             justify-content: space-between;
         }
 
-        @media (min-width: 900px) {
-            .brand-panel { display: flex; }
-        }
+        body[data-admin-theme="sakina"] .brand-panel { background: #071410; }
+        body[data-admin-theme="noor"]   .brand-panel { background: #0d1208; }
+
+        @media (min-width: 900px) { .brand-panel { display: flex; } }
 
         .brand-panel::before {
             content: '';
             position: absolute;
-            top: -120px;
-            right: -120px;
-            width: 400px;
-            height: 400px;
+            top: -100px; right: -100px;
+            width: 360px; height: 360px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(59,130,246,.18) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(59,130,246,.15) 0%, transparent 70%);
             pointer-events: none;
         }
+
+        body[data-admin-theme="sakina"] .brand-panel::before { background: radial-gradient(circle, rgba(201,168,76,.12) 0%, transparent 70%); }
+        body[data-admin-theme="noor"]   .brand-panel::before { background: radial-gradient(circle, rgba(26,92,58,.2) 0%, transparent 70%); }
 
         .brand-panel::after {
             content: '';
             position: absolute;
-            bottom: -80px;
-            left: -80px;
-            width: 300px;
-            height: 300px;
+            bottom: -80px; left: -80px;
+            width: 280px; height: 280px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(99,102,241,.12) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(99,102,241,.1) 0%, transparent 70%);
             pointer-events: none;
         }
 
-        .brand-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-logo img {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-        }
-
-        .brand-logo-text {
-            font-size: 18px;
-            font-weight: 700;
-            color: #f1f5f9;
-            letter-spacing: -0.3px;
-        }
-
-        .brand-body {
+        .brand-heading {
             position: relative;
             z-index: 1;
         }
 
         .brand-title {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 800;
             color: #f1f5f9;
             line-height: 1.2;
             letter-spacing: -0.5px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
-        .brand-title span {
-            color: #3b82f6;
-        }
+        .brand-title span { color: #3b82f6; }
+        body[data-admin-theme="sakina"] .brand-title span { color: #c9a84c; }
+        body[data-admin-theme="noor"]   .brand-title span { color: #4ade80; }
 
         .brand-desc {
-            font-size: 14px;
-            color: #94a3b8;
+            font-size: 13px;
+            color: #64748b;
             line-height: 1.6;
-            margin-bottom: 36px;
+            margin-bottom: 32px;
         }
 
         .brand-stats {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
         }
 
         .brand-stat {
             display: flex;
             align-items: center;
             gap: 12px;
-            background: rgba(255,255,255,.05);
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: 12px;
-            padding: 12px 16px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 10px;
+            padding: 11px 14px;
         }
 
         .brand-stat-icon {
-            width: 34px;
-            height: 34px;
+            width: 32px; height: 32px;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
 
-        .brand-stat-icon i { width: 16px; height: 16px; }
-
+        .brand-stat-icon i { width: 15px; height: 15px; }
         .brand-stat-text { font-size: 13px; color: #cbd5e1; font-weight: 500; }
-        .brand-stat-sub  { font-size: 11px; color: #64748b; margin-top: 1px; }
+        .brand-stat-sub  { font-size: 11px; color: #475569; margin-top: 1px; }
 
         .brand-footer {
             position: relative;
             z-index: 1;
-            font-size: 12px;
-            color: #475569;
+            font-size: 11px;
+            color: #334155;
         }
 
         /* ── Right form panel ── */
         .form-panel {
             flex: 1;
-            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 40px 24px;
             min-height: 100vh;
+            background: var(--bg-app);
         }
 
-        .form-wrap {
-            width: 100%;
-            max-width: 380px;
-        }
+        .form-wrap { width: 100%; max-width: 380px; }
 
-        /* Mobile logo (shown only when brand panel hidden) */
-        .mobile-logo {
+        /* Logo block — top of form */
+        .login-brand {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
             gap: 10px;
-            margin-bottom: 32px;
+            margin-bottom: 36px;
         }
 
-        .mobile-logo img { width: 36px; height: 36px; object-fit: contain; }
-        .mobile-logo-text { font-size: 17px; font-weight: 700; color: #0f172a; }
+        .login-brand-logo {
+            width: 64px; height: 64px;
+            border-radius: 18px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        }
 
-        @media (min-width: 900px) { .mobile-logo { display: none; } }
+        .login-brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+        .login-brand-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.4px;
+        }
+
+        .login-brand-sub {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: -6px;
+        }
 
         .form-heading {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
-            color: #0f172a;
+            color: var(--text-primary);
             letter-spacing: -0.4px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .form-subheading {
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 32px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
         }
 
-        .form-group { margin-bottom: 18px; }
+        .form-group { margin-bottom: 16px; }
 
         .form-label {
             display: block;
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: 7px;
         }
 
-        .input-wrap {
-            position: relative;
-        }
+        .input-wrap { position: relative; }
 
         .input-icon {
             position: absolute;
-            left: 12px;
-            top: 50%;
+            left: 12px; top: 50%;
             transform: translateY(-50%);
-            color: #9ca3af;
+            color: var(--text-tertiary);
             pointer-events: none;
         }
 
-        .input-icon i { width: 16px; height: 16px; display: block; }
+        .input-icon i { width: 15px; height: 15px; display: block; }
 
         .form-input {
             width: 100%;
             padding: 11px 14px 11px 38px;
-            background: #f8fafc;
-            border: 1.5px solid #e2e8f0;
+            background: var(--bg-surface);
+            border: 1.5px solid var(--border-light);
             border-radius: 10px;
-            color: #0f172a;
+            color: var(--text-primary);
             font-size: 14px;
             font-family: inherit;
-            transition: border-color .2s, box-shadow .2s, background .2s;
+            transition: border-color .2s, box-shadow .2s;
         }
 
         .form-input:focus {
             outline: none;
             border-color: #3b82f6;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
         }
 
-        .form-input::placeholder { color: #9ca3af; }
+        body[data-admin-theme="sakina"] .form-input:focus { border-color: #c9a84c; box-shadow: 0 0 0 3px rgba(201,168,76,.12); }
+        body[data-admin-theme="noor"]   .form-input:focus { border-color: #1a5c3a; box-shadow: 0 0 0 3px rgba(26,92,58,.12); }
+
+        .form-input::placeholder { color: var(--text-tertiary); }
 
         .btn-login {
             width: 100%;
@@ -243,27 +239,28 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: background .2s, transform .1s, box-shadow .2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: background .2s, box-shadow .2s, transform .1s;
+            display: flex; align-items: center; justify-content: center;
             gap: 8px;
-            box-shadow: 0 2px 8px rgba(29,78,216,.3);
+            box-shadow: 0 2px 8px rgba(29,78,216,.28);
             margin-top: 4px;
+            font-family: inherit;
         }
 
-        .btn-login:hover { background: #1e40af; box-shadow: 0 4px 14px rgba(29,78,216,.38); }
-        .btn-login:active { transform: scale(.99); }
-        .btn-login:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+        body[data-admin-theme="sakina"] .btn-login { background: #8a6a1f; box-shadow: 0 2px 8px rgba(138,106,31,.3); }
+        body[data-admin-theme="noor"]   .btn-login { background: #1a5c3a; box-shadow: 0 2px 8px rgba(26,92,58,.3); }
 
+        .btn-login:hover { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(29,78,216,.38); }
+        .btn-login:active { transform: scale(.99); }
+        .btn-login:disabled { opacity: .5; cursor: not-allowed; transform: none; }
         .btn-login i { width: 16px; height: 16px; }
 
         .error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
+            background: rgba(239,68,68,.07);
+            border: 1px solid rgba(239,68,68,.25);
             border-radius: 10px;
             padding: 11px 14px;
-            margin-top: 14px;
+            margin-top: 12px;
             font-size: 13px;
             color: #dc2626;
             display: none;
@@ -275,9 +272,8 @@
         .error-message i { width: 15px; height: 15px; flex-shrink: 0; }
 
         .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,.4);
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,.35);
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin .6s linear infinite;
@@ -286,11 +282,11 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .lockout-box {
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
+            background: rgba(234,179,8,.08);
+            border: 1px solid rgba(234,179,8,.3);
             border-radius: 10px;
             padding: 16px;
-            margin-top: 14px;
+            margin-top: 12px;
             display: none;
             flex-direction: column;
             gap: 4px;
@@ -298,106 +294,66 @@
         }
 
         .lockout-box.active { display: flex; }
-        .lockout-title { font-size: 13px; font-weight: 700; color: #92400e; }
+        .lockout-title    { font-size: 13px; font-weight: 700; color: #92400e; }
         .lockout-countdown { font-size: 28px; font-weight: 800; color: #b45309; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
-        .lockout-sub { font-size: 11px; color: #b45309; opacity: .8; }
+        .lockout-sub      { font-size: 11px; color: #b45309; opacity: .8; }
 
         /* 2FA */
         .totp-screen { display: none; }
         .totp-screen.active { display: block; }
 
-        .totp-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
+        .totp-header { text-align: center; margin-bottom: 24px; }
 
         .totp-badge {
-            width: 56px;
-            height: 56px;
+            width: 54px; height: 54px;
             border-radius: 16px;
-            background: #eff6ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(59,130,246,.1);
+            display: flex; align-items: center; justify-content: center;
             margin: 0 auto 14px;
         }
 
-        .totp-badge i { width: 26px; height: 26px; color: #3b82f6; }
+        .totp-badge i { width: 24px; height: 24px; color: #3b82f6; }
 
-        .totp-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
-        .totp-sub { font-size: 13px; color: #64748b; line-height: 1.5; }
+        .totp-title { font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+        .totp-sub   { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 
-        .totp-input {
-            letter-spacing: .3em;
-            font-size: 22px;
-            font-weight: 700;
-            text-align: center;
-            padding: 14px;
-        }
+        .totp-input { letter-spacing: .3em; font-size: 22px; font-weight: 700; text-align: center; padding: 14px; }
 
         .trust-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            display: flex; align-items: center; gap: 8px;
             margin-top: 12px;
             font-size: 13px;
-            color: #64748b;
+            color: var(--text-secondary);
             cursor: pointer;
             user-select: none;
         }
 
-        .trust-label input {
-            width: 16px;
-            height: 16px;
-            accent-color: #3b82f6;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
+        .trust-label input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; flex-shrink: 0; }
 
         .totp-back {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 13px;
-            cursor: pointer;
-            margin-top: 12px;
-            width: 100%;
+            background: none; border: none;
+            color: var(--text-tertiary);
+            font-size: 13px; cursor: pointer;
+            margin-top: 12px; width: 100%;
             text-align: center;
             font-family: inherit;
             transition: color .15s;
         }
 
-        .totp-back:hover { color: #64748b; }
+        .totp-back:hover { color: var(--text-secondary); }
 
-        .form-footer {
-            text-align: center;
-            margin-top: 28px;
-            font-size: 12px;
-            color: #94a3b8;
-        }
+        .divider { height: 1px; background: var(--border-light); margin: 24px 0; }
 
-        .divider {
-            height: 1px;
-            background: #f1f5f9;
-            margin: 24px 0;
-        }
-
-        /* Turnstile widget sizing fix */
-        .cf-turnstile { margin-bottom: 14px; }
+        .form-footer { text-align: center; font-size: 12px; color: var(--text-tertiary); }
     </style>
 </head>
 <body>
 
     <!-- ── Left branding panel ── -->
     <div class="brand-panel">
-        <div class="brand-logo">
-            <img src="/assets/images/logo.png" alt="TafsirKurd">
-            <span class="brand-logo-text">TafsirKurd</span>
-        </div>
-
-        <div class="brand-body">
-            <div class="brand-title">Admin<br><span>Dashboard</span></div>
-            <div class="brand-desc">Secure access to manage your platform — content, users, analytics, and system settings.</div>
+        <div class="brand-heading">
+            <div class="brand-title">Manage<br>your <span>platform</span></div>
+            <div class="brand-desc">Secure access to content, users, analytics, and system settings.</div>
 
             <div class="brand-stats">
                 <div class="brand-stat">
@@ -420,7 +376,7 @@
                 </div>
                 <div class="brand-stat">
                     <div class="brand-stat-icon" style="background:#8b5cf618;">
-                        <i data-lucide="lock" style="color:#8b5cf6;"></i>
+                        <i data-lucide="users" style="color:#8b5cf6;"></i>
                     </div>
                     <div>
                         <div class="brand-stat-text">Role-based access</div>
@@ -437,10 +393,13 @@
     <div class="form-panel">
         <div class="form-wrap">
 
-            <!-- Mobile logo -->
-            <div class="mobile-logo">
-                <img src="/assets/images/logo.png" alt="TafsirKurd">
-                <span class="mobile-logo-text">TafsirKurd</span>
+            <!-- Logo + brand name -->
+            <div class="login-brand">
+                <div class="login-brand-logo">
+                    <img src="/assets/images/logo.png" alt="TafsirKurd">
+                </div>
+                <div class="login-brand-name">TafsirKurd</div>
+                <div class="login-brand-sub">Admin Portal</div>
             </div>
 
             <!-- Login form -->
@@ -466,9 +425,10 @@
 
                 <div class="cf-turnstile" id="turnstileWidget"
                      data-sitekey="0x4AAAAAACns__hRPm3UKqjW"
-                     data-theme="light"
+                     data-theme="auto"
                      data-callback="onTurnstileSuccess"
-                     data-expired-callback="onTurnstileExpired"></div>
+                     data-expired-callback="onTurnstileExpired"
+                     style="margin-bottom:14px;"></div>
 
                 <button type="submit" class="btn-login" id="loginBtn">
                     <i data-lucide="log-in"></i>
@@ -525,8 +485,7 @@
     <script>
         lucide.createIcons();
 
-        // Redirect if already logged in
-        const adminToken = sessionStorage.getItem('adminToken');
+        var adminToken = sessionStorage.getItem('adminToken');
         if (adminToken) {
             var storedRole = sessionStorage.getItem('adminRole');
             var storedPerms = [];
@@ -539,21 +498,17 @@
             window.location.href = landing;
         }
 
-        const loginForm      = document.getElementById('loginForm');
-        const loginBtn       = document.getElementById('loginBtn');
-        const errorMessage   = document.getElementById('errorMessage');
-        const errorText      = document.getElementById('errorText');
-        const lockoutBox     = document.getElementById('lockoutBox');
-        const lockoutCountdown = document.getElementById('lockoutCountdown');
-
+        var loginForm        = document.getElementById('loginForm');
+        var loginBtn         = document.getElementById('loginBtn');
+        var errorMessage     = document.getElementById('errorMessage');
+        var errorText        = document.getElementById('errorText');
+        var lockoutBox       = document.getElementById('lockoutBox');
+        var lockoutCountdown = document.getElementById('lockoutCountdown');
         var _countdownInterval = null;
 
         function formatCountdown(ms) {
             if (ms <= 0) return '00:00:00';
-            var s   = Math.floor(ms / 1000);
-            var h   = Math.floor(s / 3600);
-            var m   = Math.floor((s % 3600) / 60);
-            var sec = s % 60;
+            var s = Math.floor(ms / 1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
             return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
         }
 
