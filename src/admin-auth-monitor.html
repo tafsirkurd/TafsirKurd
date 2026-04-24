@@ -324,11 +324,7 @@
 
         (async () => {
             const auth = await window.adminAuth.checkAuth();
-            if (auth) {
-                document.getElementById('profileName').textContent = auth.fullName || 'Admin';
-                document.getElementById('profileEmail').textContent = auth.email || '';
-                loadAllData();
-            }
+            if (auth) loadAllData();
         })();
 
         document.getElementById('menu-toggle').addEventListener('click', () => {
