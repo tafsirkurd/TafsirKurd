@@ -4,270 +4,471 @@
     <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="utils/theme-loader.js?v=2"></script>
     <title>Admin Login - TafsirKurd</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #FFFFFF;
-            color: #000000;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ── Left branding panel ── */
+        .brand-panel {
+            display: none;
+            width: 420px;
+            flex-shrink: 0;
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 60%, #0f2744 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 48px 40px;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        @media (min-width: 900px) {
+            .brand-panel { display: flex; }
+        }
+
+        .brand-panel::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            right: -120px;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59,130,246,.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99,102,241,.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .brand-logo {
             display: flex;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
         }
 
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .login-logo {
-            width: 88px;
-            height: 88px;
-            margin: 0 auto 16px;
-        }
-
-        .login-logo img {
-            width: 100%;
-            height: 100%;
+        .brand-logo img {
+            width: 40px;
+            height: 40px;
             object-fit: contain;
         }
 
-        .login-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
+        .brand-logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: -0.3px;
         }
 
-        .login-subtitle {
+        .brand-body {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #f1f5f9;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+            margin-bottom: 16px;
+        }
+
+        .brand-title span {
+            color: #3b82f6;
+        }
+
+        .brand-desc {
             font-size: 14px;
-            color: #666666;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 36px;
         }
 
-        .login-card {
-            background: #F5F5F5;
-            border: 1px solid #E0E0E0;
+        .brand-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .brand-stat {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(255,255,255,.08);
             border-radius: 12px;
-            padding: 32px;
+            padding: 12px 16px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .brand-stat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
+
+        .brand-stat-icon i { width: 16px; height: 16px; }
+
+        .brand-stat-text { font-size: 13px; color: #cbd5e1; font-weight: 500; }
+        .brand-stat-sub  { font-size: 11px; color: #64748b; margin-top: 1px; }
+
+        .brand-footer {
+            position: relative;
+            z-index: 1;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        /* ── Right form panel ── */
+        .form-panel {
+            flex: 1;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            min-height: 100vh;
+        }
+
+        .form-wrap {
+            width: 100%;
+            max-width: 380px;
+        }
+
+        /* Mobile logo (shown only when brand panel hidden) */
+        .mobile-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 32px;
+        }
+
+        .mobile-logo img { width: 36px; height: 36px; object-fit: contain; }
+        .mobile-logo-text { font-size: 17px; font-weight: 700; color: #0f172a; }
+
+        @media (min-width: 900px) { .mobile-logo { display: none; } }
+
+        .form-heading {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.4px;
+            margin-bottom: 6px;
+        }
+
+        .form-subheading {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+
+        .form-group { margin-bottom: 18px; }
 
         .form-label {
             display: block;
             font-size: 13px;
             font-weight: 600;
-            color: #000000;
-            margin-bottom: 8px;
+            color: #374151;
+            margin-bottom: 7px;
         }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .input-icon i { width: 16px; height: 16px; display: block; }
 
         .form-input {
             width: 100%;
-            padding: 12px 14px;
-            background: #FFFFFF;
-            border: 1px solid #CCCCCC;
-            border-radius: 8px;
-            color: #000000;
+            padding: 11px 14px 11px 38px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            color: #0f172a;
             font-size: 14px;
             font-family: inherit;
-            transition: all 0.2s;
+            transition: border-color .2s, box-shadow .2s, background .2s;
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #000000;
+            border-color: #3b82f6;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(59,130,246,.1);
         }
 
-        .form-input::placeholder {
-            color: #999999;
-        }
+        .form-input::placeholder { color: #9ca3af; }
 
         .btn-login {
             width: 100%;
             padding: 12px;
-            background: #000000;
-            color: #FFFFFF;
+            background: #1d4ed8;
+            color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background .2s, transform .1s, box-shadow .2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            box-shadow: 0 2px 8px rgba(29,78,216,.3);
+            margin-top: 4px;
         }
 
-        .btn-login:hover {
-            background: #333333;
-        }
+        .btn-login:hover { background: #1e40af; box-shadow: 0 4px 14px rgba(29,78,216,.38); }
+        .btn-login:active { transform: scale(.99); }
+        .btn-login:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
-        .btn-login:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn-login i { width: 16px; height: 16px; }
 
         .error-message {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-top: 16px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 11px 14px;
+            margin-top: 14px;
             font-size: 13px;
-            color: #000000;
+            color: #dc2626;
             display: none;
-        }
-
-        .error-message.active {
-            display: flex;
             align-items: center;
             gap: 8px;
         }
 
+        .error-message.active { display: flex; }
+        .error-message i { width: 15px; height: 15px; flex-shrink: 0; }
+
         .spinner {
             width: 16px;
             height: 16px;
-            border: 2px solid #FFFFFF;
-            border-top-color: transparent;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff;
             border-radius: 50%;
-            animation: spin 0.6s linear infinite;
+            animation: spin .6s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .login-footer {
-            text-align: center;
-            margin-top: 24px;
-            font-size: 12px;
-            color: #999999;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .lockout-box {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 8px;
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 10px;
             padding: 16px;
-            margin-top: 16px;
+            margin-top: 14px;
             display: none;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
             text-align: center;
         }
 
-        .lockout-box.active {
-            display: flex;
-        }
+        .lockout-box.active { display: flex; }
+        .lockout-title { font-size: 13px; font-weight: 700; color: #92400e; }
+        .lockout-countdown { font-size: 28px; font-weight: 800; color: #b45309; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+        .lockout-sub { font-size: 11px; color: #b45309; opacity: .8; }
 
-        .lockout-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #856404;
-        }
-
-        .lockout-countdown {
-            font-size: 24px;
-            font-weight: 700;
-            color: #856404;
-            letter-spacing: 0.05em;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .lockout-sub {
-            font-size: 12px;
-            color: #856404;
-            opacity: 0.8;
-        }
-        /* ── 2FA screen ── */
+        /* 2FA */
         .totp-screen { display: none; }
         .totp-screen.active { display: block; }
-        .totp-icon { font-size: 2.4rem; text-align: center; margin-bottom: 6px; }
-        .totp-title { font-size: 16px; font-weight: 700; text-align: center; color: var(--text-primary, #1a1a1a); margin-bottom: 4px; }
-        .totp-sub { font-size: 12px; text-align: center; color: #888; margin-bottom: 20px; }
-        .totp-input { letter-spacing: .35em; font-size: 1.5rem; font-weight: 700; text-align: center; }
-        .totp-back { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; margin-top: 10px; width: 100%; text-align: center; }
-        .totp-back:hover { color: #555; }
+
+        .totp-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .totp-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: #eff6ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+        }
+
+        .totp-badge i { width: 26px; height: 26px; color: #3b82f6; }
+
+        .totp-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+        .totp-sub { font-size: 13px; color: #64748b; line-height: 1.5; }
+
+        .totp-input {
+            letter-spacing: .3em;
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            padding: 14px;
+        }
+
+        .trust-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #64748b;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .trust-label input {
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .totp-back {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+            text-align: center;
+            font-family: inherit;
+            transition: color .15s;
+        }
+
+        .totp-back:hover { color: #64748b; }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .divider {
+            height: 1px;
+            background: #f1f5f9;
+            margin: 24px 0;
+        }
+
+        /* Turnstile widget sizing fix */
+        .cf-turnstile { margin-bottom: 14px; }
     </style>
-    <script>
-        // Early role-based sidebar hiding - runs before body renders
-        (function() {
-            var role = sessionStorage.getItem('adminRole');
-            if (role && role !== 'super_admin') {
-                var style = document.createElement('style');
-                style.id = 'early-sidebar-hide';
-                var css = '';
-                if (role === 'analyst') {
-                    css = '.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
-                } else if (role === 'editor') {
-                    css = '.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"]{display:none!important}';
-                }
-                style.textContent = css;
-                document.head.appendChild(style);
-            }
-        })();
-    </script>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="login-logo">
-                <img src="/assets/images/logo.png" alt="TafsirKurd">
-            </div>
-            <h1 class="login-title">Admin Login</h1>
-            <p class="login-subtitle">TafsirKurd Dashboard</p>
+
+    <!-- ── Left branding panel ── -->
+    <div class="brand-panel">
+        <div class="brand-logo">
+            <img src="/assets/images/logo.png" alt="TafsirKurd">
+            <span class="brand-logo-text">TafsirKurd</span>
         </div>
 
-        <div class="login-card">
+        <div class="brand-body">
+            <div class="brand-title">Admin<br><span>Dashboard</span></div>
+            <div class="brand-desc">Secure access to manage your platform — content, users, analytics, and system settings.</div>
+
+            <div class="brand-stats">
+                <div class="brand-stat">
+                    <div class="brand-stat-icon" style="background:#3b82f618;">
+                        <i data-lucide="shield-check" style="color:#3b82f6;"></i>
+                    </div>
+                    <div>
+                        <div class="brand-stat-text">End-to-end secured</div>
+                        <div class="brand-stat-sub">2FA + device fingerprinting</div>
+                    </div>
+                </div>
+                <div class="brand-stat">
+                    <div class="brand-stat-icon" style="background:#10b98118;">
+                        <i data-lucide="activity" style="color:#10b981;"></i>
+                    </div>
+                    <div>
+                        <div class="brand-stat-text">Live dashboard</div>
+                        <div class="brand-stat-sub">Real-time metrics & analytics</div>
+                    </div>
+                </div>
+                <div class="brand-stat">
+                    <div class="brand-stat-icon" style="background:#8b5cf618;">
+                        <i data-lucide="lock" style="color:#8b5cf6;"></i>
+                    </div>
+                    <div>
+                        <div class="brand-stat-text">Role-based access</div>
+                        <div class="brand-stat-sub">Super admin · Editor · Analyst</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="brand-footer">TafsirKurd © 2026 · Admin Portal</div>
+    </div>
+
+    <!-- ── Right form panel ── -->
+    <div class="form-panel">
+        <div class="form-wrap">
+
+            <!-- Mobile logo -->
+            <div class="mobile-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd">
+                <span class="mobile-logo-text">TafsirKurd</span>
+            </div>
+
+            <!-- Login form -->
             <form id="loginForm">
+                <div class="form-heading">Welcome back</div>
+                <div class="form-subheading">Sign in to your admin account</div>
+
                 <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input
-                        type="email"
-                        class="form-input"
-                        id="email"
-                        placeholder="Enter your email"
-                        required
-                    >
+                    <label class="form-label">Email address</label>
+                    <div class="input-wrap">
+                        <div class="input-icon"><i data-lucide="mail"></i></div>
+                        <input type="email" class="form-input" id="email" placeholder="you@example.com" required autocomplete="email">
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <input
-                        type="password"
-                        class="form-input"
-                        id="password"
-                        placeholder="Enter your password"
-                        required
-                        autofocus
-                    >
+                    <div class="input-wrap">
+                        <div class="input-icon"><i data-lucide="lock"></i></div>
+                        <input type="password" class="form-input" id="password" placeholder="••••••••" required autofocus autocomplete="current-password">
+                    </div>
                 </div>
 
                 <div class="cf-turnstile" id="turnstileWidget"
                      data-sitekey="0x4AAAAAACns__hRPm3UKqjW"
-                     data-theme="auto"
+                     data-theme="light"
                      data-callback="onTurnstileSuccess"
-                     data-expired-callback="onTurnstileExpired"
-                     style="margin-bottom:8px"></div>
+                     data-expired-callback="onTurnstileExpired"></div>
 
                 <button type="submit" class="btn-login" id="loginBtn">
                     <i data-lucide="log-in"></i>
@@ -275,42 +476,48 @@
                 </button>
 
                 <div class="error-message" id="errorMessage">
-                    <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
+                    <i data-lucide="alert-circle"></i>
                     <span id="errorText"></span>
                 </div>
 
                 <div class="lockout-box" id="lockoutBox">
-                    <div class="lockout-title">&#128274; Account Locked</div>
+                    <div class="lockout-title">🔒 Account Locked</div>
                     <div class="lockout-countdown" id="lockoutCountdown">--:--:--</div>
                     <div class="lockout-sub">Try again when the timer reaches 00:00:00</div>
                 </div>
             </form>
 
-            <!-- 2FA step — shown after correct password -->
+            <!-- 2FA step -->
             <div class="totp-screen" id="totpScreen">
-                <div class="totp-icon">🔐</div>
-                <div class="totp-title">Two-Factor Authentication</div>
-                <div class="totp-sub">Enter the 6-digit code from your authenticator app,<br>or a backup code.</div>
+                <div class="totp-header">
+                    <div class="totp-badge"><i data-lucide="shield"></i></div>
+                    <div class="totp-title">Two-Factor Auth</div>
+                    <div class="totp-sub">Enter the 6-digit code from your<br>authenticator app, or a backup code.</div>
+                </div>
+
                 <input type="text" id="totpCode" class="form-input totp-input"
-                    placeholder="000000" maxlength="10" autocomplete="one-time-code" inputmode="numeric">
-                <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.85rem;color:var(--text-muted);cursor:pointer;user-select:none">
-                    <input type="checkbox" id="trustDevice" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
+                    placeholder="000 000" maxlength="10" autocomplete="one-time-code" inputmode="numeric">
+
+                <label class="trust-label">
+                    <input type="checkbox" id="trustDevice">
                     Trust this device for 30 days
                 </label>
-                <div class="error-message" id="totpError" style="margin-top:10px">
-                    <i data-lucide="alert-circle" style="width:16px;height:16px"></i>
+
+                <div class="error-message" id="totpError" style="margin-top:12px;">
+                    <i data-lucide="alert-circle"></i>
                     <span id="totpErrorText"></span>
                 </div>
-                <button class="btn-login" id="totpBtn" onclick="submitTOTP()" style="margin-top:14px">
+
+                <button class="btn-login" id="totpBtn" onclick="submitTOTP()" style="margin-top:16px;">
                     <i data-lucide="shield-check"></i>
-                    <span>Verify</span>
+                    <span>Verify Code</span>
                 </button>
+
                 <button class="totp-back" onclick="cancelTOTP()">← Back to login</button>
             </div>
-        </div>
 
-        <div class="login-footer">
-            Secure admin access • TafsirKurd © 2026
+            <div class="divider"></div>
+            <div class="form-footer">Secure admin access · TafsirKurd © 2026</div>
         </div>
     </div>
 
@@ -318,7 +525,7 @@
     <script>
         lucide.createIcons();
 
-        // Check if already logged in
+        // Redirect if already logged in
         const adminToken = sessionStorage.getItem('adminToken');
         if (adminToken) {
             var storedRole = sessionStorage.getItem('adminRole');
@@ -332,45 +539,37 @@
             window.location.href = landing;
         }
 
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const errorMessage = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
-        const lockoutBox = document.getElementById('lockoutBox');
+        const loginForm      = document.getElementById('loginForm');
+        const loginBtn       = document.getElementById('loginBtn');
+        const errorMessage   = document.getElementById('errorMessage');
+        const errorText      = document.getElementById('errorText');
+        const lockoutBox     = document.getElementById('lockoutBox');
         const lockoutCountdown = document.getElementById('lockoutCountdown');
 
         var _countdownInterval = null;
 
         function formatCountdown(ms) {
             if (ms <= 0) return '00:00:00';
-            var s = Math.floor(ms / 1000);
-            var h = Math.floor(s / 3600);
-            var m = Math.floor((s % 3600) / 60);
+            var s   = Math.floor(ms / 1000);
+            var h   = Math.floor(s / 3600);
+            var m   = Math.floor((s % 3600) / 60);
             var sec = s % 60;
-            return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+            return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
         }
 
         function setBtnLoading() {
             loginBtn.disabled = true;
-            loginBtn.textContent = '';
-            var sp = document.createElement('div');
-            sp.className = 'spinner';
-            loginBtn.appendChild(sp);
-            var lbl = document.createElement('span');
-            lbl.textContent = 'Signing in...';
-            loginBtn.appendChild(lbl);
+            while (loginBtn.firstChild) loginBtn.removeChild(loginBtn.firstChild);
+            var sp = document.createElement('div'); sp.className = 'spinner'; loginBtn.appendChild(sp);
+            var lbl = document.createElement('span'); lbl.textContent = 'Signing in…'; loginBtn.appendChild(lbl);
         }
 
         function resetBtn() {
             loginBtn.disabled = false;
-            loginBtn.textContent = '';
-            var ic = document.createElement('i');
-            ic.setAttribute('data-lucide', 'log-in');
-            loginBtn.appendChild(ic);
-            var lbl = document.createElement('span');
-            lbl.textContent = 'Sign In';
-            loginBtn.appendChild(lbl);
-            lucide.createIcons();
+            while (loginBtn.firstChild) loginBtn.removeChild(loginBtn.firstChild);
+            var ic = document.createElement('i'); ic.setAttribute('data-lucide','log-in'); loginBtn.appendChild(ic);
+            var lbl = document.createElement('span'); lbl.textContent = 'Sign In'; loginBtn.appendChild(lbl);
+            lucide.createIcons({ nodes: [ic] });
         }
 
         function applyLockout(lockedUntilISO) {
@@ -382,9 +581,8 @@
             lockoutBox.classList.add('active');
             errorMessage.classList.remove('active');
             loginBtn.disabled = true;
-            document.getElementById('email').disabled = true;
+            document.getElementById('email').disabled    = true;
             document.getElementById('password').disabled = true;
-
             if (_countdownInterval) clearInterval(_countdownInterval);
             _countdownInterval = setInterval(function() {
                 var remaining = until - Date.now();
@@ -393,7 +591,7 @@
                     lockoutBox.classList.remove('active');
                     localStorage.removeItem('adminLoginLockoutUntil');
                     resetBtn();
-                    document.getElementById('email').disabled = false;
+                    document.getElementById('email').disabled    = false;
                     document.getElementById('password').disabled = false;
                     lockoutCountdown.textContent = '00:00:00';
                 } else {
@@ -403,48 +601,49 @@
             lockoutCountdown.textContent = formatCountdown(until - Date.now());
         }
 
-        // On load: restore lockout state if still active
         (function() {
             var stored = localStorage.getItem('adminLoginLockoutUntil');
             if (stored) {
                 var until = new Date(stored);
-                if (until > new Date()) {
-                    showLockoutUI(until);
-                } else {
-                    localStorage.removeItem('adminLoginLockoutUntil');
-                }
+                if (until > new Date()) showLockoutUI(until);
+                else localStorage.removeItem('adminLoginLockoutUntil');
             }
         })();
 
         var _turnstileToken = '';
         function onTurnstileSuccess(token) { _turnstileToken = token; }
-        function onTurnstileExpired() { _turnstileToken = ''; }
+        function onTurnstileExpired()      { _turnstileToken = ''; }
 
         async function submitTOTP() {
-            const code = document.getElementById('totpCode').value.trim();
+            var code = document.getElementById('totpCode').value.trim();
             if (!code) return;
-            const btn = document.getElementById('totpBtn');
+            var btn = document.getElementById('totpBtn');
             btn.disabled = true;
             document.getElementById('totpError').classList.remove('active');
             try {
-                const res = await fetch('/admin-auth', {
+                var res = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // token = tempToken, email field reused for totpCode (server reads it)
-                    body: JSON.stringify({ action: 'verify-totp', token: window._totpTempToken, email: code, deviceFingerprint: window.deviceFingerprint ? await window.deviceFingerprint.get() : null, trustDevice: document.getElementById('trustDevice').checked })
+                    body: JSON.stringify({
+                        action: 'verify-totp',
+                        token: window._totpTempToken,
+                        email: code,
+                        deviceFingerprint: window.deviceFingerprint ? await window.deviceFingerprint.get() : null,
+                        trustDevice: document.getElementById('trustDevice').checked
+                    })
                 });
-                const data = await res.json();
+                var data = await res.json();
                 if (data.success) {
                     localStorage.removeItem('adminLoginLockoutUntil');
                     localStorage.removeItem('adminLoginFailedAttempts');
                     if (data.trustToken) {
-                        localStorage.setItem('adminTrustToken', data.trustToken);
+                        localStorage.setItem('adminTrustToken',  data.trustToken);
                         localStorage.setItem('adminTrustExpiry', Date.now() + 30*24*60*60*1000);
                     }
-                    sessionStorage.setItem('adminToken', data.token);
+                    sessionStorage.setItem('adminToken',        data.token);
                     sessionStorage.setItem('adminSessionStart', new Date().toISOString());
                     if (data.user) {
-                        sessionStorage.setItem('adminRole', data.user.role);
+                        sessionStorage.setItem('adminRole',        data.user.role);
                         sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
                     }
                     var landingPage = '/admin-dashboard.html';
@@ -466,7 +665,7 @@
                     lucide.createIcons();
                     btn.disabled = false;
                 }
-            } catch (e) {
+            } catch(e) {
                 document.getElementById('totpErrorText').textContent = 'Connection error. Try again.';
                 document.getElementById('totpError').classList.add('active');
                 btn.disabled = false;
@@ -483,32 +682,28 @@
             loginForm.style.display = '';
         }
 
-        loginForm.addEventListener('submit', async (e) => {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            // Block if client-side lockout is still active
             var stored = localStorage.getItem('adminLoginLockoutUntil');
             if (stored && new Date(stored) > new Date()) return;
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
-            const _tt = localStorage.getItem('adminTrustToken'), _te = localStorage.getItem('adminTrustExpiry');
-            const trustToken = (_tt && _te && Date.now() < +_te) ? _tt : null;
+            var email    = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+            var deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
+            var _tt = localStorage.getItem('adminTrustToken'), _te = localStorage.getItem('adminTrustExpiry');
+            var trustToken = (_tt && _te && Date.now() < +_te) ? _tt : null;
 
             setBtnLoading();
             errorMessage.classList.remove('active');
 
             try {
-                const turnstileToken = _turnstileToken || document.querySelector('[name="cf-turnstile-response"]')?.value || '';
-                const response = await fetch('/admin-auth', {
+                var turnstileToken = _turnstileToken || (document.querySelector('[name="cf-turnstile-response"]') || {}).value || '';
+                var response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, deviceFingerprint, trustToken, turnstileToken })
                 });
-
-                const data = await response.json();
+                var data = await response.json();
 
                 if (data.requiresTOTP) {
                     window._totpTempToken = data.tempToken;
@@ -523,10 +718,10 @@
                 if (data.success) {
                     localStorage.removeItem('adminLoginLockoutUntil');
                     localStorage.removeItem('adminLoginFailedAttempts');
-                    sessionStorage.setItem('adminToken', data.token);
+                    sessionStorage.setItem('adminToken',        data.token);
                     sessionStorage.setItem('adminSessionStart', new Date().toISOString());
                     if (data.user) {
-                        sessionStorage.setItem('adminRole', data.user.role);
+                        sessionStorage.setItem('adminRole',        data.user.role);
                         sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
                     }
                     var landingPage = '/admin-dashboard.html';
@@ -545,8 +740,6 @@
                         applyLockout(data.lockedUntil);
                         return;
                     }
-
-                    // Only count actual credential failures, not Turnstile/IP/rate-limit errors
                     if (!data.deviceBlocked && !data.turnstileFailed && !data.ipBlocked) {
                         var attempts = parseInt(localStorage.getItem('adminLoginFailedAttempts') || '0', 10) + 1;
                         localStorage.setItem('adminLoginFailedAttempts', String(attempts));
@@ -557,20 +750,16 @@
                         }
                         var attemptsLeft = data.attemptsRemaining !== undefined ? data.attemptsRemaining : (3 - attempts);
                         var errorMsg = data.error || 'Invalid credentials';
-                        if (attemptsLeft > 0) {
-                            errorMsg += ' (' + attemptsLeft + ' attempt' + (attemptsLeft !== 1 ? 's' : '') + ' remaining)';
-                        }
+                        if (attemptsLeft > 0) errorMsg += ' (' + attemptsLeft + ' attempt' + (attemptsLeft !== 1 ? 's' : '') + ' remaining)';
                         errorText.textContent = errorMsg;
                     } else {
-                        errorText.textContent = '\uD83D\uDD12 ' + (data.error || 'Device not authorized');
+                        errorText.textContent = '🔒 ' + (data.error || 'Device not authorized');
                     }
-
                     errorMessage.classList.add('active');
                     lucide.createIcons();
                     resetBtn();
                 }
-            } catch (error) {
-                console.error('Login error:', error);
+            } catch(error) {
                 errorText.textContent = 'Connection error. Please try again.';
                 errorMessage.classList.add('active');
                 lucide.createIcons();
