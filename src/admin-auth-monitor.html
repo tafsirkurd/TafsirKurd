@@ -443,12 +443,12 @@
             try {
                 const { data: sessions, error } = await supabase
                     .from('admin_sessions')
-                    .select('id, ip_address, last_activity, expires_at, admin_id')
+                    .select('*')
                     .gt('expires_at', new Date().toISOString())
                     .order('last_activity', { ascending: false })
                     .limit(10);
 
-                if (error) throw error;
+                if (error) { console.error('Sessions error:', error); throw error; }
 
                 document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
 
