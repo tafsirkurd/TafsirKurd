@@ -78,12 +78,19 @@
         }
 
         /* ── Stats grid ───────────────────────────────────────── */
-        .metrics-grid .metric-card{border-radius:14px}
+        .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:20px}
+        .metrics-grid .metric-card{border-radius:14px;display:flex;align-items:center;gap:14px;padding:18px;opacity:0;animation:fadeInUp .4s ease forwards;animation-delay:var(--card-delay,0ms)}
+        .am-icon-wrap{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .am-icon-wrap i{width:20px;height:20px}
+        .am-metric-body{flex:1;min-width:0}
+        .am-metric-body .metric-value{font-size:26px}
+        .am-metric-body .metric-label{font-size:11px}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
         /* ── Admin accounts list ──────────────────────────────── */
         .accounts-list{display:flex;flex-direction:column;gap:8px}
-        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:16px;transition:border-color .15s}
-        .acct-card:hover{border-color:var(--primary)}
+        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:16px;transition:border-color .15s,box-shadow .15s,transform .15s}
+        .acct-card:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
         .acct-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
         .acct-avatar{width:40px;height:40px;border-radius:12px;background:var(--bg-active);border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:800;color:var(--primary)}
         .acct-info{flex:1;min-width:0}
@@ -264,7 +271,10 @@
 
             <div class="content-area">
                 <div class="page-header">
-                    <h1 class="page-title">Admin Accounts</h1>
+                    <div>
+                        <h1 class="page-title">Admin Accounts</h1>
+                        <p style="font-size:13px;color:var(--text-secondary);margin-top:4px">Manage admin users, sessions, and security settings</p>
+                    </div>
                     <div class="page-actions">
                         <button class="btn btn-secondary" onclick="loadAccounts()"><i data-lucide="refresh-cw"></i>Refresh</button>
                         <button class="btn btn-secondary" onclick="quickResetDevice()" id="resetDeviceBtn"><i data-lucide="smartphone"></i>Reset Device</button>
@@ -284,7 +294,7 @@
                 <div class="sec-card">
                     <div class="sec-card-hdr" style="margin-bottom:16px">
                         <div class="sec-card-title">
-                            <div class="sec-card-icon"><i data-lucide="key-round"></i></div>
+                            <div class="sec-card-icon" style="background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.2);color:#3b82f6"><i data-lucide="key-round"></i></div>
                             <div>
                                 <div class="sec-card-name">Change My Password</div>
                                 <div class="sec-card-sub">Update your login password</div>
@@ -325,7 +335,7 @@
                 <div class="sec-card">
                     <div class="sec-card-hdr">
                         <div class="sec-card-title">
-                            <div class="sec-card-icon"><i data-lucide="monitor"></i></div>
+                            <div class="sec-card-icon" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.2);color:#10b981"><i data-lucide="monitor"></i></div>
                             <div>
                                 <div class="sec-card-name">Active Sessions</div>
                                 <div class="sec-card-sub">Devices currently signed in to your account</div>
@@ -342,7 +352,7 @@
                 <div class="sec-card">
                     <div class="sec-card-hdr">
                         <div class="sec-card-title">
-                            <div class="sec-card-icon"><i data-lucide="monitor-smartphone"></i></div>
+                            <div class="sec-card-icon" style="background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.2);color:#8b5cf6"><i data-lucide="monitor-smartphone"></i></div>
                             <div>
                                 <div class="sec-card-name">Trusted Devices</div>
                                 <div class="sec-card-sub">Devices that skip 2FA for 30 days</div>
@@ -356,7 +366,7 @@
                 <div class="sec-card" id="my2faCard">
                     <div class="sec-card-hdr" style="margin-bottom:0;flex-wrap:wrap;gap:14px">
                         <div class="sec-card-title">
-                            <div class="sec-card-icon"><i data-lucide="shield"></i></div>
+                            <div class="sec-card-icon" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.2);color:#f59e0b"><i data-lucide="shield"></i></div>
                             <div>
                                 <div class="sec-card-name" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     Two-Factor Auth
@@ -376,11 +386,23 @@
                 <span class="sec-group-lbl" style="margin-top:8px">Admin Users</span>
 
                 <!-- Stats -->
-                <div class="metrics-grid" style="margin-bottom:12px">
-                    <div class="metric-card"><div class="metric-value" id="totalAdmins">0</div><div class="metric-label">Total Admins</div></div>
-                    <div class="metric-card"><div class="metric-value" id="activeAdmins">0</div><div class="metric-label">Active</div></div>
-                    <div class="metric-card"><div class="metric-value" id="lockedAdmins">0</div><div class="metric-label">Locked</div></div>
-                    <div class="metric-card"><div class="metric-value" id="activeSessions">0</div><div class="metric-label">Sessions</div></div>
+                <div class="metrics-grid">
+                    <div class="metric-card" style="--card-delay:0ms">
+                        <div class="am-icon-wrap" style="background:rgba(59,130,246,.12)"><i data-lucide="users" style="color:#3b82f6"></i></div>
+                        <div class="am-metric-body"><div class="metric-value" id="totalAdmins">0</div><div class="metric-label">Total Admins</div></div>
+                    </div>
+                    <div class="metric-card" style="--card-delay:80ms">
+                        <div class="am-icon-wrap" style="background:rgba(16,185,129,.12)"><i data-lucide="check-circle" style="color:#10b981"></i></div>
+                        <div class="am-metric-body"><div class="metric-value" id="activeAdmins">0</div><div class="metric-label">Active</div></div>
+                    </div>
+                    <div class="metric-card" style="--card-delay:160ms">
+                        <div class="am-icon-wrap" style="background:rgba(239,68,68,.1)"><i data-lucide="lock" style="color:#ef4444"></i></div>
+                        <div class="am-metric-body"><div class="metric-value" id="lockedAdmins">0</div><div class="metric-label">Locked</div></div>
+                    </div>
+                    <div class="metric-card" style="--card-delay:240ms">
+                        <div class="am-icon-wrap" style="background:rgba(139,92,246,.12)"><i data-lucide="monitor" style="color:#8b5cf6"></i></div>
+                        <div class="am-metric-body"><div class="metric-value" id="activeSessions">0</div><div class="metric-label">Sessions</div></div>
+                    </div>
                 </div>
 
                 <!-- Accounts list (cards) -->
