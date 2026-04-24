@@ -337,29 +337,37 @@
         async function loadAllData() {
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
+            const token = sessionStorage.getItem('adminToken');
 
             await Promise.all([
-                loadMetrics(supabase),
+                loadMetricsAndAccounts(supabase, token),
                 loadActiveSessions(supabase),
-                loadAuditLogs(supabase),
-                loadAccounts(supabase)
+                loadAuditLogs(supabase)
             ]);
 
             lucide.createIcons();
         }
 
-        async function loadMetrics(supabase) {
+        async function loadMetricsAndAccounts(supabase, token) {
             try {
-                const { count: totalCount } = await supabase
-                    .from('admin_users')
-                    .select('*', { count: 'exact', head: true });
-                document.getElementById('totalAdmins').textContent = totalCount || 0;
+                const res = await fetch('/admin-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'list_accounts', token })
+                });
+                const data = await res.json();
+                const accounts = data.data || [];
 
-                const { count: sessionsCount } = await supabase
+                document.getElementById('totalAdmins').textContent = accounts.length;
+                document.getElementById('lockedAccounts').textContent = accounts.filter(function(a) {
+                    return a.is_locked && a.locked_until && new Date(a.locked_until) > new Date();
+                }).length;
+
+                const { data: sessions } = await supabase
                     .from('admin_sessions')
-                    .select('*', { count: 'exact', head: true })
+                    .select('id')
                     .gt('expires_at', new Date().toISOString());
-                document.getElementById('activeSessions').textContent = sessionsCount || 0;
+                document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
 
                 const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
                 const { count: failedCount } = await supabase
@@ -369,15 +377,72 @@
                     .gte('created_at', oneDayAgo);
                 document.getElementById('failedAttempts').textContent = failedCount || 0;
 
-                const { count: lockedCount } = await supabase
-                    .from('admin_users')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('is_locked', true)
-                    .gt('locked_until', new Date().toISOString());
-                document.getElementById('lockedAccounts').textContent = lockedCount || 0;
+                renderAccountsTable(accounts);
             } catch (error) {
                 console.error('Error loading metrics:', error);
             }
+        }
+
+        function renderAccountsTable(accounts) {
+            const tbody = document.getElementById('accountsTableBody');
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+            if (!accounts || accounts.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 6;
+                td.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                td.textContent = 'No admin accounts found';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+
+            accounts.forEach(function(account) {
+                const tr = document.createElement('tr');
+
+                const emailTd = document.createElement('td');
+                emailTd.textContent = account.email;
+                tr.appendChild(emailTd);
+
+                const nameTd = document.createElement('td');
+                nameTd.textContent = account.full_name || '—';
+                tr.appendChild(nameTd);
+
+                const roleTd = document.createElement('td');
+                const roleBadge = document.createElement('span');
+                roleBadge.className = 'role-badge role-' + account.role;
+                roleBadge.textContent = account.role.replace('_', ' ');
+                roleTd.appendChild(roleBadge);
+                tr.appendChild(roleTd);
+
+                const statusTd = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.className = 'status-badge';
+                if (account.is_locked) {
+                    statusBadge.classList.add('status-locked');
+                    statusBadge.textContent = 'Locked';
+                } else if (account.is_active) {
+                    statusBadge.classList.add('status-active');
+                    statusBadge.textContent = 'Active';
+                } else {
+                    statusBadge.classList.add('status-inactive');
+                    statusBadge.textContent = 'Inactive';
+                }
+                statusTd.appendChild(statusBadge);
+                tr.appendChild(statusTd);
+
+                const lastLoginTd = document.createElement('td');
+                lastLoginTd.textContent = account.last_login ? formatRelativeTime(account.last_login) : 'Never';
+                tr.appendChild(lastLoginTd);
+
+                const attemptsTd = document.createElement('td');
+                attemptsTd.textContent = account.failed_attempts || 0;
+                attemptsTd.style.color = account.failed_attempts >= 2 ? 'rgb(239, 68, 68)' : 'var(--text-secondary)';
+                tr.appendChild(attemptsTd);
+
+                tbody.appendChild(tr);
+            });
         }
 
         async function loadActiveSessions(supabase) {
@@ -392,7 +457,7 @@
                 if (error) throw error;
 
                 const container = document.getElementById('sessionsList');
-                container.innerHTML = '';
+                while (container.firstChild) container.removeChild(container.firstChild);
 
                 if (!sessions || sessions.length === 0) {
                     const empty = document.createElement('div');
@@ -463,7 +528,7 @@
                 if (error) throw error;
 
                 const container = document.getElementById('auditList');
-                container.innerHTML = '';
+                while (container.firstChild) container.removeChild(container.firstChild);
 
                 if (!logs || logs.length === 0) {
                     const empty = document.createElement('div');
@@ -505,79 +570,6 @@
                 });
             } catch (error) {
                 console.error('Error loading audit logs:', error);
-            }
-        }
-
-        async function loadAccounts(supabase) {
-            try {
-                const { data: accounts, error } = await supabase
-                    .from('admin_users')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                const tbody = document.getElementById('accountsTableBody');
-                tbody.innerHTML = '';
-
-                if (!accounts || accounts.length === 0) {
-                    const tr = document.createElement('tr');
-                    const td = document.createElement('td');
-                    td.colSpan = 6;
-                    td.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
-                    td.textContent = 'No admin accounts found';
-                    tr.appendChild(td);
-                    tbody.appendChild(tr);
-                    return;
-                }
-
-                accounts.forEach(account => {
-                    const tr = document.createElement('tr');
-
-                    const emailTd = document.createElement('td');
-                    emailTd.textContent = account.email;
-                    tr.appendChild(emailTd);
-
-                    const nameTd = document.createElement('td');
-                    nameTd.textContent = account.full_name || '—';
-                    tr.appendChild(nameTd);
-
-                    const roleTd = document.createElement('td');
-                    const roleBadge = document.createElement('span');
-                    roleBadge.className = 'role-badge role-' + account.role;
-                    roleBadge.textContent = account.role.replace('_', ' ');
-                    roleTd.appendChild(roleBadge);
-                    tr.appendChild(roleTd);
-
-                    const statusTd = document.createElement('td');
-                    const statusBadge = document.createElement('span');
-                    statusBadge.className = 'status-badge';
-                    if (account.is_locked) {
-                        statusBadge.classList.add('status-locked');
-                        statusBadge.textContent = 'Locked';
-                    } else if (account.is_active) {
-                        statusBadge.classList.add('status-active');
-                        statusBadge.textContent = 'Active';
-                    } else {
-                        statusBadge.classList.add('status-inactive');
-                        statusBadge.textContent = 'Inactive';
-                    }
-                    statusTd.appendChild(statusBadge);
-                    tr.appendChild(statusTd);
-
-                    const lastLoginTd = document.createElement('td');
-                    lastLoginTd.textContent = account.last_login ? formatRelativeTime(account.last_login) : 'Never';
-                    tr.appendChild(lastLoginTd);
-
-                    const attemptsTd = document.createElement('td');
-                    attemptsTd.textContent = account.failed_attempts || 0;
-                    attemptsTd.style.color = account.failed_attempts >= 2 ? 'rgb(239, 68, 68)' : 'var(--text-secondary)';
-                    tr.appendChild(attemptsTd);
-
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                console.error('Error loading accounts:', error);
             }
         }
 
