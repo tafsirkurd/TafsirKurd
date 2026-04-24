@@ -384,34 +384,6 @@
             margin-bottom: 28px;
         }
 
-        /* ── Site Pages Grid ── */
-        .site-pages-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 28px;
-        }
-        .site-page-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-light);
-            border-radius: 14px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: box-shadow .2s, transform .2s;
-            border-left: 3px solid transparent;
-        }
-        .site-page-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.07); transform: translateY(-1px); }
-        .site-page-top { display: flex; align-items: center; justify-content: space-between; }
-        .site-page-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .site-page-icon i { width: 17px; height: 17px; }
-        .site-page-open { width: 28px; height: 28px; border-radius: 8px; background: var(--bg-active); border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); cursor: pointer; text-decoration: none; transition: all .15s; }
-        .site-page-open:hover { background: var(--bg-hover); color: var(--text-primary); }
-        .site-page-open i { width: 13px; height: 13px; }
-        .site-page-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-        .site-page-url { font-size: 11px; color: var(--text-tertiary); font-family: monospace; background: var(--bg-active); padding: 2px 7px; border-radius: 6px; display: inline-block; }
-
         /* ── System Status Bar ── */
         .system-status-bar {
             display: flex;
@@ -732,75 +704,6 @@
                         <div class="chart-container">
                             <canvas id="activeUsersChart"></canvas>
                         </div>
-                    </div>
-                </div>
-
-                <!-- ══ Site Pages ══ -->
-                <div class="section-label">My Website</div>
-                <div class="site-pages-grid">
-                    <div class="site-page-card" style="border-left-color:#3b82f6">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(59,130,246,.12)"><i data-lucide="home" style="color:#3b82f6"></i></div>
-                            <a href="https://tafsirkurd.com/" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">Home</div>
-                        <span class="site-page-url">/</span>
-                    </div>
-                    <div class="site-page-card" style="border-left-color:#10b981">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(16,185,129,.12)"><i data-lucide="book-open" style="color:#10b981"></i></div>
-                            <a href="https://tafsirkurd.com/quran" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">Quran</div>
-                        <span class="site-page-url">/quran</span>
-                    </div>
-                    <div class="site-page-card" style="border-left-color:#8b5cf6">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(139,92,246,.12)"><i data-lucide="clock" style="color:#8b5cf6"></i></div>
-                            <a href="https://tafsirkurd.com/prayer" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">Prayer</div>
-                        <span class="site-page-url">/prayer</span>
-                    </div>
-                    <div class="site-page-card" style="border-left-color:#f43f5e">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(244,63,94,.12)"><i data-lucide="radio" style="color:#f43f5e"></i></div>
-                            <a href="https://tafsirkurd.com/islamvoice" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">IslamVoice</div>
-                        <span class="site-page-url">/islamvoice</span>
-                    </div>
-                    <div class="site-page-card" style="border-left-color:#f59e0b">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(245,158,11,.12)"><i data-lucide="tv-2" style="color:#f59e0b"></i></div>
-                            <a href="https://tafsirkurd.com/live" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">Live</div>
-                        <span class="site-page-url">/live</span>
-                    </div>
-                    <div class="site-page-card" style="border-left-color:#06b6d4">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(6,182,212,.12)"><i data-lucide="bookmark" style="color:#06b6d4"></i></div>
-                            <a href="https://tafsirkurd.com/bookmarks" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">Bookmarks</div>
-                        <span class="site-page-url">/bookmarks</span>
-                    </div>
-                    <div class="site-page-card" style="border-left-color:#ec4899">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(236,72,153,.12)"><i data-lucide="user" style="color:#ec4899"></i></div>
-                            <a href="https://tafsirkurd.com/profile" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">Profile</div>
-                        <span class="site-page-url">/profile</span>
-                    </div>
-                    <div class="site-page-card" style="border-left-color:#14b8a6">
-                        <div class="site-page-top">
-                            <div class="site-page-icon" style="background:rgba(20,184,166,.12)"><i data-lucide="info" style="color:#14b8a6"></i></div>
-                            <a href="https://tafsirkurd.com/about" target="_blank" class="site-page-open"><i data-lucide="external-link"></i></a>
-                        </div>
-                        <div class="site-page-name">About</div>
-                        <span class="site-page-url">/about</span>
                     </div>
                 </div>
 
