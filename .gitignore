@@ -106,7 +106,8 @@ AuthKey_*.p8
 # Temp / generated files
 duplicate_report.txt
 scripts/test.txt
-scripts/scan-results.jsondistribution.key
+scripts/scan-results.json
+distribution.key
 distribution.p12
 distribution.pem
 distribution.csr
