@@ -713,6 +713,72 @@
             const { data: sessions } = await supabase.from('admin_sessions').select('id').gt('expires_at', new Date().toISOString());
             document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
             renderAccountsTable();
+            subscribeToPresence(supabase);
+            startPresenceTick();
+        }
+
+        // ── Real-time presence ─────────────────────────────────────
+        function computeStatus(account) {
+            if (!account.last_heartbeat) return 'offline';
+            var diff = Date.now() - new Date(account.last_heartbeat).getTime();
+            if (diff < 2 * 60 * 1000) return 'online';
+            if (diff < 10 * 60 * 1000) return 'idle';
+            return 'offline';
+        }
+
+        function applyStatusPill(pill, status) {
+            pill.className = 'status-pill';
+            pill.textContent = '';
+            var dot = document.createElement('span');
+            dot.className = 'status-dot';
+            if (status === 'online') {
+                pill.classList.add('status-online');
+                dot.classList.add('dot-online');
+                pill.appendChild(dot);
+                pill.appendChild(document.createTextNode('Online'));
+            } else if (status === 'idle') {
+                pill.classList.add('status-idle');
+                dot.classList.add('dot-idle');
+                pill.appendChild(dot);
+                pill.appendChild(document.createTextNode('Idle'));
+            } else {
+                pill.classList.add('status-offline');
+                dot.classList.add('dot-offline');
+                pill.appendChild(dot);
+                pill.appendChild(document.createTextNode('Offline'));
+            }
+        }
+
+        function updateCardStatus(userId, lastHeartbeat) {
+            var card = document.querySelector('[data-user-id="' + userId + '"]');
+            if (!card) return;
+            var pill = card.querySelector('.status-pill');
+            if (!pill) return;
+            applyStatusPill(pill, computeStatus({ last_heartbeat: lastHeartbeat }));
+        }
+
+        var presenceChannel = null;
+        function subscribeToPresence(supabase) {
+            if (presenceChannel) presenceChannel.unsubscribe();
+            presenceChannel = supabase
+                .channel('admin-presence')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'admin_users' }, function(payload) {
+                    var u = payload.new;
+                    if (!u || !u.id) return;
+                    // update in-memory record so the tick uses fresh data
+                    var mem = allAccounts.find(function(a) { return a.id === u.id; });
+                    if (mem) mem.last_heartbeat = u.last_heartbeat;
+                    updateCardStatus(u.id, u.last_heartbeat);
+                })
+                .subscribe();
+        }
+
+        var presenceTickTimer = null;
+        function startPresenceTick() {
+            if (presenceTickTimer) clearInterval(presenceTickTimer);
+            presenceTickTimer = setInterval(function() {
+                allAccounts.forEach(function(a) { updateCardStatus(a.id, a.last_heartbeat); });
+            }, 60000);
         }
 
         var AVATAR_PALETTE = [
@@ -744,6 +810,7 @@
                 var card = document.createElement('div');
                 card.className = 'acct-card';
                 card.dataset.role = account.role;
+                card.dataset.userId = account.id;
 
                 // Top row: avatar + name/email + role badge
                 var top = document.createElement('div');
@@ -781,27 +848,8 @@
                 var badges = document.createElement('div');
                 badges.className = 'acct-badges';
 
-                var liveStatus = account.status || 'offline';
                 var livePill = document.createElement('span');
-                livePill.className = 'status-pill';
-                var dot = document.createElement('span');
-                dot.className = 'status-dot';
-                if (liveStatus === 'online') {
-                    livePill.classList.add('status-online');
-                    dot.classList.add('dot-online');
-                    livePill.appendChild(dot);
-                    livePill.appendChild(document.createTextNode('Online'));
-                } else if (liveStatus === 'idle') {
-                    livePill.classList.add('status-idle');
-                    dot.classList.add('dot-idle');
-                    livePill.appendChild(dot);
-                    livePill.appendChild(document.createTextNode('Idle'));
-                } else {
-                    livePill.classList.add('status-offline');
-                    dot.classList.add('dot-offline');
-                    livePill.appendChild(dot);
-                    livePill.appendChild(document.createTextNode('Offline'));
-                }
+                applyStatusPill(livePill, computeStatus(account));
                 badges.appendChild(livePill);
 
                 if (account.is_locked) {
