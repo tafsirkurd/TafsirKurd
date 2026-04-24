@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=13">
     <style>
+        /* ── Metric Cards ─────────────────────────────────── */
         .analytics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -19,21 +20,48 @@
             margin-bottom: 32px;
         }
 
-        .analytics-card {
+        .metric-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            opacity: 0;
+            animation: fadeInUp 0.4s ease forwards;
+            animation-delay: var(--card-delay, 0ms);
+            transition: box-shadow 0.2s, transform 0.2s;
         }
 
-        .analytics-value {
-            font-size: 32px;
+        .metric-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+        .metric-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .metric-icon-wrap i { width: 22px; height: 22px; }
+
+        .metric-body { flex: 1; min-width: 0; }
+
+        .metric-value {
+            font-size: 28px;
             font-weight: 900;
             color: var(--text-primary);
+            line-height: 1.1;
             margin-bottom: 4px;
         }
 
-        .analytics-label {
+        .metric-label {
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
@@ -41,12 +69,18 @@
             color: var(--text-secondary);
         }
 
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Date Range Selector ──────────────────────────── */
         .date-range-selector {
             display: flex;
-            gap: 8px;
+            gap: 4px;
             background: var(--bg-surface);
             padding: 4px;
-            border-radius: 6px;
+            border-radius: 8px;
             border: 1px solid var(--border-light);
         }
 
@@ -58,7 +92,7 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
             transition: all 0.2s;
         }
 
@@ -72,96 +106,160 @@
             color: var(--bg-app);
         }
 
+        /* ── Chart ────────────────────────────────────────── */
         .chart-container {
             position: relative;
-            height: 300px;
-            margin: 20px 0;
+            height: 280px;
+            margin-top: 8px;
         }
 
-        .source-item, .browser-item, .page-item, .country-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 0;
+        /* ── List Items (sources, browsers, countries) ────── */
+        .analytics-list-item {
+            padding: 12px 0;
             border-bottom: 1px solid var(--border-light);
         }
 
-        .source-item:last-child, .browser-item:last-child, .page-item:last-child, .country-item:last-child {
-            border-bottom: none;
-        }
+        .analytics-list-item:last-child { border-bottom: none; }
 
-        .source-info, .browser-info, .page-info, .country-info {
+        .analytics-list-header {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 8px;
         }
 
-        .source-icon, .browser-icon, .country-icon {
-            font-size: 24px;
+        .analytics-list-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
         }
 
-        .source-name, .browser-name, .page-name, .country-name {
-            font-size: 15px;
+        .analytics-list-icon i { width: 16px; height: 16px; }
+
+        .analytics-list-name {
+            font-size: 14px;
             font-weight: 600;
             color: var(--text-primary);
         }
 
-        .source-sessions, .browser-users, .page-stats, .country-users {
-            font-size: 12px;
-            color: var(--text-secondary);
+        .analytics-list-sub {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
         }
 
-        .source-percentage, .browser-percentage, .country-percentage {
-            font-size: 22px;
-            font-weight: 900;
+        .analytics-list-pct {
+            font-size: 15px;
+            font-weight: 700;
             color: var(--text-primary);
+            min-width: 44px;
+            text-align: right;
         }
 
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-left: 48px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.7s ease;
+        }
+
+        /* ── Device Breakdown ─────────────────────────────── */
         .device-breakdown {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 16px;
-            margin-top: 20px;
         }
 
         .device-item {
+            background: var(--bg-hover);
+            border-radius: 12px;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
             text-align: center;
-            padding: 20px;
-            background: var(--bg-app);
-            border-radius: 8px;
         }
 
-        .device-icon {
-            font-size: 32px;
-            margin-bottom: 8px;
+        .device-icon-wrap {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        .device-icon-wrap i { width: 24px; height: 24px; }
 
         .device-percentage {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 900;
             color: var(--text-primary);
-            margin-bottom: 4px;
+            line-height: 1;
         }
 
         .device-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        .device-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border-light);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .device-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.8s ease;
+            width: 0%;
+        }
+
+        /* ── Top Pages Table ──────────────────────────────── */
+        .page-icon-wrap {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(99,102,241,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .page-icon-wrap i { width: 15px; height: 15px; color: #6366f1; }
+
+        /* ── Loading + Error ──────────────────────────────── */
         .loading-spinner {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border: 3px solid var(--border-light);
             border-top-color: var(--primary);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 40px auto;
+            animation: spin 0.8s linear infinite;
+            margin: 32px auto;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .error-message {
             background: var(--bg-surface);
@@ -172,28 +270,23 @@
             color: var(--text-secondary);
         }
 
+        /* ── Responsive ───────────────────────────────────── */
         @media (max-width: 768px) {
-            .device-breakdown {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
+            .device-breakdown { grid-template-columns: 1fr; gap: 10px; }
             .device-item {
-                display: flex;
-                align-items: center;
-                gap: 16px;
+                flex-direction: row;
                 text-align: left;
                 padding: 14px 16px;
+                gap: 16px;
             }
-            .device-icon { font-size: 24px; }
+            .device-bar { display: none; }
         }
     </style>
 
     <style id="early-sidebar-hide">
-        /* Hide sidebar nav by default until role is confirmed */
         .sidebar-nav { visibility: visible; }
     </style>
     <script>
-        // Early role-based sidebar hiding - runs before body renders
         (function() {
             var role = sessionStorage.getItem('adminRole');
             var style = document.getElementById('early-sidebar-hide');
@@ -208,9 +301,7 @@
             } else if (role === 'custom') {
                 css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
             }
-            if (role) {
-                style.textContent = css;
-            }
+            if (role) style.textContent = css;
         })();
     </script>
 </head>
@@ -229,7 +320,6 @@
             </div>
 
             <nav class="sidebar-nav">
-                <!-- OVERVIEW -->
                 <div class="nav-section">
                     <div class="nav-section-header">Overview</div>
                     <a href="/admin-dashboard.html" class="nav-item">
@@ -242,7 +332,6 @@
                     </a>
                 </div>
 
-                <!-- CONTENT -->
                 <div class="nav-section">
                     <div class="nav-section-header">Content</div>
                     <a href="/admin-messages.html" class="nav-item">
@@ -259,16 +348,15 @@
                         <span class="nav-item-label">IslamVoice</span>
                     </a>
                     <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
-                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
                     <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
                     <a href="/admin-translations.html" class="nav-item">
                         <i data-lucide="languages"></i>
                         <span class="nav-item-label">Translations</span>
                     </a>
-                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+                    <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
                 </div>
 
-                <!-- USERS -->
                 <div class="nav-section">
                     <div class="nav-section-header">Users</div>
                     <a href="/admin-users.html" class="nav-item">
@@ -282,7 +370,6 @@
                     </a>
                 </div>
 
-                <!-- SYSTEM -->
                 <div class="nav-section">
                     <div class="nav-section-header">System</div>
                     <a href="/admin-account-management.html" class="nav-item">
@@ -356,12 +443,10 @@
                     <input type="text" placeholder="Search...">
                 </div>
                 <div class="topbar-actions">
-                    <!-- Session Timer Display -->
                     <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour">
                         <i data-lucide="clock"></i>
                         <span id="sessionTimerText">60:00</span>
                     </div>
-
                     <button class="topbar-btn" style="position: relative;">
                         <i data-lucide="bell"></i>
                         <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
@@ -375,14 +460,17 @@
             <!-- CONTENT AREA -->
             <div class="content-area">
                 <div class="page-header">
-                    <h1 class="page-title">Analytics</h1>
+                    <div>
+                        <h1 class="page-title">Analytics</h1>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" id="analyticsSubtitle">Loading data...</p>
+                    </div>
                     <div class="page-actions">
                         <div class="date-range-selector">
                             <button class="date-range-btn active" data-days="7">7 Days</button>
                             <button class="date-range-btn" data-days="30">30 Days</button>
                             <button class="date-range-btn" data-days="90">90 Days</button>
                         </div>
-                        <button class="btn btn-secondary">
+                        <button class="btn btn-secondary" id="exportBtn">
                             <i data-lucide="download"></i>
                             Export
                         </button>
@@ -391,29 +479,46 @@
 
                 <!-- OVERVIEW METRICS -->
                 <div class="analytics-grid">
-                    <div class="analytics-card">
-                        <div class="analytics-value" id="totalPageViews">--</div>
-                        <div class="analytics-label">Total Views</div>
+                    <div class="metric-card" style="--card-delay: 0ms">
+                        <div class="metric-icon-wrap" style="background: rgba(59,130,246,0.12);">
+                            <i data-lucide="eye" style="color: #3b82f6;"></i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value" id="totalPageViews">--</div>
+                            <div class="metric-label">Total Views</div>
+                        </div>
                     </div>
-
-                    <div class="analytics-card">
-                        <div class="analytics-value" id="uniqueVisitors">--</div>
-                        <div class="analytics-label">Unique Visitors</div>
+                    <div class="metric-card" style="--card-delay: 80ms">
+                        <div class="metric-icon-wrap" style="background: rgba(16,185,129,0.12);">
+                            <i data-lucide="users" style="color: #10b981;"></i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value" id="uniqueVisitors">--</div>
+                            <div class="metric-label">Unique Visitors</div>
+                        </div>
                     </div>
-
-                    <div class="analytics-card">
-                        <div class="analytics-value" id="avgSession">--</div>
-                        <div class="analytics-label">Avg Session</div>
+                    <div class="metric-card" style="--card-delay: 160ms">
+                        <div class="metric-icon-wrap" style="background: rgba(139,92,246,0.12);">
+                            <i data-lucide="clock" style="color: #8b5cf6;"></i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value" id="avgSession">--</div>
+                            <div class="metric-label">Avg Session</div>
+                        </div>
                     </div>
-
-                    <div class="analytics-card">
-                        <div class="analytics-value" id="bounceRate">--</div>
-                        <div class="analytics-label">Bounce Rate</div>
+                    <div class="metric-card" style="--card-delay: 240ms">
+                        <div class="metric-icon-wrap" style="background: rgba(245,158,11,0.12);">
+                            <i data-lucide="log-out" style="color: #f59e0b;"></i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value" id="bounceRate">--</div>
+                            <div class="metric-label">Bounce Rate</div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- TRAFFIC CHART -->
-                <div class="card">
+                <div class="card" style="margin-bottom: 32px;">
                     <div class="card-header">
                         <h3 class="card-title">Traffic Overview</h3>
                     </div>
@@ -424,61 +529,69 @@
                     </div>
                 </div>
 
-                <!-- CONTENT GRID -->
-                <div class="content-grid" style="margin-top: 32px;">
-                    <!-- Traffic Sources -->
+                <!-- SOURCES + BROWSERS -->
+                <div class="content-grid" style="margin-bottom: 32px;">
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Traffic Sources</h3>
                         </div>
                         <div class="card-body">
-                            <div id="trafficSourcesContainer">
-                                <div class="loading-spinner"></div>
-                            </div>
+                            <div id="trafficSourcesContainer"><div class="loading-spinner"></div></div>
                         </div>
                     </div>
-
-                    <!-- Top Browsers -->
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Top Browsers</h3>
                         </div>
                         <div class="card-body">
-                            <div id="browsersContainer">
-                                <div class="loading-spinner"></div>
-                            </div>
+                            <div id="browsersContainer"><div class="loading-spinner"></div></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- DEVICE BREAKDOWN -->
-                <div class="card" style="margin-top: 32px;">
+                <div class="card" style="margin-bottom: 32px;">
                     <div class="card-header">
                         <h3 class="card-title">Device Breakdown</h3>
                     </div>
                     <div class="card-body">
                         <div class="device-breakdown">
                             <div class="device-item">
-                                <div class="device-icon">📱</div>
+                                <div class="device-icon-wrap" style="background: rgba(59,130,246,0.12);">
+                                    <i data-lucide="smartphone" style="color: #3b82f6;"></i>
+                                </div>
                                 <div class="device-percentage" id="mobilePercent">--</div>
                                 <div class="device-label">Mobile</div>
+                                <div class="device-bar">
+                                    <div class="device-bar-fill" id="mobileBar" style="background: #3b82f6;"></div>
+                                </div>
                             </div>
                             <div class="device-item">
-                                <div class="device-icon">💻</div>
+                                <div class="device-icon-wrap" style="background: rgba(16,185,129,0.12);">
+                                    <i data-lucide="monitor" style="color: #10b981;"></i>
+                                </div>
                                 <div class="device-percentage" id="desktopPercent">--</div>
                                 <div class="device-label">Desktop</div>
+                                <div class="device-bar">
+                                    <div class="device-bar-fill" id="desktopBar" style="background: #10b981;"></div>
+                                </div>
                             </div>
                             <div class="device-item">
-                                <div class="device-icon">📲</div>
+                                <div class="device-icon-wrap" style="background: rgba(139,92,246,0.12);">
+                                    <i data-lucide="tablet" style="color: #8b5cf6;"></i>
+                                </div>
                                 <div class="device-percentage" id="tabletPercent">--</div>
                                 <div class="device-label">Tablet</div>
+                                <div class="device-bar">
+                                    <div class="device-bar-fill" id="tabletBar" style="background: #8b5cf6;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- TOP PAGES -->
-                <div class="card" style="margin-top: 32px;">
+                <div class="card" style="margin-bottom: 32px;">
                     <div class="card-header">
                         <h3 class="card-title">Top Pages</h3>
                     </div>
@@ -504,14 +617,12 @@
                 </div>
 
                 <!-- TOP COUNTRIES -->
-                <div class="card" style="margin-top: 32px;">
+                <div class="card" style="margin-bottom: 32px;">
                     <div class="card-header">
                         <h3 class="card-title">Top Countries</h3>
                     </div>
                     <div class="card-body">
-                        <div id="topCountriesContainer">
-                            <div class="loading-spinner"></div>
-                        </div>
+                        <div id="topCountriesContainer"><div class="loading-spinner"></div></div>
                     </div>
                 </div>
             </div>
@@ -524,14 +635,22 @@
     <script src="/utils/admin-auth.js?v=5"></script>
     <script src="/utils/admin-notifications.js"></script>
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
 
-        // Current date range (default: 7 days)
         let currentDateRange = 7;
         let trafficChartInstance = null;
+        let lastTrafficData = null;
+        let lastAnalyticsData = null;
 
-        // Check authentication
+        function esc(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         (async () => {
             const isAuth = await window.adminAuth.checkAuth();
             if (isAuth) {
@@ -540,28 +659,21 @@
             }
         })();
 
-        // Sidebar toggle
-        const menuToggle = document.getElementById('menu-toggle');
-        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-        const sidebar = document.getElementById('sidebar');
-
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
         });
 
-        mobileMenuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('mobile-open');
+        // Rebuild chart on theme change
+        const themeObserver = new MutationObserver(() => {
+            if (lastTrafficData) renderTrafficChart(lastTrafficData);
         });
+        themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
 
-        // Theme toggle functionality
+        document.getElementById('exportBtn').addEventListener('click', exportAnalytics);
 
-            // Recreate chart with new theme
-            if (trafficChartInstance) {
-                loadAnalyticsData();
-            }
-        });
-
-        // Date range selector
         function setupDateRangeSelector() {
             const buttons = document.querySelectorAll('.date-range-btn');
             buttons.forEach(btn => {
@@ -574,63 +686,60 @@
             });
         }
 
-        // Load analytics data from Google Analytics endpoint
+        function getChartColors() {
+            const s = getComputedStyle(document.body);
+            return {
+                text: s.getPropertyValue('--text-secondary').trim(),
+                grid: s.getPropertyValue('--border-light').trim(),
+            };
+        }
+
         async function loadAnalyticsData() {
             try {
-                console.log(`Loading analytics for ${currentDateRange} days...`);
-
                 const token = sessionStorage.getItem('adminToken') || '';
                 const response = await fetch(`/google-analytics?days=${currentDateRange}`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
                 const data = await response.json();
 
                 if (data.error) {
-                    console.error('Google Analytics error:', data.message);
                     showAnalyticsError(data.message);
                     return;
                 }
 
-                console.log('Analytics data loaded:', data);
+                lastAnalyticsData = data;
 
-                // Update overview stats
+                const subtitle = document.getElementById('analyticsSubtitle');
+                if (subtitle) subtitle.textContent = `Last ${currentDateRange} days · Updated just now`;
+
                 const overview = data.overview;
                 document.getElementById('totalPageViews').textContent = overview.totalViews.toLocaleString();
                 document.getElementById('uniqueVisitors').textContent = overview.uniqueVisitors.toLocaleString();
 
-                // Format session duration
-                const avgMinutes = Math.floor(overview.avgSessionDuration / 60);
-                const avgSeconds = Math.floor(overview.avgSessionDuration % 60);
-                document.getElementById('avgSession').textContent = `${avgMinutes}m ${avgSeconds}s`;
+                const avgMin = Math.floor(overview.avgSessionDuration / 60);
+                const avgSec = Math.floor(overview.avgSessionDuration % 60);
+                document.getElementById('avgSession').textContent = `${avgMin}m ${avgSec}s`;
+                document.getElementById('bounceRate').textContent = `${(overview.bounceRate * 100).toFixed(1)}%`;
 
-                // Format bounce rate (API returns decimal)
-                const bounceRatePercent = (overview.bounceRate * 100).toFixed(1);
-                document.getElementById('bounceRate').textContent = `${bounceRatePercent}%`;
-
-                // Render traffic chart
+                lastTrafficData = data.trafficChart;
                 renderTrafficChart(data.trafficChart);
-
-                // Render traffic sources
                 renderTrafficSources(data.sources);
-
-                // Render browsers
                 renderBrowsers(data.browsers);
 
-                // Render device breakdown
                 const devices = data.devices;
                 document.getElementById('mobilePercent').textContent = `${devices.mobile}%`;
                 document.getElementById('desktopPercent').textContent = `${devices.desktop}%`;
                 document.getElementById('tabletPercent').textContent = `${devices.tablet}%`;
+                setTimeout(() => {
+                    document.getElementById('mobileBar').style.width = `${devices.mobile}%`;
+                    document.getElementById('desktopBar').style.width = `${devices.desktop}%`;
+                    document.getElementById('tabletBar').style.width = `${devices.tablet}%`;
+                }, 100);
 
-                // Render top pages
                 renderTopPages(data.pages);
-
-                // Render top countries
                 renderTopCountries(data.countries);
 
             } catch (error) {
@@ -639,273 +748,315 @@
             }
         }
 
-        // Render traffic chart using Chart.js
         function renderTrafficChart(chartData) {
             const canvas = document.getElementById('trafficChart');
             if (!canvas || !chartData || chartData.length === 0) return;
 
             const ctx = canvas.getContext('2d');
+            if (trafficChartInstance) trafficChartInstance.destroy();
 
-            // Destroy existing chart
-            if (trafficChartInstance) {
-                trafficChartInstance.destroy();
-            }
+            const colors = getChartColors();
+            const accent = '#3b82f6';
 
-            // Determine if dark mode
-            const isDark = document.body.classList.contains('dark-mode');
-            const textColor = isDark ? '#FFFFFF' : '#000000';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+            gradient.addColorStop(0, 'rgba(59,130,246,0.22)');
+            gradient.addColorStop(1, 'rgba(59,130,246,0.0)');
 
-            // Prepare data
             const labels = chartData.map(d => {
                 const date = new Date(d.date);
                 return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             });
             const values = chartData.map(d => d.views);
 
-            // Create chart
             trafficChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
                         label: 'Views',
                         data: values,
-                        borderColor: textColor,
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                        borderWidth: 2,
+                        borderColor: accent,
+                        backgroundColor: gradient,
+                        borderWidth: 2.5,
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: textColor,
-                        pointBorderColor: textColor,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
+                        pointBackgroundColor: accent,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
-                        },
+                        legend: { display: false },
                         tooltip: {
-                            backgroundColor: isDark ? '#FFFFFF' : '#000000',
-                            titleColor: isDark ? '#000000' : '#FFFFFF',
-                            bodyColor: isDark ? '#000000' : '#FFFFFF',
-                            borderColor: isDark ? '#FFFFFF' : '#000000',
-                            borderWidth: 1
+                            backgroundColor: 'rgba(0,0,0,0.82)',
+                            titleColor: '#fff',
+                            bodyColor: '#ccc',
+                            borderColor: accent,
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            padding: 10
                         }
                     },
                     scales: {
                         x: {
-                            grid: {
-                                color: gridColor
-                            },
-                            ticks: {
-                                color: textColor
-                            }
+                            grid: { display: false },
+                            ticks: { color: colors.text, font: { size: 11 } },
+                            border: { display: false }
                         },
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                color: gridColor
-                            },
-                            ticks: {
-                                color: textColor
-                            }
+                            grid: { color: colors.grid },
+                            ticks: { color: colors.text, font: { size: 11 } },
+                            border: { display: false }
                         }
                     }
                 }
             });
         }
 
-        // Render traffic sources
+        function buildListItem(iconHtml, name, sub, pct, barColor) {
+            const item = document.createElement('div');
+            item.className = 'analytics-list-item';
+
+            const header = document.createElement('div');
+            header.className = 'analytics-list-header';
+
+            const iconWrap = document.createElement('div');
+            iconWrap.className = 'analytics-list-icon';
+            iconWrap.style.background = iconHtml.bg;
+            if (iconHtml.lucide) {
+                const icon = document.createElement('i');
+                icon.dataset.lucide = iconHtml.lucide;
+                icon.style.color = iconHtml.color;
+                iconWrap.appendChild(icon);
+            } else {
+                iconWrap.textContent = iconHtml.emoji;
+            }
+
+            const textWrap = document.createElement('div');
+            textWrap.style.cssText = 'flex:1;min-width:0;';
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'analytics-list-name';
+            nameEl.textContent = name;
+
+            const subEl = document.createElement('div');
+            subEl.className = 'analytics-list-sub';
+            subEl.textContent = sub;
+
+            textWrap.appendChild(nameEl);
+            textWrap.appendChild(subEl);
+
+            const pctEl = document.createElement('div');
+            pctEl.className = 'analytics-list-pct';
+            pctEl.textContent = pct + '%';
+
+            header.appendChild(iconWrap);
+            header.appendChild(textWrap);
+            header.appendChild(pctEl);
+
+            const bar = document.createElement('div');
+            bar.className = 'progress-bar';
+            const fill = document.createElement('div');
+            fill.className = 'progress-fill';
+            fill.style.cssText = `width:${pct}%;background:${barColor};`;
+            bar.appendChild(fill);
+
+            item.appendChild(header);
+            item.appendChild(bar);
+            return item;
+        }
+
         function renderTrafficSources(sources) {
             const container = document.getElementById('trafficSourcesContainer');
-            if (!container || !sources || sources.length === 0) {
-                container.innerHTML = '<div class="error-message">No source data available</div>';
+            if (!container) return;
+            if (!sources || sources.length === 0) {
+                container.textContent = '';
+                const err = document.createElement('div');
+                err.className = 'error-message';
+                err.textContent = 'No source data available';
+                container.appendChild(err);
                 return;
             }
 
-            const sourceIcons = {
-                'Organic Search': '🔍',
-                'Direct': '🔗',
-                'Referral': '🌐',
-                'Social': '👥',
-                'Email': '📧',
-                '(not set)': '❓',
-                'Unassigned': '❓'
+            const configs = {
+                'Organic Search': { lucide: 'search',        color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+                'Direct':         { lucide: 'link',          color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+                'Referral':       { lucide: 'external-link', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+                'Social':         { lucide: 'share-2',       color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+                'Email':          { lucide: 'mail',          color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
             };
+            const def = { lucide: 'help-circle', color: '#6b7280', bg: 'rgba(107,114,128,0.12)' };
 
-            container.innerHTML = sources.map(source => `
-                <div class="source-item">
-                    <div class="source-info">
-                        <div class="source-icon">${sourceIcons[source.source] || '📍'}</div>
-                        <div>
-                            <div class="source-name">${source.source}</div>
-                            <div class="source-sessions">${source.sessions.toLocaleString()} sessions</div>
-                        </div>
-                    </div>
-                    <div class="source-percentage">${source.percentage}%</div>
-                </div>
-            `).join('');
+            container.textContent = '';
+            sources.forEach(s => {
+                const c = configs[s.source] || def;
+                container.appendChild(buildListItem(c, s.source, s.sessions.toLocaleString() + ' sessions', s.percentage, c.color));
+            });
+            lucide.createIcons();
         }
 
-        // Render browsers
         function renderBrowsers(browsers) {
             const container = document.getElementById('browsersContainer');
-            if (!container || !browsers || browsers.length === 0) {
-                container.innerHTML = '<div class="error-message">No browser data available</div>';
+            if (!container) return;
+            if (!browsers || browsers.length === 0) {
+                container.textContent = '';
+                const err = document.createElement('div');
+                err.className = 'error-message';
+                err.textContent = 'No browser data available';
+                container.appendChild(err);
                 return;
             }
 
-            const browserIcons = {
-                'Chrome': '🔵',
-                'Safari': '🔵',
-                'Firefox': '🟠',
-                'Edge': '🔷',
-                'Opera': '🔴',
-                'Samsung Internet': '📱',
-                'Android Webview': '🤖'
+            const configs = {
+                'Chrome':           { lucide: 'globe',      color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+                'Safari':           { lucide: 'compass',    color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
+                'Firefox':          { lucide: 'flame',      color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+                'Edge':             { lucide: 'wind',       color: '#0ea5e9', bg: 'rgba(14,165,233,0.12)' },
+                'Opera':            { lucide: 'circle',     color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+                'Samsung Internet': { lucide: 'smartphone', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+                'Android Webview':  { lucide: 'layout',     color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
             };
+            const def = { lucide: 'monitor', color: '#6b7280', bg: 'rgba(107,114,128,0.12)' };
 
-            container.innerHTML = browsers.slice(0, 5).map(browser => `
-                <div class="browser-item">
-                    <div class="browser-info">
-                        <div class="browser-icon">${browserIcons[browser.browser] || '🌐'}</div>
-                        <div>
-                            <div class="browser-name">${browser.browser}</div>
-                            <div class="browser-users">${browser.users.toLocaleString()} users</div>
-                        </div>
-                    </div>
-                    <div class="browser-percentage">${browser.percentage}%</div>
-                </div>
-            `).join('');
+            container.textContent = '';
+            browsers.slice(0, 5).forEach(b => {
+                const c = configs[b.browser] || def;
+                container.appendChild(buildListItem(c, b.browser, b.users.toLocaleString() + ' users', b.percentage, c.color));
+            });
+            lucide.createIcons();
         }
 
-        // Render top pages
         function renderTopPages(pages) {
             const tbody = document.getElementById('topPagesTable');
-            if (!tbody || !pages || pages.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: var(--text-tertiary);">No page data available</td></tr>';
+            if (!tbody) return;
+            if (!pages || pages.length === 0) {
+                tbody.textContent = '';
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 4;
+                td.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);';
+                td.textContent = 'No page data available';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
                 return;
             }
 
-            // Group pages by path
-            const pagesByPath = {};
-            pages.forEach(page => {
-                if (!pagesByPath[page.path]) {
-                    pagesByPath[page.path] = {
-                        path: page.path,
-                        views: 0,
-                        unique: 0,
-                        totalTime: 0,
-                        count: 0
-                    };
-                }
-                pagesByPath[page.path].views += page.views;
-                pagesByPath[page.path].unique += page.unique;
-                pagesByPath[page.path].totalTime += page.avgTime * page.views;
-                pagesByPath[page.path].count += page.views;
+            const byPath = {};
+            pages.forEach(p => {
+                if (!byPath[p.path]) byPath[p.path] = { path: p.path, views: 0, unique: 0, totalTime: 0, count: 0 };
+                byPath[p.path].views += p.views;
+                byPath[p.path].unique += p.unique;
+                byPath[p.path].totalTime += p.avgTime * p.views;
+                byPath[p.path].count += p.views;
             });
 
-            const pageData = Object.values(pagesByPath).map(page => {
-                const icon = getPageIcon(page.path);
-                const pageName = getPageName(page.path);
-                const avgTime = page.totalTime / page.count;
-                const avgMin = Math.floor(avgTime / 60);
-                const avgSec = Math.floor(avgTime % 60);
+            const pageData = Object.values(byPath).map(p => {
+                const avgTime = p.totalTime / p.count;
+                const m = Math.floor(avgTime / 60);
+                const s = Math.floor(avgTime % 60);
+                return { icon: getPageIcon(p.path), name: getPageName(p.path), path: p.path, views: p.views, unique: p.unique, avgTime: `${m}m ${s}s` };
+            }).sort((a, b) => b.views - a.views);
 
-                return {
-                    icon,
-                    name: pageName,
-                    path: page.path,
-                    views: page.views,
-                    unique: page.unique,
-                    avgTime: `${avgMin}m ${avgSec}s`
-                };
+            tbody.textContent = '';
+            pageData.slice(0, 10).forEach(p => {
+                const tr = document.createElement('tr');
+
+                const tdPage = document.createElement('td');
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'display:flex;align-items:center;gap:10px;';
+
+                const iconWrap = document.createElement('div');
+                iconWrap.className = 'page-icon-wrap';
+                const icon = document.createElement('i');
+                icon.dataset.lucide = p.icon;
+                iconWrap.appendChild(icon);
+
+                const textWrap = document.createElement('div');
+                const nameEl = document.createElement('div');
+                nameEl.style.cssText = 'font-weight:600;font-size:14px;';
+                nameEl.textContent = p.name;
+                const pathEl = document.createElement('div');
+                pathEl.style.cssText = 'font-size:12px;color:var(--text-tertiary);';
+                pathEl.textContent = p.path;
+                textWrap.appendChild(nameEl);
+                textWrap.appendChild(pathEl);
+
+                wrap.appendChild(iconWrap);
+                wrap.appendChild(textWrap);
+                tdPage.appendChild(wrap);
+
+                const tdViews = document.createElement('td');
+                tdViews.style.fontWeight = '700';
+                tdViews.textContent = p.views.toLocaleString();
+
+                const tdUnique = document.createElement('td');
+                tdUnique.style.color = 'var(--text-secondary)';
+                tdUnique.textContent = p.unique.toLocaleString();
+
+                const tdTime = document.createElement('td');
+                tdTime.style.color = 'var(--text-secondary)';
+                tdTime.textContent = p.avgTime;
+
+                tr.appendChild(tdPage);
+                tr.appendChild(tdViews);
+                tr.appendChild(tdUnique);
+                tr.appendChild(tdTime);
+                tbody.appendChild(tr);
             });
 
-            // Sort by views
-            pageData.sort((a, b) => b.views - a.views);
-
-            tbody.innerHTML = pageData.slice(0, 10).map(page => `
-                <tr>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 16px;">${page.icon}</span>
-                            <div>
-                                <div style="font-weight: 600;">${page.name}</div>
-                                <div style="font-size: 12px; color: var(--text-tertiary);">${page.path}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="font-weight: 600;">${page.views.toLocaleString()}</td>
-                    <td>${page.unique.toLocaleString()}</td>
-                    <td>${page.avgTime}</td>
-                </tr>
-            `).join('');
+            lucide.createIcons();
         }
 
-        // Render top countries
         function renderTopCountries(countries) {
             const container = document.getElementById('topCountriesContainer');
-            if (!container || !countries || countries.length === 0) {
-                container.innerHTML = '<div class="error-message">No country data available</div>';
+            if (!container) return;
+            if (!countries || countries.length === 0) {
+                container.textContent = '';
+                const err = document.createElement('div');
+                err.className = 'error-message';
+                err.textContent = 'No country data available';
+                container.appendChild(err);
                 return;
             }
 
-            const flagMap = {
-                'Iraq': '🇮🇶',
-                'Syria': '🇸🇾',
-                'Turkey': '🇹🇷',
-                'United States': '🇺🇸',
-                'Germany': '🇩🇪',
-                'United Kingdom': '🇬🇧',
-                'France': '🇫🇷',
-                'Canada': '🇨🇦',
-                'Sweden': '🇸🇪',
-                'Netherlands': '🇳🇱',
-                'Australia': '🇦🇺',
-                'Spain': '🇪🇸',
-                'Italy': '🇮🇹',
-                'Belgium': '🇧🇪',
-                'Austria': '🇦🇹',
-                'Switzerland': '🇨🇭',
-                'Norway': '🇳🇴',
-                'Denmark': '🇩🇰',
-                'Finland': '🇫🇮'
+            const flags = {
+                'Iraq': '🇮🇶', 'Syria': '🇸🇾',
+                'Turkey': '🇹🇷', 'United States': '🇺🇸',
+                'Germany': '🇩🇪', 'United Kingdom': '🇬🇧',
+                'France': '🇫🇷', 'Canada': '🇨🇦',
+                'Sweden': '🇸🇪', 'Netherlands': '🇳🇱',
+                'Australia': '🇦🇺', 'Spain': '🇪🇸',
+                'Italy': '🇮🇹', 'Belgium': '🇧🇪',
+                'Austria': '🇦🇹', 'Switzerland': '🇨🇭',
+                'Norway': '🇳🇴', 'Denmark': '🇩🇰',
+                'Finland': '🇫🇮', 'Iran': '🇮🇷',
+                'Saudi Arabia': '🇸🇦', 'Kuwait': '🇰🇼',
+                'Jordan': '🇯🇴', 'Lebanon': '🇱🇧'
             };
 
-            // Filter out unknown countries
-            const knownCountries = countries.filter(c => c.name !== '(not set)');
-
-            container.innerHTML = knownCountries.slice(0, 10).map(country => `
-                <div class="country-item">
-                    <div class="country-info">
-                        <div class="country-icon">${flagMap[country.name] || '🌍'}</div>
-                        <div>
-                            <div class="country-name">${country.name}</div>
-                            <div class="country-users">${country.users.toLocaleString()} users</div>
-                        </div>
-                    </div>
-                    <div class="country-percentage">${country.percentage}%</div>
-                </div>
-            `).join('');
+            const known = countries.filter(c => c.name !== '(not set)');
+            container.textContent = '';
+            known.slice(0, 10).forEach(c => {
+                const flagCfg = { emoji: flags[c.name] || '🌍', bg: 'var(--bg-hover)' };
+                container.appendChild(buildListItem(flagCfg, c.name, c.users.toLocaleString() + ' users', c.percentage, '#3b82f6'));
+            });
         }
 
-        // Helper: Get page icon
         function getPageIcon(path) {
-            if (path === '/') return '🏠';
-            if (path.includes('/surah/')) return '📖';
-            if (path.includes('/islamvoice')) return '📺';
-            if (path.includes('/contact')) return '📧';
-            if (path.includes('/about')) return 'ℹ️';
-            return '📄';
+            if (path === '/') return 'home';
+            if (path.includes('/surah/')) return 'book-open';
+            if (path.includes('/islamvoice')) return 'tv';
+            if (path.includes('/contact')) return 'mail';
+            if (path.includes('/about')) return 'info';
+            return 'file-text';
         }
 
-        // Helper: Get page name
         function getPageName(path) {
             if (path === '/') return 'Home Page';
             if (path.includes('/surah/')) {
@@ -915,42 +1066,58 @@
             if (path.includes('/islamvoice')) return 'TV Page';
             if (path.includes('/contact')) return 'Contact Page';
             if (path.includes('/about')) return 'About Page';
-
-            // Clean up path
             const cleaned = path.replace(/^\//, '').replace(/\/$/, '').replace(/-/g, ' ');
             return cleaned.charAt(0).toUpperCase() + cleaned.slice(1) || 'Unknown Page';
         }
 
-        // Show error message
         function showAnalyticsError(message) {
-            const containers = [
-                'trafficSourcesContainer',
-                'browsersContainer',
-                'topCountriesContainer'
-            ];
-
-            containers.forEach(id => {
+            ['trafficSourcesContainer', 'browsersContainer', 'topCountriesContainer'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    while (el.firstChild) el.removeChild(el.firstChild);
-                    const errDiv = document.createElement('div');
-                    errDiv.className = 'error-message';
-                    errDiv.textContent = message;
-                    el.appendChild(errDiv);
+                    el.textContent = '';
+                    const err = document.createElement('div');
+                    err.className = 'error-message';
+                    err.textContent = message;
+                    el.appendChild(err);
                 }
             });
-
             const table = document.getElementById('topPagesTable');
             if (table) {
-                while (table.firstChild) table.removeChild(table.firstChild);
+                table.textContent = '';
                 const tr = document.createElement('tr');
                 const td = document.createElement('td');
                 td.colSpan = 4;
-                td.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                td.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);';
                 td.textContent = message;
                 tr.appendChild(td);
                 table.appendChild(tr);
             }
+        }
+
+        function exportAnalytics() {
+            if (!lastAnalyticsData) return;
+            const d = lastAnalyticsData;
+            const rows = [
+                ['Metric', 'Value'],
+                ['Total Views', d.overview.totalViews],
+                ['Unique Visitors', d.overview.uniqueVisitors],
+                ['Avg Session (s)', d.overview.avgSessionDuration],
+                ['Bounce Rate', (d.overview.bounceRate * 100).toFixed(1) + '%'],
+                [],
+                ['Source', 'Sessions', 'Percentage'],
+                ...(d.sources || []).map(s => [s.source, s.sessions, s.percentage + '%']),
+                [],
+                ['Country', 'Users', 'Percentage'],
+                ...(d.countries || []).filter(c => c.name !== '(not set)').slice(0, 10).map(c => [c.name, c.users, c.percentage + '%'])
+            ];
+            const csv = rows.map(r => r.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics-${currentDateRange}d-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
