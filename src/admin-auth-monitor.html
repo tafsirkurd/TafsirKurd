@@ -441,14 +441,17 @@
 
         async function loadActiveSessions(supabase) {
             try {
-                const { data: sessions, error } = await supabase
-                    .from('admin_sessions')
-                    .select('*')
-                    .gt('expires_at', new Date().toISOString())
-                    .order('last_activity', { ascending: false })
-                    .limit(10);
+                const token = sessionStorage.getItem('adminToken');
+                const res = await fetch('/admin-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'list_sessions', token })
+                });
+                const json = await res.json();
+                const sessions = json.data || [];
+                const error = json.error || null;
 
-                if (error) { console.error('Sessions error:', error); throw error; }
+                if (error) { console.error('Sessions error:', error); throw new Error(error); }
 
                 document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
 
@@ -472,7 +475,9 @@
 
                     const user = document.createElement('div');
                     user.className = 'session-user';
-                    user.textContent = 'Admin session';
+                    var ua = session.user_agent || '';
+                    var device = ua.includes('iPhone') ? 'iPhone' : ua.includes('Android') ? 'Android' : ua.includes('Mac') ? 'Mac' : ua.includes('Windows') ? 'Windows' : 'Admin';
+                    user.textContent = device + ' — ' + (session.ip_address || 'Unknown IP');
                     header.appendChild(user);
 
                     const time = document.createElement('div');

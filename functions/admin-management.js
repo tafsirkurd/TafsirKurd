@@ -68,6 +68,17 @@ export async function onRequest(context) {
             return jsonResponse({ data }, 200, corsHeaders);
         }
 
+        if (action === 'list_sessions') {
+            const { data, error } = await supabase
+                .from('admin_sessions')
+                .select('id, ip_address, last_activity, expires_at, user_id, user_agent')
+                .gt('expires_at', new Date().toISOString())
+                .order('last_activity', { ascending: false })
+                .limit(20);
+            if (error) return jsonResponse({ error: error.message }, 500, corsHeaders);
+            return jsonResponse({ data }, 200, corsHeaders);
+        }
+
         // ===== RESET DEVICE BY EMAIL =====
         if (action === 'reset_device_by_email') {
             const { email } = body;
