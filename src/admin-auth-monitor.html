@@ -363,12 +363,6 @@
                     return a.is_locked && a.locked_until && new Date(a.locked_until) > new Date();
                 }).length;
 
-                const { data: sessions } = await supabase
-                    .from('admin_sessions')
-                    .select('id')
-                    .gt('expires_at', new Date().toISOString());
-                document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
-
                 const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
                 const { count: failedCount } = await supabase
                     .from('admin_login_attempts')
@@ -449,12 +443,14 @@
             try {
                 const { data: sessions, error } = await supabase
                     .from('admin_sessions')
-                    .select('*, admin_users(email, full_name, role)')
+                    .select('id, ip_address, last_activity, expires_at, admin_id')
                     .gt('expires_at', new Date().toISOString())
                     .order('last_activity', { ascending: false })
                     .limit(10);
 
                 if (error) throw error;
+
+                document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
 
                 const container = document.getElementById('sessionsList');
                 while (container.firstChild) container.removeChild(container.firstChild);
@@ -467,7 +463,7 @@
                     return;
                 }
 
-                sessions.forEach(session => {
+                sessions.forEach(function(session) {
                     const item = document.createElement('div');
                     item.className = 'session-item';
 
@@ -476,7 +472,7 @@
 
                     const user = document.createElement('div');
                     user.className = 'session-user';
-                    user.textContent = session.admin_users?.full_name || session.admin_users?.email || 'Unknown';
+                    user.textContent = 'Admin session';
                     header.appendChild(user);
 
                     const time = document.createElement('div');
@@ -494,24 +490,26 @@
                     const ipIcon = document.createElement('i');
                     ipIcon.setAttribute('data-lucide', 'globe');
                     const ipText = document.createElement('span');
-                    ipText.textContent = session.ip_address || 'Unknown';
+                    ipText.textContent = session.ip_address || 'Unknown IP';
                     ip.appendChild(ipIcon);
                     ip.appendChild(ipText);
                     details.appendChild(ip);
 
-                    const role = document.createElement('div');
-                    role.className = 'session-detail';
-                    const roleIcon = document.createElement('i');
-                    roleIcon.setAttribute('data-lucide', 'shield');
-                    const roleText = document.createElement('span');
-                    roleText.textContent = session.admin_users?.role || 'Unknown';
-                    role.appendChild(roleIcon);
-                    role.appendChild(roleText);
-                    details.appendChild(role);
+                    const exp = document.createElement('div');
+                    exp.className = 'session-detail';
+                    const expIcon = document.createElement('i');
+                    expIcon.setAttribute('data-lucide', 'clock');
+                    const expText = document.createElement('span');
+                    expText.textContent = 'Expires ' + formatRelativeTime(session.expires_at);
+                    exp.appendChild(expIcon);
+                    exp.appendChild(expText);
+                    details.appendChild(exp);
 
                     item.appendChild(details);
                     container.appendChild(item);
                 });
+
+                lucide.createIcons({ nodes: Array.from(container.querySelectorAll('i[data-lucide]')) });
             } catch (error) {
                 console.error('Error loading sessions:', error);
             }
