@@ -602,22 +602,22 @@
             if (!supabase) return;
 
             try {
-                // Fetch counts
-                const [profilesRes, messagesRes, episodesRes, sessionsRes] = await Promise.all([
-                    supabase.from('profiles').select('id, created_at', { count: 'exact' }),
+                const token = sessionStorage.getItem('adminToken');
+
+                // Fetch counts + sessions via backend (bypasses RLS on admin_sessions)
+                const [usersRes, messagesRes, episodesRes, sessionsJson] = await Promise.all([
+                    supabase.from('user_data').select('created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
                     supabase.from('contact_messages').select('id, created_at', { count: 'exact' }),
                     supabase.from('islamvoice_episodes').select('id', { count: 'exact', head: true }),
-                    supabase.from('admin_sessions').select('*, admin_users(email)').order('created_at', { ascending: false }).limit(10)
+                    fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list_sessions', token }) }).then(r => r.json())
                 ]);
 
-                // Update metrics
-                const totalUsers = profilesRes.count || 0;
-                const profiles = profilesRes.data || [];
-                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-                const newUsers = profiles.filter(p => new Date(p.created_at) > weekAgo).length;
-                document.getElementById('metricUsers').textContent = totalUsers;
-                document.getElementById('metricNewUsers').textContent = newUsers + ' new this week';
+                // Users metric
+                const weekUsers = usersRes.data || [];
+                document.getElementById('metricUsers').textContent = weekUsers.length;
+                document.getElementById('metricNewUsers').textContent = weekUsers.length + ' new this week';
 
+                // Messages metric
                 const totalMessages = messagesRes.count || 0;
                 const messages = messagesRes.data || [];
                 const today = new Date();
@@ -628,11 +628,9 @@
 
                 document.getElementById('metricEpisodes').textContent = episodesRes.count || 0;
 
-                // Sessions
-                const sessions = sessionsRes.data || [];
-                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-                const sessions24h = sessions.filter(s => new Date(s.created_at) > oneDayAgo).length;
-                document.getElementById('metricSessions').textContent = sessions24h;
+                // Sessions via backend
+                const sessions = sessionsJson.data || [];
+                document.getElementById('metricSessions').textContent = sessions.length;
 
                 // Render sessions table
                 const tbody = document.getElementById('sessionsTable');
@@ -650,9 +648,11 @@
                     sessions.forEach(s => {
                         const tr = document.createElement('tr');
 
-                        // Admin email
+                        // Device / label
                         const tdAdmin = document.createElement('td');
-                        tdAdmin.textContent = s.admin_users?.email || 'Unknown';
+                        const ua2 = s.user_agent || '';
+                        const dev2 = ua2.includes('iPhone') ? 'iPhone' : ua2.includes('Android') ? 'Android' : ua2.includes('Mac') ? 'Mac' : ua2.includes('Windows') ? 'Windows' : 'Unknown';
+                        tdAdmin.textContent = dev2 + ' session';
                         tdAdmin.style.fontWeight = '500';
                         tr.appendChild(tdAdmin);
 
