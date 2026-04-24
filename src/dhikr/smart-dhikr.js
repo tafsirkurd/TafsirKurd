@@ -709,6 +709,20 @@
      Always available — no network needed.
   ───────────────────────────────────────────── */
   function _buildAyahItem() {
+    /* Friday (Baghdad time) → always Surah Al-Kahf, Ayah 1 */
+    if (_baghdadDate().getUTCDay() === 5) {
+      return {
+        _type: 'daily', id: 'ayah_day',
+        icon: 'fas fa-book-quran', tag: 'ئایەتا ڕۆژێ',
+        title: SURAH_NAMES_AR[17], subtitle: 'سورەتا کەهف · ئایەت 1',
+        nav: function() {
+          if (window.App && App.tab && App.openSurah) {
+            App.tab('quran');
+            setTimeout(function() { App.openSurah(18, 1); }, 300);
+          }
+        }
+      };
+    }
     var flat = _seededIdx(6236, 1);
     var rem  = flat, surah = 1, ayah = 1;
     for (var i = 0; i < SURAH_SIZES.length; i++) {
