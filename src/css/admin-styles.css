@@ -634,22 +634,51 @@ body[data-admin-theme="noor"] .sidebar-profile-avatar {
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .session-timer {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border-color: #334155;
-        color: #cbd5e1;
-    }
+/* Dark mode support — uses body.dark-mode class set by theme-loader */
+body.dark-mode .session-timer,
+html.dark-mode body .session-timer {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #334155;
+    color: #cbd5e1;
+}
 
-    .session-timer i {
-        color: #94a3b8;
-    }
+body.dark-mode .session-timer i,
+html.dark-mode body .session-timer i {
+    color: #94a3b8;
+}
 
-    .session-timer:hover {
-        background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-        border-color: #475569;
-    }
+body.dark-mode .session-timer:hover,
+html.dark-mode body .session-timer:hover {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-color: #475569;
+}
+
+/* Sakina theme */
+body[data-admin-theme="sakina"] .session-timer {
+    background: linear-gradient(135deg, #1e3828 0%, #162d1f 100%);
+    border-color: #2a4a33;
+    color: #c9a84c;
+}
+
+body[data-admin-theme="sakina"] .session-timer i { color: #c9a84c; }
+
+body[data-admin-theme="sakina"] .session-timer:hover {
+    background: linear-gradient(135deg, #243d2e 0%, #1e3828 100%);
+    border-color: #c9a84c;
+}
+
+/* Noor theme */
+body[data-admin-theme="noor"] .session-timer {
+    background: linear-gradient(135deg, #f0e2c4 0%, #e8d4a8 100%);
+    border-color: #c9a87a;
+    color: #1a5c3a;
+}
+
+body[data-admin-theme="noor"] .session-timer i { color: #1a5c3a; }
+
+body[data-admin-theme="noor"] .session-timer:hover {
+    background: linear-gradient(135deg, #e8d4a8 0%, #dfc89a 100%);
+    border-color: #1a5c3a;
 }
 
 /* Content Area */
