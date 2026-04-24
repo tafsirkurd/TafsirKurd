@@ -6,29 +6,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="utils/theme-loader.js?v=2"></script>
     <title>Dashboard - TafsirKurd Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=13">
     <style>
         @keyframes spin { to { transform: rotate(360deg); } }
-        .fade-in { animation: fadeIn 0.4s ease forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+
+        /* ── Staggered fade-in ── */
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+        .card-animate {
+            opacity: 0;
+            animation: cardIn 0.5s cubic-bezier(.4,0,.2,1) forwards;
+        }
 
-        /* Quick actions */
+        /* ── Welcome Header ── */
+        .welcome-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .welcome-left h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0 0 4px 0;
+            letter-spacing: -0.5px;
+        }
+        .welcome-date {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .welcome-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .refresh-indicator {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .refresh-indicator .dot {
+            width: 6px; height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* ── Metric Cards ── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .metric-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .metric-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .metric-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .metric-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .metric-icon svg { width: 20px; height: 20px; }
+        .metric-trend {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .metric-trend.up {
+            color: #10b981;
+            background: rgba(16,185,129,0.1);
+        }
+        .metric-trend.down {
+            color: #ef4444;
+            background: rgba(239,68,68,0.1);
+        }
+        .metric-trend.neutral {
+            color: var(--text-tertiary);
+            background: var(--bg-hover);
+        }
+        .metric-value {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-tertiary);
+        }
+        .metric-sparkline {
+            width: 100%;
+            height: 32px;
+            margin-top: auto;
+        }
+        .metric-sparkline svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ── Charts Section ── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 900px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        .chart-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .chart-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .chart-card-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            background: var(--bg-hover);
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+        .chart-container {
+            position: relative;
+            height: 220px;
+        }
+
+        /* ── Quick Actions ── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-tertiary);
+            margin-bottom: 14px;
+        }
         .quick-actions {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
             gap: 12px;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
         .quick-action-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 14px 16px;
             cursor: pointer;
             text-decoration: none;
@@ -40,12 +216,12 @@
         }
         .quick-action-card:hover {
             border-color: var(--primary);
-            transform: translateY(-1px);
-            background: var(--bg-active);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
         .quick-action-icon {
-            width: 34px; height: 34px;
-            border-radius: 8px;
+            width: 36px; height: 36px;
+            border-radius: 9px;
             background: var(--bg-hover);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
@@ -54,12 +230,12 @@
         .quick-action-label { font-size: 13px; font-weight: 600; }
         .quick-action-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
 
-        /* 3-col content grid for dashboard */
+        /* ── 3-Col Content Grid ── */
         .content-grid-3 {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
         @media (max-width: 1100px) {
             .content-grid-3 { grid-template-columns: 1fr 1fr; }
@@ -67,8 +243,50 @@
         @media (max-width: 700px) {
             .content-grid-3 { grid-template-columns: 1fr; }
         }
+        .content-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .content-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .content-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .content-card-title .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .content-card-link {
+            font-size: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 4px 12px;
+            background: var(--bg-active);
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .content-card-link:hover {
+            opacity: 0.8;
+        }
+        .content-card-body {
+            padding: 12px 20px 16px;
+        }
 
-        /* Top readers card */
+        /* ── Top Readers ── */
         .top-reader-row {
             display: flex;
             align-items: center;
@@ -80,7 +298,7 @@
             color: var(--text-primary);
             transition: background 0.15s;
         }
-        .top-reader-row:hover { background: var(--bg-secondary); }
+        .top-reader-row:hover { background: var(--bg-secondary, var(--bg-hover)); }
         .tr-rank {
             font-size: 11px; font-weight: 700;
             width: 20px; text-align: center; flex-shrink: 0;
@@ -105,19 +323,117 @@
         .tr-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
         .tr-stat { font-size: 13px; font-weight: 600; color: var(--primary); flex-shrink: 0; }
 
-        /* Section label */
-        .section-label {
-            font-size: 11px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--text-tertiary);
-            margin-bottom: 14px; margin-top: -4px;
+        /* ── Activity Timeline ── */
+        .timeline-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .timeline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .timeline-item:last-child { border-bottom: none; }
+        .timeline-dot {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .timeline-dot svg { width: 14px; height: 14px; }
+        .timeline-dot.user { background: rgba(59,130,246,0.12); color: #3b82f6; }
+        .timeline-dot.message { background: rgba(16,185,129,0.12); color: #10b981; }
+        .timeline-dot.video { background: rgba(239,68,68,0.12); color: #ef4444; }
+        .timeline-content { flex: 1; min-width: 0; }
+        .timeline-text {
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+        .timeline-text strong { font-weight: 600; }
+        .timeline-time {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
         }
 
-        /* Metric sub-label */
-        .metric-sub {
-            font-size: 11px; color: var(--text-tertiary);
-            margin-top: 2px; display: flex; align-items: center; gap: 4px;
+        /* ── Messages Table (super_admin) ── */
+        .messages-section {
+            margin-bottom: 28px;
         }
-        .metric-sub svg { width: 11px; height: 11px; }
+
+        /* ── System Status Bar ── */
+        .system-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+        .status-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.green { background: #10b981; }
+        .status-dot.yellow { background: #f59e0b; }
+        .status-dot.red { background: #ef4444; }
+        .role-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: var(--bg-active);
+            color: var(--text-secondary);
+            text-transform: capitalize;
+            margin-left: auto;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .welcome-header h1 { font-size: 20px; }
+            .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .metric-card { padding: 14px; }
+            .metric-value { font-size: 24px; }
+            .system-status-bar { gap: 12px; }
+        }
+        @media (max-width: 450px) {
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav { visibility: visible; }
@@ -278,117 +594,199 @@
             </header>
 
             <div class="content-area">
-                <div class="page-header">
-                    <h1 class="page-title">Dashboard</h1>
-                    <div class="page-actions">
-                        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()">
-                            <i data-lucide="refresh-cw"></i>
+                <!-- ══ Welcome Header ══ -->
+                <div class="welcome-header">
+                    <div class="welcome-left">
+                        <h1 id="greetingText">Good morning</h1>
+                        <div class="welcome-date" id="welcomeDate"></div>
+                    </div>
+                    <div class="welcome-right">
+                        <div class="refresh-indicator" id="refreshIndicator">
+                            <span class="dot"></span>
+                            <span id="lastUpdatedText">Updating...</span>
+                        </div>
+                        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()" style="font-size:13px;padding:7px 14px;">
+                            <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
                             Refresh
                         </button>
                     </div>
                 </div>
 
-                <!-- METRICS — 6 cards -->
+                <!-- ══ Metric Cards ══ -->
                 <div class="metrics-grid" id="metricsGrid">
-                    <div class="metric-card">
+                    <!-- Total Users -->
+                    <div class="metric-card card-animate" style="animation-delay:0ms">
+                        <div class="metric-top">
+                            <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
+                                <i data-lucide="users"></i>
+                            </div>
+                            <span class="metric-trend neutral" id="trendUsers">--</span>
+                        </div>
                         <div class="metric-value" id="metricUsers">--</div>
                         <div class="metric-label">Total Users</div>
-                        <div class="metric-sub" id="metricUsersSub"></div>
+                        <div class="metric-sparkline" id="sparkUsers"></div>
                     </div>
-                    <div class="metric-card">
+                    <!-- Active Today -->
+                    <div class="metric-card card-animate" style="animation-delay:60ms">
+                        <div class="metric-top">
+                            <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
+                                <i data-lucide="activity"></i>
+                            </div>
+                            <span class="metric-trend neutral" id="trendToday">--</span>
+                        </div>
                         <div class="metric-value" id="metricActiveToday">--</div>
                         <div class="metric-label">Active Today</div>
-                        <div class="metric-sub"><i data-lucide="activity"></i><span>app opened today</span></div>
+                        <div class="metric-sparkline" id="sparkToday"></div>
                     </div>
-                    <div class="metric-card">
+                    <!-- Active 7d -->
+                    <div class="metric-card card-animate" style="animation-delay:120ms">
+                        <div class="metric-top">
+                            <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">
+                                <i data-lucide="calendar"></i>
+                            </div>
+                            <span class="metric-trend neutral" id="trend7d">--</span>
+                        </div>
                         <div class="metric-value" id="metricActive7d">--</div>
-                        <div class="metric-label">Active (7d)</div>
-                        <div class="metric-sub"><i data-lucide="calendar"></i><span>last 7 days</span></div>
+                        <div class="metric-label">Active (7 days)</div>
+                        <div class="metric-sparkline" id="spark7d"></div>
                     </div>
-                    <div class="metric-card">
+                    <!-- Active 30d -->
+                    <div class="metric-card card-animate" style="animation-delay:180ms">
+                        <div class="metric-top">
+                            <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
+                                <i data-lucide="trending-up"></i>
+                            </div>
+                            <span class="metric-trend neutral" id="trend30d">--</span>
+                        </div>
                         <div class="metric-value" id="metricActive30d">--</div>
-                        <div class="metric-label">Active (30d)</div>
-                        <div class="metric-sub"><i data-lucide="calendar"></i><span>last 30 days</span></div>
+                        <div class="metric-label">Active (30 days)</div>
+                        <div class="metric-sparkline" id="spark30d"></div>
                     </div>
-                    <div class="metric-card">
+                    <!-- Unread Messages -->
+                    <div class="metric-card card-animate" style="animation-delay:240ms">
+                        <div class="metric-top">
+                            <div class="metric-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">
+                                <i data-lucide="mail"></i>
+                            </div>
+                            <span class="metric-trend neutral" id="trendMessages">--</span>
+                        </div>
                         <div class="metric-value" id="metricMessages">--</div>
                         <div class="metric-label">Unread Messages</div>
-                        <div class="metric-sub" id="metricMessagesSub"></div>
+                        <div class="metric-sparkline" id="sparkMessages"></div>
                     </div>
-                    <div class="metric-card">
+                    <!-- Active Readers -->
+                    <div class="metric-card card-animate" style="animation-delay:300ms">
+                        <div class="metric-top">
+                            <div class="metric-icon" style="background:rgba(20,184,166,0.1);color:#14b8a6;">
+                                <i data-lucide="book-open"></i>
+                            </div>
+                            <span class="metric-trend neutral" id="trendReaders">--</span>
+                        </div>
                         <div class="metric-value" id="metricReaders">--</div>
                         <div class="metric-label">Active Readers</div>
-                        <div class="metric-sub" id="metricReadersSub"></div>
+                        <div class="metric-sparkline" id="sparkReaders"></div>
                     </div>
                 </div>
 
-                <!-- QUICK ACTIONS — populated from recent page history -->
+                <!-- ══ Charts ══ -->
+                <div class="charts-grid">
+                    <div class="chart-card card-animate" style="animation-delay:360ms">
+                        <div class="chart-card-header">
+                            <div class="chart-card-title">User Growth</div>
+                            <span class="chart-card-badge">Last 30 days</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="userGrowthChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card card-animate" style="animation-delay:420ms">
+                        <div class="chart-card-header">
+                            <div class="chart-card-title">Daily Active Users</div>
+                            <span class="chart-card-badge">Last 7 days</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="activeUsersChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ Quick Actions ══ -->
                 <div class="section-label">Recently Visited</div>
                 <div class="quick-actions" id="quickActionsGrid"></div>
 
-                <!-- 3-COL CONTENT GRID -->
+                <!-- ══ Activity Timeline ══ -->
+                <div class="timeline-section card-animate" style="animation-delay:480ms">
+                    <div class="timeline-header">
+                        <div class="timeline-title">Recent Activity</div>
+                    </div>
+                    <div class="timeline-list" id="timelineList">
+                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
+                    </div>
+                </div>
+
+                <!-- ══ 3-Col Content Grid ══ -->
                 <div class="section-label">Live Data</div>
                 <div class="content-grid-3">
                     <!-- Recent Videos -->
-                    <div class="card">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                                <span style="width:8px;height:8px;background:#ef4444;border-radius:50%;"></span>
+                    <div class="content-card card-animate" style="animation-delay:540ms">
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <span class="dot" style="background:#ef4444;"></span>
                                 Recent Videos
-                            </h3>
-                            <a href="/admin-islamvoice-management.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">View all →</a>
+                            </div>
+                            <a href="/admin-islamvoice-management.html" class="content-card-link">View all</a>
                         </div>
-                        <div class="card-body" id="recentVideosBody">
+                        <div class="content-card-body" id="recentVideosBody">
                             <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
-                                <div style="width:30px;height:30px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
-                                <p style="font-size:13px;">Loading...</p>
+                                <div style="width:28px;height:28px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
+                                <p style="font-size:13px;margin:0;">Loading...</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recent Users -->
-                    <div class="card">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                                <span style="width:8px;height:8px;background:#3b82f6;border-radius:50%;"></span>
+                    <div class="content-card card-animate" style="animation-delay:600ms">
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <span class="dot" style="background:#3b82f6;"></span>
                                 Recent Users
-                            </h3>
-                            <a href="/admin-users.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">View all →</a>
+                            </div>
+                            <a href="/admin-users.html" class="content-card-link">View all</a>
                         </div>
-                        <div class="card-body" id="recentUsersBody">
+                        <div class="content-card-body" id="recentUsersBody">
                             <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
-                                <div style="width:30px;height:30px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
-                                <p style="font-size:13px;">Loading...</p>
+                                <div style="width:28px;height:28px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
+                                <p style="font-size:13px;margin:0;">Loading...</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Top Readers -->
-                    <div class="card">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                                <span style="width:8px;height:8px;background:#10b981;border-radius:50%;"></span>
+                    <div class="content-card card-animate" style="animation-delay:660ms">
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <span class="dot" style="background:#10b981;"></span>
                                 Top Readers
-                            </h3>
-                            <a href="/admin-reading-stats.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">Full stats →</a>
+                            </div>
+                            <a href="/admin-reading-stats.html" class="content-card-link">Full stats</a>
                         </div>
-                        <div class="card-body" id="topReadersBody">
+                        <div class="content-card-body" id="topReadersBody">
                             <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
-                                <div style="width:30px;height:30px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
-                                <p style="font-size:13px;">Loading...</p>
+                                <div style="width:28px;height:28px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
+                                <p style="font-size:13px;margin:0;">Loading...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Messages (super_admin only) -->
-                <div class="card" id="recent-messages-card">
+                <!-- ══ Recent Messages (super_admin only) ══ -->
+                <div class="card messages-section" id="recent-messages-card">
                     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
                         <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
                             <span style="width:8px;height:8px;background:#10b981;border-radius:50%;"></span>
                             Recent Messages
                         </h3>
-                        <a href="/admin-messages.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;">View all →</a>
+                        <a href="/admin-messages.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;font-weight:600;">View all</a>
                     </div>
                     <div class="table-container">
                         <table>
@@ -412,6 +810,22 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- ══ System Status Bar ══ -->
+                <div class="system-status-bar" id="systemStatusBar">
+                    <div class="status-item">
+                        <span class="status-dot green" id="statusDotSystem"></span>
+                        <span>System: Online</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-dot green" id="statusDotDb"></span>
+                        <span>Database: Connected</span>
+                    </div>
+                    <div class="status-item" id="statusSync">
+                        <span>Last sync: --</span>
+                    </div>
+                    <div class="role-badge" id="roleBadge">admin</div>
+                </div>
             </div>
         </main>
     </div>
@@ -425,22 +839,72 @@
     <script>
         lucide.createIcons();
 
-        // Build quick-actions from localStorage immediately (no network needed)
+        // ── Chart instances (for theme-switch destroy/recreate) ──
+        var growthChartInstance = null;
+        var activeChartInstance = null;
+        var _lastGrowthData = null;
+        var _lastActiveData = null;
+        var _lastRefreshTime = null;
+
+        // ── Greeting (Baghdad time = UTC+3) ──
+        (function setGreeting() {
+            var now = new Date();
+            var baghdadHour = (now.getUTCHours() + 3) % 24;
+            var greeting = 'Good evening';
+            if (baghdadHour >= 5 && baghdadHour < 12) greeting = 'Good morning';
+            else if (baghdadHour >= 12 && baghdadHour < 17) greeting = 'Good afternoon';
+
+            var adminName = sessionStorage.getItem('adminName') || sessionStorage.getItem('adminEmail') || '';
+            if (adminName) {
+                var firstName = adminName.split(/[\s@]/)[0];
+                firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+                greeting += ', ' + firstName;
+            }
+
+            var el = document.getElementById('greetingText');
+            if (el) el.textContent = greeting;
+
+            // Date
+            var baghdad = new Date(now.getTime() + (3 * 60 + now.getTimezoneOffset()) * 60000);
+            var dateStr = baghdad.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            var dateEl = document.getElementById('welcomeDate');
+            if (dateEl) dateEl.textContent = dateStr;
+        })();
+
+        // ── Role badge ──
+        (function setRoleBadge() {
+            var role = sessionStorage.getItem('adminRole') || 'admin';
+            var badge = document.getElementById('roleBadge');
+            if (badge) badge.textContent = role.replace('_', ' ');
+        })();
+
+        // ── Quick Actions ──
         buildQuickActions();
 
+        // ── Auth & Load ──
         (async () => {
-            const isAuth = await window.adminAuth.checkAuth();
+            var isAuth = await window.adminAuth.checkAuth();
             if (isAuth) await loadDashboardData();
         })();
 
-        document.getElementById('menu-toggle').addEventListener('click', () => {
+        document.getElementById('menu-toggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');
         });
-        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('mobile-open');
         });
 
+        // ── Theme change observer — rebuild charts ──
+        var _themeObserver = new MutationObserver(function() {
+            if (_lastGrowthData) renderUserGrowthChart(_lastGrowthData);
+            if (_lastActiveData) renderActiveUsersChart(_lastActiveData);
+        });
+        _themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
+
+        /* ═══════════════════════════════════════════════
+           QUICK ACTIONS (localStorage-based)
+           ═══════════════════════════════════════════════ */
         function buildQuickActions() {
             var container = document.getElementById('quickActionsGrid');
             if (!container) return;
@@ -490,164 +954,575 @@
             lucide.createIcons();
         }
 
+
+        /* ═══════════════════════════════════════════════
+           HELPERS
+           ═══════════════════════════════════════════════ */
         function refreshDashboard() {
-            const btn = document.getElementById('refreshBtn');
+            var btn = document.getElementById('refreshBtn');
             if (btn) btn.disabled = true;
-            loadDashboardData().finally(() => {
+            loadDashboardData().finally(function() {
                 if (btn) btn.disabled = false;
             });
         }
 
         function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-            const intervals = { year:31536000, month:2592000, week:604800, day:86400, hour:3600, minute:60 };
-            for (const [unit, s] of Object.entries(intervals)) {
-                const n = Math.floor(seconds / s);
+            var seconds = Math.floor((new Date() - date) / 1000);
+            var intervals = { year:31536000, month:2592000, week:604800, day:86400, hour:3600, minute:60 };
+            var keys = Object.keys(intervals);
+            for (var i = 0; i < keys.length; i++) {
+                var unit = keys[i];
+                var s = intervals[unit];
+                var n = Math.floor(seconds / s);
                 if (n >= 1) return n === 1 ? '1 ' + unit + ' ago' : n + ' ' + unit + 's ago';
             }
             return 'Just now';
         }
 
         function setMetric(id, value) {
-            const el = document.getElementById(id);
+            var el = document.getElementById(id);
             if (el) {
                 el.textContent = value !== null && value !== undefined ? value.toLocaleString() : '--';
-                el.closest('.metric-card').classList.add('fade-in');
             }
         }
 
+        function setTrend(id, current, previous) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            if (previous === null || previous === undefined || current === null || current === undefined) {
+                el.className = 'metric-trend neutral';
+                el.textContent = '--';
+                return;
+            }
+            if (previous === 0) {
+                el.className = 'metric-trend up';
+                el.textContent = current > 0 ? '+ new' : '--';
+                return;
+            }
+            var pct = Math.round(((current - previous) / previous) * 100);
+            if (pct > 0) {
+                el.className = 'metric-trend up';
+                el.textContent = '\u2191 ' + pct + '%';
+            } else if (pct < 0) {
+                el.className = 'metric-trend down';
+                el.textContent = '\u2193 ' + Math.abs(pct) + '%';
+            } else {
+                el.className = 'metric-trend neutral';
+                el.textContent = '0%';
+            }
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           SPARKLINE GENERATOR (tiny inline SVG)
+           ═══════════════════════════════════════════════ */
+        function buildSparkline(containerId, data, color) {
+            var container = document.getElementById(containerId);
+            if (!container || !data || data.length < 2) return;
+
+            var w = 160, h = 32, pad = 2;
+            var min = Math.min.apply(null, data);
+            var max = Math.max.apply(null, data);
+            var range = max - min || 1;
+
+            var points = [];
+            for (var i = 0; i < data.length; i++) {
+                var x = pad + (i / (data.length - 1)) * (w - pad * 2);
+                var y = h - pad - ((data[i] - min) / range) * (h - pad * 2);
+                points.push(x.toFixed(1) + ',' + y.toFixed(1));
+            }
+
+            var pathD = 'M' + points.join('L');
+            var fillPoints = points.join(' ') + ' ' + (w - pad).toFixed(1) + ',' + h + ' ' + pad + ',' + h;
+
+            container.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+                '<polygon points="' + fillPoints + '" fill="' + color + '" opacity="0.1"/>' +
+                '<polyline points="' + points.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '</svg>';
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           CHARTS (Chart.js)
+           ═══════════════════════════════════════════════ */
+        function getChartColors() {
+            var isDark = document.body.classList.contains('dark-mode');
+            var s = getComputedStyle(document.body);
+            return {
+                text: s.getPropertyValue('--text-primary').trim() || (isDark ? '#fff' : '#000'),
+                grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                line: '#3b82f6',
+                lineFill: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.08)',
+                bar: '#8b5cf6',
+                barHover: '#a78bfa',
+                tooltipBg: isDark ? '#1e1e1e' : '#fff',
+                tooltipText: s.getPropertyValue('--text-primary').trim() || (isDark ? '#fff' : '#000'),
+                tooltipBorder: s.getPropertyValue('--border-light').trim() || '#ccc'
+            };
+        }
+
+        function renderUserGrowthChart(data) {
+            _lastGrowthData = data;
+            var ctx = document.getElementById('userGrowthChart');
+            if (!ctx) return;
+            if (growthChartInstance) growthChartInstance.destroy();
+
+            var c = getChartColors();
+            var labels = data.map(function(d) {
+                var dt = new Date(d.date);
+                return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            var values = data.map(function(d) { return d.count; });
+
+            growthChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'New Users',
+                        data: values,
+                        borderColor: c.line,
+                        backgroundColor: c.lineFill,
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: c.line,
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: c.tooltipBg,
+                            titleColor: c.tooltipText,
+                            bodyColor: c.tooltipText,
+                            borderColor: c.tooltipBorder,
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(items) { return items[0].label; },
+                                label: function(item) { return item.parsed.y + ' new users'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: c.text, font: { size: 11 }, maxTicksLimit: 7 },
+                            border: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: c.grid },
+                            ticks: { color: c.text, font: { size: 11 }, maxTicksLimit: 5 },
+                            border: { display: false }
+                        }
+                    },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
+
+        function renderActiveUsersChart(data) {
+            _lastActiveData = data;
+            var ctx = document.getElementById('activeUsersChart');
+            if (!ctx) return;
+            if (activeChartInstance) activeChartInstance.destroy();
+
+            var c = getChartColors();
+            var labels = data.map(function(d) {
+                var dt = new Date(d.date);
+                return dt.toLocaleDateString('en-US', { weekday: 'short' });
+            });
+            var values = data.map(function(d) { return d.count; });
+
+            activeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Active Users',
+                        data: values,
+                        backgroundColor: c.bar,
+                        hoverBackgroundColor: c.barHover,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: c.tooltipBg,
+                            titleColor: c.tooltipText,
+                            bodyColor: c.tooltipText,
+                            borderColor: c.tooltipBorder,
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(item) { return item.parsed.y + ' active users'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: c.text, font: { size: 11 } },
+                            border: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: c.grid },
+                            ticks: { color: c.text, font: { size: 11 }, maxTicksLimit: 5 },
+                            border: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           ACTIVITY TIMELINE
+           ═══════════════════════════════════════════════ */
+        function buildActivityTimeline(users, messages, videos) {
+            var container = document.getElementById('timelineList');
+            if (!container) return;
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            var items = [];
+
+            // Users
+            if (users && users.length) {
+                users.forEach(function(u) {
+                    items.push({
+                        type: 'user',
+                        text: '<strong>' + escHtml(u.email || 'Unknown') + '</strong> joined',
+                        time: new Date(u.created_at),
+                        icon: 'user-plus'
+                    });
+                });
+            }
+
+            // Messages
+            if (messages && messages.length) {
+                messages.forEach(function(m) {
+                    items.push({
+                        type: 'message',
+                        text: '<strong>' + escHtml(m.name || 'Someone') + '</strong> sent a message' + (m.subject ? ': ' + escHtml(m.subject) : ''),
+                        time: new Date(m.created_at),
+                        icon: 'message-circle'
+                    });
+                });
+            }
+
+            // Videos
+            if (videos && videos.length) {
+                videos.forEach(function(v) {
+                    items.push({
+                        type: 'video',
+                        text: 'New video uploaded: <strong>' + escHtml(v.title || 'Untitled') + '</strong>',
+                        time: new Date(v.created_at),
+                        icon: 'play-circle'
+                    });
+                });
+            }
+
+            // Sort by time descending, take 8
+            items.sort(function(a, b) { return b.time - a.time; });
+            items = items.slice(0, 8);
+
+            if (items.length === 0) {
+                var empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;';
+                empty.textContent = 'No recent activity';
+                container.appendChild(empty);
+                return;
+            }
+
+            items.forEach(function(item) {
+                var row = document.createElement('div');
+                row.className = 'timeline-item';
+
+                var dot = document.createElement('div');
+                dot.className = 'timeline-dot ' + item.type;
+                var icon = document.createElement('i');
+                icon.setAttribute('data-lucide', item.icon);
+                dot.appendChild(icon);
+                row.appendChild(dot);
+
+                var content = document.createElement('div');
+                content.className = 'timeline-content';
+
+                var text = document.createElement('div');
+                text.className = 'timeline-text';
+                text.innerHTML = item.text;
+                content.appendChild(text);
+
+                var time = document.createElement('div');
+                time.className = 'timeline-time';
+                time.textContent = getTimeAgo(item.time);
+                content.appendChild(time);
+
+                row.appendChild(content);
+                container.appendChild(row);
+            });
+
+            lucide.createIcons();
+        }
+
+        function escHtml(str) {
+            var d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           MAIN DATA LOADER
+           ═══════════════════════════════════════════════ */
         async function loadDashboardData() {
-            const supabase = window.adminAuth.getSupabase();
+            var supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
 
-            const today = new Date(); today.setHours(0,0,0,0);
-            const ago7  = new Date(Date.now() - 7  * 86400000);
-            const ago30 = new Date(Date.now() - 30 * 86400000);
+            var now = new Date();
+            var today = new Date(); today.setHours(0,0,0,0);
+            var yesterday = new Date(today.getTime() - 86400000);
+            var ago7  = new Date(Date.now() - 7  * 86400000);
+            var ago30 = new Date(Date.now() - 30 * 86400000);
 
             // Fire all queries in parallel
-            const [
-                totalUsersRes,
-                activeTodayRes,
-                active7dRes,
-                active30dRes,
-                unreadMsgRes,
-                videoCountRes,
-                recentMsgsRes,
-                recentVideosRes,
-                recentUsersRes,
-                readingStatsRes
-            ] = await Promise.allSettled([
-                supabase.rpc('get_total_users'),
-                supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', today.toISOString()),
-                supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago7.toISOString()),
-                supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago30.toISOString()),
-                supabase.from('contact_messages').select('*', { count:'exact', head:true }).eq('status','unread'),
-                supabase.from('islamvoice_episodes').select('*', { count:'exact', head:true }),
-                supabase.from('contact_messages').select('*').order('created_at', { ascending:false }).limit(3),
-                supabase.from('islamvoice_episodes').select('id,title,thumbnail_url,created_at').order('created_at', { ascending:false }).limit(5),
-                supabase.rpc('get_recent_users', { limit_count: 5 }),
-                fetchReadingStats()
+            var results = await Promise.allSettled([
+                /* 0  */ supabase.rpc('get_total_users'),
+                /* 1  */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', today.toISOString()),
+                /* 2  */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago7.toISOString()),
+                /* 3  */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago30.toISOString()),
+                /* 4  */ supabase.from('contact_messages').select('*', { count:'exact', head:true }).eq('status','unread'),
+                /* 5  */ supabase.from('islamvoice_episodes').select('*', { count:'exact', head:true }),
+                /* 6  */ supabase.from('contact_messages').select('*').order('created_at', { ascending:false }).limit(5),
+                /* 7  */ supabase.from('islamvoice_episodes').select('id,title,thumbnail_url,created_at').order('created_at', { ascending:false }).limit(5),
+                /* 8  */ supabase.rpc('get_recent_users', { limit_count: 5 }),
+                /* 9  */ fetchReadingStats(),
+                /* 10 */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', yesterday.toISOString()).lt('updated_at', today.toISOString()),
+                /* 11 — daily signups last 30 days */
+                supabase.from('user_data').select('created_at').gte('created_at', ago30.toISOString()).order('created_at', { ascending: true }),
+                /* 12 — daily active last 7 days */
+                supabase.from('user_data').select('updated_at').gte('updated_at', ago7.toISOString())
             ]);
 
-            // --- Metrics ---
-            if (totalUsersRes.status === 'fulfilled' && !totalUsersRes.value.error) {
-                setMetric('metricUsers', totalUsersRes.value.data);
-            }
-            if (activeTodayRes.status === 'fulfilled') {
-                setMetric('metricActiveToday', activeTodayRes.value.count);
-            }
-            if (active7dRes.status === 'fulfilled') {
-                setMetric('metricActive7d', active7dRes.value.count);
-            }
-            if (active30dRes.status === 'fulfilled') {
-                setMetric('metricActive30d', active30dRes.value.count);
-            }
+            // Shorthand
+            function val(i) { return results[i].status === 'fulfilled' ? results[i].value : null; }
+            function cnt(i) { var v = val(i); return v ? v.count : null; }
+            function dat(i) { var v = val(i); return (v && !v.error) ? v.data : null; }
 
-            const unreadCount = unreadMsgRes.status === 'fulfilled' ? unreadMsgRes.value.count : null;
+            // ─── Metrics ───
+            var totalUsers = dat(0);
+            if (totalUsers !== null) setMetric('metricUsers', totalUsers);
+
+            var activeToday = cnt(1);
+            setMetric('metricActiveToday', activeToday);
+
+            var active7d = cnt(2);
+            setMetric('metricActive7d', active7d);
+
+            var active30d = cnt(3);
+            setMetric('metricActive30d', active30d);
+
+            var unreadCount = cnt(4);
             setMetric('metricMessages', unreadCount);
-            const messagesBadge = document.getElementById('messages-badge');
+
+            var messagesBadge = document.getElementById('messages-badge');
             if (messagesBadge && unreadCount > 0) {
                 messagesBadge.textContent = unreadCount;
                 messagesBadge.style.display = '';
             }
 
-            // (episode count used in metric; quick-actions are history-based)
+            // ─── Trend: Active Today vs Yesterday ───
+            var yesterdayActive = cnt(10);
+            setTrend('trendToday', activeToday, yesterdayActive);
 
-            // --- Reading stats ---
-            const readingData = readingStatsRes.status === 'fulfilled' ? readingStatsRes.value : null;
+            // ─── Reading stats ───
+            var readingData = results[9].status === 'fulfilled' ? results[9].value : null;
             if (readingData && readingData.stats) {
                 setMetric('metricReaders', readingData.stats.activeReaders);
-                const readersSub = document.getElementById('metricReadersSub');
-                if (readersSub) {
-                    readersSub.textContent = 'avg ' + (readingData.stats.avgProgress || 0) + '% progress';
-                }
             }
             buildTopReaders(readingData ? readingData.users : null);
 
-            // --- Recent videos ---
-            const videos = recentVideosRes.status === 'fulfilled' && !recentVideosRes.value.error
-                ? recentVideosRes.value.data : null;
+            // ─── Charts data ───
+            // User growth: group signups by day
+            var signupRows = dat(11);
+            if (signupRows) {
+                var growthMap = {};
+                for (var d = 0; d < 30; d++) {
+                    var dt = new Date(ago30.getTime() + d * 86400000);
+                    var key = dt.toISOString().slice(0, 10);
+                    growthMap[key] = 0;
+                }
+                signupRows.forEach(function(r) {
+                    var k = r.created_at.slice(0, 10);
+                    if (growthMap.hasOwnProperty(k)) growthMap[k]++;
+                });
+                var growthData = Object.keys(growthMap).sort().map(function(k) {
+                    return { date: k, count: growthMap[k] };
+                });
+                renderUserGrowthChart(growthData);
+
+                // Sparkline for total users — cumulative from growth
+                var cumulative = [];
+                var base = (totalUsers || 0) - signupRows.length;
+                growthData.forEach(function(d) {
+                    base += d.count;
+                    cumulative.push(base);
+                });
+                // Take last 7 days for sparkline
+                buildSparkline('sparkUsers', cumulative.slice(-7), '#3b82f6');
+            }
+
+            // Daily active: group by day
+            var activeRows = dat(12);
+            if (activeRows) {
+                var activeMap = {};
+                for (var d2 = 0; d2 < 7; d2++) {
+                    var dt2 = new Date(ago7.getTime() + d2 * 86400000);
+                    var key2 = dt2.toISOString().slice(0, 10);
+                    activeMap[key2] = new Set();
+                }
+                activeRows.forEach(function(r) {
+                    var k2 = r.updated_at.slice(0, 10);
+                    if (activeMap.hasOwnProperty(k2)) activeMap[k2].add(r.updated_at);
+                });
+                // Actually we just need count per day
+                // Re-query approach: just count unique dates from updated_at
+                var activeDayMap = {};
+                for (var d3 = 0; d3 < 7; d3++) {
+                    var dt3 = new Date(ago7.getTime() + d3 * 86400000);
+                    var key3 = dt3.toISOString().slice(0, 10);
+                    activeDayMap[key3] = 0;
+                }
+                activeRows.forEach(function(r) {
+                    var k3 = r.updated_at.slice(0, 10);
+                    if (activeDayMap.hasOwnProperty(k3)) activeDayMap[k3]++;
+                });
+                var activeData = Object.keys(activeDayMap).sort().map(function(k) {
+                    return { date: k, count: activeDayMap[k] };
+                });
+                renderActiveUsersChart(activeData);
+
+                // Sparkline for active today — last 7 day values
+                var activeVals = activeData.map(function(d) { return d.count; });
+                buildSparkline('sparkToday', activeVals, '#10b981');
+            }
+
+            // ─── Content cards ───
+            var videos = dat(7);
             buildRecentVideos(videos);
 
-            // --- Recent users ---
-            const users = recentUsersRes.status === 'fulfilled' && !recentUsersRes.value.error
-                ? recentUsersRes.value.data : null;
+            var users = dat(8);
             buildRecentUsers(users);
 
-            // --- Recent messages ---
-            const messages = recentMsgsRes.status === 'fulfilled' && !recentMsgsRes.value.error
-                ? recentMsgsRes.value.data : null;
+            var messages = dat(6);
             buildRecentMessages(messages);
+
+            // ─── Activity Timeline ───
+            buildActivityTimeline(users, messages, videos);
+
+            // ─── Update timestamp ───
+            _lastRefreshTime = new Date();
+            updateRefreshIndicator();
+
+            // ─── System status ───
+            var dbDot = document.getElementById('statusDotDb');
+            if (dbDot) dbDot.className = 'status-dot green';
 
             lucide.createIcons();
         }
 
+
+        /* ═══════════════════════════════════════════════
+           REFRESH INDICATOR
+           ═══════════════════════════════════════════════ */
+        function updateRefreshIndicator() {
+            var el = document.getElementById('lastUpdatedText');
+            if (!el || !_lastRefreshTime) return;
+            var sec = Math.floor((new Date() - _lastRefreshTime) / 1000);
+            if (sec < 5) el.textContent = 'Just updated';
+            else if (sec < 60) el.textContent = 'Updated ' + sec + 's ago';
+            else el.textContent = 'Updated ' + Math.floor(sec/60) + 'm ago';
+        }
+        setInterval(updateRefreshIndicator, 5000);
+
+        // Sync timestamp in status bar
+        setInterval(function() {
+            var el = document.getElementById('statusSync');
+            if (!el || !_lastRefreshTime) return;
+            el.querySelector('span').textContent = 'Last sync: ' + _lastRefreshTime.toLocaleTimeString();
+        }, 1000);
+
+
+        /* ═══════════════════════════════════════════════
+           READING STATS FETCH
+           ═══════════════════════════════════════════════ */
         async function fetchReadingStats() {
-            const adminToken = sessionStorage.getItem('adminToken');
+            var adminToken = sessionStorage.getItem('adminToken');
             if (!adminToken) return null;
-            const res = await fetch('/admin-users-data', {
+            var res = await fetch('/admin-users-data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
                 body: JSON.stringify({ action: 'get_reading_stats', token: adminToken })
             });
-            const data = await res.json();
+            var data = await res.json();
             return data.success ? data : null;
         }
 
+
+        /* ═══════════════════════════════════════════════
+           CONTENT BUILDERS
+           ═══════════════════════════════════════════════ */
         function buildTopReaders(users) {
-            const container = document.getElementById('topReadersBody');
+            var container = document.getElementById('topReadersBody');
             if (!container) return;
             while (container.firstChild) container.removeChild(container.firstChild);
 
             if (!users || users.length === 0) {
-                const empty = document.createElement('div');
+                var empty = document.createElement('div');
                 empty.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;';
                 empty.textContent = 'No reading data yet';
                 container.appendChild(empty);
                 return;
             }
 
-            const top = users.slice().sort((a, b) => (b.ayahsRead || 0) - (a.ayahsRead || 0)).slice(0, 5);
-            const rankClasses = ['gold', 'silver', 'bronze', '', ''];
-            const rankLabels  = ['1st', '2nd', '3rd', '4th', '5th'];
+            var top = users.slice().sort(function(a, b) { return (b.ayahsRead || 0) - (a.ayahsRead || 0); }).slice(0, 5);
+            var rankClasses = ['gold', 'silver', 'bronze', '', ''];
+            var rankLabels  = ['1st', '2nd', '3rd', '4th', '5th'];
 
-            const wrap = document.createElement('div');
+            var wrap = document.createElement('div');
             wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
 
-            top.forEach((u, i) => {
-                const row = document.createElement('a');
+            top.forEach(function(u, i) {
+                var row = document.createElement('a');
                 row.href = '/admin-reading-stats.html';
                 row.className = 'top-reader-row';
 
-                const rank = document.createElement('div');
+                var rank = document.createElement('div');
                 rank.className = 'tr-rank' + (rankClasses[i] ? ' ' + rankClasses[i] : '');
                 rank.textContent = rankLabels[i];
                 row.appendChild(rank);
 
-                const avatar = document.createElement('div');
+                var avatar = document.createElement('div');
                 avatar.className = 'tr-avatar';
                 if (u.avatar) {
-                    const img = document.createElement('img');
+                    var img = document.createElement('img');
                     img.src = u.avatar;
                     img.alt = '';
                     img.onerror = function() { this.parentNode.textContent = (u.email || 'U').charAt(0).toUpperCase(); };
@@ -657,29 +1532,29 @@
                 }
                 row.appendChild(avatar);
 
-                const info = document.createElement('div');
+                var info = document.createElement('div');
                 info.className = 'tr-info';
 
-                const name = document.createElement('div');
+                var name = document.createElement('div');
                 name.className = 'tr-name';
                 name.textContent = u.name || u.email || 'Unknown';
                 info.appendChild(name);
 
-                const sub = document.createElement('div');
+                var sub = document.createElement('div');
                 sub.className = 'tr-sub';
-                const surahs = u.surahsCompleted || 0;
-                const streak = u.bestStreak || 0;
+                var surahs = u.surahsCompleted || 0;
+                var streak = u.bestStreak || 0;
                 if (surahs > 0 || streak > 0) {
-                    const parts = [];
+                    var parts = [];
                     if (surahs > 0) parts.push(surahs + ' surahs');
                     if (streak > 0) parts.push(streak + 'd streak');
-                    sub.textContent = parts.join(' · ');
+                    sub.textContent = parts.join(' \u00B7 ');
                 }
                 info.appendChild(sub);
 
                 row.appendChild(info);
 
-                const stat = document.createElement('div');
+                var stat = document.createElement('div');
                 stat.className = 'tr-stat';
                 stat.textContent = (u.ayahsRead || 0).toLocaleString();
                 row.appendChild(stat);
@@ -687,54 +1562,53 @@
                 wrap.appendChild(row);
             });
 
-            // Footer note
-            const footer = document.createElement('div');
+            var footer = document.createElement('div');
             footer.style.cssText = 'font-size:11px;color:var(--text-tertiary);text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light);';
-            footer.textContent = 'ayahs read · all time';
+            footer.textContent = 'ayahs read \u00B7 all time';
             wrap.appendChild(footer);
 
             container.appendChild(wrap);
         }
 
         function buildRecentVideos(videos) {
-            const container = document.getElementById('recentVideosBody');
+            var container = document.getElementById('recentVideosBody');
             if (!container) return;
             while (container.firstChild) container.removeChild(container.firstChild);
 
             if (!videos || videos.length === 0) {
-                const empty = document.createElement('div');
+                var empty = document.createElement('div');
                 empty.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;';
                 empty.textContent = 'No videos yet';
                 container.appendChild(empty);
                 return;
             }
 
-            const wrap = document.createElement('div');
+            var wrap = document.createElement('div');
             wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
 
-            videos.forEach(video => {
-                const item = document.createElement('div');
+            videos.forEach(function(video) {
+                var item = document.createElement('div');
                 item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px;transition:background 0.15s;cursor:pointer;';
-                item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
-                item.onmouseleave = () => item.style.background = 'transparent';
-                item.onclick = () => window.location.href = '/admin-islamvoice-management.html';
+                item.onmouseenter = function() { item.style.background = 'var(--bg-hover)'; };
+                item.onmouseleave = function() { item.style.background = 'transparent'; };
+                item.onclick = function() { window.location.href = '/admin-islamvoice-management.html'; };
 
-                const thumb = document.createElement('img');
+                var thumb = document.createElement('img');
                 thumb.src = video.thumbnail_url || '/assets/images/logo.png';
                 thumb.alt = video.title;
-                thumb.style.cssText = 'width:56px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--bg-secondary);';
-                thumb.onerror = () => { thumb.style.display = 'none'; };
+                thumb.style.cssText = 'width:56px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--bg-hover);';
+                thumb.onerror = function() { thumb.style.display = 'none'; };
                 item.appendChild(thumb);
 
-                const info = document.createElement('div');
+                var info = document.createElement('div');
                 info.style.cssText = 'flex:1;min-width:0;';
 
-                const title = document.createElement('div');
+                var title = document.createElement('div');
                 title.textContent = video.title;
                 title.style.cssText = 'font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
                 info.appendChild(title);
 
-                const meta = document.createElement('div');
+                var meta = document.createElement('div');
                 meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:3px;';
                 meta.textContent = getTimeAgo(new Date(video.created_at));
                 info.appendChild(meta);
@@ -747,39 +1621,39 @@
         }
 
         function buildRecentUsers(users) {
-            const container = document.getElementById('recentUsersBody');
+            var container = document.getElementById('recentUsersBody');
             if (!container) return;
             while (container.firstChild) container.removeChild(container.firstChild);
 
             if (!users || users.length === 0) {
-                const empty = document.createElement('div');
+                var empty = document.createElement('div');
                 empty.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;';
                 empty.textContent = 'No users yet';
                 container.appendChild(empty);
                 return;
             }
 
-            const wrap = document.createElement('div');
+            var wrap = document.createElement('div');
             wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
 
-            users.forEach(user => {
-                const item = document.createElement('div');
+            users.forEach(function(user) {
+                var item = document.createElement('div');
                 item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px;border-radius:8px;transition:background 0.15s;cursor:pointer;';
-                item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
-                item.onmouseleave = () => item.style.background = 'transparent';
-                item.onclick = () => window.location.href = '/admin-users.html?userId=' + user.id;
+                item.onmouseenter = function() { item.style.background = 'var(--bg-hover)'; };
+                item.onmouseleave = function() { item.style.background = 'transparent'; };
+                item.onclick = function() { window.location.href = '/admin-users.html?userId=' + user.id; };
 
-                const left = document.createElement('div');
+                var left = document.createElement('div');
                 left.style.cssText = 'display:flex;align-items:center;gap:10px;min-width:0;flex:1;';
 
-                let avatar;
+                var avatar;
                 if (user.avatar_url) {
                     avatar = document.createElement('img');
                     avatar.src = user.avatar_url;
                     avatar.alt = '';
                     avatar.style.cssText = 'width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;';
                     avatar.onerror = function() {
-                        const d = document.createElement('div');
+                        var d = document.createElement('div');
                         d.style.cssText = 'width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:13px;flex-shrink:0;';
                         d.textContent = (user.email || 'U').charAt(0).toUpperCase();
                         this.parentNode.replaceChild(d, this);
@@ -791,15 +1665,15 @@
                 }
                 left.appendChild(avatar);
 
-                const info = document.createElement('div');
+                var info = document.createElement('div');
                 info.style.cssText = 'min-width:0;flex:1;';
 
-                const email = document.createElement('div');
+                var email = document.createElement('div');
                 email.textContent = user.email || 'No email';
                 email.style.cssText = 'font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
                 info.appendChild(email);
 
-                const meta = document.createElement('div');
+                var meta = document.createElement('div');
                 meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px;';
                 meta.textContent = 'Joined ' + getTimeAgo(new Date(user.created_at));
                 info.appendChild(meta);
@@ -807,7 +1681,7 @@
                 left.appendChild(info);
                 item.appendChild(left);
 
-                const badge = document.createElement('span');
+                var badge = document.createElement('span');
                 badge.className = user.email_confirmed_at ? 'badge badge-success' : 'badge badge-neutral';
                 badge.textContent = user.email_confirmed_at ? 'Verified' : 'Pending';
                 badge.style.flexShrink = '0';
@@ -820,13 +1694,13 @@
         }
 
         function buildRecentMessages(messages) {
-            const tbody = document.getElementById('messagesTableBody');
+            var tbody = document.getElementById('messagesTableBody');
             if (!tbody) return;
             while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
             if (!messages || messages.length === 0) {
-                const tr = document.createElement('tr');
-                const td = document.createElement('td');
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
                 td.setAttribute('colspan', '6');
                 td.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary);';
                 td.textContent = 'No messages yet';
@@ -835,49 +1709,49 @@
                 return;
             }
 
-            messages.forEach(msg => {
-                const tr = document.createElement('tr');
+            messages.forEach(function(msg) {
+                var tr = document.createElement('tr');
 
-                const cells = [
+                var cells = [
                     msg.name || 'N/A',
                     msg.email || 'N/A',
                     msg.subject || 'No subject'
                 ];
-                cells.forEach(txt => {
-                    const td = document.createElement('td');
+                cells.forEach(function(txt) {
+                    var td = document.createElement('td');
                     td.textContent = txt;
                     tr.appendChild(td);
                 });
 
-                const td4 = document.createElement('td');
-                const badge = document.createElement('span');
+                var td4 = document.createElement('td');
+                var badge = document.createElement('span');
                 badge.className = msg.status === 'read' ? 'badge badge-success' : 'badge badge-neutral';
                 badge.textContent = msg.status === 'read' ? 'Read' : 'Unread';
                 td4.appendChild(badge);
                 tr.appendChild(td4);
 
-                const td5 = document.createElement('td');
+                var td5 = document.createElement('td');
                 td5.textContent = new Date(msg.created_at).toLocaleString();
                 tr.appendChild(td5);
 
-                const td6 = document.createElement('td');
-                const actions = document.createElement('div');
+                var td6 = document.createElement('td');
+                var actions = document.createElement('div');
                 actions.className = 'table-actions';
 
-                const viewBtn = document.createElement('button');
+                var viewBtn = document.createElement('button');
                 viewBtn.className = 'table-btn';
                 viewBtn.title = 'View';
-                viewBtn.onclick = () => window.location.href = '/admin-messages.html';
-                const vi = document.createElement('i');
+                viewBtn.onclick = function() { window.location.href = '/admin-messages.html'; };
+                var vi = document.createElement('i');
                 vi.setAttribute('data-lucide', 'eye');
                 viewBtn.appendChild(vi);
                 actions.appendChild(viewBtn);
 
-                const replyBtn = document.createElement('button');
+                var replyBtn = document.createElement('button');
                 replyBtn.className = 'table-btn';
                 replyBtn.title = 'Reply';
-                replyBtn.onclick = () => window.location.href = 'mailto:' + msg.email + '?subject=Re: ' + encodeURIComponent(msg.subject || '');
-                const ri = document.createElement('i');
+                replyBtn.onclick = function() { window.location.href = 'mailto:' + msg.email + '?subject=Re: ' + encodeURIComponent(msg.subject || ''); };
+                var ri = document.createElement('i');
                 ri.setAttribute('data-lucide', 'reply');
                 replyBtn.appendChild(ri);
                 actions.appendChild(replyBtn);
