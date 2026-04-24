@@ -20,10 +20,12 @@
 
         /* ── Section group labels ─────────────────────────────── */
         .sec-group{margin-bottom:4px}
-        .sec-group-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);padding:16px 2px 10px;display:block}
+        .sec-group-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);padding:20px 0 10px;display:flex;align-items:center;gap:10px}
+        .sec-group-lbl::after{content:'';flex:1;height:1px;background:var(--border-light)}
 
         /* ── Section cards ────────────────────────────────────── */
-        .sec-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;padding:20px;margin-bottom:12px}
+        .sec-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;padding:20px;margin-bottom:12px;transition:box-shadow .2s}
+        .sec-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
         .sec-card-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
         .sec-card-title{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
         .sec-card-icon{width:38px;height:38px;border-radius:11px;background:var(--bg-active);border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0}
@@ -104,22 +106,32 @@
 
         /* ── Admin accounts list ──────────────────────────────── */
         .accounts-list{display:flex;flex-direction:column;gap:8px}
-        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:16px;transition:border-color .15s,box-shadow .15s,transform .15s}
-        .acct-card:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
+        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:16px;transition:border-color .2s,box-shadow .2s,transform .2s;border-left:3px solid transparent}
+        .acct-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
+        .acct-card[data-role="super_admin"]{border-left-color:#6366f1}
+        .acct-card[data-role="editor"]{border-left-color:#16a34a}
+        .acct-card[data-role="analyst"]{border-left-color:#d97706}
+        .acct-card[data-role="custom"]{border-left-color:#9333ea}
         .acct-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
-        .acct-avatar{width:40px;height:40px;border-radius:12px;background:var(--bg-active);border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:800;color:var(--primary)}
+        .acct-avatar{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;border:none}
         .acct-info{flex:1;min-width:0}
         .acct-name{font-size:14px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .acct-email{font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
         .acct-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px}
-        .status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+        .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
         .status-online{background:rgba(34,197,94,.12);color:#16a34a}
         .status-idle{background:rgba(234,179,8,.12);color:#d97706}
         .status-offline{background:rgba(156,163,175,.1);color:#9ca3af}
         .status-locked-pill{background:rgba(239,68,68,.1);color:#dc2626}
         .device-pill{background:rgba(234,179,8,.1);color:#d97706;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
         .totp-pill{background:rgba(99,102,241,.1);color:#6366f1;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
-        .acct-meta{font-size:11px;color:var(--text-tertiary);margin-bottom:10px}
+        .status-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+        .dot-online{background:#16a34a;animation:pulse-dot 2s ease-in-out infinite}
+        .dot-idle{background:#d97706}
+        .dot-offline{background:#9ca3af}
+        @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+        .acct-meta{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary);margin-bottom:10px}
+        .acct-meta i{width:12px;height:12px;flex-shrink:0}
         .acct-actions{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border-light);padding-top:10px}
         .acct-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--border-light);background:var(--bg-active);color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
         .acct-btn:hover{background:var(--bg-hover);border-color:var(--border-color);color:var(--text-primary)}
@@ -703,6 +715,21 @@
             renderAccountsTable();
         }
 
+        var AVATAR_PALETTE = [
+            {bg:'rgba(99,102,241,.15)',color:'#6366f1'},
+            {bg:'rgba(16,185,129,.15)',color:'#10b981'},
+            {bg:'rgba(59,130,246,.15)',color:'#3b82f6'},
+            {bg:'rgba(245,158,11,.15)',color:'#f59e0b'},
+            {bg:'rgba(239,68,68,.15)',color:'#ef4444'},
+            {bg:'rgba(6,182,212,.15)',color:'#06b6d4'},
+            {bg:'rgba(236,72,153,.15)',color:'#ec4899'},
+            {bg:'rgba(168,85,247,.15)',color:'#a855f7'},
+        ];
+        function avatarColor(str) {
+            var code = (str || 'A').toUpperCase().charCodeAt(0);
+            return AVATAR_PALETTE[code % AVATAR_PALETTE.length];
+        }
+
         function renderAccountsTable() {
             var list = document.getElementById('accountsTable');
             list.textContent = '';
@@ -716,14 +743,19 @@
             accounts.forEach(account => {
                 var card = document.createElement('div');
                 card.className = 'acct-card';
+                card.dataset.role = account.role;
 
                 // Top row: avatar + name/email + role badge
                 var top = document.createElement('div');
                 top.className = 'acct-card-top';
 
+                var initChar = (account.full_name || account.email).charAt(0).toUpperCase();
+                var avatarCol = avatarColor(initChar);
                 var avatar = document.createElement('div');
                 avatar.className = 'acct-avatar';
-                avatar.textContent = (account.full_name || account.email).charAt(0).toUpperCase();
+                avatar.textContent = initChar;
+                avatar.style.background = avatarCol.bg;
+                avatar.style.color = avatarCol.color;
 
                 var info = document.createElement('div');
                 info.className = 'acct-info';
@@ -752,35 +784,52 @@
                 var liveStatus = account.status || 'offline';
                 var livePill = document.createElement('span');
                 livePill.className = 'status-pill';
+                var dot = document.createElement('span');
+                dot.className = 'status-dot';
                 if (liveStatus === 'online') {
                     livePill.classList.add('status-online');
-                    livePill.textContent = '● Online';
+                    dot.classList.add('dot-online');
+                    livePill.appendChild(dot);
+                    livePill.appendChild(document.createTextNode('Online'));
                 } else if (liveStatus === 'idle') {
                     livePill.classList.add('status-idle');
-                    livePill.textContent = '◌ Idle';
+                    dot.classList.add('dot-idle');
+                    livePill.appendChild(dot);
+                    livePill.appendChild(document.createTextNode('Idle'));
                 } else {
                     livePill.classList.add('status-offline');
-                    livePill.textContent = '○ Offline';
+                    dot.classList.add('dot-offline');
+                    livePill.appendChild(dot);
+                    livePill.appendChild(document.createTextNode('Offline'));
                 }
                 badges.appendChild(livePill);
 
                 if (account.is_locked) {
                     var lockedPill = document.createElement('span');
                     lockedPill.className = 'status-pill status-locked-pill';
-                    lockedPill.textContent = '⚠ Locked';
+                    var lockI = document.createElement('i');
+                    lockI.setAttribute('data-lucide','lock');
+                    lockedPill.appendChild(lockI);
+                    lockedPill.appendChild(document.createTextNode(' Locked'));
                     badges.appendChild(lockedPill);
                 }
                 if (account.device_fingerprint) {
                     var devPill = document.createElement('span');
                     devPill.className = 'device-pill';
-                    devPill.textContent = 'Device locked';
+                    var devI = document.createElement('i');
+                    devI.setAttribute('data-lucide','smartphone');
+                    devPill.appendChild(devI);
+                    devPill.appendChild(document.createTextNode(' Device locked'));
                     devPill.title = account.device_user_agent || 'Unknown device';
                     badges.appendChild(devPill);
                 }
                 if (account.totp_enabled) {
                     var totpPill = document.createElement('span');
                     totpPill.className = 'totp-pill';
-                    totpPill.textContent = '2FA on';
+                    var totpI = document.createElement('i');
+                    totpI.setAttribute('data-lucide','shield-check');
+                    totpPill.appendChild(totpI);
+                    totpPill.appendChild(document.createTextNode(' 2FA on'));
                     badges.appendChild(totpPill);
                 }
                 card.appendChild(badges);
@@ -788,7 +837,13 @@
                 // Meta
                 var meta = document.createElement('div');
                 meta.className = 'acct-meta';
-                meta.textContent = 'Last login: ' + (account.last_login ? new Date(account.last_login).toLocaleDateString('en-GB') : 'Never');
+                var calIcon = document.createElement('i');
+                calIcon.setAttribute('data-lucide','clock');
+                var loginText = account.last_login
+                    ? new Date(account.last_login).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})
+                    : 'Never';
+                meta.appendChild(calIcon);
+                meta.appendChild(document.createTextNode('Last login: ' + loginText));
                 card.appendChild(meta);
 
                 // Actions
