@@ -1187,19 +1187,28 @@
         async function loadEpisodeMetrics() {
             var supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
+            var mEp    = document.getElementById('metricEpisodes');
+            var mViews = document.getElementById('metricViews');
             try {
-                var { data, error } = await supabase
+                var result = await supabase
                     .from('islamvoice_episodes')
                     .select('views')
                     .or('is_published.eq.true,is_published.is.null');
-                if (!error && data) {
-                    var mEp = document.getElementById('metricEpisodes');
-                    if (mEp) mEp.textContent = data.length;
-                    var totalViews = data.reduce(function(sum, ep) { return sum + (ep.views || 0); }, 0);
-                    var mViews = document.getElementById('metricViews');
-                    if (mViews) mViews.textContent = totalViews >= 1000 ? (totalViews / 1000).toFixed(1) + 'k' : totalViews;
+                if (result.error) {
+                    console.error('loadEpisodeMetrics error:', result.error.message);
+                    if (mEp) mEp.textContent = '0';
+                    if (mViews) mViews.textContent = '0';
+                    return;
                 }
-            } catch(e) {}
+                var data = result.data || [];
+                if (mEp) mEp.textContent = data.length;
+                var totalViews = data.reduce(function(sum, ep) { return sum + (ep.views || 0); }, 0);
+                if (mViews) mViews.textContent = totalViews >= 1000 ? (totalViews / 1000).toFixed(1) + 'k' : totalViews;
+            } catch(e) {
+                console.error('loadEpisodeMetrics exception:', e);
+                if (mEp) mEp.textContent = '0';
+                if (mViews) mViews.textContent = '0';
+            }
         }
 
         lucide.createIcons();
