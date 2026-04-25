@@ -445,6 +445,26 @@
             </div>
         </div>
 
+        <!-- Summary metrics -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:16px 24px 0;">
+            <div class="metric-card" style="border-left:3px solid #10b981;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#10b98118;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="zap" style="width:17px;height:17px;color:#10b981;"></i></div>
+                <div class="metric-value" id="uc-stage-pill" style="font-size:16px;">—</div><div class="metric-label">Stage</div>
+            </div>
+            <div class="metric-card" style="border-left:3px solid #3b82f6;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#3b82f618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="tag" style="width:17px;height:17px;color:#3b82f6;"></i></div>
+                <div class="metric-value" id="uc-latest-pill" style="font-size:16px;">—</div><div class="metric-label">Latest Version</div>
+            </div>
+            <div class="metric-card" style="border-left:3px solid #8b5cf6;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#8b5cf618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="smartphone" style="width:17px;height:17px;color:#8b5cf6;"></i></div>
+                <div class="metric-value" id="uc-ios-pill" style="font-size:16px;">—</div><div class="metric-label">iOS Min</div>
+            </div>
+            <div class="metric-card" style="border-left:3px solid #f59e0b;">
+                <div style="width:36px;height:36px;border-radius:10px;background:#f59e0b18;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="cpu" style="width:17px;height:17px;color:#f59e0b;"></i></div>
+                <div class="metric-value" id="uc-android-pill" style="font-size:16px;">—</div><div class="metric-label">Android Min</div>
+            </div>
+        </div>
+
         <!-- body grid -->
         <div class="uc-body">
 
@@ -982,6 +1002,16 @@
         document.getElementById('uc_latest').value   = cfg.latest_version || '';
         document.getElementById('uc_min_ios').value  = cfg.min_ios_version || '';
         document.getElementById('uc_min_and').value  = cfg.min_android_version || '';
+        // Update summary pills
+        var stageLabels = { release: '🟢 Release', soft: '🟡 Soft', enforce: '🔴 Enforce' };
+        var stagePill = document.getElementById('uc-stage-pill');
+        if (stagePill) stagePill.textContent = stageLabels[cfg.update_stage || 'release'] || cfg.update_stage || 'Release';
+        var latestPill = document.getElementById('uc-latest-pill');
+        if (latestPill) latestPill.textContent = cfg.latest_version || '—';
+        var iosPill = document.getElementById('uc-ios-pill');
+        if (iosPill) iosPill.textContent = cfg.min_ios_version || '—';
+        var andPill = document.getElementById('uc-android-pill');
+        if (andPill) andPill.textContent = cfg.min_android_version || '—';
         document.getElementById('uc_ios_url').value  = cfg.ios_store_url || '';
         document.getElementById('uc_and_url').value  = cfg.android_store_url || '';
         document.getElementById('uc_delay').value    = cfg.update_enforce_delay_hours || '';

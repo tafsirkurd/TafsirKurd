@@ -304,6 +304,26 @@
                     </div>
                 </div>
 
+                <!-- METRICS -->
+                <div class="metrics-grid" style="margin-bottom:24px;">
+                    <div class="metric-card" style="border-left:3px solid #3b82f6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#3b82f618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="message-square" style="width:17px;height:17px;color:#3b82f6;"></i></div>
+                        <div class="metric-value" id="msg-total">—</div><div class="metric-label">Total</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #ef4444;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#ef444418;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="mail" style="width:17px;height:17px;color:#ef4444;"></i></div>
+                        <div class="metric-value" id="msg-unread">—</div><div class="metric-label">Unread</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #10b981;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#10b98118;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="check" style="width:17px;height:17px;color:#10b981;"></i></div>
+                        <div class="metric-value" id="msg-read">—</div><div class="metric-label">Read</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #f59e0b;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#f59e0b18;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="calendar" style="width:17px;height:17px;color:#f59e0b;"></i></div>
+                        <div class="metric-value" id="msg-today">—</div><div class="metric-label">Today</div>
+                    </div>
+                </div>
+
                 <!-- FILTERS -->
                 <div class="filters-bar">
                     <div class="filter-group">
@@ -370,7 +390,7 @@
                             <tbody id="messagesTableBody">
                                 <tr>
                                     <td colspan="8" style="text-align: center; padding: 40px;">
-                                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -445,8 +465,14 @@
                 if (!error && messages) {
                     allMessages = messages;
                     applyFiltersAndRender();
-                    // Update sidebar badge with unread count
                     updateMessagesBadge();
+                    // Update metric cards
+                    var today = new Date(); today.setHours(0,0,0,0);
+                    document.getElementById('msg-total').textContent  = messages.length;
+                    document.getElementById('msg-unread').textContent = messages.filter(function(m){ return m.status === 'unread'; }).length;
+                    document.getElementById('msg-read').textContent   = messages.filter(function(m){ return m.status === 'read'; }).length;
+                    document.getElementById('msg-today').textContent  = messages.filter(function(m){ return new Date(m.created_at) >= today; }).length;
+                    lucide.createIcons();
                 } else {
                     console.error('Error loading messages:', error);
                     showEmptyState('Failed to load messages');

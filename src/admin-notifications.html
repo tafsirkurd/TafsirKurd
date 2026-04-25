@@ -71,7 +71,7 @@
             font-family: var(--font-family); font-size: 14px;
             box-sizing: border-box; transition: border-color 0.15s;
         }
-        .form-input:focus { outline: none; border-color: var(--primary); }
+        .form-input:focus { outline: none; border-color: #3b82f6; }
         textarea.form-input { resize: vertical; }
 
         /* ── Notifications page styles ──────────────────────────── */
@@ -123,7 +123,7 @@
             font-size: 13px;
             font-family: var(--font-family);
         }
-        .filter-row input:focus, .filter-row select:focus { outline: none; border-color: var(--primary); }
+        .filter-row input:focus, .filter-row select:focus { outline: none; border-color: #3b82f6; }
         .filter-row input { min-width: 200px; }
         .filter-spacer { flex: 1; }
 
@@ -174,8 +174,8 @@
             display: inline-flex; align-items: center; gap: 4px;
             font-family: var(--font-family); line-height: 1.4;
         }
-        .sched-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-active); }
-        .sched-chip.active { background: var(--primary); color: var(--bg-app) !important; border-color: var(--primary); }
+        .sched-chip:hover { border-color: #3b82f6; color: #3b82f6; background: var(--bg-active); }
+        .sched-chip.active { background: #3b82f6; color: var(--bg-app) !important; border-color: #3b82f6; }
         .sched-pick-wrap { position: relative; display: inline-flex; }
         .sched-pick-wrap input[type="date"],
         .sched-pick-wrap input[type="time"] {
@@ -195,16 +195,13 @@
         .stat-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
         }
-        .stat-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--bg-active); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .stat-icon svg { width: 20px; height: 20px; color: var(--text-primary); }
-        .stat-value { font-size: 28px; font-weight: 900; color: var(--text-primary); margin-bottom: 2px; }
-        .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); }
+        .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-bottom: 10px; }
+        .stat-icon i { width: 17px; height: 17px; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; line-height: 1; letter-spacing: -0.5px; }
+        .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); }
     </style>
 
     <style id="early-sidebar-hide">
@@ -416,33 +413,25 @@
 
                 <!-- Summary Cards -->
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i data-lucide="send"></i></div>
-                        <div>
-                            <div class="stat-value" id="stat-total-sent">—</div>
-                            <div class="stat-label">Total Sent</div>
-                        </div>
+                    <div class="stat-card" style="border-left:3px solid #3b82f6;">
+                        <div class="stat-icon" style="background:#3b82f618;"><i data-lucide="send" style="color:#3b82f6;"></i></div>
+                        <div class="stat-value" id="stat-total-sent">—</div>
+                        <div class="stat-label">Total Sent</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i data-lucide="smartphone"></i></div>
-                        <div>
-                            <div class="stat-value" id="stat-tokens">—</div>
-                            <div class="stat-label">Active Tokens</div>
-                        </div>
+                    <div class="stat-card" style="border-left:3px solid #10b981;">
+                        <div class="stat-icon" style="background:#10b98118;"><i data-lucide="smartphone" style="color:#10b981;"></i></div>
+                        <div class="stat-value" id="stat-tokens">—</div>
+                        <div class="stat-label">Active Tokens</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i data-lucide="check-circle"></i></div>
-                        <div>
-                            <div class="stat-value" id="stat-delivery">—</div>
-                            <div class="stat-label">Delivery Rate</div>
-                        </div>
+                    <div class="stat-card" style="border-left:3px solid #8b5cf6;">
+                        <div class="stat-icon" style="background:#8b5cf618;"><i data-lucide="check-circle" style="color:#8b5cf6;"></i></div>
+                        <div class="stat-value" id="stat-delivery">—</div>
+                        <div class="stat-label">Delivery Rate</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i data-lucide="clock"></i></div>
-                        <div>
-                            <div class="stat-value" id="stat-scheduled">—</div>
-                            <div class="stat-label">Scheduled</div>
-                        </div>
+                    <div class="stat-card" style="border-left:3px solid #f59e0b;">
+                        <div class="stat-icon" style="background:#f59e0b18;"><i data-lucide="clock" style="color:#f59e0b;"></i></div>
+                        <div class="stat-value" id="stat-scheduled">—</div>
+                        <div class="stat-label">Scheduled</div>
                     </div>
                 </div>
 
@@ -666,7 +655,7 @@
 
                 <div class="form-group" style="margin-bottom:0">
                     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:var(--bg-active);border:1px solid var(--border-medium);border-radius:8px">
-                        <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
+                        <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer">
                         <div>
                             <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Pin as Template</div>
                             <div style="font-size:11px;color:var(--text-secondary);margin-top:1px">Stays pinned at the top. Clicking Send always keeps this template intact.</div>
@@ -1231,7 +1220,7 @@
                 var recVal = (document.querySelector('input[name="recurrence"]:checked') || {}).value || 'none';
                 var isRecurring = recVal === 'daily' || recVal === 'weekly';
                 var isPast = !isRecurring && d < new Date();
-                summary.innerHTML = '<span style="color:' + (isPast ? '#e53e3e' : 'var(--primary)') + ';font-weight:600">'
+                summary.innerHTML = '<span style="color:' + (isPast ? '#e53e3e' : '#3b82f6') + ';font-weight:600">'
                     + dateStr + ' at ' + timeStr + '</span>'
                     + (isPast ? '<span style="color:#e53e3e;font-size:0.82em;margin-left:8px">⚠️ This time is in the past</span>' : '');
                 clearBtn.style.display = 'inline-flex';
