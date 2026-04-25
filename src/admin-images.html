@@ -542,27 +542,6 @@
                     </div>
                 </div>
 
-                <h3 class="section-divider">App Popup</h3>
-                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Images shown in the app-download popup. Desktop uses portrait, mobile uses landscape. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
-                <div class="images-grid">
-<div class="image-card" data-key="app_popup_image_mobile_url">
-                        <div class="image-card-preview" id="preview-app_popup_image_mobile_url" style="aspect-ratio:5/3;margin:0 auto;">
-                            <div class="placeholder"><i data-lucide="smartphone"></i></div>
-                        </div>
-                        <div class="image-card-body">
-                            <div class="image-card-title">App Popup Image</div>
-                            <div class="image-card-desc">Landscape — 1000×600px (5:3)</div>
-                            <span class="status-badge empty" id="status-app_popup_image_mobile_url">Not Set</span>
-                            <input type="url" class="image-card-url" id="url-app_popup_image_mobile_url" placeholder="Paste image URL...">
-                            <div class="image-card-actions">
-                                <button class="btn btn-secondary" onclick="pickFile('app_popup_image_mobile_url')">Upload</button>
-                                <button class="btn btn-primary" onclick="saveImage('app_popup_image_mobile_url')">Save</button>
-                                <button class="btn btn-danger" onclick="removeImage('app_popup_image_mobile_url')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
-                            </div>
-                            <input type="file" class="upload-input" id="file-app_popup_image_mobile_url" accept="image/*" onchange="handleUpload('app_popup_image_mobile_url', this)">
-                        </div>
-                    </div>
-                </div>
 
                 <h3 class="section-divider">Qari Profile Photos</h3>
                 <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Circular profile pictures shown in the audio player. Upload a 1:1 square photo — stored in Cloudflare R2. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
@@ -597,7 +576,7 @@
         const R2_WORKER_URL = 'https://tafsirkurd-images.tefsirkurd.workers.dev';
         const R2_UPLOAD_SECRET = 'tk_r2_img_2026_K8mX3pW7nR9vJ4sQ';
 
-        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image', 'app_popup_image_mobile_url'];
+        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image'];
         const TEXT_KEYS = [
             'about_hero_sub','about_app_text','about_tafsir_text','about_tafsir_author','about_tafsir_book_desc',
             'about_declaration_text','about_quote_ar','about_quote_ku','about_quote_ref',
