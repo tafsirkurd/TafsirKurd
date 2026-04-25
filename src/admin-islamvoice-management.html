@@ -15,6 +15,15 @@
     <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=13">
     <style>
+        /* ── Accent color aliases (not in admin-styles.css) ── */
+        :root {
+            --accent-blue:   #3b82f6;
+            --accent-green:  #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red:    #ef4444;
+            --accent-purple: #8b5cf6;
+        }
+
         .action-bar {
             display: flex;
             gap: 8px;
@@ -1192,18 +1201,16 @@
             try {
                 var result = await supabase
                     .from('islamvoice_episodes')
-                    .select('views')
+                    .select('id', { count: 'exact' })
                     .or('is_published.eq.true,is_published.is.null');
                 if (result.error) {
                     console.error('loadEpisodeMetrics error:', result.error.message);
                     if (mEp) mEp.textContent = '0';
-                    if (mViews) mViews.textContent = '0';
+                    if (mViews) mViews.textContent = '—';
                     return;
                 }
-                var data = result.data || [];
-                if (mEp) mEp.textContent = data.length;
-                var totalViews = data.reduce(function(sum, ep) { return sum + (ep.views || 0); }, 0);
-                if (mViews) mViews.textContent = totalViews >= 1000 ? (totalViews / 1000).toFixed(1) + 'k' : totalViews;
+                if (mEp) mEp.textContent = result.count || 0;
+                if (mViews) mViews.textContent = '—';
             } catch(e) {
                 console.error('loadEpisodeMetrics exception:', e);
                 if (mEp) mEp.textContent = '0';

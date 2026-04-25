@@ -23,6 +23,15 @@
             font-weight: 500 700; font-style: normal; font-display: swap;
         }
 
+        /* ── Accent color aliases (not in admin-styles.css) ── */
+        :root {
+            --accent-blue:   #3b82f6;
+            --accent-green:  #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red:    #ef4444;
+            --accent-purple: #8b5cf6;
+        }
+
         /* ── Adhkar filter chips ── */
         .adhkar-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border-light);cursor:pointer;white-space:nowrap;transition:all .15s}
         .adhkar-filter-btn.active{background:#3b82f6;color:#fff;border-color:transparent}
@@ -2449,7 +2458,6 @@ async function deleteBook(id) {
         themeIcon.setAttribute('data-lucide', 'sun');
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
-    });
 })();
 
 /* ── Init ── */
