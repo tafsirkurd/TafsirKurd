@@ -27,39 +27,37 @@
         /* ── Stats row ── */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
             margin-bottom: 28px;
         }
         .stat-pill {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 20px;
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            flex: 1;
-            min-width: 120px;
+            border-radius: 12px;
+            padding: 16px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
         .stat-pill-icon {
             width: 36px; height: 36px;
             border-radius: 10px;
-            background: var(--bg-active);
             display: flex; align-items: center; justify-content: center;
-            color: var(--primary);
             flex-shrink: 0;
+            margin-bottom: 10px;
         }
-        .stat-pill-icon svg { width: 16px; height: 16px; }
+        .stat-pill-icon i { width: 17px; height: 17px; }
         .stat-pill strong {
-            font-size: 22px;
+            font-size: 28px;
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.5px;
             display: block;
+            line-height: 1;
+            margin-bottom: 4px;
         }
 
         /* ── Form panel ── */
@@ -89,7 +87,7 @@
         .add-form-toggle.editing {
             background: rgba(59,130,246,.06);
             border-color: rgba(59,130,246,.3);
-            color: var(--primary);
+            color: #3b82f6;
         }
         .add-form-body {
             display: none;
@@ -124,7 +122,8 @@
         }
         .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,.1);
         }
         .form-actions {
             display: flex;
@@ -689,17 +688,17 @@
 
             <!-- Stats row -->
             <div class="stats-row">
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="link"></i></div>
-                    <div><strong id="stat-total">—</strong>Total Links</div>
+                <div class="stat-pill" style="border-left:3px solid #3b82f6;">
+                    <div class="stat-pill-icon" style="background:#3b82f618;"><i data-lucide="link" style="color:#3b82f6;"></i></div>
+                    <strong id="stat-total">—</strong>Total Links
                 </div>
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="eye"></i></div>
-                    <div><strong id="stat-active">—</strong>Active</div>
+                <div class="stat-pill" style="border-left:3px solid #10b981;">
+                    <div class="stat-pill-icon" style="background:#10b98118;"><i data-lucide="eye" style="color:#10b981;"></i></div>
+                    <strong id="stat-active">—</strong>Active
                 </div>
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="eye-off"></i></div>
-                    <div><strong id="stat-hidden">—</strong>Hidden</div>
+                <div class="stat-pill" style="border-left:3px solid #f59e0b;">
+                    <div class="stat-pill-icon" style="background:#f59e0b18;"><i data-lucide="eye-off" style="color:#f59e0b;"></i></div>
+                    <strong id="stat-hidden">—</strong>Hidden
                 </div>
             </div>
 
@@ -1183,7 +1182,6 @@ async function deleteLink(id) {
         themeIcon.setAttribute('data-lucide', 'sun');
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
-    });
 })();
 
 /* ── Page texts (site_settings) ── */
