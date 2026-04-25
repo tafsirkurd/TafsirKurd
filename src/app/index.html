@@ -2210,98 +2210,181 @@ body{background:var(--bg);color:var(--text)}
 @media(min-width:768px){
 
   :root{
-    --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.5;--ayah-px:48px;
-    --tab-h:0px;       /* no bottom bar on tablet */
-    --nav-rail-w:84px; /* side nav width */
+    --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
+    --tab-h:0px;
+    --nav-rail-w:88px;
+    --reading-max-w:720px;
   }
 
-  /* ── SIDE NAV RAIL ────────────────────────────── */
-  /* Bottom horizontal bar → right-side vertical rail (RTL: right = start side) */
+  /* NAV RAIL: right-side vertical, safe areas on all edges */
   .tabbar{
     bottom:0;top:0;right:0;left:auto;
     width:var(--nav-rail-w);height:100%;
-    flex-direction:column;justify-content:flex-start;align-items:stretch;
-    /* Respect iPad safe-area insets (home indicator, status bar) */
-    padding:max(32px, calc(env(safe-area-inset-top,0px) + 16px)) 0
-            max(24px, calc(env(safe-area-inset-bottom,0px) + 16px));
-    gap:2px;
-    border-top:none;border-left:1px solid var(--border);
+    flex-direction:column;justify-content:flex-start;align-items:center;
+    padding-top:max(28px, calc(env(safe-area-inset-top,0px) + 14px));
+    padding-bottom:max(20px, calc(env(safe-area-inset-bottom,0px) + 10px));
+    padding-right:env(safe-area-inset-right, 0px);
+    gap:4px;
+    border-top:none;border-left:none;
+    box-shadow:-1px 0 0 var(--border), -6px 0 24px rgba(0,0,0,.05);
   }
+  [data-theme="dark"] .tabbar,
+  [data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border), -6px 0 24px rgba(0,0,0,.18)}
+
   .tab-item{
     flex:none;flex-direction:column;height:auto;max-height:none;
-    padding:11px 6px 9px;gap:5px;
-    margin:0 8px;width:calc(100% - 16px);border-radius:12px;
+    min-height:62px;
+    padding:10px 6px 8px;gap:5px;
+    margin:0 6px;width:calc(100% - 12px);
+    border-radius:14px;
+    justify-content:center;align-items:center;
+    transition:background .2s var(--ease), color .2s var(--ease);
   }
-  .tab-item i{width:40px;height:32px;font-size:18px!important;line-height:32px}
-  .tab-item span{font-size:9px!important}
-  .tab-item.on i{transform:none;box-shadow:none;border-radius:10px}
+  .tab-item i{
+    width:44px;height:36px;font-size:18px!important;line-height:36px;
+    border-radius:12px;
+    transition:background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);
+  }
+  .tab-item span{font-size:9.5px!important;font-weight:500}
+  .tab-item.on{background:color-mix(in srgb, var(--accent) 10%, transparent)}
+  .tab-item.on i{
+    background:var(--accent);color:var(--accent-t);
+    transform:none;box-shadow:0 2px 8px rgba(0,0,0,.15);border-radius:12px;
+  }
+  .tab-item.on span{font-weight:700;color:var(--text)}
 
-  /* ── PANELS: inset from right nav rail ────────── */
-  /* RTL: padding-inline-start = padding-right — keeps content clear of nav */
+  /* PANELS: RTL inset + landscape left safe area */
   .panel{padding-inline-start:var(--nav-rail-w)}
-  /* Prayer hidden state uses position:absolute;inset:0 — override right explicitly */
+  .panel{padding-left:max(0px, env(safe-area-inset-left, 0px))}
   #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
-  /* Full-screen overlays: keep within content area */
-  .auth-panel,.profile-panel,.audio-settings-panel{right:var(--nav-rail-w)!important}
+  .auth-panel,.profile-panel,.audio-settings-panel{
+    right:var(--nav-rail-w)!important;
+    padding-left:env(safe-area-inset-left, 0px);
+  }
 
-  /* ── HEADER ───────────────────────────────────── */
-  .hdr{padding:12px 24px}
+  /* HEADER: more breathing room */
+  .hdr{padding:16px 28px 14px}
 
-  /* ── QURAN: 2-column split pane ──────────────── */
+  /* QURAN: app-like reading split */
   #panelQuran.on{flex-direction:row!important}
+
   #quranHome{
     display:flex!important;flex-direction:column;
-    width:300px;flex-shrink:0;
-    border-left:1px solid var(--border);
+    width:280px;flex-shrink:0;
+    border-left:none;
+    box-shadow:-2px 0 0 var(--border), -4px 0 16px rgba(0,0,0,.06);
+    background:var(--bg2);
     overflow-y:auto;overflow-x:hidden;
-    padding-bottom:40px;  /* override the ~100px bottom from --tab-h formula */
+    padding-bottom:40px;
   }
-  #quranHome .hdr,#quranHome .search-bar,#quranHome #continueReading{flex-shrink:0}
-  #quranHome .surah-grid{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-  #quranReader{display:flex!important;flex:1;min-width:0}
+  [data-theme="dark"] #quranHome,
+  [data-theme="sakina"] #quranHome{box-shadow:-2px 0 0 var(--border), -4px 0 16px rgba(0,0,0,.2)}
+
+  #quranHome .hdr,
+  #quranHome .search-bar,
+  #quranHome #continueReading{flex-shrink:0}
+
+  /* Single-column list in sidebar feels more app-like */
+  #quranHome .surah-grid{
+    grid-template-columns:1fr!important;
+    gap:6px;padding:10px 10px 20px;
+    flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  }
+  #quranHome .surah-card{min-height:70px}
+
+  /* Reader: centered book canvas */
+  #quranReader{display:flex!important;flex:1;min-width:0;background:var(--bg)}
   #quranReader:not(.on) .reader-placeholder{display:flex}
   #quranReader:not(.on) .reader-hdr,
   #quranReader:not(.on) .sticky-progress,
   #quranReader:not(.on) .ayah-list,
   #quranReader:not(.on) #mushafView{display:none!important}
   .reader-hdr .back-btn{display:none!important}
-  .surah-reader-header{border-radius:0!important}
-  .ayah-list{padding:24px var(--ayah-px) 64px!important}
-  .ayah-card{padding:28px 32px!important;margin-bottom:16px!important}
 
-  /* ── PRAYER: 3-column grid + taller sky scene ── */
-  .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:12px 20px 48px;gap:14px}
-  .sky-scene{height:300px}
-
-  /* ── GENCINE: 2 cards per row on home screen ─── */
-  .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 20px 32px}
-  /* Last card alone in its row spans the full width */
-  .genc-home > :last-child:nth-child(odd){grid-column:1/-1}
-
-  /* ── MODALS: centred within content area (not full viewport) ── */
-  /* Bound overlay right so align-items:center centres vs. content area, not nav rail */
-  .copy-modal{align-items:center!important;right:var(--nav-rail-w)!important}
-  .copy-sheet{
-    width:460px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
-    border-radius:20px!important;padding-bottom:16px;
-    animation:tabletModalIn .22s var(--ease)!important;
+  /* Chapter header: edge-to-edge background, centered text via padding */
+  .surah-reader-header{
+    border-radius:0!important;
+    padding:40px max(32px, calc((100% - var(--reading-max-w)) / 2)) 32px!important;
+    margin-bottom:8px!important;
   }
-  .repeat-modal{align-items:center!important;right:var(--nav-rail-w)!important}
-  .repeat-modal-content{
-    width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
-    border-radius:20px!important;max-height:80vh;
-    animation:tabletModalIn .22s var(--ease)!important;
-  }
-  .prayer-settings-overlay{align-items:center!important;right:var(--nav-rail-w)!important}
-  .prayer-settings-sheet{
-    width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
+
+  /* Ayah list: no side padding, cards self-center */
+  .ayah-list{padding:0 0 120px!important}
+
+  /* Ayah cards: centered reading column, book surface */
+  .ayah-card{
+    max-width:var(--reading-max-w)!important;
+    width:calc(100% - 56px)!important;
+    margin:0 auto 18px!important;
+    padding:28px 36px!important;
     border-radius:20px!important;
-    transform:translateY(0)!important;
-    margin:0 auto;
+    box-shadow:0 2px 12px rgba(0,0,0,.06)!important;
   }
-  /* Qibla: limit overlay to content area */
-  #qiblaOverlay{right:var(--nav-rail-w)}
-  /* Sidebar: slide in to the left of the nav rail */
+  [data-theme="dark"] .ayah-card,
+  [data-theme="sakina"] .ayah-card{box-shadow:0 2px 8px rgba(0,0,0,.22)!important}
+
+  /* PRAYER: taller sky, roomier cards */
+  .sky-scene{height:310px}
+  .prayer-grid{
+    grid-template-columns:1fr 1fr 1fr;
+    padding:20px 24px 60px;
+    gap:16px;align-content:start;
+  }
+  .prayer-grid-card{
+    padding:20px 18px 18px!important;
+    border-radius:20px!important;
+    min-height:120px;
+  }
+
+  /* GENCINE: 2-col grid, cinematic cards */
+  .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:24px 24px 40px}
+  .genc-home > :last-child:nth-child(odd){grid-column:1/-1}
+  .genc-card-btn{height:175px}
+
+  /* AUDIO BAR: floating native mini-player, not edge-to-edge banner */
+  .audio-bar{
+    left:12px;
+    right:calc(var(--nav-rail-w) + 12px);
+    bottom:max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+    border-radius:20px;
+    padding:10px 14px;
+    box-shadow:0 8px 32px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.1);
+  }
+  .audio-bar-progress{border-radius:0 0 20px 20px}
+
+  /* MODALS: wider, rounder, landscape-safe */
+  .copy-modal{
+    align-items:center!important;
+    right:var(--nav-rail-w)!important;
+    left:env(safe-area-inset-left, 0px)!important;
+  }
+  .copy-sheet{
+    width:500px;max-width:calc(100vw - var(--nav-rail-w) - 48px);
+    border-radius:24px!important;padding:0 0 24px;
+    animation:tabletModalIn .22s var(--ease)!important;
+  }
+  .repeat-modal{
+    align-items:center!important;
+    right:var(--nav-rail-w)!important;
+    left:env(safe-area-inset-left, 0px)!important;
+  }
+  .repeat-modal-content{
+    width:540px;max-width:calc(100vw - var(--nav-rail-w) - 48px);
+    border-radius:24px!important;max-height:80vh;
+    animation:tabletModalIn .22s var(--ease)!important;
+  }
+  .prayer-settings-overlay{
+    align-items:center!important;
+    right:var(--nav-rail-w)!important;
+    left:env(safe-area-inset-left, 0px)!important;
+  }
+  .prayer-settings-sheet{
+    width:540px;max-width:calc(100vw - var(--nav-rail-w) - 48px);
+    border-radius:24px!important;
+    transform:translateY(0)!important;margin:0 auto;
+  }
+
+  #qiblaOverlay{right:var(--nav-rail-w);left:env(safe-area-inset-left, 0px)}
   .sidebar{right:var(--nav-rail-w)}
 }
 
@@ -2310,85 +2393,105 @@ body{background:var(--bg);color:var(--text)}
    ───────────────────────────────────────────────── */
 @media(min-width:1024px){
   :root{
-    --nav-rail-w:100px;
+    --nav-rail-w:96px;
     --ar-size:2.6rem;
-    --line-h:2.6;
+    --line-h:2.7;
+    --reading-max-w:760px;
   }
-  .tab-item{padding:13px 8px 11px;gap:7px}
-  .tab-item i{width:44px;height:36px;font-size:20px!important}
+
+  .tab-item{min-height:70px;padding:12px 6px 10px;gap:6px}
+  .tab-item i{width:48px;height:40px;font-size:20px!important}
   .tab-item span{font-size:10px!important}
 
-  /* Wider surah list column */
-  #quranHome{width:340px}
+  #quranHome{width:300px}
   .ayah-card{padding:32px 40px!important}
 
-  /* Prayer: bigger sky, roomier grid */
-  .sky-scene{height:330px}
-  .prayer-grid{padding:16px 28px 56px;gap:16px}
+  .sky-scene{height:340px}
+  .prayer-grid{padding:24px 32px 72px;gap:18px}
   .prayer-grid-time{font-size:2rem}
 
-  /* Gencine: taller cinematic cards */
-  .genc-card-btn{height:170px}
+  .genc-card-btn{height:190px}
+  .genc-home{padding:28px 28px 48px;gap:20px}
 
-  /* Settings: centred max-width content */
   .settings-content{max-width:640px;margin-left:auto;margin-right:auto}
 }
 
-/* ─────────────────────────────────────────────────
-   iPAD UA FALLBACK — activates tablet layout even
-   when CSS media query can't fire (TARGETED_DEVICE_FAMILY
-   compatibility mode reports ~375px viewport width).
-   Mirrors @media(min-width:768px) rules exactly.
-   ───────────────────────────────────────────────── */
-html.is-ipad:not(.is-ipad-overridden){
-  --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.5;--ayah-px:48px;
-  --tab-h:0px;--nav-rail-w:84px;
+/* iPAD UA FALLBACK — class-based mirror of @media(min-width:768px).
+   Fires when CSS breakpoint can't activate (TARGETED_DEVICE_FAMILY="1"
+   compat mode reports ~375px viewport). */
+html.is-ipad{
+  --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
+  --tab-h:0px;--nav-rail-w:88px;--reading-max-w:720px;
 }
 html.is-ipad .tabbar{
   bottom:0;top:0;right:0;left:auto;
   width:var(--nav-rail-w);height:100%;
-  flex-direction:column;justify-content:flex-start;align-items:stretch;
-  padding:max(32px,calc(env(safe-area-inset-top,0px)+16px)) 0 max(24px,calc(env(safe-area-inset-bottom,0px)+16px));
-  gap:2px;border-top:none;border-left:1px solid var(--border);
+  flex-direction:column;justify-content:flex-start;align-items:center;
+  padding-top:max(28px,calc(env(safe-area-inset-top,0px)+14px));
+  padding-bottom:max(20px,calc(env(safe-area-inset-bottom,0px)+10px));
+  padding-right:env(safe-area-inset-right,0px);
+  gap:4px;border-top:none;border-left:none;
+  box-shadow:-1px 0 0 var(--border),-6px 0 24px rgba(0,0,0,.05);
 }
+html.is-ipad[data-theme="dark"] .tabbar,
+html.is-ipad[data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-6px 0 24px rgba(0,0,0,.18)}
 html.is-ipad .tab-item{
   flex:none;flex-direction:column;height:auto;max-height:none;
-  padding:11px 6px 9px;gap:5px;margin:0 8px;
-  width:calc(100% - 16px);border-radius:12px;
+  min-height:62px;padding:10px 6px 8px;gap:5px;
+  margin:0 6px;width:calc(100% - 12px);
+  border-radius:14px;justify-content:center;align-items:center;
 }
+html.is-ipad .tab-item i{width:44px;height:36px;font-size:18px!important;line-height:36px;border-radius:12px}
+html.is-ipad .tab-item span{font-size:9.5px!important;font-weight:500}
+html.is-ipad .tab-item.on{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+html.is-ipad .tab-item.on i{background:var(--accent);color:var(--accent-t);transform:none;box-shadow:0 2px 8px rgba(0,0,0,.15);border-radius:12px}
+html.is-ipad .tab-item.on span{font-weight:700;color:var(--text)}
 html.is-ipad .panel{padding-inline-start:var(--nav-rail-w)}
+html.is-ipad .panel{padding-left:max(0px,env(safe-area-inset-left,0px))}
 html.is-ipad #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
 html.is-ipad .auth-panel,
 html.is-ipad .profile-panel,
-html.is-ipad .audio-settings-panel{right:var(--nav-rail-w)!important}
-html.is-ipad .hdr{padding:12px 24px}
+html.is-ipad .audio-settings-panel{right:var(--nav-rail-w)!important;padding-left:env(safe-area-inset-left,0px)}
+html.is-ipad .hdr{padding:16px 28px 14px}
 html.is-ipad #panelQuran.on{flex-direction:row!important}
 html.is-ipad #quranHome{
-  display:flex!important;flex-direction:column;width:300px;flex-shrink:0;
-  border-left:1px solid var(--border);overflow-y:auto;overflow-x:hidden;padding-bottom:40px;
+  display:flex!important;flex-direction:column;
+  width:280px;flex-shrink:0;border-left:none;
+  box-shadow:-2px 0 0 var(--border),-4px 0 16px rgba(0,0,0,.06);
+  background:var(--bg2);overflow-y:auto;overflow-x:hidden;padding-bottom:40px;
 }
-html.is-ipad .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:12px 20px 48px;gap:14px}
-html.is-ipad .sky-scene{height:300px}
-html.is-ipad .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 20px 32px}
+html.is-ipad #quranHome .surah-grid{grid-template-columns:1fr!important;gap:6px;padding:10px 10px 20px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+html.is-ipad #quranHome .surah-card{min-height:70px}
+html.is-ipad #quranReader{display:flex!important;flex:1;min-width:0;background:var(--bg)}
+html.is-ipad #quranReader:not(.on) .reader-placeholder{display:flex}
+html.is-ipad #quranReader:not(.on) .reader-hdr,
+html.is-ipad #quranReader:not(.on) .sticky-progress,
+html.is-ipad #quranReader:not(.on) .ayah-list,
+html.is-ipad #quranReader:not(.on) #mushafView{display:none!important}
+html.is-ipad .reader-hdr .back-btn{display:none!important}
+html.is-ipad .surah-reader-header{border-radius:0!important;padding:40px max(32px,calc((100% - var(--reading-max-w)) / 2)) 32px!important;margin-bottom:8px!important}
+html.is-ipad .ayah-list{padding:0 0 120px!important}
+html.is-ipad .ayah-card{max-width:var(--reading-max-w)!important;width:calc(100% - 56px)!important;margin:0 auto 18px!important;padding:28px 36px!important;border-radius:20px!important;box-shadow:0 2px 12px rgba(0,0,0,.06)!important}
+html.is-ipad .sky-scene{height:310px}
+html.is-ipad .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:20px 24px 60px;gap:16px;align-content:start}
+html.is-ipad .prayer-grid-card{padding:20px 18px 18px!important;border-radius:20px!important;min-height:120px}
+html.is-ipad .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:24px 24px 40px}
 html.is-ipad .genc-home>:last-child:nth-child(odd){grid-column:1/-1}
-html.is-ipad .copy-modal{align-items:center!important;right:var(--nav-rail-w)!important}
-html.is-ipad .copy-sheet{
-  width:460px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
-  border-radius:20px!important;padding-bottom:16px;
-  animation:tabletModalIn .22s var(--ease)!important;
+html.is-ipad .genc-card-btn{height:175px}
+html.is-ipad .audio-bar{
+  left:12px;right:calc(var(--nav-rail-w) + 12px);
+  bottom:max(12px,calc(env(safe-area-inset-bottom,0px)+8px));
+  border-radius:20px;padding:10px 14px;
+  box-shadow:0 8px 32px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.1);
 }
-html.is-ipad .repeat-modal{align-items:center!important;right:var(--nav-rail-w)!important}
-html.is-ipad .repeat-modal-content{
-  width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
-  border-radius:20px!important;max-height:80vh;
-  animation:tabletModalIn .22s var(--ease)!important;
-}
-html.is-ipad .prayer-settings-overlay{align-items:center!important;right:var(--nav-rail-w)!important}
-html.is-ipad .prayer-settings-sheet{
-  width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
-  border-radius:20px!important;transform:translateY(0)!important;margin:0 auto;
-}
-html.is-ipad #qiblaOverlay{right:var(--nav-rail-w)}
+html.is-ipad .audio-bar-progress{border-radius:0 0 20px 20px}
+html.is-ipad .copy-modal{align-items:center!important;right:var(--nav-rail-w)!important;left:env(safe-area-inset-left,0px)!important}
+html.is-ipad .copy-sheet{width:500px;max-width:calc(100vw - var(--nav-rail-w) - 48px);border-radius:24px!important;padding:0 0 24px;animation:tabletModalIn .22s var(--ease)!important}
+html.is-ipad .repeat-modal{align-items:center!important;right:var(--nav-rail-w)!important;left:env(safe-area-inset-left,0px)!important}
+html.is-ipad .repeat-modal-content{width:540px;max-width:calc(100vw - var(--nav-rail-w) - 48px);border-radius:24px!important;max-height:80vh;animation:tabletModalIn .22s var(--ease)!important}
+html.is-ipad .prayer-settings-overlay{align-items:center!important;right:var(--nav-rail-w)!important;left:env(safe-area-inset-left,0px)!important}
+html.is-ipad .prayer-settings-sheet{width:540px;max-width:calc(100vw - var(--nav-rail-w) - 48px);border-radius:24px!important;transform:translateY(0)!important;margin:0 auto}
+html.is-ipad #qiblaOverlay{right:var(--nav-rail-w);left:env(safe-area-inset-left,0px)}
 html.is-ipad .sidebar{right:var(--nav-rail-w)}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
