@@ -11,11 +11,11 @@
         { href: '/admin-messages.html',              icon: 'message-square', label: 'Messages',        section: 'Content',  keywords: 'inbox contact replies' },
         { href: '/admin-videos.html',                icon: 'video',          label: 'Videos',          section: 'Content',  keywords: 'media upload' },
         { href: '/admin-islamvoice-management.html', icon: 'radio',          label: 'IslamVoice',      section: 'Content',  keywords: 'audio series episodes' },
-        { href: '/admin-gencine.html',               icon: 'gem',            label: 'Gencine',         section: 'Content',  keywords: 'tv cinema' },
+        { href: '/admin-gencine.html',               icon: 'gem',            label: 'Gencine',         section: 'Content',  keywords: 'tv cinema duas hadiths' },
         { href: '/admin-links.html',                 icon: 'link',           label: 'Links',           section: 'Content',  keywords: 'urls external' },
         { href: '/admin-translations.html',          icon: 'languages',      label: 'Translations',    section: 'Content',  keywords: 'kurdish language sorani' },
         // Site
-        { href: '/admin-website.html',               icon: 'globe',          label: 'Website',         section: 'Site',     keywords: 'settings hero banner' },
+        { href: '/admin-website.html',               icon: 'globe',          label: 'Website',         section: 'Site',     keywords: 'settings hero banner popup' },
         { href: '/admin-images.html',                icon: 'camera',         label: 'Site Images',     section: 'Site',     keywords: 'photos backgrounds upload' },
         { href: '/admin-schedule.html',              icon: 'calendar',       label: 'Schedule',        section: 'Site',     keywords: 'prayer times juma' },
         { href: '/admin-header-animation.html',      icon: 'wand-2',         label: 'Header',          section: 'Site',     keywords: 'animation banner top' },
@@ -35,12 +35,20 @@
         { href: '/admin-audit.html',                 icon: 'shield-check',   label: 'Audit Log',       section: 'System',   keywords: 'logs history changes' },
     ];
 
+    // ── Quick actions ─────────────────────────────────────────────
+    var ACTIONS = [
+        { id: 'theme',   icon: 'moon',     label: 'Toggle Theme',  section: 'Action', keywords: 'dark light mode sakina noor' },
+        { id: 'refresh', icon: 'refresh-cw', label: 'Refresh Page', section: 'Action', keywords: 'reload' },
+        { id: 'logout',  icon: 'log-out',  label: 'Log Out',       section: 'Action', keywords: 'sign out exit' },
+    ];
+
     var SECTION_COLORS = {
         Overview: '#3b82f6',
         Content:  '#10b981',
         Site:     '#8b5cf6',
         Users:    '#f59e0b',
         System:   '#ef4444',
+        Action:   '#6b7280',
     };
 
     var RECENT_KEY = 'admin_cp_recent';
@@ -49,10 +57,11 @@
     // ── State ─────────────────────────────────────────────────────
     var isOpen = false;
     var activeIdx = 0;
-    var results = [];
+    var results = [];   // array of {type:'page'|'action', data, _section?}
+    var currentHref = window.location.pathname;
 
     // ── DOM refs ──────────────────────────────────────────────────
-    var overlay, dialog, input, list, hintEl;
+    var overlay, dialog, input, list;
 
     // ── Recent pages ──────────────────────────────────────────────
     function getRecent() {
@@ -64,95 +73,163 @@
         try { localStorage.setItem(RECENT_KEY, JSON.stringify(rec.slice(0, MAX_RECENT))); } catch (e) {}
     }
 
-    // ── Search ────────────────────────────────────────────────────
+    // ── Search — returns flat list with injected section-header sentinels ──
     function search(q) {
+        var flat = [];
         if (!q || !q.trim()) {
+            // Show recent pages with label, then top pages grouped by section
             var rec = getRecent();
             if (rec.length) {
-                return rec.map(function (h) { return PAGES.find(function (p) { return p.href === h; }); })
-                          .filter(Boolean)
-                          .slice(0, MAX_RECENT);
+                flat.push({ type: 'header', label: 'Recently Visited' });
+                rec.forEach(function (h) {
+                    var p = PAGES.find(function (pg) { return pg.href === h; });
+                    if (p) flat.push({ type: 'page', data: p });
+                });
+                flat.push({ type: 'header', label: 'All Pages' });
             }
-            return PAGES.slice(0, 8);
+            // Group remaining pages by section
+            var sections = ['Overview', 'Content', 'Site', 'Users', 'System'];
+            sections.forEach(function (sec) {
+                var items = PAGES.filter(function (p) { return p.section === sec; });
+                if (items.length) {
+                    flat.push({ type: 'header', label: sec });
+                    items.forEach(function (p) { flat.push({ type: 'page', data: p }); });
+                }
+            });
+            // Quick actions at bottom
+            flat.push({ type: 'header', label: 'Actions' });
+            ACTIONS.forEach(function (a) { flat.push({ type: 'action', data: a }); });
+            return flat;
         }
+
         var lower = q.toLowerCase();
-        return PAGES.filter(function (p) {
+        var matched = PAGES.filter(function (p) {
             return p.label.toLowerCase().includes(lower) ||
                    p.section.toLowerCase().includes(lower) ||
                    p.keywords.toLowerCase().includes(lower);
-        }).slice(0, 10);
+        });
+        var matchedActions = ACTIONS.filter(function (a) {
+            return a.label.toLowerCase().includes(lower) ||
+                   a.keywords.toLowerCase().includes(lower);
+        });
+
+        if (matched.length) {
+            flat.push({ type: 'header', label: 'Pages' });
+            matched.slice(0, 10).forEach(function (p) { flat.push({ type: 'page', data: p }); });
+        }
+        if (matchedActions.length) {
+            flat.push({ type: 'header', label: 'Actions' });
+            matchedActions.forEach(function (a) { flat.push({ type: 'action', data: a }); });
+        }
+        return flat;
+    }
+
+    // Returns only the selectable (non-header) items from results
+    function selectables() {
+        return results.filter(function (r) { return r.type !== 'header'; });
     }
 
     // ── Render ────────────────────────────────────────────────────
     function renderList() {
         list.textContent = '';
+        var q = input.value.toLowerCase();
+        var selIdx = 0;
 
-        if (!results.length) {
+        if (!results.length || (results.length === 1 && results[0].type === 'header')) {
             var empty = document.createElement('div');
             empty.style.cssText = 'padding:32px;text-align:center;color:var(--cp-muted);font-size:13px;';
-            empty.textContent = 'No pages found';
+            empty.textContent = 'No results found';
             list.appendChild(empty);
             return;
         }
 
-        var q = input.value.toLowerCase();
+        results.forEach(function (row) {
+            if (row.type === 'header') {
+                var hdr = document.createElement('div');
+                hdr.style.cssText = 'padding:10px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--cp-muted);';
+                hdr.textContent = row.label;
+                list.appendChild(hdr);
+                return;
+            }
 
-        results.forEach(function (page, i) {
+            var thisSelIdx = selIdx++;
+            var isActive = thisSelIdx === activeIdx;
             var item = document.createElement('div');
-            item.className = 'cp-item' + (i === activeIdx ? ' cp-item-active' : '');
-            item.dataset.idx = i;
+            item.className = 'cp-item' + (isActive ? ' cp-item-active' : '');
+            item.dataset.selidx = thisSelIdx;
+            if (isActive) item.setAttribute('data-active', '1');
+
+            var color = SECTION_COLORS[row.type === 'page' ? row.data.section : row.data.section] || '#6b7280';
 
             // Icon
             var iconWrap = document.createElement('div');
             iconWrap.className = 'cp-item-icon';
-            iconWrap.style.background = (SECTION_COLORS[page.section] || '#6b7280') + '18';
+            iconWrap.style.background = color + '18';
             var ic = document.createElement('i');
-            ic.setAttribute('data-lucide', page.icon);
-            ic.style.color = SECTION_COLORS[page.section] || '#6b7280';
+            ic.setAttribute('data-lucide', row.data.icon);
+            ic.style.color = color;
             iconWrap.appendChild(ic);
 
-            // Label with highlighted match
+            // Label with highlight
             var labelEl = document.createElement('span');
             labelEl.className = 'cp-item-label';
-            if (q) {
-                var lower = page.label.toLowerCase();
-                var idx = lower.indexOf(q);
-                if (idx !== -1) {
-                    labelEl.appendChild(document.createTextNode(page.label.slice(0, idx)));
+            if (q && row.type === 'page') {
+                var lowerLabel = row.data.label.toLowerCase();
+                var matchIdx = lowerLabel.indexOf(q);
+                if (matchIdx !== -1) {
+                    labelEl.appendChild(document.createTextNode(row.data.label.slice(0, matchIdx)));
                     var mark = document.createElement('mark');
-                    mark.style.cssText = 'background:rgba(59,130,246,.28);color:inherit;border-radius:2px;padding:0 1px;';
-                    mark.textContent = page.label.slice(idx, idx + q.length);
+                    mark.style.cssText = 'background:rgba(59,130,246,.25);color:inherit;border-radius:2px;padding:0 1px;';
+                    mark.textContent = row.data.label.slice(matchIdx, matchIdx + q.length);
                     labelEl.appendChild(mark);
-                    labelEl.appendChild(document.createTextNode(page.label.slice(idx + q.length)));
+                    labelEl.appendChild(document.createTextNode(row.data.label.slice(matchIdx + q.length)));
                 } else {
-                    labelEl.textContent = page.label;
+                    labelEl.textContent = row.data.label;
                 }
             } else {
-                labelEl.textContent = page.label;
+                labelEl.textContent = row.data.label;
             }
 
-            // Section badge
+            // Right side: current-page dot OR section badge
+            var right = document.createElement('div');
+            right.style.cssText = 'display:flex;align-items:center;gap:6px;flex-shrink:0;';
+
+            if (row.type === 'page' && (currentHref === row.data.href || currentHref.endsWith(row.data.href))) {
+                var dot = document.createElement('span');
+                dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:' + color + ';flex-shrink:0;';
+                dot.title = 'Current page';
+                right.appendChild(dot);
+            }
+
             var sectionEl = document.createElement('span');
             sectionEl.className = 'cp-item-section';
-            sectionEl.textContent = page.section;
-            sectionEl.style.color = SECTION_COLORS[page.section] || '#6b7280';
-            sectionEl.style.background = (SECTION_COLORS[page.section] || '#6b7280') + '14';
+            sectionEl.textContent = row.type === 'action' ? 'Action' : row.data.section;
+            sectionEl.style.color = color;
+            sectionEl.style.background = color + '14';
+            right.appendChild(sectionEl);
 
             item.appendChild(iconWrap);
             item.appendChild(labelEl);
-            item.appendChild(sectionEl);
+            item.appendChild(right);
 
-            item.addEventListener('mouseenter', function () {
-                activeIdx = i;
-                renderList();
-            });
-            item.addEventListener('click', function () { navigate(page); });
+            item.addEventListener('mouseenter', (function (idx) {
+                return function () { activeIdx = idx; renderList(); };
+            })(thisSelIdx));
+            item.addEventListener('click', (function (r) {
+                return function () { execute(r); };
+            })(row));
 
             list.appendChild(item);
         });
 
         if (typeof lucide !== 'undefined') {
             lucide.createIcons({ nodes: Array.from(list.querySelectorAll('i[data-lucide]')) });
+        }
+
+        // Scroll active item into view
+        var activeEl = list.querySelector('[data-active]');
+        if (activeEl) {
+            activeEl.scrollIntoView({ block: 'nearest' });
         }
     }
 
@@ -162,12 +239,35 @@
         renderList();
     }
 
+    // ── Execute ───────────────────────────────────────────────────
+    function execute(row) {
+        if (row.type === 'page') {
+            addRecent(row.data.href);
+            close();
+            setTimeout(function () { window.location.href = row.data.href; }, 80);
+        } else if (row.type === 'action') {
+            close();
+            setTimeout(function () { runAction(row.data.id); }, 80);
+        }
+    }
+
+    function runAction(id) {
+        if (id === 'theme') {
+            var btn = document.getElementById('theme-toggle');
+            if (btn) btn.click();
+        } else if (id === 'refresh') {
+            window.location.reload();
+        } else if (id === 'logout') {
+            if (window.adminAuth && window.adminAuth.logout) window.adminAuth.logout();
+        }
+    }
+
     // ── Open / close ──────────────────────────────────────────────
     function open() {
         if (isOpen) return;
         isOpen = true;
+        currentHref = window.location.pathname;
         overlay.style.display = 'flex';
-        // trigger animation
         requestAnimationFrame(function () {
             dialog.style.opacity = '1';
             dialog.style.transform = 'translateY(0) scale(1)';
@@ -187,12 +287,6 @@
         }, 160);
     }
 
-    function navigate(page) {
-        addRecent(page.href);
-        close();
-        setTimeout(function () { window.location.href = page.href; }, 80);
-    }
-
     // ── Keyboard ──────────────────────────────────────────────────
     function onGlobalKey(e) {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -202,9 +296,10 @@
         }
         if (!isOpen) return;
         if (e.key === 'Escape') { close(); return; }
+        var sel = selectables();
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            activeIdx = Math.min(activeIdx + 1, results.length - 1);
+            activeIdx = Math.min(activeIdx + 1, sel.length - 1);
             renderList();
             return;
         }
@@ -215,7 +310,7 @@
             return;
         }
         if (e.key === 'Enter') {
-            if (results[activeIdx]) navigate(results[activeIdx]);
+            if (sel[activeIdx]) execute(sel[activeIdx]);
             return;
         }
     }
@@ -225,13 +320,13 @@
         var s = document.createElement('style');
         s.textContent = [
             ':root{--cp-bg:#ffffff;--cp-border:#e5e7eb;--cp-input-bg:#f9fafb;--cp-text:#111827;--cp-muted:#9ca3af;--cp-hover:#f3f4f6;--cp-active:#eff6ff;--cp-active-border:#3b82f6;}',
-            '.dark-mode,:root[data-theme="dark"]{--cp-bg:#1a1a1a;--cp-border:#2a2a2a;--cp-input-bg:#111111;--cp-text:#f1f5f9;--cp-muted:#6b7280;--cp-hover:#222222;--cp-active:#1e3a5f;--cp-active-border:#3b82f6;}',
-            '[data-theme="sakina"]{--cp-bg:#162d1f;--cp-border:#1e3828;--cp-input-bg:#1c3827;--cp-text:#f0e6c8;--cp-muted:#6b5c3e;--cp-hover:#1c3827;--cp-active:#243d2e;--cp-active-border:#c9a84c;}',
-            '[data-theme="noor"]{--cp-bg:#fdf4e3;--cp-border:#d9c9a8;--cp-input-bg:#f0e2c4;--cp-text:#1a0e04;--cp-muted:#9b7650;--cp-hover:#f0e2c4;--cp-active:#e8d4a8;--cp-active-border:#1a5c3a;}',
+            '.dark-mode,:root[data-theme="dark"]{--cp-bg:#161616;--cp-border:#272727;--cp-input-bg:#0f0f0f;--cp-text:#f1f5f9;--cp-muted:#6b7280;--cp-hover:#1e1e1e;--cp-active:#1a3356;--cp-active-border:#3b82f6;}',
+            '[data-admin-theme="sakina"]{--cp-bg:#162d1f;--cp-border:#1e3828;--cp-input-bg:#1c3827;--cp-text:#f0e6c8;--cp-muted:#6b5c3e;--cp-hover:#1c3827;--cp-active:#243d2e;--cp-active-border:#c9a84c;}',
+            '[data-admin-theme="noor"]{--cp-bg:#fdf4e3;--cp-border:#d9c9a8;--cp-input-bg:#f0e2c4;--cp-text:#1a0e04;--cp-muted:#9b7650;--cp-hover:#f0e2c4;--cp-active:#e8d4a8;--cp-active-border:#1a5c3a;}',
 
-            '#cp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:99999;display:none;align-items:flex-start;justify-content:center;padding-top:14vh;}',
+            '#cp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:99999;display:none;align-items:flex-start;justify-content:center;padding-top:12vh;}',
 
-            '#cp-dialog{background:var(--cp-bg);border:1px solid var(--cp-border);border-radius:16px;width:100%;max-width:560px;box-shadow:0 24px 60px rgba(0,0,0,.22);overflow:hidden;opacity:0;transform:translateY(-8px) scale(0.97);transition:opacity .15s ease,transform .15s ease;}',
+            '#cp-dialog{background:var(--cp-bg);border:1px solid var(--cp-border);border-radius:16px;width:100%;max-width:600px;box-shadow:0 32px 80px rgba(0,0,0,.28);overflow:hidden;opacity:0;transform:translateY(-10px) scale(0.97);transition:opacity .16s ease,transform .16s ease;}',
 
             '#cp-input-wrap{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--cp-border);}',
             '#cp-input-wrap i{width:17px;height:17px;color:var(--cp-muted);flex-shrink:0;}',
@@ -239,7 +334,7 @@
             '#cp-input::placeholder{color:var(--cp-muted);}',
             '#cp-input-wrap .cp-hint{font-size:11px;font-weight:600;color:var(--cp-muted);background:var(--cp-hover);border:1px solid var(--cp-border);padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0;}',
 
-            '#cp-list{max-height:360px;overflow-y:auto;padding:6px;}',
+            '#cp-list{max-height:400px;overflow-y:auto;padding:6px 6px 8px;}',
             '#cp-list::-webkit-scrollbar{width:4px;}',
             '#cp-list::-webkit-scrollbar-thumb{background:var(--cp-border);border-radius:4px;}',
 
@@ -249,11 +344,11 @@
             '.cp-item-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}',
             '.cp-item-icon i{width:15px;height:15px;}',
             '.cp-item-label{flex:1;font-size:13px;font-weight:500;color:var(--cp-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
-            '.cp-item-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;}',
+            '.cp-item-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:20px;white-space:nowrap;}',
 
-            '#cp-footer{display:flex;align-items:center;gap:14px;padding:9px 16px;border-top:1px solid var(--cp-border);background:var(--cp-input-bg);}',
+            '#cp-footer{display:flex;align-items:center;gap:14px;padding:8px 14px;border-top:1px solid var(--cp-border);background:var(--cp-input-bg);}',
             '.cp-key{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--cp-muted);}',
-            '.cp-kbd{background:var(--cp-hover);border:1px solid var(--cp-border);border-radius:5px;padding:1px 6px;font-size:10px;font-family:inherit;color:var(--cp-muted);}'
+            '.cp-kbd{background:var(--cp-hover);border:1px solid var(--cp-border);border-radius:5px;padding:1px 6px;font-size:10px;font-family:inherit;color:var(--cp-muted);}',
         ].join('');
         document.head.appendChild(s);
     }
@@ -277,7 +372,7 @@
         input = document.createElement('input');
         input.id = 'cp-input';
         input.type = 'text';
-        input.placeholder = 'Search pages...';
+        input.placeholder = 'Search pages or actions…';
         input.setAttribute('autocomplete', 'off');
         input.setAttribute('spellcheck', 'false');
         input.addEventListener('input', render);
@@ -338,7 +433,6 @@
         label.textContent = isMac ? '⌘K' : 'Ctrl K';
         btn.appendChild(label);
         btn.addEventListener('click', open);
-        // Insert before session timer
         var timer = actions.querySelector('#sessionTimer');
         actions.insertBefore(btn, timer || actions.firstChild);
         if (typeof lucide !== 'undefined') {
