@@ -700,7 +700,9 @@ function init(){
     renderContinue();
 
     // Pull-to-refresh on all tabs
-    setupPullToRefresh('panelQuran',function(){renderSurahGrid();renderContinue()},function(){return !S.surah});
+    // On tablet the quran panel is a flex row — quranHome is the actual scroll container.
+    var _isTabletLayout=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
+    setupPullToRefresh(_isTabletLayout?'quranHome':'panelQuran',function(){renderSurahGrid();renderContinue();},_isTabletLayout?null:function(){return !S.surah});
     setupPullToRefresh('panelBookmarks',function(){_renderHash.bm=null;renderBookmarks();});
     setupPullToRefresh('panelGoals',function(){_renderHash.goals=null;renderGoals();});
     setupPullToRefresh('panelIslamvoice',function(){_renderHash.iv=null;if(typeof App.ivRefresh==='function')App.ivRefresh();});
@@ -2415,11 +2417,13 @@ App.openSurah=function(num,scrollTo){
   var s=SURAHS[num-1]; // bounds-check before any state mutation
   if(!s){console.warn('[openSurah] invalid surah num:',num);return;}
   haptic([8]);
-  var _pq=$('panelQuran');if(_pq)S._quranListScroll=_pq.scrollTop;
+  var _isT=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
+  var _pq=$('panelQuran');
+  if(_pq)S._quranListScroll=_isT?($('quranHome')||{scrollTop:0}).scrollTop:_pq.scrollTop;
   _startSession(num);
   S.surah=num;
   $('readerName').textContent=s.en+' - '+s.ar;
-  if(window.innerWidth<768){$('quranHome').style.display='none';}
+  if(!_isT){$('quranHome').style.display='none';}
   $('quranReader').classList.add('on');
   renderAyahs(num,scrollTo);
   try{localStorage.setItem('lastRead',JSON.stringify({surah:num,ayah:scrollTo||1}))}catch(e){}
@@ -2447,9 +2451,13 @@ App.backToList=function(){
   _endSession();
   S.surah=null;
   $('quranReader').classList.remove('on');
-  if(window.innerWidth<768){$('quranHome').style.display='';}
+  var _isT2=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
+  if(!_isT2){$('quranHome').style.display='';}
   if(al)al.scrollTop=0;
-  if(S._quranListScroll!=null){var _pq=$('panelQuran');if(_pq)setTimeout(function(){_pq.scrollTop=S._quranListScroll;S._quranListScroll=null;},0);}
+  if(S._quranListScroll!=null){
+    var _scrollEl=_isT2?$('quranHome'):$('panelQuran');
+    if(_scrollEl)setTimeout(function(){_scrollEl.scrollTop=S._quranListScroll;S._quranListScroll=null;},0);
+  }
   renderContinue();
 };
 
