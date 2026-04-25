@@ -1191,7 +1191,7 @@
                 var { data, error } = await supabase
                     .from('islamvoice_episodes')
                     .select('views')
-                    .eq('is_draft', false);
+                    .or('is_published.eq.true,is_published.is.null');
                 if (!error && data) {
                     var mEp = document.getElementById('metricEpisodes');
                     if (mEp) mEp.textContent = data.length;
