@@ -43,6 +43,11 @@
   // Other Android: safe with WebView 100+
   var safe=isIOS||(isSamsung?cv>=120:cv>=100);
   if(safe)document.documentElement.classList.add('safe-render');
+  // iPad UA fallback: force tablet class when CSS media query can't fire (e.g. TARGETED_DEVICE_FAMILY="1" compatibility mode)
+  var isIPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend'in document);
+  if(isIPad)document.documentElement.classList.add('is-ipad');
+  console.log('[TK] UA='+ua.substring(0,120));
+  console.log('[TK] innerWidth='+window.innerWidth+' isIPad='+isIPad);
 })();
 </script>
 <script src="/utils/platform.js"></script>
@@ -2328,6 +2333,63 @@ body{background:var(--bg);color:var(--text)}
   /* Settings: centred max-width content */
   .settings-content{max-width:640px;margin-left:auto;margin-right:auto}
 }
+
+/* ─────────────────────────────────────────────────
+   iPAD UA FALLBACK — activates tablet layout even
+   when CSS media query can't fire (TARGETED_DEVICE_FAMILY
+   compatibility mode reports ~375px viewport width).
+   Mirrors @media(min-width:768px) rules exactly.
+   ───────────────────────────────────────────────── */
+html.is-ipad:not(.is-ipad-overridden){
+  --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.5;--ayah-px:48px;
+  --tab-h:0px;--nav-rail-w:84px;
+}
+html.is-ipad .tabbar{
+  bottom:0;top:0;right:0;left:auto;
+  width:var(--nav-rail-w);height:100%;
+  flex-direction:column;justify-content:flex-start;align-items:stretch;
+  padding:max(32px,calc(env(safe-area-inset-top,0px)+16px)) 0 max(24px,calc(env(safe-area-inset-bottom,0px)+16px));
+  gap:2px;border-top:none;border-left:1px solid var(--border);
+}
+html.is-ipad .tab-item{
+  flex:none;flex-direction:column;height:auto;max-height:none;
+  padding:11px 6px 9px;gap:5px;margin:0 8px;
+  width:calc(100% - 16px);border-radius:12px;
+}
+html.is-ipad .panel{padding-inline-start:var(--nav-rail-w)}
+html.is-ipad #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
+html.is-ipad .auth-panel,
+html.is-ipad .profile-panel,
+html.is-ipad .audio-settings-panel{right:var(--nav-rail-w)!important}
+html.is-ipad .hdr{padding:12px 24px}
+html.is-ipad #panelQuran.on{flex-direction:row!important}
+html.is-ipad #quranHome{
+  display:flex!important;flex-direction:column;width:300px;flex-shrink:0;
+  border-left:1px solid var(--border);overflow-y:auto;overflow-x:hidden;padding-bottom:40px;
+}
+html.is-ipad .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:12px 20px 48px;gap:14px}
+html.is-ipad .sky-scene{height:300px}
+html.is-ipad .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 20px 32px}
+html.is-ipad .genc-home>:last-child:nth-child(odd){grid-column:1/-1}
+html.is-ipad .copy-modal{align-items:center!important;right:var(--nav-rail-w)!important}
+html.is-ipad .copy-sheet{
+  width:460px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
+  border-radius:20px!important;padding-bottom:16px;
+  animation:tabletModalIn .22s var(--ease)!important;
+}
+html.is-ipad .repeat-modal{align-items:center!important;right:var(--nav-rail-w)!important}
+html.is-ipad .repeat-modal-content{
+  width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
+  border-radius:20px!important;max-height:80vh;
+  animation:tabletModalIn .22s var(--ease)!important;
+}
+html.is-ipad .prayer-settings-overlay{align-items:center!important;right:var(--nav-rail-w)!important}
+html.is-ipad .prayer-settings-sheet{
+  width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
+  border-radius:20px!important;transform:translateY(0)!important;margin:0 auto;
+}
+html.is-ipad #qiblaOverlay{right:var(--nav-rail-w)}
+html.is-ipad .sidebar{right:var(--nav-rail-w)}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
