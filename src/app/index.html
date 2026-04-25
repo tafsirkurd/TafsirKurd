@@ -2386,6 +2386,36 @@ body{background:var(--bg);color:var(--text)}
 
   #qiblaOverlay{right:var(--nav-rail-w);left:env(safe-area-inset-left, 0px)}
   .sidebar{right:var(--nav-rail-w)}
+
+  /* ALL OVERLAYS / SHEETS: right edge must not go under nav rail */
+  .fu-banner{right:calc(var(--nav-rail-w) + 16px)}
+  .qs-sheet,.full-player,.rec-picker,.dl-sheet{right:var(--nav-rail-w)}
+  .mushaf-tafsir-ov,.mushaf-settings-ov{right:var(--nav-rail-w)}
+  .wizard,.iv-spk-overlay,.book-overlay,.rating-overlay{right:var(--nav-rail-w)}
+  .iv-overlay{right:var(--nav-rail-w)} /* Islam Voice saved/history */
+  .repeat-status{right:calc(var(--nav-rail-w) + 16px)}
+
+  /* Toast: center in content area, not full viewport */
+  .toast{left:calc(50% - var(--nav-rail-w) / 2)}
+
+  /* Surah list sidebar: bg match + enough scroll clearance for floating audio bar */
+  #quranHome .hdr{background:var(--bg2)}
+  #quranHome .search-bar{background:var(--bg2)}
+  #quranHome{padding-bottom:100px!important}
+
+  /* Reading column: prev/next surah nav centered */
+  .surah-nav{
+    max-width:var(--reading-max-w);
+    width:calc(100% - 56px);
+    margin-left:auto!important;margin-right:auto!important;
+  }
+
+  /* Mushaf mode: pages and nav centered within reading column */
+  .mushaf-text-page{max-width:var(--reading-max-w);margin-left:auto;margin-right:auto}
+  .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-left:auto;margin-right:auto}
+
+  /* Tab labels: allow wrap to prevent cutoff on long Kurdish labels */
+  .tab-item span{white-space:normal!important;line-height:1.2;text-align:center}
 }
 
 /* ─────────────────────────────────────────────────
@@ -2493,6 +2523,27 @@ html.is-ipad .prayer-settings-overlay{align-items:center!important;right:var(--n
 html.is-ipad .prayer-settings-sheet{width:540px;max-width:calc(100vw - var(--nav-rail-w) - 48px);border-radius:24px!important;transform:translateY(0)!important;margin:0 auto}
 html.is-ipad #qiblaOverlay{right:var(--nav-rail-w);left:env(safe-area-inset-left,0px)}
 html.is-ipad .sidebar{right:var(--nav-rail-w)}
+html.is-ipad .fu-banner{right:calc(var(--nav-rail-w) + 16px)}
+html.is-ipad .qs-sheet,
+html.is-ipad .full-player,
+html.is-ipad .rec-picker,
+html.is-ipad .dl-sheet{right:var(--nav-rail-w)}
+html.is-ipad .mushaf-tafsir-ov,
+html.is-ipad .mushaf-settings-ov,
+html.is-ipad .wizard,
+html.is-ipad .iv-spk-overlay,
+html.is-ipad .book-overlay,
+html.is-ipad .rating-overlay,
+html.is-ipad .iv-overlay{right:var(--nav-rail-w)}
+html.is-ipad .repeat-status{right:calc(var(--nav-rail-w) + 16px)}
+html.is-ipad .toast{left:calc(50% - var(--nav-rail-w) / 2)}
+html.is-ipad #quranHome .hdr{background:var(--bg2)}
+html.is-ipad #quranHome .search-bar{background:var(--bg2)}
+html.is-ipad #quranHome{padding-bottom:100px!important}
+html.is-ipad .surah-nav{max-width:var(--reading-max-w);width:calc(100% - 56px);margin-left:auto!important;margin-right:auto!important}
+html.is-ipad .mushaf-text-page{max-width:var(--reading-max-w);margin-left:auto;margin-right:auto}
+html.is-ipad .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-left:auto;margin-right:auto}
+html.is-ipad .tab-item span{white-space:normal!important;line-height:1.2;text-align:center}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
