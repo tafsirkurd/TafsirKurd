@@ -2214,6 +2214,7 @@ body{background:var(--bg);color:var(--text)}
     --tab-h:0px;
     --nav-rail-w:88px;
     --reading-max-w:720px;
+    --hdr-h:56px; /* tablet header is taller due to more padding */
   }
 
   /* NAV RAIL: right-side vertical, safe areas on all edges */
@@ -2275,7 +2276,7 @@ body{background:var(--bg);color:var(--text)}
     box-shadow:-2px 0 0 var(--border), -4px 0 16px rgba(0,0,0,.06);
     background:var(--bg2);
     overflow-y:auto;overflow-x:hidden;
-    padding-bottom:40px;
+    padding-bottom:100px;
   }
   [data-theme="dark"] #quranHome,
   [data-theme="sakina"] #quranHome{box-shadow:-2px 0 0 var(--border), -4px 0 16px rgba(0,0,0,.2)}
@@ -2311,17 +2312,18 @@ body{background:var(--bg);color:var(--text)}
   /* Ayah list: no side padding, cards self-center */
   .ayah-list{padding:0 0 120px!important}
 
-  /* Ayah cards: centered reading column, book surface */
+  /* Ayah cards: centered reading column, book surface.
+     No !important on box-shadow so .ayah-card.playing accent shadow still shows. */
   .ayah-card{
     max-width:var(--reading-max-w)!important;
     width:calc(100% - 56px)!important;
     margin:0 auto 18px!important;
     padding:28px 36px!important;
     border-radius:20px!important;
-    box-shadow:0 2px 12px rgba(0,0,0,.06)!important;
+    box-shadow:0 2px 12px rgba(0,0,0,.06);
   }
   [data-theme="dark"] .ayah-card,
-  [data-theme="sakina"] .ayah-card{box-shadow:0 2px 8px rgba(0,0,0,.22)!important}
+  [data-theme="sakina"] .ayah-card{box-shadow:0 2px 8px rgba(0,0,0,.22)}
 
   /* PRAYER: taller sky, roomier cards */
   .sky-scene{height:310px}
@@ -2398,10 +2400,9 @@ body{background:var(--bg);color:var(--text)}
   /* Toast: center in content area, not full viewport */
   .toast{left:calc(50% - var(--nav-rail-w) / 2)}
 
-  /* Surah list sidebar: bg match + enough scroll clearance for floating audio bar */
+  /* Surah list sidebar: bg match */
   #quranHome .hdr{background:var(--bg2)}
   #quranHome .search-bar{background:var(--bg2)}
-  #quranHome{padding-bottom:100px!important}
 
   /* Reading column: prev/next surah nav centered */
   .surah-nav{
@@ -2451,7 +2452,7 @@ body{background:var(--bg);color:var(--text)}
    compat mode reports ~375px viewport). */
 html.is-ipad{
   --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
-  --tab-h:0px;--nav-rail-w:88px;--reading-max-w:720px;
+  --tab-h:0px;--nav-rail-w:88px;--reading-max-w:720px;--hdr-h:56px;
 }
 html.is-ipad .tabbar{
   bottom:0;top:0;right:0;left:auto;
@@ -2488,7 +2489,7 @@ html.is-ipad #quranHome{
   display:flex!important;flex-direction:column;
   width:280px;flex-shrink:0;border-left:none;
   box-shadow:-2px 0 0 var(--border),-4px 0 16px rgba(0,0,0,.06);
-  background:var(--bg2);overflow-y:auto;overflow-x:hidden;padding-bottom:40px;
+  background:var(--bg2);overflow-y:auto;overflow-x:hidden;padding-bottom:100px;
 }
 html.is-ipad #quranHome .surah-grid{grid-template-columns:1fr!important;gap:6px;padding:10px 10px 20px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 html.is-ipad #quranHome .surah-card{min-height:70px}
@@ -2501,7 +2502,7 @@ html.is-ipad #quranReader:not(.on) #mushafView{display:none!important}
 html.is-ipad .reader-hdr .back-btn{display:none!important}
 html.is-ipad .surah-reader-header{border-radius:0!important;padding:40px max(32px,calc((100% - var(--reading-max-w)) / 2)) 32px!important;margin-bottom:8px!important}
 html.is-ipad .ayah-list{padding:0 0 120px!important}
-html.is-ipad .ayah-card{max-width:var(--reading-max-w)!important;width:calc(100% - 56px)!important;margin:0 auto 18px!important;padding:28px 36px!important;border-radius:20px!important;box-shadow:0 2px 12px rgba(0,0,0,.06)!important}
+html.is-ipad .ayah-card{max-width:var(--reading-max-w)!important;width:calc(100% - 56px)!important;margin:0 auto 18px!important;padding:28px 36px!important;border-radius:20px!important;box-shadow:0 2px 12px rgba(0,0,0,.06)}
 html.is-ipad .sky-scene{height:310px}
 html.is-ipad .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:20px 24px 60px;gap:16px;align-content:start}
 html.is-ipad .prayer-grid-card{padding:20px 18px 18px!important;border-radius:20px!important;min-height:120px}
@@ -2539,7 +2540,6 @@ html.is-ipad .repeat-status{right:calc(var(--nav-rail-w) + 16px)}
 html.is-ipad .toast{left:calc(50% - var(--nav-rail-w) / 2)}
 html.is-ipad #quranHome .hdr{background:var(--bg2)}
 html.is-ipad #quranHome .search-bar{background:var(--bg2)}
-html.is-ipad #quranHome{padding-bottom:100px!important}
 html.is-ipad .surah-nav{max-width:var(--reading-max-w);width:calc(100% - 56px);margin-left:auto!important;margin-right:auto!important}
 html.is-ipad .mushaf-text-page{max-width:var(--reading-max-w);margin-left:auto;margin-right:auto}
 html.is-ipad .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-left:auto;margin-right:auto}
