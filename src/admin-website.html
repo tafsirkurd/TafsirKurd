@@ -233,7 +233,8 @@
         .ws-field input:focus,
         .ws-field textarea:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,.1);
         }
         .ws-toggle-row {
             display: flex;
@@ -280,7 +281,7 @@
             transition: transform .2s;
             box-shadow: 0 1px 3px rgba(0,0,0,.2);
         }
-        .ws-switch input:checked + .ws-slider { background: var(--primary); }
+        .ws-switch input:checked + .ws-slider { background: #3b82f6; }
         .ws-switch input:checked + .ws-slider::before { transform: translateX(20px); }
 
         .ws-divider {
@@ -291,8 +292,8 @@
         .ws-save-btn {
             width: 100%;
             padding: 10px;
-            background: var(--primary);
-            color: var(--bg-app);
+            background: #1d4ed8;
+            color: #fff;
             border: none;
             border-radius: 10px;
             font-size: 13px;
@@ -300,6 +301,7 @@
             cursor: pointer;
             font-family: inherit;
             transition: opacity .15s, transform .12s;
+            box-shadow: 0 2px 8px rgba(29,78,216,.25);
         }
         .ws-save-btn:hover { opacity: .88; }
         .ws-save-btn:active { transform: scale(.97); }
@@ -321,7 +323,7 @@
         }
         .ws-link-btn:hover {
             background: var(--bg-active);
-            color: var(--primary);
+            color: #3b82f6;
         }
         .ws-link-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
@@ -492,6 +494,10 @@
                     <i data-lucide="clock"></i>
                     <span id="sessionTimerText">2:00:00</span>
                 </div>
+                <button class="topbar-btn" style="position:relative;">
+                    <i data-lucide="bell"></i>
+                    <span id="notification-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;display:none;"></span>
+                </button>
                 <button class="topbar-btn" id="theme-toggle" title="Toggle theme">
                     <i data-lucide="moon" id="theme-icon"></i>
                 </button>
