@@ -10,15 +10,13 @@
 
     // Wait for Supabase client to be initialized
     async function waitForSupabase() {
-        const maxRetries = 50; // 5 seconds max
+        const maxRetries = 150; // 15 seconds max — covers slow connections
         for (let i = 0; i < maxRetries; i++) {
             if (typeof window.supabaseClient !== 'undefined' && window.supabaseClient !== null) {
-                console.log('✅ Auth redirect: Supabase client ready');
                 return window.supabaseClient;
             }
             await new Promise(resolve => setTimeout(resolve, 100));
         }
-        console.error('❌ Auth redirect: Supabase client timeout');
         return null;
     }
 
