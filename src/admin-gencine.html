@@ -25,43 +25,42 @@
 
         /* ── Adhkar filter chips ── */
         .adhkar-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border-light);cursor:pointer;white-space:nowrap;transition:all .15s}
-        .adhkar-filter-btn.active{background:var(--primary);color:#fff;border-color:transparent}
+        .adhkar-filter-btn.active{background:#3b82f6;color:#fff;border-color:transparent}
         /* ── Stats row ── */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
             margin-bottom: 28px;
         }
         .stat-pill {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 20px;
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 14px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            flex: 1;
-            min-width: 120px;
+            border-radius: 12px;
+            padding: 16px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            transition: box-shadow 0.2s;
         }
         .stat-pill-icon {
             width: 36px; height: 36px;
             border-radius: 10px;
-            background: var(--bg-active);
             display: flex; align-items: center; justify-content: center;
-            color: var(--primary);
             flex-shrink: 0;
+            margin-bottom: 10px;
         }
-        .stat-pill-icon svg { width: 16px; height: 16px; }
+        .stat-pill-icon i { width: 17px; height: 17px; }
         .stat-pill strong {
-            font-size: 22px;
+            font-size: 28px;
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.5px;
             display: block;
+            line-height: 1;
+            margin-bottom: 4px;
         }
 
         /* ── Platform tabs ── */
@@ -94,8 +93,8 @@
         }
         .platform-tab:hover { color: var(--text-primary); }
         .platform-tab.active {
-            color: var(--text-primary);
-            border-bottom-color: var(--text-primary);
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
         }
         .platform-tab .tab-count {
             font-size: 11px;
@@ -108,8 +107,8 @@
             text-align: center;
         }
         .platform-tab.active .tab-count {
-            background: var(--text-primary);
-            color: var(--bg-app);
+            background: #3b82f6;
+            color: #fff;
         }
 
         /* ── View panels ── */
@@ -772,29 +771,29 @@
 
             <!-- Stats row -->
             <div class="stats-row">
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="layout-dashboard"></i></div>
-                    <div><strong id="stat-cats">—</strong>Sections</div>
+                <div class="stat-pill" style="border-left:3px solid #3b82f6;">
+                    <div class="stat-pill-icon" style="background:#3b82f618;"><i data-lucide="layout-dashboard" style="color:#3b82f6;"></i></div>
+                    <strong id="stat-cats">—</strong>Sections
                 </div>
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="hand-heart"></i></div>
-                    <div><strong id="stat-duas">—</strong>Duas</div>
+                <div class="stat-pill" style="border-left:3px solid #10b981;">
+                    <div class="stat-pill-icon" style="background:#10b98118;"><i data-lucide="hand-heart" style="color:#10b981;"></i></div>
+                    <strong id="stat-duas">—</strong>Duas
                 </div>
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="scroll-text"></i></div>
-                    <div><strong id="stat-hadiths">—</strong>Hadiths</div>
+                <div class="stat-pill" style="border-left:3px solid #8b5cf6;">
+                    <div class="stat-pill-icon" style="background:#8b5cf618;"><i data-lucide="scroll-text" style="color:#8b5cf6;"></i></div>
+                    <strong id="stat-hadiths">—</strong>Hadiths
                 </div>
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="book-open"></i></div>
-                    <div><strong id="stat-books">—</strong>Books</div>
+                <div class="stat-pill" style="border-left:3px solid #f59e0b;">
+                    <div class="stat-pill-icon" style="background:#f59e0b18;"><i data-lucide="book-open" style="color:#f59e0b;"></i></div>
+                    <strong id="stat-books">—</strong>Books
                 </div>
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="circle-dot"></i></div>
-                    <div><strong id="stat-tasbih">—</strong>Tasbih</div>
+                <div class="stat-pill" style="border-left:3px solid #14b8a6;">
+                    <div class="stat-pill-icon" style="background:#14b8a618;"><i data-lucide="rotate-cw" style="color:#14b8a6;"></i></div>
+                    <strong id="stat-tasbih">—</strong>Tasbih
                 </div>
-                <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="star"></i></div>
-                    <div><strong id="stat-asma99">99</strong>Asma99</div>
+                <div class="stat-pill" style="border-left:3px solid #ec4899;">
+                    <div class="stat-pill-icon" style="background:#ec489918;"><i data-lucide="star" style="color:#ec4899;"></i></div>
+                    <strong id="stat-asma99">99</strong>Asma'ul Husna
                 </div>
             </div>
 
@@ -1424,21 +1423,21 @@ async function loadAll() { await Promise.all([loadCategories(), loadDuas(), load
 async function loadCategories() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_categories').select('*').order('sort_order');
-    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    if (r.error) { console.error('loadCategories:', r.error.message); allCategories = []; renderCategoryList(); updateStats(); return; }
     allCategories = r.data || [];
     renderCategoryList(); populateCatDropdown(); renderDuaCatFilter(); updateStats();
 }
 async function loadDuas() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_duas').select('*').order('category_key').order('sort_order');
-    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    if (r.error) { console.error('loadDuas:', r.error.message); allDuas = []; renderDuaList(); updateStats(); return; }
     allDuas = r.data || [];
     renderDuaList(); updateStats();
 }
 async function loadHadiths() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_hadiths').select('*').order('sort_order');
-    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    if (r.error) { console.error('loadHadiths:', r.error.message); allHadiths = []; renderHadithList(); updateStats(); return; }
     allHadiths = r.data || [];
     renderHadithList(); updateStats();
 }
@@ -1885,7 +1884,7 @@ var allTasbih = [];
 async function loadTasbih() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_tasbih').select('*').order('sort_order');
-    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    if (r.error) { console.error('loadTasbih:', r.error.message); allTasbih = []; renderTasbihList(); updateStats(); return; }
     allTasbih = r.data || [];
     renderTasbihList(); updateStats();
 }
@@ -1987,7 +1986,8 @@ var allAdhkar = [];
 var adhkarCatFilter = '';
 
 async function loadAdhkar() {
-    var r = await window.adminAuth.getSupabase().from('gencine_adhkar').select('*').order('category_key').order('sort_order');
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_adhkar').select('*').order('category_key').order('sort_order');
     if (!r.error && r.data) {
         allAdhkar = r.data;
         var countEl = document.getElementById('tab-count-adhkar');
