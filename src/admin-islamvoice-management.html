@@ -115,7 +115,7 @@
 
         .tab-btn.active {
             color: var(--text-primary);
-            border-bottom-color: var(--primary);
+            border-bottom-color: #3b82f6;
         }
 
         .view-panel {
@@ -143,8 +143,9 @@
         }
 
         .series-card:hover {
-            border-color: var(--border-medium);
+            border-color: #3b82f6;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59,130,246,.1);
         }
 
         .series-card.dragging {
@@ -628,6 +629,26 @@
                             <i data-lucide="plus"></i>
                             <span id="add-btn-text">Add Series</span>
                         </button>
+                    </div>
+                </div>
+
+                <!-- METRICS -->
+                <div class="metrics-grid" style="margin-bottom:24px;">
+                    <div class="metric-card" style="border-left:3px solid #3b82f6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#3b82f618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="radio" style="width:17px;height:17px;color:#3b82f6;"></i></div>
+                        <div class="metric-value" id="metricSeries">—</div><div class="metric-label">Total Series</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #8b5cf6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#8b5cf618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="film" style="width:17px;height:17px;color:#8b5cf6;"></i></div>
+                        <div class="metric-value" id="metricEpisodes">—</div><div class="metric-label">Total Episodes</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #f59e0b;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#f59e0b18;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="file-edit" style="width:17px;height:17px;color:#f59e0b;"></i></div>
+                        <div class="metric-value" id="metricDrafts">—</div><div class="metric-label">Drafts</div>
+                    </div>
+                    <div class="metric-card" style="border-left:3px solid #14b8a6;">
+                        <div style="width:36px;height:36px;border-radius:10px;background:#14b8a618;display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><i data-lucide="eye" style="width:17px;height:17px;color:#14b8a6;"></i></div>
+                        <div class="metric-value" id="metricViews">—</div><div class="metric-label">Total Views</div>
                     </div>
                 </div>
 
@@ -1155,12 +1176,31 @@
                 loadAllSeries();
                 loadAllEpisodes();
                 loadDrafts(); // Load drafts count for badge
+                loadEpisodeMetrics();
                 // Auto-fix YouTube durations in background
                 setTimeout(() => autoFixYouTubeDurations(), 2000);
                 // Auto-sync YouTube playlists in background
                 setTimeout(() => autoSyncPlaylists(), 4000);
             }
         })();
+
+        async function loadEpisodeMetrics() {
+            var supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            try {
+                var { data, error } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('views')
+                    .eq('is_draft', false);
+                if (!error && data) {
+                    var mEp = document.getElementById('metricEpisodes');
+                    if (mEp) mEp.textContent = data.length;
+                    var totalViews = data.reduce(function(sum, ep) { return sum + (ep.views || 0); }, 0);
+                    var mViews = document.getElementById('metricViews');
+                    if (mViews) mViews.textContent = totalViews >= 1000 ? (totalViews / 1000).toFixed(1) + 'k' : totalViews;
+                }
+            } catch(e) {}
+        }
 
         lucide.createIcons();
 
@@ -1267,6 +1307,8 @@
                 if (error) throw error;
 
                 allSeriesData = series || [];
+                var mSeries = document.getElementById('metricSeries');
+                if (mSeries) mSeries.textContent = allSeriesData.length;
                 const list = document.getElementById('all-series-list');
 
                 if (!series || series.length === 0) {
@@ -1507,7 +1549,10 @@
                 if (error) throw error;
 
                 // Update drafts count
-                document.getElementById('drafts-count').textContent = drafts?.length || 0;
+                var draftLen = drafts?.length || 0;
+                document.getElementById('drafts-count').textContent = draftLen;
+                var mDrafts = document.getElementById('metricDrafts');
+                if (mDrafts) mDrafts.textContent = draftLen;
 
                 const tbody = document.getElementById('drafts-tbody');
 
