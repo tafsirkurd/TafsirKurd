@@ -22,7 +22,6 @@
         // Users
         { href: '/admin-users.html',                 icon: 'users',          label: 'Users',           section: 'Users',    keywords: 'accounts people members' },
         { href: '/admin-notifications.html',         icon: 'bell',           label: 'Notifications',   section: 'Users',    keywords: 'push alerts send' },
-        { href: '/admin-reading-stats.html',         icon: 'book-open',      label: 'Reading Stats',   section: 'Users',    keywords: 'quran progress streak' },
         { href: '/admin-social-stats.html',          icon: 'share-2',        label: 'Social Stats',    section: 'Users',    keywords: 'instagram twitter followers' },
         // System
         { href: '/admin-account-management.html',    icon: 'user-cog',       label: 'Admin Accounts',  section: 'System',   keywords: 'admins roles permissions create' },
