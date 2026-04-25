@@ -51,7 +51,7 @@
         .ws-preview-panel {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
         }
         .ws-preview-label {
@@ -61,6 +61,17 @@
             text-transform: uppercase;
             color: var(--text-tertiary);
             padding: 14px 18px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ws-preview-label::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            display: inline-block;
         }
         .ws-preview-body {
             padding: 18px;
@@ -618,10 +629,15 @@
                             <textarea id="pp-subtitle" dir="auto" rows="3" placeholder="Description..." oninput="updatePpPreview()"></textarea>
                         </div>
                         <div class="ws-divider"></div>
-                        <a href="/admin-images.html" class="ws-link-btn">
-                            <i data-lucide="image"></i>
-                            Manage popup image (portrait 9:16)
-                        </a>
+                        <div class="ws-field">
+                            <label>Popup Image URL <span style="font-weight:400;color:var(--text-tertiary);">(portrait 9:16)</span></label>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <input type="url" id="pp-img-url" placeholder="https://..." oninput="updatePpImgPreview()" style="flex:1;">
+                                <a href="/admin-images.html" class="ws-link-btn" style="flex-shrink:0;white-space:nowrap;">
+                                    <i data-lucide="image"></i> Browse
+                                </a>
+                            </div>
+                        </div>
                         <div class="ws-status" id="pp-status"></div>
                         <button class="ws-save-btn" onclick="savePpSection()">Save Changes</button>
                     </div>
@@ -728,6 +744,7 @@
 
         /* Popup image preview */
         if (map[KEYS.PP_IMG]) {
+            document.getElementById('pp-img-url').value = map[KEYS.PP_IMG];
             const img = document.getElementById('pp-preview-img');
             img.src = map[KEYS.PP_IMG];
             img.style.display = 'block';
@@ -750,6 +767,19 @@
     window.updatePpPreview = function () {
         document.getElementById('prev-pp-h').textContent   = document.getElementById('pp-headline').value || 'Get the app.';
         document.getElementById('prev-pp-sub').textContent = document.getElementById('pp-subtitle').value || '';
+    };
+    window.updatePpImgPreview = function () {
+        var url = document.getElementById('pp-img-url').value.trim();
+        var img = document.getElementById('pp-preview-img');
+        var empty = document.getElementById('pp-img-empty');
+        if (url) {
+            img.src = url;
+            img.style.display = 'block';
+            empty.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            empty.style.display = '';
+        }
     };
 
     /* ── Upsert helper ── */
@@ -791,6 +821,7 @@
             [KEYS.PP_ENABLED,  document.getElementById('pp-enabled').checked ? 'true' : 'false'],
             [KEYS.PP_HEADLINE, document.getElementById('pp-headline').value.trim()],
             [KEYS.PP_SUBTITLE, document.getElementById('pp-subtitle').value.trim()],
+            [KEYS.PP_IMG,      document.getElementById('pp-img-url').value.trim()],
         ]);
         btn.disabled = false;
         if (err) { setStatus('pp-status', 'Error: ' + err.message, 'err'); }
