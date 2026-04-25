@@ -1328,6 +1328,12 @@ body.sidebar-open {
     .session-timer span { display: none; }
     .session-timer { padding: 0; width: 44px; height: 44px; justify-content: center; border-radius: 50%; }
 
+    /* ── Command palette trigger: icon only on mobile ─────────── */
+    .topbar-actions button[title*="Command"] span,
+    .topbar-actions button[title*="palette"] span { display: none; }
+    .topbar-actions button[title*="Command"],
+    .topbar-actions button[title*="palette"] { padding: 6px; min-width: 44px; justify-content: center; }
+
     /* ── Reduce motion on mobile ───────────────────────────────── */
     .sidebar { will-change: transform; }
     @media (prefers-reduced-motion: reduce) {
@@ -1342,4 +1348,52 @@ body.sidebar-open {
     .content-area { padding: 12px 10px 24px; }
     .topbar { padding: 0 10px; }
     .page-title { font-size: 18px; }
+}
+
+/* ─── Page tabs (Users, Gencine, IslamVoice, etc.) ──────────── */
+.page-tabs,
+.platform-tabs,
+.view-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
+}
+.page-tabs::-webkit-scrollbar,
+.platform-tabs::-webkit-scrollbar,
+.view-tabs::-webkit-scrollbar { display: none; }
+
+/* ─── Stats bars that use inline grids ──────────────────────── */
+.stats-bar {
+    overflow-x: visible; /* already uses auto-fill, reflows naturally */
+}
+
+@media (max-width: 768px) {
+    /* Stats grids on individual pages that override the global 2-col */
+    .stats-bar,
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    /* Page tabs: scrollable, don't wrap */
+    .page-tab,
+    .platform-tab,
+    .tab-btn {
+        flex-shrink: 0;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    /* Leaderboard: 1 col */
+    .leaderboard-grid { grid-template-columns: 1fr !important; }
+    /* Reading stats filter row wraps fully */
+    .rs-filters { flex-direction: column; align-items: stretch; }
+    .rs-filter-group { width: 100%; }
+    /* Filters bar wraps */
+    .filters-bar { flex-direction: column; gap: 10px; }
+    .filter-group { min-width: 0 !important; width: 100%; }
+}
+
+@media (max-width: 390px) {
+    .stats-bar,
+    .stats-grid { grid-template-columns: 1fr; }
 }

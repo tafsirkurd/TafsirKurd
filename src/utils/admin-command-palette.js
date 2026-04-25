@@ -323,9 +323,10 @@
             '[data-admin-theme="sakina"]{--cp-bg:#162d1f;--cp-border:#1e3828;--cp-input-bg:#1c3827;--cp-text:#f0e6c8;--cp-muted:#6b5c3e;--cp-hover:#1c3827;--cp-active:#243d2e;--cp-active-border:#c9a84c;}',
             '[data-admin-theme="noor"]{--cp-bg:#fdf4e3;--cp-border:#d9c9a8;--cp-input-bg:#f0e2c4;--cp-text:#1a0e04;--cp-muted:#9b7650;--cp-hover:#f0e2c4;--cp-active:#e8d4a8;--cp-active-border:#1a5c3a;}',
 
-            '#cp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:99999;display:none;align-items:flex-start;justify-content:center;padding-top:12vh;}',
+            '#cp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:99999;display:none;align-items:flex-start;justify-content:center;padding:10vh 12px 12px;}',
 
             '#cp-dialog{background:var(--cp-bg);border:1px solid var(--cp-border);border-radius:16px;width:100%;max-width:600px;box-shadow:0 32px 80px rgba(0,0,0,.28);overflow:hidden;opacity:0;transform:translateY(-10px) scale(0.97);transition:opacity .16s ease,transform .16s ease;}',
+            '@media(max-width:640px){#cp-overlay{padding:8px 8px 0;align-items:flex-end;}#cp-dialog{border-radius:16px 16px 0 0;max-height:80vh;display:flex;flex-direction:column;}#cp-list{flex:1;max-height:none;}}',
 
             '#cp-input-wrap{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--cp-border);}',
             '#cp-input-wrap i{width:17px;height:17px;color:var(--cp-muted);flex-shrink:0;}',
@@ -423,7 +424,7 @@
         var btn = document.createElement('button');
         btn.className = 'topbar-btn';
         btn.title = 'Command palette (Ctrl+K / ⌘K)';
-        btn.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);padding:6px 10px;border-radius:8px;white-space:nowrap;';
+        btn.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);padding:6px 10px;border-radius:8px;white-space:nowrap;flex-shrink:0;';
         var ic = document.createElement('i');
         ic.setAttribute('data-lucide', 'command');
         btn.appendChild(ic);
