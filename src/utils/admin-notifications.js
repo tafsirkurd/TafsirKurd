@@ -408,7 +408,7 @@ window.adminNotifications = {
                 }
             };
         } else {
-            console.error('❌ Bell button not found!');
+            console.warn('Bell button not found on this page');
         }
 
         // Close panel when clicking outside

@@ -1515,6 +1515,7 @@ function mkIconBtn(lucideIcon, title, danger, cb) {
 /* ── CATEGORIES ── */
 function renderCategoryList() {
     var list = document.getElementById('cat-list');
+    if (!list) return;
     list.textContent = '';
     if (!allCategories.length) {
         var es = mke('div', 'empty-state');
