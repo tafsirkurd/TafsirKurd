@@ -2192,17 +2192,62 @@ body{background:var(--bg);color:var(--text)}
 .hadith-empty{padding:40px 16px;text-align:center;color:var(--text3);font-size:.88rem}
 .hadith-title-ar{font-size:.76rem;color:var(--text3);direction:rtl;margin-top:2px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ===== iPAD SPLIT-PANE QURAN ===== */
+/* ===== iPAD / TABLET LAYOUT ===== */
 .reader-placeholder{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--text3);padding:40px}
 .reader-placeholder-icon{font-size:3rem;opacity:.35}
 .reader-placeholder-text{font-size:1rem;opacity:.5}
+/* Centered modal fade-in for tablet */
+@keyframes tabletModalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+
+/* ─────────────────────────────────────────────────
+   TABLET  ≥ 768px  —  iPad portrait / small tablet
+   ───────────────────────────────────────────────── */
 @media(min-width:768px){
-  :root{--ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.5;--ayah-px:48px;}
+
+  :root{
+    --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.5;--ayah-px:48px;
+    --tab-h:0px;       /* no bottom bar on tablet */
+    --nav-rail-w:84px; /* side nav width */
+  }
+
+  /* ── SIDE NAV RAIL ────────────────────────────── */
+  /* Bottom horizontal bar → right-side vertical rail (RTL: right = start side) */
+  .tabbar{
+    bottom:0;top:0;right:0;left:auto;
+    width:var(--nav-rail-w);height:100%;
+    flex-direction:column;justify-content:flex-start;align-items:stretch;
+    padding:32px 0 24px;gap:2px;
+    border-top:none;border-left:1px solid var(--border);
+  }
+  .tab-item{
+    flex:none;flex-direction:column;height:auto;max-height:none;
+    padding:11px 6px 9px;gap:5px;
+    margin:0 8px;width:calc(100% - 16px);border-radius:12px;
+  }
+  .tab-item i{width:40px;height:32px;font-size:18px!important;line-height:32px}
+  .tab-item span{font-size:9px!important}
+  .tab-item.on i{transform:none;box-shadow:none;border-radius:10px}
+
+  /* ── PANELS: inset from right nav rail ────────── */
+  /* RTL: padding-inline-start = padding-right — keeps content clear of nav */
+  .panel{padding-inline-start:var(--nav-rail-w)}
+  /* Prayer hidden state uses position:absolute;inset:0 — override right explicitly */
+  #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
+  /* Full-screen overlays: keep within content area */
+  .auth-panel,.profile-panel,.audio-settings-panel{right:var(--nav-rail-w)!important}
+
+  /* ── HEADER ───────────────────────────────────── */
+  .hdr{padding:12px 24px}
+
+  /* ── QURAN: 2-column split pane ──────────────── */
   #panelQuran.on{flex-direction:row!important}
-  #quranHome{display:flex!important;flex-direction:column;width:300px;flex-shrink:0;border-left:1px solid var(--border);overflow-y:auto;overflow-x:hidden}
-  #quranHome .hdr{flex-shrink:0}
-  #quranHome .search-bar{flex-shrink:0}
-  #quranHome #continueReading{flex-shrink:0}
+  #quranHome{
+    display:flex!important;flex-direction:column;
+    width:300px;flex-shrink:0;
+    border-left:1px solid var(--border);
+    overflow-y:auto;overflow-x:hidden;
+  }
+  #quranHome .hdr,#quranHome .search-bar,#quranHome #continueReading{flex-shrink:0}
   #quranHome .surah-grid{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #quranReader{display:flex!important;flex:1;min-width:0}
   #quranReader:not(.on) .reader-placeholder{display:flex}
@@ -2211,9 +2256,70 @@ body{background:var(--bg);color:var(--text)}
   #quranReader:not(.on) .ayah-list,
   #quranReader:not(.on) #mushafView{display:none!important}
   .reader-hdr .back-btn{display:none!important}
-  .ayah-list{padding:20px var(--ayah-px) calc(var(--tab-h) + var(--safe-b) + 32px)!important}
-  .ayah-card{padding:28px 32px!important;margin-bottom:16px!important}
   .surah-reader-header{border-radius:0!important}
+  .ayah-list{padding:24px var(--ayah-px) 64px!important}
+  .ayah-card{padding:28px 32px!important;margin-bottom:16px!important}
+
+  /* ── PRAYER: 3-column grid + taller sky scene ── */
+  .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:12px 20px 48px;gap:14px}
+  .sky-scene{height:300px}
+
+  /* ── GENCINE: 2 cards per row on home screen ─── */
+  .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 20px 32px}
+
+  /* ── MODALS: centred floating card (not bottom-sheet) ── */
+  .copy-modal{align-items:center!important}
+  .copy-sheet{
+    width:460px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
+    border-radius:20px!important;padding-bottom:16px;
+    animation:tabletModalIn .22s var(--ease)!important;
+  }
+  .repeat-modal{align-items:center!important}
+  .repeat-modal-content{
+    width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
+    border-radius:20px!important;max-height:80vh;
+    animation:tabletModalIn .22s var(--ease)!important;
+  }
+  .prayer-settings-overlay{align-items:center!important}
+  .prayer-settings-sheet{
+    width:480px;max-width:calc(100vw - var(--nav-rail-w) - 32px);
+    border-radius:20px!important;
+    transform:translateY(0)!important;
+    margin:0 auto;
+  }
+  /* Qibla: limit overlay to content area */
+  #qiblaOverlay{right:var(--nav-rail-w)}
+  /* Sidebar: slide in from left of nav rail, not behind it */
+  .sidebar{right:var(--nav-rail-w)}
+}
+
+/* ─────────────────────────────────────────────────
+   LARGE TABLET  ≥ 1024px  —  iPad landscape / 12.9"
+   ───────────────────────────────────────────────── */
+@media(min-width:1024px){
+  :root{
+    --nav-rail-w:100px;
+    --ar-size:2.6rem;
+    --line-h:2.6;
+  }
+  .tab-item{padding:13px 8px 11px;gap:7px}
+  .tab-item i{width:44px;height:36px;font-size:20px!important}
+  .tab-item span{font-size:10px!important}
+
+  /* Wider surah list column */
+  #quranHome{width:340px}
+  .ayah-card{padding:32px 40px!important}
+
+  /* Prayer: bigger sky, roomier grid */
+  .sky-scene{height:330px}
+  .prayer-grid{padding:16px 28px 56px;gap:16px}
+  .prayer-grid-time{font-size:2rem}
+
+  /* Gencine: taller cinematic cards */
+  .genc-card-btn{height:170px}
+
+  /* Settings: centred max-width content */
+  .settings-content{max-width:640px;margin-left:auto;margin-right:auto}
 }
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
