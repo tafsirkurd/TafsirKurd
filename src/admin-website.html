@@ -603,13 +603,15 @@
                         </div>
                         <div class="ws-divider"></div>
                         <div class="ws-field">
-                            <label>Popup Image URL <span style="font-weight:400;color:var(--text-tertiary);">(portrait 9:16)</span></label>
+                            <label>Popup Image <span style="font-weight:400;color:var(--text-tertiary);">(portrait 9:16)</span></label>
                             <div style="display:flex;gap:8px;align-items:center;">
                                 <input type="url" id="pp-img-url" placeholder="https://..." oninput="updatePpImgPreview()" style="flex:1;">
-                                <a href="/admin-images.html" class="ws-link-btn" style="flex-shrink:0;white-space:nowrap;">
-                                    <i data-lucide="image"></i> Browse
-                                </a>
+                                <button type="button" class="ws-link-btn" style="flex-shrink:0;white-space:nowrap;cursor:pointer;border:none;" onclick="document.getElementById('pp-img-file').click()">
+                                    <i data-lucide="upload"></i> Upload
+                                </button>
                             </div>
+                            <input type="file" id="pp-img-file" accept="image/*" style="display:none;" onchange="uploadPopupImage(this)">
+                            <div id="pp-upload-status" style="font-size:12px;color:var(--text-tertiary);margin-top:4px;min-height:16px;"></div>
                         </div>
                         <div class="ws-status" id="pp-status"></div>
                         <button class="ws-save-btn" onclick="savePpSection()">Save Changes</button>
@@ -743,6 +745,37 @@
         document.getElementById('tk-pp-h-prev').textContent   = document.getElementById('pp-headline').value || 'Get the app.';
         document.getElementById('tk-pp-sub-prev').textContent = document.getElementById('pp-subtitle').value || '';
     };
+    var R2_WORKER = 'https://tafsirkurd-images.tefsirkurd.workers.dev';
+    var R2_SECRET = 'tk_r2_img_2026_K8mX3pW7nR9vJ4sQ';
+
+    window.uploadPopupImage = async function (input) {
+        var file = input.files[0];
+        if (!file) return;
+        var status = document.getElementById('pp-upload-status');
+        status.textContent = 'Uploading…';
+        try {
+            var r2Key = 'site-images/app_popup_image_url-' + Date.now() + '.jpg';
+            var form = new FormData();
+            form.append('file', file, r2Key.split('/').pop());
+            form.append('key', r2Key);
+            var res = await fetch(R2_WORKER + '/upload', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + R2_SECRET },
+                body: form
+            });
+            if (!res.ok) throw new Error('Upload failed: HTTP ' + res.status);
+            var data = await res.json();
+            document.getElementById('pp-img-url').value = data.url;
+            window.updatePpImgPreview();
+            status.textContent = '✓ Uploaded — click Save Changes to apply';
+            status.style.color = '#10b981';
+        } catch (e) {
+            status.textContent = '✗ ' + e.message;
+            status.style.color = '#ef4444';
+        }
+        input.value = '';
+    };
+
     window.updatePpImgPreview = function () {
         var url = document.getElementById('pp-img-url').value.trim();
         var img = document.getElementById('pp-preview-img');
