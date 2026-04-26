@@ -101,11 +101,8 @@ window.adminHeartbeat = (function() {
         window.location.href = '/admin-login.html';
     }
 
-    // Owner account never expires
-    const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
-
     function isNoTimeoutAccount() {
-        return sessionStorage.getItem('adminEmail') === NO_TIMEOUT_EMAIL;
+        return sessionStorage.getItem('adminNoTimeout') === '1';
     }
 
     function startSessionTimeout() {

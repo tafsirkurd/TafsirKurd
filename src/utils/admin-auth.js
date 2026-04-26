@@ -149,6 +149,8 @@ async function checkAuth() {
             sessionStorage.setItem('adminRole', data.role);
             sessionStorage.setItem('adminFullName', data.fullName);
             sessionStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
+            if (data.noTimeout) sessionStorage.setItem('adminNoTimeout', '1');
+            else sessionStorage.removeItem('adminNoTimeout');
 
             // Set data-role on body for CSS-based permissions
             document.body.setAttribute('data-role', data.role);
@@ -233,6 +235,8 @@ async function login(email, password) {
             sessionStorage.setItem('adminFullName', data.user.fullName);
             adminPermissions = data.permissions || [];
             sessionStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
+            if (data.noTimeout) sessionStorage.setItem('adminNoTimeout', '1');
+            else sessionStorage.removeItem('adminNoTimeout');
             // Set session start time for 60-minute auto-logout
             sessionStorage.setItem('adminSessionStart', new Date().toISOString());
             // Save grace token — allows 3-min restore after Safari close

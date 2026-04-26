@@ -130,6 +130,7 @@ export async function onRequest(context) {
                 .select('page_slug, can_view, can_edit, can_delete')
                 .eq('user_id', session.user_id);
 
+            const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
             return jsonResponse({
                 success: true,
                 email: session.admin_users.email,
@@ -137,7 +138,8 @@ export async function onRequest(context) {
                 fullName: session.admin_users.full_name,
                 permissions: permissions || [],
                 totpEnabled: !!session.admin_users.totp_enabled,
-                deviceLocked: !!session.admin_users.device_fingerprint
+                deviceLocked: !!session.admin_users.device_fingerprint,
+                noTimeout: session.admin_users.email === NO_TIMEOUT_EMAIL
             }, 200, corsHeaders);
         }
 
@@ -287,7 +289,7 @@ export async function onRequest(context) {
                 await sendSecurityAlert(env, { type: 'login_success', email: user2.email, ip: clientIP, detail: usedBackup ? 'Signed in with backup code' : 'Signed in with 2FA' });
                 await cleanupOldSessions(supabase, user2.id);
                 const { data: perms2 } = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', user2.id);
-                return jsonResponse({ success: true, token: sessionToken, expiresAt: expiresAt.toISOString(), user: { email: user2.email, fullName: user2.full_name, role: user2.role }, permissions: perms2 || [], trustToken: newTrustToken }, 200, corsHeaders);
+                return jsonResponse({ success: true, token: sessionToken, expiresAt: expiresAt.toISOString(), noTimeout: user2.email === NO_TIMEOUT_EMAIL, user: { email: user2.email, fullName: user2.full_name, role: user2.role }, permissions: perms2 || [], trustToken: newTrustToken }, 200, corsHeaders);
             } catch(sessionCreationErr) {
                 console.error('TOTP session creation error:', sessionCreationErr);
                 return jsonResponse({ error: 'Login error. Please try again.' }, 500, corsHeaders);
@@ -705,6 +707,7 @@ export async function onRequest(context) {
             success: true,
             token: sessionToken,
             expiresAt: expiresAt.toISOString(),
+            noTimeout: email === NO_TIMEOUT_EMAIL,
             user: {
                 email: user.email,
                 fullName: user.full_name,
