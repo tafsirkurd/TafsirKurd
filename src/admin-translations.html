@@ -1772,7 +1772,7 @@
                 <div class="page-header">
                     <h1 class="page-title">Translations</h1>
                     <div class="page-actions">
-                        <button class="btn btn-secondary marked-header-btn" id="markedHeaderBtn" onclick="setPlatform('marked', this)" title="Show keys marked for Nareen">🔖 <span>Marked</span> <span class="tab-count" id="markedCount" style="background:rgba(245,158,11,0.18);color:#d97706">--</span></button>
+                        <button class="btn btn-secondary marked-header-btn" id="markedHeaderBtn" onclick="setPlatform('marked', this)" title="Show marked keys">🔖 <span>Marked</span> <span class="tab-count" id="markedCount" style="background:rgba(245,158,11,0.18);color:#d97706">--</span></button>
                         <div class="action-sep"></div>
                         <div class="action-group">
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
@@ -2869,7 +2869,7 @@
                 if (row) Object.assign(row, fields);
                 // Update button state
                 btn.classList.toggle('is-marked', newVal);
-                btn.title = newVal ? 'Unmark' : 'Mark for Nareen';
+                btn.title = newVal ? 'Unmark' : 'Mark';
                 // Update row highlight — walk up DOM from button (reliable even if ID lookup fails)
                 var rowEl = btn.closest('.t-row') || document.getElementById('row-' + id);
                 if (rowEl) rowEl.classList.toggle('is-marked', newVal);
@@ -2877,7 +2877,7 @@
                 document.getElementById('markedCount').textContent = allTranslations.filter(function(t) { return t.marked; }).length;
                 // If in marked view and unmarked, remove the row
                 if (activePlatform === 'marked' && !newVal) filterTranslations();
-                showToast(newVal ? '🔖 Marked for Nareen' : 'Mark removed');
+                showToast(newVal ? '🔖 Marked' : 'Mark removed');
             } catch(e) {
                 showToast('Failed to update mark');
             }
@@ -3563,7 +3563,7 @@
             (function(tid, tMarked) {
                 var markBtn = document.createElement('button');
                 markBtn.className = 't-btn mark' + (tMarked ? ' is-marked' : '');
-                markBtn.title = tMarked ? 'Unmark' : 'Mark for Nareen';
+                markBtn.title = tMarked ? 'Unmark' : 'Mark';
                 markBtn.textContent = '\uD83D\uDD16';
                 markBtn.style.fontSize = '14px';
                 markBtn.addEventListener('click', function(e) {
