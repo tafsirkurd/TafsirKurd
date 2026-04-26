@@ -66,6 +66,18 @@
             display: inline-block;
         }
 
+        @keyframes onlinePulse {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:.5; transform:scale(1.35); }
+        }
+        .online-pulse {
+            display:inline-block;width:10px;height:10px;border-radius:50%;
+            background:#22c55e;animation:onlinePulse 1.8s ease-in-out infinite;
+        }
+        .online-platform-row {
+            font-size:11px;color:var(--text-tertiary);margin-top:6px;
+        }
+
         /* ── Metric Cards ── */
         .metrics-grid {
             display: grid;
@@ -713,6 +725,17 @@
                         <div class="metric-label">Active Readers</div>
                         <div class="metric-sparkline" id="sparkReaders"></div>
                     </div>
+                    <!-- Online Now -->
+                    <div class="metric-card card-animate" style="animation-delay:360ms">
+                        <div class="metric-top">
+                            <div class="metric-icon" style="background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;">
+                                <span class="online-pulse"></span>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="metricOnline">--</div>
+                        <div class="metric-label">Online Now</div>
+                        <div class="online-platform-row" id="dashOnlinePlatforms"></div>
+                    </div>
                 </div>
 
                 <!-- ══ Charts ══ -->
@@ -912,7 +935,11 @@
         // ── Auth & Load ──
         (async () => {
             var isAuth = await window.adminAuth.checkAuth();
-            if (isAuth) await loadDashboardData();
+            if (isAuth) {
+                await loadDashboardData();
+                loadOnlineUsers();
+                setInterval(loadOnlineUsers, 60 * 1000);
+            }
         })();
 
         document.getElementById('menu-toggle').addEventListener('click', function() {
@@ -1519,6 +1546,32 @@
             return data.success ? data : null;
         }
 
+
+        /* ═══════════════════════════════════════════════
+           ONLINE USERS
+           ═══════════════════════════════════════════════ */
+        async function loadOnlineUsers() {
+            var tok = sessionStorage.getItem('adminToken');
+            if (!tok) return;
+            try {
+                var res = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+                    body: JSON.stringify({ action: 'get_online_users', token: tok })
+                });
+                var data = await res.json();
+                if (!data.success) return;
+                document.getElementById('metricOnline').textContent = data.count;
+                var p = data.platforms || {};
+                var parts = [];
+                if (p.ios)     parts.push('iOS ' + p.ios);
+                if (p.android) parts.push('Android ' + p.android);
+                if (p.web)     parts.push('Web ' + p.web);
+                document.getElementById('dashOnlinePlatforms').textContent = parts.join(' · ');
+            } catch (e) {
+                console.error('loadOnlineUsers:', e);
+            }
+        }
 
         /* ═══════════════════════════════════════════════
            CONTENT BUILDERS
