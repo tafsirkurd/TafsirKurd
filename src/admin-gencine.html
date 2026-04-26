@@ -531,6 +531,140 @@
         }
         .section-toggle input:checked + .section-toggle-track { background: #22c55e; }
         .section-toggle input:checked + .section-toggle-track::after { transform: translateX(18px); }
+        /* NEW badge pill */
+        .section-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: linear-gradient(135deg,#f59e0b,#ef4444);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .section-badge-time {
+            font-size: 9px;
+            font-weight: 600;
+            opacity: .85;
+        }
+        .section-badge-remove {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 0;
+            font-size: 12px;
+            line-height: 1;
+            opacity: .75;
+            display: flex;
+            align-items: center;
+        }
+        .section-badge-remove:hover { opacity: 1; }
+        .section-add-badge-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            border: 1px dashed var(--border-medium);
+            background: none;
+            color: var(--text-tertiary);
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .section-add-badge-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+        /* Badge duration dialog */
+        .badge-dlg-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .badge-dlg {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px;
+            width: 360px;
+            max-width: 100%;
+            box-shadow: 0 24px 64px rgba(0,0,0,.22);
+        }
+        .badge-dlg-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg,rgba(245,158,11,.15),rgba(239,68,68,.15));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            margin-bottom: 14px;
+        }
+        .badge-dlg-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .badge-dlg-sub {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+        .badge-dur-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 7px;
+            margin-bottom: 20px;
+        }
+        .badge-dur-opt {
+            padding: 9px 4px;
+            border-radius: 9px;
+            border: 2px solid var(--border-light);
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        .badge-dur-opt:hover { border-color: #f59e0b; color: #f59e0b; }
+        .badge-dur-opt.sel {
+            border-color: #f59e0b;
+            background: rgba(245,158,11,.1);
+            color: #f59e0b;
+        }
+        .badge-dlg-actions { display: flex; gap: 8px; }
+        .badge-dlg-btn {
+            flex: 1;
+            padding: 11px;
+            border-radius: 9px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+        }
+        .badge-dlg-btn.skip { background: var(--bg-hover); color: var(--text-secondary); }
+        .badge-dlg-btn.skip:hover { background: var(--bg-active); }
+        .badge-dlg-btn.confirm { background: #f59e0b; color: #fff; }
+        .badge-dlg-btn.confirm:hover { background: #d97706; }
+        .badge-dlg-btn.confirm:disabled { opacity: .4; cursor: default; }
         /* Drag-and-drop (item-cards) */
         .item-card[draggable]{cursor:grab}
         .item-card[draggable]:active{cursor:grabbing}
@@ -1874,8 +2008,21 @@ var SECTION_KEYS = ['hadith','adhkar','dua','tasbih','asma','books'];
 function _orderedSections() {
     return SECTION_KEYS.map(function(k, i) {
         var s = allSections.find(function(x){ return x.key === k; });
-        return { key: k, sort_order: s ? s.sort_order : (i + 1) * 10, active: s ? s.active : true };
+        return {
+            key: k,
+            sort_order: s ? s.sort_order : (i + 1) * 10,
+            active: s ? s.active : true,
+            badge_until: s ? (s.badge_until || null) : null
+        };
     }).sort(function(a, b){ return a.sort_order - b.sort_order; });
+}
+function _badgeTimeLeft(isoStr) {
+    if (!isoStr) return null;
+    var ms = new Date(isoStr) - new Date();
+    if (ms <= 0) return null;
+    var h = Math.floor(ms / 3600000);
+    if (h < 24) return h + 'h left';
+    return Math.floor(h / 24) + 'd left';
 }
 async function loadSections() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
@@ -1925,12 +2072,41 @@ function renderSections() {
         var keyEl = mke('div', 'section-row-key'); keyEl.textContent = key;
         body.appendChild(lbl); body.appendChild(keyEl);
 
+        /* Badge pill or add-badge button */
+        var timeLeft = _badgeTimeLeft(item.badge_until);
+        if (isActive && timeLeft) {
+            var pill = mke('div', 'section-badge-pill');
+            var newTxt = document.createTextNode('NEW ');
+            var timeTxt = mke('span', 'section-badge-time'); timeTxt.textContent = timeLeft;
+            var rmBtn = mke('button', 'section-badge-remove');
+            rmBtn.textContent = '×';
+            rmBtn.title = 'Remove badge';
+            rmBtn.onclick = (function(k){ return function(e){ e.preventDefault(); removeSectionBadge(k); }; })(key);
+            pill.appendChild(newTxt); pill.appendChild(timeTxt); pill.appendChild(rmBtn);
+            row.appendChild(pill);
+        } else if (isActive) {
+            var addBadgeBtn = mke('button', 'section-add-badge-btn');
+            addBadgeBtn.textContent = '+ NEW badge';
+            addBadgeBtn.onclick = (function(k){ return function(e){ e.preventDefault(); showBadgeDialog(k, function(hours){ _doSetBadge(k, hours); }, null); }; })(key);
+            row.appendChild(addBadgeBtn);
+        }
+
         var toggleWrap = mke('label', 'section-toggle');
         toggleWrap.title = isActive ? 'Visible — click to hide' : 'Hidden — click to show';
         var inp = mke('input');
         inp.type = 'checkbox';
         if (isActive) inp.checked = true;
-        inp.onchange = (function(k, el){ return function(){ toggleSection(k, el.checked); }; })(key, inp);
+        inp.onchange = (function(k){ return function(e){
+            if (e.target.checked) {
+                e.target.checked = false; // revert — dialog will re-render after save
+                showBadgeDialog(k,
+                    function(hours){ _doToggleSection(k, true, hours); },
+                    function(){ _doToggleSection(k, true, null); }
+                );
+            } else {
+                _doToggleSection(k, false, null);
+            }
+        }; })(key);
         var track = mke('span', 'section-toggle-track');
         toggleWrap.appendChild(inp);
         toggleWrap.appendChild(track);
@@ -1958,6 +2134,7 @@ function renderSections() {
         row.appendChild(handle);
         row.appendChild(iconWrap);
         row.appendChild(body);
+        /* badge pill / add-badge-btn already appended above */
         row.appendChild(toggleWrap);
         list.appendChild(row);
     });
@@ -1972,7 +2149,7 @@ async function dropSection(fromKey, toKey) {
     if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
     var moved = ordered.splice(fromIdx, 1)[0];
     ordered.splice(toIdx, 0, moved);
-    var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active }; });
+    var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active, badge_until: s.badge_until || null }; });
     var r = await supabase.from('gencine_sections').upsert(upserts, { onConflict: 'key' });
     if (r.error) { showNotification('Reorder failed: ' + r.error.message, 'error'); return; }
     localStorage.removeItem('gencine_sections_v1');
@@ -1994,6 +2171,95 @@ async function moveSection(key, dir) {
     if (r1.error || r2.error) { showNotification('Sort update failed', 'error'); return; }
     localStorage.removeItem('gencine_sections_v1');
     await loadSections();
+}
+var BADGE_DURATIONS = [
+    { label: '1h',    hours: 1   },
+    { label: '6h',    hours: 6   },
+    { label: '12h',   hours: 12  },
+    { label: '1 day', hours: 24  },
+    { label: '2 days',hours: 48  },
+    { label: '3 days',hours: 72  },
+    { label: '5 days',hours: 120 },
+    { label: '1 week',hours: 168 },
+];
+function showBadgeDialog(key, onConfirm, onSkip) {
+    var meta = SECTION_META[key] || { label: key };
+    var selectedHours = null;
+    var overlay = mke('div', 'badge-dlg-overlay');
+    var dlg = mke('div', 'badge-dlg');
+
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '🏷️';
+    var title = mke('div', 'badge-dlg-title'); title.textContent = 'Add NEW badge to ' + meta.label + '?';
+    var sub = mke('div', 'badge-dlg-sub');
+    sub.textContent = 'The badge appears on this section in the app until the time runs out.';
+
+    var grid = mke('div', 'badge-dur-grid');
+    BADGE_DURATIONS.forEach(function(d) {
+        var opt = mke('button', 'badge-dur-opt');
+        opt.type = 'button';
+        opt.textContent = d.label;
+        opt.onclick = function() {
+            grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
+            opt.classList.add('sel');
+            selectedHours = d.hours;
+            confirmBtn.disabled = false;
+        };
+        grid.appendChild(opt);
+    });
+
+    var actions = mke('div', 'badge-dlg-actions');
+    var skipBtn = mke('button', 'badge-dlg-btn skip');
+    skipBtn.type = 'button';
+    skipBtn.textContent = 'No badge';
+    skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
+
+    var confirmBtn = mke('button', 'badge-dlg-btn confirm');
+    confirmBtn.type = 'button';
+    confirmBtn.textContent = 'Add Badge';
+    confirmBtn.disabled = true;
+    confirmBtn.onclick = function() { overlay.remove(); if (onConfirm) onConfirm(selectedHours); };
+
+    actions.appendChild(skipBtn); actions.appendChild(confirmBtn);
+    dlg.appendChild(icon); dlg.appendChild(title); dlg.appendChild(sub);
+    dlg.appendChild(grid); dlg.appendChild(actions);
+    overlay.appendChild(dlg);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) { overlay.remove(); if (onSkip) onSkip(); }
+    });
+}
+async function _doToggleSection(key, newActive, badgeHours) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var badgeUntil = null;
+    if (newActive && badgeHours) {
+        var d = new Date(); d.setHours(d.getHours() + badgeHours);
+        badgeUntil = d.toISOString();
+    }
+    var payload = { key: key, active: newActive, badge_until: badgeUntil };
+    var r = await supabase.from('gencine_sections').upsert(payload, { onConflict: 'key' });
+    if (r.error) { showNotification('Failed: ' + r.error.message, 'error'); return; }
+    var label = (SECTION_META[key]||{label:key}).label;
+    showNotification(label + ' ' + (newActive ? 'shown' : 'hidden') + (badgeUntil ? ' with NEW badge' : '') + '.', 'success');
+    await loadSections();
+    localStorage.removeItem('gencine_sections_v1');
+}
+async function _doSetBadge(key, badgeHours) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    if (!badgeHours) return;
+    var d = new Date(); d.setHours(d.getHours() + badgeHours);
+    var r = await supabase.from('gencine_sections').upsert({ key: key, badge_until: d.toISOString() }, { onConflict: 'key' });
+    if (r.error) { showNotification('Badge failed: ' + r.error.message, 'error'); return; }
+    showNotification('NEW badge added.', 'success');
+    await loadSections();
+    localStorage.removeItem('gencine_sections_v1');
+}
+async function removeSectionBadge(key) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').upsert({ key: key, badge_until: null }, { onConflict: 'key' });
+    if (r.error) { showNotification('Remove badge failed', 'error'); return; }
+    showNotification('Badge removed.', 'success');
+    await loadSections();
+    localStorage.removeItem('gencine_sections_v1');
 }
 async function toggleSection(key, newActive) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
