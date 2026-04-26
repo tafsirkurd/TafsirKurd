@@ -1176,6 +1176,25 @@ body{background:var(--bg);color:var(--text)}
 .iv-search-input::placeholder{color:var(--text3)}
 .iv-search-clear{position:absolute;left:8px;width:28px;height:28px;border-radius:50%;background:var(--bg3);display:none;align-items:center;justify-content:center;font-size:.7rem;color:var(--text2);cursor:pointer}
 .iv-search-clear.on{display:flex}
+/* ── IV Hero Carousel ── */
+.iv-hero{position:relative;width:100%;overflow:hidden;margin-bottom:4px;flex-shrink:0}
+.iv-hero-track{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform}
+.iv-hero-slide{flex:0 0 100%;position:relative;height:200px;overflow:hidden;cursor:pointer}
+.iv-hero-bg{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(18px) brightness(.55) saturate(1.3);transform:scale(1.08);transition:opacity .4s}
+.iv-hero-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.iv-hero-img img{height:100%;width:auto;max-width:none;object-fit:cover;object-position:center}
+.iv-hero-gradient{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.2) 55%,transparent 100%)}
+.iv-hero-content{position:absolute;bottom:0;left:0;right:0;padding:14px 16px 14px;display:flex;align-items:flex-end;gap:12px}
+.iv-hero-play{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;flex-shrink:0;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background .2s,transform .15s;padding-right:2px}
+.iv-hero-slide:active .iv-hero-play{background:rgba(255,255,255,.32);transform:scale(.93)}
+.iv-hero-play i{color:#fff;font-size:1rem}
+.iv-hero-info{flex:1;min-width:0}
+.iv-hero-ep{font-size:.78rem;font-weight:700;color:#fff;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.iv-hero-series{font-size:.68rem;color:rgba(255,255,255,.7);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iv-hero-speaker{font-size:.64rem;color:rgba(255,255,255,.5);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iv-hero-dots{position:absolute;bottom:10px;right:50%;transform:translateX(50%);display:flex;gap:5px;pointer-events:none}
+.iv-hero-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.35);transition:background .3s,width .3s}
+.iv-hero-dot.on{background:#fff;width:16px;border-radius:3px}
 .iv-home,.iv-series-view{width:100%;flex:1;display:flex;flex-direction:column}
 .iv-series-view{display:none}
 .iv-series-view.on{display:block}
@@ -2699,6 +2718,10 @@ html.is-ipad .tab-item span{white-space:normal!important;line-height:1.2;text-al
         <input type="text" id="ivSearchInput" class="iv-search-input" data-i18n-placeholder="iv.search_placeholder" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." oninput="App.ivSearch(this.value)">
         <button class="iv-search-clear" onclick="App.ivClearSearch()"><i class="fas fa-times"></i></button>
       </div>
+    </div>
+    <div id="ivHero" class="iv-hero" style="display:none">
+      <div id="ivHeroTrack" class="iv-hero-track"></div>
+      <div id="ivHeroDots" class="iv-hero-dots"></div>
     </div>
     <div id="ivLoading" class="iv-center-loading"></div>
     <div id="ivGrid" class="iv-grid"></div>
