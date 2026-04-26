@@ -225,10 +225,18 @@
             lucide.createIcons({ nodes: Array.from(list.querySelectorAll('i[data-lucide]')) });
         }
 
-        // Scroll active item into view
+        // Scroll active item into view within the list (manual — avoids page scroll)
         var activeEl = list.querySelector('[data-active]');
         if (activeEl) {
-            activeEl.scrollIntoView({ block: 'nearest' });
+            var itemTop = activeEl.offsetTop;
+            var itemBot = itemTop + activeEl.offsetHeight;
+            var listTop = list.scrollTop;
+            var listBot = listTop + list.clientHeight;
+            if (itemBot > listBot) {
+                list.scrollTop = itemBot - list.clientHeight + 6;
+            } else if (itemTop < listTop) {
+                list.scrollTop = itemTop - 6;
+            }
         }
     }
 
