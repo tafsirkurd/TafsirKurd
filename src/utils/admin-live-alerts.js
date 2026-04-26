@@ -19,10 +19,9 @@
 
   var DURATION           = 15;
   var MAX_QUEUE          = 30;
-  var WARMUP_MS          = 5000;           // wait 5s before reacting to events
+  var POLL_MS            = 30000;          // poll online users every 30 seconds
+  var WARMUP_MS          = 6000;           // wait 6s before first poll (page settle)
   var PER_USER_GAP_MS    = 5 * 60 * 1000; // max 1 online popup per user per 5 min
-  var SESSION_FRESH_MS   = 3 * 60 * 1000; // last_active_at must be within 3 min
-  var OFFLINE_TIMEOUT_MS = 12 * 60 * 1000;// no update for 12 min = offline
 
   /* ── event type definitions ─────────────────────────────── */
   var TYPES = {
@@ -138,84 +137,88 @@
     return e;
   }
 
-  /* ── online tracking state ──────────────────────────────── */
-  var _onlineMap       = {};  // userId → { name, email, platform, last_active_at, ts }
-  var _perUserShown    = {};  // userId → timestamp of last online popup shown
-  var _offlineTimer    = null;
+  /* ── online polling state ───────────────────────────────── */
+  var _onlineMap    = {};   // userId → { name, platform, lastActiveAt, ts }
+  var _prevIds      = null; // null = not yet fetched; Set after first fetch
+  var _perUserShown = {};   // userId → timestamp of last popup shown
+  var _pollTimer    = null;
 
-  function _startOfflineMonitor() {
-    if (_offlineTimer) return;
-    _offlineTimer = setInterval(function () {
-      var now = Date.now();
-      Object.keys(_onlineMap).forEach(function (uid) {
-        var u = _onlineMap[uid];
-        if (now - u.ts > OFFLINE_TIMEOUT_MS) {
-          delete _onlineMap[uid];
-          _enqueue('user_offline', u);
-        }
-      });
-    }, 30000); // check every 30 seconds
-  }
+  function _pollOnline() {
+    var tok = sessionStorage.getItem('adminToken');
+    if (!tok) return;
 
-  function _handleSession(evType, rec) {
-    if (Date.now() - _startTime < WARMUP_MS) return;
-    var userId = rec.user_id || rec.id;
-    if (!userId) return;
+    fetch('/admin-users-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get_online_users', token: tok })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (!data.success) return;
 
-    var la  = rec.last_active_at ? new Date(rec.last_active_at).getTime() : Date.now();
-    var fresh = (Date.now() - la < SESSION_FRESH_MS);
+      var users   = data.users || [];
+      var newIds  = new Set((data.userIds || []));
+      var userMap = {};
+      users.forEach(function(u){ userMap[u.userId] = u; });
 
-    // For INSERT always treat as fresh; for UPDATE require freshness
-    if (evType !== 'INSERT' && !fresh) return;
-
-    var wasOnline  = !!_onlineMap[userId];
-    var shouldShow = (evType === 'INSERT') || !wasOnline;
-    var gapOk      = Date.now() - (_perUserShown[userId] || 0) > PER_USER_GAP_MS;
-
-    // Update tracking map
-    _onlineMap[userId] = {
-      id: userId,
-      platform: rec.platform || 'Web',
-      last_active_at: rec.last_active_at,
-      ts: Date.now(),
-      // keep existing name/email if already enriched
-      name:  (_onlineMap[userId]||{}).name  || rec.name  || null,
-      email: (_onlineMap[userId]||{}).email || rec.email || null,
-    };
-
-    _startOfflineMonitor();
-
-    if (shouldShow && gapOk) {
-      _perUserShown[userId] = Date.now();
-      _enrichAndEnqueue('user_online', userId, rec);
-    }
-  }
-
-  /* Async profile enrichment — fire-and-forget */
-  function _enrichAndEnqueue(type, userId, sessionRec) {
-    var sb = window._supabase;
-    if (!sb) { _enqueue(type, sessionRec); return; }
-
-    sb.from('profiles')
-      .select('full_name,display_name,email,avatar_url')
-      .eq('id', userId)
-      .single()
-      .then(function (res) {
-        var pr = (res && res.data) || {};
-        var enriched = Object.assign({}, sessionRec, {
-          name:  pr.full_name || pr.display_name || (pr.email||'').split('@')[0] || 'User',
-          email: pr.email || sessionRec.email || userId,
+      if (_prevIds !== null) {
+        /* users who just came online */
+        newIds.forEach(function(id) {
+          if (!_prevIds.has(id)) {
+            var u   = userMap[id] || {};
+            var gapOk = Date.now() - (_perUserShown[id]||0) > PER_USER_GAP_MS;
+            if (gapOk) {
+              _perUserShown[id] = Date.now();
+              _enqueue('user_online', {
+                id:             id,
+                name:           u.name    || id,
+                email:          u.name    || id,
+                platform:       u.platform || 'Web',
+                last_active_at: u.lastActiveAt,
+              });
+            }
+          }
         });
-        // Update tracking map with enriched data
-        if (_onlineMap[userId]) {
-          _onlineMap[userId].name  = enriched.name;
-          _onlineMap[userId].email = enriched.email;
-        }
-        _enqueue(type, enriched);
-      })
-      .catch(function () {
-        _enqueue(type, sessionRec);
+
+        /* users who just went offline */
+        _prevIds.forEach(function(id) {
+          if (!newIds.has(id)) {
+            var u = _onlineMap[id] || {};
+            _enqueue('user_offline', {
+              id:             id,
+              name:           u.name     || id,
+              email:          u.email    || id,
+              platform:       u.platform || 'Web',
+              last_active_at: u.lastActiveAt,
+              ts:             Date.now(),
+            });
+            delete _onlineMap[id];
+          }
+        });
+      }
+
+      /* update local map */
+      _prevIds = newIds;
+      users.forEach(function(u) {
+        _onlineMap[u.userId] = {
+          name:          u.name,
+          email:         u.name,
+          platform:      u.platform,
+          lastActiveAt:  u.lastActiveAt,
+          ts:            Date.now(),
+        };
       });
+    })
+    .catch(function(e){ console.warn('[LiveAlerts] poll error:', e); });
+  }
+
+  function _startPolling() {
+    if (_pollTimer) return;
+    /* first poll after warmup, then every POLL_MS */
+    setTimeout(function() {
+      _pollOnline();
+      _pollTimer = setInterval(_pollOnline, POLL_MS);
+    }, WARMUP_MS);
   }
 
   /* ── popup queue state ──────────────────────────────────── */
@@ -556,30 +559,19 @@
     document.head.appendChild(s);
   }
 
-  /* ── Supabase realtime ───────────────────────────────────── */
-  function _setup(){
+  /* ── Supabase realtime (new members, messages, videos) ──── */
+  function _setupRealtime(){
     var sb=window._supabase;
     if(!sb||_channel)return;
 
-    _channel=sb.channel('admin_live_alerts_v8')
+    _channel=sb.channel('admin_live_alerts_v9')
 
-      /* NEW USER registered */
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_data'},
         function(p){ _enqueue('user_joined',p.new||{}); })
 
-      /* USER SESSION created — user just opened the app */
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_sessions'},
-        function(p){ _handleSession('INSERT',p.new||{}); })
-
-      /* USER SESSION updated — user is still active */
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_sessions'},
-        function(p){ _handleSession('UPDATE',p.new||{}); })
-
-      /* NEW MESSAGE */
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'contact_messages'},
         function(p){ _enqueue('new_message',p.new||{}); })
 
-      /* NEW EPISODE */
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'islamvoice_episodes'},
         function(p){ _enqueue('new_video',p.new||{}); })
 
@@ -587,9 +579,13 @@
   }
 
   function _init(){
-    if(window._supabase){_setup();return;}
+    /* start online/offline polling immediately — no Supabase needed */
+    _startPolling();
+
+    /* wire up Realtime for other events once Supabase is ready */
+    if(window._supabase){ _setupRealtime(); return; }
     var n=0,poll=setInterval(function(){
-      if(window._supabase){clearInterval(poll);_setup();}
+      if(window._supabase){clearInterval(poll);_setupRealtime();}
       else if(++n>60){clearInterval(poll);console.warn('[LiveAlerts] _supabase unavailable');}
     },500);
   }
