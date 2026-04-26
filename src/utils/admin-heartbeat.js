@@ -101,10 +101,26 @@ window.adminHeartbeat = (function() {
         window.location.href = '/admin-login.html';
     }
 
+    // Owner account never expires
+    const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
+
+    function isNoTimeoutAccount() {
+        return sessionStorage.getItem('adminEmail') === NO_TIMEOUT_EMAIL;
+    }
+
     function startSessionTimeout() {
         // Clear any existing timeout
         if (sessionTimeoutTimer) {
             clearTimeout(sessionTimeoutTimer);
+        }
+
+        // Owner account: record start time but never schedule auto-logout
+        if (isNoTimeoutAccount()) {
+            if (!sessionStorage.getItem('adminSessionStart')) {
+                sessionStorage.setItem('adminSessionStart', new Date().toISOString());
+            }
+            console.log('♾️ No-timeout account — session never expires');
+            return;
         }
 
         // Check if there's an existing session start time (page reload)

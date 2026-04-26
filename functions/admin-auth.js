@@ -261,7 +261,10 @@ export async function onRequest(context) {
 
                 await supabase.from('admin_users').update({ failed_attempts: 0, last_login: new Date().toISOString(), status: 'online', last_heartbeat: new Date().toISOString() }).eq('id', user2.id);
                 const sessionToken = generateSecureToken();
-                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
+                const expiresAt = user2.email === NO_TIMEOUT_EMAIL
+                    ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000) // never expires
+                    : new Date(Date.now() + 24 * 60 * 60 * 1000);
                 const { error: sessionErr } = await supabase.from('admin_sessions').insert({ user_id: user2.id, token: sessionToken, ip_address: clientIP, user_agent: userAgent, device_fingerprint: deviceFingerprint, expires_at: expiresAt.toISOString() });
                 if (sessionErr) throw new Error(sessionErr.message);
                 // Trust device for 30 days if requested
@@ -664,7 +667,10 @@ export async function onRequest(context) {
 
         // 9. Generate session token
         const sessionToken = generateSecureToken();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
+        const expiresAt = email === NO_TIMEOUT_EMAIL
+            ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000) // never expires
+            : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         // 10. Create session
         await supabase

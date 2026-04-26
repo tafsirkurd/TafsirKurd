@@ -5,12 +5,25 @@
 (function() {
     let timerUpdateInterval = null;
 
+    const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
+    function isNoTimeoutAccount() {
+        return sessionStorage.getItem('adminEmail') === NO_TIMEOUT_EMAIL;
+    }
+
     function updateSessionTimerDisplay() {
         const timerElement = document.getElementById('sessionTimer');
         const timerText = document.getElementById('sessionTimerText');
 
         if (!timerElement || !timerText) {
             console.warn('❌ Session timer elements not found in DOM');
+            return;
+        }
+
+        // Owner account: show ∞ and never expire
+        if (isNoTimeoutAccount()) {
+            timerText.textContent = '∞';
+            timerElement.classList.remove('warning', 'critical');
+            timerElement.title = 'No session timeout';
             return;
         }
 
