@@ -8916,9 +8916,14 @@ function renderIvHero(){
   }
   if(all.length<2){hero.style.display='none';return;}
 
-  // Shuffle and take 5
+  // Shuffle, then deduplicate by series so each slide shows a different series
   for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=all[i];all[i]=all[j];all[j]=tmp;}
-  _ivHeroSlides=all.slice(0,5);
+  var seen=new Set();
+  var deduped=[];
+  for(var k=0;k<all.length&&deduped.length<5;k++){
+    if(!seen.has(all[k].series.id)){seen.add(all[k].series.id);deduped.push(all[k]);}
+  }
+  _ivHeroSlides=deduped;
   _ivHeroIdx=0;
 
   hero.style.display='';
@@ -8945,7 +8950,7 @@ function renderIvHero(){
     var img=document.createElement('img');
     img.src=thumbSrc;
     img.alt='';
-    img.loading=idx===0?'eager':'lazy';
+    img.loading='eager';
     img.onerror=function(){this.parentNode.style.display='none';};
     imgWrap.appendChild(img);
     slide.appendChild(imgWrap);
