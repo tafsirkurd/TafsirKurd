@@ -129,9 +129,37 @@
     }
 
     // ── Render ────────────────────────────────────────────────────
+    var _lastRenderQuery = null;
+    var _lastRenderResultLen = 0;
+
     function renderList() {
-        list.textContent = '';
         var q = input.value.toLowerCase();
+        var sel = selectables();
+
+        // Fast path: only activeIdx changed — update classes in-place, skip DOM rebuild
+        if (q === _lastRenderQuery && sel.length === _lastRenderResultLen) {
+            list.querySelectorAll('.cp-item').forEach(function(el) {
+                var idx = parseInt(el.dataset.selidx, 10);
+                var active = idx === activeIdx;
+                el.classList.toggle('cp-item-active', active);
+                if (active) el.setAttribute('data-active', '1');
+                else el.removeAttribute('data-active');
+            });
+            var activeEl2 = list.querySelector('[data-active]');
+            if (activeEl2) {
+                var iTop = activeEl2.offsetTop;
+                var iBot = iTop + activeEl2.offsetHeight;
+                var lTop = list.scrollTop;
+                var lBot = lTop + list.clientHeight;
+                if (iBot > lBot) list.scrollTop = iBot - list.clientHeight + 6;
+                else if (iTop < lTop) list.scrollTop = iTop - 6;
+            }
+            return;
+        }
+        _lastRenderQuery = q;
+        _lastRenderResultLen = sel.length;
+
+        list.textContent = '';
         var selIdx = 0;
 
         if (!results.length || (results.length === 1 && results[0].type === 'header')) {

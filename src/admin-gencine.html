@@ -2155,23 +2155,7 @@ async function dropSection(fromKey, toKey) {
     localStorage.removeItem('gencine_sections_v1');
     await loadSections();
 }
-async function moveSection(key, dir) {
-    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    var ordered = _orderedSections();
-    var idx = ordered.findIndex(function(s){ return s.key === key; });
-    var swapIdx = idx + dir;
-    if (swapIdx < 0 || swapIdx >= ordered.length) return;
-    var a = ordered[idx], b = ordered[swapIdx];
-    /* Ensure distinct sort_order values before swap */
-    ordered.forEach(function(s, i){ if (s.sort_order === ordered[i > 0 ? i-1 : 0].sort_order && i > 0) s.sort_order = i * 10; });
-    var tmp = a.sort_order; a.sort_order = b.sort_order; b.sort_order = tmp;
-    if (a.sort_order === b.sort_order) { a.sort_order = idx * 10; b.sort_order = swapIdx * 10; }
-    var r1 = await supabase.from('gencine_sections').upsert({ key: a.key, sort_order: a.sort_order }, { onConflict: 'key' });
-    var r2 = await supabase.from('gencine_sections').upsert({ key: b.key, sort_order: b.sort_order }, { onConflict: 'key' });
-    if (r1.error || r2.error) { showNotification('Sort update failed', 'error'); return; }
-    localStorage.removeItem('gencine_sections_v1');
-    await loadSections();
-}
+
 var BADGE_DURATIONS = [
     { label: '1h',    hours: 1   },
     { label: '6h',    hours: 6   },

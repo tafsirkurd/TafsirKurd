@@ -897,6 +897,23 @@ window.GencineUI = {
       home.appendChild(btn);
     });
 
+    /* Schedule re-render when the earliest active badge expires */
+    if (_dbSections) {
+      var soonest = null;
+      _dbSections.forEach(function(s) {
+        if (s.badge_until) {
+          var exp = new Date(s.badge_until).getTime();
+          if (exp > Date.now() && (!soonest || exp < soonest)) soonest = exp;
+        }
+      });
+      if (soonest) {
+        setTimeout(function() {
+          self._homeEl = null;
+          if (self._view === 'home') self._draw();
+        }, soonest - Date.now() + 100);
+      }
+    }
+
     this._homeEl = home;
     container.appendChild(home);
   },
