@@ -467,6 +467,7 @@ body[data-admin-theme="noor"] .sidebar-profile-avatar {
     display: flex;
     gap: 8px;
     margin-left: auto;
+    flex-shrink: 0;
 }
 
 .topbar-btn {
