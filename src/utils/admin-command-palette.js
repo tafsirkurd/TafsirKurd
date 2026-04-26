@@ -429,6 +429,7 @@
         ic.setAttribute('data-lucide', 'command');
         btn.appendChild(ic);
         var label = document.createElement('span');
+        label.style.fontFamily = 'system-ui,-apple-system,sans-serif';
         var isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
         label.textContent = isMac ? '⌘K' : 'Ctrl K';
         btn.appendChild(label);
