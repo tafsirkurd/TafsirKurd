@@ -9025,25 +9025,25 @@ function renderIvHero(){
 
   _ivHeroTrackEl=track;
 
-  // Touch swipe with velocity check
+  // Touch swipe — stacked slides so just track horizontal drag direction
   var _touchStartX=0,_touchStartT=0,_dragging=false;
-  track.addEventListener('touchstart',function(e){
+  hero.addEventListener('touchstart',function(e){
     _touchStartX=e.touches[0].clientX;
     _touchStartT=Date.now();
     _dragging=true;
     if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}
   },{passive:true});
-  track.addEventListener('touchend',function(e){
+  hero.addEventListener('touchend',function(e){
     if(!_dragging)return;
     _dragging=false;
     var dx=_touchStartX-e.changedTouches[0].clientX;
     var dt=Date.now()-_touchStartT;
-    var velocity=Math.abs(dx)/dt; // px/ms
-    if(Math.abs(dx)<20||velocity<0.15)return _ivHeroResetTimer();
+    var velocity=Math.abs(dx)/dt;
+    if(Math.abs(dx)<20||velocity<0.12){_ivHeroResetTimer();return;}
     _ivHeroGoTo(dx>0?_ivHeroIdx+1:_ivHeroIdx-1);
     _ivHeroResetTimer();
   },{passive:true});
-  track.addEventListener('touchcancel',function(){_dragging=false;_ivHeroResetTimer();},{passive:true});
+  hero.addEventListener('touchcancel',function(){_dragging=false;_ivHeroResetTimer();},{passive:true});
 
   _ivHeroBuilt=true;
   _ivHeroGoTo(0);
@@ -9056,7 +9056,10 @@ function _ivHeroInvalidate(){_ivHeroBuilt=false;_ivHeroSlides=[];if(_ivHeroTimer
 function _ivHeroGoTo(idx){
   if(!_ivHeroSlides.length)return;
   _ivHeroIdx=(idx+_ivHeroSlides.length)%_ivHeroSlides.length;
-  if(_ivHeroTrackEl)_ivHeroTrackEl.style.transform='translateX('+(-_ivHeroIdx*100)+'%)';
+  if(_ivHeroTrackEl){
+    var slides=_ivHeroTrackEl.querySelectorAll('.iv-hero-slide');
+    slides.forEach(function(s,i){s.classList.toggle('iv-hero-active',i===_ivHeroIdx);});
+  }
   if(_ivHeroDotsEls)_ivHeroDotsEls.forEach(function(d,i){d.classList.toggle('on',i===_ivHeroIdx);});
 }
 
