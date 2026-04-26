@@ -73,13 +73,39 @@
         }
 
         /* ── Platform tabs ── */
+        .platform-tabs-wrap {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .platform-tabs-wrap::before,
+        .platform-tabs-wrap::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 2px;
+            width: 32px;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.2s;
+        }
+        .platform-tabs-wrap::before {
+            left: 0;
+            background: linear-gradient(to right, var(--bg-surface), transparent);
+            opacity: 0;
+        }
+        .platform-tabs-wrap::after {
+            right: 0;
+            background: linear-gradient(to left, var(--bg-surface), transparent);
+        }
+        .platform-tabs-wrap.scroll-start::before { opacity: 1; }
+        .platform-tabs-wrap.scroll-end::after { opacity: 0; }
         .platform-tabs {
             display: flex;
             gap: 0;
-            margin-bottom: 24px;
             border-bottom: 2px solid var(--border-light);
             overflow-x: auto;
             scrollbar-width: none;
+            scroll-behavior: smooth;
         }
         .platform-tabs::-webkit-scrollbar { display: none; }
         .platform-tab {
@@ -803,7 +829,8 @@
             </div>
 
             <!-- Tabs -->
-            <div class="platform-tabs">
+            <div class="platform-tabs-wrap" id="tabsWrap">
+            <div class="platform-tabs" id="platformTabs">
                 <button class="platform-tab active" onclick="switchTab('duas')">
                     <i data-lucide="hand-heart" style="width:15px;height:15px"></i>
                     Duas
@@ -829,15 +856,16 @@
                     Books
                     <span class="tab-count" id="tab-count-books">0</span>
                 </button>
-                <button class="platform-tab" onclick="switchTab('sections')">
-                    <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
-                    Sections
-                </button>
                 <button class="platform-tab" onclick="switchTab('adhkar')">
                     <i data-lucide="wind" style="width:15px;height:15px"></i>
                     Adhkar
                     <span class="tab-count" id="tab-count-adhkar">0</span>
                 </button>
+                <button class="platform-tab" onclick="switchTab('sections')">
+                    <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
+                    Sections
+                </button>
+            </div>
             </div>
 
             <!-- ── SECTIONS ── -->
@@ -1321,14 +1349,18 @@
 
 /* ── Tab switching ── */
 var currentTab = 'duas';
-var TAB_NAMES = ['duas','hadiths','tasbih','asma99','books','sections','adhkar'];
+var TAB_NAMES = ['duas','hadiths','tasbih','asma99','books','adhkar','sections'];
 var addLabels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasbih: 'Add Dhikr', asma99: '', books: 'Add Book', adhkar: 'Add Adhkar' };
 
 function switchTab(name) {
     currentTab = name;
+    var activeBtn = null;
     document.querySelectorAll('.platform-tab').forEach(function(b, i) {
-        b.classList.toggle('active', TAB_NAMES[i] === name);
+        var isActive = TAB_NAMES[i] === name;
+        b.classList.toggle('active', isActive);
+        if (isActive) activeBtn = b;
     });
+    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('panel-' + name).classList.add('active');
     var addBtn = document.getElementById('top-add-btn');
@@ -2480,6 +2512,19 @@ if (searchInput) searchInput.addEventListener('input', function() {
     });
 });
 if (typeof lucide !== 'undefined') lucide.createIcons();
+
+// ── Tab scroll fade indicators ────────────────────────────────
+(function() {
+    var tabs = document.getElementById('platformTabs');
+    var wrap = document.getElementById('tabsWrap');
+    if (!tabs || !wrap) return;
+    function updateFade() {
+        wrap.classList.toggle('scroll-start', tabs.scrollLeft > 8);
+        wrap.classList.toggle('scroll-end', tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 8);
+    }
+    tabs.addEventListener('scroll', updateFade, { passive: true });
+    updateFade();
+})();
 </script>
 <script src="/utils/admin-command-palette.js"></script>
 </body>
