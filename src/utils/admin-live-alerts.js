@@ -400,8 +400,8 @@
 
       /* backdrop — dark navy, not pure black */
       '.la-backdrop{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;',
-        'background:rgba(4,3,18,.62);',
-        'backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);',
+        'background:rgba(4,3,18,.38);',
+        'backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);',
         'animation:la-bd-in .24s ease forwards;padding:16px;box-sizing:border-box;}',
       '.la-backdrop.la-out{animation:la-bd-out .32s ease forwards;}',
 
