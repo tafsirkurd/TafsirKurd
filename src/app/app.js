@@ -8963,7 +8963,7 @@ function renderIvHero(){
   hero.style.display='';
   clear(track);
   clear(dotsEl);
-  _ivHeroDotsEls=[];
+  _ivHeroDotsEls=null;
 
   _ivHeroSlides.forEach(function(item,idx){
     var ser=item.series;
@@ -9018,12 +9018,18 @@ function renderIvHero(){
 
     (function(sid){slide.addEventListener('click',function(){App.ivShowSeries(sid);});})(ser.id);
     track.appendChild(slide);
-
-    var dot=document.createElement('div');
-    dot.className='iv-hero-dot'+(idx===0?' on':'');
-    dotsEl.appendChild(dot);
-    _ivHeroDotsEls.push(dot);
   });
+
+  // Build dots in RTL order (count-1 → 0) so dot[0] is rightmost — matches SmartDhikr
+  _ivHeroDotsEls=new Array(_ivHeroSlides.length);
+  for(var di=_ivHeroSlides.length-1;di>=0;di--){
+    (function(idx){
+      var dot=document.createElement('div');
+      dot.className='iv-hero-dot'+(idx===0?' on':'');
+      dotsEl.appendChild(dot);
+      _ivHeroDotsEls[idx]=dot;
+    })(di);
+  }
 
   _ivHeroTrackEl=track;
 
@@ -9044,7 +9050,7 @@ function renderIvHero(){
       var dt=Date.now()-_ivHeroTouchT;
       var velocity=Math.abs(dx)/dt;
       if(Math.abs(dx)<20||velocity<0.12){_ivHeroResetTimer();return;}
-      _ivHeroGoTo(dx>0?_ivHeroIdx+1:_ivHeroIdx-1);
+      _ivHeroGoTo(dx>0?_ivHeroIdx-1:_ivHeroIdx+1);
       _ivHeroResetTimer();
     },{passive:true});
     hero.addEventListener('touchcancel',function(){
