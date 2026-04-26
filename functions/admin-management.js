@@ -340,23 +340,37 @@ export async function onRequest(context) {
                 .single();
 
             // Delete existing permissions
-            await supabase
+            const { error: delError } = await supabase
                 .from('admin_permissions')
                 .delete()
                 .eq('user_id', targetUserId);
 
-            // Insert new permissions
-            const permissionRecords = permissions.map(p => ({
-                user_id: targetUserId,
-                page_slug: p.page_slug,
-                can_view: p.can_view || false,
-                can_edit: p.can_edit || false,
-                can_delete: p.can_delete || false
-            }));
+            if (delError) {
+                console.error('Delete permissions error:', delError);
+                return jsonResponse({ error: 'Failed to delete old permissions: ' + delError.message }, 500, corsHeaders);
+            }
 
-            await supabase
-                .from('admin_permissions')
-                .insert(permissionRecords);
+            // Only insert rows where at least one permission is granted
+            const permissionRecords = permissions
+                .filter(p => p.can_view || p.can_edit || p.can_delete)
+                .map(p => ({
+                    user_id: targetUserId,
+                    page_slug: p.page_slug,
+                    can_view: !!p.can_view,
+                    can_edit: !!p.can_edit,
+                    can_delete: !!p.can_delete
+                }));
+
+            if (permissionRecords.length > 0) {
+                const { error: insError } = await supabase
+                    .from('admin_permissions')
+                    .insert(permissionRecords);
+
+                if (insError) {
+                    console.error('Insert permissions error:', insError);
+                    return jsonResponse({ error: 'Failed to save permissions: ' + insError.message }, 500, corsHeaders);
+                }
+            }
 
             // Log action
             await supabase
@@ -368,7 +382,7 @@ export async function onRequest(context) {
                     details: {
                         target_user_id: targetUserId,
                         target_email: targetUser?.email,
-                        permissions_count: permissions.length
+                        permissions_count: permissionRecords.length
                     },
                     ip_address: clientIP,
                     user_agent: userAgent,
