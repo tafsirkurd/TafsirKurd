@@ -250,7 +250,7 @@
         '50%{box-shadow:0 28px 80px rgba(0,0,0,.36),0 0 0 1px var(--border-light,#e5e5e5)}}' +
 
       '.la-overlay{position:fixed;inset:0;z-index:999999;' +
-        'display:flex;align-items:center;justify-content:center;' +
+        'display:flex;align-items:flex-start;justify-content:center;padding-top:72px;' +
         'background:rgba(0,0,0,.46);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);' +
         'animation:la-fi .26s ease;}' +
 
