@@ -225,14 +225,14 @@ body{background:var(--bg);color:var(--text)}
 .fu-banner-dismiss{width:30px;height:30px;border-radius:50%;background:var(--bg3);color:var(--text2);font-size:1rem;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;flex-shrink:0;line-height:1}
 
 /* ===== TAB PANELS ===== */
-.panel{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px)}
+.panel{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 20px)}
 #panelQuran{padding-bottom:0}
-#quranHome{padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px)}
+#quranHome{padding-bottom:calc(var(--tab-h) + var(--safe-b) + 20px)}
 .panel.on{display:flex}
 /* Prayer panel: always in layout tree (position:absolute when hidden) so the
    sky scene's 300 nodes are never discarded — tab switch is visibility-only,
    zero layout cost instead of full reflow on every open */
-#panelPrayer{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px);position:absolute;inset:0;top:var(--hdr-h,56px);bottom:var(--tab-h,56px);visibility:hidden;pointer-events:none;z-index:0}
+#panelPrayer{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 20px);position:absolute;inset:0;top:var(--hdr-h,56px);bottom:var(--tab-h,56px);visibility:hidden;pointer-events:none;z-index:0}
 #panelPrayer.on{position:relative;inset:unset;visibility:visible;pointer-events:auto;z-index:auto;flex:1}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
@@ -1883,7 +1883,8 @@ body{background:var(--bg);color:var(--text)}
 
 /* ===== GENCINE TAB ===== */
 /* Gencine home — cinematic cards */
-.genc-home{display:flex;flex-direction:column;gap:14px;padding:20px 16px 32px}
+.genc-home{display:flex;flex-direction:column;gap:14px;padding:20px 16px 20px}
+#panelGencine{padding-bottom:calc(var(--tab-h) + var(--safe-b) + 16px)}
 /* Base card — fully theme-aware */
 .genc-card-btn{position:relative;width:100%;height:150px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;display:block;background:linear-gradient(135deg,#1c3a5e 0%,#0d1f35 100%);box-shadow:0 4px 20px rgba(0,0,0,.25)}
 .genc-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;border-radius:inherit}
@@ -2115,7 +2116,7 @@ body{background:var(--bg);color:var(--text)}
 .iv-skel-title{height:13px;border-radius:5px;width:85%}
 .iv-skel-title2{height:11px;border-radius:5px;width:60%}
 .iv-skel-speaker{height:10px;border-radius:5px;width:48%;margin-top:2px}
-.genc-skel{display:flex;flex-direction:column;padding-bottom:32px}
+.genc-skel{display:flex;flex-direction:column;padding-bottom:8px}
 .genc-skel-smart{padding:16px 16px 0}
 .genc-skel-smart-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .genc-skel-smart-label{height:11px;width:96px;border-radius:6px}
