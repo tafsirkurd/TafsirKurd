@@ -15,7 +15,7 @@
   var DURATION      = 15;
   var MAX_QUEUE     = 30;
   var ONLINE_GAP_MS = 60000;
-  var WARMUP_MS     = 30000;
+  var WARMUP_MS     = 5000;
 
   /* ── event types ────────────────────────────────────────── */
   var TYPES = {
@@ -543,7 +543,7 @@
           if(Date.now()-_startTime<WARMUP_MS)return;
           var rec=p.new||{};
           var ua=rec.updated_at?new Date(rec.updated_at).getTime():0;
-          if(Date.now()-ua>12000)return;
+          if(Date.now()-ua>90000)return;
           if(Date.now()-_lastOnline<ONLINE_GAP_MS)return;
           _lastOnline=Date.now();
           _enqueue('user_online',rec);
