@@ -304,6 +304,86 @@
     }, WARMUP_MS + 3000);
   }
 
+  /* ── sounds ─────────────────────────────────────────────── */
+  var _audioCtx = null;
+
+  function _getCtx() {
+    if (!_audioCtx || _audioCtx.state === 'closed') {
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    return _audioCtx;
+  }
+
+  // Play a sequence of { freq, start, dur, vol, type } notes
+  function _playNotes(notes) {
+    try {
+      var ctx = _getCtx();
+      var now = ctx.currentTime;
+      notes.forEach(function(n) {
+        var osc  = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = n.type || 'sine';
+        osc.frequency.setValueAtTime(n.freq, now + n.start);
+        gain.gain.setValueAtTime(0, now + n.start);
+        gain.gain.linearRampToValueAtTime(n.vol || 0.22, now + n.start + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + n.start + n.dur);
+        osc.start(now + n.start);
+        osc.stop(now + n.start + n.dur + 0.04);
+      });
+    } catch(e) { /* audio blocked or unavailable */ }
+  }
+
+  var SOUNDS = {
+    user_joined: function() {
+      // Rising celebration arpeggio — C E G C'
+      _playNotes([
+        { freq:523,  start:0,    dur:0.18, vol:0.2,  type:'sine' },
+        { freq:659,  start:0.1,  dur:0.18, vol:0.22, type:'sine' },
+        { freq:784,  start:0.2,  dur:0.18, vol:0.22, type:'sine' },
+        { freq:1047, start:0.3,  dur:0.35, vol:0.25, type:'sine' },
+        { freq:1047, start:0.3,  dur:0.35, vol:0.1,  type:'triangle' },
+      ]);
+    },
+    user_online: function() {
+      // Gentle soft ascending ping
+      _playNotes([
+        { freq:880,  start:0,    dur:0.1,  vol:0.16, type:'sine' },
+        { freq:1108, start:0.1,  dur:0.2,  vol:0.18, type:'sine' },
+      ]);
+    },
+    user_offline: function() {
+      // Soft descending tone — quiet, not alarming
+      _playNotes([
+        { freq:660,  start:0,    dur:0.14, vol:0.13, type:'sine' },
+        { freq:494,  start:0.13, dur:0.22, vol:0.1,  type:'sine' },
+      ]);
+    },
+    new_message: function() {
+      // Classic double-ping notification
+      _playNotes([
+        { freq:1200, start:0,    dur:0.09, vol:0.2,  type:'sine' },
+        { freq:1200, start:0.14, dur:0.18, vol:0.22, type:'sine' },
+      ]);
+    },
+    new_video: function() {
+      // Upbeat rising 3-note fanfare
+      _playNotes([
+        { freq:659,  start:0,    dur:0.12, vol:0.2,  type:'sine' },
+        { freq:784,  start:0.11, dur:0.12, vol:0.22, type:'sine' },
+        { freq:1047, start:0.22, dur:0.32, vol:0.25, type:'sine' },
+        { freq:1047, start:0.22, dur:0.32, vol:0.08, type:'triangle' },
+      ]);
+    },
+  };
+
+  function _playSound(type) {
+    var fn = SOUNDS[type];
+    if (fn) fn();
+  }
+
   /* ── popup queue state ──────────────────────────────────── */
   var _queue      = [];
   var _showing    = false;
@@ -508,6 +588,9 @@
     pgb.style.transition='none'; pgb.style.width='100%';
     pgb.getBoundingClientRect();
     pgb.style.transition='';
+
+    /* sound */
+    _playSound(type);
 
     /* confetti (skip for offline) */
     if (cfg.confetti.length) setTimeout(function(){_burst(card,cfg.confetti);},70);
