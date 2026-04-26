@@ -1160,23 +1160,16 @@
                 section.classList.remove('perms-hidden');
             }
             try {
-                var supabase = window.adminAuth.getSupabase();
-                if (supabase) {
-                    var res = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', account.id);
-                    if (res.error) { console.error('Permissions load error:', res.error); }
-                    if (res.data !== null) {
-                        // Build map — pages not in DB default to all false
-                        var permsMap = {};
-                        (res.data || []).forEach(function(r) { permsMap[r.page_slug] = r; });
-                        if (res.data.length > 0) {
-                            setPermissionsInGrid(permsMap);
-                        } else {
-                            // No saved permissions yet — apply role preset as fallback
-                            applyPreset(account.role);
-                        }
-                    } else {
-                        applyPreset(account.role);
-                    }
+                var tok = sessionStorage.getItem('adminToken');
+                var permLoadRes = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_permissions', token: tok, targetUserId: account.id }) });
+                var permLoadData = await permLoadRes.json();
+                console.log('[editAccount] get_permissions response:', JSON.stringify(permLoadData));
+                if (permLoadData.success && permLoadData.data.length > 0) {
+                    var permsMap = {};
+                    permLoadData.data.forEach(function(r) { permsMap[r.page_slug] = r; });
+                    setPermissionsInGrid(permsMap);
+                } else {
+                    applyPreset(account.role);
                 }
             } catch (e) { console.error('Load permissions error:', e); applyPreset(account.role); }
             document.getElementById('accountModal').classList.add('open');

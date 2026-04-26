@@ -325,6 +325,16 @@ export async function onRequest(context) {
         }
 
         // ===== UPDATE PERMISSIONS =====
+        if (action === 'get_permissions') {
+            if (!targetUserId) return jsonResponse({ error: 'targetUserId required' }, 400, corsHeaders);
+            const { data, error } = await supabase
+                .from('admin_permissions')
+                .select('page_slug,can_view,can_edit,can_delete')
+                .eq('user_id', targetUserId);
+            if (error) return jsonResponse({ error: error.message }, 500, corsHeaders);
+            return jsonResponse({ success: true, data: data || [] }, 200, corsHeaders);
+        }
+
         if (action === 'update_permissions') {
             const { permissions } = body;
 
