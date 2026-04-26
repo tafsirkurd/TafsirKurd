@@ -444,11 +444,12 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 18px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border-light);
         }
+        .sections-panel-left { display: flex; flex-direction: column; gap: 2px; }
         .sections-panel-title {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--text-primary);
         }
@@ -456,48 +457,81 @@
             font-size: 12px;
             color: var(--text-tertiary);
         }
+        .sections-visible-count {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(34,197,94,.12);
+            color: #16a34a;
+            white-space: nowrap;
+        }
         .section-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
+            gap: 14px;
+            padding: 14px 20px;
             border-bottom: 1px solid var(--border-light);
+            transition: background 0.15s;
+            user-select: none;
         }
         .section-row:last-child { border-bottom: none; }
+        .section-row:hover { background: var(--bg-hover); }
+        .section-row.dragging { opacity: 0.35; background: var(--bg-active); }
+        .section-row.drag-over { border-top: 2px solid var(--primary); }
+        .section-drag-handle {
+            color: var(--text-tertiary);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            opacity: 0.4;
+            transition: opacity 0.15s;
+        }
+        .section-drag-handle:active { cursor: grabbing; }
+        .section-row:hover .section-drag-handle { opacity: 1; }
         .section-row-icon {
-            width: 34px; height: 34px;
-            border-radius: 9px;
-            background: var(--bg-active);
+            width: 38px; height: 38px;
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            color: var(--text-secondary);
-            font-size: 14px;
             flex-shrink: 0;
         }
         .section-row-body { flex: 1; min-width: 0; }
         .section-row-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-        .section-row-key { font-size: 11px; color: var(--text-tertiary); font-family: monospace; }
-        .section-toggle-btn {
-            padding: 5px 14px;
-            border-radius: 20px;
-            border: 1px solid transparent;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
+        .section-row-key { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+        /* iOS-style toggle switch */
+        .section-toggle {
+            position: relative;
+            width: 44px;
+            height: 26px;
             flex-shrink: 0;
+            cursor: pointer;
         }
-        .section-toggle-btn.active {
-            background: rgba(34,197,94,.12);
-            color: #16a34a;
-            border-color: rgba(34,197,94,.3);
+        .section-toggle input {
+            opacity: 0;
+            width: 0; height: 0;
+            position: absolute;
         }
-        .section-toggle-btn.inactive {
-            background: var(--bg-hover);
-            color: var(--text-tertiary);
-            border-color: var(--border-medium);
+        .section-toggle-track {
+            position: absolute;
+            inset: 0;
+            border-radius: 13px;
+            background: var(--border-medium);
+            transition: background 0.2s;
         }
-        .section-toggle-btn:hover { opacity: .8; }
-        /* Drag-and-drop */
+        .section-toggle-track::after {
+            content: '';
+            position: absolute;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            top: 3px; left: 3px;
+            transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+            box-shadow: 0 1px 4px rgba(0,0,0,.25);
+        }
+        .section-toggle input:checked + .section-toggle-track { background: #22c55e; }
+        .section-toggle input:checked + .section-toggle-track::after { transform: translateX(18px); }
+        /* Drag-and-drop (item-cards) */
         .item-card[draggable]{cursor:grab}
         .item-card[draggable]:active{cursor:grabbing}
         .item-card.dragging{opacity:.35;background:var(--bg-active)}
@@ -505,21 +539,6 @@
         .item-card.drag-over-bot{border-bottom:2px solid var(--primary)!important}
         .drag-handle{display:flex;align-items:center;padding:0 6px 0 2px;color:var(--text-tertiary);cursor:grab;font-size:14px;flex-shrink:0}
         .drag-handle:active{cursor:grabbing}
-        .section-sort-btns { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
-        .section-sort-btn {
-            width: 26px; height: 22px;
-            border-radius: 5px;
-            border: 1px solid var(--border-medium);
-            background: var(--bg-hover);
-            color: var(--text-secondary);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px;
-            line-height: 1;
-            transition: all 0.15s;
-        }
-        .section-sort-btn:disabled { opacity: 0.25; cursor: default; }
-        .section-sort-btn:not(:disabled):hover { background: var(--bg-active); }
 
         /* ── 99 Names grid ── */
         .asma-search-row { padding: 0 0 14px 0; }
@@ -872,8 +891,11 @@
             <div id="panel-sections" class="view-panel">
                 <div class="sections-panel">
                     <div class="sections-panel-hdr">
-                        <div class="sections-panel-title">App Home Sections</div>
-                        <div class="sections-panel-hint">Show or hide sections on the app's Gencine home screen</div>
+                        <div class="sections-panel-left">
+                            <div class="sections-panel-title">App Home Sections</div>
+                            <div class="sections-panel-hint">Drag to reorder · toggle to show/hide on Gencine home</div>
+                        </div>
+                        <div id="sections-visible-count" class="sections-visible-count">— / — visible</div>
                     </div>
                     <div id="sections-list"><!-- rendered by JS --></div>
                 </div>
@@ -1840,6 +1862,14 @@ var SECTION_META = {
     asma:   { label: '99 Names',  icon: 'star'          },
     books:  { label: 'Books',     icon: 'book-open'     }
 };
+var SECTION_COLORS = {
+    hadith: { bg: 'rgba(245,158,11,.14)', color: '#f59e0b' },
+    adhkar: { bg: 'rgba(34,197,94,.14)',  color: '#22c55e' },
+    dua:    { bg: 'rgba(59,130,246,.14)', color: '#3b82f6' },
+    tasbih: { bg: 'rgba(139,92,246,.14)', color: '#8b5cf6' },
+    asma:   { bg: 'rgba(234,179,8,.14)',  color: '#ca8a04' },
+    books:  { bg: 'rgba(20,184,166,.14)', color: '#14b8a6' },
+};
 var SECTION_KEYS = ['hadith','adhkar','dua','tasbih','asma','books'];
 function _orderedSections() {
     return SECTION_KEYS.map(function(k, i) {
@@ -1859,36 +1889,94 @@ function renderSections() {
     if (!list) return;
     list.textContent = '';
     var ordered = _orderedSections();
-    ordered.forEach(function(item, idx) {
+
+    var countEl = document.getElementById('sections-visible-count');
+    if (countEl) {
+        var vis = ordered.filter(function(s){ return s.active; }).length;
+        countEl.textContent = vis + ' / ' + ordered.length + ' visible';
+    }
+
+    ordered.forEach(function(item) {
         var key = item.key;
         var isActive = item.active;
         var meta = SECTION_META[key] || { label: key, icon: 'circle' };
-        var row = mke('div', 'section-row');
+        var clr = SECTION_COLORS[key] || { bg: 'var(--bg-active)', color: 'var(--text-secondary)' };
 
-        /* Sort up/down buttons */
-        var sortBtns = mke('div', 'section-sort-btns');
-        var upBtn = mke('button', 'section-sort-btn'); upBtn.textContent = '↑'; upBtn.title = 'Move up';
-        if (idx === 0) upBtn.disabled = true;
-        upBtn.onclick = (function(k){ return function(){ moveSection(k, -1); }; })(key);
-        var downBtn = mke('button', 'section-sort-btn'); downBtn.textContent = '↓'; downBtn.title = 'Move down';
-        if (idx === ordered.length - 1) downBtn.disabled = true;
-        downBtn.onclick = (function(k){ return function(){ moveSection(k, 1); }; })(key);
-        sortBtns.appendChild(upBtn); sortBtns.appendChild(downBtn);
+        var row = mke('div', 'section-row');
+        row.draggable = true;
+        row.dataset.key = key;
+
+        var handle = mke('div', 'section-drag-handle');
+        var handleIco = mke('i');
+        handleIco.setAttribute('data-lucide', 'grip-vertical');
+        handleIco.style.cssText = 'width:16px;height:16px;pointer-events:none;';
+        handle.appendChild(handleIco);
 
         var iconWrap = mke('div', 'section-row-icon');
-        var ico = mke('i'); ico.setAttribute('data-lucide', meta.icon);
+        iconWrap.style.background = clr.bg;
+        iconWrap.style.color = clr.color;
+        var ico = mke('i');
+        ico.setAttribute('data-lucide', meta.icon);
+        ico.style.cssText = 'width:17px;height:17px;';
         iconWrap.appendChild(ico);
+
         var body = mke('div', 'section-row-body');
         var lbl = mke('div', 'section-row-label'); lbl.textContent = meta.label;
         var keyEl = mke('div', 'section-row-key'); keyEl.textContent = key;
         body.appendChild(lbl); body.appendChild(keyEl);
-        var btn = mke('button', 'section-toggle-btn ' + (isActive ? 'active' : 'inactive'));
-        btn.textContent = isActive ? 'Visible' : 'Hidden';
-        btn.onclick = (function(k, a){ return function(){ toggleSection(k, !a); }; })(key, isActive);
-        row.appendChild(sortBtns); row.appendChild(iconWrap); row.appendChild(body); row.appendChild(btn);
+
+        var toggleWrap = mke('label', 'section-toggle');
+        toggleWrap.title = isActive ? 'Visible — click to hide' : 'Hidden — click to show';
+        var inp = mke('input');
+        inp.type = 'checkbox';
+        if (isActive) inp.checked = true;
+        inp.onchange = (function(k, el){ return function(){ toggleSection(k, el.checked); }; })(key, inp);
+        var track = mke('span', 'section-toggle-track');
+        toggleWrap.appendChild(inp);
+        toggleWrap.appendChild(track);
+
+        row.addEventListener('dragstart', function(e) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', key);
+            setTimeout(function(){ row.classList.add('dragging'); }, 0);
+        });
+        row.addEventListener('dragend', function() {
+            row.classList.remove('dragging');
+            list.querySelectorAll('.section-row').forEach(function(r){ r.classList.remove('drag-over'); });
+        });
+        row.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            list.querySelectorAll('.section-row').forEach(function(r){ r.classList.remove('drag-over'); });
+            if (e.dataTransfer.getData('text/plain') !== key) row.classList.add('drag-over');
+        });
+        row.addEventListener('drop', function(e) {
+            e.preventDefault();
+            var fromKey = e.dataTransfer.getData('text/plain');
+            if (fromKey && fromKey !== key) dropSection(fromKey, key);
+        });
+
+        row.appendChild(handle);
+        row.appendChild(iconWrap);
+        row.appendChild(body);
+        row.appendChild(toggleWrap);
         list.appendChild(row);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function dropSection(fromKey, toKey) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var ordered = _orderedSections();
+    var fromIdx = ordered.findIndex(function(s){ return s.key === fromKey; });
+    var toIdx   = ordered.findIndex(function(s){ return s.key === toKey; });
+    if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+    var moved = ordered.splice(fromIdx, 1)[0];
+    ordered.splice(toIdx, 0, moved);
+    var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active }; });
+    var r = await supabase.from('gencine_sections').upsert(upserts, { onConflict: 'key' });
+    if (r.error) { showNotification('Reorder failed: ' + r.error.message, 'error'); return; }
+    localStorage.removeItem('gencine_sections_v1');
+    await loadSections();
 }
 async function moveSection(key, dir) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
