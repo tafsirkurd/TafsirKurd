@@ -580,7 +580,12 @@
                 </div>
                 <div class="field" id="passwordGroup">
                     <label>Password</label>
-                    <input type="password" id="accountPassword" class="form-input" placeholder="Min 8 characters">
+                    <div style="position:relative">
+                        <input type="password" id="accountPassword" class="form-input" placeholder="Min 8 characters" style="padding-left:40px">
+                        <button type="button" onclick="togglePasswordVisibility()" id="pwToggleBtn" style="position:absolute;left:0;top:0;height:42px;width:42px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text-tertiary,#9ca3af);transition:color .15s" title="Show/hide password">
+                            <i data-lucide="eye" id="pwToggleIcon" style="width:16px;height:16px"></i>
+                        </button>
+                    </div>
                     <div class="hint">Leave empty to keep current password</div>
                 </div>
                 <div class="field-row">
@@ -1136,7 +1141,27 @@
             lucide.createIcons();
         }
 
-        function closeModal() { document.getElementById('accountModal').classList.remove('open'); }
+        function closeModal() {
+            document.getElementById('accountModal').classList.remove('open');
+            // Reset password visibility on close
+            var pw = document.getElementById('accountPassword');
+            if (pw) pw.type = 'password';
+            var icon = document.getElementById('pwToggleIcon');
+            if (icon) icon.setAttribute('data-lucide', 'eye');
+            lucide.createIcons();
+        }
+
+        function togglePasswordVisibility() {
+            var pw = document.getElementById('accountPassword');
+            var icon = document.getElementById('pwToggleIcon');
+            var btn = document.getElementById('pwToggleBtn');
+            if (!pw) return;
+            var showing = pw.type === 'text';
+            pw.type = showing ? 'password' : 'text';
+            icon.setAttribute('data-lucide', showing ? 'eye' : 'eye-off');
+            btn.style.color = showing ? 'var(--text-tertiary,#9ca3af)' : 'var(--primary,#6366f1)';
+            lucide.createIcons({ nodes: [icon] });
+        }
 
         function toggleActiveField() {
             var cb = document.getElementById('accountActive');
