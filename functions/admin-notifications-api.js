@@ -63,6 +63,94 @@ export async function onRequest(context) {
         return json({ success: true, processed: results.length, results });
     }
 
+    // ── AUTO-NOTIFY NEW CONTENT (cron — no admin auth) ────────────
+    if (body.action === 'auto_notify_content') {
+        const cronSecret = env.NOTIF_CRON_SECRET || env.CRON_SECRET;
+        const authHeader = request.headers.get('Authorization') || '';
+        if (!cronSecret || authHeader !== `Bearer ${cronSecret}`)
+            return json({ error: 'Unauthorized' }, 401);
+
+        if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID)
+            return json({ error: 'FCM not configured' }, 503);
+
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const notified = [];
+
+        // Helper: check if we already sent a notification for this content
+        async function alreadyNotified(dlType, dlId) {
+            const { data } = await supabase
+                .from('admin_notifications')
+                .select('id')
+                .eq('deep_link_type', dlType)
+                .eq('deep_link_id', String(dlId))
+                .not('status', 'in', '("draft","cancelled")')
+                .maybeSingle();
+            return !!data;
+        }
+
+        // Helper: create + send one notification
+        async function sendAutoNotif(title, body, image_url, dlType, dlId) {
+            const { data: notif, error } = await supabase
+                .from('admin_notifications')
+                .insert({
+                    title,
+                    body,
+                    image_url: image_url || null,
+                    platform: 'all',
+                    audience: 'all',
+                    deep_link_type: dlType,
+                    deep_link_id: String(dlId),
+                    status: 'sending',
+                    created_by: 'auto',
+                })
+                .select()
+                .single();
+            if (error || !notif) return { error: error?.message || 'insert failed' };
+            return await doSend(supabase, env, notif, notif.id, 'auto');
+        }
+
+        // ── New episodes ──────────────────────────────────────────
+        const { data: episodes } = await supabase
+            .from('islamvoice_episodes')
+            .select('id,title,thumbnail_url,created_at')
+            .eq('is_published', true)
+            .gte('created_at', twoHoursAgo)
+            .order('created_at', { ascending: false });
+
+        for (const ep of (episodes || [])) {
+            if (await alreadyNotified('video', ep.id)) continue;
+            const r = await sendAutoNotif(
+                ep.title,
+                'وانێ نوی بەردەستە 🎬',
+                ep.thumbnail_url,
+                'video',
+                ep.id
+            );
+            notified.push({ type: 'video', id: ep.id, title: ep.title, ...r });
+        }
+
+        // ── New books ─────────────────────────────────────────────
+        const { data: books } = await supabase
+            .from('gencine_books')
+            .select('id,title,cover_url,created_at')
+            .gte('created_at', twoHoursAgo)
+            .order('created_at', { ascending: false });
+
+        for (const book of (books || [])) {
+            if (await alreadyNotified('book', book.id)) continue;
+            const r = await sendAutoNotif(
+                book.title,
+                'کتێبێ نوی بەردەستە 📚',
+                book.cover_url,
+                'book',
+                book.id
+            );
+            notified.push({ type: 'book', id: book.id, title: book.title, ...r });
+        }
+
+        return json({ success: true, notified: notified.length, results: notified });
+    }
+
     const token = ((request.headers.get('Authorization') || '').replace('Bearer ', '') || body.token || '').trim();
     if (!token) return json({ error: 'No token' }, 401);
 
