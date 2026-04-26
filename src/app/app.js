@@ -8900,8 +8900,10 @@ var _ivHeroSlides=[];
 var _ivHeroBuilt=false; // guard: only build once per data load
 var _ivHeroTrackEl=null;
 var _ivHeroDotsEls=null;
-var _ivHeroTouchX=null;
-var _ivHeroTouchT=null;
+var _ivHeroTouchListened=false; // touch listeners attached once only
+var _ivHeroTouchX=0;
+var _ivHeroTouchT=0;
+var _ivHeroDragging=false;
 
 function _ivThumb(url){
   // mqdefault (320×180) — already warmed by preloadIvThumbnails(), best quality/size balance
@@ -9025,25 +9027,31 @@ function renderIvHero(){
 
   _ivHeroTrackEl=track;
 
-  // Touch swipe — stacked slides so just track horizontal drag direction
-  var _touchStartX=0,_touchStartT=0,_dragging=false;
-  hero.addEventListener('touchstart',function(e){
-    _touchStartX=e.touches[0].clientX;
-    _touchStartT=Date.now();
-    _dragging=true;
-    if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}
-  },{passive:true});
-  hero.addEventListener('touchend',function(e){
-    if(!_dragging)return;
-    _dragging=false;
-    var dx=_touchStartX-e.changedTouches[0].clientX;
-    var dt=Date.now()-_touchStartT;
-    var velocity=Math.abs(dx)/dt;
-    if(Math.abs(dx)<20||velocity<0.12){_ivHeroResetTimer();return;}
-    _ivHeroGoTo(dx>0?_ivHeroIdx+1:_ivHeroIdx-1);
-    _ivHeroResetTimer();
-  },{passive:true});
-  hero.addEventListener('touchcancel',function(){_dragging=false;_ivHeroResetTimer();},{passive:true});
+  // Attach touch listeners once — reusing the same hero element across rebuilds
+  if(!_ivHeroTouchListened){
+    _ivHeroTouchListened=true;
+    hero.addEventListener('touchstart',function(e){
+      if(!_ivHeroSlides.length)return;
+      _ivHeroTouchX=e.touches[0].clientX;
+      _ivHeroTouchT=Date.now();
+      _ivHeroDragging=true;
+      if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}
+    },{passive:true});
+    hero.addEventListener('touchend',function(e){
+      if(!_ivHeroDragging||!_ivHeroSlides.length)return;
+      _ivHeroDragging=false;
+      var dx=_ivHeroTouchX-e.changedTouches[0].clientX;
+      var dt=Date.now()-_ivHeroTouchT;
+      var velocity=Math.abs(dx)/dt;
+      if(Math.abs(dx)<20||velocity<0.12){_ivHeroResetTimer();return;}
+      _ivHeroGoTo(dx>0?_ivHeroIdx+1:_ivHeroIdx-1);
+      _ivHeroResetTimer();
+    },{passive:true});
+    hero.addEventListener('touchcancel',function(){
+      _ivHeroDragging=false;
+      if(_ivHeroSlides.length)_ivHeroResetTimer();
+    },{passive:true});
+  }
 
   _ivHeroBuilt=true;
   _ivHeroGoTo(0);
