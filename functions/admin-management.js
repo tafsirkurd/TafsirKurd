@@ -338,8 +338,6 @@ export async function onRequest(context) {
         if (action === 'update_permissions') {
             const { permissions } = body;
 
-            console.log('[update_permissions] targetUserId:', targetUserId, 'permissions count:', permissions?.length);
-
             if (!targetUserId || !permissions) {
                 return jsonResponse({ error: 'Target user ID and permissions required' }, 400, corsHeaders);
             }

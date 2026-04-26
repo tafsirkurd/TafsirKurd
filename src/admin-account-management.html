@@ -799,15 +799,12 @@
 
         function getPermissionsFromGrid() {
             var perms = [];
-            var missingInputs = [];
             ADMIN_PAGES.forEach(function(page) {
                 var vw = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_view"]');
                 var ed = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_edit"]');
                 var dl = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_delete"]');
-                if (!vw || !ed || !dl) missingInputs.push(page.slug);
                 perms.push({ page_slug: page.slug, can_view: vw ? vw.checked : false, can_edit: ed ? ed.checked : false, can_delete: dl ? dl.checked : false });
             });
-            if (missingInputs.length) console.warn('[getPermissionsFromGrid] missing inputs for:', missingInputs);
             return perms;
         }
 
@@ -1163,7 +1160,6 @@
                 var tok = sessionStorage.getItem('adminToken');
                 var permLoadRes = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_permissions', token: tok, targetUserId: account.id }) });
                 var permLoadData = await permLoadRes.json();
-                console.log('[editAccount] get_permissions response:', JSON.stringify(permLoadData));
                 if (permLoadData.success && permLoadData.data.length > 0) {
                     var permsMap = {};
                     permLoadData.data.forEach(function(r) { permsMap[r.page_slug] = r; });
@@ -1224,16 +1220,11 @@
                 const data = await response.json();
                 if (data.success) {
                     var userId = id || (data.user && data.user.id ? data.user.id : null);
-                    console.log('[saveAccount] userId:', userId, 'role:', role);
                     if (role !== 'super_admin' && userId) {
                         try {
                             var perms = getPermissionsFromGrid();
-                            var checkedPerms = perms.filter(function(p){ return p.can_view || p.can_edit || p.can_delete; });
-                            console.log('[saveAccount] sending perms:', checkedPerms.length, 'checked rows:', JSON.stringify(checkedPerms));
-                            var permPayload = { action: 'update_permissions', token: token, targetUserId: userId, permissions: perms };
-                            var permRes = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(permPayload) });
+                            var permRes = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_permissions', token: token, targetUserId: userId, permissions: perms }) });
                             var permData = await permRes.json();
-                            console.log('[saveAccount] permData response:', JSON.stringify(permData));
                             if (!permData.success) {
                                 alert('Account saved but permissions failed: ' + (permData.error || 'unknown error'));
                                 return;
