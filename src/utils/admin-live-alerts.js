@@ -1,10 +1,15 @@
 /* =========================================================
-   admin-live-alerts.js  v5  —  2026 Pro Edition
+   admin-live-alerts.js  v8  —  Smart Online/Offline Edition
    Real-time event popups for the TafsirKurd admin panel.
+
+   Online tracking: user_sessions.last_active_at (correct table)
+   Offline detection: local timeout map (12 min inactivity)
+   Profile enrichment: async fetch from profiles table
 
    Console API:
      _AdminLiveAlerts.test('user_joined')
      _AdminLiveAlerts.test('user_online')
+     _AdminLiveAlerts.test('user_offline')
      _AdminLiveAlerts.test('new_message')
      _AdminLiveAlerts.test('new_video')
      _AdminLiveAlerts.demo()
@@ -12,93 +17,101 @@
 (function () {
   'use strict';
 
-  var DURATION      = 15;
-  var MAX_QUEUE     = 30;
-  var ONLINE_GAP_MS = 60000;
-  var WARMUP_MS     = 5000;
+  var DURATION           = 15;
+  var MAX_QUEUE          = 30;
+  var WARMUP_MS          = 5000;           // wait 5s before reacting to events
+  var PER_USER_GAP_MS    = 5 * 60 * 1000; // max 1 online popup per user per 5 min
+  var SESSION_FRESH_MS   = 3 * 60 * 1000; // last_active_at must be within 3 min
+  var OFFLINE_TIMEOUT_MS = 12 * 60 * 1000;// no update for 12 min = offline
 
-  /* ── event types ────────────────────────────────────────── */
+  /* ── event type definitions ─────────────────────────────── */
   var TYPES = {
     user_joined: {
-      icon:     '👤',
-      badge:    'NEW MEMBER',
+      icon: '🎉',
+      badge: 'NEW MEMBER',
       badgeCol: '#a78bfa',
-      title:    function(d){ return (d.email||'Someone').split('@')[0] + ' just joined!'; },
-      sub:      function(d){ return d.email || 'Unknown user'; },
-      rows: function(d) {
-        return [
-          { label:'Email',    val:d.email        || '—',                span:true  },
-          { label:'User ID',  val:d.id           || '—',                span:false },
-          { label:'Platform', val:d.platform     || 'Web App',          span:false },
-          { label:'Joined',   val:_fmtTime(d.created_at||new Date()),   span:false },
-          { label:'Status',   val:'Account Active ✓',                   span:false },
-        ];
-      },
+      title:  function(d){ return (d.email||'Someone').split('@')[0] + ' just joined!'; },
+      sub:    function(d){ return d.email || 'New account created'; },
+      rows: function(d) { return [
+        { label:'Email',    val:d.email                            || '—', span:true  },
+        { label:'User ID',  val:d.id                              || '—', span:false },
+        { label:'Platform', val:d.platform                        || 'Web App', span:false },
+        { label:'Joined',   val:_fmtTime(d.created_at||new Date()), span:false },
+        { label:'Status',   val:'Account Active ✓',                span:false },
+      ]; },
       grad:     'linear-gradient(135deg,#120b2e 0%,#1e1151 40%,#3b1e85 75%,#5b21b6 100%)',
-      aurora:   ['rgba(139,92,246,.5)','rgba(99,102,241,.38)','rgba(167,139,250,.28)'],
       glow:     '#7c3aed',
       ring:     '#a78bfa',
       confetti: ['#8b5cf6','#a78bfa','#c4b5fd','#6366f1','#fff','#e879f9','#f0abfc'],
     },
     user_online: {
-      icon:     '🌐',
-      badge:    'LIVE NOW',
+      icon: '🟢',
+      badge: 'ONLINE NOW',
       badgeCol: '#34d399',
-      title:    function(d){ return (d.email||d.id||'A user').split('@')[0] + ' is online'; },
-      sub:      function(d){ return d.email || d.id || 'Active user'; },
-      rows: function(d) {
-        return [
-          { label:'User',     val:d.email||d.id  || '—',                span:true  },
-          { label:'Last seen',val:_fmtTime(d.updated_at||new Date()),   span:false },
-          { label:'Session',  val:'Active session ✓',                   span:false },
-          { label:'App',      val:'TafsirKurd Web / Mobile',            span:false },
-          { label:'Status',   val:'● Online right now',                 span:false },
-        ];
-      },
+      title:  function(d){ return (d.name || (d.email||'').split('@')[0] || 'A user') + ' is online'; },
+      sub:    function(d){ return d.email || d.id || 'Active user'; },
+      rows: function(d) { return [
+        { label:'Name',        val:d.name || d.email              || '—', span:false },
+        { label:'Platform',    val:d.platform                     || 'Web', span:false },
+        { label:'Last active', val:_fmtTime(d.last_active_at||new Date()), span:false },
+        { label:'Session',     val:'Active session ✓',            span:false },
+        { label:'Status',      val:'● Online right now',          span:false },
+      ]; },
       grad:     'linear-gradient(135deg,#011a14 0%,#033d2b 40%,#065f46 75%,#059669 100%)',
-      aurora:   ['rgba(16,185,129,.48)','rgba(6,182,212,.32)','rgba(52,211,153,.26)'],
       glow:     '#059669',
       ring:     '#34d399',
       confetti: ['#10b981','#34d399','#6ee7b7','#06b6d4','#fff','#bef264'],
     },
+    user_offline: {
+      icon: '👋',
+      badge: 'WENT OFFLINE',
+      badgeCol: '#94a3b8',
+      title:  function(d){ return (d.name || (d.email||'').split('@')[0] || 'A user') + ' went offline'; },
+      sub:    function(d){ return d.email || d.id || 'User'; },
+      rows: function(d) { return [
+        { label:'Name',      val:d.name || d.email                || '—', span:false },
+        { label:'Platform',  val:d.platform                       || 'Web', span:false },
+        { label:'Last seen', val:_fmtTime(d.last_active_at||new Date(d.ts||Date.now())), span:false },
+        { label:'Session',   val:'Session ended',                 span:false },
+        { label:'Status',    val:'⚫ Offline',                    span:false },
+      ]; },
+      grad:     'linear-gradient(135deg,#0d1117 0%,#161b22 40%,#1c2333 75%,#21262d 100%)',
+      glow:     '#334155',
+      ring:     '#64748b',
+      confetti: [],
+    },
     new_message: {
-      icon:     '✉️',
-      badge:    'NEW MESSAGE',
+      icon: '✉️',
+      badge: 'NEW MESSAGE',
       badgeCol: '#fb7185',
-      title:    function(d){ return d.name || d.email || 'Someone'; },
-      sub:      function(d){ return d.subject ? '"'+d.subject+'"' : 'Sent you a message'; },
-      rows: function(d) {
-        return [
-          { label:'From',     val:d.name         || '—',                span:false },
-          { label:'Email',    val:d.email        || '—',                span:false },
-          { label:'Subject',  val:d.subject      || '(No subject)',     span:true  },
-          { label:'Message',  val:d.message ? d.message.slice(0,120)+(d.message.length>120?'…':'') : '(No preview)', span:true },
-          { label:'Received', val:_fmtTime(d.created_at||new Date()),   span:false },
-        ];
-      },
+      title:  function(d){ return d.name || d.email || 'Someone sent a message'; },
+      sub:    function(d){ return d.subject ? '"'+d.subject+'"' : 'Sent you a message'; },
+      rows: function(d) { return [
+        { label:'From',     val:d.name                            || '—', span:false },
+        { label:'Email',    val:d.email                           || '—', span:false },
+        { label:'Subject',  val:d.subject                        || '(No subject)', span:true },
+        { label:'Message',  val:d.message ? d.message.slice(0,120)+(d.message.length>120?'…':'') : '(No preview)', span:true },
+        { label:'Received', val:_fmtTime(d.created_at||new Date()), span:false },
+      ]; },
       grad:     'linear-gradient(135deg,#1a060d 0%,#450b1a 40%,#7f1230 75%,#be123c 100%)',
-      aurora:   ['rgba(244,63,94,.48)','rgba(251,146,60,.32)','rgba(253,164,175,.26)'],
       glow:     '#be123c',
       ring:     '#fb7185',
       confetti: ['#f43f5e','#fb7185','#fda4af','#fb923c','#fff','#fde047','#fbbf24'],
     },
     new_video: {
-      icon:     '▶',
-      badge:    'NEW EPISODE',
+      icon: '▶',
+      badge: 'NEW EPISODE',
       badgeCol: '#fbbf24',
-      title:    function(d){ return d.title || 'New Episode Added'; },
-      sub:      function(d){ return d.description ? d.description.slice(0,70)+'…' : 'IslamVoice episode is now live'; },
-      rows: function(d) {
-        return [
-          { label:'Title',     val:d.title        || '—',               span:true  },
-          { label:'Series',    val:d.series       || 'IslamVoice',      span:false },
-          { label:'Duration',  val:d.duration     || '—',               span:false },
-          { label:'Published', val:_fmtTime(d.created_at||new Date()),  span:false },
-          { label:'Status',    val:'🔥 Live now',                       span:false },
-        ];
-      },
+      title:  function(d){ return d.title || 'New Episode Added'; },
+      sub:    function(d){ return d.description ? d.description.slice(0,70)+'…' : 'IslamVoice episode is now live'; },
+      rows: function(d) { return [
+        { label:'Title',     val:d.title                          || '—', span:true  },
+        { label:'Series',    val:d.series                        || 'IslamVoice', span:false },
+        { label:'Duration',  val:d.duration                      || '—', span:false },
+        { label:'Published', val:_fmtTime(d.created_at||new Date()), span:false },
+        { label:'Status',    val:'🔥 Live now',                  span:false },
+      ]; },
       grad:     'linear-gradient(135deg,#160d00 0%,#3d1f00 40%,#78350f 75%,#b45309 100%)',
-      aurora:   ['rgba(245,158,11,.5)','rgba(249,115,22,.38)','rgba(253,186,116,.24)'],
       glow:     '#b45309',
       ring:     '#fbbf24',
       confetti: ['#f59e0b','#fbbf24','#fcd34d','#f97316','#fff','#a3e635','#fb923c'],
@@ -116,7 +129,7 @@
       if (diff < 60000)   return Math.floor(diff/1000)+'s ago';
       if (diff < 3600000) return Math.floor(diff/60000)+'m ago';
       return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    } catch(e) { return String(val); }
+    } catch(e){ return String(val); }
   }
 
   function _mk(tag, cls) {
@@ -125,17 +138,94 @@
     return e;
   }
 
-  /* ── state ──────────────────────────────────────────────── */
+  /* ── online tracking state ──────────────────────────────── */
+  var _onlineMap       = {};  // userId → { name, email, platform, last_active_at, ts }
+  var _perUserShown    = {};  // userId → timestamp of last online popup shown
+  var _offlineTimer    = null;
+
+  function _startOfflineMonitor() {
+    if (_offlineTimer) return;
+    _offlineTimer = setInterval(function () {
+      var now = Date.now();
+      Object.keys(_onlineMap).forEach(function (uid) {
+        var u = _onlineMap[uid];
+        if (now - u.ts > OFFLINE_TIMEOUT_MS) {
+          delete _onlineMap[uid];
+          _enqueue('user_offline', u);
+        }
+      });
+    }, 30000); // check every 30 seconds
+  }
+
+  function _handleSession(evType, rec) {
+    if (Date.now() - _startTime < WARMUP_MS) return;
+    var userId = rec.user_id || rec.id;
+    if (!userId) return;
+
+    var la  = rec.last_active_at ? new Date(rec.last_active_at).getTime() : Date.now();
+    var fresh = (Date.now() - la < SESSION_FRESH_MS);
+
+    // For INSERT always treat as fresh; for UPDATE require freshness
+    if (evType !== 'INSERT' && !fresh) return;
+
+    var wasOnline  = !!_onlineMap[userId];
+    var shouldShow = (evType === 'INSERT') || !wasOnline;
+    var gapOk      = Date.now() - (_perUserShown[userId] || 0) > PER_USER_GAP_MS;
+
+    // Update tracking map
+    _onlineMap[userId] = {
+      id: userId,
+      platform: rec.platform || 'Web',
+      last_active_at: rec.last_active_at,
+      ts: Date.now(),
+      // keep existing name/email if already enriched
+      name:  (_onlineMap[userId]||{}).name  || rec.name  || null,
+      email: (_onlineMap[userId]||{}).email || rec.email || null,
+    };
+
+    _startOfflineMonitor();
+
+    if (shouldShow && gapOk) {
+      _perUserShown[userId] = Date.now();
+      _enrichAndEnqueue('user_online', userId, rec);
+    }
+  }
+
+  /* Async profile enrichment — fire-and-forget */
+  function _enrichAndEnqueue(type, userId, sessionRec) {
+    var sb = window._supabase;
+    if (!sb) { _enqueue(type, sessionRec); return; }
+
+    sb.from('profiles')
+      .select('full_name,display_name,email,avatar_url')
+      .eq('id', userId)
+      .single()
+      .then(function (res) {
+        var pr = (res && res.data) || {};
+        var enriched = Object.assign({}, sessionRec, {
+          name:  pr.full_name || pr.display_name || (pr.email||'').split('@')[0] || 'User',
+          email: pr.email || sessionRec.email || userId,
+        });
+        // Update tracking map with enriched data
+        if (_onlineMap[userId]) {
+          _onlineMap[userId].name  = enriched.name;
+          _onlineMap[userId].email = enriched.email;
+        }
+        _enqueue(type, enriched);
+      })
+      .catch(function () {
+        _enqueue(type, sessionRec);
+      });
+  }
+
+  /* ── popup queue state ──────────────────────────────────── */
   var _queue      = [];
   var _showing    = false;
   var _el         = null;
   var _ticker     = null;
   var _channel    = null;
-  var _secsLeft   = 0;
   var _startTime  = Date.now();
-  var _lastOnline = 0;
 
-  /* ── queue ──────────────────────────────────────────────── */
   function _enqueue(type, data) {
     if (_queue.length >= MAX_QUEUE) return;
     _queue.push({ type:type, data:data||{} });
@@ -151,6 +241,7 @@
 
   /* ── confetti ────────────────────────────────────────────── */
   function _burst(root, colors) {
+    if (!colors || !colors.length) return;
     for (var i=0;i<32;i++) {
       (function(){
         var p   = _mk('div','la-cp');
@@ -181,24 +272,21 @@
     if (!cfg) { _showing=false; _next(); return; }
     _killTicker(); _remove(); _injectCSS();
 
-    var C = 2*Math.PI*24; // ring circumference r=24
+    var C = 2*Math.PI*24;
 
-    /* backdrop */
     var backdrop = _mk('div','la-backdrop');
-
-    /* card */
-    var card = _mk('div','la-card');
-    card.style.borderColor = cfg.ring+'30';
-    card.style.boxShadow   =
-      '0 0 0 1px '+cfg.ring+'18,'+
-      '0 32px 100px rgba(0,0,0,.55),'+
-      '0 0 80px '+cfg.glow+'18';
+    var card     = _mk('div','la-card');
+    card.style.borderColor = cfg.ring+'28';
+    card.style.boxShadow =
+      '0 0 0 1px '+cfg.ring+'14,'+
+      '0 32px 100px rgba(0,0,0,.5),'+
+      '0 0 60px '+cfg.glow+'14';
 
     /* ── HEADER ── */
     var hdr = _mk('div','la-hdr');
     hdr.style.background = cfg.grad;
 
-    /* top bar: badge · spacer · queue count · × */
+    /* topbar */
     var topbar = _mk('div','la-topbar');
 
     var badge = _mk('div','la-badge');
@@ -208,9 +296,8 @@
     var bdot = _mk('span','la-bdot');
     bdot.style.background = cfg.badgeCol;
     badge.appendChild(bdot);
-    badge.appendChild(document.createTextNode(' '+cfg.badge));
+    badge.appendChild(document.createTextNode(' '+cfg.badge));
     topbar.appendChild(badge);
-
     topbar.appendChild(Object.assign(_mk('div'),{style:'flex:1'}));
 
     if (_queue.length>0) {
@@ -224,79 +311,61 @@
     xBtn.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
     xBtn.addEventListener('click',_dismiss);
     topbar.appendChild(xBtn);
-
     hdr.appendChild(topbar);
 
-    /* hero row: icon + title block */
+    /* hero */
     var hero = _mk('div','la-hero');
-
     var iw = _mk('div','la-iw');
     iw.style.background = cfg.glow+'28';
-    iw.style.boxShadow  = '0 0 0 10px '+cfg.glow+'1a,0 0 40px '+cfg.glow+'33';
+    iw.style.boxShadow  = '0 0 0 10px '+cfg.glow+'18,0 0 36px '+cfg.glow+'28';
     iw.appendChild(Object.assign(_mk('div','la-icon'),{textContent:cfg.icon}));
     hero.appendChild(iw);
 
     var ht = _mk('div','la-ht');
-    var ttl = _mk('div','la-ttl');
-    ttl.textContent = String(cfg.title(data));
-    ht.appendChild(ttl);
-    var sb = _mk('div','la-sb');
-    sb.textContent = String(cfg.sub(data));
-    ht.appendChild(sb);
+    Object.assign(_mk('div','la-ttl'),{textContent:String(cfg.title(data))});
+    ht.appendChild(Object.assign(_mk('div','la-ttl'),{textContent:String(cfg.title(data))}));
+    ht.appendChild(Object.assign(_mk('div','la-sb'),{textContent:String(cfg.sub(data))}));
     hero.appendChild(ht);
-
     hdr.appendChild(hero);
     card.appendChild(hdr);
 
     /* ── BODY ── */
     var body = _mk('div','la-body');
+    body.appendChild(Object.assign(_mk('div','la-seclbl'),{textContent:'Event Details'}));
 
-    /* section label */
-    var seclbl = _mk('div','la-seclbl');
-    seclbl.textContent = 'Event Details';
-    body.appendChild(seclbl);
-
-    /* details grid */
     var grid = _mk('div','la-grid');
     cfg.rows(data).forEach(function(row){
       var item = _mk('div','la-item');
       if (row.span) item.classList.add('la-span');
-      var lbl = _mk('div','la-lbl');
-      lbl.textContent = row.label;
-      var val = _mk('div','la-val');
-      val.textContent = String(row.val||'—');
-      item.appendChild(lbl);
-      item.appendChild(val);
+      item.appendChild(Object.assign(_mk('div','la-lbl'),{textContent:row.label}));
+      item.appendChild(Object.assign(_mk('div','la-val'),{textContent:String(row.val||'—')}));
       grid.appendChild(item);
     });
     body.appendChild(grid);
 
-    /* live status pill */
     var pill = _mk('div','la-pill');
     var pd = _mk('span','la-pd');
     pd.style.background = cfg.ring;
-    var pt = _mk('span','la-pt');
-    pt.textContent = 'Live event  ·  received just now  ·  real-time via Supabase';
-    pill.appendChild(pd); pill.appendChild(pt);
+    pill.appendChild(pd);
+    pill.appendChild(Object.assign(_mk('span','la-pt'),{
+      textContent: type==='user_offline'
+        ? 'Session ended  ·  detected via activity timeout'
+        : 'Live event  ·  received just now  ·  real-time via Supabase'
+    }));
     body.appendChild(pill);
-
     card.appendChild(body);
 
     /* ── FOOTER ── */
     var foot = _mk('div','la-foot');
 
-    /* inline countdown ring */
     var ringWrap = _mk('div','la-rw');
     ringWrap.innerHTML =
       '<svg class="la-ring" viewBox="0 0 56 56" fill="none">'+
         '<circle cx="28" cy="28" r="24" stroke="rgba(255,255,255,.1)" stroke-width="3.5" fill="none"/>'+
         '<circle id="la_rc" cx="28" cy="28" r="24"'+
-          ' stroke="'+cfg.ring+'"'+
-          ' stroke-width="3.5" fill="none" stroke-linecap="round"'+
-          ' stroke-dasharray="'+C.toFixed(2)+'"'+
-          ' stroke-dashoffset="0"'+
-          ' transform="rotate(-90 28 28)"'+
-          ' style="transition:stroke-dashoffset 1s linear;"/>'+
+          ' stroke="'+cfg.ring+'" stroke-width="3.5" fill="none" stroke-linecap="round"'+
+          ' stroke-dasharray="'+C.toFixed(2)+'" stroke-dashoffset="0"'+
+          ' transform="rotate(-90 28 28)" style="transition:stroke-dashoffset 1s linear;"/>'+
         '<text id="la_rt" x="28" y="33" text-anchor="middle"'+
           ' fill="'+cfg.ring+'" font-size="11.5" font-weight="700"'+
           ' font-family="system-ui,sans-serif">'+DURATION+'</text>'+
@@ -314,69 +383,66 @@
     footmid.appendChild(flt);
     foot.appendChild(footmid);
 
-    var dismissBtn = _mk('button','la-dismiss');
-    dismissBtn.style.background = cfg.glow;
-    dismissBtn.style.boxShadow  = '0 4px 22px '+cfg.glow+'55';
-    dismissBtn.textContent = 'Got it  ✓';
-    dismissBtn.addEventListener('click',_dismiss);
-    foot.appendChild(dismissBtn);
-
+    var btn = _mk('button','la-dismiss');
+    btn.style.background = cfg.glow;
+    btn.style.boxShadow  = '0 4px 20px '+cfg.glow+'44';
+    btn.textContent = 'Got it  ✓';
+    btn.addEventListener('click',_dismiss);
+    foot.appendChild(btn);
     card.appendChild(foot);
 
-    /* ── PROGRESS BAR at very bottom ── */
+    /* progress bar */
     var pgw = _mk('div','la-pgw');
     var pgb = _mk('div','la-pgb');
     pgb.id = 'la_pgb';
-    pgb.style.background = 'linear-gradient(90deg,'+cfg.glow+'aa,'+cfg.ring+')';
-    pgw.appendChild(pgb);
-    card.appendChild(pgw);
+    pgb.style.background = 'linear-gradient(90deg,'+cfg.glow+'99,'+cfg.ring+')';
+    pgw.appendChild(pgb); card.appendChild(pgw);
 
     backdrop.appendChild(card);
     document.body.appendChild(backdrop);
     _el = backdrop;
 
-    /* reset progress bar without flash */
+    /* reset bar */
     pgb.style.transition='none'; pgb.style.width='100%';
     pgb.getBoundingClientRect();
     pgb.style.transition='';
 
-    /* confetti on every event */
-    setTimeout(function(){_burst(card,cfg.confetti);},70);
+    /* confetti (skip for offline) */
+    if (cfg.confetti.length) setTimeout(function(){_burst(card,cfg.confetti);},70);
 
     /* countdown */
     _secsLeft = DURATION;
-    var rc = document.getElementById('la_rc');
-    var rt = document.getElementById('la_rt');
-    var fn = document.getElementById('la_fn');
-    var pb = document.getElementById('la_pgb');
+    var rc=document.getElementById('la_rc');
+    var rt=document.getElementById('la_rt');
+    var fn=document.getElementById('la_fn');
+    var pb=document.getElementById('la_pgb');
 
     _ticker = setInterval(function(){
       _secsLeft--;
-      var pct = _secsLeft/DURATION;
-      if (rc) rc.style.strokeDashoffset = (C*(1-pct)).toFixed(2);
-      if (rt) rt.textContent = _secsLeft;
-      if (fn) fn.textContent = _secsLeft+'s';
-      if (pb) pb.style.width = (pct*100).toFixed(1)+'%';
-      if (_secsLeft<=0) { _killTicker(); _close(_next); }
+      var pct=_secsLeft/DURATION;
+      if(rc) rc.style.strokeDashoffset=(C*(1-pct)).toFixed(2);
+      if(rt) rt.textContent=_secsLeft;
+      if(fn) fn.textContent=_secsLeft+'s';
+      if(pb) pb.style.width=(pct*100).toFixed(1)+'%';
+      if(_secsLeft<=0){_killTicker();_close(_next);}
     },1000);
   }
 
+  var _secsLeft = 0;
+
   /* ── lifecycle ───────────────────────────────────────────── */
   function _dismiss(){ _killTicker(); _close(_next); }
-
   function _close(cb){
-    if (!_el){ if(cb)cb(); return; }
+    if(!_el){if(cb)cb();return;}
     _el.classList.add('la-out');
     var c=_el.querySelector('.la-card');
     if(c)c.classList.add('la-card-out');
-    setTimeout(function(){ _remove(); if(cb)cb(); },340);
+    setTimeout(function(){_remove();if(cb)cb();},340);
   }
-
   function _remove(){
     if(_el&&_el.parentNode)_el.parentNode.removeChild(_el);
     _el=null;
   }
-
   function _killTicker(){
     if(_ticker){clearInterval(_ticker);_ticker=null;}
   }
@@ -389,7 +455,6 @@
     var s=document.createElement('style');
     s.id='la-styles';
     s.textContent=[
-
       '@keyframes la-bd-in{from{opacity:0}to{opacity:1}}',
       '@keyframes la-bd-out{from{opacity:1}to{opacity:0}}',
       '@keyframes la-ci{0%{opacity:0;transform:translateY(36px) scale(.94)}60%{opacity:1;transform:translateY(-5px) scale(1.004)}100%{opacity:1;transform:none}}',
@@ -398,132 +463,95 @@
       '@keyframes la-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}',
       '@keyframes la-burst{0%{opacity:1;transform:translate(-50%,-50%)rotate(0)}100%{opacity:0;transform:translate(calc(-50% + var(--cx)),calc(-50% + var(--cy)))rotate(var(--cr))}}',
 
-      /* backdrop — dark navy, not pure black */
       '.la-backdrop{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;',
         'background:rgba(4,3,18,.38);',
         'backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);',
         'animation:la-bd-in .24s ease forwards;padding:16px;box-sizing:border-box;}',
       '.la-backdrop.la-out{animation:la-bd-out .32s ease forwards;}',
 
-      /* card */
-      '.la-card{position:relative;overflow:hidden;',
-        'width:min(600px,100%);',
-        'max-height:calc(100dvh - 32px);',
-        'display:flex;flex-direction:column;',
+      '.la-card{position:relative;overflow:hidden;width:min(600px,100%);',
+        'max-height:calc(100dvh - 32px);display:flex;flex-direction:column;',
         'background:rgba(11,10,26,.96);',
-        'border:1px solid rgba(255,255,255,.09);',
-        'border-radius:28px;',
+        'border:1px solid rgba(255,255,255,.09);border-radius:28px;',
         'animation:la-ci .5s cubic-bezier(.22,1,.36,1) forwards;}',
       '.la-card.la-card-out{animation:la-co .3s cubic-bezier(.55,0,1,.8) forwards!important;}',
 
-      /* header */
       '.la-hdr{position:relative;z-index:1;flex-shrink:0;padding:20px 20px 22px;border-radius:28px 28px 0 0;overflow:hidden;}',
 
-      /* topbar */
       '.la-topbar{position:relative;z-index:2;display:flex;align-items:center;gap:7px;margin-bottom:16px;}',
-
-      /* badge */
       '.la-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 7px;border-radius:20px;',
         'border:1px solid transparent;font-size:.58rem;font-weight:800;letter-spacing:.17em;}',
       '.la-bdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;animation:la-blink .85s ease-in-out infinite;}',
-
       '.la-qc{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.38);',
         'background:rgba(255,255,255,.09);padding:3px 9px;border-radius:20px;white-space:nowrap;}',
-
       '.la-x{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.09);',
         'border:1px solid rgba(255,255,255,.12);cursor:pointer;color:rgba(255,255,255,.42);',
         'display:flex;align-items:center;justify-content:center;flex-shrink:0;',
         'transition:background .15s,color .15s,transform .15s;}',
       '.la-x:hover{background:rgba(255,255,255,.18);color:#fff;transform:scale(1.08);}',
 
-      /* hero */
       '.la-hero{position:relative;z-index:2;display:flex;align-items:flex-start;gap:16px;}',
-
       '.la-iw{width:68px;height:68px;border-radius:20px;flex-shrink:0;',
         'display:flex;align-items:center;justify-content:center;',
         'animation:la-pulse 2.8s ease-in-out infinite;}',
       '.la-icon{font-size:2.2rem;line-height:1;user-select:none;}',
-
       '.la-ht{flex:1;min-width:0;padding-top:4px;}',
-
-      /* title — wraps, never clips */
-      '.la-ttl{font-size:1.32rem;font-weight:900;color:#fff;letter-spacing:-.028em;line-height:1.25;',
-        'margin-bottom:5px;text-shadow:0 2px 16px rgba(0,0,0,.45);',
+      '.la-ttl{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-.028em;line-height:1.25;',
+        'margin-bottom:5px;text-shadow:0 2px 16px rgba(0,0,0,.4);',
+        'word-break:break-word;overflow-wrap:anywhere;}',
+      '.la-sb{font-size:.83rem;color:rgba(255,255,255,.5);line-height:1.45;',
         'word-break:break-word;overflow-wrap:anywhere;}',
 
-      /* subtitle — wraps too */
-      '.la-sb{font-size:.83rem;color:rgba(255,255,255,.52);line-height:1.45;',
-        'word-break:break-word;overflow-wrap:anywhere;}',
-
-      /* body */
-      '.la-body{position:relative;z-index:1;flex:1;overflow-y:auto;',
-        'padding:18px 20px 6px;',
-        'scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent;}',
+      '.la-body{position:relative;z-index:1;flex:1;overflow-y:auto;padding:18px 20px 6px;',
+        'scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;}',
       '.la-body::-webkit-scrollbar{width:4px;}',
-      '.la-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px;}',
+      '.la-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px;}',
 
-      /* section label */
       '.la-seclbl{font-size:.6rem;font-weight:700;letter-spacing:.14em;',
         'color:rgba(255,255,255,.2);text-transform:uppercase;margin-bottom:10px;}',
 
-      /* details grid */
       '.la-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;}',
-
       '.la-item{background:rgba(255,255,255,.042);border:1px solid rgba(255,255,255,.07);',
         'border-radius:12px;padding:9px 12px;min-width:0;}',
-      '.la-span{grid-column:1/-1;}', /* full-width rows */
-
+      '.la-span{grid-column:1/-1;}',
       '.la-lbl{font-size:.62rem;font-weight:700;letter-spacing:.1em;',
         'color:rgba(255,255,255,.26);text-transform:uppercase;margin-bottom:3px;}',
-
-      /* value — allows 2-line wrap, never clips hard */
       '.la-val{font-size:.82rem;font-weight:600;color:rgba(255,255,255,.84);line-height:1.45;',
         'word-break:break-word;overflow-wrap:anywhere;',
         'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}',
-      '.la-span .la-val{-webkit-line-clamp:3;}', /* spanned rows get 3 lines */
+      '.la-span .la-val{-webkit-line-clamp:3;}',
 
-      /* live pill */
       '.la-pill{display:flex;align-items:center;gap:7px;margin-bottom:14px;',
         'padding:7px 12px;background:rgba(255,255,255,.028);',
         'border:1px solid rgba(255,255,255,.055);border-radius:10px;}',
       '.la-pd{width:6px;height:6px;border-radius:50%;flex-shrink:0;animation:la-blink .85s ease-in-out infinite;}',
-      '.la-pt{font-size:.7rem;color:rgba(255,255,255,.32);word-break:break-word;}',
+      '.la-pt{font-size:.7rem;color:rgba(255,255,255,.3);word-break:break-word;}',
 
-      /* footer */
       '.la-foot{position:relative;z-index:1;display:flex;align-items:center;gap:12px;',
         'padding:12px 20px 14px;border-top:1px solid rgba(255,255,255,.065);flex-shrink:0;}',
-
-      /* countdown ring — inline in footer */
       '.la-rw{width:44px;height:44px;flex-shrink:0;}',
       '.la-ring{width:100%;height:100%;}',
-
       '.la-footmid{flex:1;min-width:0;}',
       '.la-flt{font-size:.75rem;color:rgba(255,255,255,.28);white-space:nowrap;}',
       '.la-fln{font-weight:700;font-variant-numeric:tabular-nums;}',
-
       '.la-dismiss{padding:10px 26px;border:none;border-radius:12px;cursor:pointer;',
         'color:#fff;font-size:.84rem;font-weight:800;letter-spacing:.02em;white-space:nowrap;',
         'transition:opacity .15s,transform .12s;opacity:.92;flex-shrink:0;}',
       '.la-dismiss:hover{opacity:1;transform:scale(1.03);}',
       '.la-dismiss:active{transform:scale(.97);}',
 
-      /* progress bar at bottom */
       '.la-pgw{height:3px;background:rgba(255,255,255,.05);flex-shrink:0;}',
       '.la-pgb{height:100%;width:100%;transition:width 1s linear;}',
-
-      /* confetti */
       '.la-cp{position:absolute;pointer-events:none;will-change:transform,opacity;}',
 
-      /* mobile tweaks */
       '@media(max-width:480px){',
-        '.la-ttl{font-size:1.1rem;}',
+        '.la-ttl{font-size:1.08rem;}',
         '.la-hero{gap:12px;}',
-        '.la-iw{width:56px;height:56px;}',
-        '.la-icon{font-size:1.8rem;}',
+        '.la-iw{width:54px;height:54px;}',
+        '.la-icon{font-size:1.75rem;}',
         '.la-grid{grid-template-columns:1fr;}',
         '.la-span{grid-column:auto;}',
       '}',
-
     ].join('');
     document.head.appendChild(s);
   }
@@ -533,29 +561,29 @@
     var sb=window._supabase;
     if(!sb||_channel)return;
 
-    _channel=sb.channel('admin_live_alerts_v5')
+    _channel=sb.channel('admin_live_alerts_v8')
 
+      /* NEW USER registered */
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_data'},
-        function(p){_enqueue('user_joined',p.new||{});})
+        function(p){ _enqueue('user_joined',p.new||{}); })
 
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_data'},
-        function(p){
-          if(Date.now()-_startTime<WARMUP_MS)return;
-          var rec=p.new||{};
-          var ua=rec.updated_at?new Date(rec.updated_at).getTime():0;
-          if(Date.now()-ua>90000)return;
-          if(Date.now()-_lastOnline<ONLINE_GAP_MS)return;
-          _lastOnline=Date.now();
-          _enqueue('user_online',rec);
-        })
+      /* USER SESSION created — user just opened the app */
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_sessions'},
+        function(p){ _handleSession('INSERT',p.new||{}); })
 
+      /* USER SESSION updated — user is still active */
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_sessions'},
+        function(p){ _handleSession('UPDATE',p.new||{}); })
+
+      /* NEW MESSAGE */
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'contact_messages'},
-        function(p){_enqueue('new_message',p.new||{});})
+        function(p){ _enqueue('new_message',p.new||{}); })
 
+      /* NEW EPISODE */
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'islamvoice_episodes'},
-        function(p){_enqueue('new_video',p.new||{});})
+        function(p){ _enqueue('new_video',p.new||{}); })
 
-      .subscribe(function(s){console.log('[LiveAlerts]',s);});
+      .subscribe(function(s){ console.log('[LiveAlerts] Realtime:',s); });
   }
 
   function _init(){
@@ -570,21 +598,21 @@
   window._AdminLiveAlerts={
     test:function(type,data){
       var def={
-        user_joined:{id:'usr_xk9201',email:'sara.ahmed@example.com',created_at:new Date(),platform:'iOS App'},
-        user_online: {id:'usr_mh7743',email:'mohammed.khalid@example.com',updated_at:new Date()},
-        new_message: {name:'Ahmed Hassan',email:'ahmed@example.com',subject:'Question about the Quran app',message:'As-salamu alaykum, I wanted to ask about the Quran recitation feature and whether it supports multiple reciters. Jazakallah khair for your amazing work!',created_at:new Date()},
-        new_video:   {id:'ep_034',title:'Tafsir Al-Baqarah — Episode 12',series:'IslamVoice',duration:'42:18',created_at:new Date()},
+        user_joined: {id:'usr_xk9201',email:'sara.ahmed@example.com',created_at:new Date(),platform:'iOS App'},
+        user_online:  {id:'usr_mh7743',name:'Mohammed Khalid',email:'mohammed@example.com',platform:'iOS',last_active_at:new Date()},
+        user_offline: {id:'usr_mh7743',name:'Mohammed Khalid',email:'mohammed@example.com',platform:'iOS',last_active_at:new Date(Date.now()-13*60*1000),ts:Date.now()-13*60*1000},
+        new_message:  {name:'Ahmed Hassan',email:'ahmed@example.com',subject:'Question about the Quran app',message:'As-salamu alaykum, I wanted to ask about the Quran recitation feature and whether it supports multiple reciters. Jazakallah khair!',created_at:new Date()},
+        new_video:    {id:'ep_034',title:'Tafsir Al-Baqarah — Episode 12',series:'IslamVoice',duration:'42:18',created_at:new Date()},
       };
       _enqueue(type||'user_joined',data||def[type]||def.user_joined);
     },
     demo:function(){
-      ['user_joined','user_online','new_message','new_video'].forEach(function(t,i){
-        setTimeout(function(){window._AdminLiveAlerts.test(t);},i*900);
+      ['user_joined','user_online','user_offline','new_message','new_video'].forEach(function(t,i){
+        setTimeout(function(){window._AdminLiveAlerts.test(t);},i*1000);
       });
     },
   };
 
-  /* ── boot ───────────────────────────────────────────────── */
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',_init);
   } else { _init(); }
