@@ -435,6 +435,15 @@
             margin-left: auto;
         }
 
+        /* ── Audit Logs ── */
+        .audit-logs-section { margin-bottom: 28px; }
+        .al-sev { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .al-sev.info     { background: rgba(59,130,246,.1);  color: #3b82f6; }
+        .al-sev.warning  { background: rgba(234,179,8,.1);   color: #ca8a04; }
+        .al-sev.critical { background: rgba(239,68,68,.1);   color: #dc2626; }
+        .al-sev.default  { background: rgba(156,163,175,.1); color: #6b7280; }
+        .al-action { font-family: monospace; font-size: 11.5px; background: var(--bg-active); border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+
         /* ── Responsive ── */
         @media (max-width: 700px) {
             .welcome-header h1 { font-size: 20px; }
@@ -450,6 +459,7 @@
     <style id="early-sidebar-hide">
         .sidebar-nav { visibility: visible; }
         #recent-messages-card { display: none; }
+        #audit-logs-card { display: none; }
     </style>
     <script>
         (function() {
@@ -457,7 +467,7 @@
             var style = document.getElementById('early-sidebar-hide');
             var css = '.sidebar-nav{visibility:visible}';
             if (role === 'super_admin') {
-                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}';
+                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}#audit-logs-card{display:block}';
             } else if (role === 'analyst') {
                 css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="header-animation"],.nav-item[href*="admin-website"],.nav-item[href*="images"],.nav-item[href*="translations"],.nav-item[href*="admin-links"],#recent-messages-card{display:none!important}';
             } else if (role === 'editor') {
@@ -865,6 +875,37 @@
                             <tbody id="messagesTableBody">
                                 <tr>
                                     <td colspan="6" style="text-align:center;padding:40px;">
+                                        <div style="width:40px;height:40px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ══ Recent Audit Logs (super_admin only) ══ -->
+                <div class="card audit-logs-section" id="audit-logs-card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
+                            Recent Audit Logs
+                        </h3>
+                        <a href="/admin-audit.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;transition:all 0.2s;font-weight:600;">View all</a>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Severity</th>
+                                    <th>Action</th>
+                                    <th>Admin</th>
+                                    <th>IP</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align:center;padding:40px;">
                                         <div style="width:40px;height:40px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
                                     </td>
                                 </tr>
@@ -1360,6 +1401,63 @@
         }
 
 
+        function buildAuditLogs(logs) {
+            var tbody = document.getElementById('auditLogsTableBody');
+            if (!tbody) return;
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+            if (!logs || !logs.length) {
+                var empty = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 5;
+                td.style.cssText = 'text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;';
+                td.textContent = 'No audit logs';
+                empty.appendChild(td);
+                tbody.appendChild(empty);
+                return;
+            }
+
+            logs.forEach(function(log) {
+                var tr = document.createElement('tr');
+
+                // Severity
+                var tdSev = document.createElement('td');
+                var badge = document.createElement('span');
+                badge.className = 'al-sev ' + (log.severity || 'default');
+                badge.textContent = log.severity || '-';
+                tdSev.appendChild(badge);
+                tr.appendChild(tdSev);
+
+                // Action
+                var tdAction = document.createElement('td');
+                var code = document.createElement('span');
+                code.className = 'al-action';
+                code.textContent = log.action || '-';
+                tdAction.appendChild(code);
+                tr.appendChild(tdAction);
+
+                // Email
+                var tdEmail = document.createElement('td');
+                tdEmail.style.cssText = 'max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-secondary);';
+                tdEmail.textContent = log.email || '-';
+                tr.appendChild(tdEmail);
+
+                // IP
+                var tdIp = document.createElement('td');
+                tdIp.style.cssText = 'font-size:12px;color:var(--text-tertiary);white-space:nowrap;';
+                tdIp.textContent = log.ip_address || '-';
+                tr.appendChild(tdIp);
+
+                // Time
+                var tdTime = document.createElement('td');
+                tdTime.style.cssText = 'font-size:11px;color:var(--text-tertiary);white-space:nowrap;';
+                tdTime.textContent = getTimeAgo(new Date(log.created_at));
+                tr.appendChild(tdTime);
+
+                tbody.appendChild(tr);
+            });
+        }
+
         /* ═══════════════════════════════════════════════
            MAIN DATA LOADER
            ═══════════════════════════════════════════════ */
@@ -1389,7 +1487,9 @@
                 /* 11 — daily signups last 30 days */
                 supabase.from('user_data').select('created_at').gte('created_at', ago30.toISOString()).order('created_at', { ascending: true }),
                 /* 12 — daily active last 7 days */
-                supabase.from('user_data').select('updated_at').gte('updated_at', ago7.toISOString())
+                supabase.from('user_data').select('updated_at').gte('updated_at', ago7.toISOString()),
+                /* 13 — recent audit logs (super_admin only) */
+                supabase.from('admin_audit_logs').select('id,created_at,action,severity,email,ip_address').order('created_at', { ascending: false }).limit(8)
             ]);
 
             // Shorthand
@@ -1510,6 +1610,9 @@
 
             // ─── Activity Timeline ───
             buildActivityTimeline(users, messages, videos);
+
+            // ─── Audit Logs ───
+            buildAuditLogs(dat(13));
 
             // ─── Update timestamp ───
             _lastRefreshTime = new Date();
