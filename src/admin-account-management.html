@@ -106,18 +106,31 @@
 
         /* ── Admin accounts list ──────────────────────────────── */
         .accounts-list{display:flex;flex-direction:column;gap:8px}
-        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:16px;transition:border-color .2s,box-shadow .2s,transform .2s;border-left:3px solid transparent}
-        .acct-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
-        .acct-card[data-role="super_admin"]{border-left-color:#6366f1}
-        .acct-card[data-role="editor"]{border-left-color:#16a34a}
-        .acct-card[data-role="analyst"]{border-left-color:#d97706}
-        .acct-card[data-role="custom"]{border-left-color:#9333ea}
-        .acct-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
-        .acct-avatar{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;font-weight:800;border:none}
+        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;overflow:hidden;transition:box-shadow .2s,transform .2s}
+        .acct-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.09);transform:translateY(-2px)}
+
+        /* Role strip at top */
+        .acct-role-strip{height:5px;width:100%}
+        .acct-card[data-role="super_admin"] .acct-role-strip{background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+        .acct-card[data-role="editor"] .acct-role-strip{background:linear-gradient(90deg,#22c55e,#16a34a)}
+        .acct-card[data-role="analyst"] .acct-role-strip{background:linear-gradient(90deg,#f59e0b,#d97706)}
+        .acct-card[data-role="custom"] .acct-role-strip{background:linear-gradient(90deg,#a855f7,#9333ea)}
+
+        /* Role label row */
+        .acct-role-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 0}
+        .acct-role-label{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:20px}
+        .acct-card[data-role="super_admin"] .acct-role-label{background:rgba(99,102,241,.1);color:#6366f1}
+        .acct-card[data-role="editor"] .acct-role-label{background:rgba(34,197,94,.1);color:#16a34a}
+        .acct-card[data-role="analyst"] .acct-role-label{background:rgba(245,158,11,.1);color:#d97706}
+        .acct-card[data-role="custom"] .acct-role-label{background:rgba(168,85,247,.1);color:#9333ea}
+        .acct-role-label i{width:11px;height:11px}
+
+        .acct-card-top{display:flex;align-items:flex-start;gap:12px;padding:10px 14px 8px}
+        .acct-avatar{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;font-weight:800;border:none}
         .acct-info{flex:1;min-width:0}
         .acct-name{font-size:14px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .acct-email{font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-        .acct-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px}
+        .acct-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;padding:0 14px}
         .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
         .status-online{background:rgba(34,197,94,.12);color:#16a34a}
         .status-idle{background:rgba(234,179,8,.12);color:#d97706}
@@ -130,9 +143,9 @@
         .dot-idle{background:#d97706}
         .dot-offline{background:#9ca3af}
         @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
-        .acct-meta{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary);margin-bottom:10px}
+        .acct-meta{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary);margin-bottom:10px;padding:0 14px}
         .acct-meta i{width:12px;height:12px;flex-shrink:0}
-        .acct-actions{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border-light);padding-top:10px}
+        .acct-actions{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border-light);padding:10px 14px 14px}
         .acct-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--border-light);background:var(--bg-active);color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
         .acct-btn:hover{background:var(--bg-hover);border-color:var(--border-color);color:var(--text-primary)}
         .acct-btn svg{width:13px;height:13px}
@@ -940,7 +953,26 @@
                 card.dataset.role = account.role;
                 card.dataset.userId = account.id;
 
-                // Top row: avatar + name/email + role badge
+                // Coloured role strip
+                var strip = document.createElement('div');
+                strip.className = 'acct-role-strip';
+                card.appendChild(strip);
+
+                // Role label row with icon
+                var roleIcons = {super_admin:'shield',editor:'pen-line',analyst:'bar-chart-2',custom:'settings-2'};
+                var roleLabels = {super_admin:'Super Admin',editor:'Editor',analyst:'Analyst',custom:'Custom'};
+                var roleRow = document.createElement('div');
+                roleRow.className = 'acct-role-row';
+                var roleLabel = document.createElement('span');
+                roleLabel.className = 'acct-role-label';
+                var roleIconEl = document.createElement('i');
+                roleIconEl.setAttribute('data-lucide', roleIcons[account.role] || 'user');
+                roleLabel.appendChild(roleIconEl);
+                roleLabel.appendChild(document.createTextNode(roleLabels[account.role] || account.role));
+                roleRow.appendChild(roleLabel);
+                card.appendChild(roleRow);
+
+                // Top row: avatar + name/email
                 var top = document.createElement('div');
                 top.className = 'acct-card-top';
 
@@ -963,13 +995,8 @@
                 info.appendChild(nameEl);
                 info.appendChild(emailEl);
 
-                var roleBadge = document.createElement('span');
-                roleBadge.className = 'role-badge role-' + account.role;
-                roleBadge.textContent = account.role.replace('_', ' ');
-
                 top.appendChild(avatar);
                 top.appendChild(info);
-                top.appendChild(roleBadge);
                 card.appendChild(top);
 
                 // Status badges
