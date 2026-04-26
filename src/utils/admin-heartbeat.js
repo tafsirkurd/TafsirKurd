@@ -102,7 +102,9 @@ window.adminHeartbeat = (function() {
     }
 
     function isNoTimeoutAccount() {
-        return sessionStorage.getItem('adminNoTimeout') === '1';
+        if (sessionStorage.getItem('adminNoTimeout') === '1') return true;
+        var email = (sessionStorage.getItem('adminEmail') || '').trim().toLowerCase();
+        return email === 'tefsirkurd@gmail.com';
     }
 
     function startSessionTimeout() {
