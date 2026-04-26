@@ -8839,6 +8839,7 @@ function ivFetchFresh(force){
     S.ivSeries=seriesRes.data||[];
     S.ivEpisodes=epRes.data||[];
     _buildIvEpsCache();
+    _ivHeroInvalidate(); // fresh data → pick new random slides next render
 
     // Cache
     try{
@@ -8896,73 +8897,94 @@ function renderIvLoading(){
 var _ivHeroTimer=null;
 var _ivHeroIdx=0;
 var _ivHeroSlides=[];
+var _ivHeroBuilt=false; // guard: only build once per data load
+var _ivHeroTrackEl=null;
+var _ivHeroDotsEls=null;
 var _ivHeroTouchX=null;
+var _ivHeroTouchT=null;
+
+function _ivThumb(url){
+  // mqdefault (320×180) — already warmed by preloadIvThumbnails(), best quality/size balance
+  return (url||'').replace('maxresdefault.jpg','mqdefault.jpg').replace('hqdefault.jpg','mqdefault.jpg');
+}
 
 function renderIvHero(){
   var hero=$('ivHero');
+  if(!hero)return;
+
+  // Hide hero when search is active
+  var q=S.ivSearchQuery||'';
+  var spkFilter=S.ivSpeakerFilter||null;
+  if(q||spkFilter){hero.style.display='none';return;}
+
+  // Don't rebuild if already built (going back from series, background refresh, etc.)
+  if(_ivHeroBuilt&&_ivHeroSlides.length){
+    hero.style.display='';
+    _ivHeroResetTimer();
+    return;
+  }
+
   var track=$('ivHeroTrack');
   var dotsEl=$('ivHeroDots');
-  if(!hero||!track||!dotsEl)return;
+  if(!track||!dotsEl)return;
 
-  // Pick 5 random episodes that have a thumbnail via their series
+  // Pick one random episode per series, shuffle, take up to 5
   var all=[];
   if(S.ivEpisodes&&S.ivSeries){
     var seriesMap={};
     S.ivSeries.forEach(function(s){seriesMap[s.id]=s;});
+    // Pick the most recent episode per series that has a thumbnail
+    var bestEpMap={};
     S.ivEpisodes.forEach(function(ep){
       var ser=seriesMap[ep.series_id];
-      if(ser&&ser.thumbnail_url)all.push({ep:ep,series:ser});
+      if(!ser||!ser.thumbnail_url)return;
+      var prev=bestEpMap[ep.series_id];
+      if(!prev||(ep.created_at&&ep.created_at>prev.created_at))bestEpMap[ep.series_id]=ep;
+    });
+    Object.keys(bestEpMap).forEach(function(sid){
+      all.push({ep:bestEpMap[sid],series:seriesMap[sid]});
     });
   }
   if(all.length<2){hero.style.display='none';return;}
 
-  // Shuffle, then deduplicate by series so each slide shows a different series
+  // Shuffle and take 5
   for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=all[i];all[i]=all[j];all[j]=tmp;}
-  var seen=new Set();
-  var deduped=[];
-  for(var k=0;k<all.length&&deduped.length<5;k++){
-    if(!seen.has(all[k].series.id)){seen.add(all[k].series.id);deduped.push(all[k]);}
-  }
-  _ivHeroSlides=deduped;
+  _ivHeroSlides=all.slice(0,5);
   _ivHeroIdx=0;
 
-  // Force-fetch all thumbnails into browser cache before building slides
-  // so iOS WKWebView has them ready when background-image fires on off-screen elements
+  // Preload all thumbnails immediately so iOS WKWebView has them in cache
   _ivHeroSlides.forEach(function(item){
     var pi=new Image();
-    pi.src=item.series.thumbnail_url.replace('maxresdefault.jpg','hqdefault.jpg');
+    pi.src=_ivThumb(item.series.thumbnail_url);
   });
 
   hero.style.display='';
   clear(track);
   clear(dotsEl);
+  _ivHeroDotsEls=[];
 
   _ivHeroSlides.forEach(function(item,idx){
     var ser=item.series;
     var ep=item.ep;
-    var thumbSrc=ser.thumbnail_url.replace('maxresdefault.jpg','hqdefault.jpg');
+    var thumb=_ivThumb(ser.thumbnail_url);
 
     var slide=document.createElement('div');
     slide.className='iv-hero-slide';
 
-    // Blurred bg
     var bg=document.createElement('div');
     bg.className='iv-hero-bg';
-    bg.style.backgroundImage='url('+thumbSrc+')';
+    bg.style.backgroundImage='url('+thumb+')';
     slide.appendChild(bg);
 
-    // Sharp thumbnail as background-image (loads regardless of off-screen position)
     var imgWrap=document.createElement('div');
     imgWrap.className='iv-hero-img';
-    imgWrap.style.backgroundImage='url('+thumbSrc+')';
+    imgWrap.style.backgroundImage='url('+thumb+')';
     slide.appendChild(imgWrap);
 
-    // Gradient overlay
     var grad=document.createElement('div');
     grad.className='iv-hero-gradient';
     slide.appendChild(grad);
 
-    // Content row
     var content=document.createElement('div');
     content.className='iv-hero-content';
 
@@ -8988,51 +9010,59 @@ function renderIvHero(){
       spk.textContent=ser.speaker;
       info.appendChild(spk);
     }
-
     content.appendChild(playBtn);
     content.appendChild(info);
     slide.appendChild(content);
 
-    // Click → open series
-    (function(seriesId){
-      slide.addEventListener('click',function(){App.ivShowSeries(seriesId);});
-    })(ser.id);
-
+    (function(sid){slide.addEventListener('click',function(){App.ivShowSeries(sid);});})(ser.id);
     track.appendChild(slide);
 
-    // Dot
     var dot=document.createElement('div');
     dot.className='iv-hero-dot'+(idx===0?' on':'');
     dotsEl.appendChild(dot);
+    _ivHeroDotsEls.push(dot);
   });
 
-  // Touch swipe
-  track.addEventListener('touchstart',function(e){_ivHeroTouchX=e.touches[0].clientX;},{passive:true});
+  _ivHeroTrackEl=track;
+
+  // Touch swipe with velocity check
+  var _touchStartX=0,_touchStartT=0,_dragging=false;
+  track.addEventListener('touchstart',function(e){
+    _touchStartX=e.touches[0].clientX;
+    _touchStartT=Date.now();
+    _dragging=true;
+    if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}
+  },{passive:true});
   track.addEventListener('touchend',function(e){
-    if(_ivHeroTouchX===null)return;
-    var dx=_ivHeroTouchX-e.changedTouches[0].clientX;
-    _ivHeroTouchX=null;
-    if(Math.abs(dx)<30)return;
+    if(!_dragging)return;
+    _dragging=false;
+    var dx=_touchStartX-e.changedTouches[0].clientX;
+    var dt=Date.now()-_touchStartT;
+    var velocity=Math.abs(dx)/dt; // px/ms
+    if(Math.abs(dx)<20||velocity<0.15)return _ivHeroResetTimer();
     _ivHeroGoTo(dx>0?_ivHeroIdx+1:_ivHeroIdx-1);
     _ivHeroResetTimer();
   },{passive:true});
+  track.addEventListener('touchcancel',function(){_dragging=false;_ivHeroResetTimer();},{passive:true});
 
+  _ivHeroBuilt=true;
   _ivHeroGoTo(0);
   _ivHeroResetTimer();
 }
 
+// Call this when data reloads so hero picks fresh random slides next time
+function _ivHeroInvalidate(){_ivHeroBuilt=false;_ivHeroSlides=[];if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}}
+
 function _ivHeroGoTo(idx){
   if(!_ivHeroSlides.length)return;
   _ivHeroIdx=(idx+_ivHeroSlides.length)%_ivHeroSlides.length;
-  var track=$('ivHeroTrack');
-  if(track)track.style.transform='translateX('+(-_ivHeroIdx*100)+'%)';
-  var dots=$('ivHeroDots');
-  if(dots)dots.querySelectorAll('.iv-hero-dot').forEach(function(d,i){d.classList.toggle('on',i===_ivHeroIdx);});
+  if(_ivHeroTrackEl)_ivHeroTrackEl.style.transform='translateX('+(-_ivHeroIdx*100)+'%)';
+  if(_ivHeroDotsEls)_ivHeroDotsEls.forEach(function(d,i){d.classList.toggle('on',i===_ivHeroIdx);});
 }
 
 function _ivHeroResetTimer(){
   if(_ivHeroTimer)clearInterval(_ivHeroTimer);
-  _ivHeroTimer=setInterval(function(){_ivHeroGoTo(_ivHeroIdx+1);},4000);
+  _ivHeroTimer=setInterval(function(){_ivHeroGoTo(_ivHeroIdx+1);},4500);
 }
 
 function renderIvGrid(){
