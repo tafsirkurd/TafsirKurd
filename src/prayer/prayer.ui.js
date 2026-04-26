@@ -897,7 +897,7 @@
       horizSVG +
       '<div class="sky-top-row">' +
         '<div class="sky-city">' + (getCityLabel(city)) + '</div>' +
-        '<button class="sky-bell" id="skyBell" onclick="(function(){window.PrayerUI&&document.getElementById(\'prayerSettingsOverlay\')&&document.getElementById(\'prayerSettingsOverlay\').classList.add(\'open\')})()"><i class="fas fa-bell"></i></button>' +
+        '<button class="sky-bell' + (getAthan() ? ' sky-bell--on' : '') + '" id="skyBell" onclick="(function(){window.PrayerUI&&document.getElementById(\'prayerSettingsOverlay\')&&document.getElementById(\'prayerSettingsOverlay\').classList.add(\'open\')})()"><i class="fas fa-' + (getAthan() ? 'bell' : 'bell-slash') + '"></i></button>' +
       '</div>' +
       '<div class="sky-bottom-row">' +
         '<div class="sky-next-name" id="skyNextName"></div>' +
@@ -2610,6 +2610,11 @@
     });
     var hdrSub = document.getElementById('as2HdrCitySub');
     if (hdrSub) hdrSub.textContent = getCityLabel(city);
+    // Invalidate cached state so render() always fetches fresh data for the new city
+    _renderedKey = null;
+    _currentTimings = null;
+    _currentData = null;
+    _currentDateISO = null;
     closeSettings();
     await render();
     // Reschedule for the new city. scheduleAthanMultiDay cancels old notifications
@@ -2632,10 +2637,17 @@
 
   function updateAthanBanner(val) {
     var bell = document.getElementById('prayerHdrBell');
-    if (!bell) return;
-    bell.className = 'prayer-hdr-bell' + (val ? ' prayer-hdr-bell--on' : '');
-    var icon = bell.querySelector('i');
-    if (icon) icon.className = val ? 'fas fa-bell' : 'fas fa-bell-slash';
+    if (bell) {
+      bell.className = 'prayer-hdr-bell' + (val ? ' prayer-hdr-bell--on' : '');
+      var icon = bell.querySelector('i');
+      if (icon) icon.className = val ? 'fas fa-bell' : 'fas fa-bell-slash';
+    }
+    var skyBell = document.getElementById('skyBell');
+    if (skyBell) {
+      skyBell.classList.toggle('sky-bell--on', val);
+      var skyIcon = skyBell.querySelector('i');
+      if (skyIcon) skyIcon.className = val ? 'fas fa-bell' : 'fas fa-bell-slash';
+    }
   }
 
   async function onAthanMasterToggle(val, timings, city, dateISO) {
