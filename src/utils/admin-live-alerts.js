@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var DURATION      = 14;    // seconds per popup
+  var DURATION      = 15;    // seconds per popup
   var MAX_QUEUE     = 30;
   var ONLINE_GAP_MS = 60000;
   var WARMUP_MS     = 30000;
