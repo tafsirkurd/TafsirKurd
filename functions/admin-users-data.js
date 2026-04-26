@@ -219,6 +219,34 @@ export async function onRequest(context) {
             }, 200, corsHeaders);
         }
 
+        // ===== GET ONLINE USERS =====
+        if (action === 'get_online_users') {
+            const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+            const { data: sessions, error } = await supabase
+                .from('user_sessions')
+                .select('user_id, platform')
+                .gt('last_active_at', tenMinAgo);
+
+            if (error) return jsonResponse({ error: 'Failed to fetch sessions' }, 500, corsHeaders);
+
+            const seen = new Set();
+            const platforms = { ios: 0, android: 0, web: 0 };
+            const userIds = [];
+
+            (sessions || []).forEach(s => {
+                if (!seen.has(s.user_id)) {
+                    seen.add(s.user_id);
+                    userIds.push(s.user_id);
+                }
+                const p = (s.platform || '').toLowerCase();
+                if (p === 'ios') platforms.ios++;
+                else if (p === 'android') platforms.android++;
+                else platforms.web++;
+            });
+
+            return jsonResponse({ success: true, count: seen.size, userIds, platforms }, 200, corsHeaders);
+        }
+
         // ===== DELETE USER =====
         if (action === 'delete_user') {
             if (role !== 'super_admin')

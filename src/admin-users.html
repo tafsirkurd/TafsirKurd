@@ -12,6 +12,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=13">
     <style>
+        @keyframes onlinePulse {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:.5; transform:scale(1.35); }
+        }
+        .online-pulse {
+            display:inline-block;width:8px;height:8px;border-radius:50%;
+            background:#22c55e;animation:onlinePulse 1.8s ease-in-out infinite;
+            flex-shrink:0;
+        }
+        .online-platform-row {
+            font-size:11px;color:var(--text-tertiary);margin-top:6px;
+            display:flex;gap:8px;flex-wrap:wrap;
+        }
+        .user-avatar-wrap { position:relative;flex-shrink:0; }
+        .user-online-dot {
+            position:absolute;bottom:1px;right:1px;width:9px;height:9px;
+            border-radius:50%;background:#22c55e;
+            border:2px solid var(--bg-surface);
+        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -760,6 +779,15 @@
                         <div class="stat-value" id="avgCompletion">--</div>
                         <div class="stat-label">Avg Completion</div>
                     </div>
+
+                    <div class="stat-card" style="border-left:3px solid #22c55e;">
+                        <div class="stat-icon" style="background:#22c55e18;display:flex;align-items:center;justify-content:center;">
+                            <span class="online-pulse"></span>
+                        </div>
+                        <div class="stat-value" id="onlineNow">--</div>
+                        <div class="stat-label">Online Now</div>
+                        <div class="online-platform-row" id="onlinePlatforms"></div>
+                    </div>
                 </div>
 
                 <!-- SUMMARY CHIPS -->
@@ -1099,6 +1127,7 @@
         let activeChip = null;
         let searchQuery = '';
         let activeToggles = {};
+        let onlineUserIds = new Set();
 
         // Check authentication
         (async () => {
@@ -1219,6 +1248,10 @@
                 renderChips();
                 applyFilters();
 
+                // Load online users immediately, then refresh every 60s
+                loadOnlineUsers();
+                setInterval(loadOnlineUsers, 60 * 1000);
+
             } catch (error) {
                 console.error('Error loading users:', error);
                 showError('Failed to load users');
@@ -1252,6 +1285,37 @@
             document.getElementById('avgCompletion').textContent = avgCompletion + '%';
             renderChips();
             renderLeaderboards();
+        }
+
+        // Online users — queries user_sessions for last_active_at within 10 min
+        async function loadOnlineUsers() {
+            const tok = sessionStorage.getItem('adminToken');
+            if (!tok) return;
+            try {
+                const res = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+                    body: JSON.stringify({ action: 'get_online_users', token: tok })
+                });
+                const data = await res.json();
+                if (!data.success) return;
+
+                onlineUserIds = new Set(data.userIds || []);
+
+                document.getElementById('onlineNow').textContent = data.count;
+
+                const p = data.platforms || {};
+                const parts = [];
+                if (p.ios)     parts.push('iOS ' + p.ios);
+                if (p.android) parts.push('Android ' + p.android);
+                if (p.web)     parts.push('Web ' + p.web);
+                document.getElementById('onlinePlatforms').textContent = parts.join(' · ');
+
+                // Refresh table rows to update green dots
+                if (filteredUsers.length) renderTable();
+            } catch (e) {
+                console.error('loadOnlineUsers:', e);
+            }
         }
 
         // Leaderboards — top 5 by ayahs, streak, completed
@@ -1656,6 +1720,8 @@
             var tdUser = document.createElement('td');
             var uInfo = document.createElement('div');
             uInfo.className = 'user-info';
+            var avatarWrap = document.createElement('div');
+            avatarWrap.className = 'user-avatar-wrap';
             var img = document.createElement('img');
             img.src = avatarUrl;
             img.alt = user.profile_name;
@@ -1663,6 +1729,13 @@
             img.onerror = function() {
                 this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=80';
             };
+            avatarWrap.appendChild(img);
+            if (onlineUserIds.has(user.user_id)) {
+                var dot = document.createElement('div');
+                dot.className = 'user-online-dot';
+                dot.title = 'Online now';
+                avatarWrap.appendChild(dot);
+            }
             var uDet = document.createElement('div');
             uDet.className = 'user-details';
             var nameLine = document.createElement('div');
@@ -1677,7 +1750,7 @@
             idLine.textContent = user.user_id.substring(0, 8) + '...';
             uDet.appendChild(nameLine);
             uDet.appendChild(idLine);
-            uInfo.appendChild(img);
+            uInfo.appendChild(avatarWrap);
             uInfo.appendChild(uDet);
             tdUser.appendChild(uInfo);
 
