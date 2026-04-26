@@ -605,7 +605,8 @@ function $(id){return document.getElementById(id)}
 window.GencineUI = {
   _view:            'home',   /* 'home' | 'adhkar' | 'dua' | 'tasbih' | 'hadith' */
   _homeEl:          null,     /* cached home grid — built once, reused */
-  _adhkarView:      'grid',   /* 'grid' | 'list' */
+  _adhkarView:          'grid',   /* 'grid' | 'list' */
+  _adhkarGridScrollPos: null,
   _adhkarCat:       'morning',
   _duaCat:          'quran',
   _tasbihCount:     0,
@@ -753,9 +754,10 @@ window.GencineUI = {
     if(window.App && App.closeRecPicker) App.closeRecPicker();
     while(el.firstChild) el.removeChild(el.firstChild);
     var panel = document.getElementById('panelGencine');
-    var restoringBooks = (this._view === 'books' && this._booksScrollPos != null);
-    var restoringHome  = (this._view === 'home'  && this._homeScrollPos  != null);
-    if(panel && !restoringBooks && !restoringHome) panel.scrollTop = 0;
+    var restoringBooks  = (this._view === 'books'  && this._booksScrollPos != null);
+    var restoringHome   = (this._view === 'home'   && this._homeScrollPos  != null);
+    var restoringAdhkar = (this._view === 'adhkar' && this._adhkarView === 'grid' && this._adhkarGridScrollPos != null);
+    if(panel && !restoringBooks && !restoringHome && !restoringAdhkar) panel.scrollTop = 0;
     this._updateHeader();
     if(this._view === 'home'){
       this._renderHome(el);
@@ -765,7 +767,14 @@ window.GencineUI = {
         if(panel) setTimeout(function(){ panel.scrollTop = _savedHome; }, 0);
       }
     }
-    else if(this._view === 'adhkar')  this._renderAdhkar(el);
+    else if(this._view === 'adhkar'){
+      this._renderAdhkar(el);
+      if(restoringAdhkar){
+        var _savedAdhkar = this._adhkarGridScrollPos;
+        this._adhkarGridScrollPos = null;
+        if(panel) setTimeout(function(){ panel.scrollTop = _savedAdhkar; }, 0);
+      }
+    }
     else if(this._view === 'dua')     this._renderDua(el);
     else if(this._view === 'tasbih')  this._renderTasbih(el);
     else if(this._view === 'asma')       this._renderAsma(el);
@@ -976,6 +985,8 @@ window.GencineUI = {
         var row = document.createElement('button');
         row.className = 'adhkar-list-row' + (ki === keys.length - 1 ? ' adhkar-list-row-last' : '');
         row.onclick = function() {
+          var _pg = document.getElementById('panelGencine');
+          if (_pg) self._adhkarGridScrollPos = _pg.scrollTop;
           self._adhkarView = 'list';
           self._adhkarCat  = key;
           self._draw();
