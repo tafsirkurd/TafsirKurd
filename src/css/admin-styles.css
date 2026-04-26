@@ -484,6 +484,12 @@ body[data-admin-theme="noor"] .sidebar-profile-avatar {
     transition: all 0.2s;
 }
 
+.topbar-actions button[title*="Command palette"] {
+    width: auto;
+    min-width: max-content;
+    padding: 6px 14px;
+}
+
 .topbar-btn:hover {
     background: var(--bg-hover);
     border-color: var(--border-dark);

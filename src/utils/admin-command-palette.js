@@ -424,7 +424,7 @@
         var btn = document.createElement('button');
         btn.className = 'topbar-btn';
         btn.title = 'Command palette (Ctrl+K / ⌘K)';
-        btn.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);padding:6px 16px 6px 12px;border-radius:8px;white-space:nowrap;flex-shrink:0;width:auto;overflow:visible;';
+        btn.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-tertiary);border-radius:8px;white-space:nowrap;flex-shrink:0;';
         var ic = document.createElement('i');
         ic.setAttribute('data-lucide', 'command');
         btn.appendChild(ic);
