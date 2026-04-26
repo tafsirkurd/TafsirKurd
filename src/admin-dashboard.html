@@ -738,6 +738,18 @@
                     </div>
                 </div>
 
+                <!-- ══ Who's Online ══ -->
+                <div class="chart-card card-animate" id="whoOnlinePanel" style="display:none;animation-delay:390ms;margin-bottom:28px;padding:16px 20px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+                            <span class="online-pulse"></span>
+                            Who's Online
+                        </div>
+                        <span style="font-size:12px;color:var(--text-tertiary);" id="whoOnlineCount"></span>
+                    </div>
+                    <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
+                </div>
+
                 <!-- ══ Charts ══ -->
                 <div class="charts-grid">
                     <div class="chart-card card-animate" style="animation-delay:360ms">
@@ -1561,6 +1573,8 @@
                 });
                 var data = await res.json();
                 if (!data.success) return;
+
+                // Update metric card
                 document.getElementById('metricOnline').textContent = data.count;
                 var p = data.platforms || {};
                 var parts = [];
@@ -1568,8 +1582,60 @@
                 if (p.android) parts.push('Android ' + p.android);
                 if (p.web)     parts.push('Web ' + p.web);
                 document.getElementById('dashOnlinePlatforms').textContent = parts.join(' · ');
+
+                // Render who's online panel
+                renderWhoOnline(data.users || []);
             } catch (e) {
                 console.error('loadOnlineUsers:', e);
+            }
+        }
+
+        function renderWhoOnline(users) {
+            var panel  = document.getElementById('whoOnlinePanel');
+            var list   = document.getElementById('whoOnlineList');
+            var countEl = document.getElementById('whoOnlineCount');
+            if (!panel || !list) return;
+
+            while (list.firstChild) list.removeChild(list.firstChild);
+
+            if (!users.length) { panel.style.display = 'none'; return; }
+
+            panel.style.display = '';
+            countEl.textContent = users.length + ' online now';
+
+            var MAX = 14;
+            users.slice(0, MAX).forEach(function(u) {
+                var ago = Math.floor((Date.now() - new Date(u.lastActiveAt)) / 60000);
+                var agoStr = ago < 1 ? 'just now' : ago + 'm ago';
+                var plat = u.platform ? (u.platform.charAt(0).toUpperCase() + u.platform.slice(1)) : 'Web';
+                var tooltip = u.name + '  ·  ' + plat + '  ·  ' + agoStr;
+
+                var link = document.createElement('a');
+                link.href = '/admin-users.html';
+                link.title = tooltip;
+                link.style.cssText = 'display:inline-block;text-decoration:none;position:relative;flex-shrink:0;';
+
+                var fallbackSrc = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name) + '&background=random&size=72';
+                var img = document.createElement('img');
+                img.src = u.avatar || fallbackSrc;
+                img.alt = u.name;
+                img.style.cssText = 'width:38px;height:38px;border-radius:50%;border:2px solid var(--bg-surface);object-fit:cover;display:block;box-shadow:0 1px 4px rgba(0,0,0,.12);';
+                img.onerror = function() { this.src = fallbackSrc; };
+
+                // Green dot
+                var dot = document.createElement('div');
+                dot.style.cssText = 'position:absolute;bottom:1px;right:1px;width:9px;height:9px;border-radius:50%;background:#22c55e;border:2px solid var(--bg-surface);';
+
+                link.appendChild(img);
+                link.appendChild(dot);
+                list.appendChild(link);
+            });
+
+            if (users.length > MAX) {
+                var more = document.createElement('div');
+                more.style.cssText = 'width:38px;height:38px;border-radius:50%;background:var(--bg-hover);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0;border:2px solid var(--border-light);';
+                more.textContent = '+' + (users.length - MAX);
+                list.appendChild(more);
             }
         }
 

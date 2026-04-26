@@ -224,27 +224,54 @@ export async function onRequest(context) {
             const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
             const { data: sessions, error } = await supabase
                 .from('user_sessions')
-                .select('user_id, platform')
-                .gt('last_active_at', tenMinAgo);
+                .select('user_id, platform, last_active_at')
+                .gt('last_active_at', tenMinAgo)
+                .order('last_active_at', { ascending: false });
 
             if (error) return jsonResponse({ error: 'Failed to fetch sessions' }, 500, corsHeaders);
 
             const seen = new Set();
             const platforms = { ios: 0, android: 0, web: 0 };
-            const userIds = [];
+            const topSessions = [];
 
             (sessions || []).forEach(s => {
-                if (!seen.has(s.user_id)) {
-                    seen.add(s.user_id);
-                    userIds.push(s.user_id);
-                }
                 const p = (s.platform || '').toLowerCase();
                 if (p === 'ios') platforms.ios++;
                 else if (p === 'android') platforms.android++;
                 else platforms.web++;
+
+                if (!seen.has(s.user_id)) {
+                    seen.add(s.user_id);
+                    topSessions.push(s);
+                }
             });
 
-            return jsonResponse({ success: true, count: seen.size, userIds, platforms }, 200, corsHeaders);
+            const userIds = [...seen];
+
+            // Fetch profiles for online users
+            let users = [];
+            if (userIds.length > 0) {
+                const { data: profiles } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, display_name, avatar_url, email')
+                    .in('id', userIds);
+
+                const profileMap = {};
+                (profiles || []).forEach(p => { profileMap[p.id] = p; });
+
+                users = topSessions.map(s => {
+                    const pr = profileMap[s.user_id] || {};
+                    return {
+                        userId:      s.user_id,
+                        name:        pr.full_name || pr.display_name || (pr.email || '').split('@')[0] || 'Unknown',
+                        avatar:      pr.avatar_url || null,
+                        platform:    s.platform || 'web',
+                        lastActiveAt: s.last_active_at
+                    };
+                });
+            }
+
+            return jsonResponse({ success: true, count: seen.size, userIds, users, platforms }, 200, corsHeaders);
         }
 
         // ===== DELETE USER =====
