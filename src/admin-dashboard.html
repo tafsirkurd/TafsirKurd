@@ -951,6 +951,7 @@
                 await loadDashboardData();
                 loadOnlineUsers();
                 setInterval(loadOnlineUsers, 60 * 1000);
+                setInterval(loadDashboardData, 5 * 60 * 1000);
             }
         })();
 
@@ -1611,7 +1612,7 @@
                 var tooltip = u.name + '  ·  ' + plat + '  ·  ' + agoStr;
 
                 var link = document.createElement('a');
-                link.href = '/admin-users.html';
+                link.href = '/admin-users.html?search=' + encodeURIComponent(u.name);
                 link.title = tooltip;
                 link.style.cssText = 'display:inline-block;text-decoration:none;position:relative;flex-shrink:0;';
 

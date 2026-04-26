@@ -835,6 +835,7 @@
                     <div class="filter-group" style="flex: 0 0 auto;">
                         <label class="filter-label">Has / Is</label>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:2px">
+                            <button class="filter-toggle" data-key="online" style="display:flex;align-items:center;gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;"></span>Online Now</button>
                             <button class="filter-toggle" data-key="bookmarks">Bookmarks</button>
                             <button class="filter-toggle" data-key="progress">Progress</button>
                             <button class="filter-toggle" data-key="completed">Completed</button>
@@ -1245,6 +1246,15 @@
 
                 // Restore any persisted filter state, then apply
                 restoreFilterState();
+
+                // ?search= from dashboard avatar click overrides saved state
+                var urlSearch = new URLSearchParams(window.location.search).get('search');
+                if (urlSearch) {
+                    searchQuery = urlSearch;
+                    document.getElementById('searchInput').value = urlSearch;
+                    document.getElementById('topbar-search').value = urlSearch;
+                }
+
                 renderChips();
                 applyFilters();
 
@@ -1564,6 +1574,7 @@
                 )) return false;
                 if (provider && user.registration_source !== provider) return false;
                 if (cutoff && (!user.lastActive || new Date(user.lastActive) < cutoff)) return false;
+                if (activeToggles.online     && !onlineUserIds.has(user.user_id)) return false;
                 if (activeToggles.bookmarks  && !(user.bookmarks_count > 0)) return false;
                 if (activeToggles.progress   && !(user.total_ayahs_read > 0)) return false;
                 if (activeToggles.completed  && !(user.surahs_completed > 0)) return false;
