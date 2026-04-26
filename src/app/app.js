@@ -8926,6 +8926,13 @@ function renderIvHero(){
   _ivHeroSlides=deduped;
   _ivHeroIdx=0;
 
+  // Force-fetch all thumbnails into browser cache before building slides
+  // so iOS WKWebView has them ready when background-image fires on off-screen elements
+  _ivHeroSlides.forEach(function(item){
+    var pi=new Image();
+    pi.src=item.series.thumbnail_url.replace('maxresdefault.jpg','hqdefault.jpg');
+  });
+
   hero.style.display='';
   clear(track);
   clear(dotsEl);
