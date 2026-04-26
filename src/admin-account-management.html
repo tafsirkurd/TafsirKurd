@@ -1149,7 +1149,13 @@
             document.getElementById('accountActiveToggle').classList.toggle('checked', !!account.is_active);
             document.getElementById('modalTitle').textContent = 'Edit Admin Account';
             document.getElementById('modalSubtitle').textContent = account.email || '';
-            onRoleChange();
+            // Show/hide permissions section without applying preset — DB values will populate it
+            var section = document.getElementById('permsSection');
+            if (account.role === 'super_admin') {
+                section.classList.add('perms-hidden');
+            } else {
+                section.classList.remove('perms-hidden');
+            }
             try {
                 var supabase = window.adminAuth.getSupabase();
                 if (supabase) {
@@ -1158,12 +1164,12 @@
                         var permsMap = {};
                         res.data.forEach(function(r) { permsMap[r.page_slug] = r; });
                         setPermissionsInGrid(permsMap);
-                        if (account.role !== 'super_admin') {
-                            document.getElementById('permsSection').classList.remove('perms-hidden');
-                        }
+                    } else {
+                        // No saved permissions yet — apply role preset as fallback
+                        applyPreset(account.role);
                     }
                 }
-            } catch (e) { console.error('Load permissions error:', e); }
+            } catch (e) { console.error('Load permissions error:', e); applyPreset(account.role); }
             document.getElementById('accountModal').classList.add('open');
             lucide.createIcons();
         }
