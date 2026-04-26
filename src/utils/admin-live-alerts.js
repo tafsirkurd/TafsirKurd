@@ -171,10 +171,11 @@
               _perUserShown[id] = Date.now();
               _enqueue('user_online', {
                 id:             id,
-                name:           u.name    || id,
-                email:          u.name    || id,
+                name:           u.name     || id,
+                email:          u.name     || id,
                 platform:       u.platform || 'Web',
                 last_active_at: u.lastActiveAt,
+                avatar:         u.avatar   || null,
               });
             }
           }
@@ -190,6 +191,7 @@
               email:          u.email    || id,
               platform:       u.platform || 'Web',
               last_active_at: u.lastActiveAt,
+              avatar:         u.avatar   || null,
               ts:             Date.now(),
             });
             delete _onlineMap[id];
@@ -205,6 +207,7 @@
           email:         u.name,
           platform:      u.platform,
           lastActiveAt:  u.lastActiveAt,
+          avatar:        u.avatar || null,
           ts:            Date.now(),
         };
       });
@@ -321,7 +324,24 @@
     var iw = _mk('div','la-iw');
     iw.style.background = cfg.glow+'28';
     iw.style.boxShadow  = '0 0 0 10px '+cfg.glow+'18,0 0 36px '+cfg.glow+'28';
-    iw.appendChild(Object.assign(_mk('div','la-icon'),{textContent:cfg.icon}));
+
+    var hasAvatar = (type==='user_online'||type==='user_offline') && data.avatar;
+    if (hasAvatar) {
+      var img = _mk('img','la-avatar');
+      img.src = data.avatar;
+      img.alt = data.name || 'User';
+      img.onerror = function() {
+        iw.removeChild(img);
+        iw.appendChild(Object.assign(_mk('div','la-icon'),{textContent:cfg.icon}));
+      };
+      iw.appendChild(img);
+      /* status dot overlay */
+      var sdot = _mk('span','la-sdot');
+      sdot.style.background = type==='user_online' ? '#22c55e' : '#64748b';
+      iw.appendChild(sdot);
+    } else {
+      iw.appendChild(Object.assign(_mk('div','la-icon'),{textContent:cfg.icon}));
+    }
     hero.appendChild(iw);
 
     var ht = _mk('div','la-ht');
@@ -494,10 +514,14 @@
       '.la-x:hover{background:rgba(255,255,255,.18);color:#fff;transform:scale(1.08);}',
 
       '.la-hero{position:relative;z-index:2;display:flex;align-items:flex-start;gap:16px;}',
-      '.la-iw{width:68px;height:68px;border-radius:20px;flex-shrink:0;',
+      '.la-iw{width:68px;height:68px;border-radius:20px;flex-shrink:0;position:relative;',
         'display:flex;align-items:center;justify-content:center;',
-        'animation:la-pulse 2.8s ease-in-out infinite;}',
+        'animation:la-pulse 2.8s ease-in-out infinite;overflow:visible;}',
       '.la-icon{font-size:2.2rem;line-height:1;user-select:none;}',
+      '.la-avatar{width:100%;height:100%;object-fit:cover;border-radius:18px;display:block;}',
+      '.la-sdot{position:absolute;bottom:-3px;right:-3px;width:16px;height:16px;',
+        'border-radius:50%;border:2.5px solid rgba(11,10,26,.96);',
+        'animation:la-pulse 2s ease-in-out infinite;}',
       '.la-ht{flex:1;min-width:0;padding-top:4px;}',
       '.la-ttl{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:-.028em;line-height:1.25;',
         'margin-bottom:5px;text-shadow:0 2px 16px rgba(0,0,0,.4);',
@@ -595,8 +619,8 @@
     test:function(type,data){
       var def={
         user_joined: {id:'usr_xk9201',email:'sara.ahmed@example.com',created_at:new Date(),platform:'iOS App'},
-        user_online:  {id:'usr_mh7743',name:'Mohammed Khalid',email:'mohammed@example.com',platform:'iOS',last_active_at:new Date()},
-        user_offline: {id:'usr_mh7743',name:'Mohammed Khalid',email:'mohammed@example.com',platform:'iOS',last_active_at:new Date(Date.now()-13*60*1000),ts:Date.now()-13*60*1000},
+        user_online:  {id:'usr_mh7743',name:'Mohammed Khalid',email:'mohammed@example.com',platform:'iOS',last_active_at:new Date(),avatar:'https://i.pravatar.cc/150?u=mh7743'},
+        user_offline: {id:'usr_mh7743',name:'Mohammed Khalid',email:'mohammed@example.com',platform:'iOS',last_active_at:new Date(Date.now()-13*60*1000),ts:Date.now()-13*60*1000,avatar:'https://i.pravatar.cc/150?u=mh7743'},
         new_message:  {name:'Ahmed Hassan',email:'ahmed@example.com',subject:'Question about the Quran app',message:'As-salamu alaykum, I wanted to ask about the Quran recitation feature and whether it supports multiple reciters. Jazakallah khair!',created_at:new Date()},
         new_video:    {id:'ep_034',title:'Tafsir Al-Baqarah — Episode 12',series:'IslamVoice',duration:'42:18',created_at:new Date()},
       };
