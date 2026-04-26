@@ -19,9 +19,10 @@
 
   var DURATION           = 15;
   var MAX_QUEUE          = 30;
-  var POLL_MS            = 30000;          // poll online users every 30 seconds
-  var WARMUP_MS          = 6000;           // wait 6s before first poll (page settle)
-  var PER_USER_GAP_MS    = 5 * 60 * 1000; // max 1 online popup per user per 5 min
+  var WARMUP_MS          = 6000;
+  var POLL_ONLINE_MS     = 30000;   // online/offline check every 30s
+  var POLL_CONTENT_MS    = 45000;   // new videos / messages every 45s
+  var PER_USER_GAP_MS    = 5 * 60 * 1000;
 
   /* ── event type definitions ─────────────────────────────── */
   var TYPES = {
@@ -217,11 +218,90 @@
 
   function _startPolling() {
     if (_pollTimer) return;
-    /* first poll after warmup, then every POLL_MS */
     setTimeout(function() {
       _pollOnline();
-      _pollTimer = setInterval(_pollOnline, POLL_MS);
+      _pollTimer = setInterval(_pollOnline, POLL_ONLINE_MS);
     }, WARMUP_MS);
+  }
+
+  /* ── content polling (videos + messages + new users) ────── */
+  var _lastVideoTime   = null;
+  var _lastMsgTime     = null;
+  var _lastUserTime    = null;
+  var _contentTimer    = null;
+
+  function _pollContent() {
+    var sb = window._supabase;
+    if (!sb) return;
+
+    /* new episodes ------------------------------------------ */
+    sb.from('islamvoice_episodes')
+      .select('id,title,description,duration,created_at')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(3)
+      .then(function(res) {
+        if (res.error || !res.data || !res.data.length) return;
+        if (_lastVideoTime === null) {
+          /* first fetch — baseline, no popup */
+          _lastVideoTime = res.data[0].created_at;
+          return;
+        }
+        /* enqueue every episode newer than the last we saw */
+        res.data.forEach(function(ep) {
+          if (ep.created_at > _lastVideoTime) {
+            _enqueue('new_video', ep);
+          }
+        });
+        _lastVideoTime = res.data[0].created_at;
+      });
+
+    /* new contact messages ---------------------------------- */
+    sb.from('contact_messages')
+      .select('id,name,email,subject,message,created_at')
+      .order('created_at', { ascending: false })
+      .limit(3)
+      .then(function(res) {
+        if (res.error || !res.data || !res.data.length) return;
+        if (_lastMsgTime === null) {
+          _lastMsgTime = res.data[0].created_at;
+          return;
+        }
+        res.data.forEach(function(msg) {
+          if (msg.created_at > _lastMsgTime) {
+            _enqueue('new_message', msg);
+          }
+        });
+        _lastMsgTime = res.data[0].created_at;
+      });
+
+    /* new user accounts ------------------------------------- */
+    sb.from('user_data')
+      .select('id,email,created_at')
+      .order('created_at', { ascending: false })
+      .limit(3)
+      .then(function(res) {
+        if (res.error || !res.data || !res.data.length) return;
+        if (_lastUserTime === null) {
+          _lastUserTime = res.data[0].created_at;
+          return;
+        }
+        res.data.forEach(function(u) {
+          if (u.created_at > _lastUserTime) {
+            _enqueue('user_joined', u);
+          }
+        });
+        _lastUserTime = res.data[0].created_at;
+      });
+  }
+
+  function _startContentPoll() {
+    if (_contentTimer) return;
+    /* stagger slightly after online poll to avoid simultaneous fetches */
+    setTimeout(function() {
+      _pollContent();
+      _contentTimer = setInterval(_pollContent, POLL_CONTENT_MS);
+    }, WARMUP_MS + 3000);
   }
 
   /* ── popup queue state ──────────────────────────────────── */
@@ -229,7 +309,6 @@
   var _showing    = false;
   var _el         = null;
   var _ticker     = null;
-  var _channel    = null;
   var _startTime  = Date.now();
 
   function _enqueue(type, data) {
@@ -583,35 +662,16 @@
     document.head.appendChild(s);
   }
 
-  /* ── Supabase realtime (new members, messages, videos) ──── */
-  function _setupRealtime(){
-    var sb=window._supabase;
-    if(!sb||_channel)return;
-
-    _channel=sb.channel('admin_live_alerts_v9')
-
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'user_data'},
-        function(p){ _enqueue('user_joined',p.new||{}); })
-
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'contact_messages'},
-        function(p){ _enqueue('new_message',p.new||{}); })
-
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'islamvoice_episodes'},
-        function(p){ _enqueue('new_video',p.new||{}); })
-
-      .subscribe(function(s){ console.log('[LiveAlerts] Realtime:',s); });
-  }
-
   function _init(){
-    /* start online/offline polling immediately — no Supabase needed */
+    /* online/offline: poll /admin-users-data every 30s */
     _startPolling();
 
-    /* wire up Realtime for other events once Supabase is ready */
-    if(window._supabase){ _setupRealtime(); return; }
-    var n=0,poll=setInterval(function(){
-      if(window._supabase){clearInterval(poll);_setupRealtime();}
-      else if(++n>60){clearInterval(poll);console.warn('[LiveAlerts] _supabase unavailable');}
-    },500);
+    /* videos, messages, new users: poll Supabase directly every 45s */
+    if (window._supabase) { _startContentPoll(); return; }
+    var n=0, wait=setInterval(function(){
+      if (window._supabase) { clearInterval(wait); _startContentPoll(); }
+      else if (++n > 60)    { clearInterval(wait); console.warn('[LiveAlerts] _supabase unavailable'); }
+    }, 500);
   }
 
   /* ── public API ─────────────────────────────────────────── */
