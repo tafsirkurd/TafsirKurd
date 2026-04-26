@@ -90,20 +90,45 @@
             color: var(--bg-app);
         }
         /* ===== Platform tabs → chip scroller on mobile ===== */
+        .platform-tabs-wrap {
+            position: relative;
+        }
+        .platform-tabs-wrap::before,
+        .platform-tabs-wrap::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 28px;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.2s;
+        }
+        .platform-tabs-wrap::before {
+            left: 0;
+            background: linear-gradient(to right, var(--bg-app), transparent);
+            opacity: 0;
+        }
+        .platform-tabs-wrap::after {
+            right: 0;
+            background: linear-gradient(to left, var(--bg-app), transparent);
+            opacity: 0;
+        }
+        .platform-tabs-wrap.can-scroll-left::before  { opacity: 1; }
+        .platform-tabs-wrap.can-scroll-right::after  { opacity: 1; }
+
         @media (max-width: 768px) {
             .platform-tabs {
                 border-bottom: none;
-                padding: 0 16px 12px;
+                padding: 4px 16px 12px;
                 gap: 8px;
-                scroll-snap-type: x mandatory;
-                scroll-padding-inline: 16px;
+                scroll-behavior: smooth;
                 margin-bottom: 16px;
             }
             .platform-tab {
-                scroll-snap-align: start;
                 flex-direction: row;
-                padding: 8px 13px;
-                font-size: 12px;
+                padding: 8px 14px;
+                font-size: 13px;
                 font-weight: 600;
                 gap: 6px;
                 border-radius: 22px;
@@ -113,11 +138,7 @@
                 background: var(--bg-surface);
                 color: var(--text-secondary);
                 white-space: nowrap;
-            }
-            .platform-tab:hover {
-                background: var(--bg-hover);
-                border-color: var(--border-color);
-                color: var(--text-primary);
+                min-height: 38px;
             }
             .platform-tab.active {
                 background: var(--text-primary);
@@ -1764,6 +1785,7 @@
                     </div>
                 </div>
 
+                <div class="platform-tabs-wrap" id="tabsWrap">
                 <div class="platform-tabs" id="platformTabs">
                     <button class="platform-tab active" onclick="setPlatform('web', this)">
                         <i data-lucide="globe" style="width:16px;height:16px"></i> Web <span class="tab-count" id="webCount">--</span>
@@ -1783,6 +1805,7 @@
                     <button class="platform-tab" onclick="setPlatform('about', this)">
                         <i data-lucide="info" style="width:16px;height:16px"></i> About <span class="tab-count" id="aboutCount">--</span>
                     </button>
+                </div>
                 </div>
 
                 <div class="stats-row">
@@ -4709,6 +4732,20 @@
             toast._timer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
         }
     </script>
+<script>
+(function(){
+    var tabs = document.getElementById('platformTabs');
+    var wrap = document.getElementById('tabsWrap');
+    if (!tabs || !wrap) return;
+    function updateFade() {
+        wrap.classList.toggle('can-scroll-left',  tabs.scrollLeft > 8);
+        wrap.classList.toggle('can-scroll-right', tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 8);
+    }
+    tabs.addEventListener('scroll', updateFade, { passive: true });
+    window.addEventListener('resize', updateFade);
+    updateFade();
+})();
+</script>
 <script src="/utils/admin-command-palette.js"></script>
 </body>
 </html>
