@@ -151,11 +151,11 @@
     svg.setAttribute('viewBox', '0 0 40 40');
     svg.setAttribute('width', '40');
     svg.setAttribute('height', '40');
-    svg.className = 'la-svg';
+    svg.setAttribute('class', 'la-svg'); /* SVG: use setAttribute, not .className */
 
     var track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     track.setAttribute('cx', '20'); track.setAttribute('cy', '20'); track.setAttribute('r', '18');
-    track.className = 'la-track';
+    track.setAttribute('class', 'la-track');
     svg.appendChild(track);
 
     var fill = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -164,7 +164,7 @@
     fill.setAttribute('stroke', cfg.color);
     fill.setAttribute('stroke-dasharray', String(CIRC));
     fill.setAttribute('stroke-dashoffset', '0');
-    fill.className = 'la-fill';
+    fill.setAttribute('class', 'la-fill');
     svg.appendChild(fill);
 
     timerWrap.appendChild(svg);
