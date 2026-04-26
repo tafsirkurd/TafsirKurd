@@ -130,7 +130,7 @@ export async function onRequest(context) {
                 .select('page_slug, can_view, can_edit, can_delete')
                 .eq('user_id', session.user_id);
 
-            const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
+            const NO_TIMEOUT_EMAIL = 'tafsirkurd@gmail.com';
             return jsonResponse({
                 success: true,
                 email: session.admin_users.email,
@@ -263,7 +263,7 @@ export async function onRequest(context) {
 
                 await supabase.from('admin_users').update({ failed_attempts: 0, last_login: new Date().toISOString(), status: 'online', last_heartbeat: new Date().toISOString() }).eq('id', user2.id);
                 const sessionToken = generateSecureToken();
-                const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
+                const NO_TIMEOUT_EMAIL = 'tafsirkurd@gmail.com';
                 const expiresAt = user2.email === NO_TIMEOUT_EMAIL
                     ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000) // never expires
                     : new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -669,7 +669,7 @@ export async function onRequest(context) {
 
         // 9. Generate session token
         const sessionToken = generateSecureToken();
-        const NO_TIMEOUT_EMAIL = 'tefsirkurd@gmail.com';
+        const NO_TIMEOUT_EMAIL = 'tafsirkurd@gmail.com';
         const expiresAt = email === NO_TIMEOUT_EMAIL
             ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000) // never expires
             : new Date(Date.now() + 24 * 60 * 60 * 1000);

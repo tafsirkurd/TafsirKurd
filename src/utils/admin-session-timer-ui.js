@@ -8,7 +8,7 @@
     function isNoTimeoutAccount() {
         if (sessionStorage.getItem('adminNoTimeout') === '1') return true;
         var email = (sessionStorage.getItem('adminEmail') || '').trim().toLowerCase();
-        return email === 'tefsirkurd@gmail.com';
+        return email === 'tafsirkurd@gmail.com';
     }
 
     function updateSessionTimerDisplay() {
