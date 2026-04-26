@@ -1178,9 +1178,8 @@ body{background:var(--bg);color:var(--text)}
 .iv-search-clear.on{display:flex}
 /* ── IV Hero Carousel ── */
 .iv-hero{position:relative;width:100%;height:200px;overflow:hidden;margin-bottom:4px;flex-shrink:0}
-.iv-hero-track{position:relative;width:100%;height:100%;touch-action:pan-y}
-.iv-hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .5s ease;pointer-events:none;cursor:pointer}
-.iv-hero-slide.iv-hero-active{opacity:1;pointer-events:auto}
+.iv-hero-track{display:flex;flex-wrap:nowrap;height:100%;will-change:transform;-webkit-user-select:none;user-select:none;touch-action:pan-y}
+.iv-hero-slide{position:relative;flex:0 0 100%;min-width:0;height:100%;cursor:pointer;overflow:hidden}
 .iv-hero-bg{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(18px) brightness(.55) saturate(1.3);transform:scale(1.08)}
 .iv-hero-img{position:absolute;inset:0;background-size:cover;background-position:center}
 .iv-hero-gradient{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.2) 55%,transparent 100%)}
