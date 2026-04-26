@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
-    <link rel="stylesheet" href="/css/admin-styles.css?v=13">
+    <link rel="stylesheet" href="/css/admin-styles.css?v=14">
     <style>
         /* ── Role badges ──────────────────────────────────────── */
         .role-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
@@ -187,11 +187,11 @@
         .modal-ftr{padding:16px 24px;border-top:1px solid var(--border-light,#f0f0f0);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;background:var(--bg-app,#f8f9fa)}
 
         /* ── Footer buttons ───────────────────────────────────── */
-        .modal-ftr .btn-secondary{background:var(--bg-surface);border:1.5px solid var(--border-medium,#e2e4e8);color:var(--text-secondary);font-size:13.5px;font-weight:600;padding:9px 20px;border-radius:10px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-        .modal-ftr .btn-secondary:hover{border-color:var(--border-medium,#c9ccd2);background:var(--bg-hover);color:var(--text-primary)}
-        .modal-ftr .btn-primary{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:13.5px;font-weight:700;padding:9px 22px;border-radius:10px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(99,102,241,.35),0 1px 3px rgba(0,0,0,.1);letter-spacing:-.01em}
-        .modal-ftr .btn-primary:hover{box-shadow:0 6px 20px rgba(99,102,241,.45),0 2px 6px rgba(0,0,0,.12);transform:translateY(-1px)}
-        .modal-ftr .btn-primary:active{transform:translateY(0) scale(.98);box-shadow:0 2px 8px rgba(99,102,241,.3)}
+        .modal-box .btn-secondary{background:var(--bg-surface)!important;border:1.5px solid var(--border-medium,#e2e4e8)!important;color:var(--text-secondary)!important;font-size:13.5px;font-weight:600;padding:9px 20px;border-radius:10px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;box-shadow:none!important}
+        .modal-box .btn-secondary:hover{border-color:var(--border-medium,#c9ccd2)!important;background:var(--bg-hover)!important;color:var(--text-primary)!important}
+        .modal-box .btn-primary{background:linear-gradient(135deg,#3b82f6,#6366f1)!important;color:#fff!important;font-size:13.5px;font-weight:700;padding:9px 22px;border-radius:10px;border:none!important;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(99,102,241,.35),0 1px 3px rgba(0,0,0,.1)!important;letter-spacing:-.01em}
+        .modal-box .btn-primary:hover{box-shadow:0 6px 20px rgba(99,102,241,.45),0 2px 6px rgba(0,0,0,.12)!important;transform:translateY(-1px)!important}
+        .modal-box .btn-primary:active{transform:translateY(0) scale(.98)!important;box-shadow:0 2px 8px rgba(99,102,241,.3)!important}
 
         /* ── Form fields ──────────────────────────────────────── */
         .field{margin-bottom:16px}
@@ -242,7 +242,7 @@
             .modal-hdr{padding:20px 20px 0}
             .modal-bdy{padding:18px 20px}
             .modal-ftr{padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));flex-direction:column-reverse;gap:8px}
-            .modal-ftr .btn-primary,.modal-ftr .btn-secondary{width:100%;justify-content:center}
+            .modal-box .btn-primary,.modal-box .btn-secondary{width:100%;justify-content:center}
         }
 
     </style>
