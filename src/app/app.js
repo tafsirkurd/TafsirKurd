@@ -8944,15 +8944,10 @@ function renderIvHero(){
     bg.style.backgroundImage='url('+thumbSrc+')';
     slide.appendChild(bg);
 
-    // Centred sharp thumbnail
+    // Sharp thumbnail as background-image (loads regardless of off-screen position)
     var imgWrap=document.createElement('div');
     imgWrap.className='iv-hero-img';
-    var img=document.createElement('img');
-    img.src=thumbSrc;
-    img.alt='';
-    img.loading='eager';
-    img.onerror=function(){this.parentNode.style.display='none';};
-    imgWrap.appendChild(img);
+    imgWrap.style.backgroundImage='url('+thumbSrc+')';
     slide.appendChild(imgWrap);
 
     // Gradient overlay
