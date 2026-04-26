@@ -13,15 +13,20 @@ function _sections(){
     { name:'books',  label:T('gencine.books','کتێب'),        sub:T('gencine.books_sub','کتێبێن ئیسلامی'),                       icon:'fas fa-book-open' }
   ];
   if (!_dbSections || !_dbSections.length) return all;
-  var activeMap = {}, orderMap = {};
-  _dbSections.forEach(function(s){ activeMap[s.key] = s.active; if (s.sort_order != null) orderMap[s.key] = s.sort_order; });
+  var activeMap = {}, orderMap = {}, badgeMap = {};
+  _dbSections.forEach(function(s){
+    activeMap[s.key] = s.active;
+    if (s.sort_order != null) orderMap[s.key] = s.sort_order;
+    if (s.badge_until && new Date(s.badge_until) > new Date()) badgeMap[s.key] = true;
+  });
   return all
     .filter(function(sec){ return activeMap[sec.name] !== false; })
     .sort(function(a, b){
       var oa = orderMap[a.name] != null ? orderMap[a.name] : 999;
       var ob = orderMap[b.name] != null ? orderMap[b.name] : 999;
       return oa - ob;
-    });
+    })
+    .map(function(sec){ return badgeMap[sec.name] ? Object.assign({}, sec, { badge: true }) : sec; });
 }
 
 /* ── 99 Names of Allah ── */
@@ -871,6 +876,13 @@ window.GencineUI = {
       chevron.className = 'fas fa-chevron-left';
       arrow.appendChild(chevron);
       body.appendChild(arrow);
+
+      if (sec.badge) {
+        var badge = document.createElement('div');
+        badge.className = 'genc-card-badge';
+        badge.textContent = 'نوی';
+        btn.appendChild(badge);
+      }
 
       btn.appendChild(body);
       home.appendChild(btn);
