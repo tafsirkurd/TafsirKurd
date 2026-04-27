@@ -782,10 +782,13 @@ function init(){
             })();
             // Reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
-            // Rebuild prayer panel if active — handles overnight stale date
-            // (tickCountdown uses _currentDateISO; if date changed the countdown is wrong
-            // until render() detects the key mismatch and rebuilds with today's timings)
-            if(window.PrayerUI&&S.tab==='prayer')requestAnimationFrame(function(){PrayerUI.render();});
+            // Rebuild prayer panel if active — handles overnight stale date.
+            // Skipped on macOS: athan notifications bring app to foreground automatically;
+            // re-rendering would cause a visible "refresh" the user didn't ask for.
+            var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
+            if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
+              requestAnimationFrame(function(){PrayerUI.render();});
+            }
             // Push fresh widget data if date or city changed since last push
             if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
             pushGoalDataToWidget();
@@ -815,6 +818,12 @@ function init(){
       Capacitor.Plugins.LocalNotifications.addListener('localNotificationActionPerformed',function(ev){
         var extra=ev&&ev.notification&&ev.notification.extra;
         if(!extra)return;
+        // On macOS, Alert-style athan notifications automatically bring the app to the
+        // foreground without any user interaction. Guard prayer-tab navigation so it only
+        // fires when the user explicitly tapped — not on every athan fire.
+        var _isMac=(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()==='mac');
+        var _isUserTap=(!ev.actionId||ev.actionId==='tap');
+        if(_isMac&&!_isUserTap)return;
         if(extra.type==='verse'&&extra.s&&extra.a){
           App.tab('quran');
           setTimeout(function(){App.openSurah(extra.s,extra.a);},300);
