@@ -1017,9 +1017,9 @@
     prog.appendChild(bar);
     wrapper.parentNode.appendChild(prog);   /* wrapper.parentNode = sd-card-outer */
 
-    /* ── dots: LTR order (0 → count-1) so dot[0] is leftmost ── */
+    /* ── dots: RTL order (count-1 → 0) so dot[0] ends up rightmost ── */
     var dots = [];
-    for (var i = 0; i < count; i++) {
+    for (var i = count - 1; i >= 0; i--) {
       (function(idx) {
         var dot = _mk('span', 'sd-dot' + (idx === 0 ? ' sd-dot-active' : ''));
         dot.addEventListener('click', function() { _goTo(idx, true); });

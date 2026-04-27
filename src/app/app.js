@@ -9165,8 +9165,11 @@ function renderIvHero(){
   }
 
   _ivHeroBuilt=true;
-  _ivHeroGoTo(0,false);
-  _ivHeroResetTimer();
+  // rAF ensures the newly-visible hero has a layout before we calculate slide width
+  requestAnimationFrame(function(){
+    _ivHeroGoTo(0,false);
+    _ivHeroResetTimer();
+  });
 }
 
 // Call this when data reloads so hero picks fresh random slides next time
@@ -9260,14 +9263,15 @@ function renderIvGrid(){
 
     var card=el('div','iv-card');
 
-    // Thumbnail
+    // Thumbnail — prefer series thumbnail, fall back to first episode thumbnail
     var imgWrap=el('div','iv-card-img');
-    if(series.thumbnail_url){
+    var _thumbSrc=series.thumbnail_url||(eps[0]&&eps[0].thumbnail_url)||'';
+    _thumbSrc=_thumbSrc.replace('maxresdefault.jpg','mqdefault.jpg').replace('hqdefault.jpg','mqdefault.jpg');
+    if(_thumbSrc){
       var img=document.createElement('img');
-      // Use smaller YouTube thumbnail (mqdefault 320×180) instead of maxresdefault (1280×720)
-      img.src=series.thumbnail_url.replace('maxresdefault.jpg','mqdefault.jpg');
+      img.src=_thumbSrc;
       img.alt='';
-      // First 4 cards: eager — browser fetches even in hidden panels (plus new Image() preload above)
+      // First 4 cards: eager — browser fetches even in hidden panels
       img.loading=_ivCardIdx<4?'eager':'lazy';
       img.onload=function(){this.parentNode.style.animation='none';this.parentNode.style.background='none'};
       img.onerror=function(){this.style.display='none'};
