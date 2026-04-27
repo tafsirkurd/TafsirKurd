@@ -509,7 +509,6 @@
     hero.appendChild(iw);
 
     var ht = _mk('div','la-ht');
-    Object.assign(_mk('div','la-ttl'),{textContent:String(cfg.title(data))});
     ht.appendChild(Object.assign(_mk('div','la-ttl'),{textContent:String(cfg.title(data))}));
     ht.appendChild(Object.assign(_mk('div','la-sb'),{textContent:String(cfg.sub(data))}));
     hero.appendChild(ht);

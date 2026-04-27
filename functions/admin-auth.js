@@ -373,22 +373,22 @@ export async function onRequest(context) {
         // ===== REVOKE-SESSION =====
         if (action === 'revoke-session') {
             if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
-            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id, admin_users(email)').eq('token', token).gt('expires_at', new Date().toISOString()).single();
             if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
             const { sessionId } = body;
             if (!sessionId) return jsonResponse({ error: 'sessionId required' }, 400, corsHeaders);
             await supabase.from('admin_sessions').delete().eq('id', sessionId).eq('user_id', sess.user_id);
-            await logAudit(supabase, sess.user_id, null, 'session_revoked', { sessionId }, clientIP, userAgent, null, null, null, 'info');
+            await logAudit(supabase, sess.user_id, sess.admin_users?.email || null, 'session_revoked', { sessionId }, clientIP, userAgent, null, null, null, 'info');
             return jsonResponse({ success: true }, 200, corsHeaders);
         }
 
         // ===== REVOKE-ALL-OTHER-SESSIONS =====
         if (action === 'revoke-all-other-sessions') {
             if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
-            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id, admin_users(email)').eq('token', token).gt('expires_at', new Date().toISOString()).single();
             if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
             await supabase.from('admin_sessions').delete().eq('user_id', sess.user_id).neq('token', token);
-            await logAudit(supabase, sess.user_id, null, 'all_other_sessions_revoked', {}, clientIP, userAgent, null, null, null, 'warning');
+            await logAudit(supabase, sess.user_id, sess.admin_users?.email || null, 'all_other_sessions_revoked', {}, clientIP, userAgent, null, null, null, 'warning');
             return jsonResponse({ success: true }, 200, corsHeaders);
         }
 
@@ -415,10 +415,10 @@ export async function onRequest(context) {
         // ===== REVOKE-TRUSTED-DEVICE =====
         if (action === 'revoke-trusted-device') {
             if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
-            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id, admin_users(email)').eq('token', token).gt('expires_at', new Date().toISOString()).single();
             if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
             await supabase.from('admin_trusted_devices').delete().eq('id', deviceId).eq('user_id', sess.user_id);
-            await logAudit(supabase, sess.user_id, null, 'trusted_device_revoked', { deviceId }, clientIP, userAgent, null, null, null, 'info');
+            await logAudit(supabase, sess.user_id, sess.admin_users?.email || null, 'trusted_device_revoked', { deviceId }, clientIP, userAgent, null, null, null, 'info');
             return jsonResponse({ success: true }, 200, corsHeaders);
         }
 
