@@ -423,7 +423,7 @@
          This ensures brief/light rain in Duhok is detected even if some models lag. */
       var counts = {};
       valid.forEach(function(cond) { counts[cond] = (counts[cond] || 0) + 1; });
-      var THRESHOLD = 3; /* at least 3 independent sources must agree */
+      var THRESHOLD = 5; /* at least 5 independent sources must agree */
       var winner = 'clear';
       ['wind', 'rain', 'snow', 'thunder'].forEach(function(cond) { /* ascending priority */
         if ((counts[cond] || 0) >= THRESHOLD) winner = cond;
