@@ -711,12 +711,12 @@
                     if (!data.deviceBlocked && !data.turnstileFailed && !data.ipBlocked) {
                         var attempts = parseInt(localStorage.getItem('adminLoginFailedAttempts') || '0', 10) + 1;
                         localStorage.setItem('adminLoginFailedAttempts', String(attempts));
-                        if (attempts >= 3) {
+                        if (attempts >= 10) {
                             localStorage.removeItem('adminLoginFailedAttempts');
                             applyLockout(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
                             return;
                         }
-                        var attemptsLeft = data.attemptsRemaining !== undefined ? data.attemptsRemaining : (3 - attempts);
+                        var attemptsLeft = data.attemptsRemaining !== undefined ? data.attemptsRemaining : (10 - attempts);
                         var errorMsg = data.error || 'Invalid credentials';
                         if (attemptsLeft > 0) errorMsg += ' (' + attemptsLeft + ' attempt' + (attemptsLeft !== 1 ? 's' : '') + ' remaining)';
                         errorText.textContent = errorMsg;

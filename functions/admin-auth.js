@@ -544,9 +544,9 @@ export async function onRequest(context) {
         if (!passwordMatch) {
             await recordIPAttempt(env, clientIP);
             const newFailedAttempts = (user.failed_attempts || 0) + 1;
-            const attemptsRemaining = 3 - newFailedAttempts;
+            const attemptsRemaining = 10 - newFailedAttempts;
 
-            if (newFailedAttempts >= 3) {
+            if (newFailedAttempts >= 10) {
                 const lockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
                 await supabase
                     .from('admin_users')
@@ -559,11 +559,11 @@ export async function onRequest(context) {
 
                 await logLoginAttempt(supabase, email, clientIP, false);
                 await logAudit(supabase, user.id, email, 'account_locked', {
-                    reason: '3 failed login attempts',
+                    reason: '10 failed login attempts',
                     locked_until: lockedUntil.toISOString()
                 }, clientIP, userAgent, null, null, deviceFingerprint, 'critical');
 
-                await sendSecurityAlert(env, { type: 'account_locked', email: user.email, ip: clientIP, detail: '3 consecutive wrong passwords' });
+                await sendSecurityAlert(env, { type: 'account_locked', email: user.email, ip: clientIP, detail: '10 consecutive wrong passwords' });
                 return jsonResponse({
                     error: 'Account locked due to multiple failed attempts. Try again in 24 hours.',
                     locked: true,
