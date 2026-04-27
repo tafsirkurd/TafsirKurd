@@ -173,7 +173,7 @@
               _enqueue('user_online', {
                 id:             id,
                 name:           u.name     || id,
-                email:          u.name     || id,
+                email:          u.email    || u.name || id,
                 platform:       u.platform || 'Web',
                 last_active_at: u.lastActiveAt,
                 avatar:         u.avatar   || null,
@@ -205,7 +205,7 @@
       users.forEach(function(u) {
         _onlineMap[u.userId] = {
           name:          u.name,
-          email:         u.name,
+          email:         u.email || u.name,
           platform:      u.platform,
           lastActiveAt:  u.lastActiveAt,
           avatar:        u.avatar || null,
@@ -275,9 +275,9 @@
         _lastMsgTime = res.data[0].created_at;
       });
 
-    /* new user accounts ------------------------------------- */
-    sb.from('user_data')
-      .select('id,email,created_at')
+    /* new user accounts — join profiles for email ----------- */
+    sb.from('profiles')
+      .select('id,email,full_name,display_name,created_at')
       .order('created_at', { ascending: false })
       .limit(3)
       .then(function(res) {
@@ -288,7 +288,12 @@
         }
         res.data.forEach(function(u) {
           if (u.created_at > _lastUserTime) {
-            _enqueue('user_joined', u);
+            _enqueue('user_joined', {
+              id:    u.id,
+              email: u.email || '',
+              name:  u.full_name || u.display_name || (u.email||'').split('@')[0] || 'Unknown',
+              created_at: u.created_at,
+            });
           }
         });
         _lastUserTime = res.data[0].created_at;

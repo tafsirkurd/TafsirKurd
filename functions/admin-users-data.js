@@ -264,6 +264,7 @@ export async function onRequest(context) {
                     return {
                         userId:      s.user_id,
                         name:        pr.full_name || pr.display_name || (pr.email || '').split('@')[0] || 'Unknown',
+                        email:       pr.email || '',
                         avatar:      pr.avatar_url || null,
                         platform:    s.platform || 'web',
                         lastActiveAt: s.last_active_at

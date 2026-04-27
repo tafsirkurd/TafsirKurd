@@ -376,6 +376,7 @@ export async function onRequest(context) {
             const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
             if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
             const { sessionId } = body;
+            if (!sessionId) return jsonResponse({ error: 'sessionId required' }, 400, corsHeaders);
             await supabase.from('admin_sessions').delete().eq('id', sessionId).eq('user_id', sess.user_id);
             await logAudit(supabase, sess.user_id, null, 'session_revoked', { sessionId }, clientIP, userAgent, null, null, null, 'info');
             return jsonResponse({ success: true }, 200, corsHeaders);
