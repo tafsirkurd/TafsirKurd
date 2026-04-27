@@ -1418,12 +1418,19 @@
   /* ─────────────────────────────────────────────
      PUBLIC API
   ───────────────────────────────────────────── */
+  function clearCache() {
+    _sectionCache.el      = null;
+    _sectionCache.seed    = null;
+    _sectionCache.hasData = false;
+  }
+
   window.SmartDhikr = {
     getItemsNow:      getItemsNow,
     markOpened:       _markOpened,
     markCompleted:    _markCompleted,
     getStreak:        _getStreak,
     render:           render,
+    clearCache:       clearCache,
     buildSkelSection: _buildSkelSection
   };
 

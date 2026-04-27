@@ -679,11 +679,14 @@ window.GencineUI = {
     localStorage.removeItem('gencine_cats_v2');
     localStorage.removeItem('gencine_duas_v3');
     localStorage.removeItem('gencine_hadiths_v2');
+    localStorage.removeItem('gencine_books_v3');
     localStorage.removeItem('gencine_sections_v1');
     localStorage.removeItem('gencine_tasbih_v1');
+    localStorage.removeItem('gencine_adhkar_v1');
     _dbLoaded  = false;
     _loadingDb = false;
     this._homeEl = null;
+    if (window.SmartDhikr) SmartDhikr.clearCache();
     _fetchDbData(function(){ self._draw(); });
   },
 
