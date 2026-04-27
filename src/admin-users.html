@@ -2005,7 +2005,11 @@
         function deleteUser(userId) {
             const user = allUsers.find(u => u.user_id === userId);
             if (!user) return;
-
+            const myEmail = (sessionStorage.getItem('adminEmail') || '').toLowerCase();
+            if (myEmail && (user.profile_email || '').toLowerCase() === myEmail) {
+                alert('You cannot delete your own account.');
+                return;
+            }
             deleteUserId = userId;
             document.getElementById('deleteUserName').textContent = user.profile_name;
             document.getElementById('deleteUserEmail').textContent = user.profile_email;
