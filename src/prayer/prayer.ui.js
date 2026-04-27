@@ -52,9 +52,9 @@
 
   var CITIES = [
     'Sulaymaniyah', 'Erbil', 'Duhok', 'Kirkuk',
-    'Halabcha', 'Kfry', 'Rania', 'Koya',
+    'Halabja', 'Kfry', 'Rania', 'Koya',
     'Qaladze', 'Zakho', 'Bardarash', 'Mosul',
-    'Darbandikan', 'Kalar', 'Akre', 'Daquq',
+    'Darbandikhan', 'Kalar', 'Akre', 'Daquq',
     'Makhmur', 'Mandali', 'Qarahanjir', 'DuzKhormatou'
   ];
 
@@ -63,7 +63,7 @@
     Erbil:        'هەولێر',
     Duhok:        'دهۆک',
     Kirkuk:       'کەرکووک',
-    Halabcha:     'هەڵەبجە',
+    Halabja:      'هەڵەبجە',
     Kfry:         'کفری',
     Rania:        'ڕانیە',
     Koya:         'کۆیە',
@@ -71,7 +71,7 @@
     Zakho:        'زاخۆ',
     Bardarash:    'بەردەڕەش',
     Mosul:        'موسل',
-    Darbandikan:  'دەربەندیخان',
+    Darbandikhan: 'دەربەندیخان',
     Kalar:        'کەلار',
     Akre:         'ئاکرێ',
     Daquq:        'داقووق',
@@ -108,7 +108,7 @@
   function markCityBad(c) { var b = getBadCities(); if (b.indexOf(c) === -1) { b.push(c); try { localStorage.setItem(_BAD_KEY, JSON.stringify(b)); } catch(e) {} } }
   function markCityGood(c) { var b = getBadCities().filter(function(x){ return x !== c; }); try { localStorage.setItem(_BAD_KEY, JSON.stringify(b)); } catch(e) {} }
 
-  function getAthan()   { if (window.S) return S.prayerAthanEnabled; var v = localStorage.getItem('prayerAthanEnabled'); return v === null ? !(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') : v === 'true'; }
+  function getAthan()   { if (window.S) return S.prayerAthanEnabled; var v = localStorage.getItem('prayerAthanEnabled'); return v === null ? !(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'mac') : v === 'true'; }
   function getToggles() {
     if (window.S && S.prayerToggles) return S.prayerToggles;
     try { return JSON.parse(localStorage.getItem('prayerToggles') || '{}'); } catch(e) { return {}; }
