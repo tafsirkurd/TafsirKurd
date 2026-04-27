@@ -102,33 +102,38 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     // MARK: - UNUserNotificationCenterDelegate
 
-    /// Called when a notification is about to be presented while the app is in the foreground.
-    /// On macOS Catalyst we return only `.sound` so the athan plays but no visual banner
-    /// appears and the app window is not brought to the front.
-    /// On iOS we return the full set so the in-app notification banner is shown normally.
+    /// Called when a notification fires while the app is in the foreground.
+    /// On macOS: play sound only — no visual banner, no window focus change.
+    /// On iOS: show banner + badge + sound as normal.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
 #if targetEnvironment(macCatalyst)
-        // macOS: play the athan sound only — no visual banner, no window focus.
         completionHandler([.sound])
 #else
-        // iOS/iPadOS: forward to Capacitor so LocalNotifications plugin can handle it.
-        ApplicationDelegateProxy.shared.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
+        if #available(iOS 14.0, *) {
+            completionHandler([.banner, .badge, .sound])
+        } else {
+            completionHandler([.alert, .badge, .sound])
+        }
 #endif
     }
 
-    /// Called when the user taps a notification (or takes an action on it).
-    /// Forwards to Capacitor's ApplicationDelegateProxy so LocalNotifications
+    /// Called when the user taps a notification.
+    /// Broadcasts via NotificationCenter so Capacitor's LocalNotifications plugin
     /// can fire `localNotificationActionPerformed` in JavaScript.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        ApplicationDelegateProxy.shared.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
+        NotificationCenter.default.post(
+            name: Notification.Name(CAPNotifications.LocalNotificationActionPerformed.name()),
+            object: response
+        )
+        completionHandler()
     }
 
 }
