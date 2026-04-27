@@ -1654,9 +1654,9 @@
         // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('headerDropdown');
-            const profileBtn = document.querySelector('.header-user-profile-btn');
+            const profileBtn = document.querySelector('.profile-header-user');
 
-            if (dropdown && !profileBtn.contains(event.target)) {
+            if (dropdown && (!profileBtn || !profileBtn.contains(event.target))) {
                 dropdown.classList.remove('show');
             }
         });
