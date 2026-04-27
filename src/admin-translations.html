@@ -3327,6 +3327,8 @@
             var searchMatches = search ? platformData.filter(function(t) {
                 return t.key_id.toLowerCase().indexOf(search) !== -1 ||
                     t.kurdish_text.toLowerCase().indexOf(search) !== -1 ||
+                    (t.ios_text && t.ios_text.toLowerCase().indexOf(search) !== -1) ||
+                    (t.android_text && t.android_text.toLowerCase().indexOf(search) !== -1) ||
                     (t.context && t.context.toLowerCase().indexOf(search) !== -1);
             }) : platformData;
 
@@ -3392,25 +3394,32 @@
 
         function getSearchScore(t, search) {
             var score = 0;
-            var key = t.key_id.toLowerCase();
+            var key  = t.key_id.toLowerCase();
             var text = t.kurdish_text.toLowerCase();
+            var ios  = (t.ios_text || '').toLowerCase();
+            var drd  = (t.android_text || '').toLowerCase();
 
             // Exact full match (highest)
-            if (text === search) score += 100;
+            if (text === search || ios === search || drd === search) score += 100;
             if (key === search) score += 100;
 
             // Starts with search
-            if (text.indexOf(search) === 0) score += 50;
+            if (text.indexOf(search) === 0 || ios.indexOf(search) === 0 || drd.indexOf(search) === 0) score += 50;
             if (key.indexOf(search) === 0) score += 40;
 
-            // Contains search (closer to start = higher score)
+            // Contains search
             var textIdx = text.indexOf(search);
-            var keyIdx = key.indexOf(search);
+            var iosIdx  = ios.indexOf(search);
+            var drdIdx  = drd.indexOf(search);
+            var keyIdx  = key.indexOf(search);
             if (textIdx !== -1) score += 20 + Math.max(0, 10 - textIdx);
-            if (keyIdx !== -1) score += 15 + Math.max(0, 10 - keyIdx);
+            if (iosIdx  !== -1) score += 18 + Math.max(0, 10 - iosIdx);
+            if (drdIdx  !== -1) score += 18 + Math.max(0, 10 - drdIdx);
+            if (keyIdx  !== -1) score += 15 + Math.max(0, 10 - keyIdx);
 
-            // Match ratio (how much of the text the search covers)
-            if (textIdx !== -1) score += Math.round((search.length / text.length) * 10);
+            // Match ratio
+            var bestText = [text, ios, drd].find(function(s){ return s.indexOf(search) !== -1; }) || text;
+            if (bestText.indexOf(search) !== -1) score += Math.round((search.length / bestText.length) * 10);
 
             return score;
         }
