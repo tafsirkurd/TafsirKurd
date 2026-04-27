@@ -37,8 +37,23 @@ export async function onRequest(context) {
         if (!session?.admin_users) return json({ error: 'Unauthorized' }, 403, corsHeaders);
 
         const role = session.admin_users.role;
-        if (role !== 'super_admin' && role !== 'editor')
-            return json({ error: 'Write access denied' }, 403, corsHeaders);
+        const userId = session.user_id;
+
+        // super_admin and editor always have write access
+        // custom role: check admin_permissions for translations page with can_edit
+        if (role !== 'super_admin' && role !== 'editor') {
+            if (role === 'custom') {
+                const { data: perm } = await supabase
+                    .from('admin_permissions')
+                    .select('can_edit')
+                    .eq('user_id', userId)
+                    .eq('page_slug', 'translations')
+                    .single();
+                if (!perm?.can_edit) return json({ error: 'Write access denied' }, 403, corsHeaders);
+            } else {
+                return json({ error: 'Write access denied' }, 403, corsHeaders);
+            }
+        }
 
         // ── UPDATE one row by numeric ID ──────────────────────────────────
         if (action === 'update') {
