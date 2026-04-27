@@ -1721,7 +1721,7 @@
         function buildUserRow(user) {
             var progress = calculateProgress(user);
             var avatarUrl = user.profile_picture ||
-                'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=80';
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name || 'User') + '&background=random&size=80';
             var surahName = SURAH_NAMES[user.current_surah] || '';
             var position = user.current_surah > 0 ? (surahName + ' :' + user.current_ayah) : 'Not started';
 
@@ -1738,7 +1738,7 @@
             img.alt = user.profile_name;
             img.className = 'user-avatar';
             img.onerror = function() {
-                this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=80';
+                this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name || 'User') + '&background=random&size=80';
             };
             avatarWrap.appendChild(img);
             if (onlineUserIds.has(user.user_id)) {
@@ -1899,7 +1899,7 @@
 
             var progress = calculateProgress(user);
             var avatarUrl = user.profile_picture ||
-                'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=120';
+                'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name || 'User') + '&background=random&size=120';
             var surahName = SURAH_NAMES[user.current_surah] || '';
             var position = user.current_surah > 0 ? (surahName + ' :' + user.current_ayah) : 'Not started';
 
@@ -1914,7 +1914,7 @@
             hImg.alt = user.profile_name;
             hImg.style.cssText = 'width:80px;height:80px;border-radius:50%;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto';
             hImg.onerror = function() {
-                this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name) + '&background=random&size=120';
+                this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.profile_name || 'User') + '&background=random&size=120';
             };
             var hName = document.createElement('div');
             hName.style.cssText = 'font-size:18px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:8px';
