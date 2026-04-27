@@ -68,7 +68,7 @@ export async function onRequest(context) {
 
             // Total videos
             supabase
-                .from('tv_videos')
+                .from('islamvoice_episodes')
                 .select('*', { count: 'exact', head: true }),
 
             // Total messages
@@ -85,8 +85,8 @@ export async function onRequest(context) {
 
             // Recent videos
             supabase
-                .from('tv_videos')
-                .select('id, title, thumbnail_url, created_at, view_count')
+                .from('islamvoice_episodes')
+                .select('id, title, thumbnail_url, created_at')
                 .order('created_at', { ascending: false })
                 .limit(10),
 
