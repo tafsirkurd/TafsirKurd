@@ -2390,9 +2390,16 @@ body{background:var(--bg);color:var(--text)}
     margin-left:auto!important;margin-right:auto!important;
   }
 
-  /* Mushaf mode: pages and nav centered within reading column */
-  .mushaf-text-page{max-width:var(--reading-max-w);margin-left:auto;margin-right:auto}
-  .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-left:auto;margin-right:auto}
+  /* Mushaf portrait: bigger, more book-like */
+  .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + 32px)}
+  .mushaf-text-page{
+    max-width:680px!important;margin:0 auto 24px!important;
+    padding:44px 36px 32px!important;
+    border-radius:24px!important;
+    box-shadow:0 6px 40px rgba(0,0,0,.13)!important;
+  }
+  .mushaf-qcf-line,.mushaf-flow-verse{font-size:28px!important;line-height:2.0!important}
+  .mushaf-surah-nav{max-width:680px;width:100%;margin-left:auto;margin-right:auto}
 
   /* IV hero: taller on iPad for more cinematic feel */
   .iv-hero{height:260px}
@@ -2427,6 +2434,61 @@ body{background:var(--bg);color:var(--text)}
   .iv-hero{height:280px}
 
   .settings-content{max-width:700px;margin-left:auto;margin-right:auto}
+
+  /* ── Mushaf two-page spread: real book layout ── */
+  .mushaf-view{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    column-gap:0;
+    direction:rtl; /* page 1 → right col, page 2 → left col (authentic RTL book) */
+    padding:16px 0 calc(var(--tab-h) + var(--safe-b) + 20px);
+    background:var(--bg);
+    position:relative;
+  }
+  /* Spine between pages */
+  .mushaf-view::before{
+    content:'';
+    position:absolute;top:0;bottom:0;left:50%;
+    width:1px;
+    background:linear-gradient(to bottom,transparent 0%,var(--border) 5%,var(--border) 95%,transparent 100%);
+    z-index:2;pointer-events:none;
+  }
+
+  /* Each page fills its column — book page style */
+  .mushaf-text-page{
+    max-width:none!important;
+    width:100%!important;
+    margin:0 0 0 0!important;
+    padding:40px 32px 32px!important;
+    border-radius:0!important;
+    box-shadow:inset -1px 0 0 var(--border)!important; /* subtle inner border at spine */
+    direction:rtl;
+  }
+  /* Right page (first in RTL grid): shadow fades right toward spine */
+  .mushaf-text-page:nth-child(odd){
+    box-shadow:inset -1px 0 0 var(--border), -4px 0 12px rgba(0,0,0,.06)!important;
+  }
+  /* Left page: shadow fades left toward spine */
+  .mushaf-text-page:nth-child(even){
+    box-shadow:inset 1px 0 0 var(--border), 4px 0 12px rgba(0,0,0,.06)!important;
+  }
+  /* Lone last page (odd total) → center it */
+  .mushaf-text-page:nth-child(odd):last-of-type{
+    grid-column:1;
+    max-width:560px!important;
+    margin:0 auto!important;
+    padding:40px 36px 32px!important;
+    border-radius:20px!important;
+    box-shadow:0 4px 32px rgba(0,0,0,.1)!important;
+  }
+  /* Non-page elements (nav, loader, errors) → span both columns */
+  .mushaf-view > :not(.mushaf-text-page){
+    grid-column:1 / -1;
+    direction:ltr;
+  }
+  /* Bigger text on landscape two-page view */
+  .mushaf-qcf-line,.mushaf-flow-verse{font-size:24px!important;line-height:1.95!important}
+  .mushaf-surah-nav{max-width:none;width:100%;margin:0!important;padding:12px 24px 20px}
 }
 
 /* iPAD UA FALLBACK — class-based mirror of @media(min-width:768px).
@@ -2497,18 +2559,30 @@ html.is-ipad .toast{left:calc(50% - var(--nav-rail-w) / 2)}
 html.is-ipad #quranHome .hdr{background:var(--bg2)}
 html.is-ipad #quranHome .search-bar{background:var(--bg2)}
 html.is-ipad .surah-nav{max-width:var(--reading-max-w);width:calc(100% - 56px);margin-left:auto!important;margin-right:auto!important}
-html.is-ipad .mushaf-text-page{max-width:var(--reading-max-w);margin-left:auto;margin-right:auto}
-html.is-ipad .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-left:auto;margin-right:auto}
+/* Mushaf portrait: bigger, book-like */
+html.is-ipad .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + 32px)}
+html.is-ipad .mushaf-text-page{max-width:680px!important;margin:0 auto 24px!important;padding:44px 36px 32px!important;border-radius:24px!important;box-shadow:0 6px 40px rgba(0,0,0,.13)!important}
+html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:28px!important;line-height:2.0!important}
+html.is-ipad .mushaf-surah-nav{max-width:680px;width:100%;margin-left:auto;margin-right:auto}
 html.is-ipad .iv-hero{height:260px}
 html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%}
 
-/* Landscape iPad: 3-col IslamVoice, bigger reading width */
+/* Landscape iPad: 3-col IslamVoice, two-page mushaf */
 @media(min-width:1024px){
   html.is-ipad{--reading-max-w:800px}
   html.is-ipad #quranHome{width:340px}
   html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr)}
   html.is-ipad .iv-hero{height:280px}
   html.is-ipad .settings-content{max-width:700px;margin-left:auto;margin-right:auto}
+  html.is-ipad .mushaf-view{display:grid;grid-template-columns:1fr 1fr;column-gap:0;direction:rtl;padding:16px 0 calc(var(--tab-h) + var(--safe-b) + 20px);position:relative}
+  html.is-ipad .mushaf-view::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;background:linear-gradient(to bottom,transparent 0%,var(--border) 5%,var(--border) 95%,transparent 100%);z-index:2;pointer-events:none}
+  html.is-ipad .mushaf-text-page{max-width:none!important;width:100%!important;margin:0!important;padding:40px 32px 32px!important;border-radius:0!important;direction:rtl}
+  html.is-ipad .mushaf-text-page:nth-child(odd){box-shadow:inset -1px 0 0 var(--border),-4px 0 12px rgba(0,0,0,.06)!important}
+  html.is-ipad .mushaf-text-page:nth-child(even){box-shadow:inset 1px 0 0 var(--border),4px 0 12px rgba(0,0,0,.06)!important}
+  html.is-ipad .mushaf-text-page:nth-child(odd):last-of-type{grid-column:1;max-width:560px!important;margin:0 auto!important;padding:40px 36px 32px!important;border-radius:20px!important;box-shadow:0 4px 32px rgba(0,0,0,.1)!important}
+  html.is-ipad .mushaf-view > :not(.mushaf-text-page){grid-column:1 / -1;direction:ltr}
+  html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:24px!important;line-height:1.95!important}
+  html.is-ipad .mushaf-surah-nav{max-width:none;width:100%;margin:0!important;padding:12px 24px 20px}
 }
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
