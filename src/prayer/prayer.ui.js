@@ -123,7 +123,7 @@
   function setFormat(v)       { localStorage.setItem('prayerTimeFormat', v); }
 
   // ── Prayer Reminder settings ──────────────────────────────────────────────
-  function getReminderEnabled() { var v = localStorage.getItem('prayerReminderEnabled'); if (v === null) return !(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios'); return v !== 'false'; }
+  function getReminderEnabled() { var v = localStorage.getItem('prayerReminderEnabled'); if (v === null) return false; return v !== 'false'; }
   function setReminderEnabled(v) { localStorage.setItem('prayerReminderEnabled', v ? 'true' : 'false'); }
   function getReminderOffset()  { return parseInt(localStorage.getItem('prayerReminderOffset') || '20') || 20; }
   function setReminderOffset(v) { localStorage.setItem('prayerReminderOffset', String(v)); }

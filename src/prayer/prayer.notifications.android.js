@@ -219,7 +219,7 @@
 
   async function scheduleReminderMultiDay(daysData, toggles, offsetMin) {
     await cancelAllReminderNotifications();
-    var enabled = localStorage.getItem('prayerReminderEnabled') !== 'false';
+    var enabled = localStorage.getItem('prayerReminderEnabled') === 'true';
     if (!enabled) { console.log('[Reminder] disabled — skipping schedule'); return { count: 0 }; }
 
     var offset = parseInt(offsetMin) || 20;
@@ -384,7 +384,7 @@
 
     // iOS hard cap: 64 notifications per app. Share budget with reminders if both active.
     // Android has no such restriction.
-    var reminderOn = localStorage.getItem('prayerReminderEnabled') !== 'false';
+    var reminderOn = localStorage.getItem('prayerReminderEnabled') === 'true';
     var dayLimit  = ios ? (reminderOn ? MAX_DAYS_IOS_BOTH : MAX_DAYS_IOS) : MAX_DAYS;
     console.log('[Athan] scheduling: platform=' + (ios ? 'iOS' : 'Android') +
                 ' voice=' + voice + ' sound=' + (soundFile || 'default') +

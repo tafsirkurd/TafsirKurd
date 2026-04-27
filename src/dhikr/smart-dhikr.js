@@ -1017,9 +1017,9 @@
     prog.appendChild(bar);
     wrapper.parentNode.appendChild(prog);   /* wrapper.parentNode = sd-card-outer */
 
-    /* ── dots: RTL order (count-1 → 0) so dot[0] ends up rightmost ── */
+    /* ── dots: LTR order (0 → count-1) so dot[0] is leftmost ── */
     var dots = [];
-    for (var i = count - 1; i >= 0; i--) {
+    for (var i = 0; i < count; i++) {
       (function(idx) {
         var dot = _mk('span', 'sd-dot' + (idx === 0 ? ' sd-dot-active' : ''));
         dot.addEventListener('click', function() { _goTo(idx, true); });
@@ -1312,8 +1312,15 @@
   ───────────────────────────────────────────── */
   function render(gencineUI) {
     var seed    = _daySeed();
-    var hasData = !!(localStorage.getItem('gencine_hadiths_v2') &&
-                     localStorage.getItem('gencine_books_v3'));
+    var hasData = (function() {
+      try {
+        var h = JSON.parse(localStorage.getItem('gencine_hadiths_v2') || 'null');
+        var b = JSON.parse(localStorage.getItem('gencine_books_v3')   || 'null');
+        var hArr = (h && h.data) ? h.data : h;
+        var bArr = (b && b.data) ? b.data : b;
+        return !!(Array.isArray(hArr) && hArr.length && Array.isArray(bArr) && bArr.length);
+      } catch(e) { return false; }
+    }());
     /* Cache hit: same day AND (data was already full OR still no data).
        Only rebuild mid-day if cache was built with placeholders but real
        data has now loaded — this is what makes hadith/book show real content. */
