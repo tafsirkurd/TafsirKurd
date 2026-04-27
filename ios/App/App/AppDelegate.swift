@@ -1,16 +1,12 @@
 import UIKit
 import Capacitor
-import UserNotifications
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Become the UNUserNotificationCenter delegate so we can control
-        // notification presentation and prevent macOS auto-focus behaviour.
-        UNUserNotificationCenter.current().delegate = self
         // Set window background to match the saved theme so the very first
         // native frame after the launch screen already has the right color.
         // Theme is written to App Group UserDefaults by _nativeSyncTheme() in app.js
@@ -100,40 +96,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
-    // MARK: - UNUserNotificationCenterDelegate
-
-    /// Called when a notification fires while the app is in the foreground.
-    /// On macOS: play sound only — no visual banner, no window focus change.
-    /// On iOS: show banner + badge + sound as normal.
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-#if targetEnvironment(macCatalyst)
-        completionHandler([.sound])
-#else
-        if #available(iOS 14.0, *) {
-            completionHandler([.banner, .badge, .sound])
-        } else {
-            completionHandler([.alert, .badge, .sound])
-        }
-#endif
-    }
-
-    /// Called when the user taps a notification.
-    /// Broadcasts via NotificationCenter so Capacitor's LocalNotifications plugin
-    /// can fire `localNotificationActionPerformed` in JavaScript.
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        NotificationCenter.default.post(
-            name: Notification.Name(CAPNotifications.LocalNotificationActionPerformed.name()),
-            object: response
-        )
-        completionHandler()
-    }
 
 }
