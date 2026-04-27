@@ -2488,9 +2488,23 @@ window.GencineUI = {
 
     if (self._pdfDoc) { doLoad(self._pdfDoc); return; }
 
+    var _PDF_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
     var pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-    if (!pdfjsLib) { loadingEl.textContent = 'PDF.js not loaded'; return; }
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    if (!pdfjsLib) {
+      /* Lazy-load PDF.js the first time a PDF book is opened */
+      loadingEl.textContent = 'جێبارکرن…';
+      var scr = document.createElement('script');
+      scr.src = _PDF_CDN + 'pdf.min.js';
+      scr.onload = function() {
+        var lib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+        if (lib) { lib.GlobalWorkerOptions.workerSrc = _PDF_CDN + 'pdf.worker.min.js'; self._openPdfBook(book, container); }
+        else { loadingEl.textContent = 'PDF.js failed to load'; }
+      };
+      scr.onerror = function() { loadingEl.textContent = 'Failed to load PDF viewer'; };
+      document.head.appendChild(scr);
+      return;
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = _PDF_CDN + 'pdf.worker.min.js';
     var pdfSrc = 'https://tafsirkurd.com/pdf-proxy?url=' + encodeURIComponent(book.pdf_url);
     var loadingTask = pdfjsLib.getDocument({
       url: pdfSrc,

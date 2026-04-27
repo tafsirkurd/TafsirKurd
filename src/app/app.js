@@ -9775,15 +9775,22 @@ function startApp(){
   setInterval(function(){ ForceUpdate.check(); }, 12000);
 
   if(window.i18n){
-    i18n.initLang().then(function(){
-      console.log('[Startup] i18n ready (all layers)',Date.now()-_startupT0,'ms');
+    /* 3-second timeout — if i18n fetch hangs (slow connection), start app anyway */
+    var _i18nDone = false;
+    function _afterI18n(){
+      if(_i18nDone)return; _i18nDone=true;
       init();
       i18n.applyTranslations();
-      if(window._splashReadyI18n){ window._splashReadyI18n(); window._splashReadyI18n=null; }
-    });
+      if(window._splashReadyI18n){window._splashReadyI18n();window._splashReadyI18n=null;}
+    }
+    setTimeout(_afterI18n, 3000); /* fallback — never wait more than 3s */
+    i18n.initLang().then(function(){
+      console.log('[Startup] i18n ready',Date.now()-_startupT0,'ms');
+      _afterI18n();
+    }).catch(_afterI18n);
   } else {
     init();
-    if(window._splashReadyI18n){ window._splashReadyI18n(); window._splashReadyI18n=null; }
+    if(window._splashReadyI18n){window._splashReadyI18n();window._splashReadyI18n=null;}
   }
   // i18n:updated already handled at top of file (line ~558) — no duplicate here
 }
