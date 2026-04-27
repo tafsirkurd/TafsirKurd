@@ -68,6 +68,7 @@ export async function onRequest(context) {
 
         if (action === 'update') {
             const { id, payload } = body;
+            if (!id) return new Response(JSON.stringify({ error: 'id required' }), { status: 400, headers: corsHeaders });
             const r = await fetch(`${base}?id=eq.${id}`, { method: 'PATCH', headers: hdrs, body: JSON.stringify(payload) });
             const data = await r.json();
             if (!r.ok) return new Response(JSON.stringify({ error: data }), { status: r.status, headers: corsHeaders });
@@ -76,6 +77,7 @@ export async function onRequest(context) {
 
         if (action === 'delete') {
             const { id } = body;
+            if (!id) return new Response(JSON.stringify({ error: 'id required' }), { status: 400, headers: corsHeaders });
             const r = await fetch(`${base}?id=eq.${id}`, { method: 'DELETE', headers: { ...hdrs, Prefer: 'return=minimal' } });
             if (!r.ok) { const e = await r.text(); return new Response(JSON.stringify({ error: e }), { status: r.status, headers: corsHeaders }); }
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });

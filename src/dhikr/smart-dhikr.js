@@ -298,6 +298,9 @@
   ───────────────────────────────────────────── */
   var _RAIN_KEY = 'sd_rain_v4';
   var _RAIN_TTL = 15 * 60 * 1000; /* 15 min — faster response to rain starting */
+  /* clean up orphaned old cache keys */
+  try { localStorage.removeItem('sd_rain_v3'); localStorage.removeItem('sd_rain_v2'); localStorage.removeItem('sd_rain_v1'); } catch(e) {}
+
 
   /* Weather-code → condition classifier (WMO codes, Open-Meteo scale) */
   function _classifyCode(code, prec, windspeed) {

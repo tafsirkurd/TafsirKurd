@@ -81,13 +81,14 @@ export async function onRequest(context) {
         console.log(`[CRON SYNC] ${new Date().toISOString()} - Synced ${seriesList.length} series, ${totalNew} new episodes`);
 
         // If new episodes were added, trigger auto-notifications
-        if (totalNew > 0) {
+        const _notifSecret = env.NOTIF_CRON_SECRET || env.CRON_SECRET;
+        if (totalNew > 0 && _notifSecret) {
             const baseUrl = new URL(request.url).origin;
             fetch(`${baseUrl}/admin-notifications-api`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${env.NOTIF_CRON_SECRET || env.CRON_SECRET}`,
+                    'Authorization': `Bearer ${_notifSecret}`,
                 },
                 body: JSON.stringify({ action: 'auto_notify_content' }),
             }).catch(() => {}); // fire-and-forget, don't block response
