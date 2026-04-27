@@ -2576,7 +2576,21 @@ function _scrollMushafToAyah(surah,ayah,attempts){
   var view=$('mushafView');
   var els=window._mushafVerseElements&&window._mushafVerseElements[key];
   if(els&&els.length&&view&&view.contains(els[0])){
-    _scrollElToCenter(view,els[0]);
+    // Landscape iPad horizontal mode: scroll view to the spread, then page vertically
+    var spread=els[0].closest&&els[0].closest('.mushaf-spread');
+    if(spread){
+      var spreadIdx=Array.prototype.indexOf.call(view.children,spread);
+      view.scrollLeft=spreadIdx*view.clientWidth;
+      // Scroll within the page
+      var page=els[0].closest('.mushaf-text-page');
+      if(page){
+        var elRect=els[0].getBoundingClientRect();
+        var pRect=page.getBoundingClientRect();
+        page.scrollTop+=elRect.top-pRect.top-(page.clientHeight-els[0].offsetHeight)/2;
+      }
+    }else{
+      _scrollElToCenter(view,els[0]);
+    }
     return;
   }
   setTimeout(function(){_scrollMushafToAyah(surah,ayah,attempts+1);},100);
@@ -2617,6 +2631,39 @@ App.toggleMushafMode=function(){
 var JUZ_PAGES=[1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
 function juzForPage(p){for(var j=JUZ_PAGES.length-1;j>=0;j--){if(p>=JUZ_PAGES[j])return j+1;}return 1;}
 
+// Wrap mushaf pages into horizontal snap spreads for landscape iPad
+function _mushafWrapSpreads(view){
+  var pages=Array.prototype.slice.call(view.querySelectorAll(':scope>.mushaf-text-page'));
+  var nav=view.querySelector(':scope>.mushaf-surah-nav');
+  pages.forEach(function(p){view.removeChild(p);});
+  if(nav)view.removeChild(nav);
+  for(var i=0;i<pages.length;i+=2){
+    var spread=document.createElement('div');
+    spread.className='mushaf-spread';
+    spread.appendChild(pages[i]);
+    if(pages[i+1])spread.appendChild(pages[i+1]);
+    else spread.classList.add('spread-single');
+    view.appendChild(spread);
+  }
+  if(nav)view.appendChild(nav);
+  // Re-setup lazy observer with horizontal rootMargin
+  if(_mushafLazyObs){
+    _mushafLazyObs.disconnect();
+    _mushafLazyObs=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting)return;
+        var pageEl=entry.target;
+        if(pageEl.dataset.loaded)return;
+        pageEl.dataset.loaded='1';
+        _mushafLazyObs&&_mushafLazyObs.unobserve(pageEl);
+        loadMushafPageQCF(pageEl,parseInt(pageEl.dataset.page)).catch(function(){});
+      });
+    },{root:view,rootMargin:'0px 1200px'});
+    view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(p){_mushafLazyObs.observe(p);});
+  }
+  view.scrollLeft=0;
+}
+
 function renderMushafView(){
   var view=$('mushafView');
   if(!view||!S.surah)return;
@@ -2624,7 +2671,7 @@ function renderMushafView(){
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   window._mushafVerseElements={};
   clear(view);
-  view.scrollTop=0;
+  view.scrollTop=0;view.scrollLeft=0;
   var spinner=el('div','mushaf-loading');
   spinner.appendChild(icon('fas fa-spinner fa-spin'));
   view.appendChild(spinner);
@@ -2633,7 +2680,7 @@ function renderMushafView(){
   getMushafPageRange(S.surah).then(function(pages){
     if(!S.mushafMode||S.surah!==_renderSurah)return;
     clear(view);
-    view.scrollTop=0;
+    view.scrollTop=0;view.scrollLeft=0;
 
     // Pre-inject QCF fonts for first 3 pages so they're downloading in parallel
     for(var pi=pages.start;pi<=Math.min(pages.end,pages.start+2);pi++){
@@ -2680,7 +2727,7 @@ function renderMushafView(){
       if(!banner)return false;
       var pageEl=banner.closest?banner.closest('.mushaf-text-page'):banner.parentNode;
       trimPageToSurah(pageEl);
-      view.scrollTop=0;
+      view.scrollTop=0;view.scrollLeft=0;
       var panelEl=document.getElementById('panelQuran');
       if(panelEl)panelEl.scrollTop=0;
       return true;
@@ -2753,6 +2800,10 @@ function renderMushafView(){
         mushafNav.appendChild(nextBtn2);
       }
       view.appendChild(mushafNav);
+    }
+    // Landscape iPad: rewrap pages into horizontal scroll spreads
+    if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024){
+      _mushafWrapSpreads(view);
     }
   }).catch(function(){
     clear(view);
@@ -3473,10 +3524,10 @@ function updateMushafProgress(view){
       _lrTimer=setTimeout(function(){
         if(destroyed||S.surah!==surahId)return;
         var pages=view.querySelectorAll('.mushaf-text-page');
-        var vh=window.innerHeight;
+        var vh=window.innerHeight,vw=window.innerWidth;
         for(var i=0;i<pages.length;i++){
           var r=pages[i].getBoundingClientRect();
-          if(r.bottom>0&&r.top<vh){
+          if(r.bottom>0&&r.top<vh&&r.right>0&&r.left<vw){
             var vns=[];try{vns=JSON.parse(pages[i].dataset.verses||'[]');}catch(e){}
             if(vns.length){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:vns[0]}));}catch(e){}}
             break;
@@ -3544,6 +3595,8 @@ function updateMushafProgress(view){
 
   function visibleRatio(pageEl){
     var pr=pageEl.getBoundingClientRect();
+    // In horizontal spread mode pages may be off-screen horizontally
+    if(pr.right<=0||pr.left>=window.innerWidth)return 0;
     var top=Math.max(pr.top,0);
     var bot=Math.min(pr.bottom,window.innerHeight);
     return Math.max(0,bot-top)/Math.max(1,window.innerHeight);

@@ -2574,15 +2574,17 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%
   html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr)}
   html.is-ipad .iv-hero{height:280px}
   html.is-ipad .settings-content{max-width:700px;margin-left:auto;margin-right:auto}
-  html.is-ipad .mushaf-view{display:grid;grid-template-columns:1fr 1fr;column-gap:0;direction:rtl;padding:16px 0 calc(var(--tab-h) + var(--safe-b) + 20px);position:relative}
-  html.is-ipad .mushaf-view::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;background:linear-gradient(to bottom,transparent 0%,var(--border) 5%,var(--border) 95%,transparent 100%);z-index:2;pointer-events:none}
-  html.is-ipad .mushaf-text-page{max-width:none!important;width:100%!important;margin:0!important;padding:40px 32px 32px!important;border-radius:0!important;direction:rtl}
-  html.is-ipad .mushaf-text-page:nth-child(odd){box-shadow:inset -1px 0 0 var(--border),-4px 0 12px rgba(0,0,0,.06)!important}
-  html.is-ipad .mushaf-text-page:nth-child(even){box-shadow:inset 1px 0 0 var(--border),4px 0 12px rgba(0,0,0,.06)!important}
-  html.is-ipad .mushaf-text-page:nth-child(odd):last-of-type{grid-column:1;max-width:560px!important;margin:0 auto!important;padding:40px 36px 32px!important;border-radius:20px!important;box-shadow:0 4px 32px rgba(0,0,0,.1)!important}
-  html.is-ipad .mushaf-view > :not(.mushaf-text-page){grid-column:1 / -1;direction:ltr}
+  html.is-ipad .mushaf-view{display:flex;flex-direction:row;overflow-x:scroll;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0!important;position:relative}
+  html.is-ipad .mushaf-spread{width:100vw;min-width:100vw;height:100%;display:flex;flex-direction:row;direction:rtl;scroll-snap-align:start;scroll-snap-stop:always;position:relative;overflow:hidden;flex-shrink:0}
+  html.is-ipad .mushaf-spread::before{content:'';position:absolute;top:5%;bottom:5%;left:50%;width:1px;background:linear-gradient(to bottom,transparent 0%,var(--border) 10%,var(--border) 90%,transparent 100%);z-index:2;pointer-events:none}
+  html.is-ipad .mushaf-spread .mushaf-text-page{width:50%!important;max-width:50%!important;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0!important;border-radius:0!important;padding:40px 32px 32px!important;direction:rtl;box-sizing:border-box}
+  html.is-ipad .mushaf-spread .mushaf-text-page:first-child{box-shadow:inset -1px 0 0 var(--border),-4px 0 12px rgba(0,0,0,.06)!important}
+  html.is-ipad .mushaf-spread .mushaf-text-page:last-child:not(:first-child){box-shadow:inset 1px 0 0 var(--border),4px 0 12px rgba(0,0,0,.06)!important}
+  html.is-ipad .mushaf-spread.spread-single{justify-content:center}
+  html.is-ipad .mushaf-spread.spread-single .mushaf-text-page{width:100%!important;max-width:560px!important;height:auto!important;margin:auto!important;border-radius:20px!important;padding:40px 36px 32px!important;box-shadow:0 4px 32px rgba(0,0,0,.1)!important}
+  html.is-ipad .mushaf-spread.spread-single::before{display:none}
+  html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100vw;min-width:100vw;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;gap:32px;flex-shrink:0}
   html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:24px!important;line-height:1.95!important}
-  html.is-ipad .mushaf-surah-nav{max-width:none;width:100%;margin:0!important;padding:12px 24px 20px}
 }
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
