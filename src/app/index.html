@@ -2233,68 +2233,81 @@ body{background:var(--bg);color:var(--text)}
   :root{
     --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
     --tab-h:0px;
-    --nav-rail-w:88px;
-    --reading-max-w:720px;
-    --hdr-h:56px; /* tablet header is taller due to more padding */
+    --nav-rail-w:220px;
+    --reading-max-w:740px;
+    --hdr-h:56px;
   }
 
-  /* NAV RAIL: right-side vertical, safe areas on all edges */
+  /* ── Sidebar: full-height right panel with icon + label rows ── */
   .tabbar{
     bottom:0;top:0;right:0;left:auto;
     width:var(--nav-rail-w);height:100%;
-    flex-direction:column;justify-content:flex-start;align-items:center;
-    padding-top:max(28px, calc(env(safe-area-inset-top,0px) + 14px));
-    padding-bottom:max(20px, calc(env(safe-area-inset-bottom,0px) + 10px));
-    padding-right:env(safe-area-inset-right, 0px);
-    gap:4px;
+    flex-direction:column;justify-content:flex-start;align-items:stretch;
+    padding:max(20px,calc(env(safe-area-inset-top,0px)+10px)) 10px max(16px,calc(env(safe-area-inset-bottom,0px)+10px));
+    padding-right:max(10px,calc(env(safe-area-inset-right,0px)+10px));
+    gap:3px;
     border-top:none;border-left:none;
-    box-shadow:-1px 0 0 var(--border), -6px 0 24px rgba(0,0,0,.05);
+    box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.06);
   }
   [data-theme="dark"] .tabbar,
-  [data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border), -6px 0 24px rgba(0,0,0,.18)}
+  [data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.2)}
+
+  /* App logo badge above nav items */
+  .tabbar::before{
+    content:'';
+    display:block;
+    width:38px;height:38px;border-radius:11px;flex-shrink:0;
+    background:var(--accent) url('/assets/images/favicon-96x96.png') center/68% no-repeat;
+    box-shadow:0 3px 10px rgba(0,0,0,.18);
+    margin:0 0 14px 4px;
+  }
 
   .tab-item{
-    flex:none;flex-direction:column;height:auto;max-height:none;
-    min-height:62px;
-    padding:10px 6px 8px;gap:5px;
-    margin:0 6px;width:calc(100% - 12px);
-    border-radius:14px;
-    justify-content:center;align-items:center;
-    transition:background .2s var(--ease), color .2s var(--ease);
+    flex:none;flex-direction:row;height:auto;max-height:none;
+    min-height:48px;
+    padding:0 14px;gap:12px;
+    margin:0;width:100%;
+    border-radius:12px;
+    justify-content:flex-start;align-items:center;
+    transition:background .18s var(--ease),color .18s var(--ease);
   }
   .tab-item i{
-    width:44px;height:36px;font-size:18px!important;line-height:36px;
-    border-radius:12px;
-    transition:background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);
+    width:34px;height:34px;font-size:16px!important;line-height:34px;
+    border-radius:9px;flex-shrink:0;text-align:center;
+    transition:background .18s var(--ease),color .18s var(--ease);
   }
-  .tab-item span{font-size:9.5px!important;font-weight:500}
-  .tab-item.on{background:color-mix(in srgb, var(--accent) 10%, transparent)}
+  .tab-item span{
+    font-size:13.5px!important;font-weight:600;
+    white-space:nowrap;line-height:1;flex:1;
+    text-align:start;
+  }
+  .tab-item.on{background:color-mix(in srgb,var(--accent) 13%,transparent)}
   .tab-item.on i{
     background:var(--accent);color:var(--accent-t);
-    transform:none;box-shadow:0 2px 8px rgba(0,0,0,.15);border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
   }
-  .tab-item.on span{font-weight:700;color:var(--text)}
+  .tab-item.on span{font-weight:700;color:var(--accent)}
 
   /* PANELS: RTL inset + landscape left safe area */
   .panel{padding-inline-start:var(--nav-rail-w)}
-  .panel{padding-left:max(0px, env(safe-area-inset-left, 0px))}
+  .panel{padding-left:max(0px,env(safe-area-inset-left,0px))}
   #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
   .auth-panel,.profile-panel,.audio-settings-panel{
     right:var(--nav-rail-w)!important;
-    padding-left:env(safe-area-inset-left, 0px);
+    padding-left:env(safe-area-inset-left,0px);
   }
 
   /* HEADER: more breathing room */
-  .hdr{padding:16px 28px 14px}
+  .hdr{padding:14px 24px 12px}
 
   /* QURAN: app-like reading split */
   #panelQuran.on{flex-direction:row!important}
 
   #quranHome{
     display:flex!important;flex-direction:column;
-    width:280px;flex-shrink:0;
+    width:300px;flex-shrink:0;
     border-left:none;
-    box-shadow:-2px 0 0 var(--border), -4px 0 16px rgba(0,0,0,.06);
+    box-shadow:-2px 0 0 var(--border),-4px 0 16px rgba(0,0,0,.06);
     background:var(--bg2);
     overflow-y:auto;overflow-x:hidden;
     padding-bottom:100px;
@@ -2436,8 +2449,11 @@ body{background:var(--bg);color:var(--text)}
   .mushaf-text-page{max-width:var(--reading-max-w);margin-left:auto;margin-right:auto}
   .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-left:auto;margin-right:auto}
 
-  /* Tab labels: allow wrap to prevent cutoff on long Kurdish labels */
-  .tab-item span{white-space:normal!important;line-height:1.2;text-align:center}
+  /* IV hero: taller on iPad for more cinematic feel */
+  .iv-hero{height:260px}
+
+  /* IslamVoice: centered content with comfortable max-width */
+  #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%}
 }
 
 /* ─────────────────────────────────────────────────
@@ -2445,18 +2461,19 @@ body{background:var(--bg);color:var(--text)}
    ───────────────────────────────────────────────── */
 @media(min-width:1024px){
   :root{
-    --nav-rail-w:96px;
+    --nav-rail-w:240px;
     --ar-size:2.6rem;
     --line-h:2.7;
-    --reading-max-w:760px;
+    --reading-max-w:800px;
   }
 
-  .tab-item{min-height:70px;padding:12px 6px 10px;gap:6px}
-  .tab-item i{width:48px;height:40px;font-size:20px!important}
-  .tab-item span{font-size:10px!important}
+  /* Wider sidebar on landscape */
+  .tab-item{min-height:50px;padding:0 16px;gap:13px}
+  .tab-item i{width:36px;height:36px;font-size:17px!important}
+  .tab-item span{font-size:14.5px!important}
 
-  #quranHome{width:300px}
-  .ayah-card{padding:32px 40px!important}
+  #quranHome{width:340px}
+  .ayah-card{padding:32px 44px!important}
 
   .sky-scene{height:340px}
   .prayer-grid{padding:24px 32px 72px;gap:18px}
@@ -2465,7 +2482,11 @@ body{background:var(--bg);color:var(--text)}
   .genc-card-btn{height:190px}
   .genc-home{padding:28px 28px 48px;gap:20px}
 
-  .settings-content{max-width:640px;margin-left:auto;margin-right:auto}
+  /* 3-column IslamVoice on landscape iPad */
+  .iv-grid{grid-template-columns:repeat(3,1fr)}
+  .iv-hero{height:280px}
+
+  .settings-content{max-width:700px;margin-left:auto;margin-right:auto}
 }
 
 /* iPAD UA FALLBACK — class-based mirror of @media(min-width:768px).
@@ -2473,31 +2494,37 @@ body{background:var(--bg);color:var(--text)}
    compat mode reports ~375px viewport). */
 html.is-ipad{
   --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
-  --tab-h:0px;--nav-rail-w:88px;--reading-max-w:720px;--hdr-h:56px;
+  --tab-h:0px;--nav-rail-w:220px;--reading-max-w:740px;--hdr-h:56px;
 }
 html.is-ipad .tabbar{
   bottom:0;top:0;right:0;left:auto;
   width:var(--nav-rail-w);height:100%;
-  flex-direction:column;justify-content:flex-start;align-items:center;
-  padding-top:max(28px,calc(env(safe-area-inset-top,0px)+14px));
-  padding-bottom:max(20px,calc(env(safe-area-inset-bottom,0px)+10px));
-  padding-right:env(safe-area-inset-right,0px);
-  gap:4px;border-top:none;border-left:none;
-  box-shadow:-1px 0 0 var(--border),-6px 0 24px rgba(0,0,0,.05);
+  flex-direction:column;justify-content:flex-start;align-items:stretch;
+  padding:max(20px,calc(env(safe-area-inset-top,0px)+10px)) 10px max(16px,calc(env(safe-area-inset-bottom,0px)+10px));
+  padding-right:max(10px,calc(env(safe-area-inset-right,0px)+10px));
+  gap:3px;border-top:none;border-left:none;
+  box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.06);
 }
 html.is-ipad[data-theme="dark"] .tabbar,
-html.is-ipad[data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-6px 0 24px rgba(0,0,0,.18)}
-html.is-ipad .tab-item{
-  flex:none;flex-direction:column;height:auto;max-height:none;
-  min-height:62px;padding:10px 6px 8px;gap:5px;
-  margin:0 6px;width:calc(100% - 12px);
-  border-radius:14px;justify-content:center;align-items:center;
+html.is-ipad[data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.2)}
+html.is-ipad .tabbar::before{
+  content:'';display:block;
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  background:var(--accent) url('/assets/images/favicon-96x96.png') center/68% no-repeat;
+  box-shadow:0 3px 10px rgba(0,0,0,.18);
+  margin:0 0 14px 4px;
 }
-html.is-ipad .tab-item i{width:44px;height:36px;font-size:18px!important;line-height:36px;border-radius:12px}
-html.is-ipad .tab-item span{font-size:9.5px!important;font-weight:500}
-html.is-ipad .tab-item.on{background:color-mix(in srgb,var(--accent) 10%,transparent)}
-html.is-ipad .tab-item.on i{background:var(--accent);color:var(--accent-t);transform:none;box-shadow:0 2px 8px rgba(0,0,0,.15);border-radius:12px}
-html.is-ipad .tab-item.on span{font-weight:700;color:var(--text)}
+html.is-ipad .tab-item{
+  flex:none;flex-direction:row;height:auto;max-height:none;
+  min-height:48px;padding:0 14px;gap:12px;
+  margin:0;width:100%;
+  border-radius:12px;justify-content:flex-start;align-items:center;
+}
+html.is-ipad .tab-item i{width:34px;height:34px;font-size:16px!important;line-height:34px;border-radius:9px;flex-shrink:0;text-align:center}
+html.is-ipad .tab-item span{font-size:13.5px!important;font-weight:600;white-space:nowrap;line-height:1;flex:1;text-align:start}
+html.is-ipad .tab-item.on{background:color-mix(in srgb,var(--accent) 13%,transparent)}
+html.is-ipad .tab-item.on i{background:var(--accent);color:var(--accent-t);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+html.is-ipad .tab-item.on span{font-weight:700;color:var(--accent)}
 html.is-ipad .panel{padding-inline-start:var(--nav-rail-w)}
 html.is-ipad .panel{padding-left:max(0px,env(safe-area-inset-left,0px))}
 html.is-ipad #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
@@ -2508,7 +2535,7 @@ html.is-ipad .hdr{padding:16px 28px 14px}
 html.is-ipad #panelQuran.on{flex-direction:row!important}
 html.is-ipad #quranHome{
   display:flex!important;flex-direction:column;
-  width:280px;flex-shrink:0;border-left:none;
+  width:300px;flex-shrink:0;border-left:none;
   box-shadow:-2px 0 0 var(--border),-4px 0 16px rgba(0,0,0,.06);
   background:var(--bg2);overflow-y:auto;overflow-x:hidden;padding-bottom:100px;
 }
@@ -2564,7 +2591,19 @@ html.is-ipad #quranHome .search-bar{background:var(--bg2)}
 html.is-ipad .surah-nav{max-width:var(--reading-max-w);width:calc(100% - 56px);margin-left:auto!important;margin-right:auto!important}
 html.is-ipad .mushaf-text-page{max-width:var(--reading-max-w);margin-left:auto;margin-right:auto}
 html.is-ipad .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-left:auto;margin-right:auto}
-html.is-ipad .tab-item span{white-space:normal!important;line-height:1.2;text-align:center}
+html.is-ipad .iv-hero{height:260px}
+html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%}
+
+/* Landscape iPad: wider sidebar + 3-col IslamVoice */
+@media(min-width:1024px){
+  html.is-ipad{--nav-rail-w:240px;--reading-max-w:800px}
+  html.is-ipad .tab-item{min-height:50px;padding:0 16px;gap:13px}
+  html.is-ipad .tab-item span{font-size:14.5px!important}
+  html.is-ipad #quranHome{width:340px}
+  html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr)}
+  html.is-ipad .iv-hero{height:280px}
+  html.is-ipad .settings-content{max-width:700px;margin-left:auto;margin-right:auto}
+}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
