@@ -547,13 +547,6 @@
         .mark-cat-confirm{font-size:12px;font-weight:700;padding:5px 14px;border-radius:8px;border:none;background:#f59e0b;color:#fff;cursor:pointer;}
         .mark-cat-confirm:hover{background:#d97706;}
         .mark-cat-cancel-btn{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border-light,#e5e5e5);background:transparent;color:var(--text-secondary);cursor:pointer;}
-        .marked-cat-bar{display:none;align-items:center;gap:6px;padding:8px 0 4px;flex-wrap:wrap;}
-        .marked-cat-bar.visible{display:flex;}
-        .mcat-btn{border:1px solid var(--border-light,#e5e5e5);background:var(--bg-surface,#fff);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;color:var(--text-secondary);transition:all .12s;}
-        .mcat-btn:hover{border-color:#f59e0b;color:#d97706;}
-        .mcat-btn.mcat-active{background:#f59e0b;border-color:#f59e0b;color:#fff;}
-        body.dark-mode .mcat-btn{background:var(--bg-card);border-color:var(--border-medium);}
-        body.dark-mode .mcat-btn.mcat-active{background:#b45309;border-color:#b45309;color:#fff;}
         .t-platform-src { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
         .t-platform-src.src-web         { background: #eff6ff; color: #1d4ed8; }
         .t-platform-src.src-mobile      { background: #f0fdf4; color: #166534; }
@@ -1826,9 +1819,6 @@
                 </div>
                 </div>
 
-                <!-- Page filter bar — only visible in Marked view, built dynamically -->
-                <div class="marked-cat-bar" id="markedCatBar"></div>
-
                 <div class="stats-row">
                     <div class="stat-pill"><strong id="totalTranslations">--</strong> translations</div>
                     <div class="stat-pill"><strong id="totalPages">--</strong> <span id="pagesLabel">pages</span></div>
@@ -2659,47 +2649,6 @@
         let canEdit = true;
         let canDelete = true;
         let editingId = null;
-        let _markedPage = ''; // '' = all marked, else page name to filter by
-
-        function setMarkedCategory(page, btn) {
-            _markedPage = page;
-            document.querySelectorAll('.mcat-btn').forEach(function(b){ b.classList.remove('mcat-active'); });
-            if (btn) btn.classList.add('mcat-active');
-            currentPage = 1;
-            filterTranslations();
-        }
-
-        function _buildMarkedPageBar() {
-            var bar = document.getElementById('markedCatBar');
-            if (!bar) return;
-            bar.textContent = '';
-            var marked = allTranslations.filter(function(t){ return t.marked; });
-            if (!marked.length) return;
-
-            // Count by page (use normalizePage for display consistency)
-            var pageCounts = {};
-            marked.forEach(function(t) {
-                var p = (t.page || t.category || '').trim();
-                if (!p) p = '(no page)';
-                pageCounts[p] = (pageCounts[p] || 0) + 1;
-            });
-            var pages = Object.keys(pageCounts).sort(function(a,b){ return a.localeCompare(b); });
-
-            // "All" pill
-            var allBtn = document.createElement('button');
-            allBtn.className = 'mcat-btn' + (!_markedPage ? ' mcat-active' : '');
-            allBtn.textContent = 'All  ' + marked.length;
-            allBtn.onclick = function(){ setMarkedCategory('', allBtn); };
-            bar.appendChild(allBtn);
-
-            pages.forEach(function(p) {
-                var btn = document.createElement('button');
-                btn.className = 'mcat-btn' + (_markedPage === p ? ' mcat-active' : '');
-                btn.textContent = p + '  ' + pageCounts[p];
-                btn.onclick = function(){ setMarkedCategory(p, btn); };
-                bar.appendChild(btn);
-            });
-        }
 
         let _catPopoverEl = null;
         function _closeMarkPopover() {
@@ -2866,11 +2815,6 @@
             activePlatform = platform;
             activePageFilter = '';
             currentPage = 1;
-            var _catBar = document.getElementById('markedCatBar');
-            if (_catBar) {
-                _catBar.classList.toggle('visible', platform === 'marked');
-                if (platform === 'marked') { _markedPage = ''; _buildMarkedPageBar(); }
-            }
 
             // Update tab UI
             document.querySelectorAll('.platform-tab').forEach(function(tab) {
@@ -2990,9 +2934,9 @@
             } else if (activePlatform === 'marked') {
                 return allTranslations.filter(function(t) {
                     if (!t.marked) return false;
-                    if (_markedPage) {
-                        var p = (t.page || t.category || '').trim() || '(no page)';
-                        return p === _markedPage;
+                    if (activePageFilter) {
+                        var p = (t.page || t.category || '').trim() || '';
+                        return p === activePageFilter;
                     }
                     return true;
                 });
@@ -3173,7 +3117,6 @@
                 updateStats();
                 populatePageFilter();
                 filterTranslations();
-                if (activePlatform === 'marked') _buildMarkedPageBar();
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Failed to load translations');
@@ -3210,25 +3153,53 @@
         var activePageFilter = '';
 
         function populatePageFilter(filteredData) {
-            // Marked view: single "All" entry, no sub-filters
+            // Marked view: build sidebar from pages of marked items
             if (activePlatform === 'marked') {
                 var inner = document.getElementById('catSidebarInner');
                 inner.textContent = '';
-                var platformData = getPlatformData();
-                var btn = document.createElement('button');
-                btn.className = 'cat-item active';
-                var lbl = document.createElement('span');
-                lbl.className = 'cat-item-label';
-                lbl.textContent = 'All';
-                btn.appendChild(lbl);
-                var cntWrap = document.createElement('div');
-                cntWrap.className = 'cat-count-col';
-                var cnt = document.createElement('span');
-                cnt.className = 'cat-count';
-                cnt.textContent = platformData.length;
-                cntWrap.appendChild(cnt);
-                btn.appendChild(cntWrap);
-                inner.appendChild(btn);
+                var allMarked = allTranslations.filter(function(t){ return t.marked; });
+
+                // Count by page
+                var pageCounts = {};
+                allMarked.forEach(function(t) {
+                    var p = (t.page || t.category || '').trim() || '';
+                    pageCounts[p] = (pageCounts[p] || 0) + 1;
+                });
+                var pages = Object.keys(pageCounts).filter(function(p){ return p; }).sort();
+
+                function makeMarkedItem(p, label, count) {
+                    var btn = document.createElement('button');
+                    btn.className = 'cat-item' + (activePageFilter === p ? ' active' : '');
+                    var iconEl = makeLucideEl(p === '' ? 'layers' : 'file-text', 14);
+                    btn.appendChild(iconEl);
+                    var lbl = document.createElement('span');
+                    lbl.className = 'cat-item-label';
+                    lbl.textContent = label;
+                    btn.appendChild(lbl);
+                    var cntCol = document.createElement('div');
+                    cntCol.className = 'cat-count-col';
+                    var cnt = document.createElement('span');
+                    cnt.className = 'cat-count';
+                    cnt.textContent = count;
+                    cntCol.appendChild(cnt);
+                    btn.appendChild(cntCol);
+                    btn.addEventListener('click', (function(val){ return function(){ setPageFilter(val); }; })(p));
+                    return btn;
+                }
+
+                // "All" first
+                inner.appendChild(makeMarkedItem('', 'All', allMarked.length));
+
+                if (pages.length) {
+                    var grpLbl = document.createElement('div');
+                    grpLbl.className = 'cat-group-lbl';
+                    grpLbl.textContent = 'Pages';
+                    inner.appendChild(grpLbl);
+                    pages.forEach(function(p) {
+                        var displayLabel = getChipMeta ? getChipMeta(p, true).label : p;
+                        inner.appendChild(makeMarkedItem(p, displayLabel, pageCounts[p]));
+                    });
+                }
                 return;
             }
             var platformData = getPlatformData();
