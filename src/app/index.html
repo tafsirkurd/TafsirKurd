@@ -2232,63 +2232,18 @@ body{background:var(--bg);color:var(--text)}
 
   :root{
     --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
-    --tab-h:0px;
-    --nav-rail-w:200px;
+    --tab-h:60px;
+    --nav-rail-w:0px;
     --reading-max-w:720px;
     --hdr-h:56px;
   }
 
-  /* ── Sidebar: full-height right panel with icon + label rows ── */
-  .tabbar{
-    bottom:0;top:0;right:0;left:auto;
-    width:var(--nav-rail-w);height:100%;
-    flex-direction:column;justify-content:flex-start;align-items:stretch;
-    padding:max(20px,calc(env(safe-area-inset-top,0px)+10px)) 10px max(16px,calc(env(safe-area-inset-bottom,0px)+10px));
-    padding-right:max(10px,calc(env(safe-area-inset-right,0px)+10px));
-    gap:3px;
-    border-top:none;border-left:none;
-    box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.06);
-  }
-  [data-theme="dark"] .tabbar,
-  [data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.2)}
+  /* Keep bottom tab bar — same as mobile */
+  .tab-item i{font-size:20px!important;width:52px;height:34px}
+  .tab-item span{font-size:11px!important;font-weight:500}
 
-  .tab-item{
-    flex:none;flex-direction:row;height:auto;max-height:none;
-    min-height:48px;
-    padding:0 14px;gap:12px;
-    margin:0;width:100%;
-    border-radius:12px;
-    justify-content:flex-start;align-items:center;
-    transition:background .18s var(--ease),color .18s var(--ease);
-  }
-  .tab-item i{
-    width:34px;height:34px;font-size:16px!important;line-height:34px;
-    border-radius:9px;flex-shrink:0;text-align:center;
-    transition:background .18s var(--ease),color .18s var(--ease);
-  }
-  .tab-item span{
-    font-size:13.5px!important;font-weight:600;
-    white-space:nowrap;line-height:1;flex:1;
-    text-align:start;
-  }
-  .tab-item.on{background:color-mix(in srgb,var(--accent) 13%,transparent)}
-  .tab-item.on i{
-    background:var(--accent);color:var(--accent-t);
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
-  }
-  .tab-item.on span{font-weight:700;color:var(--accent)}
-
-  /* PANELS: RTL inset + landscape left safe area */
-  .panel{padding-inline-start:var(--nav-rail-w)}
-  .panel{padding-left:max(0px,env(safe-area-inset-left,0px))}
-  #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
-  .auth-panel,.profile-panel,.audio-settings-panel{
-    right:var(--nav-rail-w)!important;
-    padding-left:env(safe-area-inset-left,0px);
-  }
-
-  /* HEADER: more breathing room */
-  .hdr{padding:14px 24px 12px}
+  /* HEADER: more breathing room on iPad */
+  .hdr{padding:14px 28px 12px}
 
   /* QURAN: app-like reading split */
   #panelQuran.on{flex-direction:row!important}
@@ -2451,15 +2406,11 @@ body{background:var(--bg);color:var(--text)}
    ───────────────────────────────────────────────── */
 @media(min-width:1024px){
   :root{
-    --nav-rail-w:220px;
+    --nav-rail-w:0px;
     --ar-size:2.6rem;
     --line-h:2.7;
-    --reading-max-w:780px;
+    --reading-max-w:800px;
   }
-
-  .tab-item{min-height:50px;padding:0 16px;gap:13px}
-  .tab-item i{width:36px;height:36px;font-size:17px!important}
-  .tab-item span{font-size:14px!important}
 
   #quranHome{width:340px}
   .ayah-card{padding:32px 44px!important}
@@ -2469,7 +2420,7 @@ body{background:var(--bg);color:var(--text)}
   .prayer-grid-time{font-size:2rem}
 
   .genc-card-btn{height:190px}
-  .genc-home{padding:28px 28px 48px;gap:20px}
+  .genc-home{padding:28px 32px 48px;gap:22px}
 
   /* 3-column IslamVoice on landscape iPad */
   .iv-grid{grid-template-columns:repeat(3,1fr)}
@@ -2483,37 +2434,12 @@ body{background:var(--bg);color:var(--text)}
    compat mode reports ~375px viewport). */
 html.is-ipad{
   --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
-  --tab-h:0px;--nav-rail-w:200px;--reading-max-w:720px;--hdr-h:56px;
+  --tab-h:60px;--nav-rail-w:0px;--reading-max-w:720px;--hdr-h:56px;
 }
-html.is-ipad .tabbar{
-  bottom:0;top:0;right:0;left:auto;
-  width:var(--nav-rail-w);height:100%;
-  flex-direction:column;justify-content:flex-start;align-items:stretch;
-  padding:max(20px,calc(env(safe-area-inset-top,0px)+10px)) 10px max(16px,calc(env(safe-area-inset-bottom,0px)+10px));
-  padding-right:max(10px,calc(env(safe-area-inset-right,0px)+10px));
-  gap:3px;border-top:none;border-left:none;
-  box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.06);
-}
-html.is-ipad[data-theme="dark"] .tabbar,
-html.is-ipad[data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.2)}
-html.is-ipad .tab-item{
-  flex:none;flex-direction:row;height:auto;max-height:none;
-  min-height:48px;padding:0 14px;gap:12px;
-  margin:0;width:100%;
-  border-radius:12px;justify-content:flex-start;align-items:center;
-}
-html.is-ipad .tab-item i{width:34px;height:34px;font-size:16px!important;line-height:34px;border-radius:9px;flex-shrink:0;text-align:center}
-html.is-ipad .tab-item span{font-size:13.5px!important;font-weight:600;white-space:nowrap;line-height:1;flex:1;text-align:start}
-html.is-ipad .tab-item.on{background:color-mix(in srgb,var(--accent) 13%,transparent)}
-html.is-ipad .tab-item.on i{background:var(--accent);color:var(--accent-t);box-shadow:0 2px 8px rgba(0,0,0,.15)}
-html.is-ipad .tab-item.on span{font-weight:700;color:var(--accent)}
-html.is-ipad .panel{padding-inline-start:var(--nav-rail-w)}
-html.is-ipad .panel{padding-left:max(0px,env(safe-area-inset-left,0px))}
-html.is-ipad #panelPrayer:not(.on){right:var(--nav-rail-w)!important}
-html.is-ipad .auth-panel,
-html.is-ipad .profile-panel,
-html.is-ipad .audio-settings-panel{right:var(--nav-rail-w)!important;padding-left:env(safe-area-inset-left,0px)}
-html.is-ipad .hdr{padding:16px 28px 14px}
+/* Tab bar stays at bottom — same as mobile */
+html.is-ipad .tab-item i{font-size:20px!important;width:52px;height:34px}
+html.is-ipad .tab-item span{font-size:11px!important;font-weight:500}
+html.is-ipad .hdr{padding:14px 28px 12px}
 html.is-ipad #panelQuran.on{flex-direction:row!important}
 html.is-ipad #quranHome{
   display:flex!important;flex-direction:column;
@@ -2576,11 +2502,9 @@ html.is-ipad .mushaf-surah-nav{max-width:var(--reading-max-w);width:100%;margin-
 html.is-ipad .iv-hero{height:260px}
 html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%}
 
-/* Landscape iPad: wider sidebar + 3-col IslamVoice */
+/* Landscape iPad: 3-col IslamVoice, bigger reading width */
 @media(min-width:1024px){
-  html.is-ipad{--nav-rail-w:220px;--reading-max-w:780px}
-  html.is-ipad .tab-item{min-height:50px;padding:0 16px;gap:13px}
-  html.is-ipad .tab-item span{font-size:14px!important}
+  html.is-ipad{--reading-max-w:800px}
   html.is-ipad #quranHome{width:340px}
   html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr)}
   html.is-ipad .iv-hero{height:280px}
