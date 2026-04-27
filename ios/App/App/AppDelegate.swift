@@ -1,12 +1,16 @@
 import UIKit
 import Capacitor
+import UserNotifications
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Become the UNUserNotificationCenter delegate so we can control
+        // notification presentation and prevent macOS auto-focus behaviour.
+        UNUserNotificationCenter.current().delegate = self
         // Set window background to match the saved theme so the very first
         // native frame after the launch screen already has the right color.
         // Theme is written to App Group UserDefaults by _nativeSyncTheme() in app.js
@@ -46,6 +50,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+#if targetEnvironment(macCatalyst)
+        // On macOS, athan notifications automatically bring the app window to the
+        // foreground. If this activation was triggered by a notification (not the user
+        // explicitly clicking the Dock icon), minimize all windows immediately so the
+        // user's workflow is not interrupted.
+        // We detect notification-triggered activation: if the window became key within
+        // a very short time after a notification was scheduled to fire, it's athan.
+        // Simple heuristic: if the last user interaction was > 5 s ago, minimize.
+        let lastInteraction = UserDefaults.standard.double(forKey: "CapacitorStorage.macLastInteraction")
+        let sinceInteraction = Date().timeIntervalSince1970 - lastInteraction
+        if sinceInteraction > 5.0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                guard
+                    let appClass = NSClassFromString("NSApplication") as? NSObject.Type,
+                    let nsApp    = appClass.value(forKey: "sharedApplication") as? NSObject
+                else { return }
+                nsApp.perform(NSSelectorFromString("miniaturizeAll:"), with: nil)
+            }
+        }
+#endif
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -74,6 +98,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Feel free to add additional processing here, but if you want the App API to support
         // tracking app url opens, make sure to keep this call
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+
+    /// Called when a notification is about to be presented while the app is in the foreground.
+    /// On macOS Catalyst we return only `.sound` so the athan plays but no visual banner
+    /// appears and the app window is not brought to the front.
+    /// On iOS we return the full set so the in-app notification banner is shown normally.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+#if targetEnvironment(macCatalyst)
+        // macOS: play the athan sound only — no visual banner, no window focus.
+        completionHandler([.sound])
+#else
+        // iOS/iPadOS: forward to Capacitor so LocalNotifications plugin can handle it.
+        ApplicationDelegateProxy.shared.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
+#endif
+    }
+
+    /// Called when the user taps a notification (or takes an action on it).
+    /// Forwards to Capacitor's ApplicationDelegateProxy so LocalNotifications
+    /// can fire `localNotificationActionPerformed` in JavaScript.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        ApplicationDelegateProxy.shared.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
     }
 
 }

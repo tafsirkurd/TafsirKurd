@@ -864,6 +864,18 @@ function init(){
       });
     }
 
+    // macOS: track last user interaction so AppDelegate can distinguish
+    // user-initiated foreground from notification-triggered foreground.
+    if(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()==='mac'){
+      var _updateMacInteraction=function(){
+        var _pr=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Preferences;
+        if(_pr)_pr.set({key:'macLastInteraction',value:String(Date.now()/1000)}).catch(function(){});
+      };
+      document.addEventListener('pointerdown',_updateMacInteraction,{passive:true});
+      document.addEventListener('keydown',_updateMacInteraction,{passive:true});
+      _updateMacInteraction(); // stamp once on launch so first open never auto-minimizes
+    }
+
     // Android back button
     try{
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
