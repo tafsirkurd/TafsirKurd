@@ -2233,8 +2233,8 @@ body{background:var(--bg);color:var(--text)}
   :root{
     --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
     --tab-h:0px;
-    --nav-rail-w:220px;
-    --reading-max-w:740px;
+    --nav-rail-w:200px;
+    --reading-max-w:720px;
     --hdr-h:56px;
   }
 
@@ -2251,16 +2251,6 @@ body{background:var(--bg);color:var(--text)}
   }
   [data-theme="dark"] .tabbar,
   [data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.2)}
-
-  /* App logo badge above nav items */
-  .tabbar::before{
-    content:'';
-    display:block;
-    width:38px;height:38px;border-radius:11px;flex-shrink:0;
-    background:var(--accent) url('/assets/images/favicon-96x96.png') center/68% no-repeat;
-    box-shadow:0 3px 10px rgba(0,0,0,.18);
-    margin:0 0 14px 4px;
-  }
 
   .tab-item{
     flex:none;flex-direction:row;height:auto;max-height:none;
@@ -2461,16 +2451,15 @@ body{background:var(--bg);color:var(--text)}
    ───────────────────────────────────────────────── */
 @media(min-width:1024px){
   :root{
-    --nav-rail-w:240px;
+    --nav-rail-w:220px;
     --ar-size:2.6rem;
     --line-h:2.7;
-    --reading-max-w:800px;
+    --reading-max-w:780px;
   }
 
-  /* Wider sidebar on landscape */
   .tab-item{min-height:50px;padding:0 16px;gap:13px}
   .tab-item i{width:36px;height:36px;font-size:17px!important}
-  .tab-item span{font-size:14.5px!important}
+  .tab-item span{font-size:14px!important}
 
   #quranHome{width:340px}
   .ayah-card{padding:32px 44px!important}
@@ -2494,7 +2483,7 @@ body{background:var(--bg);color:var(--text)}
    compat mode reports ~375px viewport). */
 html.is-ipad{
   --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
-  --tab-h:0px;--nav-rail-w:220px;--reading-max-w:740px;--hdr-h:56px;
+  --tab-h:0px;--nav-rail-w:200px;--reading-max-w:720px;--hdr-h:56px;
 }
 html.is-ipad .tabbar{
   bottom:0;top:0;right:0;left:auto;
@@ -2507,13 +2496,6 @@ html.is-ipad .tabbar{
 }
 html.is-ipad[data-theme="dark"] .tabbar,
 html.is-ipad[data-theme="sakina"] .tabbar{box-shadow:-1px 0 0 var(--border),-8px 0 28px rgba(0,0,0,.2)}
-html.is-ipad .tabbar::before{
-  content:'';display:block;
-  width:38px;height:38px;border-radius:11px;flex-shrink:0;
-  background:var(--accent) url('/assets/images/favicon-96x96.png') center/68% no-repeat;
-  box-shadow:0 3px 10px rgba(0,0,0,.18);
-  margin:0 0 14px 4px;
-}
 html.is-ipad .tab-item{
   flex:none;flex-direction:row;height:auto;max-height:none;
   min-height:48px;padding:0 14px;gap:12px;
@@ -2596,9 +2578,9 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%
 
 /* Landscape iPad: wider sidebar + 3-col IslamVoice */
 @media(min-width:1024px){
-  html.is-ipad{--nav-rail-w:240px;--reading-max-w:800px}
+  html.is-ipad{--nav-rail-w:220px;--reading-max-w:780px}
   html.is-ipad .tab-item{min-height:50px;padding:0 16px;gap:13px}
-  html.is-ipad .tab-item span{font-size:14.5px!important}
+  html.is-ipad .tab-item span{font-size:14px!important}
   html.is-ipad #quranHome{width:340px}
   html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr)}
   html.is-ipad .iv-hero{height:280px}
