@@ -536,6 +536,24 @@
         .marked-header-btn.active { background: #f59e0b !important; border-color: #f59e0b !important; color: #fff !important; }
         body.dark-mode .marked-header-btn:hover { color: #fbbf24 !important; }
         body.dark-mode .marked-header-btn.active { background: #b45309 !important; border-color: #b45309 !important; }
+        .mark-cat-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px;vertical-align:middle;}
+        .mark-cat-popover{position:fixed;z-index:9999;background:var(--bg-surface,#fff);border:1px solid var(--border-medium,#ddd);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.18);padding:12px 14px;min-width:210px;}
+        .mark-cat-popover-title{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+        .mark-cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+        .mark-cat-pill{border:1.5px solid transparent;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;opacity:.8;transition:opacity .12s;}
+        .mark-cat-pill:hover{opacity:1;}
+        .mark-cat-pill.mcp-active{opacity:1;outline:2px solid currentColor;outline-offset:1px;}
+        .mark-cat-popover-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:4px;}
+        .mark-cat-confirm{font-size:12px;font-weight:700;padding:5px 14px;border-radius:8px;border:none;background:#f59e0b;color:#fff;cursor:pointer;}
+        .mark-cat-confirm:hover{background:#d97706;}
+        .mark-cat-cancel-btn{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border-light,#e5e5e5);background:transparent;color:var(--text-secondary);cursor:pointer;}
+        .marked-cat-bar{display:none;align-items:center;gap:6px;padding:8px 0 4px;flex-wrap:wrap;}
+        .marked-cat-bar.visible{display:flex;}
+        .mcat-btn{border:1px solid var(--border-light,#e5e5e5);background:var(--bg-surface,#fff);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;color:var(--text-secondary);transition:all .12s;}
+        .mcat-btn:hover{border-color:#f59e0b;color:#d97706;}
+        .mcat-btn.mcat-active{background:#f59e0b;border-color:#f59e0b;color:#fff;}
+        body.dark-mode .mcat-btn{background:var(--bg-card);border-color:var(--border-medium);}
+        body.dark-mode .mcat-btn.mcat-active{background:#b45309;border-color:#b45309;color:#fff;}
         .t-platform-src { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
         .t-platform-src.src-web         { background: #eff6ff; color: #1d4ed8; }
         .t-platform-src.src-mobile      { background: #f0fdf4; color: #166534; }
@@ -1808,6 +1826,18 @@
                 </div>
                 </div>
 
+                <!-- Category filter bar — only visible in Marked view -->
+                <div class="marked-cat-bar" id="markedCatBar">
+                    <span style="font-size:11px;font-weight:700;color:var(--text-tertiary);white-space:nowrap">Filter:</span>
+                    <button class="mcat-btn mcat-active" onclick="setMarkedCategory('',this)">All</button>
+                    <button class="mcat-btn" onclick="setMarkedCategory('bug',this)">🐛 Bug</button>
+                    <button class="mcat-btn" onclick="setMarkedCategory('review',this)">👀 Review</button>
+                    <button class="mcat-btn" onclick="setMarkedCategory('urgent',this)">🔴 Urgent</button>
+                    <button class="mcat-btn" onclick="setMarkedCategory('improve',this)">💡 Improve</button>
+                    <button class="mcat-btn" onclick="setMarkedCategory('later',this)">📋 Later</button>
+                    <button class="mcat-btn" onclick="setMarkedCategory('none',this)">— No category</button>
+                </div>
+
                 <div class="stats-row">
                     <div class="stat-pill"><strong id="totalTranslations">--</strong> translations</div>
                     <div class="stat-pill"><strong id="totalPages">--</strong> <span id="pagesLabel">pages</span></div>
@@ -2638,6 +2668,136 @@
         let canEdit = true;
         let canDelete = true;
         let editingId = null;
+        let _markedCategory = ''; // '' = all marked, 'none' = no category, else category id
+
+        const MARK_CATEGORIES = [
+            { id:'bug',     emoji:'🐛', label:'Bug',     color:'#ef4444', bg:'rgba(239,68,68,.12)'   },
+            { id:'review',  emoji:'👀', label:'Review',  color:'#8b5cf6', bg:'rgba(139,92,246,.12)'  },
+            { id:'urgent',  emoji:'🔴', label:'Urgent',  color:'#f97316', bg:'rgba(249,115,22,.12)'  },
+            { id:'improve', emoji:'💡', label:'Improve', color:'#3b82f6', bg:'rgba(59,130,246,.12)'  },
+            { id:'later',   emoji:'📋', label:'Later',   color:'#6b7280', bg:'rgba(107,114,128,.12)' },
+        ];
+        function _markCatCfg(id){ return MARK_CATEGORIES.find(function(c){ return c.id===id; })||null; }
+
+        function setMarkedCategory(cat, btn) {
+            _markedCategory = cat;
+            document.querySelectorAll('.mcat-btn').forEach(function(b){ b.classList.remove('mcat-active'); });
+            if (btn) btn.classList.add('mcat-active');
+            currentPage = 1;
+            filterTranslations();
+        }
+
+        let _catPopoverEl = null;
+        function _closeMarkPopover() {
+            if (_catPopoverEl && _catPopoverEl.parentNode) _catPopoverEl.parentNode.removeChild(_catPopoverEl);
+            _catPopoverEl = null;
+            document.removeEventListener('mousedown', _catPopoverOutside);
+        }
+        function _catPopoverOutside(e) {
+            if (_catPopoverEl && !_catPopoverEl.contains(e.target)) _closeMarkPopover();
+        }
+        function _showMarkCatPopover(anchorBtn, id) {
+            _closeMarkPopover();
+            var pop = document.createElement('div');
+            pop.className = 'mark-cat-popover';
+            _catPopoverEl = pop;
+
+            var title = document.createElement('div');
+            title.className = 'mark-cat-popover-title';
+            title.textContent = 'Pick a category to mark';
+            pop.appendChild(title);
+
+            var pills = document.createElement('div');
+            pills.className = 'mark-cat-pills';
+            var selectedCat = '';
+
+            MARK_CATEGORIES.forEach(function(c) {
+                var pill = document.createElement('button');
+                pill.className = 'mark-cat-pill';
+                pill.textContent = c.emoji + ' ' + c.label;
+                pill.style.background = c.bg;
+                pill.style.color = c.color;
+                pill.style.borderColor = c.color + '66';
+                pill.onclick = function(e) {
+                    e.stopPropagation();
+                    pop.querySelectorAll('.mark-cat-pill').forEach(function(p){ p.classList.remove('mcp-active'); });
+                    pill.classList.add('mcp-active');
+                    selectedCat = c.id;
+                };
+                pills.appendChild(pill);
+            });
+            var noPill = document.createElement('button');
+            noPill.className = 'mark-cat-pill mcp-active';
+            noPill.textContent = '— No category';
+            noPill.style.background = 'var(--bg-hover,#f5f5f5)';
+            noPill.style.color = 'var(--text-secondary)';
+            noPill.style.borderColor = 'var(--border-light,#ddd)';
+            noPill.onclick = function(e) {
+                e.stopPropagation();
+                pop.querySelectorAll('.mark-cat-pill').forEach(function(p){ p.classList.remove('mcp-active'); });
+                noPill.classList.add('mcp-active');
+                selectedCat = '';
+            };
+            pills.appendChild(noPill);
+            pop.appendChild(pills);
+
+            var actions = document.createElement('div');
+            actions.className = 'mark-cat-popover-actions';
+            var cancelBtn = document.createElement('button');
+            cancelBtn.className = 'mark-cat-cancel-btn';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.onclick = _closeMarkPopover;
+            var confirmBtn = document.createElement('button');
+            confirmBtn.className = 'mark-cat-confirm';
+            confirmBtn.textContent = '🔖 Mark';
+            confirmBtn.onclick = function() {
+                _closeMarkPopover();
+                _doMarkWithCategory(id, selectedCat, anchorBtn);
+            };
+            actions.appendChild(cancelBtn);
+            actions.appendChild(confirmBtn);
+            pop.appendChild(actions);
+            document.body.appendChild(pop);
+
+            var rect = anchorBtn.getBoundingClientRect();
+            pop.style.top  = (rect.bottom + 6 + window.scrollY) + 'px';
+            pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 230)) + 'px';
+            setTimeout(function(){ document.addEventListener('mousedown', _catPopoverOutside); }, 10);
+        }
+
+        async function _doMarkWithCategory(id, category, btn) {
+            var email = sessionStorage.getItem('adminEmail') || '';
+            var fields = { marked: true, marked_by: email, marked_at: new Date().toISOString(), mark_category: category || null };
+            try {
+                var result = await adminTranslationsAPI('update', { id: id, fields: fields });
+                if (!result.success) throw new Error('failed');
+                var row = allTranslations.find(function(t){ return t.id === id; });
+                if (row) Object.assign(row, fields);
+                if (btn) { btn.classList.add('is-marked'); btn.title = 'Unmark'; }
+                var rowEl = btn && (btn.closest('.t-row') || document.getElementById('row-' + id));
+                if (rowEl) {
+                    rowEl.classList.add('is-marked');
+                    var oldBadge = rowEl.querySelector('.mark-cat-badge');
+                    if (oldBadge) oldBadge.parentNode.removeChild(oldBadge);
+                    if (category) {
+                        var cfg = _markCatCfg(category);
+                        if (cfg) {
+                            var badge = document.createElement('span');
+                            badge.className = 'mark-cat-badge';
+                            badge.style.background = cfg.bg;
+                            badge.style.color = cfg.color;
+                            badge.style.borderColor = cfg.color + '44';
+                            badge.textContent = cfg.emoji + ' ' + cfg.label;
+                            var bw = rowEl.querySelector('.t-badges');
+                            if (bw) bw.appendChild(badge);
+                        }
+                    }
+                }
+                document.getElementById('markedCount').textContent = allTranslations.filter(function(t){ return t.marked; }).length;
+                var catName = category ? ((_markCatCfg(category)||{}).label||'') : '';
+                showToast('🔖 Marked' + (catName ? ' · ' + catName : ''));
+            } catch(e) { showToast('Failed to mark'); }
+        }
         let activePlatform = 'web';
         let sortOrder = 'newest'; // 'newest' | 'az'
         let quickEditMode = false;
@@ -2692,6 +2852,8 @@
             activePlatform = platform;
             activePageFilter = '';
             currentPage = 1;
+            var _catBar = document.getElementById('markedCatBar');
+            if (_catBar) _catBar.classList.toggle('visible', platform === 'marked');
 
             // Update tab UI
             document.querySelectorAll('.platform-tab').forEach(function(tab) {
@@ -2809,7 +2971,12 @@
                     return p === 'about' || p === 'founder';
                 });
             } else if (activePlatform === 'marked') {
-                return allTranslations.filter(function(t) { return t.marked; });
+                return allTranslations.filter(function(t) {
+                    if (!t.marked) return false;
+                    if (_markedCategory === 'none') return !t.mark_category;
+                    if (_markedCategory) return t.mark_category === _markedCategory;
+                    return true;
+                });
             } else {
                 // Web = everything except android, ios, notifications, updates
                 return allTranslations.filter(function(t) {
@@ -3557,6 +3724,18 @@
             pageDiv.className = 't-page-badge';
             pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications' || activePlatform === 'widgets') ? (t.category || 'general') : (normalizePage(t.page) || t.category || '');
             badgeWrap.appendChild(pageDiv);
+            if (t.mark_category) {
+                var _mcc = _markCatCfg(t.mark_category);
+                if (_mcc) {
+                    var _catB = document.createElement('span');
+                    _catB.className = 'mark-cat-badge';
+                    _catB.style.background = _mcc.bg;
+                    _catB.style.color = _mcc.color;
+                    _catB.style.border = '1px solid ' + _mcc.color + '44';
+                    _catB.textContent = _mcc.emoji + ' ' + _mcc.label;
+                    badgeWrap.appendChild(_catB);
+                }
+            }
             if (t.mark_note) {
                 var noteDiv = document.createElement('div');
                 noteDiv.className = 't-mark-note';
@@ -3579,7 +3758,11 @@
                 markBtn.style.fontSize = '14px';
                 markBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    toggleMark(tid, markBtn.classList.contains('is-marked'), markBtn);
+                    if (markBtn.classList.contains('is-marked')) {
+                        toggleMark(tid, true, markBtn); // already marked — unmark immediately
+                    } else {
+                        _showMarkCatPopover(markBtn, tid); // not marked — show category picker
+                    }
                 });
                 actionsDiv.appendChild(markBtn);
             })(t.id, t.marked);
