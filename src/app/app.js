@@ -8971,13 +8971,12 @@ function renderIvLoading(){
 var _ivHeroTimer=null;
 var _ivHeroIdx=0;
 var _ivHeroSlides=[];
-var _ivHeroBuilt=false; // guard: only build once per data load
+var _ivHeroBuilt=false;
 var _ivHeroTrackEl=null;
 var _ivHeroDotsEls=null;
-var _ivHeroTouchListened=false; // touch listeners attached once only
-var _ivHeroTrackX=0; // JS-tracked translateX — avoids getComputedStyle
+var _ivHeroTouchListened=false;
 var _ivHeroDragActive=false,_ivHeroDragDecided=false,_ivHeroDragHoriz=false;
-var _ivHeroDragSX=0,_ivHeroDragSY=0,_ivHeroDragBaseX=0;
+var _ivHeroDragSX=0,_ivHeroDragSY=0;
 var _ivHeroVx=0,_ivHeroVtLast=0,_ivHeroXLast=0;
 
 function _ivThumb(url){
@@ -9118,9 +9117,7 @@ function renderIvHero(){
       if(!_ivHeroSlides.length)return;
       _ivHeroDragActive=true;_ivHeroDragDecided=false;_ivHeroDragHoriz=false;
       _ivHeroDragSX=e.touches[0].clientX;_ivHeroDragSY=e.touches[0].clientY;
-      _ivHeroDragBaseX=_ivHeroTrackX;
       _ivHeroVx=0;_ivHeroVtLast=performance.now();_ivHeroXLast=_ivHeroDragSX;
-      if(_ivHeroTrackEl){_ivHeroTrackEl.style.transition='none';}
       if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}
     },{passive:true});
     hero.addEventListener('touchmove',function(e){
@@ -9138,10 +9135,6 @@ function renderIvHero(){
       var now=performance.now(),dt=now-_ivHeroVtLast;
       if(dt>0)_ivHeroVx=(cx-_ivHeroXLast)/dt;
       _ivHeroVtLast=now;_ivHeroXLast=cx;
-      var W=_ivHeroW(),raw=_ivHeroDragBaseX+dx;
-      var minX=-((_ivHeroSlides.length-1)*W),maxX=0;
-      var clamped=raw>maxX?maxX+(raw-maxX)*0.25:raw<minX?minX+(raw-minX)*0.25:raw;
-      if(_ivHeroTrackEl)_ivHeroTrackEl.style.transform='translate3d('+clamped+'px,0,0)';
     },{passive:false});
     hero.addEventListener('touchend',function(e){
       if(!_ivHeroDragActive)return;
@@ -9149,47 +9142,34 @@ function renderIvHero(){
       if(!_ivHeroDragDecided||!_ivHeroDragHoriz||!_ivHeroSlides.length){_ivHeroResetTimer();return;}
       var endX=e.changedTouches&&e.changedTouches[0]?e.changedTouches[0].clientX:_ivHeroDragSX;
       var delta=endX-_ivHeroDragSX;
-      var W=_ivHeroW();
       var vxFresh=(performance.now()-_ivHeroVtLast)<80?_ivHeroVx:0;
       var flick=Math.abs(vxFresh)>0.3;
-      if(flick||Math.abs(delta)>W*0.18){
+      if(flick||Math.abs(delta)>40){
         /* RTL: swipe right (delta>0 / vx>0) = next (+1), swipe left = prev (-1) */
         var dir=vxFresh!==0?(vxFresh>0?1:-1):(delta>0?1:-1);
-        _ivHeroGoTo(_ivHeroIdx+dir,true);
-      }else{
-        _ivHeroGoTo(_ivHeroIdx,true);
+        _ivHeroGoTo(_ivHeroIdx+dir);
       }
       _ivHeroResetTimer();
     },{passive:false});
     hero.addEventListener('touchcancel',function(){
       _ivHeroDragActive=false;
-      if(_ivHeroSlides.length){_ivHeroGoTo(_ivHeroIdx,true);_ivHeroResetTimer();}
+      _ivHeroResetTimer();
     },{passive:false});
   }
 
   _ivHeroBuilt=true;
-  // rAF ensures the newly-visible hero has a layout before we calculate slide width
-  requestAnimationFrame(function(){
-    _ivHeroGoTo(0,false);
-    _ivHeroResetTimer();
-  });
+  _ivHeroGoTo(0);
+  _ivHeroResetTimer();
 }
 
 // Call this when data reloads so hero picks fresh random slides next time
 function _ivHeroInvalidate(){_ivHeroBuilt=false;_ivHeroSlides=[];if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}}
 
-function _ivHeroW(){var h=$('ivHero');return h&&h.offsetWidth>0?h.offsetWidth:window.innerWidth;}
-
-function _ivHeroGoTo(idx,animate){
-  if(!_ivHeroSlides.length)return;
-  var wrap=idx<0||idx>=_ivHeroSlides.length;
+function _ivHeroGoTo(idx){
+  if(!_ivHeroSlides.length||!_ivHeroTrackEl)return;
   _ivHeroIdx=(idx+_ivHeroSlides.length)%_ivHeroSlides.length;
-  _ivHeroTrackX=-_ivHeroIdx*_ivHeroW();
-  if(_ivHeroTrackEl){
-    var doAnim=!wrap&&animate!==false;
-    _ivHeroTrackEl.style.transition=doAnim?'transform .4s cubic-bezier(0.22,1,0.36,1)':'none';
-    _ivHeroTrackEl.style.transform='translate3d('+_ivHeroTrackX+'px,0,0)';
-  }
+  var slides=_ivHeroTrackEl.querySelectorAll('.iv-hero-slide');
+  slides.forEach(function(s,i){s.classList.toggle('iv-hero-active',i===_ivHeroIdx);});
   if(_ivHeroDotsEls)_ivHeroDotsEls.forEach(function(d,i){d.classList.toggle('on',i===_ivHeroIdx);});
 }
 
