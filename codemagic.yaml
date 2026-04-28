@@ -26,7 +26,7 @@ workflows:
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
       - name: Install dependencies
-        script: npm install --legacy-peer-deps
+        script: npm install --legacy-peer-deps --omit=dev
 
       - name: Force exact Capacitor versions (all plugins)
         script: |
