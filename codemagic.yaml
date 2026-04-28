@@ -101,7 +101,25 @@ workflows:
           echo "GoogleService-Info.plist written ($(wc -c < ios/App/App/GoogleService-Info.plist) bytes)"
 
       - name: Capacitor sync iOS
-        script: npx cap sync ios
+        script: |
+          # cap sync copies web assets then runs pod install.
+          # GitHub CDN occasionally returns 502 on IONFilesystemLib — retry pod install on failure.
+          if ! npx cap sync ios; then
+            echo "cap sync failed — retrying pod install up to 3 times..."
+            success=false
+            for attempt in 1 2 3; do
+              echo "pod install attempt $attempt/3"
+              sleep 10
+              if (cd ios/App && pod install); then
+                success=true
+                break
+              fi
+            done
+            if [ "$success" != "true" ]; then
+              echo "pod install failed after 3 retries"
+              exit 1
+            fi
+          fi
 
       - name: Verify iOS project clean
         script: |
