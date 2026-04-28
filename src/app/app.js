@@ -9010,16 +9010,18 @@ function renderIvHero(){
   if(S.ivEpisodes&&S.ivSeries){
     var seriesMap={};
     S.ivSeries.forEach(function(s){seriesMap[s.id]=s;});
-    // Pick the most recent episode per series that has a thumbnail
+    // Pick the most recent episode per series; fall back to episode thumbnail if series has none
     var bestEpMap={};
     S.ivEpisodes.forEach(function(ep){
       var ser=seriesMap[ep.series_id];
-      if(!ser||!ser.thumbnail_url)return;
+      if(!ser)return;
       var prev=bestEpMap[ep.series_id];
       if(!prev||(ep.created_at&&ep.created_at>prev.created_at))bestEpMap[ep.series_id]=ep;
     });
     Object.keys(bestEpMap).forEach(function(sid){
-      all.push({ep:bestEpMap[sid],series:seriesMap[sid]});
+      var ep=bestEpMap[sid],ser=seriesMap[sid];
+      var thumb=ser.thumbnail_url||(ep&&ep.thumbnail_url)||'';
+      if(thumb)all.push({ep:ep,series:ser});
     });
   }
   if(all.length<2){hero.style.display='none';return;}
@@ -9032,7 +9034,7 @@ function renderIvHero(){
   // Preload all thumbnails immediately so iOS WKWebView has them in cache
   _ivHeroSlides.forEach(function(item){
     var pi=new Image();
-    pi.src=_ivThumb(item.series.thumbnail_url);
+    pi.src=_ivThumb(item.series.thumbnail_url||(item.ep&&item.ep.thumbnail_url)||'');
   });
 
   hero.style.display='';
@@ -9043,7 +9045,7 @@ function renderIvHero(){
   _ivHeroSlides.forEach(function(item,idx){
     var ser=item.series;
     var ep=item.ep;
-    var thumb=_ivThumb(ser.thumbnail_url);
+    var thumb=_ivThumb(ser.thumbnail_url||(ep&&ep.thumbnail_url)||'');
 
     var slide=document.createElement('div');
     slide.className='iv-hero-slide';
@@ -9095,9 +9097,10 @@ function renderIvHero(){
     track.appendChild(slide);
   });
 
-  // Build dots in RTL order (count-1 → 0) so dot[0] is rightmost — matches SmartDhikr
+  // page is dir=rtl so flex items go right-to-left; first appended = rightmost.
+  // Loop 0→count-1 so dot[0] (active) is appended first = rightmost.
   _ivHeroDotsEls=new Array(_ivHeroSlides.length);
-  for(var di=_ivHeroSlides.length-1;di>=0;di--){
+  for(var di=0;di<_ivHeroSlides.length;di++){
     (function(idx){
       var dot=document.createElement('div');
       dot.className='iv-hero-dot'+(idx===0?' on':'');

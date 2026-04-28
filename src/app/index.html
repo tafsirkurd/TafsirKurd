@@ -1201,7 +1201,8 @@ body{background:var(--bg);color:var(--text)}
 .iv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;cursor:pointer;transition:transform .2s var(--ease)}
 .iv-card:active{transform:scale(.98)}
 .iv-card-img{width:100%;aspect-ratio:16/9;background:var(--bg3);position:relative;overflow:hidden}
-.iv-card-img img{width:100%;height:100%;object-fit:cover}
+.iv-card-img img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.iv-card:active .iv-card-img img{transform:scale(1.07)}
 .iv-card-img .iv-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text3)}
 .iv-card-badge{position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.65);color:#fff;padding:3px 10px;border-radius:var(--r-full);font-size:.6rem;font-weight:600;letter-spacing:.2px}
 .iv-card-new-badge{display:inline-block;margin-top:5px;background:var(--accent);color:var(--accent-t);padding:2px 9px;border-radius:var(--r-full);font-size:.62rem;font-weight:700;letter-spacing:.2px}
