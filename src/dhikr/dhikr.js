@@ -739,9 +739,11 @@ window.GencineUI = {
     var isHome    = (this._view === 'home');
     var isBooks   = (this._view === 'books');
     var isReader  = (this._view === 'book-reader');
+    var navBtns   = document.getElementById('pdfNavBtns');
     if(backBtn)   backBtn.style.display   = isHome ? 'none' : 'flex';
     if(title)     title.style.visibility  = isHome ? '' : 'hidden';
     if(booksBtns) booksBtns.style.display = isBooks ? 'flex' : 'none';
+    if(navBtns)   navBtns.style.display   = isReader ? 'flex' : 'none';
     if(fsBtn)     fsBtn.style.display     = isReader ? 'flex' : 'none';
   },
 
@@ -2487,6 +2489,60 @@ window.GencineUI = {
       slots.forEach(function(s) { obs.observe(s); });
       renderPage(1, slots[0], pdf);
       if (slots[1]) renderPage(2, slots[1], pdf);
+
+      /* ── Page navigation ── */
+      var _curPage = 1;
+      var _navScrollTimer = null;
+      var _panelEl = document.getElementById('panelGencine');
+      var _prevBtn = document.getElementById('pdfPrevBtn');
+      var _nextBtn = document.getElementById('pdfNextBtn');
+      var _pageInd = document.getElementById('pdfPageInd');
+
+      function _updatePageNav() {
+        if (_pageInd) _pageInd.textContent = _curPage + ' / ' + pdf.numPages;
+        if (_prevBtn) _prevBtn.disabled = _curPage <= 1;
+        if (_nextBtn) _nextBtn.disabled = _curPage >= pdf.numPages;
+      }
+
+      function _syncPage() {
+        if (!_panelEl) return;
+        var panelTop = _panelEl.getBoundingClientRect().top;
+        var viewMid  = panelTop + _panelEl.clientHeight / 2;
+        var best = 1, bestDist = Infinity;
+        slots.forEach(function(sl, i) {
+          var r = sl.getBoundingClientRect();
+          var dist = Math.abs((r.top + r.height / 2) - viewMid);
+          if (dist < bestDist) { bestDist = dist; best = i + 1; }
+        });
+        if (best !== _curPage) { _curPage = best; _updatePageNav(); }
+      }
+
+      var _navScrollHandler = function() {
+        clearTimeout(_navScrollTimer);
+        _navScrollTimer = setTimeout(_syncPage, 80);
+      };
+      if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler);
+
+      if (_prevBtn) _prevBtn.onclick = function() {
+        if (_curPage > 1 && slots[_curPage - 2])
+          slots[_curPage - 2].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      if (_nextBtn) _nextBtn.onclick = function() {
+        if (_curPage < pdf.numPages && slots[_curPage])
+          slots[_curPage].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+
+      _updatePageNav();
+
+      /* Extend existing cleanup to remove nav listeners */
+      var _prevCleanup = self._pdfCleanup;
+      self._pdfCleanup = function() {
+        if (_panelEl) _panelEl.removeEventListener('scroll', _navScrollHandler);
+        clearTimeout(_navScrollTimer);
+        if (_prevBtn) _prevBtn.onclick = null;
+        if (_nextBtn) _nextBtn.onclick = null;
+        if (_prevCleanup) _prevCleanup();
+      };
     };
 
     if (self._pdfDoc) { doLoad(self._pdfDoc); return; }
