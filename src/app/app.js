@@ -605,10 +605,8 @@ var S={
   autoAdvance:localStorage.getItem('autoAdvance')==='true',
   scrollFollowsAudio:localStorage.getItem('scrollFollowsAudio')!=='false',
   hapticFeedback:localStorage.getItem('hapticFeedback')!=='false',
-  dailyReminder:localStorage.getItem('dailyReminder')==='true',
-  reminderTime:localStorage.getItem('reminderTime')||'08:00',
+  dailyReminder:localStorage.getItem('dailyReminder')!=='false',
   dailyVerse:localStorage.getItem('dailyVerse')==='true',
-  dailyVerseTime:localStorage.getItem('dailyVerseTime')||'08:00',
   prayerCity:localStorage.getItem('prayerCity')||'Duhok',
   prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'13'),
   prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true',
@@ -975,7 +973,7 @@ function init(){
       // Create reminder channel immediately at startup
       _ensureReminderChannel(_LN);
       // Reschedule daily reminder on every launch so 7-day window never expires
-      scheduleReminder(S.dailyReminder, S.reminderTime);
+      scheduleReminder(S.dailyReminder);
     }catch(e){}
   }
 
@@ -1331,7 +1329,7 @@ function _tabHash(name){
     return JSON.stringify(g)+':'+(log[today]||0)+':'+calcStreak(log)+':'+sl;
   }
   if(name==='settings'){
-    return (S.user?S.user.email:'')+':'+S.theme+':'+S.hapticFeedback+':'+S.arSize+':'+S.tfSize+':'+S.keepAwake+':'+S.dailyReminder+':'+S.reminderTime;
+    return (S.user?S.user.email:'')+':'+S.theme+':'+S.hapticFeedback+':'+S.arSize+':'+S.tfSize+':'+S.keepAwake+':'+S.dailyReminder+':'+S.dailyVerse;
   }
   if(name==='islamvoice'){
     return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'')+(S.ivSpeakerFilter||'');
@@ -1560,21 +1558,21 @@ function _getReminderMsg(dayOfYear){
   return t('notif.reminder_msg_'+idx)||t('notif.reminder_body')||'قورئانێ بخوێنە 📖';
 }
 
-function scheduleReminder(enabled,time){
+function scheduleReminder(enabled){
   if(!window.Capacitor||!window.Capacitor.Plugins||!window.Capacitor.Plugins.LocalNotifications)return;
   var LN=window.Capacitor.Plugins.LocalNotifications;
   // Cancel old single-slot (ID:1) and 7-day slots (IDs 10-16)
   LN.cancel({notifications:[1,10,11,12,13,14,15,16].map(function(id){return{id:id};})}).catch(function(){});
   if(!enabled)return;
-  var parts=(time||'08:00').split(':');
-  var h=parseInt(parts[0])||8;
-  var m=parseInt(parts[1])||0;
   var now=new Date();
-  var first=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);
-  if(first<=now)first.setDate(first.getDate()+1);
   var notifications=[];
   for(var d=0;d<7;d++){
-    var schedDate=new Date(first.getFullYear(),first.getMonth(),first.getDate()+d,h,m,0,0);
+    var dayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate()+d);
+    var seed=_getDayOfYear(dayBase)*31+7;
+    var h=7+(seed%13);var m=(seed*17)%60;
+    var schedDate=new Date(dayBase.getFullYear(),dayBase.getMonth(),dayBase.getDate(),h,m,0,0);
+    if(d===0&&schedDate<=now){schedDate.setDate(schedDate.getDate()+1);}
+    if(d===0&&schedDate<=now)continue;
     var msg=_getReminderMsg(_getDayOfYear(schedDate));
     notifications.push({
       id:10+d,
@@ -1760,7 +1758,7 @@ function _getDayOfYear(d){
   return Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
 }
 
-function scheduleDailyVerse(enabled,time){
+function scheduleDailyVerse(enabled){
   if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
   var LN=Capacitor.Plugins.LocalNotifications;
   /* Cancel IDs 20-26 */
@@ -1769,21 +1767,19 @@ function scheduleDailyVerse(enabled,time){
 
   /* Wait until Quran + tafsir data is loaded */
   if(!S.quranData||!S.tafsirData){
-    setTimeout(function(){scheduleDailyVerse(S.dailyVerse,S.dailyVerseTime);},1200);
+    setTimeout(function(){scheduleDailyVerse(S.dailyVerse);},1200);
     return;
   }
 
-  var parts=(time||'08:00').split(':');
-  var h=parseInt(parts[0])||8;
-  var m=parseInt(parts[1])||0;
   var now=new Date();
-  /* First slot: today if not yet passed, else tomorrow */
-  var first=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);
-  if(first<=now)first.setDate(first.getDate()+1);
-
   var notifications=[];
   for(var d=0;d<7;d++){
-    var schedDate=new Date(first.getFullYear(),first.getMonth(),first.getDate()+d,h,m,0,0);
+    var dayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate()+d);
+    var seed=_getDayOfYear(dayBase)*31+43;
+    var h=8+(seed%12);var m=(seed*19)%60;
+    var schedDate=new Date(dayBase.getFullYear(),dayBase.getMonth(),dayBase.getDate(),h,m,0,0);
+    if(d===0&&schedDate<=now){schedDate.setDate(schedDate.getDate()+1);}
+    if(d===0&&schedDate<=now)continue;
     // Find a short powerful ayah for this day (skip long ones)
     var baseIdx=_getDayOfYear(schedDate)%DAILY_VERSE_LIST.length;
     var v=null;
@@ -1946,7 +1942,7 @@ function initDailyVerse(){
   if(!S.dailyVerse)return;
   var last=localStorage.getItem('dailyVerseScheduledDate');
   if(last===new Date().toDateString())return; /* already scheduled today */
-  scheduleDailyVerse(true,S.dailyVerseTime);
+  scheduleDailyVerse(true);
 }
 
 /* ===== STREAK REMINDER NOTIFICATION ===== */
@@ -6755,23 +6751,12 @@ function renderSettings(){
   remLeft.appendChild(el('div','setting-sub',t('settings.reminder_sub')));
   remRow.appendChild(remLeft);
   var remRight=el('div','reminder-right');
-  if(S.dailyReminder){
-    var timeInp=document.createElement('input');
-    timeInp.type='time';timeInp.className='reminder-time-input';
-    timeInp.value=S.reminderTime;
-    on(timeInp,'change',function(){
-      S.reminderTime=timeInp.value;
-      localStorage.setItem('reminderTime',S.reminderTime);
-      scheduleReminder(true,S.reminderTime);
-    });
-    remRight.appendChild(timeInp);
-  }
   var remToggle=el('div','toggle'+(S.dailyReminder?' on':''));
   remToggle.appendChild(el('div','toggle-knob'));
   on(remToggle,'click',function(){
     S.dailyReminder=!S.dailyReminder;
     localStorage.setItem('dailyReminder',String(S.dailyReminder));
-    scheduleReminder(S.dailyReminder,S.reminderTime);
+    scheduleReminder(S.dailyReminder);
     if(S.dailyReminder)window._showNotifSetupHint();
     renderSettings();
   });
@@ -6786,23 +6771,12 @@ function renderSettings(){
   dvLeft.appendChild(el('div','setting-sub',t('settings.daily_verse_sub')));
   dvRow.appendChild(dvLeft);
   var dvRight=el('div','reminder-right');
-  if(S.dailyVerse){
-    var dvInp=document.createElement('input');
-    dvInp.type='time';dvInp.className='reminder-time-input';
-    dvInp.value=S.dailyVerseTime;
-    on(dvInp,'change',function(){
-      S.dailyVerseTime=dvInp.value;
-      localStorage.setItem('dailyVerseTime',S.dailyVerseTime);
-      scheduleDailyVerse(true,S.dailyVerseTime);
-    });
-    dvRight.appendChild(dvInp);
-  }
   var dvToggle=el('div','toggle'+(S.dailyVerse?' on':''));
   dvToggle.appendChild(el('div','toggle-knob'));
   on(dvToggle,'click',function(){
     S.dailyVerse=!S.dailyVerse;
     localStorage.setItem('dailyVerse',String(S.dailyVerse));
-    scheduleDailyVerse(S.dailyVerse,S.dailyVerseTime);
+    scheduleDailyVerse(S.dailyVerse);
     if(S.dailyVerse)window._showNotifSetupHint();
     renderSettings();
   });
@@ -7241,7 +7215,7 @@ var SYNC_SIMPLE_KEYS=[
   'app_arSize','app_tfSize','app_lineH',
   'app_reciter','app_speed','app_repeat','app_repeatCount',
   'autoAdvance','scrollFollowsAudio','hapticFeedback',
-  'dailyReminder','reminderTime','dailyVerse','dailyVerseTime',
+  'dailyReminder','dailyVerse',
   'bestStreak',
   'mushafMode','readerFont','mushafFont','mushafLineH',
   'mushafFontSize_qcf1','mushafFontSize_qcf2','mushafFontSize_qcf4',
@@ -7383,10 +7357,8 @@ function applySyncData(data){
   S.autoAdvance=localStorage.getItem('autoAdvance')==='true';
   S.scrollFollowsAudio=localStorage.getItem('scrollFollowsAudio')!=='false';
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
-  S.dailyReminder=localStorage.getItem('dailyReminder')==='true';
-  S.reminderTime=localStorage.getItem('reminderTime')||'08:00';
+  S.dailyReminder=localStorage.getItem('dailyReminder')!=='false';
   S.dailyVerse=localStorage.getItem('dailyVerse')==='true';
-  S.dailyVerseTime=localStorage.getItem('dailyVerseTime')||'08:00';
   S.mushafMode=localStorage.getItem('mushafMode')==='true';
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
   S.mushafFont=localStorage.getItem('mushafFont')||'qcf4';
@@ -7396,8 +7368,8 @@ function applySyncData(data){
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
   S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true';
   S.prayerToggles=(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return{}}})();
-  scheduleReminder(S.dailyReminder, S.reminderTime);
-  scheduleDailyVerse(S.dailyVerse, S.dailyVerseTime);
+  scheduleReminder(S.dailyReminder);
+  scheduleDailyVerse(S.dailyVerse);
   applyTheme();applySizes();
   // Sync in-memory bookmark map with whatever applySyncData wrote to localStorage.
   // Without this, _bmMap lags after a user-switch wipe or realtime push that
@@ -7540,13 +7512,11 @@ function _clearUserLocalData(){
   scheduleDailyVerse(false);    // cancels daily verse IDs 20-26
   scheduleStreakReminder();     // cancels streak ID 30 (streak=0 after log clear → no reschedule)
   localStorage.removeItem('dailyVerse');
-  localStorage.removeItem('dailyVerseTime');
   localStorage.removeItem('dailyVerseScheduledDate');
   /* Reset in-memory state to defaults */
   S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;S.showTafsir=true;S.bgAudio=false;
   S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;
-  S.hapticFeedback=true;S.dailyReminder=false;S.reminderTime='08:00';
-  S.dailyVerse=false;S.dailyVerseTime='08:00';
+  S.hapticFeedback=true;S.dailyReminder=true;S.dailyVerse=false;
   if(S.theme!=='light'){S.theme='light';applyTheme();}
   applySizes();
   /* Reset in-memory caches that mirror now-cleared localStorage keys */
