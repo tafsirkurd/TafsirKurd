@@ -901,17 +901,11 @@ window.GencineUI = {
       arrow.appendChild(chevron);
       body.appendChild(arrow);
 
-      if (sec.badge) {
-        var badge = document.createElement('div');
-        badge.className = 'genc-card-badge';
-        badge.textContent = 'نوی';
-        btn.appendChild(badge);
-      }
-
-      if (sec.newCount) {
+      var _badgeNum = sec.newCount || (sec.badge ? 1 : 0);
+      if (_badgeNum) {
         var notifDot = document.createElement('div');
         notifDot.className = 'genc-notif-count';
-        notifDot.textContent = sec.newCount;
+        notifDot.textContent = _badgeNum;
         btn.appendChild(notifDot);
       }
 
