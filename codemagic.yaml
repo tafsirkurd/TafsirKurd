@@ -16,7 +16,7 @@ workflows:
         BUNDLE_ID_WIDGET: com.tafsirkurd.app.TafsirKurdWidget
         TEAM_ID: 8KA7UDSC9D
       node: latest
-      xcode: 16.2
+      xcode: 26.0
 
     scripts:
       - name: Full clean
