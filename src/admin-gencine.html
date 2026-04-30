@@ -1891,13 +1891,23 @@ async function saveDua() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
-    cancelDuaEdit(); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
+    if (editId && savedRow) {
+        var idx = allDuas.findIndex(function(x){ return String(x.id) === String(editId); });
+        if (idx !== -1) allDuas[idx] = savedRow; else allDuas.push(savedRow);
+    } else if (!editId && savedRow) {
+        allDuas.push(savedRow);
+    }
+    renderDuaList();
+    cancelDuaEdit();
+    localStorage.removeItem('gencine_duas_v1');
+    var duaCountEl = document.getElementById('tab-count-duas');
+    if (duaCountEl) duaCountEl.textContent = allDuas.length;
     if (!editId && savedRow) {
         showBadgeDialog('Dua', function(hours) {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             supabase.from('gencine_duas').update({ badge_until: until }).eq('id', savedRow.id)
-                .then(function(res) { if (!res.error) { showNotification('نوی badge added.', 'success'); localStorage.removeItem('gencine_duas_v1'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی badge added.', 'success'); } });
         });
     }
 }
