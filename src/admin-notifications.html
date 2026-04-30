@@ -209,10 +209,16 @@
         .tmpl-count { background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600; }
         .tmpl-search { padding:5px 10px;border:1px solid var(--border-medium);border-radius:6px;background:var(--bg-app);color:var(--text-primary);font-size:12px;width:160px;font-family:var(--font-family); }
         .tmpl-search:focus { outline:none;border-color:#3b82f6; }
-        .tmpl-toggle { background:transparent;border:1px solid var(--border-medium);border-radius:6px;padding:4px 8px;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center; }
-        .tmpl-toggle:hover { border-color:#6b21a8;color:#6b21a8; }
         #templates-list { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px; }
         .tmpl-empty { grid-column:1/-1;font-size:13px;color:var(--text-tertiary);padding:12px 0; }
+        .page-tabs { display:flex;gap:0;border-bottom:2px solid var(--border-light);margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none; }
+        .page-tabs::-webkit-scrollbar { display:none; }
+        .page-tab { padding:11px 22px;font-size:14px;font-weight:600;font-family:inherit;color:var(--text-tertiary);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:color .15s;white-space:nowrap; }
+        .page-tab i { width:15px;height:15px; }
+        .page-tab:hover { color:var(--text-primary); }
+        .page-tab.active { color:#6b21a8;border-bottom-color:#6b21a8; }
+        .page-panel { display:none; }
+        .page-panel.active { display:block; }
     </style>
 
     <style id="early-sidebar-hide">
@@ -446,64 +452,69 @@
                     </div>
                 </div>
 
-                <!-- Templates -->
-                <div id="templates-section" style="display:none;margin-bottom:16px">
-                    <div class="tmpl-header">
-                        <div class="tmpl-title">
-                            <i data-lucide="bookmark" style="width:14px;height:14px"></i>
-                            Pinned Templates
-                            <span id="template-count" class="tmpl-count"></span>
-                        </div>
-                        <input id="template-search" class="tmpl-search" type="text" placeholder="Search templates…" oninput="filterTemplates()" />
-                        <button class="tmpl-toggle" onclick="toggleTemplates()" title="Collapse/expand">
-                            <i id="tmpl-toggle-icon" data-lucide="chevron-up" style="width:14px;height:14px"></i>
+                <!-- Page Tabs -->
+                <div class="page-tabs">
+                    <button class="page-tab active" id="tab-notifications" onclick="switchPageTab('notifications')">
+                        <i data-lucide="bell"></i> Notifications
+                    </button>
+                    <button class="page-tab" id="tab-templates" onclick="switchPageTab('templates')">
+                        <i data-lucide="bookmark"></i> Templates
+                        <span id="template-count" class="tmpl-count" style="display:none"></span>
+                    </button>
+                </div>
+
+                <!-- Notifications Panel -->
+                <div id="panel-notifications" class="page-panel active">
+                    <div class="filter-row">
+                        <select id="status-filter" onchange="applyFilters()">
+                            <option value="">All Statuses</option>
+                            <option value="draft">Draft</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="sending">Sending</option>
+                            <option value="sent">Sent</option>
+                            <option value="failed">Failed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <select id="platform-filter" onchange="applyFilters()">
+                            <option value="">All Platforms</option>
+                            <option value="all">All</option>
+                            <option value="android">Android</option>
+                            <option value="ios">iOS</option>
+                        </select>
+                        <div class="filter-spacer"></div>
+                        <span id="result-count" style="font-size:13px;color:var(--text-tertiary)"></span>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Title</th>
+                                    <th>Target</th>
+                                    <th>Deep Link</th>
+                                    <th>Date</th>
+                                    <th>Delivery</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notif-tbody">
+                                <tr id="loading-row">
+                                    <td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Templates Panel -->
+                <div id="panel-templates" class="page-panel">
+                    <div class="tmpl-header" style="margin-bottom:16px">
+                        <input id="template-search" class="tmpl-search" type="text" placeholder="Search templates…" oninput="filterTemplates()" style="flex:1;width:auto" />
+                        <button class="btn btn-primary" onclick="openCreateTemplateModal()" id="new-tmpl-btn">
+                            <i data-lucide="plus"></i> New Template
                         </button>
                     </div>
                     <div id="templates-list"></div>
-                </div>
-
-                <!-- Prayer Reminder Text Config -->
-                <!-- Filters -->
-                <div class="filter-row">
-                    <select id="status-filter" onchange="applyFilters()">
-                        <option value="">All Statuses</option>
-                        <option value="draft">Draft</option>
-                        <option value="scheduled">Scheduled</option>
-                        <option value="sending">Sending</option>
-                        <option value="sent">Sent</option>
-                        <option value="failed">Failed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                    <select id="platform-filter" onchange="applyFilters()">
-                        <option value="">All Platforms</option>
-                        <option value="all">All</option>
-                        <option value="android">Android</option>
-                        <option value="ios">iOS</option>
-                    </select>
-                    <div class="filter-spacer"></div>
-                    <span id="result-count" style="font-size:13px;color:var(--text-tertiary)"></span>
-                </div>
-
-                <!-- Table -->
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Status</th>
-                                <th>Title</th>
-                                <th>Target</th>
-                                <th>Deep Link</th>
-                                <th>Date</th>
-                                <th>Delivery</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="notif-tbody">
-                            <tr id="loading-row">
-                                <td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
 
             </div><!-- /content-area -->
@@ -775,6 +786,8 @@
                 if (_role === 'analyst') {
                     var btn = document.getElementById('new-notif-btn');
                     if (btn) btn.style.display = 'none';
+                    var tmplBtn = document.getElementById('new-tmpl-btn');
+                    if (tmplBtn) tmplBtn.style.display = 'none';
                 }
                 lucide.createIcons();
                 loadPage();
@@ -900,20 +913,15 @@
         }
 
         function renderTable(list) {
-            // Separate templates from regular notifications
+            // Update template count badge and render templates panel
             var templates = _notifications.filter(function(n) { return n.is_template; });
             var regular = list.filter(function(n) { return !n.is_template; });
-
-            // Render templates section
-            var section = document.getElementById('templates-section');
             var countEl = document.getElementById('template-count');
-            if (templates.length && _role !== 'analyst') {
-                section.style.display = 'block';
-                if (countEl) countEl.textContent = templates.length;
-                renderTemplateCards(templates);
-            } else {
-                section.style.display = 'none';
+            if (countEl) {
+                countEl.textContent = templates.length || '';
+                countEl.style.display = templates.length ? '' : 'none';
             }
+            renderTemplateCards(templates);
 
             // Render regular table
             var tbody = document.getElementById('notif-tbody');
@@ -937,25 +945,26 @@
             lucide.createIcons();
         }
 
-        var _templatesCollapsed = false;
-
         function renderTemplateCards(templates) {
             var tlist = document.getElementById('templates-list');
-            tlist.style.display = _templatesCollapsed ? 'none' : 'grid';
+            if (!tlist) return;
             while (tlist.firstChild) tlist.removeChild(tlist.firstChild);
-            if (!_templatesCollapsed) {
-                var q = ((document.getElementById('template-search') || {}).value || '').toLowerCase();
-                var shown = q ? templates.filter(function(n) {
-                    return (n.title || '').toLowerCase().indexOf(q) !== -1 || (n.body || '').toLowerCase().indexOf(q) !== -1;
-                }) : templates;
-                if (shown.length) {
-                    shown.forEach(function(n) { tlist.appendChild(buildTemplateCard(n)); });
-                } else {
-                    var empty = document.createElement('div');
-                    empty.className = 'tmpl-empty';
-                    empty.textContent = 'No templates match "' + q + '"';
-                    tlist.appendChild(empty);
-                }
+            var q = ((document.getElementById('template-search') || {}).value || '').toLowerCase();
+            var shown = q ? templates.filter(function(n) {
+                return (n.title || '').toLowerCase().indexOf(q) !== -1 || (n.body || '').toLowerCase().indexOf(q) !== -1;
+            }) : templates;
+            if (shown.length) {
+                shown.forEach(function(n) { tlist.appendChild(buildTemplateCard(n)); });
+            } else if (templates.length) {
+                var empty = document.createElement('div');
+                empty.className = 'tmpl-empty';
+                empty.textContent = 'No templates match "' + q + '"';
+                tlist.appendChild(empty);
+            } else {
+                var empty = document.createElement('div');
+                empty.className = 'tmpl-empty';
+                empty.textContent = 'No pinned templates yet. Create one with New Template.';
+                tlist.appendChild(empty);
             }
         }
 
@@ -965,13 +974,17 @@
             lucide.createIcons();
         }
 
-        function toggleTemplates() {
-            _templatesCollapsed = !_templatesCollapsed;
-            var icon = document.getElementById('tmpl-toggle-icon');
-            if (icon) icon.setAttribute('data-lucide', _templatesCollapsed ? 'chevron-down' : 'chevron-up');
-            var templates = _notifications.filter(function(n) { return n.is_template; });
-            renderTemplateCards(templates);
+        function switchPageTab(tab) {
+            ['notifications', 'templates'].forEach(function(t) {
+                document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+                document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+            });
             lucide.createIcons();
+        }
+
+        function openCreateTemplateModal() {
+            openCreateModal();
+            document.getElementById('f-is-template').checked = true;
         }
 
         function buildTemplateCard(n) {
