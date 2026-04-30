@@ -992,10 +992,15 @@
     async function loadConfig() {
         var supabase = window.adminAuth.getSupabase();
         if (!supabase) return;
+        var btn = document.getElementById('saveBtn');
+        var msg = document.getElementById('saveMsg');
+        btn.disabled = true; msg.className = 'save-msg'; msg.textContent = 'Loading…';
         var KEYS = ['update_stage','latest_version','min_ios_version','min_android_version',
                     'ios_store_url','android_store_url','update_release_time',
                     'update_enforce_delay_hours','soft_update_cooldown_days','update_whats_new'];
-        var { data } = await supabase.from('site_settings').select('key,value').in('key', KEYS);
+        var { data, error } = await supabase.from('site_settings').select('key,value').in('key', KEYS);
+        btn.disabled = false; msg.textContent = '';
+        if (error) { msg.className = 'save-msg err'; msg.textContent = '⚠ Load failed: ' + error.message; return; }
         var cfg = {};
         (data||[]).forEach(function(r){ cfg[r.key] = r.value; });
 
@@ -1071,15 +1076,29 @@
             {key:'update_sent_at',             value:new Date().toISOString()},
         ];
 
-        var errors = 0;
-        for (var i = 0; i < rows.length; i++) {
-            var r = await supabase.from('site_settings').upsert({key:rows[i].key,value:rows[i].value},{onConflict:'key'});
-            if (r.error) errors++;
-        }
+        var { error: saveErr } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
 
         btn.disabled = false;
-        if (errors) { msg.className='save-msg err'; msg.textContent='⚠ '+errors+' error(s)'; }
-        else { msg.className='save-msg ok'; msg.textContent='✓ Saved'; setTimeout(function(){msg.textContent='';},3000); }
+        if (saveErr) {
+            msg.className = 'save-msg err';
+            msg.textContent = '⚠ ' + saveErr.message;
+        } else {
+            msg.className = 'save-msg ok';
+            msg.textContent = '✓ Saved';
+            setTimeout(function(){ msg.textContent = ''; }, 3000);
+            // audit log
+            try {
+                await supabase.from('admin_audit_logs').insert([{
+                    email: sessionStorage.getItem('adminEmail') || '',
+                    action: 'update_config_saved',
+                    details: { stage: _stage, platform: _platform, latest: document.getElementById('uc_latest').value.trim() },
+                    page_slug: 'admin-updates',
+                    resource_type: 'update_config',
+                    severity: _stage === 'enforce' ? 'warning' : 'info'
+                }]);
+            } catch(e) {}
+            loadConfig();
+        }
     }
 
     document.getElementById('menu-toggle').addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('collapsed'); });
