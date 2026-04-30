@@ -2530,21 +2530,58 @@ window.GencineUI = {
         if (_nextBtn) _nextBtn.disabled = _curPage >= pdf.numPages;
       }
 
+      /* Return header height accounting for fullscreen hide */
+      function _hdrH() {
+        return (hdr && hdr.getBoundingClientRect().height) || 0;
+      }
+
+      /* Scroll slot to exactly below the sticky header — instant, no smooth */
       function _scrollToSlot(slot) {
         if (!_panelEl || !slot) return;
         var slotTop  = slot.getBoundingClientRect().top;
         var panelTop = _panelEl.getBoundingClientRect().top;
-        _panelEl.scrollTo({ top: _panelEl.scrollTop + (slotTop - panelTop), behavior: 'smooth' });
+        /* subtract header height: formula targets panelTop but first visible
+           pixel is panelTop + hdrHeight (sticky header sits inside the panel) */
+        _panelEl.scrollTop = _panelEl.scrollTop + (slotTop - panelTop) - _hdrH();
+      }
+
+      /* Jump to arbitrary page with retry loop.
+         Intermediate unrendered slots have min-height:300px placeholders.
+         After each instant scroll the IntersectionObserver renders newly
+         visible pages; retrying re-measures and corrects the offset. */
+      function _jumpToPage(n) {
+        var slot = slots[n - 1];
+        if (!slot) return;
+        renderPage(n, slot, pdf);
+        if (n > 1) renderPage(n - 1, slots[n - 2], pdf);
+        if (n < pdf.numPages) renderPage(n + 1, slots[n], pdf);
+
+        _scrollToSlot(slot);
+
+        var _attempts = 0;
+        function _retry() {
+          if (_attempts++ >= 4) return;
+          setTimeout(function() {
+            var slotTop  = slot.getBoundingClientRect().top;
+            var panelTop = _panelEl.getBoundingClientRect().top;
+            var off = slotTop - panelTop - _hdrH();
+            if (Math.abs(off) > 4) {
+              _panelEl.scrollTop = _panelEl.scrollTop + off;
+              _retry();
+            }
+          }, 160);
+        }
+        _retry();
       }
 
       function _syncPage() {
         if (!_panelEl) return;
         var panelTop = _panelEl.getBoundingClientRect().top;
-        var viewMid  = panelTop + _panelEl.clientHeight / 2;
+        var hdrH     = _hdrH();
+        /* page whose top edge is closest to just below the header */
         var best = 1, bestDist = Infinity;
         slots.forEach(function(sl, i) {
-          var r = sl.getBoundingClientRect();
-          var dist = Math.abs((r.top + r.height / 2) - viewMid);
+          var dist = Math.abs(sl.getBoundingClientRect().top - (panelTop + hdrH));
           if (dist < bestDist) { bestDist = dist; best = i + 1; }
         });
         if (best !== _curPage) { _curPage = best; _updatePageNav(); }
@@ -2557,10 +2594,16 @@ window.GencineUI = {
       if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler);
 
       if (_prevBtn) _prevBtn.onclick = function() {
-        if (_curPage > 1) _scrollToSlot(slots[_curPage - 2]);
+        if (_curPage > 1) {
+          renderPage(_curPage - 1, slots[_curPage - 2], pdf);
+          _scrollToSlot(slots[_curPage - 2]);
+        }
       };
       if (_nextBtn) _nextBtn.onclick = function() {
-        if (_curPage < pdf.numPages) _scrollToSlot(slots[_curPage]);
+        if (_curPage < pdf.numPages) {
+          renderPage(_curPage, slots[_curPage], pdf);
+          _scrollToSlot(slots[_curPage]);
+        }
       };
       if (_pageInd) {
         _pageInd.addEventListener('keydown', function(e) {
@@ -2568,8 +2611,8 @@ window.GencineUI = {
         });
         _pageInd.addEventListener('blur', function() {
           var n = parseInt(_pageInd.value);
-          if (!isNaN(n) && n >= 1 && n <= pdf.numPages && slots[n - 1]) {
-            _scrollToSlot(slots[n - 1]);
+          if (!isNaN(n) && n >= 1 && n <= pdf.numPages) {
+            _jumpToPage(n);
           } else {
             _pageInd.value = _curPage;
           }
