@@ -432,6 +432,13 @@
         if ((counts[cond] || 0) >= THRESHOLD) winner = cond;
       });
 
+      /* Read old condition before overwriting — used to detect a change */
+      var prevCondition = null;
+      try {
+        var _prev = JSON.parse(localStorage.getItem(_RAIN_KEY));
+        if (_prev) prevCondition = _prev.condition;
+      } catch(e3) {}
+
       try {
         localStorage.setItem(_RAIN_KEY, JSON.stringify({
           ts: Date.now(),
@@ -439,6 +446,18 @@
           sources: results  /* debug: what each source returned */
         }));
       } catch(e2) {}
+
+      /* If weather changed, bust the section cache so the next render picks
+         up the new card set. If gencine home is currently visible, re-draw
+         immediately so the weather slide appears without a manual refresh. */
+      if (winner !== prevCondition) {
+        clearCache();
+        if (window.GencineUI && GencineUI._view === 'home') {
+          setTimeout(function() {
+            if (window.GencineUI && GencineUI._view === 'home') GencineUI._draw();
+          }, 150);
+        }
+      }
     }).catch(function() { _fetchRainInProgress = false; });
   }
 
