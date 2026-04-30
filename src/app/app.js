@@ -340,19 +340,12 @@ window.ForceUpdate = (function(){
       }
 
       if (mode === 'hard') {
-        // Store safety check — fall back to soft if URL missing or store unreachable.
-        // Skip the check if no store URL configured (avoid hanging fetch).
-        var reachable;
+        // Only fall back to soft when there is literally no store URL to send the user to.
+        // The previous fetch-based reachability check caused a race on iOS where the HEAD
+        // request failed immediately (ATS / CORS) before the 2s safety timer, making every
+        // hard block silently degrade to soft.
         if (!_storeUrl) {
-          reachable = false;
-        } else {
-          reachable = await Promise.race([
-            isStoreReachable(_storeUrl),
-            new Promise(function(r){ setTimeout(function(){ r(true); }, 2000); }) // assume reachable after 2s
-          ]);
-        }
-        if (!reachable) {
-          console.log('[Update] HARD requested but store URL missing — falling back to SOFT');
+          console.log('[Update] HARD requested but no store URL — falling back to SOFT');
           if (!isSnoozed(cooldown, minVersion, cfg.update_sent_at)) showSoftBanner(cfg.update_whats_new, minVersion);
           return;
         }
