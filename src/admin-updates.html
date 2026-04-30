@@ -422,7 +422,7 @@
     <main class="main-content" style="padding:0;">
         <header class="topbar">
             <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
-            <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search..."></div>
+            <div class="topbar-search"><i data-lucide="search"></i><input type="text" id="topbar-search" name="topbar-search" placeholder="Search..." autocomplete="off"></div>
             <div class="topbar-actions">
                 <div class="session-timer" id="sessionTimer"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
                 <button class="topbar-btn" style="position:relative;">
@@ -526,8 +526,8 @@
                     </div>
                     <div class="uc-card-body" style="display:flex;flex-direction:column;gap:14px;">
                         <div>
-                            <label class="f-label">Latest published</label>
-                            <input type="text" id="uc_latest" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
+                            <label class="f-label" for="uc_latest">Latest published</label>
+                            <input type="text" id="uc_latest" name="uc_latest" class="form-input" placeholder="2.2.2" oninput="syncPreview()" autocomplete="off">
                             <div class="ver-btns">
                                 <button class="ver-btn" onclick="bumpVersion('patch')">+patch</button>
                                 <button class="ver-btn" onclick="bumpVersion('minor')">+minor</button>
@@ -535,15 +535,15 @@
                             </div>
                         </div>
                         <div class="ver-field" id="vfIos">
-                            <label class="f-label">Min iOS</label>
-                            <input type="text" id="uc_min_ios" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
+                            <label class="f-label" for="uc_min_ios">Min iOS</label>
+                            <input type="text" id="uc_min_ios" name="uc_min_ios" class="form-input" placeholder="2.2.2" oninput="syncPreview()" autocomplete="off">
                             <div class="ver-btns">
                                 <button class="ver-btn accent" onclick="setMinToLatest('uc_min_ios')">= Latest</button>
                             </div>
                         </div>
                         <div class="ver-field" id="vfAndroid">
-                            <label class="f-label">Min Android</label>
-                            <input type="text" id="uc_min_and" class="form-input" placeholder="2.2.2" oninput="syncPreview()">
+                            <label class="f-label" for="uc_min_and">Min Android</label>
+                            <input type="text" id="uc_min_and" name="uc_min_and" class="form-input" placeholder="2.2.2" oninput="syncPreview()" autocomplete="off">
                             <div class="ver-btns">
                                 <button class="ver-btn accent" onclick="setMinToLatest('uc_min_and')">= Latest</button>
                             </div>
@@ -937,6 +937,7 @@
         return svg;
     }
 
+    var _wnIdx = 0;
     function wnAddRow(value) {
         var list = document.getElementById('wnList');
         var row = document.createElement('div');
@@ -948,6 +949,8 @@
         inp.className = 'wn-input';
         inp.placeholder = 'What changed…';
         inp.value = value || '';
+        var uid = 'wn_bullet_' + (++_wnIdx);
+        inp.id = uid; inp.name = uid; inp.autocomplete = 'off';
         inp.oninput = syncBullets;
         inp.onkeydown = function(e) {
             if (e.key === 'Enter') { e.preventDefault(); wnAddRow(); }
