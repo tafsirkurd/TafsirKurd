@@ -2524,9 +2524,17 @@ window.GencineUI = {
       var _pageInd = document.getElementById('pdfPageInd');
 
       function _updatePageNav() {
-        if (_pageInd) _pageInd.textContent = _curPage + ' / ' + pdf.numPages;
+        if (_pageInd && document.activeElement !== _pageInd) _pageInd.value = _curPage;
+        if (_pageInd) _pageInd.max = pdf.numPages;
         if (_prevBtn) _prevBtn.disabled = _curPage <= 1;
         if (_nextBtn) _nextBtn.disabled = _curPage >= pdf.numPages;
+      }
+
+      function _scrollToSlot(slot) {
+        if (!_panelEl || !slot) return;
+        var slotTop  = slot.getBoundingClientRect().top;
+        var panelTop = _panelEl.getBoundingClientRect().top;
+        _panelEl.scrollTo({ top: _panelEl.scrollTop + (slotTop - panelTop), behavior: 'smooth' });
       }
 
       function _syncPage() {
@@ -2549,13 +2557,24 @@ window.GencineUI = {
       if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler);
 
       if (_prevBtn) _prevBtn.onclick = function() {
-        if (_curPage > 1 && slots[_curPage - 2])
-          slots[_curPage - 2].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (_curPage > 1) _scrollToSlot(slots[_curPage - 2]);
       };
       if (_nextBtn) _nextBtn.onclick = function() {
-        if (_curPage < pdf.numPages && slots[_curPage])
-          slots[_curPage].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (_curPage < pdf.numPages) _scrollToSlot(slots[_curPage]);
       };
+      if (_pageInd) {
+        _pageInd.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { _pageInd.blur(); }
+        });
+        _pageInd.addEventListener('blur', function() {
+          var n = parseInt(_pageInd.value);
+          if (!isNaN(n) && n >= 1 && n <= pdf.numPages && slots[n - 1]) {
+            _scrollToSlot(slots[n - 1]);
+          } else {
+            _pageInd.value = _curPage;
+          }
+        });
+      }
 
       _updatePageNav();
 
@@ -2566,6 +2585,7 @@ window.GencineUI = {
         clearTimeout(_navScrollTimer);
         if (_prevBtn) _prevBtn.onclick = null;
         if (_nextBtn) _nextBtn.onclick = null;
+        if (_pageInd) { _pageInd.onblur = null; _pageInd.onkeydown = null; _pageInd.value = ''; }
         if (_prevCleanup) _prevCleanup();
       };
     };
