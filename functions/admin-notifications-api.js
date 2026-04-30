@@ -148,6 +148,25 @@ export async function onRequest(context) {
             notified.push({ type: 'book', id: book.id, title: book.title, ...r });
         }
 
+        // ── New hadiths ───────────────────────────────────────────
+        const { data: hadiths } = await supabase
+            .from('gencine_hadiths')
+            .select('id,title,created_at')
+            .gte('created_at', twoHoursAgo)
+            .order('created_at', { ascending: false });
+
+        for (const h of (hadiths || [])) {
+            if (await alreadyNotified('hadith', h.id)) continue;
+            const r = await sendAutoNotif(
+                h.title || 'حەدیس',
+                'حەدیسێ نوی بەردەستە 📜',
+                null,
+                'hadith',
+                h.id
+            );
+            notified.push({ type: 'hadith', id: h.id, title: h.title, ...r });
+        }
+
         return json({ success: true, notified: notified.length, results: notified });
     }
 

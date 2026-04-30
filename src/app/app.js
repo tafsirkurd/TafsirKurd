@@ -851,6 +851,15 @@ function init(){
           };
           setTimeout(_bkOpen,400);
         }
+        if(extra.type==='hadith'){
+          App.tab('gencine');
+          var _hdTries=0;
+          var _hdOpen=function(){
+            if(window.GencineUI){GencineUI.section('hadith');return;}
+            if(_hdTries++<20)setTimeout(_hdOpen,300);
+          };
+          setTimeout(_hdOpen,400);
+        }
         if(extra.type==='streak'){
           App.tab('quran');
         }
