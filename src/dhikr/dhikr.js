@@ -13,12 +13,18 @@ function _sections(){
     { name:'books',  label:T('gencine.books','کتێب'),        sub:T('gencine.books_sub','کتێبێن ئیسلامی'),                       icon:'fas fa-book-open' }
   ];
   if (!_dbSections || !_dbSections.length) return all;
-  var activeMap = {}, orderMap = {}, badgeMap = {};
+  var now = new Date();
+  var activeMap = {}, orderMap = {}, badgeMap = {}, newCountMap = {};
   _dbSections.forEach(function(s){
     activeMap[s.key] = s.active;
     if (s.sort_order != null) orderMap[s.key] = s.sort_order;
-    if (s.badge_until && new Date(s.badge_until) > new Date()) badgeMap[s.key] = true;
+    if (s.badge_until && new Date(s.badge_until) > now) badgeMap[s.key] = true;
   });
+  function _countNew(arr){ return arr ? arr.filter(function(x){ return x.badge_until && new Date(x.badge_until) > now; }).length : 0; }
+  newCountMap['hadith'] = _countNew(_dbHadiths);
+  newCountMap['dua']    = _countNew(_dbDuas);
+  newCountMap['adhkar'] = _countNew(_dbAdhkar);
+  newCountMap['books']  = _countNew(_dbBooks);
   return all
     .filter(function(sec){ return activeMap[sec.name] !== false; })
     .sort(function(a, b){
@@ -26,7 +32,11 @@ function _sections(){
       var ob = orderMap[b.name] != null ? orderMap[b.name] : 999;
       return oa - ob;
     })
-    .map(function(sec){ return badgeMap[sec.name] ? Object.assign({}, sec, { badge: true }) : sec; });
+    .map(function(sec){
+      var s2 = badgeMap[sec.name] ? Object.assign({}, sec, { badge: true }) : sec;
+      var nc = newCountMap[sec.name] || 0;
+      return nc ? Object.assign({}, s2, { newCount: nc }) : s2;
+    });
 }
 
 /* ── 99 Names of Allah ── */
@@ -898,25 +908,31 @@ window.GencineUI = {
         btn.appendChild(badge);
       }
 
+      if (sec.newCount) {
+        var notifDot = document.createElement('div');
+        notifDot.className = 'genc-notif-count';
+        notifDot.textContent = sec.newCount;
+        btn.appendChild(notifDot);
+      }
+
       btn.appendChild(body);
       home.appendChild(btn);
     });
 
     /* Schedule re-render when the earliest active badge expires */
-    if (_dbSections) {
-      var soonest = null;
-      _dbSections.forEach(function(s) {
-        if (s.badge_until) {
-          var exp = new Date(s.badge_until).getTime();
-          if (exp > Date.now() && (!soonest || exp < soonest)) soonest = exp;
-        }
-      });
-      if (soonest) {
-        setTimeout(function() {
-          self._homeEl = null;
-          if (self._view === 'home') self._draw();
-        }, soonest - Date.now() + 100);
+    var _allBadgeItems = (_dbSections || []).concat(_dbHadiths || []).concat(_dbDuas || []).concat(_dbAdhkar || []).concat(_dbBooks || []);
+    var _soonest = null;
+    _allBadgeItems.forEach(function(s) {
+      if (s.badge_until) {
+        var exp = new Date(s.badge_until).getTime();
+        if (exp > Date.now() && (!_soonest || exp < _soonest)) _soonest = exp;
       }
+    });
+    if (_soonest) {
+      setTimeout(function() {
+        self._homeEl = null;
+        if (self._view === 'home') self._draw();
+      }, _soonest - Date.now() + 100);
     }
 
     this._homeEl = home;
