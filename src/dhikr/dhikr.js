@@ -2504,7 +2504,7 @@ window.GencineUI = {
       scr.onload = function() {
         window._pdfJsLoading = false;
         var lib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-        if (lib) { lib.GlobalWorkerOptions.workerSrc = _PDF_CDN + 'pdf.worker.min.js'; self._openPdfBook(book, container); }
+        if (lib) { lib.GlobalWorkerOptions.workerSrc = _PDF_CDN + 'pdf.worker.min.js'; self._draw(); }
         else { loadingEl.textContent = 'PDF.js failed to load'; }
       };
       scr.onerror = function() { window._pdfJsLoading = false; loadingEl.textContent = 'Failed to load PDF viewer'; };
@@ -2520,15 +2520,46 @@ window.GencineUI = {
       standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
       disableFontFace: true
     });
+    function _showPdfRetry() {
+      while (loadingEl.firstChild) loadingEl.removeChild(loadingEl.firstChild);
+      var errMsg = document.createElement('div');
+      errMsg.textContent = T('gencine.books_error', 'هەلەیەک هەیە');
+      errMsg.style.marginBottom = '12px';
+      var retryBtn = document.createElement('button');
+      retryBtn.textContent = T('gencine.retry', 'دووبارە هەوڵ بدە');
+      retryBtn.className = 'btn-primary';
+      retryBtn.style.cssText = 'padding:10px 24px;font-size:1rem;border-radius:12px';
+      retryBtn.onclick = function() { self._draw(); };
+      loadingEl.appendChild(errMsg);
+      loadingEl.appendChild(retryBtn);
+    }
+
+    /* Abort and show retry if stalled for 20 s with no progress */
+    var _loadTimer = setTimeout(function() {
+      try { loadingTask.destroy(); } catch(e3) {}
+      _showPdfRetry();
+    }, 20000);
+
     loadingTask.onProgress = function(data) {
       if (data.total > 0) {
         var pct = Math.min(100, Math.round(data.loaded / data.total * 100));
         progressPct.textContent = pct + '%';
         progressFill.style.width = pct + '%';
+        clearTimeout(_loadTimer);
+        if (pct < 100) {
+          _loadTimer = setTimeout(function() {
+            try { loadingTask.destroy(); } catch(e3) {}
+            _showPdfRetry();
+          }, 20000);
+        }
       }
     };
-    loadingTask.promise.then(doLoad).catch(function(e) {
-      loadingEl.textContent = T('gencine.books_error', 'هەلەیەک هەیە');
+    loadingTask.promise.then(function(pdf) {
+      clearTimeout(_loadTimer);
+      doLoad(pdf);
+    }).catch(function(e) {
+      clearTimeout(_loadTimer);
+      _showPdfRetry();
       console.error('PDF load error:', e);
     });
   },
