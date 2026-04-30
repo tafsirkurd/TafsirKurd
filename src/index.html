@@ -6756,22 +6756,6 @@ function setupContactForm() {
 
             if (error) throw error;
 
-            // Send Discord notification (don't await, send async)
-            fetch('/discord-notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: 'new_message',
-                    title: '📧 New Contact Message!',
-                    message: `From: ${name} (${email})`,
-                    details: `Subject: ${subject}`,
-                    data: {
-                        userName: name,
-                        email: email,
-                        messageContent: message
-                    }
-                })
-            }).catch(err => console.error('Notification error:', err));
 
             formMessage.textContent = 'نامە گەهشت، ل نێزیک دێ بەرسڤا تە هێتە دان.';
             formMessage.className = 'form-message success';

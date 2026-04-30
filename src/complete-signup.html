@@ -863,22 +863,6 @@
                             })
                         }).catch(err => console.error('Failed to save notification settings:', err));
 
-                        // Send confirmation notification to admin via Discord
-                        fetch('/discord-notify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                type: 'notification_enabled',
-                                title: '🔔 Notifications Enabled!',
-                                message: `${userData.full_name || userData.userName || 'User'} enabled email reminders`,
-                                details: `Email: ${userData.email || user.email || 'Not provided'}`,
-                                data: {
-                                    userName: userData.full_name || userData.userName || 'Unknown',
-                                    userEmail: userData.email || user.email || 'Not provided',
-                                    timestamp: new Date().toISOString()
-                                }
-                            })
-                        }).catch(err => console.error('Failed to send Telegram notification:', err));
                     }
 
                     // Translation key: notification_email_enabled

@@ -142,27 +142,6 @@
             } else {
                 console.log('Profile created successfully');
 
-                // Send Discord notification for new user
-                try {
-                    await fetch('/discord-notify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'new_user',
-                            title: registrationSource === 'google' ? '🎉 New Google User!' : '🎉 New User Signup!',
-                            message: `A new user has joined via ${registrationSource}`,
-                            data: {
-                                userName: profile.display_name,
-                                email: profile.email,
-                                registrationSource: registrationSource,
-                                picture: profile.avatar_url,
-                                timestamp: new Date().toISOString()
-                            }
-                        })
-                    }).catch(err => console.error('Discord notification failed:', err));
-                } catch (notifError) {
-                    console.error('Failed to send Discord notification:', notifError);
-                }
             }
         } catch (error) {
             console.error('Error in createProfile:', error);
