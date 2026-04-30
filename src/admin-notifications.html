@@ -202,6 +202,17 @@
         .stat-icon i { width: 17px; height: 17px; }
         .stat-value { font-size: 28px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; line-height: 1; letter-spacing: -0.5px; }
         .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); }
+
+        /* ── Pinned Templates ────────────────────────────────────── */
+        .tmpl-header { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
+        .tmpl-title { font-size:12px;font-weight:600;color:#6b21a8;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px;flex:1; }
+        .tmpl-count { background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600; }
+        .tmpl-search { padding:5px 10px;border:1px solid var(--border-medium);border-radius:6px;background:var(--bg-app);color:var(--text-primary);font-size:12px;width:160px;font-family:var(--font-family); }
+        .tmpl-search:focus { outline:none;border-color:#3b82f6; }
+        .tmpl-toggle { background:transparent;border:1px solid var(--border-medium);border-radius:6px;padding:4px 8px;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center; }
+        .tmpl-toggle:hover { border-color:#6b21a8;color:#6b21a8; }
+        #templates-list { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px; }
+        .tmpl-empty { grid-column:1/-1;font-size:13px;color:var(--text-tertiary);padding:12px 0; }
     </style>
 
     <style id="early-sidebar-hide">
@@ -437,10 +448,18 @@
 
                 <!-- Templates -->
                 <div id="templates-section" style="display:none;margin-bottom:16px">
-                    <div style="font-size:12px;font-weight:600;color:#6b21a8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-                        <i data-lucide="bookmark" style="width:14px;height:14px"></i> Pinned Templates
+                    <div class="tmpl-header">
+                        <div class="tmpl-title">
+                            <i data-lucide="bookmark" style="width:14px;height:14px"></i>
+                            Pinned Templates
+                            <span id="template-count" class="tmpl-count"></span>
+                        </div>
+                        <input id="template-search" class="tmpl-search" type="text" placeholder="Search templates…" oninput="filterTemplates()" />
+                        <button class="tmpl-toggle" onclick="toggleTemplates()" title="Collapse/expand">
+                            <i id="tmpl-toggle-icon" data-lucide="chevron-up" style="width:14px;height:14px"></i>
+                        </button>
                     </div>
-                    <div id="templates-list" style="display:flex;flex-direction:column;gap:8px"></div>
+                    <div id="templates-list"></div>
                 </div>
 
                 <!-- Prayer Reminder Text Config -->
@@ -887,11 +906,11 @@
 
             // Render templates section
             var section = document.getElementById('templates-section');
-            var tlist = document.getElementById('templates-list');
-            while (tlist.firstChild) tlist.removeChild(tlist.firstChild);
+            var countEl = document.getElementById('template-count');
             if (templates.length && _role !== 'analyst') {
                 section.style.display = 'block';
-                templates.forEach(function(n) { tlist.appendChild(buildTemplateCard(n)); });
+                if (countEl) countEl.textContent = templates.length;
+                renderTemplateCards(templates);
             } else {
                 section.style.display = 'none';
             }
@@ -915,6 +934,43 @@
             } else {
                 regular.forEach(function(n) { tbody.appendChild(buildRow(n)); });
             }
+            lucide.createIcons();
+        }
+
+        var _templatesCollapsed = false;
+
+        function renderTemplateCards(templates) {
+            var tlist = document.getElementById('templates-list');
+            tlist.style.display = _templatesCollapsed ? 'none' : 'grid';
+            while (tlist.firstChild) tlist.removeChild(tlist.firstChild);
+            if (!_templatesCollapsed) {
+                var q = ((document.getElementById('template-search') || {}).value || '').toLowerCase();
+                var shown = q ? templates.filter(function(n) {
+                    return (n.title || '').toLowerCase().indexOf(q) !== -1 || (n.body || '').toLowerCase().indexOf(q) !== -1;
+                }) : templates;
+                if (shown.length) {
+                    shown.forEach(function(n) { tlist.appendChild(buildTemplateCard(n)); });
+                } else {
+                    var empty = document.createElement('div');
+                    empty.className = 'tmpl-empty';
+                    empty.textContent = 'No templates match "' + q + '"';
+                    tlist.appendChild(empty);
+                }
+            }
+        }
+
+        function filterTemplates() {
+            var templates = _notifications.filter(function(n) { return n.is_template; });
+            renderTemplateCards(templates);
+            lucide.createIcons();
+        }
+
+        function toggleTemplates() {
+            _templatesCollapsed = !_templatesCollapsed;
+            var icon = document.getElementById('tmpl-toggle-icon');
+            if (icon) icon.setAttribute('data-lucide', _templatesCollapsed ? 'chevron-down' : 'chevron-up');
+            var templates = _notifications.filter(function(n) { return n.is_template; });
+            renderTemplateCards(templates);
             lucide.createIcons();
         }
 
