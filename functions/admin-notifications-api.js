@@ -159,7 +159,7 @@ export async function onRequest(context) {
             if (await alreadyNotified('hadith', h.id)) continue;
             const r = await sendAutoNotif(
                 h.title || 'حەدیس',
-                'حەدیسێ نوی بەردەستە 📜',
+                null,
                 null,
                 'hadith',
                 h.id

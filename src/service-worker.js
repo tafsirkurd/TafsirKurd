@@ -145,6 +145,41 @@ self.addEventListener('fetch', event => {
   );
 });
 
+// ── Background push notifications ────────────────────────────────────────────
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch(e) {}
+
+  const title = (data.notification && data.notification.title) || data.title || 'TafsirKurd';
+  const body  = (data.notification && data.notification.body)  || data.body  || '';
+  const icon  = '/assets/images/favicon-96x96.png';
+  const badge = '/assets/images/favicon-96x96.png';
+  const image = (data.notification && data.notification.image) || data.image || null;
+  const extra = data.data || {};
+
+  const options = { body, icon, badge, data: extra, dir: 'rtl', lang: 'ku' };
+  if (image) options.image = image;
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const extra = event.notification.data || {};
+  const url = '/app/index.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if (c.url.includes('/app/') && 'focus' in c) {
+          c.postMessage({ type: 'NOTIF_TAP', extra });
+          return c.focus();
+        }
+      }
+      return clients.openWindow(url + (extra.type ? '?notif=' + extra.type : ''));
+    })
+  );
+});
+
 // ── Message: force update ─────────────────────────────────────────────────────
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
