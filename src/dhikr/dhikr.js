@@ -1129,9 +1129,17 @@ window.GencineUI = {
     var list = document.createElement('div');
     list.className = 'dua-list';
 
+    var _now = Date.now();
     duas.forEach(function(dua){
       var card = document.createElement('div');
       card.className = 'dua-card';
+
+      if (dua.badge_until && new Date(dua.badge_until).getTime() > _now) {
+        var newChip = document.createElement('div');
+        newChip.className = 'new-badge';
+        newChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
+        card.appendChild(newChip);
+      }
 
       var ar = document.createElement('div');
       ar.className = 'dua-card-ar';
@@ -1648,6 +1656,13 @@ window.GencineUI = {
         var textCol = document.createElement('div');
         textCol.className = 'hadith-title-col';
 
+        if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
+          var hNewChip = document.createElement('span');
+          hNewChip.className = 'new-badge';
+          hNewChip.style.cssText = 'display:inline-block;margin-bottom:4px';
+          hNewChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
+          textCol.appendChild(hNewChip);
+        }
         var titleText = document.createElement('div');
         titleText.className = 'hadith-title-text';
         titleText.textContent = h.title || (h.ar ? h.ar.substring(0, 55) + '…' : '');
