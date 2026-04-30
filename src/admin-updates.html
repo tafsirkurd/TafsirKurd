@@ -1086,9 +1086,19 @@
             msg.className = 'save-msg err';
             msg.textContent = '⚠ ' + saveErr.message;
         } else {
+            var stageLabels = { release: '🟢 Release', soft: '🟡 Soft', enforce: '🔴 Enforce' };
             msg.className = 'save-msg ok';
-            msg.textContent = '✓ Saved';
-            setTimeout(function(){ msg.textContent = ''; }, 3000);
+            msg.textContent = '✓ Saved as ' + (stageLabels[_stage] || _stage);
+            setTimeout(function(){ msg.textContent = ''; }, 4000);
+            // Update summary pills directly — avoids stale read from DB replica
+            var stagePill = document.getElementById('uc-stage-pill');
+            if (stagePill) stagePill.textContent = stageLabels[_stage] || _stage;
+            var latestPill = document.getElementById('uc-latest-pill');
+            if (latestPill) latestPill.textContent = document.getElementById('uc_latest').value.trim() || '—';
+            var iosPill = document.getElementById('uc-ios-pill');
+            if (iosPill) iosPill.textContent = minIosSave || '—';
+            var andPill = document.getElementById('uc-android-pill');
+            if (andPill) andPill.textContent = minAndSave || '—';
             // audit log
             try {
                 await supabase.from('admin_audit_logs').insert([{
@@ -1100,7 +1110,6 @@
                     severity: _stage === 'enforce' ? 'warning' : 'info'
                 }]);
             } catch(e) {}
-            loadConfig();
         }
     }
 
