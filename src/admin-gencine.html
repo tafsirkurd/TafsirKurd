@@ -1820,6 +1820,18 @@ function renderDuaList() {
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hand-heart'); icon.appendChild(ico);
         var body = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; body.appendChild(arEl);
+        var dTimeLeft = _badgeTimeLeft(dua.badge_until);
+        if (dTimeLeft) {
+            var dPill = mke('div', 'section-badge-pill');
+            dPill.appendChild(document.createTextNode('نوی '));
+            var dTime = mke('span', 'section-badge-time'); dTime.textContent = dTimeLeft; dPill.appendChild(dTime);
+            var dRm = mke('button', 'section-badge-remove'); dRm.type = 'button'; dRm.textContent = '×'; dRm.title = 'Remove badge';
+            dRm.onclick = (function(dd){ return function(e){ e.preventDefault();
+                window.adminAuth.getSupabase().from('gencine_duas').update({ badge_until: null }).eq('id', dd.id)
+                    .then(function(res){ if (!res.error){ dd.badge_until = null; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); } });
+            }; })(dua);
+            dPill.appendChild(dRm); body.appendChild(dPill);
+        }
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = dua.ku; body.appendChild(kuEl);
         var meta = mke('div', 'item-card-meta');
         var cb = mke('span', 'badge badge-cat'); cb.textContent = dua.category_key; meta.appendChild(cb);
@@ -1874,11 +1886,20 @@ async function saveDua() {
         sort_order: parseInt(document.getElementById('dua-sort').value) || 0 };
     var supabase = window.adminAuth.getSupabase();
     var editId = document.getElementById('dua-edit-id').value;
-    var r = editId ? await supabase.from('gencine_duas').update(payload).eq('id', editId)
-                   : await supabase.from('gencine_duas').insert(payload);
+    var r = editId ? await supabase.from('gencine_duas').update(payload).eq('id', editId).select()
+                   : await supabase.from('gencine_duas').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
     cancelDuaEdit(); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
+    if (!editId && savedRow) {
+        showBadgeDialog('Dua', function(hours) {
+            var d = new Date(); d.setHours(d.getHours() + hours);
+            var until = d.toISOString();
+            supabase.from('gencine_duas').update({ badge_until: until }).eq('id', savedRow.id)
+                .then(function(res) { if (!res.error) { showNotification('نوی badge added.', 'success'); localStorage.removeItem('gencine_duas_v1'); } });
+        });
+    }
 }
 async function deleteDua(id) {
     if (!confirm('Delete this dua?')) return;
@@ -1903,6 +1924,18 @@ function renderHadithList() {
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','scroll-text'); icon.appendChild(ico);
         var body = mke('div', 'item-card-body');
         var numBadge = mke('span', 'badge badge-num'); numBadge.textContent = '#' + (idx + 1); body.appendChild(numBadge);
+        var hTimeLeft = _badgeTimeLeft(h.badge_until);
+        if (hTimeLeft) {
+            var hPill = mke('div', 'section-badge-pill');
+            hPill.appendChild(document.createTextNode('نوی '));
+            var hTime = mke('span', 'section-badge-time'); hTime.textContent = hTimeLeft; hPill.appendChild(hTime);
+            var hRm = mke('button', 'section-badge-remove'); hRm.type = 'button'; hRm.textContent = '×'; hRm.title = 'Remove badge';
+            hRm.onclick = (function(hh){ return function(e){ e.preventDefault();
+                window.adminAuth.getSupabase().from('gencine_hadiths').update({ badge_until: null }).eq('id', hh.id)
+                    .then(function(res){ if (!res.error){ hh.badge_until = null; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); } });
+            }; })(h);
+            hPill.appendChild(hRm); body.appendChild(hPill);
+        }
         if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; body.appendChild(titleEl); }
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; body.appendChild(arEl);
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; body.appendChild(kuEl);
@@ -1966,7 +1999,6 @@ async function saveHadith() {
     var ar = document.getElementById('hadith-ar').value.trim(); var ku = document.getElementById('hadith-ku').value.trim();
     if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
     var editId = document.getElementById('hadith-edit-id').value;
-    /* Auto sort_order: keep existing on edit; for new hadiths use max+10 */
     var sortVal = editId
         ? (parseInt(document.getElementById('hadith-sort').value) || 0)
         : (allHadiths.reduce(function(m,h){ return Math.max(m, h.sort_order||0); }, 0) + 10);
@@ -1974,11 +2006,30 @@ async function saveHadith() {
         source: hadithSources.length ? hadithSources.join('\n') : null,
         sort_order: sortVal };
     var supabase = window.adminAuth.getSupabase();
-    var r = editId ? await supabase.from('gencine_hadiths').update(payload).eq('id', editId)
-                   : await supabase.from('gencine_hadiths').insert(payload);
+    var r = editId ? await supabase.from('gencine_hadiths').update(payload).eq('id', editId).select()
+                   : await supabase.from('gencine_hadiths').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Hadith updated.' : 'Hadith added.', 'success');
-    cancelHadithEdit(); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
+    if (editId && savedRow) {
+        var idx = allHadiths.findIndex(function(x){ return String(x.id) === String(editId); });
+        if (idx !== -1) allHadiths[idx] = savedRow; else allHadiths.push(savedRow);
+    } else if (!editId && savedRow) {
+        allHadiths.push(savedRow);
+    }
+    renderHadithList();
+    cancelHadithEdit();
+    localStorage.removeItem('gencine_hadiths_v1');
+    var countEl = document.getElementById('tab-count-hadiths');
+    if (countEl) countEl.textContent = allHadiths.length;
+    if (!editId && savedRow) {
+        showBadgeDialog('Hadith', function(hours) {
+            var d = new Date(); d.setHours(d.getHours() + hours);
+            var until = d.toISOString();
+            supabase.from('gencine_hadiths').update({ badge_until: until }).eq('id', savedRow.id)
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی badge added.', 'success'); } });
+        });
+    }
 }
 async function deleteHadith(id) {
     if (!confirm('Delete this hadith?')) return;
@@ -2402,7 +2453,20 @@ function renderAdhkarList() {
         arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-bottom:4px';
         var meta = mke('div','item-card-meta');
         meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + ' · order: ' + item.sort_order + (item.active ? '' : ' · hidden');
-        body.appendChild(catBadge); body.appendChild(arEl); body.appendChild(meta);
+        body.appendChild(catBadge);
+        var aTimeLeft = _badgeTimeLeft(item.badge_until);
+        if (aTimeLeft) {
+            var aPill = mke('div', 'section-badge-pill');
+            aPill.appendChild(document.createTextNode('نوی '));
+            var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
+            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove badge';
+            aRm.onclick = (function(ii){ return function(e){ e.preventDefault();
+                window.adminAuth.getSupabase().from('gencine_adhkar').update({ badge_until: null }).eq('id', ii.id)
+                    .then(function(res){ if (!res.error){ ii.badge_until = null; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); } });
+            }; })(item);
+            aPill.appendChild(aRm); body.appendChild(aPill);
+        }
+        body.appendChild(arEl); body.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(id){ return function(){ editAdhkar(id); }; })(item.id)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteAdhkar(id); }; })(item.id)));
@@ -2469,6 +2533,14 @@ async function saveAdhkar() {
     localStorage.removeItem('gencine_adhkar_v1');
     var countEl = document.getElementById('tab-count-adhkar');
     if (countEl) countEl.textContent = allAdhkar.length;
+    if (!editId && savedRow) {
+        showBadgeDialog('Adhkar', function(hours) {
+            var d = new Date(); d.setHours(d.getHours() + hours);
+            var until = d.toISOString();
+            supabase.from('gencine_adhkar').update({ badge_until: until }).eq('id', savedRow.id)
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی badge added.', 'success'); } });
+        });
+    }
 }
 
 async function deleteAdhkar(id) {
@@ -2577,6 +2649,18 @@ function renderBooksList() {
         }
         var body = mke('div', 'item-card-body');
         var titleEl = mke('div', 'item-card-title'); titleEl.textContent = book.title_ku || book.title_ar || '(no title)'; body.appendChild(titleEl);
+        var bTimeLeft = _badgeTimeLeft(book.badge_until);
+        if (bTimeLeft) {
+            var bPill = mke('div', 'section-badge-pill');
+            bPill.appendChild(document.createTextNode('نوی '));
+            var bTime = mke('span', 'section-badge-time'); bTime.textContent = bTimeLeft; bPill.appendChild(bTime);
+            var bRm = mke('button', 'section-badge-remove'); bRm.type = 'button'; bRm.textContent = '×'; bRm.title = 'Remove badge';
+            bRm.onclick = (function(bb){ return function(e){ e.preventDefault();
+                window.adminAuth.getSupabase().from('gencine_books').update({ badge_until: null }).eq('id', bb.id)
+                    .then(function(res){ if (!res.error){ bb.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_books_v1'); } });
+            }; })(book);
+            bPill.appendChild(bRm); body.appendChild(bPill);
+        }
         if (book.author_ku || book.author_ar) {
             var auth = mke('div', 'item-card-ku'); auth.textContent = book.author_ku || book.author_ar; body.appendChild(auth);
         }
@@ -2775,6 +2859,15 @@ async function saveBook() {
     if (isNew) {
         var bookList = document.getElementById('book-list');
         if (bookList && bookList.firstChild) bookList.firstChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var newBook = allBooks.find(function(b){ return b.sort_order === autoSort; });
+        if (newBook) {
+            showBadgeDialog('Book', function(hours) {
+                var d = new Date(); d.setHours(d.getHours() + hours);
+                var until = d.toISOString();
+                window.adminAuth.getSupabase().from('gencine_books').update({ badge_until: until }).eq('id', newBook.id)
+                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('نوی badge added.', 'success'); } });
+            });
+        }
     }
 }
 
