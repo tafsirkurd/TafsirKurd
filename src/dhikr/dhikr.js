@@ -1009,9 +1009,11 @@ window.GencineUI = {
       rows.className = 'adhkar-list-rows';
 
       keys.forEach(function(key, ki) {
-        var count = _getAdhkar(key).length;
+        var catItems = _getAdhkar(key);
+        var count = catItems.length;
         var label = (window.t && window.t('adhkar.' + key)) || ADHKAR_CAT_LABELS[key] || key;
         var meta  = ADHKAR_ICONS[key] || { icon:'fas fa-circle' };
+        var newInCat = catItems.filter(function(x){ return x.badge_until && new Date(x.badge_until).getTime() > Date.now(); }).length;
 
         var row = document.createElement('button');
         row.className = 'adhkar-list-row' + (ki === keys.length - 1 ? ' adhkar-list-row-last' : '');
@@ -1035,7 +1037,12 @@ window.GencineUI = {
 
         var right = document.createElement('div');
         right.className = 'adhkar-list-right';
-        if (count) {
+        if (newInCat) {
+          var newDot = document.createElement('span');
+          newDot.className = 'adhkar-new-dot';
+          newDot.textContent = newInCat;
+          right.appendChild(newDot);
+        } else if (count) {
           var cnt = document.createElement('span');
           cnt.className = 'adhkar-list-count';
           cnt.textContent = count;
@@ -1077,6 +1084,13 @@ window.GencineUI = {
     items.forEach(function(item){
       var card = document.createElement('div');
       card.className = 'adhkar-card';
+
+      if (item.badge_until && new Date(item.badge_until).getTime() > Date.now()) {
+        var aNewChip = document.createElement('div');
+        aNewChip.className = 'new-badge';
+        aNewChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
+        card.appendChild(aNewChip);
+      }
 
       var ar = document.createElement('div');
       ar.className = 'adhkar-card-ar';
@@ -2217,7 +2231,7 @@ window.GencineUI = {
         card.appendChild(coverWrap);
 
         /* NEW badge */
-        if (book.created_at && (Date.now() - new Date(book.created_at).getTime()) < 86400000) {
+        if (book.badge_until && new Date(book.badge_until).getTime() > Date.now()) {
           var nb = document.createElement('div'); nb.className = 'new-badge'; nb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; card.appendChild(nb);
         }
 
