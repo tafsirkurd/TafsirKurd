@@ -1499,8 +1499,7 @@ window.GencineUI = {
 
       if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
         var hDetailChip = document.createElement('span');
-        hDetailChip.className = 'iv-new-badge';
-        hDetailChip.style.cssText = 'display:inline-block;margin-bottom:10px';
+        hDetailChip.style.cssText = 'display:inline-block;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:6px;margin-bottom:10px;letter-spacing:.04em';
         hDetailChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
         detail.appendChild(hDetailChip);
       }
@@ -1676,10 +1675,10 @@ window.GencineUI = {
         var textCol = document.createElement('div');
         textCol.className = 'hadith-title-col';
 
+        if (h.badge_until) { console.log('[badge] hadith', h.id, 'badge_until=', h.badge_until, 'active=', new Date(h.badge_until).getTime() > Date.now()); }
         if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
           var hNewChip = document.createElement('span');
-          hNewChip.className = 'iv-new-badge';
-          hNewChip.style.cssText = 'margin-bottom:4px;display:block';
+          hNewChip.style.cssText = 'display:inline-block;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:6px;margin-bottom:5px;letter-spacing:.04em';
           hNewChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
           textCol.appendChild(hNewChip);
         }
