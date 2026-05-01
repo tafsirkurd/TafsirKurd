@@ -1674,7 +1674,7 @@
                     btn.textContent = 'Sent! (v…' + j.version.slice(-6) + ')';
                     btn.style.background = '#10b981';
                     var verBadge = document.getElementById('i18nVersionBadge');
-                    if (verBadge) verBadge.textContent = 'v' + j.version;
+                    if (verBadge) verBadge.textContent = 'v…' + j.version.slice(-6);
                     setTimeout(function() {
                         btn.textContent = 'Force Clear All Caches';
                         btn.style.background = '#ef4444';

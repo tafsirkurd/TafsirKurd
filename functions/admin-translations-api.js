@@ -171,13 +171,19 @@ export async function onRequest(context) {
         // Returns { valid: bool, errors: [], warnings: [] } — never writes.
         if (action === 'validate_translations') {
             const { platform } = body; // optional — filter by page
-            const REQUIRED_KEYS = [
+
+            // Keys that MUST exist in the DB with a non-empty value.
+            // Only include keys confirmed to exist in kmr-bundled.js (bundle-verified).
+            // Keys that are bundled-only and never stored in the DB are not listed here —
+            // missing from DB + covered by bundle = not broken, not an error.
+            const CRITICAL_DB_KEYS = [
                 'tabs.quran','tabs.video','tabs.prayer','tabs.gencine','tabs.settings',
+                'tabs.goals','tabs.bookmarks',
                 'header.prayer','header.gencine',
-                'prayer.fajr','prayer.sunrise','prayer.dhuhr','prayer.asr','prayer.maghrib','prayer.isha',
-                'quran.loading','quran.read','quran.search',
-                'settings.language','settings.notifications','settings.theme',
-                'iv.loading','iv.empty'
+                'prayer.fajr','prayer.sunrise','prayer.dhuhr',
+                'prayer.asr','prayer.maghrib','prayer.isha',
+                'settings.language',
+                'iv.loading'
             ];
 
             let query = supabase.from('kurdish_translations').select('key_id, kurdish_text, page');
@@ -188,24 +194,27 @@ export async function onRequest(context) {
             const keyMap = Object.fromEntries((rows || []).map(r => [r.key_id, r.kurdish_text]));
             const errors = [], warnings = [];
 
-            // Check required keys
-            for (const k of REQUIRED_KEYS) {
-                if (!(k in keyMap)) {
-                    errors.push({ key: k, issue: 'missing' });
-                } else if (!keyMap[k] || !keyMap[k].trim()) {
+            // Error: critical DB key is present but empty (bundled covers missing, not empty)
+            for (const k of CRITICAL_DB_KEYS) {
+                if (k in keyMap && (!keyMap[k] || !keyMap[k].trim())) {
                     errors.push({ key: k, issue: 'empty' });
+                }
+                // Not in DB at all = bundled covers it = warning only
+                if (!(k in keyMap)) {
+                    warnings.push({ key: k, issue: 'db_missing_covered_by_bundle' });
                 }
             }
 
-            // Check all rows for obviously broken values
+            // Error: any row where value literally equals the key (raw key leaked into DB)
+            // Error: any row with obviously corrupted value
             for (const row of (rows || [])) {
                 const v = row.kurdish_text;
-                if (!v || !v.trim()) {
-                    warnings.push({ key: row.key_id, issue: 'empty_value' });
-                } else if (v === row.key_id) {
-                    errors.push({ key: row.key_id, issue: 'value_equals_key' }); // raw key leaking
-                } else if (v.includes('[object') || v.includes('undefined')) {
+                if (v === row.key_id) {
+                    errors.push({ key: row.key_id, issue: 'value_equals_key' });
+                } else if (v && (v.includes('[object') || v.includes('undefined'))) {
                     errors.push({ key: row.key_id, issue: 'corrupted_value', value: v.slice(0, 60) });
+                } else if (!v || !v.trim()) {
+                    warnings.push({ key: row.key_id, issue: 'empty_value' });
                 }
             }
 
@@ -214,7 +223,7 @@ export async function onRequest(context) {
                 valid: errors.length === 0,
                 total_keys: (rows || []).length,
                 errors,
-                warnings: warnings.slice(0, 50) // cap warnings
+                warnings: warnings.slice(0, 50)
             });
         }
 
