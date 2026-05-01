@@ -381,7 +381,25 @@ function _getSupabase() {
   return window._appSupabase || null;
 }
 
-var _bgRefreshDone = false; /* only refresh once per app session */
+var _lastBgRefresh = 0; /* timestamp of last silent re-fetch (ms) */
+
+/* Silent background re-fetch — at most once per 60s, updates badges/new content */
+function _triggerBgRefresh() {
+  if (!navigator.onLine || _loadingDb) return;
+  if (Date.now() - _lastBgRefresh < 60000) return;
+  _lastBgRefresh = Date.now();
+  _fetchDbData(function() {
+    var ui = window.GencineUI;
+    if (!ui) return;
+    ui._homeEl = null;
+    if (ui._view === 'home') ui._draw();
+    else if (ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
+    else if (ui._view === 'books') ui._draw();
+    else if (ui._view === 'tasbih') ui._draw();
+    else if (ui._view === 'adhkar') ui._draw();
+    else if (ui._view === 'dua') ui._draw();
+  });
+}
 
 /* Load from cache instantly, then re-fetch once in background per session */
 function _initDbData(onDone) {
@@ -409,20 +427,7 @@ function _initDbData(onDone) {
     if (onDone) onDone();
     if (window._splashReadyGencine) window._splashReadyGencine();
     /* One silent background refresh per session to pick up admin changes */
-    if (!_bgRefreshDone && navigator.onLine) {
-      _bgRefreshDone = true;
-      _fetchDbData(function() {
-        var ui = window.GencineUI;
-        if (!ui) return;
-        ui._homeEl = null;
-        if (ui._view === 'home') ui._draw();
-        else if (ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
-        else if (ui._view === 'books') ui._draw();
-        else if (ui._view === 'tasbih') ui._draw();
-        else if (ui._view === 'adhkar') ui._draw();
-        else if (ui._view === 'dua') ui._draw();
-      });
-    }
+    _triggerBgRefresh();
   } else {
     _fetchDbData(onDone);
   }
@@ -672,8 +677,8 @@ window.GencineUI = {
         self._draw();
       });
     } else {
-      /* Already loaded — just redraw, no background re-fetch */
       this._draw();
+      _triggerBgRefresh();
     }
   },
 
