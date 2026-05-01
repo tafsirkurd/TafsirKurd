@@ -1375,7 +1375,7 @@
             if (!container) return;
             container.innerHTML = '';
             if (!logs || !logs.length) {
-                container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">هیچ کارێک تۆمار نەکراوە</div>';
+                container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">No actions logged yet.</div>';
                 return;
             }
             logs.forEach(function(log) {
@@ -1484,7 +1484,7 @@
             btn.disabled = true;
             btn.textContent = 'Sending...';
             try {
-                var token = window.adminAuth && window.adminAuth.getToken ? window.adminAuth.getToken() : '';
+                var token = sessionStorage.getItem('adminToken') || '';
                 var r = await fetch('/admin-translations-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
