@@ -1676,7 +1676,6 @@ window.GencineUI = {
         var textCol = document.createElement('div');
         textCol.className = 'hadith-title-col';
 
-        if (h.badge_until) { console.log('[badge] hadith', h.id, 'badge_until=', h.badge_until, 'active=', new Date(h.badge_until).getTime() > Date.now()); }
         if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
           var hNewChip = document.createElement('span');
           hNewChip.style.cssText = 'display:inline-block;width:fit-content;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:6px;margin-bottom:5px;letter-spacing:.04em';
