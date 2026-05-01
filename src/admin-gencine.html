@@ -1908,7 +1908,6 @@ async function saveDua() {
             var until = d.toISOString();
             supabase.from('gencine_duas').update({ badge_until: until }).eq('id', savedRow.id)
                 .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی badge added.', 'success'); } });
-            _setBadgeOnSection('dua', until);
         });
     }
 }
@@ -1917,7 +1916,6 @@ async function deleteDua(id) {
     var r = await window.adminAuth.getSupabase().from('gencine_duas').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Dua deleted.', 'success'); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
-    _clearSectionBadgeIfEmpty('dua', allDuas);
 }
 
 /* ── HADITHS ── */
@@ -2040,7 +2038,6 @@ async function saveHadith() {
             var until = d.toISOString();
             supabase.from('gencine_hadiths').update({ badge_until: until }).eq('id', savedRow.id)
                 .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی badge added.', 'success'); } });
-            _setBadgeOnSection('hadith', until);
         });
     }
 }
@@ -2049,7 +2046,6 @@ async function deleteHadith(id) {
     var r = await window.adminAuth.getSupabase().from('gencine_hadiths').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
-    _clearSectionBadgeIfEmpty('hadith', allHadiths);
 }
 
 /* ── SECTIONS ── */
@@ -2277,16 +2273,7 @@ function showBadgeDialog(key, onConfirm, onSkip) {
         if (e.target === overlay) { overlay.remove(); if (onSkip) onSkip(); }
     });
 }
-function _setBadgeOnSection(sectionKey, until) {
-    var sb = window.adminAuth.getSupabase(); if (!sb) return;
-    sb.from('gencine_sections').upsert({ key: sectionKey, badge_until: until }, { onConflict: 'key' })
-        .then(function() { localStorage.removeItem('gencine_sections_v1'); });
-}
-function _clearSectionBadgeIfEmpty(sectionKey, itemsArray) {
-    var now = Date.now();
-    var anyActive = (itemsArray || []).some(function(x){ return x.badge_until && new Date(x.badge_until).getTime() > now; });
-    if (!anyActive) _setBadgeOnSection(sectionKey, null);
-}
+
 async function _doToggleSection(key, newActive, badgeHours) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var badgeUntil = null;
@@ -2563,7 +2550,6 @@ async function saveAdhkar() {
             var until = d.toISOString();
             supabase.from('gencine_adhkar').update({ badge_until: until }).eq('id', savedRow.id)
                 .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی badge added.', 'success'); } });
-            _setBadgeOnSection('adhkar', until);
         });
     }
 }
@@ -2578,7 +2564,6 @@ async function deleteAdhkar(id) {
     localStorage.removeItem('gencine_adhkar_v1');
     var countEl = document.getElementById('tab-count-adhkar');
     if (countEl) countEl.textContent = allAdhkar.length;
-    _clearSectionBadgeIfEmpty('adhkar', allAdhkar);
 }
 
 /* ── 99 NAMES ── */
@@ -2892,7 +2877,6 @@ async function saveBook() {
                 var until = d.toISOString();
                 window.adminAuth.getSupabase().from('gencine_books').update({ badge_until: until }).eq('id', newBook.id)
                     .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('نوی badge added.', 'success'); } });
-                _setBadgeOnSection('books', until);
             });
         }
     }
@@ -2936,7 +2920,6 @@ async function deleteBook(id) {
     var r = await _booksApi({ action: 'delete', id: id });
     if (r.error) { showNotification('Delete failed: ' + JSON.stringify(r.error), 'error'); return; }
     showNotification('Book deleted.', 'success'); await loadBooks(); localStorage.removeItem('gencine_books_v1');
-    _clearSectionBadgeIfEmpty('books', allBooks);
 }
 
 /* ── Theme toggle ── */

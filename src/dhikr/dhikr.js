@@ -901,11 +901,10 @@ window.GencineUI = {
       arrow.appendChild(chevron);
       body.appendChild(arrow);
 
-      var _badgeNum = sec.newCount || (sec.badge ? 1 : 0);
-      if (_badgeNum) {
+      if (sec.newCount) {
         var notifDot = document.createElement('div');
         notifDot.className = 'genc-notif-count';
-        notifDot.textContent = _badgeNum;
+        notifDot.textContent = sec.newCount;
         btn.appendChild(notifDot);
       }
 
