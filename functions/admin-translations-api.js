@@ -29,7 +29,7 @@ export async function onRequest(context) {
 
         const { data: session } = await supabase
             .from('admin_sessions')
-            .select('user_id, admin_users(role)')
+            .select('user_id, admin_users(role, full_name, email)')
             .eq('token', token)
             .gt('expires_at', new Date().toISOString())
             .single();
@@ -153,6 +153,17 @@ export async function onRequest(context) {
             ));
             const errors = results.filter(r => r.error).length;
             return json({ success: true, updated: items.length - errors, errors });
+        }
+
+        // ── LOG admin activity ────────────────────────────────────────────
+        if (action === 'log_activity') {
+            const { action_type, description } = body;
+            if (!action_type || !description) return json({ error: 'action_type and description required' }, 400, corsHeaders);
+            const adminName = session.admin_users?.full_name || session.admin_users?.email || 'Admin';
+            const { error } = await supabase.from('admin_activity_log')
+                .insert({ admin_name: adminName, action_type, description });
+            if (error) return json({ error: error.message }, 500, corsHeaders);
+            return json({ success: true });
         }
 
         // ── SET badge_until on any gencine content row ────────────────────

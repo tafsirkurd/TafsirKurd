@@ -786,6 +786,16 @@
                 <div class="section-label">Recently Visited</div>
                 <div class="quick-actions" id="quickActionsGrid"></div>
 
+                <!-- ══ Admin Actions Log ══ -->
+                <div class="timeline-section card-animate" style="animation-delay:460ms">
+                    <div class="timeline-header">
+                        <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                    </div>
+                    <div class="timeline-list" id="adminActionsLog">
+                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
+                    </div>
+                </div>
+
                 <!-- ══ Activity Timeline ══ -->
                 <div class="timeline-section card-animate" style="animation-delay:480ms">
                     <div class="timeline-header">
@@ -1306,6 +1316,59 @@
 
 
         /* ═══════════════════════════════════════════════
+           ADMIN ACTIONS LOG
+           ═══════════════════════════════════════════════ */
+        var ACTION_META = {
+            hadith_add:  { icon: 'fa-scroll',          color: '#8b5cf6', label: 'فەرمودە زیادکرا' },
+            hadith_edit: { icon: 'fa-scroll',          color: '#8b5cf6', label: 'فەرمودە گۆڕدرا' },
+            dua_add:     { icon: 'fa-person-praying',  color: '#10b981', label: 'دوعا زیادکرا' },
+            dua_edit:    { icon: 'fa-person-praying',  color: '#10b981', label: 'دوعا گۆڕدرا' },
+            adhkar_add:  { icon: 'fa-heart',           color: '#f59e0b', label: 'زکر زیادکرا' },
+            adhkar_edit: { icon: 'fa-heart',           color: '#f59e0b', label: 'زکر گۆڕدرا' },
+            book_add:    { icon: 'fa-book-open',       color: '#3b82f6', label: 'کتێب زیادکرا' },
+            book_edit:   { icon: 'fa-book-open',       color: '#3b82f6', label: 'کتێب گۆڕدرا' },
+            notif_send:  { icon: 'fa-bell',            color: '#ef4444', label: 'ئاگادارکردنەوە نێردرا' },
+        };
+
+        function buildAdminActions(logs) {
+            var container = document.getElementById('adminActionsLog');
+            if (!container) return;
+            container.innerHTML = '';
+            if (!logs || !logs.length) {
+                container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">هیچ کارێک تۆمار نەکراوە</div>';
+                return;
+            }
+            logs.forEach(function(log) {
+                var meta = ACTION_META[log.action_type] || { icon: 'fa-circle-dot', color: 'var(--text-secondary)', label: log.action_type };
+                var item = document.createElement('div');
+                item.className = 'timeline-item';
+
+                var dot = document.createElement('div');
+                dot.className = 'timeline-dot';
+                dot.style.cssText = 'background:' + meta.color + ';box-shadow:0 0 0 3px ' + meta.color + '22';
+                dot.innerHTML = '<i class="fas ' + meta.icon + '" style="font-size:.55rem;color:#fff"></i>';
+
+                var content = document.createElement('div');
+                content.className = 'timeline-content';
+
+                var label = document.createElement('div');
+                label.className = 'timeline-text';
+                label.style.cssText = 'direction:rtl;text-align:right';
+                label.innerHTML = '<span style="font-weight:700;color:' + meta.color + '">' + meta.label + '</span> — ' + (log.description || '');
+
+                var time = document.createElement('div');
+                time.className = 'timeline-time';
+                time.textContent = log.admin_name + ' · ' + getTimeAgo(new Date(log.created_at));
+
+                content.appendChild(label);
+                content.appendChild(time);
+                item.appendChild(dot);
+                item.appendChild(content);
+                container.appendChild(item);
+            });
+        }
+
+        /* ═══════════════════════════════════════════════
            ACTIVITY TIMELINE
            ═══════════════════════════════════════════════ */
         function buildActivityTimeline(users, messages, videos) {
@@ -1489,7 +1552,9 @@
                 /* 12 — daily active last 7 days */
                 supabase.from('user_data').select('updated_at').gte('updated_at', ago7.toISOString()),
                 /* 13 — recent audit logs (super_admin only) */
-                supabase.from('admin_audit_logs').select('id,created_at,action,severity,email,ip_address').order('created_at', { ascending: false }).limit(8)
+                supabase.from('admin_audit_logs').select('id,created_at,action,severity,email,ip_address').order('created_at', { ascending: false }).limit(8),
+                /* 14 — recent admin actions */
+                supabase.from('admin_activity_log').select('id,admin_name,action_type,description,created_at').order('created_at', { ascending: false }).limit(15)
             ]);
 
             // Shorthand
@@ -1610,6 +1675,9 @@
 
             // ─── Activity Timeline ───
             buildActivityTimeline(users, messages, videos);
+
+            // ─── Admin Actions ───
+            buildAdminActions(dat(14));
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));
