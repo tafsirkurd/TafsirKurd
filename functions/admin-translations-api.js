@@ -166,6 +166,96 @@ export async function onRequest(context) {
             return json({ success: true });
         }
 
+        // ── VALIDATE translations before publish ──────────────────────────
+        // Checks critical keys for empty values and structural issues.
+        // Returns { valid: bool, errors: [], warnings: [] } — never writes.
+        if (action === 'validate_translations') {
+            const { platform } = body; // optional — filter by page
+            const REQUIRED_KEYS = [
+                'tabs.quran','tabs.video','tabs.prayer','tabs.gencine','tabs.settings',
+                'header.prayer','header.gencine',
+                'prayer.fajr','prayer.sunrise','prayer.dhuhr','prayer.asr','prayer.maghrib','prayer.isha',
+                'quran.loading','quran.read','quran.search',
+                'settings.language','settings.notifications','settings.theme',
+                'iv.loading','iv.empty'
+            ];
+
+            let query = supabase.from('kurdish_translations').select('key_id, kurdish_text, page');
+            if (platform) query = query.eq('page', platform);
+            const { data: rows, error: qErr } = await query;
+            if (qErr) return json({ error: qErr.message }, 500, corsHeaders);
+
+            const keyMap = Object.fromEntries((rows || []).map(r => [r.key_id, r.kurdish_text]));
+            const errors = [], warnings = [];
+
+            // Check required keys
+            for (const k of REQUIRED_KEYS) {
+                if (!(k in keyMap)) {
+                    errors.push({ key: k, issue: 'missing' });
+                } else if (!keyMap[k] || !keyMap[k].trim()) {
+                    errors.push({ key: k, issue: 'empty' });
+                }
+            }
+
+            // Check all rows for obviously broken values
+            for (const row of (rows || [])) {
+                const v = row.kurdish_text;
+                if (!v || !v.trim()) {
+                    warnings.push({ key: row.key_id, issue: 'empty_value' });
+                } else if (v === row.key_id) {
+                    errors.push({ key: row.key_id, issue: 'value_equals_key' }); // raw key leaking
+                } else if (v.includes('[object') || v.includes('undefined')) {
+                    errors.push({ key: row.key_id, issue: 'corrupted_value', value: v.slice(0, 60) });
+                }
+            }
+
+            return json({
+                success: true,
+                valid: errors.length === 0,
+                total_keys: (rows || []).length,
+                errors,
+                warnings: warnings.slice(0, 50) // cap warnings
+            });
+        }
+
+        // ── BUMP i18n cache version (force all apps to clear translation cache) ─
+        // Also records i18n_last_published_at so dashboard can show it.
+        if (action === 'bump_i18n_version') {
+            const newVersion = String(Date.now());
+            const publishedAt = new Date().toISOString();
+
+            const [vErr, tErr] = await Promise.all([
+                supabase.from('site_settings')
+                    .upsert({ key: 'i18n_cache_version', value: newVersion }, { onConflict: 'key' })
+                    .then(r => r.error),
+                supabase.from('site_settings')
+                    .upsert({ key: 'i18n_last_published_at', value: publishedAt }, { onConflict: 'key' })
+                    .then(r => r.error)
+            ]);
+
+            if (vErr || tErr) return json({ error: (vErr || tErr).message }, 500, corsHeaders);
+
+            // Log activity
+            const adminName = session.admin_users?.full_name || session.admin_users?.email || 'Admin';
+            await supabase.from('admin_activity_log').insert({
+                admin_name: adminName,
+                action_type: 'i18n_version_bump',
+                description: 'i18n cache version bumped to ' + newVersion + ' — all devices will clear translation cache'
+            });
+
+            return json({ success: true, version: newVersion, published_at: publishedAt });
+        }
+
+        // ── SET i18n health reporting enabled/disabled ────────────────────
+        if (action === 'set_i18n_health_reporting') {
+            const { enabled } = body;
+            if (typeof enabled !== 'boolean') return json({ error: 'enabled (boolean) required' }, 400, corsHeaders);
+            const { error } = await supabase.from('site_settings')
+                .upsert({ key: 'i18n_health_reporting_enabled', value: enabled ? 'true' : 'false' }, { onConflict: 'key' });
+            if (error) return json({ error: error.message }, 500, corsHeaders);
+            return json({ success: true, enabled });
+        }
+
         // ── SET badge_until on any gencine content row ────────────────────
         if (action === 'set_badge') {
             const ALLOWED = ['gencine_hadiths','gencine_duas','gencine_adhkar','gencine_books','gencine_sections'];

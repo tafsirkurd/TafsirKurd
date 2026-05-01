@@ -1080,14 +1080,14 @@ function init(){
 }
 
 /* ===== LIVE TRANSLATION UPDATE ===== */
-// When the admin saves a translation, i18n.js detects the change (polling every 8s),
-// fires i18n:updated, and we immediately re-render whichever tab is currently visible.
-document.addEventListener('i18n:updated', function(){
-  // Invalidate all pre-rendered caches — next tab visit rebuilds with fresh strings
+// Fires after every atomic translation swap in i18n.js (remote merge or version purge).
+// Also called via window._i18nRerenderHook which i18n.js calls directly after a swap.
+function _rerenderCurrentTab(){
+  // Invalidate all pre-rendered caches so next tab visit rebuilds with fresh strings
   _renderHash={};
   if(window.PrayerUI) PrayerUI.invalidate();
 
-  // Re-render the currently visible tab right now so the user sees the change immediately
+  // Re-render the currently visible tab right now
   var tab=S.tab;
   if(tab==='bookmarks'){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}
   else if(tab==='goals'){renderGoals();_renderHash.goals=_tabHash('goals');}
@@ -1095,8 +1095,13 @@ document.addEventListener('i18n:updated', function(){
   else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
   else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
   else if(tab==='gencine'&&window.GencineUI){GencineUI._homeEl=null;GencineUI._draw();}
-  // quran tab uses data-i18n attributes — applyTranslations() already handled it above
-});
+  // quran tab uses data-i18n attributes — applyTranslations() handled by i18n.js before dispatch
+}
+
+// Register hook so i18n.js can trigger re-render directly after atomic swap
+window._i18nRerenderHook = _rerenderCurrentTab;
+
+document.addEventListener('i18n:updated', _rerenderCurrentTab);
 
 /* ===== DATA LOADING ===== */
 var _dataReady={quran:false,tafsir:false};
@@ -6919,6 +6924,22 @@ function initSupabase(cb){
         console.log('[PrayerCache] remote version changed to',cfg.prayerCacheVersion,'— all caches purged');
       }
     }
+    // Remote i18n cache version — if admin bumped it, purge translation cache
+    // so every device fetches fresh translations from Supabase on next open.
+    if(cfg.i18nCacheVersion){
+      var _storedI18nVer=localStorage.getItem('i18n_schema_ver')||'';
+      if(_storedI18nVer!==String(cfg.i18nCacheVersion)){
+        if(window.i18n&&window.i18n.purgeCache)window.i18n.purgeCache();
+        try{localStorage.setItem('i18n_schema_ver',String(cfg.i18nCacheVersion));}catch(e){}
+        console.log('[i18n] remote version changed to',cfg.i18nCacheVersion,'— translation cache purged');
+        // Flag so health report on this session includes the purge event
+        try{sessionStorage.setItem('i18n_version_purged','1');}catch(e){}
+      }
+    }
+    // i18n health reporting gate — admin can disable/enable remotely
+    if(cfg.i18nHealthReportingEnabled!==undefined){
+      window.i18nHealthReportingEnabled = cfg.i18nHealthReportingEnabled!=='false';
+    }
   }).catch(function(e){
     console.warn('Supabase config fetch failed (offline?)');
     if(!S.supabase&&cb)cb();
@@ -9721,13 +9742,24 @@ function startApp(){
     var _i18nDone = false;
     function _afterI18n(){
       if(_i18nDone)return; _i18nDone=true;
+
+      // Safe render guard: if bundled didn't load, UI must not show raw keys.
+      // Layer 1 (kmr-bundled.js) is synchronous — if it's missing, log the critical error
+      // and let initLang's health report surface it in the admin dashboard.
+      if(window.i18n && !window.i18n.isHealthy()){
+        console.error('[i18n] UNHEALTHY: bundled translations not loaded or key count too low.',
+          window.i18n.getStatus());
+        // Still proceed — app is usable with whatever keys loaded; health report will fire.
+      }
+
       init();
       i18n.applyTranslations();
       if(window._splashReadyI18n){window._splashReadyI18n();window._splashReadyI18n=null;}
     }
     setTimeout(_afterI18n, 3000); /* fallback — never wait more than 3s */
     i18n.initLang().then(function(){
-      console.log('[Startup] i18n ready',Date.now()-_startupT0,'ms');
+      console.log('[Startup] i18n ready',Date.now()-_startupT0,'ms',
+        window.i18n.getStatus ? window.i18n.getStatus() : '');
       _afterI18n();
     }).catch(_afterI18n);
   } else {

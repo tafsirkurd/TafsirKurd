@@ -808,6 +808,53 @@
                     </div>
                 </div>
 
+                <!-- ══ Translation Cache Health ══ -->
+                <div class="card card-animate" id="i18nHealthCard" style="animation-delay:420ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
+                            Translation Cache Health
+                        </h3>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <span id="i18nVersionBadge" style="font-size:11px;color:var(--text-tertiary);padding:3px 10px;background:var(--bg-hover);border-radius:12px;font-weight:600;">version —</span>
+                            <span id="i18nPublishedBadge" style="font-size:11px;color:var(--text-tertiary);">last published —</span>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;" title="Toggle anonymous health reporting from all devices">
+                                <span>Reports</span>
+                                <input type="checkbox" id="i18nReportingToggle" onchange="toggleI18nReporting(this.checked)" style="cursor:pointer;">
+                            </label>
+                            <button onclick="validateI18nTranslations()" style="font-size:12px;color:#fff;background:#8b5cf6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
+                                Validate
+                            </button>
+                            <button onclick="forceI18nCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps i18n_cache_version — all devices clear translation cache on next open">
+                                Force Clear All Caches
+                            </button>
+                        </div>
+                    </div>
+                    <div id="i18nHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
+                        <div style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">Loading...</div>
+                    </div>
+                    <div class="table-container" style="max-height:280px;overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Platform</th>
+                                    <th>Status</th>
+                                    <th>Layer</th>
+                                    <th>Keys</th>
+                                    <th>Bundle</th>
+                                    <th>Fetch</th>
+                                    <th>Cache Ver</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="i18nHealthBody">
+                                <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- ══ Charts ══ -->
                 <div class="charts-grid">
                     <div class="chart-card card-animate" style="animation-delay:440ms">
@@ -1510,6 +1557,193 @@
         }
 
         /* ═══════════════════════════════════════════════
+           TRANSLATION HEALTH
+           ═══════════════════════════════════════════════ */
+
+        var I18N_STATUS_META = {
+            fresh_fetch:              { color: '#10b981', label: 'Fresh Fetch',          icon: '↓' },
+            valid_cache:              { color: '#3b82f6', label: 'Valid Cache',           icon: '✓' },
+            fetch_failed_using_bundle:{ color: '#f59e0b', label: 'Net Fail / Bundled',   icon: '⚠' },
+            fetch_failed_no_bundle:   { color: '#ef4444', label: '⚠ No Bundle',          icon: '✗' },
+            rejected_remote_payload:  { color: '#dc2626', label: 'Payload Rejected',     icon: '⛔' },
+            version_purge:            { color: '#8b5cf6', label: 'Cache Purged',         icon: '↺' }
+        };
+
+        function buildI18nHealth(events, meta) {
+            var summaryEl = document.getElementById('i18nHealthSummary');
+            var bodyEl    = document.getElementById('i18nHealthBody');
+            var verBadge  = document.getElementById('i18nVersionBadge');
+            var pubBadge  = document.getElementById('i18nPublishedBadge');
+            var toggle    = document.getElementById('i18nReportingToggle');
+
+            if (meta) {
+                if (verBadge && meta.i18n_cache_version)    verBadge.textContent = 'v…' + String(meta.i18n_cache_version).slice(-6);
+                if (pubBadge && meta.i18n_last_published_at && meta.i18n_last_published_at.length > 4)
+                    pubBadge.textContent = 'published ' + getTimeAgo(new Date(meta.i18n_last_published_at));
+                if (toggle && meta.i18n_health_reporting_enabled !== undefined)
+                    toggle.checked = meta.i18n_health_reporting_enabled !== 'false';
+            }
+
+            if (!summaryEl || !bodyEl) return;
+
+            if (!events || !events.length) {
+                summaryEl.innerHTML = '<span style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">No reports yet — will appear once the app opens after deploy.</span>';
+                bodyEl.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:13px;">No data</td></tr>';
+                return;
+            }
+
+            // Summary badges
+            var counts = {};
+            events.forEach(function(e) { counts[e.status] = (counts[e.status] || 0) + 1; });
+
+            // Extra derived counters
+            var bundledOnlyCount = events.filter(function(e) {
+                return e.bundled_loaded === false || e.status === 'fetch_failed_no_bundle';
+            }).length;
+            var rejectedTotal = events.reduce(function(s, e) { return s + (e.rejected_count || 0); }, 0);
+            var swapTotal     = events.reduce(function(s, e) { return s + (e.swap_count || 0); }, 0);
+            var fetchTimes    = events.filter(function(e) { return e.fetch_time_ms > 0; }).map(function(e) { return e.fetch_time_ms; });
+            var avgFetch      = fetchTimes.length ? Math.round(fetchTimes.reduce(function(s,v){return s+v;},0)/fetchTimes.length) : null;
+
+            var summaryParts = Object.keys(I18N_STATUS_META).map(function(s) {
+                var n = counts[s] || 0;
+                if (!n) return '';
+                var m = I18N_STATUS_META[s];
+                return '<div style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;">' +
+                    '<span style="font-size:14px;color:' + m.color + '">' + m.icon + '</span>' +
+                    '<span style="font-weight:700;color:' + m.color + '">' + n + '</span>' +
+                    '<span style="color:var(--text-secondary)">' + m.label + '</span></div>';
+            });
+
+            // Derived stat chips
+            if (bundledOnlyCount > 0)
+                summaryParts.push('<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;"><span style="color:#ef4444">📵</span><span style="font-weight:700;color:#ef4444">' + bundledOnlyCount + '</span><span style="color:var(--text-secondary)">Bundled-only devices</span></div>');
+            if (rejectedTotal > 0)
+                summaryParts.push('<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;"><span style="color:#dc2626">⛔</span><span style="font-weight:700;color:#dc2626">' + rejectedTotal + '</span><span style="color:var(--text-secondary)">Payloads rejected</span></div>');
+            if (swapTotal > 0)
+                summaryParts.push('<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;"><span style="color:#10b981">↺</span><span style="font-weight:700;color:#10b981">' + swapTotal + '</span><span style="color:var(--text-secondary)">Atomic swaps</span></div>');
+            if (avgFetch !== null)
+                summaryParts.push('<div style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;"><span style="color:var(--text-tertiary)">⏱</span><span style="font-weight:700;color:var(--text-secondary)">' + avgFetch + 'ms</span><span style="color:var(--text-secondary)">avg fetch</span></div>');
+
+            summaryEl.innerHTML = summaryParts.join('');
+
+            // Table rows
+            bodyEl.innerHTML = '';
+            events.forEach(function(ev) {
+                var m = I18N_STATUS_META[ev.status] || { color: '#999', label: ev.status || '—', icon: '?' };
+                var tr = document.createElement('tr');
+                var plat = ev.platform || '—';
+                var platIcon = plat === 'ios' ? '🍎' : plat === 'android' ? '🤖' : '🌐';
+                var statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:' + m.color + '22;color:' + m.color + '">' + m.label + '</span>';
+                var bundledOk = ev.bundled_loaded === false
+                    ? '<span style="color:#ef4444;font-weight:700">✗</span>'
+                    : ev.bundled_loaded === true
+                        ? '<span style="color:#10b981">✓</span>'
+                        : '<span style="color:var(--text-tertiary)">—</span>';
+                var err = ev.error_msg
+                    ? '<span style="color:#ef4444;font-size:11px" title="' + escHtml(ev.error_msg) + '">' + escHtml(ev.error_msg.slice(0, 28)) + '…</span>'
+                    : '<span style="color:var(--text-tertiary)">—</span>';
+                tr.innerHTML =
+                    '<td style="font-size:12px;color:var(--text-tertiary)">' + getTimeAgo(new Date(ev.created_at)) + '</td>' +
+                    '<td style="font-size:12px">' + platIcon + ' ' + plat + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td style="font-size:12px;font-weight:600;color:var(--text-secondary)">' + (ev.layer_used || '—') + '</td>' +
+                    '<td style="font-size:12px;color:var(--text-secondary)">' + (ev.key_count !== null ? ev.key_count : '—') + '</td>' +
+                    '<td style="text-align:center">' + bundledOk + '</td>' +
+                    '<td style="font-size:11px;color:var(--text-tertiary)">' + (ev.fetch_time_ms ? ev.fetch_time_ms + 'ms' : '—') + '</td>' +
+                    '<td style="font-size:11px;color:var(--text-tertiary);font-family:monospace">' + (ev.cache_version ? ev.cache_version.slice(-6) : '—') + '</td>' +
+                    '<td>' + err + '</td>';
+                bodyEl.appendChild(tr);
+            });
+        }
+
+        async function forceI18nCacheRefresh() {
+            var btn = event.target;
+            if (!btn) return;
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            try {
+                var token = sessionStorage.getItem('adminToken') || '';
+                var r = await fetch('/admin-translations-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: 'bump_i18n_version' })
+                });
+                var j = await r.json();
+                if (j.success) {
+                    btn.textContent = 'Sent! (v…' + j.version.slice(-6) + ')';
+                    btn.style.background = '#10b981';
+                    var verBadge = document.getElementById('i18nVersionBadge');
+                    if (verBadge) verBadge.textContent = 'v' + j.version;
+                    setTimeout(function() {
+                        btn.textContent = 'Force Clear All Caches';
+                        btn.style.background = '#ef4444';
+                        btn.disabled = false;
+                    }, 4000);
+                } else {
+                    btn.textContent = 'Failed: ' + (j.error || 'unknown');
+                    btn.style.background = '#6b7280';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                btn.textContent = 'Error';
+                btn.style.background = '#6b7280';
+                btn.disabled = false;
+            }
+        }
+
+        async function toggleI18nReporting(enabled) {
+            var token = sessionStorage.getItem('adminToken') || '';
+            try {
+                await fetch('/admin-translations-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: 'set_i18n_health_reporting', enabled: enabled })
+                });
+            } catch(e) {}
+        }
+
+        async function validateI18nTranslations() {
+            var btn = event.target;
+            if (!btn) return;
+            btn.disabled = true;
+            btn.textContent = 'Validating...';
+            try {
+                var token = sessionStorage.getItem('adminToken') || '';
+                var r = await fetch('/admin-translations-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: 'validate_translations' })
+                });
+                var j = await r.json();
+                if (j.success) {
+                    var msg = j.valid
+                        ? '✓ Valid — ' + j.total_keys + ' keys, 0 errors'
+                        : '✗ ' + j.errors.length + ' error(s) in ' + j.total_keys + ' keys';
+                    var details = j.errors.length
+                        ? '\n\nErrors:\n' + j.errors.map(function(e) { return '• ' + e.key + ' [' + e.issue + ']'; }).join('\n')
+                        : '';
+                    if (j.warnings.length) details += '\n\nWarnings (' + j.warnings.length + ' empty keys)';
+                    alert(msg + details);
+                    btn.textContent = j.valid ? '✓ Valid' : '✗ ' + j.errors.length + ' errors';
+                    btn.style.background = j.valid ? '#10b981' : '#ef4444';
+                } else {
+                    btn.textContent = 'Error';
+                    btn.style.background = '#6b7280';
+                }
+            } catch(e) {
+                btn.textContent = 'Error';
+                btn.style.background = '#6b7280';
+            }
+            setTimeout(function() {
+                btn.textContent = 'Validate';
+                btn.style.background = '#8b5cf6';
+                btn.disabled = false;
+            }, 5000);
+        }
+
+
+        /* ═══════════════════════════════════════════════
            ACTIVITY TIMELINE
            ═══════════════════════════════════════════════ */
         function buildActivityTimeline(users, messages, videos) {
@@ -1678,26 +1912,38 @@
             // Fire all queries in parallel
             var results = await Promise.allSettled([
                 /* 0  */ supabase.rpc('get_total_users'),
-                /* 1  */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', today.toISOString()),
-                /* 2  */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago7.toISOString()),
-                /* 3  */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', ago30.toISOString()),
+                /* 1  */ Promise.resolve(null), // user_data blocked by RLS — use adminStats (16)
+                /* 2  */ Promise.resolve(null),
+                /* 3  */ Promise.resolve(null),
                 /* 4  */ supabase.from('contact_messages').select('*', { count:'exact', head:true }).eq('status','unread'),
                 /* 5  */ supabase.from('islamvoice_episodes').select('*', { count:'exact', head:true }),
                 /* 6  */ supabase.from('contact_messages').select('*').order('created_at', { ascending:false }).limit(5),
                 /* 7  */ supabase.from('islamvoice_episodes').select('id,title,thumbnail_url,created_at').order('created_at', { ascending:false }).limit(5),
                 /* 8  */ supabase.rpc('get_recent_users', { limit_count: 5 }),
                 /* 9  */ fetchReadingStats(),
-                /* 10 */ supabase.from('user_data').select('*', { count:'exact', head:true }).gte('updated_at', yesterday.toISOString()).lt('updated_at', today.toISOString()),
-                /* 11 — daily signups last 30 days */
-                supabase.from('user_data').select('created_at').gte('created_at', ago30.toISOString()).order('created_at', { ascending: true }),
-                /* 12 — daily active last 7 days */
-                supabase.from('user_data').select('updated_at').gte('updated_at', ago7.toISOString()),
+                /* 10 */ Promise.resolve(null),
+                /* 11 */ Promise.resolve(null),
+                /* 12 */ Promise.resolve(null),
                 /* 13 — recent audit logs (super_admin only) */
                 supabase.from('admin_audit_logs').select('id,created_at,action,severity,email,ip_address').order('created_at', { ascending: false }).limit(8),
                 /* 14 — recent admin actions */
                 supabase.from('admin_activity_log').select('id,admin_name,action_type,description,created_at').order('created_at', { ascending: false }).limit(15),
                 /* 15 — prayer cache health (last 30 events) */
-                supabase.from('prayer_cache_health').select('id,created_at,platform,city,cache_status,stale_reason,cache_age_hours,fajr_shown,changed_from,notifications_rescheduled,error_msg').order('created_at', { ascending: false }).limit(30)
+                supabase.from('prayer_cache_health').select('id,created_at,platform,city,cache_status,stale_reason,cache_age_hours,fajr_shown,changed_from,notifications_rescheduled,error_msg').order('created_at', { ascending: false }).limit(30),
+                /* 16 — admin stats via CF function (bypasses user_data RLS via service role) */
+                fetch('/admin-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: sessionStorage.getItem('adminToken') || '' })
+                }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+                /* 17 — i18n cache health events (last 30) */
+                supabase.from('i18n_cache_health')
+                    .select('id,created_at,platform,layer_used,key_count,cache_version,status,error_msg,bundled_loaded,rejected_count,swap_count,fetch_time_ms')
+                    .order('created_at', { ascending: false }).limit(30),
+                /* 18 — i18n site settings meta (version, published_at, reporting toggle) */
+                supabase.from('site_settings')
+                    .select('key,value')
+                    .in('key', ['i18n_cache_version','i18n_last_published_at','i18n_health_reporting_enabled'])
             ]);
 
             // Shorthand
@@ -1705,17 +1951,20 @@
             function cnt(i) { var v = val(i); return v ? v.count : null; }
             function dat(i) { var v = val(i); return (v && !v.error) ? v.data : null; }
 
+            var _adminStatsRaw = val(16);
+            var adminStats = (_adminStatsRaw && _adminStatsRaw.success) ? _adminStatsRaw : null;
+
             // ─── Metrics ───
             var totalUsers = dat(0);
             if (totalUsers !== null) setMetric('metricUsers', totalUsers);
 
-            var activeToday = cnt(1);
+            var activeToday = adminStats ? adminStats.activeToday : null;
             setMetric('metricActiveToday', activeToday);
 
-            var active7d = cnt(2);
+            var active7d = adminStats ? adminStats.active7d : null;
             setMetric('metricActive7d', active7d);
 
-            var active30d = cnt(3);
+            var active30d = adminStats ? adminStats.active30d : null;
             setMetric('metricActive30d', active30d);
 
             var unreadCount = cnt(4);
@@ -1731,7 +1980,7 @@
             }
 
             // ─── Trend: Active Today vs Yesterday ───
-            var yesterdayActive = cnt(10);
+            var yesterdayActive = adminStats ? adminStats.activeYesterday : null;
             setTrend('trendToday', activeToday, yesterdayActive);
 
             // ─── Reading stats ───
@@ -1741,67 +1990,23 @@
             }
             buildTopReaders(readingData ? readingData.users : null);
 
-            // ─── Charts data ───
-            // User growth: group signups by day
-            var signupRows = dat(11);
-            if (signupRows) {
-                var growthMap = {};
-                for (var d = 0; d < 30; d++) {
-                    var dt = new Date(ago30.getTime() + d * 86400000);
-                    var key = dt.toISOString().slice(0, 10);
-                    growthMap[key] = 0;
-                }
-                signupRows.forEach(function(r) {
-                    var k = r.created_at.slice(0, 10);
-                    if (growthMap.hasOwnProperty(k)) growthMap[k]++;
-                });
-                var growthData = Object.keys(growthMap).sort().map(function(k) {
-                    return { date: k, count: growthMap[k] };
-                });
+            // ─── Charts data (from admin-stats CF, bypasses user_data RLS) ───
+            if (adminStats && adminStats.growthData && adminStats.growthData.length) {
+                var growthData = adminStats.growthData;
                 renderUserGrowthChart(growthData);
 
-                // Sparkline for total users — cumulative from growth
+                // Sparkline: cumulative user count over last 7 days
+                var totalInPeriod = growthData.reduce(function(s, d) { return s + d.count; }, 0);
                 var cumulative = [];
-                var base = (totalUsers || 0) - signupRows.length;
-                growthData.forEach(function(d) {
-                    base += d.count;
-                    cumulative.push(base);
-                });
-                // Take last 7 days for sparkline
+                var base = (totalUsers || 0) - totalInPeriod;
+                growthData.forEach(function(d) { base += d.count; cumulative.push(base); });
                 buildSparkline('sparkUsers', cumulative.slice(-7), '#3b82f6');
             }
 
-            // Daily active: group by day
-            var activeRows = dat(12);
-            if (activeRows) {
-                var activeMap = {};
-                for (var d2 = 0; d2 < 7; d2++) {
-                    var dt2 = new Date(ago7.getTime() + d2 * 86400000);
-                    var key2 = dt2.toISOString().slice(0, 10);
-                    activeMap[key2] = new Set();
-                }
-                activeRows.forEach(function(r) {
-                    var k2 = r.updated_at.slice(0, 10);
-                    if (activeMap.hasOwnProperty(k2)) activeMap[k2].add(r.updated_at);
-                });
-                // Actually we just need count per day
-                // Re-query approach: just count unique dates from updated_at
-                var activeDayMap = {};
-                for (var d3 = 0; d3 < 7; d3++) {
-                    var dt3 = new Date(ago7.getTime() + d3 * 86400000);
-                    var key3 = dt3.toISOString().slice(0, 10);
-                    activeDayMap[key3] = 0;
-                }
-                activeRows.forEach(function(r) {
-                    var k3 = r.updated_at.slice(0, 10);
-                    if (activeDayMap.hasOwnProperty(k3)) activeDayMap[k3]++;
-                });
-                var activeData = Object.keys(activeDayMap).sort().map(function(k) {
-                    return { date: k, count: activeDayMap[k] };
-                });
+            if (adminStats && adminStats.activeData && adminStats.activeData.length) {
+                var activeData = adminStats.activeData;
                 renderActiveUsersChart(activeData);
 
-                // Sparkline for active today — last 7 day values
                 var activeVals = activeData.map(function(d) { return d.count; });
                 buildSparkline('sparkToday', activeVals, '#10b981');
             }
@@ -1824,6 +2029,14 @@
 
             // ─── Prayer Health ───
             buildPrayerHealth(dat(15));
+
+            // ─── i18n Health ───
+            var i18nMeta = {};
+            var i18nSettingsRows = dat(18);
+            if (i18nSettingsRows) {
+                i18nSettingsRows.forEach(function(r) { i18nMeta[r.key] = r.value; });
+            }
+            buildI18nHealth(dat(17), i18nMeta);
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));

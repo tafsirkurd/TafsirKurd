@@ -60,17 +60,31 @@ export async function onRequest(context) {
             supabaseKey: cleanKey
         };
 
-        // Prayer cache version — if admin bumps this in site_settings,
-        // all app clients will purge their prayer caches on next startup.
+        // Fetch versioning/control settings from site_settings.
+        // Admin bumps these to force coordinated cache invalidation on all devices.
         try {
             const supabase = (await import('@supabase/supabase-js'))
                 .createClient(cleanUrl, env.SUPABASE_SERVICE_ROLE_KEY,
                     { auth: { autoRefreshToken: false, persistSession: false } });
-            const { data: verRow } = await supabase
-                .from('site_settings').select('value').eq('key', 'prayer_cache_version').single();
-            if (verRow && verRow.value) config.prayerCacheVersion = verRow.value;
+            const { data: rows } = await supabase
+                .from('site_settings')
+                .select('key, value')
+                .in('key', [
+                    'prayer_cache_version',
+                    'i18n_cache_version',
+                    'i18n_health_reporting_enabled',
+                    'i18n_last_published_at'
+                ]);
+            if (rows) {
+                const m = Object.fromEntries(rows.map(r => [r.key, r.value]));
+                if (m.prayer_cache_version)           config.prayerCacheVersion           = m.prayer_cache_version;
+                if (m.i18n_cache_version)             config.i18nCacheVersion             = m.i18n_cache_version;
+                if (m.i18n_health_reporting_enabled !== undefined)
+                                                      config.i18nHealthReportingEnabled   = m.i18n_health_reporting_enabled;
+                if (m.i18n_last_published_at)         config.i18nLastPublishedAt          = m.i18n_last_published_at;
+            }
         } catch(e) {
-            // Non-critical — app uses its own default if missing
+            // Non-critical — app operates without these
         }
 
         if (!config.supabaseUrl || !config.supabaseKey) {
