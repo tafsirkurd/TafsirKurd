@@ -1497,19 +1497,20 @@ window.GencineUI = {
       numRow.textContent = '#' + (this._hadithDetailIdx + 1);
       detail.appendChild(numRow);
 
-      if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
-        var hDetailChip = document.createElement('span');
-        hDetailChip.style.cssText = 'display:inline-block;width:fit-content;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:6px;margin-bottom:10px;letter-spacing:.04em';
-        hDetailChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
-        detail.appendChild(hDetailChip);
-      }
-
       if (h.title) {
         var titleEl = document.createElement('div');
         titleEl.className = 'hadith-detail-title';
         titleEl.textContent = h.title;
         detail.appendChild(titleEl);
       }
+
+      if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
+        var hDetailChip = document.createElement('span');
+        hDetailChip.style.cssText = 'display:inline-block;width:fit-content;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:6px;margin-top:4px;margin-bottom:8px;letter-spacing:.04em';
+        hDetailChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
+        detail.appendChild(hDetailChip);
+      }
+
       if (h.ar) {
         var arEl = document.createElement('div');
         arEl.className = 'dua-card-ar';
