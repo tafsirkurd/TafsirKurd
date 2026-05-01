@@ -760,9 +760,57 @@
                     <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
                 </div>
 
+                <!-- ══ Admin Actions Log ══ -->
+                <div class="timeline-section card-animate" style="animation-delay:360ms">
+                    <div class="timeline-header">
+                        <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                    </div>
+                    <div class="timeline-list" id="adminActionsLog">
+                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- ══ Prayer Times Health ══ -->
+                <div class="card card-animate" id="prayerHealthCard" style="animation-delay:400ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
+                            Prayer Times Health
+                        </h3>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
+                            <button onclick="forcePrayerCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
+                                Force Refresh All Phones
+                            </button>
+                        </div>
+                    </div>
+                    <div id="prayerHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
+                        <div style="text-align:center;padding:0;"></div>
+                    </div>
+                    <div class="table-container" style="max-height:320px;overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Platform</th>
+                                    <th>City</th>
+                                    <th>Status</th>
+                                    <th>Cache Age</th>
+                                    <th>Fajr</th>
+                                    <th>Changed From</th>
+                                    <th>Notif</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prayerHealthBody">
+                                <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- ══ Charts ══ -->
                 <div class="charts-grid">
-                    <div class="chart-card card-animate" style="animation-delay:360ms">
+                    <div class="chart-card card-animate" style="animation-delay:440ms">
                         <div class="chart-card-header">
                             <div class="chart-card-title">User Growth</div>
                             <span class="chart-card-badge">Last 30 days</span>
@@ -771,7 +819,7 @@
                             <canvas id="userGrowthChart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-card card-animate" style="animation-delay:420ms">
+                    <div class="chart-card card-animate" style="animation-delay:480ms">
                         <div class="chart-card-header">
                             <div class="chart-card-title">Daily Active Users</div>
                             <span class="chart-card-badge">Last 7 days</span>
@@ -785,26 +833,6 @@
                 <!-- ══ Quick Actions ══ -->
                 <div class="section-label">Recently Visited</div>
                 <div class="quick-actions" id="quickActionsGrid"></div>
-
-                <!-- ══ Admin Actions Log ══ -->
-                <div class="timeline-section card-animate" style="animation-delay:460ms">
-                    <div class="timeline-header">
-                        <div class="timeline-title">⚙️ Recent Admin Actions</div>
-                    </div>
-                    <div class="timeline-list" id="adminActionsLog">
-                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
-                    </div>
-                </div>
-
-                <!-- ══ Activity Timeline ══ -->
-                <div class="timeline-section card-animate" style="animation-delay:480ms">
-                    <div class="timeline-header">
-                        <div class="timeline-title">Recent Activity</div>
-                    </div>
-                    <div class="timeline-list" id="timelineList">
-                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
-                    </div>
-                </div>
 
                 <!-- ══ 3-Col Content Grid ══ -->
                 <div class="section-label">Live Data</div>
@@ -858,6 +886,16 @@
                                 <p style="font-size:13px;margin:0;">Loading...</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- ══ Activity Timeline ══ -->
+                <div class="timeline-section card-animate" style="animation-delay:620ms">
+                    <div class="timeline-header">
+                        <div class="timeline-title">Recent Activity</div>
+                    </div>
+                    <div class="timeline-list" id="timelineList">
+                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
                     </div>
                 </div>
 
@@ -919,46 +957,6 @@
                                         <div style="width:40px;height:40px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div>
                                     </td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ══ Prayer Times Health ══ -->
-                <div class="card card-animate" id="prayerHealthCard" style="animation-delay:520ms;margin-bottom:20px;">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
-                            Prayer Times Health
-                        </h3>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                            <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
-                            <button onclick="forcePrayerCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version in site_settings — all phones will purge their prayer cache on next app open">
-                                Force Refresh All Phones
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Summary counters -->
-                    <div id="prayerHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
-                        <div style="text-align:center;padding:0;"></div>
-                    </div>
-                    <!-- Recent events table -->
-                    <div class="table-container" style="max-height:360px;overflow-y:auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Platform</th>
-                                    <th>City</th>
-                                    <th>Status</th>
-                                    <th>Cache Age</th>
-                                    <th>Fajr</th>
-                                    <th>Changed From</th>
-                                    <th>Notif</th>
-                                </tr>
-                            </thead>
-                            <tbody id="prayerHealthBody">
-                                <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
