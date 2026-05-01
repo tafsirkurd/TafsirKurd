@@ -1500,7 +1500,7 @@ window.GencineUI = {
       if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
         var hDetailChip = document.createElement('div');
         hDetailChip.className = 'new-badge';
-        hDetailChip.style.cssText = 'position:relative;top:auto;right:auto;display:inline-block;margin-bottom:10px';
+        hDetailChip.style.cssText = 'position:static;display:inline-block;margin-bottom:10px';
         hDetailChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
         detail.appendChild(hDetailChip);
       }
@@ -1679,7 +1679,7 @@ window.GencineUI = {
         if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
           var hNewChip = document.createElement('span');
           hNewChip.className = 'new-badge';
-          hNewChip.style.cssText = 'display:inline-block;margin-bottom:4px';
+          hNewChip.style.cssText = 'position:static;display:inline-block;margin-bottom:4px';
           hNewChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
           textCol.appendChild(hNewChip);
         }
