@@ -6909,6 +6909,16 @@ function initSupabase(cb){
         if(cb)cb();
       }
     }
+    // Remote prayer cache version — if admin bumped it, purge all local prayer caches
+    // so every phone fetches fresh data from amozhgary.tv on next prayer tab open.
+    if(cfg.prayerCacheVersion){
+      var _storedVer=localStorage.getItem('prayer_cache_schema_ver')||'';
+      if(_storedVer!==String(cfg.prayerCacheVersion)){
+        if(window.PrayerCache&&window.PrayerCache.purgeAllCaches)window.PrayerCache.purgeAllCaches();
+        try{localStorage.setItem('prayer_cache_schema_ver',String(cfg.prayerCacheVersion));}catch(e){}
+        console.log('[PrayerCache] remote version changed to',cfg.prayerCacheVersion,'— all caches purged');
+      }
+    }
   }).catch(function(e){
     console.warn('Supabase config fetch failed (offline?)');
     if(!S.supabase&&cb)cb();

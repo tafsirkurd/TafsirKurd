@@ -924,6 +924,46 @@
                     </div>
                 </div>
 
+                <!-- ══ Prayer Times Health ══ -->
+                <div class="card card-animate" id="prayerHealthCard" style="animation-delay:520ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
+                            Prayer Times Health
+                        </h3>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
+                            <button onclick="forcePrayerCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version in site_settings — all phones will purge their prayer cache on next app open">
+                                Force Refresh All Phones
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Summary counters -->
+                    <div id="prayerHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
+                        <div style="text-align:center;padding:0;"></div>
+                    </div>
+                    <!-- Recent events table -->
+                    <div class="table-container" style="max-height:360px;overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Platform</th>
+                                    <th>City</th>
+                                    <th>Status</th>
+                                    <th>Cache Age</th>
+                                    <th>Fajr</th>
+                                    <th>Changed From</th>
+                                    <th>Notif</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prayerHealthBody">
+                                <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- ══ System Status Bar ══ -->
                 <div class="system-status-bar" id="systemStatusBar">
                     <div class="status-item">
@@ -1369,6 +1409,109 @@
         }
 
         /* ═══════════════════════════════════════════════
+           PRAYER HEALTH
+           ═══════════════════════════════════════════════ */
+
+        var STATUS_META = {
+            fresh_fetch:              { color: '#10b981', label: 'Fresh Fetch',    icon: '↓' },
+            valid_cache:              { color: '#3b82f6', label: 'Valid Cache',    icon: '✓' },
+            stale_then_refresh:       { color: '#f59e0b', label: 'Stale → Refreshed', icon: '↻' },
+            fetch_failed_using_cache: { color: '#f97316', label: 'Net Fail / Cache', icon: '⚠' },
+            fetch_failed_no_cache:    { color: '#ef4444', label: 'Net Fail / No Cache', icon: '✗' }
+        };
+
+        function buildPrayerHealth(events) {
+            var summaryEl = document.getElementById('prayerHealthSummary');
+            var bodyEl    = document.getElementById('prayerHealthBody');
+            var updatedEl = document.getElementById('prayerHealthUpdated');
+            if (!summaryEl || !bodyEl) return;
+
+            if (updatedEl) updatedEl.textContent = 'Updated ' + getTimeAgo(new Date());
+
+            if (!events || !events.length) {
+                summaryEl.innerHTML = '<span style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">No health reports yet — will appear once the app is opened after deploy.</span>';
+                bodyEl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:13px;">No data yet</td></tr>';
+                return;
+            }
+
+            // Count by status
+            var counts = {};
+            events.forEach(function(e) {
+                counts[e.cache_status] = (counts[e.cache_status] || 0) + 1;
+            });
+
+            var summaryParts = Object.keys(STATUS_META).map(function(s) {
+                var n = counts[s] || 0;
+                var m = STATUS_META[s];
+                return '<div style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;">' +
+                    '<span style="font-size:14px;color:' + m.color + '">' + m.icon + '</span>' +
+                    '<span style="font-weight:700;color:' + m.color + '">' + n + '</span>' +
+                    '<span style="color:var(--text-secondary)">' + m.label + '</span>' +
+                    '</div>';
+            });
+            summaryEl.innerHTML = summaryParts.join('');
+
+            // Table rows
+            bodyEl.innerHTML = '';
+            events.forEach(function(ev) {
+                var m = STATUS_META[ev.cache_status] || { color: '#999', label: ev.cache_status, icon: '?' };
+                var tr = document.createElement('tr');
+                var age = ev.cache_age_hours !== null && ev.cache_age_hours !== undefined
+                    ? ev.cache_age_hours + 'h' : '—';
+                var statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:' + m.color + '22;color:' + m.color + '">' + m.label + '</span>';
+                var changed = ev.changed_from ? '<span style="color:#f59e0b;font-size:11px">' + ev.changed_from + '</span>' : '<span style="color:var(--text-tertiary)">—</span>';
+                var notif = ev.notifications_rescheduled
+                    ? '<span style="color:#10b981;font-weight:700">✓</span>'
+                    : '<span style="color:var(--text-tertiary)">—</span>';
+                var plat = ev.platform || '—';
+                var platIcon = plat === 'ios' ? '🍎' : plat === 'android' ? '🤖' : '🌐';
+                tr.innerHTML = '<td style="font-size:12px;color:var(--text-tertiary)">' + getTimeAgo(new Date(ev.created_at)) + '</td>' +
+                    '<td style="font-size:12px">' + platIcon + ' ' + plat + '</td>' +
+                    '<td style="font-size:12px;font-weight:600">' + (ev.city || '—') + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td style="font-size:12px;color:var(--text-secondary)">' + age + '</td>' +
+                    '<td style="font-size:12px;font-weight:600;color:#10b981">' + (ev.fajr_shown || '—') + '</td>' +
+                    '<td>' + changed + '</td>' +
+                    '<td style="text-align:center">' + notif + '</td>';
+                bodyEl.appendChild(tr);
+            });
+        }
+
+        async function forcePrayerCacheRefresh() {
+            var btn = event.target;
+            if (!btn) return;
+            var newVersion = String(Date.now());
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            try {
+                var token = window.adminAuth && window.adminAuth.getToken ? window.adminAuth.getToken() : '';
+                var r = await fetch('/admin-translations-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: 'upsert_site_setting', key: 'prayer_cache_version', value: newVersion })
+                });
+                var j = await r.json();
+                if (j.success) {
+                    btn.textContent = 'Sent! (' + newVersion.slice(-6) + ')';
+                    btn.style.background = '#10b981';
+                    setTimeout(function() {
+                        btn.textContent = 'Force Refresh All Phones';
+                        btn.style.background = '#ef4444';
+                        btn.disabled = false;
+                    }, 4000);
+                } else {
+                    btn.textContent = 'Failed: ' + (j.error || 'unknown');
+                    btn.style.background = '#6b7280';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                btn.textContent = 'Error';
+                btn.style.background = '#6b7280';
+                btn.disabled = false;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════
            ACTIVITY TIMELINE
            ═══════════════════════════════════════════════ */
         function buildActivityTimeline(users, messages, videos) {
@@ -1554,7 +1697,9 @@
                 /* 13 — recent audit logs (super_admin only) */
                 supabase.from('admin_audit_logs').select('id,created_at,action,severity,email,ip_address').order('created_at', { ascending: false }).limit(8),
                 /* 14 — recent admin actions */
-                supabase.from('admin_activity_log').select('id,admin_name,action_type,description,created_at').order('created_at', { ascending: false }).limit(15)
+                supabase.from('admin_activity_log').select('id,admin_name,action_type,description,created_at').order('created_at', { ascending: false }).limit(15),
+                /* 15 — prayer cache health (last 30 events) */
+                supabase.from('prayer_cache_health').select('id,created_at,platform,city,cache_status,stale_reason,cache_age_hours,fajr_shown,changed_from,notifications_rescheduled,error_msg').order('created_at', { ascending: false }).limit(30)
             ]);
 
             // Shorthand
@@ -1678,6 +1823,9 @@
 
             // ─── Admin Actions ───
             buildAdminActions(dat(14));
+
+            // ─── Prayer Health ───
+            buildPrayerHealth(dat(15));
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));

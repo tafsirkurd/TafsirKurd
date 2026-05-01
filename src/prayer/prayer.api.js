@@ -193,7 +193,11 @@
 
   // ── Background refresh ──────────────────────────────────────────────────────
 
-  var STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
+  // 4-hour age limit within the same Baghdad day.
+  // backgroundRefresh ALSO fires on every new Baghdad calendar day regardless of age.
+  // Effect: prayer times are re-fetched from amozhgary.tv at least once per day,
+  // and again after 4h if the user stays in the app — never more than 4h stale.
+  var STALE_MS = 4 * 60 * 60 * 1000;
   // In-flight guard keyed by mkey — prevents duplicate concurrent fetches when
   // render() is called multiple times rapidly while cache is stale (e.g. tab
   // switch away and back before the first fetch resolves).
@@ -214,15 +218,24 @@
     var year = parts[0], month = parts[1], day = parts[2];
     var mkey = window.PrayerCache.monthKey(city, year, month);
 
-    var meta = window.PrayerCache.readMeta(mkey);
-    var age  = (meta && meta.fetchedAt) ? (Date.now() - meta.fetchedAt) : Infinity;
-    if (age < STALE_MS) return; // fresh — nothing to do
+    // isStale: true if fetched on a different Baghdad calendar day OR >6h same day
+    if (!window.PrayerCache.isStale(mkey, STALE_MS)) {
+      var _meta = window.PrayerCache.readMeta(mkey);
+      var _age  = _meta ? Math.round((Date.now() - _meta.fetchedAt) / 3600000) : '?';
+      console.log('[PrayerCache] status=valid_cache city=' + city + ' date=' + dateISO + ' age=' + _age + 'h source=' + (_meta && _meta.source || 'unknown'));
+      return;
+    }
 
     // Only one fetch per month key in flight at a time
     if (_bgInFlight[mkey]) return;
     _bgInFlight[mkey] = true;
 
-    console.log('[PrayerAPI] backgroundRefresh: cache is', Math.round(age / 3600000) + 'h old — refreshing', city, dateISO);
+    var _staleMeta = window.PrayerCache.readMeta(mkey);
+    var _staleAge  = _staleMeta ? Math.round((Date.now() - _staleMeta.fetchedAt) / 3600000) : 'n/a';
+    var _staleReason = !_staleMeta ? 'no_cache' :
+      (new Date(_staleMeta.fetchedAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Baghdad' }) !==
+       new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Baghdad' }) ? 'new_baghdad_day' : 'age_' + _staleAge + 'h');
+    console.log('[PrayerCache] status=stale reason=' + _staleReason + ' city=' + city + ' date=' + dateISO + ' — refreshing');
 
     var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
               '&year=' + year + '&month=' + month;
@@ -249,10 +262,11 @@
         var freshDay = fresh.days[day] || fresh.days[String(day)];
         if (!freshDay) return;
         if (oldDay && JSON.stringify(oldDay) === JSON.stringify(freshDay)) {
-          console.log('[PrayerAPI] backgroundRefresh: data unchanged for', city, dateISO);
+          console.log('[PrayerCache] status=stale_refresh_no_change city=' + city + ' date=' + dateISO);
           return;
         }
-        console.log('[PrayerAPI] backgroundRefresh: timings changed — notifying UI', city, dateISO);
+        var _oldFajr = oldDay ? oldDay.Fajr : 'none';
+        console.log('[PrayerTimes] changed old_fajr=' + _oldFajr + ' new_fajr=' + freshDay.Fajr + ' city=' + city + ' date=' + dateISO);
         onFreshData({
           timings: {
             Fajr: freshDay.Fajr, Sunrise: freshDay.Sunrise, Dhuhr: freshDay.Dhuhr,

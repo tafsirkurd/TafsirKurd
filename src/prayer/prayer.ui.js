@@ -1622,9 +1622,30 @@
     var key    = city + ':' + today + ':' + getFormat();
 
     // ── Panel already rendered for this city/date/format — just resume countdown ──
+    // Still trigger backgroundRefresh in case cache is now stale (e.g. user had the
+    // prayer tab open for hours, or it is the next Baghdad calendar day).
     if (_renderedKey === key && _currentTimings) {
       if (!_countdownInterval) startCountdown();
-      else tickCountdown(); // force immediate tick so display is fresh on tab open
+      else tickCountdown();
+      window.PrayerAPI.backgroundRefresh(city, today, function(freshData) {
+        _currentTimings = freshData.timings;
+        _currentData    = freshData;
+        _renderedKey    = null;
+        buildPanel(container, freshData, city, today);
+        startCountdown();
+        pushWidgetData(freshData, city, today);
+        _reportPrayerHealth({ city: city, date: today, status: 'stale_then_refresh',
+          timings: freshData.timings, notifRescheduled: false });
+        if (getAthan()) {
+          fetchDaysData(city, today, 28).then(function(daysData) {
+            if (!daysData.length) return;
+            window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
+            window.PrayerNotifications.scheduleReminderMultiDay &&
+              window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
+            console.log('[PrayerNotify] rescheduled after stale bg-refresh city=' + city);
+          });
+        }
+      });
       return;
     }
 
@@ -1645,21 +1666,28 @@
       buildPanel(container, cached, city, today);
       startCountdown();
       pushWidgetData(cached, city, today);
-      // Silent background refresh — if cache is stale, re-fetch and update UI+athan
-      // only if today's timings actually changed (no spinner, no flicker).
+      _reportPrayerHealth({ city: city, date: today, status: 'valid_cache', timings: cached.timings });
+      // Silent background refresh — if cache is stale (different Baghdad day or >6h),
+      // re-fetch and update UI + reschedule notifications.
       window.PrayerAPI.backgroundRefresh(city, today, function(freshData) {
+        var oldFajr = _currentTimings && _currentTimings.Fajr;
         _currentTimings = freshData.timings;
         _currentData    = freshData;
-        _renderedKey    = null; // force panel rebuild
+        _renderedKey    = null;
         buildPanel(container, freshData, city, today);
         startCountdown();
         pushWidgetData(freshData, city, today);
+        console.log('[PrayerTimes] UI refreshed after stale cache city=' + city + ' date=' + today);
+        _reportPrayerHealth({ city: city, date: today, status: 'stale_then_refresh',
+          timings: freshData.timings, notifRescheduled: false,
+          changedFrom: oldFajr !== freshData.timings.Fajr ? ('fajr:' + oldFajr + '→' + freshData.timings.Fajr) : null });
         if (getAthan()) {
           fetchDaysData(city, today, 28).then(function(daysData) {
             if (!daysData.length) return;
             window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
             window.PrayerNotifications.scheduleReminderMultiDay &&
               window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
+            console.log('[PrayerNotify] rescheduled after stale-cache refresh city=' + city);
           });
         }
       });
@@ -1710,6 +1738,8 @@
       buildPanel(container, data, city, today);
       startCountdown();
       pushWidgetData(data, city, today);
+      console.log('[PrayerCache] status=fresh_fetch city=' + city + ' date=' + today + ' fajr=' + (data.timings && data.timings.Fajr));
+      _reportPrayerHealth({ city: city, date: today, status: 'fresh_fetch', timings: data.timings });
     } catch(e) {
       clearInterval(_pollTimer);
       // Network error — try any cached data as fallback
@@ -1721,9 +1751,13 @@
         buildPanel(container, fallback, city, today);
         startCountdown();
         _showCachedBadge(container);
+        _reportPrayerHealth({ city: city, date: today, status: 'fetch_failed_using_cache',
+          timings: fallback.timings, error: e && e.message });
       } else {
         markCityBad(city);
         buildError(container);
+        _reportPrayerHealth({ city: city, date: today, status: 'fetch_failed_no_cache',
+          error: e && e.message });
       }
     }
   }
@@ -2788,7 +2822,10 @@
       for (var ci = 0; ci < cities.length; ci++) {
         var city = cities[ci];
         var mkey = Cache.monthKey(city, ym.year, ym.month);
-        if (Cache.read(mkey)) continue; // already cached — skip
+        // Skip only if cache is FRESH (fetched today and not older than 12h).
+        // Stale caches (different Baghdad day or >12h old) are re-fetched so
+        // mid-month schedule updates from amozhgary.tv are picked up automatically.
+        if (Cache.read(mkey) && !Cache.isStale(mkey, 12 * 3600000)) continue;
         try {
           var url = 'https://tafsirkurd.com/prayer-kurd?city=' +
                     encodeURIComponent(city) + '&year=' + ym.year + '&month=' + ym.month;
@@ -2885,6 +2922,88 @@
     if (!_currentTimings || !_currentDateISO) return;
     if (!_countdownInterval) startCountdown();
     else tickCountdown();
+  }
+
+  // ─── Prayer Cache Health Reporting ───────────────────────────────────────────
+
+  // Per-session report tracker — one report per status-type per Baghdad day,
+  // max 4 total reports per session so we never spam the backend.
+  var _healthReported = {};  // key: 'city:date:status' → timestamp
+  var _healthCount    = 0;
+  var MAX_HEALTH_REPORTS = 4;
+
+  var _sessionId = (function() {
+    try {
+      var id = sessionStorage.getItem('prayer_session_id');
+      if (!id) {
+        id = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        sessionStorage.setItem('prayer_session_id', id);
+      }
+      return id;
+    } catch(e) { return 'unknown'; }
+  })();
+
+  /**
+   * Send a lightweight prayer cache health report to the backend.
+   * Fire-and-forget. Throttled to max MAX_HEALTH_REPORTS per session.
+   *
+   * @param {Object} opts
+   *   city, date (YYYY-MM-DD), status, timings, notifRescheduled, changedFrom, error
+   */
+  function _reportPrayerHealth(opts) {
+    try {
+      if (_healthCount >= MAX_HEALTH_REPORTS) return;
+      var dedupeKey = opts.city + ':' + opts.date + ':' + opts.status;
+      if (_healthReported[dedupeKey]) return;
+      _healthReported[dedupeKey] = Date.now();
+      _healthCount++;
+
+      var platform = 'web';
+      try {
+        if (window.Capacitor && window.Capacitor.getPlatform) {
+          platform = window.Capacitor.getPlatform() || 'web';
+        }
+      } catch(e) {}
+
+      var mkey = window.PrayerCache && window.PrayerCache.monthKey
+        ? window.PrayerCache.monthKey(opts.city,
+            parseInt((opts.date||'').split('-')[0]),
+            parseInt((opts.date||'').split('-')[1]))
+        : null;
+      var meta = mkey ? window.PrayerCache.readMeta(mkey) : null;
+      var cacheAgeHours = meta && meta.fetchedAt
+        ? Math.round((Date.now() - meta.fetchedAt) / 360000) / 10  // 1 decimal
+        : null;
+
+      var payload = {
+        session_id:   _sessionId,
+        platform:     platform,
+        city:         opts.city || 'unknown',
+        baghdad_date: opts.date || window.PrayerLogic.todayBaghdad(),
+        cache_status: opts.status || 'unknown',
+        stale_reason: opts.reason || null,
+        cache_age_hours: cacheAgeHours,
+        cache_version: '3',
+        fajr_shown:   opts.timings && opts.timings.Fajr   || null,
+        dhuhr_shown:  opts.timings && opts.timings.Dhuhr  || null,
+        maghrib_shown:opts.timings && opts.timings.Maghrib|| null,
+        isha_shown:   opts.timings && opts.timings.Isha   || null,
+        notifications_rescheduled: opts.notifRescheduled || false,
+        changed_from: opts.changedFrom || null,
+        error_msg:    opts.error || null
+      };
+
+      fetch('/prayer-health-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(function() {}); // fire and forget — never block UI
+    } catch(e) {}
+  }
+
+  // Purge old-version prayer cache keys on module init (runs once per page load)
+  if (window.PrayerCache && window.PrayerCache.purgeOldKeys) {
+    window.PrayerCache.purgeOldKeys();
   }
 
   window.PrayerUI = {
