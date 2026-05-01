@@ -2667,7 +2667,7 @@ function renderBooksList() {
             var bTime = mke('span', 'section-badge-time'); bTime.textContent = bTimeLeft; bPill.appendChild(bTime);
             var bRm = mke('button', 'section-badge-remove'); bRm.type = 'button'; bRm.textContent = '×'; bRm.title = 'Remove badge';
             bRm.onclick = (function(bb){ return function(e){ e.preventDefault();
-                window.adminAuth.getSupabase().from('gencine_books').update({ badge_until: null }).eq('id', bb.id)
+                _booksApi({ action: 'update', id: bb.id, payload: { badge_until: null } })
                     .then(function(res){ if (!res.error){ bb.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_books_v1'); } });
             }; })(book);
             bPill.appendChild(bRm); body.appendChild(bPill);
@@ -2875,7 +2875,7 @@ async function saveBook() {
             showBadgeDialog('Book', function(hours) {
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
-                window.adminAuth.getSupabase().from('gencine_books').update({ badge_until: until }).eq('id', newBook.id)
+                _booksApi({ action: 'update', id: newBook.id, payload: { badge_until: until } })
                     .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('نوی badge added.', 'success'); } });
             });
         }

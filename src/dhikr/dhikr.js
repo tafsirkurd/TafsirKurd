@@ -1497,6 +1497,14 @@ window.GencineUI = {
       numRow.textContent = '#' + (this._hadithDetailIdx + 1);
       detail.appendChild(numRow);
 
+      if (h.badge_until && new Date(h.badge_until).getTime() > Date.now()) {
+        var hDetailChip = document.createElement('div');
+        hDetailChip.className = 'new-badge';
+        hDetailChip.style.cssText = 'position:relative;top:auto;right:auto;display:inline-block;margin-bottom:10px';
+        hDetailChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
+        detail.appendChild(hDetailChip);
+      }
+
       if (h.title) {
         var titleEl = document.createElement('div');
         titleEl.className = 'hadith-detail-title';
