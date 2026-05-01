@@ -98,6 +98,21 @@ export async function onRequest(context) {
             return json({ success: true });
         }
 
+        // ── DELETE multiple rows by key_id list ───────────────────────────
+        if (action === 'delete_by_keys') {
+            const { key_ids } = body;
+            if (!Array.isArray(key_ids) || !key_ids.length) return json({ error: 'key_ids required' }, 400, corsHeaders);
+
+            const { error } = await supabase.from('kurdish_translations').delete().in('key_id', key_ids);
+            if (error) return json({ error: error.message }, 500, corsHeaders);
+
+            // Block all deleted keys so import never re-inserts them
+            const blocks = key_ids.map(function(k) { return { key_id: k }; });
+            await supabase.from('deleted_translation_keys').upsert(blocks, { onConflict: 'key_id' });
+
+            return json({ success: true, deleted: key_ids.length });
+        }
+
         // ── UPSERT by key_id (about page translations) ────────────────────
         if (action === 'upsert_by_key') {
             const { key_id, kurdish_text } = body;

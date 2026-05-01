@@ -3114,12 +3114,43 @@
                     from += PAGE_SIZE;
                 }
                 allTranslations = allData;
+                await _cleanupRemovedNotifKeys();
                 updateStats();
                 populatePageFilter();
                 filterTranslations();
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Failed to load translations');
+            }
+        }
+
+        // One-time cleanup: remove translation keys for deleted notification features
+        var _removedNotifKeysDone = false;
+        async function _cleanupRemovedNotifKeys() {
+            if (_removedNotifKeysDone) return;
+            var STALE_KEYS = [
+                'settings.reminder','settings.reminder_sub',
+                'settings.daily_verse','settings.daily_verse_sub',
+                'notif.reminder_body',
+                'notif.reminder_msg_0','notif.reminder_msg_1','notif.reminder_msg_2',
+                'notif.reminder_msg_3','notif.reminder_msg_4','notif.reminder_msg_5',
+                'notif.reminder_msg_6','notif.reminder_msg_7','notif.reminder_msg_8',
+                'notif.reminder_msg_9','notif.reminder_msg_10','notif.reminder_msg_11',
+                'notif.reminder_msg_12','notif.reminder_msg_13',
+                'update.notice_notification_title','update.notice_notification_body'
+            ];
+            var present = STALE_KEYS.filter(function(k) {
+                return allTranslations.some(function(t) { return t.key_id === k; });
+            });
+            if (!present.length) { _removedNotifKeysDone = true; return; }
+            try {
+                await adminTranslationsAPI('delete_by_keys', { key_ids: present });
+                allTranslations = allTranslations.filter(function(t) {
+                    return present.indexOf(t.key_id) === -1;
+                });
+                _removedNotifKeysDone = true;
+            } catch(e) {
+                console.warn('_cleanupRemovedNotifKeys failed:', e);
             }
         }
 
