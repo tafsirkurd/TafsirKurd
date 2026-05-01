@@ -1559,7 +1559,10 @@ function scheduleReminder(enabled){
   if(!enabled)return;
   var now=new Date();
   var notifications=[];
-  for(var d=0;d<7;d++){
+  // iOS 64-notification cap: keep to 3 days to leave room for athan+prayer-reminder slots
+  var _isIOS=window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios';
+  var _remDays=_isIOS?3:7;
+  for(var d=0;d<_remDays;d++){
     var dayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate()+d);
     var seed=_getDayOfYear(dayBase)*31+7;
     var h=7+(seed%13);var m=(seed*17)%60;
@@ -1766,7 +1769,9 @@ function scheduleDailyVerse(enabled){
 
   var now=new Date();
   var notifications=[];
-  for(var d=0;d<7;d++){
+  var _isIOSv=window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios';
+  var _verseDays=_isIOSv?3:7;
+  for(var d=0;d<_verseDays;d++){
     var dayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate()+d);
     var seed=_getDayOfYear(dayBase)*31+43;
     var h=8+(seed%12);var m=(seed*19)%60;

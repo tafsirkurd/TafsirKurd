@@ -21,8 +21,11 @@
   // iOS hard-limits all apps to 64 pending local notifications.
   // When only athan OR only reminders are active: 12 days × 5 = 60 (4 slots spare).
   // When BOTH athan + reminders are active:       6 days × 5 × 2 = 60 (4 slots spare).
-  var MAX_DAYS_IOS       = 12;
-  var MAX_DAYS_IOS_BOTH  = 6;  // shared budget when athan + reminders both active
+  // iOS 64-slot budget breakdown (when all features active):
+  //   athan 5×5=25 + prayer-reminder 5×5=25 + daily-reminder 3 + streak 1 + update 1 = 55  ✓
+  //   athan-only 11×5=55 + daily-reminder 3 + streak 1 + update 1 = 60  ✓
+  var MAX_DAYS_IOS       = 11;
+  var MAX_DAYS_IOS_BOTH  = 5;  // shared budget when athan + reminders both active
 
   // Kurdish prayer name fallbacks (used in notification body)
   var PRAYER_KMR_FB = {
