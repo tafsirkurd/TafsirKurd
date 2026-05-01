@@ -17,8 +17,6 @@ function tSafe(key) {
 window.ForceUpdate = (function(){
   var CFG_CACHE_KEY      = 'tk_update_cfg_v2';
   var SOFT_SNOOZE_KEY    = 'tk_soft_snooze_v2'; // {at, permanent}
-  var UPDATE_NOTIF_KEY   = 'updateNotifVer';     // last minVersion we scheduled a notification for
-  var UPDATE_NOTIF_ID    = 50;                   // LocalNotification ID — free slot (1=reminder,10-16,20-26,30-32,100-134=athan,200=test)
   var _storeUrl          = '';
   var _lastCheckTs       = 0;
   var CHECK_DEBOUNCE     = 10 * 1000; // 10s between checks
@@ -219,7 +217,6 @@ window.ForceUpdate = (function(){
     updateBtn.onclick = function() {
       openStore();
       snoozeForever(minVersion);
-      _cancelUpdateNotification();
       dismissBanner();
     };
 
@@ -245,59 +242,6 @@ window.ForceUpdate = (function(){
     setTimeout(function(){ if (banner.parentNode) banner.parentNode.removeChild(banner); }, 520);
   }
 
-  // ── Update reminder notification ──────────────────────────────────────────
-  //
-  // When soft mode is detected and the user's version is outdated, we schedule
-  // one local notification to fire 24 hours later. This nudges users who
-  // dismissed the in-app banner but haven't yet updated.
-  //
-  // Rules:
-  //   - Only scheduled ONCE per minVersion string (tracked in UPDATE_NOTIF_KEY)
-  //   - Fires 24h after first detection — users who update quickly never see it
-  //   - Automatically cancelled when check() finds the version is no longer outdated
-  //   - Uses notification ID 50 (unique, won't clash with any other notification)
-  //   - No new permissions required — reuses existing 'reminder' channel
-
-  function _getLN() {
-    return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications || null;
-  }
-
-  function _scheduleUpdateNotification(minVersion) {
-    var LN = _getLN();
-    if (!LN) return; // not on a device or plugin missing
-
-    // Already scheduled a notification for this version — don't duplicate
-    if (localStorage.getItem(UPDATE_NOTIF_KEY) === String(minVersion)) return;
-
-    var at = new Date(Date.now() + 24 * 3600 * 1000); // 24 hours from now
-    var title = tSafe('update.notice_notification_title') || tSafe('update.title') || 'هەواڵی نوێ بەردەستە.';
-    var body  = tSafe('update.notice_notification_body') || 'وەشانی نوێ هەیە — تکایە ئاپدێت بکە.';
-
-    // Cancel any leftover notification from a previous version first
-    LN.cancel({ notifications: [{ id: UPDATE_NOTIF_ID }] }).catch(function() {});
-
-    LN.schedule({ notifications: [{
-      id:          UPDATE_NOTIF_ID,
-      title:       title,
-      body:        body,
-      schedule:    { at: at, allowWhileIdle: true },
-      channelId:   'reminder',
-      smallIcon:   'ic_notification',
-      extra:       { type: 'update' }
-    }] }).then(function() {
-      localStorage.setItem(UPDATE_NOTIF_KEY, String(minVersion));
-      console.log('[Update] reminder notification scheduled for', at.toISOString(), '(ver', minVersion, ')');
-    }).catch(function(e) {
-      console.warn('[Update] could not schedule reminder notification:', e && e.message);
-    });
-  }
-
-  function _cancelUpdateNotification() {
-    var LN = _getLN();
-    if (LN) LN.cancel({ notifications: [{ id: UPDATE_NOTIF_ID }] }).catch(function() {});
-    localStorage.removeItem(UPDATE_NOTIF_KEY);
-  }
-
   // ── Main check ────────────────────────────────────────────────────────────
   async function check() {
     var now = Date.now();
@@ -313,7 +257,7 @@ window.ForceUpdate = (function(){
       if (platform === 'web') return;
 
       var cfg = await fetchConfig();
-      if (!cfg) { console.log('[Update] No config — skipping'); _cancelUpdateNotification(); return; }
+      if (!cfg) { console.log('[Update] No config — skipping'); return; }
 
       var mode       = resolveMode(cfg);
       var minVersion = platform === 'ios' ? cfg.min_ios_version : cfg.min_android_version;
@@ -328,7 +272,6 @@ window.ForceUpdate = (function(){
       console.log('[Update] v=' + version + ' min=' + (minVersion||'—') + ' stage=' + stage + ' mode=' + mode + ' outdated=' + outdated + ' platform=' + platform);
 
       if (mode === 'off' || !minVersion || !outdated) {
-        _cancelUpdateNotification();
         // If hard overlay is showing but user has now updated (or admin lifted block), dismiss it
         var overlay = document.getElementById('fuOverlay');
         if (overlay && overlay.classList.contains('on')) {
@@ -358,7 +301,6 @@ window.ForceUpdate = (function(){
         }
         console.log('[Update] SOFT — queuing banner (6s delay)');
         showSoftBanner(cfg.update_whats_new, minVersion);
-        _scheduleUpdateNotification(minVersion); // once per version, 24h later
       }
     } catch(e) {
       console.warn('[Update] check error:', e);
@@ -598,8 +540,6 @@ var S={
   autoAdvance:localStorage.getItem('autoAdvance')==='true',
   scrollFollowsAudio:localStorage.getItem('scrollFollowsAudio')!=='false',
   hapticFeedback:localStorage.getItem('hapticFeedback')!=='false',
-  dailyReminder:localStorage.getItem('dailyReminder')!=='false',
-  dailyVerse:localStorage.getItem('dailyVerse')==='true',
   prayerCity:localStorage.getItem('prayerCity')||'Duhok',
   prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'13'),
   prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true',
@@ -966,7 +906,6 @@ function init(){
       // Create reminder channel immediately at startup
       _ensureReminderChannel(_LN);
       // Reschedule daily reminder on every launch so 7-day window never expires
-      scheduleReminder(S.dailyReminder);
     }catch(e){}
   }
 
@@ -1322,7 +1261,7 @@ function _tabHash(name){
     return JSON.stringify(g)+':'+(log[today]||0)+':'+calcStreak(log)+':'+sl;
   }
   if(name==='settings'){
-    return (S.user?S.user.email:'')+':'+S.theme+':'+S.hapticFeedback+':'+S.arSize+':'+S.tfSize+':'+S.keepAwake+':'+S.dailyReminder+':'+S.dailyVerse;
+    return (S.user?S.user.email:'')+':'+S.theme+':'+S.hapticFeedback+':'+S.arSize+':'+S.tfSize+':'+S.keepAwake;
   }
   if(name==='islamvoice'){
     return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'')+(S.ivSpeakerFilter||'');
@@ -6742,46 +6681,6 @@ function renderSettings(){
     haptic([20,30,20]);
     renderSettings();
   },t('settings.haptic_sub')));
-  // (9) Daily reminder
-  var remRow=el('div','setting-row s-row');
-  var remLeft=el('div','setting-label-wrap');
-  remLeft.appendChild(el('div','setting-label',t('settings.reminder')));
-  remLeft.appendChild(el('div','setting-sub',t('settings.reminder_sub')));
-  remRow.appendChild(remLeft);
-  var remRight=el('div','reminder-right');
-  var remToggle=el('div','toggle'+(S.dailyReminder?' on':''));
-  remToggle.appendChild(el('div','toggle-knob'));
-  on(remToggle,'click',function(){
-    S.dailyReminder=!S.dailyReminder;
-    localStorage.setItem('dailyReminder',String(S.dailyReminder));
-    scheduleReminder(S.dailyReminder);
-    if(S.dailyReminder)window._showNotifSetupHint();
-    renderSettings();
-  });
-  remRight.appendChild(remToggle);
-  remRow.appendChild(remRight);
-  g3.appendChild(remRow);
-
-  // (10) Daily verse notification
-  var dvRow=el('div','setting-row s-row');
-  var dvLeft=el('div','setting-label-wrap');
-  dvLeft.appendChild(el('div','setting-label',t('settings.daily_verse')));
-  dvLeft.appendChild(el('div','setting-sub',t('settings.daily_verse_sub')));
-  dvRow.appendChild(dvLeft);
-  var dvRight=el('div','reminder-right');
-  var dvToggle=el('div','toggle'+(S.dailyVerse?' on':''));
-  dvToggle.appendChild(el('div','toggle-knob'));
-  on(dvToggle,'click',function(){
-    S.dailyVerse=!S.dailyVerse;
-    localStorage.setItem('dailyVerse',String(S.dailyVerse));
-    scheduleDailyVerse(S.dailyVerse);
-    if(S.dailyVerse)window._showNotifSetupHint();
-    renderSettings();
-  });
-  dvRight.appendChild(dvToggle);
-  dvRow.appendChild(dvRight);
-  g3.appendChild(dvRow);
-
   content.appendChild(g3);
 
   // ── Data & Sync ──────────────────────────────
@@ -7213,7 +7112,6 @@ var SYNC_SIMPLE_KEYS=[
   'app_arSize','app_tfSize','app_lineH',
   'app_reciter','app_speed','app_repeat','app_repeatCount',
   'autoAdvance','scrollFollowsAudio','hapticFeedback',
-  'dailyReminder','dailyVerse',
   'bestStreak',
   'mushafMode','readerFont','mushafFont','mushafLineH',
   'mushafFontSize_qcf1','mushafFontSize_qcf2','mushafFontSize_qcf4',
@@ -7355,8 +7253,6 @@ function applySyncData(data){
   S.autoAdvance=localStorage.getItem('autoAdvance')==='true';
   S.scrollFollowsAudio=localStorage.getItem('scrollFollowsAudio')!=='false';
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
-  S.dailyReminder=localStorage.getItem('dailyReminder')!=='false';
-  S.dailyVerse=localStorage.getItem('dailyVerse')==='true';
   S.mushafMode=localStorage.getItem('mushafMode')==='true';
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
   S.mushafFont=localStorage.getItem('mushafFont')||'qcf4';
@@ -7366,8 +7262,6 @@ function applySyncData(data){
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
   S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true';
   S.prayerToggles=(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return{}}})();
-  scheduleReminder(S.dailyReminder);
-  scheduleDailyVerse(S.dailyVerse);
   applyTheme();applySizes();
   // Sync in-memory bookmark map with whatever applySyncData wrote to localStorage.
   // Without this, _bmMap lags after a user-switch wipe or realtime push that
@@ -7506,15 +7400,15 @@ function _clearUserLocalData(){
   }
   ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions'].forEach(function(k){localStorage.removeItem(k);});
   /* Cancel all old user's scheduled notifications */
-  scheduleReminder(false);      // cancels daily Quran reminder IDs 10-16
-  scheduleDailyVerse(false);    // cancels daily verse IDs 20-26
   scheduleStreakReminder();     // cancels streak ID 30 (streak=0 after log clear → no reschedule)
+  /* Cancel old reminder/verse slots in case user upgrading from old build */
+  (function(){ var LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications; if(LN) LN.cancel({notifications:[1,10,11,12,13,14,15,16,20,21,22,23,24,25,26,50].map(function(id){return{id:id};})}).catch(function(){}); })();
   localStorage.removeItem('dailyVerse');
   localStorage.removeItem('dailyVerseScheduledDate');
   /* Reset in-memory state to defaults */
   S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;S.showTafsir=true;S.bgAudio=false;
   S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;
-  S.hapticFeedback=true;S.dailyReminder=true;S.dailyVerse=false;
+  S.hapticFeedback=true;
   if(S.theme!=='light'){S.theme='light';applyTheme();}
   applySizes();
   /* Reset in-memory caches that mirror now-cleared localStorage keys */
