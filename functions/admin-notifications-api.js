@@ -265,6 +265,85 @@ export async function onRequest(context) {
         return json({ success: true, count: count || 0 });
     }
 
+    // ── GET ANALYTICS ─────────────────────────────────────────────
+    if (action === 'get_analytics') {
+        const ago30 = new Date(Date.now() - 30 * 86400000).toISOString();
+        const [{ data: sentNotifs }, { data: allNotifs }] = await Promise.all([
+            supabase.from('admin_notifications')
+                .select('sent_at, platform, tokens_targeted, tokens_sent, tokens_failed, title')
+                .eq('status', 'sent')
+                .eq('is_template', false)
+                .gte('sent_at', ago30)
+                .order('sent_at', { ascending: true })
+                .limit(500),
+            supabase.from('admin_notifications')
+                .select('status, platform, tokens_targeted, tokens_sent, tokens_failed')
+                .eq('is_template', false)
+        ]);
+
+        // Daily sends + delivery rate last 30 days
+        const dayMap = {};
+        for (let d = 0; d < 30; d++) {
+            const dt = new Date(Date.now() - (29 - d) * 86400000);
+            dayMap[dt.toISOString().slice(0, 10)] = { sent: 0, delivered: 0, targeted: 0 };
+        }
+        for (const n of (sentNotifs || [])) {
+            if (!n.sent_at) continue;
+            const k = new Date(n.sent_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Baghdad' });
+            if (dayMap[k]) {
+                dayMap[k].sent++;
+                dayMap[k].delivered += n.tokens_sent || 0;
+                dayMap[k].targeted  += n.tokens_targeted || 0;
+            }
+        }
+        const dailyData = Object.keys(dayMap).sort().map(date => ({
+            date,
+            sent:      dayMap[date].sent,
+            delivered: dayMap[date].delivered,
+            targeted:  dayMap[date].targeted,
+            rate: dayMap[date].targeted > 0
+                ? Math.round((dayMap[date].delivered / dayMap[date].targeted) * 100) : 0
+        }));
+
+        // Platform breakdown
+        const byPlatform = { all: 0, android: 0, ios: 0 };
+        for (const n of (allNotifs || []).filter(n => n.status === 'sent'))
+            byPlatform[n.platform] = (byPlatform[n.platform] || 0) + 1;
+
+        // Top 5 by delivery rate (min 10 targeted)
+        const topNotifs = (sentNotifs || [])
+            .filter(n => (n.tokens_targeted || 0) >= 10)
+            .map(n => ({
+                title: n.title,
+                sent_at: n.sent_at,
+                targeted: n.tokens_targeted || 0,
+                delivered: n.tokens_sent || 0,
+                failed: n.tokens_failed || 0,
+                rate: Math.round(((n.tokens_sent || 0) / n.tokens_targeted) * 100)
+            }))
+            .sort((a, b) => b.rate - a.rate)
+            .slice(0, 5);
+
+        // Totals
+        const sentAll = (allNotifs || []).filter(n => n.status === 'sent');
+        const totalTargeted  = sentAll.reduce((s, n) => s + (n.tokens_targeted || 0), 0);
+        const totalDelivered = sentAll.reduce((s, n) => s + (n.tokens_sent    || 0), 0);
+        const avgRate = totalTargeted > 0 ? Math.round((totalDelivered / totalTargeted) * 100) : 0;
+
+        return json({
+            success: true,
+            dailyData,
+            byPlatform,
+            topNotifs,
+            totals: {
+                campaigns: sentAll.length,
+                totalDelivered,
+                totalTargeted,
+                avgRate
+            }
+        });
+    }
+
     // ── WRITE OPERATIONS — require editor or super_admin ──────────
     if (!isWriter) return json({ error: 'Insufficient permissions' }, 403);
 

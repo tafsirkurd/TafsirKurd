@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js?v=2"></script>
+    <title>Jobs - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=14">
+    <style>
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; margin-left: 240px; min-width: 0; overflow-x: hidden; transition: margin-left 0.3s; }
+        .sidebar.collapsed + .main-content { margin-left: 64px; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+
+        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .job-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color .15s;
+        }
+        .job-card:hover { border-color: var(--border-medium); }
+        .job-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+        .job-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .job-icon i { width: 17px; height: 17px; }
+        .job-name { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+        .job-desc { font-size: 12px; color: var(--text-secondary); }
+        .job-meta { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light); }
+        .job-meta-row { display: flex; justify-content: space-between; font-size: 12px; }
+        .job-meta-label { color: var(--text-tertiary); font-weight: 500; }
+        .job-meta-value { color: var(--text-primary); font-weight: 600; }
+
+        .job-status { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .js-active { background: #d1fae5; color: #065f46; }
+        .js-inactive { background: var(--bg-active); color: var(--text-tertiary); }
+        .js-running { background: #fef3c7; color: #92400e; }
+        .js-error { background: #fee2e2; color: #991b1b; }
+        .job-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+
+        .cron-expr { font-family: monospace; font-size: 12px; background: var(--bg-active); padding: 2px 7px; border-radius: 5px; color: var(--text-secondary); }
+
+        .activity-feed { display: flex; flex-direction: column; gap: 0; }
+        .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; margin-top: 5px; flex-shrink: 0; }
+    </style>
+    <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+            if (role === 'custom') css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            if (role && style) style.textContent = css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-badge"></span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Site</div>
+                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-label">Header</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">System</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
+                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
+                <a href="/admin-db-health.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
+                <a href="/admin-jobs.html" class="nav-item active"><i data-lucide="clock"></i><span class="nav-item-label">Jobs</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s" title="Logout"><i data-lucide="log-out"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="topbar-search">
+                <i data-lucide="clock"></i>
+                <input type="text" placeholder="Jobs" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
+                <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <h1 class="page-title">Jobs</h1>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="loadPage()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                </div>
+            </div>
+
+            <!-- Scheduled Jobs -->
+            <div class="section-title">Scheduled Cron Jobs</div>
+            <div class="jobs-grid" id="jobs-grid">
+                <!-- Rendered by JS -->
+            </div>
+
+            <!-- Pending Notifications -->
+            <div class="section-title">Pending Notifications <span id="pending-count" style="font-size:12px;font-weight:500;color:var(--text-tertiary);margin-left:6px"></span></div>
+            <div class="table-container" style="margin-bottom:28px">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Platform</th>
+                            <th>Scheduled For</th>
+                            <th>Recurrence</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-tbody">
+                        <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Recent job activity from activity_log -->
+            <div class="section-title">Recent Automated Activity</div>
+            <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:16px 20px">
+                <div class="activity-feed" id="auto-activity"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/utils/admin-session-timer-ui.js?v=10"></script>
+<script src="/utils/admin-auth.js?v=6"></script>
+<script src="/utils/admin-live-alerts.js?v=14"></script>
+<script>
+    lucide.createIcons();
+
+    // Known cron jobs defined in Cloudflare Workers
+    var KNOWN_JOBS = [
+        {
+            name: 'Process Scheduled Notifications',
+            desc: 'Sends notifications whose scheduled_at time has passed. Handles recurrence.',
+            icon: 'send',
+            color: '#3b82f6',
+            cron: '*/5 * * * *',
+            humanCron: 'Every 5 minutes',
+            endpoint: '/admin-notifications-api',
+            action: 'process_scheduled',
+        },
+        {
+            name: 'Auto-Notify New Content',
+            desc: 'Checks for new videos, books, and hadiths published in the last 2 hours and sends notifications.',
+            icon: 'bell',
+            color: '#10b981',
+            cron: '0 * * * *',
+            humanCron: 'Every hour',
+            endpoint: '/admin-notifications-api',
+            action: 'auto_notify_content',
+        },
+        {
+            name: 'Prayer Times Cache Refresh',
+            desc: 'Pre-fetches and caches prayer times for the next 7 days for major cities.',
+            icon: 'moon',
+            color: '#8b5cf6',
+            cron: '0 2 * * *',
+            humanCron: 'Daily at 2:00 AM UTC',
+            endpoint: '/prayer-kurd',
+            action: 'cache_refresh',
+        },
+        {
+            name: 'Session Cleanup',
+            desc: 'Removes expired admin sessions from the database.',
+            icon: 'trash-2',
+            color: '#f59e0b',
+            cron: '0 0 * * *',
+            humanCron: 'Daily at midnight UTC',
+            endpoint: 'DB trigger',
+            action: 'delete_expired_sessions',
+        },
+    ];
+
+    window.addEventListener('DOMContentLoaded', function() {
+        window.adminAuth.checkAuth().then(function(data) {
+            if (!data) return;
+            lucide.createIcons();
+            renderJobCards();
+            loadPage();
+        });
+        document.getElementById('menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('collapsed'); });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('mobile-open'); });
+    });
+
+    async function notifAPI(action, payload) {
+        var token = sessionStorage.getItem('adminToken');
+        if (!token) throw new Error('Not logged in');
+        var res = await fetch('/admin-notifications-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+        });
+        var data = await res.json();
+        if (!data.success) throw new Error(data.error || 'API error');
+        return data;
+    }
+
+    async function dbHealthAPI(action) {
+        var token = sessionStorage.getItem('adminToken');
+        if (!token) throw new Error('Not logged in');
+        var res = await fetch('/admin-db-health', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: action })
+        });
+        var data = await res.json();
+        if (!data.success) throw new Error(data.error || 'API error');
+        return data;
+    }
+
+    function renderJobCards() {
+        var grid = document.getElementById('jobs-grid');
+        grid.innerHTML = '';
+        KNOWN_JOBS.forEach(function(job) {
+            var card = document.createElement('div');
+            card.className = 'job-card';
+            card.innerHTML = '<div class="job-card-header">'
+                + '<div class="job-icon" style="background:' + job.color + '18">'
+                + '<i data-lucide="' + job.icon + '" style="color:' + job.color + '"></i></div>'
+                + '<div><div class="job-name">' + esc(job.name) + '</div>'
+                + '<div class="job-desc">' + esc(job.desc) + '</div></div></div>'
+                + '<div class="job-meta">'
+                + '<div class="job-meta-row"><span class="job-meta-label">Schedule</span><span class="job-meta-value">' + esc(job.humanCron) + '</span></div>'
+                + '<div class="job-meta-row"><span class="job-meta-label">Cron</span><span class="cron-expr">' + esc(job.cron) + '</span></div>'
+                + '<div class="job-meta-row"><span class="job-meta-label">Next run</span><span class="job-meta-value" id="next-' + esc(job.action) + '">' + getNextRun(job.cron) + '</span></div>'
+                + '<div class="job-meta-row"><span class="job-meta-label">Status</span>'
+                + '<span class="job-status js-active"><span class="job-status-dot"></span> Active</span></div>'
+                + '</div>';
+            grid.appendChild(card);
+        });
+        lucide.createIcons();
+    }
+
+    async function loadPage() {
+        loadPending();
+        loadAutoActivity();
+    }
+
+    async function loadPending() {
+        var tbody = document.getElementById('pending-tbody');
+        try {
+            var d = await notifAPI('list', { status: 'scheduled' });
+            var items = (d.notifications||[]).filter(function(n){return !n.is_template;});
+            var countEl = document.getElementById('pending-count');
+            if (countEl) countEl.textContent = '(' + items.length + ')';
+            tbody.innerHTML = '';
+            if (!items.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-tertiary)">No scheduled notifications.</td></tr>';
+                lucide.createIcons(); return;
+            }
+            items.forEach(function(n) {
+                var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                var rec = n.recurrence && n.recurrence !== 'none'
+                    ? (n.recurrence === 'daily' ? 'Daily' : 'Weekly · ' + (DAYS[n.recurrence_day]||''))
+                    : '—';
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td style="font-weight:600;color:var(--text-primary)">' + esc(n.title) + '</td>'
+                    + '<td style="font-size:13px">' + esc(n.platform||'all') + '</td>'
+                    + '<td style="font-size:13px">' + fmtDate(n.scheduled_at) + '</td>'
+                    + '<td style="font-size:12px;color:' + (rec!=='—'?'#3b82f6':'var(--text-tertiary)') + '">' + esc(rec) + '</td>'
+                    + '<td><span style="font-size:11px;font-weight:600;background:#bee3f8;color:#2b6cb0;padding:2px 8px;border-radius:6px">scheduled</span></td>';
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#e53e3e">' + esc(e.message) + '</td></tr>';
+        }
+    }
+
+    async function loadAutoActivity() {
+        var feed = document.getElementById('auto-activity');
+        try {
+            var d = await dbHealthAPI('get_recent_activity');
+            var items = (d.activity||[]).filter(function(a){ return a.action_type === 'i18n_version_bump' || (a.admin_name||'') === 'cron' || (a.admin_name||'') === 'auto'; });
+            if (!items.length) {
+                // Show all recent activity if no auto-only items
+                items = (d.activity||[]).slice(0,8);
+            }
+            if (!items.length) { feed.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">No recent activity found.</div>'; return; }
+            var html = '';
+            items.forEach(function(a) {
+                var colorMap = { i18n_version_bump:'#8b5cf6', 'send':'#10b981', 'delete':'#ef4444', 'insert':'#3b82f6' };
+                var color = colorMap[a.action_type] || '#94a3b8';
+                html += '<div class="activity-item">'
+                    + '<div class="activity-dot" style="background:' + color + '"></div>'
+                    + '<div style="flex:1"><div style="font-size:13px;color:var(--text-primary)">' + esc(a.description||a.action_type) + '</div>'
+                    + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">' + esc(a.admin_name||'System') + ' · ' + getRelTime(a.created_at) + '</div>'
+                    + '</div></div>';
+            });
+            feed.innerHTML = html;
+        } catch(e) {
+            feed.innerHTML = '<div style="color:#e53e3e;font-size:13px">' + esc(e.message) + '</div>';
+        }
+    }
+
+    function getNextRun(cron) {
+        // Simple heuristic next-run label
+        var parts = cron.split(' ');
+        var minute = parts[0], hour = parts[1];
+        if (minute.startsWith('*/')) {
+            var interval = parseInt(minute.slice(2));
+            var now = new Date();
+            var nextMin = Math.ceil(now.getMinutes()/interval)*interval;
+            if (nextMin >= 60) nextMin = 60;
+            var next = new Date(now);
+            next.setMinutes(nextMin, 0, 0);
+            if (next <= now) { next.setMinutes(next.getMinutes()+interval); }
+            return next.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' (approx)';
+        }
+        if (hour === '*') return 'Next hour at :' + (minute.padStart ? minute.padStart(2,'0') : minute);
+        return 'Scheduled';
+    }
+
+    function fmtDate(str) {
+        if (!str) return '—';
+        var d = new Date(str);
+        return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    }
+    function getRelTime(str) {
+        if (!str) return '—';
+        var diff = Date.now() - new Date(str).getTime();
+        var mins = Math.floor(diff/60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + 'm ago';
+        var hrs = Math.floor(mins/60);
+        if (hrs < 24) return hrs + 'h ago';
+        return Math.floor(hrs/24) + 'd ago';
+    }
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+<script src="/utils/admin-command-palette.js"></script>
+</body>
+</html>

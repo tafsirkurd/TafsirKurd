@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js?v=2"></script>
+    <title>DB Health - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=14">
+    <style>
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; margin-left: 240px; min-width: 0; overflow-x: hidden; transition: margin-left 0.3s; }
+        .sidebar.collapsed + .main-content { margin-left: 64px; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; }
+        .stat-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .stat-icon i { width: 16px; height: 16px; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -0.5px; margin-bottom: 4px; }
+        .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); }
+
+        .section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { width: 16px; height: 16px; color: var(--text-tertiary); }
+
+        .row-bar { background: var(--bg-active); border-radius: 3px; height: 5px; overflow: hidden; width: 80px; display: inline-block; vertical-align: middle; margin-left: 6px; }
+        .row-bar-fill { height: 100%; background: #3b82f6; border-radius: 3px; }
+
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+        .dot-green { background: #10b981; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-red { background: #ef4444; }
+
+        .activity-feed { display: flex; flex-direction: column; gap: 0; }
+        .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; margin-top: 5px; flex-shrink: 0; }
+        .activity-content { flex: 1; min-width: 0; }
+        .activity-desc { font-size: 13px; color: var(--text-primary); }
+        .activity-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+    </style>
+    <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+            if (role === 'custom') css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            if (role && style) style.textContent = css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-badge"></span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Site</div>
+                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-label">Header</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">System</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
+                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
+                <a href="/admin-db-health.html" class="nav-item active"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
+                <a href="/admin-jobs.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-label">Jobs</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s" title="Logout"><i data-lucide="log-out"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="topbar-search">
+                <i data-lucide="activity"></i>
+                <input type="text" placeholder="DB Health" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
+                <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <h1 class="page-title">DB Health</h1>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="loadPage()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card" style="border-left:3px solid #10b981">
+                    <div class="stat-icon" style="background:#10b98120"><i data-lucide="database" style="color:#10b981"></i></div>
+                    <div class="stat-value" id="stat-tables">—</div>
+                    <div class="stat-label">Tables Tracked</div>
+                </div>
+                <div class="stat-card" style="border-left:3px solid #3b82f6">
+                    <div class="stat-icon" style="background:#3b82f620"><i data-lucide="rows" style="color:#3b82f6"></i></div>
+                    <div class="stat-value" id="stat-rows">—</div>
+                    <div class="stat-label">Total Rows</div>
+                </div>
+                <div class="stat-card" style="border-left:3px solid #8b5cf6">
+                    <div class="stat-icon" style="background:#8b5cf620"><i data-lucide="zap" style="color:#8b5cf6"></i></div>
+                    <div class="stat-value" id="stat-writes-24h">—</div>
+                    <div class="stat-label">Recent Writes (24h)</div>
+                </div>
+                <div class="stat-card" style="border-left:3px solid #f59e0b">
+                    <div class="stat-icon" style="background:#f59e0b20"><i data-lucide="clock" style="color:#f59e0b"></i></div>
+                    <div class="stat-value" id="stat-checked">—</div>
+                    <div class="stat-label">Last Checked</div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start">
+                <!-- Table row counts -->
+                <div>
+                    <div class="section-title"><i data-lucide="table"></i> Table Row Counts</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Table</th>
+                                    <th>Rows</th>
+                                    <th>Distribution</th>
+                                    <th>Writes 24h</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tables-tbody">
+                                <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent activity -->
+                <div>
+                    <div class="section-title"><i data-lucide="activity"></i> Recent Admin Activity</div>
+                    <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:16px 20px">
+                        <div class="activity-feed" id="activity-feed">
+                            <div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">Loading…</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/utils/admin-session-timer-ui.js?v=10"></script>
+<script src="/utils/admin-auth.js?v=6"></script>
+<script src="/utils/admin-live-alerts.js?v=14"></script>
+<script>
+    lucide.createIcons();
+
+    window.addEventListener('DOMContentLoaded', function() {
+        window.adminAuth.checkAuth().then(function(data) {
+            if (!data) return;
+            lucide.createIcons();
+            loadPage();
+        });
+        document.getElementById('menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('collapsed'); });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('mobile-open'); });
+    });
+
+    async function api(action, payload) {
+        var token = sessionStorage.getItem('adminToken');
+        if (!token) throw new Error('Not logged in');
+        var res = await fetch('/admin-db-health', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+        });
+        var data = await res.json();
+        if (!data.success) throw new Error(data.error || 'API error');
+        return data;
+    }
+
+    async function loadPage() {
+        loadStats();
+        loadActivity();
+    }
+
+    async function loadStats() {
+        var tbody = document.getElementById('tables-tbody');
+        try {
+            var d = await api('get_stats');
+            document.getElementById('stat-tables').textContent = (d.tables||[]).filter(function(t){return t.error===null;}).length;
+            document.getElementById('stat-rows').textContent = (d.totalRows||0).toLocaleString();
+            var writes24h = (d.tables||[]).reduce(function(s,t){return s+(t.recent24h||0);},0);
+            document.getElementById('stat-writes-24h').textContent = writes24h.toLocaleString();
+            var checkedAt = new Date(d.checkedAt||Date.now());
+            document.getElementById('stat-checked').textContent = checkedAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+            var maxRows = Math.max.apply(null, (d.tables||[]).map(function(t){return t.count||0;}));
+            tbody.innerHTML = '';
+            (d.tables||[]).forEach(function(t) {
+                var pct = maxRows > 0 ? Math.round(((t.count||0)/maxRows)*100) : 0;
+                var status = t.error ? 'error' : (t.count > 0 ? 'ok' : 'empty');
+                var dotClass = status === 'error' ? 'dot-red' : status === 'empty' ? 'dot-yellow' : 'dot-green';
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--text-primary)">' + esc(t.name) + '</td>'
+                    + '<td style="font-size:13px;font-weight:700">' + (t.count !== null ? (t.count||0).toLocaleString() : '—') + '</td>'
+                    + '<td><div class="row-bar"><div class="row-bar-fill" style="width:' + pct + '%"></div></div></td>'
+                    + '<td style="font-size:12px;color:var(--text-secondary)">' + (t.recent24h !== null ? (t.recent24h||0) : '—') + '</td>'
+                    + '<td><span class="status-dot ' + dotClass + '"></span><span style="font-size:11px;color:var(--text-tertiary)">' + status + '</span></td>';
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        } catch(e) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#e53e3e">' + esc(e.message) + '</td></tr>';
+        }
+    }
+
+    async function loadActivity() {
+        var feed = document.getElementById('activity-feed');
+        try {
+            var d = await api('get_recent_activity');
+            var items = d.activity || [];
+            if (!items.length) { feed.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">No recent activity.</div>'; return; }
+            var html = '';
+            items.forEach(function(a) {
+                var colorMap = { i18n_version_bump:'#8b5cf6', 'delete':'#ef4444', 'insert':'#10b981', 'update':'#3b82f6' };
+                var color = colorMap[a.action_type] || '#94a3b8';
+                var relTime = getRelTime(a.created_at);
+                html += '<div class="activity-item">'
+                    + '<div class="activity-dot" style="background:' + color + '"></div>'
+                    + '<div class="activity-content">'
+                    + '<div class="activity-desc">' + esc(a.description||a.action_type) + '</div>'
+                    + '<div class="activity-meta">' + esc(a.admin_name||'') + ' · ' + relTime + '</div>'
+                    + '</div></div>';
+            });
+            feed.innerHTML = html;
+        } catch(e) {
+            feed.innerHTML = '<div style="color:#e53e3e;font-size:13px">' + esc(e.message) + '</div>';
+        }
+    }
+
+    function getRelTime(str) {
+        if (!str) return '—';
+        var diff = Date.now() - new Date(str).getTime();
+        var mins = Math.floor(diff/60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + 'm ago';
+        var hrs = Math.floor(mins/60);
+        if (hrs < 24) return hrs + 'h ago';
+        return Math.floor(hrs/24) + 'd ago';
+    }
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+<script src="/utils/admin-command-palette.js"></script>
+</body>
+</html>
