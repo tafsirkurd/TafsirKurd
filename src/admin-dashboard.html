@@ -1474,7 +1474,7 @@
             if (updatedEl) updatedEl.textContent = 'Updated ' + getTimeAgo(new Date());
 
             if (!events || !events.length) {
-                summaryEl.innerHTML = '<span style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">No reports yet.</span>';
+                summaryEl.innerHTML = '<span style="color:var(--text-tertiary);font-size:13px;">No reports yet.</span>';
                 bodyEl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:13px;">No data yet</td></tr>';
                 return;
             }
@@ -1587,7 +1587,7 @@
             if (!summaryEl || !bodyEl) return;
 
             if (!events || !events.length) {
-                summaryEl.innerHTML = '<span style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">No reports yet.</span>';
+                summaryEl.innerHTML = '<span style="color:var(--text-tertiary);font-size:13px;">No reports yet.</span>';
                 bodyEl.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:13px;">No data</td></tr>';
                 return;
             }
