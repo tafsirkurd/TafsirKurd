@@ -1891,7 +1891,7 @@ async function saveDua() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
-    _logActivity(editId ? 'dua_edit' : 'dua_add', (editId ? 'دوعا نوێ کرایەوە: ' : 'دوعای نوی زیادکرا: ') + (savedRow && savedRow.ku ? savedRow.ku.substring(0, 60) : ''));
+    _logActivity(editId ? 'dua_edit' : 'dua_add', (editId ? 'Dua updated: ' : 'Dua added: ') + (savedRow && savedRow.ku ? savedRow.ku.substring(0, 60) : ''));
     if (editId && savedRow) {
         var idx = allDuas.findIndex(function(x){ return String(x.id) === String(editId); });
         if (idx !== -1) allDuas[idx] = savedRow; else allDuas.push(savedRow);
@@ -2022,7 +2022,7 @@ async function saveHadith() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Hadith updated.' : 'Hadith added.', 'success');
-    _logActivity(editId ? 'hadith_edit' : 'hadith_add', (editId ? 'فەرمودە نوێ کرایەوە: ' : 'فەرمودەی نوی زیادکرا: ') + (savedRow && (savedRow.title || savedRow.ar) ? (savedRow.title || savedRow.ar).substring(0, 60) : ''));
+    _logActivity(editId ? 'hadith_edit' : 'hadith_add', (editId ? 'Hadith updated: ' : 'Hadith added: ') + (savedRow && (savedRow.title || savedRow.ar) ? (savedRow.title || savedRow.ar).substring(0, 60) : ''));
     if (editId && savedRow) {
         var idx = allHadiths.findIndex(function(x){ return String(x.id) === String(editId); });
         if (idx !== -1) allHadiths[idx] = savedRow; else allHadiths.push(savedRow);
@@ -2535,7 +2535,7 @@ async function saveAdhkar() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Adhkar updated.' : 'Adhkar added.', 'success');
-    _logActivity(editId ? 'adhkar_edit' : 'adhkar_add', (editId ? 'زکر نوێ کرایەوە: ' : 'زکری نوی زیادکرا: ') + (savedRow && savedRow.ar ? savedRow.ar.substring(0, 60) : ''));
+    _logActivity(editId ? 'adhkar_edit' : 'adhkar_add', (editId ? 'Adhkar updated: ' : 'Adhkar added: ') + (savedRow && savedRow.ar ? savedRow.ar.substring(0, 60) : ''));
     if (editId && savedRow) {
         var idx = allAdhkar.findIndex(function(x){ return String(x.id) === String(editId); });
         if (idx !== -1) allAdhkar[idx] = savedRow;
@@ -2890,7 +2890,7 @@ async function saveBook() {
     if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
     var isNew = !editId;
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
-    _logActivity(editId ? 'book_edit' : 'book_add', (editId ? 'کتێب نوێ کرایەوە: ' : 'کتێبی نوی زیادکرا: ') + (payload.title_ku || payload.title_ar || ''));
+    _logActivity(editId ? 'book_edit' : 'book_add', (editId ? 'Book updated: ' : 'Book added: ') + (payload.title_ku || payload.title_ar || ''));
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
     if (isNew) {
         var bookList = document.getElementById('book-list');
