@@ -155,6 +155,17 @@ export async function onRequest(context) {
             return json({ success: true, updated: items.length - errors, errors });
         }
 
+        // ── SET badge_until on any gencine content row ────────────────────
+        if (action === 'set_badge') {
+            const ALLOWED = ['gencine_hadiths','gencine_duas','gencine_adhkar','gencine_books','gencine_sections'];
+            const { table, id, badge_until } = body;
+            if (!table || !ALLOWED.includes(table)) return json({ error: 'invalid table' }, 400, corsHeaders);
+            if (!id) return json({ error: 'id required' }, 400, corsHeaders);
+            const { error } = await supabase.from(table).update({ badge_until: badge_until || null }).eq('id', id);
+            if (error) return json({ error: error.message }, 500, corsHeaders);
+            return json({ success: true });
+        }
+
         return json({ error: 'Unknown action' }, 400, corsHeaders);
 
     } catch (err) {

@@ -1827,7 +1827,7 @@ function renderDuaList() {
             var dTime = mke('span', 'section-badge-time'); dTime.textContent = dTimeLeft; dPill.appendChild(dTime);
             var dRm = mke('button', 'section-badge-remove'); dRm.type = 'button'; dRm.textContent = '×'; dRm.title = 'Remove badge';
             dRm.onclick = (function(dd){ return function(e){ e.preventDefault();
-                window.adminAuth.getSupabase().from('gencine_duas').update({ badge_until: null }).eq('id', dd.id)
+                _setBadge('gencine_duas', dd.id, null)
                     .then(function(res){ if (!res.error){ dd.badge_until = null; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); } });
             }; })(dua);
             dPill.appendChild(dRm); body.appendChild(dPill);
@@ -1906,8 +1906,8 @@ async function saveDua() {
         showBadgeDialog('Dua', function(hours) {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
-            supabase.from('gencine_duas').update({ badge_until: until }).eq('id', savedRow.id)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی badge added.', 'success'); } });
+            _setBadge('gencine_duas', savedRow.id, until)
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -1941,7 +1941,7 @@ function renderHadithList() {
             var hTime = mke('span', 'section-badge-time'); hTime.textContent = hTimeLeft; hPill.appendChild(hTime);
             var hRm = mke('button', 'section-badge-remove'); hRm.type = 'button'; hRm.textContent = '×'; hRm.title = 'Remove badge';
             hRm.onclick = (function(hh){ return function(e){ e.preventDefault();
-                window.adminAuth.getSupabase().from('gencine_hadiths').update({ badge_until: null }).eq('id', hh.id)
+                _setBadge('gencine_hadiths', hh.id, null)
                     .then(function(res){ if (!res.error){ hh.badge_until = null; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); } });
             }; })(h);
             hPill.appendChild(hRm); body.appendChild(hPill);
@@ -2036,8 +2036,8 @@ async function saveHadith() {
         showBadgeDialog('Hadith', function(hours) {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
-            supabase.from('gencine_hadiths').update({ badge_until: until }).eq('id', savedRow.id)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی badge added.', 'success'); } });
+            _setBadge('gencine_hadiths', savedRow.id, until)
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -2472,7 +2472,7 @@ function renderAdhkarList() {
             var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
             var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove badge';
             aRm.onclick = (function(ii){ return function(e){ e.preventDefault();
-                window.adminAuth.getSupabase().from('gencine_adhkar').update({ badge_until: null }).eq('id', ii.id)
+                _setBadge('gencine_adhkar', ii.id, null)
                     .then(function(res){ if (!res.error){ ii.badge_until = null; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); } });
             }; })(item);
             aPill.appendChild(aRm); body.appendChild(aPill);
@@ -2548,8 +2548,8 @@ async function saveAdhkar() {
         showBadgeDialog('Adhkar', function(hours) {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
-            supabase.from('gencine_adhkar').update({ badge_until: until }).eq('id', savedRow.id)
-                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی badge added.', 'success'); } });
+            _setBadge('gencine_adhkar', savedRow.id, until)
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -2602,6 +2602,17 @@ function filterAsma(q) { renderAsma99(); }
 
 /* ── BOOKS ── */
 function _booksToken() { return sessionStorage.getItem('adminToken') || ''; }
+
+/* Set or clear badge_until on any gencine table via service-role API */
+async function _setBadge(table, id, badge_until) {
+    var token = _booksToken();
+    var r = await fetch('/admin-translations-api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ action: 'set_badge', table: table, id: id, badge_until: badge_until || null })
+    });
+    return r.json();
+}
 async function _booksApi(body) {
     var r = await fetch('/admin-books', {
         method: 'POST',
@@ -2667,7 +2678,7 @@ function renderBooksList() {
             var bTime = mke('span', 'section-badge-time'); bTime.textContent = bTimeLeft; bPill.appendChild(bTime);
             var bRm = mke('button', 'section-badge-remove'); bRm.type = 'button'; bRm.textContent = '×'; bRm.title = 'Remove badge';
             bRm.onclick = (function(bb){ return function(e){ e.preventDefault();
-                _booksApi({ action: 'update', id: bb.id, payload: { badge_until: null } })
+                _setBadge('gencine_books', bb.id, null)
                     .then(function(res){ if (!res.error){ bb.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_books_v1'); } });
             }; })(book);
             bPill.appendChild(bRm); body.appendChild(bPill);
@@ -2875,8 +2886,8 @@ async function saveBook() {
             showBadgeDialog('Book', function(hours) {
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
-                _booksApi({ action: 'update', id: newBook.id, payload: { badge_until: until } })
-                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('نوی badge added.', 'success'); } });
+                _setBadge('gencine_books', newBook.id, until)
+                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v1'); showNotification('نوی badge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
             });
         }
     }
