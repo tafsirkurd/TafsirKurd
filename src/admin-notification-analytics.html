@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="utils/theme-loader.js?v=2"></script>
-    <title>App Versions - TafsirKurd Admin</title>
+    <title>Notification Analytics - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -29,13 +29,9 @@
         .chart-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
         .chart-wrap { position: relative; height: 200px; }
 
-        .version-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; font-family: monospace; }
-        .vb-android { background: #d1fae5; color: #065f46; }
-        .vb-ios { background: #e0e7ff; color: #3730a3; }
-        .vb-latest { background: #fef3c7; color: #92400e; }
-
-        .info-box { background: var(--bg-active); border: 1px solid var(--border-light); border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px; color: var(--text-secondary); display: flex; gap: 10px; align-items: flex-start; }
-        .info-box i { width: 16px; height: 16px; color: #3b82f6; flex-shrink: 0; margin-top: 1px; }
+        .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .bottom-row { grid-template-columns: 1fr; } }
+        .panel-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; }
     </style>
     <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
     <script>
@@ -85,7 +81,7 @@
                 <div class="nav-section-header">Users</div>
                 <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
                 <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
-                    <a href="/admin-notification-analytics.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Notif Analytics</span></a>
+                <a href="/admin-notification-analytics.html" class="nav-item active"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Notif Analytics</span></a>
                 <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
             </div>
             <div class="nav-section">
@@ -99,7 +95,7 @@
                 <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
                 <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
                 <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
-                <a href="/admin-app-versions.html" class="nav-item active"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
+                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
                 <a href="/admin-db-health.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
                 <a href="/admin-jobs.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-label">Jobs</span></a>
             </div>
@@ -120,81 +116,70 @@
         <header class="topbar">
             <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
             <div class="topbar-search">
-                <i data-lucide="smartphone"></i>
-                <input type="text" placeholder="App Versions" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
+                <i data-lucide="bar-chart-2"></i>
+                <input type="text" placeholder="Notification Analytics" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
             </div>
             <div class="topbar-actions">
-                <div class="session-timer" id="sessionTimer" title="Session expires after 2 hours"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
-                <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode"><i data-lucide="moon" id="theme-icon"></i></button>
+                <div class="session-timer" id="sessionTimer"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
+                <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
             </div>
         </header>
 
         <div class="content-area">
             <div class="page-header">
-                <h1 class="page-title">App Versions</h1>
+                <h1 class="page-title">Notification Analytics</h1>
                 <div class="page-actions">
                     <button class="btn btn-secondary" onclick="loadPage()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                    <a href="/admin-notifications.html" class="btn btn-primary"><i data-lucide="bell"></i> Manage Notifications</a>
                 </div>
-            </div>
-
-            <div class="info-box">
-                <i data-lucide="info"></i>
-                <span>Version data is reported by the app on startup via <code style="background:var(--bg-surface);padding:1px 5px;border-radius:4px;font-size:11px">/app-version-report</code>. Data appears once users open the updated app.</span>
             </div>
 
             <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card" style="border-left:3px solid #3b82f6">
-                    <div class="stat-icon" style="background:#3b82f620"><i data-lucide="smartphone" style="color:#3b82f6"></i></div>
-                    <div class="stat-value" id="stat-total">—</div>
-                    <div class="stat-label">Total Device Records</div>
+                    <div class="stat-icon" style="background:#3b82f620"><i data-lucide="send" style="color:#3b82f6"></i></div>
+                    <div class="stat-value" id="stat-campaigns">—</div>
+                    <div class="stat-label">Total Campaigns</div>
                 </div>
                 <div class="stat-card" style="border-left:3px solid #10b981">
                     <div class="stat-icon" style="background:#10b98120"><i data-lucide="check-circle" style="color:#10b981"></i></div>
-                    <div class="stat-value" id="stat-android-latest">—</div>
-                    <div class="stat-label">Latest Android Build</div>
+                    <div class="stat-value" id="stat-rate">—</div>
+                    <div class="stat-label">Avg Delivery Rate</div>
                 </div>
                 <div class="stat-card" style="border-left:3px solid #8b5cf6">
-                    <div class="stat-icon" style="background:#8b5cf620"><i data-lucide="check-circle" style="color:#8b5cf6"></i></div>
-                    <div class="stat-value" id="stat-ios-latest">—</div>
-                    <div class="stat-label">Latest iOS Build</div>
+                    <div class="stat-icon" style="background:#8b5cf620"><i data-lucide="smartphone" style="color:#8b5cf6"></i></div>
+                    <div class="stat-value" id="stat-delivered">—</div>
+                    <div class="stat-label">Total Delivered</div>
                 </div>
                 <div class="stat-card" style="border-left:3px solid #f59e0b">
                     <div class="stat-icon" style="background:#f59e0b20"><i data-lucide="users" style="color:#f59e0b"></i></div>
-                    <div class="stat-value" id="stat-active7d">—</div>
-                    <div class="stat-label">Active Users (7d)</div>
+                    <div class="stat-value" id="stat-targeted">—</div>
+                    <div class="stat-label">Total Targeted</div>
                 </div>
             </div>
 
             <!-- Charts -->
             <div class="charts-row">
                 <div class="chart-card">
-                    <div class="chart-title">Android Build Distribution</div>
-                    <div id="android-dist"></div>
+                    <div class="chart-title">Campaigns Sent — Last 30 Days</div>
+                    <div class="chart-wrap"><canvas id="chart-sends"></canvas></div>
                 </div>
                 <div class="chart-card">
-                    <div class="chart-title">iOS Build Distribution</div>
-                    <div id="ios-dist"></div>
+                    <div class="chart-title">Delivery Rate — Last 30 Days</div>
+                    <div class="chart-wrap"><canvas id="chart-rate"></canvas></div>
                 </div>
             </div>
 
-            <!-- Full table -->
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Platform</th>
-                            <th>Build</th>
-                            <th>App Version</th>
-                            <th>Device Count</th>
-                            <th>First Seen</th>
-                            <th>Last Seen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="versions-tbody">
-                        <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
-                    </tbody>
-                </table>
+            <!-- Platform + Top campaigns -->
+            <div class="bottom-row">
+                <div class="panel-card">
+                    <div class="chart-title">Platform Breakdown</div>
+                    <div id="platform-breakdown"></div>
+                </div>
+                <div class="panel-card">
+                    <div class="chart-title">Top Campaigns by Delivery Rate</div>
+                    <div id="top-campaigns"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -205,6 +190,8 @@
 <script src="/utils/admin-live-alerts.js?v=14"></script>
 <script>
     lucide.createIcons();
+
+    var _charts = [];
 
     window.addEventListener('DOMContentLoaded', function() {
         window.adminAuth.checkAuth().then(function(data) {
@@ -219,7 +206,7 @@
     async function api(action, payload) {
         var token = sessionStorage.getItem('adminToken');
         if (!token) throw new Error('Not logged in');
-        var res = await fetch('/admin-app-versions-api', {
+        var res = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify(Object.assign({ action: action }, payload || {}))
@@ -231,65 +218,90 @@
 
     async function loadPage() {
         try {
-            var d = await api('get_stats');
-            document.getElementById('stat-total').textContent = (d.totalDevices||0).toLocaleString();
-            document.getElementById('stat-android-latest').textContent = d.latestBuilds.android || '—';
-            document.getElementById('stat-ios-latest').textContent = d.latestBuilds.ios || '—';
-            document.getElementById('stat-active7d').textContent = (d.activeUsers7d||0).toLocaleString();
-            renderDist('android-dist', d.byPlatform.android || [], '#10b981');
-            renderDist('ios-dist', d.byPlatform.ios || [], '#8b5cf6');
-            renderTable(d.rows || []);
+            var d = await api('get_analytics');
+            var t = d.totals || {};
+            document.getElementById('stat-campaigns').textContent = (t.campaigns||0).toLocaleString();
+            document.getElementById('stat-rate').textContent = (t.avgRate||0) + '%';
+            document.getElementById('stat-delivered').textContent = (t.totalDelivered||0).toLocaleString();
+            document.getElementById('stat-targeted').textContent = (t.totalTargeted||0).toLocaleString();
+            renderCharts(d);
+            renderPlatformBreakdown(d.byPlatform || {});
+            renderTopCampaigns(d.topNotifs || []);
         } catch(e) {
-            document.getElementById('versions-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#e53e3e">' + esc(e.message) + '</td></tr>';
+            document.querySelector('.content-area').insertAdjacentHTML('afterbegin',
+                '<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;color:#991b1b;font-size:13px;margin-bottom:16px">Failed to load: ' + esc(e.message) + '</div>');
         }
         lucide.createIcons();
     }
 
-    function renderDist(containerId, rows, color) {
-        var container = document.getElementById(containerId);
-        if (!rows.length) { container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">No data yet — appears after users open the app.</div>'; return; }
-        var sorted = rows.slice().sort(function(a,b){ return parseInt(b.build_number)-parseInt(a.build_number)||0; });
-        var total = sorted.reduce(function(s,r){return s+(r.device_count||0);},0);
-        var html = '<div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">';
-        sorted.slice(0,8).forEach(function(r,i) {
-            var pct = total > 0 ? Math.round(((r.device_count||0)/total)*100) : 0;
-            var isLatest = i === 0;
-            html += '<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">';
-            html += '<span style="font-family:monospace;font-size:13px;font-weight:700;color:var(--text-primary)">Build ' + esc(r.build_number) + '</span>';
-            if (isLatest) html += '<span style="font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px">LATEST</span>';
-            html += '<span style="margin-left:auto;font-size:12px;color:var(--text-secondary)">' + (r.device_count||0) + ' devices (' + pct + '%)</span></div>';
-            html += '<div style="background:var(--bg-active);border-radius:4px;height:6px"><div style="width:' + pct + '%;height:100%;background:' + color + ';border-radius:4px"></div></div></div>';
+    function renderCharts(d) {
+        _charts.forEach(function(c) { try { c.destroy(); } catch(e){} });
+        _charts = [];
+
+        var labels = (d.dailyData||[]).map(function(r) {
+            return new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric' });
+        });
+        var sendsData = (d.dailyData||[]).map(function(r) { return r.sent; });
+        var ratesData = (d.dailyData||[]).map(function(r) { return r.rate; });
+        var cs = getComputedStyle(document.documentElement);
+        var textSec = cs.getPropertyValue('--text-secondary').trim() || '#6b7280';
+        var borderL = cs.getPropertyValue('--border-light').trim() || '#e5e7eb';
+
+        var ctx1 = document.getElementById('chart-sends');
+        if (ctx1) _charts.push(new Chart(ctx1, {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ data: sendsData, backgroundColor: '#3b82f640', borderColor: '#3b82f6', borderWidth: 1.5, borderRadius: 4 }] },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+                scales:{ x:{ticks:{color:textSec,font:{size:10},maxRotation:0},grid:{color:borderL}},
+                         y:{ticks:{color:textSec,font:{size:10},precision:0},grid:{color:borderL}} } }
+        }));
+
+        var ctx2 = document.getElementById('chart-rate');
+        if (ctx2) _charts.push(new Chart(ctx2, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ data: ratesData, borderColor: '#10b981', backgroundColor: '#10b98120', borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3 }] },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+                scales:{ x:{ticks:{color:textSec,font:{size:10},maxRotation:0},grid:{color:borderL}},
+                         y:{min:0, max:100, ticks:{color:textSec,font:{size:10},callback:function(v){return v+'%'}},grid:{color:borderL}} } }
+        }));
+    }
+
+    function renderPlatformBreakdown(bp) {
+        var container = document.getElementById('platform-breakdown');
+        var total = (bp.all||0) + (bp.android||0) + (bp.ios||0);
+        if (!total) { container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No data yet.</div>'; return; }
+        var html = '<div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">';
+        [['All Platforms','all','#3b82f6'],['Android','android','#10b981'],['iOS','ios','#8b5cf6']].forEach(function(p) {
+            var count = bp[p[1]]||0;
+            var pct = total > 0 ? Math.round((count/total)*100) : 0;
+            html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">'
+                + '<span style="color:var(--text-primary);font-weight:500">' + p[0] + '</span>'
+                + '<span style="color:var(--text-secondary)">' + count + ' campaigns (' + pct + '%)</span></div>'
+                + '<div style="background:var(--bg-active);border-radius:4px;height:7px"><div style="width:' + pct + '%;height:100%;background:' + p[2] + ';border-radius:4px;transition:width .4s"></div></div></div>';
         });
         html += '</div>';
         container.innerHTML = html;
     }
 
-    function renderTable(rows) {
-        var tbody = document.getElementById('versions-tbody');
-        tbody.innerHTML = '';
-        if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-tertiary)">No version data yet.</td></tr>';
-            return;
-        }
-        var sorted = rows.slice().sort(function(a,b){ return new Date(b.last_seen)-new Date(a.last_seen); });
-        sorted.forEach(function(r) {
-            var tr = document.createElement('tr');
-            var platClass = r.platform === 'android' ? 'vb-android' : r.platform === 'ios' ? 'vb-ios' : '';
-            tr.innerHTML = '<td><span class="version-badge ' + platClass + '">' + esc(r.platform||'—') + '</span></td>'
-                + '<td style="font-family:monospace;font-weight:700;color:var(--text-primary)">' + esc(r.build_number) + '</td>'
-                + '<td style="font-size:13px">' + esc(r.app_version||'—') + '</td>'
-                + '<td style="font-size:13px;font-weight:600">' + (r.device_count||0).toLocaleString() + '</td>'
-                + '<td style="font-size:12px;color:var(--text-tertiary)">' + fmtDate(r.first_seen) + '</td>'
-                + '<td style="font-size:12px;color:var(--text-tertiary)">' + fmtDate(r.last_seen) + '</td>';
-            tbody.appendChild(tr);
+    function renderTopCampaigns(topNotifs) {
+        var container = document.getElementById('top-campaigns');
+        if (!topNotifs.length) { container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No sent campaigns with ≥10 targets yet.</div>'; return; }
+        var html = '<div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">';
+        topNotifs.forEach(function(n, i) {
+            var rateColor = n.rate >= 80 ? '#10b981' : n.rate >= 50 ? '#f59e0b' : '#e53e3e';
+            html += '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-light)">'
+                + '<span style="font-size:12px;font-weight:700;color:var(--text-tertiary);width:18px;flex-shrink:0">' + (i+1) + '</span>'
+                + '<div style="flex:1;min-width:0">'
+                + '<div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(n.title) + '</div>'
+                + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:1px">' + n.delivered.toLocaleString() + ' / ' + n.targeted.toLocaleString() + ' delivered</div>'
+                + '</div>'
+                + '<span style="font-size:15px;font-weight:800;color:' + rateColor + ';flex-shrink:0">' + n.rate + '%</span>'
+                + '</div>';
         });
+        html += '</div>';
+        container.innerHTML = html;
     }
 
-    function fmtDate(str) {
-        if (!str) return '—';
-        var d = new Date(str);
-        return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-    }
     function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>
 <script src="/utils/admin-command-palette.js"></script>

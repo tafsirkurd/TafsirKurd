@@ -565,6 +565,10 @@
                         <i data-lucide="bell"></i>
                         <span class="nav-item-label">Notifications</span>
                     </a>
+                    <a href="/admin-notification-analytics.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Notif Analytics</span>
+                    </a>
                     <a href="/admin-social-stats.html" class="nav-item">
                         <i data-lucide="share-2"></i>
                         <span class="nav-item-label">Social Stats</span>
@@ -869,6 +873,63 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- ══ System Widgets Row ══ -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;" id="systemWidgetsRow">
+
+                    <!-- App Errors Widget -->
+                    <div class="card card-animate" style="animation-delay:430ms">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px">
+                                <span style="width:8px;height:8px;background:#ef4444;border-radius:50%"></span>
+                                App Errors
+                            </h3>
+                            <a href="/admin-errors.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600">View all</a>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+                            <div style="background:var(--bg-active);border-radius:8px;padding:12px;text-align:center">
+                                <div style="font-size:22px;font-weight:800;color:var(--text-primary)" id="dash-errors-24h">—</div>
+                                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Last 24h</div>
+                            </div>
+                            <div style="background:var(--bg-active);border-radius:8px;padding:12px;text-align:center">
+                                <div style="font-size:22px;font-weight:800;color:var(--text-primary)" id="dash-errors-7d">—</div>
+                                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Last 7 Days</div>
+                            </div>
+                        </div>
+                        <div id="dash-errors-types" style="display:flex;flex-direction:column;gap:6px">
+                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Analytics Widget -->
+                    <div class="card card-animate" style="animation-delay:435ms">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px">
+                                <span style="width:8px;height:8px;background:#3b82f6;border-radius:50%"></span>
+                                Notification Analytics
+                            </h3>
+                            <a href="/admin-notification-analytics.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600">Full report</a>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+                            <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center">
+                                <div style="font-size:20px;font-weight:800;color:var(--text-primary)" id="dash-notif-campaigns">—</div>
+                                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Campaigns</div>
+                            </div>
+                            <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center">
+                                <div style="font-size:20px;font-weight:800;color:#10b981" id="dash-notif-rate">—</div>
+                                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Avg Rate</div>
+                            </div>
+                            <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center">
+                                <div style="font-size:20px;font-weight:800;color:var(--text-primary)" id="dash-notif-delivered">—</div>
+                                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Delivered</div>
+                            </div>
+                        </div>
+                        <div id="dash-notif-platform" style="display:flex;flex-direction:column;gap:6px">
+                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- ══ Charts ══ -->
@@ -1585,6 +1646,67 @@
             version_purge:            { color: '#8b5cf6', label: 'Cache Purged',         icon: '↺' }
         };
 
+        function buildErrorsWidget(data) {
+            var el24 = document.getElementById('dash-errors-24h');
+            var el7d = document.getElementById('dash-errors-7d');
+            var typesEl = document.getElementById('dash-errors-types');
+            if (!data || !data.success) {
+                if (el24) el24.textContent = '—';
+                if (el7d) el7d.textContent = '—';
+                if (typesEl) typesEl.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No data yet.</div>';
+                return;
+            }
+            if (el24) el24.textContent = (data.counts.last24h||0).toLocaleString();
+            if (el7d) el7d.textContent = (data.counts.last7d||0).toLocaleString();
+            if (el24) el24.style.color = data.counts.last24h > 0 ? '#ef4444' : 'var(--text-primary)';
+            if (typesEl && data.byType && data.byType.length) {
+                var total = data.byType.reduce(function(s,r){return s+r.count;},0);
+                var colors = { js_error:'#ef4444', network_error:'#f59e0b', render_error:'#8b5cf6', i18n_error:'#10b981', unknown:'#94a3b8' };
+                var html = '';
+                data.byType.slice(0,4).forEach(function(r) {
+                    var pct = total > 0 ? Math.round((r.count/total)*100) : 0;
+                    var color = colors[r.type] || '#94a3b8';
+                    html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'
+                        + '<span style="color:var(--text-secondary)">' + r.type + '</span>'
+                        + '<span style="font-weight:600;color:' + color + '">' + r.count + '</span></div>';
+                });
+                typesEl.innerHTML = html;
+            } else if (typesEl) {
+                typesEl.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No errors in last 7 days.</div>';
+            }
+        }
+
+        function buildNotifAnalyticsWidget(data) {
+            var campEl = document.getElementById('dash-notif-campaigns');
+            var rateEl = document.getElementById('dash-notif-rate');
+            var delEl  = document.getElementById('dash-notif-delivered');
+            var platEl = document.getElementById('dash-notif-platform');
+            if (!data || !data.success) {
+                if (campEl) campEl.textContent = '—';
+                if (rateEl) rateEl.textContent = '—';
+                if (delEl) delEl.textContent = '—';
+                if (platEl) platEl.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No data yet.</div>';
+                return;
+            }
+            var t = data.totals || {};
+            if (campEl) campEl.textContent = (t.campaigns||0).toLocaleString();
+            if (rateEl) rateEl.textContent = (t.avgRate||0) + '%';
+            if (delEl) delEl.textContent = (t.totalDelivered||0).toLocaleString();
+            if (platEl && data.byPlatform) {
+                var bp = data.byPlatform;
+                var bpTotal = (bp.all||0) + (bp.android||0) + (bp.ios||0);
+                if (!bpTotal) { platEl.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No sent campaigns yet.</div>'; return; }
+                var html = '';
+                [['All','all','#3b82f6'],['Android','android','#10b981'],['iOS','ios','#8b5cf6']].forEach(function(p) {
+                    var pct = bpTotal > 0 ? Math.round(((bp[p[1]]||0)/bpTotal)*100) : 0;
+                    html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'
+                        + '<span style="color:var(--text-secondary)">' + p[0] + '</span>'
+                        + '<span style="font-weight:600;color:' + p[2] + '">' + (bp[p[1]]||0) + ' (' + pct + '%)</span></div>';
+                });
+                platEl.innerHTML = html;
+            }
+        }
+
         function buildI18nHealth(events, meta) {
             var summaryEl = document.getElementById('i18nHealthSummary');
             var bodyEl    = document.getElementById('i18nHealthBody');
@@ -1959,7 +2081,19 @@
                 /* 18 — i18n site settings meta (version, published_at, reporting toggle) */
                 supabase.from('site_settings')
                     .select('key,value')
-                    .in('key', ['i18n_cache_version','i18n_last_published_at','i18n_health_reporting_enabled'])
+                    .in('key', ['i18n_cache_version','i18n_last_published_at','i18n_health_reporting_enabled']),
+                /* 19 — app error counts (last 24h + 7d + types) */
+                fetch('/admin-errors-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (sessionStorage.getItem('adminToken')||'') },
+                    body: JSON.stringify({ action: 'get_stats' })
+                }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+                /* 20 — notification analytics totals */
+                fetch('/admin-notifications-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (sessionStorage.getItem('adminToken')||'') },
+                    body: JSON.stringify({ action: 'get_analytics' })
+                }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
             ]);
 
             // Shorthand
@@ -2053,6 +2187,10 @@
                 i18nSettingsRows.forEach(function(r) { i18nMeta[r.key] = r.value; });
             }
             buildI18nHealth(dat(17), i18nMeta);
+
+            // ─── System Widgets ───
+            buildErrorsWidget(val(19));
+            buildNotifAnalyticsWidget(val(20));
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));
