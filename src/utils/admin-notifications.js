@@ -1,439 +1,608 @@
-// Admin Notification System
-// Secure implementation using safe DOM methods
+/* =============================================================
+   admin-notifications.js  v4  — OS-style Notification Tray
+   Works on every admin page (self-injects bell if absent).
 
-window.adminNotifications = {
-    storageKey: 'admin_notifications',
-    maxNotifications: 100,  // Store up to 100 notifications
+   Data sources:
+     • contact_messages  status='unread'     (Supabase, on open)
+     • profiles          new signups last 24h (Supabase, on open)
+     • _AdminLiveAlerts  bridge               (real-time events)
 
-    // Initialize notification system
-    init() {
-        this.createNotificationPanel();
-        this.updateBadge();
-        this.attachEventListeners();
-    },
+   Storage: localStorage key 'ant_v4'
+   Public API:
+     adminNotifications.add(title, desc, type, link)
+     adminNotifications.test()
+   ============================================================= */
+(function () {
+  'use strict';
 
-    // Get all notifications from localStorage
-    getNotifications() {
-        try {
-            const stored = localStorage.getItem(this.storageKey);
-            return stored ? JSON.parse(stored) : [];
-        } catch (error) {
-            console.error('Failed to load notifications:', error);
-            return [];
-        }
-    },
+  var STORE_KEY  = 'ant_v4';
+  var MAX_ITEMS  = 80;
+  var PANEL_ID   = 'ant-panel';
+  var BADGE_ID   = 'notification-badge';
+  var STYLE_ID   = 'ant-styles';
 
-    // Save notifications to localStorage
-    saveNotifications(notifications) {
-        try {
-            // Keep only the most recent notifications
-            const trimmed = notifications.slice(0, this.maxNotifications);
-            localStorage.setItem(this.storageKey, JSON.stringify(trimmed));
-        } catch (error) {
-            console.error('Failed to save notifications:', error);
-        }
-    },
+  // ── type config ────────────────────────────────────────────
+  var TYPES = {
+    message: { icon: '✉',  color: '#ef4444', bg: 'rgba(239,68,68,.12)',  label: 'Message'  },
+    user:    { icon: '👤', color: '#8b5cf6', bg: 'rgba(139,92,246,.12)', label: 'User'     },
+    video:   { icon: '▶',  color: '#f59e0b', bg: 'rgba(245,158,11,.12)', label: 'Video'    },
+    error:   { icon: '⚠',  color: '#ef4444', bg: 'rgba(239,68,68,.12)',  label: 'Error'    },
+    info:    { icon: 'ℹ',  color: '#3b82f6', bg: 'rgba(59,130,246,.12)', label: 'Info'     },
+  };
 
-    // Add a new notification
-    add(title, description, type = 'info', link = null) {
-        const notifications = this.getNotifications();
+  // ── storage ────────────────────────────────────────────────
+  function _load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function _save(items) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(items.slice(0, MAX_ITEMS))); }
+    catch(e) {}
+  }
 
-        const notification = {
-            id: Date.now() + Math.random(),
-            title,
-            description,
-            type, // 'info', 'success', 'warning', 'error'
-            link,
-            timestamp: Date.now(),
-            read: false
-        };
+  // ── dedupe guard: skip if we already stored this source_id ─
+  function _hasSeen(sourceId) {
+    if (!sourceId) return false;
+    return _load().some(function(n) { return n.sourceId === sourceId; });
+  }
 
-        notifications.unshift(notification);
-        this.saveNotifications(notifications);
-        console.log(`✅ Notification added: "${title}" (Total: ${notifications.length})`);
-        this.updateBadge();
-        this.refreshPanel();
-    },
-
-    // Mark notification as read
-    markAsRead(notificationId) {
-        const notifications = this.getNotifications();
-        const notification = notifications.find(n => n.id === notificationId);
-
-        if (notification) {
-            notification.read = true;
-            this.saveNotifications(notifications);
-            this.updateBadge();
-            this.refreshPanel();
-        }
-    },
-
-    // Mark all as read
-    markAllAsRead() {
-        const notifications = this.getNotifications();
-        notifications.forEach(n => n.read = true);
-        this.saveNotifications(notifications);
-        this.updateBadge();
-        this.refreshPanel();
-    },
-
-    // Clear all notifications
-    clearAll() {
-        localStorage.removeItem(this.storageKey);
-        this.updateBadge();
-        this.refreshPanel();
-    },
-
-    // Get unread count
-    getUnreadCount() {
-        const notifications = this.getNotifications();
-        return notifications.filter(n => !n.read).length;
-    },
-
-    // Update badge count
-    updateBadge() {
-        const badge = document.getElementById('notification-badge');
-        const count = this.getUnreadCount();
-
-        if (badge) {
-            if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
-                badge.style.display = 'block';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-    },
-
-    // Create notification panel HTML structure
-    createNotificationPanel() {
-        // Check if panel already exists
-        if (document.getElementById('notification-panel')) return;
-
-        const panel = document.createElement('div');
-        panel.id = 'notification-panel';
-        panel.className = 'notification-panel';
-        panel.style.cssText = `
-            position: absolute;
-            top: 60px;
-            right: 20px;
-            width: 380px;
-            max-height: 500px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-light);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            display: none;
-            flex-direction: column;
-            z-index: 1000;
-            overflow: hidden;
-        `;
-
-        document.body.appendChild(panel);
-        this.refreshPanel();
-    },
-
-    // Refresh panel content
-    refreshPanel() {
-        const panel = document.getElementById('notification-panel');
-        if (!panel) return;
-
-        // Clear existing content safely
-        while (panel.firstChild) {
-            panel.removeChild(panel.firstChild);
-        }
-
-        // Create header
-        const header = document.createElement('div');
-        header.style.cssText = `
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        `;
-
-        const notifications = this.getNotifications();
-        const unreadCount = notifications.filter(n => !n.read).length;
-
-        const headerTitle = document.createElement('div');
-        headerTitle.style.cssText = `
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-primary);
-        `;
-        headerTitle.textContent = `Notifications (${notifications.length})`;
-
-        if (unreadCount > 0) {
-            const unreadBadge = document.createElement('span');
-            unreadBadge.style.cssText = `
-                margin-left: 8px;
-                background: #ef4444;
-                color: white;
-                font-size: 11px;
-                font-weight: 600;
-                padding: 2px 6px;
-                border-radius: 10px;
-            `;
-            unreadBadge.textContent = `${unreadCount} new`;
-            headerTitle.appendChild(unreadBadge);
-        }
-
-        const headerActions = document.createElement('div');
-        headerActions.style.cssText = 'display: flex; gap: 8px;';
-
-        const markAllBtn = document.createElement('button');
-        markAllBtn.textContent = 'Mark all read';
-        markAllBtn.style.cssText = `
-            font-size: 12px;
-            color: var(--primary);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px 8px;
-        `;
-        markAllBtn.onclick = () => this.markAllAsRead();
-
-        const clearAllBtn = document.createElement('button');
-        clearAllBtn.textContent = 'Clear all';
-        clearAllBtn.style.cssText = `
-            font-size: 12px;
-            color: var(--text-tertiary);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px 8px;
-        `;
-        clearAllBtn.onclick = () => {
-            if (confirm('Clear all notifications?')) {
-                this.clearAll();
-            }
-        };
-
-        headerActions.appendChild(markAllBtn);
-        headerActions.appendChild(clearAllBtn);
-        header.appendChild(headerTitle);
-        header.appendChild(headerActions);
-        panel.appendChild(header);
-
-        // Create notifications container
-        const container = document.createElement('div');
-        container.style.cssText = `
-            max-height: 420px;
-            overflow-y: auto;
-            overflow-x: hidden;
-        `;
-
-        if (notifications.length === 0) {
-            const empty = document.createElement('div');
-            empty.style.cssText = `
-                padding: 40px 20px;
-                text-align: center;
-                color: var(--text-tertiary);
-            `;
-
-            const emptyIcon = document.createElement('div');
-            emptyIcon.style.cssText = `
-                font-size: 48px;
-                margin-bottom: 12px;
-                opacity: 0.3;
-            `;
-            emptyIcon.textContent = '🔔';
-
-            const emptyText = document.createElement('div');
-            emptyText.style.fontSize = '14px';
-            emptyText.textContent = 'No notifications yet';
-
-            empty.appendChild(emptyIcon);
-            empty.appendChild(emptyText);
-            container.appendChild(empty);
-        } else {
-            notifications.forEach(notification => {
-                const item = this.createNotificationItem(notification);
-                container.appendChild(item);
-            });
-
-            // Add footer showing notification count
-            const footer = document.createElement('div');
-            footer.style.cssText = `
-                padding: 12px 20px;
-                border-top: 1px solid var(--border-light);
-                text-align: center;
-                font-size: 12px;
-                color: var(--text-tertiary);
-                background: var(--bg-app);
-            `;
-            const readCount = notifications.filter(n => n.read).length;
-            footer.textContent = `Showing all ${notifications.length} notification${notifications.length !== 1 ? 's' : ''} (${readCount} read, ${notifications.length - readCount} unread)`;
-            container.appendChild(footer);
-        }
-
-        panel.appendChild(container);
-    },
-
-    // Create a single notification item
-    createNotificationItem(notification) {
-        const item = document.createElement('div');
-        item.style.cssText = `
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-light);
-            cursor: pointer;
-            transition: background 0.2s;
-            ${notification.read ? '' : 'background: rgba(59, 130, 246, 0.05);'}
-        `;
-
-        item.onmouseenter = () => {
-            item.style.background = 'var(--bg-hover)';
-        };
-        item.onmouseleave = () => {
-            item.style.background = notification.read ? '' : 'rgba(59, 130, 246, 0.05)';
-        };
-
-        item.onclick = () => {
-            this.markAsRead(notification.id);
-            if (notification.link) {
-                window.location.href = notification.link;
-            }
-        };
-
-        // Icon based on type
-        const icon = document.createElement('div');
-        icon.style.cssText = `
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-            font-size: 16px;
-        `;
-
-        const typeConfig = {
-            info: { emoji: 'ℹ️', bg: 'rgba(59, 130, 246, 0.1)' },
-            success: { emoji: '✅', bg: 'rgba(16, 185, 129, 0.1)' },
-            warning: { emoji: '⚠️', bg: 'rgba(245, 158, 11, 0.1)' },
-            error: { emoji: '❌', bg: 'rgba(239, 68, 68, 0.1)' }
-        };
-
-        const config = typeConfig[notification.type] || typeConfig.info;
-        icon.style.background = config.bg;
-        icon.textContent = config.emoji;
-
-        // Title
-        const title = document.createElement('div');
-        title.style.cssText = `
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        `;
-        title.textContent = notification.title;
-
-        // Description
-        const desc = document.createElement('div');
-        desc.style.cssText = `
-            font-size: 13px;
-            color: var(--text-tertiary);
-            margin-bottom: 8px;
-            line-height: 1.4;
-        `;
-        desc.textContent = notification.description;
-
-        // Time
-        const time = document.createElement('div');
-        time.style.cssText = `
-            font-size: 12px;
-            color: var(--text-tertiary);
-        `;
-        time.textContent = this.formatTimeAgo(notification.timestamp);
-
-        item.appendChild(icon);
-        item.appendChild(title);
-        item.appendChild(desc);
-        item.appendChild(time);
-
-        return item;
-    },
-
-    // Format timestamp to "time ago"
-    formatTimeAgo(timestamp) {
-        const seconds = Math.floor((Date.now() - timestamp) / 1000);
-
-        if (seconds < 60) return 'Just now';
-        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-        if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-        if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-
-        return new Date(timestamp).toLocaleDateString();
-    },
-
-    // Attach event listeners
-    attachEventListeners() {
-        // Find the bell button by looking for the notification badge or bell icon
-        const findBellButton = () => {
-            const badge = document.getElementById('notification-badge');
-            if (badge && badge.closest('.topbar-btn')) {
-                return badge.closest('.topbar-btn');
-            }
-            // Fallback: find button with bell icon
-            const buttons = document.querySelectorAll('.topbar-btn');
-            for (const btn of buttons) {
-                const bellIcon = btn.querySelector('[data-lucide="bell"]');
-                if (bellIcon) return btn;
-            }
-            return null;
-        };
-
-        const bellBtn = findBellButton();
-
-        if (bellBtn) {
-            console.log('✅ Bell button found, attaching click handler');
-            bellBtn.onclick = (e) => {
-                e.stopPropagation();
-                console.log('🔔 Bell button clicked!');
-                const panel = document.getElementById('notification-panel');
-                console.log('📋 Panel element:', panel);
-                if (panel) {
-                    const isVisible = panel.style.display === 'flex';
-                    panel.style.display = isVisible ? 'none' : 'flex';
-                    console.log('📋 Panel display:', panel.style.display);
-
-                    // If opening panel, refresh it
-                    if (panel.style.display === 'flex') {
-                        this.refreshPanel();
-                    }
-                } else {
-                    console.error('❌ Notification panel not found!');
-                }
-            };
-        } else {
-            console.warn('Bell button not found on this page');
-        }
-
-        // Close panel when clicking outside
-        document.addEventListener('click', (e) => {
-            const panel = document.getElementById('notification-panel');
-            const bellBtn = findBellButton();
-
-            if (panel && bellBtn &&
-                !panel.contains(e.target) &&
-                !bellBtn.contains(e.target)) {
-                panel.style.display = 'none';
-            }
-        });
-    }
-};
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('🔔 Initializing notification system...');
-        window.adminNotifications.init();
-        console.log('✅ Notification system initialized');
+  // ── add item ───────────────────────────────────────────────
+  function _add(title, desc, type, link, sourceId) {
+    if (sourceId && _hasSeen(sourceId)) return;
+    var items = _load();
+    items.unshift({
+      id:       Date.now() + Math.random(),
+      sourceId: sourceId || null,
+      title:    title,
+      desc:     desc || '',
+      type:     type || 'info',
+      link:     link || null,
+      ts:       Date.now(),
+      read:     false,
     });
-} else {
-    console.log('🔔 Initializing notification system...');
-    window.adminNotifications.init();
-    console.log('✅ Notification system initialized');
-}
+    _save(items);
+    _updateBadge();
+    _refreshPanel();
+  }
+
+  // ── time formatter ─────────────────────────────────────────
+  function _ago(ts) {
+    var d = Math.floor((Date.now() - ts) / 1000);
+    if (d < 60)     return 'Just now';
+    if (d < 3600)   return Math.floor(d / 60) + 'm ago';
+    if (d < 86400)  return Math.floor(d / 3600) + 'h ago';
+    return Math.floor(d / 86400) + 'd ago';
+  }
+
+  // ── badge ──────────────────────────────────────────────────
+  function _updateBadge() {
+    var badge = document.getElementById(BADGE_ID);
+    if (!badge) return;
+    var n = _load().filter(function(i) { return !i.read; }).length;
+    badge.textContent  = n > 99 ? '99+' : n;
+    badge.style.display = n > 0 ? 'flex' : 'none';
+  }
+
+  // ── inject bell button if this page doesn't have one ───────
+  function _ensureBell() {
+    if (document.getElementById(BADGE_ID)) return; // already present
+    var actions = document.querySelector('.topbar-actions');
+    if (!actions) return;
+    var btn = document.createElement('button');
+    btn.className = 'topbar-btn';
+    btn.id        = 'ant-bell-btn';
+    btn.setAttribute('aria-label', 'Notifications');
+    btn.style.cssText = 'position:relative;';
+    btn.innerHTML =
+      '<i data-lucide="bell"></i>' +
+      '<span id="' + BADGE_ID + '" style="' +
+        'position:absolute;top:-4px;right:-4px;' +
+        'background:#ef4444;color:#fff;font-size:10px;font-weight:600;' +
+        'padding:2px 5px;border-radius:10px;min-width:18px;text-align:center;' +
+        'display:none;align-items:center;justify-content:center;' +
+        'pointer-events:none;"></span>';
+    // Insert before theme toggle
+    var themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) actions.insertBefore(btn, themeBtn);
+    else          actions.prepend(btn);
+    // Re-render the lucide icon we just added
+    if (window.lucide) window.lucide.createIcons({ nodes: [btn] });
+  }
+
+  // ── CSS ────────────────────────────────────────────────────
+  function _injectCSS() {
+    if (document.getElementById(STYLE_ID)) return;
+    var s = document.createElement('style');
+    s.id = STYLE_ID;
+    s.textContent = [
+      // panel
+      '#ant-panel{',
+        'position:fixed;top:60px;right:12px;width:360px;',
+        'max-height:calc(100dvh - 80px);',
+        'background:var(--bg-surface,#1a1a2e);',
+        'border:1px solid var(--border-light,rgba(255,255,255,.09));',
+        'border-radius:16px;',
+        'box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05);',
+        'display:flex;flex-direction:column;',
+        'z-index:99999;',
+        'opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;',
+        'transition:opacity .18s ease,transform .18s ease;}',
+      '#ant-panel.ant-open{opacity:1;transform:none;pointer-events:all;}',
+
+      // header
+      '#ant-panel .ant-hdr{',
+        'display:flex;align-items:center;gap:8px;',
+        'padding:14px 16px 10px;',
+        'border-bottom:1px solid var(--border-light,rgba(255,255,255,.07));',
+        'flex-shrink:0;}',
+      '#ant-panel .ant-hdr-title{',
+        'font-size:14px;font-weight:700;',
+        'color:var(--text-primary,#f1f5f9);flex:1;}',
+      '#ant-panel .ant-hdr-count{',
+        'font-size:11px;font-weight:700;',
+        'background:#ef4444;color:#fff;',
+        'padding:1px 7px;border-radius:20px;',
+        'display:none;}',
+      '#ant-panel .ant-hdr-count.ant-vis{display:inline-block;}',
+      '#ant-panel .ant-hdr-actions{display:flex;gap:4px;}',
+      '#ant-panel .ant-hbtn{',
+        'font-size:11px;font-weight:600;',
+        'color:var(--text-tertiary,rgba(255,255,255,.4));',
+        'background:none;border:none;cursor:pointer;',
+        'padding:4px 8px;border-radius:6px;',
+        'transition:color .15s,background .15s;}',
+      '#ant-panel .ant-hbtn:hover{',
+        'color:var(--text-primary,#f1f5f9);',
+        'background:rgba(255,255,255,.07);}',
+      '#ant-panel .ant-close{',
+        'width:26px;height:26px;border-radius:50%;',
+        'background:rgba(255,255,255,.07);border:none;cursor:pointer;',
+        'color:var(--text-tertiary,rgba(255,255,255,.4));',
+        'display:flex;align-items:center;justify-content:center;',
+        'flex-shrink:0;font-size:13px;',
+        'transition:background .15s,color .15s;}',
+      '#ant-panel .ant-close:hover{background:rgba(255,255,255,.14);color:var(--text-primary,#f1f5f9);}',
+
+      // scroll body
+      '#ant-panel .ant-body{',
+        'flex:1;overflow-y:auto;overflow-x:hidden;',
+        'scrollbar-width:thin;',
+        'scrollbar-color:rgba(255,255,255,.1) transparent;}',
+      '#ant-panel .ant-body::-webkit-scrollbar{width:4px;}',
+      '#ant-panel .ant-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px;}',
+
+      // section label
+      '#ant-panel .ant-sec{',
+        'font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;',
+        'color:var(--text-tertiary,rgba(255,255,255,.28));',
+        'padding:10px 16px 4px;}',
+
+      // item
+      '#ant-panel .ant-item{',
+        'display:flex;align-items:flex-start;gap:11px;',
+        'padding:10px 14px;cursor:pointer;',
+        'border-bottom:1px solid var(--border-light,rgba(255,255,255,.05));',
+        'transition:background .14s;position:relative;}',
+      '#ant-panel .ant-item:hover{background:rgba(255,255,255,.04);}',
+      '#ant-panel .ant-item.ant-unread{background:rgba(59,130,246,.045);}',
+      '#ant-panel .ant-item.ant-unread:hover{background:rgba(59,130,246,.08);}',
+
+      // unread dot
+      '#ant-panel .ant-item.ant-unread::before{',
+        'content:"";position:absolute;left:5px;top:50%;',
+        'transform:translateY(-50%);',
+        'width:4px;height:4px;border-radius:50%;background:#3b82f6;}',
+
+      // icon blob
+      '#ant-panel .ant-ico{',
+        'width:34px;height:34px;border-radius:9px;',
+        'display:flex;align-items:center;justify-content:center;',
+        'font-size:15px;flex-shrink:0;}',
+
+      // text
+      '#ant-panel .ant-txt{flex:1;min-width:0;}',
+      '#ant-panel .ant-ttl{',
+        'font-size:13px;font-weight:600;',
+        'color:var(--text-primary,#f1f5f9);',
+        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
+        'margin-bottom:2px;}',
+      '#ant-panel .ant-dsc{',
+        'font-size:12px;color:var(--text-tertiary,rgba(255,255,255,.45));',
+        'line-height:1.4;',
+        'display:-webkit-box;-webkit-box-orient:vertical;',
+        '-webkit-line-clamp:2;overflow:hidden;',
+        'margin-bottom:3px;}',
+      '#ant-panel .ant-time{',
+        'font-size:11px;color:var(--text-tertiary,rgba(255,255,255,.28));}',
+
+      // dismiss x
+      '#ant-panel .ant-del{',
+        'width:20px;height:20px;border-radius:50%;',
+        'background:none;border:none;cursor:pointer;',
+        'color:var(--text-tertiary,rgba(255,255,255,.25));',
+        'display:flex;align-items:center;justify-content:center;',
+        'font-size:12px;flex-shrink:0;margin-top:1px;',
+        'transition:color .14s,background .14s;opacity:0;}',
+      '#ant-panel .ant-item:hover .ant-del{opacity:1;}',
+      '#ant-panel .ant-del:hover{color:#ef4444;background:rgba(239,68,68,.12);}',
+
+      // empty state
+      '#ant-panel .ant-empty{',
+        'padding:48px 20px;text-align:center;',
+        'color:var(--text-tertiary,rgba(255,255,255,.25));}',
+      '#ant-panel .ant-empty-ico{font-size:36px;margin-bottom:10px;opacity:.35;}',
+      '#ant-panel .ant-empty-txt{font-size:13px;}',
+
+      // footer
+      '#ant-panel .ant-foot{',
+        'padding:8px 16px;flex-shrink:0;text-align:center;',
+        'border-top:1px solid var(--border-light,rgba(255,255,255,.06));}',
+      '#ant-panel .ant-foot-lbl{',
+        'font-size:11px;color:var(--text-tertiary,rgba(255,255,255,.25));}',
+
+      '@media(max-width:420px){',
+        '#ant-panel{width:calc(100vw - 24px);right:12px;}',
+      '}',
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  // ── build panel DOM ────────────────────────────────────────
+  function _buildPanel() {
+    var existing = document.getElementById(PANEL_ID);
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var items   = _load();
+    var unread  = items.filter(function(i) { return !i.read; });
+
+    var panel = document.createElement('div');
+    panel.id = PANEL_ID;
+
+    // header
+    var hdr   = _el('div', 'ant-hdr');
+    var htxt  = _el('div', 'ant-hdr-title');
+    htxt.textContent = 'Notifications';
+    var hcnt  = _el('span', 'ant-hdr-count');
+    if (unread.length > 0) {
+      hcnt.textContent = unread.length;
+      hcnt.classList.add('ant-vis');
+    }
+    htxt.appendChild(hcnt);
+
+    var hact = _el('div', 'ant-hdr-actions');
+    var markBtn = _el('button', 'ant-hbtn');
+    markBtn.textContent = 'Mark read';
+    markBtn.title = 'Mark all as read';
+    markBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var all = _load();
+      all.forEach(function(i) { i.read = true; });
+      _save(all);
+      _updateBadge();
+      _refreshPanel();
+    });
+
+    var clrBtn = _el('button', 'ant-hbtn');
+    clrBtn.textContent = 'Clear';
+    clrBtn.title = 'Clear all notifications';
+    clrBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _save([]);
+      _updateBadge();
+      _refreshPanel();
+    });
+
+    var closeBtn = _el('button', 'ant-close');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _close();
+    });
+
+    hact.appendChild(markBtn);
+    hact.appendChild(clrBtn);
+    hdr.appendChild(htxt);
+    hdr.appendChild(hact);
+    hdr.appendChild(closeBtn);
+    panel.appendChild(hdr);
+
+    // body
+    var body = _el('div', 'ant-body');
+
+    if (items.length === 0) {
+      var empty = _el('div', 'ant-empty');
+      var eico  = _el('div', 'ant-empty-ico');
+      eico.textContent = '🔔';
+      var etxt  = _el('div', 'ant-empty-txt');
+      etxt.textContent = 'All caught up';
+      empty.appendChild(eico);
+      empty.appendChild(etxt);
+      body.appendChild(empty);
+    } else {
+      // section: unread first, then read
+      var groups = [
+        { label: 'Unread', items: unread },
+        { label: 'Earlier', items: items.filter(function(i) { return i.read; }) },
+      ];
+      groups.forEach(function(g) {
+        if (!g.items.length) return;
+        var sec = _el('div', 'ant-sec');
+        sec.textContent = g.label;
+        body.appendChild(sec);
+        g.items.slice(0, 30).forEach(function(item) {
+          body.appendChild(_buildItem(item));
+        });
+      });
+    }
+    panel.appendChild(body);
+
+    // footer
+    if (items.length > 0) {
+      var foot = _el('div', 'ant-foot');
+      var fl   = _el('span', 'ant-foot-lbl');
+      fl.textContent = items.length + ' notification' + (items.length !== 1 ? 's' : '') +
+                       ' · ' + unread.length + ' unread';
+      foot.appendChild(fl);
+      panel.appendChild(foot);
+    }
+
+    document.body.appendChild(panel);
+  }
+
+  function _buildItem(item) {
+    var cfg  = TYPES[item.type] || TYPES.info;
+    var row  = _el('div', 'ant-item' + (item.read ? '' : ' ant-unread'));
+    row.setAttribute('data-id', item.id);
+
+    var ico  = _el('div', 'ant-ico');
+    ico.textContent   = cfg.icon;
+    ico.style.background = cfg.bg;
+    ico.style.color      = cfg.color;
+
+    var txt  = _el('div', 'ant-txt');
+    var ttl  = _el('div', 'ant-ttl');
+    ttl.textContent = item.title;
+    var dsc  = _el('div', 'ant-dsc');
+    dsc.textContent = item.desc;
+    var time = _el('div', 'ant-time');
+    time.textContent = _ago(item.ts);
+
+    txt.appendChild(ttl);
+    if (item.desc) txt.appendChild(dsc);
+    txt.appendChild(time);
+
+    var del  = _el('button', 'ant-del');
+    del.innerHTML = '&times;';
+    del.setAttribute('aria-label', 'Dismiss');
+    del.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var all = _load().filter(function(i) { return i.id !== item.id; });
+      _save(all);
+      _updateBadge();
+      _refreshPanel();
+    });
+
+    row.appendChild(ico);
+    row.appendChild(txt);
+    row.appendChild(del);
+
+    row.addEventListener('click', function() {
+      var all = _load();
+      var n   = all.find(function(i) { return i.id === item.id; });
+      if (n) { n.read = true; _save(all); }
+      _updateBadge();
+      if (item.link) window.location.href = item.link;
+      else _refreshPanel();
+    });
+
+    return row;
+  }
+
+  function _el(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+
+  // ── panel open / close ─────────────────────────────────────
+  var _isOpen = false;
+
+  function _open() {
+    _isOpen = true;
+    _buildPanel();
+    // Mark in-flight Supabase data pull
+    _pullSupabase();
+    requestAnimationFrame(function() {
+      var p = document.getElementById(PANEL_ID);
+      if (p) p.classList.add('ant-open');
+    });
+    // Mark all as read after 2 s if still open
+    setTimeout(function() {
+      if (!_isOpen) return;
+      var all = _load();
+      all.forEach(function(i) { i.read = true; });
+      _save(all);
+      _updateBadge();
+    }, 2000);
+  }
+
+  function _close() {
+    _isOpen = false;
+    var p = document.getElementById(PANEL_ID);
+    if (!p) return;
+    p.classList.remove('ant-open');
+    setTimeout(function() {
+      if (p.parentNode) p.parentNode.removeChild(p);
+    }, 200);
+  }
+
+  function _toggle(e) {
+    if (e) e.stopPropagation();
+    if (_isOpen) _close();
+    else         _open();
+  }
+
+  function _refreshPanel() {
+    if (!_isOpen) return;
+    _buildPanel();
+    requestAnimationFrame(function() {
+      var p = document.getElementById(PANEL_ID);
+      if (p) p.classList.add('ant-open');
+    });
+  }
+
+  // ── pull real data from Supabase when panel opens ──────────
+  var _lastPull = 0;
+  function _pullSupabase() {
+    var sb = window._supabase;
+    if (!sb) return;
+    var now = Date.now();
+    if (now - _lastPull < 30000) return; // max once per 30 s
+    _lastPull = now;
+
+    // Unread contact messages
+    sb.from('contact_messages')
+      .select('id,name,email,subject,message,created_at')
+      .eq('status', 'unread')
+      .order('created_at', { ascending: false })
+      .limit(10)
+      .then(function(res) {
+        if (res.error || !res.data) return;
+        res.data.forEach(function(m) {
+          _add(
+            (m.name || m.email || 'Unknown') + ' sent a message',
+            m.subject || (m.message || '').slice(0, 80),
+            'message',
+            '/admin-messages.html',
+            'msg_' + m.id
+          );
+        });
+      });
+
+    // New signups in the last 24 h
+    var ago24 = new Date(now - 86400000).toISOString();
+    sb.from('profiles')
+      .select('id,email,full_name,display_name,created_at')
+      .gte('created_at', ago24)
+      .order('created_at', { ascending: false })
+      .limit(8)
+      .then(function(res) {
+        if (res.error || !res.data) return;
+        res.data.forEach(function(u) {
+          var name = u.full_name || u.display_name || (u.email || '').split('@')[0] || 'Unknown';
+          _add(
+            name + ' joined',
+            u.email || 'New account',
+            'user',
+            '/admin-users.html',
+            'usr_' + u.id
+          );
+        });
+      });
+  }
+
+  // ── bridge: admin-live-alerts feeds the tray in real time ──
+  // Called by _AdminLiveAlerts when it fires a live popup.
+  window._antFeed = function(type, data) {
+    if (type === 'new_message') {
+      _add(
+        (data.name || data.email || 'Unknown') + ' sent a message',
+        data.subject || (data.message || '').slice(0, 80),
+        'message',
+        '/admin-messages.html',
+        data.id ? 'msg_' + data.id : null
+      );
+    } else if (type === 'user_joined') {
+      _add(
+        (data.name || (data.email || '').split('@')[0] || 'Unknown') + ' joined',
+        data.email || 'New account',
+        'user',
+        '/admin-users.html',
+        data.id ? 'usr_' + data.id : null
+      );
+    } else if (type === 'new_video') {
+      _add(
+        'New episode: ' + (data.title || 'Untitled'),
+        data.description ? data.description.slice(0, 80) : 'IslamVoice',
+        'video',
+        '/admin-videos.html',
+        data.id ? 'vid_' + data.id : null
+      );
+    }
+  };
+
+  // ── wire bell button click ─────────────────────────────────
+  function _wireBell() {
+    var btn = document.getElementById(BADGE_ID);
+    if (!btn) return;
+    var bellBtn = btn.closest('.topbar-btn') || document.getElementById('ant-bell-btn');
+    if (!bellBtn) return;
+    bellBtn.addEventListener('click', _toggle);
+  }
+
+  // Close when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!_isOpen) return;
+    var panel   = document.getElementById(PANEL_ID);
+    var bellBtn = document.getElementById('ant-bell-btn') ||
+                  (document.getElementById(BADGE_ID) &&
+                   document.getElementById(BADGE_ID).closest('.topbar-btn'));
+    if (!panel) return;
+    if (!panel.contains(e.target) && (!bellBtn || !bellBtn.contains(e.target))) {
+      _close();
+    }
+  });
+
+  // ── init ───────────────────────────────────────────────────
+  function _init() {
+    _injectCSS();
+    _ensureBell();
+    _updateBadge();
+    _wireBell();
+
+    // Silently pull Supabase unread messages + recent signups in background
+    if (window._supabase) {
+      setTimeout(_pullSupabase, 4000);
+    } else {
+      var t = 0;
+      var wait = setInterval(function() {
+        if (window._supabase) { clearInterval(wait); setTimeout(_pullSupabase, 2000); }
+        else if (++t > 60)    { clearInterval(wait); }
+      }, 500);
+    }
+
+    // Patch _AdminLiveAlerts._enqueue to feed the tray (if loaded after us)
+    var _patchAttempts = 0;
+    function _patchLiveAlerts() {
+      if (window._AdminLiveAlerts && !window._AdminLiveAlerts.__antPatched) {
+        var origEnqueue = window._AdminLiveAlerts._enqueueRaw;
+        if (!origEnqueue) {
+          // expose hook: live-alerts calls window._antFeed directly
+          window._AdminLiveAlerts.__antPatched = true;
+        }
+      } else if (!window._AdminLiveAlerts && ++_patchAttempts < 20) {
+        setTimeout(_patchLiveAlerts, 500);
+      }
+    }
+    setTimeout(_patchLiveAlerts, 1000);
+  }
+
+  // ── public API ─────────────────────────────────────────────
+  window.adminNotifications = {
+    add: function(title, desc, type, link) {
+      _add(title, desc, type, link, null);
+    },
+    test: function() {
+      _add('Ahmed Hassan sent a message', 'Question about Quran recitation feature', 'message', '/admin-messages.html', null);
+      _add('Sara Ahmed joined', 'sara.ahmed@example.com', 'user', '/admin-users.html', null);
+      _add('New episode published', 'Tafsir Al-Baqarah — Episode 12', 'video', '/admin-videos.html', null);
+    },
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _init);
+  } else {
+    _init();
+  }
+})();

@@ -399,6 +399,8 @@
   function _enqueue(type, data) {
     if (_queue.length >= MAX_QUEUE) return;
     _queue.push({ type:type, data:data||{} });
+    // Feed notification tray (admin-notifications.js)
+    if (window._antFeed) window._antFeed(type, data || {});
     if (!_showing) _next();
   }
 
