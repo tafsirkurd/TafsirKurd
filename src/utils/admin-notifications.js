@@ -506,6 +506,27 @@
           );
         });
       });
+
+    // App errors in the last 6 h
+    var ago6h = new Date(now - 6 * 3600000).toISOString();
+    sb.from('app_error_logs')
+      .select('id,error_type,error_message,platform,app_version,created_at')
+      .gte('created_at', ago6h)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(function(res) {
+        if (res.error || !res.data || !res.data.length) return;
+        res.data.forEach(function(e) {
+          var label = (e.platform ? '[' + e.platform + '] ' : '') + (e.error_type || 'error');
+          _add(
+            'App error: ' + label,
+            (e.error_message || 'No message').slice(0, 100),
+            'error',
+            '/admin-errors.html',
+            'err_' + e.id
+          );
+        });
+      });
   }
 
   // ── bridge: admin-live-alerts feeds the tray in real time ──

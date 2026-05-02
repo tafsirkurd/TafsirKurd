@@ -32,8 +32,12 @@ const logger = {
     error: (...args) => {
         console.error(...args);
         // In production, you could send errors to monitoring service
-        if (isProduction) {
-            // TODO: Send to error tracking service (e.g., Sentry)
+        if (isProduction && window.AppErrors) {
+            try {
+                var msg   = args[0] instanceof Error ? args[0].message : args.join(' ');
+                var stack = args[0] instanceof Error ? args[0].stack   : null;
+                window.AppErrors.report('js_error', msg, stack, 'logger');
+            } catch(e) {}
         }
     },
 
