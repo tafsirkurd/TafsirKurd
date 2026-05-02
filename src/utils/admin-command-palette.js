@@ -4,34 +4,41 @@
     // ── Page registry ─────────────────────────────────────────────
     var PAGES = [
         // Overview
-        { href: '/admin-dashboard.html',             icon: 'bar-chart-2',    label: 'Dashboard',       section: 'Overview', keywords: 'home main live' },
-        { href: '/admin-analytics.html',             icon: 'trending-up',    label: 'Analytics',       section: 'Overview', keywords: 'traffic stats google' },
-        { href: '/admin-search-console.html',        icon: 'search',         label: 'Search Console',  section: 'Overview', keywords: 'seo clicks impressions rankings google' },
+        { href: '/admin-dashboard.html',             icon: 'bar-chart-2',    label: 'Dashboard',         section: 'Overview',   keywords: 'home main live' },
+        { href: '/admin-analytics.html',             icon: 'trending-up',    label: 'Analytics',         section: 'Overview',   keywords: 'traffic stats google' },
+        { href: '/admin-search-console.html',        icon: 'search',         label: 'Search Console',    section: 'Overview',   keywords: 'seo clicks impressions rankings google' },
         // Content
-        { href: '/admin-messages.html',              icon: 'message-square', label: 'Messages',        section: 'Content',  keywords: 'inbox contact replies' },
-        { href: '/admin-videos.html',                icon: 'video',          label: 'Videos',          section: 'Content',  keywords: 'media upload' },
-        { href: '/admin-islamvoice-management.html', icon: 'radio',          label: 'IslamVoice',      section: 'Content',  keywords: 'audio series episodes' },
-        { href: '/admin-gencine.html',               icon: 'gem',            label: 'Gencine',         section: 'Content',  keywords: 'tv cinema duas hadiths' },
-        { href: '/admin-links.html',                 icon: 'link',           label: 'Links',           section: 'Content',  keywords: 'urls external' },
-        { href: '/admin-translations.html',          icon: 'languages',      label: 'Translations',    section: 'Content',  keywords: 'kurdish language sorani' },
+        { href: '/admin-messages.html',              icon: 'message-square', label: 'Messages',          section: 'Content',    keywords: 'inbox contact replies' },
+        { href: '/admin-videos.html',                icon: 'video',          label: 'Videos',            section: 'Content',    keywords: 'media upload' },
+        { href: '/admin-islamvoice-management.html', icon: 'radio',          label: 'IslamVoice',        section: 'Content',    keywords: 'audio series episodes' },
+        { href: '/admin-gencine.html',               icon: 'gem',            label: 'Gencine',           section: 'Content',    keywords: 'tv cinema duas hadiths' },
+        { href: '/admin-links.html',                 icon: 'link',           label: 'Links',             section: 'Content',    keywords: 'urls external' },
+        { href: '/admin-translations.html',          icon: 'languages',      label: 'Translations',      section: 'Content',    keywords: 'kurdish language sorani' },
         // Site
-        { href: '/admin-website.html',               icon: 'globe',          label: 'Website',         section: 'Site',     keywords: 'settings hero banner popup' },
-        { href: '/admin-images.html',                icon: 'camera',         label: 'Site Images',     section: 'Site',     keywords: 'photos backgrounds upload' },
-        { href: '/admin-schedule.html',              icon: 'calendar',       label: 'Schedule',        section: 'Site',     keywords: 'prayer times juma' },
-        { href: '/admin-header-animation.html',      icon: 'wand-2',         label: 'Header',          section: 'Site',     keywords: 'animation banner top' },
+        { href: '/admin-website.html',               icon: 'globe',          label: 'Website',           section: 'Site',       keywords: 'settings hero banner popup' },
+        { href: '/admin-images.html',                icon: 'camera',         label: 'Site Images',       section: 'Site',       keywords: 'photos backgrounds upload' },
+        { href: '/admin-schedule.html',              icon: 'calendar',       label: 'Schedule',          section: 'Site',       keywords: 'prayer times juma' },
+        { href: '/admin-header-animation.html',      icon: 'wand-2',         label: 'Header',            section: 'Site',       keywords: 'animation banner top' },
         // Users
-        { href: '/admin-users.html',                 icon: 'users',          label: 'Users',           section: 'Users',    keywords: 'accounts people members' },
-        { href: '/admin-notifications.html',         icon: 'bell',           label: 'Notifications',   section: 'Users',    keywords: 'push alerts send' },
-        { href: '/admin-social-stats.html',          icon: 'share-2',        label: 'Social Stats',    section: 'Users',    keywords: 'instagram twitter followers' },
-        // System
-        { href: '/admin-account-management.html',    icon: 'user-cog',       label: 'Admin Accounts',  section: 'System',   keywords: 'admins roles permissions create' },
-        { href: '/admin-features.html',              icon: 'layers',         label: 'Features',        section: 'System',   keywords: 'flags toggles enable disable' },
-        { href: '/admin-bot-protection.html',        icon: 'shield',         label: 'Bot Protection',  section: 'System',   keywords: 'security bots captcha' },
-        { href: '/admin-auth-monitor.html',          icon: 'monitor',        label: 'Auth Monitor',    section: 'System',   keywords: 'sessions login activity' },
-        { href: '/admin-email-templates.html',       icon: 'mail',           label: 'Email Templates', section: 'System',   keywords: 'brevo email design' },
-        { href: '/admin-database.html',              icon: 'database',       label: 'Database',        section: 'System',   keywords: 'supabase tables records' },
-        { href: '/admin-updates.html',               icon: 'arrow-up-circle',label: 'Updates',         section: 'System',   keywords: 'app release version ios android' },
-        { href: '/admin-audit.html',                 icon: 'shield-check',   label: 'Audit Log',       section: 'System',   keywords: 'logs history changes' },
+        { href: '/admin-users.html',                 icon: 'users',          label: 'Users',             section: 'Users',      keywords: 'accounts people members' },
+        { href: '/admin-notifications.html',         icon: 'bell',           label: 'Notifications',     section: 'Users',      keywords: 'push alerts send' },
+        { href: '/admin-notification-analytics.html',icon: 'bar-chart-2',    label: 'Notif Analytics',   section: 'Users',      keywords: 'push stats delivery' },
+        { href: '/admin-social-stats.html',          icon: 'share-2',        label: 'Social Stats',      section: 'Users',      keywords: 'instagram twitter followers' },
+        // Monitoring
+        { href: '/admin-errors.html',                icon: 'triangle-alert', label: 'App Errors',        section: 'Monitoring', keywords: 'crashes bugs javascript logs' },
+        { href: '/admin-app-versions.html',          icon: 'smartphone',     label: 'App Versions',      section: 'Monitoring', keywords: 'ios android build release devices' },
+        { href: '/admin-db-health.html',             icon: 'activity',       label: 'DB Health',         section: 'Monitoring', keywords: 'database performance supabase' },
+        { href: '/admin-jobs.html',                  icon: 'clock',          label: 'Jobs',              section: 'Monitoring', keywords: 'cron tasks scheduled workers' },
+        // Security
+        { href: '/admin-bot-protection.html',        icon: 'shield',         label: 'Bot Protection',    section: 'Security',   keywords: 'security bots captcha' },
+        { href: '/admin-auth-monitor.html',          icon: 'monitor',        label: 'Auth Monitor',      section: 'Security',   keywords: 'sessions login activity' },
+        { href: '/admin-audit.html',                 icon: 'shield-check',   label: 'Audit Log',         section: 'Security',   keywords: 'logs history changes' },
+        // Settings
+        { href: '/admin-account-management.html',    icon: 'user-cog',       label: 'Admin Accounts',    section: 'Settings',   keywords: 'admins roles permissions create' },
+        { href: '/admin-features.html',              icon: 'layers',         label: 'Features',          section: 'Settings',   keywords: 'flags toggles enable disable' },
+        { href: '/admin-email-templates.html',       icon: 'mail',           label: 'Email Templates',   section: 'Settings',   keywords: 'brevo email design' },
+        { href: '/admin-database.html',              icon: 'database',       label: 'Database',          section: 'Settings',   keywords: 'supabase tables records' },
+        { href: '/admin-updates.html',               icon: 'arrow-up-circle',label: 'Updates',           section: 'Settings',   keywords: 'app release version ios android' },
     ];
 
     // ── Quick actions ─────────────────────────────────────────────
@@ -42,12 +49,14 @@
     ];
 
     var SECTION_COLORS = {
-        Overview: '#3b82f6',
-        Content:  '#10b981',
-        Site:     '#8b5cf6',
-        Users:    '#f59e0b',
-        System:   '#ef4444',
-        Action:   '#6b7280',
+        Overview:   '#3b82f6',
+        Content:    '#10b981',
+        Site:       '#8b5cf6',
+        Users:      '#f59e0b',
+        Monitoring: '#06b6d4',
+        Security:   '#ef4444',
+        Settings:   '#6b7280',
+        Action:     '#a855f7',
     };
 
     var RECENT_KEY = 'admin_cp_recent';
@@ -87,7 +96,7 @@
                 flat.push({ type: 'header', label: 'All Pages' });
             }
             // Group remaining pages by section
-            var sections = ['Overview', 'Content', 'Site', 'Users', 'System'];
+            var sections = ['Overview', 'Content', 'Site', 'Users', 'Monitoring', 'Security', 'Settings'];
             sections.forEach(function (sec) {
                 var items = PAGES.filter(function (p) { return p.section === sec; });
                 if (items.length) {
