@@ -1548,6 +1548,28 @@
     return null;
   }
 
+  // Read tomorrow's prayer data from the monthly cache (no network).
+  // Returns { timings, dateISO } or null.
+  function readTomorrowCacheNow(city, todayISO) {
+    if (!window.PrayerCache) return null;
+    try {
+      var parts = todayISO.split('-').map(Number);
+      var tom = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+      var ty = tom.getFullYear(), tm = tom.getMonth() + 1, td = tom.getDate();
+      var tISO = ty + '-' + String(tm).padStart(2,'0') + '-' + String(td).padStart(2,'0');
+      var mkey = window.PrayerCache.monthKey(city, ty, tm);
+      var monthly = window.PrayerCache.read(mkey);
+      if (!monthly || !monthly.days) return null;
+      var d = monthly.days[td] || monthly.days[String(td)];
+      if (!d || !d.Fajr) return null;
+      return {
+        dateISO: tISO,
+        timings: { Fajr: d.Fajr, Sunrise: d.Sunrise, Dhuhr: d.Dhuhr,
+                   Asr:  d.Asr,  Maghrib: d.Maghrib,  Isha:  d.Isha }
+      };
+    } catch(e) { return null; }
+  }
+
   // Push prayer data to Android widget via JS bridge
   function pushWidgetData(data, city, dateISO) {
     try {
@@ -1559,10 +1581,14 @@
       } else if (data.date && data.date.hijriStr) {
         hijriStr = data.date.hijriStr;
       }
+      // Include tomorrow's timings so the widget has a full 48-h timeline
+      // without requiring the user to open the app at midnight.
+      var tom = readTomorrowCacheNow(city, dateISO);
       var payload = JSON.stringify({
-        city:    city,
-        date:    dateISO,
-        hijri:   hijriStr,
+        city:        city,
+        date:        dateISO,
+        hijri:       hijriStr,
+        lastUpdated: Date.now(),
         timings: {
           Fajr:    (t.Fajr    || '').split(' ')[0],
           Sunrise: (t.Sunrise || '').split(' ')[0],
@@ -1570,21 +1596,32 @@
           Asr:     (t.Asr     || '').split(' ')[0],
           Maghrib: (t.Maghrib || '').split(' ')[0],
           Isha:    (t.Isha    || '').split(' ')[0]
-        }
+        },
+        tomorrow: tom ? {
+          Fajr:    (tom.timings.Fajr    || '').split(' ')[0],
+          Sunrise: (tom.timings.Sunrise || '').split(' ')[0],
+          Dhuhr:   (tom.timings.Dhuhr   || '').split(' ')[0],
+          Asr:     (tom.timings.Asr     || '').split(' ')[0],
+          Maghrib: (tom.timings.Maghrib || '').split(' ')[0],
+          Isha:    (tom.timings.Isha    || '').split(' ')[0]
+        } : null,
+        tomorrowDate: tom ? tom.dateISO : null
       });
+      console.log('[Widget] pushWidgetData city=' + city + ' date=' + dateISO +
+                  ' hasTomorrow=' + !!tom + ' payloadLen=' + payload.length);
       // Android widget
       if (window.TafsirAndroid) {
         window.TafsirAndroid.saveString('widget_prayer', payload);
       }
       // iOS widget — write to App Group UserDefaults via SharedPrefs plugin
       var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
-      console.log('[Widget] SharedPrefs available:', !!sp, '| payload len:', payload.length);
       if (sp) {
         sp.set({ key: 'widgetPrayerData', value: payload })
           .then(function() {
-            console.log('[Widget] iOS write OK');
+            console.log('[Widget] iOS write OK hasTomorrow=' + !!tom);
             localStorage.setItem('widgetLastPushedDate', dateISO);
             localStorage.setItem('widgetLastPushedCity', city);
+            localStorage.setItem('widgetLastPushedHadTomorrow', tom ? '1' : '0');
           })
           .catch(function(e) { console.log('[Widget] iOS write FAIL:', e && e.message || e); });
       } else {
@@ -1597,17 +1634,26 @@
   }
 
   // Stale-data protection: call on app start and every foreground resume.
-  // Reads from cache (no network) and pushes to widget if the stored date or
-  // city no longer matches what the widget received last time.
+  // Pushes to widget if: different date/city, OR same date but tomorrow data
+  // is now available and was absent in the last push (e.g. first open of day
+  // before background prefetch completed).
   function pushWidgetIfStale() {
     if (!window.PrayerLogic || !window.PrayerCache) return;
     var city     = getCity();
     var today    = window.PrayerLogic.todayBaghdad();
     var lastDate = localStorage.getItem('widgetLastPushedDate') || '';
     var lastCity = localStorage.getItem('widgetLastPushedCity') || '';
-    if (lastDate === today && lastCity === city) return; // still fresh
-    console.log('[Widget] stale — lastDate=' + lastDate + ' today=' + today +
-                ' lastCity=' + lastCity + ' city=' + city + ' — refreshing from cache');
+    var hadTom   = localStorage.getItem('widgetLastPushedHadTomorrow') === '1';
+    var sameDayCity = (lastDate === today && lastCity === city);
+    if (sameDayCity && hadTom) return; // already pushed with full data
+    if (sameDayCity && !hadTom) {
+      // Same day/city but last push had no tomorrow — only repush if we have it now
+      if (!readTomorrowCacheNow(city, today)) return;
+      console.log('[Widget] repush: tomorrow data now available for ' + today);
+    } else {
+      console.log('[Widget] stale — lastDate=' + lastDate + ' today=' + today +
+                  ' lastCity=' + lastCity + ' city=' + city + ' — refreshing from cache');
+    }
     var data = readCacheNow(city, today);
     if (data) pushWidgetData(data, city, today);
     // If no cache: next render() will push when user opens prayer tab

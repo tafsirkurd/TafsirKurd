@@ -126,10 +126,44 @@ private var widgetGradient: LinearGradient {
 // MARK: — Data model (untouched)
 
 struct PrayerWidgetData: Codable {
-    let city:    String
-    let date:    String
-    let hijri:   String
-    let timings: [String: String]
+    let city:         String
+    let date:         String            // today  YYYY-MM-DD (Baghdad)
+    let hijri:        String
+    let timings:      [String: String]  // today's prayer times
+    let tomorrow:     [String: String]? // tomorrow's actual API times (new)
+    let tomorrowDate: String?           // tomorrow YYYY-MM-DD (new)
+    let lastUpdated:  Double?           // Unix ms when JS last pushed (new)
+
+    // True staleness: more than 48 h since the app last wrote fresh data.
+    var isStale: Bool {
+        guard let lu = lastUpdated else { return false }
+        return (Date().timeIntervalSince1970 * 1000 - lu) > 48 * 3600 * 1000
+    }
+
+    // Baghdad calendar shared across all date math.
+    static var baghdadCal: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "Asia/Baghdad") ?? .current
+        return c
+    }()
+
+    // YYYY-MM-DD string for Baghdad time + offset days from now.
+    static func baghdadDateString(offset: Int = 0) -> String {
+        let d = baghdadCal.date(byAdding: .day, value: offset, to: Date()) ?? Date()
+        let c = baghdadCal.dateComponents([.year, .month, .day], from: d)
+        return String(format: "%04d-%02d-%02d", c.year!, c.month!, c.day!)
+    }
+
+    // Baghdad midnight for daysAhead days from now (for timeline policy).
+    static func baghdadMidnight(daysAhead: Int) -> Date {
+        let d = baghdadCal.date(byAdding: .day, value: daysAhead, to: Date()) ?? Date()
+        let c = baghdadCal.dateComponents([.year, .month, .day], from: d)
+        var m = DateComponents()
+        m.year = c.year; m.month = c.month; m.day = c.day
+        m.hour = 0; m.minute = 0; m.second = 0
+        m.timeZone = TimeZone(identifier: "Asia/Baghdad")
+        return baghdadCal.date(from: m) ?? Date().addingTimeInterval(Double(daysAhead) * 86400)
+    }
 
     static func load() -> PrayerWidgetData? {
         guard let ud = UserDefaults(suiteName: kAppGroup) else {
@@ -146,7 +180,8 @@ struct PrayerWidgetData: Codable {
         }
         do {
             let decoded = try JSONDecoder().decode(PrayerWidgetData.self, from: raw)
-            wLog.info("decode OK — city=\(decoded.city) date=\(decoded.date)")
+            let ageH = decoded.lastUpdated.map { (Date().timeIntervalSince1970 * 1000 - $0) / 3_600_000 } ?? -1
+            wLog.info("decode OK — city=\(decoded.city) date=\(decoded.date) hasTomorrow=\(decoded.tomorrow != nil) ageHours=\(String(format:"%.1f", ageH))")
             return decoded
         } catch {
             wLog.error("JSON decode failed: \(error.localizedDescription)")
@@ -154,24 +189,68 @@ struct PrayerWidgetData: Codable {
         }
     }
 
-    private static var baghdadCal: Calendar = {
-        var c = Calendar(identifier: .gregorian)
-        c.timeZone = TimeZone(identifier: "Asia/Baghdad") ?? .current
-        return c
-    }()
-
-    func prayerDate(_ name: String, dayOffset: Int = 0) -> Date? {
-        guard let raw = timings[name] else { return nil }
-        let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
+    // Convert a "HH:mm" timing string + a YYYY-MM-DD date string into a Date.
+    private func dateFrom(timingRaw: String, dateStr: String) -> Date? {
+        let hm    = String(timingRaw.split(separator: " ").first ?? Substring(timingRaw))
         let parts = hm.split(separator: ":").compactMap { Int($0) }
         guard parts.count >= 2 else { return nil }
-        var c  = DateComponents()
-        let dp = date.split(separator: "-").compactMap { Int($0) }
+        let dp = dateStr.split(separator: "-").compactMap { Int($0) }
         guard dp.count == 3 else { return nil }
-        c.year = dp[0]; c.month = dp[1]; c.day = dp[2] + dayOffset
+        var c = DateComponents()
+        c.year = dp[0]; c.month = dp[1]; c.day = dp[2]
         c.hour = parts[0]; c.minute = parts[1]; c.second = 0
         c.timeZone = TimeZone(identifier: "Asia/Baghdad")
         return PrayerWidgetData.baghdadCal.date(from: c)
+    }
+
+    // Resolve which timings + date string to use for a given dayOffset.
+    // dayOffset 0 → today's stored data.
+    // dayOffset 1 → actual tomorrow data (if stored) or today's timings on tomorrow's date.
+    // dayOffset 2+ → today's timings on date + N (approximation for day-after-tomorrow chain).
+    func prayerDate(_ name: String, dayOffset: Int = 0) -> Date? {
+        switch dayOffset {
+        case 0:
+            guard let raw = timings[name] else { return nil }
+            return dateFrom(timingRaw: raw, dateStr: date)
+
+        case 1:
+            let tomTimings = tomorrow ?? timings
+            guard let raw = tomTimings[name] else { return nil }
+            // Use stored tomorrowDate if available; otherwise derive it from date.
+            let tomDateStr: String
+            if let td = tomorrowDate {
+                tomDateStr = td
+            } else {
+                let dp = date.split(separator: "-").compactMap { Int($0) }
+                guard dp.count == 3 else { return nil }
+                var c = DateComponents()
+                c.year = dp[0]; c.month = dp[1]; c.day = dp[2] + 1
+                c.timeZone = TimeZone(identifier: "Asia/Baghdad")
+                guard let d = PrayerWidgetData.baghdadCal.date(from: c) else { return nil }
+                let comps = PrayerWidgetData.baghdadCal.dateComponents([.year, .month, .day], from: d)
+                tomDateStr = String(format: "%04d-%02d-%02d", comps.year!, comps.month!, comps.day!)
+            }
+            return dateFrom(timingRaw: raw, dateStr: tomDateStr)
+
+        default:
+            // dayOffset >= 2: approximate with today's timings on date + offset
+            guard let raw = timings[name] else { return nil }
+            let dp = date.split(separator: "-").compactMap { Int($0) }
+            guard dp.count == 3 else { return nil }
+            var c = DateComponents()
+            c.year = dp[0]; c.month = dp[1]; c.day = dp[2] + dayOffset
+            c.timeZone = TimeZone(identifier: "Asia/Baghdad")
+            guard let d = PrayerWidgetData.baghdadCal.date(from: c) else { return nil }
+            let comps = PrayerWidgetData.baghdadCal.dateComponents([.year, .month, .day], from: d)
+            let dateStr = String(format: "%04d-%02d-%02d", comps.year!, comps.month!, comps.day!)
+            return dateFrom(timingRaw: raw, dateStr: dateStr)
+        }
+    }
+
+    // Apply a stored timing to an arbitrary Baghdad date string (stale-recovery path).
+    func prayerTimeOnDate(_ name: String, dateStr: String) -> Date? {
+        guard let raw = timings[name] else { return nil }
+        return dateFrom(timingRaw: raw, dateStr: dateStr)
     }
 
     func displayTime(_ name: String) -> String {
@@ -187,16 +266,33 @@ struct PrayerWidgetData: Codable {
     }
 
     func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
+        // 1. Today's stored prayers (exact timings for stored date)
         for n in kPrayerOrder {
             if let t = prayerDate(n), t > now {
-                wLog.info("nextPrayer: found \(n) at \(t)")
+                wLog.info("nextPrayer: today \(n) at \(t)")
                 return (n, t, kn(n))
             }
         }
-        wLog.warning("nextPrayer: all prayers passed, using tomorrow Fajr fallback")
-        if let fajrTomorrow = prayerDate("Fajr", dayOffset: 1) {
-            return ("Fajr", fajrTomorrow, kn("Fajr"))
+        // 2. Tomorrow's prayers (uses actual tomorrow data when available)
+        for n in kPrayerOrder {
+            if let t = prayerDate(n, dayOffset: 1), t > now {
+                wLog.info("nextPrayer: tomorrow \(n) at \(t)")
+                return (n, t, kn(n))
+            }
         }
+        // 3. Stale-recovery: stored times are for a past date but prayer times
+        //    shift only ~1 min/day — apply them to today/tomorrow Baghdad date.
+        wLog.warning("nextPrayer: stored data exhausted, stale-recovery with Baghdad wall clock")
+        for offset in 0...1 {
+            let targetDate = PrayerWidgetData.baghdadDateString(offset: offset)
+            for n in kPrayerOrder {
+                if let approx = prayerTimeOnDate(n, dateStr: targetDate), approx > now {
+                    wLog.info("nextPrayer stale-recovery: \(n) on \(targetDate) at \(approx)")
+                    return (n, approx, kn(n))
+                }
+            }
+        }
+        wLog.error("nextPrayer: complete failure — no future prayer found")
         return nil
     }
 }
@@ -223,36 +319,56 @@ struct PrayerProvider: TimelineProvider {
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         WT.reload()
-        let now  = Date()
-        wLog.info("getTimeline called")
+        let now = Date()
+        wLog.info("getTimeline called at \(now)")
         let data = PrayerWidgetData.load()
 
+        // ── No data at all ────────────────────────────────────────────────────────
         guard let data = data else {
-            wLog.warning("getTimeline: no data — scheduling retry in 3min")
-            let retry = now.addingTimeInterval(3 * 60)
+            wLog.warning("getTimeline: no data — retry in 3 min")
             completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
-                                policy: .after(retry)))
+                                policy: .after(now.addingTimeInterval(3 * 60))))
             return
         }
 
-        var entries: [PrayerEntry] = [.init(date: now, data: data, next: data.nextPrayer(from: now))]
+        // ── Staleness check ───────────────────────────────────────────────────────
+        // If the main app has not been opened for >48 h the stored prayer times could
+        // be multiple days old. Show a safe "open app" fallback rather than wrong data.
+        let ageH = data.lastUpdated.map { (now.timeIntervalSince1970 * 1000 - $0) / 3_600_000 } ?? 0
+        wLog.info("getTimeline: city=\(data.city) storedDate=\(data.date) hasTomorrow=\(data.tomorrow != nil) ageHours=\(String(format:"%.1f", ageH))")
 
-        // Today's prayer transition entries
-        for name in kPrayerOrder {
-            if let t = data.prayerDate(name), t > now {
-                let after = t.addingTimeInterval(30)
-                entries.append(.init(date: t, data: data, next: data.nextPrayer(from: after)))
-            }
+        if data.isStale {
+            wLog.warning("getTimeline: STALE data (age=\(String(format:"%.1f",ageH))h) — showing fallback, retry 30 min")
+            completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
+                                policy: .after(now.addingTimeInterval(30 * 60))))
+            return
         }
 
-        // Tomorrow's prayer transition entries.
-        // nextPrayer(from:) only knows about today's data (dayOffset 0) plus tomorrow-Fajr
-        // fallback, so we compute tomorrow's chain manually to get the correct highlights
-        // across the full next day without requiring the app to open.
+        // ── Build entries ─────────────────────────────────────────────────────────
+        var entries: [PrayerEntry] = []
+
+        // Entry for right now (covers the time before the first future prayer)
+        let nowNext = data.nextPrayer(from: now)
+        wLog.info("getTimeline: nowNext=\(nowNext?.name ?? "nil")")
+        entries.append(.init(date: now, data: data, next: nowNext))
+
+        // One entry per prayer time today — each entry fires exactly at that prayer
+        // and shows the next one in the chain.
+        for name in kPrayerOrder {
+            guard let t = data.prayerDate(name), t > now else { continue }
+            let after = t.addingTimeInterval(30)
+            let next  = data.nextPrayer(from: after)
+            wLog.info("getTimeline: today \(name) at \(t) → next=\(next?.name ?? "nil")")
+            entries.append(.init(date: t, data: data, next: next))
+        }
+
+        // One entry per prayer time tomorrow — uses actual tomorrow timings when the
+        // app has written them, otherwise approximate with today's timings.
         for i in 0 ..< kPrayerOrder.count {
             let name = kPrayerOrder[i]
             guard let t = data.prayerDate(name, dayOffset: 1) else { continue }
-            // Next prayer in tomorrow's order
+            // Build the "next" for this tomorrow slot manually (nextPrayer can't scan
+            // tomorrow-relative slots in its loop, so we do it here).
             var nextEntry: (name: String, time: Date, ku: String)? = nil
             for j in (i + 1) ..< kPrayerOrder.count {
                 let nxt = kPrayerOrder[j]
@@ -260,17 +376,24 @@ struct PrayerProvider: TimelineProvider {
                     nextEntry = (nxt, nt, kn(nxt)); break
                 }
             }
-            // After tomorrow's Isha: fall back to day-after-tomorrow's Fajr
+            // After tomorrow's Isha → approximate day+2 Fajr for the chain
             if nextEntry == nil, let fajr2 = data.prayerDate("Fajr", dayOffset: 2) {
                 nextEntry = ("Fajr", fajr2, kn("Fajr"))
             }
+            wLog.info("getTimeline: tomorrow \(name) at \(t) → next=\(nextEntry?.name ?? "nil")")
             entries.append(.init(date: t, data: data, next: nextEntry))
         }
 
-        wLog.info("getTimeline: \(entries.count) entries for city=\(data.city) (today+tomorrow)")
-        // Refresh 36 h from now.  App-open triggers WidgetCenter.reloadAllTimelines()
-        // earlier whenever fresh prayer data is pushed — this is just the safety net.
-        completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(36 * 3600))))
+        // ── Timeline policy ───────────────────────────────────────────────────────
+        // Refresh shortly after Baghdad midnight so the widget picks up the new day's
+        // data as soon as possible, even if the app is never opened.
+        // Cap at 25 h as a safety net for any edge cases.
+        let midnightTomorrow = PrayerWidgetData.baghdadMidnight(daysAhead: 1)
+        let policyAt = min(midnightTomorrow.addingTimeInterval(5 * 60),
+                           now.addingTimeInterval(25 * 3600))
+
+        wLog.info("getTimeline: \(entries.count) entries, policy=\(policyAt)")
+        completion(Timeline(entries: entries, policy: .after(policyAt)))
     }
 }
 
