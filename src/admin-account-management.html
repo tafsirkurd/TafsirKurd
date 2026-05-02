@@ -1063,7 +1063,7 @@
                 var calIcon = document.createElement('i');
                 calIcon.setAttribute('data-lucide','clock');
                 var loginText = account.last_login
-                    ? new Date(account.last_login).toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Baghdad'})
+                    ? new Date(account.last_login).toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true,timeZone:'Asia/Baghdad'})
                     : 'Never';
                 meta.appendChild(calIcon);
                 meta.appendChild(document.createTextNode('Last login: ' + loginText));
