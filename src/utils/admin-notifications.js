@@ -453,9 +453,15 @@
   }
 
   // ── pull real data from Supabase when panel opens ──────────
+  function _getSB() {
+    if (window.adminAuth && window.adminAuth.getSupabase) return window.adminAuth.getSupabase();
+    if (window.supabaseClient) return window.supabaseClient;
+    return null;
+  }
+
   var _lastPull = 0;
   function _pullSupabase() {
-    var sb = window._supabase;
+    var sb = _getSB();
     if (!sb) return;
     var now = Date.now();
     if (now - _lastPull < 30000) return; // max once per 30 s
@@ -562,13 +568,13 @@
     _wireBell();
 
     // Silently pull Supabase unread messages + recent signups in background
-    if (window._supabase) {
+    if (_getSB()) {
       setTimeout(_pullSupabase, 4000);
     } else {
       var t = 0;
       var wait = setInterval(function() {
-        if (window._supabase) { clearInterval(wait); setTimeout(_pullSupabase, 2000); }
-        else if (++t > 60)    { clearInterval(wait); }
+        if (_getSB()) { clearInterval(wait); setTimeout(_pullSupabase, 2000); }
+        else if (++t > 60) { clearInterval(wait); }
       }, 500);
     }
 
