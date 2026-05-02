@@ -17,9 +17,7 @@
         // Site
         { href: '/admin-website.html',               icon: 'globe',          label: 'Website',           section: 'Site',       keywords: 'settings hero banner popup' },
         { href: '/admin-images.html',                icon: 'camera',         label: 'Site Images',       section: 'Site',       keywords: 'photos backgrounds upload' },
-        { href: '/admin-schedule.html',              icon: 'calendar',       label: 'Schedule',          section: 'Site',       keywords: 'prayer times juma' },
         { href: '/admin-header-animation.html',      icon: 'wand-2',         label: 'Header',            section: 'Site',       keywords: 'animation banner top' },
-        { href: '/admin-features.html',              icon: 'layers',         label: 'Features',          section: 'Site',       keywords: 'flags toggles enable disable' },
         // Users
         { href: '/admin-users.html',                 icon: 'users',          label: 'Users',             section: 'Users',      keywords: 'accounts people members' },
         { href: '/admin-notifications.html',         icon: 'bell',           label: 'Notifications',     section: 'Users',      keywords: 'push alerts send' },
