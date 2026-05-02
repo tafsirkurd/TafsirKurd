@@ -924,6 +924,7 @@ function init(){
   setTimeout(function(){checkNewBookNotif();},2500);
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
+  setTimeout(function(){_reportAppVersion();},5000);
   // Preload Gencine scripts in background so first tab open is instant (scripts are 190KB)
   setTimeout(function(){_loadGencineScripts(function(){
     // Pre-render only if user hasn't already opened the tab
@@ -2021,6 +2022,25 @@ function _pushLog(msg){
     localStorage.setItem('push_debug',JSON.stringify(logs));
   }catch(e){}
   console.log('[Push] '+msg);
+}
+
+function _reportAppVersion(){
+  try {
+    if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.App)return;
+    var platform=Capacitor.getPlatform?Capacitor.getPlatform():'web';
+    if(platform==='web')return;
+    Capacitor.Plugins.App.getInfo().then(function(info){
+      if(!info||!info.build)return;
+      var lsKey='ark_'+platform+'_'+info.build;
+      if(localStorage.getItem(lsKey))return;
+      fetch('https://tafsirkurd.com/app-version-report',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({platform:platform,build_number:String(info.build),app_version:info.version||null}),
+        keepalive:true,
+      }).then(function(r){if(r.ok)localStorage.setItem(lsKey,'1');}).catch(function(){});
+    }).catch(function(){});
+  }catch(e){}
 }
 
 function initPushToken(){
