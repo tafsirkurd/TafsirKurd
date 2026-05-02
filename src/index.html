@@ -6166,7 +6166,7 @@ function animateCounters() {
             const progress = Math.min(elapsed / duration, 1);
             const easeOutCubic = 1 - Math.pow(1 - progress, 3);
             const current = Math.floor(easeOutCubic * target);
-            counter.textContent = KurdishNumbers.toKurdish(current);
+            counter.textContent = window.KurdishNumbers ? window.KurdishNumbers.toKurdish(current) : current;
             if (progress < 1) {
                 requestAnimationFrame(updateCounter);
             }
@@ -6811,7 +6811,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const yearElement = document.getElementById('year');
     if (yearElement) {
-        yearElement.textContent = window.KurdishNumbers.toKurdish(new Date().getFullYear());
+        const _yr = new Date().getFullYear();
+        yearElement.textContent = window.KurdishNumbers ? window.KurdishNumbers.toKurdish(_yr) : _yr;
     }
 
     try {
