@@ -532,7 +532,7 @@
         'New episode: ' + (data.title || 'Untitled'),
         data.description ? data.description.slice(0, 80) : 'IslamVoice',
         'video',
-        '/admin-videos.html',
+        '/admin-islamvoice-management.html',
         data.id ? 'vid_' + data.id : null
       );
     }
@@ -602,7 +602,7 @@
     test: function() {
       _add('Ahmed Hassan sent a message', 'Question about Quran recitation feature', 'message', '/admin-messages.html', null);
       _add('Sara Ahmed joined', 'sara.ahmed@example.com', 'user', '/admin-users.html', null);
-      _add('New episode published', 'Tafsir Al-Baqarah — Episode 12', 'video', '/admin-videos.html', null);
+      _add('New episode published', 'Tafsir Al-Baqarah — Episode 12', 'video', '/admin-islamvoice-management.html', null);
     },
   };
 
