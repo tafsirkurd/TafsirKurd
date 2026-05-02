@@ -1,12 +1,19 @@
 import UIKit
 import Capacitor
+import BackgroundTasks
+import WidgetKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    private let kBGTaskID = "com.tafsirkurd.app.prayerCacheRefresh"
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Register background task for periodic widget cache refresh
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: kBGTaskID, using: nil) { [weak self] task in
+            self?.handlePrayerCacheRefresh(task: task as! BGAppRefreshTask)
+        }
         // Set window background to match the saved theme so the very first
         // native frame after the launch screen already has the right color.
         // Theme is written to App Group UserDefaults by _nativeSyncTheme() in app.js
@@ -36,8 +43,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        // Schedule a background refresh so the widget stays current even when the app is closed.
+        schedulePrayerCacheRefresh()
+    }
+
+    private func schedulePrayerCacheRefresh() {
+        let request = BGAppRefreshTaskRequest(identifier: kBGTaskID)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 6 * 3600) // no sooner than 6 h
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            NSLog("[BGTask] scheduled prayer cache refresh (earliest: 6h)")
+        } catch {
+            NSLog("[BGTask] schedule failed: %@", error.localizedDescription)
+        }
+    }
+
+    private func handlePrayerCacheRefresh(task: BGAppRefreshTask) {
+        // Reschedule for the next cycle immediately so we never miss a window
+        schedulePrayerCacheRefresh()
+        NSLog("[BGTask] prayer cache refresh fired — triggering WidgetCenter reload")
+        // Asking WidgetKit to reload causes the widget extension to call getTimeline,
+        // which fetches fresh prayer data from the prayer-kurd API autonomously.
+        WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdWidgetV2")
+        WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdLockWidgetV2")
+        task.setTaskCompleted(success: true)
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {

@@ -8,7 +8,10 @@ private let wLog = Logger(subsystem: "com.tafsirkurd.app.TafsirKurdWidget", cate
 
 private let kAppGroup    = "group.com.tafsirkurd.app"
 private let kDataKey     = "widgetPrayerData"
-private let kDeepLink    = URL(string: "tafsirkurd://prayer")!
+private let kDeepLink       = URL(string: "tafsirkurd://prayer")!
+private let kExtCacheKey    = "widgetExtendedCache"
+private let kExtCacheSchema = 1
+private let kDiagnosticsKey = "widgetDiagnostics"
 private let kPrayerOrder   = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]          // notifications + next-prayer logic
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"] // home widget rows (includes sunrise)
 // MARK: — Widget translations (read from App Group UserDefaults, set by main app)
@@ -297,6 +300,96 @@ struct PrayerWidgetData: Codable {
     }
 }
 
+// MARK: — Extended cache (multi-day autonomous data)
+// Written by pushExtendedPrayerCache() in prayer.ui.js.
+// Schema: { v:1, city, gen (Unix ms), days: { "YYYY-MM-DD": [fajr,sunrise,dhuhr,asr,maghrib,isha] } }
+
+struct WidgetExtendedCache: Codable {
+    let v:    Int
+    let city: String
+    let gen:  Double            // Unix ms when JS wrote this cache
+    let days: [String: [String]]
+
+    private static let kIdx = ["Fajr": 0, "Sunrise": 1, "Dhuhr": 2, "Asr": 3, "Maghrib": 4, "Isha": 5]
+
+    static func load() -> WidgetExtendedCache? {
+        guard let ud   = UserDefaults(suiteName: kAppGroup),
+              let json = ud.string(forKey: kExtCacheKey),
+              let raw  = json.data(using: .utf8)
+        else { return nil }
+        do {
+            let ext = try JSONDecoder().decode(WidgetExtendedCache.self, from: raw)
+            guard ext.v == kExtCacheSchema else {
+                wLog.warning("[Ext] schema mismatch v=\(ext.v) expected \(kExtCacheSchema)")
+                return nil
+            }
+            wLog.info("[Ext] loaded city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
+            return ext
+        } catch {
+            wLog.error("[Ext] decode error: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    func save() {
+        guard let ud  = UserDefaults(suiteName: kAppGroup),
+              let raw = try? JSONEncoder().encode(self),
+              let str = String(data: raw, encoding: .utf8)
+        else { return }
+        ud.set(str, forKey: kExtCacheKey)
+        ud.synchronize()
+    }
+
+    var ageHours: Double { (Date().timeIntervalSince1970 * 1000 - gen) / 3_600_000 }
+
+    // Usable if < 48 h old and contains today's Baghdad date
+    var isUsable: Bool {
+        guard ageHours < 48 else { return false }
+        return days[PrayerWidgetData.baghdadDateString()] != nil
+    }
+
+    func timing(_ name: String, for dateStr: String) -> String? {
+        guard let arr = days[dateStr],
+              let idx = Self.kIdx[name],
+              idx < arr.count
+        else { return nil }
+        let s = arr[idx]
+        return s.isEmpty ? nil : s
+    }
+
+    func prayerDate(_ name: String, for dateStr: String) -> Date? {
+        guard let raw = timing(name, for: dateStr) else { return nil }
+        let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
+        let parts = hm.split(separator: ":").compactMap { Int($0) }
+        guard parts.count >= 2 else { return nil }
+        let dp    = dateStr.split(separator: "-").compactMap { Int($0) }
+        guard dp.count == 3 else { return nil }
+        var c = DateComponents()
+        c.year = dp[0]; c.month = dp[1]; c.day = dp[2]
+        c.hour = parts[0]; c.minute = parts[1]; c.second = 0
+        c.timeZone = TimeZone(identifier: "Asia/Baghdad")
+        return PrayerWidgetData.baghdadCal.date(from: c)
+    }
+
+    // Sorted date strings >= today with data in this cache
+    func futureDays() -> [String] {
+        let today = PrayerWidgetData.baghdadDateString()
+        return days.keys.filter { $0 >= today }.sorted()
+    }
+
+    // Find next prayer from `now` scanning forward across all future days (up to 30)
+    func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
+        for dateStr in futureDays().prefix(30) {
+            for name in kPrayerOrder {
+                if let t = prayerDate(name, for: dateStr), t > now {
+                    return (name, t, kn(name))
+                }
+            }
+        }
+        return nil
+    }
+}
+
 // MARK: — Timeline entry
 
 struct PrayerEntry: TimelineEntry {
@@ -321,80 +414,214 @@ struct PrayerProvider: TimelineProvider {
         WT.reload()
         let now = Date()
         wLog.info("getTimeline called at \(now)")
-        let data = PrayerWidgetData.load()
 
-        // ── No data at all ────────────────────────────────────────────────────────
-        guard let data = data else {
-            wLog.warning("getTimeline: no data — retry in 3 min")
+        // 1. Extended cache: multi-day autonomous path (90+ days, no app required)
+        if let ext = WidgetExtendedCache.load(), ext.isUsable {
+            wLog.info("getTimeline: extended cache hit — city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
+            let legacy = PrayerWidgetData.load()
+            let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacy)
+            writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "extended",
+                              "extDays": ext.days.count, "extAgeH": ext.ageHours,
+                              "entries": entries.count, "policyAt": policyAt.timeIntervalSince1970])
+            wLog.info("getTimeline: \(entries.count) entries policyAt=\(policyAt)")
+            completion(Timeline(entries: entries, policy: .after(policyAt)))
+            return
+        }
+
+        // 2. Extended cache missing or stale — try fetching directly from prayer-kurd API
+        let legacyData = PrayerWidgetData.load()
+        guard let city = legacyData?.city, !city.isEmpty else {
+            wLog.warning("getTimeline: no city known — retry 3 min")
             completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
                                 policy: .after(now.addingTimeInterval(3 * 60))))
             return
         }
+        wLog.info("getTimeline: fetching extended cache for city=\(city)")
+        fetchExtendedPrayerCache(city: city) { ext in
+            if let ext = ext, ext.isUsable {
+                let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
+                writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "extended_fetch",
+                                  "extDays": ext.days.count, "entries": entries.count,
+                                  "policyAt": policyAt.timeIntervalSince1970])
+                wLog.info("getTimeline: fetched extended \(entries.count) entries")
+                completion(Timeline(entries: entries, policy: .after(policyAt)))
+            } else {
+                // Network unavailable — fall back to two-day legacy data
+                wLog.warning("getTimeline: fetch failed — falling back to legacy")
+                buildLegacyTimeline(data: legacyData, now: now, completion: completion)
+            }
+        }
+    }
+}
 
-        // ── Staleness check ───────────────────────────────────────────────────────
-        // If the main app has not been opened for >48 h the stored prayer times could
-        // be multiple days old. Show a safe "open app" fallback rather than wrong data.
-        let ageH = data.lastUpdated.map { (now.timeIntervalSince1970 * 1000 - $0) / 3_600_000 } ?? 0
-        wLog.info("getTimeline: city=\(data.city) storedDate=\(data.date) hasTomorrow=\(data.tomorrow != nil) ageHours=\(String(format:"%.1f", ageH))")
+// MARK: — Extended timeline helpers
 
-        if data.isStale {
-            wLog.warning("getTimeline: STALE data (age=\(String(format:"%.1f",ageH))h) — showing fallback, retry 30 min")
-            completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
-                                policy: .after(now.addingTimeInterval(30 * 60))))
+// Build a synthetic PrayerWidgetData from the extended cache for a specific date.
+// This gives the widget views correct prayer times for each day as entries advance.
+private func syntheticData(from ext: WidgetExtendedCache, dateStr: String) -> PrayerWidgetData? {
+    guard let arr = ext.days[dateStr] else { return nil }
+    let names = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"]
+    var timing: [String: String] = [:]
+    for (i, n) in names.enumerated() where i < arr.count { timing[n] = arr[i] }
+    return PrayerWidgetData(city: ext.city, date: dateStr, hijri: "",
+                            timings: timing, tomorrow: nil, tomorrowDate: nil,
+                            lastUpdated: ext.gen)
+}
+
+// Build up to 14 days × 5 prayers = 70 timeline entries from the extended cache.
+// Each entry carries per-day synthetic display data so prayer times shown are correct.
+private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
+                                   legacyData: PrayerWidgetData?) -> ([PrayerEntry], Date) {
+    var entries: [PrayerEntry] = []
+    let futureDates = ext.futureDays()
+    let todayStr  = PrayerWidgetData.baghdadDateString()
+    let todayData = syntheticData(from: ext, dateStr: todayStr) ?? legacyData
+
+    // Entry covering "right now" — establishes the initial display state
+    let nowNext = ext.nextPrayer(from: now)
+    entries.append(.init(date: now, data: todayData, next: nowNext))
+
+    // One entry per prayer boundary across the next 14 days
+    for dateStr in futureDates.prefix(14) {
+        let dayData = syntheticData(from: ext, dateStr: dateStr) ?? todayData
+        for name in kPrayerOrder {
+            guard let t = ext.prayerDate(name, for: dateStr), t > now else { continue }
+            let next = ext.nextPrayer(from: t.addingTimeInterval(30))
+            wLog.info("[Ext] entry \(dateStr) \(name) @ \(t) -> \(next?.name ?? "nil")")
+            entries.append(.init(date: t, data: dayData, next: next))
+        }
+    }
+
+    // Refresh policy: Baghdad midnight after the last covered day
+    let lastDate = futureDates.prefix(14).last ?? PrayerWidgetData.baghdadDateString(offset: 1)
+    let dp       = lastDate.split(separator: "-").compactMap { Int($0) }
+    let policyAt: Date
+    if dp.count == 3 {
+        var c = DateComponents()
+        c.year = dp[0]; c.month = dp[1]; c.day = dp[2] + 1
+        c.hour = 0; c.minute = 5; c.second = 0
+        c.timeZone = TimeZone(identifier: "Asia/Baghdad")
+        policyAt = PrayerWidgetData.baghdadCal.date(from: c) ?? now.addingTimeInterval(72 * 3600)
+    } else {
+        policyAt = now.addingTimeInterval(72 * 3600)
+    }
+    return (entries, policyAt)
+}
+
+// Legacy two-day path: used when extended cache is unavailable and network is offline.
+// Mirrors the Phase 1 getTimeline logic: today + tomorrow, policy = Baghdad midnight+5min.
+private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
+                                 completion: @escaping (Timeline<PrayerEntry>) -> Void) {
+    guard let data = data else {
+        wLog.warning("buildLegacyTimeline: no data — retry 3 min")
+        completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
+                            policy: .after(now.addingTimeInterval(3 * 60))))
+        return
+    }
+    let ageH = data.lastUpdated.map { (now.timeIntervalSince1970 * 1000 - $0) / 3_600_000 } ?? 0
+    if data.isStale {
+        wLog.warning("buildLegacyTimeline: STALE ageH=\(String(format:"%.1f",ageH)) — retry 30 min")
+        completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
+                            policy: .after(now.addingTimeInterval(30 * 60))))
+        return
+    }
+    var entries: [PrayerEntry] = []
+    let nowNext = data.nextPrayer(from: now)
+    wLog.info("buildLegacyTimeline: city=\(data.city) nowNext=\(nowNext?.name ?? "nil") ageH=\(String(format:"%.1f",ageH))")
+    entries.append(.init(date: now, data: data, next: nowNext))
+    for name in kPrayerOrder {
+        guard let t = data.prayerDate(name), t > now else { continue }
+        let next = data.nextPrayer(from: t.addingTimeInterval(30))
+        wLog.info("buildLegacyTimeline: today \(name) -> \(next?.name ?? "nil")")
+        entries.append(.init(date: t, data: data, next: next))
+    }
+    for i in 0 ..< kPrayerOrder.count {
+        let name = kPrayerOrder[i]
+        guard let t = data.prayerDate(name, dayOffset: 1) else { continue }
+        var nextEntry: (name: String, time: Date, ku: String)? = nil
+        for j in (i + 1) ..< kPrayerOrder.count {
+            let nxt = kPrayerOrder[j]
+            if let nt = data.prayerDate(nxt, dayOffset: 1) { nextEntry = (nxt, nt, kn(nxt)); break }
+        }
+        if nextEntry == nil, let fajr2 = data.prayerDate("Fajr", dayOffset: 2) {
+            nextEntry = ("Fajr", fajr2, kn("Fajr"))
+        }
+        entries.append(.init(date: t, data: data, next: nextEntry))
+    }
+    let policyAt = min(PrayerWidgetData.baghdadMidnight(daysAhead: 1).addingTimeInterval(5 * 60),
+                       now.addingTimeInterval(25 * 3600))
+    wLog.info("buildLegacyTimeline: \(entries.count) entries policyAt=\(policyAt)")
+    completion(Timeline(entries: entries, policy: .after(policyAt)))
+}
+
+// Fetch 3 months of prayer data from the prayer-kurd CF function and persist as WidgetExtendedCache.
+// Called by the widget itself when the App Group cache is missing or stale.
+private func fetchExtendedPrayerCache(city: String, completion: @escaping (WidgetExtendedCache?) -> Void) {
+    let cal  = PrayerWidgetData.baghdadCal
+    let now  = Date()
+    var allDays: [String: [String]] = [:]
+    let group = DispatchGroup()
+    let lock  = NSLock()
+
+    for monthOffset in 0...2 {
+        guard let target = cal.date(byAdding: .month, value: monthOffset, to: now) else { continue }
+        let comps = cal.dateComponents([.year, .month], from: target)
+        guard let year = comps.year, let month = comps.month else { continue }
+
+        group.enter()
+        let enc    = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city
+        let urlStr = "https://tafsirkurd.com/prayer-kurd?city=\(enc)&year=\(year)&month=\(month)"
+        guard let url = URL(string: urlStr) else { group.leave(); continue }
+
+        URLSession.shared.dataTask(with: url) { data, _, error in
+            defer { group.leave() }
+            guard let data  = data, error == nil,
+                  let json  = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let dayMap = json["days"] as? [String: Any]
+            else {
+                wLog.error("[Ext] fetch \(year)-\(month) failed: \(error?.localizedDescription ?? "nil")")
+                return
+            }
+            lock.lock()
+            for (dayKey, val) in dayMap {
+                guard let dayNum = Int(dayKey), let d = val as? [String: String] else { continue }
+                let dateStr = String(format: "%04d-%02d-%02d", year, month, dayNum)
+                allDays[dateStr] = [
+                    (d["Fajr"]    ?? "").components(separatedBy: " ").first ?? "",
+                    (d["Sunrise"] ?? "").components(separatedBy: " ").first ?? "",
+                    (d["Dhuhr"]   ?? "").components(separatedBy: " ").first ?? "",
+                    (d["Asr"]     ?? "").components(separatedBy: " ").first ?? "",
+                    (d["Maghrib"] ?? "").components(separatedBy: " ").first ?? "",
+                    (d["Isha"]    ?? "").components(separatedBy: " ").first ?? ""
+                ]
+            }
+            lock.unlock()
+            wLog.info("[Ext] fetched \(dayMap.count) days for \(year)-\(month)")
+        }.resume()
+    }
+
+    group.notify(queue: .global(qos: .utility)) {
+        guard !allDays.isEmpty else {
+            wLog.error("[Ext] all fetches returned empty for city=\(city)")
+            completion(nil)
             return
         }
-
-        // ── Build entries ─────────────────────────────────────────────────────────
-        var entries: [PrayerEntry] = []
-
-        // Entry for right now (covers the time before the first future prayer)
-        let nowNext = data.nextPrayer(from: now)
-        wLog.info("getTimeline: nowNext=\(nowNext?.name ?? "nil")")
-        entries.append(.init(date: now, data: data, next: nowNext))
-
-        // One entry per prayer time today — each entry fires exactly at that prayer
-        // and shows the next one in the chain.
-        for name in kPrayerOrder {
-            guard let t = data.prayerDate(name), t > now else { continue }
-            let after = t.addingTimeInterval(30)
-            let next  = data.nextPrayer(from: after)
-            wLog.info("getTimeline: today \(name) at \(t) → next=\(next?.name ?? "nil")")
-            entries.append(.init(date: t, data: data, next: next))
-        }
-
-        // One entry per prayer time tomorrow — uses actual tomorrow timings when the
-        // app has written them, otherwise approximate with today's timings.
-        for i in 0 ..< kPrayerOrder.count {
-            let name = kPrayerOrder[i]
-            guard let t = data.prayerDate(name, dayOffset: 1) else { continue }
-            // Build the "next" for this tomorrow slot manually (nextPrayer can't scan
-            // tomorrow-relative slots in its loop, so we do it here).
-            var nextEntry: (name: String, time: Date, ku: String)? = nil
-            for j in (i + 1) ..< kPrayerOrder.count {
-                let nxt = kPrayerOrder[j]
-                if let nt = data.prayerDate(nxt, dayOffset: 1) {
-                    nextEntry = (nxt, nt, kn(nxt)); break
-                }
-            }
-            // After tomorrow's Isha → approximate day+2 Fajr for the chain
-            if nextEntry == nil, let fajr2 = data.prayerDate("Fajr", dayOffset: 2) {
-                nextEntry = ("Fajr", fajr2, kn("Fajr"))
-            }
-            wLog.info("getTimeline: tomorrow \(name) at \(t) → next=\(nextEntry?.name ?? "nil")")
-            entries.append(.init(date: t, data: data, next: nextEntry))
-        }
-
-        // ── Timeline policy ───────────────────────────────────────────────────────
-        // Refresh shortly after Baghdad midnight so the widget picks up the new day's
-        // data as soon as possible, even if the app is never opened.
-        // Cap at 25 h as a safety net for any edge cases.
-        let midnightTomorrow = PrayerWidgetData.baghdadMidnight(daysAhead: 1)
-        let policyAt = min(midnightTomorrow.addingTimeInterval(5 * 60),
-                           now.addingTimeInterval(25 * 3600))
-
-        wLog.info("getTimeline: \(entries.count) entries, policy=\(policyAt)")
-        completion(Timeline(entries: entries, policy: .after(policyAt)))
+        let ext = WidgetExtendedCache(v: kExtCacheSchema, city: city,
+                                      gen: Date().timeIntervalSince1970 * 1000, days: allDays)
+        ext.save()
+        wLog.info("[Ext] fetch+save complete: city=\(city) totalDays=\(allDays.count)")
+        completion(ext)
     }
+}
+
+// Write widget diagnostics to App Group for admin observability dashboard.
+private func writeDiagnostics(_ info: [String: Any]) {
+    guard let ud  = UserDefaults(suiteName: kAppGroup),
+          let raw = try? JSONSerialization.data(withJSONObject: info),
+          let str = String(data: raw, encoding: .utf8)
+    else { return }
+    ud.set(str, forKey: kDiagnosticsKey)
+    ud.synchronize()
 }
 
 // MARK: — Helpers

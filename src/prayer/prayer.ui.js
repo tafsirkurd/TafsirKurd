@@ -1645,18 +1645,85 @@
     var lastCity = localStorage.getItem('widgetLastPushedCity') || '';
     var hadTom   = localStorage.getItem('widgetLastPushedHadTomorrow') === '1';
     var sameDayCity = (lastDate === today && lastCity === city);
-    if (sameDayCity && hadTom) return; // already pushed with full data
+    if (sameDayCity && hadTom) {
+      // Main widget data is fresh — check extended cache independently
+      if (shouldPushExtendedCache(city)) pushExtendedPrayerCache(city);
+      return;
+    }
     if (sameDayCity && !hadTom) {
       // Same day/city but last push had no tomorrow — only repush if we have it now
-      if (!readTomorrowCacheNow(city, today)) return;
+      if (!readTomorrowCacheNow(city, today)) {
+        if (shouldPushExtendedCache(city)) pushExtendedPrayerCache(city);
+        return;
+      }
       console.log('[Widget] repush: tomorrow data now available for ' + today);
     } else {
       console.log('[Widget] stale — lastDate=' + lastDate + ' today=' + today +
                   ' lastCity=' + lastCity + ' city=' + city + ' — refreshing from cache');
     }
     var data = readCacheNow(city, today);
-    if (data) pushWidgetData(data, city, today);
+    if (data) {
+      pushWidgetData(data, city, today);
+      pushExtendedPrayerCache(city);
+    }
     // If no cache: next render() will push when user opens prayer tab
+  }
+
+  // Returns true if the extended multi-day cache should be re-pushed: city changed or >24 h old.
+  function shouldPushExtendedCache(city) {
+    var lastCity = localStorage.getItem('widgetExtCacheLastCity') || '';
+    var lastTs   = parseInt(localStorage.getItem('widgetExtCacheLastPush') || '0', 10);
+    if (lastCity !== city) return true;
+    return (Date.now() - lastTs) > 24 * 3600 * 1000;
+  }
+
+  // Collect all locally-cached prayer months into a compact multi-day payload and write it
+  // to the App Group (iOS only) so the widget can autonomously build a 90-day timeline
+  // without the app being open.  Format: { v:1, city, gen (Unix ms), days: { "YYYY-MM-DD":
+  // [fajr, sunrise, dhuhr, asr, maghrib, isha] } }
+  function pushExtendedPrayerCache(city) {
+    if (!window.PrayerCache || !window.PrayerLogic) return;
+    var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
+    if (!sp) return; // iOS-only bridge
+    try {
+      var today = window.PrayerLogic.todayBaghdad();
+      var parts = today.split('-').map(Number);
+      var baseDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      var days = {}, collected = 0;
+      for (var d = -3; d <= 90; d++) {
+        var target = new Date(baseDate.getTime());
+        target.setDate(baseDate.getDate() + d);
+        var ty = target.getFullYear(), tm = target.getMonth() + 1, td = target.getDate();
+        var dateStr = ty + '-' + String(tm).padStart(2, '0') + '-' + String(td).padStart(2, '0');
+        var mkey = window.PrayerCache.monthKey(city, ty, tm);
+        var monthly = window.PrayerCache.read(mkey);
+        if (!monthly || !monthly.days) continue;
+        var day = monthly.days[td] || monthly.days[String(td)];
+        if (!day || !day.Fajr) continue;
+        days[dateStr] = [
+          (day.Fajr    || '').split(' ')[0],
+          (day.Sunrise || '').split(' ')[0],
+          (day.Dhuhr   || '').split(' ')[0],
+          (day.Asr     || '').split(' ')[0],
+          (day.Maghrib || '').split(' ')[0],
+          (day.Isha    || '').split(' ')[0]
+        ];
+        collected++;
+      }
+      if (collected < 3) {
+        console.log('[WidgetExt] too few days in local cache (' + collected + ') — skipping push');
+        return;
+      }
+      var payload = JSON.stringify({ v: 1, city: city, gen: Date.now(), days: days });
+      console.log('[WidgetExt] pushing: city=' + city + ' days=' + collected + ' len=' + payload.length);
+      sp.set({ key: 'widgetExtendedCache', value: payload })
+        .then(function() {
+          localStorage.setItem('widgetExtCacheLastPush', String(Date.now()));
+          localStorage.setItem('widgetExtCacheLastCity', city);
+          console.log('[WidgetExt] write OK days=' + collected);
+        })
+        .catch(function(e) { console.log('[WidgetExt] write FAIL:', e && e.message || e); });
+    } catch(e) { console.log('[WidgetExt] error:', e); }
   }
 
   async function render() {
@@ -3078,6 +3145,7 @@
     },
     initScheduleOnStart: initScheduleOnStart,
     pushWidgetIfStale: pushWidgetIfStale,
+    pushExtendedPrayerCache: pushExtendedPrayerCache,
     prefetchAllCities: prefetchAllCities,
     preloadAthanVoices: preloadVoiceBuffers,
     // Debug helpers — call from browser devtools or adb logcat

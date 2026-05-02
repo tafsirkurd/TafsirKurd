@@ -57,6 +57,12 @@ public class SharedPrefsPlugin: CAPPlugin {
             WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdAyahWidget")
             WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdGoalWidget")
             NSLog("[SharedPrefs] widgetTranslations reload done")
+        } else if key == "widgetExtendedCache" {
+            // Extended multi-day prayer cache — reload prayer widgets so they pick up new data
+            NSLog("[SharedPrefs] widgetExtendedCache written (%d bytes) — reloading prayer widget timelines", value.count)
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdWidgetV2")
+            WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdLockWidgetV2")
+            NSLog("[SharedPrefs] extended cache reload done")
         } else if key == "widgetAccentColor" {
             NSLog("[SharedPrefs] accent color updated — reloading all widget timelines")
             WidgetCenter.shared.reloadAllTimelines()
