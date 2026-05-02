@@ -342,9 +342,11 @@ struct WidgetExtendedCache: Codable {
 
     var ageHours: Double { (Date().timeIntervalSince1970 * 1000 - gen) / 3_600_000 }
 
-    // Usable if < 48 h old and contains today's Baghdad date
+    // Usable if today's Baghdad date exists in the cache.
+    // No time-based expiry: prayer times for a given date are fixed and never change,
+    // so a 90-day cache written weeks ago is still accurate for any day it covers.
+    // City mismatch is checked separately in getTimeline.
     var isUsable: Bool {
-        guard ageHours < 48 else { return false }
         return days[PrayerWidgetData.baghdadDateString()] != nil
     }
 
@@ -415,33 +417,40 @@ struct PrayerProvider: TimelineProvider {
         let now = Date()
         wLog.info("getTimeline called at \(now)")
 
+        // Always read legacy data first — it is the source of truth for the current city.
+        let legacyData = PrayerWidgetData.load()
+        let currentCity = legacyData?.city ?? ""
+
         // 1. Extended cache: multi-day autonomous path (90+ days, no app required)
+        //    Reject if city doesn't match the current city (user changed city since last push).
         if let ext = WidgetExtendedCache.load(), ext.isUsable {
-            wLog.info("getTimeline: extended cache hit — city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
-            let legacy = PrayerWidgetData.load()
-            let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacy)
-            writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "extended",
-                              "extDays": ext.days.count, "extAgeH": ext.ageHours,
-                              "entries": entries.count, "policyAt": policyAt.timeIntervalSince1970])
-            wLog.info("getTimeline: \(entries.count) entries policyAt=\(policyAt)")
-            completion(Timeline(entries: entries, policy: .after(policyAt)))
-            return
+            if !currentCity.isEmpty && ext.city != currentCity {
+                wLog.warning("getTimeline: extended cache city '\(ext.city)' != current city '\(currentCity)' — discarding, fetching fresh")
+            } else {
+                wLog.info("getTimeline: extended cache hit — city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
+                let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
+                writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "extended",
+                                  "city": ext.city, "extDays": ext.days.count, "extAgeH": ext.ageHours,
+                                  "entries": entries.count, "policyAt": policyAt.timeIntervalSince1970])
+                wLog.info("getTimeline: \(entries.count) entries policyAt=\(policyAt)")
+                completion(Timeline(entries: entries, policy: .after(policyAt)))
+                return
+            }
         }
 
-        // 2. Extended cache missing or stale — try fetching directly from prayer-kurd API
-        let legacyData = PrayerWidgetData.load()
-        guard let city = legacyData?.city, !city.isEmpty else {
+        // 2. Extended cache missing, stale, or city-mismatched — fetch from prayer-kurd API
+        guard !currentCity.isEmpty else {
             wLog.warning("getTimeline: no city known — retry 3 min")
             completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
                                 policy: .after(now.addingTimeInterval(3 * 60))))
             return
         }
-        wLog.info("getTimeline: fetching extended cache for city=\(city)")
-        fetchExtendedPrayerCache(city: city) { ext in
+        wLog.info("getTimeline: fetching extended cache for city=\(currentCity)")
+        fetchExtendedPrayerCache(city: currentCity) { ext in
             if let ext = ext, ext.isUsable {
                 let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
                 writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "extended_fetch",
-                                  "extDays": ext.days.count, "entries": entries.count,
+                                  "city": ext.city, "extDays": ext.days.count, "entries": entries.count,
                                   "policyAt": policyAt.timeIntervalSince1970])
                 wLog.info("getTimeline: fetched extended \(entries.count) entries")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
@@ -563,6 +572,15 @@ private func fetchExtendedPrayerCache(city: String, completion: @escaping (Widge
     let group = DispatchGroup()
     let lock  = NSLock()
 
+    // 15 s timeout per request — widget runtime budget is short and URLSession default (60 s) would
+    // block completion longer than WidgetKit expects for a timeline generation call.
+    let session: URLSession = {
+        let cfg = URLSessionConfiguration.default
+        cfg.timeoutIntervalForRequest  = 15
+        cfg.timeoutIntervalForResource = 15
+        return URLSession(configuration: cfg)
+    }()
+
     for monthOffset in 0...2 {
         guard let target = cal.date(byAdding: .month, value: monthOffset, to: now) else { continue }
         let comps = cal.dateComponents([.year, .month], from: target)
@@ -573,7 +591,7 @@ private func fetchExtendedPrayerCache(city: String, completion: @escaping (Widge
         let urlStr = "https://tafsirkurd.com/prayer-kurd?city=\(enc)&year=\(year)&month=\(month)"
         guard let url = URL(string: urlStr) else { group.leave(); continue }
 
-        URLSession.shared.dataTask(with: url) { data, _, error in
+        session.dataTask(with: url) { data, _, error in
             defer { group.leave() }
             guard let data  = data, error == nil,
                   let json  = try? JSONSerialization.jsonObject(with: data) as? [String: Any],

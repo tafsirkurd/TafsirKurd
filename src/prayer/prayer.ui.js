@@ -3149,6 +3149,25 @@
     prefetchAllCities: prefetchAllCities,
     preloadAthanVoices: preloadVoiceBuffers,
     // Debug helpers — call from browser devtools or adb logcat
+    debugWidgetDiagnostics: async function() {
+      // Reads the diagnostics JSON written by the widget extension after each getTimeline.
+      // Call: await PrayerUI.debugWidgetDiagnostics()
+      var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
+      if (!sp) { console.log('[WidgetDiag] SharedPrefs not available (not iOS or plugin not loaded)'); return null; }
+      try {
+        var res  = await sp.get({ key: 'widgetDiagnostics' });
+        var raw  = res && res.value;
+        if (!raw) { console.log('[WidgetDiag] no diagnostics written yet'); return null; }
+        var d    = JSON.parse(raw);
+        var ts   = d.ts ? new Date(d.ts).toLocaleString('en-GB', { timeZone: 'Asia/Baghdad', hour12: true }) : '?';
+        console.log('[WidgetDiag] last refresh: ' + ts +
+                    ' | source=' + (d.source || '?') +
+                    ' | city='   + (d.city   || '?') +
+                    ' | extDays='+ (d.extDays != null ? d.extDays : '?') +
+                    ' | entries='+ (d.entries || '?'));
+        return d;
+      } catch(e) { console.log('[WidgetDiag] error:', e); return null; }
+    },
     debugNotifs: function() {
       if (window.PrayerNotifications && window.PrayerNotifications.debugPendingNotifications) {
         return window.PrayerNotifications.debugPendingNotifications();
