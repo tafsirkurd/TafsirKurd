@@ -19,6 +19,7 @@
         { href: '/admin-images.html',                icon: 'camera',         label: 'Site Images',       section: 'Site',       keywords: 'photos backgrounds upload' },
         { href: '/admin-schedule.html',              icon: 'calendar',       label: 'Schedule',          section: 'Site',       keywords: 'prayer times juma' },
         { href: '/admin-header-animation.html',      icon: 'wand-2',         label: 'Header',            section: 'Site',       keywords: 'animation banner top' },
+        { href: '/admin-features.html',              icon: 'layers',         label: 'Features',          section: 'Site',       keywords: 'flags toggles enable disable' },
         // Users
         { href: '/admin-users.html',                 icon: 'users',          label: 'Users',             section: 'Users',      keywords: 'accounts people members' },
         { href: '/admin-notifications.html',         icon: 'bell',           label: 'Notifications',     section: 'Users',      keywords: 'push alerts send' },
@@ -35,7 +36,6 @@
         { href: '/admin-audit.html',                 icon: 'shield-check',   label: 'Audit Log',         section: 'Security',   keywords: 'logs history changes' },
         // Settings
         { href: '/admin-account-management.html',    icon: 'user-cog',       label: 'Admin Accounts',    section: 'Settings',   keywords: 'admins roles permissions create' },
-        { href: '/admin-features.html',              icon: 'layers',         label: 'Features',          section: 'Settings',   keywords: 'flags toggles enable disable' },
         { href: '/admin-email-templates.html',       icon: 'mail',           label: 'Email Templates',   section: 'Settings',   keywords: 'brevo email design' },
         { href: '/admin-database.html',              icon: 'database',       label: 'Database',          section: 'Settings',   keywords: 'supabase tables records' },
         { href: '/admin-updates.html',               icon: 'arrow-up-circle',label: 'Updates',           section: 'Settings',   keywords: 'app release version ios android' },
