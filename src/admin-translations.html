@@ -982,7 +982,7 @@
             color: var(--text-primary);
             transition: background .12s;
         }
-        .mention-option:hover, .mention-option.mention-active { background: rgba(99,102,241,.14); }
+        .mention-option.mention-hover, .mention-option.mention-active { background: rgba(99,102,241,.14); }
         .mention-option-avatar {
             width: 26px; height: 26px; border-radius: 50%;
             background: rgba(99,102,241,.2); color: #818cf8;
@@ -2932,6 +2932,11 @@
                         '<div class="mention-option-name">' + admin.name +
                           '<div class="mention-option-role">' + admin.role + '</div>' +
                         '</div>';
+                    opt.addEventListener('mouseenter', function() {
+                        drop.querySelectorAll('.mention-option').forEach(function(o) { o.classList.remove('mention-hover'); });
+                        opt.classList.add('mention-hover');
+                    });
+                    opt.addEventListener('mouseleave', function() { opt.classList.remove('mention-hover'); });
                     opt.addEventListener('mousedown', (function(n) { return function(e) {
                         e.preventDefault();
                         _insertMention(ta, n, drop, _draftKey);
@@ -2940,10 +2945,13 @@
                 });
             }
 
-            var rect = ta.getBoundingClientRect();
-            drop.style.left  = rect.left + 'px';
-            drop.style.width = rect.width + 'px';
-            drop.style.top   = (rect.bottom + 4) + 'px';
+            // Only update position when first showing (avoid repaint-induced :hover reset)
+            if (drop.style.display === 'none' || !drop.style.top) {
+                var rect = ta.getBoundingClientRect();
+                drop.style.left  = rect.left + 'px';
+                drop.style.width = rect.width + 'px';
+                drop.style.top   = (rect.bottom + 4) + 'px';
+            }
             drop.style.display = 'block';
         }
 
@@ -4922,11 +4930,6 @@
                         drop.addEventListener('mouseenter', function() { _dropHovered = true; });
                         drop.addEventListener('mouseleave', function() { _dropHovered = false; });
                         document.body.appendChild(drop);
-                        // clean up dropdown when form is removed
-                        var _dropObserver = new MutationObserver(function() {
-                            if (!document.body.contains(form)) { drop.parentNode && drop.parentNode.removeChild(drop); _dropObserver.disconnect(); }
-                        });
-                        _dropObserver.observe(document.body, { childList: true, subtree: true });
                         var actions = makeEl('div', 'mark-form-actions');
                         var cancelBtn = makeEl('button', 'mark-btn-cancel', 'Cancel');
                         cancelBtn.type = 'button';
