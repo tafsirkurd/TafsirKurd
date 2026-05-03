@@ -473,6 +473,28 @@
             .system-widgets-row { grid-template-columns: 1fr 1fr; gap: 16px; }
         }
 
+        /* ── Release History ── */
+        .rh-row{display:block;padding:11px 20px;border-bottom:1px solid var(--border-light);text-decoration:none;color:inherit;transition:background .12s;}
+        .rh-row:last-child{border-bottom:none;}
+        .rh-row:hover{background:var(--bg-hover);}
+        .rh-latest{background:rgba(99,102,241,.04);border-left:3px solid var(--primary);padding-left:17px;}
+        .rh-latest:hover{background:rgba(99,102,241,.08);}
+        .rh-line1{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+        .rh-line2{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+        .rh-type-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.02em;flex-shrink:0;}
+        .rh-latest-pill{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;background:var(--primary);color:#fff;letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;}
+        .rh-msg{font-size:13px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+        .rh-latest .rh-msg{font-weight:600;font-size:13.5px;}
+        .rh-sha{font-family:monospace;font-size:10.5px;color:var(--text-tertiary);background:var(--bg-active);padding:1px 6px;border-radius:4px;flex-shrink:0;}
+        .rh-meta{font-size:11px;color:var(--text-tertiary);flex-shrink:0;}
+        .rh-build-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(139,92,246,.12);color:#7c3aed;flex-shrink:0;}
+        .rh-ios-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:#e0e7ff;color:#3730a3;flex-shrink:0;}
+        .rh-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--primary);background:var(--bg-active);border:none;border-radius:10px;padding:4px 10px;cursor:pointer;font-weight:600;transition:background .15s;font-family:inherit;}
+        .rh-btn:hover{background:var(--bg-hover);}
+        .rh-btn:disabled{opacity:.5;cursor:default;}
+        .rh-gh-link{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--primary);background:var(--bg-active);border-radius:10px;padding:4px 10px;font-weight:600;text-decoration:none;transition:background .15s;}
+        .rh-gh-link:hover{background:var(--bg-hover);}
+
         /* ── Responsive ── */
         @media (max-width: 768px) {
             .content-area {
@@ -1022,6 +1044,32 @@
 
                 </div>
 
+                <!-- ══ Release History ══ -->
+                <div class="card card-animate" style="margin-bottom:28px;animation-delay:445ms">
+                    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:9px;margin:0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>
+                            Release History
+                            <span style="font-size:11px;font-weight:600;color:var(--text-tertiary);background:var(--bg-hover);padding:2px 8px;border-radius:8px">main</span>
+                        </h3>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <span id="rhFetchTime" style="font-size:11px;color:var(--text-tertiary)"></span>
+                            <button class="rh-btn" id="rhRefreshBtn" onclick="fetchReleaseHistory()">
+                                <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> Refresh
+                            </button>
+                            <a class="rh-gh-link" href="https://github.com/tafsirkurd/TafsirKurd/commits/main" target="_blank" rel="noopener">
+                                <i data-lucide="github" style="width:12px;height:12px"></i> GitHub
+                            </a>
+                        </div>
+                    </div>
+                    <div id="releaseHistoryBody">
+                        <div style="padding:24px 20px;color:var(--text-tertiary);font-size:13px;display:flex;align-items:center;gap:9px">
+                            <div style="width:15px;height:15px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
+                            Loading release history…
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ══ Charts ══ -->
                 <div class="charts-grid">
                     <div class="chart-card card-animate" style="animation-delay:450ms">
@@ -1258,6 +1306,7 @@
                 subscribeAdminTeamOnline();
                 setInterval(loadAdminTeamOnline, 15 * 1000);
                 setInterval(loadDashboardData, 5 * 60 * 1000);
+                fetchReleaseHistory();
             }
         })();
 
@@ -2819,6 +2868,105 @@
             });
 
             container.appendChild(wrap);
+        }
+
+        /* ═══════════════════════════════════════════════
+           RELEASE HISTORY  (GitHub public API)
+           Fetches last 5 commits from main branch.
+           Parses conventional-commit format to extract
+           type, body, and iOS build number.
+           ═══════════════════════════════════════════════ */
+
+        var RH_TYPES = {
+            feat:     { bg:'rgba(59,130,246,.12)',  color:'#3b82f6' },
+            fix:      { bg:'rgba(16,185,129,.12)',  color:'#10b981' },
+            bump:     { bg:'rgba(139,92,246,.12)',  color:'#8b5cf6' },
+            refactor: { bg:'rgba(245,158,11,.12)',  color:'#d97706' },
+            chore:    { bg:'rgba(107,114,128,.12)', color:'#6b7280' },
+            docs:     { bg:'rgba(14,165,233,.12)',  color:'#0ea5e9' },
+            style:    { bg:'rgba(236,72,153,.12)',  color:'#db2777' },
+            perf:     { bg:'rgba(234,179,8,.12)',   color:'#ca8a04' },
+            test:     { bg:'rgba(6,182,212,.12)',   color:'#0891b2' },
+        };
+
+        function _rhEsc(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function _rhParseCommit(raw) {
+            var first = raw.split('\n')[0];
+            var m = first.match(/^(\w+)(?:\([\w/.\s-]+\))?!?:\s*(.+)$/);
+            var type = m ? m[1].toLowerCase() : 'commit';
+            var body = m ? m[2] : first;
+            var buildM = first.match(/build\s+(\d+)/i);
+            var isIos = /ios|bump/i.test(type) || /bump.*ios|ios.*build/i.test(first);
+            return { type: type, body: body, full: first, buildNum: buildM ? buildM[1] : null, isIos: isIos };
+        }
+
+        async function fetchReleaseHistory() {
+            var bodyEl = document.getElementById('releaseHistoryBody');
+            var btn    = document.getElementById('rhRefreshBtn');
+            var timeEl = document.getElementById('rhFetchTime');
+            if (!bodyEl) return;
+            bodyEl.innerHTML = '<div style="padding:22px 20px;color:var(--text-tertiary);font-size:13px;display:flex;align-items:center;gap:9px"><div style="width:15px;height:15px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>Fetching commits…</div>';
+            if (btn) btn.disabled = true;
+            try {
+                var res = await fetch('https://api.github.com/repos/tafsirkurd/TafsirKurd/commits?per_page=20&sha=main', {
+                    headers: { 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!res.ok) throw new Error('GitHub API returned ' + res.status);
+                var all = await res.json();
+                if (timeEl) timeEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+                buildReleaseHistoryWidget(all.slice(0, 5));
+            } catch (e) {
+                bodyEl.innerHTML = '<div style="padding:20px;color:var(--text-tertiary);font-size:13px">Could not load: ' + _rhEsc(e.message) + '</div>';
+            }
+            if (btn) btn.disabled = false;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function buildReleaseHistoryWidget(commits) {
+            var bodyEl = document.getElementById('releaseHistoryBody');
+            if (!bodyEl) return;
+            if (!commits || !commits.length) {
+                bodyEl.innerHTML = '<div style="padding:20px;color:var(--text-tertiary);font-size:13px">No commits found.</div>';
+                return;
+            }
+            var html = '';
+            commits.forEach(function(c, idx) {
+                var isLatest = idx === 0;
+                var p        = _rhParseCommit(c.commit.message || '');
+                var tc       = RH_TYPES[p.type] || { bg:'rgba(107,114,128,.1)', color:'#6b7280' };
+                var sha      = (c.sha || '').slice(0, 7);
+                var author   = ((c.commit.author || c.commit.committer || {}).name || 'unknown');
+                var dateRaw  = ((c.commit.author || c.commit.committer || {}).date) || '';
+                var ago      = dateRaw ? getTimeAgo(new Date(dateRaw)) : '';
+                var url      = c.html_url || ('https://github.com/tafsirkurd/TafsirKurd/commit/' + (c.sha || ''));
+
+                html += '<a href="' + _rhEsc(url) + '" target="_blank" rel="noopener" class="rh-row' + (isLatest ? ' rh-latest' : '') + '">';
+                html += '<div class="rh-line1">';
+                if (isLatest) html += '<span class="rh-latest-pill">LATEST</span>';
+                html += '<span class="rh-type-pill" style="background:' + tc.bg + ';color:' + tc.color + '">' + _rhEsc(p.type) + '</span>';
+                html += '<span class="rh-msg" title="' + _rhEsc(p.full) + '">' + _rhEsc(p.body) + '</span>';
+                html += '</div>';
+                html += '<div class="rh-line2">';
+                if (p.buildNum) {
+                    if (p.isIos) {
+                        html += '<span class="rh-ios-pill">iOS Build ' + _rhEsc(p.buildNum) + '</span>';
+                    } else {
+                        html += '<span class="rh-build-pill">Build ' + _rhEsc(p.buildNum) + '</span>';
+                    }
+                    html += '<span style="color:var(--border-light);font-size:10px;margin:0 1px">·</span>';
+                }
+                html += '<span class="rh-sha">' + _rhEsc(sha) + '</span>';
+                html += '<span style="color:var(--border-light);font-size:10px;margin:0 1px">·</span>';
+                html += '<span class="rh-meta">' + _rhEsc(author) + '</span>';
+                html += '<span style="color:var(--border-light);font-size:10px;margin:0 1px">·</span>';
+                html += '<span class="rh-meta">' + _rhEsc(ago) + '</span>';
+                html += '</div>';
+                html += '</a>';
+            });
+            bodyEl.innerHTML = html;
         }
 
         function buildRecentMessages(messages) {

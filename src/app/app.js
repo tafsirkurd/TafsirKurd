@@ -578,7 +578,30 @@ function init(){
     }
 
     S.audio.el=$('audioEl');
-    on(S.audio.el,'ended',function(){App.audioNext()});
+    var _audioEndTimer=null;var _audioNextCalled=false;
+    function _scheduleAyahEnd(){
+      if(_audioEndTimer)return;
+      var ae=S.audio.el;
+      if(!ae.duration||ae.duration===Infinity||!S.audio.playing)return;
+      var ms=(ae.duration-ae.currentTime)*1000-50;
+      if(ms<=0||ms>15000)return;
+      _audioEndTimer=setTimeout(function(){
+        _audioEndTimer=null;
+        if(S.audio.playing&&!_audioNextCalled){_audioNextCalled=true;App.audioNext();}
+      },ms);
+    }
+    on(S.audio.el,'ended',function(){
+      if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}
+      if(!_audioNextCalled){App.audioNext();}
+      _audioNextCalled=false;
+    });
+    on(S.audio.el,'timeupdate',_scheduleAyahEnd);
+    on(S.audio.el,'durationchange',function(){
+      if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}
+      _scheduleAyahEnd();
+    });
+    on(S.audio.el,'pause',function(){if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}});
+    on(S.audio.el,'play',_scheduleAyahEnd);
     on(S.audio.el,'error',function(){
       if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
       if(!S.audio.surah)return;
@@ -1382,6 +1405,7 @@ App.tab=function(name){
     if(_prevTab==='quran'&&name!=='quran'){
       var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();
       if(_surahBadgeObs){_surahBadgeObs.disconnect();}
+      clearMushafHighlights();
     }
     if(_prevTab==='gencine'&&name!=='gencine'&&window.GencineUI){GencineUI.closeSheet();}
     if(_prevTab==='islamvoice'&&name!=='islamvoice'){if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}}
@@ -2437,6 +2461,7 @@ App.backToList=function(){
   }
   // Clean up mushaf DOM + observer — keep mode preference so next surah reopens in mushaf
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
+  clearMushafHighlights();
   var mv=$('mushafView');if(mv){mv.style.display='none';clear(mv);}
   var al=$('ayahList');if(al)al.style.display='';
   var pb=$('mushafPlayBtn');if(pb)pb.style.display='none';
@@ -2606,6 +2631,7 @@ App.toggleMushafMode=function(){
   }else{
     // Capture position before hiding mushaf
     var fromAyahM=_visibleAyahInMushaf()||1;
+    clearMushafHighlights();
     if(mushafView){mushafView.style.display='none';clear(mushafView);}
     if(ayahList)ayahList.style.display='';
     var s2=SURAHS[(S.surah||1)-1];
@@ -2658,6 +2684,7 @@ function _mushafWrapSpreads(view){
 function renderMushafView(){
   var view=$('mushafView');
   if(!view||!S.surah)return;
+  clearMushafHighlights();
   // Disconnect previous lazy-load observer to prevent accumulation
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   window._mushafVerseElements={};
@@ -2872,30 +2899,19 @@ function loadMushafPageQCF(pageEl,pageNum){
         var lineEl=el('div','mushaf-qcf-line');
         lineEl.style.fontFamily=fontFam;
         var grps=lineAyahGroups[ln]||[];
-        if(grps.length<=1){
-          // Single ayah on this line — register the line div itself (fast path)
-          var g=grps[0];
-          if(g){
-            lineEl.textContent=g.words.join('');
-            var k=String(g.sn)+':'+String(g.vn);
-            if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
-            window._mushafVerseElements[k].push(lineEl);
-            (function(v,s){on(lineEl,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
-          }
-        }else{
-          // Multiple ayahs share this line — one inline span per ayah segment
-          // so highlight targets only the exact ayah, not the whole line
-          grps.forEach(function(g){
-            var seg=document.createElement('span');
-            seg.className='mushaf-ayah-seg';
-            seg.textContent=g.words.join('');
-            var k=String(g.sn)+':'+String(g.vn);
-            if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
-            window._mushafVerseElements[k].push(seg);
-            (function(v,s){on(seg,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
-            lineEl.appendChild(seg);
-          });
-        }
+        // Always wrap every ayah segment in a span — never register the full line div
+        grps.forEach(function(g){
+          var seg=document.createElement('span');
+          seg.className='mushaf-ayah-seg';
+          seg.setAttribute('data-surah',String(g.sn));
+          seg.setAttribute('data-ayah',String(g.vn));
+          seg.textContent=g.words.join('');
+          var k=String(g.sn)+':'+String(g.vn);
+          if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
+          window._mushafVerseElements[k].push(seg);
+          (function(v,s){on(seg,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
+          lineEl.appendChild(seg);
+        });
         frag.appendChild(lineEl);
       });
 
@@ -3005,7 +3021,10 @@ function loadMushafPageQCF(pageEl,pageNum){
       if(S.mushafMode&&S.audio.playing&&S.audio.surah===S.surah){
         var _hk=String(S.audio.surah)+':'+String(S.audio.ayah);
         (window._mushafVerseElements[_hk]||[]).forEach(function(l){
-          if(pageEl.contains(l))l.classList.add('mushaf-line--playing');
+          if(pageEl.contains(l)){
+            l.classList.add('mushaf-line--playing');
+            if(_mushafPlayingEls.indexOf(l)<0)_mushafPlayingEls.push(l);
+          }
         });
       }
     };
@@ -3934,15 +3953,26 @@ App.mushafPlayToggle=function(){
 
 /* ===== MUSHAF AUDIO HIGHLIGHT ===== */
 var _mushafPlayingEls=[]; // cached — avoids querySelectorAll on every ayah change
-function updateMushafHighlight(surah,ayah){
-  var view=$('mushafView');
-  if(!view)return;
-  // Clear previous playing lines directly — no DOM scan needed
+
+// Central cleanup — safe to call any time, even if mushaf DOM is not mounted
+function clearMushafHighlights(){
   _mushafPlayingEls.forEach(function(e){e.classList.remove('mushaf-line--playing');});
   _mushafPlayingEls=[];
+  // Safety net: catches elements added outside the cache (e.g. lazy page restore)
+  var view=$('mushafView');
+  if(!view)return;
+  var stale=view.querySelectorAll('.mushaf-line--playing');
+  stale.forEach(function(e){e.classList.remove('mushaf-line--playing');});
+}
+
+function updateMushafHighlight(surah,ayah){
+  var view=$('mushafView');
+  if(!view){_mushafPlayingEls=[];return;}
+  clearMushafHighlights();
   if(!surah||!ayah)return;
   var key=String(surah)+':'+String(ayah);
   var els=window._mushafVerseElements[key]||[];
+  if(!els.length)return; // target ayah not in current DOM — highlights already cleared, done
   var first=null;
   els.forEach(function(l){
     if(view.contains(l)){l.classList.add('mushaf-line--playing');_mushafPlayingEls.push(l);if(!first)first=l;}
@@ -3984,6 +4014,8 @@ function updateReaderPlayState(surah,ayah,playing){
 }
 
 function playAyah(surah,ayah){
+  if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}
+  _audioNextCalled=false;
   var url=audioUrl(surah,ayah);
   // Priority 1: user-downloaded offline copy (persistent Directory.Data — never evicted)
   // Priority 2: transparent LRU cache (Directory.Cache — may be evicted by OS)
@@ -4207,6 +4239,7 @@ App.openMushafSettings=function(){
       btn.classList.add('on');
       dismiss();
       setTimeout(function(){
+        clearMushafHighlights();
         var mv=$('mushafView');if(mv)clear(mv);
         renderMushafView();
       },280);

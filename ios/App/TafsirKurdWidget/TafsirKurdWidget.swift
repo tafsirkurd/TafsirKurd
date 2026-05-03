@@ -268,6 +268,31 @@ struct PrayerWidgetData: Codable {
         return String(format: "%d:%02d", h, m)
     }
 
+    // Returns the next 3 upcoming prayers from `now`, including Sunrise.
+    // Uses kDisplayOrder so Sunrise appears between Fajr and Dhuhr.
+    // Checks today then tomorrow so the list keeps shifting after midnight.
+    func next3(from now: Date) -> [(name: String, ku: String, display: String)] {
+        var result: [(name: String, ku: String, display: String)] = []
+        outer: for offset in 0...1 {
+            for name in kDisplayOrder {
+                guard result.count < 3 else { break outer }
+                guard let t = prayerDate(name, dayOffset: offset), t > now else { continue }
+                let src = offset == 0 ? timings : (tomorrow ?? timings)
+                guard let raw = src[name] else { continue }
+                let hm = String(raw.split(separator: " ").first ?? Substring(raw))
+                let parts = hm.split(separator: ":").compactMap { Int($0) }
+                let display: String
+                if parts.count >= 2 {
+                    var h = parts[0]; let m = parts[1]
+                    if h == 0 { h = 12 } else if h > 12 { h -= 12 }
+                    display = String(format: "%d:%02d", h, m)
+                } else { display = hm }
+                result.append((name: name, ku: kn(name), display: display))
+            }
+        }
+        return result
+    }
+
     func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
         // 1. Today's stored prayers (exact timings for stored date)
         for n in kPrayerOrder {
@@ -905,42 +930,36 @@ private struct LargeView: View {
     }
 }
 
-// MARK: — Lock screen widget  (accessoryRectangular — 3 × 2 grid)
+// MARK: — Lock screen widget  (accessoryRectangular — next 3 upcoming prayers)
 //
-// 6 items paired into 3 rows:
-//   Row 1: Fajr      | Sunrise
-//   Row 2: Dhuhr     | Asr
-//   Row 3: Maghrib   | Isha
+// Shows only the 3 next upcoming prayers relative to entry.date.
+// The list shifts automatically at every prayer boundary because the timeline
+// has one PrayerEntry per prayer transition — no app launch needed.
 //
-// RTL: within each cell → name RIGHT, time LEFT.
-//      within each row  → pair[0] RIGHT, pair[1] LEFT.
+// Layout (3 rows, 1 prayer each, RTL: Kurdish name RIGHT, time LEFT):
+//   Row 0 — next prayer: 14pt semibold, .primary foreground
+//   Row 1 — 2nd upcoming: 12pt medium,  .secondary foreground
+//   Row 2 — 3rd upcoming: 12pt medium,  .secondary foreground
 //
-// Height (VStack spacing:7, 10pt font → ~12pt line height):
-//   3 rows × 12pt = 36pt
-//   2 gaps × 7pt  = 14pt
-//   total          = 50pt  ✓ fits all devices (standard ≥ 73pt available)
-//
-// All 6 items identical styling — no hero, no highlight, no countdown.
+// Height estimate (spacing 6, line heights ≈ 17 / 15 / 15):
+//   3 rows × avg 16pt = 47pt
+//   2 gaps × 6pt      = 12pt
+//   total              ≈ 59pt  ✓ fits all devices (standard ≥ 73pt available)
 
-private let kLockPairs: [(String, String, String, String)] = [
-    ("Fajr",    "سپێدە",   "Sunrise", "ڕوژهەلات"),
-    ("Dhuhr",   "نیڤرۆ",   "Asr",     "ئێڤار"),
-    ("Maghrib", "مەغرەب",  "Isha",    "عەیشا"),
-]
-
-private struct LockPairCell: View {
-    let time: String
+private struct LockRow: View {
     let name: String
+    let time: String
+    let isNext: Bool
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 4) {
             Text(name)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(AnyShapeStyle(.primary))
+                .font(.system(size: isNext ? 14 : 12, weight: isNext ? .semibold : .medium))
+                .foregroundStyle(isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .lineLimit(1)
-            Spacer(minLength: 2)
+            Spacer(minLength: 4)
             Text(time)
-                .font(.system(size: 10, weight: .regular).monospacedDigit())
-                .foregroundStyle(AnyShapeStyle(.primary))
+                .font(.system(size: isNext ? 14 : 12, weight: isNext ? .semibold : .regular).monospacedDigit())
+                .foregroundStyle(isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
@@ -951,19 +970,22 @@ private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            VStack(spacing: 7) {
-                ForEach(0..<3, id: \.self) { i in
-                    let row = kLockPairs[i]
-                    HStack(spacing: 12) {
-                        LockPairCell(time: d.displayTime(row.0), name: row.1)
-                        LockPairCell(time: d.displayTime(row.2), name: row.3)
+            let prayers = d.next3(from: entry.date)
+            if prayers.isEmpty {
+                Text("کاتا نوێژ")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            } else {
+                VStack(spacing: 6) {
+                    ForEach(0..<prayers.count, id: \.self) { i in
+                        LockRow(name: prayers[i].ku, time: prayers[i].display, isNext: i == 0)
                     }
                 }
+                .environment(\.layoutDirection, .rightToLeft)
             }
-            .environment(\.layoutDirection, .rightToLeft)
         } else {
             Text("کاتا نوێژ")
-                .font(.system(size: 10))
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         }
     }
