@@ -385,6 +385,17 @@
             border-bottom: 1px solid var(--border-light);
         }
         .timeline-item:last-child { border-bottom: none; }
+        .tl-more-btn {
+            display: block; width: 100%;
+            padding: 11px 20px;
+            font-size: 12px; font-weight: 600;
+            color: var(--primary); background: none; border: none;
+            border-top: 1px solid var(--border-light);
+            cursor: pointer; text-align: center;
+            transition: background .14s;
+            font-family: inherit;
+        }
+        .tl-more-btn:hover { background: var(--bg-hover); }
         .timeline-dot {
             width: 32px; height: 32px;
             border-radius: 50%;
@@ -1652,15 +1663,21 @@
                 container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">No actions logged yet.</div>';
                 return;
             }
-            logs.forEach(function(log) {
-                var meta = ACTION_META[log.action_type] || { icon: 'fa-circle-dot', color: 'var(--text-secondary)', label: log.action_type };
+            var SHOW_ADMIN = 5;
+            var visibleLogs = logs.slice(0, SHOW_ADMIN);
+            var hiddenLogs  = logs.slice(SHOW_ADMIN);
+
+            function _renderAdminItem(log) {
+                var meta = ACTION_META[log.action_type] || { icon: 'fa-circle-dot', color: '#6b7280', label: log.action_type };
                 var item = document.createElement('div');
                 item.className = 'timeline-item';
 
+                // Show admin initials in dot
+                var initials = (log.admin_name || '?').split(' ').map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
                 var dot = document.createElement('div');
                 dot.className = 'timeline-dot';
-                dot.style.cssText = 'background:' + meta.color + ';box-shadow:0 0 0 3px ' + meta.color + '22';
-                dot.innerHTML = '<i class="fas ' + meta.icon + '" style="font-size:.55rem;color:#fff"></i>';
+                dot.style.cssText = 'background:' + meta.color + ';font-size:10px;font-weight:800;color:#fff;letter-spacing:-.5px;';
+                dot.textContent = initials;
 
                 var content = document.createElement('div');
                 content.className = 'timeline-content';
@@ -1668,18 +1685,35 @@
                 var label = document.createElement('div');
                 label.className = 'timeline-text';
                 label.style.cssText = 'direction:rtl;text-align:right';
-                label.innerHTML = '<span style="font-weight:700;color:' + meta.color + '">' + meta.label + '</span> — ' + (log.description || '');
+                label.innerHTML = '<span style="font-weight:700;color:' + meta.color + '">' + meta.label + '</span> — ' + escHtml(log.description || '');
 
                 var time = document.createElement('div');
                 time.className = 'timeline-time';
-                time.textContent = log.admin_name + ' · ' + getTimeAgo(new Date(log.created_at));
+                time.textContent = (log.admin_name || '') + ' · ' + getTimeAgo(new Date(log.created_at));
 
                 content.appendChild(label);
                 content.appendChild(time);
                 item.appendChild(dot);
                 item.appendChild(content);
-                container.appendChild(item);
+                return item;
+            }
+
+            visibleLogs.forEach(function(log) {
+                container.appendChild(_renderAdminItem(log));
             });
+
+            if (hiddenLogs.length > 0) {
+                var moreAdminBtn = document.createElement('button');
+                moreAdminBtn.className = 'tl-more-btn';
+                moreAdminBtn.textContent = 'Show ' + hiddenLogs.length + ' more';
+                moreAdminBtn.addEventListener('click', function() {
+                    moreAdminBtn.parentNode.removeChild(moreAdminBtn);
+                    hiddenLogs.forEach(function(log) {
+                        container.appendChild(_renderAdminItem(log));
+                    });
+                });
+                container.appendChild(moreAdminBtn);
+            }
         }
 
         /* ═══════════════════════════════════════════════
@@ -2108,9 +2142,8 @@
                 });
             }
 
-            // Sort by time descending, take 8
+            // Sort by time descending
             items.sort(function(a, b) { return b.time - a.time; });
-            items = items.slice(0, 8);
 
             if (items.length === 0) {
                 var empty = document.createElement('div');
@@ -2120,33 +2153,50 @@
                 return;
             }
 
-            items.forEach(function(item) {
+            var SHOW = 5;
+            var visible = items.slice(0, SHOW);
+            var hidden  = items.slice(SHOW);
+
+            function _renderTimelineItem(item) {
                 var row = document.createElement('div');
                 row.className = 'timeline-item';
-
                 var dot = document.createElement('div');
                 dot.className = 'timeline-dot ' + item.type;
                 var icon = document.createElement('i');
                 icon.setAttribute('data-lucide', item.icon);
                 dot.appendChild(icon);
                 row.appendChild(dot);
-
                 var content = document.createElement('div');
                 content.className = 'timeline-content';
-
                 var text = document.createElement('div');
                 text.className = 'timeline-text';
                 text.innerHTML = item.text;
                 content.appendChild(text);
-
                 var time = document.createElement('div');
                 time.className = 'timeline-time';
                 time.textContent = getTimeAgo(item.time);
                 content.appendChild(time);
-
                 row.appendChild(content);
-                container.appendChild(row);
+                return row;
+            }
+
+            visible.forEach(function(item) {
+                container.appendChild(_renderTimelineItem(item));
             });
+
+            if (hidden.length > 0) {
+                var moreBtn = document.createElement('button');
+                moreBtn.className = 'tl-more-btn';
+                moreBtn.textContent = 'Show ' + hidden.length + ' more';
+                moreBtn.addEventListener('click', function() {
+                    moreBtn.parentNode.removeChild(moreBtn);
+                    hidden.forEach(function(item) {
+                        container.appendChild(_renderTimelineItem(item));
+                    });
+                    lucide.createIcons();
+                });
+                container.appendChild(moreBtn);
+            }
 
             lucide.createIcons();
         }
