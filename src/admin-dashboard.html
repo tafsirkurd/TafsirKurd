@@ -474,21 +474,28 @@
         }
 
         /* ── Release History ── */
-        .rh-row{display:block;padding:11px 20px;border-bottom:1px solid var(--border-light);text-decoration:none;color:inherit;transition:background .12s;}
+        .rh-platform-bar{display:flex;align-items:center;gap:8px;padding:12px 20px 4px;flex-wrap:wrap;}
+        .rh-platform-item{display:flex;align-items:center;gap:7px;padding:7px 14px;background:var(--bg-active);border:1px solid var(--border-light);border-radius:10px;font-size:12px;font-weight:600;color:var(--text-primary);}
+        .rh-platform-icon{font-size:14px;flex-shrink:0;line-height:1;}
+        .rh-platform-label{color:var(--text-tertiary);font-weight:500;}
+        .rh-platform-build{font-family:monospace;font-weight:800;color:var(--primary);}
+        .rh-divider{height:1px;background:var(--border-light);margin:10px 0 0;}
+        .rh-row{display:block;padding:11px 20px;border-bottom:1px solid var(--border-light);text-decoration:none;color:var(--text-primary);transition:background .12s;}
         .rh-row:last-child{border-bottom:none;}
         .rh-row:hover{background:var(--bg-hover);}
-        .rh-latest{background:rgba(99,102,241,.04);border-left:3px solid var(--primary);padding-left:17px;}
-        .rh-latest:hover{background:rgba(99,102,241,.08);}
+        .rh-latest{background:var(--bg-active);border-left:3px solid var(--primary);padding-left:17px;}
+        .rh-latest:hover{opacity:.9;}
         .rh-line1{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
         .rh-line2{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
         .rh-type-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.02em;flex-shrink:0;}
-        .rh-latest-pill{font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;background:var(--primary);color:#fff;letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;}
+        .rh-latest-pill{font-size:9px;font-weight:800;padding:2px 8px;border-radius:4px;background:var(--primary);color:#fff;letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;}
         .rh-msg{font-size:13px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
         .rh-latest .rh-msg{font-weight:600;font-size:13.5px;}
-        .rh-sha{font-family:monospace;font-size:10.5px;color:var(--text-tertiary);background:var(--bg-active);padding:1px 6px;border-radius:4px;flex-shrink:0;}
+        .rh-sha{font-family:monospace;font-size:10.5px;color:var(--text-tertiary);background:var(--bg-hover);padding:1px 6px;border-radius:4px;flex-shrink:0;}
         .rh-meta{font-size:11px;color:var(--text-tertiary);flex-shrink:0;}
-        .rh-build-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(139,92,246,.12);color:#7c3aed;flex-shrink:0;}
-        .rh-ios-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:#e0e7ff;color:#3730a3;flex-shrink:0;}
+        .rh-ios-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(99,102,241,.15);color:#818cf8;flex-shrink:0;}
+        .rh-android-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(16,185,129,.15);color:#34d399;flex-shrink:0;}
+        .rh-build-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(139,92,246,.15);color:#a78bfa;flex-shrink:0;}
         .rh-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--primary);background:var(--bg-active);border:none;border-radius:10px;padding:4px 10px;cursor:pointer;font-weight:600;transition:background .15s;font-family:inherit;}
         .rh-btn:hover{background:var(--bg-hover);}
         .rh-btn:disabled{opacity:.5;cursor:default;}
@@ -1063,6 +1070,8 @@
                             </a>
                         </div>
                     </div>
+                    <div id="rhPlatformBar" class="rh-platform-bar" style="display:none"></div>
+                    <div id="rhPlatformDivider" class="rh-divider" style="display:none"></div>
                     <div id="releaseHistoryBody">
                         <div style="padding:24px 20px;color:var(--text-tertiary);font-size:13px;display:flex;align-items:center;gap:9px">
                             <div style="width:15px;height:15px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
@@ -1868,12 +1877,12 @@
                 if (lb.android) {
                     html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px">'
                         + '<span style="color:var(--text-secondary)">Android latest</span>'
-                        + '<span style="font-family:monospace;font-weight:700;background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:5px">Build ' + lb.android + '</span></div>';
+                        + '<span style="font-family:monospace;font-weight:700;background:rgba(16,185,129,.15);color:#34d399;padding:1px 7px;border-radius:5px">Build ' + lb.android + '</span></div>';
                 }
                 if (lb.ios) {
                     html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">'
                         + '<span style="color:var(--text-secondary)">iOS latest</span>'
-                        + '<span style="font-family:monospace;font-weight:700;background:#e0e7ff;color:#3730a3;padding:1px 7px;border-radius:5px">Build ' + lb.ios + '</span></div>';
+                        + '<span style="font-family:monospace;font-weight:700;background:rgba(99,102,241,.15);color:#818cf8;padding:1px 7px;border-radius:5px">Build ' + lb.ios + '</span></div>';
                 }
                 buildsEl.innerHTML = html || '<div style="color:var(--text-tertiary);font-size:13px">No version data yet.</div>';
             }
@@ -2370,6 +2379,7 @@
             buildErrorsWidget(val(19));
             buildNotifAnalyticsWidget(val(20));
             buildAppVersionsWidget(val(21));
+            updateRHPlatformBar(val(21));
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));
@@ -2900,8 +2910,10 @@
             var type = m ? m[1].toLowerCase() : 'commit';
             var body = m ? m[2] : first;
             var buildM = first.match(/build\s+(\d+)/i);
-            var isIos = /ios|bump/i.test(type) || /bump.*ios|ios.*build/i.test(first);
-            return { type: type, body: body, full: first, buildNum: buildM ? buildM[1] : null, isIos: isIos };
+            var isIos     = /\bios\b/i.test(first) || (/bump/i.test(type) && !/android/i.test(first));
+            var isAndroid = /android/i.test(first);
+            if (isAndroid) isIos = false;
+            return { type: type, body: body, full: first, buildNum: buildM ? buildM[1] : null, isIos: isIos, isAndroid: isAndroid };
         }
 
         async function fetchReleaseHistory() {
@@ -2958,6 +2970,8 @@
                 if (p.buildNum) {
                     if (p.isIos) {
                         html += '<span class="rh-ios-pill">iOS Build ' + _rhEsc(p.buildNum) + '</span>';
+                    } else if (p.isAndroid) {
+                        html += '<span class="rh-android-pill">Android Build ' + _rhEsc(p.buildNum) + '</span>';
                     } else {
                         html += '<span class="rh-build-pill">Build ' + _rhEsc(p.buildNum) + '</span>';
                     }
@@ -2972,6 +2986,34 @@
                 html += '</a>';
             });
             bodyEl.innerHTML = html;
+        }
+
+        function updateRHPlatformBar(versionsData) {
+            var bar     = document.getElementById('rhPlatformBar');
+            var divider = document.getElementById('rhPlatformDivider');
+            if (!bar) return;
+            var lb  = (versionsData && versionsData.latestBuilds) || {};
+            var ios = lb.ios;
+            var and = lb.android;
+            if (!ios && !and) { bar.style.display = 'none'; if (divider) divider.style.display = 'none'; return; }
+            var html = '';
+            if (ios) {
+                html += '<div class="rh-platform-item">'
+                    + '<span class="rh-platform-icon">🍎</span>'
+                    + '<span class="rh-platform-label">iOS</span>'
+                    + '<span class="rh-platform-build">Build ' + _rhEsc(String(ios)) + '</span>'
+                    + '</div>';
+            }
+            if (and) {
+                html += '<div class="rh-platform-item">'
+                    + '<span class="rh-platform-icon">🤖</span>'
+                    + '<span class="rh-platform-label">Android</span>'
+                    + '<span class="rh-platform-build">Build ' + _rhEsc(String(and)) + '</span>'
+                    + '</div>';
+            }
+            bar.innerHTML = html;
+            bar.style.display = 'flex';
+            if (divider) divider.style.display = 'block';
         }
 
         function buildRecentMessages(messages) {
