@@ -2879,6 +2879,20 @@
 
         // ── @mention autocomplete logic ────────────────────────
         var _mentionActiveIdx = -1;
+        var _MENTION_PALETTE = [
+            {bg:'rgba(99,102,241,.18)',color:'#818cf8'},
+            {bg:'rgba(16,185,129,.18)',color:'#34d399'},
+            {bg:'rgba(59,130,246,.18)',color:'#60a5fa'},
+            {bg:'rgba(245,158,11,.18)',color:'#fbbf24'},
+            {bg:'rgba(239,68,68,.18)',color:'#f87171'},
+            {bg:'rgba(6,182,212,.18)',color:'#22d3ee'},
+            {bg:'rgba(236,72,153,.18)',color:'#f472b6'},
+            {bg:'rgba(168,85,247,.18)',color:'#c084fc'},
+        ];
+        function _mentionAvatarColor(name) {
+            var code = (name || 'A').toUpperCase().charCodeAt(0);
+            return _MENTION_PALETTE[code % _MENTION_PALETTE.length];
+        }
 
         function _getMentionQuery(ta) {
             var val = ta.value;
@@ -2911,8 +2925,9 @@
                 opt.className = 'mention-option';
                 opt.setAttribute('data-name', admin.name);
                 var initials = admin.name.split(' ').map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+                var ac = _mentionAvatarColor(admin.name);
                 opt.innerHTML =
-                    '<div class="mention-option-avatar">' + initials + '</div>' +
+                    '<div class="mention-option-avatar" style="background:' + ac.bg + ';color:' + ac.color + '">' + initials + '</div>' +
                     '<div class="mention-option-name">' + admin.name +
                       '<div class="mention-option-role">' + admin.role + '</div>' +
                     '</div>';
