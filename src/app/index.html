@@ -2591,6 +2591,29 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%
   html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100vw;min-width:100vw;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;gap:32px;flex-shrink:0}
   html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:24px!important;line-height:1.95!important}
 }
+
+/* ─── FastScrollController ──────────────────────────────────────────────── */
+.fsc-pill{position:fixed;left:8px;bottom:calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 20px);width:44px;height:44px;border-radius:var(--r-full);background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow-m);display:flex;align-items:center;justify-content:center;z-index:292;cursor:pointer;opacity:0;transform:translateX(-56px) scale(.85);transition:opacity .22s var(--ease),transform .22s var(--ease);pointer-events:none;-webkit-tap-highlight-color:transparent;user-select:none;will-change:transform,opacity;overflow:hidden}
+.fsc-pill.fsc-on{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
+.fsc-pill.fsc-drag{background:var(--accent);border-color:var(--accent);transform:scale(1.08);transition:background .12s,border-color .12s,transform .12s}
+.fsc-ico{font-size:.88rem;color:var(--text2);display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1;transition:color .12s}
+.fsc-pill.fsc-drag .fsc-ico{color:var(--accent-t)}
+/* Thin progress strip on right edge */
+.fsc-strip{position:absolute;right:5px;top:7px;bottom:7px;width:3px;border-radius:2px;background:var(--border);overflow:hidden}
+.fsc-strip-fill{width:100%;background:var(--accent);border-radius:2px;position:absolute;bottom:0;transition:height .1s linear}
+.fsc-pill.fsc-drag .fsc-strip{background:rgba(255,255,255,.25)}
+.fsc-pill.fsc-drag .fsc-strip-fill{background:var(--accent-t)}
+/* Label bubble */
+.fsc-lbl{position:fixed;left:58px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-m);padding:5px 10px;font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;z-index:293;box-shadow:var(--shadow-m);opacity:0;transform:translateX(-6px) scale(.92);transition:opacity .14s var(--ease),transform .14s var(--ease);pointer-events:none;direction:rtl;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.fsc-lbl.fsc-lbl-on{opacity:1;transform:translateX(0) scale(1)}
+/* Jump panel */
+.fsc-jump{position:fixed;left:8px;bottom:calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 72px);display:flex;flex-direction:column;gap:5px;z-index:292;opacity:0;transform:translateX(-56px) scale(.85);transition:opacity .18s var(--ease),transform .18s var(--ease);pointer-events:none}
+.fsc-jump.fsc-jump-on{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
+.fsc-jbtn{width:36px;height:36px;border-radius:var(--r-m);background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow-s);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--text2);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s,color .1s,transform .1s}
+.fsc-jbtn:active{background:var(--accent);color:var(--accent-t);transform:scale(.92)}
+/* iPad: respect nav-rail offset if ever added */
+html.is-ipad .fsc-pill,html.is-ipad .fsc-jump{left:max(8px,env(safe-area-inset-left,0px))}
+html.is-ipad .fsc-lbl{left:max(58px,calc(env(safe-area-inset-left,0px) + 58px))}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
@@ -3166,6 +3189,7 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%
 <script src="/audio-cache.js?v=20260406a"></script>
 <script src="/audio-downloads.js?v=1"></script>
 <script src="/qibla/qibla.js?v=20260417"></script>
+<script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/app.js?v=20260419"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */

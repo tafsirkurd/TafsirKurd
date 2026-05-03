@@ -641,6 +641,9 @@ function init(){
     setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
     setupPullToRefresh('panelGencine',function(){if(window.GencineUI)GencineUI.refresh();});
 
+    // Fast-scroll pill for long lists
+    if(window._initFastScroll) _initFastScroll();
+
     // Load data
     loadQuranData();
     loadTafsirData();
