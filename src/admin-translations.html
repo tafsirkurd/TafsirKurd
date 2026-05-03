@@ -964,15 +964,18 @@
 
         /* ── @mention autocomplete dropdown ── */
         .mention-dropdown {
-            position: absolute; z-index: 9999;
-            background: var(--bg-surface, #1a1a2e);
+            position: absolute;
+            top: calc(100% + 4px); left: 0; right: 0;
+            z-index: 99999;
+            background: var(--bg-surface, #1e1e2e);
             border: 1px solid var(--border-light);
             border-radius: 10px;
-            box-shadow: 0 12px 40px rgba(0,0,0,.35);
-            min-width: 180px; max-width: 260px;
+            box-shadow: 0 16px 48px rgba(0,0,0,.5);
+            min-width: 180px;
             overflow: hidden;
             display: none;
         }
+        .mark-form { overflow: visible !important; }
         .mention-option {
             display: flex; align-items: center; gap: 9px;
             padding: 8px 12px;
@@ -2838,17 +2841,37 @@
         let selectedIds = new Set();
 
         // ── @mention admin list ────────────────────────────────
-        var _mentionAdmins = []; // [{ name, email, role }]
+        var _mentionAdmins = [];
+        var _mentionLoaded = false;
+        var _mentionLoading = false;
 
         async function _loadMentionAdmins(sb) {
+            if (_mentionLoading) return;
+            _mentionLoading = true;
             try {
+                // Try admin_users first
                 var res = await sb.from('admin_users').select('full_name,email,role').eq('is_active', true).order('full_name');
-                if (!res.error && res.data) {
+                if (!res.error && res.data && res.data.length) {
                     _mentionAdmins = res.data.map(function(u) {
-                        return { name: u.full_name || u.email.split('@')[0], email: u.email, role: u.role || '' };
+                        return { name: (u.full_name || '').trim() || u.email.split('@')[0], email: u.email, role: u.role || '' };
                     });
+                    _mentionLoaded = true;
+                    return;
                 }
-            } catch(e) {}
+                // Fallback: extract distinct admins from audit log emails already in memory
+                var seen = {};
+                (_historyAllRows || []).forEach(function(r) {
+                    if (r.email && !seen[r.email]) {
+                        seen[r.email] = true;
+                        _mentionAdmins.push({ name: r.email.split('@')[0], email: r.email, role: '' });
+                    }
+                });
+                _mentionLoaded = true;
+            } catch(e) {
+                console.warn('[mention] load failed:', e);
+            } finally {
+                _mentionLoading = false;
+            }
         }
 
         // ── @mention autocomplete logic ────────────────────────
@@ -2864,6 +2887,15 @@
         }
 
         function _buildMentionDrop(drop, query, ta) {
+            // If admins haven't loaded yet, load now and show a spinner
+            if (!_mentionLoaded && supabase) {
+                drop.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-tertiary)">Loading admins…</div>';
+                drop.style.display = 'block';
+                _loadMentionAdmins(supabase).then(function() {
+                    _buildMentionDrop(drop, query, ta);
+                });
+                return;
+            }
             var q = (query || '').toLowerCase();
             var matches = _mentionAdmins.filter(function(a) {
                 return !q || a.name.toLowerCase().indexOf(q) !== -1;
