@@ -142,7 +142,9 @@
         .dot-online{background:#16a34a;animation:pulse-dot 2s ease-in-out infinite}
         .dot-idle{background:#d97706}
         .dot-offline{background:#9ca3af}
-        @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+        @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.4)}}
+        .presence-seen{font-size:10px;color:var(--text-tertiary);margin-top:2px;display:block;letter-spacing:.01em}
+        .acct-badges{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:0 14px 8px;row-gap:4px}
         .acct-meta{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-tertiary);margin-bottom:10px;padding:0 14px}
         .acct-meta i{width:12px;height:12px;flex-shrink:0}
         .acct-actions{display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border-light);padding:10px 14px 14px}
@@ -867,7 +869,7 @@
             allAccounts = listData.data || [];
             accounts = allAccounts.slice();
             document.getElementById('totalAdmins').textContent = accounts.length;
-            document.getElementById('activeAdmins').textContent = accounts.filter(a => a.is_active).length;
+            document.getElementById('activeAdmins').textContent = accounts.filter(a => computeStatus(a) !== 'offline').length;
             document.getElementById('lockedAdmins').textContent = accounts.filter(a => a.is_locked).length;
             const { data: sessions } = await supabase.from('admin_sessions').select('id').gt('expires_at', new Date().toISOString());
             document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
@@ -880,9 +882,21 @@
         function computeStatus(account) {
             if (!account.last_heartbeat) return 'offline';
             var diff = Date.now() - new Date(account.last_heartbeat).getTime();
-            if (diff < 2 * 60 * 1000) return 'online';
-            if (diff < 10 * 60 * 1000) return 'idle';
+            if (diff < 2  * 60 * 1000) return 'online';   // < 2 min  → online
+            if (diff < 12 * 60 * 1000) return 'idle';     // < 12 min → idle
             return 'offline';
+        }
+
+        function computeLastSeen(account) {
+            if (!account.last_heartbeat) return 'Never seen';
+            var diff = Math.floor((Date.now() - new Date(account.last_heartbeat).getTime()) / 1000);
+            if (diff < 10)  return 'Just now';
+            if (diff < 60)  return diff + 's ago';
+            var m = Math.floor(diff / 60);
+            if (m < 60)     return m + 'm ago';
+            var h = Math.floor(m / 60);
+            if (h < 24)     return h + 'h ago';
+            return Math.floor(h / 24) + 'd ago';
         }
 
         function applyStatusPill(pill, status) {
@@ -911,20 +925,37 @@
         function updateCardStatus(userId, lastHeartbeat) {
             var card = document.querySelector('[data-user-id="' + userId + '"]');
             if (!card) return;
+            var account = { last_heartbeat: lastHeartbeat };
+            var status = computeStatus(account);
+
+            // Update pill
             var pill = card.querySelector('.status-pill');
-            if (!pill) return;
-            applyStatusPill(pill, computeStatus({ last_heartbeat: lastHeartbeat }));
+            if (pill) applyStatusPill(pill, status);
+
+            // Update "last seen" text
+            var seenEl = card.querySelector('.presence-seen');
+            if (seenEl) seenEl.textContent = computeLastSeen(account);
+
+            // Show/hide force-logout button based on live status
+            var loBtn = card.querySelector('.acct-btn.danger[data-action="force-logout"]');
+            if (loBtn) loBtn.style.display = (status !== 'offline') ? '' : 'none';
+
+            // Update Online count in metric
+            var onlineCount = allAccounts.filter(function(a) {
+                return computeStatus(a) !== 'offline';
+            }).length;
+            var el = document.getElementById('activeAdmins');
+            if (el) el.textContent = onlineCount;
         }
 
         var presenceChannel = null;
         function subscribeToPresence(supabase) {
             if (presenceChannel) presenceChannel.unsubscribe();
             presenceChannel = supabase
-                .channel('admin-presence')
+                .channel('admin-presence-watch')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'admin_users' }, function(payload) {
                     var u = payload.new;
                     if (!u || !u.id) return;
-                    // update in-memory record so the tick uses fresh data
                     var mem = allAccounts.find(function(a) { return a.id === u.id; });
                     if (mem) mem.last_heartbeat = u.last_heartbeat;
                     updateCardStatus(u.id, u.last_heartbeat);
@@ -935,9 +966,10 @@
         var presenceTickTimer = null;
         function startPresenceTick() {
             if (presenceTickTimer) clearInterval(presenceTickTimer);
+            // 15s tick — recalculates idle/offline thresholds locally without a DB round-trip
             presenceTickTimer = setInterval(function() {
                 allAccounts.forEach(function(a) { updateCardStatus(a.id, a.last_heartbeat); });
-            }, 60000);
+            }, 15000);
         }
 
         var AVATAR_PALETTE = [
@@ -965,11 +997,24 @@
                 list.appendChild(empty);
                 return;
             }
+            // Sort: online → idle → offline, then by name within each group
+            var statusOrder = { online: 0, idle: 1, offline: 2 };
+            accounts = accounts.slice().sort(function(a, b) {
+                var sa = statusOrder[computeStatus(a)] ?? 2;
+                var sb = statusOrder[computeStatus(b)] ?? 2;
+                if (sa !== sb) return sa - sb;
+                return (a.full_name || a.email).localeCompare(b.full_name || b.email);
+            });
+            // Update Online metric
+            var onlineCount = accounts.filter(function(a) { return computeStatus(a) !== 'offline'; }).length;
+            var metricEl = document.getElementById('activeAdmins');
+            if (metricEl) metricEl.textContent = onlineCount;
             accounts.forEach(account => {
                 var card = document.createElement('div');
                 card.className = 'acct-card';
                 card.dataset.role = account.role;
                 card.dataset.userId = account.id;
+                card.dataset.lastHb = account.last_heartbeat || '';
 
                 // Coloured role strip
                 var strip = document.createElement('div');
@@ -1024,6 +1069,12 @@
                 var livePill = document.createElement('span');
                 applyStatusPill(livePill, computeStatus(account));
                 badges.appendChild(livePill);
+
+                // "last seen X ago" — updates every tick
+                var seenEl = document.createElement('span');
+                seenEl.className = 'presence-seen';
+                seenEl.textContent = computeLastSeen(account);
+                badges.appendChild(seenEl);
 
                 if (account.is_locked) {
                     var lockedPill = document.createElement('span');
@@ -1091,16 +1142,17 @@
                     actions.appendChild(rdBtn);
                 }
 
-                if (account.status === 'online' || account.status === 'idle') {
-                    var loBtn = document.createElement('button');
-                    loBtn.className = 'acct-btn danger';
-                    loBtn.onclick = () => forceLogout(account.id, account.email);
-                    var loIcon = document.createElement('i');
-                    loIcon.setAttribute('data-lucide', 'log-out');
-                    loBtn.appendChild(loIcon);
-                    loBtn.appendChild(document.createTextNode(' Force Logout'));
-                    actions.appendChild(loBtn);
-                }
+                // Force Logout — always rendered but shown/hidden by updateCardStatus
+                var loBtn = document.createElement('button');
+                loBtn.className = 'acct-btn danger';
+                loBtn.dataset.action = 'force-logout';
+                loBtn.style.display = computeStatus(account) !== 'offline' ? '' : 'none';
+                loBtn.onclick = () => forceLogout(account.id, account.email);
+                var loIcon = document.createElement('i');
+                loIcon.setAttribute('data-lucide', 'log-out');
+                loBtn.appendChild(loIcon);
+                loBtn.appendChild(document.createTextNode(' Force Logout'));
+                actions.appendChild(loBtn);
 
                 if (account.is_locked) {
                     var ulBtn = document.createElement('button');
