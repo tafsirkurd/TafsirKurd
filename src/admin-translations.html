@@ -2858,15 +2858,16 @@
             var val = ta.value;
             var pos = ta.selectionStart;
             var before = val.slice(0, pos);
-            var m = before.match(/@([\w؀-ۿ][\w؀-ۿ\s'-]{0,39})$/);
-            return m ? m[1] : (before.endsWith('@') ? '' : null);
+            // Match @ followed by any non-space characters (works with any script)
+            var m = before.match(/@([^\s@]*)$/);
+            return m ? m[1] : null;
         }
 
         function _buildMentionDrop(drop, query, ta) {
             var q = (query || '').toLowerCase();
             var matches = _mentionAdmins.filter(function(a) {
-                return a.name.toLowerCase().indexOf(q) !== -1;
-            }).slice(0, 6);
+                return !q || a.name.toLowerCase().indexOf(q) !== -1;
+            }).slice(0, 8);
             drop.innerHTML = '';
             _mentionActiveIdx = -1;
             if (!matches.length) { drop.style.display = 'none'; return; }
@@ -2895,7 +2896,7 @@
             var pos = ta.selectionStart;
             var before = val.slice(0, pos);
             // Replace the @query with @Name
-            var replaced = before.replace(/@([\w؀-ۿ][\w؀-ۿ\s'-]{0,39})?$/, '@' + name + ' ');
+            var replaced = before.replace(/@([^\s@]*)$/, '@' + name + ' ');
             var after = val.slice(pos);
             ta.value = replaced + after;
             var newPos = replaced.length;
@@ -4686,9 +4687,9 @@
         function _renderMentionText(text) {
             var div = document.createElement('div');
             // Split on @Name tokens
-            var parts = text.split(/(@[\w؀-ۿ][\w؀-ۿ\s'-]{0,40})/g);
+            var parts = text.split(/(@[^\s@][^\s@]{0,40})/g);
             parts.forEach(function(part) {
-                if (/^@[\w؀-ۿ]/.test(part)) {
+                if (/^@[^\s@]/.test(part)) {
                     var chip = document.createElement('span');
                     chip.className = 'hist-mention';
                     chip.textContent = part;
