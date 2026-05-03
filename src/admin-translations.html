@@ -2903,9 +2903,9 @@
             return m ? m[1] : null;
         }
 
-        function _buildMentionDrop(drop, query, ta) {
+        function _buildMentionDrop(drop, query, ta, draftKey) {
             if (!_mentionLoaded && !_mentionLoading && supabase) {
-                _loadMentionAdmins(supabase).then(function() { _buildMentionDrop(drop, query, ta); });
+                _loadMentionAdmins(supabase).then(function() { _buildMentionDrop(drop, query, ta, draftKey); });
             }
             var source = _mentionAdmins.length ? _mentionAdmins : _mentionAdminsFromHistory();
             var q = (query || '').toLowerCase();
@@ -2939,7 +2939,7 @@
                     opt.addEventListener('mouseleave', function() { opt.classList.remove('mention-hover'); });
                     opt.addEventListener('mousedown', (function(n) { return function(e) {
                         e.preventDefault();
-                        _insertMention(ta, n, drop, _draftKey);
+                        _insertMention(ta, n, drop, draftKey);
                     }; })(admin.name));
                     drop.appendChild(opt);
                 });
@@ -2973,10 +2973,10 @@
             if (drop) drop.style.display = 'none';
         }
 
-        function _handleMentionInput(ta, drop) {
+        function _handleMentionInput(ta, drop, draftKey) {
             var q = _getMentionQuery(ta);
             if (q === null) { drop.style.display = 'none'; return; }
-            _buildMentionDrop(drop, q, ta);
+            _buildMentionDrop(drop, q, ta, draftKey);
         }
 
         function _handleMentionKey(e, ta, drop, draftKey) {
@@ -4916,7 +4916,7 @@
                         ta.addEventListener('input', function() {
                             if (ta.value) localStorage.setItem(_draftKey, ta.value);
                             else localStorage.removeItem(_draftKey);
-                            _handleMentionInput(ta, drop);
+                            _handleMentionInput(ta, drop, _draftKey);
                         });
                         ta.addEventListener('keydown', function(e) { _handleMentionKey(e, ta, drop, _draftKey); });
                         var _dropHovered = false;
