@@ -106,8 +106,15 @@
 
         /* ── Admin accounts list ──────────────────────────────── */
         .accounts-list{display:flex;flex-direction:column;gap:8px}
-        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;overflow:hidden;transition:box-shadow .2s,transform .2s}
+        .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;overflow:hidden;transition:box-shadow .2s,transform .2s,border-color .3s}
         .acct-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.09);transform:translateY(-2px)}
+        /* Live presence highlights */
+        .acct-card.presence-online{border-color:rgba(34,197,94,.45);box-shadow:0 0 0 1px rgba(34,197,94,.18),0 2px 12px rgba(34,197,94,.08)}
+        .acct-card.presence-online:hover{box-shadow:0 0 0 1px rgba(34,197,94,.3),0 6px 20px rgba(34,197,94,.12)}
+        .acct-card.presence-idle{border-color:rgba(234,179,8,.35)}
+        .acct-card.presence-offline{opacity:.82}
+        /* Live ring on avatar when online */
+        .acct-card.presence-online .acct-avatar{box-shadow:0 0 0 2.5px #22c55e,0 0 0 4.5px rgba(34,197,94,.2)}
 
         /* Role strip at top */
         .acct-role-strip{height:5px;width:100%}
@@ -130,7 +137,6 @@
         .acct-info{flex:1;min-width:0}
         .acct-name{font-size:14px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .acct-email{font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-        .acct-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;padding:0 14px}
         .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
         .status-online{background:rgba(34,197,94,.12);color:#16a34a}
         .status-idle{background:rgba(234,179,8,.12);color:#d97706}
@@ -922,6 +928,16 @@
             }
         }
 
+        function _fmtExactTime(iso) {
+            if (!iso) return 'Never';
+            var d = new Date(iso);
+            return d.toLocaleString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: false, timeZone: 'Asia/Baghdad'
+            }) + ' (Baghdad time)';
+        }
+
         function updateCardStatus(userId, lastHeartbeat) {
             var card = document.querySelector('[data-user-id="' + userId + '"]');
             if (!card) return;
@@ -932,9 +948,19 @@
             var pill = card.querySelector('.status-pill');
             if (pill) applyStatusPill(pill, status);
 
-            // Update "last seen" text
+            // Update "last seen" text + exact-time tooltip
             var seenEl = card.querySelector('.presence-seen');
-            if (seenEl) seenEl.textContent = computeLastSeen(account);
+            if (seenEl) {
+                seenEl.textContent = computeLastSeen(account);
+                seenEl.title = _fmtExactTime(lastHeartbeat);
+            }
+
+            // Update card border / highlight class
+            card.classList.remove('presence-online', 'presence-idle', 'presence-offline');
+            card.classList.add('presence-' + status);
+
+            // Store updated heartbeat on card
+            card.dataset.lastHb = lastHeartbeat || '';
 
             // Show/hide force-logout button based on live status
             var loBtn = card.querySelector('.acct-btn.danger[data-action="force-logout"]');
@@ -1011,7 +1037,8 @@
             if (metricEl) metricEl.textContent = onlineCount;
             accounts.forEach(account => {
                 var card = document.createElement('div');
-                card.className = 'acct-card';
+                var _initialStatus = computeStatus(account);
+                card.className = 'acct-card presence-' + _initialStatus;
                 card.dataset.role = account.role;
                 card.dataset.userId = account.id;
                 card.dataset.lastHb = account.last_heartbeat || '';
@@ -1070,10 +1097,11 @@
                 applyStatusPill(livePill, computeStatus(account));
                 badges.appendChild(livePill);
 
-                // "last seen X ago" — updates every tick
+                // "last seen X ago" — updates every tick; hover shows exact timestamp
                 var seenEl = document.createElement('span');
                 seenEl.className = 'presence-seen';
                 seenEl.textContent = computeLastSeen(account);
+                seenEl.title = _fmtExactTime(account.last_heartbeat);
                 badges.appendChild(seenEl);
 
                 if (account.is_locked) {

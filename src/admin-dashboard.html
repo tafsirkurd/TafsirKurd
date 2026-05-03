@@ -77,6 +77,24 @@
         .online-platform-row {
             font-size:11px;color:var(--text-tertiary);margin-top:6px;
         }
+        /* ── Admin Team Online widget ── */
+        .ato-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;padding:16px 20px;margin-bottom:28px;animation-delay:385ms;}
+        .ato-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+        .ato-title{font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;}
+        .ato-badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:rgba(34,197,94,.12);color:#16a34a;letter-spacing:.02em;}
+        .ato-link{font-size:12px;color:var(--primary);text-decoration:none;font-weight:600;padding:4px 10px;background:var(--bg-active);border-radius:10px;transition:background .15s;}
+        .ato-link:hover{background:var(--bg-hover);}
+        .ato-list{display:flex;flex-wrap:wrap;gap:10px;}
+        .ato-item{display:flex;align-items:center;gap:9px;background:var(--bg-active);border:1px solid var(--border-light);border-radius:12px;padding:8px 12px 8px 8px;min-width:0;max-width:220px;position:relative;transition:box-shadow .15s;}
+        .ato-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.08);}
+        .ato-avatar-wrap{position:relative;flex-shrink:0;}
+        .ato-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;}
+        .ato-dot{position:absolute;bottom:1px;right:1px;width:9px;height:9px;border-radius:50%;background:#22c55e;border:2px solid var(--bg-active);animation:onlinePulse 2s ease-in-out infinite;}
+        .ato-info{min-width:0;flex:1;}
+        .ato-name{font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .ato-role{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-top:1px;}
+        .ato-time{font-size:10px;color:#16a34a;margin-top:2px;font-weight:600;}
+        .ato-empty{display:none;}
 
         /* ── Metric Cards ── */
         .metrics-grid {
@@ -809,6 +827,19 @@
                     <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
                 </div>
 
+                <!-- ══ Admin Team Online ══ -->
+                <div class="ato-card card-animate" id="adminTeamOnlinePanel" style="display:none;">
+                    <div class="ato-header">
+                        <div class="ato-title">
+                            <span class="online-pulse"></span>
+                            Admin Team Online
+                            <span class="ato-badge" id="atoCount">0</span>
+                        </div>
+                        <a href="/admin-account-management.html" class="ato-link">Manage →</a>
+                    </div>
+                    <div class="ato-list" id="atoList"></div>
+                </div>
+
                 <!-- ══ Admin Actions Log ══ -->
                 <div class="timeline-section card-animate" style="animation-delay:360ms">
                     <div class="timeline-header">
@@ -1222,7 +1253,10 @@
             if (isAuth) {
                 await loadDashboardData();
                 loadOnlineUsers();
-                setInterval(loadOnlineUsers, 60 * 1000);
+                setInterval(loadOnlineUsers, 30 * 1000);
+                loadAdminTeamOnline();
+                subscribeAdminTeamOnline();
+                setInterval(loadAdminTeamOnline, 15 * 1000);
                 setInterval(loadDashboardData, 5 * 60 * 1000);
             }
         })();
@@ -2417,6 +2451,136 @@
                 more.textContent = '+' + (users.length - MAX);
                 list.appendChild(more);
             }
+        }
+
+        /* ─── Admin Team Online ──────────────────────────────────────
+           Only shows admins with last_heartbeat < 2 minutes ago.
+           Refreshes every 15 s + realtime Supabase sub for instant updates.
+        ──────────────────────────────────────────────────────────────── */
+        var _atoChannel = null;
+
+        function _atoStatus(hb) {
+            if (!hb) return 'offline';
+            return Date.now() - new Date(hb).getTime() < 2 * 60 * 1000 ? 'online' : 'offline';
+        }
+
+        function _atoSeenAgo(hb) {
+            if (!hb) return '';
+            var s = Math.floor((Date.now() - new Date(hb).getTime()) / 1000);
+            if (s < 10)  return 'Just now';
+            if (s < 60)  return s + 's ago';
+            var m = Math.floor(s / 60);
+            return m < 60 ? m + 'm ago' : Math.floor(m / 60) + 'h ago';
+        }
+
+        var ATO_PALETTE = [
+            {bg:'rgba(99,102,241,.18)',color:'#6366f1'},
+            {bg:'rgba(16,185,129,.18)',color:'#10b981'},
+            {bg:'rgba(59,130,246,.18)',color:'#3b82f6'},
+            {bg:'rgba(245,158,11,.18)',color:'#f59e0b'},
+            {bg:'rgba(239,68,68,.18)',color:'#ef4444'},
+            {bg:'rgba(6,182,212,.18)',color:'#06b6d4'},
+            {bg:'rgba(236,72,153,.18)',color:'#ec4899'},
+            {bg:'rgba(168,85,247,.18)',color:'#a855f7'},
+        ];
+        function _atoColor(str) {
+            var code = (str || 'A').toUpperCase().charCodeAt(0);
+            return ATO_PALETTE[code % ATO_PALETTE.length];
+        }
+
+        function renderAdminTeamOnline(admins) {
+            var panel  = document.getElementById('adminTeamOnlinePanel');
+            var list   = document.getElementById('atoList');
+            var badge  = document.getElementById('atoCount');
+            if (!panel || !list) return;
+
+            // Only truly online (< 2 min heartbeat)
+            var online = admins.filter(function(a) { return _atoStatus(a.last_heartbeat) === 'online'; });
+
+            while (list.firstChild) list.removeChild(list.firstChild);
+
+            if (!online.length) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            panel.style.display = '';
+            badge.textContent = online.length;
+
+            var roleLabels = { super_admin: 'Super Admin', editor: 'Editor', analyst: 'Analyst', custom: 'Custom' };
+
+            online.forEach(function(a) {
+                var initChar = (a.full_name || a.email).charAt(0).toUpperCase();
+                var col      = _atoColor(initChar);
+                var item     = document.createElement('div');
+                item.className = 'ato-item';
+                item.title = (a.full_name || a.email) + '\n' + (roleLabels[a.role] || a.role) + '\nLast seen: ' + _atoSeenAgo(a.last_heartbeat);
+
+                var avatarWrap = document.createElement('div');
+                avatarWrap.className = 'ato-avatar-wrap';
+
+                var avatar = document.createElement('div');
+                avatar.className = 'ato-avatar';
+                avatar.textContent = initChar;
+                avatar.style.background = col.bg;
+                avatar.style.color = col.color;
+                avatarWrap.appendChild(avatar);
+
+                var dot = document.createElement('div');
+                dot.className = 'ato-dot';
+                avatarWrap.appendChild(dot);
+
+                var info = document.createElement('div');
+                info.className = 'ato-info';
+
+                var nameEl = document.createElement('div');
+                nameEl.className = 'ato-name';
+                nameEl.textContent = a.full_name || a.email.split('@')[0];
+
+                var roleEl = document.createElement('div');
+                roleEl.className = 'ato-role';
+                roleEl.textContent = roleLabels[a.role] || a.role;
+
+                var timeEl = document.createElement('div');
+                timeEl.className = 'ato-time';
+                timeEl.textContent = '● ' + _atoSeenAgo(a.last_heartbeat);
+
+                info.appendChild(nameEl);
+                info.appendChild(roleEl);
+                info.appendChild(timeEl);
+
+                item.appendChild(avatarWrap);
+                item.appendChild(info);
+                list.appendChild(item);
+            });
+        }
+
+        async function loadAdminTeamOnline() {
+            try {
+                var sb = window.adminAuth && window.adminAuth.getSupabase && window.adminAuth.getSupabase();
+                if (!sb) return;
+                var { data, error } = await sb
+                    .from('admin_users')
+                    .select('id, full_name, email, role, last_heartbeat')
+                    .eq('is_active', true)
+                    .order('last_heartbeat', { ascending: false, nullsFirst: false });
+                if (error) throw error;
+                renderAdminTeamOnline(data || []);
+            } catch(e) {
+                console.error('[AdminTeam]', e);
+            }
+        }
+
+        function subscribeAdminTeamOnline() {
+            var sb = window.adminAuth && window.adminAuth.getSupabase && window.adminAuth.getSupabase();
+            if (!sb) return;
+            if (_atoChannel) _atoChannel.unsubscribe();
+            _atoChannel = sb
+                .channel('dash-admin-presence')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'admin_users' }, function() {
+                    loadAdminTeamOnline();
+                })
+                .subscribe();
         }
 
         /* ═══════════════════════════════════════════════
