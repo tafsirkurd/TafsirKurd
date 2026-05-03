@@ -2916,11 +2916,10 @@
                     '<div class="mention-option-name">' + admin.name +
                       '<div class="mention-option-role">' + admin.role + '</div>' +
                     '</div>';
-                opt.addEventListener('mousedown', function(e) {
+                opt.addEventListener('mousedown', (function(n) { return function(e) {
                     e.preventDefault();
-                    _insertMention(ta, admin.name);
-                    drop.style.display = 'none';
-                });
+                    _insertMention(ta, n, drop, _draftKey);
+                }; })(admin.name));
                 drop.appendChild(opt);
             });
             // Position fixed relative to textarea
@@ -2931,17 +2930,22 @@
             drop.style.display = 'block';
         }
 
-        function _insertMention(ta, name) {
+        function _insertMention(ta, name, drop, draftKey) {
             var val = ta.value;
             var pos = ta.selectionStart;
             var before = val.slice(0, pos);
-            // Replace the @query with @Name
             var replaced = before.replace(/@([^\s@]*)$/, '@' + name + ' ');
             var after = val.slice(pos);
             ta.value = replaced + after;
             var newPos = replaced.length;
             ta.setSelectionRange(newPos, newPos);
-            ta.dispatchEvent(new Event('input'));
+            ta.focus();
+            // Save draft directly — don't dispatch input (avoids re-triggering dropdown)
+            if (draftKey) {
+                if (ta.value) localStorage.setItem(draftKey, ta.value);
+                else localStorage.removeItem(draftKey);
+            }
+            if (drop) drop.style.display = 'none';
         }
 
         function _handleMentionInput(ta, drop) {
@@ -2950,7 +2954,7 @@
             _buildMentionDrop(drop, q, ta);
         }
 
-        function _handleMentionKey(e, ta, drop) {
+        function _handleMentionKey(e, ta, drop, draftKey) {
             if (drop.style.display === 'none') return;
             var opts = drop.querySelectorAll('.mention-option');
             if (!opts.length) return;
@@ -2963,8 +2967,7 @@
             } else if (e.key === 'Enter' || e.key === 'Tab') {
                 if (_mentionActiveIdx >= 0 && opts[_mentionActiveIdx]) {
                     e.preventDefault();
-                    _insertMention(ta, opts[_mentionActiveIdx].getAttribute('data-name'));
-                    drop.style.display = 'none';
+                    _insertMention(ta, opts[_mentionActiveIdx].getAttribute('data-name'), drop, draftKey);
                 }
                 return;
             } else if (e.key === 'Escape') {
@@ -4869,14 +4872,17 @@
                             else localStorage.removeItem(_draftKey);
                             _handleMentionInput(ta, drop);
                         });
-                        ta.addEventListener('keydown', function(e) { _handleMentionKey(e, ta, drop); });
+                        ta.addEventListener('keydown', function(e) { _handleMentionKey(e, ta, drop, _draftKey); });
+                        var _dropHovered = false;
                         ta.addEventListener('blur', function() {
-                            setTimeout(function() { drop.style.display = 'none'; }, 150);
+                            setTimeout(function() { if (!_dropHovered) drop.style.display = 'none'; }, 150);
                         });
                         form.appendChild(ta);
                         // mention dropdown — appended to body so overflow:hidden ancestors don't clip it
                         var drop = document.createElement('div');
                         drop.className = 'mention-dropdown';
+                        drop.addEventListener('mouseenter', function() { _dropHovered = true; });
+                        drop.addEventListener('mouseleave', function() { _dropHovered = false; });
                         document.body.appendChild(drop);
                         // clean up dropdown when form is removed
                         var _dropObserver = new MutationObserver(function() {
