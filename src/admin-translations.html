@@ -964,18 +964,16 @@
 
         /* ── @mention autocomplete dropdown ── */
         .mention-dropdown {
-            position: absolute;
-            top: calc(100% + 4px); left: 0; right: 0;
-            z-index: 99999;
+            position: fixed;
+            z-index: 999999;
             background: var(--bg-surface, #1e1e2e);
             border: 1px solid var(--border-light);
             border-radius: 10px;
             box-shadow: 0 16px 48px rgba(0,0,0,.5);
-            min-width: 180px;
+            min-width: 220px; max-width: 300px;
             overflow: hidden;
             display: none;
         }
-        .mark-form { overflow: visible !important; }
         .mention-option {
             display: flex; align-items: center; gap: 9px;
             padding: 8px 12px;
@@ -2890,6 +2888,8 @@
             // If admins haven't loaded yet, load now and show a spinner
             if (!_mentionLoaded && supabase) {
                 drop.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-tertiary)">Loading admins…</div>';
+                var rect0 = ta.getBoundingClientRect();
+                drop.style.left = rect0.left + 'px'; drop.style.width = rect0.width + 'px'; drop.style.top = (rect0.bottom + 4) + 'px';
                 drop.style.display = 'block';
                 _loadMentionAdmins(supabase).then(function() {
                     _buildMentionDrop(drop, query, ta);
@@ -2920,6 +2920,11 @@
                 });
                 drop.appendChild(opt);
             });
+            // Position fixed relative to textarea
+            var rect = ta.getBoundingClientRect();
+            drop.style.left  = rect.left + 'px';
+            drop.style.width = rect.width + 'px';
+            drop.style.top   = (rect.bottom + 4) + 'px';
             drop.style.display = 'block';
         }
 
@@ -4866,11 +4871,15 @@
                             setTimeout(function() { drop.style.display = 'none'; }, 150);
                         });
                         form.appendChild(ta);
-                        // mention dropdown
+                        // mention dropdown — appended to body so overflow:hidden ancestors don't clip it
                         var drop = document.createElement('div');
                         drop.className = 'mention-dropdown';
-                        form.style.position = 'relative';
-                        form.appendChild(drop);
+                        document.body.appendChild(drop);
+                        // clean up dropdown when form is removed
+                        var _dropObserver = new MutationObserver(function() {
+                            if (!document.body.contains(form)) { drop.parentNode && drop.parentNode.removeChild(drop); _dropObserver.disconnect(); }
+                        });
+                        _dropObserver.observe(document.body, { childList: true, subtree: true });
                         var actions = makeEl('div', 'mark-form-actions');
                         var cancelBtn = makeEl('button', 'mark-btn-cancel', 'Cancel');
                         cancelBtn.type = 'button';
