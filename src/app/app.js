@@ -2556,7 +2556,7 @@ function _scrollElToCenter(container,el){
   if(!container||!el)return;
   var elRect=el.getBoundingClientRect();
   var cRect=container.getBoundingClientRect();
-  container.scrollTop+=elRect.top-cRect.top-(container.clientHeight-el.offsetHeight)/2;
+  container.scrollTop+=elRect.top-cRect.top-(container.clientHeight-elRect.height)/2;
 }
 
 function _scrollMushafToAyah(surah,ayah,attempts){
@@ -2577,7 +2577,7 @@ function _scrollMushafToAyah(surah,ayah,attempts){
       if(page){
         var elRect=els[0].getBoundingClientRect();
         var pRect=page.getBoundingClientRect();
-        page.scrollTop+=elRect.top-pRect.top-(page.clientHeight-els[0].offsetHeight)/2;
+        page.scrollTop+=elRect.top-pRect.top-(page.clientHeight-elRect.height)/2;
       }
     }else{
       _scrollElToCenter(view,els[0]);
@@ -2846,7 +2846,7 @@ function loadMushafPageQCF(pageEl,pageNum){
       // ── QCF line-by-line rendering (V1, V2, or V4 tajweed) ──
       var fontFam=(font==='qcf2')?"'QCFv2p"+pageNum+"'":(font==='qcf4')?"'QCFv4p"+pageNum+"'":"'QCFv1p"+pageNum+"'";
       var codeField=(font==='qcf2'||font==='qcf4')?'code_v2':'code_v1';
-      var lineWords={};var lineVerse={};var lineOrder=[];var lineStartsSurah={};var lineAllVerses={};
+      var lineOrder=[];var lineOrderSeen={};var lineStartsSurah={};var lineAyahGroups={};
 
       verses.forEach(function(verse){
         var sn=verse.surah_number||parseInt((verse.verse_key||'1:1').split(':')[0]);
@@ -2855,14 +2855,13 @@ function loadMushafPageQCF(pageEl,pageNum){
         (verse.words||[]).forEach(function(w){
           if(!w[codeField])return;
           var ln=w.line_number||0;
-          if(!lineWords[ln]){lineWords[ln]=[];lineOrder.push(ln);}
-          if(!lineVerse[ln])lineVerse[ln]={vn:vn,sn:sn};
-          // Track every verse that has words on this line (for precise highlight)
-          if(!lineAllVerses[ln])lineAllVerses[ln]=[];
-          var lav=lineAllVerses[ln];
-          if(!lav.length||lav[lav.length-1].vn!==vn)lav.push({vn:vn,sn:sn});
+          if(!lineOrderSeen[ln]){lineOrderSeen[ln]=true;lineOrder.push(ln);}
+          if(!lineAyahGroups[ln])lineAyahGroups[ln]=[];
+          var grps=lineAyahGroups[ln];
+          var last=grps[grps.length-1];
+          if(last&&last.vn===vn&&last.sn===sn){last.words.push(w[codeField]);}
+          else{grps.push({sn:sn,vn:vn,words:[w[codeField]]});}
           if(isFirst&&!markedLine&&!lineStartsSurah[ln]){markedLine=true;lineStartsSurah[ln]={surahNum:sn};}
-          lineWords[ln].push(w[codeField]);
         });
       });
 
@@ -2872,21 +2871,31 @@ function loadMushafPageQCF(pageEl,pageNum){
         if(sc)addSurahHeader(sc.surahNum);
         var lineEl=el('div','mushaf-qcf-line');
         lineEl.style.fontFamily=fontFam;
-        lineEl.textContent=lineWords[ln].join('');
-        (function(lv,le,avns){
-          if(!lv)return;
-          le.dataset.verse=String(lv.vn);
-          le.dataset.surah=String(lv.sn);
-          le.dataset.verses=avns.join(',');
-          // Register every verse on this line in the JS highlight map
-          avns.forEach(function(vn){
-            var k=String(lv.sn)+':'+String(vn);
+        var grps=lineAyahGroups[ln]||[];
+        if(grps.length<=1){
+          // Single ayah on this line — register the line div itself (fast path)
+          var g=grps[0];
+          if(g){
+            lineEl.textContent=g.words.join('');
+            var k=String(g.sn)+':'+String(g.vn);
             if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
-            window._mushafVerseElements[k].push(le);
+            window._mushafVerseElements[k].push(lineEl);
+            (function(v,s){on(lineEl,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
+          }
+        }else{
+          // Multiple ayahs share this line — one inline span per ayah segment
+          // so highlight targets only the exact ayah, not the whole line
+          grps.forEach(function(g){
+            var seg=document.createElement('span');
+            seg.className='mushaf-ayah-seg';
+            seg.textContent=g.words.join('');
+            var k=String(g.sn)+':'+String(g.vn);
+            if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
+            window._mushafVerseElements[k].push(seg);
+            (function(v,s){on(seg,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
+            lineEl.appendChild(seg);
           });
-          // Tap → show tafsir
-          on(le,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(lv.vn,lv.sn);});
-        })(lineVerse[ln],lineEl,(lineAllVerses[ln]||[{vn:(lineVerse[ln]||{}).vn}]).map(function(v){return v.vn;}));
+        }
         frag.appendChild(lineEl);
       });
 
