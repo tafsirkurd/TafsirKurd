@@ -2904,40 +2904,42 @@
         }
 
         function _buildMentionDrop(drop, query, ta) {
-            // If admins haven't loaded yet, load now and show a spinner
-            // If admin_users hasn't loaded yet, try async then fall through to history fallback
             if (!_mentionLoaded && !_mentionLoading && supabase) {
-                _loadMentionAdmins(supabase).then(function() {
-                    _buildMentionDrop(drop, query, ta);
-                });
+                _loadMentionAdmins(supabase).then(function() { _buildMentionDrop(drop, query, ta); });
             }
-            // Use loaded list or fall back to history rows (always populated when panel is open)
             var source = _mentionAdmins.length ? _mentionAdmins : _mentionAdminsFromHistory();
             var q = (query || '').toLowerCase();
             var matches = source.filter(function(a) {
                 return !q || a.name.toLowerCase().indexOf(q) !== -1;
             }).slice(0, 8);
-            drop.innerHTML = '';
-            _mentionActiveIdx = -1;
+
             if (!matches.length) { drop.style.display = 'none'; return; }
-            matches.forEach(function(admin, idx) {
-                var opt = document.createElement('div');
-                opt.className = 'mention-option';
-                opt.setAttribute('data-name', admin.name);
-                var initials = admin.name.split(' ').map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
-                var ac = _mentionAvatarColor(admin.name);
-                opt.innerHTML =
-                    '<div class="mention-option-avatar" style="background:' + ac.bg + ';color:' + ac.color + '">' + initials + '</div>' +
-                    '<div class="mention-option-name">' + admin.name +
-                      '<div class="mention-option-role">' + admin.role + '</div>' +
-                    '</div>';
-                opt.addEventListener('mousedown', (function(n) { return function(e) {
-                    e.preventDefault();
-                    _insertMention(ta, n, drop, _draftKey);
-                }; })(admin.name));
-                drop.appendChild(opt);
-            });
-            // Position fixed relative to textarea
+
+            // Only rebuild DOM if the list of names actually changed (prevents blink on every keystroke)
+            var newKey = matches.map(function(a) { return a.name; }).join('|');
+            if (drop.getAttribute('data-key') !== newKey) {
+                drop.setAttribute('data-key', newKey);
+                drop.innerHTML = '';
+                _mentionActiveIdx = -1;
+                matches.forEach(function(admin) {
+                    var opt = document.createElement('div');
+                    opt.className = 'mention-option';
+                    opt.setAttribute('data-name', admin.name);
+                    var initials = admin.name.split(' ').map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+                    var ac = _mentionAvatarColor(admin.name);
+                    opt.innerHTML =
+                        '<div class="mention-option-avatar" style="background:' + ac.bg + ';color:' + ac.color + '">' + initials + '</div>' +
+                        '<div class="mention-option-name">' + admin.name +
+                          '<div class="mention-option-role">' + admin.role + '</div>' +
+                        '</div>';
+                    opt.addEventListener('mousedown', (function(n) { return function(e) {
+                        e.preventDefault();
+                        _insertMention(ta, n, drop, _draftKey);
+                    }; })(admin.name));
+                    drop.appendChild(opt);
+                });
+            }
+
             var rect = ta.getBoundingClientRect();
             drop.style.left  = rect.left + 'px';
             drop.style.width = rect.width + 'px';
