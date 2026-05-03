@@ -2970,6 +2970,27 @@
         }
 
         function _handleMentionKey(e, ta, drop, draftKey) {
+            // Backspace: if cursor is right after an @mention token, delete the whole token
+            if (e.key === 'Backspace') {
+                var val = ta.value;
+                var pos = ta.selectionStart;
+                if (ta.selectionStart === ta.selectionEnd) {
+                    var before = val.slice(0, pos);
+                    var m = before.match(/@([^\s@]+(?:\s+[^\s@]+)*)\s?$/);
+                    if (m && m[0].startsWith('@')) {
+                        e.preventDefault();
+                        ta.value = val.slice(0, pos - m[0].length) + val.slice(pos);
+                        ta.setSelectionRange(pos - m[0].length, pos - m[0].length);
+                        drop.style.display = 'none';
+                        if (draftKey) {
+                            if (ta.value) localStorage.setItem(draftKey, ta.value);
+                            else localStorage.removeItem(draftKey);
+                        }
+                        return;
+                    }
+                }
+                return;
+            }
             if (drop.style.display === 'none') return;
             var opts = drop.querySelectorAll('.mention-option');
             if (!opts.length) return;
