@@ -4622,6 +4622,15 @@
                         form.style.display = 'none';
                         var ta = document.createElement('textarea');
                         ta.placeholder = 'Why are you marking this? (optional)';
+                        // Restore any unsaved draft from a previous session
+                        var _draftKey = 'mark_draft_hist_' + rowId;
+                        var _savedDraft = localStorage.getItem(_draftKey);
+                        if (_savedDraft) ta.value = _savedDraft;
+                        // Persist every keystroke so a refresh never loses the draft
+                        ta.addEventListener('input', function() {
+                            if (ta.value) localStorage.setItem(_draftKey, ta.value);
+                            else localStorage.removeItem(_draftKey);
+                        });
                         form.appendChild(ta);
                         var actions = makeEl('div', 'mark-form-actions');
                         var cancelBtn = makeEl('button', 'mark-btn-cancel', 'Cancel');
@@ -4629,7 +4638,7 @@
                         cancelBtn.onclick = function() { form.style.display = 'none'; };
                         var saveBtn = makeEl('button', 'mark-btn-save', '✓ Save Mark');
                         saveBtn.type = 'button';
-                        saveBtn.onclick = function() { saveMark(rowId, ta.value.trim()); };
+                        saveBtn.onclick = function() { saveMark(rowId, ta.value.trim(), _draftKey); };
                         actions.appendChild(cancelBtn);
                         actions.appendChild(saveBtn);
                         form.appendChild(actions);
@@ -4652,7 +4661,7 @@
             });
         }
 
-        async function saveMark(rowId, note) {
+        async function saveMark(rowId, note, draftKey) {
             var row = _historyAllRows.find(function(r) { return r.id === rowId; });
             if (!row) return;
             var email = sessionStorage.getItem('adminEmail') || '';
@@ -4666,6 +4675,7 @@
                 var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
                 if (result.error) throw result.error;
                 row.details = newDetails;
+                if (draftKey) localStorage.removeItem(draftKey);
                 filterHistory();
                 showToast('🔖 Marked');
             } catch(e) {
