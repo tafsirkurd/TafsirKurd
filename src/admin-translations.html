@@ -2847,8 +2847,8 @@
             if (_mentionLoading) return;
             _mentionLoading = true;
             try {
-                // Try admin_users first
-                var res = await sb.from('admin_users').select('full_name,email,role').eq('is_active', true).order('full_name');
+                // Try admin_users (without is_active filter in case column is null)
+                var res = await sb.from('admin_users').select('full_name,email,role').order('full_name');
                 if (!res.error && res.data && res.data.length) {
                     _mentionAdmins = res.data.map(function(u) {
                         return { name: (u.full_name || '').trim() || u.email.split('@')[0], email: u.email, role: u.role || '' };
@@ -2856,20 +2856,25 @@
                     _mentionLoaded = true;
                     return;
                 }
-                // Fallback: extract distinct admins from audit log emails already in memory
-                var seen = {};
-                (_historyAllRows || []).forEach(function(r) {
-                    if (r.email && !seen[r.email]) {
-                        seen[r.email] = true;
-                        _mentionAdmins.push({ name: r.email.split('@')[0], email: r.email, role: '' });
-                    }
-                });
-                _mentionLoaded = true;
             } catch(e) {
-                console.warn('[mention] load failed:', e);
+                console.warn('[mention] admin_users failed:', e);
             } finally {
                 _mentionLoading = false;
             }
+            // admin_users failed or empty — will use live fallback in _buildMentionDrop
+        }
+
+        // Build admin list from audit log rows (always available when history is open)
+        function _mentionAdminsFromHistory() {
+            var seen = {};
+            var list = [];
+            (_historyAllRows || []).forEach(function(r) {
+                if (r.email && !seen[r.email]) {
+                    seen[r.email] = true;
+                    list.push({ name: r.email.split('@')[0], email: r.email, role: '' });
+                }
+            });
+            return list;
         }
 
         // ── @mention autocomplete logic ────────────────────────
@@ -2886,18 +2891,16 @@
 
         function _buildMentionDrop(drop, query, ta) {
             // If admins haven't loaded yet, load now and show a spinner
-            if (!_mentionLoaded && supabase) {
-                drop.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-tertiary)">Loading admins…</div>';
-                var rect0 = ta.getBoundingClientRect();
-                drop.style.left = rect0.left + 'px'; drop.style.width = rect0.width + 'px'; drop.style.top = (rect0.bottom + 4) + 'px';
-                drop.style.display = 'block';
+            // If admin_users hasn't loaded yet, try async then fall through to history fallback
+            if (!_mentionLoaded && !_mentionLoading && supabase) {
                 _loadMentionAdmins(supabase).then(function() {
                     _buildMentionDrop(drop, query, ta);
                 });
-                return;
             }
+            // Use loaded list or fall back to history rows (always populated when panel is open)
+            var source = _mentionAdmins.length ? _mentionAdmins : _mentionAdminsFromHistory();
             var q = (query || '').toLowerCase();
-            var matches = _mentionAdmins.filter(function(a) {
+            var matches = source.filter(function(a) {
                 return !q || a.name.toLowerCase().indexOf(q) !== -1;
             }).slice(0, 8);
             drop.innerHTML = '';
