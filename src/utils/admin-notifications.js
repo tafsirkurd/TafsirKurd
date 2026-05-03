@@ -1,13 +1,14 @@
 /* =============================================================
-   admin-notifications.js  v4  — OS-style Notification Tray
+   admin-notifications.js  v5  — Premium Notification Tray
    Works on every admin page (self-injects bell if absent).
 
    Data sources:
      • contact_messages  status='unread'     (Supabase, on open)
      • profiles          new signups last 24h (Supabase, on open)
+     • app_error_logs    last 6h             (Supabase, on open)
      • _AdminLiveAlerts  bridge               (real-time events)
 
-   Storage: localStorage key 'ant_v4'
+   Storage: localStorage key 'ant_v5'
    Public API:
      adminNotifications.add(title, desc, type, link)
      adminNotifications.test()
@@ -15,20 +16,30 @@
 (function () {
   'use strict';
 
-  var STORE_KEY  = 'ant_v4';
-  var MAX_ITEMS  = 80;
-  var PANEL_ID   = 'ant-panel';
-  var BADGE_ID   = 'notification-badge';
-  var STYLE_ID   = 'ant-styles';
+  var STORE_KEY = 'ant_v5';
+  var MAX_ITEMS = 80;
+  var PANEL_ID  = 'ant-panel';
+  var BADGE_ID  = 'notification-badge';
+  var STYLE_ID  = 'ant-styles';
 
-  // ── type config ────────────────────────────────────────────
   var TYPES = {
-    message: { icon: '✉',  color: '#ef4444', bg: 'rgba(239,68,68,.12)',  label: 'Message'  },
-    user:    { icon: '👤', color: '#8b5cf6', bg: 'rgba(139,92,246,.12)', label: 'User'     },
-    video:   { icon: '▶',  color: '#f59e0b', bg: 'rgba(245,158,11,.12)', label: 'Video'    },
-    error:   { icon: '⚠',  color: '#ef4444', bg: 'rgba(239,68,68,.12)',  label: 'Error'    },
-    info:    { icon: 'ℹ',  color: '#3b82f6', bg: 'rgba(59,130,246,.12)', label: 'Info'     },
+    message: { icon: '✉',  color: '#ef4444', bg: 'rgba(239,68,68,.15)',   label: 'Message',  tab: 'message' },
+    user:    { icon: '👤', color: '#8b5cf6', bg: 'rgba(139,92,246,.15)',  label: 'User',     tab: 'user'    },
+    video:   { icon: '▶',  color: '#f59e0b', bg: 'rgba(245,158,11,.15)',  label: 'Video',    tab: 'video'   },
+    error:   { icon: '⚠',  color: '#ef4444', bg: 'rgba(239,68,68,.15)',   label: 'Error',    tab: 'error'   },
+    info:    { icon: 'ℹ',  color: '#3b82f6', bg: 'rgba(59,130,246,.15)',  label: 'Info',     tab: 'info'    },
+    success: { icon: '✓',  color: '#10b981', bg: 'rgba(16,185,129,.15)',  label: 'Success',  tab: 'success' },
   };
+
+  var TABS = [
+    { id: 'all',     label: 'All',      icon: '🔔' },
+    { id: 'unread',  label: 'Unread',   icon: '·'  },
+    { id: 'message', label: 'Messages', icon: '✉'  },
+    { id: 'user',    label: 'Users',    icon: '👤' },
+    { id: 'error',   label: 'Errors',   icon: '⚠'  },
+  ];
+
+  var _currentFilter = 'all';
 
   // ── storage ────────────────────────────────────────────────
   function _load() {
@@ -39,58 +50,87 @@
     try { localStorage.setItem(STORE_KEY, JSON.stringify(items.slice(0, MAX_ITEMS))); }
     catch(e) {}
   }
-
-  // ── dedupe guard: skip if we already stored this source_id ─
   function _hasSeen(sourceId) {
     if (!sourceId) return false;
     return _load().some(function(n) { return n.sourceId === sourceId; });
   }
 
-  // ── add item ───────────────────────────────────────────────
+  // ── add ────────────────────────────────────────────────────
   function _add(title, desc, type, link, sourceId) {
     if (sourceId && _hasSeen(sourceId)) return;
     var items = _load();
     items.unshift({
-      id:       Date.now() + Math.random(),
+      id: Date.now() + Math.random(),
       sourceId: sourceId || null,
-      title:    title,
-      desc:     desc || '',
-      type:     type || 'info',
-      link:     link || null,
-      ts:       Date.now(),
-      read:     false,
+      title: title,
+      desc: desc || '',
+      type: type || 'info',
+      link: link || null,
+      ts: Date.now(),
+      read: false,
     });
     _save(items);
     _updateBadge();
     _refreshPanel();
   }
 
-  // ── time formatter ─────────────────────────────────────────
+  // ── time helpers ───────────────────────────────────────────
   function _ago(ts) {
     var d = Math.floor((Date.now() - ts) / 1000);
-    if (d < 60)     return 'Just now';
-    if (d < 3600)   return Math.floor(d / 60) + 'm ago';
-    if (d < 86400)  return Math.floor(d / 3600) + 'h ago';
+    if (d < 60)    return 'Just now';
+    if (d < 3600)  return Math.floor(d / 60) + 'm ago';
+    if (d < 86400) return Math.floor(d / 3600) + 'h ago';
     return Math.floor(d / 86400) + 'd ago';
+  }
+
+  function _timeGroup(ts) {
+    var now  = new Date();
+    var date = new Date(ts);
+    var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var ydayStart  = todayStart - 86400000;
+    var weekStart  = todayStart - 6 * 86400000;
+    if (ts >= todayStart)  return 'Today';
+    if (ts >= ydayStart)   return 'Yesterday';
+    if (ts >= weekStart)   return 'This Week';
+    return 'Earlier';
+  }
+
+  // ── filter ─────────────────────────────────────────────────
+  function _filterItems(items, filter) {
+    if (filter === 'all')    return items;
+    if (filter === 'unread') return items.filter(function(i) { return !i.read; });
+    return items.filter(function(i) { return i.type === filter; });
+  }
+
+  function _tabCount(items, filter) {
+    return _filterItems(items, filter).length;
   }
 
   // ── badge ──────────────────────────────────────────────────
   function _updateBadge() {
     var badge = document.getElementById(BADGE_ID);
-    if (!badge) return;
     var n = _load().filter(function(i) { return !i.read; }).length;
-    badge.textContent  = n > 99 ? '99+' : n;
-    badge.style.display = n > 0 ? 'flex' : 'none';
+    if (badge) {
+      badge.textContent = n > 99 ? '99+' : n;
+      badge.style.display = n > 0 ? 'flex' : 'none';
+    }
+    // pulse the bell button when there are unread
+    var bellBtn = document.getElementById('ant-bell-btn') ||
+      (badge && badge.closest('.topbar-btn'));
+    if (bellBtn) {
+      if (n > 0) bellBtn.classList.add('ant-bell-pulse');
+      else       bellBtn.classList.remove('ant-bell-pulse');
+    }
   }
 
-  // ── inject bell button if this page doesn't have one ───────
+  // ── inject bell button if absent ──────────────────────────
   function _ensureBell() {
-    if (document.getElementById(BADGE_ID)) return; // already present
+    if (document.getElementById(BADGE_ID)) return;
     var actions = document.querySelector('.topbar-actions');
     if (!actions) return;
     var btn = document.createElement('button');
     btn.className = 'topbar-btn';
-    btn.id        = 'ant-bell-btn';
+    btn.id = 'ant-bell-btn';
     btn.setAttribute('aria-label', 'Notifications');
     btn.style.cssText = 'position:relative;';
     btn.innerHTML =
@@ -101,11 +141,9 @@
         'padding:2px 5px;border-radius:10px;min-width:18px;text-align:center;' +
         'display:none;align-items:center;justify-content:center;' +
         'pointer-events:none;"></span>';
-    // Insert before theme toggle
     var themeBtn = document.getElementById('theme-toggle');
     if (themeBtn) actions.insertBefore(btn, themeBtn);
     else          actions.prepend(btn);
-    // Re-render the lucide icon we just added
     if (window.lucide) window.lucide.createIcons({ nodes: [btn] });
   }
 
@@ -115,53 +153,88 @@
     var s = document.createElement('style');
     s.id = STYLE_ID;
     s.textContent = [
+      // bell pulse ring
+      '@keyframes ant-ring{0%,100%{transform:rotate(0)}15%{transform:rotate(12deg)}30%{transform:rotate(-10deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}}',
+      '@keyframes ant-pulse-ring{0%{box-shadow:0 0 0 0 rgba(99,102,241,.5)}70%{box-shadow:0 0 0 7px rgba(99,102,241,0)}100%{box-shadow:0 0 0 0 rgba(99,102,241,0)}}',
+      '@keyframes ant-item-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}',
+
+      '.ant-bell-pulse{animation:ant-pulse-ring 1.8s ease-out infinite;}',
+      '.ant-bell-pulse i{animation:ant-ring 1.8s ease-out infinite;}',
+
       // panel
       '#ant-panel{',
-        'position:fixed;top:60px;right:12px;width:360px;',
+        'position:fixed;top:60px;right:12px;width:380px;',
         'max-height:calc(100dvh - 80px);',
-        'background:var(--bg-surface,#1a1a2e);',
-        'border:1px solid var(--border-light,rgba(255,255,255,.09));',
-        'border-radius:16px;',
-        'box-shadow:0 24px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05);',
+        'background:var(--bg-surface,#111827);',
+        'border:1px solid var(--border-light,rgba(255,255,255,.1));',
+        'border-radius:18px;',
+        'box-shadow:0 32px 96px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04);',
         'display:flex;flex-direction:column;',
         'z-index:99999;',
-        'opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;',
-        'transition:opacity .18s ease,transform .18s ease;}',
+        'opacity:0;transform:translateY(-10px) scale(.96);pointer-events:none;',
+        'transition:opacity .2s cubic-bezier(.4,0,.2,1),transform .2s cubic-bezier(.4,0,.2,1);}',
       '#ant-panel.ant-open{opacity:1;transform:none;pointer-events:all;}',
 
       // header
       '#ant-panel .ant-hdr{',
         'display:flex;align-items:center;gap:8px;',
-        'padding:14px 16px 10px;',
-        'border-bottom:1px solid var(--border-light,rgba(255,255,255,.07));',
+        'padding:16px 16px 12px;',
         'flex-shrink:0;}',
+      '#ant-panel .ant-hdr-ico{',
+        'width:32px;height:32px;border-radius:10px;',
+        'background:rgba(99,102,241,.15);',
+        'display:flex;align-items:center;justify-content:center;',
+        'font-size:15px;flex-shrink:0;}',
       '#ant-panel .ant-hdr-title{',
-        'font-size:14px;font-weight:700;',
-        'color:var(--text-primary,#f1f5f9);flex:1;}',
-      '#ant-panel .ant-hdr-count{',
-        'font-size:11px;font-weight:700;',
-        'background:#ef4444;color:#fff;',
-        'padding:1px 7px;border-radius:20px;',
-        'display:none;}',
-      '#ant-panel .ant-hdr-count.ant-vis{display:inline-block;}',
-      '#ant-panel .ant-hdr-actions{display:flex;gap:4px;}',
+        'font-size:15px;font-weight:800;',
+        'color:var(--text-primary,#f1f5f9);flex:1;letter-spacing:-.2px;}',
+      '#ant-panel .ant-hdr-actions{display:flex;gap:4px;align-items:center;}',
       '#ant-panel .ant-hbtn{',
         'font-size:11px;font-weight:600;',
         'color:var(--text-tertiary,rgba(255,255,255,.4));',
         'background:none;border:none;cursor:pointer;',
-        'padding:4px 8px;border-radius:6px;',
-        'transition:color .15s,background .15s;}',
+        'padding:5px 9px;border-radius:8px;',
+        'transition:color .15s,background .15s;white-space:nowrap;}',
       '#ant-panel .ant-hbtn:hover{',
         'color:var(--text-primary,#f1f5f9);',
-        'background:rgba(255,255,255,.07);}',
+        'background:var(--bg-hover,rgba(255,255,255,.07));}',
       '#ant-panel .ant-close{',
-        'width:26px;height:26px;border-radius:50%;',
-        'background:rgba(255,255,255,.07);border:none;cursor:pointer;',
+        'width:28px;height:28px;border-radius:50%;',
+        'background:var(--bg-hover,rgba(255,255,255,.07));border:none;cursor:pointer;',
         'color:var(--text-tertiary,rgba(255,255,255,.4));',
         'display:flex;align-items:center;justify-content:center;',
-        'flex-shrink:0;font-size:13px;',
+        'flex-shrink:0;font-size:14px;',
         'transition:background .15s,color .15s;}',
-      '#ant-panel .ant-close:hover{background:rgba(255,255,255,.14);color:var(--text-primary,#f1f5f9);}',
+      '#ant-panel .ant-close:hover{background:rgba(239,68,68,.2);color:#ef4444;}',
+
+      // filter tabs
+      '#ant-panel .ant-tabs{',
+        'display:flex;gap:4px;',
+        'padding:0 14px 12px;',
+        'overflow-x:auto;',
+        'scrollbar-width:none;',
+        'flex-shrink:0;}',
+      '#ant-panel .ant-tabs::-webkit-scrollbar{display:none;}',
+      '#ant-panel .ant-tab{',
+        'display:flex;align-items:center;gap:5px;',
+        'font-size:11.5px;font-weight:600;',
+        'padding:5px 11px;border-radius:20px;',
+        'border:none;cursor:pointer;white-space:nowrap;',
+        'background:var(--bg-hover,rgba(255,255,255,.06));',
+        'color:var(--text-secondary,rgba(255,255,255,.55));',
+        'transition:all .15s;flex-shrink:0;}',
+      '#ant-panel .ant-tab:hover{background:rgba(255,255,255,.1);color:var(--text-primary,#f1f5f9);}',
+      '#ant-panel .ant-tab.ant-tab-active{background:#6366f1;color:#fff;}',
+      '#ant-panel .ant-tab-cnt{',
+        'font-size:10px;font-weight:800;',
+        'background:rgba(255,255,255,.2);',
+        'padding:0px 5px;border-radius:8px;min-width:16px;text-align:center;}',
+      '#ant-panel .ant-tab.ant-tab-active .ant-tab-cnt{background:rgba(255,255,255,.3);}',
+
+      // divider
+      '#ant-panel .ant-divider{',
+        'height:1px;background:var(--border-light,rgba(255,255,255,.07));',
+        'flex-shrink:0;}',
 
       // scroll body
       '#ant-panel .ant-body{',
@@ -173,31 +246,27 @@
 
       // section label
       '#ant-panel .ant-sec{',
-        'font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;',
+        'font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;',
         'color:var(--text-tertiary,rgba(255,255,255,.28));',
-        'padding:10px 16px 4px;}',
+        'padding:10px 16px 4px;display:flex;align-items:center;gap:8px;}',
+      '#ant-panel .ant-sec::after{',
+        'content:"";flex:1;height:1px;background:var(--border-light,rgba(255,255,255,.06));}',
 
       // item
       '#ant-panel .ant-item{',
         'display:flex;align-items:flex-start;gap:11px;',
-        'padding:10px 14px;cursor:pointer;',
-        'border-bottom:1px solid var(--border-light,rgba(255,255,255,.05));',
-        'transition:background .14s;position:relative;}',
-      '#ant-panel .ant-item:hover{background:rgba(255,255,255,.04);}',
-      '#ant-panel .ant-item.ant-unread{background:rgba(59,130,246,.045);}',
-      '#ant-panel .ant-item.ant-unread:hover{background:rgba(59,130,246,.08);}',
-
-      // unread dot
-      '#ant-panel .ant-item.ant-unread::before{',
-        'content:"";position:absolute;left:5px;top:50%;',
-        'transform:translateY(-50%);',
-        'width:4px;height:4px;border-radius:50%;background:#3b82f6;}',
+        'padding:11px 14px 11px 16px;cursor:pointer;',
+        'border-left:3px solid transparent;',
+        'transition:background .14s,border-color .14s;position:relative;',
+        'animation:ant-item-in .2s ease both;}',
+      '#ant-panel .ant-item:hover{background:var(--bg-hover,rgba(255,255,255,.04));}',
+      '#ant-panel .ant-item.ant-unread{border-left-color:currentColor;}',
 
       // icon blob
       '#ant-panel .ant-ico{',
-        'width:34px;height:34px;border-radius:9px;',
+        'width:36px;height:36px;border-radius:10px;',
         'display:flex;align-items:center;justify-content:center;',
-        'font-size:15px;flex-shrink:0;}',
+        'font-size:16px;flex-shrink:0;margin-top:1px;}',
 
       // text
       '#ant-panel .ant-txt{flex:1;min-width:0;}',
@@ -206,43 +275,57 @@
         'color:var(--text-primary,#f1f5f9);',
         'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
         'margin-bottom:2px;}',
+      '#ant-panel .ant-item.ant-unread .ant-ttl{font-weight:700;}',
       '#ant-panel .ant-dsc{',
-        'font-size:12px;color:var(--text-tertiary,rgba(255,255,255,.45));',
-        'line-height:1.4;',
+        'font-size:12px;color:var(--text-secondary,rgba(255,255,255,.55));',
+        'line-height:1.45;',
         'display:-webkit-box;-webkit-box-orient:vertical;',
         '-webkit-line-clamp:2;overflow:hidden;',
-        'margin-bottom:3px;}',
+        'margin-bottom:4px;}',
+      '#ant-panel .ant-meta{display:flex;align-items:center;gap:6px;}',
       '#ant-panel .ant-time{',
-        'font-size:11px;color:var(--text-tertiary,rgba(255,255,255,.28));}',
+        'font-size:11px;color:var(--text-tertiary,rgba(255,255,255,.3));font-weight:500;}',
+      '#ant-panel .ant-type-badge{',
+        'font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;',
+        'letter-spacing:.02em;flex-shrink:0;}',
+
+      // action button (Reply etc)
+      '#ant-panel .ant-action{',
+        'font-size:11px;font-weight:700;',
+        'padding:3px 10px;border-radius:8px;border:none;cursor:pointer;',
+        'background:rgba(99,102,241,.15);color:#818cf8;',
+        'transition:background .14s;opacity:0;margin-top:5px;display:inline-flex;}',
+      '#ant-panel .ant-item:hover .ant-action{opacity:1;}',
+      '#ant-panel .ant-action:hover{background:rgba(99,102,241,.28);}',
 
       // dismiss x
       '#ant-panel .ant-del{',
-        'width:20px;height:20px;border-radius:50%;',
+        'width:22px;height:22px;border-radius:50%;',
         'background:none;border:none;cursor:pointer;',
         'color:var(--text-tertiary,rgba(255,255,255,.25));',
         'display:flex;align-items:center;justify-content:center;',
-        'font-size:12px;flex-shrink:0;margin-top:1px;',
+        'font-size:13px;flex-shrink:0;margin-top:1px;',
         'transition:color .14s,background .14s;opacity:0;}',
       '#ant-panel .ant-item:hover .ant-del{opacity:1;}',
-      '#ant-panel .ant-del:hover{color:#ef4444;background:rgba(239,68,68,.12);}',
+      '#ant-panel .ant-del:hover{color:#ef4444;background:rgba(239,68,68,.15);}',
 
       // empty state
       '#ant-panel .ant-empty{',
         'padding:48px 20px;text-align:center;',
         'color:var(--text-tertiary,rgba(255,255,255,.25));}',
-      '#ant-panel .ant-empty-ico{font-size:36px;margin-bottom:10px;opacity:.35;}',
-      '#ant-panel .ant-empty-txt{font-size:13px;}',
+      '#ant-panel .ant-empty-ico{font-size:40px;margin-bottom:12px;opacity:.4;}',
+      '#ant-panel .ant-empty-txt{font-size:13px;font-weight:500;}',
+      '#ant-panel .ant-empty-sub{font-size:12px;margin-top:4px;opacity:.7;}',
 
       // footer
       '#ant-panel .ant-foot{',
-        'padding:8px 16px;flex-shrink:0;text-align:center;',
+        'padding:10px 16px;flex-shrink:0;',
+        'display:flex;align-items:center;justify-content:space-between;',
         'border-top:1px solid var(--border-light,rgba(255,255,255,.06));}',
       '#ant-panel .ant-foot-lbl{',
         'font-size:11px;color:var(--text-tertiary,rgba(255,255,255,.25));}',
 
-      '@media(max-width:420px){',
-        '#ant-panel{width:calc(100vw - 24px);right:12px;}',
-      '}',
+      '@media(max-width:420px){#ant-panel{width:calc(100vw - 24px);right:12px;}}',
     ].join('');
     document.head.appendChild(s);
   }
@@ -252,97 +335,126 @@
     var existing = document.getElementById(PANEL_ID);
     if (existing) existing.parentNode.removeChild(existing);
 
-    var items   = _load();
-    var unread  = items.filter(function(i) { return !i.read; });
+    var allItems = _load();
+    var unreadN  = allItems.filter(function(i) { return !i.read; }).length;
+    var filtered = _filterItems(allItems, _currentFilter);
 
     var panel = document.createElement('div');
     panel.id = PANEL_ID;
 
-    // header
-    var hdr   = _el('div', 'ant-hdr');
-    var htxt  = _el('div', 'ant-hdr-title');
-    htxt.textContent = 'Notifications';
-    var hcnt  = _el('span', 'ant-hdr-count');
-    if (unread.length > 0) {
-      hcnt.textContent = unread.length;
-      hcnt.classList.add('ant-vis');
-    }
-    htxt.appendChild(hcnt);
+    // ── header
+    var hdr = _el('div', 'ant-hdr');
+    var ico = _el('div', 'ant-hdr-ico');
+    ico.textContent = '🔔';
+    var htitle = _el('div', 'ant-hdr-title');
+    htitle.textContent = 'Notifications';
 
     var hact = _el('div', 'ant-hdr-actions');
+
+    var refreshBtn = _el('button', 'ant-hbtn');
+    refreshBtn.title = 'Refresh';
+    refreshBtn.innerHTML = '↻';
+    refreshBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _lastPull = 0;
+      _pullSupabase();
+    });
+
     var markBtn = _el('button', 'ant-hbtn');
     markBtn.textContent = 'Mark read';
-    markBtn.title = 'Mark all as read';
     markBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      var all = _load();
-      all.forEach(function(i) { i.read = true; });
-      _save(all);
-      _updateBadge();
-      _refreshPanel();
+      var all = _load(); all.forEach(function(i) { i.read = true; }); _save(all);
+      _updateBadge(); _refreshPanel();
     });
 
     var clrBtn = _el('button', 'ant-hbtn');
     clrBtn.textContent = 'Clear';
-    clrBtn.title = 'Clear all notifications';
     clrBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      _save([]);
-      _updateBadge();
-      _refreshPanel();
+      _save([]); _updateBadge(); _refreshPanel();
     });
 
     var closeBtn = _el('button', 'ant-close');
     closeBtn.innerHTML = '&times;';
     closeBtn.setAttribute('aria-label', 'Close');
-    closeBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      _close();
-    });
+    closeBtn.addEventListener('click', function(e) { e.stopPropagation(); _close(); });
 
+    hact.appendChild(refreshBtn);
     hact.appendChild(markBtn);
     hact.appendChild(clrBtn);
-    hdr.appendChild(htxt);
+    hact.appendChild(closeBtn);
+    hdr.appendChild(ico);
+    hdr.appendChild(htitle);
     hdr.appendChild(hact);
-    hdr.appendChild(closeBtn);
     panel.appendChild(hdr);
 
-    // body
+    // ── filter tabs
+    var tabs = _el('div', 'ant-tabs');
+    TABS.forEach(function(tab) {
+      var cnt = tab.id === 'unread'
+        ? unreadN
+        : (tab.id === 'all' ? allItems.length : _tabCount(allItems, tab.id));
+      var btn = _el('button', 'ant-tab' + (tab.id === _currentFilter ? ' ant-tab-active' : ''));
+      btn.innerHTML = (tab.icon ? '<span>' + tab.icon + '</span>' : '') +
+                      '<span>' + tab.label + '</span>' +
+                      (cnt > 0 ? '<span class="ant-tab-cnt">' + cnt + '</span>' : '');
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        _currentFilter = tab.id;
+        _refreshPanel();
+      });
+      tabs.appendChild(btn);
+    });
+    panel.appendChild(tabs);
+    panel.appendChild(_el('div', 'ant-divider'));
+
+    // ── body
     var body = _el('div', 'ant-body');
 
-    if (items.length === 0) {
+    if (filtered.length === 0) {
       var empty = _el('div', 'ant-empty');
       var eico  = _el('div', 'ant-empty-ico');
-      eico.textContent = '🔔';
       var etxt  = _el('div', 'ant-empty-txt');
-      etxt.textContent = 'All caught up';
-      empty.appendChild(eico);
-      empty.appendChild(etxt);
+      var esub  = _el('div', 'ant-empty-sub');
+      if (_currentFilter === 'unread') {
+        eico.textContent = '✓'; etxt.textContent = 'All caught up'; esub.textContent = 'No unread notifications';
+      } else if (_currentFilter === 'all' && allItems.length === 0) {
+        eico.textContent = '🔔'; etxt.textContent = 'No notifications yet'; esub.textContent = 'Events will appear here in real time';
+      } else {
+        eico.textContent = '🔍'; etxt.textContent = 'Nothing here'; esub.textContent = 'No ' + _currentFilter + ' notifications';
+      }
+      empty.appendChild(eico); empty.appendChild(etxt); empty.appendChild(esub);
       body.appendChild(empty);
     } else {
-      // section: unread first, then read
-      var groups = [
-        { label: 'Unread', items: unread },
-        { label: 'Earlier', items: items.filter(function(i) { return i.read; }) },
-      ];
-      groups.forEach(function(g) {
-        if (!g.items.length) return;
+      // group by time
+      var groups = {};
+      var groupOrder = ['Today', 'Yesterday', 'This Week', 'Earlier'];
+      filtered.forEach(function(item) {
+        var g = _timeGroup(item.ts);
+        if (!groups[g]) groups[g] = [];
+        groups[g].push(item);
+      });
+      groupOrder.forEach(function(gLabel) {
+        if (!groups[gLabel] || !groups[gLabel].length) return;
         var sec = _el('div', 'ant-sec');
-        sec.textContent = g.label;
+        sec.textContent = gLabel;
         body.appendChild(sec);
-        g.items.slice(0, 30).forEach(function(item) {
-          body.appendChild(_buildItem(item));
+        groups[gLabel].slice(0, 30).forEach(function(item, idx) {
+          var el = _buildItem(item);
+          el.style.animationDelay = (idx * 25) + 'ms';
+          body.appendChild(el);
         });
       });
     }
     panel.appendChild(body);
 
-    // footer
-    if (items.length > 0) {
+    // ── footer
+    if (allItems.length > 0) {
       var foot = _el('div', 'ant-foot');
       var fl   = _el('span', 'ant-foot-lbl');
-      fl.textContent = items.length + ' notification' + (items.length !== 1 ? 's' : '') +
-                       ' · ' + unread.length + ' unread';
+      fl.textContent = allItems.length + ' notification' + (allItems.length !== 1 ? 's' : '') +
+                       ' · ' + unreadN + ' unread';
       foot.appendChild(fl);
       panel.appendChild(foot);
     }
@@ -351,36 +463,53 @@
   }
 
   function _buildItem(item) {
-    var cfg  = TYPES[item.type] || TYPES.info;
-    var row  = _el('div', 'ant-item' + (item.read ? '' : ' ant-unread'));
+    var cfg = TYPES[item.type] || TYPES.info;
+    var row = _el('div', 'ant-item' + (item.read ? '' : ' ant-unread'));
     row.setAttribute('data-id', item.id);
+    if (!item.read) row.style.color = cfg.color; // drives border-left-color via currentColor
 
-    var ico  = _el('div', 'ant-ico');
-    ico.textContent   = cfg.icon;
+    var ico = _el('div', 'ant-ico');
+    ico.textContent = cfg.icon;
     ico.style.background = cfg.bg;
-    ico.style.color      = cfg.color;
 
     var txt  = _el('div', 'ant-txt');
     var ttl  = _el('div', 'ant-ttl');
     ttl.textContent = item.title;
     var dsc  = _el('div', 'ant-dsc');
     dsc.textContent = item.desc;
-    var time = _el('div', 'ant-time');
+
+    var meta = _el('div', 'ant-meta');
+    var time = _el('span', 'ant-time');
     time.textContent = _ago(item.ts);
+    var badge = _el('span', 'ant-type-badge');
+    badge.textContent = cfg.label;
+    badge.style.background = cfg.bg;
+    badge.style.color = cfg.color;
+    meta.appendChild(time);
+    meta.appendChild(badge);
 
     txt.appendChild(ttl);
     if (item.desc) txt.appendChild(dsc);
-    txt.appendChild(time);
+    txt.appendChild(meta);
 
-    var del  = _el('button', 'ant-del');
+    // action button for messages
+    if (item.type === 'message') {
+      var actBtn = _el('button', 'ant-action');
+      actBtn.textContent = 'Reply →';
+      actBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (item.link) window.location.href = item.link;
+      });
+      txt.appendChild(actBtn);
+    }
+
+    var del = _el('button', 'ant-del');
     del.innerHTML = '&times;';
     del.setAttribute('aria-label', 'Dismiss');
     del.addEventListener('click', function(e) {
       e.stopPropagation();
       var all = _load().filter(function(i) { return i.id !== item.id; });
-      _save(all);
-      _updateBadge();
-      _refreshPanel();
+      _save(all); _updateBadge(); _refreshPanel();
     });
 
     row.appendChild(ico);
@@ -389,7 +518,7 @@
 
     row.addEventListener('click', function() {
       var all = _load();
-      var n   = all.find(function(i) { return i.id === item.id; });
+      var n = all.find(function(i) { return i.id === item.id; });
       if (n) { n.read = true; _save(all); }
       _updateBadge();
       if (item.link) window.location.href = item.link;
@@ -410,19 +539,16 @@
 
   function _open() {
     _isOpen = true;
+    _currentFilter = 'all';
     _buildPanel();
-    // Mark in-flight Supabase data pull
     _pullSupabase();
     requestAnimationFrame(function() {
       var p = document.getElementById(PANEL_ID);
       if (p) p.classList.add('ant-open');
     });
-    // Mark all as read after 2 s if still open
     setTimeout(function() {
       if (!_isOpen) return;
-      var all = _load();
-      all.forEach(function(i) { i.read = true; });
-      _save(all);
+      var all = _load(); all.forEach(function(i) { i.read = true; }); _save(all);
       _updateBadge();
     }, 2000);
   }
@@ -432,15 +558,12 @@
     var p = document.getElementById(PANEL_ID);
     if (!p) return;
     p.classList.remove('ant-open');
-    setTimeout(function() {
-      if (p.parentNode) p.parentNode.removeChild(p);
-    }, 200);
+    setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 220);
   }
 
   function _toggle(e) {
     if (e) e.stopPropagation();
-    if (_isOpen) _close();
-    else         _open();
+    if (_isOpen) _close(); else _open();
   }
 
   function _refreshPanel() {
@@ -452,7 +575,7 @@
     });
   }
 
-  // ── pull real data from Supabase when panel opens ──────────
+  // ── Supabase data pull ─────────────────────────────────────
   function _getSB() {
     if (window.adminAuth && window.adminAuth.getSupabase) return window.adminAuth.getSupabase();
     if (window.supabaseClient) return window.supabaseClient;
@@ -464,10 +587,9 @@
     var sb = _getSB();
     if (!sb) return;
     var now = Date.now();
-    if (now - _lastPull < 30000) return; // max once per 30 s
+    if (now - _lastPull < 30000) return;
     _lastPull = now;
 
-    // Unread contact messages
     sb.from('contact_messages')
       .select('id,name,email,subject,message,created_at')
       .eq('status', 'unread')
@@ -479,14 +601,11 @@
           _add(
             (m.name || m.email || 'Unknown') + ' sent a message',
             m.subject || (m.message || '').slice(0, 80),
-            'message',
-            '/admin-messages.html',
-            'msg_' + m.id
+            'message', '/admin-messages.html', 'msg_' + m.id
           );
         });
       });
 
-    // New signups in the last 24 h
     var ago24 = new Date(now - 86400000).toISOString();
     sb.from('profiles')
       .select('id,email,full_name,display_name,created_at')
@@ -497,17 +616,10 @@
         if (res.error || !res.data) return;
         res.data.forEach(function(u) {
           var name = u.full_name || u.display_name || (u.email || '').split('@')[0] || 'Unknown';
-          _add(
-            name + ' joined',
-            u.email || 'New account',
-            'user',
-            '/admin-users.html',
-            'usr_' + u.id
-          );
+          _add(name + ' joined', u.email || 'New account', 'user', '/admin-users.html', 'usr_' + u.id);
         });
       });
 
-    // App errors in the last 6 h
     var ago6h = new Date(now - 6 * 3600000).toISOString();
     sb.from('app_error_logs')
       .select('id,error_type,error_message,platform,app_version,created_at')
@@ -518,67 +630,51 @@
         if (res.error || !res.data || !res.data.length) return;
         res.data.forEach(function(e) {
           var label = (e.platform ? '[' + e.platform + '] ' : '') + (e.error_type || 'error');
-          _add(
-            'App error: ' + label,
-            (e.error_message || 'No message').slice(0, 100),
-            'error',
-            '/admin-errors.html',
-            'err_' + e.id
-          );
+          _add('App error: ' + label, (e.error_message || 'No message').slice(0, 100),
+            'error', '/admin-errors.html', 'err_' + e.id);
         });
       });
   }
 
-  // ── bridge: admin-live-alerts feeds the tray in real time ──
-  // Called by _AdminLiveAlerts when it fires a live popup.
+  // ── live alerts bridge ─────────────────────────────────────
   window._antFeed = function(type, data) {
     if (type === 'new_message') {
       _add(
         (data.name || data.email || 'Unknown') + ' sent a message',
         data.subject || (data.message || '').slice(0, 80),
-        'message',
-        '/admin-messages.html',
-        data.id ? 'msg_' + data.id : null
+        'message', '/admin-messages.html', data.id ? 'msg_' + data.id : null
       );
     } else if (type === 'user_joined') {
       _add(
         (data.name || (data.email || '').split('@')[0] || 'Unknown') + ' joined',
         data.email || 'New account',
-        'user',
-        '/admin-users.html',
-        data.id ? 'usr_' + data.id : null
+        'user', '/admin-users.html', data.id ? 'usr_' + data.id : null
       );
     } else if (type === 'new_video') {
       _add(
         'New episode: ' + (data.title || 'Untitled'),
         data.description ? data.description.slice(0, 80) : 'IslamVoice',
-        'video',
-        '/admin-islamvoice-management.html',
-        data.id ? 'vid_' + data.id : null
+        'video', '/admin-islamvoice-management.html', data.id ? 'vid_' + data.id : null
       );
     }
   };
 
-  // ── wire bell button click ─────────────────────────────────
+  // ── wire bell click ────────────────────────────────────────
   function _wireBell() {
-    var btn = document.getElementById(BADGE_ID);
-    if (!btn) return;
-    var bellBtn = btn.closest('.topbar-btn') || document.getElementById('ant-bell-btn');
+    var badge = document.getElementById(BADGE_ID);
+    if (!badge) return;
+    var bellBtn = badge.closest('.topbar-btn') || document.getElementById('ant-bell-btn');
     if (!bellBtn) return;
     bellBtn.addEventListener('click', _toggle);
   }
 
-  // Close when clicking outside
   document.addEventListener('click', function(e) {
     if (!_isOpen) return;
     var panel   = document.getElementById(PANEL_ID);
-    var bellBtn = document.getElementById('ant-bell-btn') ||
-                  (document.getElementById(BADGE_ID) &&
-                   document.getElementById(BADGE_ID).closest('.topbar-btn'));
+    var badge   = document.getElementById(BADGE_ID);
+    var bellBtn = document.getElementById('ant-bell-btn') || (badge && badge.closest('.topbar-btn'));
     if (!panel) return;
-    if (!panel.contains(e.target) && (!bellBtn || !bellBtn.contains(e.target))) {
-      _close();
-    }
+    if (!panel.contains(e.target) && (!bellBtn || !bellBtn.contains(e.target))) _close();
   });
 
   // ── init ───────────────────────────────────────────────────
@@ -588,7 +684,6 @@
     _updateBadge();
     _wireBell();
 
-    // Silently pull Supabase unread messages + recent signups in background
     if (_getSB()) {
       setTimeout(_pullSupabase, 4000);
     } else {
@@ -599,15 +694,10 @@
       }, 500);
     }
 
-    // Patch _AdminLiveAlerts._enqueue to feed the tray (if loaded after us)
     var _patchAttempts = 0;
     function _patchLiveAlerts() {
       if (window._AdminLiveAlerts && !window._AdminLiveAlerts.__antPatched) {
-        var origEnqueue = window._AdminLiveAlerts._enqueueRaw;
-        if (!origEnqueue) {
-          // expose hook: live-alerts calls window._antFeed directly
-          window._AdminLiveAlerts.__antPatched = true;
-        }
+        window._AdminLiveAlerts.__antPatched = true;
       } else if (!window._AdminLiveAlerts && ++_patchAttempts < 20) {
         setTimeout(_patchLiveAlerts, 500);
       }
@@ -617,19 +707,15 @@
 
   // ── public API ─────────────────────────────────────────────
   window.adminNotifications = {
-    add: function(title, desc, type, link) {
-      _add(title, desc, type, link, null);
-    },
+    add: function(title, desc, type, link) { _add(title, desc, type, link, null); },
     test: function() {
       _add('Ahmed Hassan sent a message', 'Question about Quran recitation feature', 'message', '/admin-messages.html', null);
       _add('Sara Ahmed joined', 'sara.ahmed@example.com', 'user', '/admin-users.html', null);
       _add('New episode published', 'Tafsir Al-Baqarah — Episode 12', 'video', '/admin-islamvoice-management.html', null);
+      _add('App error: [iOS] crash', 'Fatal exception in AudioPlayer at line 42', 'error', '/admin-errors.html', null);
     },
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _init);
-  } else {
-    _init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _init);
+  else _init();
 })();
