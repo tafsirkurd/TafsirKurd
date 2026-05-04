@@ -649,7 +649,7 @@
     var me = (window.sessionStorage && sessionStorage.getItem('adminEmail')) || '';
     if (me) {
       var ago30d = new Date(now - 30 * 86400000).toISOString();
-      sb.from('admin_notifications')
+      sb.from('admin_mention_notifs')
         .select('id,type,title,body,data,source_id,created_at')
         .eq('recipient_email', me)
         .gte('created_at', ago30d)

@@ -1,7 +1,7 @@
 -- Admin notifications table — cross-admin mention alerts and system events
 -- Run this once in the Supabase SQL editor
 
-CREATE TABLE IF NOT EXISTS admin_notifications (
+CREATE TABLE IF NOT EXISTS admin_mention_notifs (
   id             uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   recipient_email text       NOT NULL,
   type           text        NOT NULL DEFAULT 'mention',
@@ -14,16 +14,16 @@ CREATE TABLE IF NOT EXISTS admin_notifications (
   created_by     text
 );
 
-CREATE INDEX IF NOT EXISTS admin_notif_recipient_idx  ON admin_notifications(recipient_email);
-CREATE INDEX IF NOT EXISTS admin_notif_created_idx    ON admin_notifications(created_at DESC);
-CREATE INDEX IF NOT EXISTS admin_notif_unread_idx     ON admin_notifications(recipient_email, read) WHERE read = false;
+CREATE INDEX IF NOT EXISTS admin_notif_recipient_idx  ON admin_mention_notifs(recipient_email);
+CREATE INDEX IF NOT EXISTS admin_notif_created_idx    ON admin_mention_notifs(created_at DESC);
+CREATE INDEX IF NOT EXISTS admin_notif_unread_idx     ON admin_mention_notifs(recipient_email, read) WHERE read = false;
 
 -- RLS — admin system, all admin users can read/write
-ALTER TABLE admin_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_mention_notifs ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "admins_all_notifications" ON admin_notifications;
+DROP POLICY IF EXISTS "admins_all_notifications" ON admin_mention_notifs;
 CREATE POLICY "admins_all_notifications"
-  ON admin_notifications
+  ON admin_mention_notifs
   FOR ALL
   USING (true)
   WITH CHECK (true);

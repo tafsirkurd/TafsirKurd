@@ -5043,7 +5043,7 @@
                 for (var mi = 0; mi < mentionedAdmins.length; mi++) {
                     var ma = mentionedAdmins[mi];
                     if (ma.email === email) continue; // never notify self
-                    await supabase.from('admin_notifications').upsert({
+                    await supabase.from('admin_mention_notifs').upsert({
                         recipient_email: ma.email,
                         type: 'mention',
                         title: myName + ' mentioned you',
@@ -5080,7 +5080,7 @@
                 if (result.error) throw result.error;
                 row.details = newDetails;
                 // Clean up mention notifications for this audit log row
-                supabase.from('admin_notifications')
+                supabase.from('admin_mention_notifs')
                     .delete()
                     .like('source_id', 'mention_' + rowId + '_%')
                     .then(function() {});
