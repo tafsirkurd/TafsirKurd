@@ -1896,7 +1896,7 @@
                         <div class="action-group">
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
                             <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
-                            <button class="btn btn-secondary" onclick="toggleQuickEdit()" id="quickEditBtn" title="Quick edit mode" style="display:none"><i data-lucide="zap"></i><span>Quick Edit</span></button>
+
                             <button class="btn btn-secondary" onclick="toggleSelectMode()" id="selectModeBtn" title="Select rows to bulk approve"><i data-lucide="check-square"></i><span>Select</span></button>
                         </div>
                         <div class="action-sep"></div>
@@ -3148,7 +3148,6 @@
                 supabase = window.adminAuth.getSupabase();
                 canEdit = window.adminAuth.hasPermission('translations', 'edit');
                 canDelete = window.adminAuth.hasPermission('translations', 'delete');
-                if (canEdit) document.getElementById('quickEditBtn').style.display = '';
                 populatePageDropdowns();
                 loadTranslations();
                 subscribeHistoryRealtime();
