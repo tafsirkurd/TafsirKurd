@@ -2931,14 +2931,12 @@
         }
 
         function _buildMentionDrop(drop, query, ta, draftKey) {
-            // Guard 1: flag set by _insertMention
-            if (_mentionJustInserted) return;
-            // Guard 2: generation counter — async .then() callbacks capture their generation;
-            // if _closeMentionDropdown fired since, generation won't match
+            // Generation counter: incremented by every close; stale async callbacks abort
             var myGeneration = _mentionGeneration;
             if (!_mentionLoaded && !_mentionLoading && supabase) {
                 _loadMentionAdmins(supabase).then(function() {
-                    if (_mentionGeneration !== myGeneration) return; // stale
+                    // Only recurse if load actually succeeded AND no close happened since
+                    if (!_mentionLoaded || _mentionGeneration !== myGeneration) return;
                     _buildMentionDrop(drop, query, ta, draftKey);
                 });
             }
@@ -2987,7 +2985,6 @@
                 drop.style.width = rect.width + 'px';
                 drop.style.top   = (rect.bottom + 4) + 'px';
             }
-            console.trace('[MentionDebug] SHOWING dropdown — justInserted=' + _mentionJustInserted + ' gen=' + _mentionGeneration + '/' + myGeneration);
             drop.hidden = false;
             drop.style.display = 'block';
         }
@@ -2998,8 +2995,6 @@
             clearTimeout(_mentionInputTimer);
             _mentionInputTimer = null;
             _mentionActiveIdx = -1;
-            var _found = document.querySelectorAll('.mention-dropdown, .mention-menu, [data-mention-dropdown]').length;
-            console.log('[MentionDebug] _closeMentionDropdown gen=' + _mentionGeneration + ' elements=' + _found);
             function _nukeEl(el) {
                 while (el.firstChild) el.removeChild(el.firstChild);
                 el.hidden = true;
@@ -3018,8 +3013,7 @@
         }
 
         function _insertMention(ta, name, drop, draftKey) {
-            console.log('[MentionDebug] _insertMention called for:', name);
-            // Step 1: hard-close everything and cancel pending timer
+            // Close immediately — increments generation so any stale async callback aborts
             _closeMentionDropdown(drop);
 
             var val = ta.value;
@@ -3031,50 +3025,20 @@
             var escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             var dupPat = new RegExp('(?:^|\\s)@' + escapedName + '(?=\\s|$)', 'i');
             if (dupPat.test(withoutPartial)) {
-                _mentionJustInserted = true;
-                setTimeout(function() { _mentionJustInserted = false; }, 250);
                 ta.focus();
                 return;
             }
 
-            // Step 2: set flag BEFORE focus so _buildMentionDrop guard blocks async callbacks
-            _mentionJustInserted = true;
             var replaced = before.replace(/@([^\s@]*)$/, '@' + name + ' ');
             ta.value = replaced + after;
             var newPos = replaced.length;
             ta.setSelectionRange(newPos, newPos);
             ta.focus();
 
-            // Step 3: reset flag after 250ms — long enough to block async .then() callbacks
-            // but short enough that typing @ again opens the dropdown normally
-            setTimeout(function() { _mentionJustInserted = false; }, 250);
-
-            // Step 4: debug log — fires 400ms after insert to catch any async reopens
-            setTimeout(function() {
-                var allDrops = [];
-                document.querySelectorAll('.mention-dropdown,.mention-menu').forEach(function(el) {
-                    var r = el.getBoundingClientRect();
-                    allDrops.push({
-                        display: el.style.display, hidden: el.hidden,
-                        visibility: el.style.visibility, childCount: el.childElementCount,
-                        visuallyVisible: r.width > 0 && r.height > 0,
-                        rect: r.top.toFixed(0) + ',' + r.left.toFixed(0) + ' ' + r.width.toFixed(0) + 'x' + r.height.toFixed(0)
-                    });
-                });
-                console.log('[MentionDebug] 400ms after insert:', {
-                    dropDisplay: drop ? drop.style.display : 'n/a',
-                    dropHidden: drop ? drop.hidden : 'n/a',
-                    justInserted: _mentionJustInserted,
-                    activeElement: document.activeElement ? document.activeElement.tagName + '#' + document.activeElement.id : 'none',
-                    allDropdowns: allDrops
-                });
-            }, 400);
-
             // Subtle flash to confirm insertion
             ta.classList.remove('mention-flash');
             void ta.offsetWidth;
             ta.classList.add('mention-flash');
-            // Save draft directly — don't dispatch input (avoids re-triggering dropdown)
             if (draftKey) {
                 if (ta.value) localStorage.setItem(draftKey, ta.value);
                 else localStorage.removeItem(draftKey);
@@ -3082,7 +3046,6 @@
         }
 
         function _handleMentionInput(ta, drop, draftKey) {
-            if (_mentionJustInserted) { _mentionJustInserted = false; _closeMentionDropdown(drop); return; }
             clearTimeout(_mentionInputTimer);
             var q = _getMentionQuery(ta);
             if (q === null) { _closeMentionDropdown(drop); return; }
@@ -3103,7 +3066,7 @@
                         e.preventDefault();
                         ta.value = val.slice(0, pos - m[0].length) + val.slice(pos);
                         ta.setSelectionRange(pos - m[0].length, pos - m[0].length);
-                        drop.style.display = 'none';
+                        _closeMentionDropdown(drop);
                         if (draftKey) {
                             if (ta.value) localStorage.setItem(draftKey, ta.value);
                             else localStorage.removeItem(draftKey);
@@ -4924,6 +4887,10 @@
         }
 
         function renderHistory(rows) {
+            // Remove orphaned mention dropdown elements left in body from previous renders
+            document.querySelectorAll('.mention-dropdown').forEach(function(el) {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            });
             var listEl = document.getElementById('historyList');
             listEl.textContent = '';
 
