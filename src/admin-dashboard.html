@@ -550,6 +550,60 @@
         .rh-gh-link{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--primary);background:var(--bg-active);border-radius:10px;padding:4px 10px;font-weight:600;text-decoration:none;transition:background .15s;}
         .rh-gh-link:hover{background:var(--bg-hover);}
 
+        /* ── Metric Skeleton Shimmer ── */
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .metric-skel {
+            display: block;
+            height: 30px;
+            width: 65%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+        }
+        .metric-skel-sm {
+            display: block;
+            height: 12px;
+            width: 50%;
+            border-radius: 4px;
+            margin-top: 6px;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+        }
+
+        /* ── Metric value flash on update ── */
+        @keyframes metricFlash {
+            0%   { color: #10b981; }
+            80%  { color: #10b981; }
+            100% { color: inherit; }
+        }
+        .metric-flash { animation: metricFlash 1.2s ease-out forwards; }
+
+        /* ── Welcome summary line ── */
+        .welcome-summary {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .ws-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+        .ws-item.ws-alert { color: #f59e0b; }
+        .ws-item.ws-red   { color: #ef4444; }
+        .ws-item.ws-green { color: #10b981; }
+        .ws-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; background: currentColor; }
+
         /* ── Collapsible Sections ── */
         .collapse-btn {
             display: flex; align-items: center; justify-content: center;
@@ -880,6 +934,7 @@
                     <div class="welcome-left">
                         <h1 id="greetingText">Good morning</h1>
                         <div class="welcome-date" id="welcomeDate"></div>
+                        <div class="welcome-summary" id="welcomeSummary" style="display:none;"></div>
                     </div>
                     <div class="welcome-right">
                         <div class="refresh-indicator" id="refreshIndicator">
@@ -904,7 +959,7 @@
                             </div>
                             <span class="metric-trend neutral" id="trendUsers">--</span>
                         </div>
-                        <div class="metric-value" id="metricUsers">--</div>
+                        <div class="metric-value" id="metricUsers"><span class="metric-skel"></span></div>
                         <div class="metric-label">Total Users</div>
                         <div class="metric-sparkline" id="sparkUsers"></div>
                     </a>
@@ -916,7 +971,7 @@
                             </div>
                             <span class="metric-trend neutral" id="trendToday">--</span>
                         </div>
-                        <div class="metric-value" id="metricActiveToday">--</div>
+                        <div class="metric-value" id="metricActiveToday"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active Today</div>
                         <div class="metric-sparkline" id="sparkToday"></div>
                     </a>
@@ -928,7 +983,7 @@
                             </div>
                             <span class="metric-trend neutral" id="trend7d">--</span>
                         </div>
-                        <div class="metric-value" id="metricActive7d">--</div>
+                        <div class="metric-value" id="metricActive7d"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active (7 days)</div>
                         <div class="metric-sparkline" id="spark7d"></div>
                     </a>
@@ -940,7 +995,7 @@
                             </div>
                             <span class="metric-trend neutral" id="trend30d">--</span>
                         </div>
-                        <div class="metric-value" id="metricActive30d">--</div>
+                        <div class="metric-value" id="metricActive30d"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active (30 days)</div>
                         <div class="metric-sparkline" id="spark30d"></div>
                     </a>
@@ -952,7 +1007,7 @@
                             </div>
                             <span class="metric-trend neutral" id="trendMessages">--</span>
                         </div>
-                        <div class="metric-value" id="metricMessages">--</div>
+                        <div class="metric-value" id="metricMessages"><span class="metric-skel"></span></div>
                         <div class="metric-label">Unread Messages</div>
                         <div class="metric-sparkline" id="sparkMessages"></div>
                     </a>
@@ -964,7 +1019,7 @@
                             </div>
                             <span class="metric-trend neutral" id="trendReaders">--</span>
                         </div>
-                        <div class="metric-value" id="metricReaders">--</div>
+                        <div class="metric-value" id="metricReaders"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active Readers</div>
                         <div class="metric-sparkline" id="sparkReaders"></div>
                     </a>
@@ -975,9 +1030,9 @@
                                 <span class="online-pulse"></span>
                             </div>
                         </div>
-                        <div class="metric-value" id="metricOnline">--</div>
+                        <div class="metric-value" id="metricOnline"><span class="metric-skel"></span></div>
                         <div class="metric-label">Online Now</div>
-                        <div class="online-platform-row" id="dashOnlinePlatforms"></div>
+                        <div class="online-platform-row" id="dashOnlinePlatforms"><span class="metric-skel-sm"></span></div>
                     </a>
                 </div>
 
@@ -1593,9 +1648,28 @@
         function refreshDashboard() {
             var btn = document.getElementById('refreshBtn');
             if (btn) btn.disabled = true;
+            var icon = btn && btn.querySelector('i[data-lucide="refresh-cw"]');
+            if (icon) icon.style.animation = 'spin 0.7s linear infinite';
             loadDashboardData().finally(function() {
                 if (btn) btn.disabled = false;
+                if (icon) icon.style.animation = '';
             });
+        }
+
+        /* ── Welcome summary ── */
+        var _wsSummaryState = { tasks: null, unread: null, inProgress: null };
+        function updateWelcomeSummary() {
+            var el = document.getElementById('welcomeSummary');
+            if (!el) return;
+            var s = _wsSummaryState;
+            if (s.tasks === null && s.unread === null) return;
+            var parts = [];
+            if (s.unread > 0) parts.push('<span class="ws-item ws-red"><span class="ws-dot"></span>' + s.unread + ' unread</span>');
+            if (s.tasks > 0)  parts.push('<span class="ws-item ws-alert"><span class="ws-dot"></span>' + s.tasks + ' due today</span>');
+            if (s.inProgress > 0) parts.push('<span class="ws-item"><span class="ws-dot" style="background:var(--primary)"></span>' + s.inProgress + ' in progress</span>');
+            if (!parts.length)  parts.push('<span class="ws-item ws-green"><span class="ws-dot"></span>All clear</span>');
+            el.innerHTML = parts.join('<span style="color:var(--border-light);font-size:10px">·</span>');
+            el.style.display = 'flex';
         }
 
         function getTimeAgo(date) {
@@ -1615,23 +1689,36 @@
         function setMetric(id, value) {
             var el = document.getElementById(id);
             if (!el) return;
-            if (value === null || value === undefined) { el.textContent = '--'; return; }
+            if (value === null || value === undefined) { el.innerHTML = ''; el.textContent = '--'; return; }
+
             var prev = _metricPrev[id];
+            var isFirst = prev === undefined;
             _metricPrev[id] = value;
-            // Count-up animation: 600ms, only when value actually changed
-            if (prev === undefined || prev === value) { el.textContent = value.toLocaleString(); return; }
-            var start = typeof prev === 'number' ? prev : 0;
+
+            // Count-up animation
+            var start = (typeof prev === 'number') ? prev : 0;
             var end = value;
-            var duration = 600;
+            var duration = isFirst ? 700 : 500;
             var startTime = null;
+            var shouldFlash = !isFirst && end !== start;
+
+            // Clear skeleton / old content before animating
+            el.innerHTML = '';
+
             function step(ts) {
                 if (!startTime) startTime = ts;
                 var progress = Math.min((ts - startTime) / duration, 1);
-                // ease-out cubic
                 var eased = 1 - Math.pow(1 - progress, 3);
                 var current = Math.round(start + (end - start) * eased);
                 el.textContent = current.toLocaleString();
-                if (progress < 1) requestAnimationFrame(step);
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else if (shouldFlash) {
+                    el.classList.remove('metric-flash');
+                    void el.offsetWidth; // reflow to restart animation
+                    el.classList.add('metric-flash');
+                    setTimeout(function() { el.classList.remove('metric-flash'); }, 1300);
+                }
             }
             requestAnimationFrame(step);
         }
@@ -2527,6 +2614,9 @@
             var pct = total > 0 ? Math.round((doneWeek / total) * 100) : 0;
 
             // Update stat counts
+            _wsSummaryState.tasks = today.length;
+            _wsSummaryState.inProgress = inProgress.length;
+            updateWelcomeSummary();
             document.getElementById('mtTodayCount').textContent   = today.length;
             document.getElementById('mtOverdueCount').textContent = overdue.length;
             document.getElementById('mtInProgressCount').textContent = inProgress.length;
@@ -2685,6 +2775,8 @@
             if (unreadCount > 0) {
                 document.title = '(' + unreadCount + ') Dashboard - TafsirKurd Admin';
             }
+            _wsSummaryState.unread = unreadCount || 0;
+            updateWelcomeSummary();
 
             var messagesBadge = document.getElementById('messages-badge');
             if (messagesBadge && unreadCount > 0) {
@@ -3061,7 +3153,8 @@
                 if (p.ios)     parts.push('iOS ' + p.ios);
                 if (p.android) parts.push('Android ' + p.android);
                 if (p.web)     parts.push('Web ' + p.web);
-                document.getElementById('dashOnlinePlatforms').textContent = parts.join(' · ');
+                var dpEl = document.getElementById('dashOnlinePlatforms');
+                if (dpEl) dpEl.textContent = parts.join(' · ');
 
                 // Render who's online panel
                 renderWhoOnline(data.users || []);
