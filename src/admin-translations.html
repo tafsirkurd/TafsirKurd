@@ -2879,6 +2879,7 @@
 
         // ── @mention autocomplete logic ────────────────────────
         var _mentionActiveIdx = -1;
+        var _mentionJustInserted = false;
         var _MENTION_PALETTE = [
             {bg:'rgba(99,102,241,.18)',color:'#818cf8'},
             {bg:'rgba(16,185,129,.18)',color:'#34d399'},
@@ -2956,6 +2957,9 @@
         }
 
         function _insertMention(ta, name, drop, draftKey) {
+            // Hide immediately — before any focus/repaint
+            if (drop) { drop.style.display = 'none'; drop.setAttribute('data-key', ''); }
+            _mentionJustInserted = true;
             var val = ta.value;
             var pos = ta.selectionStart;
             var before = val.slice(0, pos);
@@ -2970,10 +2974,10 @@
                 if (ta.value) localStorage.setItem(draftKey, ta.value);
                 else localStorage.removeItem(draftKey);
             }
-            if (drop) drop.style.display = 'none';
         }
 
         function _handleMentionInput(ta, drop, draftKey) {
+            if (_mentionJustInserted) { _mentionJustInserted = false; return; }
             var q = _getMentionQuery(ta);
             if (q === null) { drop.style.display = 'none'; return; }
             _buildMentionDrop(drop, q, ta, draftKey);
@@ -4582,6 +4586,8 @@
                 document.body.classList.remove('history-open');
                 clearInterval(_historyPollInterval);
                 _historyPollInterval = null;
+                // Hide any body-appended mention dropdowns so they don't ghost
+                document.querySelectorAll('.mention-dropdown').forEach(function(d) { d.style.display = 'none'; });
             } else {
                 panel.classList.add('open');
                 overlay.classList.add('open');
