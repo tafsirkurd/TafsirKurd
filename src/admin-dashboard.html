@@ -1645,15 +1645,28 @@
            ADMIN ACTIONS LOG
            ═══════════════════════════════════════════════ */
         var ACTION_META = {
-            hadith_add:  { icon: 'fa-scroll',          color: '#8b5cf6', label: 'Hadith Added' },
-            hadith_edit: { icon: 'fa-scroll',          color: '#8b5cf6', label: 'Hadith Updated' },
-            dua_add:     { icon: 'fa-person-praying',  color: '#10b981', label: 'Dua Added' },
-            dua_edit:    { icon: 'fa-person-praying',  color: '#10b981', label: 'Dua Updated' },
-            adhkar_add:  { icon: 'fa-heart',           color: '#f59e0b', label: 'Adhkar Added' },
-            adhkar_edit: { icon: 'fa-heart',           color: '#f59e0b', label: 'Adhkar Updated' },
-            book_add:    { icon: 'fa-book-open',       color: '#3b82f6', label: 'Book Added' },
-            book_edit:   { icon: 'fa-book-open',       color: '#3b82f6', label: 'Book Updated' },
-            notif_send:  { icon: 'fa-bell',            color: '#ef4444', label: 'Notification Sent' },
+            hadith_add:         { icon: 'fa-scroll',          color: '#8b5cf6', label: 'Hadith Added' },
+            hadith_edit:        { icon: 'fa-scroll',          color: '#8b5cf6', label: 'Hadith Updated' },
+            hadith_delete:      { icon: 'fa-scroll',          color: '#8b5cf6', label: 'Hadith Deleted' },
+            dua_add:            { icon: 'fa-person-praying',  color: '#10b981', label: 'Dua Added' },
+            dua_edit:           { icon: 'fa-person-praying',  color: '#10b981', label: 'Dua Updated' },
+            dua_delete:         { icon: 'fa-person-praying',  color: '#10b981', label: 'Dua Deleted' },
+            adhkar_add:         { icon: 'fa-heart',           color: '#f59e0b', label: 'Adhkar Added' },
+            adhkar_edit:        { icon: 'fa-heart',           color: '#f59e0b', label: 'Adhkar Updated' },
+            adhkar_delete:      { icon: 'fa-heart',           color: '#f59e0b', label: 'Adhkar Deleted' },
+            book_add:           { icon: 'fa-book-open',       color: '#3b82f6', label: 'Book Added' },
+            book_edit:          { icon: 'fa-book-open',       color: '#3b82f6', label: 'Book Updated' },
+            book_delete:        { icon: 'fa-book-open',       color: '#3b82f6', label: 'Book Deleted' },
+            tasbih_add:         { icon: 'fa-circle-dot',      color: '#6366f1', label: 'Dhikr Added' },
+            tasbih_edit:        { icon: 'fa-circle-dot',      color: '#6366f1', label: 'Dhikr Updated' },
+            tasbih_delete:      { icon: 'fa-circle-dot',      color: '#6366f1', label: 'Dhikr Deleted' },
+            notif_send:         { icon: 'fa-bell',            color: '#ef4444', label: 'Notification Sent' },
+            i18n_version_bump:  { icon: 'fa-language',        color: '#06b6d4', label: 'Translation Cache Cleared' },
+            translation_edit:   { icon: 'fa-pen',             color: '#6366f1', label: 'Translation Edited' },
+            mark_add:           { icon: 'fa-bookmark',        color: '#f59e0b', label: 'Mark Added' },
+            mark_remove:        { icon: 'fa-bookmark',        color: '#f59e0b', label: 'Mark Removed' },
+            login:              { icon: 'fa-right-to-bracket', color: '#10b981', label: 'Admin Login' },
+            logout:             { icon: 'fa-right-from-bracket', color: '#6b7280', label: 'Admin Logout' },
         };
 
         function buildAdminActions(logs) {
