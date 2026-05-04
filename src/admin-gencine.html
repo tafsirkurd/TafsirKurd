@@ -2378,7 +2378,7 @@ function renderAdhkarList() {
         arEl.textContent = item.ar;
         arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-bottom:4px';
         var meta = mke('div','item-card-meta');
-        meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + ' · order: ' + item.sort_order + (item.active ? '' : ' · hidden');
+        meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + (item.active ? '' : ' · hidden');
         body.appendChild(catBadge);
         var aTimeLeft = _badgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
