@@ -550,6 +550,44 @@
         .rh-gh-link{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--primary);background:var(--bg-active);border-radius:10px;padding:4px 10px;font-weight:600;text-decoration:none;transition:background .15s;}
         .rh-gh-link:hover{background:var(--bg-hover);}
 
+        /* ── Needs Attention Banner ── */
+        .na-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.15s, transform 0.15s;
+            color: inherit;
+        }
+        .na-item:hover { opacity: 0.88; transform: translateY(-1px); }
+        .na-item.na-red {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: #dc2626;
+        }
+        .na-item.na-amber {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.25);
+            color: #b45309;
+        }
+        .na-item.na-blue {
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.2);
+            color: #2563eb;
+        }
+        .na-count {
+            font-size: 15px;
+            font-weight: 800;
+            min-width: 20px;
+            text-align: center;
+        }
+        .na-icon { font-size: 15px; }
+
         /* ── Responsive ── */
         @media (max-width: 768px) {
             .content-area {
@@ -791,7 +829,8 @@
             </header>
 
             <div class="content-area">
-                <!-- ══ Welcome Header ══ -->
+
+<!-- ══ Welcome Header ══ -->
                 <div class="welcome-header">
                     <div class="welcome-left">
                         <h1 id="greetingText">Good morning</h1>
@@ -896,243 +935,12 @@
                     </div>
                 </div>
 
-                <!-- ══ Who's Online ══ -->
-                <div class="chart-card card-animate" id="whoOnlinePanel" style="display:none;animation-delay:390ms;margin-bottom:28px;padding:16px 20px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                            <span class="online-pulse"></span>
-                            Who's Online
-                        </div>
-                        <span style="font-size:12px;color:var(--text-tertiary);" id="whoOnlineCount"></span>
-                    </div>
-                    <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
+                                <!-- ══ Needs Attention ══ -->
+                <div id="needsAttentionBar" style="display:none;margin-bottom:20px;">
+                    <div id="needsAttentionItems" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
                 </div>
 
-                <!-- ══ Admin Team Online ══ -->
-                <div class="ato-card card-animate" id="adminTeamOnlinePanel" style="display:none;">
-                    <div class="ato-header">
-                        <div class="ato-title">
-                            <span class="online-pulse"></span>
-                            Admin Team Online
-                            <span class="ato-badge" id="atoCount">0</span>
-                        </div>
-                        <a href="/admin-account-management.html" class="ato-link">Manage →</a>
-                    </div>
-                    <div class="ato-list" id="atoList"></div>
-                </div>
-
-                <!-- ══ Admin Actions Log ══ -->
-                <div class="timeline-section card-animate" style="animation-delay:360ms">
-                    <div class="timeline-header">
-                        <div class="timeline-title">⚙️ Recent Admin Actions</div>
-                    </div>
-                    <div class="timeline-list" id="adminActionsLog">
-                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
-                    </div>
-                </div>
-
-                <!-- ══ Prayer Times Health ══ -->
-                <div class="card card-animate" id="prayerHealthCard" style="animation-delay:400ms;margin-bottom:20px;">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
-                            Prayer Times Health
-                        </h3>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                            <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
-                            <button onclick="forcePrayerCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
-                                Force Refresh All Phones
-                            </button>
-                        </div>
-                    </div>
-                    <div id="prayerHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
-                        <div style="text-align:center;padding:0;"></div>
-                    </div>
-                    <div class="table-container" style="max-height:320px;overflow-y:auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Platform</th>
-                                    <th>City</th>
-                                    <th>Status</th>
-                                    <th>Cache Age</th>
-                                    <th>Fajr</th>
-                                    <th>Changed From</th>
-                                    <th>Notif</th>
-                                </tr>
-                            </thead>
-                            <tbody id="prayerHealthBody">
-                                <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ══ Translation Cache Health ══ -->
-                <div class="card card-animate" id="i18nHealthCard" style="animation-delay:420ms;margin-bottom:20px;">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
-                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
-                            Translation Cache Health
-                        </h3>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                            <span id="i18nVersionBadge" style="font-size:11px;color:var(--text-tertiary);padding:3px 10px;background:var(--bg-hover);border-radius:12px;font-weight:600;">version —</span>
-                            <span id="i18nPublishedBadge" style="font-size:11px;color:var(--text-tertiary);">last published —</span>
-                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;" title="Toggle anonymous health reporting from all devices">
-                                <span>Reports</span>
-                                <input type="checkbox" id="i18nReportingToggle" onchange="toggleI18nReporting(this.checked)" style="cursor:pointer;">
-                            </label>
-                            <button onclick="validateI18nTranslations()" style="font-size:12px;color:#fff;background:#8b5cf6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
-                                Validate
-                            </button>
-                            <button onclick="forceI18nCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps i18n_cache_version — all devices clear translation cache on next open">
-                                Force Clear All Caches
-                            </button>
-                        </div>
-                    </div>
-                    <div id="i18nHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
-                        <div style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">Loading...</div>
-                    </div>
-                    <div class="table-container" style="max-height:280px;overflow-y:auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Platform</th>
-                                    <th>Status</th>
-                                    <th>Layer</th>
-                                    <th>Keys</th>
-                                    <th>Bundle</th>
-                                    <th>Fetch</th>
-                                    <th>Cache Ver</th>
-                                    <th>Error</th>
-                                </tr>
-                            </thead>
-                            <tbody id="i18nHealthBody">
-                                <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ══ System Widgets Row ══ -->
-                <div class="system-widgets-row" id="systemWidgetsRow">
-
-                    <!-- App Errors Widget -->
-                    <div class="card card-animate" style="animation-delay:430ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#ef4444;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Errors</span>
-                            </h3>
-                            <a href="/admin-errors.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
-                        </div>
-                        <div style="padding:12px 16px 16px">
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-                                <div style="background:var(--bg-active);border-radius:8px;padding:12px;text-align:center;min-width:0">
-                                    <div style="font-size:22px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-errors-24h">—</div>
-                                    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Last 24h</div>
-                                </div>
-                                <div style="background:var(--bg-active);border-radius:8px;padding:12px;text-align:center;min-width:0">
-                                    <div style="font-size:22px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-errors-7d">—</div>
-                                    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Last 7 Days</div>
-                                </div>
-                            </div>
-                            <div id="dash-errors-types" style="display:flex;flex-direction:column;gap:6px">
-                                <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Notification Analytics Widget -->
-                    <div class="card card-animate" style="animation-delay:435ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#3b82f6;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Notification Analytics</span>
-                            </h3>
-                            <a href="/admin-notification-analytics.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">Full report</a>
-                        </div>
-                        <div style="padding:12px 16px 16px">
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
-                                    <div style="font-size:18px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-notif-campaigns">—</div>
-                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-tertiary);margin-top:3px">Campaigns</div>
-                                </div>
-                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
-                                    <div style="font-size:18px;font-weight:800;color:#10b981;overflow:hidden;text-overflow:ellipsis" id="dash-notif-rate">—</div>
-                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-tertiary);margin-top:3px">Avg Rate</div>
-                                </div>
-                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
-                                    <div style="font-size:18px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-notif-delivered">—</div>
-                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-tertiary);margin-top:3px">Delivered</div>
-                                </div>
-                            </div>
-                            <div id="dash-notif-platform" style="display:flex;flex-direction:column;gap:6px">
-                                <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- App Versions Widget -->
-                    <div class="card card-animate" style="animation-delay:440ms">
-                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
-                                <span style="flex-shrink:0;width:8px;height:8px;background:#10b981;border-radius:50%"></span>
-                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Versions</span>
-                            </h3>
-                            <a href="/admin-app-versions.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
-                        </div>
-                        <div style="padding:12px 16px 16px">
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
-                                    <div style="font-size:20px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-ver-total">—</div>
-                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Devices</div>
-                                </div>
-                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
-                                    <div style="font-size:20px;font-weight:800;color:#f59e0b;overflow:hidden;text-overflow:ellipsis" id="dash-ver-active7d">—</div>
-                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Active 7d</div>
-                                </div>
-                            </div>
-                            <div id="dash-ver-builds" style="display:flex;flex-direction:column;gap:6px">
-                                <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- ══ Release History ══ -->
-                <div class="card card-animate" style="margin-bottom:28px;animation-delay:445ms">
-                    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:9px;margin:0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>
-                            Release History
-                            <span style="font-size:11px;font-weight:600;color:var(--text-tertiary);background:var(--bg-hover);padding:2px 8px;border-radius:8px">main</span>
-                        </h3>
-                        <div style="display:flex;align-items:center;gap:8px">
-                            <span id="rhFetchTime" style="font-size:11px;color:var(--text-tertiary)"></span>
-                            <button class="rh-btn" id="rhRefreshBtn" onclick="fetchReleaseHistory()">
-                                <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> Refresh
-                            </button>
-                            <a class="rh-gh-link" href="https://github.com/tafsirkurd/TafsirKurd/commits/main" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="flex-shrink:0"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-                                GitHub
-                            </a>
-                        </div>
-                    </div>
-                    <div id="rhPlatformBar" class="rh-platform-bar" style="display:none"></div>
-                    <div id="rhPlatformDivider" class="rh-divider" style="display:none"></div>
-                    <div id="releaseHistoryBody">
-                        <div style="padding:24px 20px;color:var(--text-tertiary);font-size:13px;display:flex;align-items:center;gap:9px">
-                            <div style="width:15px;height:15px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
-                            Loading release history…
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ══ Charts ══ -->
+<!-- ══ Charts ══ -->
                 <div class="charts-grid">
                     <div class="chart-card card-animate" style="animation-delay:450ms">
                         <div class="chart-card-header">
@@ -1250,6 +1058,128 @@
                     </div>
                 </div>
 
+                <!-- ══ System Widgets Row ══ -->
+                <div class="system-widgets-row" id="systemWidgetsRow">
+
+                    <!-- App Errors Widget -->
+                    <div class="card card-animate" style="animation-delay:430ms">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
+                                <span style="flex-shrink:0;width:8px;height:8px;background:#ef4444;border-radius:50%"></span>
+                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Errors</span>
+                            </h3>
+                            <a href="/admin-errors.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        </div>
+                        <div style="padding:12px 16px 16px">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+                                <div style="background:var(--bg-active);border-radius:8px;padding:12px;text-align:center;min-width:0">
+                                    <div style="font-size:22px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-errors-24h">—</div>
+                                    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Last 24h</div>
+                                </div>
+                                <div style="background:var(--bg-active);border-radius:8px;padding:12px;text-align:center;min-width:0">
+                                    <div style="font-size:22px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-errors-7d">—</div>
+                                    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Last 7 Days</div>
+                                </div>
+                            </div>
+                            <div id="dash-errors-types" style="display:flex;flex-direction:column;gap:6px">
+                                <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Analytics Widget -->
+                    <div class="card card-animate" style="animation-delay:435ms">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
+                                <span style="flex-shrink:0;width:8px;height:8px;background:#3b82f6;border-radius:50%"></span>
+                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Notification Analytics</span>
+                            </h3>
+                            <a href="/admin-notification-analytics.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">Full report</a>
+                        </div>
+                        <div style="padding:12px 16px 16px">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
+                                    <div style="font-size:18px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-notif-campaigns">—</div>
+                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-tertiary);margin-top:3px">Campaigns</div>
+                                </div>
+                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
+                                    <div style="font-size:18px;font-weight:800;color:#10b981;overflow:hidden;text-overflow:ellipsis" id="dash-notif-rate">—</div>
+                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-tertiary);margin-top:3px">Avg Rate</div>
+                                </div>
+                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
+                                    <div style="font-size:18px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-notif-delivered">—</div>
+                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-tertiary);margin-top:3px">Delivered</div>
+                                </div>
+                            </div>
+                            <div id="dash-notif-platform" style="display:flex;flex-direction:column;gap:6px">
+                                <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- App Versions Widget -->
+                    <div class="card card-animate" style="animation-delay:440ms">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
+                                <span style="flex-shrink:0;width:8px;height:8px;background:#10b981;border-radius:50%"></span>
+                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">App Versions</span>
+                            </h3>
+                            <a href="/admin-app-versions.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        </div>
+                        <div style="padding:12px 16px 16px">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
+                                    <div style="font-size:20px;font-weight:800;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis" id="dash-ver-total">—</div>
+                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Devices</div>
+                                </div>
+                                <div style="background:var(--bg-active);border-radius:8px;padding:10px;text-align:center;min-width:0">
+                                    <div style="font-size:20px;font-weight:800;color:#f59e0b;overflow:hidden;text-overflow:ellipsis" id="dash-ver-active7d">—</div>
+                                    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:3px">Active 7d</div>
+                                </div>
+                            </div>
+                            <div id="dash-ver-builds" style="display:flex;flex-direction:column;gap:6px">
+                                <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ══ Who's Online ══ -->
+                <div class="chart-card card-animate" id="whoOnlinePanel" style="display:none;animation-delay:390ms;margin-bottom:28px;padding:16px 20px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+                            <span class="online-pulse"></span>
+                            Who's Online
+                        </div>
+                        <span style="font-size:12px;color:var(--text-tertiary);" id="whoOnlineCount"></span>
+                    </div>
+                    <div id="whoOnlineList" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;"></div>
+                </div>
+
+                <!-- ══ Admin Team Online ══ -->
+                <div class="ato-card card-animate" id="adminTeamOnlinePanel" style="display:none;">
+                    <div class="ato-header">
+                        <div class="ato-title">
+                            <span class="online-pulse"></span>
+                            Admin Team Online
+                            <span class="ato-badge" id="atoCount">0</span>
+                        </div>
+                        <a href="/admin-account-management.html" class="ato-link">Manage →</a>
+                    </div>
+                    <div class="ato-list" id="atoList"></div>
+                </div>
+
+                <!-- ══ Admin Actions Log ══ -->
+                <div class="timeline-section card-animate" style="animation-delay:360ms">
+                    <div class="timeline-header">
+                        <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                    </div>
+                    <div class="timeline-list" id="adminActionsLog">
+                        <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
+                    </div>
+                </div>
+
                 <!-- ══ Activity Timeline ══ -->
                 <div class="timeline-section card-animate" style="animation-delay:620ms">
                     <div class="timeline-header">
@@ -1257,6 +1187,120 @@
                     </div>
                     <div class="timeline-list" id="timelineList">
                         <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
+                    </div>
+                </div>
+
+                <!-- ══ Release History ══ -->
+                <div class="card card-animate" style="margin-bottom:28px;animation-delay:445ms">
+                    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:9px;margin:0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>
+                            Release History
+                            <span style="font-size:11px;font-weight:600;color:var(--text-tertiary);background:var(--bg-hover);padding:2px 8px;border-radius:8px">main</span>
+                        </h3>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <span id="rhFetchTime" style="font-size:11px;color:var(--text-tertiary)"></span>
+                            <button class="rh-btn" id="rhRefreshBtn" onclick="fetchReleaseHistory()">
+                                <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> Refresh
+                            </button>
+                            <a class="rh-gh-link" href="https://github.com/tafsirkurd/TafsirKurd/commits/main" target="_blank" rel="noopener">
+                                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="flex-shrink:0"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                    <div id="rhPlatformBar" class="rh-platform-bar" style="display:none"></div>
+                    <div id="rhPlatformDivider" class="rh-divider" style="display:none"></div>
+                    <div id="releaseHistoryBody">
+                        <div style="padding:24px 20px;color:var(--text-tertiary);font-size:13px;display:flex;align-items:center;gap:9px">
+                            <div style="width:15px;height:15px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
+                            Loading release history…
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ Prayer Times Health ══ -->
+                <div class="card card-animate" id="prayerHealthCard" style="animation-delay:400ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
+                            Prayer Times Health
+                        </h3>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
+                            <button onclick="forcePrayerCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
+                                Force Refresh All Phones
+                            </button>
+                        </div>
+                    </div>
+                    <div id="prayerHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
+                        <div style="text-align:center;padding:0;"></div>
+                    </div>
+                    <div class="table-container" style="max-height:320px;overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Platform</th>
+                                    <th>City</th>
+                                    <th>Status</th>
+                                    <th>Cache Age</th>
+                                    <th>Fajr</th>
+                                    <th>Changed From</th>
+                                    <th>Notif</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prayerHealthBody">
+                                <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ══ Translation Cache Health ══ -->
+                <div class="card card-animate" id="i18nHealthCard" style="animation-delay:420ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
+                            Translation Cache Health
+                        </h3>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <span id="i18nVersionBadge" style="font-size:11px;color:var(--text-tertiary);padding:3px 10px;background:var(--bg-hover);border-radius:12px;font-weight:600;">version —</span>
+                            <span id="i18nPublishedBadge" style="font-size:11px;color:var(--text-tertiary);">last published —</span>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;" title="Toggle anonymous health reporting from all devices">
+                                <span>Reports</span>
+                                <input type="checkbox" id="i18nReportingToggle" onchange="toggleI18nReporting(this.checked)" style="cursor:pointer;">
+                            </label>
+                            <button onclick="validateI18nTranslations()" style="font-size:12px;color:#fff;background:#8b5cf6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
+                                Validate
+                            </button>
+                            <button onclick="forceI18nCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps i18n_cache_version — all devices clear translation cache on next open">
+                                Force Clear All Caches
+                            </button>
+                        </div>
+                    </div>
+                    <div id="i18nHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
+                        <div style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">Loading...</div>
+                    </div>
+                    <div class="table-container" style="max-height:280px;overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Platform</th>
+                                    <th>Status</th>
+                                    <th>Layer</th>
+                                    <th>Keys</th>
+                                    <th>Bundle</th>
+                                    <th>Fetch</th>
+                                    <th>Cache Ver</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="i18nHealthBody">
+                                <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -2412,6 +2456,28 @@
             document.getElementById('mtProgressPct').textContent  = pct + '%';
             document.getElementById('myTasksUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 
+            // Update banner with overdue count (keep other values from last dashboard load)
+            var _bar = document.getElementById('needsAttentionItems');
+            if (_bar) {
+                var _curAmber = _bar.querySelector('.na-item.na-amber');
+                if (_curAmber) {
+                    _curAmber.querySelector('.na-count').textContent = overdue.length;
+                    if (!overdue.length) _curAmber.style.display = 'none'; else _curAmber.style.display = '';
+                } else if (overdue.length > 0) {
+                    // Banner may have been rendered before tasks loaded — refresh it
+                    var _prevBar = document.getElementById('needsAttentionBar');
+                    if (_prevBar) {
+                        var _amberHtml = '<a class="na-item na-amber" href="/admin-tasks.html">'
+                            + '<span class="na-icon">⚠</span>'
+                            + '<span class="na-count">' + overdue.length + '</span>'
+                            + (overdue.length === 1 ? 'Overdue task' : 'Overdue tasks')
+                            + '</a>';
+                        _bar.insertAdjacentHTML('afterbegin', _amberHtml);
+                        _prevBar.style.display = '';
+                    }
+                }
+            }
+
             // Next 5 upcoming non-done tasks (overdue first, then by due_at, then no-due)
             var urgent = tasks.filter(function(t){ return t.status !== 'done' && t.due_at && new Date(t.due_at) < todayStart; });
             var upcoming = tasks.filter(function(t){ return t.status !== 'done' && t.due_at && new Date(t.due_at) >= todayStart; });
@@ -2605,6 +2671,14 @@
             buildAppVersionsWidget(val(21));
             updateRHPlatformBar(val(21));
 
+            // ─── Needs Attention ───
+            var _errData = val(19);
+            updateNeedsAttention({
+                messages:     unreadCount || 0,
+                overdueTasks: 0,  // filled in by loadMyTasks
+                errors24h:    (_errData && _errData.success) ? (_errData.counts.last24h || 0) : 0
+            });
+
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));
 
@@ -2619,6 +2693,46 @@
             lucide.createIcons();
         }
 
+
+        /* ═══════════════════════════════════════════════
+           NEEDS ATTENTION BANNER
+           ═══════════════════════════════════════════════ */
+        function updateNeedsAttention(opts) {
+            // opts: { messages, overdueTasks, errors24h }
+            var bar = document.getElementById('needsAttentionBar');
+            var items = document.getElementById('needsAttentionItems');
+            if (!bar || !items) return;
+
+            var html = '';
+            if (opts.messages > 0) {
+                html += '<a class="na-item na-red" href="/admin-messages.html">'
+                    + '<span class="na-icon">✉</span>'
+                    + '<span class="na-count">' + opts.messages + '</span>'
+                    + (opts.messages === 1 ? 'Unread message' : 'Unread messages')
+                    + '</a>';
+            }
+            if (opts.overdueTasks > 0) {
+                html += '<a class="na-item na-amber" href="/admin-tasks.html">'
+                    + '<span class="na-icon">⚠</span>'
+                    + '<span class="na-count">' + opts.overdueTasks + '</span>'
+                    + (opts.overdueTasks === 1 ? 'Overdue task' : 'Overdue tasks')
+                    + '</a>';
+            }
+            if (opts.errors24h > 0) {
+                html += '<a class="na-item na-blue" href="/admin-errors.html">'
+                    + '<span class="na-icon">⚡</span>'
+                    + '<span class="na-count">' + opts.errors24h + '</span>'
+                    + 'App error' + (opts.errors24h === 1 ? '' : 's') + ' (24h)'
+                    + '</a>';
+            }
+
+            if (html) {
+                items.innerHTML = html;
+                bar.style.display = '';
+            } else {
+                bar.style.display = 'none';
+            }
+        }
 
         /* ═══════════════════════════════════════════════
            REFRESH INDICATOR
