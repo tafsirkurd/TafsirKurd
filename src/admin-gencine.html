@@ -1734,7 +1734,7 @@ function renderDuaCatFilter() {
     bar.appendChild(allBtn);
     allCategories.forEach(function(cat) {
         var btn = mke('button', 'filter-chip' + (duaFilterCat === cat.key ? ' on' : ''));
-        btn.textContent = cat.label_ku;
+        btn.textContent = cat.key;
         btn.onclick = function() { duaFilterCat = cat.key; renderDuaList(); renderDuaCatFilter(); };
         bar.appendChild(btn);
     });
