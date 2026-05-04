@@ -492,7 +492,7 @@
 /* ═══════════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════════ */
-var supabase = null;
+var _sb = null;
 var allTasks = [];
 var filteredTasks = [];
 var currentView = 'board';
@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     var isAuth = await window.adminAuth.checkAuth();
     if(!isAuth) return;
     currentUser = sessionStorage.getItem('adminEmail') || 'admin';
-    supabase = window.adminAuth.getSupabase();
+    _sb = window.adminAuth.getSupabase();
     lucide.createIcons();
     setupSidebar();
     setupDrag();
@@ -535,9 +535,9 @@ document.addEventListener('DOMContentLoaded', async function(){
    DATA
 ═══════════════════════════════════════════════════════════ */
 async function loadTasks(){
-    if(!supabase) return;
+    if(!_sb) return;
     try {
-        var {data, error} = await supabase
+        var {data, error} = await _sb
             .from('admin_tasks')
             .select('*')
             .eq('archived', false)
@@ -569,13 +569,13 @@ async function saveModal(){
     try {
         if(modalEditId){
             payload.updated_by = currentUser;
-            var {error} = await supabase.from('admin_tasks').update(payload).eq('id', modalEditId);
+            var {error} = await _sb.from('admin_tasks').update(payload).eq('id', modalEditId);
             if(error) throw error;
         } else {
             payload.created_by = currentUser;
             payload.sort_order = allTasks.length;
             if(payload.status === 'done') payload.completed_at = new Date().toISOString();
-            var {error} = await supabase.from('admin_tasks').insert(payload);
+            var {error} = await _sb.from('admin_tasks').insert(payload);
             if(error) throw error;
         }
         closeModal();
@@ -606,7 +606,7 @@ async function saveDetail(){
         if(!existing || existing.status !== 'done') payload.completed_at = new Date().toISOString();
     }
     try {
-        var {error} = await supabase.from('admin_tasks').update(payload).eq('id', editingTaskId);
+        var {error} = await _sb.from('admin_tasks').update(payload).eq('id', editingTaskId);
         if(error) throw error;
         closeDetail();
         await loadTasks();
@@ -621,7 +621,7 @@ async function deleteTask(){
     if(!confirm('Archive this task? It will be hidden but not deleted.')) return;
     try {
         var task = allTasks.find(function(t){return t.id===editingTaskId;});
-        var {error} = await supabase.from('admin_tasks').update({archived:true, updated_by:currentUser}).eq('id', editingTaskId);
+        var {error} = await _sb.from('admin_tasks').update({archived:true, updated_by:currentUser}).eq('id', editingTaskId);
         if(error) throw error;
         closeDetail();
         await loadTasks();
@@ -643,7 +643,7 @@ async function moveTask(id, newStatus){
     try {
         var upd = {status: newStatus, updated_by: currentUser};
         if(newStatus === 'done') upd.completed_at = new Date().toISOString();
-        await supabase.from('admin_tasks').update(upd).eq('id', id);
+        await _sb.from('admin_tasks').update(upd).eq('id', id);
         logAudit('task_update', {id: id, status: newStatus});
     } catch(e){
         console.error('[Tasks] moveTask failed', e);
@@ -658,7 +658,7 @@ async function addComment(){
     if(!text) return;
     inp.value = '';
     try {
-        var {error} = await supabase.from('admin_task_comments').insert({
+        var {error} = await _sb.from('admin_task_comments').insert({
             task_id: editingTaskId,
             content: text,
             created_by: currentUser
@@ -671,8 +671,8 @@ async function addComment(){
 }
 
 async function loadComments(taskId){
-    if(!supabase) return;
-    var {data} = await supabase
+    if(!_sb) return;
+    var {data} = await _sb
         .from('admin_task_comments')
         .select('*')
         .eq('task_id', taskId)
