@@ -992,16 +992,27 @@
         .mention-option-name { flex: 1; }
         .mention-option-role { font-size: 10px; color: var(--text-tertiary); }
 
-        /* ── spotlight: item that mentions the current admin ── */
+        /* ── spotlight: item that mentions the current admin (auto-scan) ── */
         @keyframes mentionSpotlight {
-            0%   { box-shadow: 0 0 0 0   rgba(99,102,241,.7), inset 0 0 0 0 rgba(99,102,241,.0); background: transparent; }
-            20%  { box-shadow: 0 0 0 6px rgba(99,102,241,.4), inset 0 0 60px rgba(99,102,241,.08); background: rgba(99,102,241,.06); }
-            60%  { box-shadow: 0 0 0 4px rgba(99,102,241,.2), inset 0 0 40px rgba(99,102,241,.05); background: rgba(99,102,241,.04); }
-            100% { box-shadow: 0 0 0 0   rgba(99,102,241,.0); background: transparent; }
+            0%   { box-shadow: 0 0 0 0   rgba(99,102,241,.7); background: transparent; }
+            18%  { box-shadow: 0 0 0 7px rgba(99,102,241,.35); background: rgba(99,102,241,.07); }
+            55%  { box-shadow: 0 0 0 4px rgba(99,102,241,.18); background: rgba(99,102,241,.04); }
+            100% { box-shadow: 0 0 0 0   rgba(99,102,241,.0);  background: transparent; }
         }
         .history-item.mention-spotlight-me {
             border-left: 3px solid #818cf8 !important;
-            animation: mentionSpotlight 2.4s ease-out both;
+            animation: mentionSpotlight 2.8s ease-out both;
+        }
+        /* ── spotlight: navigated from notification link (amber pulse) ── */
+        @keyframes mentionSpotlightUrl {
+            0%   { box-shadow: 0 0 0 0   rgba(251,191,36,.9); background: transparent; }
+            12%  { box-shadow: 0 0 0 10px rgba(251,191,36,.45); background: rgba(251,191,36,.1); border-left-color: #fbbf24 !important; }
+            40%  { box-shadow: 0 0 0 6px  rgba(251,191,36,.25); background: rgba(251,191,36,.06); }
+            100% { box-shadow: 0 0 0 0   rgba(251,191,36,.0);  background: transparent; border-left-color: #fbbf24 !important; }
+        }
+        .history-item.mention-spotlight-url {
+            border-left: 3px solid #fbbf24 !important;
+            animation: mentionSpotlightUrl 3.2s cubic-bezier(.22,1,.36,1) both;
         }
         /* Live dot in history panel header */
         .history-live-dot {
@@ -3063,6 +3074,25 @@
                 loadTranslations();
                 subscribeHistoryRealtime();
                 _loadMentionAdmins(supabase);
+
+                // Handle ?mention=<rowId> deep-link from notification click
+                var _urlMention = new URLSearchParams(location.search).get('mention');
+                if (_urlMention) {
+                    setTimeout(function() {
+                        toggleHistory();
+                        var _attempts = 0;
+                        var _poller = setInterval(function() {
+                            var item = document.querySelector('#historyList .history-item[data-row-id="' + _urlMention + '"]');
+                            if (item) {
+                                clearInterval(_poller);
+                                item.classList.add('mention-spotlight-url');
+                                setTimeout(function() { item.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
+                            } else if (++_attempts > 30) {
+                                clearInterval(_poller);
+                            }
+                        }, 200);
+                    }, 900);
+                }
             }
         })();
 
@@ -4969,20 +4999,68 @@
             var row = _historyAllRows.find(function(r) { return r.id === rowId; });
             if (!row) return;
             var email = sessionStorage.getItem('adminEmail') || '';
+            var myName = sessionStorage.getItem('adminFullName') || email.split('@')[0] || 'Admin';
+
+            // Parse @mentions — extract unique names from note text
+            var mentionPat = /@([^\s@][^\s@]{0,40})/g;
+            var mentionNames = [], mp;
+            while ((mp = mentionPat.exec(note)) !== null) {
+                if (!mentionNames.includes(mp[1])) mentionNames.push(mp[1]);
+            }
+            // Resolve names → admin objects (email needed for notifications)
+            var source = _mentionAdmins.length ? _mentionAdmins : _mentionAdminsFromHistory();
+            var seenEmails = {};
+            var mentionedAdmins = mentionNames.map(function(n) {
+                return source.find(function(a) { return a.name.toLowerCase() === n.toLowerCase(); });
+            }).filter(function(a) {
+                if (!a || !a.email || seenEmails[a.email]) return false;
+                seenEmails[a.email] = true;
+                return true;
+            });
+
+            var keyId = (row.details || {}).key_id || row.key_id || '';
+            var page  = (row.details || {}).page  || row.page  || '';
+            var platform = getPlatform(keyId, page);
+
             var newDetails = Object.assign({}, row.details || {}, {
                 marked: true,
                 mark_note: note,
                 marked_by: email,
-                marked_at: new Date().toISOString()
+                marked_by_name: myName,
+                marked_at: new Date().toISOString(),
+                mark_mentions: mentionedAdmins.map(function(a) { return { name: a.name, email: a.email }; })
             });
+
             try {
                 var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
                 if (result.error) throw result.error;
                 row.details = newDetails;
                 if (draftKey) localStorage.removeItem(draftKey);
+
+                // Write a notification row for each mentioned admin (skip self)
+                var notePreview = note.length > 90 ? note.slice(0, 90) + '…' : note;
+                var notifData = { rowId: rowId, key_id: keyId, page: page, platform: platform, mentioner: myName, mentionerEmail: email };
+                for (var mi = 0; mi < mentionedAdmins.length; mi++) {
+                    var ma = mentionedAdmins[mi];
+                    if (ma.email === email) continue; // never notify self
+                    await supabase.from('admin_notifications').upsert({
+                        recipient_email: ma.email,
+                        type: 'mention',
+                        title: myName + ' mentioned you',
+                        body: '"' + notePreview + '" · ' + keyId,
+                        source_id: 'mention_' + rowId + '_' + ma.email,
+                        data: notifData,
+                        read: false,
+                        created_by: email
+                    }, { onConflict: 'source_id' });
+                }
+
                 filterHistory();
-                showToast('🔖 Marked');
+                var toastMsg = '🔖 Marked';
+                if (mentionedAdmins.length) toastMsg += ' · ' + mentionedAdmins.map(function(a) { return '@' + a.name; }).join(' ') + ' notified';
+                showToast(toastMsg);
             } catch(e) {
+                console.error('[saveMark]', e);
                 showToast('Failed to save mark');
             }
         }
@@ -4994,11 +5072,18 @@
             delete newDetails.marked;
             delete newDetails.mark_note;
             delete newDetails.marked_by;
+            delete newDetails.marked_by_name;
             delete newDetails.marked_at;
+            delete newDetails.mark_mentions;
             try {
                 var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
                 if (result.error) throw result.error;
                 row.details = newDetails;
+                // Clean up mention notifications for this audit log row
+                supabase.from('admin_notifications')
+                    .delete()
+                    .like('source_id', 'mention_' + rowId + '_%')
+                    .then(function() {});
                 filterHistory();
                 showToast('Mark removed');
             } catch(e) {

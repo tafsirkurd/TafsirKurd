@@ -23,6 +23,7 @@
   var STYLE_ID  = 'ant-styles';
 
   var TYPES = {
+    mention: { icon: '@',  color: '#818cf8', bg: 'rgba(99,102,241,.15)',  label: 'Mention',  tab: 'mention' },
     message: { icon: '✉',  color: '#ef4444', bg: 'rgba(239,68,68,.15)',   label: 'Message',  tab: 'message' },
     user:    { icon: '👤', color: '#8b5cf6', bg: 'rgba(139,92,246,.15)',  label: 'User',     tab: 'user'    },
     video:   { icon: '▶',  color: '#f59e0b', bg: 'rgba(245,158,11,.15)',  label: 'Video',    tab: 'video'   },
@@ -34,6 +35,7 @@
   var TABS = [
     { id: 'all',     label: 'All',      icon: '🔔' },
     { id: 'unread',  label: 'Unread',   icon: '·'  },
+    { id: 'mention', label: 'Mentions', icon: '@'  },
     { id: 'message', label: 'Messages', icon: '✉'  },
     { id: 'user',    label: 'Users',    icon: '👤' },
     { id: 'error',   label: 'Errors',   icon: '⚠'  },
@@ -492,8 +494,16 @@
     if (item.desc) txt.appendChild(dsc);
     txt.appendChild(meta);
 
-    // action button for messages
-    if (item.type === 'message') {
+    // action buttons per type
+    if (item.type === 'mention') {
+      var actBtn = _el('button', 'ant-action');
+      actBtn.textContent = 'View →';
+      actBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (item.link) window.location.href = item.link;
+      });
+      txt.appendChild(actBtn);
+    } else if (item.type === 'message') {
       var actBtn = _el('button', 'ant-action');
       actBtn.textContent = 'Reply →';
       actBtn.addEventListener('click', function(e) {
@@ -634,6 +644,26 @@
             'error', '/admin-errors.html', 'err_' + e.id);
         });
       });
+
+    // Fetch mention notifications addressed to the current admin
+    var me = (window.sessionStorage && sessionStorage.getItem('adminEmail')) || '';
+    if (me) {
+      var ago30d = new Date(now - 30 * 86400000).toISOString();
+      sb.from('admin_notifications')
+        .select('id,type,title,body,data,source_id,created_at')
+        .eq('recipient_email', me)
+        .gte('created_at', ago30d)
+        .order('created_at', { ascending: false })
+        .limit(30)
+        .then(function(res) {
+          if (res.error || !res.data) return;
+          res.data.forEach(function(n) {
+            var d = n.data || {};
+            var link = d.rowId ? '/admin-translations.html?mention=' + d.rowId : null;
+            _add(n.title, n.body || '', n.type || 'mention', link, 'db_' + n.id);
+          });
+        });
+    }
   }
 
   // ── live alerts bridge ─────────────────────────────────────
