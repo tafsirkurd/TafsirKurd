@@ -50,6 +50,13 @@
   /* ── Lowercase normalize ────────────────────────────────────────── */
   function normLo(s) { return s ? String(s).toLowerCase().trim() : ''; }
 
+  /* ── Arabic-Indic digits → ASCII ───────────────────────────────── */
+  function arDigits(s) {
+    return String(s).replace(/[٠١٢٣٤٥٦٧٨٩]/g, function(c) {
+      return String('٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+    });
+  }
+
   /* ── Strip leading "al-" and collapse spaces/apostrophes ───────── */
   function cleanKey(s) { return s.replace(/^al[-\s]/i, '').replace(/[-'\s]/g, ''); }
 
@@ -217,13 +224,27 @@
     /* Ya-Sin */
     'ya sin': {sn:36,an:1}, 'ya seen': {sn:36,an:1},
     /* Iqra — 96:1 */
-    'iqra bismi rabbik': {sn:96,an:1}, 'recite in the name': {sn:96,an:1}
+    'iqra bismi rabbik': {sn:96,an:1}, 'recite in the name': {sn:96,an:1},
+    /* Arabic famous aliases */
+    'ايه الكرسي': {sn:2,an:255}, 'اية الكرسي': {sn:2,an:255}, 'ايات الكرسي': {sn:2,an:255},
+    'الله لا اله الا هو': {sn:2,an:255},
+    'رب زدني علما': {sn:20,an:114}, 'رب زدنى علما': {sn:20,an:114},
+    'قل هو الله احد': {sn:112,an:1}, 'قل هو الله': {sn:112,an:1},
+    'بسم الله': {sn:1,an:1}, 'بسم الله الرحمن الرحيم': {sn:1,an:1},
+    'الحمد لله': {sn:1,an:2}, 'الحمد لله رب العالمين': {sn:1,an:2},
+    'حسبنا الله': {sn:3,an:173}, 'حسبنا الله ونعم الوكيل': {sn:3,an:173},
+    'لا تقنطوا': {sn:39,an:53}, 'لا تقنطوا من رحمة الله': {sn:39,an:53},
+    'ان مع العسر يسرا': {sn:94,an:6}, 'فان مع العسر يسرا': {sn:94,an:6},
+    'ان الله مع الصابرين': {sn:2,an:153},
+    'لا تحزن': {sn:9,an:40}
   };
 
   /* ── Reference parser ──────────────────────────────────────────── */
   /* Returns {sn, an} or null */
   function parseRef(qLo, surahs) {
     var m;
+    // Convert Arabic-Indic digits first: "٢:٢٥٥" → "2:255"
+    qLo = arDigits(qLo);
     // "2:255" or "2/255"
     m = qLo.match(/^(\d{1,3})\s*[:/]\s*(\d{1,3})$/);
     if (m) { var sn = +m[1], an = +m[2]; if (sn >= 1 && sn <= 114 && an >= 1) return {sn:sn, an:an}; }
@@ -279,7 +300,7 @@
       }
     }
     _ready = true;
-    console.log('[QuranSearch] index built ' + (Date.now() - t0) + 'ms — ' + _idx.length + ' verses');
+    console.log('[QuranSearch] indexReady count=' + _idx.length + ' ms=' + (Date.now() - t0));
   }
 
   /* ── Verse scorer ──────────────────────────────────────────────── */
@@ -337,7 +358,7 @@
     var refKeys = {};
 
     /* ── 1. Famous verse alias ─────────────────────────────────── */
-    var va = VA[qLo] || VA[cleanKey(qLo)];
+    var va = VA[qLo] || VA[cleanKey(qLo)] || VA[qArN] || VA[normAr(cleanKey(qOrig))];
     if (va) {
       var ve = findVerse(va.sn, va.an);
       if (ve) {
