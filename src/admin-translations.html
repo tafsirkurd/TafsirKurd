@@ -4129,7 +4129,8 @@
             if (t.mark_note) {
                 var noteDiv = document.createElement('div');
                 noteDiv.className = 't-mark-note';
-                noteDiv.textContent = '\uD83D\uDCDD ' + t.mark_note;
+                noteDiv.appendChild(document.createTextNode('\uD83D\uDCDD '));
+                noteDiv.appendChild(_renderMentionText(t.mark_note));
                 badgeWrap.appendChild(noteDiv);
             }
 
