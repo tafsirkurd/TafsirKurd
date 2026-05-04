@@ -510,9 +510,9 @@ var PRIORITY_ORDER = {urgent:0,high:1,medium:2,low:3};
    INIT
 ═══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function(){
-    var authData = await window.adminAuth.verify();
-    if(!authData) return;
-    currentUser = authData.email || sessionStorage.getItem('adminEmail') || 'admin';
+    var isAuth = await window.adminAuth.checkAuth();
+    if(!isAuth) return;
+    currentUser = sessionStorage.getItem('adminEmail') || 'admin';
     supabase = window.adminAuth.getSupabase();
     lucide.createIcons();
     setupSidebar();
