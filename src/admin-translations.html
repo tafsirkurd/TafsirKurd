@@ -3002,17 +3002,13 @@
                 while (el.firstChild) el.removeChild(el.firstChild);
                 el.hidden = true;
                 el.style.display = 'none';
-                el.style.visibility = 'hidden';
-                el.style.opacity = '0';
-                el.style.pointerEvents = 'none';
+                el.style.visibility = '';
+                el.style.opacity = '';
+                el.style.pointerEvents = '';
                 el.removeAttribute('data-key');
                 el.classList.remove('open', 'active', 'show', 'visible');
             }
             document.querySelectorAll('.mention-dropdown, .mention-menu, [data-mention-dropdown]').forEach(_nukeEl);
-            // Second pass after microtasks — catches synchronous reopens from focus/blur
-            setTimeout(function() {
-                document.querySelectorAll('.mention-dropdown, .mention-menu, [data-mention-dropdown]').forEach(_nukeEl);
-            }, 0);
         }
 
         function _insertMention(ta, name, drop, draftKey) {
@@ -3064,7 +3060,7 @@
                 var pos = ta.selectionStart;
                 if (ta.selectionStart === ta.selectionEnd) {
                     var before = val.slice(0, pos);
-                    var m = before.match(/@([^\s@]+(?:\s+[^\s@]+)*)\s?$/);
+                    var m = before.match(/@([^\s@]+(?:\s+[^\s@]+)*)\s+$/);
                     if (m && m[0].startsWith('@')) {
                         e.preventDefault();
                         ta.value = val.slice(0, pos - m[0].length) + val.slice(pos);
