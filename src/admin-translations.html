@@ -3024,6 +3024,7 @@
             var escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             var dupPat = new RegExp('(?:^|\\s)@' + escapedName + '(?=\\s|$)', 'i');
             if (dupPat.test(withoutPartial)) {
+                _closeMentionDropdown(drop);
                 ta.focus();
                 return;
             }
@@ -3031,8 +3032,8 @@
             var replaced = before.replace(/@([^\s@]*)$/, '@' + name + ' ');
             ta.value = replaced + after;
             var newPos = replaced.length;
-            ta.setSelectionRange(newPos, newPos);
             ta.focus();
+            ta.setSelectionRange(newPos, newPos);
 
             // Subtle flash to confirm insertion
             ta.classList.remove('mention-flash');
@@ -3047,9 +3048,14 @@
         function _handleMentionInput(ta, drop, draftKey) {
             clearTimeout(_mentionInputTimer);
             var q = _getMentionQuery(ta);
-            if (q === null) { _closeMentionDropdown(drop); return; }
+            if (q === null) {
+                if (!drop.hidden) _closeMentionDropdown(drop);
+                return;
+            }
             _mentionInputTimer = setTimeout(function() {
-                _buildMentionDrop(drop, q, ta, draftKey);
+                var freshQ = _getMentionQuery(ta);
+                if (freshQ === null) { if (!drop.hidden) _closeMentionDropdown(drop); return; }
+                _buildMentionDrop(drop, freshQ, ta, draftKey);
             }, 120);
         }
 
