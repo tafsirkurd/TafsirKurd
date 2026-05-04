@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/utils/admin-guard.js?v=1"></script>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="utils/theme-loader.js?v=2"></script>
+    <title>Tasks - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=14">
+    <style>
+        .dashboard-container{display:flex;min-height:100vh}
+        .main-content{flex:1;margin-left:240px;min-width:0;overflow-x:hidden;transition:margin-left .3s}
+        .sidebar.collapsed+.main-content{margin-left:64px}
+        @media(max-width:768px){.main-content{margin-left:0}}
+
+        /* ── Summary cards ── */
+        .task-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+        @media(max-width:900px){.task-summary{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:500px){.task-summary{grid-template-columns:repeat(2,1fr);gap:10px}}
+        .ts-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:18px 20px;cursor:default;transition:border-color .15s}
+        .ts-card:hover{border-color:var(--border-medium)}
+        .ts-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+        .ts-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+        .ts-icon i{width:18px;height:18px}
+        .ts-val{font-size:28px;font-weight:800;color:var(--text-primary);line-height:1}
+        .ts-label{font-size:12px;color:var(--text-tertiary);margin-top:4px;font-weight:500}
+
+        /* ── Filter bar ── */
+        .task-filterbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+        .task-filterbar .search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:0 12px;height:38px;min-width:200px;flex:1}
+        .task-filterbar .search-wrap i{width:15px;height:15px;color:var(--text-tertiary)}
+        .task-filterbar .search-wrap input{background:none;border:none;outline:none;font-size:13px;color:var(--text-primary);width:100%}
+        .task-filterbar select{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:0 10px;height:38px;font-size:13px;color:var(--text-primary);cursor:pointer;font-family:inherit}
+        .task-filterbar select:focus{outline:none;border-color:var(--accent)}
+        .view-toggle{display:flex;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;overflow:hidden}
+        .view-btn{padding:7px 14px;font-size:13px;font-weight:600;color:var(--text-tertiary);cursor:pointer;border:none;background:none;display:flex;align-items:center;gap:6px;transition:all .15s}
+        .view-btn i{width:14px;height:14px}
+        .view-btn.active{background:var(--accent);color:#fff}
+
+        /* ── Board view ── */
+        .task-board{display:grid;grid-template-columns:repeat(4,minmax(260px,1fr));gap:16px;overflow-x:auto;padding-bottom:16px}
+        @media(max-width:1100px){.task-board{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:600px){.task-board{grid-template-columns:1fr}}
+        .board-col{background:var(--bg-active);border:1px solid var(--border-light);border-radius:14px;padding:14px;min-height:320px;display:flex;flex-direction:column;gap:0}
+        .board-col-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0}
+        .board-col-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text-primary)}
+        .board-col-dot{width:8px;height:8px;border-radius:50%}
+        .board-col-count{font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--bg-surface)}
+        .board-cards{display:flex;flex-direction:column;gap:10px;flex:1;min-height:80px}
+        .board-col.drag-over .board-cards{background:rgba(99,102,241,.06);border-radius:10px;outline:2px dashed var(--accent);outline-offset:-4px}
+
+        /* Task card */
+        .task-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:14px;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .15s;position:relative;user-select:none}
+        .task-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.12);border-color:var(--border-medium)}
+        .task-card:active{transform:scale(.98)}
+        .task-card.dragging{opacity:.5;transform:rotate(2deg)}
+        .task-card.overdue{border-left:3px solid #f97316;box-shadow:0 0 0 1px rgba(249,115,22,.18),0 2px 8px rgba(249,115,22,.08)}
+        .task-card.urgent-glow{border-left:3px solid #ef4444}
+        @keyframes urgentPulse{0%,100%{box-shadow:0 0 0 1px rgba(239,68,68,.2)}50%{box-shadow:0 0 0 3px rgba(239,68,68,.35)}}
+        .task-card.urgent-glow{animation:urgentPulse 2.4s ease-in-out infinite}
+        .tc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+        .tc-title{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.4;flex:1}
+        .tc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+        .tc-cat{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg-active);color:var(--text-secondary)}
+        .tc-due{font-size:11px;color:var(--text-tertiary);display:flex;align-items:center;gap:3px}
+        .tc-due i{width:11px;height:11px}
+        .tc-due.overdue-label{color:#f97316;font-weight:600}
+        .tc-due.today-label{color:#3b82f6;font-weight:600}
+
+        /* Priority badges */
+        .pri-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
+        .pri-low{background:rgba(107,114,128,.12);color:#6b7280}
+        .pri-medium{background:rgba(59,130,246,.12);color:#3b82f6}
+        .pri-high{background:rgba(249,115,22,.12);color:#f97316}
+        .pri-urgent{background:rgba(239,68,68,.15);color:#ef4444}
+        .pri-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+        /* ── List view ── */
+        .task-list-view{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;overflow:hidden}
+        .task-list-view table{width:100%;border-collapse:collapse}
+        .task-list-view thead th{padding:10px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);background:var(--bg-active);border-bottom:1px solid var(--border-light);text-align:left;white-space:nowrap}
+        .task-list-view tbody tr{border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s}
+        .task-list-view tbody tr:last-child{border-bottom:none}
+        .task-list-view tbody tr:hover{background:var(--bg-active)}
+        .task-list-view tbody td{padding:12px 16px;font-size:13px;color:var(--text-primary);vertical-align:middle}
+        .task-list-view tbody td.title-cell{font-weight:600;max-width:280px}
+        .task-list-view tbody td.title-cell .task-done-line{text-decoration:line-through;color:var(--text-tertiary)}
+        .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+        .st-todo{background:rgba(107,114,128,.12);color:#6b7280}
+        .st-in_progress{background:rgba(59,130,246,.12);color:#3b82f6}
+        .st-waiting{background:rgba(245,158,11,.12);color:#d97706}
+        .st-done{background:rgba(16,185,129,.12);color:#059669}
+
+        /* ── Detail panel ── */
+        .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:800;display:none;backdrop-filter:blur(2px)}
+        .detail-overlay.open{display:block}
+        .detail-panel{position:fixed;right:0;top:0;bottom:0;width:480px;max-width:100vw;background:var(--bg-base);border-left:1px solid var(--border-light);z-index:801;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+        .detail-panel.open{transform:translateX(0)}
+        @media(max-width:520px){.detail-panel{width:100vw}}
+        .dp-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border-light);flex-shrink:0}
+        .dp-title{font-size:15px;font-weight:700;color:var(--text-primary)}
+        .dp-close{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg-active);border:none;color:var(--text-secondary);transition:background .15s}
+        .dp-close:hover{background:var(--border-light)}
+        .dp-close i{width:16px;height:16px}
+        .dp-body{flex:1;overflow-y:auto;padding:20px}
+        .dp-body::-webkit-scrollbar{width:4px}
+        .dp-body::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:4px}
+        .dp-field{margin-bottom:18px}
+        .dp-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:6px}
+        .dp-input{width:100%;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:9px 12px;font-size:14px;color:var(--text-primary);font-family:inherit;transition:border-color .15s;box-sizing:border-box}
+        .dp-input:focus{outline:none;border-color:var(--accent)}
+        .dp-textarea{min-height:80px;resize:vertical;line-height:1.6}
+        .dp-select{appearance:none;cursor:pointer}
+        .dp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .dp-footer{padding:16px 20px;border-top:1px solid var(--border-light);display:flex;gap:10px;flex-shrink:0}
+        .dp-footer .btn{flex:1;justify-content:center}
+
+        /* Comments */
+        .comments-section{margin-top:24px;border-top:1px solid var(--border-light);padding-top:18px}
+        .comments-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:14px}
+        .comment-item{display:flex;gap:10px;margin-bottom:14px}
+        .comment-av{width:28px;height:28px;border-radius:50%;background:rgba(99,102,241,.15);color:#6366f1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+        .comment-body{flex:1}
+        .comment-meta{font-size:11px;color:var(--text-tertiary);margin-bottom:3px}
+        .comment-text{font-size:13px;color:var(--text-primary);line-height:1.5}
+        .comment-form{display:flex;gap:8px;margin-top:12px}
+        .comment-input{flex:1;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text-primary);font-family:inherit;resize:none;line-height:1.4}
+        .comment-input:focus{outline:none;border-color:var(--accent)}
+
+        /* ── Task modal ── */
+        .task-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+        .task-modal-overlay.open{display:flex}
+        .task-modal{background:var(--bg-base);border:1px solid var(--border-light);border-radius:18px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.3)}
+        .task-modal::-webkit-scrollbar{width:4px}
+        .task-modal::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:4px}
+        .tm-header{padding:24px 24px 18px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
+        .tm-title{font-size:17px;font-weight:800;color:var(--text-primary)}
+        .tm-close{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg-active);border:none;color:var(--text-secondary)}
+        .tm-close:hover{background:var(--border-light)}
+        .tm-body{padding:24px}
+        .tm-field{margin-bottom:18px}
+        .tm-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:6px}
+        .tm-input{width:100%;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--text-primary);font-family:inherit;transition:border-color .15s;box-sizing:border-box}
+        .tm-input:focus{outline:none;border-color:var(--accent)}
+        .tm-textarea{min-height:90px;resize:vertical;line-height:1.6}
+        .tm-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .tm-footer{padding:18px 24px;border-top:1px solid var(--border-light);display:flex;gap:10px;justify-content:flex-end}
+
+        /* ── Empty & loading states ── */
+        .board-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:32px 16px;color:var(--text-tertiary);font-size:13px}
+        .board-empty i{width:28px;height:28px;opacity:.35}
+        .task-loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text-tertiary);gap:10px;font-size:14px}
+
+        /* ── Done column muted ── */
+        .board-col.col-done .task-card .tc-title{color:var(--text-tertiary);text-decoration:line-through}
+        @keyframes checkPop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+        .check-anim{animation:checkPop .35s cubic-bezier(.4,0,.2,1)}
+
+        /* ── Keyboard hint ── */
+        .kbd-hint{font-size:11px;color:var(--text-tertiary);background:var(--bg-active);border:1px solid var(--border-light);padding:2px 7px;border-radius:5px;font-family:inherit}
+    </style>
+    <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
+    <script>
+        (function(){
+            var role=sessionStorage.getItem('adminRole');
+            var style=document.getElementById('early-sidebar-hide');
+            var css='.sidebar-nav{visibility:visible}';
+            if(role==='custom')css='.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            if(role&&style)style.textContent=css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-tasks.html" class="nav-item active"><i data-lucide="check-square"></i><span class="nav-item-label">Tasks</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-badge"></span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Site</div>
+                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-label">Header</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
+                <a href="/admin-notification-analytics.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Notif Analytics</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Monitoring</div>
+                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
+                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
+                <a href="/admin-db-health.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
+                <a href="/admin-jobs.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-label">Jobs</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Security</div>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Settings</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s" title="Logout"><i data-lucide="log-out"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="topbar-search">
+                <i data-lucide="check-square"></i>
+                <input type="text" placeholder="Tasks" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer" title="Session expires after 2 hours"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
+                <button class="topbar-btn" style="position:relative;"><i data-lucide="bell"></i><span id="notification-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;display:none;"></span></button>
+                <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode"><i data-lucide="moon" id="theme-icon"></i></button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <!-- Page header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Tasks &amp; Goals</h1>
+                    <p style="font-size:13px;color:var(--text-tertiary);margin:2px 0 0">Your personal TafsirKurd work tracker &nbsp;<span class="kbd-hint">N</span> New task</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="loadTasks()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                    <button class="btn btn-primary" id="addTaskBtn" onclick="openModal()"><i data-lucide="plus"></i> New Task</button>
+                </div>
+            </div>
+
+            <!-- Summary cards -->
+            <div class="task-summary" id="taskSummary">
+                <div class="ts-card">
+                    <div class="ts-top">
+                        <div class="ts-icon" style="background:rgba(59,130,246,.12);color:#3b82f6"><i data-lucide="calendar-check"></i></div>
+                    </div>
+                    <div class="ts-val" id="sumToday">—</div>
+                    <div class="ts-label">Due Today</div>
+                </div>
+                <div class="ts-card">
+                    <div class="ts-top">
+                        <div class="ts-icon" style="background:rgba(239,68,68,.12);color:#ef4444"><i data-lucide="alarm-clock"></i></div>
+                    </div>
+                    <div class="ts-val" id="sumOverdue">—</div>
+                    <div class="ts-label">Overdue</div>
+                </div>
+                <div class="ts-card">
+                    <div class="ts-top">
+                        <div class="ts-icon" style="background:rgba(139,92,246,.12);color:#8b5cf6"><i data-lucide="loader"></i></div>
+                    </div>
+                    <div class="ts-val" id="sumInProgress">—</div>
+                    <div class="ts-label">In Progress</div>
+                </div>
+                <div class="ts-card">
+                    <div class="ts-top">
+                        <div class="ts-icon" style="background:rgba(16,185,129,.12);color:#10b981"><i data-lucide="check-circle-2"></i></div>
+                    </div>
+                    <div class="ts-val" id="sumDoneWeek">—</div>
+                    <div class="ts-label">Done This Week</div>
+                </div>
+            </div>
+
+            <!-- Filter bar -->
+            <div class="task-filterbar">
+                <div class="search-wrap">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="filterSearch" placeholder="Search tasks…" oninput="applyFilters()">
+                </div>
+                <select id="filterStatus" onchange="applyFilters()">
+                    <option value="">All Status</option>
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="waiting">Waiting</option>
+                    <option value="done">Done</option>
+                </select>
+                <select id="filterPriority" onchange="applyFilters()">
+                    <option value="">All Priority</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+                <select id="filterCategory" onchange="applyFilters()">
+                    <option value="">All Categories</option>
+                    <option>TafsirKurd App</option>
+                    <option>Website</option>
+                    <option>Content</option>
+                    <option>Admin Panel</option>
+                    <option>Bugs</option>
+                    <option>Ideas</option>
+                    <option>Personal</option>
+                </select>
+                <select id="filterDue" onchange="applyFilters()">
+                    <option value="">Any Due Date</option>
+                    <option value="today">Due Today</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="week">This Week</option>
+                </select>
+                <div class="view-toggle">
+                    <button class="view-btn active" id="btnBoard" onclick="setView('board')"><i data-lucide="columns"></i>Board</button>
+                    <button class="view-btn" id="btnList" onclick="setView('list')"><i data-lucide="list"></i>List</button>
+                </div>
+            </div>
+
+            <!-- Board view -->
+            <div id="boardView">
+                <div class="task-board" id="taskBoard">
+                    <div class="board-col" data-status="todo" id="col-todo">
+                        <div class="board-col-hdr">
+                            <div class="board-col-title"><span class="board-col-dot" style="background:#6b7280"></span>To Do</div>
+                            <span class="board-col-count" id="cnt-todo">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-todo"></div>
+                    </div>
+                    <div class="board-col" data-status="in_progress" id="col-in_progress">
+                        <div class="board-col-hdr">
+                            <div class="board-col-title"><span class="board-col-dot" style="background:#3b82f6"></span>In Progress</div>
+                            <span class="board-col-count" id="cnt-in_progress">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-in_progress"></div>
+                    </div>
+                    <div class="board-col" data-status="waiting" id="col-waiting">
+                        <div class="board-col-hdr">
+                            <div class="board-col-title"><span class="board-col-dot" style="background:#f59e0b"></span>Waiting</div>
+                            <span class="board-col-count" id="cnt-waiting">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-waiting"></div>
+                    </div>
+                    <div class="board-col col-done" data-status="done" id="col-done">
+                        <div class="board-col-hdr">
+                            <div class="board-col-title"><span class="board-col-dot" style="background:#10b981"></span>Done</div>
+                            <span class="board-col-count" id="cnt-done">0</span>
+                        </div>
+                        <div class="board-cards" id="cards-done"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List view -->
+            <div id="listView" style="display:none">
+                <div class="task-list-view">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Category</th>
+                                <th>Due Date</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="taskTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ═══ Task Detail Panel ═══ -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+    <div class="dp-header">
+        <div class="dp-title">Task Details</div>
+        <button class="dp-close" onclick="closeDetail()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dp-body" id="dpBody">
+        <!-- rendered by JS -->
+    </div>
+    <div class="dp-footer">
+        <button class="btn btn-danger" id="dpDeleteBtn" onclick="deleteTask()"><i data-lucide="trash-2"></i> Delete</button>
+        <button class="btn btn-primary" id="dpSaveBtn" onclick="saveDetail()"><i data-lucide="save"></i> Save</button>
+    </div>
+</div>
+
+<!-- ═══ New / Edit Task Modal ═══ -->
+<div class="task-modal-overlay" id="taskModalOverlay">
+    <div class="task-modal">
+        <div class="tm-header">
+            <div class="tm-title" id="modalTitle">New Task</div>
+            <button class="tm-close" onclick="closeModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="tm-body">
+            <div class="tm-field">
+                <div class="tm-label">Title *</div>
+                <input type="text" class="tm-input" id="mTitle" placeholder="What needs to be done?">
+            </div>
+            <div class="tm-field">
+                <div class="tm-label">Description</div>
+                <textarea class="tm-input tm-textarea" id="mDesc" placeholder="Notes, details, links…"></textarea>
+            </div>
+            <div class="tm-row">
+                <div class="tm-field">
+                    <div class="tm-label">Status</div>
+                    <select class="tm-input dp-select" id="mStatus">
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="waiting">Waiting</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div class="tm-field">
+                    <div class="tm-label">Priority</div>
+                    <select class="tm-input dp-select" id="mPriority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">🔴 Urgent</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tm-row">
+                <div class="tm-field">
+                    <div class="tm-label">Category</div>
+                    <select class="tm-input dp-select" id="mCategory">
+                        <option>TafsirKurd App</option>
+                        <option>Website</option>
+                        <option>Content</option>
+                        <option>Admin Panel</option>
+                        <option>Bugs</option>
+                        <option>Ideas</option>
+                        <option>Personal</option>
+                    </select>
+                </div>
+                <div class="tm-field">
+                    <div class="tm-label">Due Date</div>
+                    <input type="date" class="tm-input" id="mDue">
+                </div>
+            </div>
+            <div class="tm-field">
+                <div class="tm-label">Assigned To</div>
+                <input type="text" class="tm-input" id="mAssigned" placeholder="Email or name (optional)">
+            </div>
+        </div>
+        <div class="tm-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveModal()"><i data-lucide="plus"></i> <span id="modalSaveLbl">Create Task</span></button>
+        </div>
+    </div>
+</div>
+
+<script src="/utils/supabase.js"></script>
+<script src="/utils/admin-auth.js"></script>
+<script src="/utils/admin-heartbeat.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+var supabase = null;
+var allTasks = [];
+var filteredTasks = [];
+var currentView = 'board';
+var editingTaskId = null;   // task open in detail panel
+var modalEditId = null;     // task open in modal (null = create)
+var currentUser = '';
+var dragSrcId = null;
+
+var STATUSES = ['todo','in_progress','waiting','done'];
+var STATUS_LABELS = {todo:'To Do',in_progress:'In Progress',waiting:'Waiting',done:'Done'};
+var PRIORITY_ORDER = {urgent:0,high:1,medium:2,low:3};
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async function(){
+    var authData = await window.adminAuth.verify();
+    if(!authData) return;
+    currentUser = authData.email || sessionStorage.getItem('adminEmail') || 'admin';
+    supabase = window.adminAuth.getSupabase();
+    lucide.createIcons();
+    setupSidebar();
+    setupDrag();
+    await loadTasks();
+    // keyboard shortcut N
+    document.addEventListener('keydown', function(e){
+        if(e.key === 'n' || e.key === 'N'){
+            var tag = (e.target.tagName||'').toLowerCase();
+            if(tag === 'input' || tag === 'textarea' || tag === 'select') return;
+            openModal();
+        }
+        if(e.key === 'Escape'){
+            closeModal();
+            closeDetail();
+        }
+    });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════ */
+async function loadTasks(){
+    if(!supabase) return;
+    try {
+        var {data, error} = await supabase
+            .from('admin_tasks')
+            .select('*')
+            .eq('archived', false)
+            .order('sort_order', {ascending:true})
+            .order('created_at', {ascending:false});
+        if(error) throw error;
+        allTasks = data || [];
+        applyFilters();
+        renderSummary();
+    } catch(e){
+        console.error('[Tasks] load failed', e);
+    }
+}
+
+async function saveModal(){
+    var title = document.getElementById('mTitle').value.trim();
+    if(!title){ alert('Title is required'); return; }
+    var payload = {
+        title: title,
+        description: document.getElementById('mDesc').value.trim() || null,
+        status:   document.getElementById('mStatus').value,
+        priority: document.getElementById('mPriority').value,
+        category: document.getElementById('mCategory').value,
+        due_at:   document.getElementById('mDue').value || null,
+        assigned_to: document.getElementById('mAssigned').value.trim() || null,
+    };
+    var btn = document.getElementById('modalSaveLbl');
+    btn.textContent = 'Saving…';
+    try {
+        if(modalEditId){
+            payload.updated_by = currentUser;
+            var {error} = await supabase.from('admin_tasks').update(payload).eq('id', modalEditId);
+            if(error) throw error;
+        } else {
+            payload.created_by = currentUser;
+            payload.sort_order = allTasks.length;
+            if(payload.status === 'done') payload.completed_at = new Date().toISOString();
+            var {error} = await supabase.from('admin_tasks').insert(payload);
+            if(error) throw error;
+        }
+        closeModal();
+        await loadTasks();
+        logAudit(modalEditId ? 'task_update' : 'task_create', {title: payload.title});
+    } catch(e){
+        alert('Error: ' + (e.message || e));
+    } finally {
+        btn.textContent = modalEditId ? 'Save Changes' : 'Create Task';
+    }
+}
+
+async function saveDetail(){
+    if(!editingTaskId) return;
+    var payload = {
+        title:       document.getElementById('dpTitle').value.trim(),
+        description: document.getElementById('dpDesc').value.trim() || null,
+        status:      document.getElementById('dpStatus').value,
+        priority:    document.getElementById('dpPriority').value,
+        category:    document.getElementById('dpCategory').value,
+        due_at:      document.getElementById('dpDue').value || null,
+        assigned_to: document.getElementById('dpAssigned').value.trim() || null,
+        updated_by:  currentUser,
+    };
+    if(!payload.title){ alert('Title is required'); return; }
+    if(payload.status === 'done'){
+        var existing = allTasks.find(function(t){return t.id===editingTaskId;});
+        if(!existing || existing.status !== 'done') payload.completed_at = new Date().toISOString();
+    }
+    try {
+        var {error} = await supabase.from('admin_tasks').update(payload).eq('id', editingTaskId);
+        if(error) throw error;
+        closeDetail();
+        await loadTasks();
+        logAudit('task_update', {title: payload.title, status: payload.status});
+    } catch(e){
+        alert('Error: ' + (e.message || e));
+    }
+}
+
+async function deleteTask(){
+    if(!editingTaskId) return;
+    if(!confirm('Archive this task? It will be hidden but not deleted.')) return;
+    try {
+        var task = allTasks.find(function(t){return t.id===editingTaskId;});
+        var {error} = await supabase.from('admin_tasks').update({archived:true, updated_by:currentUser}).eq('id', editingTaskId);
+        if(error) throw error;
+        closeDetail();
+        await loadTasks();
+        logAudit('task_delete', {title: task ? task.title : editingTaskId});
+    } catch(e){
+        alert('Error: ' + e.message);
+    }
+}
+
+async function moveTask(id, newStatus){
+    // Optimistic update
+    var task = allTasks.find(function(t){return t.id===id;});
+    if(!task || task.status === newStatus) return;
+    task.status = newStatus;
+    if(newStatus === 'done' && !task.completed_at) task.completed_at = new Date().toISOString();
+    applyFilters();
+    renderSummary();
+    // Persist
+    try {
+        var upd = {status: newStatus, updated_by: currentUser};
+        if(newStatus === 'done') upd.completed_at = new Date().toISOString();
+        await supabase.from('admin_tasks').update(upd).eq('id', id);
+        logAudit('task_update', {id: id, status: newStatus});
+    } catch(e){
+        console.error('[Tasks] moveTask failed', e);
+        await loadTasks();
+    }
+}
+
+async function addComment(){
+    if(!editingTaskId) return;
+    var inp = document.getElementById('commentInput');
+    var text = (inp.value || '').trim();
+    if(!text) return;
+    inp.value = '';
+    try {
+        var {error} = await supabase.from('admin_task_comments').insert({
+            task_id: editingTaskId,
+            content: text,
+            created_by: currentUser
+        });
+        if(error) throw error;
+        loadComments(editingTaskId);
+    } catch(e){
+        console.error('[Tasks] comment failed', e);
+    }
+}
+
+async function loadComments(taskId){
+    if(!supabase) return;
+    var {data} = await supabase
+        .from('admin_task_comments')
+        .select('*')
+        .eq('task_id', taskId)
+        .order('created_at', {ascending:true});
+    renderComments(data || []);
+}
+
+async function logAudit(action, details){
+    try {
+        var tok = sessionStorage.getItem('adminToken');
+        if(!tok) return;
+        await fetch('/admin-audit-log', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({token:tok, action:action, details:details})
+        });
+    } catch(e){}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILTERS & VIEWS
+═══════════════════════════════════════════════════════════ */
+function applyFilters(){
+    var q   = (document.getElementById('filterSearch').value || '').toLowerCase();
+    var st  = document.getElementById('filterStatus').value;
+    var pr  = document.getElementById('filterPriority').value;
+    var cat = document.getElementById('filterCategory').value;
+    var due = document.getElementById('filterDue').value;
+    var now = new Date(); now.setHours(0,0,0,0);
+    var eow = new Date(now); eow.setDate(eow.getDate() + (7 - eow.getDay()));
+
+    filteredTasks = allTasks.filter(function(t){
+        if(q && !t.title.toLowerCase().includes(q) && !(t.description||'').toLowerCase().includes(q)) return false;
+        if(st  && t.status !== st) return false;
+        if(pr  && t.priority !== pr) return false;
+        if(cat && t.category !== cat) return false;
+        if(due){
+            var d = t.due_at ? new Date(t.due_at) : null;
+            if(!d && due) return false;
+            if(d){ d.setHours(0,0,0,0); }
+            if(due==='today'   && d && d.getTime() !== now.getTime()) return false;
+            if(due==='overdue' && d && (d >= now || t.status==='done')) return false;
+            if(due==='week'    && d && (d < now || d > eow)) return false;
+        }
+        return true;
+    });
+
+    if(currentView === 'board') renderBoard();
+    else renderList();
+}
+
+function setView(v){
+    currentView = v;
+    document.getElementById('boardView').style.display = v==='board' ? '' : 'none';
+    document.getElementById('listView').style.display  = v==='list'  ? '' : 'none';
+    document.getElementById('btnBoard').classList.toggle('active', v==='board');
+    document.getElementById('btnList').classList.toggle('active',  v==='list');
+    if(v==='board') renderBoard();
+    else renderList();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SUMMARY CARDS
+═══════════════════════════════════════════════════════════ */
+function renderSummary(){
+    var now = new Date(); now.setHours(0,0,0,0);
+    var weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+    var today = 0, overdue = 0, inProg = 0, doneWk = 0;
+    allTasks.forEach(function(t){
+        var d = t.due_at ? new Date(t.due_at) : null;
+        if(d) d.setHours(0,0,0,0);
+        if(t.status !== 'done' && d && d.getTime() === now.getTime()) today++;
+        if(t.status !== 'done' && d && d < now) overdue++;
+        if(t.status === 'in_progress') inProg++;
+        if(t.status === 'done' && t.completed_at && new Date(t.completed_at) >= weekAgo) doneWk++;
+    });
+    document.getElementById('sumToday').textContent = today;
+    document.getElementById('sumOverdue').textContent = overdue;
+    document.getElementById('sumInProgress').textContent = inProg;
+    document.getElementById('sumDoneWeek').textContent = doneWk;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOARD RENDER
+═══════════════════════════════════════════════════════════ */
+function renderBoard(){
+    var now = new Date(); now.setHours(0,0,0,0);
+    STATUSES.forEach(function(st){
+        var container = document.getElementById('cards-' + st);
+        var tasks = filteredTasks.filter(function(t){return t.status===st;});
+        // Sort: urgent first, then by due date
+        tasks.sort(function(a,b){
+            var pa = PRIORITY_ORDER[a.priority] ?? 3;
+            var pb = PRIORITY_ORDER[b.priority] ?? 3;
+            if(pa !== pb) return pa - pb;
+            if(a.due_at && b.due_at) return new Date(a.due_at) - new Date(b.due_at);
+            if(a.due_at) return -1;
+            if(b.due_at) return 1;
+            return 0;
+        });
+        document.getElementById('cnt-' + st).textContent = tasks.length;
+        container.innerHTML = '';
+        if(!tasks.length){
+            var empty = document.createElement('div');
+            empty.className = 'board-empty';
+            empty.innerHTML = '<i data-lucide="inbox"></i><span>No tasks</span>';
+            container.appendChild(empty);
+            lucide.createIcons({nodes:[empty]});
+            return;
+        }
+        tasks.forEach(function(t){
+            container.appendChild(makeCard(t, now));
+        });
+        lucide.createIcons({nodes:[container]});
+    });
+}
+
+function makeCard(t, now){
+    var d = t.due_at ? new Date(t.due_at) : null;
+    if(d) d.setHours(0,0,0,0);
+    var isOverdue = d && d < now && t.status !== 'done';
+    var isToday   = d && d.getTime() === now.getTime();
+
+    var card = document.createElement('div');
+    card.className = 'task-card' + (isOverdue?' overdue':'') + (t.priority==='urgent'?' urgent-glow':'');
+    card.dataset.id = t.id;
+    card.draggable = true;
+
+    // Top row: title + priority badge
+    var top = document.createElement('div');
+    top.className = 'tc-top';
+    var title = document.createElement('div');
+    title.className = 'tc-title';
+    title.textContent = t.title;
+    var badge = makePriBadge(t.priority);
+    top.appendChild(title);
+    top.appendChild(badge);
+    card.appendChild(top);
+
+    // Meta row
+    var meta = document.createElement('div');
+    meta.className = 'tc-meta';
+    if(t.category){
+        var cat = document.createElement('span');
+        cat.className = 'tc-cat';
+        cat.textContent = t.category;
+        meta.appendChild(cat);
+    }
+    if(d){
+        var due = document.createElement('span');
+        due.className = 'tc-due' + (isOverdue?' overdue-label':isToday?' today-label':'');
+        var icon = document.createElement('i');
+        icon.setAttribute('data-lucide','calendar');
+        due.appendChild(icon);
+        due.appendChild(document.createTextNode(' ' + fmtDate(d)));
+        meta.appendChild(due);
+    }
+    card.appendChild(meta);
+
+    card.addEventListener('click', function(){ openDetail(t.id); });
+    card.addEventListener('dragstart', function(e){
+        dragSrcId = t.id;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', t.id);
+    });
+    card.addEventListener('dragend', function(){
+        card.classList.remove('dragging');
+    });
+    return card;
+}
+
+function makePriBadge(p){
+    var b = document.createElement('span');
+    b.className = 'pri-badge pri-' + p;
+    var dot = document.createElement('span');
+    dot.className = 'pri-dot';
+    b.appendChild(dot);
+    b.appendChild(document.createTextNode(p.charAt(0).toUpperCase()+p.slice(1)));
+    return b;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIST RENDER
+═══════════════════════════════════════════════════════════ */
+function renderList(){
+    var tbody = document.getElementById('taskTableBody');
+    tbody.innerHTML = '';
+    var now = new Date(); now.setHours(0,0,0,0);
+    var sorted = filteredTasks.slice().sort(function(a,b){
+        var pa = PRIORITY_ORDER[a.priority]??3;
+        var pb = PRIORITY_ORDER[b.priority]??3;
+        if(pa!==pb) return pa-pb;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+    if(!sorted.length){
+        var tr=document.createElement('tr');
+        var td=document.createElement('td');
+        td.colSpan=6;
+        td.style.cssText='text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px';
+        td.textContent='No tasks match your filters';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+    sorted.forEach(function(t){
+        var d = t.due_at ? new Date(t.due_at) : null;
+        if(d) d.setHours(0,0,0,0);
+        var isOverdue = d && d < now && t.status !== 'done';
+        var tr = document.createElement('tr');
+        if(isOverdue) tr.style.background='rgba(249,115,22,.05)';
+        tr.addEventListener('click', function(){ openDetail(t.id); });
+
+        // Title
+        var tdTitle = document.createElement('td');
+        tdTitle.className = 'title-cell';
+        var span = document.createElement('span');
+        if(t.status==='done') span.className='task-done-line';
+        span.textContent = t.title;
+        tdTitle.appendChild(span);
+        tr.appendChild(tdTitle);
+
+        // Status
+        var tdSt = document.createElement('td');
+        tdSt.innerHTML = '<span class="status-pill st-'+t.status+'">'+STATUS_LABELS[t.status]+'</span>';
+        tr.appendChild(tdSt);
+
+        // Priority
+        var tdPr = document.createElement('td');
+        tdPr.appendChild(makePriBadge(t.priority));
+        tr.appendChild(tdPr);
+
+        // Category
+        var tdCat=document.createElement('td');
+        tdCat.style.cssText='font-size:12px;color:var(--text-tertiary)';
+        tdCat.textContent=t.category||'—';
+        tr.appendChild(tdCat);
+
+        // Due
+        var tdDue=document.createElement('td');
+        tdDue.style.cssText='font-size:12px;'+(isOverdue?'color:#f97316;font-weight:600':'color:var(--text-tertiary)');
+        tdDue.textContent=d?fmtDate(d):'—';
+        tr.appendChild(tdDue);
+
+        // Created
+        var tdCr=document.createElement('td');
+        tdCr.style.cssText='font-size:12px;color:var(--text-tertiary)';
+        tdCr.textContent=fmtDate(new Date(t.created_at));
+        tr.appendChild(tdCr);
+
+        tbody.appendChild(tr);
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DETAIL PANEL
+═══════════════════════════════════════════════════════════ */
+function openDetail(id){
+    var t = allTasks.find(function(x){return x.id===id;});
+    if(!t) return;
+    editingTaskId = id;
+
+    var body = document.getElementById('dpBody');
+    body.innerHTML = [
+        field('dpTitle',  'Title', '<input type="text" class="dp-input" id="dpTitle" value="'+esc(t.title)+'">'),
+        field('dpDesc',   'Description', '<textarea class="dp-input dp-textarea" id="dpDesc">'+esc(t.description||'')+'</textarea>'),
+        '<div class="dp-row">'+
+          field('dpStatus', 'Status', selHtml('dpStatus', ['todo','in_progress','waiting','done'], t.status, STATUS_LABELS))+
+          field('dpPriority','Priority', selHtml('dpPriority',['low','medium','high','urgent'], t.priority, {low:'Low',medium:'Medium',high:'High',urgent:'🔴 Urgent'}))+
+        '</div>',
+        '<div class="dp-row">'+
+          field('dpCategory','Category', selHtml('dpCategory',['TafsirKurd App','Website','Content','Admin Panel','Bugs','Ideas','Personal'], t.category||''))+
+          field('dpDue',    'Due Date', '<input type="date" class="dp-input" id="dpDue" value="'+(t.due_at?t.due_at.substring(0,10):'')+'">') +
+        '</div>',
+        field('dpAssigned','Assigned To','<input type="text" class="dp-input" id="dpAssigned" placeholder="Email or name" value="'+esc(t.assigned_to||'')+'">'),
+        '<div class="dp-field" style="font-size:11px;color:var(--text-tertiary)">Created '+fmtDateFull(t.created_at)+' by '+esc(t.created_by)+'</div>',
+        commentsHtml()
+    ].join('');
+
+    lucide.createIcons({nodes:[body]});
+    loadComments(id);
+
+    document.getElementById('detailOverlay').classList.add('open');
+    document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail(){
+    editingTaskId = null;
+    document.getElementById('detailOverlay').classList.remove('open');
+    document.getElementById('detailPanel').classList.remove('open');
+}
+
+function field(id, label, html){
+    return '<div class="dp-field"><div class="dp-label">'+label+'</div>'+html+'</div>';
+}
+
+function selHtml(id, opts, cur, labels){
+    var h = '<select class="dp-input dp-select" id="'+id+'">';
+    opts.forEach(function(o){
+        h += '<option value="'+o+'"'+(o===cur?' selected':'')+'>'+(labels?labels[o]||o:o)+'</option>';
+    });
+    h += '</select>';
+    return h;
+}
+
+function commentsHtml(){
+    return '<div class="comments-section">'+
+        '<div class="comments-title">Comments</div>'+
+        '<div id="commentsList"></div>'+
+        '<div class="comment-form">'+
+            '<textarea class="comment-input" id="commentInput" rows="2" placeholder="Add a comment…"></textarea>'+
+            '<button class="btn btn-primary" onclick="addComment()" style="align-self:flex-end;white-space:nowrap">Send</button>'+
+        '</div>'+
+    '</div>';
+}
+
+function renderComments(comments){
+    var list = document.getElementById('commentsList');
+    if(!list) return;
+    if(!comments.length){
+        list.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);padding:6px 0">No comments yet.</div>';
+        return;
+    }
+    list.innerHTML = '';
+    comments.forEach(function(c){
+        var initChar = (c.created_by||'?').charAt(0).toUpperCase();
+        var div = document.createElement('div');
+        div.className = 'comment-item';
+        div.innerHTML = '<div class="comment-av">'+initChar+'</div>'+
+            '<div class="comment-body">'+
+            '<div class="comment-meta">'+esc(c.created_by)+' · '+fmtDateFull(c.created_at)+'</div>'+
+            '<div class="comment-text">'+esc(c.content)+'</div>'+
+            '</div>';
+        list.appendChild(div);
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CREATE/EDIT MODAL
+═══════════════════════════════════════════════════════════ */
+function openModal(taskId){
+    modalEditId = taskId || null;
+    var isEdit = !!modalEditId;
+    document.getElementById('modalTitle').textContent = isEdit ? 'Edit Task' : 'New Task';
+    document.getElementById('modalSaveLbl').textContent = isEdit ? 'Save Changes' : 'Create Task';
+    if(isEdit){
+        var t = allTasks.find(function(x){return x.id===modalEditId;});
+        if(t){
+            document.getElementById('mTitle').value = t.title||'';
+            document.getElementById('mDesc').value = t.description||'';
+            document.getElementById('mStatus').value = t.status;
+            document.getElementById('mPriority').value = t.priority;
+            document.getElementById('mCategory').value = t.category||'TafsirKurd App';
+            document.getElementById('mDue').value = t.due_at?t.due_at.substring(0,10):'';
+            document.getElementById('mAssigned').value = t.assigned_to||'';
+        }
+    } else {
+        document.getElementById('mTitle').value='';
+        document.getElementById('mDesc').value='';
+        document.getElementById('mStatus').value='todo';
+        document.getElementById('mPriority').value='medium';
+        document.getElementById('mCategory').value='TafsirKurd App';
+        document.getElementById('mDue').value='';
+        document.getElementById('mAssigned').value='';
+    }
+    document.getElementById('taskModalOverlay').classList.add('open');
+    setTimeout(function(){document.getElementById('mTitle').focus();},80);
+}
+
+function closeModal(){
+    modalEditId = null;
+    document.getElementById('taskModalOverlay').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DRAG AND DROP
+═══════════════════════════════════════════════════════════ */
+function setupDrag(){
+    document.querySelectorAll('.board-col').forEach(function(col){
+        col.addEventListener('dragover', function(e){
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            col.classList.add('drag-over');
+        });
+        col.addEventListener('dragleave', function(e){
+            if(!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+        });
+        col.addEventListener('drop', function(e){
+            e.preventDefault();
+            col.classList.remove('drag-over');
+            var id = e.dataTransfer.getData('text/plain') || dragSrcId;
+            var newStatus = col.dataset.status;
+            if(id && newStatus) moveTask(id, newStatus);
+            dragSrcId = null;
+        });
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════ */
+function fmtDate(d){
+    if(!d) return '—';
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+}
+function fmtDateFull(iso){
+    if(!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function esc(s){
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setupSidebar(){
+    var toggle = document.getElementById('menu-toggle');
+    var mobileToggle = document.getElementById('mobile-menu-toggle');
+    var sidebar = document.getElementById('sidebar');
+    if(toggle) toggle.addEventListener('click', function(){sidebar.classList.toggle('collapsed');});
+    if(mobileToggle) mobileToggle.addEventListener('click', function(){sidebar.classList.toggle('open');});
+}
+</script>
+<script src="/utils/admin-notifications.js"></script>
+<script src="/utils/admin-command-palette.js"></script>
+<script src="/utils/admin-presence-avatars.js"></script>
+</body>
+</html>

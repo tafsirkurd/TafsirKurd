@@ -7,6 +7,7 @@
         { href: '/admin-dashboard.html',             icon: 'bar-chart-2',    label: 'Dashboard',         section: 'Overview',   keywords: 'home main live' },
         { href: '/admin-analytics.html',             icon: 'trending-up',    label: 'Analytics',         section: 'Overview',   keywords: 'traffic stats google' },
         { href: '/admin-search-console.html',        icon: 'search',         label: 'Search Console',    section: 'Overview',   keywords: 'seo clicks impressions rankings google' },
+        { href: '/admin-tasks.html',                 icon: 'check-square',   label: 'Tasks & Goals',     section: 'Overview',   keywords: 'todo goals tasks personal planning checklist' },
         // Content
         { href: '/admin-messages.html',              icon: 'message-square', label: 'Messages',          section: 'Content',    keywords: 'inbox contact replies' },
         { href: '/admin-videos.html',                icon: 'video',          label: 'Videos',            section: 'Content',    keywords: 'media upload' },

@@ -354,6 +354,42 @@
         .tr-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
         .tr-stat { font-size: 13px; font-weight: 600; color: var(--primary); flex-shrink: 0; }
 
+        /* ── My Tasks Widget ── */
+        .my-tasks-widget{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:0;margin-bottom:28px;overflow:hidden;}
+        .my-tasks-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border-light);}
+        .my-tasks-title{font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;}
+        .my-tasks-title svg{width:16px;height:16px;color:#8b5cf6;}
+        .my-tasks-meta{display:flex;gap:16px;padding:12px 20px;background:var(--bg-secondary,var(--bg-hover));border-bottom:1px solid var(--border-light);}
+        .my-tasks-stat{display:flex;flex-direction:column;align-items:center;gap:2px;}
+        .my-tasks-stat-val{font-size:20px;font-weight:800;color:var(--text-primary);}
+        .my-tasks-stat-val.overdue{color:#ef4444;}
+        .my-tasks-stat-val.today{color:#f59e0b;}
+        .my-tasks-stat-val.done{color:#10b981;}
+        .my-tasks-stat-lbl{font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.5px;}
+        .my-tasks-progress{padding:10px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-light);}
+        .my-tasks-progress-bar{flex:1;height:6px;background:var(--border-light);border-radius:3px;overflow:hidden;}
+        .my-tasks-progress-fill{height:100%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);border-radius:3px;transition:width .4s ease;}
+        .my-tasks-progress-pct{font-size:12px;font-weight:700;color:var(--text-secondary);min-width:36px;text-align:right;}
+        .my-tasks-list{padding:0;}
+        .my-task-row{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border-light);cursor:pointer;text-decoration:none;color:inherit;transition:background .15s;}
+        .my-task-row:last-child{border-bottom:none;}
+        .my-task-row:hover{background:var(--bg-hover);}
+        .my-task-pri{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+        .my-task-pri.urgent{background:#ef4444;}
+        .my-task-pri.high{background:#f59e0b;}
+        .my-task-pri.medium{background:#3b82f6;}
+        .my-task-pri.low{background:#6b7280;}
+        .my-task-title{flex:1;font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .my-task-due{font-size:11px;color:var(--text-tertiary);white-space:nowrap;flex-shrink:0;}
+        .my-task-due.overdue{color:#ef4444;font-weight:600;}
+        .my-tasks-empty{text-align:center;padding:28px 20px;color:var(--text-tertiary);font-size:13px;}
+        .my-tasks-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;}
+        .my-tasks-add-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;font-family:inherit;}
+        .my-tasks-add-btn:hover{opacity:.85;}
+        .my-tasks-add-btn svg{width:14px;height:14px;}
+        .my-tasks-view-all{font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;transition:opacity .15s;}
+        .my-tasks-view-all:hover{opacity:.8;}
+
         /* ── Activity Timeline ── */
         .timeline-section {
             background: var(--bg-surface);
@@ -596,6 +632,10 @@
                     <a href="/admin-search-console.html" class="nav-item">
                         <i data-lucide="search"></i>
                         <span class="nav-item-label">Search Console</span>
+                    </a>
+                    <a href="/admin-tasks.html" class="nav-item">
+                        <i data-lucide="check-square"></i>
+                        <span class="nav-item-label">Tasks</span>
                     </a>
                 </div>
                 <div class="nav-section">
@@ -1173,6 +1213,43 @@
                     </div>
                 </div>
 
+                <!-- ══ My Tasks Widget ══ -->
+                <div class="section-label">My Tasks</div>
+                <div class="my-tasks-widget card-animate" style="animation-delay:600ms" id="myTasksWidget">
+                    <div class="my-tasks-header">
+                        <div class="my-tasks-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                            Tasks &amp; Goals
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span id="myTasksUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
+                        </div>
+                    </div>
+                    <div class="my-tasks-meta" id="myTasksMeta">
+                        <div class="my-tasks-stat"><span class="my-tasks-stat-val today" id="mtTodayCount">—</span><span class="my-tasks-stat-lbl">Due Today</span></div>
+                        <div class="my-tasks-stat"><span class="my-tasks-stat-val overdue" id="mtOverdueCount">—</span><span class="my-tasks-stat-lbl">Overdue</span></div>
+                        <div class="my-tasks-stat"><span class="my-tasks-stat-val" id="mtInProgressCount">—</span><span class="my-tasks-stat-lbl">In Progress</span></div>
+                        <div class="my-tasks-stat"><span class="my-tasks-stat-val done" id="mtDoneCount">—</span><span class="my-tasks-stat-lbl">Done This Week</span></div>
+                    </div>
+                    <div class="my-tasks-progress">
+                        <div class="my-tasks-progress-bar"><div class="my-tasks-progress-fill" id="mtProgressFill" style="width:0%"></div></div>
+                        <div class="my-tasks-progress-pct" id="mtProgressPct">0%</div>
+                    </div>
+                    <div class="my-tasks-list" id="myTasksList">
+                        <div class="my-tasks-empty" id="myTasksLoading">
+                            <div style="width:24px;height:24px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
+                            Loading tasks…
+                        </div>
+                    </div>
+                    <div class="my-tasks-footer">
+                        <button class="my-tasks-add-btn" onclick="window.location='/admin-tasks.html?new=1'">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add Task
+                        </button>
+                        <a href="/admin-tasks.html" class="my-tasks-view-all">View all →</a>
+                    </div>
+                </div>
+
                 <!-- ══ Activity Timeline ══ -->
                 <div class="timeline-section card-animate" style="animation-delay:620ms">
                     <div class="timeline-header">
@@ -1329,6 +1406,8 @@
                 setInterval(loadAdminTeamOnline, 15 * 1000);
                 setInterval(loadDashboardData, 5 * 60 * 1000);
                 fetchReleaseHistory();
+                loadMyTasks();
+                setInterval(loadMyTasks, 3 * 60 * 1000);
             }
         })();
 
@@ -2282,6 +2361,87 @@
         /* ═══════════════════════════════════════════════
            MAIN DATA LOADER
            ═══════════════════════════════════════════════ */
+        /* ═══════════════════════════════════════════════
+           MY TASKS WIDGET
+           ═══════════════════════════════════════════════ */
+        async function loadMyTasks() {
+            var sb = window.adminAuth && window.adminAuth.getSupabase();
+            if (!sb) return;
+
+            var now = new Date();
+            var todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+            var todayEnd   = new Date(now); todayEnd.setHours(23,59,59,999);
+            var weekStart  = new Date(now.getTime() - 7*86400000);
+
+            var [allRes, doneWeekRes] = await Promise.all([
+                sb.from('admin_tasks')
+                  .select('id,title,status,priority,due_at,created_at')
+                  .eq('archived', false)
+                  .order('due_at', { ascending: true, nullsFirst: false }),
+                sb.from('admin_tasks')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('archived', false)
+                  .eq('status', 'done')
+                  .gte('completed_at', weekStart.toISOString())
+            ]);
+
+            if (allRes.error) { console.warn('[MyTasks]', allRes.error); return; }
+
+            var tasks = allRes.data || [];
+            var doneWeek = doneWeekRes.count || 0;
+
+            var today = tasks.filter(function(t) {
+                if (!t.due_at || t.status === 'done') return false;
+                var d = new Date(t.due_at);
+                return d >= todayStart && d <= todayEnd;
+            });
+            var overdue = tasks.filter(function(t) {
+                if (!t.due_at || t.status === 'done') return false;
+                return new Date(t.due_at) < todayStart;
+            });
+            var inProgress = tasks.filter(function(t) { return t.status === 'in_progress'; });
+            var total = tasks.filter(function(t) { return t.status !== 'done'; }).length + doneWeek;
+            var pct = total > 0 ? Math.round((doneWeek / total) * 100) : 0;
+
+            // Update stat counts
+            document.getElementById('mtTodayCount').textContent   = today.length;
+            document.getElementById('mtOverdueCount').textContent = overdue.length;
+            document.getElementById('mtInProgressCount').textContent = inProgress.length;
+            document.getElementById('mtDoneCount').textContent    = doneWeek;
+            document.getElementById('mtProgressFill').style.width = pct + '%';
+            document.getElementById('mtProgressPct').textContent  = pct + '%';
+            document.getElementById('myTasksUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+            // Next 5 upcoming non-done tasks (overdue first, then by due_at, then no-due)
+            var urgent = tasks.filter(function(t){ return t.status !== 'done' && t.due_at && new Date(t.due_at) < todayStart; });
+            var upcoming = tasks.filter(function(t){ return t.status !== 'done' && t.due_at && new Date(t.due_at) >= todayStart; });
+            var noDue = tasks.filter(function(t){ return t.status !== 'done' && !t.due_at; });
+            var next5 = urgent.concat(upcoming).concat(noDue).slice(0, 5);
+
+            var list = document.getElementById('myTasksList');
+            if (next5.length === 0) {
+                list.innerHTML = '<div class="my-tasks-empty">All caught up! No pending tasks.</div>';
+            } else {
+                list.innerHTML = next5.map(function(t) {
+                    var isOverdue = t.due_at && new Date(t.due_at) < todayStart && t.status !== 'done';
+                    var dueStr = '';
+                    if (t.due_at) {
+                        var d = new Date(t.due_at);
+                        dueStr = d.toLocaleDateString([], {month:'short',day:'numeric'});
+                    }
+                    return '<a class="my-task-row" href="/admin-tasks.html?id=' + t.id + '">' +
+                        '<span class="my-task-pri ' + (t.priority||'medium') + '"></span>' +
+                        '<span class="my-task-title">' + _escHtml(t.title) + '</span>' +
+                        (dueStr ? '<span class="my-task-due' + (isOverdue ? ' overdue' : '') + '">' + dueStr + '</span>' : '') +
+                        '</a>';
+                }).join('');
+            }
+        }
+
+        function _escHtml(s) {
+            return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
         async function loadDashboardData() {
             var supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
