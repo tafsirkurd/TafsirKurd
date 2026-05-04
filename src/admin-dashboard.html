@@ -818,10 +818,24 @@
                         <i data-lucide="clock"></i>
                         <span id="sessionTimerText">2:00:00</span>
                     </div>
-                    <button class="topbar-btn" style="position:relative;">
-                        <i data-lucide="bell"></i>
-                        <span id="notification-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;display:none;"></span>
-                    </button>
+                    <div style="position:relative;">
+                        <button class="topbar-btn" id="notifBellBtn" onclick="toggleNotifDropdown(event)" title="Notifications" aria-haspopup="true">
+                            <i data-lucide="bell"></i>
+                            <span id="notification-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;display:none;"></span>
+                        </button>
+                        <div id="notifDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:320px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.14);z-index:9999;overflow:hidden;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border-light);">
+                                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">Notifications</span>
+                                <button onclick="clearNotifDropdown()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:600;padding:2px 8px;border-radius:8px;background:var(--bg-active);">Mark all read</button>
+                            </div>
+                            <div id="notifDropdownList" style="max-height:340px;overflow-y:auto;">
+                                <div style="padding:24px 16px;text-align:center;color:var(--text-tertiary);font-size:13px;">Loading…</div>
+                            </div>
+                            <div style="padding:10px 16px;border-top:1px solid var(--border-light);text-align:center;">
+                                <a href="/admin-messages.html" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none;">View all messages →</a>
+                            </div>
+                        </div>
+                    </div>
                     <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode">
                         <i data-lucide="moon" id="theme-icon"></i>
                     </button>
@@ -851,7 +865,7 @@
                 <!-- ══ Metric Cards ══ -->
                 <div class="metrics-grid" id="metricsGrid">
                     <!-- Total Users -->
-                    <div class="metric-card card-animate" style="animation-delay:0ms">
+                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:0ms;text-decoration:none;color:inherit;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
                                 <i data-lucide="users"></i>
@@ -861,9 +875,9 @@
                         <div class="metric-value" id="metricUsers">--</div>
                         <div class="metric-label">Total Users</div>
                         <div class="metric-sparkline" id="sparkUsers"></div>
-                    </div>
+                    </a>
                     <!-- Active Today -->
-                    <div class="metric-card card-animate" style="animation-delay:60ms">
+                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:60ms;text-decoration:none;color:inherit;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
                                 <i data-lucide="activity"></i>
@@ -873,9 +887,9 @@
                         <div class="metric-value" id="metricActiveToday">--</div>
                         <div class="metric-label">Active Today</div>
                         <div class="metric-sparkline" id="sparkToday"></div>
-                    </div>
+                    </a>
                     <!-- Active 7d -->
-                    <div class="metric-card card-animate" style="animation-delay:120ms">
+                    <a href="/admin-analytics.html" class="metric-card card-animate" style="animation-delay:120ms;text-decoration:none;color:inherit;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">
                                 <i data-lucide="calendar"></i>
@@ -885,9 +899,9 @@
                         <div class="metric-value" id="metricActive7d">--</div>
                         <div class="metric-label">Active (7 days)</div>
                         <div class="metric-sparkline" id="spark7d"></div>
-                    </div>
+                    </a>
                     <!-- Active 30d -->
-                    <div class="metric-card card-animate" style="animation-delay:180ms">
+                    <a href="/admin-analytics.html" class="metric-card card-animate" style="animation-delay:180ms;text-decoration:none;color:inherit;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
                                 <i data-lucide="trending-up"></i>
@@ -897,9 +911,9 @@
                         <div class="metric-value" id="metricActive30d">--</div>
                         <div class="metric-label">Active (30 days)</div>
                         <div class="metric-sparkline" id="spark30d"></div>
-                    </div>
+                    </a>
                     <!-- Unread Messages -->
-                    <div class="metric-card card-animate" style="animation-delay:240ms">
+                    <a href="/admin-messages.html" class="metric-card card-animate" style="animation-delay:240ms;text-decoration:none;color:inherit;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">
                                 <i data-lucide="mail"></i>
@@ -909,9 +923,9 @@
                         <div class="metric-value" id="metricMessages">--</div>
                         <div class="metric-label">Unread Messages</div>
                         <div class="metric-sparkline" id="sparkMessages"></div>
-                    </div>
+                    </a>
                     <!-- Active Readers -->
-                    <div class="metric-card card-animate" style="animation-delay:300ms">
+                    <a href="/admin-reading-stats.html" class="metric-card card-animate" style="animation-delay:300ms;text-decoration:none;color:inherit;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(20,184,166,0.1);color:#14b8a6;">
                                 <i data-lucide="book-open"></i>
@@ -921,9 +935,9 @@
                         <div class="metric-value" id="metricReaders">--</div>
                         <div class="metric-label">Active Readers</div>
                         <div class="metric-sparkline" id="sparkReaders"></div>
-                    </div>
+                    </a>
                     <!-- Online Now -->
-                    <div class="metric-card card-animate" style="animation-delay:360ms">
+                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:360ms;text-decoration:none;color:inherit;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;">
                                 <span class="online-pulse"></span>
@@ -932,7 +946,7 @@
                         <div class="metric-value" id="metricOnline">--</div>
                         <div class="metric-label">Online Now</div>
                         <div class="online-platform-row" id="dashOnlinePlatforms"></div>
-                    </div>
+                    </a>
                 </div>
 
                                 <!-- ══ Needs Attention ══ -->
@@ -2456,6 +2470,13 @@
             document.getElementById('mtProgressPct').textContent  = pct + '%';
             document.getElementById('myTasksUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 
+            // Feed overdue tasks into the notification bell
+            feedNotifFromTasks(tasks);
+            // Re-read badge total from current badge text + overdue
+            var _curBadge = document.getElementById('notification-badge');
+            var _prevTotal = _curBadge && _curBadge.style.display !== 'none' ? (parseInt(_curBadge.textContent)||0) : 0;
+            if (overdue.length > 0) updateNotifBell(0, overdue.length, 0);
+
             // Update banner with overdue count (keep other values from last dashboard load)
             var _bar = document.getElementById('needsAttentionItems');
             if (_bar) {
@@ -2671,13 +2692,17 @@
             buildAppVersionsWidget(val(21));
             updateRHPlatformBar(val(21));
 
-            // ─── Needs Attention ───
+            // ─── Needs Attention + Notification Bell ───
             var _errData = val(19);
+            var _err24h = (_errData && _errData.success) ? (_errData.counts.last24h || 0) : 0;
             updateNeedsAttention({
                 messages:     unreadCount || 0,
                 overdueTasks: 0,  // filled in by loadMyTasks
-                errors24h:    (_errData && _errData.success) ? (_errData.counts.last24h || 0) : 0
+                errors24h:    _err24h
             });
+            feedNotifFromMessages(messages);
+            feedNotifFromErrors(_errData);
+            updateNotifBell(unreadCount || 0, 0, _err24h);
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));
@@ -2693,6 +2718,126 @@
             lucide.createIcons();
         }
 
+
+        /* ═══════════════════════════════════════════════
+           NOTIFICATION BELL DROPDOWN
+           ═══════════════════════════════════════════════ */
+        var _notifItems = [];  // [{type, title, sub, href, time, color}]
+        var _notifDropdownOpen = false;
+
+        function toggleNotifDropdown(e) {
+            e.stopPropagation();
+            var dd = document.getElementById('notifDropdown');
+            if (!dd) return;
+            _notifDropdownOpen = !_notifDropdownOpen;
+            dd.style.display = _notifDropdownOpen ? '' : 'none';
+            if (_notifDropdownOpen) renderNotifDropdown();
+        }
+
+        function closeNotifDropdown() {
+            var dd = document.getElementById('notifDropdown');
+            if (dd) dd.style.display = 'none';
+            _notifDropdownOpen = false;
+        }
+
+        document.addEventListener('click', function(e) {
+            if (_notifDropdownOpen && !document.getElementById('notifDropdown').contains(e.target)) {
+                closeNotifDropdown();
+            }
+        });
+
+        function _pushNotifItem(item) {
+            var exists = _notifItems.some(function(n) { return n.id === item.id; });
+            if (!exists) _notifItems.push(item);
+        }
+
+        function updateNotifBell(unreadMessages, overdueTasks, errors24h) {
+            var total = (unreadMessages || 0) + (overdueTasks || 0) + (errors24h > 0 ? 1 : 0);
+            var badge = document.getElementById('notification-badge');
+            if (badge) {
+                if (total > 0) {
+                    badge.textContent = total > 99 ? '99+' : total;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        function feedNotifFromMessages(messages) {
+            if (!messages) return;
+            messages.filter(function(m) { return m.status === 'unread'; }).slice(0, 5).forEach(function(m) {
+                _pushNotifItem({
+                    id: 'msg-' + m.id,
+                    type: 'message',
+                    icon: '✉',
+                    color: '#ef4444',
+                    title: (m.name || 'Someone') + ' sent a message',
+                    sub: m.subject || 'No subject',
+                    href: '/admin-messages.html',
+                    time: new Date(m.created_at)
+                });
+            });
+        }
+
+        function feedNotifFromTasks(tasks) {
+            if (!tasks) return;
+            var now = new Date(); now.setHours(0,0,0,0);
+            tasks.filter(function(t) { return t.due_at && new Date(t.due_at) < now && t.status !== 'done'; }).slice(0, 3).forEach(function(t) {
+                _pushNotifItem({
+                    id: 'task-' + t.id,
+                    type: 'task',
+                    icon: '⚠',
+                    color: '#f59e0b',
+                    title: 'Overdue: ' + t.title,
+                    sub: 'Due ' + new Date(t.due_at).toLocaleDateString([], {month:'short',day:'numeric'}),
+                    href: '/admin-tasks.html?id=' + t.id,
+                    time: new Date(t.due_at)
+                });
+            });
+        }
+
+        function feedNotifFromErrors(errData) {
+            if (!errData || !errData.success || !errData.counts.last24h) return;
+            _pushNotifItem({
+                id: 'errors-24h',
+                type: 'error',
+                icon: '⚡',
+                color: '#3b82f6',
+                title: errData.counts.last24h + ' app error' + (errData.counts.last24h === 1 ? '' : 's') + ' in last 24h',
+                sub: 'Click to review error log',
+                href: '/admin-errors.html',
+                time: new Date()
+            });
+        }
+
+        function renderNotifDropdown() {
+            var list = document.getElementById('notifDropdownList');
+            if (!list) return;
+            // Sort by time descending
+            var sorted = _notifItems.slice().sort(function(a, b) { return b.time - a.time; });
+            if (!sorted.length) {
+                list.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--text-tertiary);font-size:13px;">All clear — nothing needs attention.</div>';
+                return;
+            }
+            list.innerHTML = sorted.map(function(n) {
+                return '<a href="' + n.href + '" style="display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border-light);text-decoration:none;color:var(--text-primary);transition:background .12s;" onmouseenter="this.style.background=\'var(--bg-hover)\'" onmouseleave="this.style.background=\'\'">'
+                    + '<span style="font-size:18px;line-height:1.3;flex-shrink:0;color:' + n.color + '">' + n.icon + '</span>'
+                    + '<div style="min-width:0;flex:1;">'
+                    + '<div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _escHtml(n.title) + '</div>'
+                    + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">' + _escHtml(n.sub) + '</div>'
+                    + '</div>'
+                    + '<div style="font-size:10px;color:var(--text-tertiary);white-space:nowrap;flex-shrink:0;margin-top:2px;">' + getTimeAgo(n.time) + '</div>'
+                    + '</a>';
+            }).join('');
+        }
+
+        function clearNotifDropdown() {
+            _notifItems = [];
+            renderNotifDropdown();
+            var badge = document.getElementById('notification-badge');
+            if (badge) badge.style.display = 'none';
+        }
 
         /* ═══════════════════════════════════════════════
            NEEDS ATTENTION BANNER
