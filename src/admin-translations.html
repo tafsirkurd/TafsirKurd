@@ -999,6 +999,14 @@
         }
         .mention-flash { animation: mention-flash .4s ease-out both; }
 
+        /* ── force-hide any dropdown that has [hidden] attribute ── */
+        .mention-dropdown[hidden], .mention-menu[hidden] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
         /* ── spotlight: item that mentions the current admin (auto-scan) ── */
         @keyframes mentionSpotlight {
             0%   { box-shadow: 0 0 0 0   rgba(99,102,241,.0);  background: transparent; }
@@ -2897,6 +2905,7 @@
         var _mentionActiveIdx = -1;
         var _mentionJustInserted = false;
         var _mentionInputTimer = null;
+        var _mentionGeneration = 0; // incremented on every close; stale async callbacks abort
         var _MENTION_PALETTE = [
             {bg:'rgba(99,102,241,.18)',color:'#818cf8'},
             {bg:'rgba(16,185,129,.18)',color:'#34d399'},
@@ -2922,8 +2931,16 @@
         }
 
         function _buildMentionDrop(drop, query, ta, draftKey) {
+            // Guard 1: flag set by _insertMention
+            if (_mentionJustInserted) return;
+            // Guard 2: generation counter — async .then() callbacks capture their generation;
+            // if _closeMentionDropdown fired since, generation won't match
+            var myGeneration = _mentionGeneration;
             if (!_mentionLoaded && !_mentionLoading && supabase) {
-                _loadMentionAdmins(supabase).then(function() { _buildMentionDrop(drop, query, ta, draftKey); });
+                _loadMentionAdmins(supabase).then(function() {
+                    if (_mentionGeneration !== myGeneration) return; // stale
+                    _buildMentionDrop(drop, query, ta, draftKey);
+                });
             }
             var source = _mentionAdmins.length ? _mentionAdmins : _mentionAdminsFromHistory();
             var q = (query || '').toLowerCase();
@@ -2964,29 +2981,45 @@
             }
 
             // Only update position when first showing (avoid repaint-induced :hover reset)
-            if (drop.style.display === 'none' || !drop.style.top) {
+            if (drop.style.display === 'none' || drop.hidden || !drop.style.top) {
                 var rect = ta.getBoundingClientRect();
                 drop.style.left  = rect.left + 'px';
                 drop.style.width = rect.width + 'px';
                 drop.style.top   = (rect.bottom + 4) + 'px';
             }
+            console.trace('[MentionDebug] SHOWING dropdown — justInserted=' + _mentionJustInserted + ' gen=' + _mentionGeneration + '/' + myGeneration);
+            drop.hidden = false;
             drop.style.display = 'block';
         }
 
-        // Hard-close every mention dropdown in the page — kills the debounce timer too
+        // Nuclear close — kills timer, sets every possible hide property, runs twice
         function _closeMentionDropdown(drop) {
+            _mentionGeneration++;
             clearTimeout(_mentionInputTimer);
             _mentionInputTimer = null;
             _mentionActiveIdx = -1;
-            document.querySelectorAll('.mention-dropdown, .mention-menu').forEach(function(el) {
+            var _found = document.querySelectorAll('.mention-dropdown, .mention-menu, [data-mention-dropdown]').length;
+            console.log('[MentionDebug] _closeMentionDropdown gen=' + _mentionGeneration + ' elements=' + _found);
+            function _nukeEl(el) {
                 while (el.firstChild) el.removeChild(el.firstChild);
+                el.hidden = true;
                 el.style.display = 'none';
+                el.style.visibility = 'hidden';
+                el.style.opacity = '0';
+                el.style.pointerEvents = 'none';
                 el.removeAttribute('data-key');
-            });
+                el.classList.remove('open', 'active', 'show', 'visible');
+            }
+            document.querySelectorAll('.mention-dropdown, .mention-menu, [data-mention-dropdown]').forEach(_nukeEl);
+            // Second pass after microtasks — catches synchronous reopens from focus/blur
+            setTimeout(function() {
+                document.querySelectorAll('.mention-dropdown, .mention-menu, [data-mention-dropdown]').forEach(_nukeEl);
+            }, 0);
         }
 
         function _insertMention(ta, name, drop, draftKey) {
-            // Kill any pending debounce — this is the root cause of the dropdown reopening
+            console.log('[MentionDebug] _insertMention called for:', name);
+            // Step 1: hard-close everything and cancel pending timer
             _closeMentionDropdown(drop);
 
             var val = ta.value;
@@ -2999,17 +3032,44 @@
             var dupPat = new RegExp('(?:^|\\s)@' + escapedName + '(?=\\s|$)', 'i');
             if (dupPat.test(withoutPartial)) {
                 _mentionJustInserted = true;
+                setTimeout(function() { _mentionJustInserted = false; }, 250);
                 ta.focus();
                 return;
             }
+
+            // Step 2: set flag BEFORE focus so _buildMentionDrop guard blocks async callbacks
             _mentionJustInserted = true;
             var replaced = before.replace(/@([^\s@]*)$/, '@' + name + ' ');
             ta.value = replaced + after;
             var newPos = replaced.length;
             ta.setSelectionRange(newPos, newPos);
             ta.focus();
-            // Close again after focus settles — belt and suspenders
-            setTimeout(function() { _closeMentionDropdown(null); }, 0);
+
+            // Step 3: reset flag after 250ms — long enough to block async .then() callbacks
+            // but short enough that typing @ again opens the dropdown normally
+            setTimeout(function() { _mentionJustInserted = false; }, 250);
+
+            // Step 4: debug log — fires 400ms after insert to catch any async reopens
+            setTimeout(function() {
+                var allDrops = [];
+                document.querySelectorAll('.mention-dropdown,.mention-menu').forEach(function(el) {
+                    var r = el.getBoundingClientRect();
+                    allDrops.push({
+                        display: el.style.display, hidden: el.hidden,
+                        visibility: el.style.visibility, childCount: el.childElementCount,
+                        visuallyVisible: r.width > 0 && r.height > 0,
+                        rect: r.top.toFixed(0) + ',' + r.left.toFixed(0) + ' ' + r.width.toFixed(0) + 'x' + r.height.toFixed(0)
+                    });
+                });
+                console.log('[MentionDebug] 400ms after insert:', {
+                    dropDisplay: drop ? drop.style.display : 'n/a',
+                    dropHidden: drop ? drop.hidden : 'n/a',
+                    justInserted: _mentionJustInserted,
+                    activeElement: document.activeElement ? document.activeElement.tagName + '#' + document.activeElement.id : 'none',
+                    allDropdowns: allDrops
+                });
+            }, 400);
+
             // Subtle flash to confirm insertion
             ta.classList.remove('mention-flash');
             void ta.offsetWidth;
