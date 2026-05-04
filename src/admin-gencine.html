@@ -2259,8 +2259,8 @@ function renderTasbihList() {
         var body = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = item.ar;
         arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem';
-        var sortEl = mke('div','item-card-meta'); sortEl.textContent = 'order: ' + item.sort_order + (item.active ? '' : ' · hidden');
-        body.appendChild(arEl); body.appendChild(sortEl);
+        if (!item.active) { var sortEl = mke('div','item-card-meta'); sortEl.textContent = 'hidden'; body.appendChild(arEl); body.appendChild(sortEl); }
+        else body.appendChild(arEl);
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, function(id){ return function(){ editTasbih(id); }; }(item.id)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function(id){ return function(){ deleteTasbih(id); }; }(item.id)));
