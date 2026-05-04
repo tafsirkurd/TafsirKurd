@@ -58,12 +58,13 @@
   }
 
   // ── add ────────────────────────────────────────────────────
-  function _add(title, desc, type, link, sourceId) {
+  function _add(title, desc, type, link, sourceId, dbId) {
     if (sourceId && _hasSeen(sourceId)) return;
     var items = _load();
     items.unshift({
       id: Date.now() + Math.random(),
       sourceId: sourceId || null,
+      dbId: dbId || null,
       title: title,
       desc: desc || '',
       type: type || 'info',
@@ -74,6 +75,17 @@
     _save(items);
     _updateBadge();
     _refreshPanel();
+  }
+
+  // ── mark a DB mention notification as read ─────────────────
+  function _markReadInDB(dbId) {
+    if (!dbId) return;
+    var sb = _getSB();
+    if (!sb) return;
+    sb.from('admin_mention_notifs')
+      .update({ read: true })
+      .eq('id', dbId)
+      .then(function() {});
   }
 
   // ── time helpers ───────────────────────────────────────────
@@ -500,6 +512,10 @@
       actBtn.textContent = 'View →';
       actBtn.addEventListener('click', function(e) {
         e.stopPropagation();
+        var all = _load();
+        var n = all.find(function(i) { return i.id === item.id; });
+        if (n && !n.read) { n.read = true; _save(all); _updateBadge(); }
+        _markReadInDB(item.dbId);
         if (item.link) window.location.href = item.link;
       });
       txt.appendChild(actBtn);
@@ -529,7 +545,7 @@
     row.addEventListener('click', function() {
       var all = _load();
       var n = all.find(function(i) { return i.id === item.id; });
-      if (n) { n.read = true; _save(all); }
+      if (n && !n.read) { n.read = true; _save(all); _markReadInDB(item.dbId); }
       _updateBadge();
       if (item.link) window.location.href = item.link;
       else _refreshPanel();
@@ -660,7 +676,7 @@
           res.data.forEach(function(n) {
             var d = n.data || {};
             var link = d.rowId ? '/admin-translations.html?mention=' + d.rowId : null;
-            _add(n.title, n.body || '', n.type || 'mention', link, 'db_' + n.id);
+            _add(n.title, n.body || '', n.type || 'mention', link, 'db_' + n.id, n.id);
           });
         });
     }

@@ -992,27 +992,32 @@
         .mention-option-name { flex: 1; }
         .mention-option-role { font-size: 10px; color: var(--text-tertiary); }
 
+        /* ── mention insert flash on textarea ── */
+        @keyframes mention-flash {
+            0%   { box-shadow: 0 0 0 2px rgba(99,102,241,.45); }
+            100% { box-shadow: 0 0 0 0   rgba(99,102,241,.0);  }
+        }
+        .mention-flash { animation: mention-flash .4s ease-out both; }
+
         /* ── spotlight: item that mentions the current admin (auto-scan) ── */
         @keyframes mentionSpotlight {
-            0%   { box-shadow: 0 0 0 0   rgba(99,102,241,.7); background: transparent; }
-            18%  { box-shadow: 0 0 0 7px rgba(99,102,241,.35); background: rgba(99,102,241,.07); }
-            55%  { box-shadow: 0 0 0 4px rgba(99,102,241,.18); background: rgba(99,102,241,.04); }
+            0%   { box-shadow: 0 0 0 0   rgba(99,102,241,.0);  background: transparent; }
+            15%  { box-shadow: 0 0 0 5px rgba(99,102,241,.28); background: rgba(99,102,241,.06); }
             100% { box-shadow: 0 0 0 0   rgba(99,102,241,.0);  background: transparent; }
         }
         .history-item.mention-spotlight-me {
             border-left: 3px solid #818cf8 !important;
-            animation: mentionSpotlight 2.8s ease-out both;
+            animation: mentionSpotlight 1.8s ease-out both;
         }
         /* ── spotlight: navigated from notification link (amber pulse) ── */
         @keyframes mentionSpotlightUrl {
-            0%   { box-shadow: 0 0 0 0   rgba(251,191,36,.9); background: transparent; }
-            12%  { box-shadow: 0 0 0 10px rgba(251,191,36,.45); background: rgba(251,191,36,.1); border-left-color: #fbbf24 !important; }
-            40%  { box-shadow: 0 0 0 6px  rgba(251,191,36,.25); background: rgba(251,191,36,.06); }
+            0%   { box-shadow: 0 0 0 0   rgba(251,191,36,.0);  background: transparent; }
+            12%  { box-shadow: 0 0 0 6px rgba(251,191,36,.38); background: rgba(251,191,36,.08); border-left-color: #fbbf24 !important; }
             100% { box-shadow: 0 0 0 0   rgba(251,191,36,.0);  background: transparent; border-left-color: #fbbf24 !important; }
         }
         .history-item.mention-spotlight-url {
             border-left: 3px solid #fbbf24 !important;
-            animation: mentionSpotlightUrl 3.2s cubic-bezier(.22,1,.36,1) both;
+            animation: mentionSpotlightUrl 2s cubic-bezier(.22,1,.36,1) both;
         }
         /* Live dot in history panel header */
         .history-live-dot {
@@ -2891,6 +2896,7 @@
         // ── @mention autocomplete logic ────────────────────────
         var _mentionActiveIdx = -1;
         var _mentionJustInserted = false;
+        var _mentionInputTimer = null;
         var _MENTION_PALETTE = [
             {bg:'rgba(99,102,241,.18)',color:'#818cf8'},
             {bg:'rgba(16,185,129,.18)',color:'#34d399'},
@@ -2923,7 +2929,7 @@
             var q = (query || '').toLowerCase();
             var matches = source.filter(function(a) {
                 return !q || a.name.toLowerCase().indexOf(q) !== -1;
-            }).slice(0, 8);
+            }).slice(0, 6);
 
             if (!matches.length) { drop.style.display = 'none'; return; }
 
@@ -2967,19 +2973,47 @@
             drop.style.display = 'block';
         }
 
+        // Hard-close every mention dropdown in the page — kills the debounce timer too
+        function _closeMentionDropdown(drop) {
+            clearTimeout(_mentionInputTimer);
+            _mentionInputTimer = null;
+            _mentionActiveIdx = -1;
+            document.querySelectorAll('.mention-dropdown, .mention-menu').forEach(function(el) {
+                while (el.firstChild) el.removeChild(el.firstChild);
+                el.style.display = 'none';
+                el.removeAttribute('data-key');
+            });
+        }
+
         function _insertMention(ta, name, drop, draftKey) {
-            // Hide immediately — before any focus/repaint
-            if (drop) { drop.style.display = 'none'; drop.setAttribute('data-key', ''); }
-            _mentionJustInserted = true;
+            // Kill any pending debounce — this is the root cause of the dropdown reopening
+            _closeMentionDropdown(drop);
+
             var val = ta.value;
             var pos = ta.selectionStart;
             var before = val.slice(0, pos);
+            var after  = val.slice(pos);
+            // Prevent duplicate — check text with current partial @token removed
+            var withoutPartial = before.replace(/@([^\s@]*)$/, '') + after;
+            var escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var dupPat = new RegExp('(?:^|\\s)@' + escapedName + '(?=\\s|$)', 'i');
+            if (dupPat.test(withoutPartial)) {
+                _mentionJustInserted = true;
+                ta.focus();
+                return;
+            }
+            _mentionJustInserted = true;
             var replaced = before.replace(/@([^\s@]*)$/, '@' + name + ' ');
-            var after = val.slice(pos);
             ta.value = replaced + after;
             var newPos = replaced.length;
             ta.setSelectionRange(newPos, newPos);
             ta.focus();
+            // Close again after focus settles — belt and suspenders
+            setTimeout(function() { _closeMentionDropdown(null); }, 0);
+            // Subtle flash to confirm insertion
+            ta.classList.remove('mention-flash');
+            void ta.offsetWidth;
+            ta.classList.add('mention-flash');
             // Save draft directly — don't dispatch input (avoids re-triggering dropdown)
             if (draftKey) {
                 if (ta.value) localStorage.setItem(draftKey, ta.value);
@@ -2988,10 +3022,13 @@
         }
 
         function _handleMentionInput(ta, drop, draftKey) {
-            if (_mentionJustInserted) { _mentionJustInserted = false; return; }
+            if (_mentionJustInserted) { _mentionJustInserted = false; _closeMentionDropdown(drop); return; }
+            clearTimeout(_mentionInputTimer);
             var q = _getMentionQuery(ta);
-            if (q === null) { drop.style.display = 'none'; return; }
-            _buildMentionDrop(drop, q, ta, draftKey);
+            if (q === null) { _closeMentionDropdown(drop); return; }
+            _mentionInputTimer = setTimeout(function() {
+                _buildMentionDrop(drop, q, ta, draftKey);
+            }, 120);
         }
 
         function _handleMentionKey(e, ta, drop, draftKey) {
@@ -3032,7 +3069,7 @@
                 }
                 return;
             } else if (e.key === 'Escape') {
-                drop.style.display = 'none'; return;
+                _closeMentionDropdown(drop); return;
             } else { return; }
             opts.forEach(function(o) { o.classList.remove('mention-active'); });
             if (_mentionActiveIdx >= 0) opts[_mentionActiveIdx].classList.add('mention-active');
@@ -4957,7 +4994,7 @@
                         ta.addEventListener('keydown', function(e) { _handleMentionKey(e, ta, drop, _draftKey); });
                         var _dropHovered = false;
                         ta.addEventListener('blur', function() {
-                            setTimeout(function() { if (!_dropHovered) drop.style.display = 'none'; }, 150);
+                            setTimeout(function() { if (!_dropHovered) _closeMentionDropdown(drop); }, 150);
                         });
                         form.appendChild(ta);
                         // mention dropdown — appended to body so overflow:hidden ancestors don't clip it
@@ -4969,10 +5006,10 @@
                         var actions = makeEl('div', 'mark-form-actions');
                         var cancelBtn = makeEl('button', 'mark-btn-cancel', 'Cancel');
                         cancelBtn.type = 'button';
-                        cancelBtn.onclick = function() { form.style.display = 'none'; };
+                        cancelBtn.onclick = function() { _closeMentionDropdown(drop); form.style.display = 'none'; };
                         var saveBtn = makeEl('button', 'mark-btn-save', '✓ Save Mark');
                         saveBtn.type = 'button';
-                        saveBtn.onclick = function() { saveMark(rowId, ta.value.trim(), _draftKey); };
+                        saveBtn.onclick = function() { _closeMentionDropdown(drop); saveMark(rowId, ta.value.trim(), _draftKey); };
                         actions.appendChild(cancelBtn);
                         actions.appendChild(saveBtn);
                         form.appendChild(actions);
@@ -5037,9 +5074,23 @@
                 row.details = newDetails;
                 if (draftKey) localStorage.removeItem(draftKey);
 
-                // Write a notification row for each mentioned admin (skip self)
+                // Remove notifications for admins no longer mentioned in this note
+                var prevMentions = (row.details && row.details.mark_mentions) || [];
+                var prevEmails = prevMentions.map(function(m) { return m.email; });
+                var newEmails  = mentionedAdmins.map(function(a) { return a.email; });
+                prevEmails.forEach(function(pe) {
+                    if (!newEmails.includes(pe) && pe !== email) {
+                        supabase.from('admin_mention_notifs')
+                            .delete()
+                            .eq('source_id', 'mention_' + rowId + '_' + pe)
+                            .then(function() {});
+                    }
+                });
+
+                // Write/update a notification row for each mentioned admin (skip self)
                 var notePreview = note.length > 90 ? note.slice(0, 90) + '…' : note;
                 var notifData = { rowId: rowId, key_id: keyId, page: page, platform: platform, mentioner: myName, mentionerEmail: email };
+                var nowIso = new Date().toISOString();
                 for (var mi = 0; mi < mentionedAdmins.length; mi++) {
                     var ma = mentionedAdmins[mi];
                     if (ma.email === email) continue; // never notify self
@@ -5050,6 +5101,7 @@
                         body: '"' + notePreview + '" · ' + keyId,
                         source_id: 'mention_' + rowId + '_' + ma.email,
                         data: notifData,
+                        updated_at: nowIso,
                         read: false,
                         created_by: email
                     }, { onConflict: 'source_id' });
