@@ -3,6 +3,7 @@
 // Version 2.0 - RBAC sidebar permissions
 // Admin-auth.js v2.0 loaded
 
+
 let supabaseClient = null;
 let adminPermissions = [];
 
@@ -194,9 +195,13 @@ async function checkAuth() {
             // Track this page visit for dashboard quick-actions
             trackPageVisit();
 
+            // Reveal page — was hidden by instant guard above
+            document.documentElement.style.visibility = '';
+
             return data;
         } else {
             if (data.error && data.error.includes('Device not authorized')) {
+                document.documentElement.style.visibility = '';
                 showDeviceBlockedMessage();
             }
 
@@ -206,6 +211,7 @@ async function checkAuth() {
         }
     } catch (error) {
         console.error('Session verification error:', error);
+        document.documentElement.style.visibility = '';
         redirectToLogin();
         return false;
     }
