@@ -3092,6 +3092,7 @@
                             if (ta.value) localStorage.setItem(draftKey, ta.value);
                             else localStorage.removeItem(draftKey);
                         }
+                        ta.dispatchEvent(new Event('input', { bubbles: true }));
                         return;
                     }
                 }
