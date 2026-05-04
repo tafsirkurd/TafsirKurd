@@ -5119,14 +5119,15 @@
             });
 
             try {
-                var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
-                if (result.error) throw result.error;
-                row.details = newDetails;
-                if (draftKey) localStorage.removeItem(draftKey);
-
-                // Remove notifications for admins no longer mentioned in this note
+                // Capture old mentions BEFORE overwriting row.details
                 var prevMentions = (row.details && row.details.mark_mentions) || [];
                 var prevEmails = prevMentions.map(function(m) { return m.email; });
+
+                var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId).select('id');
+                if (result.error) throw result.error;
+                if (!result.data || !result.data.length) throw new Error('Update was blocked — run the SQL migration in src/database/allow_admin_audit_log_mark_updates.sql in Supabase.');
+                row.details = newDetails;
+                if (draftKey) localStorage.removeItem(draftKey);
                 var newEmails  = mentionedAdmins.map(function(a) { return a.email; });
                 prevEmails.forEach(function(pe) {
                     if (!newEmails.includes(pe) && pe !== email) {
