@@ -3057,6 +3057,8 @@
                 if (ta.value) localStorage.setItem(draftKey, ta.value);
                 else localStorage.removeItem(draftKey);
             }
+            // Fire synthetic input so listeners (preview, draft) update without a real keystroke
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         function _handleMentionInput(ta, drop, draftKey) {
