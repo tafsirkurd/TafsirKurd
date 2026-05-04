@@ -217,15 +217,112 @@
             height: 220px;
         }
 
-        /* ── Quick Actions ── */
+        /* ── Chart Insights ── */
+        .chart-insights {
+            display: flex;
+            gap: 16px;
+            padding: 10px 4px 2px;
+            flex-wrap: wrap;
+        }
+        .ci-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .ci-val {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+        .ci-lbl {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-tertiary);
+        }
+        .ci-divider {
+            width: 1px;
+            background: var(--border-light);
+            align-self: stretch;
+            margin: 2px 0;
+        }
+
+        /* ── Platform Split Row ── */
+        .ps-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .ps-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            flex: 1;
+            min-width: 100px;
+        }
+        .ps-icon { font-size: 16px; flex-shrink: 0; }
+        .ps-info { min-width: 0; }
+        .ps-count { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+        .ps-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); }
+        .ps-bar-wrap { flex: 1; height: 4px; background: var(--border-light); border-radius: 2px; overflow: hidden; min-width: 40px; }
+        .ps-bar { height: 100%; border-radius: 2px; transition: width .5s ease; }
+
+        /* ── Content card skeleton ── */
+        .card-skel-list { display: flex; flex-direction: column; gap: 10px; padding: 12px 0 4px; }
+        .card-skel-item { display: flex; align-items: center; gap: 10px; }
+        .card-skel-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+        .card-skel-lines { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .card-skel-line { height: 11px; border-radius: 4px;
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+
+        /* ── Mobile notification dropdown clamp ── */
+        @media (max-width: 480px) {
+            #notifDropdown {
+                position: fixed !important;
+                top: 60px !important;
+                right: 8px !important;
+                left: 8px !important;
+                width: auto !important;
+            }
+        }
+
+        /* ── Section Labels ── */
         .section-label {
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
             color: var(--text-tertiary);
             margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
         }
+        .section-label .sl-icon {
+            width: 18px; height: 18px;
+            border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 10px;
+        }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+
+        /* ── Quick Actions ── */
         .quick-actions {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -1042,6 +1139,7 @@
                 </div>
 
 <!-- ══ Charts ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;">↗</span>Trends</div>
                 <div class="charts-grid">
                     <div class="chart-card card-animate" style="animation-delay:450ms">
                         <div class="chart-card-header">
@@ -1051,6 +1149,7 @@
                         <div class="chart-container">
                             <canvas id="userGrowthChart"></canvas>
                         </div>
+                        <div class="chart-insights" id="growthInsights"></div>
                     </div>
                     <div class="chart-card card-animate" style="animation-delay:480ms">
                         <div class="chart-card-header">
@@ -1060,15 +1159,18 @@
                         <div class="chart-container">
                             <canvas id="activeUsersChart"></canvas>
                         </div>
+                        <div class="chart-insights" id="activeInsights"></div>
                     </div>
                 </div>
+                <!-- Platform split -->
+                <div id="platformSplitRow" style="display:none;margin-bottom:28px;"></div>
 
                 <!-- ══ Quick Actions ══ -->
-                <div class="section-label">Recently Visited</div>
+                <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;">⏱</span>Recently Visited</div>
                 <div class="quick-actions" id="quickActionsGrid"></div>
 
                 <!-- ══ 3-Col Content Grid ══ -->
-                <div class="section-label">Live Data</div>
+                <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;">◉</span>Live Data</div>
                 <div class="content-grid-3">
                     <!-- Recent Videos -->
                     <div class="content-card card-animate" style="animation-delay:540ms">
@@ -1080,9 +1182,10 @@
                             <a href="/admin-islamvoice-management.html" class="content-card-link">View all</a>
                         </div>
                         <div class="content-card-body" id="recentVideosBody">
-                            <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
-                                <div style="width:28px;height:28px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
-                                <p style="font-size:13px;margin:0;">Loading...</p>
+                            <div class="card-skel-list">
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:56px;height:36px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:80%"></div><div class="card-skel-line" style="width:40%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:56px;height:36px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:65%"></div><div class="card-skel-line" style="width:35%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:56px;height:36px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:70%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
                             </div>
                         </div>
                     </div>
@@ -1097,9 +1200,11 @@
                             <a href="/admin-users.html" class="content-card-link">View all</a>
                         </div>
                         <div class="content-card-body" id="recentUsersBody">
-                            <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
-                                <div style="width:28px;height:28px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
-                                <p style="font-size:13px;margin:0;">Loading...</p>
+                            <div class="card-skel-list">
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:75%"></div><div class="card-skel-line" style="width:45%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:40%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:80%"></div><div class="card-skel-line" style="width:35%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:55%"></div><div class="card-skel-line" style="width:42%"></div></div></div>
                             </div>
                         </div>
                     </div>
@@ -1114,16 +1219,19 @@
                             <a href="/admin-reading-stats.html" class="content-card-link">Full stats</a>
                         </div>
                         <div class="content-card-body" id="topReadersBody">
-                            <div style="text-align:center;padding:40px;color:var(--text-tertiary);">
-                                <div style="width:28px;height:28px;border:3px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px;"></div>
-                                <p style="font-size:13px;margin:0;">Loading...</p>
+                            <div class="card-skel-list">
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:70%"></div><div class="card-skel-line" style="width:38%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:65%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:78%"></div><div class="card-skel-line" style="width:42%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:36%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:72%"></div><div class="card-skel-line" style="width:33%"></div></div></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- ══ My Tasks Widget ══ -->
-                <div class="section-label">My Tasks</div>
+                <div class="section-label"><span class="sl-icon" style="background:rgba(139,92,246,.12);color:#8b5cf6;">✓</span>My Tasks</div>
                 <div class="my-tasks-widget card-animate" style="animation-delay:600ms" id="myTasksWidget">
                     <div class="my-tasks-header">
                         <div class="my-tasks-title">
@@ -1798,6 +1906,21 @@
             };
         }
 
+        function _buildChartInsights(containerId, data, valKey, totalLabel, peakLabel, avgLabel) {
+            var el = document.getElementById(containerId);
+            if (!el || !data || !data.length) return;
+            var vals = data.map(function(d) { return d[valKey] || 0; });
+            var total = vals.reduce(function(s,v){return s+v;},0);
+            var peak  = Math.max.apply(null, vals);
+            var avg   = total > 0 ? Math.round(total / vals.length) : 0;
+            el.innerHTML =
+                '<div class="ci-stat"><div class="ci-val">' + total.toLocaleString() + '</div><div class="ci-lbl">' + totalLabel + '</div></div>' +
+                '<div class="ci-divider"></div>' +
+                '<div class="ci-stat"><div class="ci-val">' + peak.toLocaleString() + '</div><div class="ci-lbl">' + peakLabel + '</div></div>' +
+                '<div class="ci-divider"></div>' +
+                '<div class="ci-stat"><div class="ci-val">' + avg.toLocaleString() + '</div><div class="ci-lbl">' + avgLabel + '</div></div>';
+        }
+
         function renderUserGrowthChart(data) {
             _lastGrowthData = data;
             var ctx = document.getElementById('userGrowthChart');
@@ -1865,6 +1988,7 @@
                     interaction: { intersect: false, mode: 'index' }
                 }
             });
+            _buildChartInsights('growthInsights', data, 'count', 'Total 30d', 'Peak Day', 'Daily Avg');
         }
 
         function renderActiveUsersChart(data) {
@@ -1927,6 +2051,7 @@
                     }
                 }
             });
+            _buildChartInsights('activeInsights', data, 'count', 'Total 7d', 'Peak DAU', 'Daily Avg');
         }
 
 
@@ -3158,9 +3283,41 @@
 
                 // Render who's online panel
                 renderWhoOnline(data.users || []);
+
+                // Platform split widget
+                renderPlatformSplit(p, data.count || 0);
             } catch (e) {
                 console.error('loadOnlineUsers:', e);
             }
+        }
+
+        function renderPlatformSplit(platforms, total) {
+            var row = document.getElementById('platformSplitRow');
+            if (!row) return;
+            var p = platforms || {};
+            var ios = p.ios || 0;
+            var android = p.android || 0;
+            var web = p.web || 0;
+            var t = ios + android + web;
+            if (!t) { row.style.display = 'none'; return; }
+            function pct(n) { return t > 0 ? Math.round((n/t)*100) : 0; }
+            row.style.display = '';
+            row.innerHTML = '<div class="ps-row">'
+                + _psChip('🍎', 'iOS', ios, pct(ios), '#6366f1')
+                + _psChip('🤖', 'Android', android, pct(android), '#10b981')
+                + _psChip('🌐', 'Web', web, pct(web), '#f59e0b')
+                + '</div>';
+        }
+
+        function _psChip(icon, label, count, pctVal, color) {
+            return '<div class="ps-chip">'
+                + '<span class="ps-icon">' + icon + '</span>'
+                + '<div class="ps-info">'
+                + '<div class="ps-count">' + count + '</div>'
+                + '<div class="ps-label">' + label + ' · ' + pctVal + '%</div>'
+                + '</div>'
+                + '<div class="ps-bar-wrap"><div class="ps-bar" style="width:' + pctVal + '%;background:' + color + '"></div></div>'
+                + '</div>';
         }
 
         function renderWhoOnline(users) {
