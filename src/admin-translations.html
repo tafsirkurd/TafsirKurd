@@ -1067,6 +1067,20 @@
             box-sizing: border-box;
         }
         .mark-form textarea:focus { outline: none; border-color: #f59e0b; }
+        .mark-note-preview {
+            display: none;
+            padding: 5px 10px;
+            font-size: 12.5px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            margin-top: -1px;
+            word-break: break-word;
+        }
+        .mark-note-preview.has-mention { display: block; }
         .mark-form-actions { display: flex; gap: 6px; margin-top: 7px; justify-content: flex-end; }
         .mark-btn-save {
             padding: 5px 14px;
@@ -5019,9 +5033,24 @@
                         var _draftKey = 'mark_draft_hist_' + rowId;
                         var _savedDraft = localStorage.getItem(_draftKey);
                         if (_savedDraft) ta.value = _savedDraft;
+                        var preview = document.createElement('div');
+                        preview.className = 'mark-note-preview';
+                        function _updatePreview() {
+                            var val = ta.value;
+                            var hasMention = /@[^\s@]/.test(val);
+                            while (preview.firstChild) preview.removeChild(preview.firstChild);
+                            if (hasMention) {
+                                preview.appendChild(_renderMentionText(val));
+                                preview.classList.add('has-mention');
+                            } else {
+                                preview.classList.remove('has-mention');
+                            }
+                        }
+                        if (_savedDraft) _updatePreview();
                         ta.addEventListener('input', function() {
                             if (ta.value) localStorage.setItem(_draftKey, ta.value);
                             else localStorage.removeItem(_draftKey);
+                            _updatePreview();
                             _handleMentionInput(ta, drop, _draftKey);
                         });
                         ta.addEventListener('keydown', function(e) { _handleMentionKey(e, ta, drop, _draftKey); });
@@ -5030,6 +5059,7 @@
                             setTimeout(function() { if (!_dropHovered) _closeMentionDropdown(drop); }, 150);
                         });
                         form.appendChild(ta);
+                        form.appendChild(preview);
                         // mention dropdown — appended to body so overflow:hidden ancestors don't clip it
                         var drop = document.createElement('div');
                         drop.className = 'mention-dropdown';
