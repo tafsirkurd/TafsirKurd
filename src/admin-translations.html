@@ -1053,49 +1053,31 @@
             border: 1px solid #fde68a;
             border-radius: 8px;
         }
-        .mark-note-wrap {
-            position: relative;
-            border: 1px solid var(--border-light);
-            border-radius: 6px;
-            background: var(--bg-surface);
-            transition: border-color .15s;
-        }
-        .mark-note-wrap:focus-within { border-color: #f59e0b; }
         .mark-form textarea {
             width: 100%;
             padding: 7px 10px;
-            border: none;
+            border: 1px solid var(--border-light);
             border-radius: 6px;
-            background: transparent;
+            background: var(--bg-surface);
             color: var(--text-primary);
-            caret-color: var(--text-primary);
             font-size: 12px;
             font-family: inherit;
             line-height: 1.6;
             resize: vertical;
             min-height: 56px;
             box-sizing: border-box;
-            position: relative;
-            z-index: 1;
         }
-        .mark-form textarea:focus { outline: none; }
-        .mark-note-overlay {
-            position: absolute;
-            inset: 0;
-            padding: 7px 10px;
-            font-size: 12px;
-            font-family: inherit;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
-            overflow: hidden;
-            box-sizing: border-box;
-            color: var(--text-primary);
-            pointer-events: none;
-            z-index: 0;
-            border-radius: 6px;
+        .mark-form textarea:focus { outline: none; border-color: #f59e0b; }
+        .mark-tagged-row {
+            display: none;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 11px;
+            color: var(--text-tertiary);
         }
-        .mark-note-overlay.has-mention ~ textarea { color: transparent; }
+        .mark-tagged-row.visible { display: flex; }
         .mark-form-actions { display: flex; gap: 6px; margin-top: 7px; justify-content: flex-end; }
         .mark-btn-save {
             padding: 5px 14px;
@@ -5045,30 +5027,35 @@
                         form.className = 'mark-form';
                         form.id = formId;
                         form.style.display = 'none';
-                        var wrap = document.createElement('div');
-                        wrap.className = 'mark-note-wrap';
-                        var overlay = document.createElement('div');
-                        overlay.className = 'mark-note-overlay';
-                        overlay.setAttribute('aria-hidden', 'true');
                         var ta = document.createElement('textarea');
-                        ta.placeholder = 'Note… type @ to mention an admin';
+                        ta.placeholder = 'Note... type @ to mention an admin';
                         var _draftKey = 'mark_draft_hist_' + rowId;
                         var _savedDraft = localStorage.getItem(_draftKey);
                         if (_savedDraft) ta.value = _savedDraft;
-                        function _updateOverlay() {
-                            var val = ta.value;
-                            while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
-                            if (val) overlay.appendChild(_renderMentionText(val));
-                            if (/@[^\s@]/.test(val)) overlay.classList.add('has-mention');
-                            else overlay.classList.remove('has-mention');
-                            overlay.scrollTop = ta.scrollTop;
+                        var taggedRow = document.createElement('div');
+                        taggedRow.className = 'mark-tagged-row';
+                        function _updateTagged() {
+                            while (taggedRow.firstChild) taggedRow.removeChild(taggedRow.firstChild);
+                            var names = [];
+                            var pat = /@([^\s@][^\s@]{0,40})/g, pm;
+                            while ((pm = pat.exec(ta.value)) !== null) {
+                                if (names.indexOf(pm[1]) === -1) names.push(pm[1]);
+                            }
+                            if (!names.length) { taggedRow.classList.remove('visible'); return; }
+                            taggedRow.appendChild(document.createTextNode('Tagged:'));
+                            names.forEach(function(n) {
+                                var chip = document.createElement('span');
+                                chip.className = 'hist-mention';
+                                chip.textContent = '@' + n;
+                                taggedRow.appendChild(chip);
+                            });
+                            taggedRow.classList.add('visible');
                         }
-                        if (_savedDraft) _updateOverlay();
-                        ta.addEventListener('scroll', function() { overlay.scrollTop = ta.scrollTop; });
+                        if (_savedDraft) _updateTagged();
                         ta.addEventListener('input', function() {
                             if (ta.value) localStorage.setItem(_draftKey, ta.value);
                             else localStorage.removeItem(_draftKey);
-                            _updateOverlay();
+                            _updateTagged();
                             _handleMentionInput(ta, drop, _draftKey);
                         });
                         ta.addEventListener('keydown', function(e) { _handleMentionKey(e, ta, drop, _draftKey); });
@@ -5076,9 +5063,8 @@
                         ta.addEventListener('blur', function() {
                             setTimeout(function() { if (!_dropHovered) _closeMentionDropdown(drop); }, 150);
                         });
-                        wrap.appendChild(overlay);
-                        wrap.appendChild(ta);
-                        form.appendChild(wrap);
+                        form.appendChild(ta);
+                        form.appendChild(taggedRow);
                         // mention dropdown — appended to body so overflow:hidden ancestors don't clip it
                         var drop = document.createElement('div');
                         drop.className = 'mention-dropdown';
