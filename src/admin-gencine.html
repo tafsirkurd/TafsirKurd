@@ -1653,7 +1653,8 @@ function renderCategoryList() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function populateCatDropdown() {
-    var sel = document.getElementById('dua-cat'); sel.textContent = '';
+    var sel = document.getElementById('dua-cat'); if (!sel) return;
+    sel.textContent = '';
     allCategories.forEach(function(cat) {
         var opt = document.createElement('option');
         opt.value = cat.key; opt.textContent = cat.key + ' \u2014 ' + cat.label_ku;
@@ -1778,7 +1779,7 @@ function editDua(id) {
     document.getElementById('dua-source').value = dua.source || '';
     document.getElementById('dua-repeat').value = dua.repeat || 1;
     document.getElementById('dua-sort').value = dua.sort_order || 10;
-    document.getElementById('dua-cat').value = dua.category_key;
+    var duaCatEl = document.getElementById('dua-cat'); if (duaCatEl) duaCatEl.value = dua.category_key;
     document.getElementById('dua-form-toggle-label').textContent = 'Editing dua';
     switchTab('duas'); openForm('dua');
 }
@@ -1791,7 +1792,8 @@ function cancelDuaEdit() {
 async function saveDua() {
     var ar = document.getElementById('dua-ar').value.trim(); var ku = document.getElementById('dua-ku').value.trim();
     if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
-    var payload = { category_key: document.getElementById('dua-cat').value, ar: ar, ku: ku,
+    var _duaCatEl = document.getElementById('dua-cat');
+    var payload = { category_key: _duaCatEl ? _duaCatEl.value : null, ar: ar, ku: ku,
         source: document.getElementById('dua-source').value.trim() || null,
         repeat: parseInt(document.getElementById('dua-repeat').value) || 1,
         sort_order: parseInt(document.getElementById('dua-sort').value) || 0 };
