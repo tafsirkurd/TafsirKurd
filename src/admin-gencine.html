@@ -1732,12 +1732,6 @@ function renderDuaCatFilter() {
     var allBtn = mke('button', 'filter-chip' + (duaFilterCat === 'all' ? ' on' : ''));
     allBtn.textContent = 'All'; allBtn.onclick = function() { duaFilterCat = 'all'; renderDuaList(); renderDuaCatFilter(); };
     bar.appendChild(allBtn);
-    allCategories.forEach(function(cat) {
-        var btn = mke('button', 'filter-chip' + (duaFilterCat === cat.key ? ' on' : ''));
-        btn.textContent = cat.key;
-        btn.onclick = function() { duaFilterCat = cat.key; renderDuaList(); renderDuaCatFilter(); };
-        bar.appendChild(btn);
-    });
 }
 function renderDuaList() {
     var list = document.getElementById('dua-list'); list.textContent = '';
