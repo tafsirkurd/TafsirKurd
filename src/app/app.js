@@ -2219,6 +2219,94 @@ function _shAdd(q){
   try{localStorage.setItem(_SEARCH_HIST_KEY,JSON.stringify(h.slice(0,_SEARCH_HIST_MAX)));}catch(e){}
 }
 function _shClear(){try{localStorage.removeItem(_SEARCH_HIST_KEY);}catch(e){}}
+/* --- Search query context (set in _execSearch, used in _mkSearchItem) --- */
+var _lastSearchQ={arN:'',arTokens:[],lo:'',loTokens:[]};
+
+/* Extract a context window of ~radius chars centred on normPos */
+function _ctxSnippet(text,normPos,radius){
+  if(!text)return'';
+  radius=radius||70;
+  var len=text.length;
+  if(len<=radius*2+20)return text;
+  var origPos=normPos>=0?Math.min(Math.round(normPos*1.35),len-1):0;
+  var start=Math.max(0,origPos-radius);
+  var end=Math.min(len,origPos+radius+20);
+  while(start>0&&text[start]!==' ')start--;
+  while(end<len&&text[end]!==' ')end++;
+  return(start>2?'\u2026':'')+text.slice(start,end).trim()+(end<len-2?'\u2026':'');
+}
+
+/* Build DOM nodes with highlighted matched tokens */
+function _hlNodes(text,tokens,isAr){
+  if(!text)return[document.createTextNode('')];
+  var REMOVE_AR=/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]/;
+  var AR_SUBS={'\u0622':'\u0627','\u0623':'\u0627','\u0625':'\u0627','\u0671':'\u0627',
+               '\u0649':'\u064A','\u0624':'\u0648','\u0626':'\u064A','\u0629':'\u0647'};
+  var norm='',toOrig=[];
+  if(isAr){
+    for(var i=0;i<text.length;i++){
+      var c=text[i];
+      if(REMOVE_AR.test(c))continue;
+      norm+=(AR_SUBS[c]||c);toOrig.push(i);
+    }
+  }else{
+    for(var i2=0;i2<text.length;i2++){norm+=text[i2].toLowerCase();toOrig.push(i2);}
+  }
+  var valid=tokens?tokens.filter(function(t){return t&&t.length>=2;}):[];
+  if(!valid.length)return[document.createTextNode(text)];
+  var ranges=[];
+  for(var t=0;t<valid.length;t++){
+    var tok=valid[t],pos=0;
+    while(pos<norm.length){
+      var idx=norm.indexOf(tok,pos);
+      if(idx===-1)break;
+      var nEnd=Math.min(idx+tok.length-1,toOrig.length-1);
+      if(toOrig[idx]!==undefined&&toOrig[nEnd]!==undefined){
+        var oS=toOrig[idx],oE=toOrig[nEnd]+1;
+        if(isAr){while(oE<text.length&&REMOVE_AR.test(text[oE]))oE++;}
+        if(oS<oE)ranges.push([oS,oE]);
+      }
+      pos=idx+1;
+    }
+  }
+  if(!ranges.length)return[document.createTextNode(text)];
+  ranges.sort(function(a,b){return a[0]-b[0];});
+  var merged=[ranges[0].slice()];
+  for(var r=1;r<ranges.length;r++){
+    var last=merged[merged.length-1];
+    if(ranges[r][0]<last[1])last[1]=Math.max(last[1],ranges[r][1]);
+    else merged.push(ranges[r].slice());
+  }
+  var nodes=[],prev=0;
+  for(var m=0;m<merged.length;m++){
+    var ms=merged[m][0],me=merged[m][1];
+    if(ms>prev)nodes.push(document.createTextNode(text.slice(prev,ms)));
+    var mark=document.createElement('mark');
+    mark.className='search-hl';
+    mark.textContent=text.slice(ms,me);
+    nodes.push(mark);
+    prev=me;
+  }
+  if(prev<text.length)nodes.push(document.createTextNode(text.slice(prev)));
+  return nodes;
+}
+
+/* Append match-source pills to a result card */
+function _appendSrcPills(item,srcs){
+  if(!srcs||!srcs.length)return;
+  var LABELS={arabic:'Arabic',translation:'\u0648\u06d5\u0631\u06af\u06ce\u0695\u0627\u0646',tafsir:'\u062a\u06d5\u0641\u0633\u06cc\u0631',surah:'\u0633\u0648\u0648\u0631\u06d5',ref:'\u0626\u0627\u06cc\u06d5\u062a'};
+  var pills=document.createElement('div');
+  pills.className='search-src-pills';
+  srcs.forEach(function(src){
+    if(!LABELS[src])return;
+    var pill=document.createElement('span');
+    pill.className='search-src-pill search-src-pill--'+src;
+    pill.textContent=LABELS[src];
+    pills.appendChild(pill);
+  });
+  item.appendChild(pills);
+}
+
 
 var _POPULAR=[
   {q:'2:255',label:'ئایەتی کورسی'},
@@ -2325,7 +2413,7 @@ App.onSearch=function(v){
     App._renderSearchEmpty();
     return;
   }
-  _searchTimer=setTimeout(function(){App._execSearch(v);},150);
+  _searchTimer=setTimeout(function(){App._execSearch(v);},100);
 };
 
 /* Actual search execution after debounce */
@@ -2336,11 +2424,24 @@ App._execSearch=function(v){
   clear(res);
   if(!q){App._renderSearchEmpty();return;}
 
+  // Build normalized query tokens for context highlighting
+  var _qArN=q.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]/g,'')
+             .replace(/[\u0622\u0623\u0625\u0671]/g,'\u0627')
+             .replace(/\u0649/g,'\u064A').replace(/\u0624/g,'\u0648')
+             .replace(/\u0626/g,'\u064A').replace(/\u0629/g,'\u0647')
+             .replace(/\s+/g,' ').trim();
+  var _qLo=q.toLowerCase().trim();
+  _lastSearchQ={
+    arN:_qArN,
+    arTokens:_qArN.split(/\s+/).filter(function(t){return t.length>=2;}),
+    lo:_qLo,
+    loTokens:_qLo.split(/\s+/).filter(function(t){return t.length>=2;})
+  };
+
   var t0=Date.now();
   var results=window.QuranSearch&&QuranSearch.isReady()
     ? QuranSearch.query(q,SURAHS,30)
     : App._basicSearch(q);
-  console.log('[QuranSearch] query="'+q+'" results='+results.length+' ms='+(Date.now()-t0));
 
   if(!results.length){
     App._renderSearchNoResults(q);
@@ -2391,39 +2492,49 @@ App._renderSearchNoResults=function(q){
   res.classList.add('on');
 };
 
-/* Build a single result card */
+/* Build a single result card --- context snippets, highlights, source pills */
 App._mkSearchItem=function(r){
   var item=el('div','search-result search-result--'+r.type);
+  var qArN=_lastSearchQ.arN,arToks=_lastSearchQ.arTokens;
+  var qLo=_lastSearchQ.lo,loToks=_lastSearchQ.loTokens;
+  var allAr=qArN?[qArN].concat(arToks).filter(function(t){return t&&t.length>=2;}):arToks;
+  var allLo=qLo?[qLo].concat(loToks).filter(function(t){return t&&t.length>=2;}):loToks;
 
   if(r.type==='ref'){
-    /* ── Direct-jump card */
     var badge=document.createElement('div');
     badge.className='search-ref-badge';
     badge.appendChild(el('span','search-ref-surah',r.surahAr||r.surahEn));
     badge.appendChild(el('span','search-ref-num',r.sn+':'+r.an));
     item.appendChild(badge);
     if(r.arO){
-      var arTxt=r.arO.length>90?r.arO.substring(0,90)+'…':r.arO;
-      item.appendChild(el('div','search-result-verse-ar',arTxt));
+      var snipAr=_ctxSnippet(r.arO,r.posAr,75);
+      var arDiv=document.createElement('div');
+      arDiv.className='search-result-verse-ar';
+      _hlNodes(snipAr,allAr,true).forEach(function(n){arDiv.appendChild(n);});
+      item.appendChild(arDiv);
     }
     if(r.kuO){
-      item.appendChild(el('div','search-result-ku',r.kuO.substring(0,72)+'…'));
+      var snipKu=_ctxSnippet(r.kuO,r.posKu,90);
+      var kuDiv=document.createElement('div');
+      kuDiv.className='search-result-ku';
+      _hlNodes(snipKu,allLo,false).forEach(function(n){kuDiv.appendChild(n);});
+      item.appendChild(kuDiv);
     }
+    _appendSrcPills(item,r.matchSrcs);
     on(item,'click',(function(sn,an,q){return function(){
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
       setTimeout(function(){App.openSurah(sn,an);},100);
     };})(r.sn,r.an,S.search));
 
-  } else if(r.type==='surah'){
-    /* ── Surah name card */
+  }else if(r.type==='surah'){
     var row=document.createElement('div');
     row.className='search-surah-row';
     row.appendChild(el('div','search-surah-num',String(r.sn)));
     var info=document.createElement('div');
     info.className='search-surah-info';
     info.appendChild(el('div','search-result-title',r.surahEn));
-    info.appendChild(el('div','search-result-sub',r.surahAr+' • '+r.ayahCount+' '+t('reader.ayah')));
+    info.appendChild(el('div','search-result-sub',r.surahAr+' \u2022 '+r.ayahCount+' '+t('reader.ayah')));
     row.appendChild(info);
     item.appendChild(row);
     on(item,'click',(function(sn,q){return function(){
@@ -2431,16 +2542,23 @@ App._mkSearchItem=function(r){
       App.openSurah(sn);App.clearSearch();$('searchBar').classList.remove('on');
     };})(r.sn,S.search));
 
-  } else {
-    /* ── Verse card */
-    var arSnip=r.arO?r.arO.substring(0,88)+(r.arO.length>88?'…':''):'';
-    item.appendChild(el('div','search-result-verse-ar',arSnip));
+  }else{
+    var snipAr2=_ctxSnippet(r.arO,r.posAr,75);
+    var arDiv2=document.createElement('div');
+    arDiv2.className='search-result-verse-ar';
+    _hlNodes(snipAr2,allAr,true).forEach(function(n){arDiv2.appendChild(n);});
+    item.appendChild(arDiv2);
     var sub=el('div','search-result-sub');
-    sub.textContent=(r.surahAr||r.surahEn)+' • '+t('reader.ayah')+' '+r.an;
+    sub.textContent=(r.surahAr||r.surahEn)+' \u2022 '+t('reader.ayah')+' '+r.an;
     item.appendChild(sub);
     if(r.kuO){
-      item.appendChild(el('div','search-result-ku',r.kuO.substring(0,65)+'…'));
+      var snipKu2=_ctxSnippet(r.kuO,r.posKu,90);
+      var kuDiv2=document.createElement('div');
+      kuDiv2.className='search-result-ku';
+      _hlNodes(snipKu2,allLo,false).forEach(function(n){kuDiv2.appendChild(n);});
+      item.appendChild(kuDiv2);
     }
+    _appendSrcPills(item,r.matchSrcs);
     on(item,'click',(function(sn,an,q){return function(){
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
