@@ -50,6 +50,19 @@ const ROLE_PERMISSIONS = {
 async function initSupabase() {
     if (supabaseClient) return true;
 
+    // Ensure the Supabase library global is available. The <head> CDN script
+    // covers most cases; this fallback fires if it failed to load (network blip,
+    // first-visit cold cache, etc.). Uses the explicit UMD build path.
+    if (!window.supabase) {
+        await new Promise(function (resolve, reject) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0/dist/umd/supabase.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
     try {
         const configResponse = await fetch('/config');
         if (!configResponse.ok) {
