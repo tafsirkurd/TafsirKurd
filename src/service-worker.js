@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v603';
+const CACHE_NAME = 'tafsir-kurd-v604';
 
 // All files required to run the app fully offline
 const PRECACHE = [

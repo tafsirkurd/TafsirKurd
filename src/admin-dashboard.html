@@ -550,6 +550,37 @@
         .rh-gh-link{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--primary);background:var(--bg-active);border-radius:10px;padding:4px 10px;font-weight:600;text-decoration:none;transition:background .15s;}
         .rh-gh-link:hover{background:var(--bg-hover);}
 
+        /* ── Collapsible Sections ── */
+        .collapse-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px;
+            background: var(--bg-hover); border: none; border-radius: 8px;
+            cursor: pointer; color: var(--text-tertiary);
+            transition: background .15s, color .15s;
+            flex-shrink: 0;
+        }
+        .collapse-btn:hover { background: var(--bg-active); color: var(--text-primary); }
+        .collapsible-body {
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(.4,0,.2,1), opacity 0.25s ease;
+            max-height: 2000px;
+            opacity: 1;
+        }
+        .collapsible-card.is-collapsed .collapsible-body {
+            max-height: 0;
+            opacity: 0;
+        }
+        .collapsible-card.is-collapsed .card-header {
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        .collapsible-card.is-collapsed #colBtn-rh i,
+        .collapsible-card.is-collapsed #colBtn-prayer i,
+        .collapsible-card.is-collapsed #colBtn-i18n i {
+            transform: rotate(180deg);
+        }
+
         /* ── Needs Attention Banner ── */
         .na-item {
             display: inline-flex;
@@ -811,7 +842,7 @@
                 <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
                 <div class="topbar-search">
                     <i data-lucide="search"></i>
-                    <input type="text" placeholder="Search...">
+                    <input type="text" placeholder="Search or press Ctrl+K…" readonly>
                 </div>
                 <div class="topbar-actions">
                     <div class="session-timer" id="sessionTimer" title="Session expires after 2 hours">
@@ -855,9 +886,10 @@
                             <span class="dot"></span>
                             <span id="lastUpdatedText">Updating...</span>
                         </div>
-                        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()" style="font-size:13px;padding:7px 14px;">
+                        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()" style="font-size:13px;padding:7px 14px;" title="Refresh dashboard (shortcut: R)">
                             <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
                             Refresh
+                            <kbd style="font-size:10px;font-weight:700;padding:1px 5px;border:1px solid var(--border-light);border-radius:4px;background:var(--bg-hover);color:var(--text-tertiary);margin-left:4px;font-family:inherit;">R</kbd>
                         </button>
                     </div>
                 </div>
@@ -1205,14 +1237,14 @@
                 </div>
 
                 <!-- ══ Release History ══ -->
-                <div class="card card-animate" style="margin-bottom:28px;animation-delay:445ms">
-                    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                <div class="card card-animate collapsible-card" id="colCard-rh" style="margin-bottom:28px;animation-delay:445ms">
+                    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer;" onclick="toggleCollapse('rh')">
                         <h3 class="card-title" style="display:flex;align-items:center;gap:9px;margin:0">
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>
                             Release History
                             <span style="font-size:11px;font-weight:600;color:var(--text-tertiary);background:var(--bg-hover);padding:2px 8px;border-radius:8px">main</span>
                         </h3>
-                        <div style="display:flex;align-items:center;gap:8px">
+                        <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
                             <span id="rhFetchTime" style="font-size:11px;color:var(--text-tertiary)"></span>
                             <button class="rh-btn" id="rhRefreshBtn" onclick="fetchReleaseHistory()">
                                 <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> Refresh
@@ -1221,8 +1253,12 @@
                                 <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="flex-shrink:0"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
                                 GitHub
                             </a>
+                            <button class="collapse-btn" id="colBtn-rh" onclick="event.stopPropagation();toggleCollapse('rh')" title="Collapse section">
+                                <i data-lucide="chevron-up" style="width:14px;height:14px;transition:transform .2s;"></i>
+                            </button>
                         </div>
                     </div>
+                    <div class="collapsible-body" id="colBody-rh">
                     <div id="rhPlatformBar" class="rh-platform-bar" style="display:none"></div>
                     <div id="rhPlatformDivider" class="rh-divider" style="display:none"></div>
                     <div id="releaseHistoryBody">
@@ -1231,22 +1267,27 @@
                             Loading release history…
                         </div>
                     </div>
+                    </div><!-- /collapsible-body rh -->
                 </div>
 
                 <!-- ══ Prayer Times Health ══ -->
-                <div class="card card-animate" id="prayerHealthCard" style="animation-delay:400ms;margin-bottom:20px;">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+                <div class="card card-animate collapsible-card" id="prayerHealthCard" style="animation-delay:400ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('prayer')">
                         <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
                             <span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;"></span>
                             Prayer Times Health
                         </h3>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
                             <button onclick="forcePrayerCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
                                 Force Refresh All Phones
                             </button>
+                            <button class="collapse-btn" id="colBtn-prayer" onclick="event.stopPropagation();toggleCollapse('prayer')" title="Collapse section">
+                                <i data-lucide="chevron-up" style="width:14px;height:14px;transition:transform .2s;"></i>
+                            </button>
                         </div>
                     </div>
+                    <div class="collapsible-body" id="colBody-prayer">
                     <div id="prayerHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
                         <div style="text-align:center;padding:0;"></div>
                     </div>
@@ -1269,16 +1310,17 @@
                             </tbody>
                         </table>
                     </div>
+                    </div><!-- /collapsible-body prayer -->
                 </div>
 
                 <!-- ══ Translation Cache Health ══ -->
-                <div class="card card-animate" id="i18nHealthCard" style="animation-delay:420ms;margin-bottom:20px;">
-                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+                <div class="card card-animate collapsible-card" id="i18nHealthCard" style="animation-delay:420ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('i18n')">
                         <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
                             <span style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;"></span>
                             Translation Cache Health
                         </h3>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="i18nVersionBadge" style="font-size:11px;color:var(--text-tertiary);padding:3px 10px;background:var(--bg-hover);border-radius:12px;font-weight:600;">version —</span>
                             <span id="i18nPublishedBadge" style="font-size:11px;color:var(--text-tertiary);">last published —</span>
                             <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;" title="Toggle anonymous health reporting from all devices">
@@ -1291,8 +1333,12 @@
                             <button onclick="forceI18nCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps i18n_cache_version — all devices clear translation cache on next open">
                                 Force Clear All Caches
                             </button>
+                            <button class="collapse-btn" id="colBtn-i18n" onclick="event.stopPropagation();toggleCollapse('i18n')" title="Collapse section">
+                                <i data-lucide="chevron-up" style="width:14px;height:14px;transition:transform .2s;"></i>
+                            </button>
                         </div>
                     </div>
+                    <div class="collapsible-body" id="colBody-i18n">
                     <div id="i18nHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
                         <div style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">Loading...</div>
                     </div>
@@ -1316,6 +1362,7 @@
                             </tbody>
                         </table>
                     </div>
+                    </div><!-- /collapsible-body i18n -->
                 </div>
 
                 <!-- ══ Recent Messages (super_admin only) ══ -->
@@ -1564,11 +1611,29 @@
             return 'Just now';
         }
 
+        var _metricPrev = {};
         function setMetric(id, value) {
             var el = document.getElementById(id);
-            if (el) {
-                el.textContent = value !== null && value !== undefined ? value.toLocaleString() : '--';
+            if (!el) return;
+            if (value === null || value === undefined) { el.textContent = '--'; return; }
+            var prev = _metricPrev[id];
+            _metricPrev[id] = value;
+            // Count-up animation: 600ms, only when value actually changed
+            if (prev === undefined || prev === value) { el.textContent = value.toLocaleString(); return; }
+            var start = typeof prev === 'number' ? prev : 0;
+            var end = value;
+            var duration = 600;
+            var startTime = null;
+            function step(ts) {
+                if (!startTime) startTime = ts;
+                var progress = Math.min((ts - startTime) / duration, 1);
+                // ease-out cubic
+                var eased = 1 - Math.pow(1 - progress, 3);
+                var current = Math.round(start + (end - start) * eased);
+                el.textContent = current.toLocaleString();
+                if (progress < 1) requestAnimationFrame(step);
             }
+            requestAnimationFrame(step);
         }
 
         function setTrend(id, current, previous) {
@@ -2880,17 +2945,75 @@
         }
 
         /* ═══════════════════════════════════════════════
-           REFRESH INDICATOR
+           REFRESH INDICATOR + COUNTDOWN
            ═══════════════════════════════════════════════ */
+        var AUTO_REFRESH_SECS = 5 * 60; // matches setInterval(loadDashboardData, 5*60*1000)
         function updateRefreshIndicator() {
             var el = document.getElementById('lastUpdatedText');
             if (!el || !_lastRefreshTime) return;
             var sec = Math.floor((new Date() - _lastRefreshTime) / 1000);
-            if (sec < 5) el.textContent = 'Just updated';
-            else if (sec < 60) el.textContent = 'Updated ' + sec + 's ago';
-            else el.textContent = 'Updated ' + Math.floor(sec/60) + 'm ago';
+            var nextIn = AUTO_REFRESH_SECS - sec;
+            var ago = sec < 5 ? 'Just updated'
+                    : sec < 60 ? 'Updated ' + sec + 's ago'
+                    : 'Updated ' + Math.floor(sec/60) + 'm ago';
+            var countdown = nextIn > 0
+                ? ' · next in ' + (nextIn >= 60 ? Math.ceil(nextIn/60) + 'm' : nextIn + 's')
+                : '';
+            el.textContent = ago + countdown;
         }
-        setInterval(updateRefreshIndicator, 5000);
+        setInterval(updateRefreshIndicator, 1000);
+
+        // ── Keyboard shortcut: R = refresh (when not typing in an input) ──
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'r' || e.key === 'R') {
+                var tag = document.activeElement && document.activeElement.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                refreshDashboard();
+            }
+        });
+
+        /* ═══════════════════════════════════════════════
+           COLLAPSIBLE SECTIONS
+           ═══════════════════════════════════════════════ */
+        var COLLAPSE_KEY = 'dash_collapsed';
+
+        function _getCollapsed() {
+            try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}'); } catch(e) { return {}; }
+        }
+
+        function _saveCollapsed(state) {
+            try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state)); } catch(e) {}
+        }
+
+        function toggleCollapse(id) {
+            var card = document.getElementById('colCard-' + id) || document.getElementById('prayerHealthCard') && id === 'prayer' && document.getElementById('prayerHealthCard') || document.getElementById('i18nHealthCard') && id === 'i18n' && document.getElementById('i18nHealthCard');
+            // Resolve card element
+            if (id === 'prayer') card = document.getElementById('prayerHealthCard');
+            else if (id === 'i18n') card = document.getElementById('i18nHealthCard');
+            else card = document.getElementById('colCard-' + id);
+            if (!card) return;
+
+            var collapsed = card.classList.toggle('is-collapsed');
+            lucide.createIcons();
+
+            var state = _getCollapsed();
+            state[id] = collapsed;
+            _saveCollapsed(state);
+        }
+
+        // Restore collapse states from localStorage on load
+        (function restoreCollapseStates() {
+            var state = _getCollapsed();
+            Object.keys(state).forEach(function(id) {
+                if (!state[id]) return;
+                var card;
+                if (id === 'prayer') card = document.getElementById('prayerHealthCard');
+                else if (id === 'i18n') card = document.getElementById('i18nHealthCard');
+                else card = document.getElementById('colCard-' + id);
+                if (card) card.classList.add('is-collapsed');
+            });
+        })();
 
         // Sync timestamp in status bar
         setInterval(function() {
