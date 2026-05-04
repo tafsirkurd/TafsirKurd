@@ -1053,34 +1053,49 @@
             border: 1px solid #fde68a;
             border-radius: 8px;
         }
-        .mark-form textarea {
-            width: 100%;
-            padding: 7px 10px;
+        .mark-note-wrap {
+            position: relative;
             border: 1px solid var(--border-light);
             border-radius: 6px;
             background: var(--bg-surface);
+            transition: border-color .15s;
+        }
+        .mark-note-wrap:focus-within { border-color: #f59e0b; }
+        .mark-form textarea {
+            width: 100%;
+            padding: 7px 10px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
             color: var(--text-primary);
+            caret-color: var(--text-primary);
             font-size: 12px;
             font-family: inherit;
+            line-height: 1.6;
             resize: vertical;
             min-height: 56px;
             box-sizing: border-box;
+            position: relative;
+            z-index: 1;
         }
-        .mark-form textarea:focus { outline: none; border-color: #f59e0b; }
-        .mark-note-preview {
-            display: none;
-            padding: 5px 10px;
-            font-size: 12.5px;
+        .mark-form textarea:focus { outline: none; }
+        .mark-note-overlay {
+            position: absolute;
+            inset: 0;
+            padding: 7px 10px;
+            font-size: 12px;
+            font-family: inherit;
             line-height: 1.6;
-            color: var(--text-secondary);
-            background: var(--bg-surface);
-            border: 1px solid var(--border-light);
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            margin-top: -1px;
+            white-space: pre-wrap;
             word-break: break-word;
+            overflow: hidden;
+            box-sizing: border-box;
+            color: var(--text-primary);
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 6px;
         }
-        .mark-note-preview.has-mention { display: block; }
+        .mark-note-overlay.has-mention ~ textarea { color: transparent; }
         .mark-form-actions { display: flex; gap: 6px; margin-top: 7px; justify-content: flex-end; }
         .mark-btn-save {
             padding: 5px 14px;
@@ -5030,29 +5045,30 @@
                         form.className = 'mark-form';
                         form.id = formId;
                         form.style.display = 'none';
+                        var wrap = document.createElement('div');
+                        wrap.className = 'mark-note-wrap';
+                        var overlay = document.createElement('div');
+                        overlay.className = 'mark-note-overlay';
+                        overlay.setAttribute('aria-hidden', 'true');
                         var ta = document.createElement('textarea');
                         ta.placeholder = 'Note… type @ to mention an admin';
                         var _draftKey = 'mark_draft_hist_' + rowId;
                         var _savedDraft = localStorage.getItem(_draftKey);
                         if (_savedDraft) ta.value = _savedDraft;
-                        var preview = document.createElement('div');
-                        preview.className = 'mark-note-preview';
-                        function _updatePreview() {
+                        function _updateOverlay() {
                             var val = ta.value;
-                            var hasMention = /@[^\s@]/.test(val);
-                            while (preview.firstChild) preview.removeChild(preview.firstChild);
-                            if (hasMention) {
-                                preview.appendChild(_renderMentionText(val));
-                                preview.classList.add('has-mention');
-                            } else {
-                                preview.classList.remove('has-mention');
-                            }
+                            while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
+                            if (val) overlay.appendChild(_renderMentionText(val));
+                            if (/@[^\s@]/.test(val)) overlay.classList.add('has-mention');
+                            else overlay.classList.remove('has-mention');
+                            overlay.scrollTop = ta.scrollTop;
                         }
-                        if (_savedDraft) _updatePreview();
+                        if (_savedDraft) _updateOverlay();
+                        ta.addEventListener('scroll', function() { overlay.scrollTop = ta.scrollTop; });
                         ta.addEventListener('input', function() {
                             if (ta.value) localStorage.setItem(_draftKey, ta.value);
                             else localStorage.removeItem(_draftKey);
-                            _updatePreview();
+                            _updateOverlay();
                             _handleMentionInput(ta, drop, _draftKey);
                         });
                         ta.addEventListener('keydown', function(e) { _handleMentionKey(e, ta, drop, _draftKey); });
@@ -5060,8 +5076,9 @@
                         ta.addEventListener('blur', function() {
                             setTimeout(function() { if (!_dropHovered) _closeMentionDropdown(drop); }, 150);
                         });
-                        form.appendChild(ta);
-                        form.appendChild(preview);
+                        wrap.appendChild(overlay);
+                        wrap.appendChild(ta);
+                        form.appendChild(wrap);
                         // mention dropdown — appended to body so overflow:hidden ancestors don't clip it
                         var drop = document.createElement('div');
                         drop.className = 'mention-dropdown';
