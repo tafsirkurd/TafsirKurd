@@ -870,6 +870,124 @@
             .quick-actions { gap: 8px; }
         }
 
+        /* ── Focus Mode ── */
+        body.focus-mode .sidebar { transform: translateX(-100%); }
+        body.focus-mode .main-content { margin-left: 0 !important; }
+        #focusBadge {
+            display: none;
+            position: fixed; top: 12px; left: 12px;
+            font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 8px;
+            background: var(--primary); color: #fff;
+            z-index: 9000; cursor: pointer;
+            transition: opacity .2s;
+        }
+        body.focus-mode #focusBadge { display: block; }
+
+        /* ── Back to Top ── */
+        #backToTop {
+            position: fixed; bottom: 28px; right: 24px;
+            width: 38px; height: 38px;
+            background: var(--primary); color: #fff;
+            border: none; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 8000;
+            opacity: 0; pointer-events: none;
+            transform: translateY(8px);
+            transition: opacity .25s, transform .25s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+        }
+        #backToTop.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        #backToTop:hover { opacity: 0.85; }
+        #backToTop svg { width: 16px; height: 16px; }
+
+        /* ── Shortcuts guide modal ── */
+        #shortcutsModal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 99998;
+            align-items: center;
+            justify-content: center;
+        }
+        #shortcutsModal.open { display: flex; }
+        #shortcutsBox {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px 28px;
+            width: 100%; max-width: 440px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+            animation: cmdIn 0.18s cubic-bezier(.4,0,.2,1);
+        }
+        .sc-title {
+            font-size: 15px; font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 18px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .sc-close {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-tertiary); font-size: 20px; line-height: 1;
+            padding: 0 4px;
+        }
+        .sc-group { margin-bottom: 16px; }
+        .sc-group-label {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--text-tertiary);
+            margin-bottom: 8px;
+        }
+        .sc-row {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .sc-row:last-child { border-bottom: none; }
+        .sc-keys { display: flex; gap: 4px; flex-shrink: 0; }
+        .sc-key {
+            font-size: 11px; font-weight: 600;
+            padding: 2px 8px;
+            border: 1px solid var(--border-light);
+            border-radius: 5px;
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        /* ── Timeline filter tabs ── */
+        .tl-filter-row {
+            display: flex; gap: 6px; flex-wrap: wrap;
+            padding-bottom: 14px;
+        }
+        .tl-filter-btn {
+            font-size: 11px; font-weight: 600;
+            padding: 3px 11px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            color: var(--text-tertiary);
+            background: var(--bg-hover);
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .tl-filter-btn:hover { color: var(--text-primary); }
+        .tl-filter-btn.active {
+            color: var(--primary);
+            background: var(--bg-active);
+            border-color: var(--primary);
+        }
+
+        /* ── Live clock ── */
+        #liveClock {
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-tertiary);
+            margin-left: 4px;
+        }
+
         /* ── Command Palette ── */
         #cmdPaletteOverlay {
             display: none;
@@ -1261,6 +1379,9 @@
                             </div>
                         </div>
                     </div>
+                    <button class="topbar-btn" onclick="openShortcutsModal()" title="Keyboard shortcuts (?)">
+                        <i data-lucide="keyboard"></i>
+                    </button>
                     <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode">
                         <i data-lucide="moon" id="theme-icon"></i>
                     </button>
@@ -1273,7 +1394,7 @@
                 <div class="welcome-header">
                     <div class="welcome-left">
                         <h1 id="greetingText">Good morning</h1>
-                        <div class="welcome-date" id="welcomeDate"></div>
+                        <div class="welcome-date" id="welcomeDate"><span id="liveClock"></span></div>
                         <div class="welcome-summary" id="welcomeSummary" style="display:none;"></div>
                     </div>
                     <div class="welcome-right">
@@ -1690,6 +1811,12 @@
                     <div class="timeline-header">
                         <div class="timeline-title">Recent Activity</div>
                     </div>
+                    <div class="tl-filter-row" id="tlFilterRow">
+                        <button class="tl-filter-btn active" data-tlcat="all"     onclick="setTimelineFilter('all')">All</button>
+                        <button class="tl-filter-btn"        data-tlcat="user"    onclick="setTimelineFilter('user')">👤 Users</button>
+                        <button class="tl-filter-btn"        data-tlcat="message" onclick="setTimelineFilter('message')">✉ Messages</button>
+                        <button class="tl-filter-btn"        data-tlcat="video"   onclick="setTimelineFilter('video')">▶ Videos</button>
+                    </div>
                     <div class="timeline-list" id="timelineList">
                         <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading activity...</div>
                     </div>
@@ -1904,6 +2031,40 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- ══ Focus mode badge ══ -->
+    <div id="focusBadge" onclick="toggleFocusMode()" title="Exit Focus Mode (F)">Focus Mode — press F to exit</div>
+
+    <!-- ══ Back to Top ══ -->
+    <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <!-- ══ Keyboard Shortcuts Modal ══ -->
+    <div id="shortcutsModal" onclick="if(event.target===this)closeShortcutsModal()">
+        <div id="shortcutsBox">
+            <div class="sc-title">
+                Keyboard Shortcuts
+                <button class="sc-close" onclick="closeShortcutsModal()">×</button>
+            </div>
+            <div class="sc-group">
+                <div class="sc-group-label">Navigation</div>
+                <div class="sc-row"><span>Open command palette</span><div class="sc-keys"><kbd class="sc-key">Ctrl</kbd><kbd class="sc-key">K</kbd></div></div>
+                <div class="sc-row"><span>Go to quick action 1–6</span><div class="sc-keys"><kbd class="sc-key">1</kbd><span style="font-size:11px;color:var(--text-tertiary)">–</span><kbd class="sc-key">6</kbd></div></div>
+            </div>
+            <div class="sc-group">
+                <div class="sc-group-label">Dashboard</div>
+                <div class="sc-row"><span>Refresh data</span><div class="sc-keys"><kbd class="sc-key">R</kbd></div></div>
+                <div class="sc-row"><span>Toggle focus mode</span><div class="sc-keys"><kbd class="sc-key">F</kbd></div></div>
+                <div class="sc-row"><span>Show this guide</span><div class="sc-keys"><kbd class="sc-key">?</kbd></div></div>
+                <div class="sc-row"><span>Close overlay / Esc</span><div class="sc-keys"><kbd class="sc-key">Esc</kbd></div></div>
+            </div>
+            <div class="sc-group">
+                <div class="sc-group-label">Theme</div>
+                <div class="sc-row"><span>Toggle dark mode</span><div class="sc-keys"><kbd class="sc-key">D</kbd></div></div>
+            </div>
+        </div>
     </div>
 
     <!-- ══ Command Palette ══ -->
@@ -2222,6 +2383,75 @@
                 tooltipBorder: s.getPropertyValue('--border-light').trim() || '#ccc'
             };
         }
+
+        /* ═══════════════════════════════════════════════
+           FOCUS MODE
+           ═══════════════════════════════════════════════ */
+        function toggleFocusMode() {
+            document.body.classList.toggle('focus-mode');
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           BACK TO TOP
+           ═══════════════════════════════════════════════ */
+        (function initBackToTop() {
+            var btn = document.getElementById('backToTop');
+            if (!btn) return;
+            var scrollEl = document.querySelector('.main-content') || window;
+            function onScroll() {
+                var scrollY = scrollEl === window ? window.scrollY : scrollEl.scrollTop;
+                btn.classList.toggle('visible', scrollY > 400);
+            }
+            scrollEl.addEventListener('scroll', onScroll, { passive: true });
+        })();
+
+
+        /* ═══════════════════════════════════════════════
+           KEYBOARD SHORTCUTS MODAL
+           ═══════════════════════════════════════════════ */
+        function openShortcutsModal() {
+            document.getElementById('shortcutsModal').classList.add('open');
+        }
+        function closeShortcutsModal() {
+            document.getElementById('shortcutsModal').classList.remove('open');
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           LIVE BAGHDAD CLOCK
+           ═══════════════════════════════════════════════ */
+        (function startLiveClock() {
+            var el = document.getElementById('liveClock');
+            if (!el) return;
+            function tick() {
+                var now = new Date();
+                var baghdad = new Date(now.getTime() + (3 * 60 + now.getTimezoneOffset()) * 60000);
+                var h = baghdad.getHours().toString().padStart(2, '0');
+                var m = baghdad.getMinutes().toString().padStart(2, '0');
+                var s = baghdad.getSeconds().toString().padStart(2, '0');
+                el.textContent = '· ' + h + ':' + m + ':' + s;
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
+
+
+        /* ═══════════════════════════════════════════════
+           ACTIVITY TIMELINE FILTER
+           ═══════════════════════════════════════════════ */
+        var _allTimelineItems = [];
+        var _timelineFilter = 'all';
+
+        function setTimelineFilter(cat) {
+            _timelineFilter = cat;
+            var btns = document.querySelectorAll('#tlFilterRow .tl-filter-btn');
+            btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-tlcat') === cat); });
+            var filtered = cat === 'all' ? _allTimelineItems
+                : _allTimelineItems.filter(function(item) { return item.type === cat; });
+            _renderTimelineItems(filtered);
+        }
+
 
         /* ═══════════════════════════════════════════════
            COMMAND PALETTE
@@ -3169,56 +3399,38 @@
         /* ═══════════════════════════════════════════════
            ACTIVITY TIMELINE
            ═══════════════════════════════════════════════ */
-        function buildActivityTimeline(users, messages, videos) {
+        function _renderTimelineItem(item) {
+            var row = document.createElement('div');
+            row.className = 'timeline-item';
+            var dot = document.createElement('div');
+            dot.className = 'timeline-dot ' + item.type;
+            var icon = document.createElement('i');
+            icon.setAttribute('data-lucide', item.icon);
+            dot.appendChild(icon);
+            row.appendChild(dot);
+            var content = document.createElement('div');
+            content.className = 'timeline-content';
+            var text = document.createElement('div');
+            text.className = 'timeline-text';
+            text.innerHTML = item.text;
+            content.appendChild(text);
+            var time = document.createElement('div');
+            time.className = 'timeline-time';
+            time.textContent = getTimeAgo(item.time);
+            content.appendChild(time);
+            row.appendChild(content);
+            return row;
+        }
+
+        function _renderTimelineItems(items) {
             var container = document.getElementById('timelineList');
             if (!container) return;
             while (container.firstChild) container.removeChild(container.firstChild);
 
-            var items = [];
-
-            // Users
-            if (users && users.length) {
-                users.forEach(function(u) {
-                    items.push({
-                        type: 'user',
-                        text: '<strong>' + escHtml(u.email || 'Unknown') + '</strong> joined',
-                        time: new Date(u.created_at),
-                        icon: 'user-plus'
-                    });
-                });
-            }
-
-            // Messages
-            if (messages && messages.length) {
-                messages.forEach(function(m) {
-                    items.push({
-                        type: 'message',
-                        text: '<strong>' + escHtml(m.name || 'Someone') + '</strong> sent a message' + (m.subject ? ': ' + escHtml(m.subject) : ''),
-                        time: new Date(m.created_at),
-                        icon: 'message-circle'
-                    });
-                });
-            }
-
-            // Videos
-            if (videos && videos.length) {
-                videos.forEach(function(v) {
-                    items.push({
-                        type: 'video',
-                        text: 'New video uploaded: <strong>' + escHtml(v.title || 'Untitled') + '</strong>',
-                        time: new Date(v.created_at),
-                        icon: 'play-circle'
-                    });
-                });
-            }
-
-            // Sort by time descending
-            items.sort(function(a, b) { return b.time - a.time; });
-
-            if (items.length === 0) {
+            if (!items || items.length === 0) {
                 var empty = document.createElement('div');
                 empty.style.cssText = 'text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;';
-                empty.textContent = 'No recent activity';
+                empty.textContent = 'No activity in this category';
                 container.appendChild(empty);
                 return;
             }
@@ -3226,29 +3438,6 @@
             var SHOW = 5;
             var visible = items.slice(0, SHOW);
             var hidden  = items.slice(SHOW);
-
-            function _renderTimelineItem(item) {
-                var row = document.createElement('div');
-                row.className = 'timeline-item';
-                var dot = document.createElement('div');
-                dot.className = 'timeline-dot ' + item.type;
-                var icon = document.createElement('i');
-                icon.setAttribute('data-lucide', item.icon);
-                dot.appendChild(icon);
-                row.appendChild(dot);
-                var content = document.createElement('div');
-                content.className = 'timeline-content';
-                var text = document.createElement('div');
-                text.className = 'timeline-text';
-                text.innerHTML = item.text;
-                content.appendChild(text);
-                var time = document.createElement('div');
-                time.className = 'timeline-time';
-                time.textContent = getTimeAgo(item.time);
-                content.appendChild(time);
-                row.appendChild(content);
-                return row;
-            }
 
             visible.forEach(function(item) {
                 container.appendChild(_renderTimelineItem(item));
@@ -3267,6 +3456,34 @@
                 });
                 container.appendChild(moreBtn);
             }
+            lucide.createIcons();
+        }
+
+        function buildActivityTimeline(users, messages, videos) {
+            var items = [];
+
+            if (users && users.length) {
+                users.forEach(function(u) {
+                    items.push({ type: 'user',    text: '<strong>' + escHtml(u.email || 'Unknown') + '</strong> joined', time: new Date(u.created_at), icon: 'user-plus' });
+                });
+            }
+            if (messages && messages.length) {
+                messages.forEach(function(m) {
+                    items.push({ type: 'message', text: '<strong>' + escHtml(m.name || 'Someone') + '</strong> sent a message' + (m.subject ? ': ' + escHtml(m.subject) : ''), time: new Date(m.created_at), icon: 'message-circle' });
+                });
+            }
+            if (videos && videos.length) {
+                videos.forEach(function(v) {
+                    items.push({ type: 'video',   text: 'New video uploaded: <strong>' + escHtml(v.title || 'Untitled') + '</strong>', time: new Date(v.created_at), icon: 'play-circle' });
+                });
+            }
+
+            items.sort(function(a, b) { return b.time - a.time; });
+            _allTimelineItems = items;
+            _timelineFilter = 'all';
+            var btns = document.querySelectorAll('#tlFilterRow .tl-filter-btn');
+            btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-tlcat') === 'all'); });
+            _renderTimelineItems(items);
 
             lucide.createIcons();
         }
@@ -3843,6 +4060,31 @@
             // R — refresh dashboard
             if (e.key === 'r' || e.key === 'R') {
                 refreshDashboard();
+                return;
+            }
+
+            // F — toggle focus mode
+            if (e.key === 'f' || e.key === 'F') {
+                toggleFocusMode();
+                return;
+            }
+
+            // ? — keyboard shortcut guide
+            if (e.key === '?') {
+                openShortcutsModal();
+                return;
+            }
+
+            // D — toggle dark mode
+            if (e.key === 'd' || e.key === 'D') {
+                var themeBtn = document.getElementById('theme-toggle');
+                if (themeBtn) themeBtn.click();
+                return;
+            }
+
+            // Esc — close any open overlay
+            if (e.key === 'Escape') {
+                closeShortcutsModal();
                 return;
             }
 
