@@ -1072,6 +1072,49 @@
         body.dark-mode .health-score-badge.yellow { color: #fde68a; }
         body.dark-mode .health-score-badge.red { color: #fca5a5; }
 
+        /* ── Dark mode: fix var(--primary)=#fff used as button background ── */
+        body.dark-mode .qt-btn-submit {
+            background: #3b82f6;
+            color: #fff;
+        }
+        body.dark-mode #focusBadge {
+            background: #2d2d2d;
+            color: #fff;
+            border: 1px solid #555;
+        }
+        body.dark-mode #backToTop {
+            background: #2d2d2d;
+            color: #fff;
+            border: 1px solid #555;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+        }
+
+        /* ── Dark mode: make borders visible on bg-hover elements ── */
+        body.dark-mode .al-filter-btn,
+        body.dark-mode .tl-filter-btn {
+            border-color: var(--border-medium);
+        }
+        body.dark-mode .sc-key,
+        body.dark-mode .qa-kbd,
+        body.dark-mode .cmd-footer kbd {
+            border-color: var(--border-medium);
+            background: #1a1a1a;
+        }
+        body.dark-mode .sidebar-search-input,
+        body.dark-mode .qt-input,
+        body.dark-mode .qt-select {
+            border-color: var(--border-medium);
+        }
+        body.dark-mode .qt-btn-cancel {
+            border-color: var(--border-medium);
+        }
+
+        /* ── Dark mode: insight chip text must be readable ── */
+        body.dark-mode .insight-chip.good  { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.3); }
+        body.dark-mode .insight-chip.warn  { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.3); }
+        body.dark-mode .insight-chip.bad   { background: rgba(239,68,68,.12);  border-color: rgba(239,68,68,.3); }
+        body.dark-mode .insight-chip.info  { background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.3); }
+
         /* ── Focus Mode ── */
         body.focus-mode .sidebar { transform: translateX(-100%); }
         body.focus-mode .main-content { margin-left: 0 !important; }
