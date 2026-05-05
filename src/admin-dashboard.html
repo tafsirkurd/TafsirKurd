@@ -693,6 +693,24 @@
         .rh-platform-label{color:var(--text-tertiary);font-weight:500;}
         .rh-platform-build{font-family:monospace;font-weight:800;color:var(--primary);}
         .rh-divider{height:1px;background:var(--border-light);margin:10px 0 0;}
+
+        /* ── Release History Platform Sections ── */
+        .rh-section { border-top: 1px solid var(--border-light); }
+        .rh-section-hdr {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            user-select: none;
+            transition: background .12s;
+        }
+        .rh-section-hdr:hover { background: var(--bg-hover); }
+        .rh-section-icon { font-size: 16px; flex-shrink: 0; }
+        .rh-section-title { font-size: 13px; font-weight: 700; color: var(--text-primary); flex: 1; }
+        .rh-section-meta { font-size: 11px; color: var(--text-tertiary); }
+        .rh-section-chevron { font-size: 11px; color: var(--text-tertiary); transition: transform .2s; }
+        .rh-section-chevron.open { transform: rotate(180deg); }
+        .rh-section-body { display: none; }
+        .rh-section-body.open { display: block; }
         .rh-row{display:block;padding:11px 20px;border-bottom:1px solid var(--border-light);text-decoration:none;color:var(--text-primary);transition:background .12s;}
         .rh-row:last-child{border-bottom:none;}
         .rh-row:hover{background:var(--bg-hover);}
@@ -5888,42 +5906,70 @@
                 if (divider) divider.style.display = 'block';
             }
 
-            var html = '';
-            commits.forEach(function(c, idx) {
-                var isLatest = idx === 0;
-                var p        = _rhParseCommit(c.commit.message || '');
-                var tc       = RH_TYPES[p.type] || { bg:'rgba(107,114,128,.1)', color:'#6b7280' };
-                var sha      = (c.sha || '').slice(0, 7);
-                var author   = ((c.commit.author || c.commit.committer || {}).name || 'unknown');
-                var dateRaw  = ((c.commit.author || c.commit.committer || {}).date) || '';
-                var ago      = dateRaw ? getTimeAgo(new Date(dateRaw)) : '';
-                var url      = c.html_url || ('https://github.com/tafsirkurd/TafsirKurd/commit/' + (c.sha || ''));
-
-                html += '<a href="' + _rhEsc(url) + '" target="_blank" rel="noopener" class="rh-row' + (isLatest ? ' rh-latest' : '') + '">';
-                html += '<div class="rh-line1">';
-                if (isLatest) html += '<span class="rh-latest-pill">LATEST</span>';
-                html += '<span class="rh-type-pill" style="background:' + tc.bg + ';color:' + tc.color + '">' + _rhEsc(p.type) + '</span>';
-                html += '<span class="rh-msg" title="' + _rhEsc(p.full) + '">' + _rhEsc(p.body) + '</span>';
-                html += '</div>';
-                html += '<div class="rh-line2">';
+            function _renderCommitRow(c, isLatest) {
+                var p      = _rhParseCommit(c.commit.message || '');
+                var tc     = RH_TYPES[p.type] || { bg:'rgba(107,114,128,.1)', color:'#6b7280' };
+                var sha    = (c.sha || '').slice(0, 7);
+                var author = ((c.commit.author || c.commit.committer || {}).name || 'unknown');
+                var dateRaw = ((c.commit.author || c.commit.committer || {}).date) || '';
+                var ago    = dateRaw ? getTimeAgo(new Date(dateRaw)) : '';
+                var url    = c.html_url || ('https://github.com/tafsirkurd/TafsirKurd/commit/' + (c.sha || ''));
+                var h = '<a href="' + _rhEsc(url) + '" target="_blank" rel="noopener" class="rh-row' + (isLatest ? ' rh-latest' : '') + '">';
+                h += '<div class="rh-line1">';
+                if (isLatest) h += '<span class="rh-latest-pill">LATEST</span>';
+                h += '<span class="rh-type-pill" style="background:' + tc.bg + ';color:' + tc.color + '">' + _rhEsc(p.type) + '</span>';
+                h += '<span class="rh-msg" title="' + _rhEsc(p.full) + '">' + _rhEsc(p.body) + '</span>';
+                h += '</div><div class="rh-line2">';
                 if (p.buildNum) {
-                    if (p.isIos) {
-                        html += '<span class="rh-ios-pill">iOS Build ' + _rhEsc(p.buildNum) + '</span>';
-                    } else if (p.isAndroid) {
-                        html += '<span class="rh-android-pill">Android Build ' + _rhEsc(p.buildNum) + '</span>';
-                    } else {
-                        html += '<span class="rh-build-pill">Build ' + _rhEsc(p.buildNum) + '</span>';
-                    }
-                    html += '<span style="color:var(--border-light);font-size:10px;margin:0 1px">·</span>';
+                    if (p.isIos)         h += '<span class="rh-ios-pill">🍎 iOS Build ' + _rhEsc(p.buildNum) + '</span>';
+                    else if (p.isAndroid) h += '<span class="rh-android-pill">🤖 Android Build ' + _rhEsc(p.buildNum) + '</span>';
+                    else                  h += '<span class="rh-build-pill">Build ' + _rhEsc(p.buildNum) + '</span>';
+                    h += '<span style="color:var(--border-medium);font-size:10px;margin:0 2px">·</span>';
                 }
-                html += '<span class="rh-sha">' + _rhEsc(sha) + '</span>';
-                html += '<span style="color:var(--border-light);font-size:10px;margin:0 1px">·</span>';
-                html += '<span class="rh-meta">' + _rhEsc(author) + '</span>';
-                html += '<span style="color:var(--border-light);font-size:10px;margin:0 1px">·</span>';
-                html += '<span class="rh-meta">' + _rhEsc(ago) + '</span>';
-                html += '</div>';
-                html += '</a>';
-            });
+                h += '<span class="rh-sha">' + _rhEsc(sha) + '</span>';
+                h += '<span style="color:var(--border-medium);font-size:10px;margin:0 2px">·</span>';
+                h += '<span class="rh-meta">' + _rhEsc(author) + '</span>';
+                h += '<span style="color:var(--border-medium);font-size:10px;margin:0 2px">·</span>';
+                h += '<span class="rh-meta">' + _rhEsc(ago) + '</span>';
+                h += '</div></a>';
+                return h;
+            }
+
+            function _renderSection(id, icon, title, sectionCommits, defaultOpen) {
+                if (!sectionCommits.length) return '';
+                var latestBuild = null;
+                sectionCommits.forEach(function(c) {
+                    var p = _rhParseCommit(c.commit.message || '');
+                    if (p.buildNum && !latestBuild) latestBuild = p.buildNum;
+                });
+                var meta = sectionCommits.length + ' commit' + (sectionCommits.length > 1 ? 's' : '')
+                    + (latestBuild ? ' · latest build ' + latestBuild : '');
+                var open = defaultOpen ? ' open' : '';
+                var h = '<div class="rh-section">';
+                h += '<div class="rh-section-hdr" onclick="(function(el){';
+                h += 'var b=el.closest(\'.rh-section\').querySelector(\'.rh-section-body\');';
+                h += 'var c=el.querySelector(\'.rh-section-chevron\');';
+                h += 'b.classList.toggle(\'open\');c.classList.toggle(\'open\');';
+                h += '})(this)">';
+                h += '<span class="rh-section-icon">' + icon + '</span>';
+                h += '<span class="rh-section-title">' + title + '</span>';
+                h += '<span class="rh-section-meta">' + meta + '</span>';
+                h += '<span class="rh-section-chevron' + open + '">▾</span>';
+                h += '</div>';
+                h += '<div class="rh-section-body' + open + '">';
+                sectionCommits.forEach(function(c, i) { h += _renderCommitRow(c, i === 0 && defaultOpen); });
+                h += '</div></div>';
+                return h;
+            }
+
+            var iosCommits = commits.filter(function(c) { return _rhParseCommit(c.commit.message || '').isIos; });
+            var andCommits = commits.filter(function(c) { return _rhParseCommit(c.commit.message || '').isAndroid; });
+            var allCommits = commits;
+
+            var html = _renderSection('all', '🔀', 'All Commits', allCommits, true);
+            if (iosCommits.length) html += _renderSection('ios', '🍎', 'iOS Releases', iosCommits, false);
+            if (andCommits.length) html += _renderSection('android', '🤖', 'Android Releases', andCommits, false);
+
             bodyEl.innerHTML = html;
         }
 
