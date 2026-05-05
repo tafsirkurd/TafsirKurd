@@ -870,6 +870,102 @@
             .quick-actions { gap: 8px; }
         }
 
+        /* ── Quick Add Task Modal ── */
+        #quickTaskModal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99997;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        #quickTaskModal.open { display: flex; }
+        #quickTaskBox {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.24);
+            animation: cmdIn 0.18s cubic-bezier(.4,0,.2,1);
+        }
+        .qt-title {
+            font-size: 15px; font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .qt-close {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-tertiary); font-size: 20px; line-height: 1;
+            padding: 0 4px;
+        }
+        .qt-field { margin-bottom: 14px; }
+        .qt-label {
+            display: block;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .06em;
+            color: var(--text-tertiary);
+            margin-bottom: 6px;
+        }
+        .qt-input, .qt-select {
+            width: 100%; padding: 9px 12px;
+            font-size: 13px; font-weight: 500;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color .15s;
+        }
+        .qt-input:focus, .qt-select:focus { border-color: var(--primary); background: var(--bg-surface); }
+        .qt-row { display: flex; gap: 10px; }
+        .qt-row .qt-field { flex: 1; }
+        .qt-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+        .qt-btn-cancel {
+            padding: 8px 18px; font-size: 13px; font-weight: 600;
+            border: 1px solid var(--border-light); border-radius: 8px;
+            background: var(--bg-hover); color: var(--text-secondary);
+            cursor: pointer; font-family: inherit; transition: background .15s;
+        }
+        .qt-btn-cancel:hover { background: var(--bg-active); }
+        .qt-btn-submit {
+            padding: 8px 20px; font-size: 13px; font-weight: 700;
+            border: none; border-radius: 8px;
+            background: var(--primary); color: #fff;
+            cursor: pointer; font-family: inherit; transition: opacity .15s;
+        }
+        .qt-btn-submit:hover { opacity: .88; }
+        .qt-btn-submit:disabled { opacity: .5; cursor: default; }
+        .qt-error { font-size: 12px; color: #ef4444; margin-top: 8px; display: none; }
+
+        /* ── Smart Insights Row ── */
+        #insightsRow {
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .insight-chip {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px; font-weight: 600;
+            border: 1px solid;
+        }
+        .insight-chip.good  { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.2); color: #065f46; }
+        .insight-chip.warn  { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.2); color: #92400e; }
+        .insight-chip.bad   { background: rgba(239,68,68,.08);  border-color: rgba(239,68,68,.2);  color: #991b1b; }
+        .insight-chip.info  { background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.2); color: #1e40af; }
+        body.dark-mode .insight-chip.good  { color: #6ee7b7; }
+        body.dark-mode .insight-chip.warn  { color: #fde68a; }
+        body.dark-mode .insight-chip.bad   { color: #fca5a5; }
+        body.dark-mode .insight-chip.info  { color: #93c5fd; }
+        .insight-icon { font-size: 14px; }
+
         /* ── Sidebar search ── */
         .sidebar-search-wrap {
             padding: 8px 12px 4px;
@@ -1513,6 +1609,10 @@
                             <span class="dot"></span>
                             <span id="lastUpdatedText">Updating...</span>
                         </div>
+                        <button class="btn btn-secondary" onclick="openQuickTask()" style="font-size:13px;padding:7px 14px;gap:6px;display:inline-flex;align-items:center;" title="Quick add task">
+                            <i data-lucide="plus" style="width:13px;height:13px;"></i> Task
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyDashboardSnapshot()" style="font-size:13px;padding:7px 12px;" title="Copy dashboard summary to clipboard" id="snapshotBtn">📋</button>
                         <button class="btn btn-secondary" onclick="showPinnedNote()" style="font-size:13px;padding:7px 12px;" title="Add a pinned note">📌</button>
                         <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()" style="font-size:13px;padding:7px 14px;" title="Refresh dashboard (shortcut: R)">
                             <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
@@ -1524,6 +1624,9 @@
 
                 <!-- ══ What-changed diff banner ══ -->
                 <div id="diffBanner"></div>
+
+                <!-- ══ Smart Insights ══ -->
+                <div id="insightsRow"></div>
 
                 <!-- ══ Pinned Note ══ -->
                 <div id="pinnedNote" style="display:none;">
@@ -2149,6 +2252,44 @@
         </main>
     </div>
 
+    <!-- ══ Quick Add Task Modal ══ -->
+    <div id="quickTaskModal" onclick="if(event.target===this)closeQuickTask()">
+        <div id="quickTaskBox">
+            <div class="qt-title">
+                New Task
+                <button class="qt-close" onclick="closeQuickTask()">×</button>
+            </div>
+            <div class="qt-field">
+                <label class="qt-label">Title *</label>
+                <input class="qt-input" id="qtTitle" type="text" placeholder="What needs to be done?" maxlength="200" autocomplete="off">
+            </div>
+            <div class="qt-row">
+                <div class="qt-field">
+                    <label class="qt-label">Priority</label>
+                    <select class="qt-select" id="qtPriority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div class="qt-field">
+                    <label class="qt-label">Due Date</label>
+                    <input class="qt-input" id="qtDue" type="date">
+                </div>
+            </div>
+            <div class="qt-field">
+                <label class="qt-label">Notes (optional)</label>
+                <input class="qt-input" id="qtNotes" type="text" placeholder="Any extra context…" maxlength="500" autocomplete="off">
+            </div>
+            <div class="qt-error" id="qtError"></div>
+            <div class="qt-footer">
+                <button class="qt-btn-cancel" onclick="closeQuickTask()">Cancel</button>
+                <button class="qt-btn-submit" id="qtSubmitBtn" onclick="submitQuickTask()">Add Task</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ══ Focus mode badge ══ -->
     <div id="focusBadge" onclick="toggleFocusMode()" title="Exit Focus Mode (F)">Focus Mode — press F to exit</div>
 
@@ -2171,6 +2312,7 @@
             </div>
             <div class="sc-group">
                 <div class="sc-group-label">Dashboard</div>
+                <div class="sc-row"><span>Quick add task</span><div class="sc-keys"><kbd class="sc-key">N</kbd></div></div>
                 <div class="sc-row"><span>Refresh data</span><div class="sc-keys"><kbd class="sc-key">R</kbd></div></div>
                 <div class="sc-row"><span>Toggle focus mode</span><div class="sc-keys"><kbd class="sc-key">F</kbd></div></div>
                 <div class="sc-row"><span>Show this guide</span><div class="sc-keys"><kbd class="sc-key">?</kbd></div></div>
@@ -2499,6 +2641,206 @@
                 tooltipBorder: s.getPropertyValue('--border-light').trim() || '#ccc'
             };
         }
+
+        /* ═══════════════════════════════════════════════
+           QUICK ADD TASK MODAL
+           ═══════════════════════════════════════════════ */
+        function openQuickTask() {
+            var modal = document.getElementById('quickTaskModal');
+            if (!modal) return;
+            // Set default due date to today
+            var today = new Date().toISOString().slice(0, 10);
+            document.getElementById('qtDue').value = today;
+            document.getElementById('qtTitle').value = '';
+            document.getElementById('qtNotes').value = '';
+            document.getElementById('qtPriority').value = 'medium';
+            document.getElementById('qtError').style.display = 'none';
+            var btn = document.getElementById('qtSubmitBtn');
+            if (btn) { btn.disabled = false; btn.textContent = 'Add Task'; }
+            modal.classList.add('open');
+            setTimeout(function() { document.getElementById('qtTitle').focus(); }, 60);
+        }
+
+        function closeQuickTask() {
+            var modal = document.getElementById('quickTaskModal');
+            if (modal) modal.classList.remove('open');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeQuickTask();
+        });
+
+        async function submitQuickTask() {
+            var title = (document.getElementById('qtTitle').value || '').trim();
+            var priority = document.getElementById('qtPriority').value;
+            var due = document.getElementById('qtDue').value;
+            var notes = (document.getElementById('qtNotes').value || '').trim();
+            var errEl = document.getElementById('qtError');
+            var btn = document.getElementById('qtSubmitBtn');
+
+            if (!title) {
+                errEl.textContent = 'Title is required.';
+                errEl.style.display = '';
+                document.getElementById('qtTitle').focus();
+                return;
+            }
+            errEl.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = 'Adding…';
+
+            try {
+                var sb = window.adminAuth && window.adminAuth.getSupabase();
+                if (!sb) throw new Error('Not authenticated');
+                var adminEmail = sessionStorage.getItem('adminEmail') || '';
+                var adminName = sessionStorage.getItem('adminName') || adminEmail.split('@')[0] || 'Admin';
+
+                var payload = {
+                    title: title,
+                    priority: priority,
+                    status: 'todo',
+                    archived: false,
+                    assigned_to: adminEmail,
+                    created_by: adminName
+                };
+                if (due) payload.due_at = due + 'T23:59:59';
+                if (notes) payload.description = notes;
+
+                var { error } = await sb.from('admin_tasks').insert([payload]);
+                if (error) throw error;
+
+                btn.textContent = '✓ Added!';
+                btn.style.background = '#10b981';
+                setTimeout(function() {
+                    closeQuickTask();
+                    btn.style.background = '';
+                    btn.disabled = false;
+                    btn.textContent = 'Add Task';
+                    loadMyTasks(); // refresh the tasks widget
+                }, 900);
+            } catch(err) {
+                errEl.textContent = 'Failed: ' + (err.message || 'Unknown error');
+                errEl.style.display = '';
+                btn.disabled = false;
+                btn.textContent = 'Add Task';
+            }
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           SMART ANOMALY INSIGHTS
+           ═══════════════════════════════════════════════ */
+        function buildInsights(opts) {
+            // opts: { activeToday, yesterdayActive, active7d, errors24h, errors7d, totalUsers, unreadMessages, online }
+            var row = document.getElementById('insightsRow');
+            if (!row) return;
+
+            var chips = [];
+
+            function chip(icon, text, cls) {
+                chips.push('<div class="insight-chip ' + cls + '"><span class="insight-icon">' + icon + '</span>' + text + '</div>');
+            }
+
+            // User activity vs yesterday
+            if (opts.activeToday != null && opts.yesterdayActive != null && opts.yesterdayActive > 0) {
+                var pctVsYd = Math.round(((opts.activeToday - opts.yesterdayActive) / opts.yesterdayActive) * 100);
+                if (pctVsYd >= 20)       chip('🔥', 'Activity up ' + pctVsYd + '% vs yesterday', 'good');
+                else if (pctVsYd <= -20) chip('📉', 'Activity down ' + Math.abs(pctVsYd) + '% vs yesterday', 'warn');
+            }
+
+            // Error rate vs weekly average
+            if (opts.errors24h != null && opts.errors7d != null && opts.errors7d > 0) {
+                var dailyAvgErrors = opts.errors7d / 7;
+                if (dailyAvgErrors > 0) {
+                    var errRatio = opts.errors24h / dailyAvgErrors;
+                    if (errRatio >= 3)       chip('⚡', 'Errors ' + Math.round(errRatio) + '× above weekly avg', 'bad');
+                    else if (errRatio >= 1.5) chip('⚠️', 'Errors elevated vs weekly avg', 'warn');
+                    else if (opts.errors24h === 0 && opts.errors7d > 0) chip('✅', 'No errors in last 24h', 'good');
+                }
+            }
+            if (opts.errors24h === 0 && opts.errors7d != null) {
+                chip('✅', 'Zero errors in last 24h', 'good');
+            }
+
+            // New users rate (today's registrations from growthData)
+            if (_fullGrowthData && _fullGrowthData.length >= 2) {
+                var todayKey = new Date().toISOString().slice(0, 10);
+                var todayEntry = _fullGrowthData.find(function(d) { return (d.date || '').slice(0,10) === todayKey; });
+                var last7 = _fullGrowthData.slice(-8, -1);
+                if (todayEntry && last7.length) {
+                    var avgNew = last7.reduce(function(s,d){return s+d.count;},0) / last7.length;
+                    if (avgNew > 0) {
+                        var newRatio = todayEntry.count / avgNew;
+                        if (newRatio >= 1.5) chip('🚀', todayEntry.count + ' new users today (' + Math.round(newRatio * 100) + '% of avg)', 'good');
+                    }
+                }
+            }
+
+            // High unread message count
+            if (opts.unreadMessages >= 10) chip('✉️', opts.unreadMessages + ' unread messages need attention', 'warn');
+
+            // Online now context
+            if (opts.online >= 50) chip('👥', opts.online + ' users online right now', 'info');
+
+            if (!chips.length) {
+                row.style.display = 'none';
+                return;
+            }
+            row.innerHTML = chips.join('');
+            row.style.display = 'flex';
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           COPY DASHBOARD SNAPSHOT
+           ═══════════════════════════════════════════════ */
+        function copyDashboardSnapshot() {
+            var btn = document.getElementById('snapshotBtn');
+            var now = new Date();
+            var baghdad = new Date(now.getTime() + (3 * 60 + now.getTimezoneOffset()) * 60000);
+            var dateStr = baghdad.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+            var timeStr = baghdad.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+            function metricText(id) {
+                var el = document.getElementById(id);
+                return el ? el.textContent.trim() : '—';
+            }
+
+            var lines = [
+                'TafsirKurd Admin Dashboard',
+                dateStr + ' · ' + timeStr + ' (Baghdad)',
+                '─────────────────────────────────────',
+                'Total Users:       ' + metricText('metricUsers'),
+                'Active Today:      ' + metricText('metricActiveToday'),
+                'Active (7d):       ' + metricText('metricActive7d'),
+                'Active (30d):      ' + metricText('metricActive30d'),
+                'Unread Messages:   ' + metricText('metricMessages'),
+                'Active Readers:    ' + metricText('metricReaders'),
+                'Online Now:        ' + metricText('metricOnline'),
+                '─────────────────────────────────────',
+            ];
+
+            var healthEl = document.getElementById('healthScoreBadge');
+            if (healthEl && healthEl.style.display !== 'none') {
+                lines.push('System Health:     ' + healthEl.textContent.trim());
+            }
+
+            var text = lines.join('\n');
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    if (btn) { var old = btn.textContent; btn.textContent = '✓'; setTimeout(function() { btn.textContent = old; }, 1800); }
+                });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (btn) { var old2 = btn.textContent; btn.textContent = '✓'; setTimeout(function() { btn.textContent = old2; }, 1800); }
+            }
+        }
+
 
         /* ═══════════════════════════════════════════════
            SIDEBAR NAV SEARCH
@@ -4094,6 +4436,18 @@
             var _dbOk = !!(dat(0) !== null || adminStats);
             updateHealthScore(_err24h, _dbOk);
 
+            // ─── Smart insights ───
+            buildInsights({
+                activeToday:     activeToday,
+                yesterdayActive: adminStats ? adminStats.activeYesterday : null,
+                active7d:        active7d,
+                errors24h:       _err24h,
+                errors7d:        (_errData && _errData.success) ? (_errData.counts.last7d || 0) : null,
+                totalUsers:      totalUsers,
+                unreadMessages:  unreadCount || 0,
+                online:          _onlineNow || 0
+            });
+
             // ─── Update timestamp ───
             _lastRefreshTime = new Date();
             updateRefreshIndicator();
@@ -4303,6 +4657,12 @@
             // R — refresh dashboard
             if (e.key === 'r' || e.key === 'R') {
                 refreshDashboard();
+                return;
+            }
+
+            // N — quick add task
+            if (e.key === 'n' || e.key === 'N') {
+                openQuickTask();
                 return;
             }
 
