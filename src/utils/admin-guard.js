@@ -1,6 +1,6 @@
 // Runs synchronously from <head> — hides page before first paint
 // Prevents any flash of protected content while async auth completes
-(function () {
+;(function () {
     try {
         var token = sessionStorage.getItem('adminToken');
         if (!token) {
@@ -36,4 +36,16 @@
             }
         }
     } catch (e) {}
+})();
+
+// Load max-security features on every authenticated admin page
+(function () {
+    if (window.location.pathname.includes('admin-login')) return;
+    function loadScript(src) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.defer = true;
+        (document.head || document.documentElement).appendChild(s);
+    }
+    loadScript('/utils/admin-security-max.js?v=1');
 })();
