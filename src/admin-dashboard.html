@@ -715,6 +715,46 @@
         .rh-gh-link{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--primary);background:var(--bg-active);border-radius:10px;padding:4px 10px;font-weight:600;text-decoration:none;transition:background .15s;}
         .rh-gh-link:hover{background:var(--bg-hover);}
 
+        /* ── Deploy Status Badge ── */
+        #deployStatus {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 8px;
+            letter-spacing: .01em;
+            cursor: default;
+            white-space: nowrap;
+        }
+        #deployStatus.ds-deploying {
+            display: inline-flex;
+            background: rgba(245,158,11,.12);
+            color: #b45309;
+            border: 1px solid rgba(245,158,11,.3);
+        }
+        #deployStatus.ds-live {
+            display: inline-flex;
+            background: rgba(16,185,129,.1);
+            color: #059669;
+            border: 1px solid rgba(16,185,129,.25);
+        }
+        body.dark-mode #deployStatus.ds-deploying { color: #fde68a; }
+        body.dark-mode #deployStatus.ds-live      { color: #6ee7b7; }
+
+        @keyframes ds-spin {
+            to { transform: rotate(360deg); }
+        }
+        .ds-spinner {
+            width: 9px; height: 9px;
+            border: 1.5px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: ds-spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
         /* ── Metric Skeleton Shimmer ── */
         @keyframes shimmer {
             0%   { background-position: 200% 0; }
@@ -2258,6 +2298,7 @@
                             <span style="font-size:11px;font-weight:600;color:var(--text-tertiary);background:var(--bg-hover);padding:2px 8px;border-radius:8px">main</span>
                         </h3>
                         <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
+                            <span id="deployStatus"></span>
                             <span id="rhFetchTime" style="font-size:11px;color:var(--text-tertiary)"></span>
                             <button class="rh-btn" id="rhRefreshBtn" onclick="fetchReleaseHistory()">
                                 <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> Refresh
@@ -5733,6 +5774,48 @@
             return { type: type, body: body, full: first, buildNum: buildM ? buildM[1] : null, isIos: isIos, isAndroid: isAndroid };
         }
 
+        var _deployPollInterval = null;
+        var _latestCommitDate = null;
+        var _deployCountdownInterval = null;
+
+        function _updateDeployBadge() {
+            var badge = document.getElementById('deployStatus');
+            if (!badge || !_latestCommitDate) return;
+            var ageMs = Date.now() - _latestCommitDate.getTime();
+            var DEPLOY_WINDOW = 4 * 60 * 1000; // 4 minutes
+            if (ageMs < DEPLOY_WINDOW) {
+                var secLeft = Math.max(0, Math.round((DEPLOY_WINDOW - ageMs) / 1000));
+                var minLeft = Math.floor(secLeft / 60);
+                var s = secLeft % 60;
+                var countdown = minLeft > 0 ? minLeft + 'm ' + s + 's' : s + 's';
+                badge.className = 'ds-deploying';
+                badge.innerHTML = '<span class="ds-spinner"></span>Deploying… ' + countdown;
+            } else {
+                badge.className = 'ds-live';
+                badge.innerHTML = '✓ Live';
+                // Stop polling and countdown once live
+                if (_deployPollInterval) { clearInterval(_deployPollInterval); _deployPollInterval = null; }
+                if (_deployCountdownInterval) { clearInterval(_deployCountdownInterval); _deployCountdownInterval = null; }
+            }
+        }
+
+        function _startDeployWatch(commitDate) {
+            _latestCommitDate = commitDate;
+            _updateDeployBadge();
+
+            // Update countdown every second while in deploy window
+            if (_deployCountdownInterval) clearInterval(_deployCountdownInterval);
+            _deployCountdownInterval = setInterval(_updateDeployBadge, 1000);
+
+            var ageMs = Date.now() - commitDate.getTime();
+            var DEPLOY_WINDOW = 4 * 60 * 1000;
+            if (ageMs < DEPLOY_WINDOW) {
+                // Auto-refresh commits every 30s while deploying
+                if (_deployPollInterval) clearInterval(_deployPollInterval);
+                _deployPollInterval = setInterval(fetchReleaseHistory, 30 * 1000);
+            }
+        }
+
         async function fetchReleaseHistory() {
             var bodyEl = document.getElementById('releaseHistoryBody');
             var btn    = document.getElementById('rhRefreshBtn');
@@ -5751,7 +5834,15 @@
                 var data = await res.json();
                 if (!data.success) throw new Error(data.error || 'Unknown error');
                 if (timeEl) timeEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-                buildReleaseHistoryWidget((data.commits || []).slice(0, 5));
+                var commits = (data.commits || []).slice(0, 5);
+                buildReleaseHistoryWidget(commits);
+
+                // Update deploy status badge from latest commit date
+                if (commits.length > 0) {
+                    var latest = commits[0];
+                    var dateStr = (latest.commit.author || latest.commit.committer || {}).date || '';
+                    if (dateStr) _startDeployWatch(new Date(dateStr));
+                }
             } catch (e) {
                 bodyEl.innerHTML = '<div style="padding:20px;color:var(--text-tertiary);font-size:13px">Could not load: ' + _rhEsc(e.message) + '</div>';
             }
