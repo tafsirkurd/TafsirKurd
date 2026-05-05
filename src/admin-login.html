@@ -890,7 +890,7 @@
                     localStorage.removeItem('adminLoginFailedAttempts');
                     if (data.trustToken) {
                         localStorage.setItem('adminTrustToken',  data.trustToken);
-                        localStorage.setItem('adminTrustExpiry', Date.now() + 30*24*60*60*1000);
+                        localStorage.setItem('adminTrustExpiry', Date.now() + 7*24*60*60*1000);
                     }
                     sessionStorage.setItem('adminToken',        data.token);
                     sessionStorage.setItem('adminSessionStart', new Date().toISOString());
@@ -901,7 +901,7 @@
                     var landingPage = '/admin-dashboard.html';
                     if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
                         var first = data.permissions.find(function(p) { return p.can_view; });
-                        if (first) landingPage = '/admin-' + first.page_slug + '.html';
+                        if (first && /^[a-z0-9-]+$/.test(first.page_slug)) landingPage = '/admin-' + first.page_slug + '.html';
                     }
                     setTimeout(function() { window.location.href = landingPage; }, 600);
                 } else {
@@ -1004,7 +1004,7 @@
                     var landingPage = '/admin-dashboard.html';
                     if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
                         var first = data.permissions.find(function(p) { return p.can_view; });
-                        if (first) landingPage = '/admin-' + first.page_slug + '.html';
+                        if (first && /^[a-z0-9-]+$/.test(first.page_slug)) landingPage = '/admin-' + first.page_slug + '.html';
                     }
                     setTimeout(function() { window.location.href = landingPage; }, 650);
                 } else {

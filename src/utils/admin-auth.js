@@ -127,6 +127,7 @@ async function checkAuth() {
         // Safari closes and wipes sessionStorage — allow 3-min re-entry via grace token
         const graceToken = tryRestoreGraceToken();
         if (graceToken) {
+            clearGraceToken(); // consume immediately — single-use
             sessionStorage.setItem('adminToken', graceToken);
             adminToken = graceToken;
         } else {
