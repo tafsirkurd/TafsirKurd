@@ -10,6 +10,86 @@
     var CHANNEL        = 'tk-admin-bus';   // BroadcastChannel name
     var TAB_ID         = Date.now() + '-' + Math.random().toString(36).substr(2, 8);
 
+    // ── Theme-aware wall CSS (injected once, covers all 4 themes) ────────────
+    function injectWallThemeCSS() {
+        if (document.getElementById('adminWallThemeCSS')) return;
+        var s = document.createElement('style');
+        s.id  = 'adminWallThemeCSS';
+        s.textContent = [
+            /* Default (light) */
+            ':root{',
+                '--wall-bg:rgba(244,246,251,.97);',
+                '--wall-card-bg:#ffffff;',
+                '--wall-card-border:rgba(0,0,0,.08);',
+                '--wall-card-shadow:0 24px 64px rgba(0,0,0,.12);',
+                '--wall-title:#0f172a;',
+                '--wall-body:#475569;',
+                '--wall-em:#0f172a;',
+                '--wall-note-bg:rgba(0,0,0,.03);',
+                '--wall-note-border:rgba(0,0,0,.07);',
+                '--wall-note:#64748b;',
+                '--wall-foot:#94a3b8;',
+                '--wall-btn:linear-gradient(135deg,#3b82f6,#6366f1);',
+                '--wall-btn-shadow:rgba(59,130,246,.35);',
+                '--wall-btn2-color:#64748b;',
+            '}',
+            /* Dark mode */
+            'body.dark-mode{',
+                '--wall-bg:rgba(4,6,14,.97);',
+                '--wall-card-bg:rgba(255,255,255,.025);',
+                '--wall-card-border:rgba(255,255,255,.08);',
+                '--wall-card-shadow:0 40px 80px rgba(0,0,0,.7);',
+                '--wall-title:#f1f5f9;',
+                '--wall-body:#475569;',
+                '--wall-em:#f1f5f9;',
+                '--wall-note-bg:rgba(255,255,255,.03);',
+                '--wall-note-border:rgba(255,255,255,.06);',
+                '--wall-note:#334155;',
+                '--wall-foot:#1e293b;',
+            '}',
+            /* Sakina theme */
+            'body[data-admin-theme="sakina"]{',
+                '--wall-bg:rgba(8,12,8,.97);',
+                '--wall-card-bg:rgba(201,168,76,.04);',
+                '--wall-card-border:rgba(201,168,76,.14);',
+                '--wall-title:#f5f0e0;',
+                '--wall-body:#6b7280;',
+                '--wall-em:#e8d5a0;',
+                '--wall-note-bg:rgba(201,168,76,.05);',
+                '--wall-note-border:rgba(201,168,76,.1);',
+                '--wall-note:#78716c;',
+                '--wall-foot:#292524;',
+                '--wall-btn:linear-gradient(135deg,#b5922e,#c9a84c);',
+                '--wall-btn-shadow:rgba(185,146,46,.35);',
+            '}',
+            /* Noor theme */
+            'body[data-admin-theme="noor"]{',
+                '--wall-bg:rgba(4,12,6,.97);',
+                '--wall-card-bg:rgba(34,197,94,.03);',
+                '--wall-card-border:rgba(34,197,94,.12);',
+                '--wall-title:#f0fdf4;',
+                '--wall-body:#4b5563;',
+                '--wall-em:#bbf7d0;',
+                '--wall-note-bg:rgba(34,197,94,.04);',
+                '--wall-note-border:rgba(34,197,94,.1);',
+                '--wall-note:#374151;',
+                '--wall-foot:#14532d;',
+                '--wall-btn:linear-gradient(135deg,#16a34a,#22c55e);',
+                '--wall-btn-shadow:rgba(22,163,74,.35);',
+            '}',
+        ].join('');
+        document.head.appendChild(s);
+    }
+
+    // Reliable tab-close: try window.close(), fall back to navigate away
+    function _closeOrNavigate() {
+        window.close();
+        // If still here after 400ms, the browser blocked close() — navigate instead
+        setTimeout(function () {
+            if (!window.closed) window.location.replace('/admin-login.html');
+        }, 400);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -165,38 +245,52 @@
     }
 
     function _showDuplicateTabWall() {
+        injectWallThemeCSS();
         document.body.style.overflow = 'hidden';
         document.documentElement.style.visibility = 'visible';
-        var wall = document.createElement('div');
-        wall.style.cssText = [
+
+        var overlay = document.createElement('div');
+        overlay.style.cssText = [
             'position:fixed;inset:0;z-index:9999999;',
-            'background:rgba(4,6,14,.98);',
+            'background:var(--wall-bg,rgba(4,6,14,.97));',
             'display:flex;align-items:center;justify-content:center;',
             'backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);',
-            'font-family:Inter,system-ui,sans-serif;',
+            'font-family:Inter,system-ui,sans-serif;padding:24px;',
         ].join('');
-        wall.innerHTML =
-            '<div style="text-align:center;max-width:380px;padding:48px 36px;' +
-                'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);' +
-                'border-radius:24px;box-shadow:0 40px 80px rgba(0,0,0,.7)">' +
-                '<div style="font-size:52px;margin-bottom:18px">🔒</div>' +
-                '<div style="font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:10px">One Session at a Time</div>' +
-                '<div style="font-size:13px;color:#475569;line-height:1.7;margin-bottom:28px">' +
-                    'For your security, only <strong style="color:#f1f5f9">one admin tab</strong> is allowed at a time. ' +
-                    'An active admin session is already running in another window. ' +
-                    'Close that window first, then refresh this tab.' +
-                '</div>' +
-                '<button onclick="window.close()" style="width:100%;padding:13px;border-radius:12px;' +
-                    'background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;' +
-                    'font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:inherit;' +
-                    'box-shadow:0 6px 24px rgba(59,130,246,.4)">' +
-                    'Close This Tab' +
-                '</button>' +
-                '<div style="font-size:11px;color:#1e293b;margin-top:14px">' +
-                    'If no other admin tab is open, wait 7 seconds and refresh this page.' +
-                '</div>' +
+
+        var card = document.createElement('div');
+        card.style.cssText = [
+            'text-align:center;max-width:400px;width:100%;',
+            'padding:48px 36px;',
+            'background:var(--wall-card-bg);',
+            'border:1px solid var(--wall-card-border);',
+            'border-radius:24px;',
+            'box-shadow:var(--wall-card-shadow);',
+        ].join('');
+
+        card.innerHTML =
+            '<div style="font-size:52px;margin-bottom:18px">🔒</div>' +
+            '<div style="font-size:20px;font-weight:700;color:var(--wall-title);margin-bottom:10px;letter-spacing:-.3px">One Session at a Time</div>' +
+            '<div style="font-size:13px;color:var(--wall-body);line-height:1.75;margin-bottom:28px">' +
+                'For your security, only <strong style="color:var(--wall-em)">one admin tab</strong> is allowed at a time. ' +
+                'An active admin session is already running in another window. ' +
+                'Close that window first, then refresh this tab.' +
+            '</div>' +
+            '<button id="_wallCloseBtn" style="width:100%;padding:13px;border-radius:12px;' +
+                'background:var(--wall-btn,linear-gradient(135deg,#3b82f6,#6366f1));color:#fff;' +
+                'font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:inherit;' +
+                'box-shadow:0 6px 24px var(--wall-btn-shadow,rgba(59,130,246,.4));' +
+                'transition:opacity .15s">' +
+                'Close This Tab' +
+            '</button>' +
+            '<div style="font-size:11px;color:var(--wall-foot);margin-top:14px">' +
+                'If no other admin tab is open, wait 7 s then refresh this page.' +
             '</div>';
-        document.body.appendChild(wall);
+
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        document.getElementById('_wallCloseBtn').addEventListener('click', _closeOrNavigate);
     }
 
     // ── 5b. IRAQ-ONLY GEO BLOCK ───────────────────────────────────────────────
@@ -233,38 +327,45 @@
     }
 
     function _showGeoBlock(countryName) {
+        injectWallThemeCSS();
         document.documentElement.style.visibility = 'visible';
         document.body.style.overflow = 'hidden';
-        // Replace entire page with block wall
         document.body.innerHTML = '';
         document.body.style.cssText = [
             'margin:0;padding:0;',
-            'background:#04060e;',
+            'background:var(--wall-bg,rgba(4,6,14,.97));',
             'display:flex;align-items:center;justify-content:center;',
-            'min-height:100vh;',
-            'font-family:Inter,system-ui,sans-serif;',
+            'min-height:100vh;font-family:Inter,system-ui,sans-serif;padding:24px;',
+            'box-sizing:border-box;',
         ].join('');
-        var wall = document.createElement('div');
-        wall.style.cssText = 'text-align:center;max-width:440px;padding:52px 40px;' +
-            'background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);' +
-            'border-radius:28px;box-shadow:0 48px 96px rgba(0,0,0,.6)';
-        wall.innerHTML =
-            '<div style="width:72px;height:72px;border-radius:50%;background:rgba(239,68,68,.12);' +
-                'border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;' +
-                'font-size:32px;margin:0 auto 20px">🚫</div>' +
-            '<div style="font-size:22px;font-weight:800;color:#f1f5f9;margin-bottom:10px;letter-spacing:-.3px">' +
+
+        var card = document.createElement('div');
+        card.style.cssText = [
+            'text-align:center;max-width:460px;width:100%;',
+            'padding:52px 40px;',
+            'background:var(--wall-card-bg);',
+            'border:1px solid var(--wall-card-border);',
+            'border-radius:28px;',
+            'box-shadow:var(--wall-card-shadow);',
+        ].join('');
+        card.innerHTML =
+            '<div style="width:76px;height:76px;border-radius:50%;' +
+                'background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);' +
+                'display:flex;align-items:center;justify-content:center;' +
+                'font-size:34px;margin:0 auto 22px">🚫</div>' +
+            '<div style="font-size:22px;font-weight:800;color:var(--wall-title);margin-bottom:10px;letter-spacing:-.3px">' +
                 'Access Restricted</div>' +
-            '<div style="font-size:14px;color:#475569;line-height:1.75;margin-bottom:28px">' +
-                'Admin access is only permitted from <strong style="color:#f1f5f9">Iraq 🇮🇶</strong>.<br>' +
+            '<div style="font-size:14px;color:var(--wall-body);line-height:1.75;margin-bottom:28px">' +
+                'Admin access is only permitted from <strong style="color:var(--wall-em)">Iraq 🇮🇶</strong>.<br>' +
                 'Your current location (<strong style="color:#ef4444">' + esc(countryName) + '</strong>) is not authorized.' +
             '</div>' +
-            '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);' +
-                'border-radius:12px;padding:14px 18px;font-size:12px;color:#334155;line-height:1.7">' +
+            '<div style="background:var(--wall-note-bg);border:1px solid var(--wall-note-border);' +
+                'border-radius:12px;padding:14px 18px;font-size:12px;color:var(--wall-note);line-height:1.7;margin-bottom:0">' +
                 'If you are in Iraq and seeing this message, your ISP or VPN may be routing through another country. ' +
                 'Disconnect your VPN, or use an Iraqi-based network.' +
             '</div>' +
-            '<div style="margin-top:18px;font-size:10px;color:#0f172a">Security block · TafsirKurd Admin</div>';
-        document.body.appendChild(wall);
+            '<div style="margin-top:18px;font-size:10px;color:var(--wall-foot)">Security block · TafsirKurd Admin</div>';
+        document.body.appendChild(card);
     }
 
     // Run geo check immediately (async, non-blocking for UI)
@@ -561,6 +662,7 @@
 
     // ── INIT (after DOM ready) ────────────────────────────────────────────────
     function init() {
+        injectWallThemeCSS();
         injectFAB();
         injectWatermark();
         initSensitiveMask();

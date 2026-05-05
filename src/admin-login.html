@@ -737,15 +737,38 @@
         (function() {
             function escGeo(s) { return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
             function showLoginGeoBlock(countryName) {
-                document.body.style.cssText = 'margin:0;padding:0;background:#04060e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,system-ui,sans-serif;';
-                document.body.innerHTML =
-                    '<div style="text-align:center;max-width:440px;padding:52px 40px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:28px;box-shadow:0 48px 96px rgba(0,0,0,.6)">' +
-                    '<div style="width:72px;height:72px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px">🚫</div>' +
-                    '<div style="font-size:22px;font-weight:800;color:#f1f5f9;margin-bottom:10px;letter-spacing:-.3px">Access Restricted</div>' +
-                    '<div style="font-size:14px;color:#475569;line-height:1.75;margin-bottom:28px">Admin access is only permitted from <strong style="color:#f1f5f9">Iraq 🇮🇶</strong>.<br>Your current location (<strong style="color:#ef4444">' + escGeo(countryName) + '</strong>) is not authorized.</div>' +
-                    '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 18px;font-size:12px;color:#334155;line-height:1.7">If you are in Iraq and seeing this message, your ISP or VPN may be routing through another country. Disconnect your VPN or use an Iraqi-based network.</div>' +
-                    '<div style="margin-top:18px;font-size:10px;color:#0f172a">Security block · TafsirKurd Admin</div>' +
-                    '</div>';
+                // Inherit theme from <body> data-admin-theme and .dark-mode class already set by theme-loader.js
+                var isDark  = document.body.classList.contains('dark-mode');
+                var theme   = document.body.getAttribute('data-admin-theme') || '';
+                var bg, cardBg, cardBorder, title, body2, em, noteBg, noteBorder, note, foot;
+                if (theme === 'sakina') {
+                    bg='rgba(8,12,8,.98)'; cardBg='rgba(201,168,76,.04)'; cardBorder='rgba(201,168,76,.14)';
+                    title='#f5f0e0'; body2='#6b7280'; em='#e8d5a0';
+                    noteBg='rgba(201,168,76,.05)'; noteBorder='rgba(201,168,76,.1)'; note='#78716c'; foot='#292524';
+                } else if (theme === 'noor') {
+                    bg='rgba(4,12,6,.98)'; cardBg='rgba(34,197,94,.03)'; cardBorder='rgba(34,197,94,.12)';
+                    title='#f0fdf4'; body2='#4b5563'; em='#bbf7d0';
+                    noteBg='rgba(34,197,94,.04)'; noteBorder='rgba(34,197,94,.1)'; note='#374151'; foot='#14532d';
+                } else if (isDark) {
+                    bg='rgba(4,6,14,.98)'; cardBg='rgba(255,255,255,.025)'; cardBorder='rgba(255,255,255,.08)';
+                    title='#f1f5f9'; body2='#475569'; em='#f1f5f9';
+                    noteBg='rgba(255,255,255,.03)'; noteBorder='rgba(255,255,255,.06)'; note='#334155'; foot='#1e293b';
+                } else {
+                    bg='rgba(244,246,251,.98)'; cardBg='#ffffff'; cardBorder='rgba(0,0,0,.08)';
+                    title='#0f172a'; body2='#475569'; em='#0f172a';
+                    noteBg='rgba(0,0,0,.03)'; noteBorder='rgba(0,0,0,.07)'; note='#64748b'; foot='#94a3b8';
+                }
+                document.body.style.cssText = 'margin:0;padding:24px;background:'+bg+';display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,system-ui,sans-serif;box-sizing:border-box;';
+                var card = document.createElement('div');
+                card.style.cssText = 'text-align:center;max-width:460px;width:100%;padding:52px 40px;background:'+cardBg+';border:1px solid '+cardBorder+';border-radius:28px;box-shadow:0 40px 80px rgba(0,0,0,.18)';
+                card.innerHTML =
+                    '<div style="width:76px;height:76px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 22px">🚫</div>' +
+                    '<div style="font-size:22px;font-weight:800;color:'+title+';margin-bottom:10px;letter-spacing:-.3px">Access Restricted</div>' +
+                    '<div style="font-size:14px;color:'+body2+';line-height:1.75;margin-bottom:28px">Admin access is only permitted from <strong style="color:'+em+'">Iraq 🇮🇶</strong>.<br>Your current location (<strong style="color:#ef4444">'+escGeo(countryName)+'</strong>) is not authorized.</div>' +
+                    '<div style="background:'+noteBg+';border:1px solid '+noteBorder+';border-radius:12px;padding:14px 18px;font-size:12px;color:'+note+';line-height:1.7">If you are in Iraq and seeing this message, your ISP or VPN may be routing through another country. Disconnect your VPN or use an Iraqi-based network.</div>' +
+                    '<div style="margin-top:18px;font-size:10px;color:'+foot+'">Security block · TafsirKurd Admin</div>';
+                document.body.innerHTML = '';
+                document.body.appendChild(card);
             }
             // Check cache
             try {
