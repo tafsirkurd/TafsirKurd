@@ -45,7 +45,7 @@
                 '--wall-note-bg:rgba(255,255,255,.03);',
                 '--wall-note-border:rgba(255,255,255,.06);',
                 '--wall-note:#334155;',
-                '--wall-foot:#1e293b;',
+                '--wall-foot:#4b5563;',
             '}',
             /* Sakina theme */
             'body[data-admin-theme="sakina"]{',
