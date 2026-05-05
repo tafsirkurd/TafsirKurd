@@ -96,14 +96,46 @@
         }
 
         /* ── Stats grid ───────────────────────────────────────── */
-        .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:20px}
-        .metrics-grid .metric-card{border-radius:14px;display:flex;align-items:center;gap:14px;padding:18px;opacity:0;animation:fadeInUp .4s ease forwards;animation-delay:var(--card-delay,0ms)}
+        .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+        .metrics-grid .metric-card{border-radius:14px;display:flex;align-items:center;gap:14px;padding:18px;opacity:0;animation:fadeInUp .4s ease forwards;animation-delay:var(--card-delay,0ms);background:var(--bg-surface);border:1px solid var(--border-light);transition:box-shadow .2s,transform .2s}
+        .metrics-grid .metric-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px)}
         .am-icon-wrap{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
         .am-icon-wrap i{width:20px;height:20px}
         .am-metric-body{flex:1;min-width:0}
-        .am-metric-body .metric-value{font-size:26px}
-        .am-metric-body .metric-label{font-size:11px}
+        .am-metric-body .metric-value{font-size:26px;font-weight:800;color:var(--text-primary);letter-spacing:-.5px}
+        .am-metric-body .metric-label{font-size:11px;color:var(--text-tertiary);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ── Search / filter row ──────────────────────────────── */
+        .acct-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+        .acct-search-wrap{position:relative;flex:1;min-width:180px}
+        .acct-search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-tertiary);pointer-events:none}
+        .acct-search{width:100%;height:36px;padding:0 12px 0 34px;border-radius:9px;border:1.5px solid var(--border-light);background:var(--bg-surface);color:var(--text-primary);font-size:13px;font-family:inherit;transition:border-color .2s,box-shadow .2s}
+        .acct-search:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+        .acct-search::placeholder{color:var(--text-tertiary)}
+        .acct-role-filter{height:36px;padding:0 10px;border-radius:9px;border:1.5px solid var(--border-light);background:var(--bg-surface);color:var(--text-primary);font-size:13px;font-family:inherit;cursor:pointer;transition:border-color .2s}
+        .acct-role-filter:focus{outline:none;border-color:#3b82f6}
+        .acct-filter-count{font-size:12px;color:var(--text-tertiary);white-space:nowrap;padding:0 4px}
+
+        /* ── Password strength ────────────────────────────────── */
+        .pw-strength-wrap{margin-top:6px}
+        .pw-strength-bar{height:3px;border-radius:2px;background:var(--border-light);overflow:hidden;margin-bottom:4px}
+        .pw-strength-fill{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0}
+        .pw-strength-label{font-size:10px;font-weight:600;transition:color .3s;letter-spacing:.03em}
+        .pw-strength-weak   .pw-strength-fill{width:25%;background:#ef4444}
+        .pw-strength-fair   .pw-strength-fill{width:50%;background:#f59e0b}
+        .pw-strength-good   .pw-strength-fill{width:75%;background:#3b82f6}
+        .pw-strength-strong .pw-strength-fill{width:100%;background:#16a34a}
+        .pw-strength-weak   .pw-strength-label{color:#ef4444}
+        .pw-strength-fair   .pw-strength-label{color:#f59e0b}
+        .pw-strength-good   .pw-strength-label{color:#3b82f6}
+        .pw-strength-strong .pw-strength-label{color:#16a34a}
+
+        /* ── Backup code copy ─────────────────────────────────── */
+        .backup-codes-wrap{position:relative}
+        .backup-copy-btn{position:absolute;top:0;right:0;padding:5px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--border-light);background:var(--bg-surface);color:var(--text-secondary);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px}
+        .backup-copy-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
+        .backup-copy-btn i{width:12px;height:12px}
 
         /* ── Admin accounts list ──────────────────────────────── */
         .accounts-list{display:flex;flex-direction:column;gap:8px}
@@ -496,8 +528,12 @@
                         <div>
                             <label class="fld-label">New Password</label>
                             <div class="pw-wrap">
-                                <input type="password" id="cpNew" class="form-input" placeholder="Min 8 characters" style="width:100%">
+                                <input type="password" id="cpNew" class="form-input" placeholder="Min 8 characters" style="width:100%" oninput="updatePwStrength(this.value)">
                                 <button type="button" class="pw-toggle" onclick="togglePw(this)"><i data-lucide="eye"></i></button>
+                            </div>
+                            <div class="pw-strength-wrap" id="pwStrengthWrap" style="display:none">
+                                <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
+                                <span class="pw-strength-label" id="pwStrengthLabel"></span>
                             </div>
                         </div>
                         <div>
@@ -587,6 +623,22 @@
                         <div class="am-icon-wrap" style="background:rgba(139,92,246,.12)"><i data-lucide="monitor" style="color:#8b5cf6"></i></div>
                         <div class="am-metric-body"><div class="metric-value" id="activeSessions">0</div><div class="metric-label">Sessions</div></div>
                     </div>
+                </div>
+
+                <!-- Search / filter -->
+                <div class="acct-filter-row">
+                    <div class="acct-search-wrap">
+                        <i data-lucide="search"></i>
+                        <input type="search" class="acct-search" id="acctSearch" placeholder="Search by name or email…" oninput="filterAccounts()">
+                    </div>
+                    <select class="acct-role-filter" id="acctRoleFilter" onchange="filterAccounts()">
+                        <option value="">All roles</option>
+                        <option value="super_admin">Super Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="analyst">Analyst</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <span class="acct-filter-count" id="acctFilterCount"></span>
                 </div>
 
                 <!-- Accounts list (cards) -->
@@ -680,47 +732,83 @@
 
     <!-- 2FA Setup Modal -->
     <div class="modal-overlay" id="totp2faModal">
-        <div class="modal-box" style="max-width:420px">
+        <div class="modal-box" style="max-width:440px">
             <div class="modal-hdr">
-                <h3>Enable Two-Factor Auth</h3>
-                <button class="modal-close-btn" onclick="document.getElementById('totp2faModal').classList.remove('open')"><i data-lucide="x"></i></button>
+                <div class="modal-hdr-inner">
+                    <div class="modal-hdr-left">
+                        <div class="modal-hdr-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i data-lucide="shield-plus"></i></div>
+                        <div class="modal-hdr-text">
+                            <h3>Enable Two-Factor Auth</h3>
+                            <p>Protect your account with an authenticator app</p>
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" onclick="document.getElementById('totp2faModal').classList.remove('open')"><i data-lucide="x"></i></button>
+                </div>
             </div>
             <div class="modal-bdy">
                 <div id="totpSetupStep">
-                    <p style="font-size:13px;margin-bottom:12px">1. Scan this QR code with Google Authenticator, Authy, or any TOTP app.</p>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">1. Scan this QR code with <strong>Google Authenticator</strong>, Authy, or any TOTP app.</p>
                     <div class="totp-qr">
-                        <img id="totpQrImg" src="" alt="QR Code" style="width:200px;height:200px;border-radius:8px">
-                        <div style="font-size:12px;color:var(--text-tertiary)">Or enter this secret manually:</div>
-                        <div class="totp-secret-box" id="totpSecretDisplay"></div>
+                        <div style="background:#fff;padding:10px;border-radius:12px;border:1.5px solid var(--border-light);display:inline-block">
+                            <img id="totpQrImg" src="" alt="QR Code" style="width:180px;height:180px;display:block">
+                        </div>
+                        <div style="font-size:12px;color:var(--text-tertiary);margin-top:8px">Or enter this secret manually:</div>
+                        <div class="totp-secret-box" id="totpSecretDisplay" style="cursor:pointer" title="Click to copy" onclick="navigator.clipboard&&navigator.clipboard.writeText(this.textContent).then(function(){var el=document.getElementById('totpSecretDisplay');el.style.background='rgba(22,163,74,.12)';setTimeout(function(){el.style.background=''},1000)})"></div>
+                        <div style="font-size:11px;color:var(--text-tertiary)">Click secret to copy</div>
                     </div>
-                    <p style="font-size:13px;margin:12px 0 8px">2. Enter the 6-digit code from the app to confirm:</p>
-                    <input type="text" id="totpConfirmCode" class="form-input" placeholder="000000" maxlength="6" inputmode="numeric" style="letter-spacing:.3em;font-size:1.3rem;text-align:center">
-                    <div id="totpSetupError" style="color:#dc2626;font-size:12px;margin-top:6px"></div>
-                    <button class="btn btn-primary" id="totpConfirmBtn" onclick="confirmTOTPSetup()" style="width:100%;margin-top:14px;justify-content:center">Activate 2FA</button>
+                    <p style="font-size:13px;color:var(--text-secondary);margin:16px 0 8px;line-height:1.6">2. Enter the <strong>6-digit code</strong> from the app to confirm setup:</p>
+                    <input type="text" id="totpConfirmCode" class="form-input" placeholder="000 000" maxlength="6" inputmode="numeric" style="letter-spacing:.3em;font-size:1.4rem;text-align:center;padding:14px">
+                    <div id="totpSetupError" style="color:#dc2626;font-size:12px;margin-top:6px;display:flex;align-items:center;gap:4px"></div>
                 </div>
                 <div id="totpBackupStep" style="display:none">
-                    <div style="text-align:center;font-size:1.5rem;margin-bottom:8px">&#x2705;</div>
-                    <p style="font-weight:700;text-align:center;margin-bottom:4px">2FA Enabled!</p>
-                    <p style="font-size:12px;color:var(--text-tertiary);text-align:center;margin-bottom:12px">Save these backup codes somewhere safe. Each can be used once if you lose your phone.</p>
-                    <div class="backup-codes-grid" id="backupCodesGrid"></div>
-                    <button class="btn btn-primary" onclick="document.getElementById('totp2faModal').classList.remove('open')" style="width:100%;margin-top:8px;justify-content:center">I've saved my backup codes</button>
+                    <div style="text-align:center;margin-bottom:14px">
+                        <div style="width:56px;height:56px;border-radius:16px;background:rgba(22,163,74,.1);border:1.5px solid rgba(22,163,74,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i data-lucide="shield-check" style="width:24px;height:24px;color:#16a34a"></i></div>
+                        <div style="font-size:17px;font-weight:800;color:var(--text-primary);margin-bottom:4px">2FA Enabled!</div>
+                        <p style="font-size:13px;color:var(--text-secondary);line-height:1.5">Save these backup codes somewhere safe.<br>Each can be used once if you lose your phone.</p>
+                    </div>
+                    <div class="backup-codes-wrap" style="position:relative">
+                        <button class="backup-copy-btn" id="copyCodesBtn" onclick="copyBackupCodes()"><i data-lucide="copy"></i>Copy all</button>
+                        <div class="backup-codes-grid" id="backupCodesGrid" style="margin-top:0"></div>
+                    </div>
                 </div>
+            </div>
+            <div class="modal-ftr" id="totpSetupFtr">
+                <button class="btn-secondary" onclick="document.getElementById('totp2faModal').classList.remove('open')">Cancel</button>
+                <button class="btn-primary" id="totpConfirmBtn" onclick="confirmTOTPSetup()"><i data-lucide="shield-check" style="width:14px;height:14px"></i> Activate 2FA</button>
+            </div>
+            <div class="modal-ftr" id="totpBackupFtr" style="display:none">
+                <button class="btn-primary" onclick="document.getElementById('totp2faModal').classList.remove('open');document.getElementById('totpSetupFtr').style.display='';document.getElementById('totpBackupFtr').style.display='none'" style="width:100%;justify-content:center"><i data-lucide="check" style="width:14px;height:14px"></i> I've saved my backup codes</button>
             </div>
         </div>
     </div>
 
     <!-- 2FA Disable Modal -->
     <div class="modal-overlay" id="totp2faDisableModal">
-        <div class="modal-box" style="max-width:360px">
+        <div class="modal-box" style="max-width:380px">
             <div class="modal-hdr">
-                <h3>Disable Two-Factor Auth</h3>
-                <button class="modal-close-btn" onclick="document.getElementById('totp2faDisableModal').classList.remove('open')"><i data-lucide="x"></i></button>
+                <div class="modal-hdr-inner">
+                    <div class="modal-hdr-left">
+                        <div class="modal-hdr-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626)"><i data-lucide="shield-off"></i></div>
+                        <div class="modal-hdr-text">
+                            <h3>Disable Two-Factor Auth</h3>
+                            <p>This will reduce your account security</p>
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" onclick="document.getElementById('totp2faDisableModal').classList.remove('open')"><i data-lucide="x"></i></button>
+                </div>
             </div>
             <div class="modal-bdy">
-                <p style="font-size:13px;margin-bottom:14px">Enter your current 6-digit authenticator code to confirm.</p>
-                <input type="text" id="totpDisableCode" class="form-input" placeholder="000000" maxlength="6" inputmode="numeric" style="letter-spacing:.3em;font-size:1.3rem;text-align:center">
+                <div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:12px 14px;font-size:13px;color:#b91c1c;margin-bottom:16px;display:flex;align-items:flex-start;gap:8px">
+                    <i data-lucide="alert-triangle" style="width:15px;height:15px;flex-shrink:0;margin-top:1px"></i>
+                    <span>Disabling 2FA makes your account more vulnerable. Only do this if you're setting up a new authenticator app.</span>
+                </div>
+                <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:7px">Current authenticator code</label>
+                <input type="text" id="totpDisableCode" class="form-input" placeholder="000 000" maxlength="6" inputmode="numeric" style="letter-spacing:.3em;font-size:1.4rem;text-align:center;padding:14px;width:100%">
                 <div id="totpDisableError" style="color:#dc2626;font-size:12px;margin-top:6px"></div>
-                <button class="btn btn-danger" id="totpDisableBtn" onclick="confirmTOTPDisable()" style="width:100%;margin-top:14px;justify-content:center">Disable 2FA</button>
+            </div>
+            <div class="modal-ftr">
+                <button class="btn-secondary" onclick="document.getElementById('totp2faDisableModal').classList.remove('open')">Cancel</button>
+                <button class="btn-danger" id="totpDisableBtn" onclick="confirmTOTPDisable()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer"><i data-lucide="shield-off" style="width:14px;height:14px"></i> Disable 2FA</button>
             </div>
         </div>
     </div>
@@ -1415,6 +1503,8 @@
             document.getElementById('totpSecretDisplay').textContent = data.secret;
             document.getElementById('totpSetupStep').style.display = '';
             document.getElementById('totpBackupStep').style.display = 'none';
+            document.getElementById('totpSetupFtr').style.display = '';
+            document.getElementById('totpBackupFtr').style.display = 'none';
             document.getElementById('totpConfirmCode').value = '';
             document.getElementById('totpSetupError').textContent = '';
             document.getElementById('totp2faModal').classList.add('open');
@@ -1426,10 +1516,10 @@
             var code = document.getElementById('totpConfirmCode').value.trim();
             if (!code) return;
             var btn = document.getElementById('totpConfirmBtn');
-            btn.disabled = true; btn.textContent = 'Verifying...';
+            btn.disabled = true; btn.innerHTML = 'Verifying…';
             var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'confirm-totp', token, password: code }) });
             var data = await res.json();
-            btn.disabled = false; btn.textContent = 'Activate 2FA';
+            btn.disabled = false; btn.innerHTML = '<i data-lucide="shield-check" style="width:14px;height:14px"></i> Activate 2FA'; lucide.createIcons({ nodes: [btn] });
             if (data.error) { document.getElementById('totpSetupError').textContent = data.error; return; }
             var grid = document.getElementById('backupCodesGrid');
             while (grid.firstChild) grid.removeChild(grid.firstChild);
@@ -1438,6 +1528,9 @@
             });
             document.getElementById('totpSetupStep').style.display = 'none';
             document.getElementById('totpBackupStep').style.display = '';
+            document.getElementById('totpSetupFtr').style.display = 'none';
+            document.getElementById('totpBackupFtr').style.display = '';
+            lucide.createIcons();
             load2faStatus();
         }
 
@@ -1453,10 +1546,10 @@
             var code = document.getElementById('totpDisableCode').value.trim();
             if (!code) return;
             var btn = document.getElementById('totpDisableBtn');
-            btn.disabled = true; btn.textContent = 'Disabling...';
+            btn.disabled = true; btn.innerHTML = 'Disabling…';
             var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'disable-totp', token, password: code }) });
             var data = await res.json();
-            btn.disabled = false; btn.textContent = 'Disable 2FA';
+            btn.disabled = false; btn.innerHTML = '<i data-lucide="shield-off" style="width:14px;height:14px"></i> Disable 2FA'; lucide.createIcons({ nodes: [btn] });
             if (data.error) { document.getElementById('totpDisableError').textContent = data.error; return; }
             document.getElementById('totp2faDisableModal').classList.remove('open');
             load2faStatus();
@@ -1471,15 +1564,57 @@
             else alert(data.error || 'Failed');
         }
 
-        function filterAdmins() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            if (!query) {
-                accounts = allAccounts.slice();
-            } else {
-                accounts = allAccounts.filter(a => a.email.toLowerCase().includes(query) || (a.full_name && a.full_name.toLowerCase().includes(query)));
+        function filterAccounts() {
+            var query = (document.getElementById('acctSearch').value || '').toLowerCase();
+            var role  = document.getElementById('acctRoleFilter').value;
+            accounts = allAccounts.filter(function(a) {
+                var matchText = !query ||
+                    (a.email || '').toLowerCase().includes(query) ||
+                    (a.full_name || '').toLowerCase().includes(query);
+                var matchRole = !role || a.role === role;
+                return matchText && matchRole;
+            });
+            var countEl = document.getElementById('acctFilterCount');
+            if (countEl) {
+                countEl.textContent = (query || role)
+                    ? (accounts.length + ' of ' + allAccounts.length)
+                    : '';
             }
             renderAccountsTable();
         }
+
+        function updatePwStrength(val) {
+            var wrap = document.getElementById('pwStrengthWrap');
+            var fill = document.getElementById('pwStrengthFill');
+            var label = document.getElementById('pwStrengthLabel');
+            if (!val) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'block';
+            var score = 0;
+            if (val.length >= 8)  score++;
+            if (val.length >= 12) score++;
+            if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+            var levels = ['','pw-strength-weak','pw-strength-fair','pw-strength-good','pw-strength-strong'];
+            var names  = ['','Weak','Fair','Good','Strong'];
+            var lvl = score <= 1 ? 1 : score <= 2 ? 2 : score <= 3 ? 3 : 4;
+            wrap.className = 'pw-strength-wrap ' + levels[lvl];
+            label.textContent = names[lvl];
+        }
+
+        function copyBackupCodes() {
+            var codes = Array.from(document.querySelectorAll('#backupCodesGrid .backup-code')).map(function(el){ return el.textContent; });
+            if (!codes.length) return;
+            navigator.clipboard && navigator.clipboard.writeText(codes.join('\n')).then(function() {
+                var btn = document.getElementById('copyCodesBtn');
+                var orig = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check"></i>Copied!';
+                lucide.createIcons({ nodes: [btn] });
+                setTimeout(function(){ btn.innerHTML = orig; lucide.createIcons({ nodes: [btn] }); }, 2000);
+            });
+        }
+
+        function filterAdmins() { filterAccounts(); }
 
         /* ══ ACTIVE SESSIONS ══════════════════════════════════ */
         async function loadActiveSessions() {
