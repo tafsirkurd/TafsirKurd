@@ -733,6 +733,50 @@
 
     <script src="/utils/device-fingerprint.js"></script>
     <script>
+        // ── Iraq-only geo gate (runs before anything else on the login page) ──
+        (function() {
+            function escGeo(s) { return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+            function showLoginGeoBlock(countryName) {
+                document.body.style.cssText = 'margin:0;padding:0;background:#04060e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,system-ui,sans-serif;';
+                document.body.innerHTML =
+                    '<div style="text-align:center;max-width:440px;padding:52px 40px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:28px;box-shadow:0 48px 96px rgba(0,0,0,.6)">' +
+                    '<div style="width:72px;height:72px;border-radius:50%;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px">🚫</div>' +
+                    '<div style="font-size:22px;font-weight:800;color:#f1f5f9;margin-bottom:10px;letter-spacing:-.3px">Access Restricted</div>' +
+                    '<div style="font-size:14px;color:#475569;line-height:1.75;margin-bottom:28px">Admin access is only permitted from <strong style="color:#f1f5f9">Iraq 🇮🇶</strong>.<br>Your current location (<strong style="color:#ef4444">' + escGeo(countryName) + '</strong>) is not authorized.</div>' +
+                    '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 18px;font-size:12px;color:#334155;line-height:1.7">If you are in Iraq and seeing this message, your ISP or VPN may be routing through another country. Disconnect your VPN or use an Iraqi-based network.</div>' +
+                    '<div style="margin-top:18px;font-size:10px;color:#0f172a">Security block · TafsirKurd Admin</div>' +
+                    '</div>';
+            }
+            // Check cache
+            try {
+                var c = JSON.parse(sessionStorage.getItem('adminGeoCheck') || 'null');
+                if (c && (Date.now() - c.at) < 30 * 60 * 1000) {
+                    if (!c.ok) showLoginGeoBlock(c.name || c.code);
+                    return; // cache hit — no API call needed
+                }
+            } catch(e) {}
+            // Async geo check — hide form until resolved
+            var formPanel = document.querySelector('.form-panel') || document.body;
+            var geoLoading = document.createElement('div');
+            geoLoading.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--bg-app,#fff);display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif';
+            geoLoading.innerHTML = '<div style="text-align:center;color:var(--text-tertiary,#9ca3af);font-size:13px"><div style="width:28px;height:28px;border:2px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px"></div>Verifying location…</div>';
+            document.body.appendChild(geoLoading);
+            fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout ? AbortSignal.timeout(7000) : undefined })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var code = (data.country_code || '').toUpperCase();
+                    var name = data.country_name || code;
+                    var ok   = code === 'IQ';
+                    sessionStorage.setItem('adminGeoCheck', JSON.stringify({ ok: ok, code: code, name: name, at: Date.now() }));
+                    if (geoLoading.parentNode) geoLoading.parentNode.removeChild(geoLoading);
+                    if (!ok) showLoginGeoBlock(name);
+                })
+                .catch(function() {
+                    // API unreachable → fail open, show login form
+                    if (geoLoading.parentNode) geoLoading.parentNode.removeChild(geoLoading);
+                });
+        })();
+
         lucide.createIcons();
 
         // Redirect if already logged in

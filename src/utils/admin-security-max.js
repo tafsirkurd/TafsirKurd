@@ -98,49 +98,177 @@
         window.location.replace('/admin-login.html?expired=1');
     }
 
-    // ── 5. MULTI-TAB DETECTION via BroadcastChannel ───────────────────────────
-    // Only ONE admin tab is allowed. Opening a second tab locks it immediately.
-    var _bc = null;
-    var _isPrimary = true;
-    try {
-        _bc = new BroadcastChannel(CHANNEL);
-        // Announce ourselves
-        _bc.postMessage({ type:'TAB_OPEN', id: TAB_ID });
+    // ── 5. MULTI-TAB LOCK — localStorage heartbeat + BroadcastChannel ──────────
+    // localStorage heartbeat is reliable across any tab/window scenario.
+    // BroadcastChannel gives instant notification for same-origin tabs.
+    var TAB_KEY = 'tkAdminTab';
+    var TAB_TTL = 6000;   // tab considered dead after 6 s of silence
+    var TAB_HB  = 2500;   // write heartbeat every 2.5 s
+    var _tabHbInterval = null;
+    var _isSecondary = false;
 
-        _bc.addEventListener('message', function (e) {
-            if (!e.data || e.data.id === TAB_ID) return;
+    function _tabBeat() {
+        try { localStorage.setItem(TAB_KEY, JSON.stringify({ id: TAB_ID, at: Date.now() })); } catch(e) {}
+    }
 
-            if (e.data.type === 'TAB_OPEN') {
-                // A new tab just opened — we are the primary, tell it
-                _bc.postMessage({ type:'PRIMARY_EXISTS', id: TAB_ID });
-                logSec('secondary_tab_blocked', e.data.id);
-            }
-            if (e.data.type === 'PRIMARY_EXISTS' && _isPrimary) {
-                // We just opened and a primary already exists — we are secondary
-                _isPrimary = false;
-                _showDuplicateTabWall();
-            }
-            if (e.data.type === 'FORCE_LOCK') {
-                showLockScreen('Another tab requested a lock.');
-            }
+    function _startTabHeartbeat() {
+        _tabBeat();
+        _tabHbInterval = setInterval(_tabBeat, TAB_HB);
+        // Release claim when this tab closes
+        window.addEventListener('beforeunload', function () {
+            clearInterval(_tabHbInterval);
+            try {
+                var cur = JSON.parse(localStorage.getItem(TAB_KEY) || 'null');
+                if (cur && cur.id === TAB_ID) localStorage.removeItem(TAB_KEY);
+            } catch(e) {}
         });
-    } catch(e) {}
+    }
+
+    function _checkForExistingTab() {
+        try {
+            var existing = JSON.parse(localStorage.getItem(TAB_KEY) || 'null');
+            if (existing && existing.id !== TAB_ID && (Date.now() - existing.at) < TAB_TTL) {
+                // A live primary tab already exists
+                return true;
+            }
+        } catch(e) {}
+        return false;
+    }
+
+    // Run the check: if another tab is live → show wall, else claim primary
+    if (_checkForExistingTab()) {
+        _isSecondary = true;
+        logSec('duplicate_tab_blocked');
+        // Show wall after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', _showDuplicateTabWall);
+        } else {
+            _showDuplicateTabWall();
+        }
+    } else {
+        _startTabHeartbeat();
+        // Also listen via BroadcastChannel for instant cross-tab messages
+        try {
+            var _bc = new BroadcastChannel(CHANNEL);
+            _bc.postMessage({ type: 'TAB_OPEN', id: TAB_ID });
+            _bc.addEventListener('message', function (e) {
+                if (!e.data || e.data.id === TAB_ID) return;
+                if (e.data.type === 'TAB_OPEN') {
+                    // New secondary tab opened — tell it we're primary
+                    _bc.postMessage({ type: 'PRIMARY_EXISTS', id: TAB_ID });
+                }
+                if (e.data.type === 'FORCE_LOCK') {
+                    showLockScreen('A remote lock was triggered.');
+                }
+            });
+        } catch(e) {}
+    }
 
     function _showDuplicateTabWall() {
         document.body.style.overflow = 'hidden';
+        document.documentElement.style.visibility = 'visible';
         var wall = document.createElement('div');
-        wall.style.cssText = 'position:fixed;inset:0;z-index:9999999;background:rgba(6,9,18,.98);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(24px)';
+        wall.style.cssText = [
+            'position:fixed;inset:0;z-index:9999999;',
+            'background:rgba(4,6,14,.98);',
+            'display:flex;align-items:center;justify-content:center;',
+            'backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);',
+            'font-family:Inter,system-ui,sans-serif;',
+        ].join('');
         wall.innerHTML =
-            '<div style="text-align:center;max-width:360px;padding:40px 32px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:24px;box-shadow:0 32px 80px rgba(0,0,0,.6)">' +
-                '<div style="font-size:48px;margin-bottom:16px">🔒</div>' +
-                '<div style="font-size:19px;font-weight:700;color:#f1f5f9;margin-bottom:8px">Duplicate Session Blocked</div>' +
-                '<div style="font-size:13px;color:#64748b;line-height:1.65;margin-bottom:24px">For security, only one admin tab is allowed at a time. An active admin session is already open in another tab.</div>' +
-                '<button onclick="window.close()" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:inherit">Close This Tab</button>' +
-                '<div style="font-size:11px;color:#1e293b;margin-top:12px">If this is the only tab, refresh the other window.</div>' +
+            '<div style="text-align:center;max-width:380px;padding:48px 36px;' +
+                'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);' +
+                'border-radius:24px;box-shadow:0 40px 80px rgba(0,0,0,.7)">' +
+                '<div style="font-size:52px;margin-bottom:18px">🔒</div>' +
+                '<div style="font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:10px">One Session at a Time</div>' +
+                '<div style="font-size:13px;color:#475569;line-height:1.7;margin-bottom:28px">' +
+                    'For your security, only <strong style="color:#f1f5f9">one admin tab</strong> is allowed at a time. ' +
+                    'An active admin session is already running in another window. ' +
+                    'Close that window first, then refresh this tab.' +
+                '</div>' +
+                '<button onclick="window.close()" style="width:100%;padding:13px;border-radius:12px;' +
+                    'background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;' +
+                    'font-weight:700;font-size:14px;border:none;cursor:pointer;font-family:inherit;' +
+                    'box-shadow:0 6px 24px rgba(59,130,246,.4)">' +
+                    'Close This Tab' +
+                '</button>' +
+                '<div style="font-size:11px;color:#1e293b;margin-top:14px">' +
+                    'If no other admin tab is open, wait 7 seconds and refresh this page.' +
+                '</div>' +
             '</div>';
         document.body.appendChild(wall);
-        logSec('duplicate_tab_wall_shown');
     }
+
+    // ── 5b. IRAQ-ONLY GEO BLOCK ───────────────────────────────────────────────
+    // Admin access is only allowed from Iraq (country code: IQ).
+    // Uses ipapi.co (already in CSP connect-src). Cached 30 min in sessionStorage.
+    // Fails open (allows access) if the API is unreachable — never locks out on network error.
+    async function checkGeoAccess() {
+        // Check cache
+        try {
+            var c = JSON.parse(sessionStorage.getItem('adminGeoCheck') || 'null');
+            if (c && (Date.now() - c.at) < 30 * 60 * 1000) {
+                if (!c.ok) _showGeoBlock(c.name || c.code);
+                return c.ok;
+            }
+        } catch(e) {}
+
+        try {
+            var ctrl = new AbortController();
+            var timer = setTimeout(function () { ctrl.abort(); }, 7000);
+            var res  = await fetch('https://ipapi.co/json/', { signal: ctrl.signal });
+            clearTimeout(timer);
+            var data = await res.json();
+            var code = (data.country_code || '').toUpperCase();
+            var name = data.country_name || code;
+            var ok   = code === 'IQ';
+            sessionStorage.setItem('adminGeoCheck', JSON.stringify({ ok: ok, code: code, name: name, at: Date.now() }));
+            if (!ok) { logSec('geo_blocked', code); _showGeoBlock(name); }
+            return ok;
+        } catch(e) {
+            // API timeout / network error → fail open, don't punish legitimate users
+            logSec('geo_check_failed', 'api_unreachable');
+            return true;
+        }
+    }
+
+    function _showGeoBlock(countryName) {
+        document.documentElement.style.visibility = 'visible';
+        document.body.style.overflow = 'hidden';
+        // Replace entire page with block wall
+        document.body.innerHTML = '';
+        document.body.style.cssText = [
+            'margin:0;padding:0;',
+            'background:#04060e;',
+            'display:flex;align-items:center;justify-content:center;',
+            'min-height:100vh;',
+            'font-family:Inter,system-ui,sans-serif;',
+        ].join('');
+        var wall = document.createElement('div');
+        wall.style.cssText = 'text-align:center;max-width:440px;padding:52px 40px;' +
+            'background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);' +
+            'border-radius:28px;box-shadow:0 48px 96px rgba(0,0,0,.6)';
+        wall.innerHTML =
+            '<div style="width:72px;height:72px;border-radius:50%;background:rgba(239,68,68,.12);' +
+                'border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;' +
+                'font-size:32px;margin:0 auto 20px">🚫</div>' +
+            '<div style="font-size:22px;font-weight:800;color:#f1f5f9;margin-bottom:10px;letter-spacing:-.3px">' +
+                'Access Restricted</div>' +
+            '<div style="font-size:14px;color:#475569;line-height:1.75;margin-bottom:28px">' +
+                'Admin access is only permitted from <strong style="color:#f1f5f9">Iraq 🇮🇶</strong>.<br>' +
+                'Your current location (<strong style="color:#ef4444">' + esc(countryName) + '</strong>) is not authorized.' +
+            '</div>' +
+            '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);' +
+                'border-radius:12px;padding:14px 18px;font-size:12px;color:#334155;line-height:1.7">' +
+                'If you are in Iraq and seeing this message, your ISP or VPN may be routing through another country. ' +
+                'Disconnect your VPN, or use an Iraqi-based network.' +
+            '</div>' +
+            '<div style="margin-top:18px;font-size:10px;color:#0f172a">Security block · TafsirKurd Admin</div>';
+        document.body.appendChild(wall);
+    }
+
+    // Run geo check immediately (async, non-blocking for UI)
+    if (!_isSecondary) checkGeoAccess();
 
     // ── 6. ADMIN PAGE WATERMARK ───────────────────────────────────────────────
     // Subtle repeating diagonal watermark — makes screenshots identifiable.
