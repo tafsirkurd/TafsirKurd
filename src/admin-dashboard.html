@@ -3447,34 +3447,33 @@
             if (saved) {
                 ta.value = saved;
                 note.style.display = 'flex';
+                ta.style.height = 'auto';
+                ta.style.height = Math.min(ta.scrollHeight, 80) + 'px';
             }
 
-            ta.addEventListener('input', function() {
-                var val = ta.value.trim();
-                if (val) {
-                    localStorage.setItem(PINNED_NOTE_KEY, ta.value);
-                    note.style.display = 'flex';
+            function _save() {
+                var val = ta.value;
+                if (val.trim()) {
+                    try { localStorage.setItem(PINNED_NOTE_KEY, val); } catch(e) {}
                 } else {
-                    localStorage.removeItem(PINNED_NOTE_KEY);
-                    note.style.display = 'none';
+                    try { localStorage.removeItem(PINNED_NOTE_KEY); } catch(e) {}
                 }
                 // Auto-resize
                 ta.style.height = 'auto';
                 ta.style.height = Math.min(ta.scrollHeight, 80) + 'px';
-            });
-
-            // Auto-resize on load
-            if (saved) {
-                ta.style.height = 'auto';
-                ta.style.height = Math.min(ta.scrollHeight, 80) + 'px';
             }
+
+            ta.addEventListener('input', _save);
+            ta.addEventListener('change', _save);
+            ta.addEventListener('keyup', _save);
+            window.addEventListener('beforeunload', _save);
         })();
 
         function showPinnedNote() {
             var note = document.getElementById('pinnedNote');
             var ta   = document.getElementById('pinnedNoteText');
             if (note) note.style.display = 'flex';
-            if (ta)   setTimeout(function() { ta.focus(); }, 50);
+            if (ta)   setTimeout(function() { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 50);
         }
 
         function clearPinnedNote() {
