@@ -525,6 +525,9 @@
             <div class="brand-title">Manage your<br><span>platform</span></div>
             <div class="brand-desc">Secure access to content, users,<br>analytics, and system settings.</div>
 
+            <!-- Rotating security tip -->
+            <div id="secTip" style="margin-bottom:18px;padding:10px 14px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:11px;color:#64748b;line-height:1.6;text-align:left;min-height:48px;transition:opacity .4s"></div>
+
             <div class="brand-stats">
                 <div class="brand-stat">
                     <div class="brand-stat-icon" style="background:#3b82f618;">
@@ -592,6 +595,8 @@
                 <form id="loginForm">
                     <div class="form-heading">Welcome back</div>
                     <div class="form-subheading">Sign in to your admin account</div>
+                    <!-- Last login info — shown after email blur if found -->
+                    <div id="lastLoginBanner" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:9px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);font-size:11px;color:#16a34a;display:flex;align-items:center;gap:7px"></div>
 
                     <div class="form-group">
                         <label class="form-label">Email address</label>
@@ -1177,13 +1182,86 @@
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 var totpScreen = document.getElementById('totpScreen');
-                // Only clear password on step 1 (not during TOTP)
                 if (totpScreen && !totpScreen.classList.contains('active')) {
                     var pw = document.getElementById('password');
                     if (pw && pw.value) { pw.value = ''; }
                 }
             }
         });
+
+        // ── Rotating security tips on brand panel ─────────────────────────────
+        var _tips = [
+            '🔐 <strong>Never share</strong> your admin password or 2FA code with anyone — not even TafsirKurd support.',
+            '🛡️ <strong>2FA codes expire</strong> every 30 seconds. If it\'s about to expire, wait for the next one.',
+            '🔒 <strong>Lock your screen</strong> whenever you step away, even for a minute.',
+            '🌍 <strong>Log in only</strong> from trusted networks. Avoid public Wi-Fi without a VPN.',
+            '📋 <strong>Copied passwords</strong> are automatically wiped from clipboard after 60 seconds.',
+            '🖥️ <strong>Only one admin tab</strong> is allowed. Opening a second tab will lock it.',
+            '⏱️ <strong>Sessions expire</strong> after 2 hours of activity. Save your work regularly.',
+            '🔑 <strong>Device trust</strong> expires after 7 days — you\'ll need 2FA again after that.',
+            '🚨 <strong>If you see unexpected logins</strong>, immediately change your password and contact the team.',
+            '📵 <strong>Admin pages cannot be printed.</strong> Screenshots are watermarked with your name.',
+        ];
+        var _tipIdx = 0;
+        var _tipEl  = document.getElementById('secTip');
+        function showNextTip() {
+            if (!_tipEl) return;
+            _tipEl.style.opacity = '0';
+            setTimeout(function() {
+                _tipEl.innerHTML = '💡 ' + _tips[_tipIdx % _tips.length];
+                _tipEl.style.opacity = '1';
+                _tipIdx++;
+            }, 400);
+        }
+        showNextTip();
+        setInterval(showNextTip, 6000);
+
+        // ── Last-login banner ─────────────────────────────────────────────────
+        // Show when email field loses focus if we have stored lastLogin for that email
+        emailInput.addEventListener('blur', function() {
+            var banner = document.getElementById('lastLoginBanner');
+            if (!banner) return;
+            var email = this.value.trim().toLowerCase();
+            if (!email) { banner.style.display = 'none'; return; }
+            try {
+                var key  = 'adminLastLogin_' + btoa(email).replace(/=/g,'');
+                var raw  = localStorage.getItem(key);
+                if (!raw) { banner.style.display = 'none'; return; }
+                var info = JSON.parse(raw);
+                var d    = new Date(info.at);
+                var ago  = Math.floor((Date.now() - d.getTime()) / 60000);
+                var agoStr = ago < 60 ? ago + ' min ago'
+                           : ago < 1440 ? Math.floor(ago/60) + 'h ago'
+                           : Math.floor(ago/1440) + ' day' + (Math.floor(ago/1440)>1?'s':'') + ' ago';
+                banner.style.display = 'flex';
+                banner.innerHTML =
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+                    ' Last login: <strong style="margin-left:4px">' + agoStr + '</strong>';
+            } catch(e) { banner.style.display = 'none'; }
+        });
+
+        // Store lastLogin after every successful auth
+        function storeLastLogin(email) {
+            try {
+                var key = 'adminLastLogin_' + btoa((email||'').trim().toLowerCase()).replace(/=/g,'');
+                localStorage.setItem(key, JSON.stringify({ at: new Date().toISOString() }));
+            } catch(e) {}
+        }
+
+        // Patch both auth success paths to record lastLogin
+        var _origLoginSubmit = loginForm.onsubmit;
+        loginForm.addEventListener('securityLoginSuccess', function(e) {
+            storeLastLogin(e.detail && e.detail.email);
+        });
+        // We fire this custom event from the fetch success handlers below
+        // Intercept: patch the two data.success blocks by hooking into their aftermath
+        // Since those already run, we attach the storeLastLogin to the setBtnSuccess calls
+        var _origSetBtnSuccess = setBtnSuccess;
+        setBtnSuccess = function() {
+            _origSetBtnSuccess();
+            var email = document.getElementById('email').value;
+            storeLastLogin(email);
+        };
 
     </script>
 </body>
