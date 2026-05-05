@@ -1117,6 +1117,33 @@
         body.dark-mode .insight-chip.bad   { background: rgba(239,68,68,.12);  border-color: rgba(239,68,68,.3); }
         body.dark-mode .insight-chip.info  { background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.3); }
 
+        /* ── Compact Density Mode ── */
+        body.compact .content-area          { padding: 16px 16px; }
+        body.compact .metrics-grid          { gap: 10px; margin-bottom: 16px; }
+        body.compact .metric-card           { padding: 12px 14px; }
+        body.compact .metric-value          { font-size: 26px; }
+        body.compact .metric-label          { font-size: 10px; margin-top: 0; }
+        body.compact .metric-sparkline      { margin-top: 6px; }
+        body.compact .charts-grid           { gap: 12px; margin-bottom: 16px; }
+        body.compact .chart-card            { padding: 14px 16px; }
+        body.compact .chart-container       { height: 160px !important; }
+        body.compact .section-label         { margin-bottom: 10px; font-size: 10px; }
+        body.compact .content-grid-3        { gap: 12px; margin-bottom: 16px; }
+        body.compact .content-card          { padding: 0; }
+        body.compact .welcome-header        { margin-bottom: 16px; }
+        body.compact .welcome-left h1       { font-size: 20px; }
+        body.compact .system-widgets-row    { gap: 12px; margin-bottom: 16px; }
+        body.compact .timeline-section      { padding: 14px 16px; margin-bottom: 16px; }
+        body.compact .my-tasks-widget       { padding: 0; }
+        body.compact .my-tasks-header       { padding: 12px 16px 8px; }
+        body.compact .my-tasks-meta         { padding: 0 16px 8px; }
+        body.compact .heatmap-card          { padding: 12px 16px; margin-bottom: 16px; }
+        body.compact .ato-card              { padding: 10px 14px; margin-bottom: 16px; }
+        body.compact #insightsRow           { gap: 6px; margin-bottom: 12px; }
+        body.compact .insight-chip          { padding: 5px 10px; font-size: 11px; }
+        body.compact #diffBanner            { padding: 6px 14px; margin-bottom: 12px; font-size: 11px; }
+        body.compact #pinnedNote            { padding: 7px 10px; margin-bottom: 12px; }
+
         /* ── Focus Mode ── */
         body.focus-mode .sidebar { transform: translateX(-100%); }
         body.focus-mode .main-content { margin-left: 0 !important; }
@@ -1689,6 +1716,9 @@
                             </div>
                         </div>
                     </div>
+                    <button class="topbar-btn" id="compactToggleBtn" onclick="toggleCompactMode()" title="Toggle compact density (C)">
+                        <i data-lucide="layout-list" id="compactIcon"></i>
+                    </button>
                     <button class="topbar-btn" onclick="openShortcutsModal()" title="Keyboard shortcuts (?)">
                         <i data-lucide="keyboard"></i>
                     </button>
@@ -1778,6 +1808,7 @@
                         </div>
                         <div class="metric-value" id="metricActive7d"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active (7 days)</div>
+                        <div class="metric-sub" id="metricActive7dSub"></div>
                         <div class="metric-goal" id="goal_active7d"></div>
                         <div class="metric-sparkline" id="spark7d"></div>
                     </a>
@@ -1791,6 +1822,7 @@
                         </div>
                         <div class="metric-value" id="metricActive30d"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active (30 days)</div>
+                        <div class="metric-sub" id="metricActive30dSub"></div>
                         <div class="metric-goal" id="goal_active30d"></div>
                         <div class="metric-sparkline" id="spark30d"></div>
                     </a>
@@ -2429,6 +2461,7 @@
             <div class="sc-group">
                 <div class="sc-group-label">Theme</div>
                 <div class="sc-row"><span>Toggle dark mode</span><div class="sc-keys"><kbd class="sc-key">D</kbd></div></div>
+                <div class="sc-row"><span>Toggle compact density</span><div class="sc-keys"><kbd class="sc-key">C</kbd></div></div>
             </div>
         </div>
     </div>
@@ -3058,6 +3091,28 @@
            ═══════════════════════════════════════════════ */
         function toggleFocusMode() {
             document.body.classList.toggle('focus-mode');
+        }
+
+        /* ── Compact Density Mode ── */
+        var COMPACT_KEY = 'dash_compact_mode';
+        (function initCompact() {
+            if (localStorage.getItem(COMPACT_KEY) === '1') {
+                document.body.classList.add('compact');
+                var icon = document.getElementById('compactIcon');
+                if (icon) icon.setAttribute('data-lucide', 'layout-dashboard');
+            }
+        })();
+
+        function toggleCompactMode() {
+            var isCompact = document.body.classList.toggle('compact');
+            localStorage.setItem(COMPACT_KEY, isCompact ? '1' : '0');
+            var icon = document.getElementById('compactIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isCompact ? 'layout-dashboard' : 'layout-list');
+                lucide.createIcons({ nodes: [icon] });
+            }
+            var btn = document.getElementById('compactToggleBtn');
+            if (btn) btn.title = isCompact ? 'Comfortable view (C)' : 'Compact view (C)';
         }
 
 
@@ -4475,6 +4530,32 @@
                 var base = (totalUsers || 0) - totalInPeriod;
                 growthData.forEach(function(d) { base += d.count; cumulative.push(base); });
                 buildSparkline('sparkUsers', cumulative.slice(-7), '#3b82f6');
+
+                // Active 7d vs prev 7d — computed from growthData daily counts
+                if (growthData.length >= 14) {
+                    var last7  = growthData.slice(-7).reduce(function(s,d){return s+(d.count||0);},0);
+                    var prev7  = growthData.slice(-14,-7).reduce(function(s,d){return s+(d.count||0);},0);
+                    var sub7El = document.getElementById('metricActive7dSub');
+                    if (sub7El && prev7 > 0) {
+                        var d7 = last7 - prev7;
+                        sub7El.className = d7 > 0 ? 'metric-sub up' : d7 < 0 ? 'metric-sub down' : 'metric-sub';
+                        sub7El.textContent = d7 > 0 ? '+' + d7 + ' vs prev week' : d7 < 0 ? d7 + ' vs prev week' : 'same as prev week';
+                    }
+                    buildSparkline('spark7d', growthData.slice(-7).map(function(d){return d.count||0;}), '#8b5cf6');
+                }
+
+                // Active 30d vs prev 30d
+                if (growthData.length >= 60) {
+                    var last30 = growthData.slice(-30).reduce(function(s,d){return s+(d.count||0);},0);
+                    var prev30 = growthData.slice(-60,-30).reduce(function(s,d){return s+(d.count||0);},0);
+                    var sub30El = document.getElementById('metricActive30dSub');
+                    if (sub30El && prev30 > 0) {
+                        var d30 = last30 - prev30;
+                        sub30El.className = d30 > 0 ? 'metric-sub up' : d30 < 0 ? 'metric-sub down' : 'metric-sub';
+                        sub30El.textContent = d30 > 0 ? '+' + d30 + ' vs prev month' : d30 < 0 ? d30 + ' vs prev month' : 'same as prev month';
+                    }
+                    buildSparkline('spark30d', growthData.slice(-30).map(function(d){return d.count||0;}), '#f59e0b');
+                }
             }
 
             if (adminStats && adminStats.activeData && adminStats.activeData.length) {
@@ -4798,6 +4879,12 @@
             if (e.key === 'd' || e.key === 'D') {
                 var themeBtn = document.getElementById('theme-toggle');
                 if (themeBtn) themeBtn.click();
+                return;
+            }
+
+            // C — toggle compact density
+            if (e.key === 'c' || e.key === 'C') {
+                toggleCompactMode();
                 return;
             }
 
