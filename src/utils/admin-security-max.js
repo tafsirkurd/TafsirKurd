@@ -73,6 +73,21 @@
                 '--wall-btn:linear-gradient(135deg,#16a34a,#22c55e);',
                 '--wall-btn-shadow:rgba(22,163,74,.35);',
             '}',
+            /* Êvar theme */
+            'body[data-admin-theme="evar"]{',
+                '--wall-bg:rgba(20,22,30,.97);',
+                '--wall-card-bg:rgba(129,140,248,.04);',
+                '--wall-card-border:rgba(129,140,248,.14);',
+                '--wall-title:#dde1ec;',
+                '--wall-body:#545c72;',
+                '--wall-em:#818cf8;',
+                '--wall-note-bg:rgba(129,140,248,.05);',
+                '--wall-note-border:rgba(129,140,248,.1);',
+                '--wall-note:#4a5068;',
+                '--wall-foot:#2a2e3c;',
+                '--wall-btn:linear-gradient(135deg,#6366f1,#818cf8);',
+                '--wall-btn-shadow:rgba(99,102,241,.35);',
+            '}',
         ].join('');
         document.head.appendChild(s);
     }

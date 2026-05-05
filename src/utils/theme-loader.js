@@ -1,17 +1,17 @@
-// Admin Theme Loader — light / dark / sakina / noor
+// Admin Theme Loader — light / dark / sakina / noor / evar
 // Runs immediately in <head> — synchronous flash prevention + DOMContentLoaded wiring
 
 (function () {
-    var NEXT  = { light: 'dark', dark: 'sakina', sakina: 'noor', noor: 'light' };
+    var NEXT  = { light: 'dark', dark: 'sakina', sakina: 'noor', noor: 'evar', evar: 'light' };
     // Icon shown while ON that theme (represents the current state)
-    var ICONS = { light: 'sun', dark: 'moon', sakina: 'star', noor: 'sunrise' };
+    var ICONS = { light: 'sun', dark: 'moon', sakina: 'star', noor: 'sunrise', evar: 'contrast' };
 
     function _saved() {
         try { return localStorage.getItem('admin-theme') || 'light'; } catch (e) { return 'light'; }
     }
 
     function _applyTheme(theme) {
-        var isDark = theme === 'dark' || theme === 'sakina';
+        var isDark = theme === 'dark' || theme === 'sakina' || theme === 'evar';
 
         // Body classes + attribute
         document.body.classList.toggle('dark-mode', isDark);
@@ -34,7 +34,7 @@
     // ── 1. Flash prevention: run synchronously before first paint ──
     try {
         var t0 = _saved();
-        if (t0 === 'dark' || t0 === 'sakina') {
+        if (t0 === 'dark' || t0 === 'sakina' || t0 === 'evar') {
             document.documentElement.classList.add('dark-mode');
         }
         document.documentElement.setAttribute('data-admin-theme', t0);

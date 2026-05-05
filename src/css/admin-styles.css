@@ -80,6 +80,26 @@ html[data-admin-theme="noor"] body {
     --primary-hover: #164d31;
 }
 
+/* Êvar — balanced dusk × soft indigo */
+body[data-admin-theme="evar"],
+html[data-admin-theme="evar"] body {
+    --bg-app: #1e2028;
+    --bg-surface: #252830;
+    --bg-hover: #2e3240;
+    --bg-active: #363b4e;
+
+    --text-primary: #dde1ec;
+    --text-secondary: #8892aa;
+    --text-tertiary: #545c72;
+
+    --border-light: #2a2e3c;
+    --border-medium: #363b4e;
+    --border-dark: #4a5068;
+
+    --primary: #818cf8;
+    --primary-hover: #6d76f0;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -170,6 +190,9 @@ body[data-admin-theme="sakina"] .sidebar-logo-img {
 }
 body[data-admin-theme="noor"] .sidebar-logo-img {
     filter: sepia(0.35) brightness(0.88);
+}
+body[data-admin-theme="evar"] .sidebar-logo-img {
+    filter: invert(1) brightness(0.85);
 }
 
 .sidebar-logo-text {
@@ -385,6 +408,11 @@ body[data-admin-theme="noor"] .sidebar-profile-avatar {
     background: #e8d4a8;
     color: #1a0e04;
     border: 1px solid #d9c9a8;
+}
+body[data-admin-theme="evar"] .sidebar-profile-avatar {
+    background: #2e3240;
+    color: #818cf8;
+    border-color: #363b4e;
 }
 
 .sidebar-profile-info {
@@ -716,6 +744,20 @@ body[data-admin-theme="noor"] .session-timer i { color: #1a5c3a; }
 body[data-admin-theme="noor"] .session-timer:hover {
     background: linear-gradient(135deg, #e8d4a8 0%, #dfc89a 100%);
     border-color: #1a5c3a;
+}
+
+/* Êvar theme */
+body[data-admin-theme="evar"] .session-timer {
+    background: linear-gradient(135deg, #2e3240 0%, #252830 100%);
+    border-color: #363b4e;
+    color: #818cf8;
+}
+
+body[data-admin-theme="evar"] .session-timer i { color: #818cf8; }
+
+body[data-admin-theme="evar"] .session-timer:hover {
+    background: linear-gradient(135deg, #363b4e 0%, #2e3240 100%);
+    border-color: #818cf8;
 }
 
 /* Content Area */
