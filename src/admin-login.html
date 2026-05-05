@@ -21,6 +21,50 @@
             color: var(--text-primary);
         }
 
+        /* ── Entrance animation ── */
+        @keyframes formEntrance {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            15%      { transform: translateX(-7px); }
+            30%      { transform: translateX(6px); }
+            45%      { transform: translateX(-5px); }
+            60%      { transform: translateX(4px); }
+            75%      { transform: translateX(-3px); }
+            90%      { transform: translateX(2px); }
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes successPop {
+            0%   { transform: scale(.85); opacity: 0; }
+            60%  { transform: scale(1.05); }
+            100% { transform: scale(1);   opacity: 1; }
+        }
+
+        @keyframes orbFloat1 {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50%     { transform: translate(18px,-24px) scale(1.06); }
+        }
+
+        @keyframes orbFloat2 {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50%     { transform: translate(-14px,20px) scale(1.04); }
+        }
+
+        @keyframes orbFloat3 {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50%     { transform: translate(10px,16px) scale(1.08); }
+        }
+
+        @keyframes dotPulse {
+            0%,100% { opacity: .4; transform: scale(.9); }
+            50%     { opacity: 1;  transform: scale(1.1); }
+        }
+
         /* ── Left branding panel (always dark) ── */
         .brand-panel {
             display: none;
@@ -40,26 +84,45 @@
 
         @media (min-width: 900px) { .brand-panel { display: flex; } }
 
-        .brand-panel::before {
-            content: '';
+        /* Animated orbs */
+        .brand-orb {
             position: absolute;
-            top: -100px; right: -100px;
-            width: 360px; height: 360px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(59,130,246,.15) 0%, transparent 70%);
             pointer-events: none;
         }
 
-        body[data-admin-theme="sakina"] .brand-panel::before { background: radial-gradient(circle, rgba(201,168,76,.12) 0%, transparent 70%); }
-        body[data-admin-theme="noor"]   .brand-panel::before { background: radial-gradient(circle, rgba(26,92,58,.2) 0%, transparent 70%); }
+        .brand-orb-1 {
+            top: -90px; right: -90px;
+            width: 340px; height: 340px;
+            background: radial-gradient(circle, rgba(59,130,246,.18) 0%, transparent 70%);
+            animation: orbFloat1 7s ease-in-out infinite;
+        }
 
+        .brand-orb-2 {
+            bottom: -70px; left: -70px;
+            width: 260px; height: 260px;
+            background: radial-gradient(circle, rgba(99,102,241,.12) 0%, transparent 70%);
+            animation: orbFloat2 9s ease-in-out infinite;
+        }
+
+        .brand-orb-3 {
+            top: 50%; left: 50%;
+            margin: -100px 0 0 -100px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(16,185,129,.07) 0%, transparent 70%);
+            animation: orbFloat3 11s ease-in-out infinite;
+        }
+
+        body[data-admin-theme="sakina"] .brand-orb-1 { background: radial-gradient(circle, rgba(201,168,76,.15) 0%, transparent 70%); }
+        body[data-admin-theme="noor"]   .brand-orb-1 { background: radial-gradient(circle, rgba(26,92,58,.22) 0%, transparent 70%); }
+
+        /* Subtle dot-grid pattern */
         .brand-panel::after {
             content: '';
             position: absolute;
-            bottom: -80px; left: -80px;
-            width: 280px; height: 280px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(99,102,241,.1) 0%, transparent 70%);
+            inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+            background-size: 28px 28px;
             pointer-events: none;
         }
 
@@ -70,13 +133,26 @@
             width: 100%;
         }
 
+        .brand-logo-wrap {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .brand-logo-wrap img {
+            width: 56px; height: 56px;
+            object-fit: contain;
+            filter: invert(1) brightness(.9);
+            opacity: .9;
+        }
+
         .brand-title {
-            font-size: 30px;
+            font-size: 28px;
             font-weight: 800;
             color: #f1f5f9;
-            line-height: 1.2;
+            line-height: 1.25;
             letter-spacing: -0.5px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .brand-title span { color: #3b82f6; }
@@ -86,7 +162,7 @@
         .brand-desc {
             font-size: 13px;
             color: #64748b;
-            line-height: 1.6;
+            line-height: 1.65;
             margin-bottom: 32px;
         }
 
@@ -96,6 +172,7 @@
             gap: 10px;
             position: relative;
             z-index: 1;
+            width: 100%;
         }
 
         .brand-stat {
@@ -104,29 +181,47 @@
             gap: 12px;
             background: rgba(255,255,255,.04);
             border: 1px solid rgba(255,255,255,.07);
-            border-radius: 10px;
-            padding: 11px 14px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            transition: background .2s, border-color .2s;
+        }
+
+        .brand-stat:hover {
+            background: rgba(255,255,255,.07);
+            border-color: rgba(255,255,255,.12);
         }
 
         .brand-stat-icon {
-            width: 32px; height: 32px;
-            border-radius: 8px;
+            width: 34px; height: 34px;
+            border-radius: 9px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
 
         .brand-stat-icon i { width: 15px; height: 15px; }
-        .brand-stat-text { font-size: 13px; color: #cbd5e1; font-weight: 500; }
-        .brand-stat-sub  { font-size: 11px; color: #475569; margin-top: 1px; }
+        .brand-stat-text { font-size: 13px; color: #cbd5e1; font-weight: 600; }
+        .brand-stat-sub  { font-size: 11px; color: #475569; margin-top: 2px; }
+
+        /* Live dot */
+        .live-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            margin-right: 5px;
+            vertical-align: middle;
+            animation: dotPulse 1.8s ease-in-out infinite;
+        }
 
         .brand-footer {
             position: absolute;
-            bottom: 28px;
+            bottom: 24px;
             left: 0; right: 0;
             text-align: center;
             z-index: 1;
             font-size: 11px;
             color: #334155;
+            letter-spacing: .02em;
         }
 
         /* ── Right form panel ── */
@@ -140,26 +235,38 @@
             background: var(--bg-app);
         }
 
-        .form-wrap { width: 100%; max-width: 380px; }
+        .form-wrap {
+            width: 100%;
+            max-width: 380px;
+            animation: formEntrance .5s cubic-bezier(.22,.68,0,1.2) both;
+        }
 
-        /* Logo block — top of form */
+        .form-wrap.shake { animation: shake .4s ease; }
+
+        /* Logo block */
         .login-brand {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 36px;
+            gap: 8px;
+            margin-bottom: 32px;
         }
 
         .login-brand-logo {
-            width: 80px; height: 80px;
+            width: 72px; height: 72px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--bg-surface);
+            border: 1.5px solid var(--border-light);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,.08);
         }
 
-        .login-brand-logo img { width: 100%; height: 100%; object-fit: contain; transition: filter .3s; }
+        .login-brand-logo img { width: 58px; height: 58px; object-fit: contain; transition: filter .3s; }
 
         body.dark-mode .login-brand-logo img { filter: invert(1); }
-        body[data-admin-theme="sakina"] .login-brand-logo img { filter: invert(1) sepia(0.4) hue-rotate(20deg) brightness(0.85); }
-        body[data-admin-theme="noor"]   .login-brand-logo img { filter: sepia(0.35) brightness(0.88); }
+        body[data-admin-theme="sakina"] .login-brand-logo img { filter: invert(1) sepia(.4) hue-rotate(20deg) brightness(.85); }
+        body[data-admin-theme="noor"]   .login-brand-logo img { filter: sepia(.35) brightness(.88); }
 
         .login-brand-name {
             font-size: 20px;
@@ -169,9 +276,11 @@
         }
 
         .login-brand-sub {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-tertiary);
-            margin-top: -6px;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            font-weight: 600;
         }
 
         .form-heading {
@@ -185,10 +294,10 @@
         .form-subheading {
             font-size: 13px;
             color: var(--text-secondary);
-            margin-bottom: 28px;
+            margin-bottom: 24px;
         }
 
-        .form-group { margin-bottom: 16px; }
+        .form-group { margin-bottom: 14px; }
 
         .form-label {
             display: block;
@@ -206,6 +315,7 @@
             transform: translateY(-50%);
             color: var(--text-tertiary);
             pointer-events: none;
+            z-index: 1;
         }
 
         .input-icon i { width: 15px; height: 15px; display: block; }
@@ -222,6 +332,11 @@
             transition: border-color .2s, box-shadow .2s;
         }
 
+        body.dark-mode .form-input {
+            border-color: #383838;
+            background: #1a1a1a;
+        }
+
         .form-input:focus {
             outline: none;
             border-color: #3b82f6;
@@ -233,6 +348,28 @@
 
         .form-input::placeholder { color: var(--text-tertiary); }
 
+        /* Password toggle */
+        .input-toggle {
+            position: absolute;
+            right: 10px; top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            display: flex;
+            border-radius: 6px;
+            transition: color .15s, background .15s;
+        }
+
+        .input-toggle:hover { color: var(--text-secondary); background: var(--bg-hover); }
+        .input-toggle i { width: 15px; height: 15px; display: block; }
+
+        /* When password toggle is visible, add right padding */
+        .has-toggle { padding-right: 38px; }
+
+        /* Login button */
         .btn-login {
             width: 100%;
             padding: 12px;
@@ -243,7 +380,7 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: background .2s, box-shadow .2s, transform .1s;
+            transition: background .2s, box-shadow .2s, transform .1s, opacity .2s;
             display: flex; align-items: center; justify-content: center;
             gap: 8px;
             box-shadow: 0 2px 8px rgba(29,78,216,.28);
@@ -254,17 +391,24 @@
         body[data-admin-theme="sakina"] .btn-login { background: #8a6a1f; box-shadow: 0 2px 8px rgba(138,106,31,.3); }
         body[data-admin-theme="noor"]   .btn-login { background: #1a5c3a; box-shadow: 0 2px 8px rgba(26,92,58,.3); }
 
-        .btn-login:hover { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(29,78,216,.38); }
-        .btn-login:active { transform: scale(.99); }
-        .btn-login:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        .btn-login:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(29,78,216,.38); }
+        .btn-login:active:not(:disabled) { transform: scale(.99); }
+        .btn-login:disabled { opacity: .55; cursor: not-allowed; transform: none; }
         .btn-login i { width: 16px; height: 16px; }
 
+        .btn-login.success {
+            background: #16a34a !important;
+            box-shadow: 0 4px 14px rgba(22,163,74,.4) !important;
+            animation: successPop .35s ease both;
+        }
+
+        /* Error */
         .error-message {
             background: rgba(239,68,68,.07);
-            border: 1px solid rgba(239,68,68,.25);
+            border: 1px solid rgba(239,68,68,.22);
             border-radius: 10px;
             padding: 11px 14px;
-            margin-top: 12px;
+            margin-top: 10px;
             font-size: 13px;
             color: #dc2626;
             display: none;
@@ -272,60 +416,76 @@
             gap: 8px;
         }
 
+        body.dark-mode .error-message { background: rgba(239,68,68,.1); color: #f87171; border-color: rgba(239,68,68,.3); }
         .error-message.active { display: flex; }
         .error-message i { width: 15px; height: 15px; flex-shrink: 0; }
 
+        /* Spinner */
         .spinner {
             width: 16px; height: 16px;
             border: 2px solid rgba(255,255,255,.35);
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin .6s linear infinite;
+            flex-shrink: 0;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-
+        /* Lockout */
         .lockout-box {
             background: rgba(234,179,8,.08);
-            border: 1px solid rgba(234,179,8,.3);
-            border-radius: 10px;
-            padding: 16px;
+            border: 1px solid rgba(234,179,8,.28);
+            border-radius: 12px;
+            padding: 18px;
             margin-top: 12px;
             display: none;
             flex-direction: column;
-            gap: 4px;
+            gap: 5px;
             text-align: center;
         }
 
         .lockout-box.active { display: flex; }
         .lockout-title    { font-size: 13px; font-weight: 700; color: #92400e; }
-        .lockout-countdown { font-size: 28px; font-weight: 800; color: #b45309; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
-        .lockout-sub      { font-size: 11px; color: #b45309; opacity: .8; }
+        .lockout-countdown { font-size: 30px; font-weight: 800; color: #b45309; letter-spacing: .1em; font-variant-numeric: tabular-nums; margin: 4px 0; }
+        .lockout-sub      { font-size: 11px; color: #b45309; opacity: .75; }
 
-        /* 2FA */
+        /* ── 2FA ── */
         .totp-screen { display: none; }
-        .totp-screen.active { display: block; }
+        .totp-screen.active { display: block; animation: formEntrance .35s ease both; }
 
         .totp-header { text-align: center; margin-bottom: 24px; }
 
         .totp-badge {
-            width: 54px; height: 54px;
+            width: 56px; height: 56px;
             border-radius: 16px;
             background: rgba(59,130,246,.1);
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 14px;
+            border: 1.5px solid rgba(59,130,246,.2);
         }
 
-        .totp-badge i { width: 24px; height: 24px; color: #3b82f6; }
+        .totp-badge i { width: 26px; height: 26px; color: #3b82f6; }
 
         .totp-title { font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
-        .totp-sub   { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+        .totp-sub   { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
 
-        .totp-input { letter-spacing: .3em; font-size: 22px; font-weight: 700; text-align: center; padding: 14px; }
+        .totp-input {
+            letter-spacing: .35em;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            padding: 14px;
+        }
+
+        .totp-hint {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 7px;
+        }
 
         .trust-label {
             display: flex; align-items: center; gap: 8px;
-            margin-top: 12px;
+            margin-top: 14px;
             font-size: 13px;
             color: var(--text-secondary);
             cursor: pointer;
@@ -338,24 +498,52 @@
             background: none; border: none;
             color: var(--text-tertiary);
             font-size: 13px; cursor: pointer;
-            margin-top: 12px; width: 100%;
+            margin-top: 14px; width: 100%;
             text-align: center;
             font-family: inherit;
             transition: color .15s;
+            padding: 6px;
         }
 
         .totp-back:hover { color: var(--text-secondary); }
 
-        .divider { height: 1px; background: var(--border-light); margin: 24px 0; }
+        /* Footer */
+        .login-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+        }
 
-        .form-footer { text-align: center; font-size: 12px; color: var(--text-tertiary); }
+        body.dark-mode .login-footer { border-top-color: #2a2a2a; }
+
+        .login-footer-lock {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: rgba(59,130,246,.08);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .login-footer-lock i { width: 13px; height: 13px; color: #3b82f6; }
+
+        .login-footer-text {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            line-height: 1.4;
+        }
+
+        .login-footer-text strong { color: var(--text-secondary); font-weight: 600; }
 
         @media (max-width: 768px) {
-            .form-input, .totp-input { font-size: 16px; } /* prevent iOS zoom */
-            .form-panel { padding: 24px 16px; }
+            .form-input, .totp-input { font-size: 16px; }
+            .form-panel { padding: 24px 20px; }
             .form-wrap { max-width: 100%; }
-            .login-brand { margin-bottom: 20px; }
-            .login-brand-logo { width: 52px; height: 52px; }
+            .login-brand { margin-bottom: 24px; }
+            .login-brand-logo { width: 58px; height: 58px; }
             .form-heading { font-size: 20px; }
         }
     </style>
@@ -364,9 +552,16 @@
 
     <!-- ── Left branding panel ── -->
     <div class="brand-panel">
+        <div class="brand-orb brand-orb-1"></div>
+        <div class="brand-orb brand-orb-2"></div>
+        <div class="brand-orb brand-orb-3"></div>
+
         <div class="brand-heading">
-            <div class="brand-title">Manage<br>your <span>platform</span></div>
-            <div class="brand-desc">Secure access to content, users, analytics, and system settings.</div>
+            <div class="brand-logo-wrap">
+                <img src="/assets/images/logo.png" alt="TafsirKurd">
+            </div>
+            <div class="brand-title">Manage your<br><span>platform</span></div>
+            <div class="brand-desc">Secure access to content, users,<br>analytics, and system settings.</div>
 
             <div class="brand-stats">
                 <div class="brand-stat">
@@ -383,8 +578,8 @@
                         <i data-lucide="activity" style="color:#10b981;"></i>
                     </div>
                     <div>
-                        <div class="brand-stat-text">Live dashboard</div>
-                        <div class="brand-stat-sub">Real-time metrics & analytics</div>
+                        <div class="brand-stat-text"><span class="live-dot"></span>Live dashboard</div>
+                        <div class="brand-stat-sub">Real-time metrics &amp; analytics</div>
                     </div>
                 </div>
                 <div class="brand-stat">
@@ -404,7 +599,7 @@
 
     <!-- ── Right form panel ── -->
     <div class="form-panel">
-        <div class="form-wrap">
+        <div class="form-wrap" id="formWrap">
 
             <!-- Logo + brand name -->
             <div class="login-brand">
@@ -432,7 +627,10 @@
                     <label class="form-label">Password</label>
                     <div class="input-wrap">
                         <div class="input-icon"><i data-lucide="lock"></i></div>
-                        <input type="password" class="form-input" id="password" placeholder="••••••••" required autofocus autocomplete="current-password">
+                        <input type="password" class="form-input has-toggle" id="password" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="input-toggle" id="pwToggle" tabindex="-1" title="Show/hide password">
+                            <i data-lucide="eye" id="pwToggleIcon"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -470,6 +668,7 @@
 
                 <input type="text" id="totpCode" class="form-input totp-input"
                     placeholder="000 000" maxlength="10" autocomplete="one-time-code" inputmode="numeric">
+                <div class="totp-hint">Auto-submits when 6 digits are entered</div>
 
                 <label class="trust-label">
                     <input type="checkbox" id="trustDevice">
@@ -489,8 +688,13 @@
                 <button class="totp-back" onclick="cancelTOTP()">← Back to login</button>
             </div>
 
-            <div class="divider"></div>
-            <div class="form-footer">Secure admin access · TafsirKurd © 2026</div>
+            <!-- Footer security badge -->
+            <div class="login-footer">
+                <div class="login-footer-lock"><i data-lucide="lock"></i></div>
+                <div class="login-footer-text">
+                    <strong>Encrypted &amp; secure</strong> · TafsirKurd © 2026
+                </div>
+            </div>
         </div>
     </div>
 
@@ -511,20 +715,51 @@
             window.location.href = landing;
         }
 
-        var loginForm        = document.getElementById('loginForm');
-        var loginBtn         = document.getElementById('loginBtn');
-        var errorMessage     = document.getElementById('errorMessage');
-        var errorText        = document.getElementById('errorText');
-        var lockoutBox       = document.getElementById('lockoutBox');
-        var lockoutCountdown = document.getElementById('lockoutCountdown');
+        // Auto-focus email
+        document.getElementById('email').focus();
+
+        var formWrap        = document.getElementById('formWrap');
+        var loginForm       = document.getElementById('loginForm');
+        var loginBtn        = document.getElementById('loginBtn');
+        var errorMessage    = document.getElementById('errorMessage');
+        var errorText       = document.getElementById('errorText');
+        var lockoutBox      = document.getElementById('lockoutBox');
+        var lockoutCountdown= document.getElementById('lockoutCountdown');
         var _countdownInterval = null;
 
+        // ── Password show/hide ──────────────────────────────────────────────
+        var pwInput = document.getElementById('password');
+        var pwToggle = document.getElementById('pwToggle');
+        var pwToggleIcon = document.getElementById('pwToggleIcon');
+        var _pwVisible = false;
+
+        pwToggle.addEventListener('click', function() {
+            _pwVisible = !_pwVisible;
+            pwInput.type = _pwVisible ? 'text' : 'password';
+            pwToggleIcon.setAttribute('data-lucide', _pwVisible ? 'eye-off' : 'eye');
+            lucide.createIcons({ nodes: [pwToggleIcon] });
+            pwInput.focus();
+        });
+
+        // ── Shake helper ────────────────────────────────────────────────────
+        function shakeForm() {
+            formWrap.classList.remove('shake');
+            void formWrap.offsetWidth; // reflow
+            formWrap.classList.add('shake');
+            formWrap.addEventListener('animationend', function h() {
+                formWrap.classList.remove('shake');
+                formWrap.removeEventListener('animationend', h);
+            });
+        }
+
+        // ── Countdown ───────────────────────────────────────────────────────
         function formatCountdown(ms) {
             if (ms <= 0) return '00:00:00';
             var s = Math.floor(ms / 1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
             return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
         }
 
+        // ── Button states ───────────────────────────────────────────────────
         function setBtnLoading() {
             loginBtn.disabled = true;
             while (loginBtn.firstChild) loginBtn.removeChild(loginBtn.firstChild);
@@ -532,14 +767,24 @@
             var lbl = document.createElement('span'); lbl.textContent = 'Signing in…'; loginBtn.appendChild(lbl);
         }
 
+        function setBtnSuccess() {
+            loginBtn.classList.add('success');
+            while (loginBtn.firstChild) loginBtn.removeChild(loginBtn.firstChild);
+            var ic = document.createElement('i'); ic.setAttribute('data-lucide','check'); loginBtn.appendChild(ic);
+            var lbl = document.createElement('span'); lbl.textContent = 'Success!'; loginBtn.appendChild(lbl);
+            lucide.createIcons({ nodes: [ic] });
+        }
+
         function resetBtn() {
             loginBtn.disabled = false;
+            loginBtn.classList.remove('success');
             while (loginBtn.firstChild) loginBtn.removeChild(loginBtn.firstChild);
             var ic = document.createElement('i'); ic.setAttribute('data-lucide','log-in'); loginBtn.appendChild(ic);
             var lbl = document.createElement('span'); lbl.textContent = 'Sign In'; loginBtn.appendChild(lbl);
             lucide.createIcons({ nodes: [ic] });
         }
 
+        // ── Lockout ─────────────────────────────────────────────────────────
         function applyLockout(lockedUntilISO) {
             localStorage.setItem('adminLoginLockoutUntil', lockedUntilISO);
             showLockoutUI(new Date(lockedUntilISO));
@@ -578,16 +823,25 @@
             }
         })();
 
+        // ── Turnstile ───────────────────────────────────────────────────────
         var _turnstileToken = '';
         function onTurnstileSuccess(token) { _turnstileToken = token; }
         function onTurnstileExpired()      { _turnstileToken = ''; }
 
+        // ── TOTP ────────────────────────────────────────────────────────────
         async function submitTOTP() {
-            var code = document.getElementById('totpCode').value.trim();
+            var code = document.getElementById('totpCode').value.replace(/\s/g,'');
             if (!code) return;
             var btn = document.getElementById('totpBtn');
             btn.disabled = true;
             document.getElementById('totpError').classList.remove('active');
+
+            // Success state on verify button
+            var origHtml = btn.innerHTML;
+            while (btn.firstChild) btn.removeChild(btn.firstChild);
+            var sp = document.createElement('div'); sp.className = 'spinner'; btn.appendChild(sp);
+            var lbl = document.createElement('span'); lbl.textContent = 'Verifying…'; btn.appendChild(lbl);
+
             try {
                 var res = await fetch('/admin-auth', {
                     method: 'POST',
@@ -602,6 +856,13 @@
                 });
                 var data = await res.json();
                 if (data.success) {
+                    // Green success flash on verify button
+                    btn.classList.add('success');
+                    while (btn.firstChild) btn.removeChild(btn.firstChild);
+                    var ic2 = document.createElement('i'); ic2.setAttribute('data-lucide','check'); btn.appendChild(ic2);
+                    var lb2 = document.createElement('span'); lb2.textContent = 'Verified!'; btn.appendChild(lb2);
+                    lucide.createIcons({ nodes: [ic2] });
+
                     localStorage.removeItem('adminLoginLockoutUntil');
                     localStorage.removeItem('adminLoginFailedAttempts');
                     if (data.trustToken) {
@@ -619,7 +880,7 @@
                         var first = data.permissions.find(function(p) { return p.can_view; });
                         if (first) landingPage = '/admin-' + first.page_slug + '.html';
                     }
-                    window.location.href = landingPage;
+                    setTimeout(function() { window.location.href = landingPage; }, 600);
                 } else {
                     if (data.expired) {
                         cancelTOTP();
@@ -632,13 +893,25 @@
                     document.getElementById('totpError').classList.add('active');
                     lucide.createIcons();
                     btn.disabled = false;
+                    btn.classList.remove('success');
+                    btn.innerHTML = origHtml;
+                    lucide.createIcons({ nodes: [btn] });
+                    shakeForm();
                 }
             } catch(e) {
                 document.getElementById('totpErrorText').textContent = 'Connection error. Try again.';
                 document.getElementById('totpError').classList.add('active');
                 btn.disabled = false;
+                btn.innerHTML = origHtml;
+                lucide.createIcons({ nodes: [btn] });
             }
         }
+
+        // Auto-submit when 6 digits entered
+        document.getElementById('totpCode').addEventListener('input', function() {
+            var digits = this.value.replace(/\D/g,'');
+            if (digits.length >= 6) submitTOTP();
+        });
 
         document.getElementById('totpCode').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') submitTOTP();
@@ -650,6 +923,7 @@
             loginForm.style.display = '';
         }
 
+        // ── Login submit ────────────────────────────────────────────────────
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             var stored = localStorage.getItem('adminLoginLockoutUntil');
@@ -677,6 +951,7 @@
                     window._totpTempToken = data.tempToken;
                     loginForm.style.display = 'none';
                     document.getElementById('totpScreen').classList.add('active');
+                    document.getElementById('totpCode').value = '';
                     document.getElementById('totpCode').focus();
                     lucide.createIcons();
                     resetBtn();
@@ -692,12 +967,14 @@
                         sessionStorage.setItem('adminRole',        data.user.role);
                         sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
                     }
+                    // Success flash before redirect
+                    setBtnSuccess();
                     var landingPage = '/admin-dashboard.html';
                     if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
                         var first = data.permissions.find(function(p) { return p.can_view; });
                         if (first) landingPage = '/admin-' + first.page_slug + '.html';
                     }
-                    window.location.href = landingPage;
+                    setTimeout(function() { window.location.href = landingPage; }, 650);
                 } else {
                     if (data.turnstileFailed) {
                         _turnstileToken = '';
@@ -726,12 +1003,14 @@
                     errorMessage.classList.add('active');
                     lucide.createIcons();
                     resetBtn();
+                    shakeForm();
                 }
             } catch(error) {
                 errorText.textContent = 'Connection error. Please try again.';
                 errorMessage.classList.add('active');
                 lucide.createIcons();
                 resetBtn();
+                shakeForm();
             }
         });
     </script>
