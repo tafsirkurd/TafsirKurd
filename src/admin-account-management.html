@@ -137,6 +137,47 @@
         .backup-copy-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
         .backup-copy-btn i{width:12px;height:12px}
 
+        /* ── Toast notifications ──────────────────────────────── */
+        #toastStack{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+        .toast{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:500;max-width:340px;pointer-events:all;
+               background:var(--bg-surface);border:1px solid var(--border-light);box-shadow:0 8px 32px rgba(0,0,0,.14);
+               animation:toastIn .3s cubic-bezier(.22,.68,0,1.2) both}
+        .toast.toast-out{animation:toastOut .25s ease forwards}
+        .toast-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .toast-icon i{width:14px;height:14px}
+        .toast-body{flex:1;min-width:0}
+        .toast-title{font-weight:700;color:var(--text-primary);margin-bottom:1px;font-size:13px}
+        .toast-msg{font-size:12px;color:var(--text-secondary);line-height:1.4}
+        .toast.success .toast-icon{background:rgba(22,163,74,.12);color:#16a34a}
+        .toast.error   .toast-icon{background:rgba(239,68,68,.12);color:#ef4444}
+        .toast.warning .toast-icon{background:rgba(234,179,8,.12);color:#d97706}
+        .toast.info    .toast-icon{background:rgba(59,130,246,.12);color:#3b82f6}
+        @keyframes toastIn{from{opacity:0;transform:translateX(24px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+        @keyframes toastOut{to{opacity:0;transform:translateX(24px) scale(.95)}}
+
+        /* ── Confirm modal ────────────────────────────────────── */
+        #confirmModal .modal-hdr-icon{background:linear-gradient(135deg,#f59e0b,#d97706)}
+        #confirmModal.danger-mode .modal-hdr-icon{background:linear-gradient(135deg,#ef4444,#dc2626)}
+        #confirmModal .btn-confirm-ok{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;border:none;color:#fff;transition:all .15s}
+        #confirmModal .btn-confirm-ok.danger-btn{background:#dc2626;box-shadow:0 4px 12px rgba(220,38,38,.3)}
+        #confirmModal .btn-confirm-ok.danger-btn:hover{background:#b91c1c}
+        #confirmModal .btn-confirm-ok.warning-btn{background:#d97706;box-shadow:0 4px 12px rgba(217,119,6,.3)}
+        #confirmModal .btn-confirm-ok.warning-btn:hover{background:#b45309}
+
+        /* ── Sort controls ────────────────────────────────────── */
+        .sort-wrap{display:flex;align-items:center;gap:4px;margin-left:4px}
+        .sort-btn{height:36px;padding:0 10px;border-radius:9px;border:1.5px solid var(--border-light);background:var(--bg-surface);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:border-color .2s,color .2s}
+        .sort-btn i{width:13px;height:13px;transition:transform .2s}
+        .sort-btn.active{border-color:#3b82f6;color:#3b82f6}
+        .sort-btn.asc i{transform:rotate(0deg)}
+        .sort-btn.desc i{transform:rotate(180deg)}
+
+        /* ── Password requirements ────────────────────────────── */
+        .pw-reqs{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+        .pw-req{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-tertiary);transition:color .2s}
+        .pw-req.met{color:#16a34a}
+        .pw-req-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;transition:background .2s}
+
         /* ── Admin accounts list ──────────────────────────────── */
         .accounts-list{display:flex;flex-direction:column;gap:8px}
         .acct-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;overflow:hidden;transition:box-shadow .2s,transform .2s,border-color .3s}
@@ -535,6 +576,12 @@
                                 <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
                                 <span class="pw-strength-label" id="pwStrengthLabel"></span>
                             </div>
+                            <div class="pw-reqs" id="pwReqs" style="display:none">
+                                <div class="pw-req" id="req-len"><span class="pw-req-dot"></span>At least 8 characters</div>
+                                <div class="pw-req" id="req-case"><span class="pw-req-dot"></span>Upper &amp; lowercase letters</div>
+                                <div class="pw-req" id="req-num"><span class="pw-req-dot"></span>At least one number</div>
+                                <div class="pw-req" id="req-sym"><span class="pw-req-dot"></span>At least one symbol</div>
+                            </div>
                         </div>
                         <div>
                             <label class="fld-label">Confirm New</label>
@@ -639,12 +686,45 @@
                         <option value="custom">Custom</option>
                     </select>
                     <span class="acct-filter-count" id="acctFilterCount"></span>
+                    <div class="sort-wrap">
+                        <button class="sort-btn active asc" id="sortBtn" onclick="cycleSort()">
+                            <i data-lucide="arrow-up"></i><span id="sortLabel">Status</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Accounts list (cards) -->
                 <div id="accountsTable" class="accounts-list"></div>
             </div>
         </main>
+    </div>
+
+    <!-- Toast stack -->
+    <div id="toastStack"></div>
+
+    <!-- Confirm Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box" style="max-width:380px">
+            <div class="modal-hdr">
+                <div class="modal-hdr-inner">
+                    <div class="modal-hdr-left">
+                        <div class="modal-hdr-icon"><i data-lucide="alert-triangle" id="confirmIcon"></i></div>
+                        <div class="modal-hdr-text">
+                            <h3 id="confirmTitle">Confirm Action</h3>
+                            <p id="confirmSubtitle">This action may not be reversible</p>
+                        </div>
+                    </div>
+                    <button class="modal-close-btn" onclick="_confirmReject()"><i data-lucide="x"></i></button>
+                </div>
+            </div>
+            <div class="modal-bdy">
+                <p id="confirmMsg" style="font-size:13px;color:var(--text-secondary);line-height:1.6"></p>
+            </div>
+            <div class="modal-ftr">
+                <button class="btn-secondary" onclick="_confirmReject()">Cancel</button>
+                <button class="btn-confirm-ok" id="confirmOkBtn" onclick="_confirmResolve()">Confirm</button>
+            </div>
+        </div>
     </div>
 
     <!-- Account Modal -->
@@ -964,7 +1044,7 @@
             }
             const listRes = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list_accounts', token }) });
             const listData = await listRes.json();
-            if (listData.error) { console.error(listData.error); alert('Error loading accounts: ' + listData.error); return; }
+            if (listData.error) { console.error(listData.error); showToast('error','Load failed', listData.error); return; }
             allAccounts = listData.data || [];
             accounts = allAccounts.slice();
             document.getElementById('totalAdmins').textContent = accounts.length;
@@ -1116,18 +1196,13 @@
                 list.appendChild(empty);
                 return;
             }
-            // Sort: online → idle → offline, then by name within each group
-            var statusOrder = { online: 0, idle: 1, offline: 2 };
-            accounts = accounts.slice().sort(function(a, b) {
-                var sa = statusOrder[computeStatus(a)] ?? 2;
-                var sb = statusOrder[computeStatus(b)] ?? 2;
-                if (sa !== sb) return sa - sb;
-                return (a.full_name || a.email).localeCompare(b.full_name || b.email);
-            });
-            // Update Online metric
-            var onlineCount = accounts.filter(function(a) { return computeStatus(a) !== 'offline'; }).length;
-            var metricEl = document.getElementById('activeAdmins');
-            if (metricEl) metricEl.textContent = onlineCount;
+            // Apply sort
+            accounts = sortAccounts(accounts);
+            // Update Online metric with animation
+            var onlineCount = allAccounts.filter(function(a) { return computeStatus(a) !== 'offline'; }).length;
+            animateCount(document.getElementById('activeAdmins'), onlineCount);
+            animateCount(document.getElementById('totalAdmins'), allAccounts.length);
+            animateCount(document.getElementById('lockedAdmins'), allAccounts.filter(function(a){return a.is_locked;}).length);
             accounts.forEach(account => {
                 var card = document.createElement('div');
                 var _initialStatus = computeStatus(account);
@@ -1159,13 +1234,18 @@
                 var top = document.createElement('div');
                 top.className = 'acct-card-top';
 
-                var initChar = (account.full_name || account.email).charAt(0).toUpperCase();
-                var avatarCol = avatarColor(initChar);
+                var displayName = account.full_name || account.email;
+                var nameParts = displayName.trim().split(/\s+/);
+                var initials = nameParts.length >= 2
+                    ? (nameParts[0].charAt(0) + nameParts[nameParts.length-1].charAt(0)).toUpperCase()
+                    : displayName.substring(0,2).toUpperCase();
+                var avatarCol = avatarColor(displayName.charAt(0));
                 var avatar = document.createElement('div');
                 avatar.className = 'acct-avatar';
-                avatar.textContent = initChar;
+                avatar.textContent = initials;
                 avatar.style.background = avatarCol.bg;
                 avatar.style.color = avatarCol.color;
+                avatar.style.fontSize = initials.length > 1 ? '15px' : '18px';
 
                 var info = document.createElement('div');
                 info.className = 'acct-info';
@@ -1399,8 +1479,8 @@
             const password = document.getElementById('accountPassword').value;
             const role = document.getElementById('accountRole').value;
             const isActive = document.getElementById('accountActive').checked;
-            if (!email) { alert('Email is required'); return; }
-            if (!id && !password) { alert('Password is required for new accounts'); return; }
+            if (!email) { showToast('warning','Validation','Email is required'); return; }
+            if (!id && !password) { showToast('warning','Validation','Password is required for new accounts'); return; }
             const token = sessionStorage.getItem('adminToken');
             try {
                 const action = id ? 'update_account' : 'create_account';
@@ -1417,62 +1497,62 @@
                             var permRes = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_permissions', token: token, targetUserId: userId, permissions: perms }) });
                             var permData = await permRes.json();
                             if (!permData.success) {
-                                alert('Account saved but permissions failed: ' + (permData.error || 'unknown error'));
-                                return;
+                                showToast('warning','Permissions','Account saved but permissions failed: ' + (permData.error || 'unknown error'));
                             }
                         } catch (pe) {
                             console.error('Save permissions error:', pe);
-                            alert('Account saved but permissions could not be updated');
-                            return;
+                            showToast('warning','Permissions','Account saved but permissions could not be updated');
                         }
                     }
-                    alert(data.message);
+                    showToast('success','Saved', data.message || 'Account saved successfully');
                     closeModal();
                     loadAccounts();
                 } else {
-                    alert('Error: ' + data.error);
+                    showToast('error','Error', data.error || 'Failed to save account');
                 }
             } catch (error) {
                 console.error('Save account error:', error);
-                alert('Connection error');
+                showToast('error','Connection error','Please check your connection and try again');
             }
         }
 
         async function forceLogout(id, email) {
-            if (!confirm('Force logout "' + email + '"? They will be logged out immediately.')) return;
+            try { await showConfirm('Force Logout', 'Force logout "' + email + '"? They will be signed out immediately.', 'warning'); } catch(e) { return; }
             const token = sessionStorage.getItem('adminToken');
             try {
                 const response = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'force_logout', token, targetUserId: id }) });
                 const data = await response.json();
-                if (data.success) { alert(data.message); loadAccounts(); }
-                else { alert('Error: ' + data.error); }
-            } catch (error) { console.error('Force logout error:', error); alert('Connection error'); }
+                if (data.success) { showToast('success','Logged out', data.message); loadAccounts(); }
+                else { showToast('error','Error', data.error); }
+            } catch (error) { showToast('error','Connection error'); }
         }
 
         async function resetDevice(id, email) {
-            if (!confirm('Reset device lock for "' + email + '"? They can login from any device again.')) return;
+            try { await showConfirm('Reset Device', 'Reset device lock for "' + email + '"? They can sign in from any device again.', 'warning'); } catch(e) { return; }
             const token = sessionStorage.getItem('adminToken');
             try {
                 const response = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reset_device', token, targetUserId: id }) });
                 const data = await response.json();
-                if (data.success) { alert(data.message); loadAccounts(); }
-                else { alert('Error: ' + data.error); }
-            } catch (error) { console.error('Reset device error:', error); alert('Connection error'); }
+                if (data.success) { showToast('success','Device reset', data.message); loadAccounts(); }
+                else { showToast('error','Error', data.error); }
+            } catch (error) { showToast('error','Connection error'); }
         }
 
         async function unlockAccount(id) {
-            if (!confirm('Unlock this account?')) return;
+            try { await showConfirm('Unlock Account', 'Unlock this account? The user will be able to sign in again.', 'warning'); } catch(e) { return; }
             const supabase = window.adminAuth.getSupabase();
             await supabase.from('admin_users').update({ is_locked: false, locked_until: null, failed_attempts: 0 }).eq('id', id);
+            showToast('success','Unlocked','Account is now active');
             loadAccounts();
         }
 
         async function deleteAccount(id) {
             const account = accounts.find(a => a.id === id);
             if (!account) return;
-            if (!confirm('Delete admin account "' + account.email + '"? This action cannot be undone.')) return;
+            try { await showConfirm('Delete Account', 'Delete "' + account.email + '"? This cannot be undone.', 'danger'); } catch(e) { return; }
             const supabase = window.adminAuth.getSupabase();
             await supabase.from('admin_users').delete().eq('id', id);
+            showToast('success','Deleted','Account has been removed');
             loadAccounts();
         }
 
@@ -1556,24 +1636,25 @@
         }
 
         async function reset2faForUser(userId, userEmail) {
-            if (!confirm('Reset 2FA for ' + userEmail + '? They will need to set it up again.')) return;
+            try { await showConfirm('Reset 2FA', 'Reset 2FA for ' + userEmail + '? They will need to set it up again on next login.', 'warning'); } catch(e) { return; }
             var token = sessionStorage.getItem('adminToken');
             var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'reset-totp', token, email: userId }) });
             var data = await res.json();
-            if (data.success) { alert('2FA reset for ' + userEmail); loadAccounts(); }
-            else alert(data.error || 'Failed');
+            if (data.success) { showToast('success','2FA Reset','2FA has been removed for ' + userEmail); loadAccounts(); }
+            else showToast('error','Error', data.error || 'Failed to reset 2FA');
         }
 
         function filterAccounts() {
             var query = (document.getElementById('acctSearch').value || '').toLowerCase();
             var role  = document.getElementById('acctRoleFilter').value;
-            accounts = allAccounts.filter(function(a) {
+            var filtered = allAccounts.filter(function(a) {
                 var matchText = !query ||
                     (a.email || '').toLowerCase().includes(query) ||
                     (a.full_name || '').toLowerCase().includes(query);
                 var matchRole = !role || a.role === role;
                 return matchText && matchRole;
             });
+            accounts = sortAccounts(filtered);
             var countEl = document.getElementById('acctFilterCount');
             if (countEl) {
                 countEl.textContent = (query || role)
@@ -1583,18 +1664,123 @@
             renderAccountsTable();
         }
 
+        /* ══ TOAST ════════════════════════════════════════════ */
+        function showToast(type, title, msg, duration) {
+            var icons = {success:'check-circle',error:'alert-circle',warning:'alert-triangle',info:'info'};
+            var stack = document.getElementById('toastStack');
+            var t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.innerHTML = '<div class="toast-icon"><i data-lucide="' + (icons[type]||'info') + '"></i></div>'
+                        + '<div class="toast-body"><div class="toast-title">' + title + '</div>'
+                        + (msg ? '<div class="toast-msg">' + msg + '</div>' : '')
+                        + '</div>';
+            stack.appendChild(t);
+            lucide.createIcons({ nodes: [t] });
+            setTimeout(function() {
+                t.classList.add('toast-out');
+                setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 280);
+            }, duration || 3500);
+        }
+
+        /* ══ CONFIRM MODAL ════════════════════════════════════ */
+        var _confirmResolve, _confirmReject;
+        function showConfirm(title, msg, type) {
+            return new Promise(function(resolve, reject) {
+                var modal = document.getElementById('confirmModal');
+                var isDanger = type === 'danger';
+                modal.classList.toggle('danger-mode', isDanger);
+                document.getElementById('confirmTitle').textContent = title;
+                document.getElementById('confirmSubtitle').textContent = isDanger ? 'This cannot be undone' : 'Please confirm before proceeding';
+                document.getElementById('confirmMsg').textContent = msg;
+                var okBtn = document.getElementById('confirmOkBtn');
+                okBtn.className = 'btn-confirm-ok ' + (isDanger ? 'danger-btn' : 'warning-btn');
+                okBtn.innerHTML = (isDanger ? '<i data-lucide="trash-2" style="width:14px;height:14px"></i> ' : '<i data-lucide="check" style="width:14px;height:14px"></i> ') + title;
+                lucide.createIcons({ nodes: [okBtn] });
+                modal.classList.add('open');
+                _confirmResolve = function() { modal.classList.remove('open'); resolve(true); };
+                _confirmReject  = function() { modal.classList.remove('open'); reject(); };
+            });
+        }
+
+        /* ══ METRIC COUNTER ANIMATION ═════════════════════════ */
+        function animateCount(el, target) {
+            if (!el) return;
+            var start = parseInt(el.textContent) || 0;
+            if (start === target) return;
+            var step = target > start ? 1 : -1;
+            var steps = Math.abs(target - start);
+            var delay = Math.min(30, Math.floor(300 / (steps || 1)));
+            var cur = start;
+            var t = setInterval(function() {
+                cur += step;
+                el.textContent = cur;
+                if (cur === target) clearInterval(t);
+            }, delay);
+        }
+
+        /* ══ SORT ═════════════════════════════════════════════ */
+        var _sortModes = ['status','name','role','login'];
+        var _sortLabels = ['Status','Name','Role','Last Login'];
+        var _sortIdx = 0;
+        var _sortDir = 'asc';
+
+        function cycleSort() {
+            var btn = document.getElementById('sortBtn');
+            _sortIdx = (_sortIdx + 1) % _sortModes.length;
+            document.getElementById('sortLabel').textContent = _sortLabels[_sortIdx];
+            _sortDir = 'asc';
+            btn.classList.remove('desc'); btn.classList.add('asc');
+            filterAccounts();
+        }
+
+        function sortAccounts(arr) {
+            var statusOrder = { online: 0, idle: 1, offline: 2 };
+            return arr.slice().sort(function(a, b) {
+                var mode = _sortModes[_sortIdx];
+                var r = 0;
+                if (mode === 'status') {
+                    var sa = statusOrder[computeStatus(a)] ?? 2;
+                    var sb = statusOrder[computeStatus(b)] ?? 2;
+                    r = sa - sb;
+                    if (r === 0) r = (a.full_name || a.email).localeCompare(b.full_name || b.email);
+                } else if (mode === 'name') {
+                    r = (a.full_name || a.email).localeCompare(b.full_name || b.email);
+                } else if (mode === 'role') {
+                    var ro = {super_admin:0,editor:1,analyst:2,custom:3};
+                    r = (ro[a.role]||9) - (ro[b.role]||9);
+                } else if (mode === 'login') {
+                    var la = a.last_login ? new Date(a.last_login).getTime() : 0;
+                    var lb = b.last_login ? new Date(b.last_login).getTime() : 0;
+                    r = lb - la; // newest first
+                }
+                return _sortDir === 'desc' ? -r : r;
+            });
+        }
+
         function updatePwStrength(val) {
-            var wrap = document.getElementById('pwStrengthWrap');
-            var fill = document.getElementById('pwStrengthFill');
+            var wrap  = document.getElementById('pwStrengthWrap');
             var label = document.getElementById('pwStrengthLabel');
-            if (!val) { wrap.style.display = 'none'; return; }
+            var reqs  = document.getElementById('pwReqs');
+            if (!val) { wrap.style.display = 'none'; if(reqs) reqs.style.display = 'none'; return; }
             wrap.style.display = 'block';
+            if (reqs) reqs.style.display = 'flex';
+            // Requirements
+            var r = {
+                len:  val.length >= 8,
+                case: /[A-Z]/.test(val) && /[a-z]/.test(val),
+                num:  /[0-9]/.test(val),
+                sym:  /[^A-Za-z0-9]/.test(val)
+            };
+            Object.keys(r).forEach(function(k) {
+                var el = document.getElementById('req-' + k);
+                if (el) el.classList.toggle('met', r[k]);
+            });
             var score = 0;
             if (val.length >= 8)  score++;
             if (val.length >= 12) score++;
-            if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
-            if (/[0-9]/.test(val)) score++;
-            if (/[^A-Za-z0-9]/.test(val)) score++;
+            if (r.case)  score++;
+            if (r.num)   score++;
+            if (r.sym)   score++;
             var levels = ['','pw-strength-weak','pw-strength-fair','pw-strength-good','pw-strength-strong'];
             var names  = ['','Weak','Fair','Good','Strong'];
             var lvl = score <= 1 ? 1 : score <= 2 ? 2 : score <= 3 ? 3 : 4;
@@ -1699,16 +1885,18 @@
         }
 
         async function revokeSession(sessionId) {
-            if (!confirm('Kill this session?')) return;
+            try { await showConfirm('Kill Session', 'Terminate this session? That device will be signed out.', 'warning'); } catch(e) { return; }
             var token = sessionStorage.getItem('adminToken');
             await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'revoke-session', token, sessionId }) });
+            showToast('success','Session killed','Device has been signed out');
             loadActiveSessions();
         }
 
         async function revokeAllOtherSessions() {
-            if (!confirm('Kill ALL other sessions? Only your current session will remain.')) return;
+            try { await showConfirm('Kill All Others', 'Kill ALL other sessions? Only this device will remain signed in.', 'danger'); } catch(e) { return; }
             var token = sessionStorage.getItem('adminToken');
             await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'revoke-all-other-sessions', token }) });
+            showToast('success','All sessions killed','Only your current session remains');
             loadActiveSessions();
         }
 
@@ -1824,13 +2012,13 @@
             var token = sessionStorage.getItem('adminToken');
             var res = await fetch('/admin-management', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reset_device_by_email', token, email: email.trim() }) });
             var data = await res.json();
-            if (data.error) { alert('Error: ' + data.error); return; }
-            alert('Device lock cleared. They can now log in from any device.');
+            if (data.error) { showToast('error','Error', data.error); return; }
+            showToast('success','Device cleared','They can now sign in from any device');
             loadAccounts();
         }
 
         async function revokeDevice(deviceId) {
-            if (!confirm('Revoke this trusted device? It will need 2FA on next login.')) return;
+            try { await showConfirm('Revoke Device', 'Revoke this trusted device? 2FA will be required on next login.', 'warning'); } catch(e) { return; }
             var token = sessionStorage.getItem('adminToken');
             await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'revoke-trusted-device', token, deviceId }) });
             loadTrustedDevices();
