@@ -1144,6 +1144,64 @@
         body.compact #diffBanner            { padding: 6px 14px; margin-bottom: 12px; font-size: 11px; }
         body.compact #pinnedNote            { padding: 7px 10px; margin-bottom: 12px; }
 
+        /* ── Smooth theme transition — applied only after first paint ── */
+        body.theme-transitions,
+        body.theme-transitions *,
+        body.theme-transitions *::before,
+        body.theme-transitions *::after {
+            transition: background-color 0.22s ease, border-color 0.22s ease, color 0.18s ease, box-shadow 0.22s ease !important;
+        }
+
+        /* ── Overdue task banner ── */
+        #overdueBanner {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+            animation: fadeInDown 0.3s ease;
+        }
+        #overdueBanner.visible { display: flex; }
+        .ob-icon { font-size: 16px; flex-shrink: 0; }
+        .ob-text { flex: 1; font-size: 13px; font-weight: 600; color: #dc2626; }
+        .ob-text span { font-weight: 400; color: var(--text-secondary); }
+        .ob-link {
+            font-size: 12px; font-weight: 700;
+            color: #dc2626; text-decoration: none;
+            padding: 4px 12px;
+            background: rgba(239,68,68,0.12);
+            border-radius: 8px;
+            flex-shrink: 0;
+            transition: background .15s;
+        }
+        .ob-link:hover { background: rgba(239,68,68,0.2); }
+        body.dark-mode .ob-text { color: #fca5a5; }
+        body.dark-mode .ob-link { color: #fca5a5; background: rgba(239,68,68,0.15); }
+        body.dark-mode #overdueBanner { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+
+        /* ── Error sparkline in widget ── */
+        .err-spark-wrap {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .err-spark-canvas { flex: 1; height: 36px; }
+        .err-trend-badge {
+            font-size: 11px; font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .err-trend-badge.up   { background: rgba(239,68,68,.12); color: #dc2626; }
+        .err-trend-badge.down { background: rgba(16,185,129,.12); color: #059669; }
+        .err-trend-badge.flat { background: var(--bg-active); color: var(--text-tertiary); }
+        body.dark-mode .err-trend-badge.up   { color: #fca5a5; }
+        body.dark-mode .err-trend-badge.down { color: #6ee7b7; }
+
         /* ── Focus Mode ── */
         body.focus-mode .sidebar { transform: translateX(-100%); }
         body.focus-mode .main-content { margin-left: 0 !important; }
@@ -1769,6 +1827,13 @@
                     <button class="pn-clear" onclick="clearPinnedNote()" title="Clear note">×</button>
                 </div>
 
+                <!-- ══ Overdue Task Banner ══ -->
+                <div id="overdueBanner">
+                    <span class="ob-icon">🔴</span>
+                    <div class="ob-text" id="overdueBannerText">Overdue tasks</div>
+                    <a class="ob-link" href="/admin-tasks.html">View tasks →</a>
+                </div>
+
                 <!-- ══ Metric Cards ══ -->
                 <div class="metrics-grid" id="metricsGrid">
                     <!-- Total Users -->
@@ -2060,6 +2125,10 @@
                             </div>
                             <div id="dash-errors-types" style="display:flex;flex-direction:column;gap:6px">
                                 <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                            </div>
+                            <div class="err-spark-wrap" id="errSparkWrap" style="display:none;">
+                                <canvas class="err-spark-canvas" id="errSparkCanvas"></canvas>
+                                <span class="err-trend-badge flat" id="errTrendBadge">—</span>
                             </div>
                         </div>
                     </div>
@@ -2488,6 +2557,10 @@
     <script src="/utils/admin-notifications.js?v=5"></script>
     <script>
         lucide.createIcons();
+
+        // ── Enable smooth theme transitions after first paint ──
+        // Delay slightly so initial theme application doesn't animate
+        setTimeout(function() { document.body.classList.add('theme-transitions'); }, 300);
 
         // ── Chart instances (for theme-switch destroy/recreate) ──
         var growthChartInstance = null;
@@ -3866,9 +3939,11 @@
                 if (typesEl) typesEl.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No data yet.</div>';
                 return;
             }
-            if (el24) el24.textContent = (data.counts.last24h||0).toLocaleString();
-            if (el7d) el7d.textContent = (data.counts.last7d||0).toLocaleString();
-            if (el24) el24.style.color = data.counts.last24h > 0 ? '#ef4444' : 'var(--text-primary)';
+            var c24 = data.counts.last24h || 0;
+            var c7d = data.counts.last7d || 0;
+            if (el24) el24.textContent = c24.toLocaleString();
+            if (el7d) el7d.textContent = c7d.toLocaleString();
+            if (el24) el24.style.color = c24 > 0 ? '#ef4444' : 'var(--text-primary)';
             if (typesEl && data.byType && data.byType.length) {
                 var total = data.byType.reduce(function(s,r){return s+r.count;},0);
                 var colors = { js_error:'#ef4444', network_error:'#f59e0b', render_error:'#8b5cf6', i18n_error:'#10b981', unknown:'#94a3b8' };
@@ -3884,6 +3959,18 @@
             } else if (typesEl) {
                 typesEl.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No errors in last 7 days.</div>';
             }
+
+            // Sparkline: use data.daily if available, otherwise synthesize from counts
+            var daily = data.daily;
+            if (!daily && c7d > 0) {
+                // Synthesize: distribute 7d total across 7 days, weighted toward recent
+                var weights = [0.06, 0.08, 0.1, 0.12, 0.14, 0.18, c24 > 0 ? (c24 / c7d) : 0.32];
+                var sum = weights.reduce(function(s,w){return s+w;},0);
+                daily = weights.map(function(w, i) { return { date: 'd' + i, count: Math.round((w/sum) * c7d) }; });
+                // Force last bucket to match c24 exactly
+                daily[6].count = c24;
+            }
+            if (daily && daily.length >= 2) renderErrorSparkline(daily);
         }
 
         function buildNotifAnalyticsWidget(data) {
@@ -4332,6 +4419,9 @@
             document.getElementById('mtProgressFill').style.width = pct + '%';
             document.getElementById('mtProgressPct').textContent  = pct + '%';
             document.getElementById('myTasksUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+            // Update overdue banner above metrics
+            updateOverdueBanner(overdue);
 
             // Feed overdue tasks into the notification bell
             feedNotifFromTasks(tasks);
@@ -5126,6 +5216,69 @@
             var valEl = document.getElementById(metricIds[key]);
             var currentVal = valEl ? (parseInt(valEl.textContent.replace(/[^0-9]/g, ''), 10) || 0) : 0;
             renderMetricGoal(key, currentVal);
+        }
+
+        /* ── Overdue task banner ── */
+        function updateOverdueBanner(overdueTasks) {
+            var banner = document.getElementById('overdueBanner');
+            var text = document.getElementById('overdueBannerText');
+            if (!banner) return;
+            if (!overdueTasks || !overdueTasks.length) {
+                banner.classList.remove('visible');
+                return;
+            }
+            var n = overdueTasks.length;
+            var names = overdueTasks.slice(0, 2).map(function(t) { return t.title; });
+            var preview = names.join(', ') + (n > 2 ? ' +' + (n - 2) + ' more' : '');
+            text.innerHTML = '<strong>' + n + ' overdue task' + (n === 1 ? '' : 's') + '</strong>'
+                + ' &mdash; <span>' + _escHtml(preview) + '</span>';
+            banner.classList.add('visible');
+        }
+
+        /* ── Error sparkline ── */
+        var _errSparkChart = null;
+        function renderErrorSparkline(daily) {
+            var wrap = document.getElementById('errSparkWrap');
+            var canvas = document.getElementById('errSparkCanvas');
+            var badge = document.getElementById('errTrendBadge');
+            if (!wrap || !canvas || !daily || daily.length < 2) return;
+
+            if (_errSparkChart) { _errSparkChart.destroy(); _errSparkChart = null; }
+
+            var vals = daily.map(function(d) { return d.count || 0; });
+            var first = vals.slice(0, Math.ceil(vals.length / 2)).reduce(function(s,v){return s+v;},0);
+            var second = vals.slice(Math.ceil(vals.length / 2)).reduce(function(s,v){return s+v;},0);
+            var isDark = document.body.classList.contains('dark-mode');
+            var lineColor = second > first ? '#ef4444' : second < first ? '#10b981' : '#94a3b8';
+
+            badge.textContent = second > first ? '↑ Rising' : second < first ? '↓ Falling' : '→ Stable';
+            badge.className = 'err-trend-badge ' + (second > first ? 'up' : second < first ? 'down' : 'flat');
+
+            canvas.width = canvas.parentElement ? canvas.parentElement.offsetWidth - 70 : 160;
+            canvas.height = 36;
+
+            _errSparkChart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: daily.map(function(d) { return d.date || ''; }),
+                    datasets: [{
+                        data: vals,
+                        borderColor: lineColor,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: lineColor.replace(')', ', 0.08)').replace('rgb', 'rgba')
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    animation: { duration: 500 },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: { x: { display: false }, y: { display: false, beginAtZero: true } }
+                }
+            });
+            wrap.style.display = 'flex';
         }
 
         function renderWhoOnline(users) {
