@@ -628,7 +628,7 @@
                     </div>
                     <div>
                         <div class="brand-stat-text">End-to-end secured</div>
-                        <div class="brand-stat-sub">2FA + device fingerprinting</div>
+                        <div class="brand-stat-sub">Multi-layer authentication</div>
                     </div>
                 </div>
                 <div class="brand-stat">
@@ -825,7 +825,6 @@
 
     <script src="/utils/device-fingerprint.js"></script>
     <script>
-        // ── Iraq-only geo gate (runs before anything else on the login page) ──
         (function() {
             function escGeo(s) { return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
             function showLoginGeoBlock(countryName) {
@@ -862,19 +861,17 @@
                 document.body.innerHTML = '';
                 document.body.appendChild(card);
             }
-            // Check cache
             try {
                 var c = JSON.parse(sessionStorage.getItem('adminGeoCheck') || 'null');
                 if (c && (Date.now() - c.at) < 30 * 60 * 1000) {
                     if (!c.ok) showLoginGeoBlock(c.name || c.code);
-                    return; // cache hit — no API call needed
+                    return;
                 }
             } catch(e) {}
-            // Async geo check — hide form until resolved
             var formPanel = document.querySelector('.form-panel') || document.body;
             var geoLoading = document.createElement('div');
             geoLoading.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--bg-app,#fff);display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif';
-            geoLoading.innerHTML = '<div style="text-align:center;color:var(--text-tertiary,#9ca3af);font-size:13px"><div style="width:28px;height:28px;border:2px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px"></div>Verifying location…</div>';
+            geoLoading.innerHTML = '<div style="text-align:center;color:var(--text-tertiary,#9ca3af);font-size:13px"><div style="width:28px;height:28px;border:2px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px"></div></div>';
             document.body.appendChild(geoLoading);
             fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout ? AbortSignal.timeout(7000) : undefined })
                 .then(function(r) { return r.json(); })
@@ -887,14 +884,12 @@
                     if (!ok) showLoginGeoBlock(name);
                 })
                 .catch(function() {
-                    // API unreachable → fail open, show login form
                     if (geoLoading.parentNode) geoLoading.parentNode.removeChild(geoLoading);
                 });
         })();
 
         lucide.createIcons();
 
-        // Redirect if already logged in
         var adminToken = sessionStorage.getItem('adminToken');
         if (adminToken) {
             var storedRole = sessionStorage.getItem('adminRole');
@@ -918,21 +913,17 @@
         var lockoutCountdown = document.getElementById('lockoutCountdown');
         var _countdownInterval = null;
 
-        // ── Remember email ──────────────────────────────────────────────────
         var rememberEl = document.getElementById('rememberEmail');
         var savedEmail = localStorage.getItem('adminLoginEmail');
         if (savedEmail) { emailInput.value = savedEmail; rememberEl.checked = true; }
 
-        // Auto-focus
         if (!savedEmail) emailInput.focus();
         else document.getElementById('password').focus();
 
-        // ── Email valid indicator ───────────────────────────────────────────
         emailInput.addEventListener('input', function() {
             this.classList.toggle('input-valid', this.validity.valid && this.value.length > 4);
         });
 
-        // ── Password show/hide ──────────────────────────────────────────────
         var pwInput      = document.getElementById('password');
         var pwToggle     = document.getElementById('pwToggle');
         var pwToggleIcon = document.getElementById('pwToggleIcon');
@@ -946,7 +937,6 @@
             pwInput.focus();
         });
 
-        // ── OTP Digit Boxes ─────────────────────────────────────────────────
         var otpBoxEls  = Array.from(document.querySelectorAll('.otp-box'));
         var totpInput  = document.getElementById('totpCode');
         var _otpSubmitting = false;
@@ -977,7 +967,6 @@
             if (e.key === 'Enter' && !_otpSubmitting) { _otpSubmitting = true; submitTOTP(); }
         });
 
-        // ── Step indicator ──────────────────────────────────────────────────
         function goToStep2() {
             document.getElementById('stepNode1').className = 'step-node done';
             document.getElementById('stepNode1').textContent = '✓';
@@ -992,7 +981,6 @@
             document.getElementById('stepNode2').className = 'step-node';
         }
 
-        // ── Shake ───────────────────────────────────────────────────────────
         function shakeForm() {
             formWrap.classList.remove('shake');
             void formWrap.offsetWidth;
@@ -1003,14 +991,12 @@
             });
         }
 
-        // ── Countdown ───────────────────────────────────────────────────────
         function formatCountdown(ms) {
             if (ms <= 0) return '00:00:00';
             var s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
             return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
         }
 
-        // ── Button states ───────────────────────────────────────────────────
         function setBtnLoading() {
             loginBtn.disabled = true;
             while (loginBtn.firstChild) loginBtn.removeChild(loginBtn.firstChild);
@@ -1035,7 +1021,6 @@
             lucide.createIcons({ nodes: [ic] });
         }
 
-        // ── Lockout ─────────────────────────────────────────────────────────
         function applyLockout(lockedUntilISO) {
             localStorage.setItem('adminLoginLockoutUntil', lockedUntilISO);
             showLockoutUI(new Date(lockedUntilISO));
@@ -1074,12 +1059,10 @@
             }
         })();
 
-        // ── Turnstile ───────────────────────────────────────────────────────
         var _turnstileToken = '';
         function onTurnstileSuccess(token) { _turnstileToken = token; }
         function onTurnstileExpired()      { _turnstileToken = ''; }
 
-        // ── TOTP submit ─────────────────────────────────────────────────────
         async function submitTOTP() {
             var code = totpInput.value.replace(/\D/g,'');
             if (code.length < 6) { _otpSubmitting = false; return; }
@@ -1087,7 +1070,6 @@
             btn.disabled = true;
             document.getElementById('totpError').classList.remove('active');
 
-            // Loading state on verify button
             var origContent = btn.innerHTML;
             while (btn.firstChild) btn.removeChild(btn.firstChild);
             var sp = document.createElement('div'); sp.className = 'spinner'; btn.appendChild(sp);
@@ -1146,7 +1128,6 @@
                     btn.classList.remove('success');
                     btn.innerHTML = origContent;
                     lucide.createIcons({ nodes: [btn] });
-                    // Clear OTP boxes for retry
                     totpInput.value = '';
                     updateOtpBoxes('');
                     _otpSubmitting = false;
@@ -1176,7 +1157,6 @@
             resetSteps();
         }
 
-        // ── Login submit ────────────────────────────────────────────────────
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             var stored = localStorage.getItem('adminLoginLockoutUntil');
@@ -1188,7 +1168,6 @@
             var _tt = localStorage.getItem('adminTrustToken'), _te = localStorage.getItem('adminTrustExpiry');
             var trustToken = (_tt && _te && Date.now() < +_te) ? _tt : null;
 
-            // Remember email
             if (rememberEl.checked) localStorage.setItem('adminLoginEmail', email);
             else localStorage.removeItem('adminLoginEmail');
 
@@ -1273,13 +1252,12 @@
             }
         });
 
-        // ── TOTP 30-second countdown ring ─────────────────────────────────────
         var _totpCountdownInterval = null;
         function startTotpCountdown() {
             stopTotpCountdown();
             var ring = document.getElementById('totpRing');
             var sec  = document.getElementById('totpCountdownSec');
-            var CIRC = 2 * Math.PI * 14; // r=14 → 87.96
+            var CIRC = 2 * Math.PI * 14;
             function tick() {
                 var now       = Date.now() / 1000;
                 var remaining = 30 - (now % 30);
@@ -1297,7 +1275,6 @@
             if (_totpCountdownInterval) { clearInterval(_totpCountdownInterval); _totpCountdownInterval = null; }
         }
 
-        // Start countdown when TOTP screen becomes active, stop when leaving
         var _totpObserver = new MutationObserver(function(muts) {
             muts.forEach(function(m) {
                 m.addedNodes.forEach(function() {
@@ -1306,13 +1283,11 @@
                 });
             });
         });
-        // Also hook goToStep2 to start the countdown
         var _origGoToStep2 = goToStep2;
         goToStep2 = function() { _origGoToStep2(); startTotpCountdown(); };
         var _origCancelTOTP = cancelTOTP;
         cancelTOTP = function() { _origCancelTOTP(); stopTotpCountdown(); };
 
-        // ── Device trust indicator ─────────────────────────────────────────────
         (function() {
             var tt = localStorage.getItem('adminTrustToken');
             var te = localStorage.getItem('adminTrustExpiry');
@@ -1324,7 +1299,6 @@
                 banner.style.display = 'flex';
                 banner.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Trusted device — expires in ' + days + ' day' + (days !== 1 ? 's' : '');
             } else if (tt || te) {
-                // Had token but expired
                 localStorage.removeItem('adminTrustToken');
                 localStorage.removeItem('adminTrustExpiry');
                 banner.className = 'trust-banner-new';
@@ -1337,7 +1311,6 @@
             }
         })();
 
-        // ── Tab-blur security: clear password field if tab hides while on step 1 ─
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 var totpScreen = document.getElementById('totpScreen');
@@ -1372,8 +1345,6 @@
         showNextTip();
         setInterval(showNextTip, 6000);
 
-        // ── Last-login banner ─────────────────────────────────────────────────
-        // Show when email field loses focus if we have stored lastLogin for that email
         emailInput.addEventListener('blur', function() {
             var banner = document.getElementById('lastLoginBanner');
             if (!banner) return;
@@ -1396,7 +1367,6 @@
             } catch(e) { banner.style.display = 'none'; }
         });
 
-        // Store lastLogin after every successful auth
         function storeLastLogin(email) {
             try {
                 var key = 'adminLastLogin_' + btoa((email||'').trim().toLowerCase()).replace(/=/g,'');
@@ -1409,9 +1379,6 @@
         loginForm.addEventListener('securityLoginSuccess', function(e) {
             storeLastLogin(e.detail && e.detail.email);
         });
-        // We fire this custom event from the fetch success handlers below
-        // Intercept: patch the two data.success blocks by hooking into their aftermath
-        // Since those already run, we attach the storeLastLogin to the setBtnSuccess calls
         var _origSetBtnSuccess = setBtnSuccess;
         setBtnSuccess = function() {
             _origSetBtnSuccess();

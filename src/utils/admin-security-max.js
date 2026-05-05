@@ -1,16 +1,12 @@
-/* admin-security-max.js v2 — Apple-level security for all admin pages
-   Loaded automatically on every authenticated admin page via admin-guard.js */
 (function () {
     'use strict';
 
-    // ── Config ────────────────────────────────────────────────────────────────
-    var REVALIDATE_MS  = 5  * 60 * 1000;  // silent token re-check every 5 min
-    var BLUR_LOCK_MS   = 5  * 60 * 1000;  // lock after 5 min in background
-    var CLIPBOARD_MS   = 60 * 1000;        // wipe clipboard after 60 s
-    var CHANNEL        = 'tk-admin-bus';   // BroadcastChannel name
+    var REVALIDATE_MS  = 5  * 60 * 1000;
+    var BLUR_LOCK_MS   = 5  * 60 * 1000;
+    var CLIPBOARD_MS   = 60 * 1000;
+    var CHANNEL        = 'tk-admin-bus';
     var TAB_ID         = Date.now() + '-' + Math.random().toString(36).substr(2, 8);
 
-    // ── Theme-aware wall CSS (injected once, covers all 4 themes) ────────────
     function injectWallThemeCSS() {
         if (document.getElementById('adminWallThemeCSS')) return;
         var s = document.createElement('style');
@@ -81,16 +77,13 @@
         document.head.appendChild(s);
     }
 
-    // Reliable tab-close: try window.close(), fall back to navigate away
     function _closeOrNavigate() {
         window.close();
-        // If still here after 400ms, the browser blocked close() — navigate instead
         setTimeout(function () {
             if (!window.closed) window.location.replace('/admin-login.html');
         }, 400);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
     function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
@@ -108,7 +101,6 @@
         return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
     }
 
-    // ── Security Event Journal (client-side log, shown in console + stored) ──
     var _journal = [];
     function logSec(type, detail) {
         var entry = { t: new Date().toISOString(), type: type, detail: detail || '' };
@@ -117,7 +109,6 @@
         try { sessionStorage.setItem('adminSecLog', JSON.stringify(_journal.slice(-20))); } catch(e) {}
     }
 
-    // ── 1. PRINT PROTECTION ───────────────────────────────────────────────────
     var _ps = document.createElement('style');
     _ps.id  = 'adminPrintBlock';
     _ps.textContent = '@media print{html,body{display:none!important;visibility:hidden!important;}}';
@@ -130,7 +121,6 @@
         document.documentElement.style.removeProperty('display');
     });
 
-    // ── 2. CLIPBOARD AUTO-WIPE ────────────────────────────────────────────────
     var _wipeTimer = null;
     function armClipboardWipe() {
         clearTimeout(_wipeTimer);
@@ -145,7 +135,6 @@
         navigator.clipboard.writeText = function (t) { armClipboardWipe(); return _origCB(t); };
     } catch(e) {}
 
-    // ── 3. RIGHT-CLICK GUARD on sensitive areas ───────────────────────────────
     document.addEventListener('contextmenu', function (e) {
         if (e.target.closest('table, .acct-card, .user-row, .metric-card, [data-sensitive]')) {
             e.preventDefault();
@@ -153,8 +142,6 @@
         }
     });
 
-    // ── 4. PERIODIC SILENT TOKEN RE-VALIDATION ────────────────────────────────
-    // Every 5 minutes: quietly ping server. If token invalid → force logout.
     setInterval(async function () {
         var token = ss('adminToken');
         if (!token) return;
@@ -178,12 +165,9 @@
         window.location.replace('/admin-login.html?expired=1');
     }
 
-    // ── 5. MULTI-TAB LOCK — localStorage heartbeat + BroadcastChannel ──────────
-    // localStorage heartbeat is reliable across any tab/window scenario.
-    // BroadcastChannel gives instant notification for same-origin tabs.
     var TAB_KEY = 'tkAdminTab';
-    var TAB_TTL = 6000;   // tab considered dead after 6 s of silence
-    var TAB_HB  = 2500;   // write heartbeat every 2.5 s
+    var TAB_TTL = 6000;
+    var TAB_HB  = 2500;
     var _tabHbInterval = null;
     var _isSecondary = false;
 
@@ -194,7 +178,6 @@
     function _startTabHeartbeat() {
         _tabBeat();
         _tabHbInterval = setInterval(_tabBeat, TAB_HB);
-        // Release claim when this tab closes
         window.addEventListener('beforeunload', function () {
             clearInterval(_tabHbInterval);
             try {
@@ -208,14 +191,12 @@
         try {
             var existing = JSON.parse(localStorage.getItem(TAB_KEY) || 'null');
             if (existing && existing.id !== TAB_ID && (Date.now() - existing.at) < TAB_TTL) {
-                // A live primary tab already exists
                 return true;
             }
         } catch(e) {}
         return false;
     }
 
-    // Run the check: if another tab is live → show wall, else claim primary
     if (_checkForExistingTab()) {
         _isSecondary = true;
         logSec('duplicate_tab_blocked');
@@ -227,14 +208,12 @@
         }
     } else {
         _startTabHeartbeat();
-        // Also listen via BroadcastChannel for instant cross-tab messages
         try {
             var _bc = new BroadcastChannel(CHANNEL);
             _bc.postMessage({ type: 'TAB_OPEN', id: TAB_ID });
             _bc.addEventListener('message', function (e) {
                 if (!e.data || e.data.id === TAB_ID) return;
                 if (e.data.type === 'TAB_OPEN') {
-                    // New secondary tab opened — tell it we're primary
                     _bc.postMessage({ type: 'PRIMARY_EXISTS', id: TAB_ID });
                 }
                 if (e.data.type === 'FORCE_LOCK') {
@@ -293,12 +272,7 @@
         document.getElementById('_wallCloseBtn').addEventListener('click', _closeOrNavigate);
     }
 
-    // ── 5b. IRAQ-ONLY GEO BLOCK ───────────────────────────────────────────────
-    // Admin access is only allowed from Iraq (country code: IQ).
-    // Uses ipapi.co (already in CSP connect-src). Cached 30 min in sessionStorage.
-    // Fails open (allows access) if the API is unreachable — never locks out on network error.
     async function checkGeoAccess() {
-        // Check cache
         try {
             var c = JSON.parse(sessionStorage.getItem('adminGeoCheck') || 'null');
             if (c && (Date.now() - c.at) < 30 * 60 * 1000) {
@@ -320,7 +294,6 @@
             if (!ok) { logSec('geo_blocked', code); _showGeoBlock(name); }
             return ok;
         } catch(e) {
-            // API timeout / network error → fail open, don't punish legitimate users
             logSec('geo_check_failed', 'api_unreachable');
             return true;
         }
@@ -371,9 +344,6 @@
     // Run geo check immediately (async, non-blocking for UI)
     if (!_isSecondary) checkGeoAccess();
 
-    // ── 6. ADMIN PAGE WATERMARK ───────────────────────────────────────────────
-    // Subtle repeating diagonal watermark — makes screenshots identifiable.
-    // Rendered as a tiled SVG background so it's impossible to remove via DOM.
     function injectWatermark() {
         if (document.getElementById('adminWatermark')) return;
         var name = ss('adminFullName') || ss('adminEmail') || 'Admin';
@@ -381,7 +351,6 @@
         var date = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
         var text = esc(name + ' · ' + role + ' · ' + date);
 
-        // SVG tile: two diagonal lines of text per 300×150 tile
         var svg = [
             '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150">',
             '<text x="150" y="55" text-anchor="middle" dominant-baseline="middle"',
@@ -410,9 +379,6 @@
         document.body.appendChild(wm);
     }
 
-    // ── 7. SENSITIVE DATA AUTO-MASKING ────────────────────────────────────────
-    // Add class .mask-sensitive to any element to blur it until hover/click.
-    // Auto-re-blurs after 8 seconds of reveal.
     function initSensitiveMask() {
         if (document.getElementById('adminMaskCSS')) return;
         var s = document.createElement('style');
@@ -438,7 +404,6 @@
         });
     }
 
-    // ── 8. LOCK SCREEN ───────────────────────────────────────────────────────
     var _lockEl   = null;
     var _isLocked = false;
     var _lockTmr  = null;
@@ -626,7 +591,6 @@
         });
     }
 
-    // ── 9. TAB VISIBILITY → AUTO-LOCK ────────────────────────────────────────
     var _hiddenAt = null;
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
@@ -639,7 +603,6 @@
         }
     });
 
-    // ── 10. KEYBOARD SHORTCUT: Ctrl+L to lock ────────────────────────────────
     document.addEventListener('keydown', function (e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
             e.preventDefault();
@@ -647,7 +610,6 @@
         }
     });
 
-    // ── 11. FLOATING LOCK FAB ─────────────────────────────────────────────────
     function injectFAB() {
         if (document.getElementById('adminLockFab')) return;
         injectLockCSS();
@@ -660,7 +622,6 @@
         document.body.appendChild(fab);
     }
 
-    // ── INIT (after DOM ready) ────────────────────────────────────────────────
     function init() {
         injectWallThemeCSS();
         injectFAB();
@@ -672,11 +633,9 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        // DOM already ready (script loaded with defer)
         init();
     }
 
-    // ── GLOBAL API ────────────────────────────────────────────────────────────
     window.adminSecurityMax = {
         lock:    function (reason) { showLockScreen(reason); },
         logout:  _forceLogout,
