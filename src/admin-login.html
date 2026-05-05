@@ -21,51 +21,57 @@
             color: var(--text-primary);
         }
 
-        /* ── Entrance animation ── */
+        /* ── Keyframes ── */
         @keyframes formEntrance {
-            from { opacity: 0; transform: translateY(22px); }
+            from { opacity: 0; transform: translateY(24px); }
             to   { opacity: 1; transform: translateY(0); }
         }
-
+        @keyframes statEntrance {
+            from { opacity: 0; transform: translateX(-16px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
         @keyframes shake {
             0%,100% { transform: translateX(0); }
-            15%      { transform: translateX(-7px); }
-            30%      { transform: translateX(6px); }
-            45%      { transform: translateX(-5px); }
-            60%      { transform: translateX(4px); }
-            75%      { transform: translateX(-3px); }
-            90%      { transform: translateX(2px); }
+            15%     { transform: translateX(-8px); }
+            30%     { transform: translateX(7px); }
+            45%     { transform: translateX(-6px); }
+            60%     { transform: translateX(5px); }
+            75%     { transform: translateX(-3px); }
+            90%     { transform: translateX(2px); }
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
-
         @keyframes successPop {
-            0%   { transform: scale(.85); opacity: 0; }
-            60%  { transform: scale(1.05); }
-            100% { transform: scale(1);   opacity: 1; }
+            0%  { transform: scale(.8); opacity: 0; }
+            60% { transform: scale(1.05); }
+            100%{ transform: scale(1); opacity: 1; }
         }
-
         @keyframes orbFloat1 {
             0%,100% { transform: translate(0,0) scale(1); }
             50%     { transform: translate(18px,-24px) scale(1.06); }
         }
-
         @keyframes orbFloat2 {
             0%,100% { transform: translate(0,0) scale(1); }
             50%     { transform: translate(-14px,20px) scale(1.04); }
         }
-
         @keyframes orbFloat3 {
             0%,100% { transform: translate(0,0) scale(1); }
             50%     { transform: translate(10px,16px) scale(1.08); }
         }
-
         @keyframes dotPulse {
             0%,100% { opacity: .4; transform: scale(.9); }
             50%     { opacity: 1;  transform: scale(1.1); }
         }
+        @keyframes otpBlink {
+            0%,100% { opacity: 1; }
+            50%     { opacity: 0; }
+        }
+        @keyframes otpPop {
+            0%  { transform: scale(.7); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100%{ transform: scale(1);  opacity: 1; }
+        }
 
-        /* ── Left branding panel (always dark) ── */
+        /* ── Left branding panel ── */
         .brand-panel {
             display: none;
             width: 400px;
@@ -78,473 +84,396 @@
             align-items: center;
             justify-content: center;
         }
-
         body[data-admin-theme="sakina"] .brand-panel { background: #071410; }
         body[data-admin-theme="noor"]   .brand-panel { background: #0d1208; }
-
         @media (min-width: 900px) { .brand-panel { display: flex; } }
 
-        /* Animated orbs */
-        .brand-orb {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
+        .brand-orb { position: absolute; border-radius: 50%; pointer-events: none; }
         .brand-orb-1 {
-            top: -90px; right: -90px;
-            width: 340px; height: 340px;
-            background: radial-gradient(circle, rgba(59,130,246,.18) 0%, transparent 70%);
+            top: -90px; right: -90px; width: 340px; height: 340px;
+            background: radial-gradient(circle, rgba(59,130,246,.2) 0%, transparent 70%);
             animation: orbFloat1 7s ease-in-out infinite;
         }
-
         .brand-orb-2 {
-            bottom: -70px; left: -70px;
-            width: 260px; height: 260px;
-            background: radial-gradient(circle, rgba(99,102,241,.12) 0%, transparent 70%);
+            bottom: -70px; left: -70px; width: 260px; height: 260px;
+            background: radial-gradient(circle, rgba(99,102,241,.14) 0%, transparent 70%);
             animation: orbFloat2 9s ease-in-out infinite;
         }
-
         .brand-orb-3 {
-            top: 50%; left: 50%;
-            margin: -100px 0 0 -100px;
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, rgba(16,185,129,.07) 0%, transparent 70%);
+            top: 50%; left: 50%; margin: -100px 0 0 -100px; width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(16,185,129,.08) 0%, transparent 70%);
             animation: orbFloat3 11s ease-in-out infinite;
         }
+        body[data-admin-theme="sakina"] .brand-orb-1 { background: radial-gradient(circle, rgba(201,168,76,.18) 0%, transparent 70%); }
+        body[data-admin-theme="noor"]   .brand-orb-1 { background: radial-gradient(circle, rgba(26,92,58,.24) 0%, transparent 70%); }
 
-        body[data-admin-theme="sakina"] .brand-orb-1 { background: radial-gradient(circle, rgba(201,168,76,.15) 0%, transparent 70%); }
-        body[data-admin-theme="noor"]   .brand-orb-1 { background: radial-gradient(circle, rgba(26,92,58,.22) 0%, transparent 70%); }
-
-        /* Subtle dot-grid pattern */
         .brand-panel::after {
             content: '';
             position: absolute;
             inset: 0;
-            background-image: radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+            background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px);
             background-size: 28px 28px;
             pointer-events: none;
         }
 
-        .brand-heading {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            width: 100%;
-        }
+        .brand-heading { position: relative; z-index: 1; text-align: center; width: 100%; }
 
-        .brand-logo-wrap {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .brand-logo-wrap img {
-            width: 56px; height: 56px;
-            object-fit: contain;
-            filter: invert(1) brightness(.9);
-            opacity: .9;
-        }
+        .brand-logo-wrap { margin-bottom: 18px; display: flex; justify-content: center; }
+        .brand-logo-wrap img { width: 52px; height: 52px; object-fit: contain; filter: invert(1) brightness(.88); opacity: .9; }
 
         .brand-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #f1f5f9;
-            line-height: 1.25;
-            letter-spacing: -0.5px;
-            margin-bottom: 10px;
+            font-size: 28px; font-weight: 800; color: #f1f5f9;
+            line-height: 1.25; letter-spacing: -0.5px; margin-bottom: 10px;
         }
-
         .brand-title span { color: #3b82f6; }
         body[data-admin-theme="sakina"] .brand-title span { color: #c9a84c; }
         body[data-admin-theme="noor"]   .brand-title span { color: #4ade80; }
 
-        .brand-desc {
-            font-size: 13px;
-            color: #64748b;
-            line-height: 1.65;
-            margin-bottom: 32px;
-        }
+        .brand-desc { font-size: 13px; color: #64748b; line-height: 1.65; margin-bottom: 28px; }
 
-        .brand-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: relative;
-            z-index: 1;
-            width: 100%;
-        }
+        .brand-stats { display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 1; width: 100%; }
 
         .brand-stat {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            display: flex; align-items: center; gap: 12px;
             background: rgba(255,255,255,.04);
             border: 1px solid rgba(255,255,255,.07);
-            border-radius: 12px;
-            padding: 12px 14px;
-            transition: background .2s, border-color .2s;
+            border-radius: 12px; padding: 12px 14px;
+            transition: background .2s, border-color .2s, transform .2s;
+            opacity: 0;
+            animation: statEntrance .5s ease both;
         }
+        .brand-stat:nth-child(1) { animation-delay: .1s; }
+        .brand-stat:nth-child(2) { animation-delay: .2s; }
+        .brand-stat:nth-child(3) { animation-delay: .3s; }
+        .brand-stat:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); transform: translateX(3px); }
 
-        .brand-stat:hover {
-            background: rgba(255,255,255,.07);
-            border-color: rgba(255,255,255,.12);
-        }
-
-        .brand-stat-icon {
-            width: 34px; height: 34px;
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-
+        .brand-stat-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .brand-stat-icon i { width: 15px; height: 15px; }
         .brand-stat-text { font-size: 13px; color: #cbd5e1; font-weight: 600; }
         .brand-stat-sub  { font-size: 11px; color: #475569; margin-top: 2px; }
 
-        /* Live dot */
         .live-dot {
-            display: inline-block;
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: #10b981;
-            margin-right: 5px;
-            vertical-align: middle;
+            display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+            background: #10b981; margin-right: 5px; vertical-align: middle;
             animation: dotPulse 1.8s ease-in-out infinite;
         }
 
-        .brand-footer {
-            position: absolute;
-            bottom: 24px;
-            left: 0; right: 0;
-            text-align: center;
-            z-index: 1;
-            font-size: 11px;
-            color: #334155;
-            letter-spacing: .02em;
+        .brand-footer { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; z-index: 1; font-size: 11px; color: #334155; letter-spacing: .02em; }
+
+        /* ── Mobile header (only on small screens) ── */
+        .mobile-header {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 28px;
         }
+        .mobile-header img { width: 32px; height: 32px; object-fit: contain; }
+        body.dark-mode .mobile-header img { filter: invert(1); }
+        .mobile-header-name { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+        .mobile-header-badge {
+            margin-left: auto;
+            font-size: 10px; font-weight: 700;
+            background: rgba(59,130,246,.1); color: #3b82f6;
+            border: 1px solid rgba(59,130,246,.2);
+            padding: 2px 8px; border-radius: 20px;
+            letter-spacing: .04em; text-transform: uppercase;
+        }
+        @media (max-width: 899px) { .mobile-header { display: flex; } }
 
         /* ── Right form panel ── */
         .form-panel {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 24px;
-            min-height: 100vh;
-            background: var(--bg-app);
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 40px 24px; min-height: 100vh; background: var(--bg-app);
         }
+        @media (max-width: 899px) { .form-panel { align-items: flex-start; padding: 0; } }
+
+        .form-outer {
+            width: 100%;
+            max-width: 420px;
+        }
+        @media (max-width: 899px) { .form-outer { max-width: 100%; } }
 
         .form-wrap {
-            width: 100%;
-            max-width: 380px;
+            padding: 0 24px 32px;
             animation: formEntrance .5s cubic-bezier(.22,.68,0,1.2) both;
         }
-
-        .form-wrap.shake { animation: shake .4s ease; }
+        @media (min-width: 900px) {
+            .form-wrap {
+                background: var(--bg-surface);
+                border: 1px solid var(--border-light);
+                border-radius: 20px;
+                padding: 36px 36px 32px;
+                box-shadow: 0 8px 40px rgba(0,0,0,.07);
+            }
+            body.dark-mode .form-wrap {
+                background: #161616;
+                border-color: #262626;
+                box-shadow: 0 8px 40px rgba(0,0,0,.3);
+            }
+        }
+        .form-wrap.shake { animation: shake .42s ease; }
 
         /* Logo block */
-        .login-brand {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 32px;
-        }
+        .login-brand { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 28px; }
+        @media (max-width: 899px) { .login-brand { display: none; } }
 
         .login-brand-logo {
-            width: 72px; height: 72px;
-            border-radius: 20px;
-            overflow: hidden;
-            background: var(--bg-surface);
-            border: 1.5px solid var(--border-light);
+            width: 68px; height: 68px; border-radius: 18px; overflow: hidden;
+            background: var(--bg-app); border: 1.5px solid var(--border-light);
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 16px rgba(0,0,0,.08);
         }
-
-        .login-brand-logo img { width: 58px; height: 58px; object-fit: contain; transition: filter .3s; }
-
+        body.dark-mode .login-brand-logo { background: #111; border-color: #2a2a2a; }
+        .login-brand-logo img { width: 54px; height: 54px; object-fit: contain; transition: filter .3s; }
         body.dark-mode .login-brand-logo img { filter: invert(1); }
         body[data-admin-theme="sakina"] .login-brand-logo img { filter: invert(1) sepia(.4) hue-rotate(20deg) brightness(.85); }
         body[data-admin-theme="noor"]   .login-brand-logo img { filter: sepia(.35) brightness(.88); }
 
-        .login-brand-name {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: -0.4px;
-        }
+        .login-brand-name { font-size: 19px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; }
+        .login-brand-sub  { font-size: 10px; color: var(--text-tertiary); letter-spacing: .07em; text-transform: uppercase; font-weight: 700; }
 
-        .login-brand-sub {
-            font-size: 11px;
+        /* Step indicator */
+        .step-indicator {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0; margin-bottom: 22px;
+        }
+        .step-node {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700;
+            background: var(--bg-app); border: 2px solid var(--border-light);
             color: var(--text-tertiary);
-            letter-spacing: .04em;
-            text-transform: uppercase;
-            font-weight: 600;
+            transition: background .3s, border-color .3s, color .3s;
+            position: relative; z-index: 1;
         }
-
-        .form-heading {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: -0.4px;
-            margin-bottom: 4px;
+        body.dark-mode .step-node { background: #1a1a1a; border-color: #333; }
+        .step-node.active  { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+        .step-node.done    { background: #16a34a; border-color: #16a34a; color: #fff; }
+        .step-line {
+            flex: 1; height: 2px; max-width: 60px;
+            background: var(--border-light); margin: 0 4px;
+            transition: background .3s;
         }
+        body.dark-mode .step-line { background: #2a2a2a; }
+        .step-line.active { background: #3b82f6; }
 
-        .form-subheading {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
+        .form-heading    { font-size: 21px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; margin-bottom: 3px; }
+        .form-subheading { font-size: 13px; color: var(--text-secondary); margin-bottom: 22px; }
 
+        /* Form groups with focus feedback */
         .form-group { margin-bottom: 14px; }
 
         .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 7px;
+            display: block; font-size: 13px; font-weight: 600;
+            color: var(--text-primary); margin-bottom: 6px;
+            transition: color .2s;
         }
+        .form-group:focus-within .form-label { color: #3b82f6; }
+        body[data-admin-theme="sakina"] .form-group:focus-within .form-label { color: #c9a84c; }
+        body[data-admin-theme="noor"]   .form-group:focus-within .form-label { color: #16a34a; }
 
         .input-wrap { position: relative; }
 
         .input-icon {
-            position: absolute;
-            left: 12px; top: 50%;
+            position: absolute; left: 12px; top: 50%;
             transform: translateY(-50%);
             color: var(--text-tertiary);
-            pointer-events: none;
-            z-index: 1;
+            pointer-events: none; z-index: 1;
+            transition: color .2s;
         }
-
+        .form-group:focus-within .input-icon { color: #3b82f6; }
+        body[data-admin-theme="sakina"] .form-group:focus-within .input-icon { color: #c9a84c; }
+        body[data-admin-theme="noor"]   .form-group:focus-within .input-icon { color: #16a34a; }
         .input-icon i { width: 15px; height: 15px; display: block; }
 
         .form-input {
             width: 100%;
             padding: 11px 14px 11px 38px;
-            background: var(--bg-surface);
+            background: var(--bg-app);
             border: 1.5px solid var(--border-light);
             border-radius: 10px;
             color: var(--text-primary);
-            font-size: 14px;
-            font-family: inherit;
+            font-size: 14px; font-family: inherit;
             transition: border-color .2s, box-shadow .2s;
         }
-
-        body.dark-mode .form-input {
-            border-color: #383838;
-            background: #1a1a1a;
+        body.dark-mode .form-input { border-color: #303030; background: #111; }
+        @media (min-width: 900px) {
+            .form-input { background: var(--bg-app); }
+            body.dark-mode .form-input { background: #0e0e0e; }
         }
-
         .form-input:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.13);
         }
-
-        body[data-admin-theme="sakina"] .form-input:focus { border-color: #c9a84c; box-shadow: 0 0 0 3px rgba(201,168,76,.12); }
-        body[data-admin-theme="noor"]   .form-input:focus { border-color: #1a5c3a; box-shadow: 0 0 0 3px rgba(26,92,58,.12); }
-
+        body[data-admin-theme="sakina"] .form-input:focus { border-color: #c9a84c; box-shadow: 0 0 0 3px rgba(201,168,76,.13); }
+        body[data-admin-theme="noor"]   .form-input:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.13); }
         .form-input::placeholder { color: var(--text-tertiary); }
+        .form-input.input-valid { border-color: #16a34a !important; }
 
         /* Password toggle */
         .input-toggle {
-            position: absolute;
-            right: 10px; top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            padding: 4px;
-            cursor: pointer;
-            color: var(--text-tertiary);
-            display: flex;
-            border-radius: 6px;
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; padding: 4px; cursor: pointer;
+            color: var(--text-tertiary); display: flex; border-radius: 6px;
             transition: color .15s, background .15s;
         }
-
         .input-toggle:hover { color: var(--text-secondary); background: var(--bg-hover); }
         .input-toggle i { width: 15px; height: 15px; display: block; }
-
-        /* When password toggle is visible, add right padding */
         .has-toggle { padding-right: 38px; }
+
+        /* Remember row */
+        .remember-row {
+            display: flex; align-items: center;
+            margin-top: 2px; margin-bottom: 14px;
+        }
+        .remember-label {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 12px; color: var(--text-secondary);
+            cursor: pointer; user-select: none;
+        }
+        .remember-label input { width: 14px; height: 14px; accent-color: #3b82f6; cursor: pointer; flex-shrink: 0; border-radius: 3px; }
 
         /* Login button */
         .btn-login {
             width: 100%;
             padding: 12px;
-            background: #1d4ed8;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .2s, box-shadow .2s, transform .1s, opacity .2s;
-            display: flex; align-items: center; justify-content: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(29,78,216,.28);
-            margin-top: 4px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #fff; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: filter .2s, box-shadow .2s, transform .1s, background .3s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 2px 12px rgba(37,99,235,.35);
             font-family: inherit;
         }
-
-        body[data-admin-theme="sakina"] .btn-login { background: #8a6a1f; box-shadow: 0 2px 8px rgba(138,106,31,.3); }
-        body[data-admin-theme="noor"]   .btn-login { background: #1a5c3a; box-shadow: 0 2px 8px rgba(26,92,58,.3); }
-
-        .btn-login:hover:not(:disabled) { filter: brightness(1.1); box-shadow: 0 4px 14px rgba(29,78,216,.38); }
+        body[data-admin-theme="sakina"] .btn-login { background: linear-gradient(135deg, #a07820 0%, #8a6a1f 100%); box-shadow: 0 2px 12px rgba(138,106,31,.35); }
+        body[data-admin-theme="noor"]   .btn-login { background: linear-gradient(135deg, #1e6b44 0%, #1a5c3a 100%); box-shadow: 0 2px 12px rgba(26,92,58,.35); }
+        .btn-login:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 5px 18px rgba(37,99,235,.45); }
         .btn-login:active:not(:disabled) { transform: scale(.99); }
         .btn-login:disabled { opacity: .55; cursor: not-allowed; transform: none; }
         .btn-login i { width: 16px; height: 16px; }
-
         .btn-login.success {
-            background: #16a34a !important;
-            box-shadow: 0 4px 14px rgba(22,163,74,.4) !important;
+            background: linear-gradient(135deg, #16a34a, #15803d) !important;
+            box-shadow: 0 4px 16px rgba(22,163,74,.45) !important;
             animation: successPop .35s ease both;
         }
 
         /* Error */
         .error-message {
-            background: rgba(239,68,68,.07);
-            border: 1px solid rgba(239,68,68,.22);
-            border-radius: 10px;
-            padding: 11px 14px;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #dc2626;
-            display: none;
-            align-items: center;
-            gap: 8px;
+            background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.22);
+            border-radius: 10px; padding: 11px 14px; margin-top: 10px;
+            font-size: 13px; color: #dc2626;
+            display: none; align-items: center; gap: 8px;
         }
-
-        body.dark-mode .error-message { background: rgba(239,68,68,.1); color: #f87171; border-color: rgba(239,68,68,.3); }
+        body.dark-mode .error-message { background: rgba(239,68,68,.1); color: #f87171; border-color: rgba(239,68,68,.28); }
         .error-message.active { display: flex; }
         .error-message i { width: 15px; height: 15px; flex-shrink: 0; }
 
         /* Spinner */
         .spinner {
             width: 16px; height: 16px;
-            border: 2px solid rgba(255,255,255,.35);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin .6s linear infinite;
-            flex-shrink: 0;
+            border: 2px solid rgba(255,255,255,.35); border-top-color: #fff;
+            border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0;
         }
 
         /* Lockout */
         .lockout-box {
-            background: rgba(234,179,8,.08);
-            border: 1px solid rgba(234,179,8,.28);
-            border-radius: 12px;
-            padding: 18px;
-            margin-top: 12px;
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            text-align: center;
+            background: rgba(234,179,8,.08); border: 1px solid rgba(234,179,8,.28);
+            border-radius: 12px; padding: 18px; margin-top: 12px;
+            display: none; flex-direction: column; gap: 5px; text-align: center;
         }
-
         .lockout-box.active { display: flex; }
-        .lockout-title    { font-size: 13px; font-weight: 700; color: #92400e; }
+        .lockout-title     { font-size: 13px; font-weight: 700; color: #92400e; }
         .lockout-countdown { font-size: 30px; font-weight: 800; color: #b45309; letter-spacing: .1em; font-variant-numeric: tabular-nums; margin: 4px 0; }
-        .lockout-sub      { font-size: 11px; color: #b45309; opacity: .75; }
+        .lockout-sub       { font-size: 11px; color: #b45309; opacity: .75; }
 
         /* ── 2FA ── */
         .totp-screen { display: none; }
         .totp-screen.active { display: block; animation: formEntrance .35s ease both; }
 
         .totp-header { text-align: center; margin-bottom: 24px; }
-
         .totp-badge {
-            width: 56px; height: 56px;
-            border-radius: 16px;
-            background: rgba(59,130,246,.1);
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 14px;
-            border: 1.5px solid rgba(59,130,246,.2);
+            width: 56px; height: 56px; border-radius: 16px;
+            background: rgba(59,130,246,.1); border: 1.5px solid rgba(59,130,246,.2);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
         }
-
         .totp-badge i { width: 26px; height: 26px; color: #3b82f6; }
-
         .totp-title { font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
         .totp-sub   { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
 
-        .totp-input {
-            letter-spacing: .35em;
-            font-size: 24px;
-            font-weight: 700;
-            text-align: center;
-            padding: 14px;
+        /* OTP digit boxes */
+        .otp-wrap {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
         }
-
-        .totp-hint {
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-tertiary);
-            margin-top: 7px;
+        .otp-row {
+            display: flex; align-items: center; gap: 8px; cursor: text;
         }
-
-        .trust-label {
-            display: flex; align-items: center; gap: 8px;
-            margin-top: 14px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            cursor: pointer;
+        .otp-box {
+            width: 44px; height: 52px;
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 800; color: var(--text-primary);
+            background: var(--bg-app);
+            transition: border-color .2s, box-shadow .2s, background .2s;
+            position: relative;
             user-select: none;
         }
+        body.dark-mode .otp-box { border-color: #333; background: #111; }
+        .otp-box.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+        }
+        .otp-box.active::after {
+            content: '';
+            position: absolute;
+            width: 2px; height: 24px;
+            background: #3b82f6;
+            border-radius: 1px;
+            animation: otpBlink .9s ease-in-out infinite;
+        }
+        .otp-box.filled { animation: otpPop .2s ease both; }
+        .otp-sep { font-size: 20px; font-weight: 300; color: var(--text-tertiary); margin: 0 2px; }
+        .otp-real {
+            position: absolute; opacity: 0; pointer-events: none;
+            width: 1px; height: 1px; overflow: hidden;
+        }
+        .otp-hint { font-size: 11px; color: var(--text-tertiary); text-align: center; }
 
-        .trust-label input { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; flex-shrink: 0; }
+        .trust-label {
+            display: flex; align-items: center; gap: 8px; margin-top: 14px;
+            font-size: 13px; color: var(--text-secondary); cursor: pointer; user-select: none;
+        }
+        .trust-label input { width: 15px; height: 15px; accent-color: #3b82f6; cursor: pointer; flex-shrink: 0; }
 
         .totp-back {
-            background: none; border: none;
-            color: var(--text-tertiary);
-            font-size: 13px; cursor: pointer;
-            margin-top: 14px; width: 100%;
-            text-align: center;
-            font-family: inherit;
-            transition: color .15s;
-            padding: 6px;
+            background: none; border: none; color: var(--text-tertiary);
+            font-size: 13px; cursor: pointer; margin-top: 14px; width: 100%;
+            text-align: center; font-family: inherit; transition: color .15s; padding: 6px;
         }
-
         .totp-back:hover { color: var(--text-secondary); }
 
         /* Footer */
         .login-footer {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 28px;
-            padding-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-top: 24px; padding-top: 18px;
             border-top: 1px solid var(--border-light);
         }
-
-        body.dark-mode .login-footer { border-top-color: #2a2a2a; }
-
+        body.dark-mode .login-footer { border-top-color: #222; }
         .login-footer-lock {
-            width: 28px; height: 28px;
-            border-radius: 8px;
+            width: 26px; height: 26px; border-radius: 7px;
             background: rgba(59,130,246,.08);
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-
-        .login-footer-lock i { width: 13px; height: 13px; color: #3b82f6; }
-
-        .login-footer-text {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            line-height: 1.4;
-        }
-
+        .login-footer-lock i { width: 12px; height: 12px; color: #3b82f6; }
+        .login-footer-text { font-size: 11px; color: var(--text-tertiary); }
         .login-footer-text strong { color: var(--text-secondary); font-weight: 600; }
 
         @media (max-width: 768px) {
-            .form-input, .totp-input { font-size: 16px; }
-            .form-panel { padding: 24px 20px; }
-            .form-wrap { max-width: 100%; }
-            .login-brand { margin-bottom: 24px; }
-            .login-brand-logo { width: 58px; height: 58px; }
-            .form-heading { font-size: 20px; }
+            .form-input { font-size: 16px; }
+            .otp-box    { width: 42px; height: 50px; font-size: 20px; }
         }
     </style>
 </head>
@@ -599,100 +528,136 @@
 
     <!-- ── Right form panel ── -->
     <div class="form-panel">
-        <div class="form-wrap" id="formWrap">
+        <div class="form-outer">
 
-            <!-- Logo + brand name -->
-            <div class="login-brand">
-                <div class="login-brand-logo">
-                    <img src="/assets/images/logo.png" alt="TafsirKurd">
-                </div>
-                <div class="login-brand-name">TafsirKurd</div>
-                <div class="login-brand-sub">Admin Portal</div>
+            <!-- Compact mobile header -->
+            <div class="mobile-header">
+                <img src="/assets/images/logo.png" alt="TafsirKurd">
+                <span class="mobile-header-name">TafsirKurd</span>
+                <span class="mobile-header-badge">Admin</span>
             </div>
 
-            <!-- Login form -->
-            <form id="loginForm">
-                <div class="form-heading">Welcome back</div>
-                <div class="form-subheading">Sign in to your admin account</div>
+            <div class="form-wrap" id="formWrap">
 
-                <div class="form-group">
-                    <label class="form-label">Email address</label>
-                    <div class="input-wrap">
-                        <div class="input-icon"><i data-lucide="mail"></i></div>
-                        <input type="email" class="form-input" id="email" placeholder="you@example.com" required autocomplete="email">
+                <!-- Logo + brand name (desktop only) -->
+                <div class="login-brand">
+                    <div class="login-brand-logo">
+                        <img src="/assets/images/logo.png" alt="TafsirKurd">
                     </div>
+                    <div class="login-brand-name">TafsirKurd</div>
+                    <div class="login-brand-sub">Admin Portal</div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <div class="input-wrap">
-                        <div class="input-icon"><i data-lucide="lock"></i></div>
-                        <input type="password" class="form-input has-toggle" id="password" placeholder="••••••••" required autocomplete="current-password">
-                        <button type="button" class="input-toggle" id="pwToggle" tabindex="-1" title="Show/hide password">
-                            <i data-lucide="eye" id="pwToggleIcon"></i>
-                        </button>
+                <!-- Step indicator -->
+                <div class="step-indicator" id="stepIndicator">
+                    <div class="step-node active" id="stepNode1">1</div>
+                    <div class="step-line" id="stepLine"></div>
+                    <div class="step-node" id="stepNode2">2</div>
+                </div>
+
+                <!-- Login form -->
+                <form id="loginForm">
+                    <div class="form-heading">Welcome back</div>
+                    <div class="form-subheading">Sign in to your admin account</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email address</label>
+                        <div class="input-wrap">
+                            <div class="input-icon"><i data-lucide="mail"></i></div>
+                            <input type="email" class="form-input" id="email" placeholder="you@example.com" required autocomplete="email">
+                        </div>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="input-wrap">
+                            <div class="input-icon"><i data-lucide="lock"></i></div>
+                            <input type="password" class="form-input has-toggle" id="password" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="input-toggle" id="pwToggle" tabindex="-1" title="Show/hide password">
+                                <i data-lucide="eye" id="pwToggleIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="remember-row">
+                        <label class="remember-label">
+                            <input type="checkbox" id="rememberEmail">
+                            Remember my email
+                        </label>
+                    </div>
+
+                    <div class="cf-turnstile" id="turnstileWidget"
+                         data-sitekey="0x4AAAAAACns__hRPm3UKqjW"
+                         data-theme="auto"
+                         data-callback="onTurnstileSuccess"
+                         data-expired-callback="onTurnstileExpired"
+                         style="margin-bottom:14px;"></div>
+
+                    <button type="submit" class="btn-login" id="loginBtn">
+                        <i data-lucide="log-in"></i>
+                        <span>Sign In</span>
+                    </button>
+
+                    <div class="error-message" id="errorMessage">
+                        <i data-lucide="alert-circle"></i>
+                        <span id="errorText"></span>
+                    </div>
+
+                    <div class="lockout-box" id="lockoutBox">
+                        <div class="lockout-title">🔒 Account Locked</div>
+                        <div class="lockout-countdown" id="lockoutCountdown">--:--:--</div>
+                        <div class="lockout-sub">Try again when the timer reaches 00:00:00</div>
+                    </div>
+                </form>
+
+                <!-- 2FA step -->
+                <div class="totp-screen" id="totpScreen">
+                    <div class="totp-header">
+                        <div class="totp-badge"><i data-lucide="shield"></i></div>
+                        <div class="totp-title">Two-Factor Auth</div>
+                        <div class="totp-sub">Enter the 6-digit code from your<br>authenticator app, or a backup code.</div>
+                    </div>
+
+                    <div class="otp-wrap">
+                        <div class="otp-row" id="otpRow">
+                            <div class="otp-box" data-idx="0"></div>
+                            <div class="otp-box" data-idx="1"></div>
+                            <div class="otp-box" data-idx="2"></div>
+                            <div class="otp-sep">—</div>
+                            <div class="otp-box" data-idx="3"></div>
+                            <div class="otp-box" data-idx="4"></div>
+                            <div class="otp-box" data-idx="5"></div>
+                        </div>
+                        <div class="otp-hint">Auto-submits when 6 digits are entered</div>
+                    </div>
+                    <!-- Hidden real input -->
+                    <input type="text" id="totpCode" class="otp-real"
+                        maxlength="6" autocomplete="one-time-code" inputmode="numeric">
+
+                    <label class="trust-label">
+                        <input type="checkbox" id="trustDevice">
+                        Trust this device for 30 days
+                    </label>
+
+                    <div class="error-message" id="totpError" style="margin-top:12px;">
+                        <i data-lucide="alert-circle"></i>
+                        <span id="totpErrorText"></span>
+                    </div>
+
+                    <button class="btn-login" id="totpBtn" onclick="submitTOTP()" style="margin-top:16px;">
+                        <i data-lucide="shield-check"></i>
+                        <span>Verify Code</span>
+                    </button>
+
+                    <button class="totp-back" onclick="cancelTOTP()">← Back to login</button>
                 </div>
 
-                <div class="cf-turnstile" id="turnstileWidget"
-                     data-sitekey="0x4AAAAAACns__hRPm3UKqjW"
-                     data-theme="auto"
-                     data-callback="onTurnstileSuccess"
-                     data-expired-callback="onTurnstileExpired"
-                     style="margin-bottom:14px;"></div>
-
-                <button type="submit" class="btn-login" id="loginBtn">
-                    <i data-lucide="log-in"></i>
-                    <span>Sign In</span>
-                </button>
-
-                <div class="error-message" id="errorMessage">
-                    <i data-lucide="alert-circle"></i>
-                    <span id="errorText"></span>
-                </div>
-
-                <div class="lockout-box" id="lockoutBox">
-                    <div class="lockout-title">🔒 Account Locked</div>
-                    <div class="lockout-countdown" id="lockoutCountdown">--:--:--</div>
-                    <div class="lockout-sub">Try again when the timer reaches 00:00:00</div>
-                </div>
-            </form>
-
-            <!-- 2FA step -->
-            <div class="totp-screen" id="totpScreen">
-                <div class="totp-header">
-                    <div class="totp-badge"><i data-lucide="shield"></i></div>
-                    <div class="totp-title">Two-Factor Auth</div>
-                    <div class="totp-sub">Enter the 6-digit code from your<br>authenticator app, or a backup code.</div>
-                </div>
-
-                <input type="text" id="totpCode" class="form-input totp-input"
-                    placeholder="000 000" maxlength="10" autocomplete="one-time-code" inputmode="numeric">
-                <div class="totp-hint">Auto-submits when 6 digits are entered</div>
-
-                <label class="trust-label">
-                    <input type="checkbox" id="trustDevice">
-                    Trust this device for 30 days
-                </label>
-
-                <div class="error-message" id="totpError" style="margin-top:12px;">
-                    <i data-lucide="alert-circle"></i>
-                    <span id="totpErrorText"></span>
-                </div>
-
-                <button class="btn-login" id="totpBtn" onclick="submitTOTP()" style="margin-top:16px;">
-                    <i data-lucide="shield-check"></i>
-                    <span>Verify Code</span>
-                </button>
-
-                <button class="totp-back" onclick="cancelTOTP()">← Back to login</button>
-            </div>
-
-            <!-- Footer security badge -->
-            <div class="login-footer">
-                <div class="login-footer-lock"><i data-lucide="lock"></i></div>
-                <div class="login-footer-text">
-                    <strong>Encrypted &amp; secure</strong> · TafsirKurd © 2026
+                <!-- Footer -->
+                <div class="login-footer">
+                    <div class="login-footer-lock"><i data-lucide="lock"></i></div>
+                    <div class="login-footer-text">
+                        <strong>Encrypted &amp; secure</strong> · TafsirKurd © 2026
+                    </div>
                 </div>
             </div>
         </div>
@@ -702,6 +667,7 @@
     <script>
         lucide.createIcons();
 
+        // Redirect if already logged in
         var adminToken = sessionStorage.getItem('adminToken');
         if (adminToken) {
             var storedRole = sessionStorage.getItem('adminRole');
@@ -715,23 +681,35 @@
             window.location.href = landing;
         }
 
-        // Auto-focus email
-        document.getElementById('email').focus();
-
-        var formWrap        = document.getElementById('formWrap');
-        var loginForm       = document.getElementById('loginForm');
-        var loginBtn        = document.getElementById('loginBtn');
-        var errorMessage    = document.getElementById('errorMessage');
-        var errorText       = document.getElementById('errorText');
-        var lockoutBox      = document.getElementById('lockoutBox');
-        var lockoutCountdown= document.getElementById('lockoutCountdown');
+        var emailInput       = document.getElementById('email');
+        var formWrap         = document.getElementById('formWrap');
+        var loginForm        = document.getElementById('loginForm');
+        var loginBtn         = document.getElementById('loginBtn');
+        var errorMessage     = document.getElementById('errorMessage');
+        var errorText        = document.getElementById('errorText');
+        var lockoutBox       = document.getElementById('lockoutBox');
+        var lockoutCountdown = document.getElementById('lockoutCountdown');
         var _countdownInterval = null;
 
+        // ── Remember email ──────────────────────────────────────────────────
+        var rememberEl = document.getElementById('rememberEmail');
+        var savedEmail = localStorage.getItem('adminLoginEmail');
+        if (savedEmail) { emailInput.value = savedEmail; rememberEl.checked = true; }
+
+        // Auto-focus
+        if (!savedEmail) emailInput.focus();
+        else document.getElementById('password').focus();
+
+        // ── Email valid indicator ───────────────────────────────────────────
+        emailInput.addEventListener('input', function() {
+            this.classList.toggle('input-valid', this.validity.valid && this.value.length > 4);
+        });
+
         // ── Password show/hide ──────────────────────────────────────────────
-        var pwInput = document.getElementById('password');
-        var pwToggle = document.getElementById('pwToggle');
+        var pwInput      = document.getElementById('password');
+        var pwToggle     = document.getElementById('pwToggle');
         var pwToggleIcon = document.getElementById('pwToggleIcon');
-        var _pwVisible = false;
+        var _pwVisible   = false;
 
         pwToggle.addEventListener('click', function() {
             _pwVisible = !_pwVisible;
@@ -741,10 +719,56 @@
             pwInput.focus();
         });
 
-        // ── Shake helper ────────────────────────────────────────────────────
+        // ── OTP Digit Boxes ─────────────────────────────────────────────────
+        var otpBoxEls  = Array.from(document.querySelectorAll('.otp-box'));
+        var totpInput  = document.getElementById('totpCode');
+        var _otpSubmitting = false;
+
+        function updateOtpBoxes(val) {
+            var digits = val.replace(/\D/g,'').slice(0,6);
+            otpBoxEls.forEach(function(box, i) {
+                var prev = box.textContent;
+                box.textContent = digits[i] || '';
+                if (digits[i] && !prev) { box.classList.add('filled'); setTimeout(function(){ box.classList.remove('filled'); }, 200); }
+                box.classList.toggle('active', !_otpSubmitting && i === digits.length && digits.length < 6);
+            });
+        }
+
+        document.getElementById('otpRow').addEventListener('click', function() { totpInput.focus(); });
+
+        totpInput.addEventListener('focus', function() { updateOtpBoxes(this.value); });
+        totpInput.addEventListener('blur',  function() { otpBoxEls.forEach(function(b){ b.classList.remove('active'); }); });
+
+        totpInput.addEventListener('input', function() {
+            var digits = this.value.replace(/\D/g,'').slice(0,6);
+            this.value = digits;
+            updateOtpBoxes(digits);
+            if (digits.length === 6 && !_otpSubmitting) { _otpSubmitting = true; submitTOTP(); }
+        });
+
+        totpInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !_otpSubmitting) { _otpSubmitting = true; submitTOTP(); }
+        });
+
+        // ── Step indicator ──────────────────────────────────────────────────
+        function goToStep2() {
+            document.getElementById('stepNode1').className = 'step-node done';
+            document.getElementById('stepNode1').textContent = '✓';
+            document.getElementById('stepLine').classList.add('active');
+            document.getElementById('stepNode2').classList.add('active');
+        }
+
+        function resetSteps() {
+            document.getElementById('stepNode1').className = 'step-node active';
+            document.getElementById('stepNode1').textContent = '1';
+            document.getElementById('stepLine').classList.remove('active');
+            document.getElementById('stepNode2').className = 'step-node';
+        }
+
+        // ── Shake ───────────────────────────────────────────────────────────
         function shakeForm() {
             formWrap.classList.remove('shake');
-            void formWrap.offsetWidth; // reflow
+            void formWrap.offsetWidth;
             formWrap.classList.add('shake');
             formWrap.addEventListener('animationend', function h() {
                 formWrap.classList.remove('shake');
@@ -755,7 +779,7 @@
         // ── Countdown ───────────────────────────────────────────────────────
         function formatCountdown(ms) {
             if (ms <= 0) return '00:00:00';
-            var s = Math.floor(ms / 1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+            var s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
             return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
         }
 
@@ -794,7 +818,7 @@
             lockoutBox.classList.add('active');
             errorMessage.classList.remove('active');
             loginBtn.disabled = true;
-            document.getElementById('email').disabled    = true;
+            emailInput.disabled = true;
             document.getElementById('password').disabled = true;
             if (_countdownInterval) clearInterval(_countdownInterval);
             _countdownInterval = setInterval(function() {
@@ -804,7 +828,7 @@
                     lockoutBox.classList.remove('active');
                     localStorage.removeItem('adminLoginLockoutUntil');
                     resetBtn();
-                    document.getElementById('email').disabled    = false;
+                    emailInput.disabled = false;
                     document.getElementById('password').disabled = false;
                     lockoutCountdown.textContent = '00:00:00';
                 } else {
@@ -828,16 +852,16 @@
         function onTurnstileSuccess(token) { _turnstileToken = token; }
         function onTurnstileExpired()      { _turnstileToken = ''; }
 
-        // ── TOTP ────────────────────────────────────────────────────────────
+        // ── TOTP submit ─────────────────────────────────────────────────────
         async function submitTOTP() {
-            var code = document.getElementById('totpCode').value.replace(/\s/g,'');
-            if (!code) return;
+            var code = totpInput.value.replace(/\D/g,'');
+            if (code.length < 6) { _otpSubmitting = false; return; }
             var btn = document.getElementById('totpBtn');
             btn.disabled = true;
             document.getElementById('totpError').classList.remove('active');
 
-            // Success state on verify button
-            var origHtml = btn.innerHTML;
+            // Loading state on verify button
+            var origContent = btn.innerHTML;
             while (btn.firstChild) btn.removeChild(btn.firstChild);
             var sp = document.createElement('div'); sp.className = 'spinner'; btn.appendChild(sp);
             var lbl = document.createElement('span'); lbl.textContent = 'Verifying…'; btn.appendChild(lbl);
@@ -856,7 +880,6 @@
                 });
                 var data = await res.json();
                 if (data.success) {
-                    // Green success flash on verify button
                     btn.classList.add('success');
                     while (btn.firstChild) btn.removeChild(btn.firstChild);
                     var ic2 = document.createElement('i'); ic2.setAttribute('data-lucide','check'); btn.appendChild(ic2);
@@ -894,33 +917,36 @@
                     lucide.createIcons();
                     btn.disabled = false;
                     btn.classList.remove('success');
-                    btn.innerHTML = origHtml;
+                    btn.innerHTML = origContent;
                     lucide.createIcons({ nodes: [btn] });
+                    // Clear OTP boxes for retry
+                    totpInput.value = '';
+                    updateOtpBoxes('');
+                    _otpSubmitting = false;
+                    totpInput.focus();
                     shakeForm();
                 }
             } catch(e) {
                 document.getElementById('totpErrorText').textContent = 'Connection error. Try again.';
                 document.getElementById('totpError').classList.add('active');
                 btn.disabled = false;
-                btn.innerHTML = origHtml;
+                btn.innerHTML = origContent;
                 lucide.createIcons({ nodes: [btn] });
+                totpInput.value = '';
+                updateOtpBoxes('');
+                _otpSubmitting = false;
+                totpInput.focus();
             }
         }
-
-        // Auto-submit when 6 digits entered
-        document.getElementById('totpCode').addEventListener('input', function() {
-            var digits = this.value.replace(/\D/g,'');
-            if (digits.length >= 6) submitTOTP();
-        });
-
-        document.getElementById('totpCode').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') submitTOTP();
-        });
 
         function cancelTOTP() {
             window._totpTempToken = null;
             document.getElementById('totpScreen').classList.remove('active');
             loginForm.style.display = '';
+            totpInput.value = '';
+            updateOtpBoxes('');
+            _otpSubmitting = false;
+            resetSteps();
         }
 
         // ── Login submit ────────────────────────────────────────────────────
@@ -929,11 +955,15 @@
             var stored = localStorage.getItem('adminLoginLockoutUntil');
             if (stored && new Date(stored) > new Date()) return;
 
-            var email    = document.getElementById('email').value;
+            var email    = emailInput.value;
             var password = document.getElementById('password').value;
             var deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
             var _tt = localStorage.getItem('adminTrustToken'), _te = localStorage.getItem('adminTrustExpiry');
             var trustToken = (_tt && _te && Date.now() < +_te) ? _tt : null;
+
+            // Remember email
+            if (rememberEl.checked) localStorage.setItem('adminLoginEmail', email);
+            else localStorage.removeItem('adminLoginEmail');
 
             setBtnLoading();
             errorMessage.classList.remove('active');
@@ -951,10 +981,13 @@
                     window._totpTempToken = data.tempToken;
                     loginForm.style.display = 'none';
                     document.getElementById('totpScreen').classList.add('active');
-                    document.getElementById('totpCode').value = '';
-                    document.getElementById('totpCode').focus();
+                    totpInput.value = '';
+                    updateOtpBoxes('');
+                    _otpSubmitting = false;
+                    goToStep2();
                     lucide.createIcons();
                     resetBtn();
+                    setTimeout(function() { totpInput.focus(); }, 100);
                     return;
                 }
 
@@ -967,7 +1000,6 @@
                         sessionStorage.setItem('adminRole',        data.user.role);
                         sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
                     }
-                    // Success flash before redirect
                     setBtnSuccess();
                     var landingPage = '/admin-dashboard.html';
                     if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
@@ -990,7 +1022,7 @@
                         localStorage.setItem('adminLoginFailedAttempts', String(attempts));
                         if (attempts >= 10) {
                             localStorage.removeItem('adminLoginFailedAttempts');
-                            applyLockout(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+                            applyLockout(new Date(Date.now() + 24*60*60*1000).toISOString());
                             return;
                         }
                         var attemptsLeft = data.attemptsRemaining !== undefined ? data.attemptsRemaining : (10 - attempts);
