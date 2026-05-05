@@ -61,6 +61,24 @@
     var RECENT_KEY = 'admin_cp_recent';
     var MAX_RECENT = 5;
 
+    // ── Permission-filtered page list ─────────────────────────────
+    // Returns only the pages this user is allowed to see.
+    // Super-admins see everything. Custom-role users see only their assigned pages.
+    function visiblePages() {
+        var role = sessionStorage.getItem('adminRole');
+        if (role === 'super_admin') return PAGES;
+        var perms = [];
+        try { perms = JSON.parse(sessionStorage.getItem('adminPermissions') || '[]'); } catch(e) {}
+        if (!perms.length) return PAGES; // no cache yet — show all, guard will catch navigation
+        return PAGES.filter(function (page) {
+            var m = page.href.match(/\/admin-([^.]+)\.html/);
+            var slug = m ? m[1] : null;
+            if (!slug) return true;
+            var p = perms.find(function (p) { return p.page_slug === slug; });
+            return p && p.can_view;
+        });
+    }
+
     // ── State ─────────────────────────────────────────────────────
     var isOpen = false;
     var activeIdx = 0;
@@ -83,13 +101,14 @@
     // ── Search — returns flat list with injected section-header sentinels ──
     function search(q) {
         var flat = [];
+        var allowed = visiblePages();
         if (!q || !q.trim()) {
             // Show recent pages with label, then top pages grouped by section
             var rec = getRecent();
             if (rec.length) {
                 flat.push({ type: 'header', label: 'Recently Visited' });
                 rec.forEach(function (h) {
-                    var p = PAGES.find(function (pg) { return pg.href === h; });
+                    var p = allowed.find(function (pg) { return pg.href === h; });
                     if (p) flat.push({ type: 'page', data: p });
                 });
                 flat.push({ type: 'header', label: 'All Pages' });
@@ -97,7 +116,7 @@
             // Group remaining pages by section
             var sections = ['Overview', 'Content', 'Site', 'Users', 'Monitoring', 'Security', 'Settings'];
             sections.forEach(function (sec) {
-                var items = PAGES.filter(function (p) { return p.section === sec; });
+                var items = allowed.filter(function (p) { return p.section === sec; });
                 if (items.length) {
                     flat.push({ type: 'header', label: sec });
                     items.forEach(function (p) { flat.push({ type: 'page', data: p }); });
@@ -110,7 +129,7 @@
         }
 
         var lower = q.toLowerCase();
-        var matched = PAGES.filter(function (p) {
+        var matched = allowed.filter(function (p) {
             return p.label.toLowerCase().includes(lower) ||
                    p.section.toLowerCase().includes(lower) ||
                    p.keywords.toLowerCase().includes(lower);

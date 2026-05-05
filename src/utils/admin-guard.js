@@ -30,7 +30,11 @@
                 if (slug) {
                     var perm = cachedPerms.find(function (p) { return p.page_slug === slug; });
                     if (!perm || !perm.can_view) {
-                        window.location.replace('/admin-dashboard.html?denied=' + encodeURIComponent(slug));
+                        // Redirect to the first page this user IS allowed to see,
+                        // not always dashboard (which they may also lack permission for).
+                        var firstAllowed = cachedPerms.find(function (p) { return p.can_view && /^[a-z0-9-]+$/.test(p.page_slug); });
+                        var dest = firstAllowed ? '/admin-' + firstAllowed.page_slug + '.html' : '/admin-login.html';
+                        window.location.replace(dest + '?denied=' + encodeURIComponent(slug));
                     }
                 }
             }
