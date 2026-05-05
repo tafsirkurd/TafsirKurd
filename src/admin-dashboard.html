@@ -870,6 +870,112 @@
             .quick-actions { gap: 8px; }
         }
 
+        /* ── Sidebar search ── */
+        .sidebar-search-wrap {
+            padding: 8px 12px 4px;
+        }
+        .sidebar-search-input {
+            width: 100%;
+            padding: 6px 10px 6px 30px;
+            font-size: 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color .15s;
+        }
+        .sidebar-search-input:focus { border-color: var(--primary); }
+        .sidebar-search-input::placeholder { color: var(--text-tertiary); }
+        .sidebar-search-wrap { position: relative; }
+        .sidebar-search-icon {
+            position: absolute;
+            left: 20px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            pointer-events: none;
+        }
+        .sidebar-search-icon i { width: 13px; height: 13px; }
+        .nav-item.hidden-by-search { display: none !important; }
+        .nav-section.all-hidden .nav-section-header { display: none; }
+
+        /* ── Auto-refresh progress bar ── */
+        #refreshProgressBar {
+            position: sticky;
+            top: 0;
+            height: 2px;
+            background: var(--border-light);
+            margin: -1px -1px 20px;
+            z-index: 100;
+            border-radius: 0;
+            overflow: hidden;
+        }
+        #refreshProgressFill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #10b981);
+            width: 100%;
+            transform-origin: left;
+            transition: width 1s linear;
+        }
+
+        /* ── What-changed diff banner ── */
+        #diffBanner {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 8px 14px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.2);
+            font-size: 12px;
+            font-weight: 600;
+            color: #065f46;
+            animation: fadeInDown 0.4s ease;
+        }
+        body.dark-mode #diffBanner { color: #6ee7b7; background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); }
+        @keyframes fadeInDown {
+            from { opacity:0; transform: translateY(-6px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+        .diff-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 8px; border-radius: 6px;
+            background: rgba(16,185,129,0.12);
+            font-size: 11px;
+        }
+        .diff-chip.neg { background: rgba(239,68,68,0.1); color: #b91c1c; }
+        body.dark-mode .diff-chip.neg { color: #fca5a5; }
+        .diff-banner-label { color: var(--text-tertiary); font-weight: 500; font-size: 11px; }
+
+        /* ── Metric sub-label ── */
+        .metric-sub {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            margin-top: -4px;
+        }
+        .metric-sub.up   { color: #10b981; }
+        .metric-sub.down { color: #ef4444; }
+
+        /* ── System health score ── */
+        .health-score-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12px; font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 8px;
+            cursor: default;
+        }
+        .health-score-badge.green { background: rgba(16,185,129,0.12); color: #065f46; }
+        .health-score-badge.yellow { background: rgba(245,158,11,0.12); color: #92400e; }
+        .health-score-badge.red { background: rgba(239,68,68,0.1); color: #991b1b; }
+        body.dark-mode .health-score-badge.green { color: #6ee7b7; }
+        body.dark-mode .health-score-badge.yellow { color: #fde68a; }
+        body.dark-mode .health-score-badge.red { color: #fca5a5; }
+
         /* ── Focus Mode ── */
         body.focus-mode .sidebar { transform: translateX(-100%); }
         body.focus-mode .main-content { margin-left: 0 !important; }
@@ -1198,6 +1304,10 @@
                     <i data-lucide="chevron-left"></i>
                 </button>
             </div>
+            <div class="sidebar-search-wrap">
+                <span class="sidebar-search-icon"><i data-lucide="search"></i></span>
+                <input class="sidebar-search-input" id="sidebarSearchInput" type="text" placeholder="Filter pages…" autocomplete="off">
+            </div>
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-header">Overview</div>
@@ -1389,6 +1499,7 @@
             </header>
 
             <div class="content-area">
+                <div id="refreshProgressBar"><div id="refreshProgressFill"></div></div>
 
 <!-- ══ Welcome Header ══ -->
                 <div class="welcome-header">
@@ -1410,6 +1521,9 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- ══ What-changed diff banner ══ -->
+                <div id="diffBanner"></div>
 
                 <!-- ══ Pinned Note ══ -->
                 <div id="pinnedNote" style="display:none;">
@@ -1442,6 +1556,7 @@
                         </div>
                         <div class="metric-value" id="metricActiveToday"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active Today</div>
+                        <div class="metric-sub" id="metricActiveTodaySub"></div>
                         <div class="metric-sparkline" id="sparkToday"></div>
                     </a>
                     <!-- Active 7d -->
@@ -2027,6 +2142,7 @@
                     <div class="status-item" id="statusSync">
                         <span>Last sync: --</span>
                     </div>
+                    <div id="healthScoreBadge" style="display:none;" class="health-score-badge green" title="System health score based on errors, DB and sync status"></div>
                     <div class="role-badge" id="roleBadge">admin</div>
                 </div>
             </div>
@@ -2383,6 +2499,108 @@
                 tooltipBorder: s.getPropertyValue('--border-light').trim() || '#ccc'
             };
         }
+
+        /* ═══════════════════════════════════════════════
+           SIDEBAR NAV SEARCH
+           ═══════════════════════════════════════════════ */
+        (function initSidebarSearch() {
+            var input = document.getElementById('sidebarSearchInput');
+            if (!input) return;
+            input.addEventListener('input', function() {
+                var q = this.value.trim().toLowerCase();
+                var sections = document.querySelectorAll('.sidebar-nav .nav-section');
+                sections.forEach(function(sec) {
+                    var items = sec.querySelectorAll('.nav-item');
+                    var anyVisible = false;
+                    items.forEach(function(item) {
+                        var label = (item.querySelector('.nav-item-label') || item).textContent.toLowerCase();
+                        var match = !q || label.includes(q);
+                        item.classList.toggle('hidden-by-search', !match);
+                        if (match) anyVisible = true;
+                    });
+                    sec.classList.toggle('all-hidden', !anyVisible);
+                });
+            });
+            lucide.createIcons();
+        })();
+
+
+        /* ═══════════════════════════════════════════════
+           AUTO-REFRESH PROGRESS BAR
+           ═══════════════════════════════════════════════ */
+        (function initRefreshProgressBar() {
+            var fill = document.getElementById('refreshProgressFill');
+            if (!fill) return;
+            var TOTAL = AUTO_REFRESH_SECS;
+            function updateBar() {
+                if (!_lastRefreshTime) return;
+                var elapsed = Math.floor((Date.now() - _lastRefreshTime) / 1000);
+                var pct = Math.max(0, Math.min(100, ((TOTAL - elapsed) / TOTAL) * 100));
+                fill.style.width = pct + '%';
+            }
+            setInterval(updateBar, 1000);
+        })();
+
+
+        /* ═══════════════════════════════════════════════
+           WHAT-CHANGED DIFF BANNER
+           ═══════════════════════════════════════════════ */
+        var _prevDiffState = null;
+
+        function showDiffBanner(curr) {
+            var banner = document.getElementById('diffBanner');
+            if (!banner || !_prevDiffState) { _prevDiffState = curr; return; }
+            var prev = _prevDiffState;
+            _prevDiffState = curr;
+
+            var chips = [];
+            function chip(label, delta, isGoodUp) {
+                if (delta === 0 || delta === null || delta === undefined) return;
+                var pos = delta > 0;
+                var good = isGoodUp ? pos : !pos;
+                var sign = pos ? '+' : '';
+                chips.push('<span class="diff-chip' + (good ? '' : ' neg') + '">'
+                    + (pos ? '↑' : '↓') + ' ' + sign + delta.toLocaleString() + ' ' + label + '</span>');
+            }
+
+            if (curr.users   != null && prev.users   != null) chip('users',    curr.users   - prev.users,   true);
+            if (curr.active  != null && prev.active  != null) chip('active',   curr.active  - prev.active,  true);
+            if (curr.msgs    != null && prev.msgs    != null) chip('messages', curr.msgs    - prev.msgs,    false);
+            if (curr.errors  != null && prev.errors  != null) chip('errors',   curr.errors  - prev.errors,  false);
+            if (curr.online  != null && prev.online  != null) chip('online',   curr.online  - prev.online,  true);
+
+            if (!chips.length) { banner.style.display = 'none'; return; }
+
+            banner.innerHTML = '<span class="diff-banner-label">Since last refresh:</span>' + chips.join('');
+            banner.style.display = 'flex';
+            clearTimeout(banner._fadeTimer);
+            banner._fadeTimer = setTimeout(function() {
+                banner.style.transition = 'opacity 1s';
+                banner.style.opacity = '0';
+                setTimeout(function() { banner.style.display = 'none'; banner.style.opacity = ''; banner.style.transition = ''; }, 1000);
+            }, 8000);
+        }
+
+
+        /* ═══════════════════════════════════════════════
+           SYSTEM HEALTH SCORE
+           ═══════════════════════════════════════════════ */
+        function updateHealthScore(errors24h, dbOk) {
+            var badge = document.getElementById('healthScoreBadge');
+            if (!badge) return;
+            var score = 100;
+            if (!dbOk) score -= 40;
+            if (errors24h > 50) score -= 30;
+            else if (errors24h > 10) score -= 15;
+            else if (errors24h > 0) score -= 5;
+            score = Math.max(0, score);
+            var cls = score >= 90 ? 'green' : score >= 70 ? 'yellow' : 'red';
+            var icon = score >= 90 ? '✓' : score >= 70 ? '⚠' : '✗';
+            badge.className = 'health-score-badge ' + cls;
+            badge.textContent = icon + ' ' + score + '% healthy';
+            badge.style.display = '';
+        }
+
 
         /* ═══════════════════════════════════════════════
            FOCUS MODE
@@ -3748,6 +3966,16 @@
             var activeToday = adminStats ? adminStats.activeToday : null;
             setMetric('metricActiveToday', activeToday);
 
+            // Active Today sub-label: vs yesterday
+            var _subEl = document.getElementById('metricActiveTodaySub');
+            if (_subEl && activeToday !== null && adminStats && adminStats.activeYesterday !== null) {
+                var _yd = adminStats.activeYesterday;
+                var _delta = activeToday - _yd;
+                if (_delta > 0) { _subEl.className = 'metric-sub up'; _subEl.textContent = '+' + _delta + ' vs yesterday'; }
+                else if (_delta < 0) { _subEl.className = 'metric-sub down'; _subEl.textContent = _delta + ' vs yesterday'; }
+                else { _subEl.className = 'metric-sub'; _subEl.textContent = 'same as yesterday'; }
+            }
+
             var active7d = adminStats ? adminStats.active7d : null;
             setMetric('metricActive7d', active7d);
 
@@ -3850,6 +4078,21 @@
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));
+
+            // ─── What-changed diff banner ───
+            var _onlineEl = document.getElementById('metricOnline');
+            var _onlineNow = _onlineEl ? (parseInt(_onlineEl.textContent) || null) : null;
+            showDiffBanner({
+                users:  totalUsers,
+                active: activeToday,
+                msgs:   unreadCount || 0,
+                errors: _err24h,
+                online: _onlineNow
+            });
+
+            // ─── System health score ───
+            var _dbOk = !!(dat(0) !== null || adminStats);
+            updateHealthScore(_err24h, _dbOk);
 
             // ─── Update timestamp ───
             _lastRefreshTime = new Date();
