@@ -5767,11 +5767,21 @@
             var m = first.match(/^(\w+)(?:\([\w/.\s-]+\))?!?:\s*(.+)$/);
             var type = m ? m[1].toLowerCase() : 'commit';
             var body = m ? m[2] : first;
-            var buildM = first.match(/build\s+(\d+)/i);
-            var isIos     = /\bios\b/i.test(first) || (/bump/i.test(type) && !/android/i.test(first));
+
+            // Match "NNN → NNN" arrow bumps (take the SECOND/new number)
+            var arrowM = first.match(/(\d+)\s*[→\->]+\s*(\d+)/);
+            // Match "build NNN" or "build number NNN"
+            var buildM = first.match(/build(?:\s+number)?\s+(\d+)(?!\s*[→\->])/i);
+            // Prefer arrow target over plain build match
+            var buildNum = arrowM ? arrowM[2] : (buildM ? buildM[1] : null);
+
+            var isIos     = /\bios\b/i.test(first);
             var isAndroid = /android/i.test(first);
+            // "build(ios)" scope or generic bump commit without android keyword
+            if (!isIos && !isAndroid && buildNum && /\(ios\)/i.test(first)) isIos = true;
             if (isAndroid) isIos = false;
-            return { type: type, body: body, full: first, buildNum: buildM ? buildM[1] : null, isIos: isIos, isAndroid: isAndroid };
+
+            return { type: type, body: body, full: first, buildNum: buildNum, isIos: isIos, isAndroid: isAndroid };
         }
 
         var _deployPollInterval = null;
@@ -5857,6 +5867,27 @@
                 bodyEl.innerHTML = '<div style="padding:20px;color:var(--text-tertiary);font-size:13px">No commits found.</div>';
                 return;
             }
+
+            // Derive latest platform builds from commit history and overlay on platform bar
+            var gitIosBuild = null, gitAndBuild = null;
+            commits.forEach(function(c) {
+                var p = _rhParseCommit(c.commit.message || '');
+                if (p.buildNum) {
+                    if (p.isIos && !gitIosBuild) gitIosBuild = p.buildNum;
+                    if (p.isAndroid && !gitAndBuild) gitAndBuild = p.buildNum;
+                }
+            });
+            var bar = document.getElementById('rhPlatformBar');
+            var divider = document.getElementById('rhPlatformDivider');
+            if (bar && (gitIosBuild || gitAndBuild)) {
+                var barHtml = '';
+                if (gitIosBuild) barHtml += '<div class="rh-platform-item"><span class="rh-platform-icon">🍎</span><span class="rh-platform-label">iOS</span><span class="rh-platform-build">Build ' + gitIosBuild + '</span></div>';
+                if (gitAndBuild) barHtml += '<div class="rh-platform-item"><span class="rh-platform-icon">🤖</span><span class="rh-platform-label">Android</span><span class="rh-platform-build">Build ' + gitAndBuild + '</span></div>';
+                bar.innerHTML = barHtml;
+                bar.style.display = 'flex';
+                if (divider) divider.style.display = 'block';
+            }
+
             var html = '';
             commits.forEach(function(c, idx) {
                 var isLatest = idx === 0;
