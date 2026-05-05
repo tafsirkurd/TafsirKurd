@@ -768,6 +768,7 @@
         .ws-item.ws-red   { color: #ef4444; }
         .ws-item.ws-green { color: #10b981; }
         .ws-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; background: currentColor; }
+        .ws-sep { color: var(--border-medium); font-size: 10px; }
 
         /* ── Collapsible Sections ── */
         .collapse-btn {
@@ -1408,6 +1409,65 @@
             font-size: 11px;
             color: var(--text-tertiary);
         }
+
+        /* ── Platform Donut Card ── */
+        .ps-donut-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+        }
+        .ps-donut-header {
+            display: flex; align-items: baseline; gap: 10px;
+            margin-bottom: 16px;
+        }
+        .ps-donut-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .ps-donut-sub { font-size: 12px; color: var(--text-tertiary); }
+        .ps-donut-body {
+            display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+        }
+        .ps-donut-canvas-wrap {
+            position: relative; width: 130px; height: 130px; flex-shrink: 0;
+        }
+        .ps-donut-center {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        .ps-donut-num { font-size: 22px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; }
+        .ps-donut-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-tertiary); }
+        .ps-legend { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 160px; }
+        .ps-legend-item { display: flex; align-items: center; gap: 7px; padding: 3px 0; }
+        .ps-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .ps-legend-icon { font-size: 13px; flex-shrink: 0; }
+        .ps-legend-name { font-size: 13px; font-weight: 600; color: var(--text-secondary); flex: 1; }
+        .ps-legend-count { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .ps-legend-pct { font-size: 10px; font-weight: 600; color: var(--text-tertiary); min-width: 32px; text-align: right; }
+        .ps-legend-bar-wrap { height: 3px; background: var(--bg-active); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+        .ps-legend-bar { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+
+        /* ── Metric Goal Bars ── */
+        .metric-goal { margin-top: 5px; min-height: 16px; }
+        .mg-row { display: flex; align-items: center; gap: 5px; }
+        .mg-bar-wrap { flex: 1; height: 3px; background: var(--bg-active); border-radius: 2px; overflow: hidden; }
+        .mg-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+        .mg-text { font-size: 10px; font-weight: 600; color: var(--text-tertiary); white-space: nowrap; }
+        .mg-edit-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 11px; color: var(--text-tertiary); padding: 0 1px; line-height: 1;
+        }
+        .mg-edit-btn:hover { color: var(--text-primary); }
+        .mg-set-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 10px; font-weight: 600;
+            color: var(--text-tertiary); padding: 0;
+            font-family: inherit;
+            border-bottom: 1px dashed currentColor;
+            line-height: 1.3;
+        }
+        .mg-set-btn:hover { color: var(--primary); }
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav { visibility: visible; }
@@ -1691,6 +1751,7 @@
                         </div>
                         <div class="metric-value" id="metricUsers"><span class="metric-skel"></span></div>
                         <div class="metric-label">Total Users</div>
+                        <div class="metric-goal" id="goal_users"></div>
                         <div class="metric-sparkline" id="sparkUsers"></div>
                     </a>
                     <!-- Active Today -->
@@ -1704,6 +1765,7 @@
                         <div class="metric-value" id="metricActiveToday"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active Today</div>
                         <div class="metric-sub" id="metricActiveTodaySub"></div>
+                        <div class="metric-goal" id="goal_activeToday"></div>
                         <div class="metric-sparkline" id="sparkToday"></div>
                     </a>
                     <!-- Active 7d -->
@@ -1716,6 +1778,7 @@
                         </div>
                         <div class="metric-value" id="metricActive7d"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active (7 days)</div>
+                        <div class="metric-goal" id="goal_active7d"></div>
                         <div class="metric-sparkline" id="spark7d"></div>
                     </a>
                     <!-- Active 30d -->
@@ -1728,6 +1791,7 @@
                         </div>
                         <div class="metric-value" id="metricActive30d"><span class="metric-skel"></span></div>
                         <div class="metric-label">Active (30 days)</div>
+                        <div class="metric-goal" id="goal_active30d"></div>
                         <div class="metric-sparkline" id="spark30d"></div>
                     </a>
                     <!-- Unread Messages -->
@@ -2545,18 +2609,19 @@
         }
 
         /* ── Welcome summary ── */
-        var _wsSummaryState = { tasks: null, unread: null, inProgress: null };
+        var _wsSummaryState = { tasks: null, unread: null, inProgress: null, errors: null };
         function updateWelcomeSummary() {
             var el = document.getElementById('welcomeSummary');
             if (!el) return;
             var s = _wsSummaryState;
             if (s.tasks === null && s.unread === null) return;
             var parts = [];
-            if (s.unread > 0) parts.push('<span class="ws-item ws-red"><span class="ws-dot"></span>' + s.unread + ' unread</span>');
-            if (s.tasks > 0)  parts.push('<span class="ws-item ws-alert"><span class="ws-dot"></span>' + s.tasks + ' due today</span>');
-            if (s.inProgress > 0) parts.push('<span class="ws-item"><span class="ws-dot" style="background:var(--primary)"></span>' + s.inProgress + ' in progress</span>');
-            if (!parts.length)  parts.push('<span class="ws-item ws-green"><span class="ws-dot"></span>All clear</span>');
-            el.innerHTML = parts.join('<span style="color:var(--border-light);font-size:10px">·</span>');
+            if (s.errors > 0)   parts.push('<span class="ws-item ws-red"><span class="ws-dot" style="background:#ef4444"></span>' + s.errors + ' error' + (s.errors === 1 ? '' : 's') + '</span>');
+            if (s.unread > 0)   parts.push('<span class="ws-item ws-alert"><span class="ws-dot" style="background:#f59e0b"></span>' + s.unread + ' unread</span>');
+            if (s.tasks > 0)    parts.push('<span class="ws-item"><span class="ws-dot" style="background:#8b5cf6"></span>' + s.tasks + ' due today</span>');
+            if (s.inProgress > 0) parts.push('<span class="ws-item"><span class="ws-dot" style="background:#3b82f6"></span>' + s.inProgress + ' in progress</span>');
+            if (!parts.length)  parts.push('<span class="ws-item ws-green"><span class="ws-dot" style="background:#10b981"></span>All clear</span>');
+            el.innerHTML = parts.join('<span class="ws-sep">·</span>');
             el.style.display = 'flex';
         }
 
@@ -4347,10 +4412,11 @@
 
             // ─── Metrics ───
             var totalUsers = dat(0);
-            if (totalUsers !== null) setMetric('metricUsers', totalUsers);
+            if (totalUsers !== null) { setMetric('metricUsers', totalUsers); renderMetricGoal('users', totalUsers); }
 
             var activeToday = adminStats ? adminStats.activeToday : null;
             setMetric('metricActiveToday', activeToday);
+            renderMetricGoal('activeToday', activeToday);
 
             // Active Today sub-label: vs yesterday
             var _subEl = document.getElementById('metricActiveTodaySub');
@@ -4364,9 +4430,11 @@
 
             var active7d = adminStats ? adminStats.active7d : null;
             setMetric('metricActive7d', active7d);
+            renderMetricGoal('active7d', active7d);
 
             var active30d = adminStats ? adminStats.active30d : null;
             setMetric('metricActive30d', active30d);
+            renderMetricGoal('active30d', active30d);
 
             var unreadCount = cnt(4);
             setMetric('metricMessages', unreadCount);
@@ -4491,6 +4559,10 @@
                 unreadMessages:  unreadCount || 0,
                 online:          _onlineNow || 0
             });
+
+            // ─── Welcome summary: include errors ───
+            _wsSummaryState.errors = _err24h;
+            updateWelcomeSummary();
 
             // ─── Update timestamp ───
             _lastRefreshTime = new Date();
@@ -4844,6 +4916,8 @@
             }
         }
 
+        var _platformChart = null;
+
         function renderPlatformSplit(platforms, total) {
             var row = document.getElementById('platformSplitRow');
             if (!row) return;
@@ -4853,24 +4927,118 @@
             var web = p.web || 0;
             var t = ios + android + web;
             if (!t) { row.style.display = 'none'; return; }
-            function pct(n) { return t > 0 ? Math.round((n/t)*100) : 0; }
+
+            function pct(n) { return t > 0 ? Math.round((n / t) * 100) : 0; }
+
+            if (_platformChart) { _platformChart.destroy(); _platformChart = null; }
+
             row.style.display = '';
-            row.innerHTML = '<div class="ps-row">'
-                + _psChip('🍎', 'iOS', ios, pct(ios), '#6366f1')
-                + _psChip('🤖', 'Android', android, pct(android), '#10b981')
-                + _psChip('🌐', 'Web', web, pct(web), '#f59e0b')
+            row.className = 'ps-donut-card card-animate';
+            row.innerHTML =
+                '<div class="ps-donut-header">'
+                    + '<span class="ps-donut-title">Platform Distribution</span>'
+                    + '<span class="ps-donut-sub">Users online now</span>'
+                + '</div>'
+                + '<div class="ps-donut-body">'
+                    + '<div class="ps-donut-canvas-wrap">'
+                        + '<canvas id="platformDonutChart" width="130" height="130"></canvas>'
+                        + '<div class="ps-donut-center">'
+                            + '<div class="ps-donut-num">' + t + '</div>'
+                            + '<div class="ps-donut-lbl">online</div>'
+                        + '</div>'
+                    + '</div>'
+                    + '<div class="ps-legend">'
+                        + _psLegendItem('🍎', 'iOS', ios, pct(ios), '#6366f1')
+                        + _psLegendItem('🤖', 'Android', android, pct(android), '#10b981')
+                        + _psLegendItem('🌐', 'Web', web, pct(web), '#f59e0b')
+                    + '</div>'
+                + '</div>';
+
+            var canvas = document.getElementById('platformDonutChart');
+            if (!canvas) return;
+            _platformChart = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['iOS', 'Android', 'Web'],
+                    datasets: [{
+                        data: [ios, android, web],
+                        backgroundColor: ['#6366f1', '#10b981', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    cutout: '70%',
+                    responsive: false,
+                    animation: { duration: 600, easing: 'easeInOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ' ' + ctx.label + ': ' + ctx.raw + ' (' + pct(ctx.raw) + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function _psLegendItem(icon, label, count, pctVal, color) {
+            return '<div class="ps-legend-item">'
+                + '<span class="ps-legend-dot" style="background:' + color + '"></span>'
+                + '<span class="ps-legend-icon">' + icon + '</span>'
+                + '<span class="ps-legend-name">' + label + '</span>'
+                + '<span class="ps-legend-count">' + count + '</span>'
+                + '<span class="ps-legend-pct">' + pctVal + '%</span>'
+                + '</div>'
+                + '<div class="ps-legend-bar-wrap">'
+                + '<div class="ps-legend-bar" style="width:' + pctVal + '%;background:' + color + '"></div>'
                 + '</div>';
         }
 
-        function _psChip(icon, label, count, pctVal, color) {
-            return '<div class="ps-chip">'
-                + '<span class="ps-icon">' + icon + '</span>'
-                + '<div class="ps-info">'
-                + '<div class="ps-count">' + count + '</div>'
-                + '<div class="ps-label">' + label + ' · ' + pctVal + '%</div>'
-                + '</div>'
-                + '<div class="ps-bar-wrap"><div class="ps-bar" style="width:' + pctVal + '%;background:' + color + '"></div></div>'
+        /* ── Metric Goal Tracking ── */
+        var GOALS_KEY = 'dash_metric_goals';
+        var _goals = {};
+        (function loadGoals() {
+            try { _goals = JSON.parse(localStorage.getItem(GOALS_KEY) || '{}'); } catch(e) { _goals = {}; }
+        })();
+
+        function saveGoals() {
+            try { localStorage.setItem(GOALS_KEY, JSON.stringify(_goals)); } catch(e) {}
+        }
+
+        function renderMetricGoal(goalKey, current) {
+            var el = document.getElementById('goal_' + goalKey);
+            if (!el) return;
+            var goal = _goals[goalKey];
+            if (!goal) {
+                el.innerHTML = '<button class="mg-set-btn" onclick="promptGoal(\'' + goalKey + '\')" title="Set a target for this metric">+ set goal</button>';
+                return;
+            }
+            var pctVal = Math.min(100, Math.round(((current || 0) / goal) * 100));
+            var color = pctVal >= 100 ? '#10b981' : pctVal >= 70 ? '#f59e0b' : '#3b82f6';
+            el.innerHTML = '<div class="mg-row">'
+                + '<div class="mg-bar-wrap"><div class="mg-bar-fill" style="width:' + pctVal + '%;background:' + color + '"></div></div>'
+                + '<span class="mg-text" style="color:' + color + '">' + pctVal + '% of ' + goal.toLocaleString() + '</span>'
+                + '<button class="mg-edit-btn" onclick="promptGoal(\'' + goalKey + '\')" title="Edit goal">✎</button>'
                 + '</div>';
+        }
+
+        function promptGoal(key) {
+            var labels = { users: 'Total Users', activeToday: 'Active Today', active7d: 'Active 7 days', active30d: 'Active 30 days' };
+            var current = _goals[key] ? String(_goals[key]) : '';
+            var val = prompt('Goal for ' + (labels[key] || key) + ':\n(Enter a number to set, leave blank to remove)', current);
+            if (val === null) return;
+            var num = parseInt(val.replace(/[^0-9]/g, ''), 10);
+            if (!val.trim()) { delete _goals[key]; }
+            else if (!isNaN(num) && num > 0) { _goals[key] = num; }
+            saveGoals();
+            var metricIds = { users: 'metricUsers', activeToday: 'metricActiveToday', active7d: 'metricActive7d', active30d: 'metricActive30d' };
+            var valEl = document.getElementById(metricIds[key]);
+            var currentVal = valEl ? (parseInt(valEl.textContent.replace(/[^0-9]/g, ''), 10) || 0) : 0;
+            renderMetricGoal(key, currentVal);
         }
 
         function renderWhoOnline(users) {
