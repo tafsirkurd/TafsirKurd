@@ -179,19 +179,52 @@
         .sec-check.neutral{background:var(--bg-active);color:var(--text-tertiary)}
         .sec-check i{width:11px;height:11px}
 
-        /* Security overview banner */
-        .sec-overview{display:flex;align-items:center;gap:12px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:14px 18px;margin-bottom:14px;flex-wrap:wrap}
+        /* Security overview */
+        .sec-overview{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;margin-bottom:14px;overflow:hidden}
         body.dark-mode .sec-overview{background:#161616;border-color:#262626}
-        .sec-overview-score{display:flex;align-items:center;gap:10px;flex-shrink:0}
-        .sec-overview-ring{position:relative;width:48px;height:48px}
-        .sec-overview-items{display:flex;gap:10px;flex-wrap:wrap;flex:1}
-        .sec-ov-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--bg-active)}
-        .sec-ov-item.good{color:#16a34a}
-        .sec-ov-item.bad{color:#dc2626}
-        .sec-ov-item.warn{color:#d97706}
-        .sec-ov-item i{width:13px;height:13px}
-        .sec-ov-label{font-size:13px;font-weight:800;color:var(--text-primary)}
-        .sec-ov-sub{font-size:11px;color:var(--text-tertiary);margin-top:1px}
+        .sec-overview-top{display:flex;align-items:center;gap:16px;padding:16px 20px;flex-wrap:wrap}
+        .sec-overview-score{display:flex;align-items:center;gap:14px;flex-shrink:0}
+        .sec-overview-ring{position:relative;width:72px;height:72px}
+        .sec-overview-ring svg{transform:rotate(-90deg)}
+        .sec-overview-ring .ring-bg{fill:none;stroke:var(--border-light);stroke-width:6}
+        .sec-overview-ring .ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .4s}
+        .sec-overview-ring-val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+        .sec-overview-ring-pct{font-size:17px;font-weight:800}
+        .sec-ov-score-label{font-size:16px;font-weight:800;color:var(--text-primary)}
+        .sec-ov-score-sub{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+        .sec-overview-items{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+        .sec-ov-item{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:8px 12px;border-radius:10px;background:var(--bg-active);border:1.5px solid var(--border-light);cursor:pointer;transition:border-color .15s,background .15s,transform .1s;user-select:none}
+        .sec-ov-item:hover{transform:translateY(-1px)}
+        .sec-ov-item.good{color:#16a34a;border-color:rgba(22,163,74,.2)}
+        .sec-ov-item.good:hover{background:rgba(22,163,74,.07)}
+        .sec-ov-item.bad{color:#dc2626;border-color:rgba(239,68,68,.2)}
+        .sec-ov-item.bad:hover{background:rgba(239,68,68,.07)}
+        .sec-ov-item.warn{color:#d97706;border-color:rgba(234,179,8,.2)}
+        .sec-ov-item.warn:hover{background:rgba(234,179,8,.07)}
+        .sec-ov-item i{width:14px;height:14px;flex-shrink:0}
+        .sec-ov-item-sub{font-size:10px;font-weight:500;opacity:.75;margin-top:1px}
+        .sec-ov-item-inner{display:flex;flex-direction:column}
+        .sec-ov-active{outline:2px solid currentColor;outline-offset:1px}
+
+        /* Recommendations panel */
+        .sec-recs{border-top:1px solid var(--border-light);padding:14px 20px}
+        body.dark-mode .sec-recs{border-top-color:#262626}
+        .sec-recs-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .sec-recs-title i{width:13px;height:13px}
+        .sec-recs-list{display:flex;flex-direction:column;gap:6px}
+        .sec-rec{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;font-size:12.5px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+        .sec-rec:hover{background:var(--bg-active)}
+        .sec-rec.critical .sec-rec-icon{background:rgba(239,68,68,.12);color:#dc2626}
+        .sec-rec.high     .sec-rec-icon{background:rgba(234,179,8,.12);color:#d97706}
+        .sec-rec.ok       .sec-rec-icon{background:rgba(22,163,74,.1);color:#16a34a}
+        .sec-rec-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sec-rec-icon i{width:15px;height:15px}
+        .sec-rec-body{flex:1;min-width:0}
+        .sec-rec-title{font-weight:700;color:var(--text-primary);margin-bottom:2px}
+        .sec-rec-desc{color:var(--text-secondary);line-height:1.5;font-size:12px}
+        .sec-rec-action{margin-left:auto;flex-shrink:0;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;border:1.5px solid var(--border-light);background:var(--bg-surface);color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
+        .sec-rec-action:hover{border-color:#3b82f6;color:#3b82f6}
+        .sec-rec.ok .sec-rec-action{display:none}
 
         /* Inactivity warning banner */
         .inactivity-banner{position:fixed;top:0;left:0;right:0;z-index:2000;background:#b45309;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13px;font-weight:600;transform:translateY(-100%);transition:transform .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.2)}
@@ -712,20 +745,28 @@
 
                 <!-- Security overview -->
                 <div class="sec-overview" id="secOverview" style="display:none">
-                    <div class="sec-overview-score">
-                        <div class="sec-overview-ring" id="secOverviewRingWrap">
-                            <svg width="48" height="48" viewBox="0 0 48 48">
-                                <circle class="ring-bg" cx="24" cy="24" r="20"/>
-                                <circle class="ring-fill" id="secOverviewRingFill" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="125.6"/>
-                            </svg>
-                            <div class="sec-score-val" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800" id="secOverviewPct">0%</div>
+                    <div class="sec-overview-top">
+                        <div class="sec-overview-score">
+                            <div class="sec-overview-ring">
+                                <svg width="72" height="72" viewBox="0 0 72 72">
+                                    <circle class="ring-bg" cx="36" cy="36" r="30"/>
+                                    <circle class="ring-fill" id="secOverviewRingFill" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5"/>
+                                </svg>
+                                <div class="sec-overview-ring-val">
+                                    <span class="sec-overview-ring-pct" id="secOverviewPct">0%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="sec-ov-score-label" id="secOverviewLabel">Security</div>
+                                <div class="sec-ov-score-sub">Overall score</div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="sec-ov-label" id="secOverviewLabel">Security</div>
-                            <div class="sec-ov-sub">Overall score</div>
-                        </div>
+                        <div class="sec-overview-items" id="secOverviewItems"></div>
                     </div>
-                    <div class="sec-overview-items" id="secOverviewItems"></div>
+                    <div class="sec-recs" id="secRecs">
+                        <div class="sec-recs-title"><i data-lucide="list-checks"></i>Security Recommendations</div>
+                        <div class="sec-recs-list" id="secRecsList"></div>
+                    </div>
                 </div>
 
                 <!-- Stats -->
@@ -844,12 +885,20 @@
                 <div class="field" id="passwordGroup">
                     <label>Password</label>
                     <div style="position:relative">
-                        <input type="password" id="accountPassword" class="form-input" placeholder="Min 8 characters" style="padding-left:40px">
-                        <button type="button" onclick="togglePasswordVisibility()" id="pwToggleBtn" style="position:absolute;left:0;top:0;height:42px;width:42px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text-tertiary,#9ca3af);transition:color .15s" title="Show/hide password">
+                        <input type="password" id="accountPassword" class="form-input" placeholder="Min 8 characters" style="padding-left:40px;padding-right:88px;font-family:monospace;letter-spacing:0.04em">
+                        <button type="button" onclick="togglePasswordVisibility()" id="pwToggleBtn" style="position:absolute;left:0;top:0;height:42px;width:42px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text-tertiary,#9ca3af);transition:color .15s" title="Show / Hide">
                             <i data-lucide="eye" id="pwToggleIcon" style="width:16px;height:16px"></i>
                         </button>
+                        <div style="position:absolute;right:0;top:0;display:flex;gap:0">
+                            <button type="button" onclick="copyAccountPassword()" id="pwCopyBtn" style="height:42px;width:42px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text-tertiary,#9ca3af);transition:color .15s" title="Copy password">
+                                <i data-lucide="copy" id="pwCopyIcon" style="width:15px;height:15px"></i>
+                            </button>
+                            <button type="button" onclick="generateAccountPassword()" id="pwGenBtn" style="height:42px;width:42px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text-tertiary,#9ca3af);transition:color .15s;border-left:1px solid var(--border-light,#e5e7eb)" title="Generate strong password">
+                                <i data-lucide="wand-2" style="width:15px;height:15px"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="hint">Leave empty to keep current password</div>
+                    <div class="hint" id="pwHintRow">Leave empty to keep current password</div>
                 </div>
                 <div class="field-row">
                     <div class="field">
@@ -1567,6 +1616,58 @@
             lucide.createIcons({ nodes: [icon] });
         }
 
+        function generateAccountPassword() {
+            const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+            const lower = 'abcdefghjkmnpqrstuvwxyz';
+            const digits = '23456789';
+            const syms = '!@#$%^&*-_+=?';
+            const all = upper + lower + digits + syms;
+            const arr = new Uint8Array(16);
+            crypto.getRandomValues(arr);
+            let pw = upper[arr[0] % upper.length] + lower[arr[1] % lower.length]
+                   + digits[arr[2] % digits.length] + syms[arr[3] % syms.length];
+            for (let i = 4; i < 16; i++) pw += all[arr[i] % all.length];
+            // Shuffle
+            pw = pw.split('').sort(() => Math.random() - 0.5).join('');
+
+            var input = document.getElementById('accountPassword');
+            input.value = pw;
+            input.type = 'text';
+            var icon = document.getElementById('pwToggleIcon');
+            var btn = document.getElementById('pwToggleBtn');
+            icon.setAttribute('data-lucide', 'eye-off');
+            btn.style.color = 'var(--primary,#6366f1)';
+            lucide.createIcons({ nodes: [icon] });
+
+            var genBtn = document.getElementById('pwGenBtn');
+            genBtn.style.color = 'var(--primary,#6366f1)';
+            setTimeout(() => { genBtn.style.color = 'var(--text-tertiary,#9ca3af)'; }, 1200);
+
+            input.select();
+            showToast('success', 'Password generated', 'Strong password ready — copy it now!', 3500);
+        }
+
+        async function copyAccountPassword() {
+            var pw = document.getElementById('accountPassword').value;
+            if (!pw) { showToast('warning', 'Empty', 'No password to copy.', 2500); return; }
+            try {
+                await navigator.clipboard.writeText(pw);
+                var icon = document.getElementById('pwCopyIcon');
+                var btn = document.getElementById('pwCopyBtn');
+                icon.setAttribute('data-lucide', 'check');
+                btn.style.color = '#22c55e';
+                lucide.createIcons({ nodes: [icon] });
+                showToast('success', 'Copied!', 'Password copied to clipboard.', 2500);
+                setTimeout(() => {
+                    icon.setAttribute('data-lucide', 'copy');
+                    btn.style.color = 'var(--text-tertiary,#9ca3af)';
+                    lucide.createIcons({ nodes: [icon] });
+                }, 2000);
+            } catch(e) {
+                showToast('error', 'Copy failed', 'Could not access clipboard.', 3000);
+            }
+        }
+
         function toggleActiveField() {
             var cb = document.getElementById('accountActive');
             var tog = document.getElementById('accountActiveToggle');
@@ -1888,49 +1989,160 @@
             return bar;
         }
 
-        /* ══ SECURITY OVERVIEW BANNER ════════════════════════ */
+        /* ══ SECURITY OVERVIEW ═══════════════════════════════ */
+        var _secActiveFilter = null;
+
         function renderSecurityOverview(accts) {
-            var total  = accts.length;
+            var total    = accts.length;
             if (!total) return;
-            var with2fa   = accts.filter(function(a) { return a.totp_enabled; }).length;
-            var locked    = accts.filter(function(a) { return a.is_locked; }).length;
-            var noDevice  = accts.filter(function(a) { return !a.device_fingerprint; }).length;
-            var avgScore  = Math.round(accts.reduce(function(s,a){ return s + calcSecScore(a); }, 0) / total);
-            var color     = _scoreColor(avgScore);
+            var with2fa  = accts.filter(function(a) { return a.totp_enabled; }).length;
+            var no2fa    = total - with2fa;
+            var locked   = accts.filter(function(a) { return a.is_locked; }).length;
+            var noDevice = accts.filter(function(a) { return !a.device_fingerprint; }).length;
+            var avgScore = Math.round(accts.reduce(function(s,a){ return s + calcSecScore(a); }, 0) / total);
+            var color    = _scoreColor(avgScore);
 
-            var ov = document.getElementById('secOverview');
-            ov.style.display = 'flex';
+            document.getElementById('secOverview').style.display = '';
 
-            // Ring
+            // Ring (r=30, circ=2π*30≈188.5)
             var fill = document.getElementById('secOverviewRingFill');
-            var circ = 2 * Math.PI * 20;
+            var circ = 2 * Math.PI * 30;
             fill.style.stroke = color;
             fill.style.strokeDasharray  = circ;
-            fill.style.strokeDashoffset = circ - (avgScore / 100) * circ;
-            document.getElementById('secOverviewPct').textContent = avgScore + '%';
-            document.getElementById('secOverviewPct').style.color = color;
+            fill.style.strokeDashoffset = circ * (1 - avgScore / 100);
+            var pctEl = document.getElementById('secOverviewPct');
+            pctEl.textContent = avgScore + '%';
+            pctEl.style.color = color;
+            var lbl = document.getElementById('secOverviewLabel');
+            lbl.textContent = avgScore >= 80 ? 'Strong' : avgScore >= 60 ? 'Good' : avgScore >= 40 ? 'Fair' : 'Weak';
+            lbl.style.color  = color;
 
-            var label = document.getElementById('secOverviewLabel');
-            label.textContent = avgScore >= 80 ? 'Strong' : avgScore >= 60 ? 'Good' : avgScore >= 40 ? 'Fair' : 'Weak';
-            label.style.color = color;
-
-            // Items
+            // Clickable stat chips
             var items = document.getElementById('secOverviewItems');
             items.textContent = '';
-            var checks = [
-                { good: with2fa === total,   icon: 'shield-check', label: with2fa + '/' + total + ' have 2FA',      cls: with2fa === total ? 'good' : 'bad' },
-                { good: locked === 0,        icon: 'lock',          label: locked + ' account' + (locked!==1?'s':'') + ' locked', cls: locked === 0 ? 'good' : 'warn' },
-                { good: noDevice === 0,      icon: 'smartphone',    label: noDevice + ' without device lock',         cls: noDevice === 0 ? 'good' : 'warn' },
-            ];
-            checks.forEach(function(c) {
-                var el = document.createElement('div');
-                el.className = 'sec-ov-item ' + c.cls;
-                el.innerHTML = '<i data-lucide="' + c.icon + '"></i><span>' + c.label + '</span>';
-                items.appendChild(el);
-            });
-            lucide.createIcons({ nodes: [ov] });
 
-            // Update 2FA metric
+            function makeChip(icon, mainLabel, subLabel, cls, filterFn, filterId) {
+                var el = document.createElement('div');
+                el.className = 'sec-ov-item ' + cls;
+                el.setAttribute('title', subLabel || mainLabel);
+                el.innerHTML = '<i data-lucide="' + icon + '"></i>'
+                    + '<div class="sec-ov-item-inner">'
+                    + '<span>' + mainLabel + '</span>'
+                    + (subLabel ? '<span class="sec-ov-item-sub">' + subLabel + '</span>' : '')
+                    + '</div>';
+                if (filterFn) {
+                    el.onclick = function() {
+                        if (_secActiveFilter === filterId) {
+                            // Toggle off
+                            _secActiveFilter = null;
+                            document.querySelectorAll('.sec-ov-item').forEach(function(x){ x.classList.remove('sec-ov-active'); });
+                            accounts = allAccounts.slice();
+                            document.getElementById('acctSearch').value = '';
+                            document.getElementById('acctRoleFilter').value = '';
+                        } else {
+                            _secActiveFilter = filterId;
+                            document.querySelectorAll('.sec-ov-item').forEach(function(x){ x.classList.remove('sec-ov-active'); });
+                            el.classList.add('sec-ov-active');
+                            accounts = filterFn(allAccounts);
+                            document.getElementById('acctFilterCount').textContent = accounts.length + ' of ' + total;
+                        }
+                        renderAccountsTable();
+                    };
+                }
+                return el;
+            }
+
+            items.appendChild(makeChip('shield-check',
+                with2fa + '/' + total + ' have 2FA',
+                no2fa > 0 ? 'Click to see accounts without 2FA' : 'All accounts secured',
+                with2fa === total ? 'good' : 'bad',
+                no2fa > 0 ? function(a) { return a.filter(function(x){ return !x.totp_enabled; }); } : null,
+                'no2fa'
+            ));
+            items.appendChild(makeChip('lock',
+                locked === 0 ? 'No locked accounts' : locked + ' account' + (locked!==1?'s':'') + ' locked',
+                locked > 0 ? 'Click to see locked accounts' : null,
+                locked === 0 ? 'good' : 'warn',
+                locked > 0 ? function(a) { return a.filter(function(x){ return x.is_locked; }); } : null,
+                'locked'
+            ));
+            items.appendChild(makeChip('smartphone',
+                noDevice === 0 ? 'All devices bound' : noDevice + ' without device lock',
+                noDevice > 0 ? 'Click to see unbound accounts' : null,
+                noDevice === 0 ? 'good' : 'warn',
+                noDevice > 0 ? function(a) { return a.filter(function(x){ return !x.device_fingerprint; }); } : null,
+                'nodevice'
+            ));
+            lucide.createIcons({ nodes: [items] });
+
+            // Recommendations
+            var recList = document.getElementById('secRecsList');
+            recList.textContent = '';
+            var recs = [];
+            if (no2fa > 0) recs.push({
+                sev: 'critical', icon: 'shield-x',
+                title: no2fa + ' admin' + (no2fa!==1?'s':'') + ' without Two-Factor Auth',
+                desc:  '2FA is the single most effective protection against account takeover. Enable it for all admins immediately.',
+                action: 'Show accounts',
+                onclick: function() {
+                    _secActiveFilter = 'no2fa';
+                    document.querySelectorAll('.sec-ov-item').forEach(function(x){ x.classList.remove('sec-ov-active'); });
+                    accounts = allAccounts.filter(function(x){ return !x.totp_enabled; });
+                    document.getElementById('acctFilterCount').textContent = accounts.length + ' of ' + total;
+                    renderAccountsTable();
+                    document.getElementById('accountsTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+            if (noDevice > 0) recs.push({
+                sev: 'high', icon: 'smartphone',
+                title: noDevice + ' account' + (noDevice!==1?'s':'') + ' without device lock',
+                desc:  'Device fingerprinting ensures accounts can only be accessed from known browsers. Enable it on the login page.',
+                action: 'Show accounts',
+                onclick: function() {
+                    _secActiveFilter = 'nodevice';
+                    document.querySelectorAll('.sec-ov-item').forEach(function(x){ x.classList.remove('sec-ov-active'); });
+                    accounts = allAccounts.filter(function(x){ return !x.device_fingerprint; });
+                    document.getElementById('acctFilterCount').textContent = accounts.length + ' of ' + total;
+                    renderAccountsTable();
+                    document.getElementById('accountsTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+            if (locked > 0) recs.push({
+                sev: 'high', icon: 'lock',
+                title: locked + ' account' + (locked!==1?'s':'') + ' is locked',
+                desc: 'Accounts are locked after repeated failed login attempts. Review these accounts for potential brute-force attempts.',
+                action: 'Show accounts',
+                onclick: function() {
+                    _secActiveFilter = 'locked';
+                    accounts = allAccounts.filter(function(x){ return x.is_locked; });
+                    document.getElementById('acctFilterCount').textContent = accounts.length + ' of ' + total;
+                    renderAccountsTable();
+                    document.getElementById('accountsTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+            if (recs.length === 0) recs.push({
+                sev: 'ok', icon: 'shield-check',
+                title: 'All security checks passed',
+                desc: 'Your admin team has 2FA enabled, device locks active, and no locked accounts. Keep it up!',
+                action: null
+            });
+
+            recs.forEach(function(rec) {
+                var row = document.createElement('div');
+                row.className = 'sec-rec ' + rec.sev;
+                var btn = rec.action ? '<button class="sec-rec-action">' + rec.action + '</button>' : '';
+                row.innerHTML = '<div class="sec-rec-icon"><i data-lucide="' + rec.icon + '"></i></div>'
+                    + '<div class="sec-rec-body"><div class="sec-rec-title">' + rec.title + '</div><div class="sec-rec-desc">' + rec.desc + '</div></div>'
+                    + btn;
+                if (rec.onclick) {
+                    row.querySelector('.sec-rec-action').addEventListener('click', rec.onclick);
+                    row.style.cursor = 'pointer';
+                    row.addEventListener('click', function(e) { if (!e.target.closest('.sec-rec-action')) rec.onclick(); });
+                }
+                recList.appendChild(row);
+            });
+            lucide.createIcons({ nodes: [recList] });
+
             animateCount(document.getElementById('twoFaAdmins'), with2fa);
         }
 
