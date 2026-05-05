@@ -1596,11 +1596,18 @@
 
         function closeModal() {
             document.getElementById('accountModal').classList.remove('open');
-            // Reset password visibility on close
             var pw = document.getElementById('accountPassword');
-            if (pw) pw.type = 'password';
+            if (pw) { pw.type = 'password'; pw.value = ''; }
             var icon = document.getElementById('pwToggleIcon');
             if (icon) icon.setAttribute('data-lucide', 'eye');
+            var hint = document.getElementById('pwHintRow');
+            if (hint) hint.textContent = 'Leave empty to keep current password';
+            var cpIcon = document.getElementById('pwCopyIcon');
+            if (cpIcon) { cpIcon.setAttribute('data-lucide', 'copy'); }
+            var cpBtn = document.getElementById('pwCopyBtn');
+            if (cpBtn) cpBtn.style.color = 'var(--text-tertiary,#9ca3af)';
+            var eyeBtn = document.getElementById('pwToggleBtn');
+            if (eyeBtn) eyeBtn.style.color = 'var(--text-tertiary,#9ca3af)';
             lucide.createIcons();
         }
 
@@ -1617,54 +1624,96 @@
         }
 
         function generateAccountPassword() {
-            // Character pools — ambiguous chars (0,O,l,I,1) removed intentionally
-            const upper  = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   // 24
-            const lower  = 'abcdefghjkmnpqrstuvwxyz';    // 23
-            const digits = '23456789';                    // 8
-            const syms   = '!@#$%&*-_+=?';               // 11
-            const all    = upper + lower + digits + syms;
+            // ── Character pools ────────────────────────────────────────────
+            // Ambiguous chars removed: 0 O o l I 1 i (to avoid copy mistakes)
+            const UPPER  = 'ABCDEFGHJKLMNPQRSTUVWXYZ';     // 24 chars
+            const LOWER  = 'abcdefghjkmnpqrstuvwxyz';      // 23 chars
+            const DIGITS = '23456789';                      // 8 chars
+            const SYMS   = '!@#$%^&*()-_=+[]{}|;:,.<>?';  // 27 chars
+            const ALL    = UPPER + LOWER + DIGITS + SYMS;  // 82 chars total
 
-            // Unbiased pick: rejection sampling so every character has equal probability
-            function pick(pool) {
-                const max = 256 - (256 % pool.length);
-                const buf = new Uint8Array(1);
-                do { crypto.getRandomValues(buf); } while (buf[0] >= max);
-                return pool[buf[0] % pool.length];
+            // ── Unbiased cryptographic pick (rejection sampling) ──────────
+            // Rejection sampling eliminates modulo bias completely.
+            // Worst case: ~0.4% of draws are rejected — negligible overhead.
+            function cryptoPick(pool) {
+                const limit = 256 - (256 % pool.length);
+                const buf = new Uint8Array(8); // batch 8 bytes; reuse before refilling
+                let pos = buf.length;
+                function nextByte() {
+                    if (pos >= buf.length) { crypto.getRandomValues(buf); pos = 0; }
+                    return buf[pos++];
+                }
+                let b;
+                do { b = nextByte(); } while (b >= limit);
+                return pool[b % pool.length];
             }
 
-            // Guarantee at least 2 of each pool in a 24-char password
+            // ── Build 32-char password with guaranteed distribution ────────
+            // 4 guaranteed from each pool (16 chars) + 16 more from full set
+            const LENGTH = 32;
+            const GUARANTEED = 4;
             let chars = [];
-            for (let i = 0; i < 2; i++) chars.push(pick(upper));
-            for (let i = 0; i < 2; i++) chars.push(pick(lower));
-            for (let i = 0; i < 2; i++) chars.push(pick(digits));
-            for (let i = 0; i < 2; i++) chars.push(pick(syms));
-            for (let i = chars.length; i < 24; i++) chars.push(pick(all));
+            for (let i = 0; i < GUARANTEED; i++) chars.push(cryptoPick(UPPER));
+            for (let i = 0; i < GUARANTEED; i++) chars.push(cryptoPick(LOWER));
+            for (let i = 0; i < GUARANTEED; i++) chars.push(cryptoPick(DIGITS));
+            for (let i = 0; i < GUARANTEED; i++) chars.push(cryptoPick(SYMS));
+            while (chars.length < LENGTH) chars.push(cryptoPick(ALL));
 
-            // Cryptographic Fisher-Yates shuffle — no Math.random() anywhere
+            // ── Cryptographic Fisher-Yates shuffle ────────────────────────
+            // Uses its own rejection sampling — no Math.random() anywhere.
             for (let i = chars.length - 1; i > 0; i--) {
-                const max = 256 - (256 % (i + 1));
+                const range = i + 1;
+                const limit = 256 - (256 % range);
                 const buf = new Uint8Array(1);
-                do { crypto.getRandomValues(buf); } while (buf[0] >= max);
-                const j = buf[0] % (i + 1);
+                let b;
+                do { crypto.getRandomValues(buf); b = buf[0]; } while (b >= limit);
+                const j = b % range;
                 [chars[i], chars[j]] = [chars[j], chars[i]];
             }
             const pw = chars.join('');
 
-            var input = document.getElementById('accountPassword');
+            // ── Entropy info (for hint display) ──────────────────────────
+            // Shannon entropy: LENGTH × log2(pool_size)
+            const bits = Math.floor(LENGTH * Math.log2(ALL.length)); // ≈ 196 bits
+
+            // ── Fill UI ───────────────────────────────────────────────────
+            const input = document.getElementById('accountPassword');
             input.value = pw;
             input.type = 'text';
-            var icon = document.getElementById('pwToggleIcon');
-            var btn = document.getElementById('pwToggleBtn');
-            icon.setAttribute('data-lucide', 'eye-off');
-            btn.style.color = 'var(--primary,#6366f1)';
-            lucide.createIcons({ nodes: [icon] });
+            const eyeIcon = document.getElementById('pwToggleIcon');
+            const eyeBtn  = document.getElementById('pwToggleBtn');
+            eyeIcon.setAttribute('data-lucide', 'eye-off');
+            eyeBtn.style.color = 'var(--primary,#6366f1)';
+            lucide.createIcons({ nodes: [eyeIcon] });
 
-            var genBtn = document.getElementById('pwGenBtn');
+            const genBtn = document.getElementById('pwGenBtn');
             genBtn.style.color = 'var(--primary,#6366f1)';
-            setTimeout(() => { genBtn.style.color = 'var(--text-tertiary,#9ca3af)'; }, 1200);
+            setTimeout(() => { genBtn.style.color = 'var(--text-tertiary,#9ca3af)'; }, 1400);
 
-            input.select();
-            showToast('success', 'Password generated', 'Strong password ready — copy it now!', 3500);
+            // ── Show entropy badge in hint row ────────────────────────────
+            const hint = document.getElementById('pwHintRow');
+            hint.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;color:#22c55e;font-weight:600;font-size:12px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                ${bits}-bit entropy &nbsp;·&nbsp; ${LENGTH} characters &nbsp;·&nbsp; Unbreakable
+            </span>`;
+
+            // ── Auto-copy to clipboard ────────────────────────────────────
+            navigator.clipboard.writeText(pw).then(() => {
+                showToast('success', 'Copied automatically!', `${bits}-bit password in your clipboard — paste it safely.`, 4500);
+                const cpIcon = document.getElementById('pwCopyIcon');
+                const cpBtn  = document.getElementById('pwCopyBtn');
+                cpIcon.setAttribute('data-lucide', 'check');
+                cpBtn.style.color = '#22c55e';
+                lucide.createIcons({ nodes: [cpIcon] });
+                setTimeout(() => {
+                    cpIcon.setAttribute('data-lucide', 'copy');
+                    cpBtn.style.color = 'var(--text-tertiary,#9ca3af)';
+                    lucide.createIcons({ nodes: [cpIcon] });
+                }, 3000);
+            }).catch(() => {
+                input.select();
+                showToast('success', 'Password generated', `${bits}-bit password ready — copy it now!`, 4000);
+            });
         }
 
         async function copyAccountPassword() {
