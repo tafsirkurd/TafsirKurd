@@ -906,6 +906,15 @@ window.GencineUI = {
       arrow.appendChild(chevron);
       body.appendChild(arrow);
 
+      /* Section-level "نوی" badge — set via admin badge dialog */
+      if (sec.badge) {
+        var newBadge = document.createElement('div');
+        newBadge.className = 'genc-card-badge';
+        newBadge.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
+        btn.appendChild(newBadge);
+      }
+
+      /* Item-count dot (separate from section badge) */
       if (sec.newCount) {
         var notifDot = document.createElement('div');
         notifDot.className = 'genc-notif-count';
