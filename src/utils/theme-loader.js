@@ -7,7 +7,7 @@
     var ICONS = { light: 'sun', dark: 'moon', sakina: 'star', noor: 'sunrise', evar: 'contrast' };
 
     function _saved() {
-        try { return localStorage.getItem('admin-theme') || 'light'; } catch (e) { return 'light'; }
+        try { return localStorage.getItem('admin-theme') || 'evar'; } catch (e) { return 'evar'; }
     }
 
     function _applyTheme(theme) {
