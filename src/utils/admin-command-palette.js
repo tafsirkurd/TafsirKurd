@@ -63,13 +63,19 @@
 
     // ── Permission-filtered page list ─────────────────────────────
     // Returns only the pages this user is allowed to see.
-    // Super-admins see everything. Custom-role users see only their assigned pages.
+    // Super-admins see everything. All other roles see ONLY their assigned pages.
+    // Never falls back to showing all pages — if perms aren't loaded yet, returns [].
     function visiblePages() {
         var role = sessionStorage.getItem('adminRole');
-        if (role === 'super_admin') return PAGES;
+        if (!role) return [];                    // auth not done yet — show nothing
+        if (role === 'super_admin') return PAGES; // super admin sees everything
+
         var perms = [];
         try { perms = JSON.parse(sessionStorage.getItem('adminPermissions') || '[]'); } catch(e) {}
-        if (!perms.length) return PAGES; // no cache yet — show all, guard will catch navigation
+
+        // If no permissions in cache yet, also return [] — the palette will show a loading hint
+        if (!perms.length) return [];
+
         return PAGES.filter(function (page) {
             var m = page.href.match(/\/admin-([^.]+)\.html/);
             var slug = m ? m[1] : null;
@@ -77,6 +83,12 @@
             var p = perms.find(function (p) { return p.page_slug === slug; });
             return p && p.can_view;
         });
+    }
+
+    // Strip recently-visited hrefs that the current user can no longer see
+    function visibleRecent() {
+        var allowed = visiblePages().map(function (p) { return p.href; });
+        return getRecent().filter(function (h) { return allowed.indexOf(h) !== -1; });
     }
 
     // ── State ─────────────────────────────────────────────────────
@@ -102,22 +114,36 @@
     function search(q) {
         var flat = [];
         var allowed = visiblePages();
+
+        // Permissions not loaded yet — show loading hint + actions only
+        if (!allowed.length) {
+            var role = sessionStorage.getItem('adminRole');
+            if (role && role !== 'super_admin') {
+                flat.push({ type: 'header', label: 'Pages' });
+                // Will be empty — just show actions
+            }
+            flat.push({ type: 'header', label: 'Actions' });
+            ACTIONS.forEach(function (a) { flat.push({ type: 'action', data: a }); });
+            return flat;
+        }
+
         if (!q || !q.trim()) {
-            // Show recent pages with label, then top pages grouped by section
-            var rec = getRecent();
+            // Show recent pages (filtered to allowed only), then pages grouped by section
+            var rec = visibleRecent();
             if (rec.length) {
                 flat.push({ type: 'header', label: 'Recently Visited' });
                 rec.forEach(function (h) {
                     var p = allowed.find(function (pg) { return pg.href === h; });
                     if (p) flat.push({ type: 'page', data: p });
                 });
-                flat.push({ type: 'header', label: 'All Pages' });
             }
-            // Group remaining pages by section
+            // Group by section — only sections that have at least one allowed page
             var sections = ['Overview', 'Content', 'Site', 'Users', 'Monitoring', 'Security', 'Settings'];
+            var hasAnySectionPages = false;
             sections.forEach(function (sec) {
                 var items = allowed.filter(function (p) { return p.section === sec; });
                 if (items.length) {
+                    if (!hasAnySectionPages) { flat.push({ type: 'header', label: 'Pages' }); hasAnySectionPages = true; }
                     flat.push({ type: 'header', label: sec });
                     items.forEach(function (p) { flat.push({ type: 'page', data: p }); });
                 }
