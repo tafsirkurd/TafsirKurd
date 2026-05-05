@@ -217,6 +217,74 @@
             height: 220px;
         }
 
+        /* ── Chart Time-Range Tabs ── */
+        .chart-range-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .chart-range-tab {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            background: var(--bg-hover);
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .chart-range-tab:hover { color: var(--text-primary); background: var(--bg-active); }
+        .chart-range-tab.active {
+            color: #3b82f6;
+            background: rgba(59,130,246,0.1);
+            border-color: rgba(59,130,246,0.25);
+        }
+
+        /* ── Admin Actions filter tabs ── */
+        .al-filter-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 0 0 14px;
+        }
+        .al-filter-btn {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 11px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            color: var(--text-tertiary);
+            background: var(--bg-hover);
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .al-filter-btn:hover { color: var(--text-primary); }
+        .al-filter-btn.active {
+            color: var(--primary);
+            background: var(--bg-active);
+            border-color: var(--primary);
+        }
+
+        /* ── Quick action kbd badge ── */
+        .qa-kbd {
+            position: absolute;
+            top: 6px; right: 6px;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background: var(--bg-hover);
+            color: var(--text-tertiary);
+            font-family: inherit;
+            letter-spacing: 0;
+            line-height: 1.4;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
         /* ── Chart Insights ── */
         .chart-insights {
             display: flex;
@@ -1144,7 +1212,11 @@
                     <div class="chart-card card-animate" style="animation-delay:450ms">
                         <div class="chart-card-header">
                             <div class="chart-card-title">User Growth</div>
-                            <span class="chart-card-badge">Last 30 days</span>
+                            <div class="chart-range-tabs" id="growthRangeTabs">
+                                <button class="chart-range-tab" data-days="7" onclick="setGrowthRange(7)">7d</button>
+                                <button class="chart-range-tab" data-days="14" onclick="setGrowthRange(14)">14d</button>
+                                <button class="chart-range-tab active" data-days="30" onclick="setGrowthRange(30)">30d</button>
+                            </div>
                         </div>
                         <div class="chart-container">
                             <canvas id="userGrowthChart"></canvas>
@@ -1383,6 +1455,13 @@
                 <div class="timeline-section card-animate" style="animation-delay:360ms">
                     <div class="timeline-header">
                         <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                    </div>
+                    <div class="al-filter-row" id="alFilterRow">
+                        <button class="al-filter-btn active" data-cat="all"     onclick="setActionsFilter('all')">All</button>
+                        <button class="al-filter-btn"        data-cat="content" onclick="setActionsFilter('content')">Content</button>
+                        <button class="al-filter-btn"        data-cat="notifs"  onclick="setActionsFilter('notifs')">Notifications</button>
+                        <button class="al-filter-btn"        data-cat="i18n"    onclick="setActionsFilter('i18n')">i18n</button>
+                        <button class="al-filter-btn"        data-cat="auth"    onclick="setActionsFilter('auth')">Auth</button>
                     </div>
                     <div class="timeline-list" id="adminActionsLog">
                         <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
@@ -1688,7 +1767,7 @@
 
         // ── Theme change observer — rebuild charts ──
         var _themeObserver = new MutationObserver(function() {
-            if (_lastGrowthData) renderUserGrowthChart(_lastGrowthData);
+            if (_lastGrowthData) renderUserGrowthChart(_lastGrowthData, true);
             if (_lastActiveData) renderActiveUsersChart(_lastActiveData);
         });
         _themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
@@ -1718,10 +1797,18 @@
                 ];
             }
 
-            recent.forEach(function(page) {
+            recent.forEach(function(page, idx) {
                 var card = document.createElement('a');
                 card.href = page.href;
                 card.className = 'quick-action-card';
+                card.style.position = 'relative';
+                card.setAttribute('data-qa-index', idx);
+
+                // Keyboard shortcut badge (1–6)
+                var kbd = document.createElement('span');
+                kbd.className = 'qa-kbd';
+                kbd.textContent = idx + 1;
+                card.appendChild(kbd);
 
                 var iconWrap = document.createElement('div');
                 iconWrap.className = 'quick-action-icon';
@@ -1906,6 +1993,46 @@
             };
         }
 
+        /* ── User Growth chart time-range toggle ── */
+        var _fullGrowthData = null;
+        var _growthRange = 30;
+
+        function setGrowthRange(days) {
+            _growthRange = days;
+            // Update active tab
+            var tabs = document.querySelectorAll('#growthRangeTabs .chart-range-tab');
+            tabs.forEach(function(t) {
+                t.classList.toggle('active', parseInt(t.getAttribute('data-days'), 10) === days);
+            });
+            if (_fullGrowthData && _fullGrowthData.length) {
+                var sliced = _fullGrowthData.slice(-days);
+                renderUserGrowthChart(sliced, true);
+            }
+        }
+
+        /* ── Admin Actions filter ── */
+        var _allAdminLogs = [];
+        var _actionsFilter = 'all';
+        var ACTION_CATEGORIES = {
+            content: ['hadith_add','hadith_edit','hadith_delete','dua_add','dua_edit','dua_delete',
+                      'adhkar_add','adhkar_edit','adhkar_delete','book_add','book_edit','book_delete',
+                      'tasbih_add','tasbih_edit','tasbih_delete','mark_add','mark_remove'],
+            notifs:  ['notif_send'],
+            i18n:    ['i18n_version_bump','translation_edit'],
+            auth:    ['login','logout']
+        };
+
+        function setActionsFilter(cat) {
+            _actionsFilter = cat;
+            var btns = document.querySelectorAll('#alFilterRow .al-filter-btn');
+            btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-cat') === cat); });
+            var filtered = cat === 'all' ? _allAdminLogs
+                : _allAdminLogs.filter(function(l) {
+                    return (ACTION_CATEGORIES[cat] || []).indexOf(l.action_type) !== -1;
+                });
+            _renderAdminActions(filtered);
+        }
+
         function _buildChartInsights(containerId, data, valKey, totalLabel, peakLabel, avgLabel) {
             var el = document.getElementById(containerId);
             if (!el || !data || !data.length) return;
@@ -1921,8 +2048,13 @@
                 '<div class="ci-stat"><div class="ci-val">' + avg.toLocaleString() + '</div><div class="ci-lbl">' + avgLabel + '</div></div>';
         }
 
-        function renderUserGrowthChart(data) {
-            _lastGrowthData = data;
+        function renderUserGrowthChart(data, isRangeSwitch) {
+            if (!isRangeSwitch) {
+                _fullGrowthData = data;
+                _lastGrowthData = data;
+            } else {
+                _lastGrowthData = data;
+            }
             var ctx = document.getElementById('userGrowthChart');
             if (!ctx) return;
             if (growthChartInstance) growthChartInstance.destroy();
@@ -2084,6 +2216,14 @@
         };
 
         function buildAdminActions(logs) {
+            _allAdminLogs = logs || [];
+            _actionsFilter = 'all';
+            var btns = document.querySelectorAll('#alFilterRow .al-filter-btn');
+            btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-cat') === 'all'); });
+            _renderAdminActions(_allAdminLogs);
+        }
+
+        function _renderAdminActions(logs) {
             var container = document.getElementById('adminActionsLog');
             if (!container) return;
             container.innerHTML = '';
@@ -2923,7 +3063,9 @@
             // ─── Charts data (from admin-stats CF, bypasses user_data RLS) ───
             if (adminStats && adminStats.growthData && adminStats.growthData.length) {
                 var growthData = adminStats.growthData;
-                renderUserGrowthChart(growthData);
+                _fullGrowthData = growthData;
+                var slicedGrowth = growthData.slice(-_growthRange);
+                renderUserGrowthChart(slicedGrowth, false);
 
                 // Sparkline: cumulative user count over last 7 days
                 var totalInPeriod = growthData.reduce(function(s, d) { return s + d.count; }, 0);
@@ -3180,13 +3322,33 @@
         }
         setInterval(updateRefreshIndicator, 1000);
 
-        // ── Keyboard shortcut: R = refresh (when not typing in an input) ──
+        // ── Keyboard shortcuts ──
         document.addEventListener('keydown', function(e) {
+            var tag = document.activeElement && document.activeElement.tagName;
+            var isTyping = (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT');
+
+            // Ctrl+K — focus search bar
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                var searchInput = document.querySelector('.topbar-search input');
+                if (searchInput) searchInput.focus();
+                return;
+            }
+
+            if (isTyping) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            // R — refresh dashboard
             if (e.key === 'r' || e.key === 'R') {
-                var tag = document.activeElement && document.activeElement.tagName;
-                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-                if (e.ctrlKey || e.metaKey || e.altKey) return;
                 refreshDashboard();
+                return;
+            }
+
+            // 1–6 — navigate to quick action card
+            var num = parseInt(e.key, 10);
+            if (num >= 1 && num <= 6) {
+                var card = document.querySelector('.quick-action-card[data-qa-index="' + (num - 1) + '"]');
+                if (card && card.href) window.location.href = card.href;
             }
         });
 
