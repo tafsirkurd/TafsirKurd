@@ -164,7 +164,59 @@
         #confirmModal .btn-confirm-ok.warning-btn{background:#d97706;box-shadow:0 4px 12px rgba(217,119,6,.3)}
         #confirmModal .btn-confirm-ok.warning-btn:hover{background:#b45309}
 
-        /* ── Sort controls ────────────────────────────────────── */
+        /* ── Security Health Score ────────────────────────────── */
+        .sec-score-ring{width:52px;height:52px;flex-shrink:0}
+        .sec-score-ring svg{transform:rotate(-90deg)}
+        .sec-score-ring .ring-bg{fill:none;stroke:var(--border-light);stroke-width:5}
+        .sec-score-ring .ring-fill{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .6s ease,stroke .3s}
+        .sec-score-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;line-height:1}
+
+        /* Per-account security mini-checklist */
+        .acct-sec-bar{display:flex;align-items:center;gap:6px;padding:0 14px 10px;flex-wrap:wrap}
+        .sec-check{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap}
+        .sec-check.ok{background:rgba(22,163,74,.1);color:#16a34a}
+        .sec-check.warn{background:rgba(239,68,68,.1);color:#dc2626}
+        .sec-check.neutral{background:var(--bg-active);color:var(--text-tertiary)}
+        .sec-check i{width:11px;height:11px}
+
+        /* Security overview banner */
+        .sec-overview{display:flex;align-items:center;gap:12px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:14px 18px;margin-bottom:14px;flex-wrap:wrap}
+        body.dark-mode .sec-overview{background:#161616;border-color:#262626}
+        .sec-overview-score{display:flex;align-items:center;gap:10px;flex-shrink:0}
+        .sec-overview-ring{position:relative;width:48px;height:48px}
+        .sec-overview-items{display:flex;gap:10px;flex-wrap:wrap;flex:1}
+        .sec-ov-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--bg-active)}
+        .sec-ov-item.good{color:#16a34a}
+        .sec-ov-item.bad{color:#dc2626}
+        .sec-ov-item.warn{color:#d97706}
+        .sec-ov-item i{width:13px;height:13px}
+        .sec-ov-label{font-size:13px;font-weight:800;color:var(--text-primary)}
+        .sec-ov-sub{font-size:11px;color:var(--text-tertiary);margin-top:1px}
+
+        /* Inactivity warning banner */
+        .inactivity-banner{position:fixed;top:0;left:0;right:0;z-index:2000;background:#b45309;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13px;font-weight:600;transform:translateY(-100%);transition:transform .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+        .inactivity-banner.show{transform:translateY(0)}
+        .inactivity-banner button{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:#fff;padding:5px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;transition:background .15s}
+        .inactivity-banner button:hover{background:rgba(255,255,255,.35)}
+
+        /* Password age warning */
+        .pw-age-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;margin-top:10px}
+        .pw-age-row.ok{background:rgba(22,163,74,.07);color:#16a34a}
+        .pw-age-row.warn{background:rgba(234,179,8,.1);color:#d97706}
+        .pw-age-row.danger{background:rgba(239,68,68,.08);color:#dc2626}
+        .pw-age-row i{width:13px;height:13px;flex-shrink:0}
+
+        /* Confirm match indicator */
+        .pw-match-row{font-size:11px;margin-top:5px;display:none;align-items:center;gap:5px;font-weight:600}
+        .pw-match-row.ok{color:#16a34a}
+        .pw-match-row.bad{color:#dc2626}
+        .pw-match-row i{width:12px;height:12px}
+
+        /* 2FA nag banner on cards */
+        .no2fa-nag{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(239,68,68,.06);border-top:1px solid rgba(239,68,68,.12);font-size:11.5px;color:#dc2626;font-weight:600}
+        .no2fa-nag i{width:12px;height:12px;flex-shrink:0}
+
+        /* Sort controls ────────────────────────────────────── */
         .sort-wrap{display:flex;align-items:center;gap:4px;margin-left:4px}
         .sort-btn{height:36px;padding:0 10px;border-radius:9px;border:1.5px solid var(--border-light);background:var(--bg-surface);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:border-color .2s,color .2s}
         .sort-btn i{width:13px;height:13px;transition:transform .2s}
@@ -591,7 +643,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="cp-footer">
+                    <div id="pwAgeRow" class="pw-age-row" style="display:none">
+                        <i data-lucide="clock"></i><span id="pwAgeText"></span>
+                    </div>
+                    <div class="pw-match-row" id="pwMatchRow">
+                        <i data-lucide="check-circle" id="pwMatchIcon"></i><span id="pwMatchText"></span>
+                    </div>
+                    <div class="cp-footer" style="margin-top:12px">
                         <div id="cpMsg" style="font-size:13px;display:none"></div>
                         <div style="flex:1"></div>
                         <button class="btn btn-primary" onclick="changeMyPassword()"><i data-lucide="save"></i>Update Password</button>
@@ -652,6 +710,24 @@
                 <!-- ── ADMIN USERS ─────────────────────────────────── -->
                 <span class="sec-group-lbl" style="margin-top:8px">Admin Users</span>
 
+                <!-- Security overview -->
+                <div class="sec-overview" id="secOverview" style="display:none">
+                    <div class="sec-overview-score">
+                        <div class="sec-overview-ring" id="secOverviewRingWrap">
+                            <svg width="48" height="48" viewBox="0 0 48 48">
+                                <circle class="ring-bg" cx="24" cy="24" r="20"/>
+                                <circle class="ring-fill" id="secOverviewRingFill" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="125.6"/>
+                            </svg>
+                            <div class="sec-score-val" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800" id="secOverviewPct">0%</div>
+                        </div>
+                        <div>
+                            <div class="sec-ov-label" id="secOverviewLabel">Security</div>
+                            <div class="sec-ov-sub">Overall score</div>
+                        </div>
+                    </div>
+                    <div class="sec-overview-items" id="secOverviewItems"></div>
+                </div>
+
                 <!-- Stats -->
                 <div class="metrics-grid">
                     <div class="metric-card" style="--card-delay:0ms">
@@ -669,6 +745,10 @@
                     <div class="metric-card" style="--card-delay:240ms">
                         <div class="am-icon-wrap" style="background:rgba(139,92,246,.12)"><i data-lucide="monitor" style="color:#8b5cf6"></i></div>
                         <div class="am-metric-body"><div class="metric-value" id="activeSessions">0</div><div class="metric-label">Sessions</div></div>
+                    </div>
+                    <div class="metric-card" style="--card-delay:320ms">
+                        <div class="am-icon-wrap" style="background:rgba(245,158,11,.12)"><i data-lucide="shield-check" style="color:#f59e0b"></i></div>
+                        <div class="am-metric-body"><div class="metric-value" id="twoFaAdmins">0</div><div class="metric-label">2FA Secured</div></div>
                     </div>
                 </div>
 
@@ -697,6 +777,13 @@
                 <div id="accountsTable" class="accounts-list"></div>
             </div>
         </main>
+    </div>
+
+    <!-- Inactivity banner -->
+    <div class="inactivity-banner" id="inactivityBanner">
+        <i data-lucide="clock" style="width:15px;height:15px;flex-shrink:0"></i>
+        <span>Your session will expire in <strong id="inactivityCountdown">5:00</strong> due to inactivity</span>
+        <button onclick="resetInactivityTimer()">Stay signed in</button>
     </div>
 
     <!-- Toast stack -->
@@ -1198,11 +1285,13 @@
             }
             // Apply sort
             accounts = sortAccounts(accounts);
-            // Update Online metric with animation
+            // Update metrics with animation
             var onlineCount = allAccounts.filter(function(a) { return computeStatus(a) !== 'offline'; }).length;
             animateCount(document.getElementById('activeAdmins'), onlineCount);
             animateCount(document.getElementById('totalAdmins'), allAccounts.length);
             animateCount(document.getElementById('lockedAdmins'), allAccounts.filter(function(a){return a.is_locked;}).length);
+            // Security overview
+            renderSecurityOverview(allAccounts);
             accounts.forEach(account => {
                 var card = document.createElement('div');
                 var _initialStatus = computeStatus(account);
@@ -1318,6 +1407,19 @@
                 meta.appendChild(calIcon);
                 meta.appendChild(document.createTextNode('Last login: ' + loginText));
                 card.appendChild(meta);
+
+                // Security checklist bar
+                card.appendChild(buildSecurityChecklist(account));
+
+                // 2FA nag for non-super-admin without 2FA
+                if (!account.totp_enabled && account.role !== 'custom') {
+                    var nag = document.createElement('div');
+                    nag.className = 'no2fa-nag';
+                    var nagI = document.createElement('i'); nagI.setAttribute('data-lucide','alert-triangle');
+                    nag.appendChild(nagI);
+                    nag.appendChild(document.createTextNode(' 2FA not enabled — account is at risk'));
+                    card.appendChild(nag);
+                }
 
                 // Actions
                 var actions = document.createElement('div');
@@ -1572,6 +1674,8 @@
             badge.style.color = _my2faEnabled ? '#16a34a' : '#6b7280';
             document.getElementById('enable2faBtn').style.display = _my2faEnabled ? 'none' : '';
             document.getElementById('disable2faBtn').style.display = _my2faEnabled ? '' : 'none';
+            // Show password age if the API returns it
+            showPasswordAge((data.user && data.user.password_updated_at) || data.passwordUpdatedAt || null);
         }
 
         async function open2faSetup() {
@@ -1662,6 +1766,172 @@
                     : '';
             }
             renderAccountsTable();
+        }
+
+        /* ══ INACTIVITY AUTO-LOGOUT ══════════════════════════ */
+        var INACTIVITY_WARN  = 10 * 60 * 1000; // warn at 10 min idle
+        var INACTIVITY_LIMIT = 15 * 60 * 1000; // logout at 15 min
+        var _lastActivity    = Date.now();
+        var _inactivityTimer = null;
+        var _countdownTimer  = null;
+        var _bannerShown     = false;
+
+        function resetInactivityTimer() {
+            _lastActivity = Date.now();
+            _bannerShown  = false;
+            document.getElementById('inactivityBanner').classList.remove('show');
+            if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
+        }
+
+        function _startInactivityWatch() {
+            ['mousemove','keydown','mousedown','touchstart','scroll'].forEach(function(evt) {
+                document.addEventListener(evt, resetInactivityTimer, { passive: true });
+            });
+            _inactivityTimer = setInterval(function() {
+                var idle = Date.now() - _lastActivity;
+                if (idle >= INACTIVITY_LIMIT) {
+                    clearInterval(_inactivityTimer);
+                    if (_countdownTimer) clearInterval(_countdownTimer);
+                    showToast('warning','Session expired','Signing you out for security');
+                    setTimeout(function() { sessionStorage.clear(); window.location.href = '/admin-login.html'; }, 1500);
+                } else if (idle >= INACTIVITY_WARN && !_bannerShown) {
+                    _bannerShown = true;
+                    var remaining = Math.ceil((INACTIVITY_LIMIT - idle) / 1000);
+                    document.getElementById('inactivityBanner').classList.add('show');
+                    lucide.createIcons({ nodes: [document.getElementById('inactivityBanner')] });
+                    _countdownTimer = setInterval(function() {
+                        var secs = Math.max(0, Math.ceil((INACTIVITY_LIMIT - (Date.now() - _lastActivity)) / 1000));
+                        var m = Math.floor(secs / 60), s = secs % 60;
+                        document.getElementById('inactivityCountdown').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+                        if (secs <= 0) { clearInterval(_countdownTimer); }
+                    }, 1000);
+                }
+            }, 5000);
+        }
+        _startInactivityWatch();
+
+        /* ══ PASSWORD AGE ════════════════════════════════════ */
+        function showPasswordAge(updatedAt) {
+            var row = document.getElementById('pwAgeRow');
+            var txt = document.getElementById('pwAgeText');
+            if (!updatedAt) { row.style.display = 'none'; return; }
+            var days = Math.floor((Date.now() - new Date(updatedAt).getTime()) / 86400000);
+            row.style.display = 'flex';
+            if (days < 30) {
+                row.className = 'pw-age-row ok';
+                txt.textContent = 'Password updated ' + days + ' days ago — looking good';
+            } else if (days < 90) {
+                row.className = 'pw-age-row warn';
+                txt.textContent = 'Password is ' + days + ' days old — consider updating it soon';
+            } else {
+                row.className = 'pw-age-row danger';
+                txt.textContent = 'Password is ' + days + ' days old — update it now for better security';
+            }
+        }
+
+        /* ══ CONFIRM MATCH ═══════════════════════════════════ */
+        (function() {
+            var cfm = document.getElementById('cpConfirm');
+            if (!cfm) return;
+            cfm.addEventListener('input', function() {
+                var nw  = document.getElementById('cpNew').value;
+                var row = document.getElementById('pwMatchRow');
+                var ic  = document.getElementById('pwMatchIcon');
+                var tx  = document.getElementById('pwMatchText');
+                if (!this.value) { row.style.display = 'none'; return; }
+                row.style.display = 'flex';
+                var match = nw === this.value;
+                row.className = 'pw-match-row ' + (match ? 'ok' : 'bad');
+                ic.setAttribute('data-lucide', match ? 'check-circle' : 'x-circle');
+                lucide.createIcons({ nodes: [ic] });
+                tx.textContent = match ? 'Passwords match' : 'Passwords do not match';
+            });
+        })();
+
+        /* ══ SECURITY SCORE (per account) ════════════════════ */
+        function calcSecScore(account) {
+            var pts = 0, max = 5;
+            if (account.totp_enabled) pts++;
+            if (!account.is_locked) pts++;
+            if (account.is_active) pts++;
+            if (account.device_fingerprint) pts++;
+            var hb = account.last_heartbeat || account.last_login;
+            if (hb && (Date.now() - new Date(hb).getTime()) < 30*24*60*60*1000) pts++;
+            return Math.round((pts / max) * 100);
+        }
+
+        function _scoreColor(pct) {
+            if (pct >= 80) return '#16a34a';
+            if (pct >= 60) return '#3b82f6';
+            if (pct >= 40) return '#f59e0b';
+            return '#ef4444';
+        }
+
+        function buildSecurityChecklist(account) {
+            var items = [
+                { ok: !!account.totp_enabled,         ok_label: '2FA on',       bad_label: 'No 2FA',     icon: 'shield-check' },
+                { ok: !account.is_locked,             ok_label: 'Not locked',   bad_label: 'Locked',     icon: 'lock' },
+                { ok: !!account.is_active,            ok_label: 'Active',       bad_label: 'Inactive',   icon: 'check-circle' },
+                { ok: !!account.device_fingerprint,   ok_label: 'Device bound', bad_label: 'Any device', icon: 'smartphone', neutral: true },
+            ];
+            var bar = document.createElement('div');
+            bar.className = 'acct-sec-bar';
+            items.forEach(function(item) {
+                var chip = document.createElement('span');
+                chip.className = 'sec-check ' + (item.ok ? 'ok' : (item.neutral ? 'neutral' : 'warn'));
+                var ic = document.createElement('i');
+                ic.setAttribute('data-lucide', item.icon);
+                chip.appendChild(ic);
+                chip.appendChild(document.createTextNode(' ' + (item.ok ? item.ok_label : item.bad_label)));
+                bar.appendChild(chip);
+            });
+            return bar;
+        }
+
+        /* ══ SECURITY OVERVIEW BANNER ════════════════════════ */
+        function renderSecurityOverview(accts) {
+            var total  = accts.length;
+            if (!total) return;
+            var with2fa   = accts.filter(function(a) { return a.totp_enabled; }).length;
+            var locked    = accts.filter(function(a) { return a.is_locked; }).length;
+            var noDevice  = accts.filter(function(a) { return !a.device_fingerprint; }).length;
+            var avgScore  = Math.round(accts.reduce(function(s,a){ return s + calcSecScore(a); }, 0) / total);
+            var color     = _scoreColor(avgScore);
+
+            var ov = document.getElementById('secOverview');
+            ov.style.display = 'flex';
+
+            // Ring
+            var fill = document.getElementById('secOverviewRingFill');
+            var circ = 2 * Math.PI * 20;
+            fill.style.stroke = color;
+            fill.style.strokeDasharray  = circ;
+            fill.style.strokeDashoffset = circ - (avgScore / 100) * circ;
+            document.getElementById('secOverviewPct').textContent = avgScore + '%';
+            document.getElementById('secOverviewPct').style.color = color;
+
+            var label = document.getElementById('secOverviewLabel');
+            label.textContent = avgScore >= 80 ? 'Strong' : avgScore >= 60 ? 'Good' : avgScore >= 40 ? 'Fair' : 'Weak';
+            label.style.color = color;
+
+            // Items
+            var items = document.getElementById('secOverviewItems');
+            items.textContent = '';
+            var checks = [
+                { good: with2fa === total,   icon: 'shield-check', label: with2fa + '/' + total + ' have 2FA',      cls: with2fa === total ? 'good' : 'bad' },
+                { good: locked === 0,        icon: 'lock',          label: locked + ' account' + (locked!==1?'s':'') + ' locked', cls: locked === 0 ? 'good' : 'warn' },
+                { good: noDevice === 0,      icon: 'smartphone',    label: noDevice + ' without device lock',         cls: noDevice === 0 ? 'good' : 'warn' },
+            ];
+            checks.forEach(function(c) {
+                var el = document.createElement('div');
+                el.className = 'sec-ov-item ' + c.cls;
+                el.innerHTML = '<i data-lucide="' + c.icon + '"></i><span>' + c.label + '</span>';
+                items.appendChild(el);
+            });
+            lucide.createIcons({ nodes: [ov] });
+
+            // Update 2FA metric
+            animateCount(document.getElementById('twoFaAdmins'), with2fa);
         }
 
         /* ══ TOAST ════════════════════════════════════════════ */
