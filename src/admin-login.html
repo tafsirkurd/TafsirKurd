@@ -808,13 +808,8 @@
 
                 <!-- Security footer bar -->
                 <div class="sec-footer-bar">
-                    <span class="sec-footer-label">Secured</span>
-                    <div class="sec-pill"><div class="sec-pill-dot"></div> 2FA</div>
-                    <div class="sec-pill"><div class="sec-pill-dot"></div> HSTS</div>
-                    <div class="sec-pill"><div class="sec-pill-dot"></div> Device Lock</div>
-                    <div class="sec-pill"><div class="sec-pill-dot"></div> Turnstile</div>
-                    <div class="sec-pill"><div class="sec-pill-dot"></div> 196-bit Keys</div>
-                    <div class="sec-pill"><div class="sec-pill-dot"></div> Iraq-only</div>
+                    <div class="sec-pill-dot"></div>
+                    <span class="sec-footer-label" style="margin-right:0;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:none;">Secured connection · Unauthorized access is monitored and logged</span>
                 </div>
 
                 <!-- Footer -->
@@ -1355,16 +1350,13 @@
 
         // ── Rotating security tips on brand panel ─────────────────────────────
         var _tips = [
-            '🔐 <strong>Never share</strong> your admin password or 2FA code with anyone — not even TafsirKurd support.',
+            '🔐 <strong>Never share</strong> your admin password or 2FA code with anyone.',
             '🛡️ <strong>2FA codes expire</strong> every 30 seconds. If it\'s about to expire, wait for the next one.',
             '🔒 <strong>Lock your screen</strong> whenever you step away, even for a minute.',
             '🌍 <strong>Log in only</strong> from trusted networks. Avoid public Wi-Fi without a VPN.',
-            '📋 <strong>Copied passwords</strong> are automatically wiped from clipboard after 60 seconds.',
-            '🖥️ <strong>Only one admin tab</strong> is allowed. Opening a second tab will lock it.',
-            '⏱️ <strong>Sessions expire</strong> after 2 hours of activity. Save your work regularly.',
-            '🔑 <strong>Device trust</strong> expires after 7 days — you\'ll need 2FA again after that.',
-            '🚨 <strong>If you see unexpected logins</strong>, immediately change your password and contact the team.',
-            '📵 <strong>Admin pages cannot be printed.</strong> Screenshots are watermarked with your name.',
+            '🔑 <strong>Keep your credentials</strong> private and never reuse passwords.',
+            '⏱️ <strong>Save your work</strong> regularly — sessions expire after a period of inactivity.',
+            '🚨 <strong>If you suspect unauthorized access</strong>, change your password immediately and contact the team.',
         ];
         var _tipIdx = 0;
         var _tipEl  = document.getElementById('secTip');
