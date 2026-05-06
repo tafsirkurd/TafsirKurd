@@ -524,6 +524,8 @@ function setAudioIcon(state){
   var fa=$('fpAvatar');if(fa)fa.classList.toggle('playing',state==='pause');
 }
 
+var _audioEndTimer=null;var _audioNextCalled=false;
+
 /* ===== STATE ===== */
 var S={
   tab:'quran',tabHistory:[],
@@ -578,7 +580,6 @@ function init(){
     }
 
     S.audio.el=$('audioEl');
-    var _audioEndTimer=null;var _audioNextCalled=false;
     function _scheduleAyahEnd(){
       if(_audioEndTimer)return;
       var ae=S.audio.el;
@@ -3152,12 +3153,18 @@ function renderMushafView(){
         if(k.classList&&k.classList.contains('mushaf-surah-banner')){
           var bn=parseInt(k.dataset.surah);
           if(bn===targetSurah){keepFrom=i;foundTarget=true;}
-          else if(foundTarget){keepTo=i;break;} // only cut at the surah AFTER the target
+          else if(foundTarget){keepTo=i;break;}
+        }
+        // Continuation pages have no banner — detect target surah via segment data-surah
+        if(!foundTarget&&k.classList&&k.classList.contains('mushaf-qcf-line')){
+          var segs=k.querySelectorAll?k.querySelectorAll('.mushaf-ayah-seg[data-surah]'):[];
+          for(var si=0;si<segs.length;si++){
+            if(parseInt(segs[si].dataset.surah)===targetSurah){foundTarget=true;break;}
+          }
+          if(foundTarget){keepFrom=i;}
         }
       }
-      // Remove trailing other-surah content (from end down to keepTo)
       for(var j=kids.length-1;j>=keepTo;j--){if(kids[j].parentNode===pageEl)pageEl.removeChild(kids[j]);}
-      // Remove leading other-surah content (only when this page starts mid-surah)
       if(keepFrom>0){for(var m=keepFrom-1;m>=0;m--){if(kids[m].parentNode===pageEl)pageEl.removeChild(kids[m]);}}
     }
     function trimToTargetSurah(){
@@ -3368,7 +3375,11 @@ function loadMushafPageQCF(pageEl,pageNum){
         if(grps.length===1){
           (function(v,s){on(lineEl,'click',function(){App.showMushafVerseTafsir(v,s);});})(grps[0].vn,grps[0].sn);
         } else if(grps.length>1){
-          (function(gs){on(lineEl,'click',function(){App.showMushafLinePicker(gs);});})(grps.map(function(g){return{vn:g.vn,sn:g.sn};}));
+          (function(gs,cur){on(lineEl,'click',function(){
+            var own=gs.filter(function(g){return g.sn===cur;});
+            if(own.length===1){App.showMushafVerseTafsir(own[0].vn,own[0].sn);}
+            else{App.showMushafLinePicker(gs);}
+          });})(grps.map(function(g){return{vn:g.vn,sn:g.sn};}),targetSurah);
         }
         frag.appendChild(lineEl);
       });
