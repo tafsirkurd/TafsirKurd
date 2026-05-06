@@ -2784,7 +2784,7 @@ function injectQCFV4Font(pageNum){
   _qcfV4FontInjected[pageNum]=true;
   var s=document.createElement('style');
   // Local bundled font is primary; remote Cloudflare Worker is fallback only
-  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:url('/assets/fonts/qcf4/p"+pageNum+".bin') format('woff2'),url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
+  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:url('/assets/fonts/qcf4/p"+pageNum+".woff2') format('woff2'),url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
   document.head.appendChild(s);
 }
 
