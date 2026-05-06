@@ -3019,6 +3019,57 @@ window.MushafDebug={
       var r=validateMushafPage(pageNum,json,pageEl);
       console.log('[MushafDebug] validate page='+pageNum,r);
     });
+  },
+  visibleSurah:function(){
+    var view=$('mushafView');
+    if(!view)return null;
+    var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
+    var viewRect=view.getBoundingClientRect();
+    var best=null,bestTop=Infinity;
+    for(var b=0;b<banners.length;b++){
+      var br=banners[b].getBoundingClientRect();
+      var dist=Math.abs(br.top-viewRect.top);
+      if(br.bottom>viewRect.top&&br.top<viewRect.bottom&&dist<bestTop){bestTop=dist;best=banners[b];}
+    }
+    if(!best){console.log('[MushafDebug] no banner visible');return null;}
+    var sn=parseInt(best.dataset.surah);
+    var s=SURAHS[sn-1];
+    console.log('[MushafDebug] visibleSurah='+sn+(s?' ('+s.en+')':''));
+    return sn;
+  },
+  renderedAyahs:function(pageNum){
+    var view=$('mushafView');
+    if(!view)return [];
+    var pageEl=pageNum?view.querySelector('.mushaf-text-page[data-page="'+pageNum+'"]'):null;
+    var container=pageEl||view;
+    var segs=container.querySelectorAll('.mushaf-ayah-seg[data-surah][data-ayah]');
+    var keys=[];
+    for(var i=0;i<segs.length;i++){
+      var k=segs[i].getAttribute('data-surah')+':'+segs[i].getAttribute('data-ayah');
+      if(keys.indexOf(k)<0)keys.push(k);
+    }
+    console.log('[MushafDebug] renderedAyahs page='+pageNum+' count='+keys.length,keys);
+    return keys;
+  },
+  missingAyahs:function(pageNum){
+    var self=this;
+    var pf=_getPageFields();
+    return getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
+      var verses=json.verses||[];
+      var expected=[];
+      verses.forEach(function(v){
+        var k=String(v.surah_number||parseInt((v.verse_key||'0:0').split(':')[0]))+':'+String(v.verse_number);
+        if(expected.indexOf(k)<0)expected.push(k);
+      });
+      var rendered=self.renderedAyahs(pageNum);
+      var missing=expected.filter(function(k){return rendered.indexOf(k)<0;});
+      if(missing.length){
+        console.warn('[MushafDebug] missingAyahs page='+pageNum+' MISSING='+missing.join(','));
+      } else {
+        console.log('[MushafDebug] missingAyahs page='+pageNum+' ALL PRESENT ('+expected.length+' ayahs)');
+      }
+      return missing;
+    });
   }
 };
 
@@ -3155,26 +3206,54 @@ function renderMushafView(){
     }
     updateMushafProgress(view);
 
+    // Header: update as user scrolls through pages — reflect topmost visible surah
+    (function(){
+      var _hdrTimer=null;
+      function _updateHeaderFromScroll(){
+        clearTimeout(_hdrTimer);
+        _hdrTimer=setTimeout(function(){
+          if(S.surah!==capturedSurah)return;
+          var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
+          var viewRect=view.getBoundingClientRect();
+          var best=null,bestTop=Infinity;
+          for(var b=0;b<banners.length;b++){
+            var br=banners[b].getBoundingClientRect();
+            var dist=Math.abs(br.top-viewRect.top);
+            if(br.bottom>viewRect.top&&br.top<viewRect.bottom&&dist<bestTop){
+              bestTop=dist;best=banners[b];
+            }
+          }
+          if(!best)return;
+          var sn=parseInt(best.dataset.surah);
+          var ns=SURAHS[sn-1];
+          if(ns&&$('readerName'))$('readerName').textContent=ns.en+' - '+ns.ar;
+        },200);
+      }
+      view.addEventListener('scroll',_updateHeaderFromScroll,{passive:true});
+    })();
+
     // Prev / Next surah nav at end of mushaf pages
     if(S.surah>1||S.surah<114){
       var mushafNav=el('div','mushaf-surah-nav');
       function mushafGoSurah(num){
         S.surah=num;
         var ns=SURAHS[num-1];
-        if(ns)$('readerName').textContent=ns.en+' - '+ns.ar;
+        if(ns&&$('readerName'))$('readerName').textContent=ns.en+' - '+ns.ar;
         try{localStorage.setItem('lastRead',JSON.stringify({surah:num,ayah:1}));}catch(e){}
         var mv=$('mushafView');if(mv){clear(mv);renderMushafView();}
       }
       if(S.surah>1){
+        var prevSurah=SURAHS[S.surah-2];
         var prevBtn=el('button','mushaf-surah-nav-btn');
         prevBtn.appendChild(icon('fas fa-arrow-right'));
-        prevBtn.appendChild(document.createTextNode('  '+(SURAHS[S.surah-2]||{}).n||''));
+        prevBtn.appendChild(document.createTextNode(' '+(prevSurah?prevSurah.ar:'')));
         on(prevBtn,'click',function(){mushafGoSurah(S.surah-1);});
         mushafNav.appendChild(prevBtn);
       }
       if(S.surah<114){
+        var nextSurah=SURAHS[S.surah];
         var nextBtn2=el('button','mushaf-surah-nav-btn');
-        nextBtn2.appendChild(document.createTextNode((SURAHS[S.surah]||{}).n+'  '));
+        nextBtn2.appendChild(document.createTextNode((nextSurah?nextSurah.ar:'')+' '));
         nextBtn2.appendChild(icon('fas fa-arrow-left'));
         on(nextBtn2,'click',function(){mushafGoSurah(S.surah+1);});
         mushafNav.appendChild(nextBtn2);
