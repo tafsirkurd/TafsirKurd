@@ -10647,19 +10647,22 @@
         // Pause Audio
         function pauseAudio() {
             const audio = document.getElementById('quranAudio');
-            audio.pause();
+            if (audio) audio.pause();
         }
 
         // Toggle Play/Pause (main button)
         function togglePlayPause() {
             const audio = document.getElementById('quranAudio');
+            if (!audio) return;
 
             if (audioPlayerState.isPlaying) {
                 pauseAudio();
             } else {
                 if (audioPlayerState.currentSurah && audioPlayerState.currentAyah) {
-                    // Resume playback - replay current ayah
-                    playAyah(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+                    // Resume from current position — do NOT call playAyah() which restarts
+                    audio.play().catch(() => {});
+                    audioPlayerState.isPlaying = true;
+                    updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
                 }
             }
         }
@@ -10788,6 +10791,9 @@
 
         function onAudioEnded() {
             audioPlayerState.isPlaying = false;
+
+            // If repeat manager is driving playback, let it handle the ended event
+            if (repeatManagerState.isPlaying) return;
 
             // Safety check
             if (!audioPlayerState.currentSurah || !audioPlayerState.currentAyah || !quranData) {
@@ -11028,14 +11034,9 @@
         // Reciter Selection
         function populateReciterOptions() {
             const container = document.getElementById('reciterOptions');
-            if (!container) {
-                console.error('Reciter options container not found');
-                return;
-            }
+            if (!container) return;
 
             container.innerHTML = '';
-
-            console.log(`📋 Populating ${RECITERS.length} reciters`);
 
             RECITERS.forEach(reciter => {
                 const option = document.createElement('div');
@@ -11048,8 +11049,6 @@
                 option.onclick = () => selectReciter(reciter.id);
                 container.appendChild(option);
             });
-
-            console.log('✅ Reciters populated successfully');
         }
 
         function selectReciter(reciterId) {
@@ -11080,8 +11079,10 @@
             const audio = document.getElementById('quranAudio');
             const audioPlayer = document.getElementById('audioPlayer');
 
+            repeatManagerState.isPlaying = false;
             audio.pause();
             audio.src = '';
+            audio.load(); // fully reset — clears buffered data and aborts any in-flight fetch
             audioPlayer.classList.remove('active');
 
             // Remove all highlights
