@@ -70,6 +70,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/hafs.woff2?v=17" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/surah-name-v4.woff2?v=17" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="/assets/fonts/surah-name-v2.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
@@ -318,7 +319,7 @@ body{background:var(--bg);color:var(--text)}
 .surah-img-panel{width:64px;flex-shrink:0;background-size:cover;background-position:center;border-radius:var(--r-xl) 0 0 var(--r-xl)}.surah-img-panel.meccan{background-image:url('/assets/icons/Makkah.webp')}.surah-img-panel.maddinah{background-image:url('/assets/icons/Maddinah.webp')}
 .surah-num-badge{position:absolute;top:10px;right:0;z-index:3;min-width:28px;height:26px;padding:0 9px 0 10px;border-radius:10px 0 0 10px;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.7rem;line-height:1;border:1px solid rgba(255,255,255,.25);text-shadow:0 1px 4px rgba(0,0,0,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
 .surah-info{flex:1;min-width:0;padding:11px 10px 11px 10px;padding-inline-start:18px}
-.surah-name-ar{font-family:var(--font-su);font-size:1.75rem;font-weight:400;line-height:1.1;margin-bottom:3px;color:var(--text)}
+.surah-name-ar{font-family:var(--font-su);font-size:1.75rem;font-weight:400;line-height:1.1;margin-bottom:3px;color:var(--text);transition:opacity .15s ease}
 .surah-name-en{font-size:.65rem;color:var(--text2);font-weight:600;letter-spacing:.01em}
 .surah-ayahs{font-size:.58rem;color:var(--text3);margin-top:4px}
 
@@ -326,7 +327,7 @@ body{background:var(--bg);color:var(--text)}
 .continue-card{margin:16px 16px 0;padding:14px 18px;background:var(--accent);color:#fff;border-radius:var(--r-xl);cursor:pointer;transition:transform .2s var(--ease);position:relative;overflow:hidden;display:flex;align-items:center;gap:0;min-height:76px;background-size:cover;background-position:center}
 .continue-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.68) 0%,rgba(0,0,0,.35) 100%);border-radius:inherit}
 .continue-card:active{transform:scale(.98)}
-.continue-surah-deco{font-family:var(--font-su);font-size:5.5rem;font-weight:400;line-height:1;opacity:.22;position:absolute;inset-inline-end:-8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#fff;white-space:nowrap;z-index:1}
+.continue-surah-deco{font-family:var(--font-su);font-size:5.5rem;font-weight:400;line-height:1;opacity:.22;position:absolute;inset-inline-end:-8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#fff;white-space:nowrap;z-index:1;transition:opacity .15s ease}
 .continue-info{position:relative;z-index:2;flex:1}
 .continue-label{font-size:.75rem;opacity:.7;margin-bottom:4px}
 .continue-title{font-size:1rem;font-weight:700}
@@ -420,7 +421,7 @@ body{background:var(--bg);color:var(--text)}
 .ayah-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px var(--ayah-px) calc(var(--tab-h) + var(--safe-b) + 80px)}
 .surah-reader-header{margin:0 0 12px;padding:32px 24px 26px;text-align:center;background:var(--surface);border-radius:0 0 32px 32px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
 .surah-reader-num-bg{position:absolute;font-size:9rem;font-weight:900;color:var(--accent);opacity:.055;top:50%;left:50%;transform:translate(-50%,-50%);line-height:1;pointer-events:none;user-select:none;font-variant-numeric:tabular-nums}
-.surah-reader-name{font-family:'SurahNameV2',var(--font-su),serif;font-size:3rem;font-weight:400;line-height:1.2;color:var(--text);display:block;margin-bottom:14px;position:relative}
+.surah-reader-name{font-family:'SurahNameV2',var(--font-su),serif;font-size:3rem;font-weight:400;line-height:1.2;color:var(--text);display:block;margin-bottom:14px;position:relative;transition:opacity .15s ease}
 .surah-reader-bismillah{font-family:var(--font-ar);font-size:1.25rem;line-height:1.9;color:var(--text3);direction:rtl;position:relative}
 .ayah-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:20px;margin-bottom:12px}
 .ayah-card.bookmarked{border-right:3px solid var(--accent)}
@@ -3216,6 +3217,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/audio-downloads.js?v=1"></script>
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
+<script src="/app/quran-font-manager.js?v=20260506"></script>
 <script src="/app/app.js?v=20260419"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */

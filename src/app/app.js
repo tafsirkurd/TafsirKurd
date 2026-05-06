@@ -2621,7 +2621,9 @@ function renderSurahGrid(){
     info.className='surah-info';
     var deco=document.createElement('div');
     deco.className='surah-name-ar no-kurdish-convert';
-    deco.textContent='surah'+String(s.n).padStart(3,'0');
+    var _gc='surah'+String(s.n).padStart(3,'0');
+    deco.dataset.glyph=_gc;
+    deco.textContent=_surahNameFontReady?_gc:s.ar;
     var nameEn=document.createElement('div');
     nameEn.className='surah-name-en';
     nameEn.textContent=s.en;
@@ -2668,7 +2670,12 @@ function renderContinue(){
   if(!s)return;
   var card=el('div','continue-card');
   card.style.backgroundImage="url('/assets/icons/"+(s.t==='Meccan'?'Makkah':'Maddinah')+".webp')";
-  var deco=el('div','continue-surah-deco no-kurdish-convert','surah'+String(s.n).padStart(3,'0'));
+  var _cdec=document.createElement('div');
+  _cdec.className='continue-surah-deco no-kurdish-convert';
+  var _cglyph='surah'+String(s.n).padStart(3,'0');
+  _cdec.dataset.glyph=_cglyph;
+  _cdec.textContent=_surahNameFontReady?_cglyph:s.ar;
+  var deco=_cdec;
   card.appendChild(deco);
   var info=el('div','continue-info');
   info.appendChild(el('div','continue-label',t('reader.continue')));
@@ -2735,6 +2742,25 @@ App.backToList=function(){
 var _qcfFontInjected={};
 var _qcfV2FontInjected={};
 var _qcfV4FontInjected={};
+
+/* SurahName font readiness — delegates to QuranFontManager (quran-font-manager.js).
+   Local flags mirror manager state so render-time isReady checks stay O(1). */
+var _surahNameFontReady=false;
+var _surahNameV2FontReady=false;
+(function(){
+  var QFM=window.QuranFontManager;
+  if(!QFM)return;
+  QFM.onReady('SurahName',function(ok){
+    _surahNameFontReady=ok;
+    if(ok)QFM.upgradeGlyphElements('.surah-name-ar');
+    if(ok)QFM.upgradeGlyphElements('.continue-surah-deco');
+  });
+  QFM.onReady('SurahNameV2',function(ok){
+    _surahNameV2FontReady=ok;
+    if(ok)QFM.upgradeGlyphElements('.surah-reader-name');
+  });
+})();
+
 function toArabicNum(n){return String(n).replace(/\d/g,function(d){return'٠١٢٣٤٥٦٧٨٩'[+d];});}
 
 function injectQCFFont(pageNum){
@@ -3288,8 +3314,11 @@ function loadMushafPageQCF(pageEl,pageNum){
     };
     var fontFamName=(font==='qcf1')?('QCFv1p'+pageNum):(font==='qcf2'?'QCFv2p'+pageNum:(font==='qcf4'?'QCFv4p'+pageNum:''));
     if(fontFamName&&document.fonts&&document.fonts.load){
+      var _qcfT=Date.now();
       return document.fonts.load('1em "'+fontFamName+'"').catch(function(){return[];}).then(function(faces){
+        var QFM=window.QuranFontManager;
         if(!faces||!faces.length){
+          if(QFM)QFM.qcfPageFailed(pageNum,'timeout');
           clear(pageEl);
           var fe=el('div','mushaf-font-offline');
           fe.appendChild(el('div','mushaf-font-offline-msg',t('mushaf.font_offline')||'Page font not available offline.'));
@@ -3299,6 +3328,7 @@ function loadMushafPageQCF(pageEl,pageNum){
           pageEl.appendChild(fe);
           return;
         }
+        if(QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_qcfT);
         showContent();
       });
     }
@@ -3395,7 +3425,12 @@ function renderAyahs(surahNum,scrollTo){
   // Giant faded number as background watermark
   hdr.appendChild(el('div','surah-reader-num-bg no-kurdish-convert',toArabicNum(surahNum)));
   // Calligraphy name
-  hdr.appendChild(el('div','surah-reader-name no-kurdish-convert','surah'+String(surahNum).padStart(3,'0')));
+  var _rn=document.createElement('div');
+  _rn.className='surah-reader-name no-kurdish-convert';
+  var _rnglyph='surah'+String(surahNum).padStart(3,'0');
+  _rn.dataset.glyph=_rnglyph;
+  _rn.textContent=_surahNameV2FontReady?_rnglyph:(s.ar||'');
+  hdr.appendChild(_rn);
   // Bismillah
   if(surahNum!==1&&surahNum!==9){
     hdr.appendChild(el('div','surah-reader-bismillah','بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ'));

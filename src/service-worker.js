@@ -39,10 +39,15 @@ const PRECACHE = [
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
   '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
+  // SurahName decorative fonts — required for Quran grid calligraphy
+  '/assets/fonts/surah-name-v4.woff2',
+  '/assets/fonts/surah-name-v2.woff2',
   '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
   '/assets/fontawesome/webfonts/fa-brands-400.woff2',
+  // Font manager must be offline-available
+  '/app/quran-font-manager.js',
   // Images
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png',
@@ -92,6 +97,24 @@ self.addEventListener('fetch', event => {
 
   const reqUrl = new URL(url);
   const isOwnOrigin = reqUrl.origin === self.location.origin;
+
+  // ── Remote QCF mushaf fonts: cache-first (immutable per page number) ────
+  // iOS strips local .bin files; iOS/web both fall back to this Cloudflare Worker.
+  // Once cached the font loads instantly — Mushaf feels native-fast offline.
+  if (url.includes('qpc-v4-fonts.tefsirkurd.workers.dev')) {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        return fetch(req, { mode: 'cors' }).then(res => {
+          if (res && res.status === 200) {
+            caches.open(CACHE_NAME).then(c => c.put(req, res.clone())).catch(() => {});
+          }
+          return res;
+        }).catch(() => new Response('', { status: 503 }));
+      })
+    );
+    return;
+  }
 
   // ── External domains: pass through (Supabase, YouTube, CDNs, analytics) ──
   if (!isOwnOrigin) return;
