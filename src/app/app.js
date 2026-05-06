@@ -3164,6 +3164,12 @@ function loadMushafPageQCF(pageEl,pageNum){
           (function(v,s){on(seg,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
           lineEl.appendChild(seg);
         });
+        // Line-level fallback: covers gaps between segments
+        if(grps.length===1){
+          (function(v,s){on(lineEl,'click',function(){App.showMushafVerseTafsir(v,s);});})(grps[0].vn,grps[0].sn);
+        } else if(grps.length>1){
+          (function(gs){on(lineEl,'click',function(){App.showMushafLinePicker(gs);});})(grps.map(function(g){return{vn:g.vn,sn:g.sn};}));
+        }
         frag.appendChild(lineEl);
       });
 
@@ -4539,6 +4545,45 @@ App.showMushafVerseTafsir=function(vn,sn){
   var txtDiv=el('div',txt?'mushaf-tafsir-txt':'mushaf-tafsir-empty');
   txtDiv.textContent=txt||t('reader.tafsir_empty');
   body.appendChild(txtDiv);
+  pane.appendChild(body);
+  ov.appendChild(pane);
+
+  on(ov,'click',function(e){if(e.target===ov)dismiss();});
+  document.body.appendChild(ov);
+  requestAnimationFrame(function(){pane.classList.add('on');});
+};
+
+/* ===== MUSHAF LINE PICKER (multi-ayah shared line) ===== */
+App.showMushafLinePicker=function(ayahs){
+  var existing=$('mushafPickerSheet');
+  if(existing)existing.parentNode.removeChild(existing);
+
+  var ov=el('div','mushaf-tafsir-ov');
+  ov.id='mushafPickerSheet';
+  var pane=el('div','mushaf-tafsir-pane');
+
+  function dismiss(){
+    pane.classList.remove('on');
+    setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},260);
+  }
+
+  var hdr=el('div','mushaf-tafsir-hdr');
+  hdr.appendChild(el('span','mushaf-tafsir-title',t('reader.pick_ayah')));
+  var closeBtn=el('button','mushaf-tafsir-close');
+  closeBtn.appendChild(icon('fas fa-times'));
+  on(closeBtn,'click',dismiss);
+  hdr.appendChild(closeBtn);
+  pane.appendChild(hdr);
+
+  var body=el('div','mushaf-tafsir-body');
+  ayahs.forEach(function(a){
+    var s=SURAHS[(a.sn||1)-1];
+    var label=(s?s.n:'')+' — '+t('reader.ayah')+' '+toArabicNum(a.vn);
+    var btn=el('button','mushaf-picker-btn');
+    btn.textContent=label;
+    on(btn,'click',function(){dismiss();setTimeout(function(){App.showMushafVerseTafsir(a.vn,a.sn);},270);});
+    body.appendChild(btn);
+  });
   pane.appendChild(body);
   ov.appendChild(pane);
 

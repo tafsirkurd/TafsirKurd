@@ -202,6 +202,7 @@
   "reader.prev_surah": "سورەتا پێشیێ",
   "reader.next_surah": "سورەتا دی",
   "reader.tafsir_empty": "تفسیر بردەست نیە",
+  "reader.pick_ayah": "کام ئایەت؟",
   "reader.juz_label": "جزء",
   "reader.continue": "بەردەوامکرن ل خواندنێ",
   "reader.ayah_num": "ئایەت ${num}",
