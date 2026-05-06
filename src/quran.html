@@ -10610,31 +10610,29 @@
             const audio = document.getElementById('quranAudio');
             const audioPlayer = document.getElementById('audioPlayer');
 
-            if (!audio) {
-                // Silent fail - audio element not found
-                return;
-            }
+            if (!audio) return;
 
             // Update state
             audioPlayerState.currentSurah = surahNum;
             audioPlayerState.currentAyah = ayahNum;
-            audioPlayerState.isPlaying = true; // Set immediately to update UI correctly
+            audioPlayerState.isPlaying = true;
 
             // Format surah and ayah numbers (3 digits)
             const surahFormatted = String(surahNum).padStart(3, '0');
             const ayahFormatted = String(ayahNum).padStart(3, '0');
 
-            // Build audio URL (format: 001001.mp3 - NO underscore!)
             const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
-            // Set audio source and play
+            // pause → set src → load() → play()
+            // audio.load() is required on iOS/Android: without it, setting src
+            // doesn't reliably trigger a new load, so play() silently fails.
+            audio.pause();
             audio.src = audioUrl;
+            audio.load();
             audio.playbackRate = audioPlayerState.playbackSpeed;
 
-            audio.play().catch(err => {
-                // Silent fail - audio errors are handled via onAudioError event
-                audioPlayerState.isPlaying = false; // Reset on error
-                // Don't show notification here - onAudioError will handle it
+            audio.play().catch(() => {
+                audioPlayerState.isPlaying = false;
             });
 
             // Show audio player
@@ -10642,11 +10640,7 @@
 
             // Update player UI
             updatePlayerInfo(surahNum, ayahNum);
-
-            // Highlight ayah
             highlightPlayingAyah(surahNum, ayahNum);
-
-            // Update play buttons (will now show pause icon because isPlaying = true)
             updatePlayButtons(surahNum, ayahNum);
         }
 
