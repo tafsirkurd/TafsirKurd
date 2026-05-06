@@ -121,6 +121,9 @@ workflows:
             fi
           fi
 
+      - name: Strip web fonts from iOS bundle (ITMS-90853)
+        script: node scripts/strip-ios-fonts.js
+
       - name: Verify iOS project clean
         script: |
           # 1. Podfile must exist — CocoaPods mode requires it
