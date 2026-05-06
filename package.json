@@ -11,6 +11,7 @@
         "lint": "echo 'Linting...'",
         "format": "echo 'Formatting code...'",
         "cap:sync": "npx cap sync && node scripts/verify-assets.js",
+        "cap:ios:sync": "npx cap sync ios && node scripts/strip-ios-fonts.js && node scripts/verify-assets.js",
         "cap:ios": "npx cap open ios",
         "cap:android": "npx cap open android",
         "android:live": "node scripts/android-live.js"
