@@ -977,21 +977,16 @@ function init(){
     }
   }
 
-  // Pre-fetch mushaf page data — delayed to 4.5s so font injection doesn't compete with entry
+  // Mushaf font warm-up — prefetch current page ±2 fonts/data so Mushaf tab opens fast
   setTimeout(function(){
-    var pf=_getPageFields();
     getMushafPageRange(S.surah||1).then(function(pages){
-      // Inject fonts and fetch data for all pages of this surah
-      for(var pn=pages.start;pn<=pages.end;pn++){
-        (function(n){
-          if(S.mushafFont==='qcf1')injectQCFFont(n);
-          else if(S.mushafFont==='qcf2')injectQCFV2Font(n);
-          else if(S.mushafFont==='qcf4')injectQCFV4Font(n);
-          getMushafPageData(n,pf.fields,pf.cache,pf.mushafId).catch(function(){});
-        })(pn);
-      }
+      var cur=pages.start;
+      _prefetchMushafPage(cur);
+      _prefetchMushafPage(cur+1);
+      _prefetchMushafPage(cur-1);
+      _prefetchMushafPage(cur+2);
     }).catch(function(){});
-  },4500);
+  },500);
 
   // Early data prefetch — warm all API/DB caches before user taps any tab.
   // No DOM work here — just fires network requests so cache is hot when tab opens.
@@ -2742,6 +2737,11 @@ App.backToList=function(){
 var _qcfFontInjected={};
 var _qcfV2FontInjected={};
 var _qcfV4FontInjected={};
+// pageNum → Promise<boolean> — deduplicates concurrent font-load waits
+var _qcfV4FontLoadP={};
+
+// Detect iOS Capacitor once — strip script removes local woff2, so skip local src on iOS
+var _isIOSCap=(function(){try{return window.Capacitor&&Capacitor.getPlatform()==='ios';}catch(e){return false;}}());
 
 /* SurahName font readiness — delegates to QuranFontManager (quran-font-manager.js).
    Local flags mirror manager state so render-time isReady checks stay O(1). */
@@ -2783,9 +2783,42 @@ function injectQCFV4Font(pageNum){
   if(_qcfV4FontInjected[pageNum])return;
   _qcfV4FontInjected[pageNum]=true;
   var s=document.createElement('style');
-  // Local bundled font is primary; remote Cloudflare Worker is fallback only
-  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:url('/assets/fonts/qcf4/p"+pageNum+".woff2') format('woff2'),url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
+  // On iOS the local woff2 is stripped from the bundle → skip to Cloudflare Worker directly
+  var localSrc=_isIOSCap?'':("url('/assets/fonts/qcf4/p"+pageNum+".woff2') format('woff2'),");
+  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:"+localSrc+"url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
   document.head.appendChild(s);
+}
+
+// Inject + wait for QCF4 font — returns Promise<boolean>.
+// Deduplicates: calling for the same pageNum returns the same Promise.
+function ensureQCFV4Font(pageNum){
+  if(_qcfV4FontLoadP[pageNum])return _qcfV4FontLoadP[pageNum];
+  injectQCFV4Font(pageNum);
+  var fontName='QCFv4p'+pageNum;
+  if(!document.fonts||!document.fonts.load){
+    _qcfV4FontLoadP[pageNum]=Promise.resolve(false);
+    return _qcfV4FontLoadP[pageNum];
+  }
+  var loadP=document.fonts.load('1em "'+fontName+'"').then(function(faces){
+    return !!(faces&&faces.length);
+  }).catch(function(){return false;});
+  var timeoutP=new Promise(function(res){setTimeout(function(){res(false);},5000);});
+  _qcfV4FontLoadP[pageNum]=Promise.race([loadP,timeoutP]);
+  return _qcfV4FontLoadP[pageNum];
+}
+
+// Prefetch QCF4 font + page data for a page number — fire and forget.
+function _prefetchMushafPage(pageNum){
+  if(pageNum<1||pageNum>604)return;
+  var pf=_getPageFields();
+  if(S.mushafFont==='qcf4'){
+    ensureQCFV4Font(pageNum);
+  } else if(S.mushafFont==='qcf2'){
+    injectQCFV2Font(pageNum);
+  } else {
+    injectQCFFont(pageNum);
+  }
+  getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).catch(function(){});
 }
 
 function getMushafPageRange(surahNum){
@@ -2926,6 +2959,18 @@ App.toggleMushafMode=function(){
 var JUZ_PAGES=[1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
 function juzForPage(p){for(var j=JUZ_PAGES.length-1;j>=0;j--){if(p>=JUZ_PAGES[j])return j+1;}return 1;}
 
+function _mushafSkeleton(){
+  var sk=el('div','mushaf-skeleton');
+  for(var i=0;i<15;i++){
+    var line=document.createElement('div');
+    line.className='mushaf-skeleton-line';
+    // vary widths so it looks like real text lines
+    line.style.width=(i%5===2?'60%':i%3===0?'80%':'100%');
+    sk.appendChild(line);
+  }
+  return sk;
+}
+
 // Wrap mushaf pages into horizontal snap spreads for landscape iPad
 function _mushafWrapSpreads(view){
   var pages=Array.prototype.slice.call(view.querySelectorAll(':scope>.mushaf-text-page'));
@@ -2968,9 +3013,7 @@ function renderMushafView(){
   window._mushafVerseElements={};
   clear(view);
   view.scrollTop=0;view.scrollLeft=0;
-  var spinner=el('div','mushaf-loading');
-  spinner.appendChild(icon('fas fa-spinner fa-spin'));
-  view.appendChild(spinner);
+  view.appendChild(_mushafSkeleton());
 
   var _renderSurah=S.surah; // capture at render time — abort if surah changes during async
   getMushafPageRange(S.surah).then(function(pages){
@@ -2989,9 +3032,7 @@ function renderMushafView(){
       (function(pn){
         var pageEl=el('div','mushaf-text-page');
         pageEl.dataset.page=String(pn);
-        var ph=el('div','mushaf-page-ph');
-        ph.appendChild(icon('fas fa-spinner fa-spin'));
-        pageEl.appendChild(ph);
+        pageEl.appendChild(_mushafSkeleton());
         view.appendChild(pageEl);
       })(p);
     }
@@ -3115,12 +3156,23 @@ function renderMushafView(){
 
 function loadMushafPageQCF(pageEl,pageNum){
   var font=S.mushafFont||'qcf1';
-  if(font==='qcf1')injectQCFFont(pageNum);
-  else if(font==='qcf2')injectQCFV2Font(pageNum);
-  else if(font==='qcf4')injectQCFV4Font(pageNum);
   var pf=_getPageFields();
+  var _t0=Date.now();
 
-  return getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
+  // Start font and data fetches in parallel
+  var fontP;
+  if(font==='qcf4'){
+    fontP=ensureQCFV4Font(pageNum);
+  } else {
+    if(font==='qcf1')injectQCFFont(pageNum);
+    else if(font==='qcf2')injectQCFV2Font(pageNum);
+    fontP=Promise.resolve(true);
+  }
+  var _dataT=Date.now();
+  var dataP=getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId);
+
+  return dataP.then(function(json){
+    var _dataMs=Date.now()-_dataT;
     var verses=json.verses||[];
     if(!verses.length){clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','—'));return;}
 
@@ -3280,25 +3332,13 @@ function loadMushafPageQCF(pageEl,pageNum){
     }).map(function(v){return Number(v.verse_number);});
     pageEl.dataset.verses=JSON.stringify(svn);
 
-    // Prefetch adjacent pages for zero-delay scroll
-    var pf2=_getPageFields();
-    var maxP=parseInt(pageEl.parentNode&&pageEl.parentNode.lastElementChild&&pageEl.parentNode.lastElementChild.dataset.page)||pageNum+5;
-    if(pageNum+1<=maxP){
-      if(font==='qcf1')injectQCFFont(pageNum+1);
-      else if(font==='qcf2')injectQCFV2Font(pageNum+1);
-      else if(font==='qcf4')injectQCFV4Font(pageNum+1);
-      getMushafPageData(pageNum+1,pf2.fields,pf2.cache,pf2.mushafId).catch(function(){});
-    }
-    if(pageNum+2<=maxP){
-      if(font==='qcf1')injectQCFFont(pageNum+2);
-      else if(font==='qcf2')injectQCFV2Font(pageNum+2);
-      else if(font==='qcf4')injectQCFV4Font(pageNum+2);
-      getMushafPageData(pageNum+2,pf2.fields,pf2.cache,pf2.mushafId).catch(function(){});
-    }
+    // Prefetch adjacent pages: next 2 and previous 1 for instant scroll in any direction
+    _prefetchMushafPage(pageNum+1);
+    _prefetchMushafPage(pageNum+2);
+    _prefetchMushafPage(pageNum-1);
 
-    // Wait for QCF font to finish downloading before revealing content.
-    // Spinner stays visible until font is ready — prevents garbled-glyph flash.
     var showContent=function(){
+      var _rT=Date.now();
       clear(pageEl);
       pageEl.appendChild(frag);
       // If audio is playing for this surah, restore highlight on newly-loaded page
@@ -3311,28 +3351,29 @@ function loadMushafPageQCF(pageEl,pageNum){
           }
         });
       }
+      var _renderMs=Date.now()-_rT;
+      var _total=Date.now()-_t0;
+      console.log('[MushafPerf] page='+pageNum+' font=QCFv4p'+pageNum+' dataMs='+_dataMs+' renderMs='+_renderMs+' total='+_total);
     };
-    var fontFamName=(font==='qcf1')?('QCFv1p'+pageNum):(font==='qcf2'?'QCFv2p'+pageNum:(font==='qcf4'?'QCFv4p'+pageNum:''));
-    if(fontFamName&&document.fonts&&document.fonts.load){
-      var _qcfT=Date.now();
-      return document.fonts.load('1em "'+fontFamName+'"').catch(function(){return[];}).then(function(faces){
-        var QFM=window.QuranFontManager;
-        if(!faces||!faces.length){
-          if(QFM)QFM.qcfPageFailed(pageNum,'timeout');
-          clear(pageEl);
-          var fe=el('div','mushaf-font-offline');
-          fe.appendChild(el('div','mushaf-font-offline-msg',t('mushaf.font_offline')||'Page font not available offline.'));
-          var fb=el('button','mushaf-offline-switch-btn',t('mushaf.switch_to_reading')||'Switch to reading mode');
-          on(fb,'click',function(){App.toggleMushafMode();});
-          fe.appendChild(fb);
-          pageEl.appendChild(fe);
-          return;
-        }
-        if(QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_qcfT);
-        showContent();
-      });
-    }
-    showContent();
+
+    // For QCF4 font already resolved by ensureQCFV4Font; for other modes font is always ready
+    return fontP.then(function(fontOk){
+      var QFM=window.QuranFontManager;
+      if(font==='qcf4'&&!fontOk){
+        if(QFM)QFM.qcfPageFailed(pageNum,'timeout');
+        clear(pageEl);
+        var fe=el('div','mushaf-font-offline');
+        fe.appendChild(el('div','mushaf-font-offline-msg',t('mushaf.font_offline')||'Page font not available offline.'));
+        var fb=el('button','mushaf-offline-switch-btn',t('mushaf.switch_to_reading')||'Switch to reading mode');
+        on(fb,'click',function(){App.toggleMushafMode();});
+        fe.appendChild(fb);
+        pageEl.appendChild(fe);
+        console.log('[MushafPerf] page='+pageNum+' font=QCFv4p'+pageNum+' status=failed total='+(Date.now()-_t0));
+        return;
+      }
+      if(font==='qcf4'&&QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_t0);
+      showContent();
+    });
   }).catch(function(){
     clear(pageEl);
     pageEl.appendChild(el('div','mushaf-page-ph','✕'));
