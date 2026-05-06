@@ -2838,7 +2838,7 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   fields=fields||'code_v1';cachePrefix=cachePrefix||'qcfV1p_';
   var key=cachePrefix+pageNum;
   try{var c=JSON.parse(localStorage.getItem(key)||'null');if(c&&c.verses)return Promise.resolve(c);}catch(e){}
-  var url='https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields='+fields+'&per_page=50';
+  var url='https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields='+fields+'&per_page=300';
   if(mushafId)url+='&mushaf='+mushafId;
   return fetch(url)
     .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
@@ -2971,6 +2971,57 @@ function _mushafSkeleton(){
   return sk;
 }
 
+// ── Mushaf integrity validation ──────────────────────────────────────────────
+// pageData = the raw API json; pageEl = rendered DOM element
+var _mushafRenderMetrics={};  // pageNum → {fontMs,dataMs,renderMs,total,height,ok}
+
+function validateMushafPage(pageNum,pageData,pageEl){
+  var verses=pageData.verses||[];
+  var expectedKeys=[];
+  verses.forEach(function(v){
+    var k=String(v.surah_number||parseInt((v.verse_key||'0:0').split(':')[0]))+':'+String(v.verse_number);
+    if(expectedKeys.indexOf(k)<0)expectedKeys.push(k);
+  });
+  var rendered=window._mushafVerseElements||{};
+  var presentKeys=expectedKeys.filter(function(k){return !!(rendered[k]&&rendered[k].length);});
+  var missingKeys=expectedKeys.filter(function(k){return !(rendered[k]&&rendered[k].length);});
+  var lineCount=pageEl.querySelectorAll('.mushaf-qcf-line,.mushaf-flow-verse').length;
+  var height=pageEl.offsetHeight;
+  var ok=missingKeys.length===0;
+  if(!ok){
+    console.warn('[MushafIntegrity] FAIL page='+pageNum+' missing='+missingKeys.join(','));
+  }
+  return{pageNum:pageNum,expected:expectedKeys,present:presentKeys,missing:missingKeys,lineCount:lineCount,height:height,ok:ok};
+}
+
+window.MushafDebug={
+  pageMetrics:function(pageNum){
+    var m=_mushafRenderMetrics[pageNum];
+    if(!m){console.log('[MushafDebug] no metrics for page '+pageNum);return null;}
+    console.log('[MushafDebug] page='+pageNum,JSON.stringify(m,null,2));
+    return m;
+  },
+  allMetrics:function(){
+    Object.keys(_mushafRenderMetrics).sort(function(a,b){return+a-+b;}).forEach(function(p){
+      var m=_mushafRenderMetrics[p];
+      console.log('[MushafDebug] page='+p+' ok='+m.ok+' missing='+(m.missing||[]).join(',')
+        +' dataMs='+m.dataMs+' fontMs='+m.fontMs+' total='+m.total+' height='+m.height+'px');
+    });
+    return _mushafRenderMetrics;
+  },
+  validate:function(pageNum){
+    var view=$('mushafView');
+    if(!view)return;
+    var pageEl=view.querySelector('.mushaf-text-page[data-page="'+pageNum+'"]');
+    if(!pageEl){console.warn('[MushafDebug] page el not found: '+pageNum);return;}
+    var pf=_getPageFields();
+    getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
+      var r=validateMushafPage(pageNum,json,pageEl);
+      console.log('[MushafDebug] validate page='+pageNum,r);
+    });
+  }
+};
+
 // Wrap mushaf pages into horizontal snap spreads for landscape iPad
 function _mushafWrapSpreads(view){
   var pages=Array.prototype.slice.call(view.querySelectorAll(':scope>.mushaf-text-page'));
@@ -3074,42 +3125,34 @@ function renderMushafView(){
       var ph=el('div','mushaf-page-ph mushaf-page-err','—');
       pageEl.appendChild(ph);
     }
+    var capturedSurah=targetSurah;
+
+    // Eagerly load every page of the surah — never rely on IntersectionObserver
+    // (IntersectionObserver with root:view fires unreliably on iOS Capacitor,
+    //  causing the last pages of a surah to never render and ayahs to go missing)
+    function _loadAllRemainingPages(){
+      var remaining=Array.prototype.slice.call(view.querySelectorAll('.mushaf-text-page:not([data-loaded])'));
+      remaining.forEach(function(pe){
+        if(S.surah!==capturedSurah)return;
+        pe.dataset.loaded='1';
+        (function(pg){
+          loadMushafPageQCF(pg,parseInt(pg.dataset.page)).then(function(){
+            if(S.surah!==capturedSurah)return;
+            trimPageToSurah(pg);
+          }).catch(function(){_mushafPageErr(pg);});
+        })(pe);
+      });
+    }
+
     if(firstPage){
       firstPage.dataset.loaded='1';
       loadMushafPageQCF(firstPage,pages.start).then(function(){
         setTimeout(function(){
-          if(trimToTargetSurah())return;
-          // Banner not on first page — load next page and try again
-          var p2=view.querySelector('.mushaf-text-page[data-page="'+(pages.start+1)+'"]');
-          if(p2&&!p2.dataset.loaded){
-            p2.dataset.loaded='1';
-            loadMushafPageQCF(p2,pages.start+1).then(function(){
-              setTimeout(trimToTargetSurah,100);
-            }).catch(function(){_mushafPageErr(p2);});
-          }
-        },150);
+          trimToTargetSurah();   // trim leading other-surah content on first page
+          _loadAllRemainingPages(); // then load ALL remaining pages unconditionally
+        },0);
       }).catch(function(){_mushafPageErr(firstPage);});
     }
-
-    // Lazy-load the rest with a large preload margin
-    var capturedSurah=targetSurah;
-    _mushafLazyObs=new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if(!entry.isIntersecting)return;
-        var pageEl=entry.target;
-        if(pageEl.dataset.loaded)return;
-        pageEl.dataset.loaded='1';
-        _mushafLazyObs&&_mushafLazyObs.unobserve(pageEl);
-        (function(pe){
-          if(S.surah!==capturedSurah)return; // surah changed, discard
-          loadMushafPageQCF(pe,parseInt(pe.dataset.page)).then(function(){
-            if(S.surah!==capturedSurah)return;
-            trimPageToSurah(pe);
-          }).catch(function(){_mushafPageErr(pe);});
-        })(pageEl);
-      });
-    },{root:view,rootMargin:'1200px 0px'});
-    view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(p){_mushafLazyObs.observe(p);});
     updateMushafProgress(view);
 
     // Prev / Next surah nav at end of mushaf pages
@@ -3337,7 +3380,7 @@ function loadMushafPageQCF(pageEl,pageNum){
     _prefetchMushafPage(pageNum+2);
     _prefetchMushafPage(pageNum-1);
 
-    var showContent=function(){
+    var showContent=function(fontMs){
       var _rT=Date.now();
       clear(pageEl);
       pageEl.appendChild(frag);
@@ -3353,12 +3396,22 @@ function loadMushafPageQCF(pageEl,pageNum){
       }
       var _renderMs=Date.now()-_rT;
       var _total=Date.now()-_t0;
-      console.log('[MushafPerf] page='+pageNum+' font=QCFv4p'+pageNum+' dataMs='+_dataMs+' renderMs='+_renderMs+' total='+_total);
+      // Integrity validation — runs after DOM commit so offsetHeight is available
+      requestAnimationFrame(function(){
+        var result=validateMushafPage(pageNum,json,pageEl);
+        _mushafRenderMetrics[pageNum]={
+          fontMs:fontMs||0,dataMs:_dataMs,renderMs:_renderMs,total:_total,
+          height:pageEl.offsetHeight,ok:result.ok,
+          expected:result.expected,missing:result.missing
+        };
+        console.log('[MushafPerf] page='+pageNum+' dataMs='+_dataMs+' fontMs='+(fontMs||0)+' renderMs='+_renderMs+' total='+_total+' ok='+result.ok+(result.missing.length?' MISSING='+result.missing.join(','):''));
+      });
     };
 
     // For QCF4 font already resolved by ensureQCFV4Font; for other modes font is always ready
     return fontP.then(function(fontOk){
       var QFM=window.QuranFontManager;
+      var _fontMs=Date.now()-_t0-_dataMs;
       if(font==='qcf4'&&!fontOk){
         if(QFM)QFM.qcfPageFailed(pageNum,'timeout');
         clear(pageEl);
@@ -3368,11 +3421,12 @@ function loadMushafPageQCF(pageEl,pageNum){
         on(fb,'click',function(){App.toggleMushafMode();});
         fe.appendChild(fb);
         pageEl.appendChild(fe);
-        console.log('[MushafPerf] page='+pageNum+' font=QCFv4p'+pageNum+' status=failed total='+(Date.now()-_t0));
+        _mushafRenderMetrics[pageNum]={fontMs:_fontMs,dataMs:_dataMs,total:Date.now()-_t0,ok:false,missing:['font-failed']};
+        console.log('[MushafPerf] page='+pageNum+' status=font-failed total='+(Date.now()-_t0));
         return;
       }
       if(font==='qcf4'&&QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_t0);
-      showContent();
+      showContent(_fontMs);
     });
   }).catch(function(){
     clear(pageEl);
