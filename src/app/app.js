@@ -3353,16 +3353,10 @@ function loadMushafPageQCF(pageEl,pageNum){
           (function(v,s){on(seg,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
           lineEl.appendChild(seg);
         });
-        // Line-level fallback: covers gaps between segments
+        // Line-level fallback: only for single-ayah lines (gaps between glyphs still clickable)
+        // Multi-ayah lines: use segment spans directly — no ambiguous line-level handler
         if(grps.length===1){
           (function(v,s){on(lineEl,'click',function(){App.showMushafVerseTafsir(v,s);});})(grps[0].vn,grps[0].sn);
-        } else if(grps.length>1){
-          (function(gs){on(lineEl,'click',function(){
-            var cur=S.surah;
-            var own=gs.filter(function(g){return g.sn===cur;});
-            if(own.length===1){App.showMushafVerseTafsir(own[0].vn,own[0].sn);}
-            else{App.showMushafLinePicker(gs);}
-          });})(grps.map(function(g){return{vn:g.vn,sn:g.sn};}));
         }
         frag.appendChild(lineEl);
       });
