@@ -1560,9 +1560,11 @@
     } catch(e) { return null; }
   }
 
-  // Push prayer data to Android widget via JS bridge
-  function pushWidgetData(data, city, dateISO) {
+  // Push prayer data to Android and iOS widgets.
+  // source: why this push was triggered (prayerChange, cityChange, foreground, forceRefresh, etc.)
+  function pushWidgetData(data, city, dateISO, source) {
     try {
+      var _src = source || 'prayerChange';
       var t = data.timings;
       var hijriStr = '';
       if (data.date && data.date.hijri) {
@@ -1574,11 +1576,12 @@
       // Include tomorrow's timings so the widget has a full 48-h timeline
       // without requiring the user to open the app at midnight.
       var tom = readTomorrowCacheNow(city, dateISO);
+      var now = Date.now();
       var payload = JSON.stringify({
         city:        city,
         date:        dateISO,
         hijri:       hijriStr,
-        lastUpdated: Date.now(),
+        lastUpdated: now,
         timings: {
           Fajr:    (t.Fajr    || '').split(' ')[0],
           Sunrise: (t.Sunrise || '').split(' ')[0],
@@ -1597,30 +1600,147 @@
         } : null,
         tomorrowDate: tom ? tom.dateISO : null
       });
-      console.log('[Widget] pushWidgetData city=' + city + ' date=' + dateISO +
-                  ' hasTomorrow=' + !!tom + ' payloadLen=' + payload.length);
+      console.log('[WidgetSync] pushWidgetData source=' + _src + ' city=' + city + ' date=' + dateISO +
+                  ' hasTomorrow=' + !!tom + ' len=' + payload.length);
+
       // Android widget
       if (window.TafsirAndroid) {
         window.TafsirAndroid.saveString('widget_prayer', payload);
       }
-      // iOS widget — write to App Group UserDefaults via SharedPrefs plugin
+
+      // iOS widget — write to App Group UserDefaults via SharedPrefs plugin.
+      // Widget reload is triggered automatically by SharedPrefsPlugin.swift after synchronize().
       var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
       if (sp) {
         sp.set({ key: 'widgetPrayerData', value: payload })
           .then(function() {
-            console.log('[Widget] iOS write OK hasTomorrow=' + !!tom);
-            localStorage.setItem('widgetLastPushedDate', dateISO);
-            localStorage.setItem('widgetLastPushedCity', city);
+            console.log('[WidgetSync] App Group write OK source=' + _src + ' city=' + city + ' hasTomorrow=' + !!tom);
+            localStorage.setItem('widgetLastPushedDate',        dateISO);
+            localStorage.setItem('widgetLastPushedCity',        city);
             localStorage.setItem('widgetLastPushedHadTomorrow', tom ? '1' : '0');
+            localStorage.setItem('widgetLastPushedTs',          String(now));
+            localStorage.setItem('widgetLastPushedSource',      _src);
+            // Write JS-side sync meta so health report can read without touching App Group
+            _writeWidgetHealthStamp(city, _src, payload.length, 'ok');
           })
-          .catch(function(e) { console.log('[Widget] iOS write FAIL:', e && e.message || e); });
+          .catch(function(e) {
+            console.log('[WidgetSync] App Group write FAIL source=' + _src + ':', e && e.message || e);
+            _writeWidgetHealthStamp(city, _src, payload.length, 'fail');
+          });
       } else {
-        console.log('[Widget] SharedPrefs NOT available — plugin not loaded on iOS');
-        // Non-iOS path: stamp anyway so stale-check stays consistent
+        // Non-iOS: stamp for consistency
         localStorage.setItem('widgetLastPushedDate', dateISO);
         localStorage.setItem('widgetLastPushedCity', city);
+        localStorage.setItem('widgetLastPushedTs',   String(now));
       }
-    } catch(e) { console.log('[Widget] pushWidgetData error:', e); }
+    } catch(e) { console.log('[WidgetSync] pushWidgetData error:', e); }
+  }
+
+  // Stamp localStorage with last widget health state for admin dashboard reads.
+  function _writeWidgetHealthStamp(city, source, payloadLen, writeStatus) {
+    try {
+      var stamp = JSON.stringify({
+        ts: Date.now(), city: city, source: source,
+        payloadLen: payloadLen, writeStatus: writeStatus
+      });
+      localStorage.setItem('widgetHealthStamp', stamp);
+    } catch(e) {}
+  }
+
+  // Force-push all widget data regardless of stale guards.
+  // Increments the refresh nonce in App Group to invalidate the widget's extended cache.
+  function forceWidgetRefresh(source) {
+    var _src = source || 'manualRefresh';
+    console.log('[WidgetRefresh] forceWidgetRefresh source=' + _src);
+    var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
+    // 1. Write new nonce — SharedPrefsPlugin clears ext cache and reloads all widgets
+    if (sp) {
+      var nonce = String(Date.now());
+      sp.set({ key: 'widgetRefreshNonce', value: nonce })
+        .then(function() {
+          console.log('[WidgetRefresh] nonce written nonce=' + nonce);
+          localStorage.setItem('widgetRefreshNonceLocal', nonce);
+        })
+        .catch(function(e) { console.log('[WidgetRefresh] nonce write FAIL:', e && e.message || e); });
+    }
+    // 2. Re-push all widget data from current cache
+    if (window.PrayerLogic && window.PrayerCache) {
+      var city  = getCity();
+      var today = window.PrayerLogic.todayBaghdad();
+      var data  = readCacheNow(city, today);
+      if (data) {
+        // Clear stale guard so push always fires
+        localStorage.removeItem('widgetLastPushedDate');
+        localStorage.removeItem('widgetExtCacheLastPush');
+        pushWidgetData(data, city, today, _src);
+        pushExtendedPrayerCache(city);
+      } else {
+        console.log('[WidgetRefresh] no cache for ' + city + '/' + today + ' — will push on next prayer load');
+      }
+    }
+    console.log('[WidgetRefresh] forceWidgetRefresh complete source=' + _src);
+  }
+
+  // Build a health status object from localStorage + diagnostics for the admin dashboard.
+  function getWidgetHealthStatus() {
+    try {
+      var stamp     = JSON.parse(localStorage.getItem('widgetHealthStamp') || 'null');
+      var lastPushedTs = parseInt(localStorage.getItem('widgetLastPushedTs') || '0', 10);
+      var lastCity  = localStorage.getItem('widgetLastPushedCity') || '';
+      var lastSrc   = localStorage.getItem('widgetLastPushedSource') || '';
+      var extTs     = parseInt(localStorage.getItem('widgetExtCacheLastPush') || '0', 10);
+      var extCity   = localStorage.getItem('widgetExtCacheLastCity') || '';
+      var now       = Date.now();
+      var ageMin    = lastPushedTs ? Math.round((now - lastPushedTs) / 60000) : null;
+      var extAgeH   = extTs        ? Math.round((now - extTs) / 3600000 * 10) / 10 : null;
+      var status    = 'unknown';
+      if (!lastPushedTs)             status = 'missingTimeline';
+      else if (ageMin > 1440)        status = 'stale';       // >24 h
+      else if (ageMin > 60)          status = 'delayed';     // >1 h
+      else                           status = 'healthy';
+      return {
+        status:      status,
+        lastPushedTs: lastPushedTs,
+        ageMin:       ageMin,
+        city:         lastCity,
+        source:       lastSrc,
+        extAgeH:      extAgeH,
+        extCity:      extCity,
+        writeStatus:  stamp && stamp.writeStatus || 'unknown'
+      };
+    } catch(e) { return { status: 'unknown', error: String(e) }; }
+  }
+
+  // Report widget health to backend (Supabase via CF Worker endpoint).
+  // Fire-and-forget, throttled to 1 report per 10 min per session.
+  var _widgetHealthReportedAt = 0;
+  function reportWidgetHealth(opts) {
+    try {
+      var now = Date.now();
+      if (now - _widgetHealthReportedAt < 10 * 60 * 1000) return; // throttle
+      _widgetHealthReportedAt = now;
+      var health = getWidgetHealthStatus();
+      var platform = 'web';
+      try { if (window.Capacitor && window.Capacitor.getPlatform) platform = window.Capacitor.getPlatform() || 'web'; } catch(e) {}
+      var payload = {
+        platform:        platform,
+        city:            health.city || getCity() || 'unknown',
+        status:          opts && opts.status || health.status,
+        last_pushed_ts:  health.lastPushedTs || 0,
+        payload_age_min: health.ageMin,
+        last_refresh_source: health.source || 'unknown',
+        ext_cache_age_h: health.extAgeH,
+        write_status:    health.writeStatus,
+        error_msg:       opts && opts.error || null,
+        tz:              Intl && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : null
+      };
+      console.log('[WidgetHealth] reporting status=' + payload.status + ' city=' + payload.city);
+      fetch('/widget-health-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(function() {});
+    } catch(e) {}
   }
 
   // Stale-data protection: call on app start and every foreground resume.
@@ -3114,6 +3234,15 @@
     window.PrayerCache.purgeOldKeys();
   }
 
+  // Re-push widget data when the app returns to foreground so the widget is always
+  // accurate immediately after the user opens the app (not just when prayer tab opens).
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+      console.log('[WidgetRefresh] app foregrounded — checking widget staleness');
+      setTimeout(function() { pushWidgetIfStale(); }, 800);
+    }
+  });
+
   window.PrayerUI = {
     render: render,
     refresh: refresh,
@@ -3141,6 +3270,9 @@
     initScheduleOnStart: initScheduleOnStart,
     pushWidgetIfStale: pushWidgetIfStale,
     pushExtendedPrayerCache: pushExtendedPrayerCache,
+    forceWidgetRefresh: forceWidgetRefresh,
+    getWidgetHealthStatus: getWidgetHealthStatus,
+    reportWidgetHealth: reportWidgetHealth,
     prefetchAllCities: prefetchAllCities,
     preloadAthanVoices: preloadVoiceBuffers,
     // Debug helpers — call from browser devtools or adb logcat

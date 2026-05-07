@@ -6,12 +6,14 @@ private let wLog = Logger(subsystem: "com.tafsirkurd.app.TafsirKurdWidget", cate
 
 // MARK: — Constants
 
-private let kAppGroup    = "group.com.tafsirkurd.app"
-private let kDataKey     = "widgetPrayerData"
+private let kAppGroup       = "group.com.tafsirkurd.app"
+private let kDataKey        = "widgetPrayerData"
 private let kDeepLink       = URL(string: "tafsirkurd://prayer")!
 private let kExtCacheKey    = "widgetExtendedCache"
 private let kExtCacheSchema = 1
 private let kDiagnosticsKey = "widgetDiagnostics"
+private let kNonceKey       = "widgetRefreshNonce"       // written by admin force-refresh
+private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted on (UserDefaults.standard)
 private let kPrayerOrder   = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]          // notifications + next-prayer logic
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"] // home widget rows (includes sunrise)
 // MARK: — Widget translations (read from App Group UserDefaults, set by main app)
@@ -440,24 +442,58 @@ struct PrayerProvider: TimelineProvider {
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         WT.reload()
         let now = Date()
-        wLog.info("getTimeline called at \(now)")
+        wLog.info("[WidgetTimeline] getTimeline called at \(now)")
+
+        // Check admin force-refresh nonce — if it changed, discard extended cache so we
+        // re-fetch fresh prayer data from the API on this getTimeline call.
+        if let ud = UserDefaults(suiteName: kAppGroup),
+           let newNonce = ud.string(forKey: kNonceKey) {
+            let seenNonce = UserDefaults.standard.string(forKey: kNonceSeenKey) ?? ""
+            if newNonce != seenNonce {
+                wLog.info("[WidgetTimeline] admin nonce changed \(seenNonce) → \(newNonce) — discarding extended cache")
+                ud.removeObject(forKey: kExtCacheKey)
+                ud.synchronize()
+                UserDefaults.standard.set(newNonce, forKey: kNonceSeenKey)
+            }
+        }
 
         // Always read legacy data first — it is the source of truth for the current city.
         let legacyData = PrayerWidgetData.load()
         let currentCity = legacyData?.city ?? ""
 
+        // Stale-data detection: if the app hasn't written fresh data in >24 h, flag it
+        // in App Group so the JS health reporter can surface it in the admin dashboard.
+        if let legacy = legacyData, legacy.isStale {
+            let ageH = legacy.lastUpdated.map { (now.timeIntervalSince1970 * 1000 - $0) / 3_600_000 } ?? 0
+            wLog.warning("[WidgetHealth] stale timeline detected ageH=\(String(format:"%.1f",ageH)) city=\(legacy.city)")
+            if let ud = UserDefaults(suiteName: kAppGroup) {
+                ud.set("1", forKey: "widgetNeedsRefresh")
+                ud.synchronize()
+            }
+        }
+
         // 1. Extended cache: multi-day autonomous path (90+ days, no app required)
         //    Reject if city doesn't match the current city (user changed city since last push).
         if let ext = WidgetExtendedCache.load(), ext.isUsable {
             if !currentCity.isEmpty && ext.city != currentCity {
-                wLog.warning("getTimeline: extended cache city '\(ext.city)' != current city '\(currentCity)' — discarding, fetching fresh")
+                wLog.warning("[WidgetTimeline] extended cache city '\(ext.city)' ≠ current '\(currentCity)' — discard, fetch fresh")
             } else {
-                wLog.info("getTimeline: extended cache hit — city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
+                wLog.info("[WidgetTimeline] extended cache hit city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
                 let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
-                writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "extended",
-                                  "city": ext.city, "extDays": ext.days.count, "extAgeH": ext.ageHours,
-                                  "entries": entries.count, "policyAt": policyAt.timeIntervalSince1970])
-                wLog.info("getTimeline: \(entries.count) entries policyAt=\(policyAt)")
+                let nextName = entries.first?.next?.name ?? "unknown"
+                writeDiagnostics([
+                    "ts":        Date().timeIntervalSince1970 * 1000,
+                    "source":    "extended",
+                    "city":      ext.city,
+                    "extDays":   ext.days.count,
+                    "extAgeH":   ext.ageHours,
+                    "entries":   entries.count,
+                    "policyAt":  policyAt.timeIntervalSince1970,
+                    "nextPrayer": nextName,
+                    "iosVer":    UIDevice.current.systemVersion,
+                    "stale":     legacyData?.isStale ?? false
+                ])
+                wLog.info("[WidgetTimeline] \(entries.count) entries nextPrayer=\(nextName) policyAt=\(policyAt)")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
                 return
             }
@@ -465,23 +501,36 @@ struct PrayerProvider: TimelineProvider {
 
         // 2. Extended cache missing, stale, or city-mismatched — fetch from prayer-kurd API
         guard !currentCity.isEmpty else {
-            wLog.warning("getTimeline: no city known — retry 3 min")
+            wLog.warning("[WidgetTimeline] no city known — retry 3 min")
+            writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "no_city",
+                              "status": "missingTimeline", "iosVer": UIDevice.current.systemVersion])
             completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
                                 policy: .after(now.addingTimeInterval(3 * 60))))
             return
         }
-        wLog.info("getTimeline: fetching extended cache for city=\(currentCity)")
+        wLog.info("[WidgetTimeline] fetching extended cache for city=\(currentCity)")
         fetchExtendedPrayerCache(city: currentCity) { ext in
             if let ext = ext, ext.isUsable {
                 let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
-                writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "extended_fetch",
-                                  "city": ext.city, "extDays": ext.days.count, "entries": entries.count,
-                                  "policyAt": policyAt.timeIntervalSince1970])
-                wLog.info("getTimeline: fetched extended \(entries.count) entries")
+                let nextName = entries.first?.next?.name ?? "unknown"
+                writeDiagnostics([
+                    "ts":        Date().timeIntervalSince1970 * 1000,
+                    "source":    "extended_fetch",
+                    "city":      ext.city,
+                    "extDays":   ext.days.count,
+                    "entries":   entries.count,
+                    "policyAt":  policyAt.timeIntervalSince1970,
+                    "nextPrayer": nextName,
+                    "iosVer":    UIDevice.current.systemVersion,
+                    "stale":     false
+                ])
+                wLog.info("[WidgetTimeline] fetched \(entries.count) entries nextPrayer=\(nextName)")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
             } else {
                 // Network unavailable — fall back to two-day legacy data
-                wLog.warning("getTimeline: fetch failed — falling back to legacy")
+                wLog.warning("[WidgetTimeline] fetch failed — falling back to legacy data")
+                writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "legacy_fallback",
+                                  "city": currentCity, "status": "failed", "iosVer": UIDevice.current.systemVersion])
                 buildLegacyTimeline(data: legacyData, now: now, completion: completion)
             }
         }
@@ -657,14 +706,21 @@ private func fetchExtendedPrayerCache(city: String, completion: @escaping (Widge
     }
 }
 
-// Write widget diagnostics to App Group for admin observability dashboard.
+// Write widget diagnostics to App Group so the admin observability dashboard can read them.
+// Also clears widgetNeedsRefresh when source is a successful timeline build.
 private func writeDiagnostics(_ info: [String: Any]) {
     guard let ud  = UserDefaults(suiteName: kAppGroup),
           let raw = try? JSONSerialization.data(withJSONObject: info),
           let str = String(data: raw, encoding: .utf8)
     else { return }
     ud.set(str, forKey: kDiagnosticsKey)
+    // Clear stale-refresh flag if this was a successful extended timeline
+    if let src = info["source"] as? String,
+       (src == "extended" || src == "extended_fetch") {
+        ud.removeObject(forKey: "widgetNeedsRefresh")
+    }
     ud.synchronize()
+    wLog.info("[WidgetHealth] diagnostics written source=\(info["source"] as? String ?? "?")")
 }
 
 // MARK: — Helpers

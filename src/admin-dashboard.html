@@ -845,7 +845,8 @@
         }
         .collapsible-card.is-collapsed #colBtn-rh i,
         .collapsible-card.is-collapsed #colBtn-prayer i,
-        .collapsible-card.is-collapsed #colBtn-i18n i {
+        .collapsible-card.is-collapsed #colBtn-i18n i,
+        .collapsible-card.is-collapsed #colBtn-widget i {
             transform: rotate(180deg);
         }
 
@@ -1738,6 +1739,10 @@
                         <i data-lucide="activity"></i>
                         <span class="nav-item-label">DB Health</span>
                     </a>
+                    <a href="/admin-widget-health.html" class="nav-item">
+                        <i data-lucide="smartphone"></i>
+                        <span class="nav-item-label">Widget Health</span>
+                    </a>
                     <a href="/admin-jobs.html" class="nav-item">
                         <i data-lucide="clock"></i>
                         <span class="nav-item-label">Jobs</span>
@@ -2413,6 +2418,55 @@
                         </table>
                     </div>
                     </div><!-- /collapsible-body i18n -->
+                </div>
+
+                <!-- ══ Widget Health ══ -->
+                <div class="card card-animate collapsible-card" id="widgetHealthCard" style="animation-delay:440ms;margin-bottom:20px;">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:14px;margin-bottom:4px;flex-wrap:wrap;gap:8px;cursor:pointer;" onclick="toggleCollapse('widget')">
+                        <h3 class="card-title" style="display:flex;align-items:center;gap:8px;">
+                            <span style="width:8px;height:8px;background:#3b82f6;border-radius:50%;"></span>
+                            Widget Health
+                        </h3>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
+                            <span id="widgetHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
+                            <button onclick="forceWidgetRefreshAdmin()" style="font-size:12px;color:#fff;background:#3b82f6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps widget_refresh_nonce — all iOS devices force-refresh on next open">
+                                Force Refresh All Widgets
+                            </button>
+                            <button onclick="clearWidgetCacheAdmin()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Clears extended cache — widget will re-fetch from API">
+                                Clear Widget Cache
+                            </button>
+                            <button onclick="validateWidgetHealth()" style="font-size:12px;color:#fff;background:#10b981;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
+                                Validate
+                            </button>
+                            <button class="collapse-btn" id="colBtn-widget" onclick="event.stopPropagation();toggleCollapse('widget')" title="Collapse section">
+                                <i data-lucide="chevron-up" style="width:14px;height:14px;transition:transform .2s;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapsible-body" id="colBody-widget">
+                    <div id="widgetHealthSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 0 10px 0;border-bottom:1px solid var(--border-light);margin-bottom:10px;">
+                        <div style="color:var(--text-tertiary);font-size:13px;padding:4px 0;">Loading...</div>
+                    </div>
+                    <div class="table-container" style="max-height:300px;overflow-y:auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Platform</th>
+                                    <th>Status</th>
+                                    <th>City</th>
+                                    <th>Payload Age</th>
+                                    <th>Ext Cache</th>
+                                    <th>Source</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="widgetHealthBody">
+                                <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div><!-- /collapsible-body widget -->
                 </div>
 
                 <!-- ══ Recent Messages (super_admin only) ══ -->
@@ -3953,6 +4007,148 @@
         }
 
         /* ═══════════════════════════════════════════════
+           WIDGET HEALTH
+           ═══════════════════════════════════════════════ */
+
+        var WIDGET_STATUS_META = {
+            healthy:           { color: '#10b981', label: 'Healthy',           icon: '✓' },
+            stale:             { color: '#f59e0b', label: 'Stale',             icon: '⏱' },
+            delayed:           { color: '#fb923c', label: 'Delayed',           icon: '⚠' },
+            failed:            { color: '#ef4444', label: 'Failed',            icon: '✗' },
+            throttled:         { color: '#8b5cf6', label: 'Throttled',         icon: '⊘' },
+            appGroupMismatch:  { color: '#dc2626', label: 'AppGroup Mismatch', icon: '⛔' },
+            missingTimeline:   { color: '#6b7280', label: 'No Timeline',       icon: '?' },
+            oldPrayerData:     { color: '#f59e0b', label: 'Old Prayer Data',   icon: '📅' }
+        };
+
+        async function loadWidgetHealth() {
+            var summaryEl = document.getElementById('widgetHealthSummary');
+            var bodyEl    = document.getElementById('widgetHealthBody');
+            var updatedEl = document.getElementById('widgetHealthUpdated');
+            if (!summaryEl || !bodyEl) return;
+
+            try {
+                var sb = window.adminAuth && window.adminAuth.getSupabase ? window.adminAuth.getSupabase() : null;
+                if (!sb) { summaryEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">Supabase not ready.</div>'; return; }
+
+                var { data, error } = await sb
+                    .from('widget_health_reports')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(60);
+
+                if (updatedEl) updatedEl.textContent = 'Updated ' + getTimeAgo(new Date());
+
+                if (error || !data || !data.length) {
+                    summaryEl.innerHTML = '<div style="font-size:13px;color:var(--text-tertiary);">No widget health reports yet. Reports appear here when iOS devices open the app.</div>';
+                    bodyEl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-tertiary);">No data</td></tr>';
+                    return;
+                }
+
+                // Summary badges
+                var counts = {};
+                data.forEach(function(r) { counts[r.status] = (counts[r.status]||0)+1; });
+                var avgAge = data.filter(function(r){return r.payload_age_min!=null;})
+                    .reduce(function(s,r){return s+r.payload_age_min;},0) / (data.length||1);
+                summaryEl.innerHTML =
+                    Object.keys(WIDGET_STATUS_META).map(function(s){
+                        var n=counts[s]||0; if(!n)return '';
+                        var m=WIDGET_STATUS_META[s];
+                        return '<div style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;">' +
+                            '<span style="font-size:14px;color:'+m.color+'">'+m.icon+'</span>' +
+                            '<span style="font-weight:700;color:'+m.color+'">'+n+'</span>' +
+                            '<span style="color:var(--text-secondary)">'+m.label+'</span></div>';
+                    }).join('') +
+                    '<div style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--border-light);border-radius:8px;padding:5px 12px;font-size:12px;margin:2px;">' +
+                    '<span style="color:var(--text-secondary)">Avg age</span>' +
+                    '<span style="font-weight:700;color:var(--text-primary)">' + Math.round(avgAge) + 'm</span></div>';
+
+                // Table rows
+                bodyEl.innerHTML = '';
+                data.forEach(function(r) {
+                    var m  = WIDGET_STATUS_META[r.status] || { color: '#999', label: r.status||'?', icon: '?' };
+                    var platIcon = r.platform==='ios'?'🍎':r.platform==='android'?'🤖':'🌐';
+                    var ageStr   = r.payload_age_min != null ? r.payload_age_min + 'm' : '—';
+                    var extStr   = r.ext_cache_age_h != null ? r.ext_cache_age_h + 'h' : '—';
+                    var statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:'+m.color+'22;color:'+m.color+'">'+m.label+'</span>';
+                    var tr = document.createElement('tr');
+                    tr.innerHTML =
+                        '<td style="font-size:12px;color:var(--text-tertiary)">'+getTimeAgo(new Date(r.created_at))+'</td>'+
+                        '<td style="font-size:12px">'+platIcon+' '+( r.platform||'—')+'</td>'+
+                        '<td>'+statusBadge+'</td>'+
+                        '<td style="font-size:12px;font-weight:600">'+(r.city||'—')+'</td>'+
+                        '<td style="font-size:12px;color:'+(r.payload_age_min>60?'#f59e0b':'var(--text-secondary)')+'">'+ageStr+'</td>'+
+                        '<td style="font-size:12px;color:var(--text-secondary)">'+extStr+'</td>'+
+                        '<td style="font-size:12px;color:var(--text-secondary)">'+(r.last_refresh_source||'—')+'</td>'+
+                        '<td style="font-size:11px;color:#ef4444;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r.error_msg||'—')+'</td>';
+                    bodyEl.appendChild(tr);
+                });
+            } catch(e) {
+                summaryEl.innerHTML = '<div style="font-size:13px;color:#ef4444;">Error loading widget health: ' + e.message + '</div>';
+            }
+        }
+
+        async function forceWidgetRefreshAdmin() {
+            var btn = event.target;
+            if (!btn) return;
+            var newNonce = String(Date.now());
+            btn.disabled = true; btn.textContent = 'Sending...';
+            try {
+                var token = sessionStorage.getItem('adminToken') || '';
+                var r = await fetch('/admin-translations-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: 'upsert_site_setting', key: 'widget_refresh_nonce', value: newNonce })
+                });
+                var j = await r.json();
+                if (j.success) {
+                    btn.textContent = 'Sent! All devices will refresh on next open';
+                    btn.style.background = '#10b981';
+                    setTimeout(function() { btn.textContent = 'Force Refresh All Widgets'; btn.style.background = '#3b82f6'; btn.disabled = false; }, 5000);
+                } else { btn.textContent = 'Failed'; btn.style.background = '#6b7280'; btn.disabled = false; }
+            } catch(e) { btn.textContent = 'Error'; btn.style.background = '#6b7280'; btn.disabled = false; }
+        }
+
+        async function clearWidgetCacheAdmin() {
+            var btn = event.target;
+            if (!btn) return;
+            // Clear extended cache by writing a new nonce — SharedPrefsPlugin removes widgetExtendedCache
+            btn.disabled = true; btn.textContent = 'Clearing...';
+            try {
+                var token = sessionStorage.getItem('adminToken') || '';
+                var r = await fetch('/admin-translations-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: 'upsert_site_setting', key: 'widget_refresh_nonce', value: 'clear_' + Date.now() })
+                });
+                var j = await r.json();
+                if (j.success) {
+                    btn.textContent = 'Cache cleared — widgets will re-fetch on next open';
+                    btn.style.background = '#10b981';
+                    setTimeout(function() { btn.textContent = 'Clear Widget Cache'; btn.style.background = '#ef4444'; btn.disabled = false; }, 5000);
+                } else { btn.textContent = 'Failed'; btn.style.background = '#6b7280'; btn.disabled = false; }
+            } catch(e) { btn.textContent = 'Error'; btn.style.background = '#6b7280'; btn.disabled = false; }
+        }
+
+        async function validateWidgetHealth() {
+            var btn = event.target;
+            if (!btn) return;
+            btn.disabled = true; btn.textContent = 'Validating...';
+            try {
+                var sb = window.adminAuth && window.adminAuth.getSupabase ? window.adminAuth.getSupabase() : null;
+                if (!sb) { btn.textContent = 'Supabase not ready'; btn.disabled = false; return; }
+                var { data } = await sb.from('widget_health_reports').select('*').order('created_at',{ascending:false}).limit(1);
+                var latest = data && data[0];
+                if (!latest) { btn.textContent = 'No reports found'; btn.style.background = '#f59e0b'; setTimeout(function(){btn.textContent='Validate';btn.style.background='#10b981';btn.disabled=false;},3000); return; }
+                var ageMin = Math.round((Date.now() - new Date(latest.created_at).getTime()) / 60000);
+                var ok = latest.status === 'healthy' && ageMin < 120;
+                btn.textContent = ok ? '✓ OK — ' + latest.city + ' ' + ageMin + 'm ago' : '⚠ ' + latest.status + ' ' + ageMin + 'm ago';
+                btn.style.background = ok ? '#10b981' : '#f59e0b';
+                setTimeout(function(){btn.textContent='Validate';btn.style.background='#10b981';btn.disabled=false;},5000);
+            } catch(e) { btn.textContent = 'Error'; btn.style.background = '#6b7280'; btn.disabled = false; }
+        }
+
+        /* ═══════════════════════════════════════════════
            TRANSLATION HEALTH
            ═══════════════════════════════════════════════ */
 
@@ -4722,6 +4918,9 @@
                 i18nSettingsRows.forEach(function(r) { i18nMeta[r.key] = r.value; });
             }
             buildI18nHealth(dat(17), i18nMeta);
+
+            // ─── Widget Health ───
+            loadWidgetHealth();
 
             // ─── System Widgets ───
             buildErrorsWidget(val(19));

@@ -7722,6 +7722,18 @@ function initSupabase(cb){
         console.log('[PrayerCache] remote version changed to',cfg.prayerCacheVersion,'— all caches purged');
       }
     }
+    // Remote widget refresh nonce — if admin bumped it, force-push all widget data
+    // so every iOS device gets a fresh App Group write and WidgetCenter reload.
+    if(cfg.widgetRefreshNonce){
+      var _storedWidgetNonce=localStorage.getItem('widget_refresh_nonce_seen')||'';
+      if(_storedWidgetNonce!==String(cfg.widgetRefreshNonce)){
+        localStorage.setItem('widget_refresh_nonce_seen',String(cfg.widgetRefreshNonce));
+        console.log('[WidgetRefresh] admin nonce changed → forceWidgetRefresh');
+        if(window.PrayerUI&&window.PrayerUI.forceWidgetRefresh){
+          window.PrayerUI.forceWidgetRefresh('adminNonce');
+        }
+      }
+    }
     // Remote i18n cache version — if admin bumped it, purge translation cache
     // so every device fetches fresh translations from Supabase on next open.
     if(cfg.i18nCacheVersion){
