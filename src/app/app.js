@@ -4661,9 +4661,12 @@ function playAyah(surah,ayah){
     // Pre-decoded secondary buffer is ready — swap it as the main element src
     src=_audioBuf.src;_srcType='prebuf';
     _audioBuf=null;_audioBufKey=null;
+    // Defer revoke: slot.blob === src, must not revoke before audio element loads it
+    if(_blobToRevoke)URL.revokeObjectURL(_blobToRevoke);
+    _blobToRevoke=src;
     if(slot){
       if(slot.xhr){slot.xhr.abort();}
-      if(slot.blob){URL.revokeObjectURL(slot.blob);}
+      // slot.blob already transferred to _blobToRevoke — do NOT revoke here
       delete _pfCache[url];
     }
   } else if(slot&&slot.blob){
