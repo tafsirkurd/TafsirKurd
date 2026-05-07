@@ -127,7 +127,7 @@ img{display:block;max-width:100%}
   --ayah-read-opacity:.5;
   --ayah-current-glow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent),0 2px 18px color-mix(in srgb,var(--accent) 7%,transparent);
   --fu-glow:rgba(38,100,58,.22);--fu-ring:rgba(56,130,78,.3);
-  --logo-filter:invert(1);--logo-blend:screen;--mushaf-filter:invert(1);
+  --logo-filter:invert(1);--logo-blend:screen;--mushaf-filter:none;
   --fu-logo-filter:invert(1) brightness(1.1);
 }
 /* ── Sakina: deep emerald night × gold ── */
@@ -146,7 +146,7 @@ img{display:block;max-width:100%}
   --ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,transparent),0 3px 22px color-mix(in srgb,var(--accent) 24%,transparent);
   --ayah-next-border:color-mix(in srgb,var(--accent) 40%,transparent);
   --fu-glow:rgba(201,168,76,.18);--fu-ring:rgba(201,168,76,.3);
-  --logo-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);--logo-blend:screen;--mushaf-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);
+  --logo-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);--logo-blend:screen;--mushaf-filter:none;
   --fu-logo-filter:invert(1) sepia(1) saturate(4) hue-rotate(-15deg) brightness(0.85);
 }
 /* ── Noor: warm parchment × deep green ── */
@@ -363,7 +363,7 @@ body{background:var(--bg);color:var(--text)}
 .mushaf-surah-banner::before,.mushaf-surah-banner::after{content:'';position:absolute;top:50%;transform:translateY(-50%);height:1px;background:var(--border2);width:36%}
 .mushaf-surah-banner::before{right:0}.mushaf-surah-banner::after{left:0}
 .mushaf-bismillah{text-align:center;font-family:'KFGQPC Hafs',serif;font-size:1.5rem;line-height:2.2;color:var(--text);margin-bottom:4px}
-.mushaf-qcf-line{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:center;direction:rtl;color:var(--text);white-space:nowrap;overflow:visible;-webkit-user-select:none;user-select:none;filter:var(--mushaf-filter,none)}
+.mushaf-qcf-line{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:center;direction:rtl;color:var(--text);white-space:nowrap;overflow:visible;-webkit-user-select:none;user-select:none}
 .mushaf-ayah-seg{display:inline;cursor:pointer;border-radius:3px;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:background .1s}
 .mushaf-ayah-seg.mushaf-seg-sel{background:rgba(128,128,128,.18);box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .mushaf-ayah-seg--current{background:var(--ayah-current-bg);border-radius:4px;box-shadow:var(--ayah-current-glow);box-decoration-break:clone;-webkit-box-decoration-break:clone;animation:seg-pulse-in .32s ease forwards}
@@ -3239,7 +3239,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=20260515"></script>
+<script src="/app/app.js?v=20260516"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
