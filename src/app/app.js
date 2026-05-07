@@ -1437,6 +1437,7 @@ App.tab=function(name){
     App.closeReaderSettings();
 
     // Renders for new tab
+    if(name==='quran'){requestAnimationFrame(_hlRestoreAll);}
     if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}}
     if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){renderGoals();_renderHash.goals=_tabHash('goals');}}
     if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}}
@@ -3863,6 +3864,8 @@ function renderAyahs(surahNum,scrollTo){
 
   // Always sync-render only the first BATCH — never block main thread on large surahs
   appendBatch(1,BATCH,true);
+  // Restore any active playback highlight state onto the freshly-rendered cards
+  requestAnimationFrame(_hlRestoreAll);
 
   // Progress
   updateProgress(list,total);
@@ -4576,23 +4579,53 @@ function _hlRestoreMushafPage(pageEl){
   });
 }
 
-// Full reset — called on stop/pause/tab-switch/surah-change/mode-toggle
-function clearAllHighlights(){
+// Strip CSS classes from DOM elements and zero element-ref arrays.
+// Preserves currentKey/nextKey/readMap keys so state can be restored after DOM rebuilds.
+function _hlClearDom(){
   var ALL=['mushaf-ayah-seg--current','mushaf-ayah-seg--next','mushaf-ayah-seg--read',
            'quran-ayah--current','quran-ayah--next','quran-ayah--read'];
   var seen=(_hl.currentEls||[]).concat(_hl.nextEls||[]);
   Object.keys(_hl.readMap).forEach(function(k){seen=seen.concat(_hl.readMap[k]||[]);});
   seen.forEach(function(e){ALL.forEach(function(c){e.classList.remove(c);});});
-  // Safety net: DOM scan catches any elements the cache missed
   var view=$('mushafView');
   if(view)ALL.forEach(function(c){view.querySelectorAll('.'+c).forEach(function(e){e.classList.remove(c);});});
   var list=$('ayahList');
   if(list)ALL.forEach(function(c){list.querySelectorAll('.'+c).forEach(function(e){e.classList.remove(c);});});
-  _hl.currentKey=null;_hl.currentEls=[];_hl.nextKey=null;_hl.nextEls=[];_hl.readMap={};
+  _hl.currentEls=[];_hl.nextEls=[];
+  Object.keys(_hl.readMap).forEach(function(k){_hl.readMap[k]=[];});
 }
 
-// Backward-compat alias used by the mushaf renderer and tab-switch code
-function clearMushafHighlights(){clearAllHighlights();}
+// Full reset — only call when playback actually ends (audioClose, surah change, etc.)
+function clearAllHighlights(){
+  _hlClearDom();
+  _hl.currentKey=null;_hl.nextKey=null;_hl.readMap={};
+}
+
+// Re-apply saved highlight state to current DOM without touching _hl keys.
+// Called after tab switch back to Quran, after renderAyahs, after mushaf page render.
+function _hlRestoreAll(){
+  if(!S.audio.playing||!_hl.currentKey)return;
+  var mode=S.mushafMode?'mushaf':'reader';
+  if(mode==='reader'){
+    var playSurah=parseInt(_hl.currentKey.split(':')[0],10);
+    if(playSurah!==S.surah)return;
+  }
+  var CC=mode==='mushaf'?'mushaf-ayah-seg--current':'quran-ayah--current';
+  var NC=mode==='mushaf'?'mushaf-ayah-seg--next':'quran-ayah--next';
+  var RC=mode==='mushaf'?'mushaf-ayah-seg--read':'quran-ayah--read';
+  var curEls=_hlEls(_hl.currentKey,mode);
+  _hl.currentEls=curEls;_hlSet(curEls,CC,true);
+  if(_hl.nextKey){
+    var nxtEls=_hlEls(_hl.nextKey,mode);
+    _hl.nextEls=nxtEls;_hlSet(nxtEls,NC,true);
+  }
+  Object.keys(_hl.readMap).forEach(function(k){
+    var els=_hlEls(k,mode);_hl.readMap[k]=els;_hlSet(els,RC,true);
+  });
+}
+
+// Tab-switch/mode-toggle: clear DOM only — preserve state so _hlRestoreAll() can replay it
+function clearMushafHighlights(){_hlClearDom();}
 // Legacy alias — updateMushafHighlight(0,0) called from audioClose
 function updateMushafHighlight(s,a){updateHighlight(s,a);}
 
