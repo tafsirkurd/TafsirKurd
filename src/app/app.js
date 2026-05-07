@@ -3998,14 +3998,6 @@ function updateMushafProgress(view){
     }
     return _surahSeen[sn];
   }
-  // Pre-load all 114 surahs so all-Quran % is accurate from the start
-  for(var _pi=1;_pi<=114;_pi++)_getSeen(_pi);
-
-  // Count total seen ayahs across all Quran
-  function _allSeenCount(){
-    var n=0;for(var k in _surahSeen)n+=_surahSeen[k].size;return n;
-  }
-
   // ── Dirty-save tracker — saves all modified surahs in one debounced flush ─
   var _dirty=new Set();
   function scheduleSave(sn){
@@ -4053,9 +4045,10 @@ function updateMushafProgress(view){
     var lbl=$('readerAyahLabel');
     if(lbl)lbl.textContent=count+'/'+total+' '+t('reader.ayah');
 
-    // Bar + % = all-Quran
-    var allSeen=_allSeenCount();
-    var allPct=_totalQ>0?Math.min(100,Math.round(allSeen/_totalQ*100)):0;
+    // Bar + % = positional all-Quran progress (cumulative ayahs up to current surah)
+    var cumul=0;
+    for(var ci=1;ci<=dispS;ci++){var cs=SURAHS[ci-1];if(cs)cumul+=cs.a;}
+    var allPct=_totalQ>0?Math.min(100,Math.round(cumul/_totalQ*100)):0;
     var fill=$('readerProgressFill');if(fill)fill.style.width=allPct+'%';
     var pctEl=$('readerPct');if(pctEl)pctEl.textContent=allPct+'%';
 
