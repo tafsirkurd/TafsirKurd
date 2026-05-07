@@ -368,7 +368,7 @@
     _fetchRainInProgress = true;
 
     /* 10 independent sources — 6 meteorological models via Open-Meteo,
-       wttr.in ×2, Norwegian Met Office, and 7timer.info                */
+       wttr.in ×2, and Norwegian Met Office                              */
 
     /* Sources 1-6 — Open-Meteo serving 6 different agency models */
     var s1 = _omFetch(_OM);                                                   /* best-match (auto) */
@@ -402,20 +402,7 @@
         return 'clear';
       }).catch(function() { return null; });
 
-    /* Source 10 — 7timer.info CIVIL product (independent forecast provider) */
-    var s10 = fetch('https://www.7timer.info/bin/api.pl?lon=42.95&lat=36.87&product=civil&output=json')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        var ds   = (d.dataseries && d.dataseries[0]) || {};
-        var prec = ds.prec_type || 'none';
-        var wspd = (ds.wind10m && ds.wind10m.speed) || 1; /* 1-8 scale; 7≥50 km/h */
-        if (prec === 'snow') return 'snow';
-        if (prec === 'rain' || prec === 'frzr' || prec === 'icepellets') return 'rain';
-        if (wspd >= 7) return 'wind';
-        return 'clear';
-      }).catch(function() { return null; });
-
-    Promise.all([s1, s2, s3, s4, s5, s6, s7, s8, s9, s10]).then(function(results) {
+    Promise.all([s1, s2, s3, s4, s5, s6, s7, s8, s9]).then(function(results) {
       _fetchRainInProgress = false;
       /* Filter out nulls (failed sources) */
       var valid = results.filter(function(r) { return r !== null; });

@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Tafsir Kurd</title>
 
@@ -27,10 +28,6 @@
   // light→splash-light  dark→splash-dark  noor→splash-parchment  sakina→splash-emerald
   var _sm={light:'light',dark:'dark',noor:'parchment',sakina:'emerald'};
   window._splashName=_sm[theme]||'light';
-  var _pl=document.createElement('link');
-  _pl.rel='preload';_pl.as='video';_pl.type='video/mp4';
-  _pl.href='/assets/videos/splash-'+window._splashName+'.mp4';
-  document.head.appendChild(_pl);
 })();
 // Device-safe rendering detection — default OFF, only enable on confirmed safe devices
 (function(){

@@ -271,7 +271,7 @@
     _weatherFetchInProgress = true;
 
     var _OMB = 'https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1';
-    /* 10 sources: 6 Open-Meteo models + wttr.in ×2 + met.no + 7timer */
+    /* 9 sources: 6 Open-Meteo models + wttr.in ×2 + met.no */
     var s1  = _omFetchPW(_OMB);
     var s2  = _omFetchPW(_OMB + '&models=ecmwf_ifs025');
     var s3  = _omFetchPW(_OMB + '&models=gfs_seamless');
@@ -295,18 +295,8 @@
         if(wind>=11)return 'wind';
         return 'clear';
       }).catch(function(){return null;});
-    var s10 = fetch('https://www.7timer.info/bin/api.pl?lon=42.95&lat=36.87&product=civil&output=json')
-      .then(function(r){return r.json();}).then(function(d){
-        var ds=(d.dataseries&&d.dataseries[0])||{};
-        var prec=ds.prec_type||'none';
-        var wspd=(ds.wind10m&&ds.wind10m.speed)||1;
-        if(prec==='snow')return 'snow';
-        if(prec==='rain'||prec==='frzr'||prec==='icepellets')return 'rain';
-        if(wspd>=7)return 'wind';
-        return 'clear';
-      }).catch(function(){return null;});
 
-    Promise.all([s1,s2,s3,s4,s5,s6,s7,s8,s9,s10]).then(function(results){
+    Promise.all([s1,s2,s3,s4,s5,s6,s7,s8,s9]).then(function(results){
       _weatherFetchInProgress = false;
       var valid = results.filter(function(r){return r!==null;});
       if (!valid.length) return;
