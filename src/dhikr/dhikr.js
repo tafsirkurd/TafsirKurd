@@ -1624,7 +1624,6 @@ window.GencineUI = {
     }
 
     /* Search bar */
-    if (!this._hadithSort) this._hadithSort = 'default';
     var searchWrap = document.createElement('div');
     searchWrap.className = 'hadith-search-wrap';
     var searchIco = document.createElement('i');
@@ -1636,13 +1635,6 @@ window.GencineUI = {
     searchInput.placeholder = T('gencine.hadith_search_ph','گەڕان بە ناو یا دەق...');
     searchInput.value = this._hadithSearch;
     searchWrap.appendChild(searchInput);
-    var sortBtn = document.createElement('button');
-    sortBtn.className = 'hadith-sort-btn' + (this._hadithSort === 'az' ? ' hadith-sort-btn--active' : '');
-    sortBtn.title = 'sort';
-    var sortIco = document.createElement('i');
-    sortIco.className = 'fas fa-arrow-down-a-z';
-    sortBtn.appendChild(sortIco);
-    searchWrap.appendChild(sortBtn);
     container.appendChild(searchWrap);
 
     /* Count label */
@@ -1668,18 +1660,6 @@ window.GencineUI = {
         }).filter(function(x){ return x.score > 0; });
         scored.sort(function(a, b){ return b.score - a.score; });
         countEl.textContent = scored.length + ' / ' + hadiths.length + ' ' + T('gencine.hadith_count','فەرمودە');
-      }
-
-      if (self._hadithSort === 'az' && (!q || !q.trim())) {
-        scored.sort(function(a, b){
-          var ta = a.h.title ? a.h.title.trim() : '';
-          var tb = b.h.title ? b.h.title.trim() : '';
-          // Untitled hadiths go to end, preserving their sort_order among themselves
-          if (!ta && !tb) return (a.h.sort_order || 0) - (b.h.sort_order || 0);
-          if (!ta) return 1;
-          if (!tb) return -1;
-          return ta.localeCompare(tb, undefined, { sensitivity: 'base', numeric: true });
-        });
       }
 
       if (!scored.length) {
@@ -1747,12 +1727,6 @@ window.GencineUI = {
     }
 
     buildList(this._hadithSearch);
-
-    sortBtn.addEventListener('click', function(){
-      self._hadithSort = (self._hadithSort === 'az') ? 'default' : 'az';
-      sortBtn.classList.toggle('hadith-sort-btn--active', self._hadithSort === 'az');
-      buildList(self._hadithSearch);
-    });
 
     searchInput.addEventListener('input', function(){
       self._hadithSearch = this.value;
