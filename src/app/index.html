@@ -110,6 +110,12 @@ img{display:block;max-width:100%}
   --ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 30%,transparent),0 2px 16px color-mix(in srgb,var(--accent) 10%,transparent);
   --ayah-next-bg:color-mix(in srgb,var(--accent) 4%,transparent);
   --ayah-next-border:color-mix(in srgb,var(--accent) 28%,transparent);
+  /* Mushaf-specific highlight (separate from reader cards) */
+  --audio-bar-h:0px;
+  --mhl-cur-bg:color-mix(in srgb,var(--accent) 6%,transparent);
+  --mhl-cur-line:color-mix(in srgb,var(--accent) 42%,transparent);
+  --mhl-cur-glow:0 0 10px color-mix(in srgb,var(--accent) 5%,transparent);
+  --mhl-read-op:.55;
   --fu-glow:rgba(26,92,58,.12);--fu-ring:rgba(26,92,58,.22);
   --logo-filter:none;--logo-blend:multiply;--mushaf-filter:none;
   --fu-logo-filter:none;
@@ -126,6 +132,10 @@ img{display:block;max-width:100%}
   --accent-glow:rgba(255,255,255,.07);
   --ayah-read-opacity:.5;
   --ayah-current-glow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent),0 2px 18px color-mix(in srgb,var(--accent) 7%,transparent);
+  --mhl-cur-bg:color-mix(in srgb,var(--accent) 9%,transparent);
+  --mhl-cur-line:color-mix(in srgb,var(--accent) 26%,transparent);
+  --mhl-cur-glow:0 0 8px color-mix(in srgb,var(--accent) 4%,transparent);
+  --mhl-read-op:.43;
   --fu-glow:rgba(38,100,58,.22);--fu-ring:rgba(56,130,78,.3);
   --logo-filter:invert(1);--logo-blend:screen;--mushaf-filter:none;
   --fu-logo-filter:invert(1) brightness(1.1);
@@ -145,6 +155,10 @@ img{display:block;max-width:100%}
   --ayah-current-bg:color-mix(in srgb,var(--accent) 14%,transparent);
   --ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,transparent),0 3px 22px color-mix(in srgb,var(--accent) 24%,transparent);
   --ayah-next-border:color-mix(in srgb,var(--accent) 40%,transparent);
+  --mhl-cur-bg:color-mix(in srgb,var(--accent) 10%,transparent);
+  --mhl-cur-line:color-mix(in srgb,var(--accent) 55%,transparent);
+  --mhl-cur-glow:0 0 14px color-mix(in srgb,var(--accent) 9%,transparent);
+  --mhl-read-op:.47;
   --fu-glow:rgba(201,168,76,.18);--fu-ring:rgba(201,168,76,.3);
   --logo-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);--logo-blend:screen;--mushaf-filter:none;
   --fu-logo-filter:invert(1) sepia(1) saturate(4) hue-rotate(-15deg) brightness(0.85);
@@ -163,6 +177,10 @@ img{display:block;max-width:100%}
   --fu-glow:rgba(26,92,58,.1);--fu-ring:rgba(26,92,58,.2);
   --logo-filter:sepia(0.35) brightness(0.88);--logo-blend:multiply;
   --fu-logo-filter:sepia(0.4) brightness(0.82);
+  --mhl-cur-bg:color-mix(in srgb,var(--accent) 7%,transparent);
+  --mhl-cur-line:color-mix(in srgb,var(--accent) 36%,transparent);
+  --mhl-cur-glow:0 0 10px color-mix(in srgb,var(--accent) 4%,transparent);
+  --mhl-read-op:.52;
 }
 
 body{background:var(--bg);color:var(--text)}
@@ -354,7 +372,7 @@ body{background:var(--bg);color:var(--text)}
 .sticky-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#27ae60);border-radius:var(--r-full);transition:width .3s ease;width:0}
 .sticky-progress-info{display:flex;justify-content:space-between;align-items:center}
 /* Mushaf QCF V1 (Madinah) */
-.mushaf-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:8px 8px calc(var(--tab-h) + var(--safe-b) + 80px);position:relative}
+.mushaf-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:8px 8px calc(var(--tab-h) + var(--safe-b) + var(--audio-bar-h) + 48px);position:relative}
 .mushaf-text-page{background:var(--surface);border-radius:18px;padding:32px 22px 22px;margin-bottom:16px;box-shadow:0 2px 24px rgba(0,0,0,.11);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s ease;overflow:hidden}
 .mushaf-text-page:active{opacity:.75}
 .mushaf-surah-nav{padding:8px 16px 24px;display:flex;justify-content:space-between;gap:10px}
@@ -366,10 +384,10 @@ body{background:var(--bg);color:var(--text)}
 .mushaf-qcf-line{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:center;direction:rtl;color:var(--text);white-space:nowrap;overflow:visible;-webkit-user-select:none;user-select:none}
 .mushaf-ayah-seg{display:inline;cursor:pointer;border-radius:3px;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:background .1s}
 .mushaf-ayah-seg.mushaf-seg-sel{background:rgba(128,128,128,.18);box-decoration-break:clone;-webkit-box-decoration-break:clone}
-.mushaf-ayah-seg--current{background:var(--ayah-current-bg);border-radius:4px;box-shadow:var(--ayah-current-glow);box-decoration-break:clone;-webkit-box-decoration-break:clone;animation:seg-pulse-in .32s ease forwards}
-.mushaf-ayah-seg--current:active{background:color-mix(in srgb,var(--accent) 22%,transparent);box-decoration-break:clone;-webkit-box-decoration-break:clone}
-.mushaf-ayah-seg--read{opacity:var(--ayah-read-opacity);transition:opacity .4s}
-.mushaf-ayah-seg--next{background:var(--ayah-next-bg);border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:background .25s}
+.mushaf-ayah-seg--current{background:var(--mhl-cur-bg);border-radius:2px;box-shadow:0 2px 0 0 var(--mhl-cur-line),var(--mhl-cur-glow);box-decoration-break:clone;-webkit-box-decoration-break:clone;animation:seg-pulse-in .28s ease forwards}
+.mushaf-ayah-seg--current:active{background:color-mix(in srgb,var(--accent) 16%,transparent);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.mushaf-ayah-seg--read{opacity:var(--mhl-read-op);transition:opacity .5s}
+.mushaf-ayah-seg--next{opacity:.84;transition:opacity .3s}
 .mushaf-flow-verse{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:justify;direction:rtl;color:var(--text);padding:2px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px;transition:background .12s}
 .mushaf-flow-verse:active{background:rgba(128,128,128,.12)}
 .mushaf-page-foot{text-align:center;margin-top:12px;padding-top:8px;border-top:1px solid var(--border)}
@@ -381,7 +399,7 @@ body{background:var(--bg);color:var(--text)}
 .mushaf-skeleton-line{height:20px;margin:10px 0;border-radius:6px;background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3,#e8e8e8) 50%,var(--bg2) 75%);background-size:200% 100%;animation:mushaf-shimmer 1.4s infinite}
 @keyframes mushaf-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes ayah-pulse-in{0%{box-shadow:var(--ayah-current-glow),0 0 0 5px color-mix(in srgb,var(--accent) 16%,transparent)}100%{box-shadow:var(--ayah-current-glow)}}
-@keyframes seg-pulse-in{0%{background:color-mix(in srgb,var(--accent) 26%,transparent)}100%{background:var(--ayah-current-bg)}}
+@keyframes seg-pulse-in{0%{background:color-mix(in srgb,var(--accent) 18%,transparent);box-shadow:0 2px 0 0 color-mix(in srgb,var(--accent) 75%,transparent)}100%{background:var(--mhl-cur-bg);box-shadow:0 2px 0 0 var(--mhl-cur-line),var(--mhl-cur-glow)}}
 .mushaf-error{padding:48px 20px;text-align:center;color:var(--danger);font-size:.9rem}
 .mushaf-offline-err{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px}
 .mushaf-offline-err-msg{font-size:.88rem;color:var(--text2);line-height:1.6}
@@ -2457,7 +2475,7 @@ body{background:var(--bg);color:var(--text)}
   }
 
   /* Mushaf portrait: bigger, more book-like */
-  .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + 32px)}
+  .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + var(--audio-bar-h) + 32px)}
   .mushaf-text-page{
     max-width:680px!important;margin:0 auto 24px!important;
     padding:44px 36px 32px!important;
@@ -2626,7 +2644,7 @@ html.is-ipad #quranHome .hdr{background:var(--bg2)}
 html.is-ipad #quranHome .search-bar{background:var(--bg2)}
 html.is-ipad .surah-nav{max-width:var(--reading-max-w);width:calc(100% - 56px);margin-left:auto!important;margin-right:auto!important}
 /* Mushaf portrait: bigger, book-like */
-html.is-ipad .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + 32px)}
+html.is-ipad .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + var(--audio-bar-h) + 32px)}
 html.is-ipad .mushaf-text-page{max-width:680px!important;margin:0 auto 24px!important;padding:44px 36px 32px!important;border-radius:24px!important;box-shadow:0 6px 40px rgba(0,0,0,.13)!important}
 html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:28px!important;line-height:2.0!important}
 html.is-ipad .mushaf-surah-nav{max-width:680px;width:100%;margin-left:auto;margin-right:auto}
@@ -3239,7 +3257,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=20260516"></script>
+<script src="/app/app.js?v=20260517"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){

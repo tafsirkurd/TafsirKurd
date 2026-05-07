@@ -4738,6 +4738,12 @@ function updateAudioBarAvatar(){
   }
 }
 
+function _syncAudioBarH(){
+  var bar=$('audioBar');
+  var h=(bar&&bar.classList.contains('on'))?bar.offsetHeight:0;
+  document.documentElement.style.setProperty('--audio-bar-h',h+'px');
+}
+
 function showAudioBar(){
   var bar=$('audioBar');
   bar.classList.add('on');
@@ -4747,6 +4753,7 @@ function showAudioBar(){
   setAudioIcon(S.audio.playing?'pause':'play');
   updateAudioBarAvatar();
   if(typeof _fpOpen!=='undefined'&&_fpOpen)syncFullPlayer();
+  requestAnimationFrame(_syncAudioBarH);
 }
 
 App.audioToggle=function(){
@@ -4794,6 +4801,7 @@ App.audioClose=function(){
   clearPrefetch();
   if(window.AudioCache)AudioCache.cancelBg();
   $('audioBar').classList.remove('on');
+  requestAnimationFrame(_syncAudioBarH);
   updateReaderPlayState(0,0,false);
   clearAllHighlights();
   if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(0,0);
