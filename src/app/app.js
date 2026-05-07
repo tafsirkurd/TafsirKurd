@@ -3499,16 +3499,8 @@ function loadMushafPageQCF(pageEl,pageNum){
       var _rT=Date.now();
       clear(pageEl);
       pageEl.appendChild(frag);
-      // If audio is playing for this surah, restore highlight on newly-loaded page
-      if(S.mushafMode&&S.audio.playing&&S.audio.surah===S.surah){
-        var _hk=String(S.audio.surah)+':'+String(S.audio.ayah);
-        (window._mushafVerseElements[_hk]||[]).forEach(function(l){
-          if(pageEl.contains(l)){
-            l.classList.add('mushaf-line--playing');
-            if(_mushafPlayingEls.indexOf(l)<0)_mushafPlayingEls.push(l);
-          }
-        });
-      }
+      // Restore all active highlight states on the newly-rendered page
+      if(S.audio.playing&&S.audio.surah===S.surah)_hlRestoreMushafPage(pageEl);
       var _renderMs=Date.now()-_rT;
       var _total=Date.now()-_t0;
       // Integrity validation + line auto-fit — runs after DOM commit
@@ -4492,36 +4484,117 @@ App.mushafPlayToggle=function(){
   }
 };
 
-/* ===== MUSHAF AUDIO HIGHLIGHT ===== */
-var _mushafPlayingEls=[]; // cached — avoids querySelectorAll on every ayah change
+/* ===== QURAN AUDIO HIGHLIGHT STATE MACHINE ===== */
+// Tracks current/next/read state for both reader and mushaf modes.
+// Only updates the elements that change — no full DOM scan per ayah.
+var _hl={currentKey:null,nextKey:null,currentEls:[],nextEls:[],readMap:{}};
 
-// Central cleanup — safe to call any time, even if mushaf DOM is not mounted
-function clearMushafHighlights(){
-  _mushafPlayingEls.forEach(function(e){e.classList.remove('mushaf-line--playing');});
-  _mushafPlayingEls=[];
-  // Safety net: catches elements added outside the cache (e.g. lazy page restore)
-  var view=$('mushafView');
-  if(!view)return;
-  var stale=view.querySelectorAll('.mushaf-line--playing');
-  stale.forEach(function(e){e.classList.remove('mushaf-line--playing');});
+function _hlKey(s,a){return String(s)+':'+String(a);}
+
+function _hlEls(key,mode){
+  if(mode==='mushaf')return window._mushafVerseElements[key]||[];
+  var list=$('ayahList');if(!list)return[];
+  var ayah=key.split(':')[1];
+  var card=list.querySelector('.ayah-card[data-ayah="'+ayah+'"]');
+  return card?[card]:[];
 }
 
-function updateMushafHighlight(surah,ayah){
-  var view=$('mushafView');
-  if(!view){_mushafPlayingEls=[];return;}
-  clearMushafHighlights();
-  if(!surah||!ayah)return;
-  var key=String(surah)+':'+String(ayah);
-  var els=window._mushafVerseElements[key]||[];
-  if(!els.length)return; // target ayah not in current DOM — highlights already cleared, done
-  var first=null;
-  els.forEach(function(l){
-    if(view.contains(l)){l.classList.add('mushaf-line--playing');_mushafPlayingEls.push(l);if(!first)first=l;}
+function _hlSet(els,cls,add){
+  for(var i=0;i<els.length;i++){if(add)els[i].classList.add(cls);else els[i].classList.remove(cls);}
+}
+
+// Called every time the playing ayah changes — updates only the diff.
+function updateHighlight(surah,ayah){
+  if(!surah||!ayah){clearAllHighlights();return;}
+  var mode=S.mushafMode?'mushaf':'reader';
+  var CC=mode==='mushaf'?'mushaf-ayah-seg--current':'quran-ayah--current';
+  var NC=mode==='mushaf'?'mushaf-ayah-seg--next':'quran-ayah--next';
+  var RC=mode==='mushaf'?'mushaf-ayah-seg--read':'quran-ayah--read';
+  var newKey=_hlKey(surah,ayah);
+
+  // Demote previous current → read
+  if(_hl.currentKey&&_hl.currentKey!==newKey){
+    _hlSet(_hl.currentEls,CC,false);
+    _hlSet(_hl.currentEls,RC,true);
+    if(!_hl.readMap[_hl.currentKey])_hl.readMap[_hl.currentKey]=_hl.currentEls.slice();
+  }
+
+  // Retire old next if it won't become current
+  if(_hl.nextKey&&_hl.nextKey!==newKey){
+    _hlSet(_hl.nextEls,NC,false);
+    _hl.nextKey=null;_hl.nextEls=[];
+  }
+
+  // Apply current — re-trigger animation by removing then re-adding in next frame
+  var newEls=_hlEls(newKey,mode);
+  _hl.currentKey=newKey;_hl.currentEls=newEls;
+  _hlSet(newEls,RC,false);_hlSet(newEls,NC,false);
+  _hlSet(newEls,CC,false);
+  requestAnimationFrame(function(){_hlSet(newEls,CC,true);});
+
+  // Mark next ayah as up-next
+  var nxt=_nextAyahPos(surah,ayah);
+  if(nxt){
+    var nxtKey=_hlKey(nxt.surah,nxt.ayah);
+    if(nxtKey!==newKey){
+      var nxtEls=_hlEls(nxtKey,mode);
+      _hl.nextKey=nxtKey;_hl.nextEls=nxtEls;
+      _hlSet(nxtEls,RC,false);_hlSet(nxtEls,CC,false);_hlSet(nxtEls,NC,true);
+    }
+  }
+
+  // Mushaf: scroll to first visible current seg + notify tafsir sheet
+  if(mode==='mushaf'){
+    var view=$('mushafView');
+    if(view&&newEls.length){
+      for(var i=0;i<newEls.length;i++){
+        if(view.contains(newEls[i])){newEls[i].scrollIntoView({behavior:'smooth',block:'center'});break;}
+      }
+    }
+    if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
+  }
+}
+
+// Re-apply all active highlight states to elements on a newly-rendered Mushaf page.
+// _mushafVerseElements is always up-to-date at this point; _hl caches may lag.
+function _hlRestoreMushafPage(pageEl){
+  if(!pageEl||!_hl.currentKey||!S.mushafMode)return;
+  var CC='mushaf-ayah-seg--current',NC='mushaf-ayah-seg--next',RC='mushaf-ayah-seg--read';
+  (window._mushafVerseElements[_hl.currentKey]||[]).forEach(function(e){
+    if(pageEl.contains(e)){e.classList.add(CC);if(_hl.currentEls.indexOf(e)<0)_hl.currentEls.push(e);}
   });
-  if(first)first.scrollIntoView({behavior:'smooth',block:'center'});
-  // Notify tafsir sheet so it can update play/pause icon state
-  if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
+  if(_hl.nextKey){
+    (window._mushafVerseElements[_hl.nextKey]||[]).forEach(function(e){
+      if(pageEl.contains(e)){e.classList.add(NC);if(_hl.nextEls.indexOf(e)<0)_hl.nextEls.push(e);}
+    });
+  }
+  Object.keys(_hl.readMap).forEach(function(k){
+    (window._mushafVerseElements[k]||[]).forEach(function(e){
+      if(pageEl.contains(e)){e.classList.add(RC);
+        if(_hl.readMap[k].indexOf(e)<0)_hl.readMap[k].push(e);}
+    });
+  });
 }
+
+// Full reset — called on stop/pause/tab-switch/surah-change/mode-toggle
+function clearAllHighlights(){
+  var ALL=['mushaf-ayah-seg--current','mushaf-ayah-seg--next','mushaf-ayah-seg--read',
+           'quran-ayah--current','quran-ayah--next','quran-ayah--read'];
+  var seen=(_hl.currentEls||[]).concat(_hl.nextEls||[]);
+  Object.keys(_hl.readMap).forEach(function(k){seen=seen.concat(_hl.readMap[k]||[]);});
+  seen.forEach(function(e){ALL.forEach(function(c){e.classList.remove(c);});});
+  // Safety net: DOM scan catches any elements the cache missed
+  var view=$('mushafView');
+  if(view)ALL.forEach(function(c){view.querySelectorAll('.'+c).forEach(function(e){e.classList.remove(c);});});
+  var list=$('ayahList');
+  if(list)ALL.forEach(function(c){list.querySelectorAll('.'+c).forEach(function(e){e.classList.remove(c);});});
+  _hl.currentKey=null;_hl.currentEls=[];_hl.nextKey=null;_hl.nextEls=[];_hl.readMap={};
+}
+
+// Backward-compat alias used by the mushaf renderer and tab-switch code
+function clearMushafHighlights(){clearAllHighlights();}
+// Legacy alias — updateMushafHighlight(0,0) called from audioClose
+function updateMushafHighlight(s,a){updateHighlight(s,a);}
 
 // Pre-buffer the first ayah of the current surah into the audio element so
 // the mushaf play button starts instantly (browser has already downloaded enough).
@@ -4542,12 +4615,7 @@ function scrollToAyah(ayahNum){
   var list=$('ayahList');
   if(!list)return;
   var cards=list.querySelectorAll('.ayah-card');
-  if(cards[ayahNum-1]){
-    cards[ayahNum-1].scrollIntoView({behavior:'smooth',block:'center'});
-    // Highlight
-    cards.forEach(function(c){c.classList.remove('playing')});
-    cards[ayahNum-1].classList.add('playing');
-  }
+  if(cards[ayahNum-1])cards[ayahNum-1].scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 var _readerPlayBtn=null; // cached — avoids querySelectorAll on every ayah change
@@ -4627,9 +4695,8 @@ function playAyah(surah,ayah){
   S.audio.playing=true;
   updateReaderPlayState(surah,ayah,true);
   showAudioBar();
-  if(S.surah===surah&&S.scrollFollowsAudio)scrollToAyah(ayah);
-  if(S.mushafMode&&S.surah===surah)updateMushafHighlight(surah,ayah);
-  else if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
+  if(S.surah===surah&&S.scrollFollowsAudio&&!S.mushafMode)scrollToAyah(ayah);
+  updateHighlight(surah,ayah);
   updateMushafPlayBtn();
   prefetchAyahBlob(surah,ayah);
   // Prime secondary decode buffer for the immediate next ayah (if blob already cached)
@@ -4725,9 +4792,7 @@ App.audioClose=function(){
   if(window.AudioCache)AudioCache.cancelBg();
   $('audioBar').classList.remove('on');
   updateReaderPlayState(0,0,false);
-  var cards=document.querySelectorAll('.ayah-card.playing');
-  cards.forEach(function(c){c.classList.remove('playing')});
-  updateMushafHighlight(0,0);
+  clearAllHighlights();
   if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(0,0);
   updateMushafPlayBtn();
   // Close full player and reset progress

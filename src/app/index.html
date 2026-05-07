@@ -105,6 +105,11 @@ img{display:block;max-width:100%}
   --ease:cubic-bezier(.16,1,.3,1);
   --r-s:8px;--r-m:12px;--r-l:16px;--r-xl:20px;--r-full:9999px;
   --accent-glow:rgba(0,0,0,.1);
+  --ayah-read-opacity:.65;
+  --ayah-current-bg:color-mix(in srgb,var(--accent) 9%,transparent);
+  --ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 30%,transparent),0 2px 16px color-mix(in srgb,var(--accent) 10%,transparent);
+  --ayah-next-bg:color-mix(in srgb,var(--accent) 4%,transparent);
+  --ayah-next-border:color-mix(in srgb,var(--accent) 28%,transparent);
   --fu-glow:rgba(26,92,58,.12);--fu-ring:rgba(26,92,58,.22);
   --logo-filter:none;--logo-blend:multiply;--mushaf-filter:none;
   --fu-logo-filter:none;
@@ -119,6 +124,8 @@ img{display:block;max-width:100%}
   --shadow-m:0 4px 12px rgba(0,0,0,.4);
   --shadow-l:0 12px 32px rgba(0,0,0,.6);
   --accent-glow:rgba(255,255,255,.07);
+  --ayah-read-opacity:.5;
+  --ayah-current-glow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent),0 2px 18px color-mix(in srgb,var(--accent) 7%,transparent);
   --fu-glow:rgba(38,100,58,.22);--fu-ring:rgba(56,130,78,.3);
   --logo-filter:invert(1);--logo-blend:screen;--mushaf-filter:invert(1);
   --fu-logo-filter:invert(1) brightness(1.1);
@@ -134,6 +141,10 @@ img{display:block;max-width:100%}
   --shadow-m:0 4px 14px rgba(0,0,0,.55);
   --shadow-l:0 12px 36px rgba(0,0,0,.75);
   --accent-glow:rgba(201,168,76,.28);
+  --ayah-read-opacity:.5;
+  --ayah-current-bg:color-mix(in srgb,var(--accent) 14%,transparent);
+  --ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,transparent),0 3px 22px color-mix(in srgb,var(--accent) 24%,transparent);
+  --ayah-next-border:color-mix(in srgb,var(--accent) 40%,transparent);
   --fu-glow:rgba(201,168,76,.18);--fu-ring:rgba(201,168,76,.3);
   --logo-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);--logo-blend:screen;--mushaf-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);
   --fu-logo-filter:invert(1) sepia(1) saturate(4) hue-rotate(-15deg) brightness(0.85);
@@ -355,8 +366,10 @@ body{background:var(--bg);color:var(--text)}
 .mushaf-qcf-line{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:center;direction:rtl;color:var(--text);white-space:nowrap;overflow:visible;-webkit-user-select:none;user-select:none;filter:var(--mushaf-filter,none)}
 .mushaf-ayah-seg{display:inline;cursor:pointer;border-radius:3px;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:background .1s}
 .mushaf-ayah-seg.mushaf-seg-sel{background:rgba(128,128,128,.18);box-decoration-break:clone;-webkit-box-decoration-break:clone}
-.mushaf-ayah-seg.mushaf-line--playing{background:rgba(34,197,94,.15);border-radius:4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
-.mushaf-ayah-seg.mushaf-line--playing:active{background:rgba(34,197,94,.28);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.mushaf-ayah-seg--current{background:var(--ayah-current-bg);border-radius:4px;box-shadow:var(--ayah-current-glow);box-decoration-break:clone;-webkit-box-decoration-break:clone;animation:seg-pulse-in .32s ease forwards}
+.mushaf-ayah-seg--current:active{background:color-mix(in srgb,var(--accent) 22%,transparent);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.mushaf-ayah-seg--read{opacity:var(--ayah-read-opacity);transition:opacity .4s}
+.mushaf-ayah-seg--next{background:var(--ayah-next-bg);border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:background .25s}
 .mushaf-flow-verse{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:justify;direction:rtl;color:var(--text);padding:2px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px;transition:background .12s}
 .mushaf-flow-verse:active{background:rgba(128,128,128,.12)}
 .mushaf-page-foot{text-align:center;margin-top:12px;padding-top:8px;border-top:1px solid var(--border)}
@@ -367,6 +380,8 @@ body{background:var(--bg);color:var(--text)}
 .mushaf-skeleton{padding:24px 16px}
 .mushaf-skeleton-line{height:20px;margin:10px 0;border-radius:6px;background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3,#e8e8e8) 50%,var(--bg2) 75%);background-size:200% 100%;animation:mushaf-shimmer 1.4s infinite}
 @keyframes mushaf-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes ayah-pulse-in{0%{box-shadow:var(--ayah-current-glow),0 0 0 5px color-mix(in srgb,var(--accent) 16%,transparent)}100%{box-shadow:var(--ayah-current-glow)}}
+@keyframes seg-pulse-in{0%{background:color-mix(in srgb,var(--accent) 26%,transparent)}100%{background:var(--ayah-current-bg)}}
 .mushaf-error{padding:48px 20px;text-align:center;color:var(--danger);font-size:.9rem}
 .mushaf-offline-err{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px}
 .mushaf-offline-err-msg{font-size:.88rem;color:var(--text2);line-height:1.6}
@@ -633,7 +648,9 @@ body{background:var(--bg);color:var(--text)}
 @keyframes skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* ===== PLAYING AYAH HIGHLIGHT ===== */
-.ayah-card.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 2px 14px var(--accent-glow);background:color-mix(in srgb,var(--accent) 7%,var(--bg2));transition:border-color .3s,box-shadow .3s,background .3s}
+.quran-ayah--current{border-color:color-mix(in srgb,var(--accent) 38%,transparent)!important;box-shadow:var(--ayah-current-glow)!important;background:var(--ayah-current-bg)!important;animation:ayah-pulse-in .4s ease forwards}
+.quran-ayah--read{opacity:var(--ayah-read-opacity);transition:opacity .4s}
+.quran-ayah--next{border-inline-start:2.5px solid var(--ayah-next-border)!important;background:var(--ayah-next-bg)!important;transition:background .25s,border-color .25s}
 .ayah-card--marked{border-right:4px solid #e6a817;background:rgba(230,168,23,.09);transition:background .3s,border-color .3s}
 [data-theme=dark] .ayah-card--marked{background:rgba(230,168,23,.13)}
 .ayah-card--pressing{transform:scale(.985);opacity:.75;transition:transform .1s,opacity .1s}
@@ -3222,7 +3239,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=20260513"></script>
+<script src="/app/app.js?v=20260514"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
