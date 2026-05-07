@@ -2706,6 +2706,7 @@ App.openSurah=function(num,scrollTo){
     var al=$('ayahList');if(al)al.style.display='none';
     var mv=$('mushafView');if(mv){mv.style.display='';renderMushafView();}
     if(scrollTo&&scrollTo>1)_scrollMushafToAyah(num,scrollTo,0);
+    _preBufferMushafAyah();
   }
 };
 
@@ -2938,6 +2939,7 @@ App.toggleMushafMode=function(){
     var fromAyah=_visibleAyahInList()||1;
     if(ayahList)ayahList.style.display='none';
     if(mushafView){mushafView.style.display='';renderMushafView();}
+    _preBufferMushafAyah();
     // After mushaf renders, scroll to where user was
     _scrollMushafToAyah(S.surah,fromAyah,0);
   }else{
@@ -4481,6 +4483,22 @@ function updateMushafHighlight(surah,ayah){
     if(view.contains(l)){l.classList.add('mushaf-line--playing');_mushafPlayingEls.push(l);if(!first)first=l;}
   });
   if(first)first.scrollIntoView({behavior:'smooth',block:'center'});
+  // Notify tafsir sheet so it can update play/pause icon state
+  if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
+}
+
+// Pre-buffer the first ayah of the current surah into the audio element so
+// the mushaf play button starts instantly (browser has already downloaded enough).
+function _preBufferMushafAyah(){
+  if(S.audio.playing)return;
+  var url=audioUrl(S.surah,1);
+  var localUri=(window.AudioDownloads&&AudioDownloads.getLocalUri(RECITER,S.surah,1))
+              ||(window.AudioCache&&AudioCache.getLocalUri(RECITER,S.surah,1))||null;
+  var slot=_pfCache[url];
+  if(localUri||(slot&&slot.blob))return; // instant source already available
+  if(S.audio.el.src===url)return; // already pre-buffering
+  S.audio.el.src=url;
+  S.audio.el.preload='auto';
 }
 
 /* ===== AUDIO ===== */
@@ -4557,7 +4575,14 @@ function playAyah(surah,ayah){
     console.log('[Audio] remote stream — reciter:'+RECITER+' surah:'+surah+' ayah:'+ayah+' url:'+url);
   }
   S.audio.surah=surah;S.audio.ayah=ayah;
-  S.audio.el.src=src;
+  // Preserve pre-buffered data: if audio element already has this exact remote URL
+  // loaded (not blob/local), skip src reset so browser plays from buffered bytes.
+  var _isBlobOrLocal=src.startsWith('blob:')||src.indexOf('://')>-1&&!src.startsWith('http');
+  if(!_isBlobOrLocal&&S.audio.el.src===src&&S.audio.el.readyState>=2){
+    S.audio.el.currentTime=0;
+  }else{
+    S.audio.el.src=src;
+  }
   S.audio.el.playbackRate=S.audio.speed;
   S.audio.el.play().catch(function(){});
   S.audio.playing=true;
@@ -4565,8 +4590,9 @@ function playAyah(surah,ayah){
   showAudioBar();
   // Auto-scroll if same surah is open and scroll-follows-audio is on
   if(S.surah===surah&&S.scrollFollowsAudio)scrollToAyah(ayah);
-  // Highlight current line in mushaf mode
+  // Highlight current line in mushaf mode (also notifies tafsir sheet via _mushafTafsirSheetUpdate)
   if(S.mushafMode&&S.surah===surah)updateMushafHighlight(surah,ayah);
+  else if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
   // Update mushaf play button icon
   updateMushafPlayBtn();
   // Start prefetching next ayah in background
@@ -4666,6 +4692,7 @@ App.audioClose=function(){
   var cards=document.querySelectorAll('.ayah-card.playing');
   cards.forEach(function(c){c.classList.remove('playing')});
   updateMushafHighlight(0,0);
+  if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(0,0);
   updateMushafPlayBtn();
   // Close full player and reset progress
   if(typeof App.closeFP==='function')App.closeFP();
@@ -4744,37 +4771,65 @@ App.openMushafSettings=function(){
 App.showMushafVerseTafsir=function(vn,sn){
   var existing=$('mushafTafsirSheet');
   if(existing)existing.parentNode.removeChild(existing);
+  window._mushafTafsirSheetUpdate=null;
 
-  // Get tafsir text — read from canonical tafsirData (works across surah boundaries in mushaf)
   var txt=getAyahTafsirText(sn,vn);
-
   var ov=el('div','mushaf-tafsir-ov');
   ov.id='mushafTafsirSheet';
   var pane=el('div','mushaf-tafsir-pane');
 
   function dismiss(){
+    window._mushafTafsirSheetUpdate=null;
     pane.classList.remove('on');
     setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},260);
   }
 
-  // Header: surah name + verse number + play + close
   var hdr=el('div','mushaf-tafsir-hdr');
   var s=SURAHS[(sn||S.surah||1)-1];
-  var titleParts=(s?s.n:'')+' — '+toArabicNum(vn);
-  hdr.appendChild(el('span','mushaf-tafsir-title',titleParts));
+  hdr.appendChild(el('span','mushaf-tafsir-title',(s?s.n:'')+' — '+toArabicNum(vn)));
+
+  // Actions: play + close grouped on one side
+  var actions=el('div','mushaf-tafsir-actions');
+
+  var playBtn=el('button','mushaf-tafsir-play');
+  function _setPlayIcon(playing){
+    while(playBtn.firstChild)playBtn.removeChild(playBtn.firstChild);
+    playBtn.appendChild(icon(playing?'fas fa-pause':'fas fa-play'));
+  }
+  _setPlayIcon(S.audio.playing&&S.audio.surah===sn&&S.audio.ayah===vn);
+  on(playBtn,'click',function(){
+    haptic([8]);
+    if(S.audio.playing&&S.audio.surah===sn&&S.audio.ayah===vn){
+      App.audioToggle();
+      _setPlayIcon(false);
+    }else{
+      playAyah(sn,vn);
+      _setPlayIcon(true);
+    }
+  });
+  actions.appendChild(playBtn);
+
   var closeBtn=el('button','mushaf-tafsir-close');
   closeBtn.appendChild(icon('fas fa-times'));
   on(closeBtn,'click',dismiss);
-  hdr.appendChild(closeBtn);
+  actions.appendChild(closeBtn);
+  hdr.appendChild(actions);
   pane.appendChild(hdr);
 
-  // Body: tafsir text
   var body=el('div','mushaf-tafsir-body');
   var txtDiv=el('div',txt?'mushaf-tafsir-txt':'mushaf-tafsir-empty');
   txtDiv.textContent=txt||t('reader.tafsir_empty');
   body.appendChild(txtDiv);
   pane.appendChild(body);
   ov.appendChild(pane);
+
+  // Live hook: updates play icon when audio advances or stops
+  window._mushafTafsirSheetUpdate=function(newSurah,newAyah){
+    _setPlayIcon(S.audio.playing&&newSurah===sn&&newAyah===vn);
+  };
+
+  // Pre-fetch this ayah's audio so play starts instantly
+  prefetchAyahBlob(sn,vn-1);
 
   on(ov,'click',function(e){if(e.target===ov)dismiss();});
   document.body.appendChild(ov);
