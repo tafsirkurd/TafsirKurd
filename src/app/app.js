@@ -3131,10 +3131,9 @@ function renderMushafView(){
       else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
     }
 
-    // Load at least 50 pages from surah start so short surahs (Al-Fatiha=1 page)
-    // still have enough continuation for natural Mushaf scrolling into the next surah
-    var lastPage=Math.min(Math.max(pages.end+2, pages.start+49),604);
-    for(var p=pages.start;p<=lastPage;p++){
+    // All 604 pages — placeholders created upfront so scrolling never hits a wall.
+    // Content is loaded lazily via IntersectionObserver (3000px lookahead).
+    for(var p=pages.start;p<=604;p++){
       (function(pn){
         var pageEl=el('div','mushaf-text-page');
         pageEl.dataset.page=String(pn);
@@ -3153,36 +3152,34 @@ function renderMushafView(){
       pageEl.appendChild(ph);
     }
 
-    // Scroll so the target surah's banner is at the top — pages are full, not trimmed
+    // Scroll to surah banner — use direct scrollTop so parent containers don't shift.
     function _scrollToSurah(){
       var banner=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-      if(banner){banner.scrollIntoView({block:'start',behavior:'instant'});}
+      if(banner){view.scrollTop=banner.offsetTop;}
     }
 
-    // Eagerly load every remaining page in batches of 10 — never rely on IntersectionObserver.
-    // Batching avoids flooding the network when there are 50 pages (e.g. Al-Baqarah).
-    function _loadAllRemainingPages(){
-      var remaining=Array.prototype.slice.call(view.querySelectorAll('.mushaf-text-page:not([data-loaded])'));
-      var batchSize=10;
-      remaining.forEach(function(pe,idx){
-        if(S.surah!==capturedSurah)return;
+    // Lazy-load pages via IntersectionObserver — load content when page is within 3000px below viewport.
+    if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
+    _mushafLazyObs=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting)return;
+        var pe=entry.target;
+        if(pe.dataset.loaded)return;
         pe.dataset.loaded='1';
-        (function(pg,delay){
-          setTimeout(function(){
-            if(S.surah!==capturedSurah)return;
-            loadMushafPageQCF(pg,parseInt(pg.dataset.page)).catch(function(){_mushafPageErr(pg);});
-          },delay);
-        })(pe, Math.floor(idx/batchSize)*150);
+        _mushafLazyObs&&_mushafLazyObs.unobserve(pe);
+        if(S.surah!==capturedSurah)return;
+        loadMushafPageQCF(pe,parseInt(pe.dataset.page)).catch(function(){_mushafPageErr(pe);});
       });
-    }
+    },{root:view,rootMargin:'0px 0px 3000px 0px'});
+    view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(pe){
+      _mushafLazyObs.observe(pe);
+    });
 
     if(firstPage){
       firstPage.dataset.loaded='1';
+      _mushafLazyObs&&_mushafLazyObs.unobserve(firstPage);
       loadMushafPageQCF(firstPage,pages.start).then(function(){
-        setTimeout(function(){
-          _scrollToSurah();
-          _loadAllRemainingPages();
-        },0);
+        setTimeout(function(){_scrollToSurah();},0);
       }).catch(function(){_mushafPageErr(firstPage);});
     }
     updateMushafProgress(view);
