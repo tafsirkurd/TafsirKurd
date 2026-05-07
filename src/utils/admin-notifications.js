@@ -1,5 +1,5 @@
 /* =============================================================
-   admin-notifications.js  v5  — Premium Notification Tray
+   admin-notifications.js  v6  — Premium Notification Tray
    Works on every admin page (self-injects bell if absent).
 
    Data sources:
@@ -661,6 +661,23 @@
         });
       });
 
+    // Overdue admin tasks
+    sb.from('admin_tasks')
+      .select('id,title,due_at,status')
+      .neq('status', 'done')
+      .not('due_at', 'is', null)
+      .lt('due_at', new Date().toISOString())
+      .order('due_at', { ascending: true })
+      .limit(5)
+      .then(function(res) {
+        if (res.error || !res.data) return;
+        res.data.forEach(function(t) {
+          _add('Overdue: ' + t.title,
+            'Due ' + new Date(t.due_at).toLocaleDateString([],{month:'short',day:'numeric'}),
+            'error', '/admin-tasks.html?id=' + t.id, 'task_' + t.id);
+        });
+      });
+
     // Fetch mention notifications addressed to the current admin
     var me = (window.sessionStorage && sessionStorage.getItem('adminEmail')) || '';
     if (me) {
@@ -753,7 +770,7 @@
 
   // ── public API ─────────────────────────────────────────────
   window.adminNotifications = {
-    add: function(title, desc, type, link) { _add(title, desc, type, link, null); },
+    add: function(title, desc, type, link, sourceId) { _add(title, desc, type, link, sourceId||null); },
     test: function() {
       _add('Ahmed Hassan sent a message', 'Question about Quran recitation feature', 'message', '/admin-messages.html', null);
       _add('Sara Ahmed joined', 'sara.ahmed@example.com', 'user', '/admin-users.html', null);

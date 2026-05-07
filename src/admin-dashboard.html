@@ -352,16 +352,6 @@
             background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 50%, var(--bg-hover) 75%);
             background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
 
-        /* ── Mobile notification dropdown clamp ── */
-        @media (max-width: 480px) {
-            #notifDropdown {
-                position: fixed !important;
-                top: 60px !important;
-                right: 8px !important;
-                left: 8px !important;
-                width: auto !important;
-            }
-        }
 
         /* ── Section Labels ── */
         .section-label {
@@ -1815,22 +1805,10 @@
                         <span id="sessionTimerText">2:00:00</span>
                     </div>
                     <div style="position:relative;">
-                        <button class="topbar-btn" id="notifBellBtn" onclick="toggleNotifDropdown(event)" title="Notifications" aria-haspopup="true">
+                        <button class="topbar-btn" id="notifBellBtn" title="Notifications" aria-haspopup="true">
                             <i data-lucide="bell"></i>
                             <span id="notification-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;display:none;"></span>
                         </button>
-                        <div id="notifDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:320px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.14);z-index:9999;overflow:hidden;">
-                            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border-light);">
-                                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">Notifications</span>
-                                <button onclick="clearNotifDropdown()" style="font-size:11px;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:600;padding:2px 8px;border-radius:8px;background:var(--bg-active);">Mark all read</button>
-                            </div>
-                            <div id="notifDropdownList" style="max-height:340px;overflow-y:auto;">
-                                <div style="padding:24px 16px;text-align:center;color:var(--text-tertiary);font-size:13px;">Loading…</div>
-                            </div>
-                            <div style="padding:10px 16px;border-top:1px solid var(--border-light);text-align:center;">
-                                <a href="/admin-messages.html" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none;">View all messages →</a>
-                            </div>
-                        </div>
                     </div>
                     <button class="topbar-btn" id="compactToggleBtn" onclick="toggleCompactMode()" title="Toggle compact density (C)">
                         <i data-lucide="layout-list" id="compactIcon"></i>
@@ -2613,7 +2591,7 @@
     <script src="/utils/admin-loading.js"></script>
     <script src="/utils/admin-auth.js?v=6"></script>
     <script src="/utils/admin-live-alerts.js?v=14"></script>
-    <script src="/utils/admin-notifications.js?v=5"></script>
+    <script src="/utils/admin-notifications.js?v=6"></script>
     <script>
         lucide.createIcons();
 
@@ -4482,11 +4460,15 @@
             updateOverdueBanner(overdue);
 
             // Feed overdue tasks into the notification bell
-            feedNotifFromTasks(tasks);
-            // Re-read badge total from current badge text + overdue
-            var _curBadge = document.getElementById('notification-badge');
-            var _prevTotal = _curBadge && _curBadge.style.display !== 'none' ? (parseInt(_curBadge.textContent)||0) : 0;
-            if (overdue.length > 0) updateNotifBell(0, overdue.length, 0);
+            // Feed overdue tasks into premium notification tray
+            if (window.adminNotifications) {
+                var _now2 = new Date(); _now2.setHours(0,0,0,0);
+                (tasks||[]).filter(function(t){ return t.due_at && new Date(t.due_at) < _now2 && t.status !== 'done'; }).slice(0,5).forEach(function(t){
+                    adminNotifications.add('Overdue: ' + t.title,
+                        'Due ' + new Date(t.due_at).toLocaleDateString([],{month:'short',day:'numeric'}),
+                        'error', '/admin-tasks.html?id=' + t.id, 'task_' + t.id);
+                });
+            }
 
             // Update banner with overdue count (keep other values from last dashboard load)
             var _bar = document.getElementById('needsAttentionItems');
@@ -4755,9 +4737,7 @@
                 overdueTasks: 0,  // filled in by loadMyTasks
                 errors24h:    _err24h
             });
-            feedNotifFromMessages(messages);
-            feedNotifFromErrors(_errData);
-            updateNotifBell(unreadCount || 0, 0, _err24h);
+            // Messages + errors routed through premium tray (admin-notifications.js pulls them via Supabase)
 
             // ─── Audit Logs ───
             buildAuditLogs(dat(13));
@@ -4808,122 +4788,6 @@
         /* ═══════════════════════════════════════════════
            NOTIFICATION BELL DROPDOWN
            ═══════════════════════════════════════════════ */
-        var _notifItems = [];  // [{type, title, sub, href, time, color}]
-        var _notifDropdownOpen = false;
-
-        function toggleNotifDropdown(e) {
-            e.stopPropagation();
-            var dd = document.getElementById('notifDropdown');
-            if (!dd) return;
-            _notifDropdownOpen = !_notifDropdownOpen;
-            dd.style.display = _notifDropdownOpen ? '' : 'none';
-            if (_notifDropdownOpen) renderNotifDropdown();
-        }
-
-        function closeNotifDropdown() {
-            var dd = document.getElementById('notifDropdown');
-            if (dd) dd.style.display = 'none';
-            _notifDropdownOpen = false;
-        }
-
-        document.addEventListener('click', function(e) {
-            if (_notifDropdownOpen && !document.getElementById('notifDropdown').contains(e.target)) {
-                closeNotifDropdown();
-            }
-        });
-
-        function _pushNotifItem(item) {
-            var exists = _notifItems.some(function(n) { return n.id === item.id; });
-            if (!exists) _notifItems.push(item);
-        }
-
-        function updateNotifBell(unreadMessages, overdueTasks, errors24h) {
-            var total = (unreadMessages || 0) + (overdueTasks || 0) + (errors24h > 0 ? 1 : 0);
-            var badge = document.getElementById('notification-badge');
-            if (badge) {
-                if (total > 0) {
-                    badge.textContent = total > 99 ? '99+' : total;
-                    badge.style.display = '';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-        }
-
-        function feedNotifFromMessages(messages) {
-            if (!messages) return;
-            messages.filter(function(m) { return m.status === 'unread'; }).slice(0, 5).forEach(function(m) {
-                _pushNotifItem({
-                    id: 'msg-' + m.id,
-                    type: 'message',
-                    icon: '✉',
-                    color: '#ef4444',
-                    title: (m.name || 'Someone') + ' sent a message',
-                    sub: m.subject || 'No subject',
-                    href: '/admin-messages.html',
-                    time: new Date(m.created_at)
-                });
-            });
-        }
-
-        function feedNotifFromTasks(tasks) {
-            if (!tasks) return;
-            var now = new Date(); now.setHours(0,0,0,0);
-            tasks.filter(function(t) { return t.due_at && new Date(t.due_at) < now && t.status !== 'done'; }).slice(0, 3).forEach(function(t) {
-                _pushNotifItem({
-                    id: 'task-' + t.id,
-                    type: 'task',
-                    icon: '⚠',
-                    color: '#f59e0b',
-                    title: 'Overdue: ' + t.title,
-                    sub: 'Due ' + new Date(t.due_at).toLocaleDateString([], {month:'short',day:'numeric'}),
-                    href: '/admin-tasks.html?id=' + t.id,
-                    time: new Date(t.due_at)
-                });
-            });
-        }
-
-        function feedNotifFromErrors(errData) {
-            if (!errData || !errData.success || !errData.counts.last24h) return;
-            _pushNotifItem({
-                id: 'errors-24h',
-                type: 'error',
-                icon: '⚡',
-                color: '#3b82f6',
-                title: errData.counts.last24h + ' app error' + (errData.counts.last24h === 1 ? '' : 's') + ' in last 24h',
-                sub: 'Click to review error log',
-                href: '/admin-errors.html',
-                time: new Date()
-            });
-        }
-
-        function renderNotifDropdown() {
-            var list = document.getElementById('notifDropdownList');
-            if (!list) return;
-            // Sort by time descending
-            var sorted = _notifItems.slice().sort(function(a, b) { return b.time - a.time; });
-            if (!sorted.length) {
-                list.innerHTML = '<div style="padding:24px 16px;text-align:center;color:var(--text-tertiary);font-size:13px;">All clear — nothing needs attention.</div>';
-                return;
-            }
-            list.innerHTML = sorted.map(function(n) {
-                return '<a href="' + n.href + '" style="display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border-light);text-decoration:none;color:var(--text-primary);transition:background .12s;" onmouseenter="this.style.background=\'var(--bg-hover)\'" onmouseleave="this.style.background=\'\'">'
-                    + '<span style="font-size:18px;line-height:1.3;flex-shrink:0;color:' + n.color + '">' + n.icon + '</span>'
-                    + '<div style="min-width:0;flex:1;">'
-                    + '<div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _escHtml(n.title) + '</div>'
-                    + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">' + _escHtml(n.sub) + '</div>'
-                    + '</div>'
-                    + '<div style="font-size:10px;color:var(--text-tertiary);white-space:nowrap;flex-shrink:0;margin-top:2px;">' + getTimeAgo(n.time) + '</div>'
-                    + '</a>';
-            }).join('');
-        }
-
-        function clearNotifDropdown() {
-            _notifItems = [];
-            renderNotifDropdown();
-            var badge = document.getElementById('notification-badge');
-            if (badge) badge.style.display = 'none';
-        }
 
         /* ═══════════════════════════════════════════════
            NEEDS ATTENTION BANNER
