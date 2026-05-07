@@ -9258,7 +9258,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       ptrSpinner.style.transition='none';
     }
 
-    e.preventDefault();
+    if(e.cancelable)e.preventDefault();
     // Subtract dead zone so pull=0 at the exact moment pulling engages.
     var pullRaw=dy-DEAD_ZONE;
     var pull=pullRaw<threshold?pullRaw:threshold+((pullRaw-threshold)*0.3);
@@ -9702,7 +9702,7 @@ function renderIvHero(){
         if(!_ivHeroDragHoriz){_ivHeroDragActive=false;_ivHeroResetTimer();return;}
       }
       if(!_ivHeroDragHoriz)return;
-      e.preventDefault();
+      if(e.cancelable)e.preventDefault();
       var now=performance.now(),dt=now-_ivHeroVtLast;
       if(dt>0)_ivHeroVx=(cx-_ivHeroXLast)/dt;
       _ivHeroVtLast=now;_ivHeroXLast=cx;
