@@ -1672,9 +1672,13 @@ window.GencineUI = {
 
       if (self._hadithSort === 'az' && (!q || !q.trim())) {
         scored.sort(function(a, b){
-          var ta = (a.h.title || '').toLowerCase();
-          var tb = (b.h.title || '').toLowerCase();
-          return ta < tb ? -1 : ta > tb ? 1 : 0;
+          var ta = a.h.title ? a.h.title.trim() : '';
+          var tb = b.h.title ? b.h.title.trim() : '';
+          // Untitled hadiths go to end, preserving their sort_order among themselves
+          if (!ta && !tb) return (a.h.sort_order || 0) - (b.h.sort_order || 0);
+          if (!ta) return 1;
+          if (!tb) return -1;
+          return ta.localeCompare(tb, undefined, { sensitivity: 'base', numeric: true });
         });
       }
 
