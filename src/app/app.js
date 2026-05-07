@@ -3350,7 +3350,14 @@ function loadMushafPageQCF(pageEl,pageNum){
           var k=String(g.sn)+':'+String(g.vn);
           if(!window._mushafVerseElements[k])window._mushafVerseElements[k]=[];
           window._mushafVerseElements[k].push(seg);
-          (function(v,s){on(seg,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(g.vn,g.sn);
+          (function(v,s,segKey){on(seg,'click',function(e){
+            e.stopPropagation();
+            // Flash all segments of this ayah (may span multiple lines)
+            var all=window._mushafVerseElements[segKey]||[];
+            all.forEach(function(el){el.classList.add('mushaf-seg-sel');});
+            setTimeout(function(){all.forEach(function(el){el.classList.remove('mushaf-seg-sel');});},220);
+            App.showMushafVerseTafsir(v,s);
+          });})(g.vn,g.sn,k);
           lineEl.appendChild(seg);
         });
         // Line-level fallback: only for single-ayah lines (gaps between glyphs still clickable)
