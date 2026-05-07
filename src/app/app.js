@@ -2786,7 +2786,7 @@ function injectQCFV4Font(pageNum){
   var s=document.createElement('style');
   // On iOS the local woff2 is stripped from the bundle → skip to Cloudflare Worker directly
   var localSrc=_isIOSCap?'':("url('/assets/fonts/qcf4/p"+pageNum+".woff2') format('woff2'),");
-  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:"+localSrc+"url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
+  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:"+localSrc+"url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:swap}";
   document.head.appendChild(s);
 }
 
@@ -3234,6 +3234,29 @@ function renderMushafView(){
   });
 }
 
+// Shrink QCF lines that overflow their container so no characters are clipped.
+// Separates DOM reads from writes to avoid layout thrashing.
+function _fitQCFLines(pageEl){
+  var lines=pageEl.querySelectorAll('.mushaf-qcf-line');
+  var n=lines.length;
+  if(!n)return;
+  // batch-reset transforms first so measurements reflect natural width
+  for(var i=0;i<n;i++)lines[i].style.transform='';
+  var scales=new Array(n);
+  // batch-read
+  for(var i=0;i<n;i++){
+    var sw=lines[i].scrollWidth,cw=lines[i].clientWidth;
+    scales[i]=(sw>cw&&cw>0)?cw/sw:1;
+  }
+  // batch-write
+  for(var i=0;i<n;i++){
+    if(scales[i]<1){
+      lines[i].style.transform='scaleX('+scales[i].toFixed(4)+')';
+      lines[i].style.transformOrigin='center';
+    }
+  }
+}
+
 function loadMushafPageQCF(pageEl,pageNum){
   var font=S.mushafFont||'qcf1';
   var pf=_getPageFields();
@@ -3450,8 +3473,9 @@ function loadMushafPageQCF(pageEl,pageNum){
       }
       var _renderMs=Date.now()-_rT;
       var _total=Date.now()-_t0;
-      // Integrity validation — runs after DOM commit so offsetHeight is available
+      // Integrity validation + line auto-fit — runs after DOM commit
       requestAnimationFrame(function(){
+        _fitQCFLines(pageEl);
         var result=validateMushafPage(pageNum,json,pageEl);
         _mushafRenderMetrics[pageNum]={
           fontMs:fontMs||0,dataMs:_dataMs,renderMs:_renderMs,total:_total,
@@ -4675,7 +4699,17 @@ App.openMushafSettings=function(){
   body.appendChild(el('div','ms-section-label',t('qs.font_size_label')));
   var fsVal=el('span','stepper-val',S.mushafFontSize+'px');
   var fsMBtn,fsPBtn;
-  function setFsSize(v){v=Math.max(14,Math.min(50,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';document.documentElement.style.setProperty('--mushaf-size',v+'px');localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));if(fsMBtn)fsMBtn.disabled=(v<=14);if(fsPBtn)fsPBtn.disabled=(v>=50);}
+  function setFsSize(v){
+    v=Math.max(14,Math.min(50,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
+    document.documentElement.style.setProperty('--mushaf-size',v+'px');
+    localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));
+    if(fsMBtn)fsMBtn.disabled=(v<=14);if(fsPBtn)fsPBtn.disabled=(v>=50);
+    // Re-fit all rendered pages since line widths changed with font size
+    requestAnimationFrame(function(){
+      var mv=$('mushafView');
+      if(mv){var pgs=mv.querySelectorAll('.mushaf-text-page[data-loaded]');for(var _i=0;_i<pgs.length;_i++)_fitQCFLines(pgs[_i]);}
+    });
+  }
   var fsCtrl=el('div','setting-stepper');
   fsMBtn=el('button','stepper-btn','-');fsPBtn=el('button','stepper-btn','+');
   on(fsMBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize-1);});
