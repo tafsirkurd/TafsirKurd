@@ -1690,7 +1690,7 @@ window.GencineUI = {
         return;
       }
 
-      scored.forEach(function(item){
+      scored.forEach(function(item, displayIdx){
         var h = item.h;
         var origIdx = item.origIdx;
 
@@ -1699,7 +1699,7 @@ window.GencineUI = {
 
         var numEl = document.createElement('div');
         numEl.className = 'hadith-num';
-        numEl.textContent = origIdx + 1;
+        numEl.textContent = displayIdx + 1;
         row.appendChild(numEl);
 
         var textCol = document.createElement('div');
