@@ -34,7 +34,8 @@
 // ── Constants ─────────────────────────────────────────────────────────────────
 var CACHE_KEY        = 'tafsirkurd_i18n_v3';
 var HEALTH_SENT_KEY  = 'i18n_health_sent_session'; // sessionStorage — one report/session
-var REMOTE_URL       = 'https://tafsirkurd.com/app-translations?platform=android';
+var _platform        = (function(){ try{ return (window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'web'; }catch(e){ return 'web'; } })();
+var REMOTE_URL       = 'https://tafsirkurd.com/app-translations?platform='+_platform;
 var POLL_MS          = 30000;  // 30s polling interval
 var STARTUP_TIMEOUT  = 3000;   // max ms to wait for remote before unblocking splash
 var MIN_REMOTE_KEYS  = 10;     // below this → obviously broken payload, reject
@@ -195,10 +196,10 @@ function loadBundled(){
 // ── Layer 3: remote DB — atomic merge ────────────────────────────────────────
 // Fetches remote into a TEMP object, validates, then atomically swaps.
 // Never touches the live translations object until validation passes.
-function mergeRemote(){
+function mergeRemote(signal){
   var t0 = Date.now();
 
-  return fetch(REMOTE_URL, { cache:'no-cache' })
+  return fetch(REMOTE_URL, { cache:'no-cache', signal: signal||null })
     .then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
@@ -259,6 +260,7 @@ function mergeRemote(){
       }
     })
     .catch(function(e){
+      if(e && e.name === 'AbortError') throw e; // propagate silently — startup timeout cancelled us
       console.warn('[i18n] Remote fetch failed (offline or timeout) — layers 1+2 in use:', e.message);
       throw e;
     });
@@ -364,15 +366,19 @@ function initLang(){
   applyTranslations();
 
   // Layer 3 — race against 3s timeout so splash is never blocked
-  var timeout = new Promise(function(resolve){ setTimeout(resolve, STARTUP_TIMEOUT); });
+  var _startupAC = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timeout = new Promise(function(resolve){
+    setTimeout(function(){ if(_startupAC)_startupAC.abort(); resolve(); }, STARTUP_TIMEOUT);
+  });
 
   _initPromise = Promise.race([
-    mergeRemote().then(
+    mergeRemote(_startupAC ? _startupAC.signal : null).then(
       function(){
         _initStatus = _cachedSnapshot ? 'valid_cache' : 'fresh_fetch';
         if(Object.keys(_bundledSnapshot).length === 0) _initStatus = 'fetch_failed_no_bundle';
       },
       function(err){
+        if(err && err.name === 'AbortError') return; // startup timeout cancelled us — normal, no report
         _initStatus = Object.keys(_bundledSnapshot).length > 0
           ? 'fetch_failed_using_bundle'
           : 'fetch_failed_no_bundle';
