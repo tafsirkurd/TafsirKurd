@@ -148,7 +148,7 @@ window.AppRating = {
   // Does NOT use the native in-app review API, which can silently no-op on debug builds
   // or when the OS quota is exhausted.
   requestReview: function(){
-    if(window.toast) window.toast(window.t ? window.t('toast.rating_opening') : '…بازارگەی ئەپ کرایەوە');
+    if(typeof window.toast==='function') window.toast(window.t ? window.t('toast.rating_opening') : '…بازارگەی ئەپ کرایەوە');
     if(window.haptic) window.haptic([20]);
     _openStorePage();
     localStorage.setItem('ratingPromptDone','true');
@@ -172,7 +172,7 @@ window.AppRating = {
     _hidePopup();
     localStorage.setItem('ratingPromptDone','true');
     if(window.haptic) window.haptic([30]);
-    if(window.toast) window.toast(window.t ? window.t('toast.rating_opening') : '…بازارگەی ئەپ کرایەوە');
+    if(typeof window.toast==='function') window.toast(window.t ? window.t('toast.rating_opening') : '…بازارگەی ئەپ کرایەوە');
     _openStorePage();
   },
   _onLater: function(){
