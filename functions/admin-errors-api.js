@@ -97,6 +97,15 @@ export async function onRequest(context) {
         });
     }
 
+    // ── RESOLVE (delete) individual errors by ID ─────────────────
+    if (action === 'resolve') {
+        const ids = Array.isArray(body.ids) ? body.ids : (body.id ? [body.id] : []);
+        if (!ids.length) return json({ error: 'No ids provided' }, 400);
+        const { error } = await supabase.from('app_error_logs').delete().in('id', ids);
+        if (error) return json({ error: error.message }, 500);
+        return json({ success: true });
+    }
+
     // ── DELETE old errors (super_admin only) ──────────────────────
     if (action === 'clear_old') {
         if (role !== 'super_admin') return json({ error: 'super_admin required' }, 403);

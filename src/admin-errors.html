@@ -262,6 +262,9 @@
             <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body" id="modal-body"></div>
+        <div style="padding:0 24px 20px;display:flex;justify-content:flex-end">
+            <button class="btn btn-secondary" id="modal-resolve-btn" style="color:#10b981;border-color:#10b98140"><i data-lucide="check"></i> Mark Resolved</button>
+        </div>
     </div>
 </div>
 
@@ -411,7 +414,8 @@
                 + '<td style="font-size:12px;color:var(--text-tertiary)">' + esc(e.app_version||'—') + '</td>'
                 + '<td style="font-size:12px;color:var(--text-tertiary)">' + esc(e.page_context||'—') + '</td>'
                 + '<td style="font-size:12px;white-space:nowrap">' + fmtDate(e.created_at) + '</td>'
-                + '<td><button class="btn btn-secondary" style="padding:3px 9px;font-size:12px" onclick="showDetail(' + e.id + ')">View</button></td>';
+                + '<td style="white-space:nowrap"><button class="btn btn-secondary" style="padding:3px 9px;font-size:12px" onclick="showDetail(' + e.id + ')">View</button>'
+                + ' <button class="btn btn-secondary" style="padding:3px 9px;font-size:12px;color:#10b981;border-color:#10b98140" title="Mark resolved" onclick="resolveError(' + e.id + ')"><i data-lucide="check"></i></button></td>';
             tbody.appendChild(tr);
         });
         lucide.createIcons();
@@ -434,11 +438,23 @@
             html += '<div class="stack-trace">' + esc(e.stack_trace) + '</div>';
         }
         document.getElementById('modal-body').innerHTML = html;
+        var resolveBtn = document.getElementById('modal-resolve-btn');
+        if (resolveBtn) resolveBtn.onclick = function(){ resolveError(e.id); closeModal(); };
         document.getElementById('detail-modal').classList.add('active');
         lucide.createIcons();
     }
 
     function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
+
+    async function resolveError(id) {
+        try {
+            await api('resolve', { id: id });
+            _errors = _errors.filter(function(e) { return e.id !== id; });
+            applyFilters();
+            loadStats();
+            showToast('Error resolved ✓');
+        } catch(e) { alert('Failed: ' + e.message); }
+    }
 
     async function clearOldErrors() {
         if (!confirm('Delete all errors older than 30 days? This cannot be undone.')) return;
