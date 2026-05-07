@@ -3131,9 +3131,12 @@ function renderMushafView(){
       else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
     }
 
-    // All 604 pages — placeholders created upfront so scrolling never hits a wall.
-    // Content is loaded lazily via IntersectionObserver (3000px lookahead).
-    for(var p=pages.start;p<=604;p++){
+    // Full Quran: page 1→604. Always start from page 1 so scrolling back to
+    // Al-Fatiha from any surah works like a real Mushaf.
+    // Pre-scroll to near the target surah before the observer fires so the
+    // initial intersection check loads pages around the right position.
+    var _estPx=(pages.start-1)*560; // ~560px per skeleton page
+    for(var p=1;p<=604;p++){
       (function(pn){
         var pageEl=el('div','mushaf-text-page');
         pageEl.dataset.page=String(pn);
@@ -3141,10 +3144,11 @@ function renderMushafView(){
         view.appendChild(pageEl);
       })(p);
     }
+    view.scrollTop=_estPx;
 
-    var firstPage=view.querySelector('.mushaf-text-page');
     var targetSurah=S.surah;
     var capturedSurah=targetSurah;
+    var targetPageEl=view.querySelector('.mushaf-text-page[data-page="'+pages.start+'"]');
 
     function _mushafPageErr(pageEl){
       clear(pageEl);
@@ -3152,13 +3156,14 @@ function renderMushafView(){
       pageEl.appendChild(ph);
     }
 
-    // Scroll to surah banner — use direct scrollTop so parent containers don't shift.
+    // Scroll to surah banner — direct scrollTop, no parent-container shift.
     function _scrollToSurah(){
       var banner=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
       if(banner){view.scrollTop=banner.offsetTop;}
     }
 
-    // Lazy-load pages via IntersectionObserver — load content when page is within 3000px below viewport.
+    // Lazy-load: 3000px lookahead in BOTH directions so scrolling up (back to
+    // Al-Fatiha) also pre-loads pages ahead of the scroll position.
     if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
     _mushafLazyObs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
@@ -3170,17 +3175,19 @@ function renderMushafView(){
         if(S.surah!==capturedSurah)return;
         loadMushafPageQCF(pe,parseInt(pe.dataset.page)).catch(function(){_mushafPageErr(pe);});
       });
-    },{root:view,rootMargin:'0px 0px 3000px 0px'});
+    },{root:view,rootMargin:'3000px 0px 3000px 0px'});
     view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(pe){
       _mushafLazyObs.observe(pe);
     });
 
-    if(firstPage){
-      firstPage.dataset.loaded='1';
-      _mushafLazyObs&&_mushafLazyObs.unobserve(firstPage);
-      loadMushafPageQCF(firstPage,pages.start).then(function(){
+    // Eagerly load the target surah's first page for immediate display, then
+    // scroll precisely to the surah banner once the page content is rendered.
+    if(targetPageEl){
+      targetPageEl.dataset.loaded='1';
+      _mushafLazyObs&&_mushafLazyObs.unobserve(targetPageEl);
+      loadMushafPageQCF(targetPageEl,pages.start).then(function(){
         setTimeout(function(){_scrollToSurah();},0);
-      }).catch(function(){_mushafPageErr(firstPage);});
+      }).catch(function(){_mushafPageErr(targetPageEl);});
     }
     updateMushafProgress(view);
 
