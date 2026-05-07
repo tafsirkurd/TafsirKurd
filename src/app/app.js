@@ -3131,8 +3131,9 @@ function renderMushafView(){
       else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
     }
 
-    // Load surah pages + 2 extra so the next surah flows naturally without an abrupt stop
-    var lastPage=Math.min(pages.end+2,604);
+    // Load at least 50 pages from surah start so short surahs (Al-Fatiha=1 page)
+    // still have enough continuation for natural Mushaf scrolling into the next surah
+    var lastPage=Math.min(Math.max(pages.end+2, pages.start+49),604);
     for(var p=pages.start;p<=lastPage;p++){
       (function(pn){
         var pageEl=el('div','mushaf-text-page');
@@ -3158,15 +3159,20 @@ function renderMushafView(){
       if(banner){banner.scrollIntoView({block:'start',behavior:'instant'});}
     }
 
-    // Eagerly load every remaining page — never rely on IntersectionObserver
+    // Eagerly load every remaining page in batches of 10 — never rely on IntersectionObserver.
+    // Batching avoids flooding the network when there are 50 pages (e.g. Al-Baqarah).
     function _loadAllRemainingPages(){
       var remaining=Array.prototype.slice.call(view.querySelectorAll('.mushaf-text-page:not([data-loaded])'));
-      remaining.forEach(function(pe){
+      var batchSize=10;
+      remaining.forEach(function(pe,idx){
         if(S.surah!==capturedSurah)return;
         pe.dataset.loaded='1';
-        (function(pg){
-          loadMushafPageQCF(pg,parseInt(pg.dataset.page)).catch(function(){_mushafPageErr(pg);});
-        })(pe);
+        (function(pg,delay){
+          setTimeout(function(){
+            if(S.surah!==capturedSurah)return;
+            loadMushafPageQCF(pg,parseInt(pg.dataset.page)).catch(function(){_mushafPageErr(pg);});
+          },delay);
+        })(pe, Math.floor(idx/batchSize)*150);
       });
     }
 
@@ -3260,7 +3266,13 @@ function loadMushafPageQCF(pageEl,pageNum){
       var s=SURAHS[sn-1];
       var banner=el('div','mushaf-surah-banner');
       banner.dataset.surah=String(sn);
-      banner.textContent=s?s.n:('سورة '+sn);
+      var gc='surah'+String(sn).padStart(3,'0');
+      var titleEl=document.createElement('div');
+      titleEl.className='surah-name-ar no-kurdish-convert';
+      titleEl.dataset.glyph=gc;
+      var fontReady=(window.QuranFontManager&&window.QuranFontManager.isReady('SurahName'))||window._surahNameFontReady;
+      titleEl.textContent=fontReady?gc:(s?s.ar:('سورة '+sn));
+      banner.appendChild(titleEl);
       frag.appendChild(banner);
       if(sn!==1&&sn!==9){
         var bism=el('div','mushaf-bismillah');
