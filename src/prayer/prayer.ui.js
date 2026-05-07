@@ -2452,10 +2452,11 @@
    * Requests permission first, creates channels, then schedules.
    */
   // Audio preview — shared context + preloaded buffers for zero-delay playback
-  var _previewAudio = null;
-  var _previewAbort = null;
-  var _audioCtx     = null;
-  var _voiceBuffers = {}; // voiceId → decoded AudioBuffer
+  var _previewAudio  = null;
+  var _previewAbort  = null;
+  var _audioCtx      = null;
+  var _voiceBuffers  = {}; // voiceId → decoded AudioBuffer (ready to play)
+  var _rawBuffers    = {}; // voiceId → ArrayBuffer (fetched, awaiting decode)
   var _previewToken  = 0;  // incremented on every stop — stale onended callbacks check this
   var _durationTimer = null; // setTimeout handle for auto-stop after chosen duration
 
@@ -2464,34 +2465,38 @@
       _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (_audioCtx.state === 'suspended') { _audioCtx.resume(); }
+    // Decode any ArrayBuffers that were fetched before a user gesture was available
+    var ctx = _audioCtx;
+    Object.keys(_rawBuffers).forEach(function(id) {
+      if (_voiceBuffers[id]) { delete _rawBuffers[id]; return; }
+      var buf = _rawBuffers[id];
+      delete _rawBuffers[id];
+      ctx.decodeAudioData(buf, function(decoded) { _voiceBuffers[id] = decoded; }, function() {});
+    });
     return _audioCtx;
   }
 
-  // Fetch + decode all voices in background so first tap is instant.
-  // Voices are decoded ONE AT A TIME (staggered 400ms apart) to prevent parallel
-  // decodeAudioData calls from saturating the CPU and dropping frames.
+  // Pre-FETCH athan audio files during background quiet time.
+  // AudioContext is NOT created here — browser blocks it before user gesture.
+  // Actual decode (decodeAudioData) is deferred to the first getAudioCtx() call
+  // triggered by user interaction, so the first preview tap is still near-instant.
   function preloadVoiceBuffers() {
     var voices = window.PrayerNotifications && window.PrayerNotifications.ATHAN_VOICES;
     if (!voices) return;
-    // Pre-create the AudioContext now (main-thread cost, ~50-300ms on Android).
-    // Doing this here — during quiet background time — means it's already
-    // initialized by the time the user opens the settings sheet.
-    var ctx = getAudioCtx();
-    var queue = voices.filter(function(v) { return !_voiceBuffers[v.id]; });
-    function decodeNext() {
+    var queue = voices.filter(function(v) { return !_voiceBuffers[v.id] && !_rawBuffers[v.id]; });
+    function fetchNext() {
       if (!queue.length) return;
       var voice = queue.shift();
       fetch(voice.previewUrl || ('/audio/athan_' + voice.id + '.mp3'))
         .then(function(r) { return r.arrayBuffer(); })
-        .then(function(buf) { return ctx.decodeAudioData(buf); })
-        .then(function(decoded) {
-          _voiceBuffers[voice.id] = decoded;
-          // 400ms gap between decodes — keeps CPU free for UI work
-          setTimeout(decodeNext, 400);
+        .then(function(buf) {
+          if (!_voiceBuffers[voice.id]) _rawBuffers[voice.id] = buf;
+          // 400ms gap between fetches — keeps CPU/network free for UI work
+          setTimeout(fetchNext, 400);
         })
-        .catch(function() { setTimeout(decodeNext, 400); });
+        .catch(function() { setTimeout(fetchNext, 400); });
     }
-    decodeNext();
+    fetchNext();
   }
 
   function setPreviewBtnIcon(btn, iconClass) {

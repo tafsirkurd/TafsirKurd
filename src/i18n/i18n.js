@@ -264,12 +264,20 @@ function mergeRemote(){
     });
 }
 
-// ── Guarded poll — one in-flight at a time ────────────────────────────────────
+// ── Guarded poll — one in-flight at a time, with failure backoff ──────────────
+var _fetchFailCount = 0;
+var _lastFailTs     = 0;
+var BACKOFF_AFTER   = 3;      // consecutive failures before backing off
+var BACKOFF_MS      = 300000; // 5 minutes
+
 function _mergeRemoteGuarded(){
   if(_fetchInFlight) return;
+  // Back off for 5 min after 3+ consecutive failures (e.g. ERR_CONNECTION_CLOSED)
+  if(_fetchFailCount >= BACKOFF_AFTER && Date.now() - _lastFailTs < BACKOFF_MS) return;
   _fetchInFlight = true;
   mergeRemote()
-    .catch(function(){})
+    .then(function(){ _fetchFailCount = 0; })
+    .catch(function(){ _fetchFailCount++; _lastFailTs = Date.now(); })
     .then(function(){ _fetchInFlight = false; });
 }
 
