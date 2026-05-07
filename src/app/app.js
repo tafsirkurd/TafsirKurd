@@ -520,6 +520,53 @@ function clearPrefetch(){
   _audioBuf=null;_audioBufKey=null;
 }
 
+// Returns how many ms before natural end to trigger the next-ayah transition.
+// Tighter when next ayah is pre-decoded/cached (near-instant swap); looser for streaming.
+function _earlyMs(){
+  var nxt=_nextAyahPos(S.audio.surah,S.audio.ayah);
+  if(!nxt)return 150;
+  var nxtUrl=audioUrl(nxt.surah,nxt.ayah);
+  if(_audioBufKey===nxtUrl&&_audioBuf)return 30;
+  var _hasLocal=(window.AudioDownloads&&AudioDownloads.getLocalUri&&AudioDownloads.getLocalUri(RECITER,nxt.surah,nxt.ayah))
+              ||(window.AudioCache&&AudioCache.getLocalUri&&AudioCache.getLocalUri(RECITER,nxt.surah,nxt.ayah));
+  if(_hasLocal)return 30;
+  if(_pfCache[nxtUrl]&&_pfCache[nxtUrl].blob)return 80;
+  return 200;
+}
+
+function _scheduleAyahEnd(){
+  if(_audioEndTimer)return;
+  var ae=S.audio.el;
+  if(!ae||!ae.duration||ae.duration===Infinity||!S.audio.playing)return;
+  var em=_earlyMs();
+  var ms=(ae.duration-ae.currentTime)*1000-em;
+  if(ms<=0||ms>30000)return;
+  _audioEndTimer=setTimeout(function(){
+    _audioEndTimer=null;
+    var _nxt2=_nextAyahPos(S.audio.surah,S.audio.ayah);
+    var _pr=_nxt2&&_audioBufKey===audioUrl(_nxt2.surah,_nxt2.ayah)&&!!_audioBuf;
+    console.log('[QuranAudioPerf] earlyTrigger='+S.audio.surah+':'+S.audio.ayah
+      +' earlyMs='+em+' preloadReady='+!!_pr);
+    if(S.audio.playing&&!_audioNextCalled){_audioNextCalled=true;_audioGapT=Date.now();App.audioNext();}
+  },ms);
+}
+
+// Called when prebuf becomes ready mid-ayah — reschedule with tighter early offset.
+function _rescheduleEarlyEnd(){
+  var ae=S.audio.el;
+  if(!ae||!ae.duration||ae.duration===Infinity||!S.audio.playing||_audioNextCalled)return;
+  var em=_earlyMs();
+  var ms=(ae.duration-ae.currentTime)*1000-em;
+  if(ms<=0||ms>8000)return;
+  if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}
+  _audioEndTimer=setTimeout(function(){
+    _audioEndTimer=null;
+    console.log('[QuranAudioPerf] earlyTrigger='+S.audio.surah+':'+S.audio.ayah
+      +' earlyMs='+em+' preloadReady=true rescheduled=true');
+    if(S.audio.playing&&!_audioNextCalled){_audioNextCalled=true;_audioGapT=Date.now();App.audioNext();}
+  },ms);
+}
+
 // Pre-decode the next ayah blob into a secondary Audio element so the
 // browser finishes network+decode before we need it. When playAyah fires
 // it can swap src from _audioBuf instead of constructing a new Audio.
@@ -536,6 +583,8 @@ function _primeNextBuffer(surah,ayah){
     _audioBuf=buf;
     _audioBufKey=url;
     console.log('[QuranAudioPerf] primed next='+surah+':'+ayah);
+    // Prebuf just became ready — tighten the early-end timer if it's still pending
+    _rescheduleEarlyEnd();
   }catch(e){}
 }
 
@@ -551,6 +600,7 @@ function setAudioIcon(state){
 
 var _audioEndTimer=null;var _audioNextCalled=false;
 var _audioBuf=null;var _audioBufKey=null;var _audioGapT=0;
+var _playStartT=0;var _lastSrcType='';
 
 /* ===== STATE ===== */
 var S={
@@ -606,18 +656,8 @@ function init(){
     }
 
     S.audio.el=$('audioEl');
-    function _scheduleAyahEnd(){
-      if(_audioEndTimer)return;
-      var ae=S.audio.el;
-      if(!ae.duration||ae.duration===Infinity||!S.audio.playing)return;
-      var ms=(ae.duration-ae.currentTime)*1000-150;
-      if(ms<=0||ms>30000)return;
-      _audioEndTimer=setTimeout(function(){
-        _audioEndTimer=null;
-        if(S.audio.playing&&!_audioNextCalled){_audioNextCalled=true;_audioGapT=Date.now();App.audioNext();}
-      },ms);
-    }
     on(S.audio.el,'ended',function(){
+      console.log('[QuranAudioPerf] ended='+S.audio.surah+':'+S.audio.ayah);
       if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}
       if(!_audioNextCalled){App.audioNext();}
       _audioNextCalled=false;
@@ -669,6 +709,10 @@ function init(){
     on(S.audio.el,'playing',function(){
       setAudioIcon('pause');
       if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
+      if(_playStartT){
+        console.log('[QuranAudioPerf] playLatencyMs='+(Date.now()-_playStartT)+' src='+_lastSrcType);
+        _playStartT=0;
+      }
     });
     on(S.audio.el,'pause',function(){if(!S.audio.playing)setAudioIcon('play')});
 
@@ -717,6 +761,8 @@ function init(){
           var _skyEl=document.getElementById('prayerSkyScene');
           if(_skyEl)_skyEl.classList.remove('sky-paused');
         }
+        // Restore playback highlight state if Quran tab is visible (handles browser bg/fg)
+        if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
       }
     });
     try{
@@ -783,6 +829,8 @@ function init(){
             checkNewBookNotif();
             // Re-run prefetch in case any city cache is missing (e.g. first open was offline)
             if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
+            // Restore playback highlight state if Quran tab is active
+            if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
           }
         });
       }
@@ -4604,7 +4652,7 @@ function clearAllHighlights(){
 // Re-apply saved highlight state to current DOM without touching _hl keys.
 // Called after tab switch back to Quran, after renderAyahs, after mushaf page render.
 function _hlRestoreAll(){
-  if(!S.audio.playing||!_hl.currentKey)return;
+  if(!_hl.currentKey)return; // no active audio session — nothing to restore
   var mode=S.mushafMode?'mushaf':'reader';
   if(mode==='reader'){
     var playSurah=parseInt(_hl.currentKey.split(':')[0],10);
@@ -4713,12 +4761,18 @@ function playAyah(surah,ayah){
     // Show buffering indicator for stream path — user has to wait for network
     setAudioIcon('loading');
   }
+  _lastSrcType=_srcType;
   var _nxt=_nextAyahPos(surah,ayah);
   var _gapMs=_audioGapT?Date.now()-_audioGapT:0;
   _audioGapT=0;
+  var _nxtUrl=_nxt?audioUrl(_nxt.surah,_nxt.ayah):null;
+  var _nxtReady=_nxtUrl&&(
+    (_audioBufKey===_nxtUrl&&!!_audioBuf)||
+    (!!(_pfCache[_nxtUrl]&&_pfCache[_nxtUrl].blob))
+  );
   console.log('[QuranAudioPerf] current='+surah+':'+ayah
     +(_nxt?' next='+_nxt.surah+':'+_nxt.ayah:'')
-    +' src='+_srcType+' gapMs='+_gapMs);
+    +' src='+_srcType+' preloadReady='+!!_nxtReady+' gapMs='+_gapMs);
   S.audio.surah=surah;S.audio.ayah=ayah;
   var _isBlobOrLocal=src.startsWith('blob:')||src.indexOf('://')>-1&&!src.startsWith('http');
   if(!_isBlobOrLocal&&S.audio.el.src===src&&S.audio.el.readyState>=2){
@@ -4727,6 +4781,7 @@ function playAyah(surah,ayah){
     S.audio.el.src=src;
   }
   S.audio.el.playbackRate=S.audio.speed;
+  _playStartT=Date.now();
   S.audio.el.play().catch(function(){});
   S.audio.playing=true;
   updateReaderPlayState(surah,ayah,true);
