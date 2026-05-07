@@ -557,9 +557,9 @@ var S={
   supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,lastSyncTime:0,realtimeChannel:null,
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
-  mushafFont:localStorage.getItem('mushafFont')||'qcf4',
-  mushafFontSize:(function(){var f=localStorage.getItem('mushafFont')||'qcf4';return parseInt(localStorage.getItem('mushafFontSize_'+f))||(f==='qcf1'?22:20);}()),
-  mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||1.8,
+  mushafFont:'qcf1',
+  mushafFontSize:parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26,
+  mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||2.3,
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
 
@@ -4733,33 +4733,6 @@ App.openMushafSettings=function(){
   lhCtrl.appendChild(lhMBtn);lhCtrl.appendChild(lhVal);lhCtrl.appendChild(lhPBtn);
   body.appendChild(lhCtrl);
 
-  // Font Style segmented
-  body.appendChild(el('div','ms-section-label',t('settings.font_style')||'ستایلی فونت'));
-  var fonts=[{id:'qcf4',label:t('settings.font_tajwidi')||'تاجویدی V4'},{id:'qcf1',label:t('settings.font_madani_classic')||'مەدینی کلاسیک'},{id:'qcf2',label:t('settings.font_madani_new')||'مەدینی نوێ'}];
-  var seg=el('div','ms-seg');
-  fonts.forEach(function(f){
-    var btn=el('button','ms-seg-btn'+(S.mushafFont===f.id?' on':''),f.label);
-    on(btn,'click',function(){
-      if(S.mushafFont===f.id)return;
-      localStorage.setItem('mushafFontSize_'+S.mushafFont,String(S.mushafFontSize));
-      S.mushafFont=f.id;
-      localStorage.setItem('mushafFont',f.id);
-      var newSize=parseInt(localStorage.getItem('mushafFontSize_'+f.id))||(f.id==='qcf1'?22:20);// qcf2/qcf4 default 20
-      S.mushafFontSize=newSize;
-      document.documentElement.style.setProperty('--mushaf-size',newSize+'px');
-      setFsSize(newSize);
-      seg.querySelectorAll('.ms-seg-btn').forEach(function(b){b.classList.remove('on');});
-      btn.classList.add('on');
-      dismiss();
-      setTimeout(function(){
-        clearMushafHighlights();
-        var mv=$('mushafView');if(mv)clear(mv);
-        renderMushafView();
-      },280);
-    });
-    seg.appendChild(btn);
-  });
-  body.appendChild(seg);
 
   pane.appendChild(body);ov.appendChild(pane);
   on(ov,'click',function(e){if(e.target===ov)dismiss();});
@@ -7766,7 +7739,7 @@ var SYNC_SIMPLE_KEYS=[
   'autoAdvance','scrollFollowsAudio','hapticFeedback',
   'bestStreak',
   'mushafMode','readerFont','mushafFont','mushafLineH',
-  'mushafFontSize_qcf1','mushafFontSize_qcf2','mushafFontSize_qcf4',
+  'mushafFontSize_qcf1',
   'book_saved',
   'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
   'prayerAthanVoice','prayerTimeFormat',
@@ -7907,9 +7880,10 @@ function applySyncData(data){
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
   S.mushafMode=localStorage.getItem('mushafMode')==='true';
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
-  S.mushafFont=localStorage.getItem('mushafFont')||'qcf4';
-  S.mushafFontSize=parseInt(localStorage.getItem('mushafFontSize_'+S.mushafFont))||(S.mushafFont==='qcf1'?22:20);
-  S.mushafLineH=parseFloat(localStorage.getItem('mushafLineH'))||1.8;
+  S.mushafFont='qcf1';
+  localStorage.setItem('mushafFont','qcf1');
+  S.mushafFontSize=parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26;
+  S.mushafLineH=parseFloat(localStorage.getItem('mushafLineH'))||2.3;
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
   S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true';
@@ -10351,8 +10325,8 @@ function startApp(){
     try{var _ns=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(_ns)_ns.hide({fadeOutDuration:0});}catch(e){}
   });
   // Apply persisted mushaf CSS vars immediately
-  document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||22)+'px');
-  document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
+  document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||26)+'px');
+  document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||2.3));
   // Force-update check runs early — parallel with i18n, non-blocking
   ForceUpdate.check();
   // Re-check every 12s so admin changes appear within ~12s of saving
