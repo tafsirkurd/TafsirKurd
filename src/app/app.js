@@ -3131,7 +3131,9 @@ function renderMushafView(){
       else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
     }
 
-    for(var p=pages.start;p<=pages.end;p++){
+    // Load surah pages + 2 extra so the next surah flows naturally without an abrupt stop
+    var lastPage=Math.min(pages.end+2,604);
+    for(var p=pages.start;p<=lastPage;p++){
       (function(pn){
         var pageEl=el('div','mushaf-text-page');
         pageEl.dataset.page=String(pn);
@@ -3140,56 +3142,30 @@ function renderMushafView(){
       })(p);
     }
 
-    // Load first page immediately — no waiting for intersection
     var firstPage=view.querySelector('.mushaf-text-page');
     var targetSurah=S.surah;
-    // Trim a page so it only contains content belonging to targetSurah
-    function trimPageToSurah(pageEl){
-      if(!pageEl)return;
-      var kids=Array.prototype.slice.call(pageEl.childNodes);
-      var keepFrom=0,keepTo=kids.length,foundTarget=false;
-      for(var i=0;i<kids.length;i++){
-        var k=kids[i];
-        if(k.classList&&k.classList.contains('mushaf-surah-banner')){
-          var bn=parseInt(k.dataset.surah);
-          if(bn===targetSurah){keepFrom=i;foundTarget=true;}
-          else if(foundTarget){keepTo=i;break;}
-        }
-      }
-      for(var j=kids.length-1;j>=keepTo;j--){if(kids[j].parentNode===pageEl)pageEl.removeChild(kids[j]);}
-      if(keepFrom>0){for(var m=keepFrom-1;m>=0;m--){if(kids[m].parentNode===pageEl)pageEl.removeChild(kids[m]);}}
-    }
-    function trimToTargetSurah(){
-      // First page: trim leading previous-surah content, then reset scroll
-      var banner=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-      if(!banner)return false;
-      var pageEl=banner.closest?banner.closest('.mushaf-text-page'):banner.parentNode;
-      trimPageToSurah(pageEl);
-      view.scrollTop=0;view.scrollLeft=0;
-      var panelEl=document.getElementById('panelQuran');
-      if(panelEl)panelEl.scrollTop=0;
-      return true;
-    }
+    var capturedSurah=targetSurah;
+
     function _mushafPageErr(pageEl){
       clear(pageEl);
       var ph=el('div','mushaf-page-ph mushaf-page-err','—');
       pageEl.appendChild(ph);
     }
-    var capturedSurah=targetSurah;
 
-    // Eagerly load every page of the surah — never rely on IntersectionObserver
-    // (IntersectionObserver with root:view fires unreliably on iOS Capacitor,
-    //  causing the last pages of a surah to never render and ayahs to go missing)
+    // Scroll so the target surah's banner is at the top — pages are full, not trimmed
+    function _scrollToSurah(){
+      var banner=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+      if(banner){banner.scrollIntoView({block:'start',behavior:'instant'});}
+    }
+
+    // Eagerly load every remaining page — never rely on IntersectionObserver
     function _loadAllRemainingPages(){
       var remaining=Array.prototype.slice.call(view.querySelectorAll('.mushaf-text-page:not([data-loaded])'));
       remaining.forEach(function(pe){
         if(S.surah!==capturedSurah)return;
         pe.dataset.loaded='1';
         (function(pg){
-          loadMushafPageQCF(pg,parseInt(pg.dataset.page)).then(function(){
-            if(S.surah!==capturedSurah)return;
-            trimPageToSurah(pg);
-          }).catch(function(){_mushafPageErr(pg);});
+          loadMushafPageQCF(pg,parseInt(pg.dataset.page)).catch(function(){_mushafPageErr(pg);});
         })(pe);
       });
     }
@@ -3198,8 +3174,8 @@ function renderMushafView(){
       firstPage.dataset.loaded='1';
       loadMushafPageQCF(firstPage,pages.start).then(function(){
         setTimeout(function(){
-          trimToTargetSurah();   // trim leading other-surah content on first page
-          _loadAllRemainingPages(); // then load ALL remaining pages unconditionally
+          _scrollToSurah();
+          _loadAllRemainingPages();
         },0);
       }).catch(function(){_mushafPageErr(firstPage);});
     }
@@ -3231,34 +3207,7 @@ function renderMushafView(){
       view.addEventListener('scroll',_updateHeaderFromScroll,{passive:true});
     })();
 
-    // Prev / Next surah nav at end of mushaf pages
-    if(S.surah>1||S.surah<114){
-      var mushafNav=el('div','mushaf-surah-nav');
-      function mushafGoSurah(num){
-        S.surah=num;
-        var ns=SURAHS[num-1];
-        if(ns&&$('readerName'))$('readerName').textContent=ns.en+' - '+ns.ar;
-        try{localStorage.setItem('lastRead',JSON.stringify({surah:num,ayah:1}));}catch(e){}
-        var mv=$('mushafView');if(mv){clear(mv);renderMushafView();}
-      }
-      if(S.surah>1){
-        var prevSurah=SURAHS[S.surah-2];
-        var prevBtn=el('button','mushaf-surah-nav-btn');
-        prevBtn.appendChild(icon('fas fa-arrow-right'));
-        prevBtn.appendChild(document.createTextNode(' '+(prevSurah?prevSurah.ar:'')));
-        on(prevBtn,'click',function(){mushafGoSurah(S.surah-1);});
-        mushafNav.appendChild(prevBtn);
-      }
-      if(S.surah<114){
-        var nextSurah=SURAHS[S.surah];
-        var nextBtn2=el('button','mushaf-surah-nav-btn');
-        nextBtn2.appendChild(document.createTextNode((nextSurah?nextSurah.ar:'')+' '));
-        nextBtn2.appendChild(icon('fas fa-arrow-left'));
-        on(nextBtn2,'click',function(){mushafGoSurah(S.surah+1);});
-        mushafNav.appendChild(nextBtn2);
-      }
-      view.appendChild(mushafNav);
-    }
+
     // Landscape iPad: rewrap pages into horizontal scroll spreads
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024){
       _mushafWrapSpreads(view);
