@@ -3155,14 +3155,6 @@ function renderMushafView(){
           if(bn===targetSurah){keepFrom=i;foundTarget=true;}
           else if(foundTarget){keepTo=i;break;}
         }
-        // Continuation pages have no banner — detect target surah via segment data-surah
-        if(!foundTarget&&k.classList&&k.classList.contains('mushaf-qcf-line')){
-          var segs=k.querySelectorAll?k.querySelectorAll('.mushaf-ayah-seg[data-surah]'):[];
-          for(var si=0;si<segs.length;si++){
-            if(parseInt(segs[si].dataset.surah)===targetSurah){foundTarget=true;break;}
-          }
-          if(foundTarget){keepFrom=i;}
-        }
       }
       for(var j=kids.length-1;j>=keepTo;j--){if(kids[j].parentNode===pageEl)pageEl.removeChild(kids[j]);}
       if(keepFrom>0){for(var m=keepFrom-1;m>=0;m--){if(kids[m].parentNode===pageEl)pageEl.removeChild(kids[m]);}}
