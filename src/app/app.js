@@ -452,7 +452,7 @@ function audioUrl(surah,ayah){
 // Multi-slot lookahead cache — keeps up to 3 upcoming ayahs pre-downloaded as blobs
 var _pfCache={}; // url → {blob, xhr}
 var _blobToRevoke=null;
-var _PF_AHEAD=3; // how many ayahs to fetch ahead
+var _PF_AHEAD=5; // how many ayahs to fetch ahead
 
 function _nextAyahPos(surah,ayah){
   var s=SURAHS[surah-1];if(!s)return null;
@@ -497,6 +497,11 @@ function prefetchAyahBlob(surah,ayah){
           var _p=url.match(/\/([^/]+)\/(\d{3})(\d{3})\.mp3$/);
           if(_p)AudioCache.saveBlob(_p[1],parseInt(_p[2],10),parseInt(_p[3],10),xhr.response);
         }
+        // If this is the immediate next ayah, prime the secondary decode buffer now
+        var _nxt=_nextAyahPos(surah,ayah);
+        if(_nxt&&url===audioUrl(_nxt.surah,_nxt.ayah)){
+          _primeNextBuffer(_nxt.surah,_nxt.ayah);
+        }
       }
     };
     xhr.onerror=function(){if(_pfCache[url]===slot)delete _pfCache[url];};
@@ -512,6 +517,26 @@ function clearPrefetch(){
     if(slot.blob)URL.revokeObjectURL(slot.blob);
   });
   _pfCache={};
+  _audioBuf=null;_audioBufKey=null;
+}
+
+// Pre-decode the next ayah blob into a secondary Audio element so the
+// browser finishes network+decode before we need it. When playAyah fires
+// it can swap src from _audioBuf instead of constructing a new Audio.
+function _primeNextBuffer(surah,ayah){
+  var url=audioUrl(surah,ayah);
+  if(_audioBufKey===url)return; // already primed
+  var slot=_pfCache[url];
+  if(!slot||!slot.blob)return; // blob not ready yet — will prime when it arrives
+  try{
+    var buf=new Audio();
+    buf.preload='auto';
+    buf.src=slot.blob;
+    buf.load(); // trigger decode without playing
+    _audioBuf=buf;
+    _audioBufKey=url;
+    console.log('[QuranAudioPerf] primed next='+surah+':'+ayah);
+  }catch(e){}
 }
 
 // Update play/pause/loading icon — also keeps full player in sync
@@ -525,6 +550,7 @@ function setAudioIcon(state){
 }
 
 var _audioEndTimer=null;var _audioNextCalled=false;
+var _audioBuf=null;var _audioBufKey=null;var _audioGapT=0;
 
 /* ===== STATE ===== */
 var S={
@@ -584,11 +610,11 @@ function init(){
       if(_audioEndTimer)return;
       var ae=S.audio.el;
       if(!ae.duration||ae.duration===Infinity||!S.audio.playing)return;
-      var ms=(ae.duration-ae.currentTime)*1000-50;
-      if(ms<=0||ms>15000)return;
+      var ms=(ae.duration-ae.currentTime)*1000-150;
+      if(ms<=0||ms>30000)return;
       _audioEndTimer=setTimeout(function(){
         _audioEndTimer=null;
-        if(S.audio.playing&&!_audioNextCalled){_audioNextCalled=true;App.audioNext();}
+        if(S.audio.playing&&!_audioNextCalled){_audioNextCalled=true;_audioGapT=Date.now();App.audioNext();}
       },ms);
     }
     on(S.audio.el,'ended',function(){
@@ -978,14 +1004,13 @@ function init(){
     }
   }
 
-  // Mushaf font warm-up — prefetch current page ±2 fonts/data so Mushaf tab opens fast
+  // Mushaf font warm-up — prefetch current page ±4 fonts/data so Mushaf tab opens fast
   setTimeout(function(){
     getMushafPageRange(S.surah||1).then(function(pages){
       var cur=pages.start;
-      _prefetchMushafPage(cur);
-      _prefetchMushafPage(cur+1);
-      _prefetchMushafPage(cur-1);
-      _prefetchMushafPage(cur+2);
+      for(var _wp=-2;_wp<=4;_wp++){
+        if(cur+_wp>=1&&cur+_wp<=604)_prefetchMushafPage(cur+_wp);
+      }
     }).catch(function(){});
   },500);
 
@@ -4548,46 +4573,49 @@ function updateReaderPlayState(surah,ayah,playing){
 function playAyah(surah,ayah){
   if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}
   _audioNextCalled=false;
+  var _t0=Date.now();
   var url=audioUrl(surah,ayah);
   // Priority 1: user-downloaded offline copy (persistent Directory.Data — never evicted)
   // Priority 2: transparent LRU cache (Directory.Cache — may be evicted by OS)
   var localUri=(window.AudioDownloads&&AudioDownloads.getLocalUri(RECITER,surah,ayah))
               ||(window.AudioCache&&AudioCache.getLocalUri(RECITER,surah,ayah))||null;
-  // Priority 2: prefetched blob (zero-gap in-memory)
-  var src;
+  var src;var _srcType;
   var slot=_pfCache[url];
   if(localUri){
-    // Serve from local file — WebView-accessible capacitor:// URI
-    src=localUri;
-    // Consume any in-flight prefetch slot to avoid wasted bandwidth
+    src=localUri;_srcType='local';
     if(slot){
       if(slot.xhr){slot.xhr.abort();}
       if(slot.blob){URL.revokeObjectURL(slot.blob);}
       delete _pfCache[url];
     }
     AudioCache.touchAccess(RECITER,surah,ayah);
-    console.log('[Audio] local-cache hit — reciter:'+RECITER+' surah:'+surah+' ayah:'+ayah);
+  } else if(_audioBufKey===url&&_audioBuf){
+    // Pre-decoded secondary buffer is ready — swap it as the main element src
+    src=_audioBuf.src;_srcType='prebuf';
+    _audioBuf=null;_audioBufKey=null;
+    if(slot){
+      if(slot.xhr){slot.xhr.abort();}
+      if(slot.blob){URL.revokeObjectURL(slot.blob);}
+      delete _pfCache[url];
+    }
   } else if(slot&&slot.blob){
-    // Serve from in-memory prefetch blob
-    src=slot.blob;
+    src=slot.blob;_srcType='blob';
     if(_blobToRevoke)URL.revokeObjectURL(_blobToRevoke);
     _blobToRevoke=src;
-    delete _pfCache[url]; // blob now owned by audio element
-    console.log('[Audio] prefetch-blob hit — reciter:'+RECITER+' surah:'+surah+' ayah:'+ayah);
+    delete _pfCache[url];
   } else {
-    // Fall through to remote streaming
-    src=url;
-    // Cancel any in-flight XHR for this url since we'll stream directly
+    src=url;_srcType='stream';
     if(slot&&slot.xhr){slot.xhr.abort();delete _pfCache[url];}
-    // NOTE: Do NOT fire a parallel fetch here — it would compete with the audio stream
-    // and cause MEDIA_ERR_NETWORK (code 2) on constrained mobile connections.
-    // The prefetchAyahBlob system will cache upcoming ayahs; this one will be cached
-    // the next time it enters the prefetch lookahead window.
-    console.log('[Audio] remote stream — reciter:'+RECITER+' surah:'+surah+' ayah:'+ayah+' url:'+url);
+    // Show buffering indicator for stream path — user has to wait for network
+    setAudioIcon('loading');
   }
+  var _nxt=_nextAyahPos(surah,ayah);
+  var _gapMs=_audioGapT?Date.now()-_audioGapT:0;
+  _audioGapT=0;
+  console.log('[QuranAudioPerf] current='+surah+':'+ayah
+    +(_nxt?' next='+_nxt.surah+':'+_nxt.ayah:'')
+    +' src='+_srcType+' gapMs='+_gapMs);
   S.audio.surah=surah;S.audio.ayah=ayah;
-  // Preserve pre-buffered data: if audio element already has this exact remote URL
-  // loaded (not blob/local), skip src reset so browser plays from buffered bytes.
   var _isBlobOrLocal=src.startsWith('blob:')||src.indexOf('://')>-1&&!src.startsWith('http');
   if(!_isBlobOrLocal&&S.audio.el.src===src&&S.audio.el.readyState>=2){
     S.audio.el.currentTime=0;
@@ -4599,16 +4627,13 @@ function playAyah(surah,ayah){
   S.audio.playing=true;
   updateReaderPlayState(surah,ayah,true);
   showAudioBar();
-  // Auto-scroll if same surah is open and scroll-follows-audio is on
   if(S.surah===surah&&S.scrollFollowsAudio)scrollToAyah(ayah);
-  // Highlight current line in mushaf mode (also notifies tafsir sheet via _mushafTafsirSheetUpdate)
   if(S.mushafMode&&S.surah===surah)updateMushafHighlight(surah,ayah);
   else if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
-  // Update mushaf play button icon
   updateMushafPlayBtn();
-  // Start prefetching next ayah in background
   prefetchAyahBlob(surah,ayah);
-  // Start persistent background caching for the rest of this surah
+  // Prime secondary decode buffer for the immediate next ayah (if blob already cached)
+  if(_nxt)_primeNextBuffer(_nxt.surah,_nxt.ayah);
   if(window.AudioCache)AudioCache.startSurahBg(surah,ayah,RECITER);
 }
 
