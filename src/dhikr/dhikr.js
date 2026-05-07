@@ -1624,6 +1624,7 @@ window.GencineUI = {
     }
 
     /* Search bar */
+    if (!this._hadithReverse) this._hadithReverse = false;
     var searchWrap = document.createElement('div');
     searchWrap.className = 'hadith-search-wrap';
     var searchIco = document.createElement('i');
@@ -1635,6 +1636,13 @@ window.GencineUI = {
     searchInput.placeholder = T('gencine.hadith_search_ph','گەڕان بە ناو یا دەق...');
     searchInput.value = this._hadithSearch;
     searchWrap.appendChild(searchInput);
+    var sortBtn = document.createElement('button');
+    sortBtn.className = 'hadith-sort-btn' + (this._hadithReverse ? ' hadith-sort-btn--active' : '');
+    sortBtn.title = 'sort';
+    var sortIco = document.createElement('i');
+    sortIco.className = 'fas fa-arrow-down-9-1';
+    sortBtn.appendChild(sortIco);
+    searchWrap.appendChild(sortBtn);
     container.appendChild(searchWrap);
 
     /* Count label */
@@ -1653,6 +1661,7 @@ window.GencineUI = {
       var scored;
       if (!q || !q.trim()) {
         scored = hadiths.map(function(h, i){ return {h: h, origIdx: i}; });
+        if (self._hadithReverse) scored = scored.slice().reverse();
         countEl.textContent = hadiths.length + ' ' + T('gencine.hadith_count','فەرمودە');
       } else {
         scored = hadiths.map(function(h, i){
@@ -1727,6 +1736,12 @@ window.GencineUI = {
     }
 
     buildList(this._hadithSearch);
+
+    sortBtn.addEventListener('click', function(){
+      self._hadithReverse = !self._hadithReverse;
+      sortBtn.classList.toggle('hadith-sort-btn--active', self._hadithReverse);
+      buildList(self._hadithSearch);
+    });
 
     searchInput.addEventListener('input', function(){
       self._hadithSearch = this.value;
