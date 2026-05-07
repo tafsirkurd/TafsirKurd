@@ -1688,7 +1688,7 @@ window.GencineUI = {
 
         var numEl = document.createElement('div');
         numEl.className = 'hadith-num';
-        numEl.textContent = displayIdx + 1;
+        numEl.textContent = origIdx + 1;
         row.appendChild(numEl);
 
         var textCol = document.createElement('div');
