@@ -559,7 +559,7 @@ var S={
   glyphVerses:{},
   mushafFont:'qcf1',
   mushafFontSize:parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26,
-  mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||2.3,
+  mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||1.8,
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
 
@@ -4797,7 +4797,15 @@ App.showMushafVerseTafsir=function(vn,sn){
 
   var hdr=el('div','mushaf-tafsir-hdr');
   var s=SURAHS[(sn||S.surah||1)-1];
-  hdr.appendChild(el('span','mushaf-tafsir-title',(s?s.n:'')+' — '+toArabicNum(vn)));
+  var titleSpan=el('span','mushaf-tafsir-title');
+  var gc='surah'+String(sn||S.surah||1).padStart(3,'0');
+  var snGlyph=document.createElement('span');
+  snGlyph.className='no-kurdish-convert mushaf-tafsir-surah-glyph';
+  snGlyph.textContent=gc;
+  if(window.QuranFontManager)window.QuranFontManager.onReady('SurahName',function(ok){if(ok)snGlyph.textContent=gc;});
+  titleSpan.appendChild(snGlyph);
+  titleSpan.appendChild(document.createTextNode(' — '+toArabicNum(vn)));
+  hdr.appendChild(titleSpan);
 
   // Actions: play + close grouped on one side
   var actions=el('div','mushaf-tafsir-actions');
@@ -7949,7 +7957,7 @@ function applySyncData(data){
   S.mushafFont='qcf1';
   localStorage.setItem('mushafFont','qcf1');
   S.mushafFontSize=parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26;
-  S.mushafLineH=parseFloat(localStorage.getItem('mushafLineH'))||2.3;
+  S.mushafLineH=parseFloat(localStorage.getItem('mushafLineH'))||1.8;
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
   S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true';
@@ -10392,7 +10400,7 @@ function startApp(){
   });
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||26)+'px');
-  document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||2.3));
+  document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
   // Force-update check runs early — parallel with i18n, non-blocking
   ForceUpdate.check();
   // Re-check every 12s so admin changes appear within ~12s of saving
