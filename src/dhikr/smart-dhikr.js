@@ -297,7 +297,7 @@
        'clear'     — nothing notable
   ───────────────────────────────────────────── */
   var _RAIN_KEY = 'sd_rain_v4';
-  var _RAIN_TTL = 15 * 60 * 1000; /* 15 min — faster response to rain starting */
+  var _RAIN_TTL = 30 * 60 * 1000; /* 30 min — weather changes slowly; reduces API pressure */
   /* clean up orphaned old cache keys */
   try { localStorage.removeItem('sd_rain_v3'); localStorage.removeItem('sd_rain_v2'); localStorage.removeItem('sd_rain_v1'); } catch(e) {}
 
@@ -367,25 +367,21 @@
     if (_fetchRainInProgress) return;
     _fetchRainInProgress = true;
 
-    /* 10 independent sources — 6 meteorological models via Open-Meteo,
-       wttr.in ×2, and Norwegian Met Office                              */
+    /* 4 independent sources — 1 Open-Meteo (auto model), wttr.in ×2,
+       Norwegian Met Office. Reduced from 6 Open-Meteo model variants
+       to avoid 429 burst-rate errors on the free tier.               */
 
-    /* Sources 1-6 — Open-Meteo serving 6 different agency models */
-    var s1 = _omFetch(_OM);                                                   /* best-match (auto) */
-    var s2 = _omFetch(_OM + '&models=ecmwf_ifs025');                          /* ECMWF IFS 0.25° */
-    var s3 = _omFetch(_OM + '&models=gfs_seamless');                          /* US NOAA GFS */
-    var s4 = _omFetch(_OM + '&models=icon_seamless');                         /* German DWD ICON */
-    var s5 = _omFetch(_OM + '&models=gem_seamless');                          /* Canadian CMC GEM */
-    var s6 = _omFetch(_OM + '&models=meteofrance_seamless');                  /* Météo-France */
+    /* Source 1 — Open-Meteo auto-model (best regional blend) */
+    var s1 = _omFetch(_OM);
 
-    /* Source 7 — wttr.in by city name */
-    var s7 = _wttrFetch('https://wttr.in/Duhok?format=j1');
+    /* Source 2 — wttr.in by city name */
+    var s2 = _wttrFetch('https://wttr.in/Duhok?format=j1');
 
-    /* Source 8 — wttr.in by exact Duhok coordinates */
-    var s8 = _wttrFetch('https://wttr.in/36.87,42.95?format=j1');
+    /* Source 3 — wttr.in by exact Duhok coordinates */
+    var s3 = _wttrFetch('https://wttr.in/36.87,42.95?format=j1');
 
-    /* Source 9 — Norwegian Met Office (fully independent provider) */
-    var s9 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95',
+    /* Source 4 — Norwegian Met Office (fully independent provider) */
+    var s4 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95',
         { headers: { 'User-Agent': 'TafsirKurdApp/1.0 tefsirkurd@gmail.com' } })
       .then(function(r) { return r.json(); })
       .then(function(d) {
@@ -402,18 +398,18 @@
         return 'clear';
       }).catch(function() { return null; });
 
-    Promise.all([s1, s2, s3, s4, s5, s6, s7, s8, s9]).then(function(results) {
+    Promise.all([s1, s2, s3, s4]).then(function(results) {
       _fetchRainInProgress = false;
       /* Filter out nulls (failed sources) */
       var valid = results.filter(function(r) { return r !== null; });
       if (!valid.length) return; /* all failed — keep stale cache */
 
-      /* Low-threshold vote: any weather condition reported by ≥3 sources wins.
-         If multiple conditions reach threshold, priority is: thunder > snow > rain > wind.
-         This ensures brief/light rain in Duhok is detected even if some models lag. */
+      /* Majority vote across 4 sources (Open-Meteo auto, wttr.in ×2, Norwegian Met).
+         Any condition reported by ≥2 sources wins.
+         Priority if tied: thunder > snow > rain > wind. */
       var counts = {};
       valid.forEach(function(cond) { counts[cond] = (counts[cond] || 0) + 1; });
-      var THRESHOLD = 5; /* at least 5 independent sources must agree */
+      var THRESHOLD = 2; /* 2 of 4 independent sources must agree */
       var winner = 'clear';
       ['wind', 'rain', 'snow', 'thunder'].forEach(function(cond) { /* ascending priority */
         if ((counts[cond] || 0) >= THRESHOLD) winner = cond;
