@@ -229,8 +229,8 @@
   var _skyLastTick = 0;
 
   /* ── Duhok weather (10-source majority vote, shared sd_rain_v2 cache) ── */
-  var _WEATHER_KEY = 'sd_rain_v3';
-  var _WEATHER_TTL = 30 * 60 * 1000;
+  var _WEATHER_KEY = 'sd_rain_v4';
+  var _WEATHER_TTL = 2 * 60 * 60 * 1000; // 2 hours — sky animation doesn't need finer freshness
   var _weatherFetchInProgress = false;
 
   function _classifyWeatherCode(code, prec, wind) {
@@ -270,17 +270,11 @@
     if (_weatherFetchInProgress) return;
     _weatherFetchInProgress = true;
 
+    // Single Open-Meteo request (default best-match model) + met.no fallback.
+    // Previously used 6 OM model variants simultaneously — caused 429 rate limiting.
     var _OMB = 'https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1';
-    /* 9 sources: 6 Open-Meteo models + wttr.in ×2 + met.no */
-    var s1  = _omFetchPW(_OMB);
-    var s2  = _omFetchPW(_OMB + '&models=ecmwf_ifs025');
-    var s3  = _omFetchPW(_OMB + '&models=gfs_seamless');
-    var s4  = _omFetchPW(_OMB + '&models=icon_seamless');
-    var s5  = _omFetchPW(_OMB + '&models=gem_seamless');
-    var s6  = _omFetchPW(_OMB + '&models=meteofrance_seamless');
-    var s7  = _wttrFetchPW('https://wttr.in/Duhok?format=j1');
-    var s8  = _wttrFetchPW('https://wttr.in/36.87,42.95?format=j1');
-    var s9  = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95',
+    var s1 = _omFetchPW(_OMB);
+    var s2 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95',
         {headers:{'User-Agent':'TafsirKurdApp/1.0 tefsirkurd@gmail.com'}})
       .then(function(r){return r.json();}).then(function(d){
         var ts=(d.properties&&d.properties.timeseries&&d.properties.timeseries[0])||{};
@@ -296,18 +290,13 @@
         return 'clear';
       }).catch(function(){return null;});
 
-    Promise.all([s1,s2,s3,s4,s5,s6,s7,s8,s9]).then(function(results){
+    Promise.all([s1,s2]).then(function(results){
       _weatherFetchInProgress = false;
       var valid = results.filter(function(r){return r!==null;});
       if (!valid.length) return;
-      var counts = {};
-      valid.forEach(function(c){counts[c]=(counts[c]||0)+1;});
-      var majority = Math.floor(valid.length / 2) + 1;
-      var winner = 'clear';
-      ['thunder','snow','rain','wind'].forEach(function(c){
-        if((counts[c]||0) >= majority) winner = c;
-      });
-      try { localStorage.setItem(_WEATHER_KEY, JSON.stringify({ts:Date.now(),condition:winner,sources:results})); } catch(e){}
+      // Primary (OM) wins outright; fallback (met.no) only used if primary fails
+      var winner = valid[0];
+      try { localStorage.setItem(_WEATHER_KEY, JSON.stringify({ts:Date.now(),condition:winner})); } catch(e){}
       // Refresh sky if prayer tab is active
       _doUpdateSky();
     }).catch(function(){_weatherFetchInProgress=false;});

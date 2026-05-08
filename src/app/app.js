@@ -4871,7 +4871,11 @@ App.audioNext=function(){
     S.audio.currentRepeat=0;
   }
   if(S.audio.ayah<s.a){playAyah(S.audio.surah,S.audio.ayah+1)}
-  else if(S.autoAdvance&&S.audio.surah<114){playAyah(S.audio.surah+1,1)}
+  else if(S.autoAdvance&&S.audio.surah<114){
+    var _advSurah=S.audio.surah+1;
+    playAyah(_advSurah,1);
+    if(S.tab==='quran')App.openSurah(_advSurah,1);
+  }
   else{App.audioClose()}
 };
 
