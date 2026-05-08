@@ -56,6 +56,19 @@ export async function onRequest(context) {
             });
         }
 
+        // Global deadline — Promise.race ensures a response is always sent within
+        // 10 seconds even if the AbortController signal doesn't propagate correctly
+        // in this CF Workers runtime (known issue: signal may not abort a hung fetch).
+        // ERR_CONNECTION_CLOSED is caused by CF killing the worker at its wall-clock
+        // limit before we can send any response — this prevents that.
+        const globalDeadline = new Promise((_, reject) =>
+            setTimeout(() => {
+                const e = new Error('global_timeout');
+                e.name = 'AbortError';
+                reject(e);
+            }, 10000)
+        );
+
         // Fetch ALL translations across every page/category (paginated — Supabase max 1000/batch).
         // We intentionally do NOT filter by `page` here: the admin panel stores keys under
         // page values like 'android', 'index', 'bookmarks', 'goals', 'islamvoice', etc.
@@ -63,40 +76,41 @@ export async function onRequest(context) {
         // to those keys never reached the app. All keys share one Kurdish language — every
         // client receives everything and the i18n system merges on top of kmr.json.
         const BATCH = 1000;
-        let rows = [];
-        let offset = 0;
-        while (true) {
-            // 8-second timeout per batch — prevents CF Worker from hanging when
-            // Supabase is slow, which would cause the client to see ERR_CONNECTION_CLOSED.
-            const controller = new AbortController();
-            const tid = setTimeout(() => controller.abort(), 8000);
-            let res;
-            try {
-                res = await fetch(
-                    `${supabaseUrl}/rest/v1/kurdish_translations?select=key_id,kurdish_text&limit=${BATCH}&offset=${offset}`,
-                    {
-                        headers: {
-                            'apikey': supabaseKey,
-                            'Authorization': `Bearer ${supabaseKey}`
-                        },
-                        signal: controller.signal
-                    }
-                );
-            } finally {
-                clearTimeout(tid);
-            }
+        const dbHeaders = { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` };
 
-            if (!res.ok) {
-                return new Response(JSON.stringify({ error: 'DB error' }), {
-                    status: 502, headers: corsHeaders
-                });
-            }
+        const fetchAllRows = async () => {
+            let rows = [];
+            let offset = 0;
+            while (true) {
+                // Per-batch AbortController (4s) as inner safety.
+                // The outer Promise.race (10s global) is the real guard against hung workers.
+                const controller = new AbortController();
+                const tid = setTimeout(() => controller.abort(), 4000);
+                let res;
+                try {
+                    res = await fetch(
+                        `${supabaseUrl}/rest/v1/kurdish_translations?select=key_id,kurdish_text&limit=${BATCH}&offset=${offset}`,
+                        { headers: dbHeaders, signal: controller.signal }
+                    );
+                } finally {
+                    clearTimeout(tid);
+                }
 
-            const batch = await res.json();
-            rows = rows.concat(batch);
-            if (batch.length < BATCH) break;
-            offset += BATCH;
-        }
+                if (!res.ok) {
+                    const err = new Error('db_error');
+                    err.isDbError = true;
+                    throw err;
+                }
+
+                const batch = await res.json();
+                rows = rows.concat(batch);
+                if (batch.length < BATCH) break;
+                offset += BATCH;
+            }
+            return rows;
+        };
+
+        const rows = await Promise.race([fetchAllRows(), globalDeadline]);
 
         // Convert to flat { "key": "value" } format for i18n.js
         const translations = {};
@@ -109,7 +123,13 @@ export async function onRequest(context) {
         });
     } catch (error) {
         const isTimeout = error && error.name === 'AbortError';
-        console.error('app-translations error:', isTimeout ? 'Supabase timeout' : error);
+        const isDbError = error && error.isDbError;
+        console.error('app-translations error:', isTimeout ? 'timeout' : isDbError ? 'DB error' : error);
+        if (isDbError) {
+            return new Response(JSON.stringify({ error: 'DB error' }), {
+                status: 502, headers: corsHeaders
+            });
+        }
         return new Response(JSON.stringify({ error: isTimeout ? 'timeout' : 'Internal error' }), {
             status: isTimeout ? 504 : 500, headers: corsHeaders
         });

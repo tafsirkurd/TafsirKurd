@@ -750,6 +750,7 @@ function init(){
       if(document.hidden){
         if(!S.bgAudio&&S.audio.playing){
           S.audio.el.pause();S.audio.playing=false;
+          document.body.classList.remove('mushaf-audio-playing');
           var ic=$('audioPlayIcon');if(ic)ic.className='fas fa-play';
         }
         // Pause GPU-expensive sky animations when screen off/background
@@ -3212,14 +3213,17 @@ function renderMushafView(){
     // Pre-scroll to near the target surah before the observer fires so the
     // initial intersection check loads pages around the right position.
     var _estPx=(pages.start-1)*560; // ~560px per skeleton page
+    // Build all 604 page containers in a DocumentFragment (single DOM insertion)
+    // with no children — CSS min-height keeps scroll range intact. Skeletons are
+    // added by the IO callback just before data loads, cutting initial DOM nodes
+    // from ~9,000 (604×15 lines) down to 604 bare divs.
+    var _frag=document.createDocumentFragment();
     for(var p=1;p<=604;p++){
-      (function(pn){
-        var pageEl=el('div','mushaf-text-page');
-        pageEl.dataset.page=String(pn);
-        pageEl.appendChild(_mushafSkeleton());
-        view.appendChild(pageEl);
-      })(p);
+      var pageEl=el('div','mushaf-text-page');
+      pageEl.dataset.page=String(p);
+      _frag.appendChild(pageEl);
     }
+    view.appendChild(_frag);
     view.scrollTop=_estPx;
 
     var targetSurah=S.surah;
@@ -3249,6 +3253,8 @@ function renderMushafView(){
         pe.dataset.loaded='1';
         _mushafLazyObs&&_mushafLazyObs.unobserve(pe);
         if(S.surah!==capturedSurah)return;
+        // Add skeleton shimmer now so the page isn't blank while data loads
+        if(!pe.firstChild)pe.appendChild(_mushafSkeleton());
         loadMushafPageQCF(pe,parseInt(pe.dataset.page)).catch(function(){_mushafPageErr(pe);});
       });
     },{root:view,rootMargin:'3000px 0px 3000px 0px'});
@@ -3261,6 +3267,7 @@ function renderMushafView(){
     if(targetPageEl){
       targetPageEl.dataset.loaded='1';
       _mushafLazyObs&&_mushafLazyObs.unobserve(targetPageEl);
+      targetPageEl.appendChild(_mushafSkeleton());
       loadMushafPageQCF(targetPageEl,pages.start).then(function(){
         setTimeout(function(){_scrollToSurah();},0);
       }).catch(function(){_mushafPageErr(targetPageEl);});
@@ -4576,7 +4583,10 @@ function updateHighlight(surah,ayah){
     _hl.nextKey=null;_hl.nextEls=[];
   }
 
-  // Apply current — re-trigger animation by removing then re-adding in next frame
+  // Apply current — re-trigger animation by removing then re-adding in next frame.
+  // In performance mode (body.mushaf-audio-playing) the animation is suppressed by CSS
+  // so this only costs a class toggle, not a full paint cycle.
+  var _hlT0=Date.now();
   var newEls=_hlEls(newKey,mode);
   _hl.currentKey=newKey;_hl.currentEls=newEls;
   _hlSet(newEls,RC,false);_hlSet(newEls,NC,false);
@@ -4596,16 +4606,48 @@ function updateHighlight(surah,ayah){
     }
   }
 
-  // Mushaf: scroll to first visible current seg + notify tafsir sheet
+  // Mushaf: scroll to current ayah + notify tafsir sheet
   if(mode==='mushaf'){
     var view=$('mushafView');
     if(view&&newEls.length){
+      // Find the first element actually inside the mushaf view
+      var _scrollTarget=null;
       for(var i=0;i<newEls.length;i++){
-        if(view.contains(newEls[i])){newEls[i].scrollIntoView({behavior:'smooth',block:'center'});break;}
+        if(view.contains(newEls[i])){_scrollTarget=newEls[i];break;}
+      }
+      if(_scrollTarget){
+        // Defer to next RAF so scroll never blocks audio start.
+        // Batch layout reads inside the RAF to avoid forced sync reflow here.
+        var _scrollEl=_scrollTarget,_isPlaying=S.audio.playing;
+        requestAnimationFrame(function(){
+          var vr=view.getBoundingClientRect();
+          var er=_scrollEl.getBoundingClientRect();
+          // Safe zone: middle 70% of the view height — if already there, skip scroll entirely
+          var _margin=vr.height*0.15;
+          var _inSafe=(er.top>=vr.top+_margin&&er.bottom<=vr.bottom-_margin);
+          if(_inSafe){
+            console.log('[MushafScroll] skipped=true reason=alreadyVisible key='+newKey);
+            return;
+          }
+          if(_isPlaying){
+            // Instant snap during playback — smooth scroll costs 300-800ms and jank on WebView
+            var relTop=er.top-vr.top+view.scrollTop;
+            view.scrollTop=relTop-vr.height/2+er.height/2;
+            console.log('[MushafScroll] instant key='+newKey);
+          }else{
+            _scrollEl.scrollIntoView({behavior:'smooth',block:'center'});
+            console.log('[MushafScroll] smooth key='+newKey);
+          }
+        });
       }
     }
     if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
+    var _hlMs=Date.now()-_hlT0;
+    if(_hlMs>4)console.log('[MushafJank] highlightMs='+_hlMs+' elCount='+newEls.length+' key='+newKey);
   }
+  // Always sync performance mode class — must run for both mushaf AND reader
+  // so switching mushaf→reader while audio plays correctly removes the class.
+  document.body.classList.toggle('mushaf-audio-playing',!!(S.mushafMode&&S.audio.playing));
 }
 
 // Re-apply all active highlight states to elements on a newly-rendered Mushaf page.
@@ -4791,10 +4833,18 @@ function playAyah(surah,ayah){
   if(S.surah===surah&&S.scrollFollowsAudio&&!S.mushafMode)scrollToAyah(ayah);
   updateHighlight(surah,ayah);
   updateMushafPlayBtn();
-  prefetchAyahBlob(surah,ayah);
+  // Defer prefetch when streaming — gives audio a 600ms head start on the network
+  // before competing fetches begin. Blob/prebuf paths start immediately (already cached).
+  if(_srcType==='stream'){
+    setTimeout(function(){prefetchAyahBlob(surah,ayah);},600);
+  }else{
+    prefetchAyahBlob(surah,ayah);
+  }
   // Prime secondary decode buffer for the immediate next ayah (if blob already cached)
   if(_nxt)_primeNextBuffer(_nxt.surah,_nxt.ayah);
   if(window.AudioCache)AudioCache.startSurahBg(surah,ayah,RECITER);
+  var _transMs=Date.now()-_t0;
+  console.log('[QuranAudioPerf] transitionMs='+_transMs+' src='+_srcType+' key='+surah+':'+ayah);
 }
 
 function getReciterName(){
@@ -4848,8 +4898,13 @@ function showAudioBar(){
 
 App.audioToggle=function(){
   haptic([8]);
-  if(S.audio.playing){S.audio.el.pause();S.audio.playing=false;setAudioIcon('play');updateReaderPlayState(0,0,false);}
-  else{S.audio.el.play().catch(function(){});S.audio.playing=true;setAudioIcon('pause');updateReaderPlayState(S.audio.surah,S.audio.ayah,true);}
+  if(S.audio.playing){
+    S.audio.el.pause();S.audio.playing=false;setAudioIcon('play');updateReaderPlayState(0,0,false);
+    document.body.classList.remove('mushaf-audio-playing');
+  }else{
+    S.audio.el.play().catch(function(){});S.audio.playing=true;setAudioIcon('pause');updateReaderPlayState(S.audio.surah,S.audio.ayah,true);
+    if(S.mushafMode)document.body.classList.add('mushaf-audio-playing');
+  }
 };
 
 App.audioNext=function(){
@@ -4890,6 +4945,7 @@ App.audioClose=function(){
   S.audio.el.pause();S.audio.el.src='';
   // Revoke any deferred blob that never reached the playing event
   if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
+  document.body.classList.remove('mushaf-audio-playing');
   S.audio.playing=false;S.audio.surah=0;S.audio.ayah=0;
   S.audio.currentRepeat=0;
   clearPrefetch();

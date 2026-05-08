@@ -865,6 +865,39 @@
         /* Marked tab special color */
         .history-tab.marked-tab.active { background: #f59e0b; border-color: #f59e0b; }
         .history-tab.marked-tab:hover:not(.active) { border-color: #f59e0b; color: #d97706; }
+        /* Needs Review tab */
+        .history-tab.needs-review-tab.active { background: #dc2626; border-color: #dc2626; color: #fff; }
+        .history-tab.needs-review-tab:hover:not(.active) { border-color: #dc2626; color: #dc2626; }
+        body.dark-mode .history-tab.needs-review-tab.active { background: #991b1b; border-color: #991b1b; }
+        /* Review summary banner */
+        .history-review-bar {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 20px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+        .history-review-bar.visible { display: flex; }
+        .history-review-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid transparent;
+            transition: opacity .15s;
+        }
+        .history-review-chip:hover { opacity: .75; }
+        .history-review-chip.marked-chip  { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+        .history-review-chip.approve-chip { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+        body.dark-mode .history-review-chip.marked-chip  { background: #1c1200; color: #fbbf24; border-color: #78350f; }
+        body.dark-mode .history-review-chip.approve-chip { background: #1c0505; color: #f87171; border-color: #7f1d1d; }
+        .history-review-label { font-size: 11px; color: var(--text-tertiary); }
         /* Marked item highlight */
         .history-item.is-marked {
             background: #fffbeb;
@@ -915,6 +948,59 @@
             line-height: 1;
         }
         .history-mark-remove:hover { color: #b91c1c; }
+        /* Translation row status row (mark + approve badges inside history items) */
+        .history-row-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border-light);
+        }
+        .history-row-status-label {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            flex-shrink: 0;
+        }
+        .h-status-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border-medium);
+            background: var(--bg-surface);
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+        }
+        .h-status-btn:hover { border-color: #9ca3af; color: var(--text-secondary); }
+        .h-status-btn.mark.is-marked { color: #d97706; border-color: #f59e0b; background: #fffbeb; }
+        body.dark-mode .h-status-btn.mark.is-marked { color: #fbbf24; border-color: #b45309; background: #1c1200; }
+        .h-status-btn.mark:hover { border-color: #f59e0b; color: #d97706; }
+        body.dark-mode .h-status-btn.mark:hover { color: #fbbf24; }
+        .h-status-btn.approve.is-approved { color: #16a34a; border-color: #16a34a; background: #f0fdf4; font-weight: 700; }
+        body.dark-mode .h-status-btn.approve.is-approved { color: #4ade80; border-color: #166534; background: #052e16; }
+        .h-status-btn.approve:hover { border-color: #16a34a; color: #16a34a; }
+        .h-status-chip {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .h-status-chip.marked  { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+        .h-status-chip.approved { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        body.dark-mode .h-status-chip.marked   { background: #1c1200; color: #fbbf24; border-color: #78350f; }
+        body.dark-mode .h-status-chip.approved { background: #052e16; color: #4ade80; border-color: #166534; }
         /* Realtime badge on History button */
         .history-notif-badge {
             position: absolute;
@@ -2625,7 +2711,13 @@
                             <button class="history-tab" onclick="setHistoryTab('web', this)">🌐 Web</button>
                             <button class="history-tab" onclick="setHistoryTab('mobile', this)">📱 Mobile</button>
                             <button class="history-tab marked-tab" onclick="setHistoryTab('marked', this)">🔖 Marked</button>
+                            <button class="history-tab needs-review-tab" onclick="setHistoryTab('needs_review', this)" id="historyNeedsReviewTab">📋 Needs Review</button>
                         </div>
+                    </div>
+                    <div class="history-review-bar" id="historyReviewBar">
+                        <span class="history-review-label">Pending:</span>
+                        <span class="history-review-chip marked-chip" id="reviewChipMarked" onclick="setHistoryTab('needs_review', document.getElementById('historyNeedsReviewTab'))">🔖 0 marked</span>
+                        <span class="history-review-chip approve-chip" id="reviewChipUnapproved">✓ 0 not approved</span>
                     </div>
                     <div class="history-stats" id="historyStats"></div>
                     <div class="history-list" id="historyList">
@@ -4692,6 +4784,7 @@
                 // Clear badge when opening
                 _unreadCount = 0;
                 updateHistoryBadge();
+                updateHistoryReviewSummary();
                 loadHistory();
                 // Fallback poll every 30s (safety net if Realtime drops)
                 clearInterval(_historyPollInterval);
@@ -4805,6 +4898,7 @@
                 if (result.error) throw result.error;
                 _historyAllRows = result.data || [];
                 filterHistory();
+                updateHistoryReviewSummary();
             } catch (e) {
                 listEl.textContent = '';
                 statsEl.textContent = '';
@@ -4824,6 +4918,23 @@
             filterHistory();
         }
 
+        function updateHistoryReviewSummary() {
+            var bar = document.getElementById('historyReviewBar');
+            var chipMarked = document.getElementById('reviewChipMarked');
+            var chipUnapproved = document.getElementById('reviewChipUnapproved');
+            if (!bar || !chipMarked || !chipUnapproved || !allTranslations.length) return;
+            var markedCount = allTranslations.filter(function(t) { return t.marked; }).length;
+            var unapprovedCount = allTranslations.filter(function(t) { return !t.approved; }).length;
+            chipMarked.textContent = '🔖 ' + markedCount + ' marked';
+            chipUnapproved.textContent = '✓ ' + unapprovedCount + ' not approved';
+            // Show bar only when history panel is open and there's something worth showing
+            var panelOpen = document.getElementById('historyPanel').classList.contains('open');
+            bar.classList.toggle('visible', panelOpen && (markedCount > 0 || unapprovedCount > 0));
+            // Highlight the needs-review tab badge if any marked translations exist
+            var tab = document.getElementById('historyNeedsReviewTab');
+            if (tab) tab.textContent = markedCount > 0 ? '📋 Needs Review (' + markedCount + ')' : '📋 Needs Review';
+        }
+
         function filterHistory() {
             var search = (document.getElementById('historySearch').value || '').toLowerCase().trim();
             var rows = _historyAllRows;
@@ -4831,6 +4942,19 @@
             // Filter by tab
             if (_historyTab === 'marked') {
                 rows = rows.filter(function(row) { return (row.details || {}).marked === true; });
+            } else if (_historyTab === 'needs_review') {
+                // Show latest history entry per translation that is currently marked (needs attention).
+                // De-duplicates by key_id so each flagged translation appears once (most recent change).
+                var markedKeys = {};
+                allTranslations.forEach(function(t) { if (t.marked) markedKeys[t.key_id] = true; });
+                var seen = {};
+                rows = rows.filter(function(row) {
+                    var k = (row.details || {}).key_id;
+                    if (!k || !markedKeys[k]) return false;
+                    if (seen[k]) return false;
+                    seen[k] = true;
+                    return true;
+                });
             } else if (_historyTab !== 'all') {
                 rows = rows.filter(function(row) {
                     var details = row.details || {};
@@ -5071,6 +5195,90 @@
                         meta.appendChild(form);
                     }
                 })(row.id, details);
+
+                // Live translation row status — mark 🔖 and approve ✓ with full toggle.
+                // Actions are silent (no audit entry) identical to the main t-actions buttons.
+                // renderStatus() re-renders the section after every toggle so chips stay in sync.
+                (function(keyId) {
+                    if (!keyId) return;
+                    var tRow = allTranslations.find(function(t) { return t.key_id === keyId; });
+                    if (!tRow) return;
+
+                    var statusRow = makeEl('div', 'history-row-status');
+
+                    function renderStatus() {
+                        while (statusRow.firstChild) statusRow.removeChild(statusRow.firstChild);
+                        statusRow.appendChild(makeEl('span', 'history-row-status-label', 'Row:'));
+
+                        // ── Mark / Unmark ──────────────────────────────────────────
+                        var mkBtn = makeEl('button',
+                            'h-status-btn mark' + (tRow.marked ? ' is-marked' : ''),
+                            '🔖');
+                        mkBtn.title = tRow.marked ? 'Marked — click to unmark' : 'Not marked — click to mark';
+                        mkBtn.onclick = async function(e) {
+                            e.stopPropagation();
+                            var newVal = !tRow.marked;
+                            var email = sessionStorage.getItem('adminEmail') || '';
+                            var fields = newVal
+                                ? { marked: true, marked_by: email, marked_at: new Date().toISOString() }
+                                : { marked: false, marked_by: null, marked_at: null, mark_note: null };
+                            try {
+                                var r = await adminTranslationsAPI('update', { id: tRow.id, fields: fields });
+                                if (!r.success) throw new Error();
+                                Object.assign(tRow, fields);
+                                // Sync main list row if visible
+                                var mainRow = document.getElementById('row-' + tRow.id);
+                                if (mainRow) {
+                                    mainRow.classList.toggle('is-marked', newVal);
+                                    var mainMk = mainRow.querySelector('.t-btn.mark');
+                                    if (mainMk) { mainMk.classList.toggle('is-marked', newVal); mainMk.title = newVal ? 'Unmark' : 'Mark'; }
+                                }
+                                var cnt = document.getElementById('markedCount');
+                                if (cnt) cnt.textContent = allTranslations.filter(function(t) { return t.marked; }).length;
+                                if (activePlatform === 'marked' && !newVal) filterTranslations();
+                                showToast(newVal ? '🔖 Marked' : 'Mark removed');
+                                updateHistoryReviewSummary();
+                                renderStatus();
+                            } catch(_) { showToast('Failed to update mark'); }
+                        };
+                        statusRow.appendChild(mkBtn);
+
+                        // ── Approve / Unapprove ────────────────────────────────────
+                        var apBtn = makeEl('button',
+                            'h-status-btn approve' + (tRow.approved ? ' is-approved' : ''),
+                            '✓');
+                        apBtn.title = tRow.approved ? 'Approved — click to undo' : 'Not approved — click to approve';
+                        apBtn.onclick = async function(e) {
+                            e.stopPropagation();
+                            var newVal = !tRow.approved;
+                            try {
+                                var r = await adminTranslationsAPI('update', { id: tRow.id, fields: { approved: newVal } });
+                                if (!r.success) throw new Error();
+                                tRow.approved = newVal;
+                                // Sync main list row if visible
+                                var mainRow = document.getElementById('row-' + tRow.id);
+                                if (mainRow) {
+                                    mainRow.classList.toggle('is-approved', newVal);
+                                    var mainAp = mainRow.querySelector('.t-btn.approve');
+                                    if (mainAp) { mainAp.classList.toggle('is-approved', newVal); mainAp.title = newVal ? 'Approved — click to undo' : 'Approve'; }
+                                }
+                                showToast(newVal ? '✅ Approved' : 'Approval removed');
+                                updateHistoryReviewSummary();
+                                renderStatus();
+                            } catch(_) { showToast('Failed to update approval'); }
+                        };
+                        statusRow.appendChild(apBtn);
+
+                        // ── State chips ────────────────────────────────────────────
+                        if (tRow.marked)   statusRow.appendChild(makeEl('span', 'h-status-chip marked',   '🔖 Marked'));
+                        if (tRow.approved) statusRow.appendChild(makeEl('span', 'h-status-chip approved', '✓ Approved'));
+                        if (!tRow.marked && !tRow.approved)
+                            statusRow.appendChild(makeEl('span', 'history-row-status-label', '—'));
+                    }
+
+                    renderStatus();
+                    meta.appendChild(statusRow);
+                })(details.key_id);
 
                 item.appendChild(meta);
 
