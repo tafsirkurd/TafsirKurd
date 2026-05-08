@@ -221,19 +221,39 @@
                     <div class="stat-value" id="stat-devices">—</div>
                     <div class="stat-label">Unique Devices</div>
                 </div>
+                <div class="stat-card" style="border-left:3px solid #dc2626">
+                    <div class="stat-icon" style="background:#dc262620"><i data-lucide="alert-triangle" style="color:#dc2626"></i></div>
+                    <div class="stat-value" id="stat-stale">—</div>
+                    <div class="stat-label">Stale Snapshots</div>
+                </div>
             </div>
 
             <!-- Actions -->
             <div class="section-card" style="padding:18px 20px;margin-bottom:24px">
-                <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:6px">
-                    <i data-lucide="zap" style="width:14px;height:14px;color:var(--text-tertiary)"></i> Admin Actions
+                <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+                    <i data-lucide="zap" style="width:14px;height:14px;color:var(--text-tertiary)"></i> Widget Control
                 </div>
-                <div class="action-bar">
+                <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:12px">Commands propagate to all devices on next app open via the config nonce mechanism.</div>
+                <div class="action-bar" style="margin-bottom:10px">
                     <button class="btn-action btn-force" id="btnForce" onclick="forceRefreshAll()">
-                        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Force Refresh All Devices
+                        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Force Widget Reload
                     </button>
                     <button class="btn-action btn-clear" id="btnClear" onclick="clearExtCache()">
                         <i data-lucide="trash-2" style="width:13px;height:13px"></i> Clear Extended Cache
+                    </button>
+                    <button class="btn-action btn-force" id="btnRebuild" onclick="forceTimelineRebuild()">
+                        <i data-lucide="layers" style="width:13px;height:13px"></i> Force Timeline Rebuild
+                    </button>
+                    <button class="btn-action btn-force" id="btnRecalc" onclick="forcePrayerRecalculation()">
+                        <i data-lucide="calculator" style="width:13px;height:13px"></i> Force Prayer Recalculation
+                    </button>
+                </div>
+                <div class="action-bar">
+                    <button class="btn-action" style="background:rgba(16,185,129,.1);color:#059669" id="btnSimTrans" onclick="simulatePrayerTransition()">
+                        <i data-lucide="fast-forward" style="width:13px;height:13px"></i> Simulate Prayer Transition
+                    </button>
+                    <button class="btn-action" style="background:rgba(139,92,246,.1);color:#7c3aed" id="btnSimMid" onclick="simulateMidnightRollover()">
+                        <i data-lucide="moon" style="width:13px;height:13px"></i> Test Midnight Rollover
                     </button>
                     <button class="btn-action btn-refresh" onclick="loadAll()">
                         <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Reload Data
@@ -290,9 +310,12 @@
                                 <th>Time</th>
                                 <th>Status</th>
                                 <th>City</th>
+                                <th>Stale?</th>
+                                <th>Current Prayer</th>
+                                <th>Next Prayer</th>
+                                <th>Snap Date</th>
                                 <th>Age (min)</th>
                                 <th>Source</th>
-                                <th>Payload</th>
                                 <th>Ext Age (h)</th>
                                 <th>iOS</th>
                                 <th>App</th>
@@ -301,7 +324,7 @@
                             </tr>
                         </thead>
                         <tbody id="reportsTbody">
-                            <tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
+                            <tr><td colspan="14" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -386,6 +409,9 @@
             document.getElementById('stat-issues').textContent = issues;
             document.getElementById('stat-devices').textContent = devices || '—';
             document.getElementById('stat-last-seen').textContent = latest ? relTime(latest) : '—';
+            // Stale count (new enriched field) — loaded separately from full reports
+            var staleEl = document.getElementById('stat-stale');
+            if (staleEl) staleEl.textContent = '…';
 
         } catch(e) {
             console.error('[widget-health] stats error', e);
@@ -475,9 +501,13 @@
             if (error) throw error;
             _reports = data || [];
             renderTable();
+            // Update stale count from enriched field
+            var staleCount = (_reports).filter(function(r) { return r.snapshot_stale === true; }).length;
+            var staleEl = document.getElementById('stat-stale');
+            if (staleEl) staleEl.textContent = staleCount || '0';
         } catch(e) {
             document.getElementById('reportsTbody').innerHTML =
-                '<tr><td colspan="11" style="text-align:center;padding:40px;color:#e53e3e">' + esc(e.message) + '</td></tr>';
+                '<tr><td colspan="14" style="text-align:center;padding:40px;color:#e53e3e">' + esc(e.message) + '</td></tr>';
         }
     }
 
@@ -488,7 +518,7 @@
 
         var tbody = document.getElementById('reportsTbody');
         if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-tertiary)">No reports found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:40px;color:var(--text-tertiary)">No reports found.</td></tr>';
             return;
         }
 
@@ -497,13 +527,30 @@
             var sbClass = 'sb-' + (r.status || 'unknown');
             var shortDev = r.device_id ? r.device_id.slice(-8) : '—';
             var hasDiag = r.diagnostics && Object.keys(r.diagnostics).length > 0;
+            var staleCell = r.snapshot_stale === true
+                ? '<span style="color:#dc2626;font-weight:700;font-size:11px">STALE</span>'
+                : r.snapshot_stale === false
+                    ? '<span style="color:#059669;font-size:11px">ok</span>'
+                    : '<span style="color:var(--text-tertiary);font-size:11px">—</span>';
+            var curPrayer = r.current_prayer
+                ? '<span style="font-size:11.5px;font-weight:600;color:var(--primary)">' + esc(r.current_prayer) + '</span>'
+                : '<span style="color:var(--text-tertiary)">—</span>';
+            var nxtPrayer = r.next_prayer
+                ? '<span style="font-size:11.5px;color:var(--text-secondary)">' + esc(r.next_prayer) + '</span>'
+                : '<span style="color:var(--text-tertiary)">—</span>';
+            var snapDate = r.snapshot_date
+                ? '<span class="time-mono" title="today=' + esc(r.today_baghdad || '') + '">' + esc(r.snapshot_date) + (r.snapshot_date !== r.today_baghdad && r.today_baghdad ? ' ⚠' : '') + '</span>'
+                : '—';
             html += '<tr>'
                 + '<td class="time-mono">' + formatTs(r.created_at) + '</td>'
                 + '<td><span class="status-badge ' + sbClass + '">' + esc(r.status || '?') + '</span></td>'
                 + '<td style="font-size:12.5px">' + esc(r.city || '—') + '</td>'
-                + '<td style="font-size:12.5px;text-align:right">' + (r.age_min !== null ? r.age_min : '—') + '</td>'
+                + '<td style="text-align:center">' + staleCell + '</td>'
+                + '<td>' + curPrayer + '</td>'
+                + '<td>' + nxtPrayer + '</td>'
+                + '<td>' + snapDate + '</td>'
+                + '<td style="font-size:12.5px;text-align:right">' + (r.age_min !== null ? r.age_min + 'm' : '—') + '</td>'
                 + '<td style="font-size:11.5px;color:var(--text-tertiary);font-family:monospace">' + esc(r.source || '—') + '</td>'
-                + '<td style="font-size:12px;text-align:right">' + (r.payload_len !== null ? fmtBytes(r.payload_len) : '—') + '</td>'
                 + '<td style="font-size:12px;text-align:right">' + (r.ext_age_h !== null ? Number(r.ext_age_h).toFixed(1) + 'h' : '—') + '</td>'
                 + '<td class="time-mono">' + esc(r.ios_ver || '—') + '</td>'
                 + '<td class="time-mono">' + esc(r.app_version || '—') + '</td>'
@@ -574,6 +621,87 @@
             btn.innerHTML = '<i data-lucide="trash-2" style="width:13px;height:13px"></i> Clear Extended Cache';
             lucide.createIcons();
         }
+    }
+
+    async function forceTimelineRebuild() {
+        // Clears extended cache AND writes a rebuild nonce — forces widget to fetch
+        // fresh 3-month data from prayer-kurd API and rebuild full timeline.
+        var btn = document.getElementById('btnRebuild');
+        btn.disabled = true;
+        try {
+            var token = sessionStorage.getItem('adminToken');
+            var nonce = 'rebuild_' + Date.now();
+            var res = await fetch('/admin-translations-api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ action: 'upsert_setting', key: 'widget_refresh_nonce', value: nonce })
+            });
+            var d = await res.json();
+            if (!d.success) throw new Error(d.error || 'API error');
+            showActionResult('Timeline rebuild triggered (nonce=' + nonce + '). Extended cache will be cleared on next device open.', 'ok');
+        } catch(e) {
+            showActionResult('Error: ' + e.message, 'err');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function forcePrayerRecalculation() {
+        // Sends a prayer_recalc nonce — app interprets this as a signal to
+        // re-fetch prayer data from the API (amozhgary.tv / Aladhan) and push fresh data.
+        var btn = document.getElementById('btnRecalc');
+        btn.disabled = true;
+        try {
+            var token = sessionStorage.getItem('adminToken');
+            var nonce = 'recalc_' + Date.now();
+            var res = await fetch('/admin-translations-api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ action: 'upsert_setting', key: 'widget_prayer_recalc_nonce', value: nonce })
+            });
+            var d = await res.json();
+            if (!d.success) throw new Error(d.error || 'API error');
+            showActionResult('Prayer recalculation signal sent. Devices will re-fetch from API on next open.', 'ok');
+        } catch(e) {
+            showActionResult('Error: ' + e.message, 'err');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function simulatePrayerTransition() {
+        // Opens a validation checklist for prayer boundary behavior.
+        // Actual simulation runs on-device — this guides the tester through the steps.
+        var steps = [
+            '1. Open the app and go to Prayer tab.',
+            '2. Note the current next prayer and its time.',
+            '3. Wait until that prayer time arrives (or use device Date & Time override).',
+            '4. Without opening the app: check the widget.',
+            '   → The highlighted prayer must change immediately.',
+            '   → The countdown must reset to the new next prayer.',
+            '5. Now open the app → pushWidgetIfStale() fires.',
+            '   → Logs: [PrayerBoundary] timer fired',
+            '   → Logs: [PrayerSync] pushWidgetData source=prayerBoundary',
+            '6. Check widget again — must match the app prayer tab.'
+        ];
+        showActionResult('Checklist:\n' + steps.join('\n'), 'ok');
+    }
+
+    function simulateMidnightRollover() {
+        // Guide for testing the Baghdad midnight transition.
+        var steps = [
+            '1. Set device Date & Time to 11:58 PM Baghdad time.',
+            '2. Widget should show Isha as next (or passed).',
+            '3. Wait 2 minutes past midnight.',
+            '4. Widget must switch to Fajr of the new day.',
+            '   → No "no data" flash allowed.',
+            '   → Extended cache midnight entry fires at 00:00:01.',
+            '   → Legacy path: Baghdad midnight+5min reload fires.',
+            '5. Open app → date check triggers pushWidgetIfStale().',
+            '   → validUntil was Baghdad midnight+5min: stale guard triggers.',
+            '   → New payload pushed with next day\'s data.'
+        ];
+        showActionResult('Rollover checklist:\n' + steps.join('\n'), 'ok');
     }
 
     function showActionResult(msg, type) {

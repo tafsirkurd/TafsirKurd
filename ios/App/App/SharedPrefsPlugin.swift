@@ -40,7 +40,19 @@ public class SharedPrefsPlugin: CAPPlugin {
         switch key {
 
         case "widgetPrayerData":
-            NSLog("[WidgetRefresh] reason=prayerData — reloading prayer widgets")
+            // Log enriched snapshot fields if present (added in prayer.ui.js ≥ 20260523)
+            if let d = value.data(using: .utf8),
+               let obj = try? JSONSerialization.jsonObject(with: d) as? [String: Any] {
+                let city       = obj["city"]         as? String ?? "?"
+                let date       = obj["date"]         as? String ?? "?"
+                let nextName   = (obj["nextPrayer"]  as? [String: Any])?["name"] as? String ?? "?"
+                let curPrayer  = obj["currentPrayer"] as? String ?? "?"
+                let validUntil = obj["validUntil"]   as? Double ?? 0
+                let vuStr      = validUntil > 0 ? Date(timeIntervalSince1970: validUntil/1000).description : "none"
+                NSLog("[PrayerSync] snapshot city=%@ date=%@ currentPrayer=%@ nextPrayer=%@ validUntil=%@",
+                      city, date, curPrayer, nextName, vuStr)
+            }
+            NSLog("[WidgetReload] reason=prayerData — reloading prayer widgets")
             WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdWidgetV2")
             WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdLockWidgetV2")
 

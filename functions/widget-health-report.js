@@ -47,18 +47,25 @@ export async function onRequest(context) {
         }
 
         const row = {
-            device_id:    san(body.device_id, 64),
-            city:         san(body.city, 80),
-            status:       san(body.status, 40),
-            age_min:      sanNum(body.age_min, 99999),
-            payload_len:  sanNum(body.payload_len, 9999999),
-            source:       san(body.source, 60),
-            write_status: san(body.write_status, 20),
-            ext_age_h:    sanNum(body.ext_age_h, 9999),
-            diagnostics:  body.diagnostics && typeof body.diagnostics === 'object' ? body.diagnostics : null,
-            app_version:  san(body.app_version, 20),
-            ios_ver:      san(body.ios_ver, 20),
-            platform:     san(body.platform, 20) || 'ios'
+            device_id:      san(body.device_id, 64),
+            city:           san(body.city, 80),
+            status:         san(body.status, 40),
+            age_min:        sanNum(body.age_min, 99999),
+            payload_len:    sanNum(body.payload_len, 9999999),
+            source:         san(body.source, 60),
+            write_status:   san(body.write_status, 20),
+            ext_age_h:      sanNum(body.ext_age_h, 9999),
+            diagnostics:    body.diagnostics && typeof body.diagnostics === 'object' ? body.diagnostics : null,
+            app_version:    san(body.app_version, 20),
+            ios_ver:        san(body.ios_ver, 20),
+            platform:       san(body.platform, 20) || 'ios',
+            // Enriched snapshot fields (prayer.ui.js >= 20260523)
+            current_prayer: san(body.current_prayer, 20),
+            next_prayer:    san(body.next_prayer, 20),
+            snapshot_date:  san(body.snapshot_date, 12),
+            today_baghdad:  san(body.today_baghdad, 12),
+            snapshot_stale: body.snapshot_stale === true ? true : (body.snapshot_stale === false ? false : null),
+            valid_until:    sanNum(body.valid_until, 9999999999999)
         };
 
         const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {

@@ -1551,6 +1551,83 @@
 
   // Push prayer data to Android and iOS widgets.
   // source: why this push was triggered (prayerChange, cityChange, foreground, forceRefresh, etc.)
+  // Helpers for enriched snapshot fields ──────────────────────────────────────
+
+  // Baghdad is UTC+3 (no DST). Baghdad midnight of dateStr = UTC midnight - 3 h.
+  function _baghdadMidnightMs(dateStr) {
+    var p = dateStr.split('-').map(Number);
+    if (p.length < 3) return 0;
+    return Date.UTC(p[0], p[1]-1, p[2]) - 3 * 3600 * 1000;
+  }
+
+  // Parse "HH:MM" on dateStr (Baghdad) → Unix ms.
+  function _parsePrayerMs(hm, dateStr) {
+    var hmP = (hm || '').split(':').map(Number);
+    if (hmP.length < 2) return 0;
+    return _baghdadMidnightMs(dateStr) + (hmP[0] * 60 + hmP[1]) * 60000;
+  }
+
+  // Compute {currentPrayer, nextPrayer} from today's and tomorrow's timings.
+  function _computePrayerState(timings, dateISO, tom, tomDateISO) {
+    var ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    var now = Date.now();
+    var currentPrayer = null, nextPrayer = null, lastMs = -Infinity;
+    ORDER.forEach(function(name) {
+      var ms = _parsePrayerMs((timings[name] || '').split(' ')[0], dateISO);
+      if (!ms) return;
+      if (ms <= now && ms > lastMs) { currentPrayer = name; lastMs = ms; }
+      if (ms > now && !nextPrayer)  { nextPrayer = {name: name, timeMs: ms}; }
+    });
+    if (!nextPrayer && tom && tomDateISO) {
+      ORDER.forEach(function(name) {
+        if (nextPrayer) return;
+        var ms = _parsePrayerMs((tom[name] || '').split(' ')[0], tomDateISO);
+        if (ms && ms > now) nextPrayer = {name: name, timeMs: ms};
+      });
+    }
+    return {currentPrayer: currentPrayer, nextPrayer: nextPrayer};
+  }
+
+  // JS-side prayer boundary timers — fire while app is in foreground.
+  // Calls pushWidgetIfStale at each prayer start so the widget reloads immediately.
+  var _boundaryTimers = [];
+  function _clearBoundaryTimers() {
+    _boundaryTimers.forEach(function(id) { clearTimeout(id); });
+    _boundaryTimers = [];
+  }
+  function _schedulePrayerBoundaryTimers(timings, dateISO, tom, tomDateISO) {
+    _clearBoundaryTimers();
+    var ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    var now = Date.now();
+    function schedule(ms, label) {
+      var delay = ms - now;
+      if (delay < 500 || delay > 26 * 3600 * 1000) return; // ignore past or far-future
+      var id = setTimeout(function() {
+        console.log('[PrayerBoundary] timer fired label=' + label + ' at=' + new Date(ms).toISOString());
+        if (window.PrayerUI && window.PrayerUI.pushWidgetIfStale) {
+          // Clear stale guard so push fires unconditionally at boundary
+          localStorage.removeItem('widgetLastPushedDate');
+          window.PrayerUI.pushWidgetIfStale();
+        }
+      }, delay);
+      _boundaryTimers.push(id);
+      console.log('[PrayerSync] boundary scheduled ' + label + ' in ' + Math.round(delay/1000) + 's');
+    }
+    ORDER.forEach(function(name) {
+      var ms = _parsePrayerMs((timings[name] || '').split(' ')[0], dateISO);
+      if (ms) schedule(ms + 1000, name);
+    });
+    if (tom && tomDateISO) {
+      ORDER.forEach(function(name) {
+        var ms = _parsePrayerMs((tom[name] || '').split(' ')[0], tomDateISO);
+        if (ms) schedule(ms + 1000, name + '_tomorrow');
+      });
+    }
+    // Midnight rollover: Baghdad midnight tomorrow + 5 s
+    var midnightMs = _baghdadMidnightMs(tomDateISO || dateISO) + (tomDateISO ? 0 : 86400000);
+    schedule(midnightMs + 5000, 'midnight');
+  }
+
   function pushWidgetData(data, city, dateISO, source) {
     try {
       var _src = source || 'prayerChange';
@@ -1566,30 +1643,48 @@
       // without requiring the user to open the app at midnight.
       var tom = readTomorrowCacheNow(city, dateISO);
       var now = Date.now();
+
+      // ── Enriched snapshot fields ──────────────────────────────────────────
+      // validUntil = Baghdad midnight tomorrow + 5 min (when the `date` field becomes stale).
+      var tomDateISO = tom && tom.dateISO || null;
+      var validUntilMs = tomDateISO
+        ? _baghdadMidnightMs(tomDateISO) + 5 * 60 * 1000
+        : _baghdadMidnightMs(dateISO) + 86400000 + 5 * 60 * 1000; // derive if no tomorrow
+      var tomTimings = tom ? {
+        Fajr:    (tom.timings.Fajr    || '').split(' ')[0],
+        Sunrise: (tom.timings.Sunrise || '').split(' ')[0],
+        Dhuhr:   (tom.timings.Dhuhr   || '').split(' ')[0],
+        Asr:     (tom.timings.Asr     || '').split(' ')[0],
+        Maghrib: (tom.timings.Maghrib || '').split(' ')[0],
+        Isha:    (tom.timings.Isha    || '').split(' ')[0]
+      } : null;
+      var todayTimings = {
+        Fajr:    (t.Fajr    || '').split(' ')[0],
+        Sunrise: (t.Sunrise || '').split(' ')[0],
+        Dhuhr:   (t.Dhuhr   || '').split(' ')[0],
+        Asr:     (t.Asr     || '').split(' ')[0],
+        Maghrib: (t.Maghrib || '').split(' ')[0],
+        Isha:    (t.Isha    || '').split(' ')[0]
+      };
+      var state = _computePrayerState(todayTimings, dateISO, tomTimings, tomDateISO);
+
       var payload = JSON.stringify({
-        city:        city,
-        date:        dateISO,
-        hijri:       hijriStr,
-        lastUpdated: now,
-        timings: {
-          Fajr:    (t.Fajr    || '').split(' ')[0],
-          Sunrise: (t.Sunrise || '').split(' ')[0],
-          Dhuhr:   (t.Dhuhr   || '').split(' ')[0],
-          Asr:     (t.Asr     || '').split(' ')[0],
-          Maghrib: (t.Maghrib || '').split(' ')[0],
-          Isha:    (t.Isha    || '').split(' ')[0]
-        },
-        tomorrow: tom ? {
-          Fajr:    (tom.timings.Fajr    || '').split(' ')[0],
-          Sunrise: (tom.timings.Sunrise || '').split(' ')[0],
-          Dhuhr:   (tom.timings.Dhuhr   || '').split(' ')[0],
-          Asr:     (tom.timings.Asr     || '').split(' ')[0],
-          Maghrib: (tom.timings.Maghrib || '').split(' ')[0],
-          Isha:    (tom.timings.Isha    || '').split(' ')[0]
-        } : null,
-        tomorrowDate: tom ? tom.dateISO : null
+        city:          city,
+        date:          dateISO,
+        hijri:         hijriStr,
+        lastUpdated:   now,
+        generatedAt:   now,
+        validUntil:    validUntilMs,
+        currentPrayer: state.currentPrayer,
+        nextPrayer:    state.nextPrayer,
+        timings:       todayTimings,
+        tomorrow:      tomTimings,
+        tomorrowDate:  tomDateISO
       });
-      console.log('[WidgetSync] pushWidgetData source=' + _src + ' city=' + city + ' date=' + dateISO +
+      console.log('[PrayerSync] pushWidgetData source=' + _src + ' city=' + city + ' date=' + dateISO +
+                  ' currentPrayer=' + (state.currentPrayer || 'none') +
+                  ' nextPrayer=' + (state.nextPrayer && state.nextPrayer.name || 'none') +
+                  ' validUntil=' + new Date(validUntilMs).toISOString() +
                   ' hasTomorrow=' + !!tom + ' len=' + payload.length);
 
       // Android widget
@@ -1603,17 +1698,24 @@
       if (sp) {
         sp.set({ key: 'widgetPrayerData', value: payload })
           .then(function() {
-            console.log('[WidgetSync] App Group write OK source=' + _src + ' city=' + city + ' hasTomorrow=' + !!tom);
+            console.log('[PrayerSync] App Group write OK source=' + _src + ' city=' + city);
             localStorage.setItem('widgetLastPushedDate',        dateISO);
             localStorage.setItem('widgetLastPushedCity',        city);
             localStorage.setItem('widgetLastPushedHadTomorrow', tom ? '1' : '0');
             localStorage.setItem('widgetLastPushedTs',          String(now));
             localStorage.setItem('widgetLastPushedSource',      _src);
-            // Write JS-side sync meta so health report can read without touching App Group
             _writeWidgetHealthStamp(city, _src, payload.length, 'ok');
+            // Cache key snapshot fields for health reporting
+            try { localStorage.setItem('_widgetLastPayloadMeta', JSON.stringify({
+              city: city, date: dateISO,
+              currentPrayer: state.currentPrayer, nextPrayer: state.nextPrayer,
+              validUntil: validUntilMs, generatedAt: now
+            })); } catch(e) {}
+            // Schedule JS timers to push at each prayer boundary while app is foreground
+            _schedulePrayerBoundaryTimers(todayTimings, dateISO, tomTimings, tomDateISO);
           })
           .catch(function(e) {
-            console.log('[WidgetSync] App Group write FAIL source=' + _src + ':', e && e.message || e);
+            console.log('[PrayerSync] App Group write FAIL source=' + _src + ':', e && e.message || e);
             _writeWidgetHealthStamp(city, _src, payload.length, 'fail');
           });
       } else {
@@ -1621,6 +1723,7 @@
         localStorage.setItem('widgetLastPushedDate', dateISO);
         localStorage.setItem('widgetLastPushedCity', city);
         localStorage.setItem('widgetLastPushedTs',   String(now));
+        _schedulePrayerBoundaryTimers(todayTimings, dateISO, tomTimings, tomDateISO);
       }
     } catch(e) { console.log('[WidgetSync] pushWidgetData error:', e); }
   }
@@ -1711,17 +1814,27 @@
       var health = getWidgetHealthStatus();
       var platform = 'web';
       try { if (window.Capacitor && window.Capacitor.getPlatform) platform = window.Capacitor.getPlatform() || 'web'; } catch(e) {}
+      var city = health.city || getCity() || 'unknown';
+      var today = window.PrayerLogic ? window.PrayerLogic.todayBaghdad() : '';
+      var snapshot = null;
+      try { snapshot = JSON.parse(localStorage.getItem('_widgetLastPayloadMeta') || 'null'); } catch(e) {}
       var payload = {
-        platform:        platform,
-        city:            health.city || getCity() || 'unknown',
-        status:          opts && opts.status || health.status,
-        last_pushed_ts:  health.lastPushedTs || 0,
-        payload_age_min: health.ageMin,
+        platform:            platform,
+        city:                city,
+        status:              opts && opts.status || health.status,
+        last_pushed_ts:      health.lastPushedTs || 0,
+        payload_age_min:     health.ageMin,
         last_refresh_source: health.source || 'unknown',
-        ext_cache_age_h: health.extAgeH,
-        write_status:    health.writeStatus,
-        error_msg:       opts && opts.error || null,
-        tz:              Intl && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : null
+        ext_cache_age_h:     health.extAgeH,
+        write_status:        health.writeStatus,
+        error_msg:           opts && opts.error || null,
+        tz:                  Intl && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+        current_prayer:      snapshot && snapshot.currentPrayer || null,
+        next_prayer:         snapshot && snapshot.nextPrayer && snapshot.nextPrayer.name || null,
+        valid_until:         snapshot && snapshot.validUntil || null,
+        snapshot_date:       snapshot && snapshot.date || null,
+        today_baghdad:       today,
+        snapshot_stale:      snapshot ? (Date.now() > (snapshot.validUntil || Infinity)) : null
       };
       console.log('[WidgetHealth] reporting status=' + payload.status + ' city=' + payload.city);
       fetch('/widget-health-report', {
@@ -2866,6 +2979,9 @@
     _currentTimings = null;
     _currentData = null;
     _currentDateISO = null;
+    // Cancel prayer-boundary timers for the old city — new timers will be scheduled
+    // by pushWidgetData after the render() fetches and pushes data for the new city.
+    _clearBoundaryTimers();
     closeSettings();
     await render();
     // Reschedule for the new city. scheduleAthanMultiDay cancels old notifications
@@ -3227,7 +3343,7 @@
   // accurate immediately after the user opens the app (not just when prayer tab opens).
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
-      console.log('[WidgetRefresh] app foregrounded — checking widget staleness');
+      console.log('[PrayerSync] app foregrounded — checking widget staleness');
       setTimeout(function() { pushWidgetIfStale(); }, 800);
     }
   });
