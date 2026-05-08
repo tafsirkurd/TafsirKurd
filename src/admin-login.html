@@ -207,6 +207,31 @@
 
         .brand-footer { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; z-index: 1; font-size: 11px; color: #334155; letter-spacing: .02em; }
 
+        /* Arabic decorative element in brand panel */
+        .brand-arabic-deco {
+            position: absolute; z-index: 0; pointer-events: none;
+            bottom: 80px; left: 50%; transform: translateX(-50%);
+            font-size: 64px; color: rgba(255,255,255,.025);
+            font-family: 'Scheherazade New', 'KFGQPC Uthmanic Script', serif;
+            white-space: nowrap; user-select: none; letter-spacing: .06em;
+        }
+        body[data-admin-theme="sakina"] .brand-arabic-deco { color: rgba(201,168,76,.04); }
+        body[data-admin-theme="noor"]   .brand-arabic-deco { color: rgba(74,222,128,.03); }
+        body[data-admin-theme="evar"]   .brand-arabic-deco { color: rgba(129,140,248,.035); }
+
+        /* Tip box with left accent */
+        #secTip {
+            text-align: left !important;
+            border-left: 2px solid rgba(59,130,246,.35) !important;
+            border-top: none !important; border-right: none !important; border-bottom: none !important;
+            border-radius: 0 8px 8px 0 !important;
+            padding: 9px 13px !important;
+            background: rgba(59,130,246,.04) !important;
+        }
+        body[data-admin-theme="sakina"] #secTip { border-left-color: rgba(201,168,76,.4) !important; background: rgba(201,168,76,.04) !important; }
+        body[data-admin-theme="noor"]   #secTip { border-left-color: rgba(74,222,128,.35) !important; background: rgba(74,222,128,.03) !important; }
+        body[data-admin-theme="evar"]   #secTip { border-left-color: rgba(129,140,248,.4) !important; background: rgba(129,140,248,.04) !important; }
+
         /* ── Mobile header (only on small screens) ── */
         .mobile-header {
             display: none;
@@ -578,26 +603,22 @@
 
         /* Security footer bar */
         .sec-footer-bar {
-            margin-top: 20px; padding: 11px 16px;
+            margin-top: 20px; padding: 9px 14px;
             background: rgba(34,197,94,.035);
             border: 1px solid rgba(34,197,94,.14);
-            border-radius: 12px;
-            display: flex; align-items: center;
-            flex-wrap: wrap; gap: 5px 14px;
+            border-radius: 10px;
+            display: flex; align-items: center; gap: 8px;
         }
         body.dark-mode .sec-footer-bar { background: rgba(34,197,94,.04); border-color: rgba(34,197,94,.12); }
         .sec-footer-label {
-            font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-            color: #16a34a; margin-right: 4px;
+            font-size: 11px; font-weight: 600;
+            color: var(--text-tertiary); line-height: 1.4;
         }
-        body.dark-mode .sec-footer-label { color: #4ade80; }
-        .sec-pill {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 10px; font-weight: 600; color: var(--text-tertiary);
-            white-space: nowrap;
-        }
+        body.dark-mode .sec-footer-label { color: #475569; }
+        .sec-pill { display: none; }
         .sec-pill-dot {
-            width: 5px; height: 5px; border-radius: 50%; background: #22c55e;
+            width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(34,197,94,.2);
         }
 
         /* ── Êvar theme overrides ─────────────────────────────────── */
@@ -660,26 +681,28 @@
         <div class="brand-orb brand-orb-2"></div>
         <div class="brand-orb brand-orb-3"></div>
 
+        <div class="brand-arabic-deco">بِسْمِ اللَّهِ</div>
+
         <div class="brand-heading">
             <div class="brand-logo-wrap">
                 <div class="brand-logo-wrap-inner">
                     <img src="/assets/images/logo.png" alt="TafsirKurd">
                 </div>
             </div>
-            <div class="brand-title">Manage your<br><span>platform</span></div>
-            <div class="brand-desc">Secure access to content, users,<br>analytics, and system settings.</div>
+            <div class="brand-title">تەفسیر کورد<br><span>Admin Portal</span></div>
+            <div class="brand-desc">Quran translations, content, and users<br>— all managed from one place.</div>
 
             <!-- Rotating security tip -->
-            <div id="secTip" style="margin-bottom:18px;padding:10px 14px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:11px;color:#64748b;line-height:1.6;text-align:left;min-height:48px;transition:opacity .4s"></div>
+            <div id="secTip" style="margin-bottom:18px;font-size:11px;color:#64748b;line-height:1.6;min-height:44px;transition:opacity .4s"></div>
 
             <div class="brand-stats">
                 <div class="brand-stat">
                     <div class="brand-stat-icon" style="background:#3b82f618;">
-                        <i data-lucide="shield-check" style="color:#3b82f6;"></i>
+                        <i data-lucide="book-open" style="color:#3b82f6;"></i>
                     </div>
                     <div>
-                        <div class="brand-stat-text">End-to-end secured</div>
-                        <div class="brand-stat-sub">Multi-layer authentication</div>
+                        <div class="brand-stat-text">6,236 Ayahs · 114 Surahs</div>
+                        <div class="brand-stat-sub">Kurdish Quran translation management</div>
                     </div>
                 </div>
                 <div class="brand-stat">
@@ -687,23 +710,23 @@
                         <i data-lucide="activity" style="color:#10b981;"></i>
                     </div>
                     <div>
-                        <div class="brand-stat-text"><span class="live-dot"></span>Live dashboard</div>
-                        <div class="brand-stat-sub">Real-time metrics &amp; analytics</div>
+                        <div class="brand-stat-text"><span class="live-dot"></span>Live platform metrics</div>
+                        <div class="brand-stat-sub">Real-time users, content &amp; analytics</div>
                     </div>
                 </div>
                 <div class="brand-stat">
                     <div class="brand-stat-icon" style="background:#8b5cf618;">
-                        <i data-lucide="users" style="color:#8b5cf6;"></i>
+                        <i data-lucide="shield-check" style="color:#8b5cf6;"></i>
                     </div>
                     <div>
-                        <div class="brand-stat-text">Role-based access</div>
-                        <div class="brand-stat-sub">Super admin · Editor · Analyst</div>
+                        <div class="brand-stat-text">Hardened admin access</div>
+                        <div class="brand-stat-sub">TOTP · device trust · geo-block</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="brand-footer">TafsirKurd © 2026 · Admin Portal</div>
+        <div class="brand-footer">تەفسیر کورد © 2026 · Admin Portal</div>
     </div>
 
     <!-- ── Right form panel ── -->
@@ -715,8 +738,8 @@
                 <div class="mobile-header-logo">
                     <img src="/assets/images/logo.png" alt="TafsirKurd">
                 </div>
-                <span class="mobile-header-name">TafsirKurd</span>
-                <span class="mobile-header-badge">Admin</span>
+                <span class="mobile-header-name">تەفسیر کورد</span>
+                <span class="mobile-header-badge">Admin Portal</span>
             </div>
 
             <div class="form-wrap" id="formWrap">
@@ -726,7 +749,7 @@
                     <div class="login-brand-logo">
                         <img src="/assets/images/logo.png" alt="TafsirKurd">
                     </div>
-                    <div class="login-brand-name">TafsirKurd</div>
+                    <div class="login-brand-name">تەفسیر کورد</div>
                     <div class="login-brand-sub">Admin Portal</div>
                 </div>
 
@@ -740,7 +763,7 @@
                 <!-- Login form -->
                 <form id="loginForm">
                     <div class="form-heading">Welcome back</div>
-                    <div class="form-subheading">Sign in to your admin account</div>
+                    <div class="form-subheading">Sign in to the Kurdish Quran admin portal</div>
                     <!-- Last login info — shown after email blur if found -->
                     <div id="lastLoginBanner" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:9px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);font-size:11px;color:#16a34a;align-items:center;gap:7px"></div>
 
@@ -860,7 +883,7 @@
                 <!-- Security footer bar -->
                 <div class="sec-footer-bar">
                     <div class="sec-pill-dot"></div>
-                    <span class="sec-footer-label" style="margin-right:0;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:none;">Secured connection · Unauthorized access is monitored and logged</span>
+                    <span class="sec-footer-label">TLS encrypted · access is monitored and logged</span>
                 </div>
 
                 <!-- Footer -->
