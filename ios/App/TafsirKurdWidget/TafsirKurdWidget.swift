@@ -16,6 +16,11 @@ private let kNonceKey       = "widgetRefreshNonce"       // written by admin for
 private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted on (UserDefaults.standard)
 private let kPrayerOrder   = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]          // notifications + next-prayer logic
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"] // home widget rows (includes sunrise)
+
+// After a prayer's scheduled second + kGracePastSeconds it is considered "past".
+// 5 s prevents the widget from remaining on a just-passed prayer when WidgetKit
+// activates the boundary entry a few seconds late.
+private let kGracePastSeconds: TimeInterval = 5
 // MARK: — Widget translations (read from App Group UserDefaults, set by main app)
 
 /// Reads the `widgetTranslations` key written by `syncWidgetTranslations()` in app.js.
@@ -614,13 +619,21 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
         for name in kPrayerOrder {
             guard let t = ext.prayerDate(name, for: dateStr), t > now else { continue }
             let next = ext.nextPrayer(from: t.addingTimeInterval(30))
-            wLog.info("[PrayerBoundary] entry \(dateStr) \(name) @ \(t) -> next=\(next?.name ?? "nil")")
+            wLog.info("[PrayerBoundary] entry \(dateStr) \(name) @ \(fmtHMS(t)) -> next=\(next?.name ?? "nil")")
             entries.append(.init(date: t, data: dayData, next: next))
-            // +5 min safety entry for first 3 days — self-corrects if WidgetKit delays activation
-            if dayIndex < 3 {
-                let safetyT    = t.addingTimeInterval(5 * 60)
-                let safetyNext = ext.nextPrayer(from: safetyT.addingTimeInterval(30))
-                entries.append(.init(date: safetyT, data: dayData, next: safetyNext))
+
+            // Tight follow-up entries guarantee WidgetKit re-renders within seconds of
+            // each prayer boundary, so the lock screen switches without opening the app.
+            //   +5 s  → fires inside the grace window; self-corrects any early-activation drift
+            //   +60 s → secondary safety; catches WidgetKit delays of up to 1 minute
+            //   +5 min → fallback for aggressive battery/LPM throttling
+            let safetyOffsets: [TimeInterval] = [5, 60, 5 * 60]
+            for offset in safetyOffsets {
+                let st = t.addingTimeInterval(offset)
+                guard st > now else { continue }
+                let sNext = ext.nextPrayer(from: st.addingTimeInterval(30))
+                wLog.info("[PrayerBoundary] safety \(dateStr) \(name) +\(Int(offset))s -> next=\(sNext?.name ?? "nil")")
+                entries.append(.init(date: st, data: dayData, next: sNext))
             }
         }
 
@@ -678,14 +691,19 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
     wLog.info("[WidgetTimeline] buildLegacy city=\(data.city) nowNext=\(nowNext?.name ?? "nil") ageH=\(String(format:"%.1f",ageH))")
     rawEntries.append((now, nowNext))
 
-    // Today's prayer boundaries
+    // Today's prayer boundaries — exact + T+5s + T+60s for fast lock-screen switching
+    let legacyBoundaryOffsets: [TimeInterval] = [0, 5, 60]
     for name in kPrayerOrder {
         guard let t = data.prayerDate(name), t > now else { continue }
         let next = data.nextPrayer(from: t.addingTimeInterval(30))
         wLog.info("[PrayerBoundary] legacy today \(name) -> next=\(next?.name ?? "nil")")
-        rawEntries.append((t, next))
+        for offset in legacyBoundaryOffsets {
+            let et = t.addingTimeInterval(offset)
+            guard et > now else { continue }
+            rawEntries.append((et, next))
+        }
     }
-    // Tomorrow's prayer boundaries
+    // Tomorrow's prayer boundaries — exact + T+5s + T+60s
     for i in 0 ..< kPrayerOrder.count {
         let name = kPrayerOrder[i]
         guard let t = data.prayerDate(name, dayOffset: 1) else { continue }
@@ -697,7 +715,9 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
         if nextEntry == nil, let fajr2 = data.prayerDate("Fajr", dayOffset: 2) {
             nextEntry = ("Fajr", fajr2, kn("Fajr"))
         }
-        rawEntries.append((t, nextEntry))
+        for offset in legacyBoundaryOffsets {
+            rawEntries.append((t.addingTimeInterval(offset), nextEntry))
+        }
     }
 
     // Baghdad midnight entry — anchors the day-boundary transition
@@ -708,18 +728,18 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
         rawEntries.append((midnightTomorrow, nextAtMid))
     }
 
-    // 15-minute safety entries between prayer boundaries so a missed boundary entry
-    // self-corrects within 15 minutes (max gap between entries in this fallback path).
+    // 5-minute safety entries between prayer boundaries so a missed boundary entry
+    // self-corrects within 5 minutes (max gap between entries in this fallback path).
     var safetyEntries: [(date: Date, next: (name: String, time: Date, ku: String)?)] = []
     let sortedRaw = rawEntries.sorted { $0.date < $1.date }
     for i in 0 ..< (sortedRaw.count - 1) {
         let gapStart = sortedRaw[i].date
         let gapEnd   = sortedRaw[i + 1].date
-        var tick = gapStart.addingTimeInterval(15 * 60)
+        var tick = gapStart.addingTimeInterval(5 * 60)
         while tick < gapEnd {
             let n = data.nextPrayer(from: tick)
             safetyEntries.append((tick, n))
-            tick = tick.addingTimeInterval(15 * 60)
+            tick = tick.addingTimeInterval(5 * 60)
         }
     }
 
@@ -944,19 +964,92 @@ private struct NoDataView: View {
     }
 }
 
-// MARK: — Self-correcting next prayer
+// MARK: — Boundary-aware next prayer helpers
 //
-// Re-derives the "next prayer" from Date() at render time so that if WidgetKit
-// delays an entry by 5–15 minutes, the view still highlights the correct prayer.
-// Falls back to the build-time entry.next when nextPrayer() returns nil (stale data).
+// effectiveNextPrayer: re-derives from Date() with a 5-second grace window.
+// A prayer is "still next" while now < prayerTime + kGracePastSeconds, preventing
+// the widget from flipping mid-second if WidgetKit activates a boundary entry early.
+//
+// correctedNext: wraps effectiveNextPrayer for home-screen widgets, logs drift.
+//
+// effectiveNext3: grace-aware version of next3() used by LockView.
+
+private func fmtHMS(_ d: Date) -> String {
+    var cal = Calendar.current
+    cal.timeZone = TimeZone(identifier: "Asia/Baghdad") ?? .current
+    let c = cal.dateComponents([.hour, .minute, .second], from: d)
+    return String(format: "%02d:%02d:%02d", c.hour ?? 0, c.minute ?? 0, c.second ?? 0)
+}
+
+private func effectiveNextPrayer(
+    data: PrayerWidgetData,
+    now: Date,
+    tag: String = ""
+) -> (name: String, time: Date, ku: String)? {
+    // Include prayer while now < t + grace (within 5 s window after prayer starts)
+    func stillRelevant(_ t: Date) -> Bool { return now < t.addingTimeInterval(kGracePastSeconds) }
+
+    for n in kPrayerOrder {
+        if let t = data.prayerDate(n), stillRelevant(t) {
+            let passed = now >= t
+            wLog.info("[WidgetBoundary] \(tag.isEmpty ? "" : tag + " ")now=\(fmtHMS(now)) prayer=\(n) time=\(fmtHMS(t)) passed=\(passed) next=\(n)")
+            return (n, t, kn(n))
+        }
+    }
+    for n in kPrayerOrder {
+        if let t = data.prayerDate(n, dayOffset: 1), stillRelevant(t) {
+            return (n, t, kn(n))
+        }
+    }
+    // Stale-recovery: stored times are for a past date — try Baghdad wall-clock dates
+    for offset in 0...1 {
+        let targetDate = PrayerWidgetData.baghdadDateString(offset: offset)
+        for n in kPrayerOrder {
+            if let approx = data.prayerTimeOnDate(n, dateStr: targetDate), stillRelevant(approx) {
+                wLog.warning("[WidgetBoundary] stale-recovery \(n) on \(targetDate)")
+                return (n, approx, kn(n))
+            }
+        }
+    }
+    wLog.error("[WidgetBoundary] effectiveNextPrayer: no prayer found tag=\(tag)")
+    return nil
+}
+
+private func effectiveNext3(
+    data: PrayerWidgetData,
+    now: Date
+) -> [(name: String, ku: String, display: String)] {
+    func stillRelevant(_ t: Date) -> Bool { return now < t.addingTimeInterval(kGracePastSeconds) }
+
+    var result: [(name: String, ku: String, display: String)] = []
+    outer: for offset in 0...1 {
+        for name in kDisplayOrder {
+            guard result.count < 3 else { break outer }
+            guard let t = data.prayerDate(name, dayOffset: offset), stillRelevant(t) else { continue }
+            let src = offset == 0 ? data.timings : (data.tomorrow ?? data.timings)
+            guard let raw = src[name] else { continue }
+            let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
+            let parts = hm.split(separator: ":").compactMap { Int($0) }
+            let display: String
+            if parts.count >= 2 {
+                var h = parts[0]; let m = parts[1]
+                if h == 0 { h = 12 } else if h > 12 { h -= 12 }
+                display = String(format: "%d:%02d", h, m)
+            } else { display = hm }
+            result.append((name: name, ku: kn(name), display: display))
+        }
+    }
+    return result
+}
+
 private func correctedNext(
     data: PrayerWidgetData,
     stored: (name: String, time: Date, ku: String)?,
     tag: String
 ) -> (name: String, time: Date, ku: String)? {
-    let rederived = data.nextPrayer(from: Date())
+    let rederived = effectiveNextPrayer(data: data, now: Date(), tag: tag)
     if let rd = rederived, let st = stored, rd.name != st.name {
-        wLog.warning("[Drift] \(tag): stale=\(st.name) current=\(rd.name) — delayed activation, self-corrected")
+        wLog.warning("[WidgetDrift] \(tag): stale=\(st.name) corrected=\(rd.name)")
     }
     return rederived ?? stored
 }
@@ -1150,7 +1243,15 @@ private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let prayers = d.next3(from: Date())
+            let now     = Date()
+            let prayers = effectiveNext3(data: d, now: now)
+            // Drift detection: if stored next differs from what we computed, log it
+            if let stored = entry.next, let first = prayers.first, stored.name != first.name {
+                let _ = wLog.warning("[WidgetDrift] lock: stale=\(stored.name) corrected=\(first.name) now=\(fmtHMS(now))")
+            }
+            if let first = prayers.first {
+                let _ = wLog.info("[WidgetBoundary] lock: now=\(fmtHMS(now)) next=\(first.name)")
+            }
             if prayers.isEmpty {
                 Text("کاتا نوێژ")
                     .font(.system(size: 11))
