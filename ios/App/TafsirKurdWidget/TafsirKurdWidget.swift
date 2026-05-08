@@ -467,8 +467,10 @@ struct PrayerProvider: TimelineProvider {
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         WT.reload()
-        let now = Date()
-        wLog.info("[WidgetTimeline] getTimeline called at \(now)")
+        let now        = Date()
+        let buildStart = now
+        let isLPM      = ProcessInfo.processInfo.isLowPowerModeEnabled
+        wLog.info("[WidgetTimeline] getTimeline called at \(now) lpm=\(isLPM)")
 
         // Check admin force-refresh nonce — if it changed, discard extended cache so we
         // re-fetch fresh prayer data from the API on this getTimeline call.
@@ -507,6 +509,7 @@ struct PrayerProvider: TimelineProvider {
                 wLog.info("[WidgetTimeline] extended cache hit city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
                 let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
                 let nextName = entries.first?.next?.name ?? "unknown"
+                let buildMs  = (Date().timeIntervalSince1970 - buildStart.timeIntervalSince1970) * 1000
                 writeDiagnostics([
                     "ts":         Date().timeIntervalSince1970 * 1000,
                     "source":     "extended",
@@ -515,7 +518,9 @@ struct PrayerProvider: TimelineProvider {
                     "extAgeH":    ext.ageHours,
                     "entries":    entries.count,
                     "policyAt":   policyAt.timeIntervalSince1970,
-                    "nextPrayer": nextName
+                    "nextPrayer": nextName,
+                    "lpm":        isLPM,
+                    "buildMs":    buildMs
                 ], legacyData: legacyData)
                 wLog.info("[WidgetTimeline] \(entries.count) entries nextPrayer=\(nextName) policyAt=\(policyAt)")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
@@ -531,11 +536,22 @@ struct PrayerProvider: TimelineProvider {
                                 policy: .after(now.addingTimeInterval(3 * 60))))
             return
         }
+        // In Low Power Mode: skip the network fetch to save battery.
+        // Dense timeline entries + self-correcting views handle accuracy while offline.
+        if isLPM {
+            wLog.info("[WidgetTimeline] LPM active — skipping extended cache fetch, using legacy data")
+            writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "legacy_lpm",
+                              "city": currentCity, "lpm": true], legacyData: legacyData)
+            buildLegacyTimeline(data: legacyData, now: now, completion: completion)
+            return
+        }
+
         wLog.info("[WidgetTimeline] fetching extended cache for city=\(currentCity)")
         fetchExtendedPrayerCache(city: currentCity) { ext in
             if let ext = ext, ext.isUsable {
                 let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
                 let nextName = entries.first?.next?.name ?? "unknown"
+                let buildMs  = (Date().timeIntervalSince1970 - buildStart.timeIntervalSince1970) * 1000
                 writeDiagnostics([
                     "ts":         Date().timeIntervalSince1970 * 1000,
                     "source":     "extended_fetch",
@@ -543,7 +559,9 @@ struct PrayerProvider: TimelineProvider {
                     "extDays":    ext.days.count,
                     "entries":    entries.count,
                     "policyAt":   policyAt.timeIntervalSince1970,
-                    "nextPrayer": nextName
+                    "nextPrayer": nextName,
+                    "lpm":        isLPM,
+                    "buildMs":    buildMs
                 ], legacyData: legacyData)
                 wLog.info("[WidgetTimeline] fetched \(entries.count) entries nextPrayer=\(nextName)")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
@@ -569,7 +587,9 @@ private func syntheticData(from ext: WidgetExtendedCache, dateStr: String) -> Pr
     for (i, n) in names.enumerated() where i < arr.count { timing[n] = arr[i] }
     return PrayerWidgetData(city: ext.city, date: dateStr, hijri: "",
                             timings: timing, tomorrow: nil, tomorrowDate: nil,
-                            lastUpdated: ext.gen)
+                            lastUpdated: ext.gen,
+                            generatedAt: nil, validUntil: nil,
+                            currentPrayer: nil, nextPrayer: nil)
 }
 
 // Build up to 14 days × 5 prayers = 70 timeline entries from the extended cache.
@@ -587,7 +607,7 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
 
     // One entry per prayer boundary across the next 14 days, plus explicit midnight
     // entries so the Isha→Fajr transition and Baghdad day-rollover are deterministic.
-    for dateStr in futureDates.prefix(14) {
+    for (dayIndex, dateStr) in futureDates.prefix(14).enumerated() {
         let dayData = syntheticData(from: ext, dateStr: dateStr) ?? todayData
 
         // Prayer-boundary entries
@@ -596,6 +616,12 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             let next = ext.nextPrayer(from: t.addingTimeInterval(30))
             wLog.info("[PrayerBoundary] entry \(dateStr) \(name) @ \(t) -> next=\(next?.name ?? "nil")")
             entries.append(.init(date: t, data: dayData, next: next))
+            // +5 min safety entry for first 3 days — self-corrects if WidgetKit delays activation
+            if dayIndex < 3 {
+                let safetyT    = t.addingTimeInterval(5 * 60)
+                let safetyNext = ext.nextPrayer(from: safetyT.addingTimeInterval(30))
+                entries.append(.init(date: safetyT, data: dayData, next: safetyNext))
+            }
         }
 
         // Midnight entry: Baghdad 00:00:01 of this date — anchors the day-boundary transition.
@@ -918,13 +944,30 @@ private struct NoDataView: View {
     }
 }
 
+// MARK: — Self-correcting next prayer
+//
+// Re-derives the "next prayer" from Date() at render time so that if WidgetKit
+// delays an entry by 5–15 minutes, the view still highlights the correct prayer.
+// Falls back to the build-time entry.next when nextPrayer() returns nil (stale data).
+private func correctedNext(
+    data: PrayerWidgetData,
+    stored: (name: String, time: Date, ku: String)?,
+    tag: String
+) -> (name: String, time: Date, ku: String)? {
+    let rederived = data.nextPrayer(from: Date())
+    if let rd = rederived, let st = stored, rd.name != st.name {
+        wLog.warning("[Drift] \(tag): stale=\(st.name) current=\(rd.name) — delayed activation, self-corrected")
+    }
+    return rederived ?? stored
+}
+
 // MARK: — Small widget
 
 private struct SmallView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let n        = entry.next
+            let n        = correctedNext(data: d, stored: entry.next, tag: "small")
             let showName = n?.ku   ?? kn("Fajr")
             let showKey  = n?.name ?? "Fajr"
             VStack(alignment: .trailing, spacing: 0) {
@@ -974,7 +1017,7 @@ private struct MediumView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let n = entry.next
+            let n = correctedNext(data: d, stored: entry.next, tag: "medium")
             VStack(spacing: 0) {
                 HStack(alignment: .center, spacing: 0) {
                     if let n = n {
@@ -1007,7 +1050,7 @@ private struct LargeView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let n          = entry.next
+            let n          = correctedNext(data: d, stored: entry.next, tag: "large")
             let bottomName = n?.name ?? "Fajr"
             let bottomKu   = n?.ku   ?? kn("Fajr")
             VStack(spacing: 0) {
@@ -1107,7 +1150,7 @@ private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data {
-            let prayers = d.next3(from: entry.date)
+            let prayers = d.next3(from: Date())
             if prayers.isEmpty {
                 Text("کاتا نوێژ")
                     .font(.system(size: 11))
