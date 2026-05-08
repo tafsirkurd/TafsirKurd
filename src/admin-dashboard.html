@@ -100,7 +100,7 @@
             font-size:11px;color:var(--text-tertiary);margin-top:6px;
         }
         /* ── Admin Team Online widget ── */
-        .ato-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;padding:16px 20px;margin-bottom:28px;animation-delay:385ms;}
+        .ato-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:16px 20px;margin-bottom:28px;animation-delay:385ms;}
         .ato-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
         .ato-title{font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;}
         .ato-badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:rgba(34,197,94,.12);color:#16a34a;letter-spacing:.02em;}
@@ -555,7 +555,7 @@
         .tr-stat { font-size: 13px; font-weight: 600; color: var(--primary); flex-shrink: 0; }
 
         /* ── My Tasks Widget ── */
-        .my-tasks-widget{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:0;margin-bottom:28px;overflow:hidden;}
+        .my-tasks-widget{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:0;margin-bottom:28px;overflow:hidden;}
         .my-tasks-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border-light);}
         .my-tasks-title{font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;}
         .my-tasks-title svg{width:16px;height:16px;color:#8b5cf6;}
@@ -594,7 +594,7 @@
         .timeline-section {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 20px;
             margin-bottom: 28px;
         }
@@ -666,13 +666,14 @@
         .system-status-bar {
             display: flex;
             align-items: center;
-            gap: 20px;
-            padding: 12px 20px;
+            gap: 0;
+            padding: 0;
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            overflow: hidden;
         }
         .status-item {
             display: flex;
@@ -681,7 +682,10 @@
             font-size: 12px;
             color: var(--text-tertiary);
             font-weight: 500;
+            padding: 10px 18px;
+            border-right: 1px solid var(--border-light);
         }
+        .status-item:last-of-type { border-right: none; }
         .status-dot {
             width: 7px; height: 7px;
             border-radius: 50%;
@@ -700,6 +704,7 @@
             color: var(--text-secondary);
             text-transform: capitalize;
             margin-left: auto;
+            margin-right: 14px;
         }
 
         /* ── Audit Logs ── */
@@ -943,27 +948,74 @@
             }
         }
         @media (max-width: 700px) {
-            .welcome-left h1 { font-size: 20px; }
-            .welcome-right { flex-wrap: wrap; gap: 8px; }
+            .welcome-header { padding: 16px 18px; margin-bottom: 18px; gap: 10px; }
+            .welcome-left h1 { font-size: 20px; letter-spacing: -0.4px; }
+            .welcome-right { gap: 6px; flex-wrap: nowrap; }
             .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .metric-card { padding: 14px; }
             .metric-value { font-size: 24px; }
             .metric-sparkline { height: 26px; }
-            .system-status-bar { gap: 10px; flex-wrap: wrap; }
-            .role-badge { margin-left: 0; }
+            .system-status-bar { flex-wrap: wrap; }
+            .status-item { padding: 8px 12px; border-right: 1px solid var(--border-light); font-size: 11px; }
+            .role-badge { margin-left: 0; margin-right: 10px; }
             .system-widgets-row { grid-template-columns: 1fr; gap: 14px; }
             .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 190px !important; }
             .quick-actions { grid-template-columns: 1fr 1fr; }
             .timeline-text { font-size: 12px; }
+            .timeline-section { padding: 16px 16px; }
+            .my-tasks-widget { border-radius: 14px; }
+            .content-card-header { padding: 12px 14px; }
+            .content-card-body { padding: 10px 14px 14px; }
+            .ato-card { padding: 14px 16px; }
+            .ato-item { max-width: none; flex: 1 1 200px; }
+        }
+        @media (max-width: 540px) {
+            /* Icon-only mode for welcome header buttons — hide text labels */
+            .welcome-right .btn-label { display: none; }
+            .welcome-right .btn-kbd { display: none; }
+            /* Hide clip/pin on very small screens — keep task + refresh */
+            .wh-clip-btn { display: none; }
+            .wh-pin-btn { display: none; }
+            /* Refresh indicator: dot only */
+            .refresh-indicator #lastUpdatedText { display: none; }
+            .welcome-header { padding: 14px 16px; gap: 8px; }
+            .welcome-left h1 { font-size: 19px; }
+            .metrics-grid { gap: 8px; }
+            .metric-card { padding: 12px 14px; gap: 8px; }
+            .metric-value { font-size: 22px; }
+            .metric-icon { width: 34px; height: 34px; border-radius: 9px; }
+            .quick-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .quick-action-card { padding: 12px 14px; gap: 10px; }
+            .quick-action-icon { width: 34px; height: 34px; }
+            .chart-container { height: 170px !important; }
+            .ato-list { gap: 8px; }
+            .chart-insights { gap: 10px; padding: 8px 2px 2px; }
+            /* Status bar wraps nicely */
+            .status-item { flex: 1 1 auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 8px 14px; }
+            .system-status-bar { border-radius: 10px; }
+            #healthScoreBadge { margin: 6px 14px; }
+            .role-badge { margin: 6px 14px 6px auto; }
+            /* Chart insights overflow scroll on tiny screens */
+            .chart-insights { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .chart-range-tabs { flex-wrap: nowrap; overflow-x: auto; }
         }
         @media (max-width: 390px) {
-            .welcome-left h1 { font-size: 18px; }
+            .welcome-left h1 { font-size: 17px; }
             .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .metric-card { padding: 12px; }
+            .metric-card { padding: 11px 12px; }
             .metric-value { font-size: 20px; }
             .metric-label { font-size: 11px; }
             .quick-action-label { font-size: 12px; }
-            .quick-actions { gap: 8px; }
+            .quick-actions { gap: 7px; }
+            .chart-container { height: 155px !important; }
+            .content-card-header { padding: 10px 12px; }
+            .content-card-body { padding: 8px 12px 12px; }
+            .ato-card { padding: 12px 14px; }
+            .my-tasks-header { padding: 14px 14px; }
+            .my-tasks-meta { padding: 10px 14px; }
+            .my-task-row { padding: 9px 14px; }
+            .my-tasks-footer { padding: 10px 14px; }
         }
 
         /* ── Quick Add Task Modal ── */
@@ -1888,15 +1940,14 @@
                             <span class="dot"></span>
                             <span id="lastUpdatedText">Updating...</span>
                         </div>
-                        <button class="btn btn-secondary" onclick="openQuickTask()" style="font-size:13px;padding:7px 14px;gap:6px;display:inline-flex;align-items:center;" title="Quick add task">
-                            <i data-lucide="plus" style="width:13px;height:13px;"></i> Task
+                        <button class="btn btn-secondary wh-task-btn" onclick="openQuickTask()" style="font-size:13px;padding:7px 14px;gap:6px;display:inline-flex;align-items:center;" title="Quick add task">
+                            <i data-lucide="plus" style="width:13px;height:13px;"></i><span class="btn-label">Task</span>
                         </button>
-                        <button class="btn btn-secondary" onclick="copyDashboardSnapshot()" style="font-size:13px;padding:7px 12px;display:inline-flex;align-items:center;" title="Copy dashboard summary to clipboard" id="snapshotBtn"><i data-lucide="clipboard" style="width:14px;height:14px;"></i></button>
-                        <button class="btn btn-secondary" onclick="showPinnedNote()" style="font-size:13px;padding:7px 12px;display:inline-flex;align-items:center;" title="Add a pinned note"><i data-lucide="pin" style="width:14px;height:14px;"></i></button>
-                        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()" style="font-size:13px;padding:7px 14px;" title="Refresh dashboard (shortcut: R)">
+                        <button class="btn btn-secondary wh-clip-btn" onclick="copyDashboardSnapshot()" style="font-size:13px;padding:7px 12px;display:inline-flex;align-items:center;" title="Copy dashboard summary to clipboard" id="snapshotBtn"><i data-lucide="clipboard" style="width:14px;height:14px;"></i></button>
+                        <button class="btn btn-secondary wh-pin-btn" onclick="showPinnedNote()" style="font-size:13px;padding:7px 12px;display:inline-flex;align-items:center;" title="Add a pinned note"><i data-lucide="pin" style="width:14px;height:14px;"></i></button>
+                        <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()" style="font-size:13px;padding:7px 14px;gap:6px;display:inline-flex;align-items:center;" title="Refresh dashboard (shortcut: R)">
                             <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
-                            Refresh
-                            <kbd style="font-size:10px;font-weight:700;padding:1px 5px;border:1px solid var(--border-light);border-radius:4px;background:var(--bg-hover);color:var(--text-tertiary);margin-left:4px;font-family:inherit;">R</kbd>
+                            <span class="btn-label">Refresh</span><span class="btn-kbd"><kbd style="font-size:10px;font-weight:700;padding:1px 5px;border:1px solid var(--border-light);border-radius:4px;background:var(--bg-hover);color:var(--text-tertiary);margin-left:2px;font-family:inherit;">R</kbd></span>
                         </button>
                     </div>
                 </div>
