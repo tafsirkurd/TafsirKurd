@@ -1,21 +1,30 @@
 /* =============================================================
-   admin-notifications.js  v7  — Unified Notification System
-   Loads on every admin page. Self-injects bell if absent.
+   admin-notifications.js  v8  — Unified Notification System
 
-   Data sources (on panel open):
-     • contact_messages  status='unread'
-     • profiles          new signups last 24h
-     • app_error_logs    last 6h
-     • admin_tasks       overdue
-     • admin_mention_notifs  addressed to current admin
+   Primary source  → admin_activity_feed (realtime INSERT)
+     Captures: new_message, new_user_signup, admin_login,
+               new_video, task_update, and any future event
+               types the backend writes there.
 
-   Presence events wired from dashboard ATO system.
+   Additional realtime:
+     • app_error_logs       INSERT → instant error alert
+     • admin_login_attempts INSERT (success=false) → security alert
+     • islamvoice_episodes  INSERT (is_published) → video alert
+     • admin_tasks          INSERT/UPDATE → task alert
 
-   Storage: localStorage 'ant_v5'  (backward-compatible)
-   Public API:
-     adminNotifications.add(title, desc, type, link, sourceId)
-     adminNotifications.updateBySourceId(sourceId, changes)
-     adminNotifications.test()
+   Background poll (every 60 s + on panel open):
+     • admin_activity_feed  last 7 days (skip translation_updated)
+     • app_error_logs       last 6 h
+     • admin_tasks          overdue
+     • islamvoice_episodes  published last 48 h
+     • admin_login_attempts failed last 2 h
+     • admin_mention_notifs last 30 days
+
+   Presence events → _antPresenceJoin / _antPresenceLeave (dashboard ATO)
+   App user activity → _antFeed('user_online'/'user_offline') from live-alerts
+
+   Storage key : 'ant_v5'  (max 200 items)
+   Public API  : adminNotifications.add / updateBySourceId / test
    ============================================================= */
 (function () {
   'use strict';
@@ -25,17 +34,18 @@
   var PANEL_ID  = 'ant-panel';
   var BADGE_ID  = 'notification-badge';
   var STYLE_ID  = 'ant-styles';
+  var POLL_MS   = 60000;   // background auto-refresh interval
 
   // ── ATO palette (avatar initials) ─────────────────────────
   var ATO_PAL = [
-    {bg:'rgba(99,102,241,.22)',color:'#818cf8'},
-    {bg:'rgba(16,185,129,.22)',color:'#34d399'},
-    {bg:'rgba(59,130,246,.22)',color:'#60a5fa'},
-    {bg:'rgba(245,158,11,.22)',color:'#fbbf24'},
-    {bg:'rgba(239,68,68,.22)', color:'#f87171'},
-    {bg:'rgba(6,182,212,.22)', color:'#22d3ee'},
-    {bg:'rgba(236,72,153,.22)',color:'#f472b6'},
-    {bg:'rgba(168,85,247,.22)',color:'#c084fc'},
+    {bg:'rgba(99,102,241,.22)',  color:'#818cf8'},
+    {bg:'rgba(16,185,129,.22)', color:'#34d399'},
+    {bg:'rgba(59,130,246,.22)', color:'#60a5fa'},
+    {bg:'rgba(245,158,11,.22)', color:'#fbbf24'},
+    {bg:'rgba(239,68,68,.22)',  color:'#f87171'},
+    {bg:'rgba(6,182,212,.22)',  color:'#22d3ee'},
+    {bg:'rgba(236,72,153,.22)', color:'#f472b6'},
+    {bg:'rgba(168,85,247,.22)', color:'#c084fc'},
   ];
   function _atoCol(ch) {
     return ATO_PAL[(ch.toUpperCase().charCodeAt(0)||65) % ATO_PAL.length];
@@ -43,15 +53,18 @@
 
   // ── Type config ────────────────────────────────────────────
   var TYPES = {
-    presence_online:  { svg: _svg_user_check, color: '#22c55e', bg: 'rgba(34,197,94,.15)',   label: 'Online',   tab: 'presence' },
-    presence_offline: { svg: _svg_user_x,     color: '#64748b', bg: 'rgba(100,116,139,.12)', label: 'Offline',  tab: 'presence' },
-    message:          { svg: _svg_msg,        color: '#ef4444', bg: 'rgba(239,68,68,.15)',   label: 'Message',  tab: 'message'  },
-    user:             { svg: _svg_user,       color: '#8b5cf6', bg: 'rgba(139,92,246,.15)',  label: 'User',     tab: 'user'     },
-    video:            { svg: _svg_video,      color: '#f59e0b', bg: 'rgba(245,158,11,.15)',  label: 'Video',    tab: 'video'    },
-    error:            { svg: _svg_warn,       color: '#ef4444', bg: 'rgba(239,68,68,.15)',   label: 'Error',    tab: 'error'    },
-    info:             { svg: _svg_info,       color: '#3b82f6', bg: 'rgba(59,130,246,.15)',  label: 'Info',     tab: 'info'     },
-    success:          { svg: _svg_check,      color: '#10b981', bg: 'rgba(16,185,129,.15)',  label: 'Success',  tab: 'success'  },
-    mention:          { svg: _svg_at,         color: '#818cf8', bg: 'rgba(99,102,241,.15)',  label: 'Mention',  tab: 'mention'  },
+    presence_online:  { svg: _svg_user_check, color: '#22c55e', bg: 'rgba(34,197,94,.15)',   label: 'Online',    tab: 'presence'  },
+    presence_offline: { svg: _svg_user_x,     color: '#64748b', bg: 'rgba(100,116,139,.12)', label: 'Offline',   tab: 'presence'  },
+    message:          { svg: _svg_msg,        color: '#ef4444', bg: 'rgba(239,68,68,.15)',   label: 'Message',   tab: 'message'   },
+    user:             { svg: _svg_user,       color: '#8b5cf6', bg: 'rgba(139,92,246,.15)',  label: 'User',      tab: 'user'      },
+    video:            { svg: _svg_video,      color: '#f59e0b', bg: 'rgba(245,158,11,.15)',  label: 'Video',     tab: 'content'   },
+    error:            { svg: _svg_warn,       color: '#ef4444', bg: 'rgba(239,68,68,.15)',   label: 'Error',     tab: 'error'     },
+    security:         { svg: _svg_shield,     color: '#f59e0b', bg: 'rgba(245,158,11,.15)',  label: 'Security',  tab: 'security'  },
+    task:             { svg: _svg_task,       color: '#06b6d4', bg: 'rgba(6,182,212,.15)',   label: 'Task',      tab: 'task'      },
+    activity:         { svg: _svg_activity,   color: '#06b6d4', bg: 'rgba(6,182,212,.12)',   label: 'Activity',  tab: 'activity'  },
+    info:             { svg: _svg_info,       color: '#3b82f6', bg: 'rgba(59,130,246,.15)',  label: 'Info',      tab: 'info'      },
+    success:          { svg: _svg_check,      color: '#10b981', bg: 'rgba(16,185,129,.15)',  label: 'Success',   tab: 'success'   },
+    mention:          { svg: _svg_at,         color: '#818cf8', bg: 'rgba(99,102,241,.15)',  label: 'Mention',   tab: 'mention'   },
   };
 
   var TABS = [
@@ -61,11 +74,17 @@
     { id: 'message',  label: 'Messages' },
     { id: 'user',     label: 'Users'    },
     { id: 'error',    label: 'Errors'   },
+    { id: 'security', label: 'Security' },
+    { id: 'task',     label: 'Tasks'    },
+    { id: 'content',  label: 'Content'  },
+    { id: 'activity', label: 'Activity' },
   ];
 
   var _currentFilter = 'all';
-  var _isOpen = false;
+  var _isOpen        = false;
   var _presenceTimers = {};
+  var _rtChannel     = null;
+  var _autoTimer     = null;
 
   // ── SVG icons ──────────────────────────────────────────────
   function _svgWrap(path) {
@@ -77,6 +96,9 @@
   function _svg_user()       { return _svgWrap('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'); }
   function _svg_video()      { return _svgWrap('<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>'); }
   function _svg_warn()       { return _svgWrap('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'); }
+  function _svg_shield()     { return _svgWrap('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'); }
+  function _svg_task()       { return _svgWrap('<rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'); }
+  function _svg_activity()   { return _svgWrap('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'); }
   function _svg_info()       { return _svgWrap('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'); }
   function _svg_check()      { return _svgWrap('<polyline points="20 6 9 17 4 12"/>'); }
   function _svg_at()         { return _svgWrap('<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>'); }
@@ -101,16 +123,16 @@
     if (sourceId && _hasSeen(sourceId)) return null;
     var items = _load();
     var n = {
-      id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      id:       Date.now() + '_' + Math.random().toString(36).slice(2, 6),
       sourceId: sourceId || null,
-      dbId: dbId || null,
-      title: title,
-      desc: desc || '',
-      type: type || 'info',
-      link: link || null,
-      ts: Date.now(),
-      read: false,
-      meta: meta || null,
+      dbId:     dbId     || null,
+      title:    title,
+      desc:     desc     || '',
+      type:     type     || 'info',
+      link:     link     || null,
+      ts:       Date.now(),
+      read:     false,
+      meta:     meta     || null,
     };
     items.unshift(n);
     _save(items);
@@ -120,23 +142,15 @@
     return n.id;
   }
 
-  // ── Update by sourceId (e.g. presence online → offline) ───
+  // ── Update by sourceId (presence online → offline) ────────
   function _updateBySourceId(sourceId, changes) {
     if (!sourceId) return;
-    var items = _load();
-    var found = false;
+    var items = _load(), found = false;
     items = items.map(function(item) {
-      if (item.sourceId === sourceId) {
-        found = true;
-        return Object.assign({}, item, changes, { ts: item.ts });
-      }
+      if (item.sourceId === sourceId) { found = true; return Object.assign({}, item, changes, { ts: item.ts }); }
       return item;
     });
-    if (found) {
-      _save(items);
-      _updateBadge();
-      _refreshPanel();
-    }
+    if (found) { _save(items); _updateBadge(); _refreshPanel(); }
   }
 
   // ── Mark DB mention read ───────────────────────────────────
@@ -147,31 +161,80 @@
     sb.from('admin_mention_notifs').update({ read: true }).eq('id', dbId).then(function() {});
   }
 
+  // ── Map admin_activity_feed row to notification ────────────
+  function _mapFeedEvent(ev) {
+    // Skip very noisy low-priority content updates
+    if (ev.event_type === 'translation_updated') return;
+
+    var type = 'info', link = null;
+    var m = ev.metadata || {};
+
+    switch (ev.event_type) {
+      case 'new_message':
+        type = 'message';
+        link = '/admin-messages.html';
+        break;
+      case 'new_user_signup':
+        type = 'user';
+        link = '/admin-users.html';
+        break;
+      case 'admin_login':
+        type = 'security';
+        link = '/admin-audit.html';
+        break;
+      case 'new_video':
+      case 'episode_published':
+        type = 'video';
+        link = '/admin-islamvoice-management.html';
+        break;
+      case 'task_created':
+      case 'task_assigned':
+      case 'task_updated':
+        type = 'task';
+        link = '/admin-tasks.html';
+        break;
+      case 'app_error':
+      case 'error':
+        type = 'error';
+        link = '/admin-errors.html';
+        break;
+      case 'failed_login':
+      case 'security_alert':
+        type = 'security';
+        link = '/admin-auth-monitor.html';
+        break;
+      default:
+        switch (ev.category) {
+          case 'security': type = 'security'; link = '/admin-audit.html'; break;
+          case 'users':    type = 'user';     link = '/admin-users.html'; break;
+          case 'content':  type = 'info';     break;
+          case 'error':    type = 'error';    link = '/admin-errors.html'; break;
+        }
+    }
+
+    _add(ev.title, ev.message, type, link, 'feed_' + ev.id);
+  }
+
   // ── Time helpers ───────────────────────────────────────────
   function _ago(ts) {
     var d = Math.floor((Date.now() - ts) / 1000);
-    if (d < 5)    return 'just now';
-    if (d < 60)   return Math.floor(d) + 's ago';
-    if (d < 3600) return Math.floor(d / 60) + 'm ago';
-    if (d < 86400)return Math.floor(d / 3600) + 'h ago';
+    if (d < 5)     return 'just now';
+    if (d < 60)    return Math.floor(d) + 's ago';
+    if (d < 3600)  return Math.floor(d / 60) + 'm ago';
+    if (d < 86400) return Math.floor(d / 3600) + 'h ago';
     return Math.floor(d / 86400) + 'd ago';
   }
   function _timeGroup(ts) {
-    var now = new Date(), d = new Date(ts);
-    var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    var ydayStart  = todayStart - 86400000;
-    var weekStart  = todayStart - 6 * 86400000;
-    if (ts >= todayStart)  return 'Today';
-    if (ts >= ydayStart)   return 'Yesterday';
-    if (ts >= weekStart)   return 'This Week';
+    var now = new Date(), todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var ydayStart = todayStart - 86400000, weekStart = todayStart - 6 * 86400000;
+    if (ts >= todayStart) return 'Today';
+    if (ts >= ydayStart)  return 'Yesterday';
+    if (ts >= weekStart)  return 'This Week';
     return 'Earlier';
   }
-  function _fmtClock(ts) {
-    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
+  function _fmtClock(ts) { return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
   function _fmtDur(ms) {
-    var s = Math.floor(ms / 1000);
-    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    var s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
     if (h > 0) return h + 'h ' + m + 'm';
     if (m > 0) return m + 'm ' + sec + 's';
     return sec + 's';
@@ -179,8 +242,8 @@
 
   // ── Filter ─────────────────────────────────────────────────
   function _filterItems(items, f) {
-    if (f === 'all')      return items;
-    if (f === 'unread')   return items.filter(function(i) { return !i.read; });
+    if (f === 'all')    return items;
+    if (f === 'unread') return items.filter(function(i) { return !i.read; });
     if (f === 'presence') return items.filter(function(i) { return i.type === 'presence_online' || i.type === 'presence_offline'; });
     return items.filter(function(i) { return (TYPES[i.type] || {}).tab === f || i.type === f; });
   }
@@ -200,7 +263,6 @@
     }
   }
 
-  // ── Bell ring animation ────────────────────────────────────
   function _ringBell() {
     var bellBtn = document.getElementById('notifBellBtn') || document.getElementById('ant-bell-btn');
     if (!bellBtn) return;
@@ -210,25 +272,18 @@
 
   // ── Inject bell if absent ──────────────────────────────────
   function _ensureBell() {
-    // Use existing notifBellBtn if present (dashboard)
     var existing = document.getElementById('notifBellBtn');
     if (existing) {
-      existing.removeAttribute('style');
       existing.classList.add('ant-bell-managed');
       existing.addEventListener('click', _toggle);
-      // Replace static badge if present
-      var oldBadge = document.getElementById(BADGE_ID);
-      if (!oldBadge) {
+      if (!document.getElementById(BADGE_ID)) {
         var badge = document.createElement('span');
-        badge.id = BADGE_ID;
-        badge.className = 'ant-badge';
+        badge.id = BADGE_ID; badge.className = 'ant-badge';
         existing.style.position = 'relative';
         existing.appendChild(badge);
       }
-      existing.parentElement && (existing.parentElement.style.position = 'relative');
       return;
     }
-    // Otherwise inject a new bell
     if (document.getElementById(BADGE_ID)) return;
     var actions = document.querySelector('.topbar-actions');
     if (!actions) return;
@@ -251,18 +306,15 @@
     var s = document.createElement('style');
     s.id = STYLE_ID;
     s.textContent = [
-      /* Bell animations */
       '@keyframes ant-ring{0%,100%{transform:rotate(0)}12%{transform:rotate(14deg)}25%{transform:rotate(-11deg)}37%{transform:rotate(8deg)}50%{transform:rotate(-5deg)}62%{transform:rotate(3deg)}}',
       '@keyframes ant-pulse-ring{0%{box-shadow:0 0 0 0 rgba(99,102,241,.55)}70%{box-shadow:0 0 0 8px rgba(99,102,241,0)}100%{box-shadow:0 0 0 0 rgba(99,102,241,0)}}',
       '@keyframes ant-item-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}',
       '@keyframes ant-hdr-shift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}',
 
-      /* Bell state */
       '.ant-bell-managed{position:relative !important;}',
       '.ant-bell-pulse{animation:ant-pulse-ring 2s ease-out infinite !important;}',
       '.ant-bell-ring svg,.ant-bell-ring i{animation:ant-ring .65s ease !important;}',
 
-      /* Badge */
       '.ant-badge{',
         'position:absolute;top:-5px;right:-5px;',
         'background:#ef4444;color:#fff;',
@@ -274,10 +326,9 @@
         'display:flex !important;align-items:center;justify-content:center;}',
       'body.dark-mode .ant-badge{border-color:var(--bg-surface,#111);}',
 
-      /* Panel */
       '#ant-panel{',
         'position:fixed;top:58px;right:12px;',
-        'width:390px;max-width:calc(100vw - 24px);',
+        'width:400px;max-width:calc(100vw - 24px);',
         'max-height:calc(100dvh - 76px);',
         'background:var(--bg-surface);',
         'border:1px solid var(--border-light);',
@@ -290,171 +341,91 @@
       '#ant-panel.ant-open{opacity:1;transform:none;pointer-events:all;}',
       'body.dark-mode #ant-panel{box-shadow:0 24px 72px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05);}',
 
-      /* Gradient accent bar at top */
       '#ant-panel::before{',
         'content:"";position:absolute;top:0;left:0;right:0;height:3px;',
-        'background:linear-gradient(90deg,#6366f1,#3b82f6,#8b5cf6,#6366f1);',
+        'background:linear-gradient(90deg,#6366f1,#3b82f6,#8b5cf6,#06b6d4,#6366f1);',
         'background-size:300% 100%;',
         'animation:ant-hdr-shift 6s ease infinite;',
         'border-radius:18px 18px 0 0;}',
 
-      /* Header */
-      '#ant-panel .ant-hdr{',
-        'display:flex;align-items:center;gap:10px;',
-        'padding:18px 16px 12px;flex-shrink:0;}',
-      '#ant-panel .ant-hdr-icon{',
-        'width:34px;height:34px;border-radius:10px;',
-        'background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);',
-        'display:flex;align-items:center;justify-content:center;',
-        'flex-shrink:0;color:#6366f1;}',
+      '#ant-panel .ant-hdr{display:flex;align-items:center;gap:10px;padding:18px 16px 12px;flex-shrink:0;}',
+      '#ant-panel .ant-hdr-icon{width:34px;height:34px;border-radius:10px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#6366f1;}',
       '#ant-panel .ant-hdr-icon svg{width:16px;height:16px;}',
       '#ant-panel .ant-hdr-main{flex:1;min-width:0;}',
       '#ant-panel .ant-hdr-title{font-size:15px;font-weight:800;color:var(--text-primary);letter-spacing:-.3px;}',
       '#ant-panel .ant-hdr-sub{font-size:11px;color:var(--text-tertiary);margin-top:1px;}',
       '#ant-panel .ant-hdr-actions{display:flex;gap:4px;align-items:center;}',
-      '#ant-panel .ant-hbtn{',
-        'font-size:11px;font-weight:600;padding:5px 9px;border-radius:7px;',
-        'border:1px solid var(--border-light);',
-        'background:var(--bg-hover);color:var(--text-secondary);',
-        'cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}',
+      '#ant-panel .ant-hbtn{font-size:11px;font-weight:600;padding:5px 9px;border-radius:7px;border:1px solid var(--border-light);background:var(--bg-hover);color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}',
       '#ant-panel .ant-hbtn:hover{background:var(--bg-active);color:var(--text-primary);}',
       '#ant-panel .ant-hbtn.ant-hbtn-danger:hover{background:rgba(239,68,68,.1);color:#ef4444;border-color:rgba(239,68,68,.25);}',
-      '#ant-panel .ant-close{',
-        'width:28px;height:28px;border-radius:8px;',
-        'background:var(--bg-hover);border:none;cursor:pointer;',
-        'color:var(--text-tertiary);display:flex;align-items:center;justify-content:center;',
-        'font-size:16px;flex-shrink:0;transition:all .15s;}',
+      '#ant-panel .ant-close{width:28px;height:28px;border-radius:8px;background:var(--bg-hover);border:none;cursor:pointer;color:var(--text-tertiary);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:all .15s;}',
       '#ant-panel .ant-close:hover{background:rgba(239,68,68,.12);color:#ef4444;}',
 
-      /* Filter tabs */
-      '#ant-panel .ant-tabs{',
-        'display:flex;gap:4px;padding:0 12px 10px;',
-        'overflow-x:auto;scrollbar-width:none;flex-shrink:0;}',
+      '#ant-panel .ant-tabs{display:flex;gap:4px;padding:0 12px 10px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}',
       '#ant-panel .ant-tabs::-webkit-scrollbar{display:none;}',
-      '#ant-panel .ant-tab{',
-        'font-size:11.5px;font-weight:600;',
-        'padding:5px 12px;border-radius:20px;',
-        'border:1px solid transparent;cursor:pointer;white-space:nowrap;',
-        'background:var(--bg-hover);color:var(--text-tertiary);',
-        'transition:all .14s;flex-shrink:0;font-family:inherit;}',
+      '#ant-panel .ant-tab{font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid transparent;cursor:pointer;white-space:nowrap;background:var(--bg-hover);color:var(--text-tertiary);transition:all .14s;flex-shrink:0;font-family:inherit;}',
       '#ant-panel .ant-tab:hover{color:var(--text-primary);background:var(--bg-active);}',
-      '#ant-panel .ant-tab.ant-tab-active{',
-        'background:rgba(99,102,241,.12);color:#6366f1;',
-        'border-color:rgba(99,102,241,.25);}',
-      '#ant-panel .ant-tab-cnt{',
-        'display:inline-block;font-size:9px;font-weight:800;',
-        'background:rgba(99,102,241,.2);color:#6366f1;',
-        'padding:0 5px;border-radius:6px;min-width:14px;text-align:center;',
-        'margin-left:3px;line-height:1.6;}',
+      '#ant-panel .ant-tab.ant-tab-active{background:rgba(99,102,241,.12);color:#6366f1;border-color:rgba(99,102,241,.25);}',
+      '#ant-panel .ant-tab-cnt{display:inline-block;font-size:9px;font-weight:800;background:rgba(99,102,241,.2);color:#6366f1;padding:0 5px;border-radius:6px;min-width:14px;text-align:center;margin-left:3px;line-height:1.6;}',
       '#ant-panel .ant-tab.ant-tab-active .ant-tab-cnt{background:rgba(99,102,241,.3);}',
 
-      /* Divider */
       '#ant-panel .ant-divider{height:1px;background:var(--border-light);flex-shrink:0;}',
-
-      /* Scroll body */
       '#ant-panel .ant-body{flex:1;overflow-y:auto;overflow-x:hidden;}',
       '#ant-panel .ant-body::-webkit-scrollbar{width:3px;}',
       '#ant-panel .ant-body::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:2px;}',
 
-      /* Section group label */
-      '#ant-panel .ant-sec{',
-        'font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;',
-        'color:var(--text-tertiary);padding:10px 16px 4px;',
-        'display:flex;align-items:center;gap:8px;}',
+      '#ant-panel .ant-sec{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-tertiary);padding:10px 16px 4px;display:flex;align-items:center;gap:8px;}',
       '#ant-panel .ant-sec::after{content:"";flex:1;height:1px;background:var(--border-light);}',
 
-      /* Notification item */
-      '#ant-panel .ant-item{',
-        'display:flex;align-items:flex-start;gap:11px;',
-        'padding:11px 14px 11px 16px;cursor:pointer;position:relative;',
-        'border-left:3px solid transparent;',
-        'transition:background .12s,border-color .12s;',
-        'animation:ant-item-in .18s ease both;}',
+      '#ant-panel .ant-item{display:flex;align-items:flex-start;gap:11px;padding:11px 14px 11px 16px;cursor:pointer;position:relative;border-left:3px solid transparent;transition:background .12s,border-color .12s;animation:ant-item-in .18s ease both;}',
       '#ant-panel .ant-item:hover{background:var(--bg-hover);}',
       '#ant-panel .ant-item.ant-unread{border-left-color:currentColor;}',
       '#ant-panel .ant-item.ant-unread:hover{background:var(--bg-active);}',
 
-      /* Icon blob */
-      '#ant-panel .ant-ico{',
-        'width:36px;height:36px;border-radius:10px;',
-        'display:flex;align-items:center;justify-content:center;',
-        'flex-shrink:0;margin-top:1px;}',
+      '#ant-panel .ant-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}',
       '#ant-panel .ant-ico svg{width:15px;height:15px;}',
+      '#ant-panel .ant-av{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;margin-top:1px;}',
 
-      /* Avatar (presence) */
-      '#ant-panel .ant-av{',
-        'width:36px;height:36px;border-radius:10px;',
-        'display:flex;align-items:center;justify-content:center;',
-        'font-size:14px;font-weight:800;flex-shrink:0;margin-top:1px;}',
-
-      /* Text */
       '#ant-panel .ant-txt{flex:1;min-width:0;}',
-      '#ant-panel .ant-ttl{',
-        'font-size:13px;font-weight:600;color:var(--text-primary);',
-        'line-height:1.3;margin-bottom:3px;}',
+      '#ant-panel .ant-ttl{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;margin-bottom:3px;}',
       '#ant-panel .ant-item.ant-unread .ant-ttl{font-weight:700;}',
-      '#ant-panel .ant-dsc{',
-        'font-size:11.5px;color:var(--text-secondary);line-height:1.45;',
-        'margin-bottom:4px;}',
+      '#ant-panel .ant-dsc{font-size:11.5px;color:var(--text-secondary);line-height:1.45;margin-bottom:4px;}',
 
-      /* Presence detail rows */
-      '#ant-panel .ant-pr{',
-        'display:flex;flex-direction:column;gap:2px;margin-top:2px;}',
-      '#ant-panel .ant-pr-row{',
-        'display:flex;align-items:center;gap:5px;',
-        'font-size:10.5px;color:var(--text-tertiary);}',
+      '#ant-panel .ant-pr{display:flex;flex-direction:column;gap:2px;margin-top:2px;}',
+      '#ant-panel .ant-pr-row{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text-tertiary);}',
       '#ant-panel .ant-pr-lbl{font-weight:600;min-width:38px;}',
       '#ant-panel .ant-pr-val{font-weight:700;color:var(--text-primary);font-family:monospace;font-size:11px;}',
       '#ant-panel .ant-pr-sep{border-top:1px solid var(--border-light);margin:4px 0;}',
       '#ant-panel .ant-pr-total .ant-pr-val{color:#6366f1;}',
       '#ant-panel .ant-live{color:#16a34a;font-family:monospace;font-size:10.5px;font-weight:700;}',
 
-      /* Meta row */
       '#ant-panel .ant-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}',
       '#ant-panel .ant-time{font-size:10.5px;color:var(--text-tertiary);font-weight:500;}',
-      '#ant-panel .ant-type-badge{',
-        'font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;',
-        'letter-spacing:.03em;flex-shrink:0;}',
+      '#ant-panel .ant-type-badge{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;letter-spacing:.03em;flex-shrink:0;}',
 
-      /* Action button */
-      '#ant-panel .ant-action{',
-        'font-size:11px;font-weight:700;',
-        'padding:3px 10px;border-radius:7px;border:none;cursor:pointer;',
-        'background:rgba(99,102,241,.12);color:#6366f1;',
-        'transition:background .14s;display:inline-flex;align-items:center;gap:4px;',
-        'opacity:0;font-family:inherit;margin-top:5px;}',
+      '#ant-panel .ant-action{font-size:11px;font-weight:700;padding:3px 10px;border-radius:7px;border:none;cursor:pointer;background:rgba(99,102,241,.12);color:#6366f1;transition:background .14s;display:inline-flex;align-items:center;gap:4px;opacity:0;font-family:inherit;margin-top:5px;}',
       '#ant-panel .ant-item:hover .ant-action{opacity:1;}',
       '#ant-panel .ant-action:hover{background:rgba(99,102,241,.25);}',
 
-      /* Dismiss */
-      '#ant-panel .ant-del{',
-        'width:22px;height:22px;border-radius:6px;',
-        'background:none;border:none;cursor:pointer;',
-        'color:var(--text-tertiary);display:flex;align-items:center;justify-content:center;',
-        'font-size:14px;flex-shrink:0;margin-top:1px;transition:all .14s;opacity:0;}',
+      '#ant-panel .ant-del{width:22px;height:22px;border-radius:6px;background:none;border:none;cursor:pointer;color:var(--text-tertiary);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px;transition:all .14s;opacity:0;}',
       '#ant-panel .ant-item:hover .ant-del{opacity:1;}',
       '#ant-panel .ant-del:hover{color:#ef4444;background:rgba(239,68,68,.12);}',
 
-      /* Empty */
       '#ant-panel .ant-empty{padding:52px 24px;text-align:center;color:var(--text-tertiary);}',
       '#ant-panel .ant-empty svg{opacity:.3;margin-bottom:12px;}',
       '#ant-panel .ant-empty-ttl{font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;}',
       '#ant-panel .ant-empty-sub{font-size:12px;}',
 
-      /* Footer */
-      '#ant-panel .ant-foot{',
-        'padding:10px 16px;flex-shrink:0;',
-        'display:flex;align-items:center;justify-content:space-between;',
-        'border-top:1px solid var(--border-light);}',
+      '#ant-panel .ant-foot{padding:10px 16px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-light);}',
       '#ant-panel .ant-foot-lbl{font-size:11px;color:var(--text-tertiary);}',
+      '#ant-panel .ant-live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:4px;animation:ant-pulse-ring 2s ease-out infinite;}',
 
-      /* Mobile */
       '@media(max-width:480px){#ant-panel{top:52px;left:8px;right:8px;width:auto;}}',
     ].join('');
     document.head.appendChild(s);
   }
 
-  // ── Build item ─────────────────────────────────────────────
+  // ── Build notification item ────────────────────────────────
   function _buildItem(item, idx) {
     var cfg = TYPES[item.type] || TYPES.info;
     var row = _el('div', 'ant-item' + (item.read ? '' : ' ant-unread'));
@@ -462,29 +433,22 @@
     row.style.animationDelay = (idx * 20) + 'ms';
     if (!item.read) row.style.color = cfg.color;
 
-    // Icon / avatar
     var isPresence = item.type === 'presence_online' || item.type === 'presence_offline';
     if (isPresence && item.meta && item.meta.initChar) {
       var av = _el('div', 'ant-av');
       var col = _atoCol(item.meta.initChar);
-      av.style.background = col.bg;
-      av.style.color = col.color;
+      av.style.background = col.bg; av.style.color = col.color;
       av.textContent = item.meta.initChar;
-      if (item.type === 'presence_online') {
-        av.style.boxShadow = '0 0 0 2px #22c55e, 0 0 0 4px rgba(34,197,94,.2)';
-      } else {
-        av.style.opacity = '.7';
-      }
+      if (item.type === 'presence_online') av.style.boxShadow = '0 0 0 2px #22c55e, 0 0 0 4px rgba(34,197,94,.2)';
+      else av.style.opacity = '.7';
       row.appendChild(av);
     } else {
       var ico = _el('div', 'ant-ico');
-      ico.style.background = cfg.bg;
-      ico.style.color = cfg.color;
+      ico.style.background = cfg.bg; ico.style.color = cfg.color;
       ico.innerHTML = cfg.svg();
       row.appendChild(ico);
     }
 
-    // Content
     var txt = _el('div', 'ant-txt');
     var ttl = _el('div', 'ant-ttl');
     ttl.textContent = item.title;
@@ -498,28 +462,22 @@
 
     // Presence detail rows
     if (isPresence && item.meta) {
-      var pr = _el('div', 'ant-pr');
-      var m = item.meta;
-
+      var pr = _el('div', 'ant-pr'), m = item.meta;
       if (m.joinTime) {
         var r1 = _el('div', 'ant-pr-row');
         r1.innerHTML = '<span class="ant-pr-lbl" style="color:' + (item.type==='presence_online'?'#16a34a':'var(--text-tertiary)') + '">▶ Joined</span><span class="ant-pr-val">' + _fmtClock(new Date(m.joinTime).getTime()) + '</span>';
         pr.appendChild(r1);
       }
-
       if (item.type === 'presence_online' && m.joinTime) {
-        var r2 = _el('div', 'ant-pr-row');
-        var liveSpan = _el('span', 'ant-live');
+        var r2 = _el('div', 'ant-pr-row'), liveSpan = _el('span', 'ant-live');
         liveSpan.textContent = _fmtDur(Date.now() - new Date(m.joinTime).getTime());
         r2.innerHTML = '<span class="ant-pr-lbl">⏱ Online</span>';
         r2.appendChild(liveSpan);
         pr.appendChild(r2);
-        // Start live timer
         _presenceTimers[item.id] = setInterval(function() {
           liveSpan.textContent = _fmtDur(Date.now() - new Date(m.joinTime).getTime());
         }, 1000);
       }
-
       if (item.type === 'presence_offline') {
         if (m.leaveTime) {
           var r3 = _el('div', 'ant-pr-row');
@@ -527,74 +485,55 @@
           pr.appendChild(r3);
         }
         if (m.duration !== undefined) {
-          var sep = _el('div', 'ant-pr-sep');
-          pr.appendChild(sep);
+          var sep = _el('div', 'ant-pr-sep'); pr.appendChild(sep);
           var rt = _el('div', 'ant-pr-row ant-pr-total');
           rt.innerHTML = '<span class="ant-pr-lbl" style="color:#6366f1">⏱ Total</span><span class="ant-pr-val" style="color:#6366f1">' + _fmtDur(m.duration) + '</span>';
           pr.appendChild(rt);
         }
       }
-
       txt.appendChild(pr);
     }
 
-    // Meta (time + type badge)
     var meta = _el('div', 'ant-meta');
     meta.style.marginTop = '4px';
-    var time = _el('span', 'ant-time');
-    time.textContent = _ago(item.ts);
+    var time = _el('span', 'ant-time'); time.textContent = _ago(item.ts);
     var badge = _el('span', 'ant-type-badge');
     badge.textContent = cfg.label;
     badge.style.cssText = 'background:' + cfg.bg + ';color:' + cfg.color + ';';
-    meta.appendChild(time);
-    meta.appendChild(badge);
+    meta.appendChild(time); meta.appendChild(badge);
     txt.appendChild(meta);
 
     // Action buttons
-    if (item.type === 'message') {
+    var actLabel = null;
+    if (item.type === 'message')  actLabel = 'Reply →';
+    else if (item.type === 'mention') actLabel = 'View →';
+    else if (item.link) actLabel = 'Go to →';
+    if (actLabel) {
       var act = _el('button', 'ant-action');
-      act.innerHTML = 'Reply →';
+      act.innerHTML = actLabel;
       act.addEventListener('click', function(e) {
         e.stopPropagation();
+        _markSingleRead(item.id);
+        if (item.dbId) _markReadInDB(item.dbId);
         if (item.link) window.location.href = item.link;
       });
       txt.appendChild(act);
-    } else if (item.type === 'mention') {
-      var act2 = _el('button', 'ant-action');
-      act2.innerHTML = 'View →';
-      act2.addEventListener('click', function(e) {
-        e.stopPropagation();
-        _markSingleRead(item.id); _markReadInDB(item.dbId);
-        if (item.link) window.location.href = item.link;
-      });
-      txt.appendChild(act2);
-    } else if (item.link) {
-      var act3 = _el('button', 'ant-action');
-      act3.innerHTML = 'Go to →';
-      act3.addEventListener('click', function(e) {
-        e.stopPropagation();
-        if (item.link) window.location.href = item.link;
-      });
-      txt.appendChild(act3);
     }
 
     row.appendChild(txt);
 
-    // Dismiss
     var del = _el('button', 'ant-del');
-    del.innerHTML = '&times;';
-    del.title = 'Dismiss';
+    del.innerHTML = '&times;'; del.title = 'Dismiss';
     del.addEventListener('click', function(e) {
       e.stopPropagation();
-      var all = _load().filter(function(i) { return i.id !== item.id; });
-      _save(all); _updateBadge(); _refreshPanel();
+      _save(_load().filter(function(i) { return i.id !== item.id; }));
+      _updateBadge(); _refreshPanel();
     });
     row.appendChild(del);
 
-    // Click = mark read + navigate
     row.addEventListener('click', function() {
       _markSingleRead(item.id);
-      _markReadInDB(item.dbId);
+      if (item.dbId) _markReadInDB(item.dbId);
       if (item.link) window.location.href = item.link;
       else _refreshPanel();
     });
@@ -610,27 +549,27 @@
 
   // ── Build panel ────────────────────────────────────────────
   function _buildPanel() {
-    // Stop previous live timers
     Object.keys(_presenceTimers).forEach(function(k) { clearInterval(_presenceTimers[k]); });
     _presenceTimers = {};
 
     var existing = document.getElementById(PANEL_ID);
     if (existing) existing.parentNode.removeChild(existing);
 
-    var allItems  = _load();
-    var unreadN   = allItems.filter(function(i) { return !i.read; }).length;
-    var filtered  = _filterItems(allItems, _currentFilter);
+    var allItems = _load();
+    var unreadN  = allItems.filter(function(i) { return !i.read; }).length;
+    var filtered = _filterItems(allItems, _currentFilter);
 
-    var panel = _el('div');
-    panel.id = PANEL_ID;
+    var panel = _el('div'); panel.id = PANEL_ID;
 
-    // ── Header
+    // Header
     var hdr = _el('div', 'ant-hdr');
-    var hicon = _el('div', 'ant-hdr-icon');
-    hicon.innerHTML = _svg_bell();
+    var hicon = _el('div', 'ant-hdr-icon'); hicon.innerHTML = _svg_bell();
     var hmain = _el('div', 'ant-hdr-main');
     hmain.innerHTML = '<div class="ant-hdr-title">Notifications</div>' +
-      '<div class="ant-hdr-sub">' + (unreadN > 0 ? unreadN + ' unread' : 'All caught up') + '</div>';
+      '<div class="ant-hdr-sub">' +
+        (_rtChannel ? '<span class="ant-live-dot"></span>Live · ' : '') +
+        (unreadN > 0 ? unreadN + ' unread' : 'All caught up') +
+      '</div>';
     var hact = _el('div', 'ant-hdr-actions');
 
     var refreshBtn = _el('button', 'ant-hbtn');
@@ -658,25 +597,24 @@
     hdr.appendChild(hicon); hdr.appendChild(hmain); hdr.appendChild(hact);
     panel.appendChild(hdr);
 
-    // ── Tabs
+    // Tabs (only show tabs with content, always show All/Unread/Presence)
     var tabs = _el('div', 'ant-tabs');
     TABS.forEach(function(tab) {
       var cnt = tab.id === 'unread' ? unreadN
-              : tab.id === 'all'    ? allItems.length
+              : tab.id === 'all'   ? allItems.length
               : _filterItems(allItems, tab.id).length;
+      // Skip empty tabs except All, Unread, Presence
+      if (cnt === 0 && tab.id !== 'all' && tab.id !== 'unread' && tab.id !== 'presence') return;
       var btn = _el('button', 'ant-tab' + (tab.id === _currentFilter ? ' ant-tab-active' : ''));
       btn.innerHTML = tab.label + (cnt > 0 ? '<span class="ant-tab-cnt">' + cnt + '</span>' : '');
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation(); _currentFilter = tab.id; _refreshPanel();
-      });
+      btn.addEventListener('click', function(e) { e.stopPropagation(); _currentFilter = tab.id; _refreshPanel(); });
       tabs.appendChild(btn);
     });
     panel.appendChild(tabs);
     panel.appendChild(_el('div', 'ant-divider'));
 
-    // ── Body
+    // Body
     var body = _el('div', 'ant-body');
-
     if (!filtered.length) {
       var empty = _el('div', 'ant-empty');
       var isAllEmpty = allItems.length === 0;
@@ -697,18 +635,14 @@
       groupOrder.forEach(function(gLabel) {
         if (!groups[gLabel] || !groups[gLabel].length) return;
         var sec = _el('div', 'ant-sec'); sec.textContent = gLabel; body.appendChild(sec);
-        groups[gLabel].slice(0, 50).forEach(function(item) {
-          body.appendChild(_buildItem(item, globalIdx++));
-        });
+        groups[gLabel].slice(0, 50).forEach(function(item) { body.appendChild(_buildItem(item, globalIdx++)); });
       });
     }
-
     panel.appendChild(body);
 
-    // ── Footer
     if (allItems.length > 0) {
       var foot = _el('div', 'ant-foot');
-      foot.innerHTML = '<span class="ant-foot-lbl">' + allItems.length + ' notifications · ' + unreadN + ' unread</span>';
+      foot.innerHTML = '<span class="ant-foot-lbl">' + allItems.length + ' total · ' + unreadN + ' unread</span>';
       panel.appendChild(foot);
     }
 
@@ -719,15 +653,13 @@
 
   // ── Open / Close ───────────────────────────────────────────
   function _open() {
-    _isOpen = true;
-    _currentFilter = 'all';
+    _isOpen = true; _currentFilter = 'all';
     _buildPanel();
-    _pullSupabase();
+    _lastPull = 0; _pullSupabase();
     requestAnimationFrame(function() {
       var p = document.getElementById(PANEL_ID);
       if (p) p.classList.add('ant-open');
     });
-    // Auto-read after 3s
     setTimeout(function() {
       if (!_isOpen) return;
       var all = _load(); all.forEach(function(i) { i.read = true; }); _save(all); _updateBadge();
@@ -762,81 +694,201 @@
     return null;
   }
 
+  // ── Realtime subscriptions ─────────────────────────────────
+  function _subscribeRealtime() {
+    var sb = _getSB();
+    if (!sb || _rtChannel) return;
+
+    _rtChannel = sb.channel('ant-rt-v8')
+      // Central activity feed — everything the backend writes here
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_activity_feed' }, function(p) {
+        _mapFeedEvent(p.new || {});
+      })
+      // App errors — not yet in activity_feed
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_error_logs' }, function(p) {
+        var e = p.new || {};
+        var label = (e.platform ? '[' + e.platform + '] ' : '') + (e.error_type || 'error');
+        _add('App error: ' + label, (e.error_message || '').slice(0, 100), 'error', '/admin-errors.html', 'err_' + e.id);
+      })
+      // Failed admin login attempts — security alerts
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_login_attempts' }, function(p) {
+        var a = p.new || {};
+        if (a.success === false || a.success === 'false') {
+          _add('Failed login attempt', (a.email || 'Unknown') + ' · ' + (a.ip_address || 'unknown IP'), 'security', '/admin-auth-monitor.html', 'sec_' + a.id);
+        }
+      })
+      // New published IslamVoice episodes
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'islamvoice_episodes' }, function(p) {
+        var ep = p.new || {};
+        if (ep.is_published) {
+          _add('New episode: ' + (ep.title || 'Untitled'), (ep.description || '').slice(0, 80), 'video', '/admin-islamvoice-management.html', 'vid_' + ep.id);
+        }
+      })
+      // New admin tasks (assignments)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_tasks' }, function(p) {
+        var t = p.new || {};
+        var me = sessionStorage.getItem('adminEmail') || '';
+        // Only notify if assigned to me or unassigned
+        if (!t.assigned_to || t.assigned_to === me || t.assigned_to === sessionStorage.getItem('adminId')) {
+          _add('New task: ' + (t.title || 'Untitled'), (t.description || '').slice(0, 80) || ('Priority: ' + (t.priority || 'normal')), 'task', '/admin-tasks.html', 'task_new_' + t.id);
+        }
+      })
+      // New mentions
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_mention_notifs' }, function(p) {
+        var n = p.new || {};
+        var me = sessionStorage.getItem('adminEmail') || '';
+        if (!me || n.recipient_email === me) {
+          var d = n.data || {};
+          var link = d.rowId ? '/admin-translations.html?mention=' + d.rowId : null;
+          _add(n.title || 'New mention', n.body || '', 'mention', link, 'db_' + n.id, n.id);
+        }
+      })
+      // User comments on IslamVoice
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'islamvoice_comments' }, function(p) {
+        var c = p.new || {};
+        _add('New comment on episode', (c.content || '').slice(0, 100), 'message', '/admin-islamvoice-management.html', 'cmt_' + c.id);
+      })
+      // Widget health failures
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'widget_health_reports' }, function(p) {
+        var w = p.new || {};
+        if (w.status === 'error' || w.status === 'stale' || w.snapshot_stale) {
+          _add('Widget health issue', (w.city || 'Unknown') + ' · ' + (w.platform || '') + ' · ' + (w.status || 'error'), 'error', '/admin-widget-health.html', 'wgt_' + w.id + '_' + Math.floor(Date.now() / 3600000));
+        }
+      })
+      .subscribe(function(status) {
+        if (status === 'SUBSCRIBED') _refreshPanel(); // refresh header "Live" dot
+      });
+  }
+
+  // ── Background auto-poll ───────────────────────────────────
+  function _startAutoRefresh() {
+    if (_autoTimer) return;
+    _autoTimer = setInterval(function() {
+      _lastPull = 0;
+      _pullSupabase();
+    }, POLL_MS);
+  }
+
+  // ── Pull from Supabase (panel open + background) ───────────
   var _lastPull = 0;
   function _pullSupabase() {
     var sb = _getSB(); if (!sb) return;
     var now = Date.now();
-    if (now - _lastPull < 30000) return;
+    if (now - _lastPull < 20000) return;
     _lastPull = now;
 
-    sb.from('contact_messages').select('id,name,email,subject,message,created_at')
-      .eq('status', 'unread').order('created_at',{ascending:false}).limit(10)
+    // Central activity feed (last 7 days, skip low-priority translation noise)
+    sb.from('admin_activity_feed')
+      .select('id,event_type,category,priority,title,message,metadata,source_table,section,created_at')
+      .not('event_type', 'eq', 'translation_updated')
+      .gte('created_at', new Date(now - 7 * 86400000).toISOString())
+      .order('created_at', { ascending: false }).limit(60)
       .then(function(res) {
         if (res.error || !res.data) return;
-        res.data.forEach(function(m) {
-          _add((m.name||m.email||'Unknown')+' sent a message', m.subject||(m.message||'').slice(0,80),
-            'message','/admin-messages.html','msg_'+m.id);
-        });
+        res.data.forEach(function(ev) { _mapFeedEvent(ev); });
       });
 
-    sb.from('profiles').select('id,email,full_name,display_name,created_at')
-      .gte('created_at',new Date(now-86400000).toISOString()).order('created_at',{ascending:false}).limit(8)
+    // App errors (last 6h) — direct table since may not be in feed
+    sb.from('app_error_logs')
+      .select('id,error_type,error_message,platform,app_version,created_at')
+      .gte('created_at', new Date(now - 6 * 3600000).toISOString())
+      .order('created_at', { ascending: false }).limit(10)
       .then(function(res) {
-        if (res.error||!res.data) return;
-        res.data.forEach(function(u) {
-          var name=u.full_name||u.display_name||(u.email||'').split('@')[0]||'Unknown';
-          _add(name+' joined',u.email||'New account','user','/admin-users.html','usr_'+u.id);
-        });
-      });
-
-    sb.from('app_error_logs').select('id,error_type,error_message,platform,created_at')
-      .gte('created_at',new Date(now-6*3600000).toISOString()).order('created_at',{ascending:false}).limit(5)
-      .then(function(res) {
-        if (res.error||!res.data||!res.data.length) return;
+        if (res.error || !res.data || !res.data.length) return;
         res.data.forEach(function(e) {
-          var label=(e.platform?'['+e.platform+'] ':'')+(e.error_type||'error');
-          _add('App error: '+label,(e.error_message||'').slice(0,100),'error','/admin-errors.html','err_'+e.id);
+          var label = (e.platform ? '[' + e.platform + '] ' : '') + (e.error_type || 'error');
+          _add('App error: ' + label, (e.error_message || '').slice(0, 100), 'error', '/admin-errors.html', 'err_' + e.id);
         });
       });
 
-    sb.from('admin_tasks').select('id,title,due_at,status')
-      .neq('status','done').not('due_at','is',null).lt('due_at',new Date().toISOString())
-      .order('due_at',{ascending:true}).limit(5)
+    // Overdue tasks
+    sb.from('admin_tasks')
+      .select('id,title,due_at,priority,status,assigned_to')
+      .neq('status', 'done').not('due_at', 'is', null).lt('due_at', new Date().toISOString())
+      .eq('archived', false)
+      .order('due_at', { ascending: true }).limit(5)
       .then(function(res) {
-        if (res.error||!res.data) return;
+        if (res.error || !res.data) return;
         res.data.forEach(function(t) {
-          _add('Overdue: '+t.title,'Due '+new Date(t.due_at).toLocaleDateString([],{month:'short',day:'numeric'}),
-            'error','/admin-tasks.html?id='+t.id,'task_'+t.id);
+          _add('Overdue: ' + t.title,
+            'Due ' + new Date(t.due_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' · ' + (t.priority || 'normal'),
+            'error', '/admin-tasks.html?id=' + t.id, 'task_' + t.id);
         });
       });
 
-    var me=(window.sessionStorage&&sessionStorage.getItem('adminEmail'))||'';
+    // Published IslamVoice episodes (last 48h)
+    sb.from('islamvoice_episodes')
+      .select('id,title,description,duration,created_at')
+      .eq('is_published', true)
+      .gte('created_at', new Date(now - 48 * 3600000).toISOString())
+      .order('created_at', { ascending: false }).limit(5)
+      .then(function(res) {
+        if (res.error || !res.data) return;
+        res.data.forEach(function(ep) {
+          _add('New episode: ' + (ep.title || 'Untitled'), (ep.description || '').slice(0, 80), 'video', '/admin-islamvoice-management.html', 'vid_' + ep.id);
+        });
+      });
+
+    // Failed login attempts (last 2h)
+    sb.from('admin_login_attempts')
+      .select('id,email,ip_address,created_at')
+      .eq('success', false)
+      .gte('created_at', new Date(now - 2 * 3600000).toISOString())
+      .order('created_at', { ascending: false }).limit(10)
+      .then(function(res) {
+        if (res.error || !res.data) return;
+        res.data.forEach(function(a) {
+          _add('Failed login attempt', (a.email || 'Unknown') + ' · ' + (a.ip_address || 'unknown IP'), 'security', '/admin-auth-monitor.html', 'sec_' + a.id);
+        });
+      });
+
+    // Mentions addressed to me
+    var me = (window.sessionStorage && sessionStorage.getItem('adminEmail')) || '';
     if (me) {
-      sb.from('admin_mention_notifs').select('id,type,title,body,data,source_id,created_at')
-        .eq('recipient_email',me).gte('created_at',new Date(now-30*86400000).toISOString())
-        .order('created_at',{ascending:false}).limit(30)
+      sb.from('admin_mention_notifs')
+        .select('id,type,title,body,data,source_id,created_at')
+        .eq('recipient_email', me)
+        .gte('created_at', new Date(now - 30 * 86400000).toISOString())
+        .order('created_at', { ascending: false }).limit(30)
         .then(function(res) {
-          if (res.error||!res.data) return;
+          if (res.error || !res.data) return;
           res.data.forEach(function(n) {
-            var d=n.data||{};
-            var link=d.rowId?'/admin-translations.html?mention='+d.rowId:null;
-            _add(n.title,n.body||'',n.type||'mention',link,'db_'+n.id,n.id);
+            var d = n.data || {};
+            var link = d.rowId ? '/admin-translations.html?mention=' + d.rowId : null;
+            _add(n.title, n.body || '', n.type || 'mention', link, 'db_' + n.id, n.id);
           });
         });
     }
   }
 
-  // ── Live alerts bridge (other pages feed events) ───────────
+  // ── Live events bridge (from admin-live-alerts.js) ─────────
   window._antFeed = function(type, data) {
+    data = data || {};
     if (type === 'new_message') {
-      _add((data.name||data.email||'Unknown')+' sent a message',
-        data.subject||(data.message||'').slice(0,80),'message','/admin-messages.html',data.id?'msg_'+data.id:null);
+      _add((data.name || data.email || 'Unknown') + ' sent a message',
+        data.subject || (data.message || '').slice(0, 80), 'message', '/admin-messages.html',
+        data.id ? 'msg_' + data.id : null);
+
     } else if (type === 'user_joined') {
-      _add((data.name||(data.email||'').split('@')[0]||'Unknown')+' joined',
-        data.email||'','user','/admin-users.html',data.id?'usr_'+data.id:null);
+      var uname = data.name || (data.email || '').split('@')[0] || 'Unknown';
+      _add(uname + ' joined', data.email || 'New account', 'user', '/admin-users.html',
+        data.id ? 'usr_' + data.id : null);
+
     } else if (type === 'new_video') {
-      _add('New episode: '+(data.title||'Untitled'),data.description?data.description.slice(0,80):'IslamVoice',
-        'video','/admin-islamvoice-management.html',data.id?'vid_'+data.id:null);
+      _add('New episode: ' + (data.title || 'Untitled'),
+        data.description ? data.description.slice(0, 80) : 'IslamVoice',
+        'video', '/admin-islamvoice-management.html', data.id ? 'vid_' + data.id : null);
+
+    } else if (type === 'user_online') {
+      // App user came online — deduplicate per hour per user
+      var aoName = data.name || (data.email || '').split('@')[0] || 'User';
+      var aoSid = data.id ? 'act_on_' + data.id + '_' + Math.floor(Date.now() / 3600000) : null;
+      _add(aoName + ' is active', (data.email || '') + (data.platform ? ' · ' + data.platform : ''), 'activity', null, aoSid);
+
+    } else if (type === 'user_offline') {
+      var aoName2 = data.name || (data.email || '').split('@')[0] || 'User';
+      var aoSid2 = data.id ? 'act_off_' + data.id + '_' + Math.floor(Date.now() / 3600000) : null;
+      _add(aoName2 + ' went offline', (data.email || '') + (data.platform ? ' · ' + data.platform : ''), 'activity', null, aoSid2);
     }
   };
 
@@ -848,15 +900,11 @@
     var roleLabel = roleLabels[admin.role] || admin.role || 'Admin';
     var joinTime = new Date();
     var sid = 'pres_on_' + admin.id + '_' + joinTime.getTime();
-    // Store sid on the admin object so we can reference it on leave
     admin.__antSid = sid;
     admin.__antJoinTime = joinTime;
     _add(name + ' is online', roleLabel + ' · ' + admin.email, 'presence_online', null, sid, null, {
-      initChar: initChar,
-      joinTime: joinTime.toISOString(),
-      adminId: admin.id,
-      roleLabel: roleLabel,
-      email: admin.email,
+      initChar: initChar, joinTime: joinTime.toISOString(),
+      adminId: admin.id, roleLabel: roleLabel, email: admin.email,
     });
   };
 
@@ -868,18 +916,13 @@
     var roleLabels = { super_admin: 'Super Admin', editor: 'Editor', analyst: 'Analyst', custom: 'Custom' };
     var roleLabel = roleLabels[admin.role] || admin.role || 'Admin';
     _updateBySourceId(admin.__antSid, {
-      type: 'presence_offline',
-      title: name + ' went offline',
-      desc: roleLabel + ' · ' + admin.email,
-      read: false,
+      type: 'presence_offline', title: name + ' went offline',
+      desc: roleLabel + ' · ' + admin.email, read: false,
       meta: {
         initChar: name.charAt(0).toUpperCase(),
         joinTime: admin.__antJoinTime ? admin.__antJoinTime.toISOString() : null,
-        leaveTime: leaveTime.toISOString(),
-        duration: duration,
-        adminId: admin.id,
-        roleLabel: roleLabel,
-        email: admin.email,
+        leaveTime: leaveTime.toISOString(), duration: duration,
+        adminId: admin.id, roleLabel: roleLabel, email: admin.email,
       },
     });
   };
@@ -898,12 +941,19 @@
     _injectCSS();
     _ensureBell();
     _updateBadge();
+
+    function _ready() {
+      setTimeout(_pullSupabase, 3000);
+      setTimeout(_subscribeRealtime, 1500);
+      _startAutoRefresh();
+    }
+
     if (_getSB()) {
-      setTimeout(_pullSupabase, 4000);
+      _ready();
     } else {
       var t = 0;
       var wait = setInterval(function() {
-        if (_getSB()) { clearInterval(wait); setTimeout(_pullSupabase, 2000); }
+        if (_getSB()) { clearInterval(wait); _ready(); }
         else if (++t > 60) clearInterval(wait);
       }, 500);
     }
@@ -914,13 +964,17 @@
 
   // ── Public API ─────────────────────────────────────────────
   window.adminNotifications = {
-    add: function(title, desc, type, link, sourceId) { _add(title, desc, type, link, sourceId||null); },
+    add: function(title, desc, type, link, sourceId) { _add(title, desc, type, link, sourceId || null); },
     updateBySourceId: function(sid, changes) { _updateBySourceId(sid, changes); },
     test: function() {
-      _add('Ahmed sent a message','Question about Quran recitation','message','/admin-messages.html',null);
-      _add('Sara Ahmed joined','sara.ahmed@gmail.com','user','/admin-users.html',null);
-      _add('App error: [iOS]','Fatal exception in AudioPlayer at line 42','error','/admin-errors.html',null);
-      window._antPresenceJoin({ id:'test1', full_name:'Test Admin', email:'test@tafsirkurd.com', role:'editor' });
+      _add('Ahmed sent a message', 'Question about Quran recitation', 'message', '/admin-messages.html', null);
+      _add('Sara Ahmed joined', 'sara.ahmed@gmail.com', 'user', '/admin-users.html', null);
+      _add('App error: [iOS]', 'Fatal exception in AudioPlayer at line 42', 'error', '/admin-errors.html', null);
+      _add('Failed login attempt', 'hacker@example.com · 192.168.1.1', 'security', '/admin-auth-monitor.html', null);
+      _add('Overdue: Publish new episode', 'Due May 1 · high', 'error', '/admin-tasks.html', null);
+      _add('New episode: Tafseer Al-Baqarah', 'IslamVoice new content', 'video', '/admin-islamvoice-management.html', null);
+      _add('User came online', 'user@example.com · iOS', 'activity', null, null);
+      window._antPresenceJoin({ id: 'test1', full_name: 'Test Admin', email: 'test@tafsirkurd.com', role: 'editor' });
     },
   };
 
