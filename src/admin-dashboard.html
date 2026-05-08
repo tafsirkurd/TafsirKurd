@@ -5619,8 +5619,10 @@
            Refreshes every 15 s + realtime Supabase sub for instant updates.
         ──────────────────────────────────────────────────────────────── */
         var _atoChannel = null;
-        var _atoOnlineIds = new Set();  // IDs of admins currently tracked as online
-        var _atoInitialized = false;    // skip toasts on first load
+        var _atoOnlineIds = new Set();   // IDs currently online
+        var _atoInitialized = false;     // skip toasts on first load
+        // adminId -> { admin, joinTime, cardEl, timerInterval, accentEl, statusEl, durationEl, timelineEl }
+        var _atoSessions = {};
 
         function _atoStatus(hb) {
             if (!hb) return 'offline';
@@ -5651,58 +5653,178 @@
             return ATO_PALETTE[code % ATO_PALETTE.length];
         }
 
-        function _showAdminOnlineToast(admin) {
+        function _fmtTime(d) {
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        function _fmtDuration(ms) {
+            var s = Math.floor(ms / 1000);
+            var h = Math.floor(s / 3600);
+            var m = Math.floor((s % 3600) / 60);
+            var sec = s % 60;
+            if (h > 0) return h + 'h ' + m + 'm ' + sec + 's';
+            if (m > 0) return m + 'm ' + sec + 's';
+            return sec + 's';
+        }
+
+        function _createPresenceCard(admin, joinTime) {
             var name = admin.full_name || admin.email.split('@')[0];
             var initChar = name.charAt(0).toUpperCase();
             var col = _atoColor(initChar);
             var roleLabels = { super_admin: 'Super Admin', editor: 'Editor', analyst: 'Analyst', custom: 'Custom' };
             var roleLabel = roleLabels[admin.role] || admin.role || 'Admin';
 
-            var toast = document.createElement('div');
-            toast.style.cssText = [
-                'display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;',
-                'background:var(--bg-surface);border:1px solid var(--border-light);',
-                'box-shadow:0 8px 32px rgba(0,0,0,.14),0 0 0 1px rgba(34,197,94,.15);',
-                'font-size:13px;font-weight:500;max-width:300px;pointer-events:all;',
+            var card = document.createElement('div');
+            card.style.cssText = [
+                'background:var(--bg-surface);border:1px solid rgba(34,197,94,.3);',
+                'border-radius:14px;max-width:320px;width:320px;pointer-events:all;',
+                'box-shadow:0 8px 32px rgba(0,0,0,.14),0 0 0 1px rgba(34,197,94,.1);',
                 'animation:toastIn .35s cubic-bezier(.22,.68,0,1.2) both;',
-                'position:relative;overflow:hidden;'
+                'position:relative;overflow:hidden;font-family:inherit;'
             ].join('');
 
-            // Green top accent
+            // Top accent bar (green = online)
             var accent = document.createElement('div');
-            accent.style.cssText = 'position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#22c55e,#10b981);border-radius:14px 14px 0 0;';
-            toast.appendChild(accent);
+            accent.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#22c55e,#10b981);border-radius:14px 14px 0 0;transition:background .4s;';
+            card.appendChild(accent);
 
-            // Avatar
+            // Main row
+            var row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:14px 14px 10px;';
+
+            // Avatar with pulse ring
+            var avWrap = document.createElement('div');
+            avWrap.style.cssText = 'position:relative;flex-shrink:0;';
             var av = document.createElement('div');
-            av.style.cssText = 'width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;box-shadow:0 0 0 2px #22c55e;';
+            av.style.cssText = 'width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;box-shadow:0 0 0 2.5px #22c55e,0 0 0 5px rgba(34,197,94,.2);transition:box-shadow .4s;';
             av.style.background = col.bg;
             av.style.color = col.color;
             av.textContent = initChar;
-            toast.appendChild(av);
+            var avDot = document.createElement('div');
+            avDot.style.cssText = 'position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid var(--bg-surface);transition:background .4s;';
+            avWrap.appendChild(av);
+            avWrap.appendChild(avDot);
+            row.appendChild(avWrap);
 
             // Body
             var body = document.createElement('div');
             body.style.cssText = 'flex:1;min-width:0;';
 
-            var title = document.createElement('div');
-            title.style.cssText = 'font-weight:700;color:var(--text-primary);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-            title.textContent = name + ' is online';
-            body.appendChild(title);
+            var nameRow = document.createElement('div');
+            nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+            var nameEl = document.createElement('div');
+            nameEl.style.cssText = 'font-weight:700;color:var(--text-primary);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
+            nameEl.textContent = name;
+            var statusBadge = document.createElement('span');
+            statusBadge.style.cssText = 'font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,.14);color:#16a34a;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;transition:all .4s;flex-shrink:0;';
+            statusBadge.textContent = 'ONLINE';
+            nameRow.appendChild(nameEl);
+            nameRow.appendChild(statusBadge);
+            body.appendChild(nameRow);
 
-            var sub = document.createElement('div');
-            sub.style.cssText = 'font-size:11px;color:#16a34a;font-weight:600;margin-top:2px;display:flex;align-items:center;gap:4px;';
-            sub.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;flex-shrink:0;"></span>' + roleLabel + ' · just joined';
-            body.appendChild(sub);
+            var roleEl = document.createElement('div');
+            roleEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-weight:600;margin-top:1px;';
+            roleEl.textContent = roleLabel;
+            body.appendChild(roleEl);
 
-            toast.appendChild(body);
+            // Timeline rows
+            var tl = document.createElement('div');
+            tl.style.cssText = 'margin-top:8px;display:flex;flex-direction:column;gap:3px;';
+
+            var tlJoin = document.createElement('div');
+            tlJoin.style.cssText = 'font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:5px;';
+            tlJoin.innerHTML = '<span style="color:#16a34a;font-size:10px;">▶</span><span style="font-weight:600;color:var(--text-tertiary);min-width:36px;">Joined</span><span style="font-weight:700;color:var(--text-primary);font-family:monospace;">' + _fmtTime(joinTime) + '</span>';
+            tl.appendChild(tlJoin);
+
+            var tlDur = document.createElement('div');
+            tlDur.style.cssText = 'font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:5px;';
+            var durValEl = document.createElement('span');
+            durValEl.style.cssText = 'font-weight:700;color:#16a34a;font-family:monospace;transition:color .4s;';
+            durValEl.textContent = '0s';
+            tlDur.innerHTML = '<span style="color:#16a34a;font-size:10px;transition:color .4s;">⏱</span><span style="font-weight:600;color:var(--text-tertiary);min-width:36px;">Online</span>';
+            tlDur.appendChild(durValEl);
+            tl.appendChild(tlDur);
+
+            body.appendChild(tl);
+            row.appendChild(body);
+
+            // Dismiss button (top-right)
+            var closeBtn = document.createElement('button');
+            closeBtn.style.cssText = 'background:var(--bg-hover);border:none;width:24px;height:24px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);font-size:14px;flex-shrink:0;transition:background .15s,color .15s;margin-top:-2px;';
+            closeBtn.innerHTML = '×';
+            closeBtn.title = 'Dismiss';
+            closeBtn.onmouseenter = function() { this.style.background='var(--bg-active)'; this.style.color='var(--text-primary)'; };
+            closeBtn.onmouseleave = function() { this.style.background='var(--bg-hover)'; this.style.color='var(--text-tertiary)'; };
+            closeBtn.onclick = function() {
+                // Stop timer if still running
+                if (_atoSessions[admin.id]) {
+                    clearInterval(_atoSessions[admin.id].timerInterval);
+                    delete _atoSessions[admin.id];
+                }
+                card.style.animation = 'toastOut .25s ease forwards';
+                setTimeout(function() { card.remove(); }, 280);
+            };
+            row.appendChild(closeBtn);
+            card.appendChild(row);
+
+            // Email footer
+            var footer = document.createElement('div');
+            footer.style.cssText = 'padding:0 14px 10px;font-size:10px;color:var(--text-tertiary);display:flex;align-items:center;gap:4px;';
+            footer.innerHTML = '<span style="opacity:.6;">✉</span>' + admin.email;
+            card.appendChild(footer);
 
             var stack = document.getElementById('toastStack') || document.body;
-            stack.appendChild(toast);
-            setTimeout(function() {
-                toast.style.animation = 'toastOut .25s ease forwards';
-                setTimeout(function() { toast.remove(); }, 280);
-            }, 5000);
+            stack.appendChild(card);
+
+            // Live duration timer
+            var interval = setInterval(function() {
+                var ms = Date.now() - joinTime.getTime();
+                durValEl.textContent = _fmtDuration(ms);
+            }, 1000);
+
+            _atoSessions[admin.id] = {
+                admin: admin, joinTime: joinTime, cardEl: card,
+                timerInterval: interval, accentEl: accent,
+                avEl: av, avDotEl: avDot,
+                statusBadge: statusBadge, durValEl: durValEl, tlDur: tlDur
+            };
+        }
+
+        function _markAdminOffline(session) {
+            clearInterval(session.timerInterval);
+            var leaveTime = new Date();
+            var duration = leaveTime.getTime() - session.joinTime.getTime();
+            var card = session.cardEl;
+
+            // Accent bar → grey
+            session.accentEl.style.background = 'linear-gradient(90deg,#94a3b8,#6b7280)';
+            card.style.borderColor = 'rgba(148,163,184,.3)';
+            card.style.boxShadow = '0 4px 16px rgba(0,0,0,.1)';
+
+            // Avatar ring → grey
+            session.avEl.style.boxShadow = '0 0 0 2.5px #94a3b8,0 0 0 5px rgba(148,163,184,.15)';
+            session.avDotEl.style.background = '#94a3b8';
+
+            // Status badge → offline
+            session.statusBadge.style.background = 'rgba(148,163,184,.15)';
+            session.statusBadge.style.color = '#64748b';
+            session.statusBadge.textContent = 'OFFLINE';
+
+            // Duration row → show final value in grey + add left time row
+            session.durValEl.style.color = 'var(--text-tertiary)';
+            session.tlDur.querySelector('span').style.color = '#94a3b8';
+
+            // Add left time row
+            var tl = session.tlDur.parentNode;
+            var tlLeft = document.createElement('div');
+            tlLeft.style.cssText = 'font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:5px;';
+            tlLeft.innerHTML = '<span style="color:#94a3b8;font-size:10px;">■</span><span style="font-weight:600;color:var(--text-tertiary);min-width:36px;">Left</span><span style="font-weight:700;color:var(--text-primary);font-family:monospace;">' + _fmtTime(leaveTime) + '</span>';
+            tl.appendChild(tlLeft);
+
+            // Total session row
+            var tlTotal = document.createElement('div');
+            tlTotal.style.cssText = 'font-size:11px;display:flex;align-items:center;gap:5px;margin-top:2px;padding-top:4px;border-top:1px solid var(--border-light);';
+            tlTotal.innerHTML = '<span style="color:#94a3b8;font-size:10px;">⏱</span><span style="font-weight:600;color:var(--text-tertiary);min-width:36px;">Total</span><span style="font-weight:800;color:var(--text-primary);font-family:monospace;">' + _fmtDuration(duration) + '</span>';
+            tl.appendChild(tlTotal);
         }
 
         function renderAdminTeamOnline(admins) {
@@ -5714,17 +5836,27 @@
             // Only truly online (< 2 min heartbeat)
             var online = admins.filter(function(a) { return _atoStatus(a.last_heartbeat) === 'online'; });
 
-            // Detect newly joined admins (skip self, skip first load)
+            // Detect newly joined / went offline admins (skip self, skip first load)
             var myEmail = sessionStorage.getItem('adminEmail') || '';
+            var nowOnlineIds = new Set(online.map(function(a) { return a.id; }));
+
             if (_atoInitialized) {
+                // New joiners → create persistent card
                 online.forEach(function(a) {
                     if (!_atoOnlineIds.has(a.id) && a.email !== myEmail) {
-                        _showAdminOnlineToast(a);
+                        _createPresenceCard(a, new Date());
+                    }
+                });
+                // Gone offline → update existing card to offline state
+                _atoOnlineIds.forEach(function(id) {
+                    if (!nowOnlineIds.has(id) && _atoSessions[id]) {
+                        _markAdminOffline(_atoSessions[id]);
+                        delete _atoSessions[id];
                     }
                 });
             }
-            // Update tracked set
-            _atoOnlineIds = new Set(online.map(function(a) { return a.id; }));
+
+            _atoOnlineIds = nowOnlineIds;
             _atoInitialized = true;
 
             while (list.firstChild) list.removeChild(list.firstChild);
@@ -5800,6 +5932,29 @@
                 console.error('[AdminTeam]', e);
             }
         }
+
+        // Test helpers — call from console:
+        //   _testAdminOnline()           → simulate admin joining
+        //   _testAdminOffline()          → simulate that admin going offline
+        window._testAdminOnline = function(name, role) {
+            var id = '__test_' + Date.now() + '__';
+            window.__lastTestId = id;
+            _createPresenceCard({
+                id: id,
+                full_name: name || 'Test Admin',
+                email: (name || 'test').toLowerCase() + '@tafsirkurd.com',
+                role: role || 'editor'
+            }, new Date());
+        };
+        window._testAdminOffline = function() {
+            var id = window.__lastTestId;
+            if (id && _atoSessions[id]) {
+                _markAdminOffline(_atoSessions[id]);
+                delete _atoSessions[id];
+            } else {
+                console.warn('[test] No active test session — call _testAdminOnline() first');
+            }
+        };
 
         function subscribeAdminTeamOnline() {
             var sb = window.adminAuth && window.adminAuth.getSupabase && window.adminAuth.getSupabase();
