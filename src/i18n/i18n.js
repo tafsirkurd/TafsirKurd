@@ -196,12 +196,12 @@ function loadBundled(){
 // ── Layer 3: remote DB — atomic merge ────────────────────────────────────────
 // Fetches remote into a TEMP object, validates, then atomically swaps.
 // Never touches the live translations object until validation passes.
-function mergeRemote(signal){
+function mergeRemote(){
   if(navigator.onLine === false)
     return Promise.reject(Object.assign(new Error('offline'), {name:'OfflineError'}));
   var t0 = Date.now();
 
-  return fetch(REMOTE_URL, { cache:'no-cache', signal: signal||null })
+  return fetch(REMOTE_URL, { cache:'no-cache' })
     .then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
@@ -262,7 +262,7 @@ function mergeRemote(signal){
       }
     })
     .catch(function(e){
-      if(e && (e.name === 'AbortError' || e.name === 'OfflineError')) throw e; // propagate silently
+      if(e && e.name === 'OfflineError') throw e; // propagate silently
       console.warn('[i18n] Remote fetch failed (offline or timeout) — layers 1+2 in use:', e.message);
       throw e;
     });
@@ -367,20 +367,21 @@ function initLang(){
   // Apply layers 1+2 immediately — UI renders with correct text before network
   applyTranslations();
 
-  // Layer 3 — race against 3s timeout so splash is never blocked
-  var _startupAC = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  // Layer 3 — race against 3s timeout so splash is never blocked.
+  // No AbortController: we let the fetch run to completion in the background.
+  // If it finishes after the timeout, the .then() handler still fires and applies updates.
   var timeout = new Promise(function(resolve){
-    setTimeout(function(){ if(_startupAC)_startupAC.abort(); resolve(); }, STARTUP_TIMEOUT);
+    setTimeout(resolve, STARTUP_TIMEOUT);
   });
 
   _initPromise = Promise.race([
-    mergeRemote(_startupAC ? _startupAC.signal : null).then(
+    mergeRemote().then(
       function(){
         _initStatus = _cachedSnapshot ? 'valid_cache' : 'fresh_fetch';
         if(Object.keys(_bundledSnapshot).length === 0) _initStatus = 'fetch_failed_no_bundle';
       },
       function(err){
-        if(err && (err.name === 'AbortError' || err.name === 'OfflineError')) return; // silent — no network or timeout
+        if(err && err.name === 'OfflineError') return; // silent — device is offline
         _initStatus = Object.keys(_bundledSnapshot).length > 0
           ? 'fetch_failed_using_bundle'
           : 'fetch_failed_no_bundle';
