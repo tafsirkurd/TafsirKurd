@@ -36,7 +36,10 @@ export async function onRequest(context) {
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=10'
+        // 5-minute edge cache + 1-hour stale-while-revalidate.
+        // Translations change rarely — a 5-min stale window is fine and prevents
+        // the CF Worker from hitting Supabase on every i18n poll (every 30s).
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600'
     };
 
     if (request.method === 'OPTIONS') {
@@ -63,15 +66,25 @@ export async function onRequest(context) {
         let rows = [];
         let offset = 0;
         while (true) {
-            const res = await fetch(
-                `${supabaseUrl}/rest/v1/kurdish_translations?select=key_id,kurdish_text&limit=${BATCH}&offset=${offset}`,
-                {
-                    headers: {
-                        'apikey': supabaseKey,
-                        'Authorization': `Bearer ${supabaseKey}`
+            // 8-second timeout per batch — prevents CF Worker from hanging when
+            // Supabase is slow, which would cause the client to see ERR_CONNECTION_CLOSED.
+            const controller = new AbortController();
+            const tid = setTimeout(() => controller.abort(), 8000);
+            let res;
+            try {
+                res = await fetch(
+                    `${supabaseUrl}/rest/v1/kurdish_translations?select=key_id,kurdish_text&limit=${BATCH}&offset=${offset}`,
+                    {
+                        headers: {
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        signal: controller.signal
                     }
-                }
-            );
+                );
+            } finally {
+                clearTimeout(tid);
+            }
 
             if (!res.ok) {
                 return new Response(JSON.stringify({ error: 'DB error' }), {
@@ -95,9 +108,10 @@ export async function onRequest(context) {
             status: 200, headers: corsHeaders
         });
     } catch (error) {
-        console.error('app-translations error:', error);
-        return new Response(JSON.stringify({ error: 'Internal error' }), {
-            status: 500, headers: corsHeaders
+        const isTimeout = error && error.name === 'AbortError';
+        console.error('app-translations error:', isTimeout ? 'Supabase timeout' : error);
+        return new Response(JSON.stringify({ error: isTimeout ? 'timeout' : 'Internal error' }), {
+            status: isTimeout ? 504 : 500, headers: corsHeaders
         });
     }
 }
