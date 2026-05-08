@@ -4583,14 +4583,16 @@ function updateHighlight(surah,ayah){
   _hlSet(newEls,CC,false);
   requestAnimationFrame(function(){_hlSet(newEls,CC,true);});
 
-  // Mark next ayah as up-next
-  var nxt=_nextAyahPos(surah,ayah);
-  if(nxt){
-    var nxtKey=_hlKey(nxt.surah,nxt.ayah);
-    if(nxtKey!==newKey){
-      var nxtEls=_hlEls(nxtKey,mode);
-      _hl.nextKey=nxtKey;_hl.nextEls=nxtEls;
-      _hlSet(nxtEls,RC,false);_hlSet(nxtEls,CC,false);_hlSet(nxtEls,NC,true);
+  // Mark next ayah as up-next — mushaf mode only
+  if(mode==='mushaf'){
+    var nxt=_nextAyahPos(surah,ayah);
+    if(nxt){
+      var nxtKey=_hlKey(nxt.surah,nxt.ayah);
+      if(nxtKey!==newKey){
+        var nxtEls=_hlEls(nxtKey,mode);
+        _hl.nextKey=nxtKey;_hl.nextEls=nxtEls;
+        _hlSet(nxtEls,RC,false);_hlSet(nxtEls,CC,false);_hlSet(nxtEls,NC,true);
+      }
     }
   }
 
@@ -4663,7 +4665,7 @@ function _hlRestoreAll(){
   var RC=mode==='mushaf'?'mushaf-ayah-seg--read':'quran-ayah--read';
   var curEls=_hlEls(_hl.currentKey,mode);
   _hl.currentEls=curEls;_hlSet(curEls,CC,true);
-  if(_hl.nextKey){
+  if(mode==='mushaf'&&_hl.nextKey){
     var nxtEls=_hlEls(_hl.nextKey,mode);
     _hl.nextEls=nxtEls;_hlSet(nxtEls,NC,true);
   }
