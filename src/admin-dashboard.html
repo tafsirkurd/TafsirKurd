@@ -61,10 +61,11 @@
             gap: 5px;
         }
         .refresh-indicator .dot {
-            width: 6px; height: 6px;
+            width: 7px; height: 7px;
             background: #10b981;
             border-radius: 50%;
             display: inline-block;
+            animation: onlinePulse 2s ease-in-out infinite;
         }
 
         @keyframes onlinePulse {
@@ -107,18 +108,28 @@
         .metric-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
             position: relative;
             overflow: hidden;
         }
+        /* Colored top accent bar per card — set --mc-accent inline */
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--mc-accent, transparent);
+            border-radius: 14px 14px 0 0;
+        }
         .metric-card:hover {
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border-color: var(--mc-accent, var(--primary));
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+            transform: translateY(-1px);
         }
         .metric-top {
             display: flex;
@@ -367,12 +378,12 @@
             margin-top: 4px;
         }
         .section-label .sl-icon {
-            width: 18px; height: 18px;
-            border-radius: 5px;
+            width: 22px; height: 22px;
+            border-radius: 6px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
-            font-size: 10px;
         }
+        .section-label .sl-icon i { width: 12px; height: 12px; display: block; }
         .section-label::after {
             content: '';
             flex: 1;
@@ -406,12 +417,14 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
         .quick-action-icon {
-            width: 36px; height: 36px;
-            border-radius: 9px;
+            width: 38px; height: 38px;
+            border-radius: 10px;
             background: var(--bg-hover);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
+            transition: background 0.2s;
         }
+        .quick-action-card:hover .quick-action-icon { background: var(--bg-active); }
         .quick-action-icon svg { width: 16px; height: 16px; }
         .quick-action-label { font-size: 13px; font-weight: 600; }
         .quick-action-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
@@ -1845,8 +1858,8 @@
                         <button class="btn btn-secondary" onclick="openQuickTask()" style="font-size:13px;padding:7px 14px;gap:6px;display:inline-flex;align-items:center;" title="Quick add task">
                             <i data-lucide="plus" style="width:13px;height:13px;"></i> Task
                         </button>
-                        <button class="btn btn-secondary" onclick="copyDashboardSnapshot()" style="font-size:13px;padding:7px 12px;" title="Copy dashboard summary to clipboard" id="snapshotBtn">📋</button>
-                        <button class="btn btn-secondary" onclick="showPinnedNote()" style="font-size:13px;padding:7px 12px;" title="Add a pinned note">📌</button>
+                        <button class="btn btn-secondary" onclick="copyDashboardSnapshot()" style="font-size:13px;padding:7px 12px;display:inline-flex;align-items:center;" title="Copy dashboard summary to clipboard" id="snapshotBtn"><i data-lucide="clipboard" style="width:14px;height:14px;"></i></button>
+                        <button class="btn btn-secondary" onclick="showPinnedNote()" style="font-size:13px;padding:7px 12px;display:inline-flex;align-items:center;" title="Add a pinned note"><i data-lucide="pin" style="width:14px;height:14px;"></i></button>
                         <button class="btn btn-secondary" id="refreshBtn" onclick="refreshDashboard()" style="font-size:13px;padding:7px 14px;" title="Refresh dashboard (shortcut: R)">
                             <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
                             Refresh
@@ -1878,7 +1891,7 @@
                 <!-- ══ Metric Cards ══ -->
                 <div class="metrics-grid" id="metricsGrid">
                     <!-- Total Users -->
-                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:0ms;text-decoration:none;color:inherit;">
+                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:0ms;text-decoration:none;color:inherit;--mc-accent:#3b82f6;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
                                 <i data-lucide="users"></i>
@@ -1891,7 +1904,7 @@
                         <div class="metric-sparkline" id="sparkUsers"></div>
                     </a>
                     <!-- Active Today -->
-                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:60ms;text-decoration:none;color:inherit;">
+                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:60ms;text-decoration:none;color:inherit;--mc-accent:#10b981;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">
                                 <i data-lucide="activity"></i>
@@ -1905,7 +1918,7 @@
                         <div class="metric-sparkline" id="sparkToday"></div>
                     </a>
                     <!-- Active 7d -->
-                    <a href="/admin-analytics.html" class="metric-card card-animate" style="animation-delay:120ms;text-decoration:none;color:inherit;">
+                    <a href="/admin-analytics.html" class="metric-card card-animate" style="animation-delay:120ms;text-decoration:none;color:inherit;--mc-accent:#8b5cf6;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">
                                 <i data-lucide="calendar"></i>
@@ -1919,7 +1932,7 @@
                         <div class="metric-sparkline" id="spark7d"></div>
                     </a>
                     <!-- Active 30d -->
-                    <a href="/admin-analytics.html" class="metric-card card-animate" style="animation-delay:180ms;text-decoration:none;color:inherit;">
+                    <a href="/admin-analytics.html" class="metric-card card-animate" style="animation-delay:180ms;text-decoration:none;color:inherit;--mc-accent:#f59e0b;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
                                 <i data-lucide="trending-up"></i>
@@ -1933,7 +1946,7 @@
                         <div class="metric-sparkline" id="spark30d"></div>
                     </a>
                     <!-- Unread Messages -->
-                    <a href="/admin-messages.html" class="metric-card card-animate" style="animation-delay:240ms;text-decoration:none;color:inherit;">
+                    <a href="/admin-messages.html" class="metric-card card-animate" style="animation-delay:240ms;text-decoration:none;color:inherit;--mc-accent:#ef4444;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">
                                 <i data-lucide="mail"></i>
@@ -1945,7 +1958,7 @@
                         <div class="metric-sparkline" id="sparkMessages"></div>
                     </a>
                     <!-- Active Readers -->
-                    <a href="/admin-reading-stats.html" class="metric-card card-animate" style="animation-delay:300ms;text-decoration:none;color:inherit;">
+                    <a href="/admin-reading-stats.html" class="metric-card card-animate" style="animation-delay:300ms;text-decoration:none;color:inherit;--mc-accent:#14b8a6;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(20,184,166,0.1);color:#14b8a6;">
                                 <i data-lucide="book-open"></i>
@@ -1957,7 +1970,7 @@
                         <div class="metric-sparkline" id="sparkReaders"></div>
                     </a>
                     <!-- Online Now -->
-                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:360ms;text-decoration:none;color:inherit;">
+                    <a href="/admin-users.html" class="metric-card card-animate" style="animation-delay:360ms;text-decoration:none;color:inherit;--mc-accent:#22c55e;">
                         <div class="metric-top">
                             <div class="metric-icon" style="background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;">
                                 <span class="online-pulse"></span>
@@ -1975,7 +1988,7 @@
                 </div>
 
 <!-- ══ Charts ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;">↗</span>Trends</div>
+                <div class="section-label"><span class="sl-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;"><i data-lucide="trending-up"></i></span>Trends</div>
                 <div class="charts-grid">
                     <div class="chart-card card-animate" style="animation-delay:450ms">
                         <div class="chart-card-header">
@@ -2040,11 +2053,11 @@
                 </div>
 
                 <!-- ══ Quick Actions ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;">⏱</span>Recently Visited</div>
+                <div class="section-label"><span class="sl-icon" style="background:rgba(99,102,241,.12);color:#6366f1;"><i data-lucide="clock"></i></span>Recently Visited</div>
                 <div class="quick-actions" id="quickActionsGrid"></div>
 
                 <!-- ══ 3-Col Content Grid ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;">◉</span>Live Data</div>
+                <div class="section-label"><span class="sl-icon" style="background:rgba(16,185,129,.12);color:#10b981;"><i data-lucide="radio"></i></span>Live Data</div>
                 <div class="content-grid-3">
                     <!-- Recent Videos -->
                     <div class="content-card card-animate" style="animation-delay:540ms">
@@ -2105,7 +2118,7 @@
                 </div>
 
                 <!-- ══ My Tasks Widget ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(139,92,246,.12);color:#8b5cf6;">✓</span>My Tasks</div>
+                <div class="section-label"><span class="sl-icon" style="background:rgba(139,92,246,.12);color:#8b5cf6;"><i data-lucide="check-square"></i></span>My Tasks</div>
                 <div class="my-tasks-widget card-animate" style="animation-delay:600ms" id="myTasksWidget">
                     <div class="my-tasks-header">
                         <div class="my-tasks-title">
