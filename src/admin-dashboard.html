@@ -716,6 +716,37 @@
         .al-sev.default  { background: rgba(156,163,175,.1); color: #6b7280; }
         .al-action { font-family: monospace; font-size: 11.5px; background: var(--bg-active); border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
 
+        /* ── New Video Badge ── */
+        @keyframes nvb-pulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.45); }
+            60%      { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+        }
+        .new-video-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px 3px 7px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #f43f5e, #ef4444);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .05em;
+            white-space: nowrap;
+            flex-shrink: 0;
+            animation: nvb-pulse 2s ease-in-out infinite;
+            border: 1.5px solid rgba(255,255,255,.25);
+            vertical-align: middle;
+        }
+        .nvb-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #fff;
+            opacity: .9;
+            flex-shrink: 0;
+        }
+
         /* ── System Widgets Row ── */
         .system-widgets-row {
             display: grid;
@@ -1488,6 +1519,20 @@
             box-shadow: 0 24px 64px rgba(0,0,0,0.28);
             animation: cmdIn 0.18s cubic-bezier(.4,0,.2,1);
         }
+        /* ── Admin online toast stack ── */
+        #dashToastStack {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        @keyframes toastIn  { from { opacity:0; transform:translateX(24px) scale(.95); } to { opacity:1; transform:translateX(0) scale(1); } }
+        @keyframes toastOut { to   { opacity:0; transform:translateX(24px) scale(.95); } }
+
         @keyframes cmdIn {
             from { opacity:0; transform: scale(.96) translateY(-8px); }
             to   { opacity:1; transform: scale(1)  translateY(0); }
@@ -2686,6 +2731,9 @@
             </div>
         </div>
     </div>
+
+    <!-- ══ Admin online toast stack ══ -->
+    <div id="toastStack" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
 
     <!-- ══ Focus mode badge ══ -->
     <div id="focusBadge" onclick="toggleFocusMode()" title="Exit Focus Mode (F)">Focus Mode — press F to exit</div>
@@ -5571,6 +5619,8 @@
            Refreshes every 15 s + realtime Supabase sub for instant updates.
         ──────────────────────────────────────────────────────────────── */
         var _atoChannel = null;
+        var _atoOnlineIds = new Set();  // IDs of admins currently tracked as online
+        var _atoInitialized = false;    // skip toasts on first load
 
         function _atoStatus(hb) {
             if (!hb) return 'offline';
@@ -5601,6 +5651,60 @@
             return ATO_PALETTE[code % ATO_PALETTE.length];
         }
 
+        function _showAdminOnlineToast(admin) {
+            var name = admin.full_name || admin.email.split('@')[0];
+            var initChar = name.charAt(0).toUpperCase();
+            var col = _atoColor(initChar);
+            var roleLabels = { super_admin: 'Super Admin', editor: 'Editor', analyst: 'Analyst', custom: 'Custom' };
+            var roleLabel = roleLabels[admin.role] || admin.role || 'Admin';
+
+            var toast = document.createElement('div');
+            toast.style.cssText = [
+                'display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;',
+                'background:var(--bg-surface);border:1px solid var(--border-light);',
+                'box-shadow:0 8px 32px rgba(0,0,0,.14),0 0 0 1px rgba(34,197,94,.15);',
+                'font-size:13px;font-weight:500;max-width:300px;pointer-events:all;',
+                'animation:toastIn .35s cubic-bezier(.22,.68,0,1.2) both;',
+                'position:relative;overflow:hidden;'
+            ].join('');
+
+            // Green top accent
+            var accent = document.createElement('div');
+            accent.style.cssText = 'position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#22c55e,#10b981);border-radius:14px 14px 0 0;';
+            toast.appendChild(accent);
+
+            // Avatar
+            var av = document.createElement('div');
+            av.style.cssText = 'width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;box-shadow:0 0 0 2px #22c55e;';
+            av.style.background = col.bg;
+            av.style.color = col.color;
+            av.textContent = initChar;
+            toast.appendChild(av);
+
+            // Body
+            var body = document.createElement('div');
+            body.style.cssText = 'flex:1;min-width:0;';
+
+            var title = document.createElement('div');
+            title.style.cssText = 'font-weight:700;color:var(--text-primary);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+            title.textContent = name + ' is online';
+            body.appendChild(title);
+
+            var sub = document.createElement('div');
+            sub.style.cssText = 'font-size:11px;color:#16a34a;font-weight:600;margin-top:2px;display:flex;align-items:center;gap:4px;';
+            sub.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;flex-shrink:0;"></span>' + roleLabel + ' · just joined';
+            body.appendChild(sub);
+
+            toast.appendChild(body);
+
+            var stack = document.getElementById('toastStack') || document.body;
+            stack.appendChild(toast);
+            setTimeout(function() {
+                toast.style.animation = 'toastOut .25s ease forwards';
+                setTimeout(function() { toast.remove(); }, 280);
+            }, 5000);
+        }
+
         function renderAdminTeamOnline(admins) {
             var panel  = document.getElementById('adminTeamOnlinePanel');
             var list   = document.getElementById('atoList');
@@ -5609,6 +5713,19 @@
 
             // Only truly online (< 2 min heartbeat)
             var online = admins.filter(function(a) { return _atoStatus(a.last_heartbeat) === 'online'; });
+
+            // Detect newly joined admins (skip self, skip first load)
+            var myEmail = sessionStorage.getItem('adminEmail') || '';
+            if (_atoInitialized) {
+                online.forEach(function(a) {
+                    if (!_atoOnlineIds.has(a.id) && a.email !== myEmail) {
+                        _showAdminOnlineToast(a);
+                    }
+                });
+            }
+            // Update tracked set
+            _atoOnlineIds = new Set(online.map(function(a) { return a.id; }));
+            _atoInitialized = true;
 
             while (list.firstChild) list.removeChild(list.firstChild);
 
@@ -5804,8 +5921,7 @@
                 if (newCount > 0) {
                     var badge = document.createElement('span');
                     badge.className = 'new-video-badge';
-                    badge.textContent = newCount + ' NEW';
-                    badge.style.cssText = 'background:#ef4444;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.04em;';
+                    badge.innerHTML = '<span class="nvb-dot"></span>' + newCount + ' NEW';
                     var titleEl = cardTitle.querySelector('.content-card-title');
                     if (titleEl) titleEl.appendChild(badge);
                 }
