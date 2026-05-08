@@ -35,7 +35,7 @@
 var CACHE_KEY        = 'tafsirkurd_i18n_v3';
 var HEALTH_SENT_KEY  = 'i18n_health_sent_session'; // sessionStorage — one report/session
 var _platform        = (function(){ try{ return (window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'web'; }catch(e){ return 'web'; } })();
-var REMOTE_URL       = 'https://tafsirkurd.com/app-translations?platform='+_platform;
+var REMOTE_URL       = (_platform==='web'?'':'https://tafsirkurd.com')+'/app-translations?platform='+_platform;
 var POLL_MS          = 30000;  // 30s polling interval
 var STARTUP_TIMEOUT  = 3000;   // max ms to wait for remote before unblocking splash
 var MIN_REMOTE_KEYS  = 10;     // below this → obviously broken payload, reject
