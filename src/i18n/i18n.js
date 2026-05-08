@@ -197,6 +197,8 @@ function loadBundled(){
 // Fetches remote into a TEMP object, validates, then atomically swaps.
 // Never touches the live translations object until validation passes.
 function mergeRemote(signal){
+  if(navigator.onLine === false)
+    return Promise.reject(Object.assign(new Error('offline'), {name:'OfflineError'}));
   var t0 = Date.now();
 
   return fetch(REMOTE_URL, { cache:'no-cache', signal: signal||null })
@@ -260,7 +262,7 @@ function mergeRemote(signal){
       }
     })
     .catch(function(e){
-      if(e && e.name === 'AbortError') throw e; // propagate silently — startup timeout cancelled us
+      if(e && (e.name === 'AbortError' || e.name === 'OfflineError')) throw e; // propagate silently
       console.warn('[i18n] Remote fetch failed (offline or timeout) — layers 1+2 in use:', e.message);
       throw e;
     });
@@ -378,7 +380,7 @@ function initLang(){
         if(Object.keys(_bundledSnapshot).length === 0) _initStatus = 'fetch_failed_no_bundle';
       },
       function(err){
-        if(err && err.name === 'AbortError') return; // startup timeout cancelled us — normal, no report
+        if(err && (err.name === 'AbortError' || err.name === 'OfflineError')) return; // silent — no network or timeout
         _initStatus = Object.keys(_bundledSnapshot).length > 0
           ? 'fetch_failed_using_bundle'
           : 'fetch_failed_no_bundle';
