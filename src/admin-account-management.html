@@ -4,7 +4,7 @@
     <script src="/utils/admin-guard.js?v=1"></script>
     <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script src="utils/theme-loader.js?v=2"></script>
     <title>Account Management - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -412,6 +412,154 @@
             .modal-box .btn-primary,.modal-box .btn-secondary{width:100%;justify-content:center}
         }
 
+        /* ── Page intro banner ────────────────────────────────── */
+        @keyframes am-shift {
+            0%,100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+        .am-page-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .am-page-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2.5px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #3b82f6, #6366f1);
+            background-size: 300% 100%;
+            animation: am-shift 8s ease infinite;
+        }
+        .am-banner-left { display: flex; align-items: center; gap: 14px; }
+        .am-banner-icon {
+            width: 48px; height: 48px;
+            border-radius: 13px;
+            background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(139,92,246,.15));
+            border: 1px solid rgba(99,102,241,.2);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            color: #6366f1;
+        }
+        .am-banner-icon i { width: 22px; height: 22px; }
+        .am-banner-title { font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -.4px; margin: 0 0 3px; }
+        .am-banner-sub { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
+        .am-banner-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .am-banner-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 700;
+            background: var(--bg-active); border: 1px solid var(--border-light);
+            color: var(--text-secondary); white-space: nowrap;
+        }
+        .am-banner-chip i { width: 11px; height: 11px; }
+        .am-banner-chip.chip-indigo { background: rgba(99,102,241,.09); border-color: rgba(99,102,241,.2); color: #6366f1; }
+        .am-banner-chip.chip-green  { background: rgba(16,185,129,.09); border-color: rgba(16,185,129,.2); color: #059669; }
+        .am-banner-chip.chip-amber  { background: rgba(245,158,11,.09); border-color: rgba(245,158,11,.2); color: #d97706; }
+
+        /* ── Metric cards — colored top accent ────────────────── */
+        .metrics-grid .metric-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .metrics-grid .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--mc-accent, transparent);
+            border-radius: 14px 14px 0 0;
+        }
+        .metrics-grid .metric-card:hover {
+            border-color: var(--mc-accent, var(--primary));
+        }
+
+        /* ── Section labels — icon chips ──────────────────────── */
+        .sec-group-lbl {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--text-tertiary);
+            padding: 20px 0 12px;
+        }
+        .sec-group-lbl .slg-icon {
+            width: 22px; height: 22px;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .sec-group-lbl .slg-icon i { width: 11px; height: 11px; display: block; }
+        .sec-group-lbl::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+
+        /* ── sec-card colored left accent ─────────────────────── */
+        .sec-card {
+            position: relative;
+        }
+        .sec-card::before {
+            content: '';
+            position: absolute;
+            top: 12px; bottom: 12px; left: 0;
+            width: 3px;
+            border-radius: 0 3px 3px 0;
+            background: var(--sc-accent, transparent);
+        }
+
+        /* ── Filter row polish ────────────────────────────────── */
+        .acct-filter-row {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+        .acct-search { background: var(--bg-hover); }
+        .acct-role-filter { background: var(--bg-hover); }
+
+        /* ── Mobile ───────────────────────────────────────────── */
+        @media (max-width: 640px) {
+            .content-area {
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+                padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
+            }
+            .am-page-banner { padding: 16px 18px; gap: 12px; margin-bottom: 18px; }
+            .am-banner-title { font-size: 17px; }
+            .am-banner-chips { gap: 6px; }
+            .metrics-grid { grid-template-columns: 1fr 1fr; }
+            .am-metric-body .metric-value { font-size: 22px; }
+            .acct-filter-row { flex-wrap: wrap; }
+            .sort-wrap { margin-left: 0; }
+            .acct-card-top { gap: 10px; }
+            .acct-actions { gap: 5px; }
+            .acct-btn { font-size: 11px; padding: 6px 10px; }
+            .sec-card { padding: 16px; }
+            .sec-card-hdr { gap: 10px; }
+        }
+        @media (max-width: 420px) {
+            .am-banner-chips { display: none; }
+            .am-banner-title { font-size: 16px; }
+            .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .am-metric-body .metric-value { font-size: 20px; }
+        }
+
     </style>
 
     <style id="early-sidebar-hide">
@@ -612,15 +760,26 @@
             </header>
 
             <div class="content-area">
-                <div class="page-header">
-                    <div>
-                        <h1 class="page-title">Admin Accounts</h1>
-                        <p style="font-size:13px;color:var(--text-secondary);margin-top:4px">Manage admin users, sessions, and security settings</p>
+                <!-- ── Page banner ── -->
+                <div class="am-page-banner">
+                    <div class="am-banner-left">
+                        <div class="am-banner-icon"><i data-lucide="user-cog"></i></div>
+                        <div>
+                            <h1 class="am-banner-title">Admin Accounts</h1>
+                            <p class="am-banner-sub">Manage admin users, sessions, and security settings</p>
+                        </div>
                     </div>
-                    <div class="page-actions">
-                        <button class="btn btn-secondary" onclick="loadAccounts()"><i data-lucide="refresh-cw"></i>Refresh</button>
-                        <button class="btn btn-secondary" onclick="quickResetDevice()" id="resetDeviceBtn"><i data-lucide="smartphone"></i>Reset Device</button>
-                        <button class="btn btn-primary" onclick="openCreateModal()" id="createBtn"><i data-lucide="user-plus"></i>Create Account</button>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                        <div class="am-banner-chips">
+                            <span class="am-banner-chip chip-indigo"><i data-lucide="users"></i><span id="chipTotalAdmins">—</span> admins</span>
+                            <span class="am-banner-chip chip-green"><i data-lucide="shield-check"></i><span id="chip2fa">—</span> 2FA</span>
+                            <span class="am-banner-chip chip-amber"><i data-lucide="monitor"></i><span id="chipSessions">—</span> sessions</span>
+                        </div>
+                        <div class="page-actions" style="margin:0">
+                            <button class="btn btn-secondary" onclick="loadAccounts()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                            <button class="btn btn-secondary" onclick="quickResetDevice()" id="resetDeviceBtn"><i data-lucide="smartphone"></i>Reset Device</button>
+                            <button class="btn btn-primary" onclick="openCreateModal()" id="createBtn"><i data-lucide="user-plus"></i>Create Account</button>
+                        </div>
                     </div>
                 </div>
 
@@ -630,10 +789,10 @@
                 </div>
 
                 <!-- ── MY ACCOUNT ──────────────────────────────────── -->
-                <span class="sec-group-lbl">My Account</span>
+                <span class="sec-group-lbl"><span class="slg-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><i data-lucide="user"></i></span>My Account</span>
 
                 <!-- Change Password -->
-                <div class="sec-card">
+                <div class="sec-card" style="--sc-accent:#3b82f6">
                     <div class="sec-card-hdr" style="margin-bottom:16px">
                         <div class="sec-card-title">
                             <div class="sec-card-icon" style="background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.2);color:#3b82f6"><i data-lucide="key-round"></i></div>
@@ -690,7 +849,7 @@
                 </div>
 
                 <!-- Active Sessions -->
-                <div class="sec-card">
+                <div class="sec-card" style="--sc-accent:#10b981">
                     <div class="sec-card-hdr">
                         <div class="sec-card-title">
                             <div class="sec-card-icon" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.2);color:#10b981"><i data-lucide="monitor"></i></div>
@@ -707,7 +866,7 @@
                 </div>
 
                 <!-- Trusted Devices -->
-                <div class="sec-card">
+                <div class="sec-card" style="--sc-accent:#8b5cf6">
                     <div class="sec-card-hdr">
                         <div class="sec-card-title">
                             <div class="sec-card-icon" style="background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.2);color:#8b5cf6"><i data-lucide="monitor-smartphone"></i></div>
@@ -721,7 +880,7 @@
                 </div>
 
                 <!-- 2FA -->
-                <div class="sec-card" id="my2faCard">
+                <div class="sec-card" id="my2faCard" style="--sc-accent:#f59e0b">
                     <div class="sec-card-hdr" style="margin-bottom:0;flex-wrap:wrap;gap:14px">
                         <div class="sec-card-title">
                             <div class="sec-card-icon" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.2);color:#f59e0b"><i data-lucide="shield"></i></div>
@@ -741,7 +900,7 @@
                 </div>
 
                 <!-- ── ADMIN USERS ─────────────────────────────────── -->
-                <span class="sec-group-lbl" style="margin-top:8px">Admin Users</span>
+                <span class="sec-group-lbl" style="margin-top:4px"><span class="slg-icon" style="background:rgba(99,102,241,.1);color:#6366f1"><i data-lucide="users"></i></span>Admin Users</span>
 
                 <!-- Security overview -->
                 <div class="sec-overview" id="secOverview" style="display:none">
@@ -771,23 +930,23 @@
 
                 <!-- Stats -->
                 <div class="metrics-grid">
-                    <div class="metric-card" style="--card-delay:0ms">
+                    <div class="metric-card" style="--card-delay:0ms;--mc-accent:#3b82f6">
                         <div class="am-icon-wrap" style="background:rgba(59,130,246,.12)"><i data-lucide="users" style="color:#3b82f6"></i></div>
                         <div class="am-metric-body"><div class="metric-value" id="totalAdmins">0</div><div class="metric-label">Total Admins</div></div>
                     </div>
-                    <div class="metric-card" style="--card-delay:80ms">
+                    <div class="metric-card" style="--card-delay:80ms;--mc-accent:#10b981">
                         <div class="am-icon-wrap" style="background:rgba(16,185,129,.12)"><i data-lucide="check-circle" style="color:#10b981"></i></div>
                         <div class="am-metric-body"><div class="metric-value" id="activeAdmins">0</div><div class="metric-label">Active</div></div>
                     </div>
-                    <div class="metric-card" style="--card-delay:160ms">
+                    <div class="metric-card" style="--card-delay:160ms;--mc-accent:#ef4444">
                         <div class="am-icon-wrap" style="background:rgba(239,68,68,.1)"><i data-lucide="lock" style="color:#ef4444"></i></div>
                         <div class="am-metric-body"><div class="metric-value" id="lockedAdmins">0</div><div class="metric-label">Locked</div></div>
                     </div>
-                    <div class="metric-card" style="--card-delay:240ms">
+                    <div class="metric-card" style="--card-delay:240ms;--mc-accent:#8b5cf6">
                         <div class="am-icon-wrap" style="background:rgba(139,92,246,.12)"><i data-lucide="monitor" style="color:#8b5cf6"></i></div>
                         <div class="am-metric-body"><div class="metric-value" id="activeSessions">0</div><div class="metric-label">Sessions</div></div>
                     </div>
-                    <div class="metric-card" style="--card-delay:320ms">
+                    <div class="metric-card" style="--card-delay:320ms;--mc-accent:#f59e0b">
                         <div class="am-icon-wrap" style="background:rgba(245,158,11,.12)"><i data-lucide="shield-check" style="color:#f59e0b"></i></div>
                         <div class="am-metric-body"><div class="metric-value" id="twoFaAdmins">0</div><div class="metric-label">2FA Secured</div></div>
                     </div>
@@ -1187,7 +1346,13 @@
             document.getElementById('activeAdmins').textContent = accounts.filter(a => computeStatus(a) !== 'offline').length;
             document.getElementById('lockedAdmins').textContent = accounts.filter(a => a.is_locked).length;
             const { data: sessions } = await supabase.from('admin_sessions').select('id').gt('expires_at', new Date().toISOString());
-            document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
+            var sessionCount = sessions ? sessions.length : 0;
+            document.getElementById('activeSessions').textContent = sessionCount;
+            // Banner chips
+            var chipTotal = document.getElementById('chipTotalAdmins');
+            var chipSess = document.getElementById('chipSessions');
+            if (chipTotal) chipTotal.textContent = accounts.length;
+            if (chipSess) chipSess.textContent = sessionCount;
             renderAccountsTable();
             subscribeToPresence(supabase);
             startPresenceTick();
@@ -2213,6 +2378,8 @@
             lucide.createIcons({ nodes: [recList] });
 
             animateCount(document.getElementById('twoFaAdmins'), with2fa);
+            var chip2fa = document.getElementById('chip2fa');
+            if (chip2fa) chip2fa.textContent = with2fa;
         }
 
         /* ══ TOAST ════════════════════════════════════════════ */
