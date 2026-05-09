@@ -364,7 +364,7 @@ body[data-admin-theme="evar"] .sidebar-logo-img {
 }
 .sidebar-search-input {
     width: 100%;
-    padding: 6px 10px 6px 28px;
+    padding: 6px 10px 6px 30px;
     font-size: 12px;
     background: var(--bg-hover);
     border: 1px solid var(--border-light);
@@ -382,12 +382,11 @@ body[data-admin-theme="evar"] .sidebar-logo-img {
     left: 20px;
     top: 50%;
     transform: translateY(-50%);
-    display: flex;
-    align-items: center;
+    line-height: 0;
     color: var(--text-tertiary);
     pointer-events: none;
 }
-.sidebar-search-icon i { width: 12px; height: 12px; }
+.sidebar-search-icon i { width: 12px; height: 12px; display: block; }
 .nav-item.hidden-by-search { display: none !important; }
 .nav-section.all-hidden .nav-section-header { display: none; }
 .sidebar.collapsed .sidebar-search-wrap { display: none; }
