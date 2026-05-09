@@ -2606,6 +2606,33 @@ App._execSearch=function(v){
       frag.appendChild(dymBar);
     }
   }
+  // "Maybe this ayah" hero — for short/partial queries with a famous-phrase match
+  var famousHits=results.filter(function(r){return r.isFamous;}).slice(0,2);
+  var isShortQ=_lastSearchQ.arTokens.length<=4&&!isExactMode;
+  if(famousHits.length&&isShortQ){
+    var hero=document.createElement('div');
+    hero.className='search-famous-hero';
+    hero.appendChild(el('div','search-famous-hdr','شاید ئەم ئایەتەیە مەبەستت'));
+    famousHits.forEach(function(r){
+      var fItem=document.createElement('div');
+      fItem.className='search-famous-item';
+      var snInfo=SURAHS[r.sn-1]||{};
+      var arDiv=document.createElement('div');
+      arDiv.className='search-famous-verse';
+      var allArH=(_lastSearchQ.arN?[_lastSearchQ.arN]:[]).concat(_lastSearchQ.arTokens).filter(Boolean);
+      _hlNodes(_ctxSnippet(r.arO,r.posAr,120),allArH,true).forEach(function(n){arDiv.appendChild(n);});
+      fItem.appendChild(arDiv);
+      fItem.appendChild(el('span','search-famous-ref',(snInfo.ar||snInfo.en)+' • â¾یەت '+r.an));
+      on(fItem,'click',function(){
+        if(navigator.vibrate)navigator.vibrate(8);
+        _shAdd(S.search);
+        App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+        setTimeout(function(){App.openSurah(r.sn,r.an);},100);
+      });
+      hero.appendChild(fItem);
+    });
+    frag.appendChild(hero);
+  }
   var prevType=null;
   for(var i=0;i<results.length;i++){
     var r=results[i];
@@ -2616,7 +2643,7 @@ App._execSearch=function(v){
         frag.appendChild(el('div','search-divider',t('search.divider_ayah')));
       prevType=r.type;
     }
-    var isPrimary=i===0&&(r.phraseScore>0||r.matchType==='alias');
+    var isPrimary=i===0&&(r.phraseScore>0||r.matchType==='alias'||r.isFamous);
     frag.appendChild(App._mkSearchItem(r,isPrimary));
   }
   res.appendChild(frag);
@@ -2776,9 +2803,13 @@ App._mkSearchItem=function(r,isPrimary){
     metaRow.textContent=(r.surahAr||r.surahEn)+' \u2022 '+t('reader.ayah')+' '+r.an;
     // Confidence badge (only when score data is available)
     if(r.phraseScore!==undefined){
-      var conf=r.phraseScore>0?'exact':r.consecutiveScore>400?'close':r.tokenScore>150?'relevant':'';
+      var conf,confLbl;
+      if(r.isFamous){conf='famous';confLbl='\u2605 \u0645\u0634\u0647\u0648\u0631';}
+      else if(r.phraseScore>0){conf='exact';confLbl='\u2726 \u062f\u0642\u06cc\u0642';}
+      else if(r.rareWordBonus>60){conf='rare';confLbl='\u25c6 \u0646\u0627\u062f\u0631';}
+      else if(r.consecutiveScore>400){conf='close';confLbl='\u2248 \u0646\u0632\u06cc\u06a9';}
+      else if(r.tokenScore>150){conf='relevant';confLbl='\u223c \u067e\u06d5\u06cc\u0648\u06d5\u0646\u062f\u06cc\u062f\u0627\u0631';}
       if(conf){
-        var confLbl=conf==='exact'?'\u2726 \u062f\u0642\u06cc\u0642':conf==='close'?'\u2248 \u0646\u0632\u06cc\u06a9':'\u223c \u067e\u06d5\u06cc\u0648\u06d5\u0646\u062f\u06cc\u062f\u0627\u0631';
         var cbadge=el('span','search-conf-badge search-conf-badge--'+conf,confLbl);
         metaRow.appendChild(cbadge);
       }

@@ -595,6 +595,93 @@
     '2:152': ['33:41','13:28','2:186','3:191']
   };
 
+  /* ── Famous/memorable ayah fragment index ────────────────────── */
+  /* Curated list of notable ayah phrases and fragments. Each entry maps one or
+   * more query strings to the "most likely intended" verse. Indexed at buildIndex()
+   * time into _famousIdx (exact) and _famousNoSpace (fused-word tolerance). */
+  var FAMOUS_PHRASES = [
+    /* 65:3 — tawakkul / rizq */
+    {q:['يتوكل','فهو حسبه','ومن يتوكل','يتوكل على الله','حسبه ان الله','بالغ امره','ومن يتوكل على الله فهو حسبه'],v:'65:3',w:500},
+    /* 3:173 — hasbunallah */
+    {q:['حسبنا','حسبنا الله','حسبنا الله ونعم','نعم الوكيل','حسبنا الله وكيل'],v:'3:173',w:500},
+    /* 39:53 — la taqnatu */
+    {q:['تقنطوا','لا تقنطوا','تقنطوا من رحمة','يغفر الذنوب جميعا','لا تقنطوا من رحمة الله'],v:'39:53',w:500},
+    /* 94:6 — inna maal usri */
+    {q:['مع العسر يسرا','إن مع العسر','ان مع العسر','العسر يسرا','عسر يسرا'],v:'94:6',w:500},
+    /* 94:5 */
+    {q:['فإن مع العسر','فان مع العسر'],v:'94:5',w:490},
+    /* 20:114 — rabbi zidni ilma */
+    {q:['رب زدني','زدني علما','قل رب زدني','رب زدني علما'],v:'20:114',w:500},
+    /* 1:5 — iyyaka nabudu */
+    {q:['إياك نعبد','اياك نعبد','نعبد ونستعين','نستعين','إياك نعبد وإياك نستعين'],v:'1:5',w:500},
+    /* 13:28 — ala bidhikr */
+    {q:['الا بذكر الله','ألا بذكر الله','بذكر الله تطمئن','تطمئن القلوب','تطمئن','ذكر الله تطمئن'],v:'13:28',w:500},
+    /* 3:185 — kullu nafsin dhaiqat */
+    {q:['كل نفس ذائقة','ذائقة الموت','كل نفس ذائقة الموت','ذائقة','كل نفس'],v:'3:185',w:500},
+    /* 2:255 — ayat al-kursi */
+    {q:['الحي القيوم','لا تاخذه سنة','وسع كرسيه','الحي القيوم لا تاخذه'],v:'2:255',w:500},
+    /* 2:286 — la yukallifu */
+    {q:['لا يكلف الله','يكلف الله نفسا','نفسا وسعها','لا يكلف نفسا','ربنا لا تؤاخذنا','لا تواخذنا'],v:'2:286',w:500},
+    /* 2:214 — nasr allah qarib */
+    {q:['نصر الله قريب','الا إن نصر الله','متى نصر الله','الا ان نصر الله'],v:'2:214',w:500},
+    /* 9:40 — la tahzan */
+    {q:['لا تحزن إن الله','لا تحزن','الله معنا سكينة','إن الله معنا','لا تحزن ان الله معنا'],v:'9:40',w:500},
+    /* 2:153 — inna allaha maa sabirin */
+    {q:['الله مع الصابرين','إن الله مع الصابرين','مع الصابرين','ان الله مع الصابرين'],v:'2:153',w:500},
+    /* 40:60 — ud'uni */
+    {q:['ادعوني أستجب','ادعوني استجب','استجيب','ادعوني','أستجب لكم'],v:'40:60',w:500},
+    /* 2:186 — idha saala ibadi */
+    {q:['فإني قريب','إني قريب أجيب','اجيب دعوة','دعوة الداعي','فاني قريب'],v:'2:186',w:500},
+    /* 21:87 — dua yunus */
+    {q:['لا إله إلا أنت سبحانك','لا اله الا انت سبحانك','سبحانك إني كنت','إني كنت من الظالمين','اني كنت من الظالمين'],v:'21:87',w:500},
+    /* 20:25 — rabbi ishrah */
+    {q:['رب اشرح لي صدري','رب اشرح','اشرح لي صدري','اشرح صدري'],v:'20:25',w:500},
+    /* 2:201 — rabbana atina */
+    {q:['ربنا آتنا في الدنيا','ربنا اتنا','آتنا في الدنيا حسنة','اتنا في الدنيا حسنة'],v:'2:201',w:480},
+    /* 7:23 — adam & hawa */
+    {q:['ظلمنا أنفسنا','ظلمنا انفسنا','ربنا ظلمنا','إن لم تغفر','ان لم تغفر'],v:'7:23',w:490},
+    /* 14:7 — shukr */
+    {q:['شكرتم لأزيدنكم','لئن شكرتم','لأزيدنكم','لئن كفرتم عذابي'],v:'14:7',w:480},
+    /* 112:1 — ikhlas */
+    {q:['قل هو الله أحد','قل هو الله','هو الله أحد','الله الصمد','قل هو الله احد'],v:'112:1',w:500},
+    /* 1:1 — bismillah */
+    {q:['بسم الله الرحمن','بسم الله','الرحمن الرحيم'],v:'1:1',w:500},
+    /* 1:2 — alhamdulillah */
+    {q:['الحمد لله رب العالمين','الحمد لله','رب العالمين'],v:'1:2',w:500},
+    /* 2:152 — udhkuruni */
+    {q:['فاذكروني أذكركم','اذكروني اذكركم','فاذكروني','اذكروني'],v:'2:152',w:480},
+    /* 2:156 — inna lillahi */
+    {q:['إنا لله وإنا إليه','إنا لله','انا لله واليه','إليه راجعون','انا لله وانا اليه راجعون'],v:'2:156',w:500},
+    /* 58:11 — yarfa' al-ilm */
+    {q:['يرفع الله الذين','يرفع الله الذين آمنوا','يرفع الله'],v:'58:11',w:470},
+    /* 27:62 — yujib al-mudtarr */
+    {q:['يجيب المضطر','أمن يجيب المضطر','المضطر إذا دعاه'],v:'27:62',w:480},
+    /* 47:7 */
+    {q:['تنصروا الله ينصركم','إن تنصروا الله','ان تنصروا الله'],v:'47:7',w:460},
+    /* 49:10 */
+    {q:['إنما المؤمنون إخوة','المؤمنون إخوة','انما المومنون اخوة'],v:'49:10',w:460},
+    /* 3:139 */
+    {q:['لا تهنوا ولا تحزنوا','لا تهنوا','وأنتم الأعلون'],v:'3:139',w:460},
+    /* 94:1 — alam nashrah */
+    {q:['ألم نشرح لك صدرك','ألم نشرح','نشرح لك صدرك','الم نشرح'],v:'94:1',w:460},
+    /* 55:13 */
+    {q:['فبأي آلاء ربكما','فباي الاء ربكما','آلاء ربكما تكذبان'],v:'55:13',w:470},
+    /* 17:23 — parents */
+    {q:['لا تقل لهما أف','لا تقل لهما','قل لهما قولا كريما'],v:'17:23',w:460},
+    /* 21:107 */
+    {q:['وما أرسلناك إلا رحمة','رحمة للعالمين','ارسلناك الا رحمة'],v:'21:107',w:480},
+    /* 12:87 — la tay'asu */
+    {q:['لا تيأسوا من روح الله','لا ييئس من روح الله','روح الله'],v:'12:87',w:470},
+    /* 9:129 — hasbiy allah */
+    {q:['حسبي الله','حسبي الله لا إله','لا إله إلا هو عليه توكلت'],v:'9:129',w:470},
+    /* 65:2 — yattaqi */
+    {q:['ومن يتق الله يجعل','يتق الله يجعل','مخرجا'],v:'65:2',w:460},
+    /* 2:45 */
+    {q:['واستعينوا بالصبر والصلاة','استعينوا بالصبر','الصبر والصلاة'],v:'2:45',w:460},
+    /* 3:173 — hasbunallah additional */
+    {q:['ونعم الوكيل','نعم الوكيل'],v:'3:173',w:480}
+  ];
+
   /* ── Reference parser ─────────────────────────────────────────── */
   function parseRef(qLo, surahs) {
     var m;
@@ -622,11 +709,15 @@
   }
 
   /* ── Search index ─────────────────────────────────────────────── */
-  var _idx      = [];
-  var _ready    = false;
-  var _tokenIdx = {}; // normalized-word → [_idx positions] for fast candidate lookup
-  var _tagIdx   = {}; // VTAGS concept keyword → [_idx positions]
-  var _stats    = {
+  var _idx         = [];
+  var _ready       = false;
+  var _tokenIdx    = {}; // normalized-word → [_idx positions] for fast candidate lookup
+  var _tagIdx      = {}; // VTAGS concept keyword → [_idx positions]
+  var _famousIdx   = {}; // normalized famous fragment → {sn, an, weight, canonical}
+  var _famousNoSpace = {}; // fused (no-space) version → same (handles "حسبنالله" etc.)
+  var _wordFreq    = {}; // normalized word → verse-count (rarity signal)
+  var _versePos    = {}; // "sn:an" → _idx position for O(1) famous verse lookup
+  var _stats       = {
     queries:0, totalMs:0, cacheHits:0, slowQ:[], zeroQ:[],
     phraseMatches:0, aliasHits:0, recentQ:[], candidateSum:0, candidateCount:0
   };
@@ -689,9 +780,41 @@
         _tagIdx[gtw].push(gpos);
       }
     }
+    // Build verse position map — "sn:an" → _idx position for O(1) lookup
+    _versePos = {};
+    for (var vp = 0; vp < _idx.length; vp++) {
+      _versePos[_idx[vp].sn + ':' + _idx[vp].an] = vp;
+    }
+    // Build word frequency index — word → number of verses containing it
+    // Uses _tokenIdx since each position list has unique-per-verse entries
+    _wordFreq = {};
+    var allToks = Object.keys(_tokenIdx);
+    for (var wk = 0; wk < allToks.length; wk++) {
+      _wordFreq[allToks[wk]] = _tokenIdx[allToks[wk]].length;
+    }
+    // Build famous phrase index — normalized fragment → verse target + weight
+    _famousIdx = {};
+    _famousNoSpace = {};
+    for (var fpi = 0; fpi < FAMOUS_PHRASES.length; fpi++) {
+      var fp = FAMOUS_PHRASES[fpi];
+      var fpPts = fp.v.split(':');
+      var fpData = {sn: +fpPts[0], an: +fpPts[1], weight: fp.w, canonical: fp.q[0]};
+      for (var fqi = 0; fqi < fp.q.length; fqi++) {
+        var fqN = normAr(fp.q[fqi]);
+        if (!_famousIdx[fqN]) _famousIdx[fqN] = fpData;
+        // Index no-space version (handles fused input like "حسبنالله")
+        var fqNS = fqN.replace(/\s+/g, '');
+        if (!_famousNoSpace[fqNS]) _famousNoSpace[fqNS] = fpData;
+        // Also store typo-fixed no-space version (handles "لاتقنطو" from "لا تقنطوا")
+        var fqFix = _typoFix(fqNS);
+        if (fqFix !== fqNS && !_famousNoSpace[fqFix]) _famousNoSpace[fqFix] = fpData;
+      }
+    }
     _ready = true;
     console.log('[QuranSearch] indexReady count=' + _idx.length +
-      ' tokenKeys=' + Object.keys(_tokenIdx).length + ' ms=' + (Date.now() - t0));
+      ' tokenKeys=' + Object.keys(_tokenIdx).length +
+      ' famousKeys=' + Object.keys(_famousIdx).length +
+      ' ms=' + (Date.now() - t0));
   }
 
   /* ── Verse scorer ─────────────────────────────────────────────── */
@@ -830,12 +953,29 @@
       }
     }
 
-    var finalScore = phraseScore + consecutiveScore + tokenScore + translationScore;
+    /* ── 7. Rare word signal ──────────────────────────────────────── */
+    /* Low-frequency Quran words (حسبه, تقنطوا, المضطر…) are strong confidence
+     * signals. Only fires when the verse already matched the query. */
+    var rareWordBonus = 0;
+    if (phraseScore > 0 || consecutiveScore > 0 || tokenScore > 40) {
+      for (var rw = 0; rw < arTokens.length; rw++) {
+        var rwt = arTokens[rw];
+        if (STOP_AR[rwt] || rwt.length < 3) continue;
+        if (e.arN.indexOf(rwt) === -1) continue; // token must be in this verse
+        var rwFreq = _wordFreq[rwt] || (_wordFreq[_stripPfx(rwt) || rwt] || 0);
+        if (rwFreq > 0 && rwFreq <= 5)   rareWordBonus += 130;
+        else if (rwFreq <= 15)            rareWordBonus += 75;
+        else if (rwFreq <= 40)            rareWordBonus += 30;
+      }
+      rareWordBonus = Math.min(rareWordBonus, 200); // cap to avoid runaway scores
+    }
+
+    var finalScore = phraseScore + consecutiveScore + tokenScore + translationScore + rareWordBonus;
     return {
       score: finalScore, srcs: srcs, posAr: posAr, posKu: posKu,
       phraseScore: phraseScore, consecutiveScore: consecutiveScore,
       tokenScore: tokenScore, translationScore: translationScore,
-      finalScore: finalScore,
+      rareWordBonus: rareWordBonus, finalScore: finalScore,
       _vLen: e.arW.length
     };
   }
@@ -933,26 +1073,60 @@
       var arTokens = qArN.split(/\s+/).filter(function(t){return t.length>=2;});
       var loTokens = qLo.split(/\s+/).filter(function(t){return t.length>=2;});
 
+      // Famous phrase boost map — "sn:an" → {weight, canonical} for current query
+      var _famousBoostMap = {};
+      // Direct match: full normalized query against famous index
+      var _qArNNoSp = qArN.replace(/\s+/g,'');
+      var _directFam = _famousIdx[qArN] || _famousNoSpace[_qArNNoSp] || _famousNoSpace[_typoFix(_qArNNoSp)];
+      if (_directFam) _famousBoostMap[_directFam.sn+':'+_directFam.an] = {weight:_directFam.weight, canonical:_directFam.canonical};
+      // Token-level match: each individual token against famous index
+      for (var ft = 0; ft < arTokens.length; ft++) {
+        var ftm = _famousIdx[arTokens[ft]];
+        if (ftm) {
+          var ftKey = ftm.sn+':'+ftm.an;
+          var ftW = Math.round(ftm.weight * 0.65);
+          if (!_famousBoostMap[ftKey] || _famousBoostMap[ftKey].weight < ftW) {
+            _famousBoostMap[ftKey] = {weight:ftW, canonical:ftm.canonical};
+          }
+        }
+      }
+      var isShortQuery = arTokens.filter(function(t){ return !STOP_AR[t]; }).length <= 4;
+
       // Pre-filter via token index — typical Arabic phrase: ~5-50 candidates vs 6236
       var candidates = _getCandidates(arTokens);
+      // Ensure famous-boosted verses are always in the scan set (critical for fused-word queries)
+      var famKeys = Object.keys(_famousBoostMap);
+      for (var fk2 = 0; fk2 < famKeys.length; fk2++) {
+        if (refKeys[famKeys[fk2]]) continue;
+        var fkPos = _versePos[famKeys[fk2]];
+        if (fkPos !== undefined) {
+          if (!candidates) candidates = [fkPos];
+          else if (candidates.indexOf(fkPos) === -1) candidates.unshift(fkPos); // score first
+        }
+      }
       var scanLen = candidates ? candidates.length : _idx.length;
 
       var tScan = Date.now();
       for (var m = 0; m < scanLen; m++) {
         var e = candidates ? _idx[candidates[m]] : _idx[m];
-        if (refKeys[e.sn+':'+e.an]) continue;
+        var eKey = e.sn+':'+e.an;
+        if (refKeys[eKey]) continue;
+        var famBoost = _famousBoostMap[eKey];
+        var famousWeight = famBoost ? famBoost.weight : 0;
         var sv = scoreVerse(e, qArN, qLo, arTokens, loTokens);
-        if (sv.score <= 0) continue;
-        if (exactMode && sv.phraseScore === 0) continue; // strict exact-phrase mode
+        if (sv.score <= 0 && famousWeight <= 0) continue;
+        if (exactMode && sv.phraseScore === 0 && !famousWeight) continue;
+        var isFamous = famousWeight > 0;
         var sh = surahs[e.sn-1] || {};
         verseHits.push({
           type:'verse', sn:e.sn, an:e.an, arO:e.arO, kuO:e.kuO,
           surahAr:sh.ar||'', surahEn:sh.en||'',
-          score:sv.score, matchSrcs:sv.srcs,
-          posAr:sv.posAr, posKu:sv.posKu, mode:mode,
+          score:sv.score + famousWeight, isFamous:isFamous, famousWeight:famousWeight,
+          matchSrcs:sv.srcs, posAr:sv.posAr, posKu:sv.posKu, mode:mode,
           phraseScore:sv.phraseScore, consecutiveScore:sv.consecutiveScore,
           tokenScore:sv.tokenScore, translationScore:sv.translationScore,
-          finalScore:sv.finalScore, _vLen:sv._vLen
+          rareWordBonus:sv.rareWordBonus, finalScore:sv.finalScore + famousWeight,
+          _vLen:sv._vLen
         });
       }
       var scanMs = Date.now() - tScan;
