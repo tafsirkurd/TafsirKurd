@@ -87,10 +87,12 @@
         @media(max-width:768px){
             .grid-2{grid-template-columns:1fr}
             .metrics-grid{grid-template-columns:repeat(2,1fr)}
+            .date-range-tabs{flex-wrap:wrap}
             .cols-3 .data-table-header,.cols-5 .data-table-header{display:none}
             .cols-3 .data-table-row,.cols-5 .data-table-row{grid-template-columns:1fr}
             .cols-3 .data-table-row>div,.cols-5 .data-table-row>div{padding:2px 0;font-size:12px}
             .cols-3 .data-table-row>div:first-child,.cols-5 .data-table-row>div:first-child{font-weight:600;padding-bottom:4px;margin-bottom:2px}
+            .last-update{display:none}
         }
     </style>
 
@@ -295,23 +297,21 @@
                         <p class="page-subtitle" style="margin:0;font-size:13px;color:var(--text-tertiary);margin-top:3px">Google Search performance — clicks, impressions &amp; rankings</p>
                     </div>
                     <div class="page-actions">
+                        <div class="date-range-tabs" style="margin-bottom:0">
+                            <button class="date-tab" data-range="24hours">24h</button>
+                            <button class="date-tab" data-range="7days">7d</button>
+                            <button class="date-tab active" data-range="28days">28d</button>
+                            <button class="date-tab" data-range="3months">3mo</button>
+                        </div>
+                        <div class="last-update" id="last-update" style="margin-bottom:0">
+                            <i data-lucide="refresh-cw"></i>
+                            <span id="last-update-text">Loading...</span>
+                        </div>
                         <button class="btn btn-secondary" onclick="loadData()"><i data-lucide="refresh-cw"></i>Refresh</button>
                     </div>
                 </div>
 
                 <div id="error-container"></div>
-
-                <div class="date-range-tabs">
-                    <button class="date-tab" data-range="24hours">24 hours</button>
-                    <button class="date-tab" data-range="7days">7 days</button>
-                    <button class="date-tab active" data-range="28days">28 days</button>
-                    <button class="date-tab" data-range="3months">3 months</button>
-                </div>
-
-                <div class="last-update" id="last-update">
-                    <i data-lucide="refresh-cw"></i>
-                    <span id="last-update-text">Loading...</span>
-                </div>
 
                 <!-- Metric Cards -->
                 <div class="metrics-grid">
@@ -350,15 +350,15 @@
                 <div class="grid-2">
                     <div class="data-section">
                         <div class="section-title"><i data-lucide="search"></i> Top queries</div>
-                        <div class="data-table cols-3">
-                            <div class="data-table-header"><div>Query</div><div>Clicks</div><div>Impressions</div></div>
+                        <div class="data-table cols-5">
+                            <div class="data-table-header"><div>Query</div><div>Clicks</div><div>Impressions</div><div>CTR</div><div>Pos.</div></div>
                             <div id="queries-body"></div>
                         </div>
                     </div>
                     <div class="data-section">
                         <div class="section-title"><i data-lucide="file-text"></i> Top pages</div>
-                        <div class="data-table cols-3">
-                            <div class="data-table-header"><div>Page</div><div>Clicks</div><div>Impressions</div></div>
+                        <div class="data-table cols-5">
+                            <div class="data-table-header"><div>Page</div><div>Clicks</div><div>Impressions</div><div>CTR</div><div>Pos.</div></div>
                             <div id="pages-body"></div>
                         </div>
                     </div>
@@ -647,15 +647,15 @@
             var maxClicks = Math.max.apply(null, data.slice(0, 10).map(function(r) { return r.clicks; }));
             var rows = data.slice(0, 10).map(function(r, i) {
                 var nameDiv = document.createElement('div');
-                nameDiv.style.display = 'flex';
-                nameDiv.style.alignItems = 'center';
-                nameDiv.style.gap = '4px';
+                nameDiv.style.cssText = 'display:flex;align-items:center;gap:4px;min-width:0';
                 nameDiv.appendChild(rankText(i));
                 var t = document.createElement('span');
                 t.textContent = r.keys[0];
                 t.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)';
                 nameDiv.appendChild(t);
-                return makeRow([nameDiv, progressDiv(r.clicks, maxClicks, '#3b82f6'), numDiv(r.impressions)]);
+                var ctrD = textDiv(((r.ctr || 0) * 100).toFixed(1) + '%', 'num-cell');
+                var posD = textDiv((r.position || 0).toFixed(1), 'num-cell');
+                return makeRow([nameDiv, progressDiv(r.clicks, maxClicks, '#3b82f6'), numDiv(r.impressions), ctrD, posD]);
             });
             setBody('queries-body', rows);
         }
@@ -665,9 +665,7 @@
             var maxClicks = Math.max.apply(null, data.slice(0, 10).map(function(r) { return r.clicks; }));
             var rows = data.slice(0, 10).map(function(r, i) {
                 var nameDiv = document.createElement('div');
-                nameDiv.style.display = 'flex';
-                nameDiv.style.alignItems = 'center';
-                nameDiv.style.gap = '4px';
+                nameDiv.style.cssText = 'display:flex;align-items:center;gap:4px;min-width:0';
                 nameDiv.appendChild(rankText(i));
                 var a = document.createElement('a');
                 a.href = r.keys[0];
@@ -675,7 +673,9 @@
                 a.className = 'page-url';
                 a.textContent = r.keys[0].replace('https://tafsirkurd.com', '') || '/';
                 nameDiv.appendChild(a);
-                return makeRow([nameDiv, progressDiv(r.clicks, maxClicks, '#8b5cf6'), numDiv(r.impressions)]);
+                var ctrD = textDiv(((r.ctr || 0) * 100).toFixed(1) + '%', 'num-cell');
+                var posD = textDiv((r.position || 0).toFixed(1), 'num-cell');
+                return makeRow([nameDiv, progressDiv(r.clicks, maxClicks, '#8b5cf6'), numDiv(r.impressions), ctrD, posD]);
             });
             setBody('pages-body', rows);
         }

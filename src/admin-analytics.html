@@ -16,58 +16,70 @@
         /* ── Metric Cards ─────────────────────────────────── */
         .analytics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
             margin-bottom: 32px;
         }
 
         .metric-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
-            border-radius: 12px;
+            border-left: 3px solid transparent;
+            border-radius: 14px;
             padding: 20px;
             display: flex;
-            align-items: center;
-            gap: 16px;
+            flex-direction: column;
+            gap: 10px;
             opacity: 0;
             animation: fadeInUp 0.4s ease forwards;
             animation-delay: var(--card-delay, 0ms);
             transition: box-shadow 0.2s, transform 0.2s;
+            cursor: default;
         }
 
         .metric-card:hover {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+            transform: translateY(-1px);
         }
 
+        .metric-card.views     { border-left-color: #3b82f6; }
+        .metric-card.visitors  { border-left-color: #10b981; }
+        .metric-card.session   { border-left-color: #8b5cf6; }
+        .metric-card.bounce    { border-left-color: #f59e0b; }
+
         .metric-icon-wrap {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
 
-        .metric-icon-wrap i { width: 22px; height: 22px; }
+        .metric-icon-wrap i { width: 18px; height: 18px; }
 
-        .metric-body { flex: 1; min-width: 0; }
+        .metric-body { display: none; }
 
         .metric-value {
-            font-size: 28px;
-            font-weight: 900;
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.02em;
             color: var(--text-primary);
-            line-height: 1.1;
-            margin-bottom: 4px;
         }
 
+        .metric-value.views    { color: #3b82f6; }
+        .metric-value.visitors { color: #10b981; }
+        .metric-value.session  { color: #8b5cf6; }
+        .metric-value.bounce   { color: #f59e0b; }
+
         .metric-label {
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
+            letter-spacing: .06em;
+            color: var(--text-tertiary);
         }
 
         @keyframes fadeInUp {
@@ -522,41 +534,33 @@
 
                 <!-- OVERVIEW METRICS -->
                 <div class="analytics-grid">
-                    <div class="metric-card" style="--card-delay: 0ms">
+                    <div class="metric-card views" style="--card-delay: 0ms">
                         <div class="metric-icon-wrap" style="background: rgba(59,130,246,0.12);">
                             <i data-lucide="eye" style="color: #3b82f6;"></i>
                         </div>
-                        <div class="metric-body">
-                            <div class="metric-value" id="totalPageViews">--</div>
-                            <div class="metric-label">Total Views</div>
-                        </div>
+                        <div class="metric-label">Total Views</div>
+                        <div class="metric-value views" id="totalPageViews">--</div>
                     </div>
-                    <div class="metric-card" style="--card-delay: 80ms">
+                    <div class="metric-card visitors" style="--card-delay: 80ms">
                         <div class="metric-icon-wrap" style="background: rgba(16,185,129,0.12);">
                             <i data-lucide="users" style="color: #10b981;"></i>
                         </div>
-                        <div class="metric-body">
-                            <div class="metric-value" id="uniqueVisitors">--</div>
-                            <div class="metric-label">Unique Visitors</div>
-                        </div>
+                        <div class="metric-label">Unique Visitors</div>
+                        <div class="metric-value visitors" id="uniqueVisitors">--</div>
                     </div>
-                    <div class="metric-card" style="--card-delay: 160ms">
+                    <div class="metric-card session" style="--card-delay: 160ms">
                         <div class="metric-icon-wrap" style="background: rgba(139,92,246,0.12);">
                             <i data-lucide="clock" style="color: #8b5cf6;"></i>
                         </div>
-                        <div class="metric-body">
-                            <div class="metric-value" id="avgSession">--</div>
-                            <div class="metric-label">Avg Session</div>
-                        </div>
+                        <div class="metric-label">Avg Session</div>
+                        <div class="metric-value session" id="avgSession">--</div>
                     </div>
-                    <div class="metric-card" style="--card-delay: 240ms">
+                    <div class="metric-card bounce" style="--card-delay: 240ms">
                         <div class="metric-icon-wrap" style="background: rgba(245,158,11,0.12);">
                             <i data-lucide="log-out" style="color: #f59e0b;"></i>
                         </div>
-                        <div class="metric-body">
-                            <div class="metric-value" id="bounceRate">--</div>
-                            <div class="metric-label">Bounce Rate</div>
-                        </div>
+                        <div class="metric-label">Bounce Rate</div>
+                        <div class="metric-value bounce" id="bounceRate">--</div>
                     </div>
                 </div>
 
