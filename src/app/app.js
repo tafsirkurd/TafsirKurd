@@ -2686,7 +2686,7 @@ App._mkSearchItem=function(r,isPrimary){
     if(r.phraseScore!==undefined){
       var conf=r.phraseScore>0?'exact':r.consecutiveScore>400?'close':r.tokenScore>150?'relevant':'';
       if(conf){
-        var confLbl=conf==='exact'?'\u062f\u0642\u06cc\u0642':conf==='close'?'\u0646\u0632\u06cc\u06a9':'\u067e\u06d5\u06cc\u0648\u06d5\u0646\u062f\u06cc\u062f\u0627\u0631';
+        var confLbl=conf==='exact'?'\u2726 \u062f\u0642\u06cc\u0642':conf==='close'?'\u2248 \u0646\u0632\u06cc\u06a9':'\u223c \u067e\u06d5\u06cc\u0648\u06d5\u0646\u062f\u06cc\u062f\u0627\u0631';
         var cbadge=el('span','search-conf-badge search-conf-badge--'+conf,confLbl);
         metaRow.appendChild(cbadge);
       }

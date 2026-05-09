@@ -94,8 +94,14 @@
     s = s.replace(/ها(\s|$)/g, 'ه$1');
     // الاه → الله (very common phone-keyboard mistake)
     s = s.replace(/الاه/g, 'الله');
-    // ييي / ووو / ااا — collapse 3+ repeated chars → 1
+    // ييي / ووو / ааа — collapse 3+ repeated chars → 1
     s = s.replace(/(.)\1{2,}/g, '$1');
+    // Duplicate leading conjunctions: "و ومن" → "ومن", "ف فمن" → "فمن"
+    s = s.replace(/^[وف]\s+([وفبلك])/g, '$1');
+    s = s.replace(/(\s)[وف]\s+([وفبلك])/g, '$1$2');
+    // Missing space between long Arabic words (>12 chars, likely two words merged)
+    // e.g. "ومنيتوكل" → try splitting at inner common prefixes after first 3 chars
+    s = s.replace(/([^\s]{4,})(ومن|وما|فمن|فما|وان|ثم|وهو|وهي|وله|وفي|وان)([^\s])/g, '$1 $2$3');
     // Double spaces
     s = s.replace(/\s{2,}/g, ' ').trim();
     return s;
@@ -117,21 +123,25 @@
   }
 
   /* Narrow the full _idx to candidate positions using non-stop tokens.
-   * Returns array of _idx positions, or null when full scan is needed. */
+   * Returns pre-sorted array of _idx positions (highest token overlap first),
+   * or null when a full scan is needed. Pre-sorting means the best matches
+   * are scored first — critical for future early-exit optimization. */
   function _getCandidates(arTokens) {
     var nonStop = arTokens.filter(function(t) { return t.length >= 2 && !STOP_AR[t]; });
     if (!nonStop.length) return null; // all stopwords → full scan
 
-    var union = new Set();
+    var overlap = {}; // _idx position → count of distinct non-stop tokens matched
     var maxSingle = 0;
     for (var t = 0; t < nonStop.length; t++) {
       var cs = _getTokCandidates(nonStop[t]);
       if (cs.size > maxSingle) maxSingle = cs.size;
-      cs.forEach(function(idx) { union.add(idx); });
+      cs.forEach(function(idx) { overlap[idx] = (overlap[idx] || 0) + 1; });
     }
-    // If every token is extremely common, don't bother narrowing
     if (maxSingle > 2500 && nonStop.length === 1) return null;
-    return Array.from(union);
+    // Sort positions by overlap count descending — likely best matches scored first
+    var positions = Object.keys(overlap).map(Number);
+    positions.sort(function(a, b) { return overlap[b] - overlap[a]; });
+    return positions;
   }
 
   /* ── Token equality with mutual prefix-strip fallback ─────────── */
@@ -412,6 +422,66 @@
     'inna lillahi wa inna ilayhi rajiun':{sn:2,an:156}
   };
 
+  /* ── Semantic verse concept tags ─────────────────────────────── */
+  /* Maps "sn:an" → space/comma-separated concept keywords (Arabic + Kurdish).
+   * Used as a lightweight semantic tier when Arabic phrase/token scoring is low.
+   * Only fires for queries where the user is searching by concept, not exact text. */
+  var VTAGS = {
+    '1:1':   'بسملة افتتاح رحمن رحيم، به ناوی خودا کردن سوره',
+    '1:2':   'حمد الله رب عالمين، ستایش سوپاس پەروەردگار',
+    '1:5':   'عبادة استعانة نعبد نستعين، پرستن یارمەتی',
+    '1:7':   'صراط منعم غضب ضال، ڕێگا ڕاست ئاڵوودەکراو',
+    '2:152': 'ذكر اذكروني اذكرني، یادکردن یادی خودا بیرهێنانەوە',
+    '2:153': 'صبر صابرين الله مع، سابری کردن تووشانی',
+    '2:155': 'بلاء خوف جوع نقص اموال ابتلاء، تاقیکردنەوە',
+    '2:156': 'انا لله راجعون مصيبة، ئێمە لە خوداین راجعین',
+    '2:201': 'دنيا حسنة اخرة عذاب ربنا، دووعا دنیا ئاخرەت',
+    '2:255': 'كرسي إله الحي القيوم وسع، ئایەتی کورسی',
+    '2:286': 'يكلف وسعها لها ما كسبت وما اكتسبت، گرانتر توانا',
+    '3:173': 'حسبنا الله ونعم الوكيل توكل، بەسە باشترین وەکیل',
+    '3:185': 'ذائقة الموت اجورهم قيامة، هەموو گیانێک مردن',
+    '3:200': 'صابروا رابطوا اتقوا فلاح، سابری ئاماده بون',
+    '9:40':  'لا تحزن الله معنا سكينة، مەترسە ئارام خودا لەگەڵ',
+    '10:62': 'اولياء الله خوف يحزنون، دۆستانی خودا ترس خەم',
+    '13:11': 'يغير الله ما بقوم حتى يغيروا ما بانفسهم، گۆڕین خودا',
+    '13:28': 'بذكر الله تطمئن القلوب، ئاراماو قەڵب یادی خودا',
+    '14:7':  'لئن شكرتم لأزيدنكم لئن كفرتم عذابي لشديد، سوپاس زیاد',
+    '17:44': 'يسبح سماوات ارض شيء، تازبیدەکەن هەر شتێک',
+    '20:25': 'رب اشرح صدري يسر امري يفقهوا قولي، دووعای موسا سینە',
+    '20:114': 'زدني علما رب، زانست زیادکردن ئەلم',
+    '21:83': 'ايوب ضر مسني الارحم الراحمين، دووعای ئەیووب ئازار',
+    '21:87': 'يونس لا اله الا انت سبحانك ظالمين، دووعای یونس تاریکی',
+    '21:107': 'ارسلناك رحمة للعالمين، ئەرسال کردن رەحمەت جیهان',
+    '23:118': 'رب اغفر وارحم خير الراحمين، دووعا خواستنی خواببووندی',
+    '24:35': 'الله نور سماوات ارض نور على نور، خودا رووناکی',
+    '27:62': 'يجيب المضطر دعاه يكشف السوء، دووعا ئیچاچاک بچووک',
+    '28:24': 'رب لما انزلت من خير فقير، موسا دووعا خیر خزانه',
+    '29:69': 'جاهدوا لنهدينهم سبلنا محسنين، جهاد ڕێنوێنی کردن باشی',
+    '33:41': 'اذكروا الله ذكرا كثيرا، زیاد یادی خودا کردن',
+    '39:53': 'تقنطوا رحمة الله يغفر الذنوب جميعا، هیوای توبه ئومید',
+    '40:60': 'ادعوني استجب ادعون متكبرين، دووعا کردن وەڵام دانەوە',
+    '41:30': 'قالوا ربنا الله استقاموا ملائكة، ئیستیقامەت فریشتە',
+    '47:7':  'تنصروا الله ينصركم يثبت اقدامكم، یاری خودا سەرکەوتن',
+    '49:13': 'خلقناكم ذكر انثى شعوبا قبائل لتعارفوا اتقاكم، نەتەوە ناسین',
+    '55:13': 'الاء ربكما تكذبان نعمة، نیعمەت دروغ مندانی',
+    '57:3':  'هو الأول والآخر الظاهر الباطن بكل شيء عليم، پێشوو دوایین زانا',
+    '58:11': 'يرفع الله الذين آمنوا اوتوا العلم درجات، بەرزکردنەوە زانست',
+    '62:10': 'قضيت الصلاة فانتشروا الارض ابتغوا فضل الله، کاری کردن دوای نوێژ',
+    '65:3':  'توكل يتوكل رزق حسبه بالغ امره قدر، تەوەکول ڕیزق بەسە',
+    '67:2':  'خلق الموت والحياة يبلوكم احسن عملا، مردن ژیان تاقی کردن',
+    '73:20': 'اقرءوا ما تيسر قران اقيموا الصلاة، خوێندنی قورئان نوێژ',
+    '84:6':  'كادح الى ربك كدحا فملاقيه، تووشانن خودا کار',
+    '90:4':  'خلقنا الإنسان في كبد، مرۆڤ کاکل تەکاپووکردن',
+    '93:3':  'ما ودعك ربك قلى، پەروەردگارت پشت پێ نەکردووت هیوا',
+    '93:4':  'الآخرة خير لك من الأولى، ئاخرەت باشتر دنیا',
+    '94:5':  'إن مع العسر يسرا فان مع، سختی ئاسانی گرانی دوای',
+    '94:6':  'إن مع العسر يسرا، سختی ئاسانی هیوا',
+    '96:1':  'اقرأ باسم ربك خلق، بخوێنە ناوی پەروەردگار',
+    '112:1': 'قل هو الله احد الصمد، تەوحید یەکتایی یەکانەیی',
+    '113:1': 'قل اعوذ برب الفلق، پاراستن بەرەبەیان',
+    '114:1': 'قل اعوذ برب الناس ملك الناس، پاراستن مرۆڤ شێطان'
+  };
+
   /* ── Reference parser ─────────────────────────────────────────── */
   function parseRef(qLo, surahs) {
     var m;
@@ -442,7 +512,11 @@
   var _idx      = [];
   var _ready    = false;
   var _tokenIdx = {}; // normalized-word → [_idx positions] for fast candidate lookup
-  var _stats    = { queries:0, totalMs:0, cacheHits:0, slowQ:[], zeroQ:[] };
+  var _tagIdx   = {}; // VTAGS concept keyword → [_idx positions]
+  var _stats    = {
+    queries:0, totalMs:0, cacheHits:0, slowQ:[], zeroQ:[],
+    phraseMatches:0, aliasHits:0, recentQ:[], candidateSum:0, candidateCount:0
+  };
 
   function buildIndex(quranData, tafsirData) {
     var t0 = Date.now();
@@ -481,6 +555,25 @@
           if (!_tokenIdx[tw]) _tokenIdx[tw] = [];
           _tokenIdx[tw].push(ti);
         }
+      }
+    }
+    // Build semantic tag index — VTAGS concept keyword → list of _idx positions
+    _tagIdx = {};
+    var tagKeys = Object.keys(VTAGS);
+    for (var gi = 0; gi < tagKeys.length; gi++) {
+      var gKey = tagKeys[gi]; // "65:3"
+      var parts = gKey.split(':');
+      var gsn = +parts[0], gan = +parts[1];
+      var gpos = -1;
+      for (var gj = 0; gj < _idx.length; gj++) {
+        if (_idx[gj].sn === gsn && _idx[gj].an === gan) { gpos = gj; break; }
+      }
+      if (gpos === -1) continue;
+      var tagWords = normAr(VTAGS[gKey]).split(/[\s،,،،]+/).filter(function(w){ return w.length >= 2; });
+      for (var gw = 0; gw < tagWords.length; gw++) {
+        var gtw = tagWords[gw];
+        if (!_tagIdx[gtw]) _tagIdx[gtw] = [];
+        _tagIdx[gtw].push(gpos);
       }
     }
     _ready = true;
@@ -598,6 +691,32 @@
       }
     }
 
+    /* ── 6. Semantic concept tag matching ────────────────────────── */
+    /* Fires when other tiers are weak — boosts key verses via curated concept keywords.
+     * Useful for Arabic stems (توكل → verse has يتوكل) and Kurdish concept searches. */
+    if (phraseScore === 0 && consecutiveScore < 200 && tokenScore < 80 && translationScore < 80) {
+      var tagStr = VTAGS[e.sn + ':' + e.an];
+      if (tagStr) {
+        var tagWords = normAr(tagStr).split(/[\s،,،،]+/);
+        var tagHit = 0;
+        for (var qi = 0; qi < arTokens.length; qi++) {
+          if (STOP_AR[arTokens[qi]]) continue;
+          var at = arTokens[qi];
+          for (var tw2 = 0; tw2 < tagWords.length; tw2++) {
+            if (tagWords[tw2].length >= 2 && (tagWords[tw2] === at || tagWords[tw2].indexOf(at) === 0 || at.indexOf(tagWords[tw2]) === 0)) {
+              tagHit++;
+              break;
+            }
+          }
+        }
+        if (tagHit > 0) {
+          var tagScore = tagHit * 55;
+          translationScore = Math.max(translationScore, tagScore);
+          if (srcs.indexOf('semantic') === -1) srcs.push('semantic');
+        }
+      }
+    }
+
     var finalScore = phraseScore + consecutiveScore + tokenScore + translationScore;
     return {
       score: finalScore, srcs: srcs, posAr: posAr, posKu: posKu,
@@ -640,6 +759,7 @@
     /* ── 1. Famous verse alias ───────────────────────────────── */
     var va = VA[qLo] || VA[cleanKey(qLo)] || VA[qArN] || VA[normAr(cleanKey(qOrig))];
     if (va) {
+      _stats.aliasHits++;
       var ve = findVerse(va.sn, va.an);
       if (ve) {
         var vSn = surahs[ve.sn-1] || {};
@@ -733,10 +853,16 @@
       var rankMs = Date.now() - tRank;
       verseHits = verseHits.slice(0, 25);
       // Track stats
+      var totalMs = scanMs + rankMs;
       _stats.queries++;
-      _stats.totalMs += scanMs + rankMs;
-      if (scanMs + rankMs > 80) _stats.slowQ.push({q:qOrig, ms:scanMs+rankMs});
+      _stats.totalMs += totalMs;
+      _stats.candidateSum += scanLen;
+      _stats.candidateCount++;
+      if (totalMs > 80) _stats.slowQ.push({q:qOrig, ms:totalMs});
       if (!verseHits.length) _stats.zeroQ.push(qOrig);
+      if (verseHits.length && verseHits[0].phraseScore > 0) _stats.phraseMatches++;
+      _stats.recentQ.push({q:qOrig, ms:totalMs, hits:verseHits.length});
+      if (_stats.recentQ.length > 20) _stats.recentQ.shift();
       console.log('[QSearchPerf] query="'+qOrig+'" candidates='+scanLen+'/'+_idx.length+
         ' scanMs='+scanMs+' rankMs='+rankMs+' hits='+verseHits.length+(exactMode?' [exact]':''));
     }
@@ -787,14 +913,21 @@
     isReady: function () { return _ready; },
 
     stats: function () {
+      var q = _stats.queries || 1;
       return {
-        queries:    _stats.queries,
-        avgMs:      _stats.queries ? Math.round(_stats.totalMs / _stats.queries) : 0,
-        slowQueries: _stats.slowQ.slice(-10),
-        zeroResults: _stats.zeroQ.slice(-10),
-        indexSize:  _idx.length,
-        tokenKeys:  Object.keys(_tokenIdx).length,
-        workerEnabled: false
+        queries:          _stats.queries,
+        avgMs:            _stats.queries ? Math.round(_stats.totalMs / _stats.queries) : 0,
+        slowQueries:      _stats.slowQ.slice(-10),
+        zeroResults:      _stats.zeroQ.slice(-10),
+        recentQueries:    _stats.recentQ.slice(-20),
+        indexSize:        _idx.length,
+        tokenKeys:        Object.keys(_tokenIdx).length,
+        taggedVerses:     Object.keys(VTAGS).length,
+        phraseMatchRate:  Math.round(_stats.phraseMatches / q * 100) + '%',
+        aliasHitRate:     Math.round(_stats.aliasHits / q * 100) + '%',
+        candidateCountAvg: _stats.candidateCount ? Math.round(_stats.candidateSum / _stats.candidateCount) : 0,
+        cacheHits:        _stats.cacheHits,
+        workerEnabled:    false
       };
     },
 
