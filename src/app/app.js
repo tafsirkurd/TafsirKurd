@@ -2509,10 +2509,13 @@ App._execSearch=function(v){
   for(var ri=0;ri<results.length;ri++){if(results[ri].type==='verse'||results[ri].type==='ref'){topVerse=results[ri];break;}}
   if(topVerse&&topVerse.phraseScore===0&&topVerse.score>50&&topVerse.score<500&&window.QuranSearch){
 }
-  for(var i=0;i<results.length;i++){
-    var r=results[i];
-    if(r.type==='surah'&&i>0&&results[i-1].type==='verse')
-      frag.appendChild(el('div','search-divider',''));
+  // Ayah-first: when query has 2+ tokens, verses always lead; surah cards follow (max 1)
+  var _av=results.filter(function(r){return r.type!=='surah';});
+  var _as=results.filter(function(r){return r.type==='surah';});
+  var _aq=_lastSearchQ.arTokens.filter(function(t){return t.length>=2;}).length>=2;
+  var _ord=(_aq&&_av.length>0)?_av.concat(_as.slice(0,1)):results;
+  for(var i=0;i<_ord.length;i++){
+    var r=_ord[i];
     frag.appendChild(App._mkSearchItem(r,i===0&&r.type==='verse'));
   }
   res.appendChild(frag);
