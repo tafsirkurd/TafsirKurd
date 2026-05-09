@@ -558,3 +558,31 @@
 
     window.cmdPalette = { open: open, close: close };
 })();
+
+// ── Sidebar nav search (shared across all admin pages) ────────────
+(function initSidebarSearch() {
+    function setup() {
+        var input = document.getElementById('sidebarSearchInput');
+        if (!input) return;
+        input.addEventListener('input', function() {
+            var q = this.value.trim().toLowerCase();
+            var sections = document.querySelectorAll('.sidebar-nav .nav-section');
+            sections.forEach(function(sec) {
+                var items = sec.querySelectorAll('.nav-item');
+                var anyVisible = false;
+                items.forEach(function(item) {
+                    var label = (item.querySelector('.nav-item-label') || item).textContent.toLowerCase();
+                    var match = !q || label.includes(q);
+                    item.classList.toggle('hidden-by-search', !match);
+                    if (match) anyVisible = true;
+                });
+                sec.classList.toggle('all-hidden', !anyVisible);
+            });
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    } else {
+        setup();
+    }
+})();
