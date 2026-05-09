@@ -515,19 +515,27 @@ struct PrayerProvider: TimelineProvider {
                 let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
                 let nextName = entries.first?.next?.name ?? "unknown"
                 let buildMs  = (Date().timeIntervalSince1970 - buildStart.timeIntervalSince1970) * 1000
+                // heartbeats = entries at 15-min intervals in the first 36h
+                let heartbeatCount = entries.filter { e in
+                    let secs = e.date.timeIntervalSince(now)
+                    return secs > 0 && secs <= 36 * 3600 &&
+                           Int(secs) % (15 * 60) < 5   // within 5 s of a 15-min mark
+                }.count
                 writeDiagnostics([
-                    "ts":         Date().timeIntervalSince1970 * 1000,
-                    "source":     "extended",
-                    "city":       ext.city,
-                    "extDays":    ext.days.count,
-                    "extAgeH":    ext.ageHours,
-                    "entries":    entries.count,
-                    "policyAt":   policyAt.timeIntervalSince1970,
-                    "nextPrayer": nextName,
-                    "lpm":        isLPM,
-                    "buildMs":    buildMs
+                    "ts":            Date().timeIntervalSince1970 * 1000,
+                    "source":        "extended",
+                    "city":          ext.city,
+                    "extDays":       ext.days.count,
+                    "extAgeH":       ext.ageHours,
+                    "entries":       entries.count,
+                    "heartbeats":    heartbeatCount,
+                    "policyAt":      policyAt.timeIntervalSince1970,
+                    "policyAtISO":   ISO8601DateFormatter().string(from: policyAt),
+                    "nextPrayer":    nextName,
+                    "lpm":           isLPM,
+                    "buildMs":       buildMs
                 ], legacyData: legacyData)
-                wLog.info("[WidgetTimeline] \(entries.count) entries nextPrayer=\(nextName) policyAt=\(policyAt)")
+                wLog.info("[WidgetTimeline] \(entries.count) entries (~\(heartbeatCount) heartbeats) nextPrayer=\(nextName) policy=\(fmtHMS(policyAt))")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
                 return
             }
@@ -558,17 +566,18 @@ struct PrayerProvider: TimelineProvider {
                 let nextName = entries.first?.next?.name ?? "unknown"
                 let buildMs  = (Date().timeIntervalSince1970 - buildStart.timeIntervalSince1970) * 1000
                 writeDiagnostics([
-                    "ts":         Date().timeIntervalSince1970 * 1000,
-                    "source":     "extended_fetch",
-                    "city":       ext.city,
-                    "extDays":    ext.days.count,
-                    "entries":    entries.count,
-                    "policyAt":   policyAt.timeIntervalSince1970,
-                    "nextPrayer": nextName,
-                    "lpm":        isLPM,
-                    "buildMs":    buildMs
+                    "ts":          Date().timeIntervalSince1970 * 1000,
+                    "source":      "extended_fetch",
+                    "city":        ext.city,
+                    "extDays":     ext.days.count,
+                    "entries":     entries.count,
+                    "policyAt":    policyAt.timeIntervalSince1970,
+                    "policyAtISO": ISO8601DateFormatter().string(from: policyAt),
+                    "nextPrayer":  nextName,
+                    "lpm":         isLPM,
+                    "buildMs":     buildMs
                 ], legacyData: legacyData)
-                wLog.info("[WidgetTimeline] fetched \(entries.count) entries nextPrayer=\(nextName)")
+                wLog.info("[WidgetTimeline] fetched \(entries.count) entries nextPrayer=\(nextName) policy=\(fmtHMS(policyAt))")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
             } else {
                 // Network unavailable — fall back to two-day legacy data
@@ -597,8 +606,15 @@ private func syntheticData(from ext: WidgetExtendedCache, dateStr: String) -> Pr
                             currentPrayer: nil, nextPrayer: nil)
 }
 
-// Build up to 14 days × 5 prayers = 70 timeline entries from the extended cache.
-// Each entry carries per-day synthetic display data so prayer times shown are correct.
+// Build a dense timeline from the extended cache:
+//   • Today + tomorrow: prayer boundaries + safety entries + 15-min heartbeats
+//   • Days 3–14: prayer boundaries + midnight anchors only
+//
+// The 15-min heartbeat entries are the key reliability fix: WidgetKit pre-renders a
+// static snapshot at each entry's `date`. If iOS throttles boundary entries (locked
+// screen, Low Power Mode, battery management), the widget can freeze for hours on a
+// stale prayer. With heartbeats every 15 min, staleness is bounded to 15 minutes
+// regardless of how many prayer-boundary entries iOS skips.
 private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
                                    legacyData: PrayerWidgetData?) -> ([PrayerEntry], Date) {
     var entries: [PrayerEntry] = []
@@ -610,35 +626,26 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
     let nowNext = ext.nextPrayer(from: now)
     entries.append(.init(date: now, data: todayData, next: nowNext))
 
-    // One entry per prayer boundary across the next 14 days, plus explicit midnight
-    // entries so the Isha→Fajr transition and Baghdad day-rollover are deterministic.
-    for (dayIndex, dateStr) in futureDates.prefix(14).enumerated() {
+    // Prayer-boundary entries across the next 14 days + midnight anchors.
+    // Safety offsets at each boundary: +5 s, +60 s, +5 min.
+    for (_, dateStr) in futureDates.prefix(14).enumerated() {
         let dayData = syntheticData(from: ext, dateStr: dateStr) ?? todayData
 
-        // Prayer-boundary entries
         for name in kPrayerOrder {
             guard let t = ext.prayerDate(name, for: dateStr), t > now else { continue }
             let next = ext.nextPrayer(from: t.addingTimeInterval(30))
             wLog.info("[PrayerBoundary] entry \(dateStr) \(name) @ \(fmtHMS(t)) -> next=\(next?.name ?? "nil")")
             entries.append(.init(date: t, data: dayData, next: next))
 
-            // Tight follow-up entries guarantee WidgetKit re-renders within seconds of
-            // each prayer boundary, so the lock screen switches without opening the app.
-            //   +5 s  → fires inside the grace window; self-corrects any early-activation drift
-            //   +60 s → secondary safety; catches WidgetKit delays of up to 1 minute
-            //   +5 min → fallback for aggressive battery/LPM throttling
             let safetyOffsets: [TimeInterval] = [5, 60, 5 * 60]
             for offset in safetyOffsets {
                 let st = t.addingTimeInterval(offset)
                 guard st > now else { continue }
                 let sNext = ext.nextPrayer(from: st.addingTimeInterval(30))
-                wLog.info("[PrayerBoundary] safety \(dateStr) \(name) +\(Int(offset))s -> next=\(sNext?.name ?? "nil")")
                 entries.append(.init(date: st, data: dayData, next: sNext))
             }
         }
 
-        // Midnight entry: Baghdad 00:00:01 of this date — anchors the day-boundary transition.
-        // Ensures the widget re-evaluates the correct "next prayer" at the start of each day.
         let dp = dateStr.split(separator: "-").compactMap { Int($0) }
         if dp.count == 3 {
             var mc = DateComponents()
@@ -653,19 +660,33 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
         }
     }
 
-    // Refresh policy: Baghdad midnight after the last covered day
-    let lastDate = futureDates.prefix(14).last ?? PrayerWidgetData.baghdadDateString(offset: 1)
-    let dp       = lastDate.split(separator: "-").compactMap { Int($0) }
-    let policyAt: Date
-    if dp.count == 3 {
-        var c = DateComponents()
-        c.year = dp[0]; c.month = dp[1]; c.day = dp[2] + 1
-        c.hour = 0; c.minute = 5; c.second = 0
-        c.timeZone = TimeZone(identifier: "Asia/Baghdad")
-        policyAt = PrayerWidgetData.baghdadCal.date(from: c) ?? now.addingTimeInterval(72 * 3600)
-    } else {
-        policyAt = now.addingTimeInterval(72 * 3600)
+    // ── Heartbeat entries every 15 min for the next 36 hours ──────────────────
+    // These are the hard reliability guarantee: even when iOS completely skips prayer
+    // boundary entries (locked device, LPM, aggressive throttling), a heartbeat fires
+    // within 15 minutes. effectiveNextPrayer() / effectiveNext3() then re-derive the
+    // correct prayer from the real clock time, so the snapshot is never more than
+    // 15 minutes stale — and usually corrects at the very next heartbeat.
+    var hTick        = now.addingTimeInterval(15 * 60)
+    let hEnd         = now.addingTimeInterval(36 * 3600)
+    var heartbeatCount = 0
+    while hTick <= hEnd {
+        let hComps   = PrayerWidgetData.baghdadCal.dateComponents([.year, .month, .day], from: hTick)
+        if let hy = hComps.year, let hm = hComps.month, let hd = hComps.day {
+            let hDateStr = String(format: "%04d-%02d-%02d", hy, hm, hd)
+            let hData    = syntheticData(from: ext, dateStr: hDateStr) ?? todayData
+            let hNext    = ext.nextPrayer(from: hTick)
+            entries.append(.init(date: hTick, data: hData, next: hNext))
+            heartbeatCount += 1
+        }
+        hTick = hTick.addingTimeInterval(15 * 60)
     }
+    wLog.info("[WidgetTimeline] heartbeats=\(heartbeatCount) boundaryEntries=\(entries.count - heartbeatCount - 1)")
+
+    // ── Refresh policy: Baghdad midnight TONIGHT + 5 min ──────────────────────
+    // Nightly rebuild keeps heartbeat and boundary entries dense and current.
+    // The 90-day extended cache preserves prayer-time accuracy across long offline
+    // periods — only the timeline density needs nightly regeneration.
+    let policyAt = PrayerWidgetData.baghdadMidnight(daysAhead: 1).addingTimeInterval(5 * 60)
     return (entries, policyAt)
 }
 
@@ -821,21 +842,77 @@ private func fetchExtendedPrayerCache(city: String, completion: @escaping (Widge
     }
 }
 
+// Derives the currently-active prayer from a timings dict + Baghdad date string.
+// "Active" = the latest prayer whose scheduled time has already passed.
+// Used by writeDiagnostics to populate derivedCurrentPrayer independently of
+// the snapshot's stored currentPrayer, so drift is detectable in the admin dashboard.
+private func derivedActivePrayer(timings: [String: String], dateStr: String, at now: Date) -> String? {
+    var best: (name: String, time: Date)? = nil
+    let dp = dateStr.split(separator: "-").compactMap { Int($0) }
+    guard dp.count == 3 else { return nil }
+    for name in kPrayerOrder {
+        guard let raw = timings[name] else { continue }
+        let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
+        let parts = hm.split(separator: ":").compactMap { Int($0) }
+        guard parts.count >= 2 else { continue }
+        var c = DateComponents()
+        c.year = dp[0]; c.month = dp[1]; c.day = dp[2]
+        c.hour = parts[0]; c.minute = parts[1]; c.second = 0
+        c.timeZone = TimeZone(identifier: "Asia/Baghdad")
+        guard let t = PrayerWidgetData.baghdadCal.date(from: c), t <= now else { continue }
+        if best == nil || t > best!.time { best = (name, t) }
+    }
+    return best?.name
+}
+
 // Write widget diagnostics to App Group so the admin observability dashboard can read them.
 // Also clears widgetNeedsRefresh when source is a successful extended timeline build.
 private func writeDiagnostics(_ info: [String: Any], legacyData: PrayerWidgetData? = nil) {
     var merged = info
-    // Always include iOS version, staleness, and validUntil for admin dashboard completeness.
+    let realNow   = Date()
+    let realNowMs = realNow.timeIntervalSince1970 * 1000
+
+    // ── Core fields ───────────────────────────────────────────────────────────
     merged["iosVer"]    = UIDevice.current.systemVersion
-    merged["buildTime"] = Date().timeIntervalSince1970 * 1000
+    merged["buildTime"] = realNowMs
+    merged["realNowMs"] = realNowMs   // device clock truth for admin drift detection
+
+    // ── Snapshot fields + prayer-drift detection ───────────────────────────────
     if let ld = legacyData {
-        merged["stale"]       = ld.isStale
-        merged["staleReason"] = ld.staleReason
-        merged["validUntil"]  = ld.validUntil as Any
-        merged["generatedAt"] = ld.generatedAt as Any
+        merged["stale"]          = ld.isStale
+        merged["staleReason"]    = ld.staleReason
+        merged["validUntil"]     = ld.validUntil  as Any
+        merged["generatedAt"]    = ld.generatedAt as Any
         merged["snapshotCity"]   = ld.city
         merged["snapshotDate"]   = ld.date
+        merged["snapshotCurrentPrayer"] = ld.currentPrayer as Any
+
+        // Derive the prayer that SHOULD be active right now from the stored timings
+        // and the real Baghdad wall-clock time — independent of the snapshot state.
+        let todayBaghdad = PrayerWidgetData.baghdadDateString()
+        if let derived = derivedActivePrayer(timings: ld.timings, dateStr: todayBaghdad, at: realNow) {
+            merged["derivedCurrentPrayer"] = derived
+            // Drift: snapshot says one prayer, clock says another
+            if let snap = ld.currentPrayer, snap != derived {
+                merged["prayerDrift"]        = "\(snap)→\(derived)"
+                merged["staleSnapshotWarn"]  = true
+                wLog.warning("[WidgetDiag] prayer drift detected: snapshot=\(snap) derived=\(derived)")
+            }
+        }
+        // Snapshot age for staleness warnings
+        if let gen = ld.generatedAt {
+            let ageSeconds = Int((realNowMs - gen) / 1000)
+            merged["snapshotAgeSeconds"] = ageSeconds
+            if ageSeconds > 6 * 3600 { merged["snapshotOldWarn"] = ">\(ageSeconds / 3600)h" }
+        }
     }
+
+    // ── Last reload metadata ───────────────────────────────────────────────────
+    if let ud2 = UserDefaults(suiteName: kAppGroup),
+       let reloadMeta = ud2.string(forKey: "widgetLastReloadMeta") {
+        merged["lastReloadMeta"] = reloadMeta
+    }
+
     guard let ud  = UserDefaults(suiteName: kAppGroup),
           let raw = try? JSONSerialization.data(withJSONObject: merged),
           let str = String(data: raw, encoding: .utf8)
@@ -847,7 +924,7 @@ private func writeDiagnostics(_ info: [String: Any], legacyData: PrayerWidgetDat
         ud.removeObject(forKey: "widgetStaleReason")
     }
     ud.synchronize()
-    wLog.info("[WidgetHealth] diagnostics written source=\(info["source"] as? String ?? "?")")
+    wLog.info("[WidgetHealth] diagnostics written source=\(info["source"] as? String ?? "?") derivedPrayer=\(merged["derivedCurrentPrayer"] as? String ?? "?")")
 }
 
 // MARK: — Helpers
@@ -986,13 +1063,14 @@ private func effectiveNextPrayer(
     now: Date,
     tag: String = ""
 ) -> (name: String, time: Date, ku: String)? {
-    // Include prayer while now < t + grace (within 5 s window after prayer starts)
-    func stillRelevant(_ t: Date) -> Bool { return now < t.addingTimeInterval(kGracePastSeconds) }
+    // A prayer is still "next" while now < t + grace (5-second window after it starts).
+    func stillRelevant(_ t: Date) -> Bool { now < t.addingTimeInterval(kGracePastSeconds) }
 
+    // ── Tier 1: stored data for the snapshot's own date ───────────────────────
     for n in kPrayerOrder {
         if let t = data.prayerDate(n), stillRelevant(t) {
             let passed = now >= t
-            wLog.info("[WidgetBoundary] \(tag.isEmpty ? "" : tag + " ")now=\(fmtHMS(now)) prayer=\(n) time=\(fmtHMS(t)) passed=\(passed) next=\(n)")
+            wLog.info("[WidgetBoundary] \(tag.isEmpty ? "" : tag + " ")now=\(fmtHMS(now)) prayer=\(n) time=\(fmtHMS(t)) passed=\(passed)")
             return (n, t, kn(n))
         }
     }
@@ -1001,17 +1079,23 @@ private func effectiveNextPrayer(
             return (n, t, kn(n))
         }
     }
-    // Stale-recovery: stored times are for a past date — try Baghdad wall-clock dates
+
+    // ── Tier 2: Baghdad wall-clock recovery ───────────────────────────────────
+    // The snapshot's `date` may be yesterday or older (stale data, timezone shift,
+    // or midnight rollover without a fresh push). Apply the stored prayer times to
+    // the REAL Baghdad date so the widget never shows yesterday's Asr at 10 PM.
+    wLog.warning("[WidgetBoundary] \(tag) stored dates exhausted — applying timings to Baghdad wall-clock date")
     for offset in 0...1 {
         let targetDate = PrayerWidgetData.baghdadDateString(offset: offset)
         for n in kPrayerOrder {
             if let approx = data.prayerTimeOnDate(n, dateStr: targetDate), stillRelevant(approx) {
-                wLog.warning("[WidgetBoundary] stale-recovery \(n) on \(targetDate)")
+                wLog.warning("[WidgetBoundary] wall-clock recovery: \(n) on \(targetDate) now=\(fmtHMS(now))")
                 return (n, approx, kn(n))
             }
         }
     }
-    wLog.error("[WidgetBoundary] effectiveNextPrayer: no prayer found tag=\(tag)")
+
+    wLog.error("[WidgetBoundary] effectiveNextPrayer: no prayer found tag=\(tag) now=\(fmtHMS(now))")
     return nil
 }
 
@@ -1019,26 +1103,48 @@ private func effectiveNext3(
     data: PrayerWidgetData,
     now: Date
 ) -> [(name: String, ku: String, display: String)] {
-    func stillRelevant(_ t: Date) -> Bool { return now < t.addingTimeInterval(kGracePastSeconds) }
+    func stillRelevant(_ t: Date) -> Bool { now < t.addingTimeInterval(kGracePastSeconds) }
+
+    func formatHM(_ raw: String) -> String {
+        let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
+        let parts = hm.split(separator: ":").compactMap { Int($0) }
+        guard parts.count >= 2 else { return hm }
+        var h = parts[0]; let m = parts[1]
+        if h == 0 { h = 12 } else if h > 12 { h -= 12 }
+        return String(format: "%d:%02d", h, m)
+    }
 
     var result: [(name: String, ku: String, display: String)] = []
+
+    // ── Tier 1: stored data for snapshot's date and tomorrow ──────────────────
     outer: for offset in 0...1 {
         for name in kDisplayOrder {
             guard result.count < 3 else { break outer }
             guard let t = data.prayerDate(name, dayOffset: offset), stillRelevant(t) else { continue }
             let src = offset == 0 ? data.timings : (data.tomorrow ?? data.timings)
             guard let raw = src[name] else { continue }
-            let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
-            let parts = hm.split(separator: ":").compactMap { Int($0) }
-            let display: String
-            if parts.count >= 2 {
-                var h = parts[0]; let m = parts[1]
-                if h == 0 { h = 12 } else if h > 12 { h -= 12 }
-                display = String(format: "%d:%02d", h, m)
-            } else { display = hm }
-            result.append((name: name, ku: kn(name), display: display))
+            result.append((name: name, ku: kn(name), display: formatHM(raw)))
         }
     }
+
+    // ── Tier 2: Baghdad wall-clock recovery (handles stale snapshots) ─────────
+    // If the stored date is yesterday (stale push), tier 1 finds nothing — all
+    // stored times are past. Apply timings to the real Baghdad date so the lock
+    // screen never shows yesterday's Asr at 10 PM.
+    if result.isEmpty {
+        wLog.warning("[effectiveNext3] tier-1 empty — wall-clock recovery now=\(fmtHMS(now))")
+        outer2: for offset in 0...1 {
+            let targetDate = PrayerWidgetData.baghdadDateString(offset: offset)
+            for name in kDisplayOrder {
+                guard result.count < 3 else { break outer2 }
+                guard let approx = data.prayerTimeOnDate(name, dateStr: targetDate),
+                      stillRelevant(approx) else { continue }
+                guard let raw = data.timings[name] else { continue }
+                result.append((name: name, ku: kn(name), display: formatHM(raw)))
+            }
+        }
+    }
+
     return result
 }
 

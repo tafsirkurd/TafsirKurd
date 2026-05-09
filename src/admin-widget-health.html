@@ -338,11 +338,17 @@
 <div id="diagModal" class="diag-modal-backdrop" style="display:none" onclick="if(event.target===this)closeDiag()">
     <div class="diag-modal">
         <div class="diag-modal-hdr">
-            <h3>Diagnostics</h3>
+            <h3>Widget Diagnostics</h3>
             <button class="diag-modal-close" onclick="closeDiag()"><i data-lucide="x" style="width:16px;height:16px"></i></button>
         </div>
         <div class="diag-modal-body">
-            <pre class="diag-json" id="diagJson"></pre>
+            <!-- Structured summary -->
+            <div id="diagSummary" style="margin-bottom:14px"></div>
+            <!-- Raw JSON toggle -->
+            <details style="margin-top:6px">
+                <summary style="cursor:pointer;font-size:11px;color:var(--text-tertiary);user-select:none">Raw JSON</summary>
+                <pre class="diag-json" id="diagJson" style="margin-top:8px"></pre>
+            </details>
         </div>
     </div>
 </div>
@@ -567,7 +573,56 @@
             return !filter || r2.status === filter;
         }))[idx];
         if (!r || !r.diagnostics) return;
-        document.getElementById('diagJson').textContent = JSON.stringify(r.diagnostics, null, 2);
+        var d = r.diagnostics;
+
+        // ── Structured summary ───────────────────────────────────────────────
+        function fts(ms) {
+            if (!ms) return '—';
+            var dt = new Date(ms);
+            return dt.toLocaleTimeString('en-GB', { hour12: false }) + ' (' + Math.round((Date.now() - ms) / 1000) + 's ago)';
+        }
+        function row(label, val, warn) {
+            var warnHtml = warn ? ' <span style="color:#dc2626;font-weight:700">⚠ ' + esc(warn) + '</span>' : '';
+            return '<tr><td style="color:var(--text-tertiary);font-size:11.5px;padding:3px 10px 3px 0;white-space:nowrap">'
+                + esc(label) + '</td><td style="font-size:12px;font-family:monospace">' + val + warnHtml + '</td></tr>';
+        }
+
+        var realNow  = d.realNowMs ? new Date(d.realNowMs).toLocaleTimeString('en-GB',{hour12:false}) : '—';
+        var snapPray = d.snapshotCurrentPrayer || d.currentPrayer || '—';
+        var derivPray= d.derivedCurrentPrayer || '—';
+        var drift    = d.prayerDrift ? '<span style="color:#dc2626;font-weight:700">DRIFT: ' + esc(d.prayerDrift) + '</span>' : '<span style="color:#10b981">✓ no drift</span>';
+        var staleWarn= d.staleSnapshotWarn ? 'STALE SNAPSHOT' : null;
+        var ageS     = d.snapshotAgeSeconds != null ? Math.round(d.snapshotAgeSeconds / 60) + ' min' : '—';
+        var oldWarn  = d.snapshotOldWarn || null;
+        var entries  = d.entries != null ? d.entries : '—';
+        var hb       = d.heartbeats != null ? d.heartbeats : '—';
+        var policyAt = d.policyAtISO ? new Date(d.policyAtISO).toLocaleString('en-GB', {hour12:false,timeZone:'Asia/Baghdad'}) : (d.policyAt ? new Date(d.policyAt*1000).toLocaleString('en-GB',{hour12:false,timeZone:'Asia/Baghdad'}) : '—');
+        var lastReload = '—';
+        try {
+            var lrm = d.lastReloadMeta ? (typeof d.lastReloadMeta === 'string' ? JSON.parse(d.lastReloadMeta) : d.lastReloadMeta) : null;
+            if (lrm) lastReload = esc(lrm.reason || '?') + ' @ ' + fts(lrm.ts);
+        } catch(e) {}
+
+        var html = '<table style="border-collapse:collapse;width:100%">'
+            + '<tr><td colspan="2" style="padding-bottom:6px;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Clock &amp; Prayer</td></tr>'
+            + row('Real device time', esc(realNow))
+            + row('Snapshot prayer', esc(snapPray))
+            + row('Derived prayer (clock)', esc(derivPray), staleWarn)
+            + row('Prayer drift', drift)
+            + '<tr><td colspan="2" style="padding:8px 0 4px;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Timeline</td></tr>'
+            + row('Total entries', esc(String(entries)))
+            + row('Heartbeats (15-min)', esc(String(hb)))
+            + row('Policy refresh at', esc(policyAt) + ' (Baghdad)')
+            + row('Source', esc(d.source || '—'))
+            + '<tr><td colspan="2" style="padding:8px 0 4px;font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em">Snapshot</td></tr>'
+            + row('Snapshot age', esc(ageS), oldWarn)
+            + row('Snapshot date', esc(d.snapshotDate || '—'))
+            + row('Stale?', d.stale ? '<span style="color:#dc2626;font-weight:700">YES — ' + esc(d.staleReason || '') + '</span>' : '<span style="color:#10b981">no</span>')
+            + row('Last reload', lastReload)
+            + '</table>';
+
+        document.getElementById('diagSummary').innerHTML = html;
+        document.getElementById('diagJson').textContent = JSON.stringify(d, null, 2);
         document.getElementById('diagModal').style.display = 'flex';
         lucide.createIcons();
     }
