@@ -360,11 +360,11 @@ body[data-admin-theme="evar"] .sidebar-logo-img {
 /* ── Sidebar nav search ── */
 .sidebar-search-wrap {
     position: relative;
-    padding: 8px 12px 4px;
+    padding: 8px 12px 8px;
 }
 .sidebar-search-input {
     width: 100%;
-    padding: 6px 10px 6px 30px;
+    padding: 6px 10px 6px 28px;
     font-size: 12px;
     background: var(--bg-hover);
     border: 1px solid var(--border-light);
@@ -379,12 +379,15 @@ body[data-admin-theme="evar"] .sidebar-logo-img {
 .sidebar-search-input::placeholder { color: var(--text-tertiary); }
 .sidebar-search-icon {
     position: absolute;
-    left: 20px; top: 50%;
+    left: 20px;
+    top: 50%;
     transform: translateY(-50%);
+    display: flex;
+    align-items: center;
     color: var(--text-tertiary);
     pointer-events: none;
 }
-.sidebar-search-icon i { width: 11px; height: 11px; }
+.sidebar-search-icon i { width: 12px; height: 12px; }
 .nav-item.hidden-by-search { display: none !important; }
 .nav-section.all-hidden .nav-section-header { display: none; }
 .sidebar.collapsed .sidebar-search-wrap { display: none; }

@@ -1145,36 +1145,7 @@
         body.dark-mode .insight-chip.info  { color: #93c5fd; }
         .insight-icon { font-size: 14px; }
 
-        /* ── Sidebar search ── */
-        .sidebar-search-wrap {
-            padding: 8px 12px 4px;
-        }
-        .sidebar-search-input {
-            width: 100%;
-            padding: 6px 10px 6px 30px;
-            font-size: 12px;
-            background: var(--bg-hover);
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            color: var(--text-primary);
-            outline: none;
-            font-family: inherit;
-            box-sizing: border-box;
-            transition: border-color .15s;
-        }
-        .sidebar-search-input:focus { border-color: var(--primary); }
-        .sidebar-search-input::placeholder { color: var(--text-tertiary); }
-        .sidebar-search-wrap { position: relative; }
-        .sidebar-search-icon {
-            position: absolute;
-            left: 20px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-tertiary);
-            pointer-events: none;
-        }
-        .sidebar-search-icon i { width: 11px; height: 11px; }
-        .nav-item.hidden-by-search { display: none !important; }
-        .nav-section.all-hidden .nav-section-header { display: none; }
+        /* ── Sidebar search (styles live in admin-styles.css) ── */
 
         /* ── Auto-refresh progress bar ── */
         #refreshProgressBar {
