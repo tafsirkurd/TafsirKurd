@@ -46,9 +46,9 @@
   function normAr(s) {
     if (!s) return '';
     s = String(s);
-    // 1. Remove harakat / tashkeel / Quran tajweed marks
-    s = s.replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]/g, '');
-    // 2. Normalize alef variants → ا
+    // 1. Strip all Arabic diacritics and Quran annotation marks
+    s = s.replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-ۭ]/g, '');
+    // 2. Normalize alef variants → ا (U+0671 alef wasla included)
     s = s.replace(/[آأإٱ]/g, 'ا');
     // 3. Normalize alif maqsura ى → ي
     s = s.replace(/ى/g, 'ي');
@@ -56,11 +56,14 @@
     s = s.replace(/ؤ/g, 'و');
     // 5. Normalize ئ → ي
     s = s.replace(/ئ/g, 'ي');
-    // 6. Remove tatweel ـ
+    // 6. Remove tatweel/kashida ـ
     s = s.replace(/ـ/g, '');
     // 7. Normalize ta marbuta ة → ه
     s = s.replace(/ة/g, 'ه');
-    // 8. Normalize whitespace
+    // 8. Small waw/ya variants used in some Quran encodings
+    s = s.replace(/ۥ/g, 'و');
+    s = s.replace(/ۦ/g, 'ي');
+    // 9. Collapse whitespace
     s = s.replace(/\s+/g, ' ').trim();
     return s;
   }
