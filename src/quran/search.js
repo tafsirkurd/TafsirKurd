@@ -595,6 +595,69 @@
     '2:152': ['33:41','13:28','2:186','3:191']
   };
 
+  /* ── Ayah importance scores (0–1000) for ultra-short query ranking ────────── */
+  /* Applied as scaled bonus when query has ≤3 meaningful tokens.
+   * Represents spiritual/cultural salience independent of query content. */
+  var AYAH_PRIORITY = {
+    '1:1':980,'1:2':980,'1:4':900,'1:5':980,'1:6':950,'1:7':900,
+    '2:45':840,'2:62':800,'2:152':870,'2:153':920,'2:155':840,'2:156':920,
+    '2:177':820,'2:186':960,'2:201':890,'2:214':870,'2:238':800,'2:255':1000,'2:286':980,
+    '3:8':820,'3:18':810,'3:133':840,'3:139':840,'3:173':940,'3:185':920,'3:191':810,'3:200':820,
+    '4:17':800,'4:57':810,'4:103':800,
+    '7:23':880,'7:55':820,'7:156':830,
+    '9:40':880,'9:104':810,'9:129':860,
+    '10:62':830,'11:6':820,'12:87':840,
+    '13:23':830,'13:28':960,
+    '14:7':890,'14:30':800,'14:40':820,
+    '17:9':800,'17:23':840,'17:24':820,'17:80':820,
+    '20:25':890,'20:114':970,
+    '21:87':940,'21:107':860,
+    '27:62':860,'28:77':810,
+    '29:57':810,'29:60':810,
+    '33:41':830,'39:9':820,'39:10':830,'39:53':960,'39:73':830,
+    '40:60':960,'41:30':830,'46:13':820,'47:7':820,'49:10':820,'49:13':830,
+    '51:58':820,'55:13':920,'55:46':850,'56:12':840,
+    '58:11':830,'59:22':830,'62:8':810,'64:13':820,'65:2':850,'65:3':950,
+    '66:6':800,'66:8':820,'71:10':810,
+    '87:17':820,'93:4':820,'94:1':870,'94:5':940,'94:6':960,
+    '96:1':840,'103:3':820,'112:1':1000,'112:2':970,'112:3':960,'112:4':940
+  };
+
+  /* ── Intent boosts — known single-word spiritual searches ────────────────── */
+  /* Maps common one-word Arabic spiritual queries to the most likely ayahs.
+   * Applied when query has ≤1 meaningful token, pre-injecting these into candidates. */
+  var INTENT_BOOSTS = {
+    'رب':    ['20:114','20:25','2:201','7:23','9:129','14:40','17:80','3:8'],
+    'ربنا':  ['2:201','2:286','7:23','3:8','14:40','59:10'],
+    'الله':  ['2:255','112:1','13:28','59:22','2:163','3:18','64:13'],
+    'الحمد': ['1:2','17:111','64:1','27:93','14:7'],
+    'صبر':   ['2:153','2:155','39:10','2:177','3:200','103:3','94:5'],
+    'خوف':   ['10:62','41:30','46:13','2:62','3:170','9:40'],
+    'جنة':   ['3:133','13:23','55:46','56:12','39:73','4:57','2:25'],
+    'نار':   ['66:6','3:131','2:24','14:30','4:56'],
+    'دعاء':  ['2:186','40:60','27:62','21:87','2:201','7:55'],
+    'ذكر':   ['13:28','2:152','33:41','3:191','18:24'],
+    'توكل':  ['65:3','3:173','9:129','64:13','39:38'],
+    'رزق':   ['65:3','51:58','11:6','29:60','2:3'],
+    'مغفرة': ['39:53','3:135','4:110','71:10','9:104'],
+    'شكر':   ['14:7','2:172','31:12','16:114'],
+    'علم':   ['20:114','96:1','58:11','39:9','2:31'],
+    'رحمة':  ['21:107','39:53','7:156','6:12','2:186'],
+    'صلاة':  ['2:45','2:153','11:114','4:103','2:238'],
+    'موت':   ['3:185','29:57','62:8','16:61','2:156'],
+    'قلب':   ['13:28','3:8','2:10','26:89','50:37'],
+    'دنيا':  ['2:201','3:185','87:17','18:45','28:77'],
+    'آخرة':  ['2:201','42:20','87:17','93:4','28:77'],
+    'توبة':  ['39:53','4:17','66:8','9:104','3:135'],
+    'هداية': ['1:6','2:2','10:57','39:23'],
+    'نعمة':  ['14:7','55:13','16:18','2:172'],
+    'أمل':   ['39:53','12:87','3:139','94:5','94:6'],
+    'ضيق':   ['94:5','94:6','65:7','2:286'],
+    'حزن':   ['9:40','3:139','12:86','2:62'],
+    'تقوى':  ['2:177','49:13','3:102','8:29'],
+    'قرآن':  ['17:9','2:2','41:44','6:19']
+  };
+
   /* ── Famous/memorable ayah fragment index ────────────────────── */
   /* Curated list of notable ayah phrases and fragments. Each entry maps one or
    * more query strings to the "most likely intended" verse. Indexed at buildIndex()
@@ -717,6 +780,7 @@
   var _famousNoSpace = {}; // fused (no-space) version → same (handles "حسبنالله" etc.)
   var _wordFreq    = {}; // normalized word → verse-count (rarity signal)
   var _versePos    = {}; // "sn:an" → _idx position for O(1) famous verse lookup
+  var _famousByWord = {}; // meaningful word → [{sn,an,weight,canonical}] from famous phrases
   var _stats       = {
     queries:0, totalMs:0, cacheHits:0, slowQ:[], zeroQ:[],
     phraseMatches:0, aliasHits:0, recentQ:[], candidateSum:0, candidateCount:0
@@ -808,6 +872,24 @@
         // Also store typo-fixed no-space version (handles "لاتقنطو" from "لا تقنطوا")
         var fqFix = _typoFix(fqNS);
         if (fqFix !== fqNS && !_famousNoSpace[fqFix]) _famousNoSpace[fqFix] = fpData;
+      }
+    }
+    // Build word-level famous index — each meaningful word in canonical phrase → verse list
+    _famousByWord = {};
+    for (var fpi2 = 0; fpi2 < FAMOUS_PHRASES.length; fpi2++) {
+      var fp2 = FAMOUS_PHRASES[fpi2];
+      var fp2Pts = fp2.v.split(':');
+      var fp2Data = {sn:+fp2Pts[0], an:+fp2Pts[1], weight:fp2.w, canonical:fp2.q[0]};
+      var canonWds = normAr(fp2.q[0]).split(/\s+/);
+      for (var cw = 0; cw < canonWds.length; cw++) {
+        var cwt = canonWds[cw];
+        if (!cwt || STOP_AR[cwt] || cwt.length < 2) continue;
+        if (!_famousByWord[cwt]) _famousByWord[cwt] = [];
+        var fwDup = false;
+        for (var fwd = 0; fwd < _famousByWord[cwt].length; fwd++) {
+          if (_famousByWord[cwt][fwd].sn === fp2Data.sn && _famousByWord[cwt][fwd].an === fp2Data.an) { fwDup = true; break; }
+        }
+        if (!fwDup) _famousByWord[cwt].push(fp2Data);
       }
     }
     _ready = true;
@@ -1072,6 +1154,10 @@
     if (qArN.length >= 2 || qLo.length >= 2) {
       var arTokens = qArN.split(/\s+/).filter(function(t){return t.length>=2;});
       var loTokens = qLo.split(/\s+/).filter(function(t){return t.length>=2;});
+      var meaningfulTokens = arTokens.filter(function(t){ return !STOP_AR[t] && t.length >= 2; });
+      var isUltraShort = meaningfulTokens.length <= 1;
+      // Priority factor: scales AYAH_PRIORITY bonus by query shortness (0 for 4+ token queries)
+      var pFactor = isUltraShort ? 0.65 : meaningfulTokens.length === 2 ? 0.35 : meaningfulTokens.length === 3 ? 0.12 : 0;
 
       // Famous phrase boost map — "sn:an" → {weight, canonical} for current query
       var _famousBoostMap = {};
@@ -1090,7 +1176,47 @@
           }
         }
       }
-      var isShortQuery = arTokens.filter(function(t){ return !STOP_AR[t]; }).length <= 4;
+      // _famousByWord: boost famous ayahs that contain queried words (ultra/short queries)
+      if (meaningfulTokens.length <= 2) {
+        for (var mt = 0; mt < meaningfulTokens.length; mt++) {
+          var mtW = meaningfulTokens[mt];
+          var fbwList = _famousByWord[mtW] || _famousByWord[_stripPfx(mtW)] || [];
+          for (var fbi = 0; fbi < fbwList.length; fbi++) {
+            var fbKey = fbwList[fbi].sn + ':' + fbwList[fbi].an;
+            var fbWt = Math.round(fbwList[fbi].weight * (isUltraShort ? 0.45 : 0.28));
+            if (!_famousBoostMap[fbKey] || _famousBoostMap[fbKey].weight < fbWt) {
+              _famousBoostMap[fbKey] = {weight:fbWt, canonical:fbwList[fbi].canonical};
+            }
+          }
+        }
+      }
+      // INTENT_BOOSTS: curated ayah list for known single-word spiritual queries
+      if (isUltraShort && meaningfulTokens.length === 1) {
+        var intentKey = meaningfulTokens[0];
+        var intentList = INTENT_BOOSTS[intentKey] || INTENT_BOOSTS[_stripPfx(intentKey)] || [];
+        for (var ii = 0; ii < intentList.length; ii++) {
+          var ibKey = intentList[ii];
+          var ibWt = Math.max(360 - ii * 38, 100);
+          if (!_famousBoostMap[ibKey] || _famousBoostMap[ibKey].weight < ibWt) {
+            _famousBoostMap[ibKey] = {weight:ibWt, canonical:''};
+          }
+        }
+      }
+      // Prefix detection: query text is a prefix of a famous phrase → boost that ayah
+      if (qArN.length >= 3) {
+        var famIdxKeys = Object.keys(_famousIdx);
+        for (var pfx = 0; pfx < famIdxKeys.length; pfx++) {
+          if (famIdxKeys[pfx].length > qArN.length && famIdxKeys[pfx].indexOf(qArN) === 0) {
+            var pfxEntry = _famousIdx[famIdxKeys[pfx]];
+            var pfxKey = pfxEntry.sn + ':' + pfxEntry.an;
+            var pfxWt = Math.round(pfxEntry.weight * 0.72);
+            if (!_famousBoostMap[pfxKey] || _famousBoostMap[pfxKey].weight < pfxWt) {
+              _famousBoostMap[pfxKey] = {weight:pfxWt, canonical:pfxEntry.canonical};
+            }
+          }
+        }
+      }
+      var isShortQuery = meaningfulTokens.length <= 4;
 
       // Pre-filter via token index — typical Arabic phrase: ~5-50 candidates vs 6236
       var candidates = _getCandidates(arTokens);
@@ -1117,16 +1243,19 @@
         if (sv.score <= 0 && famousWeight <= 0) continue;
         if (exactMode && sv.phraseScore === 0 && !famousWeight) continue;
         var isFamous = famousWeight > 0;
+        var priorityBonus = pFactor > 0 ? Math.round((AYAH_PRIORITY[eKey] || 0) * pFactor) : 0;
+        var popBonus = Math.min(_getLocalPop(eKey) * 12, 90);
+        var totalScore = sv.score + famousWeight + priorityBonus + popBonus;
         var sh = surahs[e.sn-1] || {};
         verseHits.push({
           type:'verse', sn:e.sn, an:e.an, arO:e.arO, kuO:e.kuO,
           surahAr:sh.ar||'', surahEn:sh.en||'',
-          score:sv.score + famousWeight, isFamous:isFamous, famousWeight:famousWeight,
+          score:totalScore, isFamous:isFamous, famousWeight:famousWeight,
           matchSrcs:sv.srcs, posAr:sv.posAr, posKu:sv.posKu, mode:mode,
           phraseScore:sv.phraseScore, consecutiveScore:sv.consecutiveScore,
           tokenScore:sv.tokenScore, translationScore:sv.translationScore,
-          rareWordBonus:sv.rareWordBonus, finalScore:sv.finalScore + famousWeight,
-          _vLen:sv._vLen
+          rareWordBonus:sv.rareWordBonus, priorityBonus:priorityBonus, popBonus:popBonus,
+          finalScore:totalScore, _vLen:sv._vLen
         });
       }
       var scanMs = Date.now() - tScan;
@@ -1161,6 +1290,10 @@
     }
     console.log('[QuranSearch] query="'+qOrig+'" mode='+mode+' results='+out.length+' ms='+(Date.now()-t0));
     return out;
+  }
+
+  function _getLocalPop(key) {
+    try { return +(localStorage.getItem('qtap_' + key.replace(':', '_')) || 0); } catch(e) { return 0; }
   }
 
   /* ── Semantic concept suggestions (for smart empty state) ───── */
@@ -1240,6 +1373,14 @@
 
     /* Concept-matched verse suggestions for empty-state / fallback display */
     semanticSuggest: function (q) { return _ready ? semanticSuggest(q) : []; },
+
+    /* Track user tap on a verse — stored locally to improve popularity ranking */
+    trackTap: function (sn, an) {
+      try {
+        var k = 'qtap_' + sn + '_' + an;
+        localStorage.setItem(k, Math.min((+(localStorage.getItem(k) || 0)) + 1, 50));
+      } catch(e) {}
+    },
 
     isReady: function () { return _ready; },
 

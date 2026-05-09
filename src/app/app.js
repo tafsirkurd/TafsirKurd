@@ -2606,29 +2606,45 @@ App._execSearch=function(v){
       frag.appendChild(dymBar);
     }
   }
-  // "Maybe this ayah" hero — for short/partial queries with a famous-phrase match
-  var famousHits=results.filter(function(r){return r.isFamous;}).slice(0,2);
-  var isShortQ=_lastSearchQ.arTokens.length<=4&&!isExactMode;
-  if(famousHits.length&&isShortQ){
+  // AI memory hero — smart top-result cards for short/partial queries
+  var _mtCount=_lastSearchQ.arTokens.filter(function(t){return t.length>=2;}).length;
+  var isUltraShortQ=_mtCount<=1&&!isExactMode;
+  var isShortQ=_mtCount<=3&&!isExactMode;
+  var heroResults=isUltraShortQ
+    ?results.slice(0,3)
+    :results.filter(function(r){return r.isFamous;}).slice(0,2);
+  if(heroResults.length&&isShortQ){
     var hero=document.createElement('div');
     hero.className='search-famous-hero';
-    hero.appendChild(el('div','search-famous-hdr','شاید ئەم ئایەتەیە مەبەستت'));
-    famousHits.forEach(function(r){
+    var heroHdr=document.createElement('div');
+    heroHdr.className='search-famous-hdr';
+    heroHdr.textContent=isUltraShortQ?'زۆربەی کات مەبەستت ئەوانەیە':'شاید ئەم ئایەتانە مەبەستت';
+    hero.appendChild(heroHdr);
+    heroResults.forEach(function(r){
       var fItem=document.createElement('div');
       fItem.className='search-famous-item';
       var snInfo=SURAHS[r.sn-1]||{};
+      var previewText=r.arO.length<=160?r.arO:_ctxSnippet(r.arO,r.posAr,150);
       var arDiv=document.createElement('div');
       arDiv.className='search-famous-verse';
       var allArH=(_lastSearchQ.arN?[_lastSearchQ.arN]:[]).concat(_lastSearchQ.arTokens).filter(Boolean);
-      _hlNodes(_ctxSnippet(r.arO,r.posAr,120),allArH,true).forEach(function(n){arDiv.appendChild(n);});
+      _hlNodes(previewText,allArH,true).forEach(function(n){arDiv.appendChild(n);});
+      var refRow=document.createElement('div');
+      refRow.className='search-famous-ref-row';
+      refRow.appendChild(el('span','search-famous-ref',(snInfo.ar||snInfo.en)+' • ئایەت '+r.an));
+      if(r.isFamous)refRow.appendChild(el('span','search-famous-badge','★ مشهور'));
+      else if(r.priorityBonus>180)refRow.appendChild(el('span','search-famous-badge search-famous-badge--pop','◎ بەناوبانگ'));
       fItem.appendChild(arDiv);
-      fItem.appendChild(el('span','search-famous-ref',(snInfo.ar||snInfo.en)+' • â¾یەت '+r.an));
-      on(fItem,'click',function(){
-        if(navigator.vibrate)navigator.vibrate(8);
-        _shAdd(S.search);
-        App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
-        setTimeout(function(){App.openSurah(r.sn,r.an);},100);
-      });
+      fItem.appendChild(refRow);
+      (function(rr){
+        on(fItem,'click',function(){
+          if(navigator.vibrate)navigator.vibrate(8);
+          if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(rr.sn,rr.an);
+          _shAdd(S.search);
+          App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+          setTimeout(function(){App.openSurah(rr.sn,rr.an);},100);
+        });
+      })(r);
       hero.appendChild(fItem);
     });
     frag.appendChild(hero);
@@ -2772,6 +2788,7 @@ App._mkSearchItem=function(r,isPrimary){
     }
     on(item,'click',(function(sn,an,q){return function(){
       if(navigator.vibrate)navigator.vibrate(8);
+      if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
       setTimeout(function(){App.openSurah(sn,an);},100);
@@ -2846,6 +2863,7 @@ App._mkSearchItem=function(r,isPrimary){
     }
     on(item,'click',(function(sn,an,q){return function(){
       if(navigator.vibrate)navigator.vibrate(8);
+      if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
       setTimeout(function(){App.openSurah(sn,an);},100);

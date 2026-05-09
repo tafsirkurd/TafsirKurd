@@ -347,13 +347,18 @@ body{background:var(--bg);color:var(--text)}
 .search-conf-badge--relevant{background:rgba(156,163,175,.07);color:var(--text3);border-color:rgba(156,163,175,.18)}
 .search-conf-badge--famous{background:rgba(251,191,36,.09);color:#f59e0b;border-color:rgba(251,191,36,.3);box-shadow:0 1px 6px rgba(251,191,36,.1)}
 .search-conf-badge--rare{background:rgba(167,139,250,.09);color:#a78bfa;border-color:rgba(167,139,250,.25)}
-/* Famous ayah hero section */
-.search-famous-hero{padding:10px 14px 8px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(31,95,74,.05),rgba(31,95,74,.02));animation:hl-fadein .22s ease}
-.search-famous-hdr{font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px;opacity:.75}
-.search-famous-item{background:var(--surface);border:1px solid rgba(31,95,74,.18);border-radius:var(--r-lg);padding:10px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s;margin-bottom:5px}
-.search-famous-item:active{background:rgba(31,95,74,.06)}
-.search-famous-verse{font-family:var(--font-ar);font-size:.88rem;direction:rtl;color:var(--text);line-height:1.65;margin-bottom:4px}
-.search-famous-ref{font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.04em}
+/* AI memory hero section — smart top-guess cards for short queries */
+.search-famous-hero{padding:12px 14px 10px;border-bottom:1px solid var(--border);background:linear-gradient(160deg,rgba(31,95,74,.06),rgba(31,95,74,.01));animation:hl-fadein .22s ease}
+.search-famous-hdr{font-size:.58rem;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px;opacity:.7;display:flex;align-items:center;gap:5px}
+.search-famous-hdr::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.6}
+.search-famous-item{background:var(--surface);border:1px solid rgba(31,95,74,.2);border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,border-color .15s;margin-bottom:7px}
+.search-famous-item:last-child{margin-bottom:0}
+.search-famous-item:active{background:rgba(31,95,74,.07);border-color:rgba(31,95,74,.35)}
+.search-famous-verse{font-family:var(--font-ar);font-size:.92rem;direction:rtl;color:var(--text);line-height:1.7;margin-bottom:6px}
+.search-famous-ref-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.search-famous-ref{font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.04em;opacity:.85}
+.search-famous-badge{font-size:.54rem;font-weight:700;padding:1px 7px;border-radius:6px;background:rgba(251,191,36,.1);color:#f59e0b;border:1px solid rgba(251,191,36,.25);letter-spacing:.04em}
+.search-famous-badge--pop{background:rgba(99,147,246,.09);color:#7ba3f7;border-color:rgba(99,147,246,.22)}
 /* Loading shimmer while scoring */
 .search-results.loading{opacity:.65;pointer-events:none}
 /* Live phrase suggestion strip */
