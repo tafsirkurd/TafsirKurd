@@ -101,6 +101,39 @@
     return s;
   }
 
+  /* ── Token index candidate lookup ────────────────────────────── */
+  /* Returns Set of _idx positions containing tok OR any prefixed form */
+  function _getTokCandidates(tok) {
+    var s = new Set();
+    var h = _tokenIdx[tok];
+    if (h) for (var i = 0; i < h.length; i++) s.add(h[i]);
+    // Also look up prefixed verse words (verse has "ويتوكل", user typed "يتوكل")
+    var pfx = 'وفبلك';
+    for (var p = 0; p < pfx.length; p++) {
+      var ph = _tokenIdx[pfx[p] + tok];
+      if (ph) for (var j = 0; j < ph.length; j++) s.add(ph[j]);
+    }
+    return s;
+  }
+
+  /* Narrow the full _idx to candidate positions using non-stop tokens.
+   * Returns array of _idx positions, or null when full scan is needed. */
+  function _getCandidates(arTokens) {
+    var nonStop = arTokens.filter(function(t) { return t.length >= 2 && !STOP_AR[t]; });
+    if (!nonStop.length) return null; // all stopwords → full scan
+
+    var union = new Set();
+    var maxSingle = 0;
+    for (var t = 0; t < nonStop.length; t++) {
+      var cs = _getTokCandidates(nonStop[t]);
+      if (cs.size > maxSingle) maxSingle = cs.size;
+      cs.forEach(function(idx) { union.add(idx); });
+    }
+    // If every token is extremely common, don't bother narrowing
+    if (maxSingle > 2500 && nonStop.length === 1) return null;
+    return Array.from(union);
+  }
+
   /* ── Token equality with mutual prefix-strip fallback ─────────── */
   function _tokMatch(vWord, qTok) {
     if (vWord === qTok) return true;
@@ -406,8 +439,10 @@
   }
 
   /* ── Search index ─────────────────────────────────────────────── */
-  var _idx   = [];
-  var _ready = false;
+  var _idx      = [];
+  var _ready    = false;
+  var _tokenIdx = {}; // normalized-word → [_idx positions] for fast candidate lookup
+  var _stats    = { queries:0, totalMs:0, cacheHits:0, slowQ:[], zeroQ:[] };
 
   function buildIndex(quranData, tafsirData) {
     var t0 = Date.now();
@@ -434,8 +469,23 @@
         });
       }
     }
+    // Build reverse token index — word → list of _idx positions
+    _tokenIdx = {};
+    for (var ti = 0; ti < _idx.length; ti++) {
+      var twords = _idx[ti].arW;
+      var tseen  = {};
+      for (var wi = 0; wi < twords.length; wi++) {
+        var tw = twords[wi];
+        if (!tseen[tw]) {
+          tseen[tw] = 1;
+          if (!_tokenIdx[tw]) _tokenIdx[tw] = [];
+          _tokenIdx[tw].push(ti);
+        }
+      }
+    }
     _ready = true;
-    console.log('[QuranSearch] indexReady count=' + _idx.length + ' ms=' + (Date.now() - t0));
+    console.log('[QuranSearch] indexReady count=' + _idx.length +
+      ' tokenKeys=' + Object.keys(_tokenIdx).length + ' ms=' + (Date.now() - t0));
   }
 
   /* ── Verse scorer ─────────────────────────────────────────────── */
@@ -574,6 +624,13 @@
     var qOrig = q.trim();
     if (!qOrig) return [];
 
+    // Exact-phrase mode: query wrapped in " " or « » or " "
+    var exactMode = qOrig.length > 2 &&
+      ((qOrig[0]==='"'    && qOrig[qOrig.length-1]==='"')    ||
+       (qOrig[0]==='“' && qOrig[qOrig.length-1]==='”') ||
+       (qOrig[0]==='«' && qOrig[qOrig.length-1]==='»'));
+    if (exactMode) qOrig = qOrig.slice(1, -1).trim();
+
     var qLo  = normLo(qOrig);
     var qArN = _typoFix(normAr(qOrig)); // normalize then fix common typos
     var mode = detectMode(qOrig, qLo);
@@ -638,44 +695,50 @@
     surahHits = surahHits.slice(0, 4);
 
     /* ── 4. Verse index search ───────────────────────────────── */
-    /* NOTE: All 6236 verses are scored — no early-exit cap.     */
-    /* The old 300-limit was causing later surahs to be missed.  */
     var verseHits = [];
     if (qArN.length >= 2 || qLo.length >= 2) {
       var arTokens = qArN.split(/\s+/).filter(function(t){return t.length>=2;});
       var loTokens = qLo.split(/\s+/).filter(function(t){return t.length>=2;});
+
+      // Pre-filter via token index — typical Arabic phrase: ~5-50 candidates vs 6236
+      var candidates = _getCandidates(arTokens);
+      var scanLen = candidates ? candidates.length : _idx.length;
+
       var tScan = Date.now();
-      for (var m=0; m<_idx.length; m++) {
-        var e = _idx[m];
+      for (var m = 0; m < scanLen; m++) {
+        var e = candidates ? _idx[candidates[m]] : _idx[m];
         if (refKeys[e.sn+':'+e.an]) continue;
         var sv = scoreVerse(e, qArN, qLo, arTokens, loTokens);
-        if (sv.score > 0) {
-          var sh = surahs[e.sn-1] || {};
-          verseHits.push({
-            type:'verse', sn:e.sn, an:e.an, arO:e.arO, kuO:e.kuO,
-            surahAr:sh.ar||'', surahEn:sh.en||'',
-            score:sv.score, matchSrcs:sv.srcs,
-            posAr:sv.posAr, posKu:sv.posKu, mode:mode,
-            phraseScore:sv.phraseScore, consecutiveScore:sv.consecutiveScore,
-            tokenScore:sv.tokenScore, translationScore:sv.translationScore,
-            finalScore:sv.finalScore, _vLen:sv._vLen
-          });
-        }
+        if (sv.score <= 0) continue;
+        if (exactMode && sv.phraseScore === 0) continue; // strict exact-phrase mode
+        var sh = surahs[e.sn-1] || {};
+        verseHits.push({
+          type:'verse', sn:e.sn, an:e.an, arO:e.arO, kuO:e.kuO,
+          surahAr:sh.ar||'', surahEn:sh.en||'',
+          score:sv.score, matchSrcs:sv.srcs,
+          posAr:sv.posAr, posKu:sv.posKu, mode:mode,
+          phraseScore:sv.phraseScore, consecutiveScore:sv.consecutiveScore,
+          tokenScore:sv.tokenScore, translationScore:sv.translationScore,
+          finalScore:sv.finalScore, _vLen:sv._vLen
+        });
       }
       var scanMs = Date.now() - tScan;
       var tRank = Date.now();
       verseHits.sort(function(a,b){
         if (b.score !== a.score) return b.score - a.score;
-        // Tie-break 1: phrase appears earlier in the verse
         if (a.phraseScore > 0 && b.phraseScore > 0 && a.posAr !== b.posAr) return a.posAr - b.posAr;
-        // Tie-break 2: shorter verse wins (fewer unmatched words)
         if ((a._vLen||99) !== (b._vLen||99)) return (a._vLen||99) - (b._vLen||99);
-        // Tie-break 3: earlier surah (proxy for common/important)
         return a.sn - b.sn;
       });
       var rankMs = Date.now() - tRank;
       verseHits = verseHits.slice(0, 25);
-      console.log('[QSearchPerf] query="' + qOrig + '" scanMs=' + scanMs + ' rankMs=' + rankMs + ' results=' + verseHits.length);
+      // Track stats
+      _stats.queries++;
+      _stats.totalMs += scanMs + rankMs;
+      if (scanMs + rankMs > 80) _stats.slowQ.push({q:qOrig, ms:scanMs+rankMs});
+      if (!verseHits.length) _stats.zeroQ.push(qOrig);
+      console.log('[QSearchPerf] query="'+qOrig+'" candidates='+scanLen+'/'+_idx.length+
+        ' scanMs='+scanMs+' rankMs='+rankMs+' hits='+verseHits.length+(exactMode?' [exact]':''));
     }
 
     var out = results.concat(surahHits, verseHits);
@@ -684,6 +747,29 @@
     }
     console.log('[QuranSearch] query="'+qOrig+'" mode='+mode+' results='+out.length+' ms='+(Date.now()-t0));
     return out;
+  }
+
+  /* ── Live phrase suggestions ─────────────────────────────────── */
+  /* Prefix-matches query against Arabic VA keys → [{text, sn, an}] */
+  function suggest(q) {
+    if (!q || q.length < 2) return [];
+    var qN = _typoFix(normAr(q));
+    var suggs = [], seen = {};
+    var vaKeys = Object.keys(VA);
+    for (var i = 0; i < vaKeys.length; i++) {
+      var key = vaKeys[i];
+      if (!/[؀-ۿ]/.test(key)) continue; // Arabic keys only
+      var keyN = normAr(key);
+      if (keyN.length > qN.length + 1 && keyN.indexOf(qN) === 0) {
+        var target = VA[key];
+        var tKey = target.sn + ':' + target.an;
+        if (!seen[tKey]) {
+          seen[tKey] = 1;
+          suggs.push({text: key, sn: target.sn, an: target.an});
+        }
+      }
+    }
+    return suggs.slice(0, 5);
   }
 
   /* ── Public API ─────────────────────────────────────────────── */
@@ -696,7 +782,21 @@
 
     query: function (q, surahs, max) { return query(q, surahs, max); },
 
+    suggest: function (q) { return _ready ? suggest(q) : []; },
+
     isReady: function () { return _ready; },
+
+    stats: function () {
+      return {
+        queries:    _stats.queries,
+        avgMs:      _stats.queries ? Math.round(_stats.totalMs / _stats.queries) : 0,
+        slowQueries: _stats.slowQ.slice(-10),
+        zeroResults: _stats.zeroQ.slice(-10),
+        indexSize:  _idx.length,
+        tokenKeys:  Object.keys(_tokenIdx).length,
+        workerEnabled: false
+      };
+    },
 
     debug: function (surahs) {
       var tests = [

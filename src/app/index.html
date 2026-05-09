@@ -333,9 +333,10 @@ body{background:var(--bg);color:var(--text)}
 .search-noresult-sug-hdr{font-size:.72rem;color:var(--text3);margin-bottom:8px;font-weight:600}
 .search-noresult .search-chips{justify-content:center;padding:0}
 /* Search highlight mark */
-.search-hl{background:rgba(250,185,10,.28);border-radius:2px;padding:0 1px;font-weight:600;color:inherit}
-/* Phrase-level highlight — continuous background even across wrapped lines */
-.search-hl--phrase{background:linear-gradient(135deg,rgba(250,185,10,.42) 0%,rgba(250,185,10,.28) 100%);border-radius:3px;padding:1px 3px;font-weight:700;color:inherit;-webkit-box-decoration-break:clone;box-decoration-break:clone;box-shadow:0 0 0 1px rgba(250,185,10,.18)}
+.search-hl{background:rgba(212,160,23,.22);border-radius:2px;padding:0 1px;font-weight:600;color:inherit;animation:hl-fadein .25s ease}
+/* Phrase-level highlight — warm gold illumination, continuous across wrapped lines */
+.search-hl--phrase{background:linear-gradient(135deg,rgba(212,160,23,.38) 0%,rgba(212,160,23,.2) 60%,rgba(212,160,23,.32) 100%);border-radius:3px;padding:1px 4px;font-weight:700;color:inherit;-webkit-box-decoration-break:clone;box-decoration-break:clone;box-shadow:0 0 0 1.5px rgba(212,160,23,.25),0 1px 4px rgba(212,160,23,.12);animation:hl-fadein .3s ease}
+@keyframes hl-fadein{from{opacity:0;background-color:rgba(212,160,23,0)}to{opacity:1}}
 /* Primary card — top result with exact phrase match */
 .search-result--primary{background:linear-gradient(135deg,rgba(31,95,74,.1) 0%,rgba(31,95,74,.03) 100%);border-left:3px solid var(--accent)}
 .search-result--primary .search-result-verse-ar{font-size:.95rem}
@@ -346,6 +347,13 @@ body{background:var(--bg);color:var(--text)}
 .search-conf-badge--relevant{background:rgba(156,163,175,.12);color:var(--text3)}
 /* Loading shimmer while scoring */
 .search-results.loading{opacity:.65;pointer-events:none}
+/* Live phrase suggestion strip */
+.search-suggestions{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:7px 12px 5px;border-bottom:1px solid var(--border);background:var(--bg2);animation:hl-fadein .18s ease}
+.search-sugg-lbl{font-size:.62rem;color:var(--text3);flex-shrink:0;margin-inline-end:2px;opacity:.7}
+.search-sugg-chip{display:inline-flex;align-items:center;padding:4px 11px;border-radius:var(--r-full);background:linear-gradient(135deg,rgba(31,95,74,.12),rgba(31,95,74,.06));border:1px solid rgba(31,95,74,.25);font-size:.76rem;color:var(--accent);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s;font-family:var(--font-ar);direction:rtl;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.search-sugg-chip:active{background:rgba(31,95,74,.2)}
+/* Exact-phrase mode banner */
+.search-exact-banner{padding:5px 14px;font-size:.68rem;color:var(--accent);background:rgba(31,95,74,.07);border-bottom:1px solid rgba(31,95,74,.15);font-weight:600}
 /* Match-source pills */
 .search-src-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .search-src-pill{font-size:.64rem;font-weight:700;padding:2px 7px;border-radius:8px;text-transform:uppercase;letter-spacing:.04em}

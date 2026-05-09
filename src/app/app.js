@@ -2492,10 +2492,39 @@ App._renderSearchEmpty=function(){
   res.classList.add('on');
 };
 
+/* Live phrase suggestions — shown immediately while debounce fires */
+App._renderSuggestions=function(v){
+  if(!window.QuranSearch||!QuranSearch.isReady())return;
+  var suggs=QuranSearch.suggest(v);
+  var res=$('searchResults');
+  var old=res.querySelector('.search-suggestions');
+  if(old)old.remove();
+  if(!suggs.length)return;
+  var bar=document.createElement('div');
+  bar.className='search-suggestions';
+  var lbl=el('span','search-sugg-lbl','↩');
+  bar.appendChild(lbl);
+  suggs.forEach(function(s){
+    var chip=document.createElement('button');
+    chip.className='search-sugg-chip';
+    chip.dir='rtl';
+    chip.textContent=s.text;
+    on(chip,'click',function(){
+      $('searchInput').value=s.text;
+      App.onSearch(s.text);
+    });
+    bar.appendChild(chip);
+  });
+  if(res.firstChild)res.insertBefore(bar,res.firstChild);
+  else{res.appendChild(bar);res.classList.add('on');}
+};
+
 /* Debounced entry point — called on every keystroke */
 App.onSearch=function(v){
   clearTimeout(_searchTimer);
   if(!v.trim()){App._renderSearchEmpty();return;}
+  // Show live phrase suggestions immediately (no debounce)
+  App._renderSuggestions(v);
   // Instant render for cached queries (no debounce needed)
   if(_searchCache.has(v.trim())){App._execSearch(v);return;}
   _searchTimer=setTimeout(function(){App._execSearch(v);},90);
@@ -2504,6 +2533,8 @@ App.onSearch=function(v){
 /* Actual search execution after debounce */
 App._execSearch=function(v){
   var q=v.trim();
+  // Strip quote wrappers for display-side normalization (search.js handles them too)
+  var isExactMode=(q.length>2&&((q[0]==='"'&&q[q.length-1]==='"')||(q[0]==='«'&&q[q.length-1]==='»')));
   S.search=q;
   var res=$('searchResults');
   if(!q){App._renderSearchEmpty();return;}
@@ -2543,6 +2574,11 @@ App._execSearch=function(v){
   res.classList.add('on');
 
   var frag=document.createDocumentFragment();
+  // Exact-mode banner
+  if(isExactMode){
+    var exactBanner=el('div','search-exact-banner','🔍 '+(t('search.exact_mode')||'گەڕانی دقیق — تەنها دروستترین ئایەت'));
+    frag.appendChild(exactBanner);
+  }
   var prevType=null;
   for(var i=0;i<results.length;i++){
     var r=results[i];
