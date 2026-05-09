@@ -2278,6 +2278,11 @@ function checkNewBookNotif(){
 
 /* ===== SEARCH ===== */
 var _searchTimer=null;
+/* ─── Search result cache ──────────────────────────────────────── */
+var _searchCache=new Map();
+var _SEARCH_CACHE_MAX=50;
+function _cachePut(k,v){if(_searchCache.size>=_SEARCH_CACHE_MAX){_searchCache.delete(_searchCache.keys().next().value);}_searchCache.set(k,v);}
+function _cacheInvalidate(){_searchCache.clear();}
 
 /* ─── Search history ───────────────────────────────────────────── */
 var _SEARCH_HIST_KEY='qs_history';
@@ -2307,7 +2312,10 @@ function _ctxSnippet(text,normPos,radius){
   return(start>2?'\u2026':'')+text.slice(start,end).trim()+(end<len-2?'\u2026':'');
 }
 
-/* Build DOM nodes with highlighted matched tokens */
+/* Build DOM nodes with highlighted matched tokens.
+ * First token in `tokens` is treated as the full phrase (qArN) and gets
+ * search-hl--phrase class for a continuous background; subsequent tokens
+ * get the lighter search-hl class. */
 function _hlNodes(text,tokens,isAr){
   if(!text)return[document.createTextNode('')];
   var REMOVE_AR=/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]/;
@@ -2325,9 +2333,11 @@ function _hlNodes(text,tokens,isAr){
   }
   var valid=tokens?tokens.filter(function(t){return t&&t.length>=2;}):[];
   if(!valid.length)return[document.createTextNode(text)];
+  // ranges: [origStart, origEnd, isPhrase(0|1)]
   var ranges=[];
   for(var t=0;t<valid.length;t++){
     var tok=valid[t],pos=0;
+    var isPhraseTok=(t===0&&tok.length>=5); // first token = full normalized phrase
     while(pos<norm.length){
       var idx=norm.indexOf(tok,pos);
       if(idx===-1)break;
@@ -2335,25 +2345,30 @@ function _hlNodes(text,tokens,isAr){
       if(toOrig[idx]!==undefined&&toOrig[nEnd]!==undefined){
         var oS=toOrig[idx],oE=toOrig[nEnd]+1;
         if(isAr){while(oE<text.length&&REMOVE_AR.test(text[oE]))oE++;}
-        if(oS<oE)ranges.push([oS,oE]);
+        if(oS<oE)ranges.push([oS,oE,isPhraseTok?1:0]);
       }
       pos=idx+1;
     }
   }
   if(!ranges.length)return[document.createTextNode(text)];
   ranges.sort(function(a,b){return a[0]-b[0];});
-  var merged=[ranges[0].slice()];
+  // Merge overlapping ranges; propagate phrase flag through merge
+  var merged=[[ranges[0][0],ranges[0][1],ranges[0][2]]];
   for(var r=1;r<ranges.length;r++){
     var last=merged[merged.length-1];
-    if(ranges[r][0]<last[1])last[1]=Math.max(last[1],ranges[r][1]);
-    else merged.push(ranges[r].slice());
+    if(ranges[r][0]<last[1]){
+      if(ranges[r][1]>last[1])last[1]=ranges[r][1];
+      if(ranges[r][2])last[2]=1; // phrase flag wins
+    }else{
+      merged.push([ranges[r][0],ranges[r][1],ranges[r][2]]);
+    }
   }
   var nodes=[],prev=0;
   for(var m=0;m<merged.length;m++){
-    var ms=merged[m][0],me=merged[m][1];
+    var ms=merged[m][0],me=merged[m][1],ph=merged[m][2];
     if(ms>prev)nodes.push(document.createTextNode(text.slice(prev,ms)));
     var mark=document.createElement('mark');
-    mark.className='search-hl';
+    mark.className=ph?'search-hl search-hl--phrase':'search-hl';
     mark.textContent=text.slice(ms,me);
     nodes.push(mark);
     prev=me;
@@ -2480,11 +2495,10 @@ App._renderSearchEmpty=function(){
 /* Debounced entry point — called on every keystroke */
 App.onSearch=function(v){
   clearTimeout(_searchTimer);
-  if(!v.trim()){
-    App._renderSearchEmpty();
-    return;
-  }
-  _searchTimer=setTimeout(function(){App._execSearch(v);},100);
+  if(!v.trim()){App._renderSearchEmpty();return;}
+  // Instant render for cached queries (no debounce needed)
+  if(_searchCache.has(v.trim())){App._execSearch(v);return;}
+  _searchTimer=setTimeout(function(){App._execSearch(v);},90);
 };
 
 /* Actual search execution after debounce */
@@ -2492,7 +2506,6 @@ App._execSearch=function(v){
   var q=v.trim();
   S.search=q;
   var res=$('searchResults');
-  clear(res);
   if(!q){App._renderSearchEmpty();return;}
 
   // Build normalized query tokens for context highlighting
@@ -2500,6 +2513,7 @@ App._execSearch=function(v){
              .replace(/[\u0622\u0623\u0625\u0671]/g,'\u0627')
              .replace(/\u0649/g,'\u064A').replace(/\u0624/g,'\u0648')
              .replace(/\u0626/g,'\u064A').replace(/\u0629/g,'\u0647')
+             .replace(/\u0648\u0627(\s|$)/g,'\u0648$1').replace(/\u0647\u0627(\s|$)/g,'\u0647$1') // typo fix
              .replace(/\s+/g,' ').trim();
   var _qLo=q.toLowerCase().trim();
   _lastSearchQ={
@@ -2509,15 +2523,23 @@ App._execSearch=function(v){
     loTokens:_qLo.split(/\s+/).filter(function(t){return t.length>=2;})
   };
 
-  var t0=Date.now();
-  var results=window.QuranSearch&&QuranSearch.isReady()
-    ? QuranSearch.query(q,SURAHS,30)
-    : App._basicSearch(q);
-
-  if(!results.length){
-    App._renderSearchNoResults(q);
-    return;
+  // Serve from cache if available (instant, no recompute)
+  var results=_searchCache.get(q);
+  if(!results){
+    res.classList.add('loading');
+    var t0=performance.now?performance.now():Date.now();
+    results=window.QuranSearch&&QuranSearch.isReady()
+      ? QuranSearch.query(q,SURAHS,30)
+      : App._basicSearch(q);
+    var elapsed=Math.round((performance.now?performance.now():Date.now())-t0);
+    _cachePut(q,results);
+    var top=results[0];
+    console.log('[QSearchPerf] query="'+q+'" scanMs='+elapsed+' results='+results.length+(top?' top='+top.sn+':'+(top.an||'')+' score='+top.score:''));
+    res.classList.remove('loading');
   }
+
+  clear(res);
+  if(!results.length){App._renderSearchNoResults(q);return;}
   res.classList.add('on');
 
   var frag=document.createDocumentFragment();
@@ -2531,7 +2553,8 @@ App._execSearch=function(v){
         frag.appendChild(el('div','search-divider',t('search.divider_ayah')));
       prevType=r.type;
     }
-    frag.appendChild(App._mkSearchItem(r));
+    var isPrimary=i===0&&(r.phraseScore>0||r.matchType==='alias');
+    frag.appendChild(App._mkSearchItem(r,isPrimary));
   }
   res.appendChild(frag);
 };
@@ -2564,8 +2587,9 @@ App._renderSearchNoResults=function(q){
 };
 
 /* Build a single result card --- context snippets, highlights, source pills */
-App._mkSearchItem=function(r){
-  var item=el('div','search-result search-result--'+r.type);
+App._mkSearchItem=function(r,isPrimary){
+  var cls='search-result search-result--'+r.type+(isPrimary?' search-result--primary':'');
+  var item=el('div',cls);
   var qArN=_lastSearchQ.arN,arToks=_lastSearchQ.arTokens;
   var qLo=_lastSearchQ.lo,loToks=_lastSearchQ.loTokens;
   var allAr=qArN?[qArN].concat(arToks).filter(function(t){return t&&t.length>=2;}):arToks;
@@ -2619,9 +2643,19 @@ App._mkSearchItem=function(r){
     arDiv2.className='search-result-verse-ar';
     _hlNodes(snipAr2,allAr,true).forEach(function(n){arDiv2.appendChild(n);});
     item.appendChild(arDiv2);
-    var sub=el('div','search-result-sub');
-    sub.textContent=(r.surahAr||r.surahEn)+' \u2022 '+t('reader.ayah')+' '+r.an;
-    item.appendChild(sub);
+    // Surah + ayah meta line
+    var metaRow=el('div','search-result-sub');
+    metaRow.textContent=(r.surahAr||r.surahEn)+' \u2022 '+t('reader.ayah')+' '+r.an;
+    // Confidence badge (only when score data is available)
+    if(r.phraseScore!==undefined){
+      var conf=r.phraseScore>0?'exact':r.consecutiveScore>400?'close':r.tokenScore>150?'relevant':'';
+      if(conf){
+        var confLbl=conf==='exact'?'\u062f\u0642\u06cc\u0642':conf==='close'?'\u0646\u0632\u06cc\u06a9':'\u067e\u06d5\u06cc\u0648\u06d5\u0646\u062f\u06cc\u062f\u0627\u0631';
+        var cbadge=el('span','search-conf-badge search-conf-badge--'+conf,confLbl);
+        metaRow.appendChild(cbadge);
+      }
+    }
+    item.appendChild(metaRow);
     if(r.kuO){
       var snipKu2=_ctxSnippet(r.kuO,r.posKu,90);
       var kuDiv2=document.createElement('div');

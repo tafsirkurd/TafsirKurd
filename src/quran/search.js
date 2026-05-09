@@ -1,28 +1,43 @@
 /* =====================================================================
- * QuranSearch — Smart Quran Search Engine v2.0
+ * QuranSearch — Smart Quran Search Engine v3.0
  * TafsirKurd Capacitor App
  *
  * Architecture:
- *  normAr()       — Arabic normalization (harakat, alef, ya, hamza, tatweel, ta-marbuta)
- *  normLo()       — lowercase/trim normalize
- *  arDigits()     — Arabic-Indic → ASCII digits
- *  _stripPfx()    — strip one-letter Arabic prefixes (و/ف/ب/ل/ك)
- *  SA             — Surah aliases (English transliterations)
- *  VA             — Famous verse aliases (Arabic phrases + English names)
- *  parseRef()     — "2:255" / "٢:٢٥٥" / "baqarah 255" / "البقرة 255" etc.
- *  detectMode()   — detect query mode: ref / surah / arabic / latin / mixed
- *  buildIndex()   — one-time: precomputes arN + kuN + tfN for all 6236 verses
- *  scoreVerse()   — weighted score + match sources + match positions
- *  query()        — orchestrates all above, returns ranked results
+ *  normAr()        — Arabic normalization (harakat, alef, ya, hamza, tatweel, ta-marbuta)
+ *  normLo()        — lowercase/trim normalize
+ *  arDigits()      — Arabic-Indic → ASCII digits
+ *  _stripPfx()     — strip one-letter Arabic prefix (و/ف/ب/ل/ك)
+ *  _tokMatch()     — token equality with mutual prefix-strip fallback
+ *  _maxConsec()    — longest consecutive run of query tokens in verse word array
+ *  STOP_AR         — Arabic stopwords (downweighted in token scoring, still active in phrase matching)
+ *  SA              — Surah aliases (English transliterations)
+ *  VA              — Famous verse aliases (Arabic phrases + English names)
+ *  parseRef()      — "2:255" / "٢:٢٥٥" / "baqarah 255" / "البقرة 255" etc.
+ *  detectMode()    — detect query mode: ref / surah / arabic / latin / mixed
+ *  buildIndex()    — one-time: precomputes arN + arW + kuN + tfN for all 6236 verses
+ *  scoreVerse()    — tiered scorer: phrase → consecutive → token → translation
+ *  query()         — orchestrates all above, returns ranked results
+ *
+ * Scoring tiers:
+ *  1. Exact normalized phrase match   → 1000–1150
+ *  2. All tokens consecutive          → 850
+ *  3. Partial consecutive run ≥5      → 550+
+ *  4. Partial consecutive run ≥4      → 400+
+ *  5. Partial consecutive run ≥3      → 200+
+ *  6. 2-token consecutive             → 80
+ *  7. Non-stop token coverage         → 0–250
+ *  8. Translation/Kurdish             → 0–310
+ *  9. Tafsir fallback                 → 0–110
+ *
+ * Debug fields per result:
+ *  phraseScore, consecutiveScore, tokenScore, translationScore, finalScore
  *
  * Result shapes:
- *  {type:'ref',   sn, an, arO, kuO, surahAr, surahEn, score, matchSrcs, posAr, posKu, mode}
+ *  {type:'ref',   sn, an, arO, kuO, surahAr, surahEn, score, matchSrcs, posAr, posKu, mode,
+ *   phraseScore, consecutiveScore, tokenScore, translationScore, finalScore}
  *  {type:'surah', sn, surahAr, surahEn, ayahCount, score, matchSrcs, mode}
- *  {type:'verse', sn, an, arO, kuO, surahAr, surahEn, score, matchSrcs, posAr, posKu, mode}
- *
- * Debug logs:
- *  [QuranSearch] indexReady count=N ms=M
- *  [QuranSearch] query="..." mode=MODE results=N ms=M
+ *  {type:'verse', sn, an, arO, kuO, surahAr, surahEn, score, matchSrcs, posAr, posKu, mode,
+ *   phraseScore, consecutiveScore, tokenScore, translationScore, finalScore}
  * ===================================================================== */
 (function () {
   'use strict';
@@ -32,7 +47,7 @@
     if (!s) return '';
     s = String(s);
     // 1. Remove harakat / tashkeel / Quran tajweed marks
-    s = s.replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]/g, '');
+    s = s.replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]/g, '');
     // 2. Normalize alef variants → ا
     s = s.replace(/[آأإٱ]/g, 'ا');
     // 3. Normalize alif maqsura ى → ي
@@ -70,6 +85,63 @@
     }
     return null;
   }
+
+  /* ── Typo tolerance: fix common Arabic keyboard/input errors ─── */
+  function _typoFix(s) {
+    if (!s) return s;
+    // Trailing alef on و/ه endings (فهوا → فهو, هذها → هذه)
+    s = s.replace(/وا(\s|$)/g, 'و$1');
+    s = s.replace(/ها(\s|$)/g, 'ه$1');
+    // الاه → الله (very common phone-keyboard mistake)
+    s = s.replace(/الاه/g, 'الله');
+    // ييي / ووو / ااا — collapse 3+ repeated chars → 1
+    s = s.replace(/(.)\1{2,}/g, '$1');
+    // Double spaces
+    s = s.replace(/\s{2,}/g, ' ').trim();
+    return s;
+  }
+
+  /* ── Token equality with mutual prefix-strip fallback ─────────── */
+  function _tokMatch(vWord, qTok) {
+    if (vWord === qTok) return true;
+    var vs = _stripPfx(vWord);
+    if (vs && vs === qTok) return true;
+    var qs = _stripPfx(qTok);
+    if (qs && qs === vWord) return true;
+    if (vs && qs && vs === qs) return true;
+    return false;
+  }
+
+  /* ── Longest consecutive run of queryToks in verseWords ──────── */
+  function _maxConsec(verseWords, queryToks) {
+    if (!queryToks.length || !verseWords.length) return 0;
+    var best = 0;
+    for (var vi = 0; vi < verseWords.length; vi++) {
+      for (var qi = 0; qi < queryToks.length; qi++) {
+        if (!_tokMatch(verseWords[vi], queryToks[qi])) continue;
+        var run = 1;
+        var vj = vi + 1;
+        for (var qj = qi + 1; qj < queryToks.length && vj < verseWords.length; qj++, vj++) {
+          if (_tokMatch(verseWords[vj], queryToks[qj])) run++;
+          else break;
+        }
+        if (run > best) best = run;
+        if (best === queryToks.length) return best; // can't do better
+      }
+    }
+    return best;
+  }
+
+  /* ── Arabic stopwords (downweighted in token scoring) ────────── */
+  /* They are still active in phrase matching — never removed from the text. */
+  var STOP_AR = {
+    'من':1,'في':1,'علي':1,'الله':1,'ان':1,'اي':1,'ما':1,'لا':1,
+    'هو':1,'هي':1,'هم':1,'عن':1,'الي':1,'ثم':1,'لم':1,'لن':1,
+    'قد':1,'بل':1,'انه':1,'كل':1,'هذا':1,'هذه':1,'ذلك':1,'تلك':1,
+    'هل':1,'كان':1,'فهو':1,'وهو':1,'وهي':1,'اله':1,'اذا':1,'لقد':1,
+    'عليه':1,'عليهم':1,'قال':1,'يقول':1,'ومن':1,'وما':1,'فما':1,
+    'فان':1,'وان':1,'اما':1,'مما':1,'مع':1,'بما':1,'عما':1,'اذ':1
+  };
 
   /* ── Mode detection ───────────────────────────────────────────── */
   function detectMode(qOrig, qLo) {
@@ -245,43 +317,65 @@
     'ya sin':{sn:36,an:1},'ya seen':{sn:36,an:1},
     /* Iqra */
     'iqra bismi rabbik':{sn:96,an:1},'recite in the name':{sn:96,an:1},
-    /* Arabic — Ayat al-Kursi */
+    /* Man yatawakkal */
+    'man yatawakkal':{sn:65,an:3},'waman yatawakkal':{sn:65,an:3},
+    'whoever relies on allah':{sn:65,an:3},'tawakkal ala allah':{sn:65,an:3},
+    /* Iyyaka nabudu */
+    'iyyaka nabudu':{sn:1,an:5},'iyyaka nabudu wa iyyaka nastaeen':{sn:1,an:5},
+    'you alone we worship':{sn:1,an:5},
+
+    /* ── Arabic aliases ──────────────────────────────────────────── */
+    /* Ayat al-Kursi */
     'ايه الكرسي':{sn:2,an:255},'اية الكرسي':{sn:2,an:255},'ايات الكرسي':{sn:2,an:255},
     'الله لا اله الا هو':{sn:2,an:255},
-    /* Arabic — Rabbi zidni ilma */
+    /* Rabbi zidni ilma */
     'رب زدني علما':{sn:20,an:114},'رب زدنى علما':{sn:20,an:114},
     'قال رب زدني علما':{sn:20,an:114},'قال ربي زدني علما':{sn:20,an:114},
-    /* Arabic — Qul huwallahu */
+    /* Qul huwallahu */
     'قل هو الله احد':{sn:112,an:1},'قل هو الله':{sn:112,an:1},
-    /* Arabic — Bismillah / Fatiha */
+    /* Bismillah / Fatiha */
     'بسم الله':{sn:1,an:1},'بسم الله الرحمن الرحيم':{sn:1,an:1},
     'الحمد لله':{sn:1,an:2},'الحمد لله رب العالمين':{sn:1,an:2},
-    /* Arabic — Hasbunallah */
+    /* Hasbunallah */
     'حسبنا الله':{sn:3,an:173},'حسبنا الله ونعم الوكيل':{sn:3,an:173},
-    /* Arabic — La taqnatu */
+    /* La taqnatu */
     'لا تقنطوا':{sn:39,an:53},'لا تقنطوا من رحمة الله':{sn:39,an:53},
-    /* Arabic — Inna maal usri */
+    /* Inna maal usri */
     'ان مع العسر يسرا':{sn:94,an:6},'فان مع العسر يسرا':{sn:94,an:6},
-    /* Arabic — Inna Allah maa sabirin */
+    'إن مع العسر يسرا':{sn:94,an:6},'إن مع العسر يسرًا':{sn:94,an:6},
+    /* Inna Allah maa sabirin */
     'ان الله مع الصابرين':{sn:2,an:153},
-    /* Arabic — La tahzan */
+    /* La tahzan */
     'لا تحزن':{sn:9,an:40},
-    /* Arabic — Dua Yunus / La ilaha illa anta */
+    /* Dua Yunus */
     'لا اله الا انت سبحانك':{sn:21,an:87},'لا اله الا انت':{sn:21,an:87},
     'سبحانك اني كنت من الظالمين':{sn:21,an:87},'دعاء يونس':{sn:21,an:87},
-    /* Arabic — Rabbi ishrah */
+    /* Rabbi ishrah */
     'رب اشرح لي صدري':{sn:20,an:25},'رب اشرح':{sn:20,an:25},
-    /* Arabic — Rabbana atina */
+    /* Rabbana atina */
     'ربنا اتنا':{sn:2,an:201},'ربنا اتنا في الدنيا حسنة':{sn:2,an:201},
-    /* Arabic — Alam nashrah */
+    /* Alam nashrah */
     'الم نشرح':{sn:94,an:1},'الم نشرح لك صدرك':{sn:94,an:1},
-    /* Arabic — Wama arsalnaka */
+    /* Wama arsalnaka */
     'وما ارسلناك الا رحمه للعالمين':{sn:21,an:107},
-    /* Arabic — Inna lillahi */
+    /* Inna lillahi */
     'انا لله وانا اليه راجعون':{sn:2,an:156},'انا لله':{sn:2,an:156},
-    /* English — Dua Yunus */
+    /* Man yatawakkal — full phrase and common fragments */
+    'ومن يتوكل على الله فهو حسبه':{sn:65,an:3},
+    'ومن يتوكل علي الله فهو حسبه':{sn:65,an:3},
+    'من يتوكل على الله فهو حسبه':{sn:65,an:3},
+    'من يتوكل علي الله فهو حسبه':{sn:65,an:3},
+    'فهو حسبه':{sn:65,an:3},
+    'يتوكل على الله':{sn:65,an:3},
+    'يتوكل علي الله':{sn:65,an:3},
+    /* Iyyaka nabudu */
+    'إياك نعبد وإياك نستعين':{sn:1,an:5},
+    'اياك نعبد واياك نستعين':{sn:1,an:5},
+    'إياك نعبد':{sn:1,an:5},
+    'اياك نعبد':{sn:1,an:5},
+
+    /* ── English aliases ─────────────────────────────────────────── */
     'la ilaha illa anta subhanaka':{sn:21,an:87},'dua yunus':{sn:21,an:87},
-    /* English — Inna lillahi */
     'inna lillahi wa inna ilayhi rajiun':{sn:2,an:156}
   };
 
@@ -329,11 +423,12 @@
         var arO  = String(vObj.text || vObj || '');
         var kuO  = kvv[vi] ? String(kvv[vi].text  || '') : '';
         var tfO  = kvv[vi] ? String(kvv[vi].tafsir || '') : '';
-        // Fallback: if no translation, use first 200 chars of tafsir for display
         if (!kuO && tfO) kuO = tfO.substring(0, 200);
+        var arN = normAr(arO);
         _idx.push({
           sn: sn, an: vi + 1,
-          arO: arO, arN: normAr(arO),
+          arO: arO, arN: arN,
+          arW: arN.split(/\s+/).filter(Boolean), // word array for consecutive matching
           kuO: kuO, kuN: normLo(kuO),
           tfO: tfO, tfN: normLo(tfO)
         });
@@ -344,96 +439,123 @@
   }
 
   /* ── Verse scorer ─────────────────────────────────────────────── */
-  /* Returns {score, srcs, posAr, posKu} */
+  /* Returns {score, srcs, posAr, posKu, phraseScore, consecutiveScore, tokenScore, translationScore, finalScore} */
   function scoreVerse(e, qArN, qLo, arTokens, loTokens) {
-    var sc = 0, srcs = [], posAr = -1, posKu = -1;
+    var phraseScore = 0, consecutiveScore = 0, tokenScore = 0, translationScore = 0;
+    var srcs = [], posAr = -1, posKu = -1;
 
-    /* Arabic exact phrase */
-    var ap = e.arN.indexOf(qArN);
-    if (ap !== -1) {
-      posAr = ap;
-      sc += 500;
-      if (ap === 0)       sc += 150;
-      else if (ap < 20)   sc += 80;
-      else if (ap < 60)   sc += 40;
-      if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
+    /* ── 1. Exact normalized Arabic phrase ───────────────────── */
+    if (qArN.length >= 3) {
+      var ap = e.arN.indexOf(qArN);
+      if (ap !== -1) {
+        posAr = ap;
+        phraseScore = 1000;
+        if (ap === 0)       phraseScore += 150;
+        else if (ap < 20)   phraseScore += 80;
+        else if (ap < 60)   phraseScore += 40;
+        if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
+      }
     }
 
-    /* Arabic token matching */
-    if (arTokens.length > 0) {
-      var arHit = 0, arPfx = 0;
-      for (var i=0; i<arTokens.length; i++) {
+    /* ── 2. Consecutive token sequence (phrase not found) ────── */
+    if (phraseScore === 0 && arTokens.length >= 2) {
+      var consec = _maxConsec(e.arW, arTokens);
+      if (consec >= 2) {
+        if      (consec >= arTokens.length) consecutiveScore = 850;
+        else if (consec >= 5)               consecutiveScore = 550 + consec * 20;
+        else if (consec >= 4)               consecutiveScore = 400 + consec * 20;
+        else if (consec >= 3)               consecutiveScore = 200 + consec * 20;
+        else                                consecutiveScore = 80;
+        if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
+        if (posAr === -1) posAr = 0;
+      }
+    }
+
+    /* ── 3. Token matching with stopword downweighting ───────── */
+    if (phraseScore === 0) {
+      var arHit = 0, arPfxHit = 0;
+      var nonStopTotal = 0, nonStopHit = 0;
+      for (var i = 0; i < arTokens.length; i++) {
         var tok = arTokens[i];
         if (tok.length < 2) continue;
+        var isStop = STOP_AR[tok] === 1;
+        if (!isStop) nonStopTotal++;
         var tp = e.arN.indexOf(tok);
         if (tp !== -1) {
           arHit++;
+          if (!isStop) nonStopHit++;
           if (posAr === -1) posAr = tp;
           if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
         } else {
-          // Try stripping one-letter prefix (handles و/ف/ب/ل prefixed words)
           var stripped = _stripPfx(tok);
-          if (stripped && e.arN.indexOf(stripped) !== -1) arPfx++;
+          if (stripped && e.arN.indexOf(stripped) !== -1) {
+            arPfxHit++;
+            if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
+          }
         }
       }
-      var totalArTok = arTokens.filter(function(t){return t.length>=2;}).length;
-      if (totalArTok > 1) {
-        if (sc < 300) {
-          if (arHit + arPfx >= totalArTok) sc += 350;
-          else if (arHit >= 2)             sc += arHit * 55 + arPfx * 25;
-          else if (arHit === 1)            sc += 30 + arPfx * 20;
-        } else {
-          // Bonus for additional token hits on top of phrase match
-          if (arHit >= 2) sc += 20;
-        }
-      } else if (totalArTok === 1 && sc === 0 && qArN.length >= 3) {
-        // Single token — try prefix strip for a modest bonus
-        var stripped1 = _stripPfx(qArN);
-        if (stripped1 && e.arN.indexOf(stripped1) !== -1) {
-          sc += 120;
-          if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
-          if (posAr === -1) posAr = e.arN.indexOf(stripped1);
-        }
+      var totalToks = arTokens.filter(function (t) { return t.length >= 2; }).length;
+      if (totalToks > 0 && (arHit + arPfxHit) > 0) {
+        // Non-stop tokens carry most weight; stop tokens add a small bonus
+        var nonStopScore = nonStopTotal > 0 ? (nonStopHit / nonStopTotal) * 220 : 0;
+        var stopBonus    = Math.max(0, arHit - nonStopHit + arPfxHit) * 8;
+        tokenScore = Math.round(nonStopScore + stopBonus);
+        // Bonus for complete coverage (all meaningful tokens present)
+        if (nonStopTotal > 0 && nonStopHit >= nonStopTotal) tokenScore += 40;
       }
     }
 
-    /* Kurdish / translation match */
+    /* ── 4. Kurdish / translation match ─────────────────────── */
     if (e.kuN && qLo.length >= 2) {
       var kp = e.kuN.indexOf(qLo);
       if (kp !== -1) {
-        posKu = kp; sc += 250;
-        if (kp === 0) sc += 60;
+        posKu = kp;
+        translationScore += 250 + (kp === 0 ? 60 : 0);
         if (srcs.indexOf('translation') === -1) srcs.push('translation');
       } else if (loTokens.length > 1) {
         var kuHit = 0;
-        for (var j=0; j<loTokens.length; j++) {
+        for (var j = 0; j < loTokens.length; j++) {
           if (loTokens[j].length >= 3 && e.kuN.indexOf(loTokens[j]) !== -1) {
             kuHit++;
             if (posKu === -1) posKu = e.kuN.indexOf(loTokens[j]);
           }
         }
-        if (kuHit >= 2) { sc += kuHit * 50; if (srcs.indexOf('translation') === -1) srcs.push('translation'); }
-        else if (kuHit === 1) { sc += 35; if (srcs.indexOf('translation') === -1) srcs.push('translation'); }
-      }
-    }
-
-    /* Tafsir match — lower priority, only when no other match */
-    if (sc === 0 && e.tfN && qLo.length >= 3) {
-      var tP = e.tfN.indexOf(qLo);
-      if (tP !== -1) {
-        sc += 110;
-        srcs.push('tafsir');
-        if (posKu === -1) posKu = tP;
-      } else if (loTokens.length > 1) {
-        var tfHit = 0;
-        for (var k=0; k<loTokens.length; k++) {
-          if (loTokens[k].length >= 4 && e.tfN.indexOf(loTokens[k]) !== -1) tfHit++;
+        if (kuHit >= 2) {
+          translationScore += kuHit * 50;
+          if (srcs.indexOf('translation') === -1) srcs.push('translation');
+        } else if (kuHit === 1) {
+          translationScore += 35;
+          if (srcs.indexOf('translation') === -1) srcs.push('translation');
         }
-        if (tfHit >= 2) { sc += tfHit * 28; srcs.push('tafsir'); }
       }
     }
 
-    return {score: sc, srcs: srcs, posAr: posAr, posKu: posKu};
+    /* ── 5. Tafsir fallback (only when no Arabic/translation match) */
+    if (phraseScore === 0 && consecutiveScore === 0 && tokenScore === 0 && translationScore < 50) {
+      if (e.tfN && qLo.length >= 3) {
+        var tP = e.tfN.indexOf(qLo);
+        if (tP !== -1) {
+          translationScore += 110;
+          srcs.push('tafsir');
+          if (posKu === -1) posKu = tP;
+        } else if (loTokens.length > 1) {
+          var tfHit = 0;
+          for (var k = 0; k < loTokens.length; k++) {
+            if (loTokens[k].length >= 4 && e.tfN.indexOf(loTokens[k]) !== -1) tfHit++;
+          }
+          if (tfHit >= 2) { translationScore += tfHit * 28; srcs.push('tafsir'); }
+        }
+      }
+    }
+
+    var finalScore = phraseScore + consecutiveScore + tokenScore + translationScore;
+    return {
+      score: finalScore, srcs: srcs, posAr: posAr, posKu: posKu,
+      phraseScore: phraseScore, consecutiveScore: consecutiveScore,
+      tokenScore: tokenScore, translationScore: translationScore,
+      finalScore: finalScore,
+      _vLen: e.arW.length
+    };
   }
 
   /* ── Find verse by sn+an ──────────────────────────────────────── */
@@ -453,7 +575,7 @@
     if (!qOrig) return [];
 
     var qLo  = normLo(qOrig);
-    var qArN = normAr(qOrig);
+    var qArN = _typoFix(normAr(qOrig)); // normalize then fix common typos
     var mode = detectMode(qOrig, qLo);
     var results = [], refKeys = {};
     var t0 = Date.now();
@@ -468,7 +590,8 @@
           type:'ref', sn:ve.sn, an:ve.an, arO:ve.arO, kuO:ve.kuO,
           surahAr:vSn.ar||'', surahEn:vSn.en||'',
           score:1000, matchType:'alias', matchSrcs:['arabic'],
-          posAr:0, posKu:-1, mode:mode
+          posAr:0, posKu:-1, mode:mode,
+          phraseScore:1000, consecutiveScore:0, tokenScore:0, translationScore:0, finalScore:1000
         });
         refKeys[ve.sn+':'+ve.an] = 1;
       }
@@ -484,7 +607,8 @@
           type:'ref', sn:re.sn, an:re.an, arO:re.arO, kuO:re.kuO,
           surahAr:rSn.ar||'', surahEn:rSn.en||'',
           score:950, matchType:'ref', matchSrcs:['ref'],
-          posAr:0, posKu:-1, mode:mode
+          posAr:0, posKu:-1, mode:mode,
+          phraseScore:0, consecutiveScore:0, tokenScore:0, translationScore:0, finalScore:950
         });
         refKeys[re.sn+':'+re.an] = 1;
       }
@@ -514,10 +638,13 @@
     surahHits = surahHits.slice(0, 4);
 
     /* ── 4. Verse index search ───────────────────────────────── */
+    /* NOTE: All 6236 verses are scored — no early-exit cap.     */
+    /* The old 300-limit was causing later surahs to be missed.  */
     var verseHits = [];
     if (qArN.length >= 2 || qLo.length >= 2) {
       var arTokens = qArN.split(/\s+/).filter(function(t){return t.length>=2;});
       var loTokens = qLo.split(/\s+/).filter(function(t){return t.length>=2;});
+      var tScan = Date.now();
       for (var m=0; m<_idx.length; m++) {
         var e = _idx[m];
         if (refKeys[e.sn+':'+e.an]) continue;
@@ -528,16 +655,33 @@
             type:'verse', sn:e.sn, an:e.an, arO:e.arO, kuO:e.kuO,
             surahAr:sh.ar||'', surahEn:sh.en||'',
             score:sv.score, matchSrcs:sv.srcs,
-            posAr:sv.posAr, posKu:sv.posKu, mode:mode
+            posAr:sv.posAr, posKu:sv.posKu, mode:mode,
+            phraseScore:sv.phraseScore, consecutiveScore:sv.consecutiveScore,
+            tokenScore:sv.tokenScore, translationScore:sv.translationScore,
+            finalScore:sv.finalScore, _vLen:sv._vLen
           });
-          if (verseHits.length >= 300) break;
         }
       }
-      verseHits.sort(function(a,b){return b.score-a.score;});
+      var scanMs = Date.now() - tScan;
+      var tRank = Date.now();
+      verseHits.sort(function(a,b){
+        if (b.score !== a.score) return b.score - a.score;
+        // Tie-break 1: phrase appears earlier in the verse
+        if (a.phraseScore > 0 && b.phraseScore > 0 && a.posAr !== b.posAr) return a.posAr - b.posAr;
+        // Tie-break 2: shorter verse wins (fewer unmatched words)
+        if ((a._vLen||99) !== (b._vLen||99)) return (a._vLen||99) - (b._vLen||99);
+        // Tie-break 3: earlier surah (proxy for common/important)
+        return a.sn - b.sn;
+      });
+      var rankMs = Date.now() - tRank;
       verseHits = verseHits.slice(0, 25);
+      console.log('[QSearchPerf] query="' + qOrig + '" scanMs=' + scanMs + ' rankMs=' + rankMs + ' results=' + verseHits.length);
     }
 
     var out = results.concat(surahHits, verseHits);
+    if (out.length > 0 && out[0].sn) {
+      console.log('[QSearchPerf] top=' + out[0].sn + ':' + (out[0].an || '') + ' score=' + out[0].score);
+    }
     console.log('[QuranSearch] query="'+qOrig+'" mode='+mode+' results='+out.length+' ms='+(Date.now()-t0));
     return out;
   }
@@ -556,18 +700,28 @@
 
     debug: function (surahs) {
       var tests = [
+        /* required test cases */
+        'ومن يتوكل على الله فهو حسبه',
+        'فهو حسبه',
+        'لا تقنطوا من رحمة الله',
+        'إن مع العسر يسرا',
+        'ان مع العسر يسرا',
+        'رب زدني علما',
+        'إياك نعبد وإياك نستعين',
+        'حسبنا الله ونعم الوكيل',
+        /* fuzzy variants */
+        'ومن يتوكل ع الله فهو حسبه',
+        'ومن يتوكل على الله فهوا حسبه',
+        /* reference / surah */
         '2:255', '٢:٢٥٥',
         'البقره 255',
         'الفاتحه', 'Al-Fatiha',
+        /* classic */
         'قال رب زدني علما',
-        'قال ربي زدني علما',
         'لا اله الا انت سبحانك',
         'yaseen', 'ikhlas', 'hasbunallah',
-        'forgiveness', 'patience', 'baqarah',
         'rabbish rahli sadri',
-        'قل هو الله',
-        'ان مع العسر يسرا',
-        'لا تقنطوا'
+        'قل هو الله'
       ];
       console.group('QuranSearch.debug()');
       tests.forEach(function (q) {
@@ -575,9 +729,15 @@
         console.log(
           '"' + q + '" →',
           r.map(function (x) {
+            var dbg = x.phraseScore !== undefined
+              ? ' [P=' + x.phraseScore + ' C=' + x.consecutiveScore +
+                ' T=' + x.tokenScore + ' Tr=' + x.translationScore +
+                ' F=' + x.finalScore + ']'
+              : '';
             return x.type + ' ' + x.sn + (x.an ? ':' + x.an : '') +
-              ' (' + x.score + ') srcs=' + ((x.matchSrcs || []).join(',')) + ' mode=' + x.mode;
-          }).join(', ') || '(no results)'
+              ' (' + x.score + ')' + dbg +
+              ' srcs=' + ((x.matchSrcs || []).join(',')) + ' mode=' + x.mode;
+          }).join(' | ') || '(no results)'
         );
       });
       console.groupEnd();
