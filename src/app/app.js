@@ -2611,8 +2611,8 @@ App._execSearch=function(v){
   var isUltraShortQ=_mtCount<=1&&!isExactMode;
   var isShortQ=_mtCount<=3&&!isExactMode;
   var heroResults=isUltraShortQ
-    ?results.slice(0,3)
-    :results.filter(function(r){return r.isFamous;}).slice(0,2);
+    ?results.filter(function(r){return r.type==='verse'&&r.arO;}).slice(0,3)
+    :results.filter(function(r){return r.isFamous&&r.arO;}).slice(0,2);
   if(heroResults.length&&isShortQ){
     var hero=document.createElement('div');
     hero.className='search-famous-hero';
