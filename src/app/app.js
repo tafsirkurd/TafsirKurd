@@ -2430,7 +2430,7 @@ App._renderSearchEmpty=function(){
   ic.className='fas fa-magnifying-glass';
   ic.setAttribute('aria-hidden','true');
   wrap.appendChild(ic);
-  wrap.appendChild(el('div','search-empty-hint',t('search.placeholder')||'گەۚان لە قورئاندا...'));
+  wrap.appendChild(el('div','search-empty-hint',t('search.placeholder')));
   res.appendChild(wrap);
   res.classList.add('on');
 };
@@ -2501,7 +2501,7 @@ App._execSearch=function(v){
   var frag=document.createDocumentFragment();
   // Exact-mode banner
   if(isExactMode){
-    var exactBanner=el('div','search-exact-banner','🔍 '+(t('search.exact_mode')||'گەڕانی دقیق — تەنها دروستترین ئایەت'));
+    var exactBanner=el('div','search-exact-banner',t('search.exact_mode'));
     frag.appendChild(exactBanner);
   }
   // "Did you mean this ayah?" — surface canonical phrase when match is semantic/token only
@@ -2527,8 +2527,8 @@ App._renderSearchNoResults=function(q){
   var wrap=document.createElement('div');
   wrap.className='search-noresult';
   wrap.appendChild(el('div','search-noresult-icon','◌'));
-  wrap.appendChild(el('div','search-noresult-msg',t('search.no_results')||'هیچ ئەنجامێک نەدۆزرایەوە'));
-  wrap.appendChild(el('div','search-noresult-sub','دەستنویسی ئەوەی تر تاقی بکە'));
+  wrap.appendChild(el('div','search-noresult-msg',t('search.no_results')));
+  wrap.appendChild(el('div','search-noresult-sub',t('search.no_results_sub')));
   clear(res);
   res.appendChild(wrap);
   res.classList.add('on');
