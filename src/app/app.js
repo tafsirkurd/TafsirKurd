@@ -2380,7 +2380,7 @@ function _hlNodes(text,tokens,isAr){
 /* Append match-source pills to a result card */
 function _appendSrcPills(item,srcs){
   if(!srcs||!srcs.length)return;
-  var LABELS={arabic:'Arabic',translation:'\u0648\u06d5\u0631\u06af\u06ce\u0695\u0627\u0646',tafsir:'\u062a\u06d5\u0641\u0633\u06cc\u0631',surah:'\u0633\u0648\u0648\u0631\u06d5',ref:'\u0626\u0627\u06cc\u06d5\u062a'};
+  var LABELS={arabic:'Arabic',translation:'\u0648\u06d5\u0631\u06af\u06ce\u0695\u0627\u0646',tafsir:'\u062a\u06d5\u0641\u0633\u06cc\u0631',semantic:'\u0645\u0627\u0646\u0627',surah:'\u0633\u0648\u0648\u0631\u06d5',ref:'\u0626\u0627\u06cc\u06d5\u062a'};
   var pills=document.createElement('div');
   pills.className='search-src-pills';
   srcs.forEach(function(src){
@@ -2407,8 +2407,16 @@ App.toggleSearch=function(){
   var bar=$('searchBar');
   bar.classList.toggle('on');
   if(bar.classList.contains('on')){
-    $('searchInput').focus();
-    App._renderSearchEmpty();
+    var inp=$('searchInput');
+    inp.focus();
+    // Restore last session query if input is empty
+    var lastQ='';try{lastQ=sessionStorage.getItem('qs_last')||'';}catch(e){}
+    if(lastQ&&!inp.value){
+      inp.value=lastQ;
+      App.onSearch(lastQ);
+    } else {
+      App._renderSearchEmpty();
+    }
   } else {
     App.clearSearch();
   }
@@ -2569,6 +2577,9 @@ App._execSearch=function(v){
     res.classList.remove('loading');
   }
 
+  // Persist last successful query for session continuity
+  try{sessionStorage.setItem('qs_last',q);}catch(e){}
+
   clear(res);
   if(!results.length){App._renderSearchNoResults(q);return;}
   res.classList.add('on');
@@ -2578,6 +2589,22 @@ App._execSearch=function(v){
   if(isExactMode){
     var exactBanner=el('div','search-exact-banner','🔍 '+(t('search.exact_mode')||'گەڕانی دقیق — تەنها دروستترین ئایەت'));
     frag.appendChild(exactBanner);
+  }
+  // "Did you mean this ayah?" — surface canonical phrase when match is semantic/token only
+  var topVerse=null;
+  for(var ri=0;ri<results.length;ri++){if(results[ri].type==='verse'||results[ri].type==='ref'){topVerse=results[ri];break;}}
+  if(topVerse&&topVerse.phraseScore===0&&topVerse.score>50&&topVerse.score<500&&window.QuranSearch){
+    var canon=QuranSearch.canonicalPhrase(topVerse.sn,topVerse.an);
+    if(canon){
+      var dymBar=document.createElement('div');
+      dymBar.className='search-dym-bar';
+      dymBar.appendChild(el('span','search-dym-lbl','ئایە مەبەستت ئەمەیە؟'));
+      var dymBtn=el('button','search-dym-phrase',canon);
+      dymBtn.dir='rtl';
+      on(dymBtn,'click',function(){$('searchInput').value=canon;App.onSearch(canon);});
+      dymBar.appendChild(dymBtn);
+      frag.appendChild(dymBar);
+    }
   }
   var prevType=null;
   for(var i=0;i<results.length;i++){
@@ -2595,28 +2622,71 @@ App._execSearch=function(v){
   res.appendChild(frag);
 };
 
-/* No-results state */
+/* Smart empty state — concept suggestions + recent searches */
 App._renderSearchNoResults=function(q){
   var res=$('searchResults');
   var wrap=document.createElement('div');
   wrap.className='search-noresult';
-  wrap.appendChild(el('div','search-noresult-icon','🔍'));
-  wrap.appendChild(el('div','search-noresult-msg',t('search.no_results')||'هیچ ەنجامێک نەدۆزرایەوە'));
-  var sub=document.createElement('div');
-  sub.className='search-noresult-sub';
-  sub.textContent='"'+q+'"';
-  wrap.appendChild(sub);
-  wrap.appendChild(el('div','search-noresult-sug-hdr',t('search.try')||'ەمانەی ترت تاقی بکەوە:'));
-  var sug=document.createElement('div');
-  sug.className='search-chips';
-  [{q:'2:255'},{q:'الفاتحة'},{q:'يس'}].forEach(function(s){
-    var chip=document.createElement('button');
-    chip.className='search-chip';
-    chip.textContent=s.q;
-    on(chip,'click',function(){$('searchInput').value=s.q;App.onSearch(s.q);});
-    sug.appendChild(chip);
-  });
-  wrap.appendChild(sug);
+  wrap.appendChild(el('div','search-noresult-icon','◌'));
+  wrap.appendChild(el('div','search-noresult-msg',t('search.no_results')||'هیچ ئەنجامێک نەدۆزرایەوە'));
+  wrap.appendChild(el('div','search-noresult-sub','"'+q+'"'));
+
+  // Semantic concept suggestions from VTAGS
+  var semantic=window.QuranSearch&&QuranSearch.isReady()?QuranSearch.semanticSuggest(q):[];
+  if(semantic.length){
+    wrap.appendChild(el('div','search-noresult-sug-hdr','نزیکترین مانا:'));
+    var semRow=document.createElement('div');
+    semRow.className='search-chips search-chips--semantic';
+    semantic.forEach(function(s){
+      var snInfo=SURAHS[s.sn-1]||{};
+      var chip=document.createElement('button');
+      chip.className='search-chip search-chip--semantic';
+      var chipRef=el('span','search-chip-ref',s.sn+':'+s.an);
+      var chipTxt=el('span','search-chip-surah',snInfo.ar||snInfo.en||'');
+      chip.appendChild(chipRef);
+      chip.appendChild(chipTxt);
+      chip.dir='rtl';
+      on(chip,'click',function(){
+        if(navigator.vibrate)navigator.vibrate(8);
+        App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+        setTimeout(function(){App.openSurah(s.sn,s.an);},100);
+      });
+      semRow.appendChild(chip);
+    });
+    wrap.appendChild(semRow);
+  }
+
+  // Recent searches
+  var hist=_shGet().slice(0,5);
+  if(hist.length){
+    wrap.appendChild(el('div','search-noresult-sug-hdr','گەڕانی ئێستا:'));
+    var histRow=document.createElement('div');
+    histRow.className='search-chips';
+    hist.forEach(function(hq){
+      var chip=document.createElement('button');
+      chip.className='search-chip';
+      chip.dir='rtl';
+      chip.textContent=hq;
+      on(chip,'click',function(){$('searchInput').value=hq;App.onSearch(hq);});
+      histRow.appendChild(chip);
+    });
+    wrap.appendChild(histRow);
+  } else {
+    // Fallback discovery chips
+    wrap.appendChild(el('div','search-noresult-sug-hdr',t('search.try')||'ئەمانەی ترت تاقی بکەوە:'));
+    var sug=document.createElement('div');
+    sug.className='search-chips';
+    ['توكل','صبر','2:255','الفاتحة','رزق','دعا'].forEach(function(s){
+      var chip=document.createElement('button');
+      chip.className='search-chip';
+      chip.dir='rtl';
+      chip.textContent=s;
+      on(chip,'click',function(){$('searchInput').value=s;App.onSearch(s);});
+      sug.appendChild(chip);
+    });
+    wrap.appendChild(sug);
+  }
+
   clear(res);
   res.appendChild(wrap);
   res.classList.add('on');
@@ -2652,7 +2722,29 @@ App._mkSearchItem=function(r,isPrimary){
       item.appendChild(kuDiv);
     }
     _appendSrcPills(item,r.matchSrcs);
+    // Related ayahs on primary ref result
+    if(isPrimary&&window.QuranSearch){
+      var relatedRef=QuranSearch.relatedVerses(r.sn,r.an);
+      if(relatedRef.length){
+        var relRowRef=document.createElement('div');
+        relRowRef.className='search-related-strip';
+        relRowRef.appendChild(el('span','search-related-lbl','پەیوەندیدار:'));
+        relatedRef.forEach(function(ref){
+          var chip=el('button','search-related-chip',ref);
+          on(chip,'click',function(ev){
+            ev.stopPropagation();
+            if(navigator.vibrate)navigator.vibrate(6);
+            var pts=ref.split(':');
+            App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+            setTimeout(function(){App.openSurah(+pts[0],+pts[1]);},100);
+          });
+          relRowRef.appendChild(chip);
+        });
+        item.appendChild(relRowRef);
+      }
+    }
     on(item,'click',(function(sn,an,q){return function(){
+      if(navigator.vibrate)navigator.vibrate(8);
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
       setTimeout(function(){App.openSurah(sn,an);},100);
@@ -2700,7 +2792,29 @@ App._mkSearchItem=function(r,isPrimary){
       item.appendChild(kuDiv2);
     }
     _appendSrcPills(item,r.matchSrcs);
+    // Related ayahs strip — only on primary verse/ref result
+    if(isPrimary&&window.QuranSearch){
+      var related=QuranSearch.relatedVerses(r.sn,r.an);
+      if(related.length){
+        var relRow=document.createElement('div');
+        relRow.className='search-related-strip';
+        relRow.appendChild(el('span','search-related-lbl','پەیوەندیدار:'));
+        related.forEach(function(ref){
+          var chip=el('button','search-related-chip',ref);
+          on(chip,'click',function(ev){
+            ev.stopPropagation();
+            if(navigator.vibrate)navigator.vibrate(6);
+            var pts=ref.split(':');
+            App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+            setTimeout(function(){App.openSurah(+pts[0],+pts[1]);},100);
+          });
+          relRow.appendChild(chip);
+        });
+        item.appendChild(relRow);
+      }
+    }
     on(item,'click',(function(sn,an,q){return function(){
+      if(navigator.vibrate)navigator.vibrate(8);
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
       setTimeout(function(){App.openSurah(sn,an);},100);

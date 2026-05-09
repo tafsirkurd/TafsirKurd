@@ -360,8 +360,34 @@ body{background:var(--bg);color:var(--text)}
 .search-src-pill--arabic{background:rgba(59,130,246,.12);color:#3b82f6}
 .search-src-pill--translation{background:rgba(16,185,129,.12);color:#10b981}
 .search-src-pill--tafsir{background:rgba(139,92,246,.12);color:#8b5cf6}
+.search-src-pill--semantic{background:rgba(251,146,60,.12);color:#f97316}
 .search-src-pill--surah{background:rgba(245,158,11,.12);color:#d97706}
 .search-src-pill--ref{background:rgba(20,184,166,.12);color:#0d9488}
+/* Staggered result reveal */
+.search-result{animation:search-item-in .17s ease both}
+.search-result:nth-child(1){animation-delay:0ms}
+.search-result:nth-child(2){animation-delay:35ms}
+.search-result:nth-child(3){animation-delay:60ms}
+.search-result:nth-child(4){animation-delay:80ms}
+.search-result:nth-child(5){animation-delay:96ms}
+.search-result:nth-child(n+6){animation-delay:110ms}
+@keyframes search-item-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+/* "Did you mean this ayah?" bar */
+.search-dym-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:7px 14px 7px;border-bottom:1px solid var(--border);background:rgba(31,95,74,.04);animation:hl-fadein .2s ease}
+.search-dym-lbl{font-size:.64rem;color:var(--text3);flex-shrink:0}
+.search-dym-phrase{display:inline-flex;align-items:center;padding:3px 11px;border-radius:var(--r-full);background:linear-gradient(135deg,rgba(31,95,74,.12),rgba(31,95,74,.06));border:1px solid rgba(31,95,74,.3);font-size:.8rem;font-family:var(--font-ar);direction:rtl;color:var(--accent);font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s;max-width:calc(100% - 90px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-dym-phrase:active{background:rgba(31,95,74,.22)}
+/* Related ayahs strip */
+.search-related-strip{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:6px 0 2px;margin-top:6px;border-top:1px solid var(--border)}
+.search-related-lbl{font-size:.6rem;color:var(--text3);flex-shrink:0;margin-inline-end:2px}
+.search-related-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;background:rgba(var(--accent-rgb,.2,80,60),.06);border:1px solid rgba(31,95,74,.18);font-size:.68rem;font-weight:700;color:var(--text2);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s;letter-spacing:.02em}
+.search-related-chip:active{background:rgba(31,95,74,.14)}
+/* Smart empty state enhancements */
+.search-chips--semantic{gap:6px}
+.search-chip--semantic{display:flex;flex-direction:column;align-items:flex-start;padding:7px 10px;border-radius:10px;min-width:80px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s}
+.search-chip--semantic:active{background:var(--surface)}
+.search-chip-ref{font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.search-chip-surah{font-family:var(--font-ar);font-size:.82rem;color:var(--text);margin-top:1px}
 
 /* ===== SURAH GRID ===== */
 .surah-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}
