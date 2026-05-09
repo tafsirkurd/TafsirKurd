@@ -310,28 +310,15 @@ body{background:var(--bg);color:var(--text)}
 .search-surah-info{flex:1;min-width:0}
 /* Kurdish snippet */
 .search-result-ku{font-size:.72rem;color:var(--text3);margin-top:3px;direction:rtl;line-height:1.5;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
-/* Search empty / history / popular */
-.search-section-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 4px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
-.search-hist-clear{font-size:.72rem;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px;-webkit-tap-highlight-color:transparent}
-.search-hist-clear:active{opacity:.65}
-.search-chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 16px 10px}
-.search-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--r-full);background:var(--bg2);border:1px solid var(--border);font-size:.78rem;color:var(--text2);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s}
-.search-chip:active{background:var(--surface-h)}
-.search-chip--hist i{font-size:.7rem;color:var(--text3)}
-.search-popular{padding:2px 10px 12px}
-.search-popular-row{display:flex;align-items:center;gap:12px;width:100%;padding:9px 6px;border-radius:10px;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:start;transition:background .1s}
-.search-popular-row:active{background:var(--surface-h)}
-.search-popular-row>i{font-size:.9rem;flex-shrink:0;width:18px;text-align:center}
-.search-popular-info{display:flex;flex-direction:column;gap:1px;min-width:0}
-.search-popular-label{font-size:.85rem;font-weight:600;color:var(--text);direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
-.search-popular-q{font-size:.72rem;color:var(--text3);direction:rtl}
+/* Search empty state */
+.search-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px 40px;gap:12px;color:var(--text3);opacity:.55}
+.search-empty i{font-size:2rem}
+.search-empty-hint{font-size:.82rem;text-align:center}
 /* No-results state */
 .search-noresult{padding:28px 20px 20px;text-align:center}
 .search-noresult-icon{font-size:2.2rem;margin-bottom:10px;filter:grayscale(.3)}
 .search-noresult-msg{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:4px}
 .search-noresult-sub{font-size:.8rem;color:var(--text3);margin-bottom:16px;direction:rtl}
-.search-noresult-sug-hdr{font-size:.72rem;color:var(--text3);margin-bottom:8px;font-weight:600}
-.search-noresult .search-chips{justify-content:center;padding:0}
 /* Search highlight mark */
 .search-hl{background:rgba(212,160,23,.22);border-radius:2px;padding:0 1px;font-weight:600;color:inherit;animation:hl-fadein .25s ease}
 /* Phrase-level highlight — warm gold illumination, continuous across wrapped lines */
@@ -342,11 +329,6 @@ body{background:var(--bg);color:var(--text)}
 .search-result--primary .search-result-verse-ar{font-size:.95rem}
 /* Loading shimmer while scoring */
 .search-results.loading{opacity:.65;pointer-events:none}
-/* Live phrase suggestion strip */
-.search-suggestions{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:7px 12px 5px;border-bottom:1px solid var(--border);background:var(--bg2);animation:hl-fadein .18s ease}
-.search-sugg-lbl{font-size:.62rem;color:var(--text3);flex-shrink:0;margin-inline-end:2px;opacity:.7}
-.search-sugg-chip{display:inline-flex;align-items:center;padding:4px 11px;border-radius:var(--r-full);background:linear-gradient(135deg,rgba(31,95,74,.12),rgba(31,95,74,.06));border:1px solid rgba(31,95,74,.25);font-size:.76rem;color:var(--accent);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s;font-family:var(--font-ar);direction:rtl;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
-.search-sugg-chip:active{background:rgba(31,95,74,.2)}
 /* Exact-phrase mode banner */
 .search-exact-banner{padding:5px 14px;font-size:.68rem;color:var(--accent);background:rgba(31,95,74,.07);border-bottom:1px solid rgba(31,95,74,.15);font-weight:600}
 /* Match-source pills */
@@ -367,22 +349,6 @@ body{background:var(--bg);color:var(--text)}
 .search-result:nth-child(5){animation-delay:96ms}
 .search-result:nth-child(n+6){animation-delay:110ms}
 @keyframes search-item-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-/* "Did you mean this ayah?" bar */
-.search-dym-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:7px 14px 7px;border-bottom:1px solid var(--border);background:rgba(31,95,74,.04);animation:hl-fadein .2s ease}
-.search-dym-lbl{font-size:.64rem;color:var(--text3);flex-shrink:0}
-.search-dym-phrase{display:inline-flex;align-items:center;padding:3px 11px;border-radius:var(--r-full);background:linear-gradient(135deg,rgba(31,95,74,.12),rgba(31,95,74,.06));border:1px solid rgba(31,95,74,.3);font-size:.8rem;font-family:var(--font-ar);direction:rtl;color:var(--accent);font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s;max-width:calc(100% - 90px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.search-dym-phrase:active{background:rgba(31,95,74,.22)}
-/* Related ayahs strip */
-.search-related-strip{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:6px 0 2px;margin-top:6px;border-top:1px solid var(--border)}
-.search-related-lbl{font-size:.6rem;color:var(--text3);flex-shrink:0;margin-inline-end:2px}
-.search-related-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;background:rgba(var(--accent-rgb,.2,80,60),.06);border:1px solid rgba(31,95,74,.18);font-size:.68rem;font-weight:700;color:var(--text2);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s;letter-spacing:.02em}
-.search-related-chip:active{background:rgba(31,95,74,.14)}
-/* Smart empty state enhancements */
-.search-chips--semantic{gap:6px}
-.search-chip--semantic{display:flex;flex-direction:column;align-items:flex-start;padding:7px 10px;border-radius:10px;min-width:80px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s}
-.search-chip--semantic:active{background:var(--surface)}
-.search-chip-ref{font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.04em}
-.search-chip-surah{font-family:var(--font-ar);font-size:.82rem;color:var(--text);margin-top:1px}
 
 /* ===== SURAH GRID ===== */
 .surah-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}

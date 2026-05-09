@@ -2394,14 +2394,6 @@ function _appendSrcPills(item,srcs){
 }
 
 
-var _POPULAR=[
-  {q:'2:255',label:'ئایەتی کورسی'},
-  {q:'الفاتحة',label:'الفاتحة'},
-  {q:'يس',label:'یاسین'},
-  {q:'قل هو الله احد',label:'سورەی ئیخلاس'},
-  {q:'ان مع العسر يسرا',label:'ئاسانی لەگەل سەختیدایە'},
-  {q:'رب زدني علما',label:'ڕەبی زیدنی عیلما'}
-];
 
 App.toggleSearch=function(){
   var bar=$('searchBar');
@@ -2431,100 +2423,22 @@ App.clearSearch=function(){
 
 App._renderSearchEmpty=function(){
   var res=$('searchResults');
-  var hist=_shGet();
-  var frag=document.createDocumentFragment();
-
-  if(hist.length){
-    var hdrRow=document.createElement('div');
-    hdrRow.className='search-section-hdr';
-    var hdrLbl=el('span','',t('search.history')||'دوا گەڕانەکان');
-    var clearBtn=document.createElement('button');
-    clearBtn.className='search-hist-clear';
-    clearBtn.textContent=t('search.clear_history')||'سڕینەوە';
-    on(clearBtn,'click',function(e){
-      e.stopPropagation();
-      _shClear();
-      App._renderSearchEmpty();
-    });
-    hdrRow.appendChild(hdrLbl);
-    hdrRow.appendChild(clearBtn);
-    frag.appendChild(hdrRow);
-
-    var chips=document.createElement('div');
-    chips.className='search-chips';
-    hist.forEach(function(q){
-      var chip=document.createElement('button');
-      chip.className='search-chip search-chip--hist';
-      var ic=document.createElement('i');
-      ic.className='fas fa-clock-rotate-left';
-      chip.appendChild(ic);
-      chip.appendChild(document.createTextNode(' '+q));
-      on(chip,'click',function(){
-        $('searchInput').value=q;
-        App.onSearch(q);
-      });
-      chips.appendChild(chip);
-    });
-    frag.appendChild(chips);
-  }
-
-  var popHdr=document.createElement('div');
-  popHdr.className='search-section-hdr';
-  popHdr.appendChild(el('span','',t('search.popular')||'گەڕانی بەناو'));
-  frag.appendChild(popHdr);
-
-  var popList=document.createElement('div');
-  popList.className='search-popular';
-  _POPULAR.forEach(function(p){
-    var row=document.createElement('button');
-    row.className='search-popular-row';
-    var ic=document.createElement('i');
-    ic.className='fas fa-fire-flame-curved';
-    ic.style.color='var(--accent)';
-    var info=document.createElement('div');
-    info.className='search-popular-info';
-    info.appendChild(el('span','search-popular-label',p.label));
-    info.appendChild(el('span','search-popular-q',p.q));
-    row.appendChild(ic);
-    row.appendChild(info);
-    on(row,'click',function(){
-      $('searchInput').value=p.q;
-      App.onSearch(p.q);
-    });
-    popList.appendChild(row);
-  });
-  frag.appendChild(popList);
-
   clear(res);
-  res.appendChild(frag);
+  var wrap=document.createElement('div');
+  wrap.className='search-empty';
+  var ic=document.createElement('i');
+  ic.className='fas fa-magnifying-glass';
+  ic.setAttribute('aria-hidden','true');
+  wrap.appendChild(ic);
+  wrap.appendChild(el('div','search-empty-hint',t('search.placeholder')||'گەۚان لە قورئاندا...'));
+  res.appendChild(wrap);
   res.classList.add('on');
 };
 
-/* Live phrase suggestions — shown immediately while debounce fires */
-App._renderSuggestions=function(v){
-  if(!window.QuranSearch||!QuranSearch.isReady())return;
-  var suggs=QuranSearch.suggest(v);
-  var res=$('searchResults');
-  var old=res.querySelector('.search-suggestions');
+/* Suggestions disabled — search only */
+App._renderSuggestions=function(){
+  var old=$('searchResults').querySelector('.search-suggestions');
   if(old)old.remove();
-  if(!suggs.length)return;
-  var bar=document.createElement('div');
-  bar.className='search-suggestions';
-  var lbl=el('span','search-sugg-lbl','↩');
-  bar.appendChild(lbl);
-  suggs.forEach(function(s){
-    var chip=document.createElement('button');
-    chip.className='search-sugg-chip';
-    chip.dir='rtl';
-    chip.textContent=s.text;
-    on(chip,'click',function(){
-      $('searchInput').value=s.text;
-      App.onSearch(s.text);
-    });
-    bar.appendChild(chip);
-  });
-  if(res.firstChild)res.insertBefore(bar,res.firstChild);
-  else{res.appendChild(bar);res.classList.add('on');}
 };
 
 /* Debounced entry point — called on every keystroke */
@@ -2594,18 +2508,7 @@ App._execSearch=function(v){
   var topVerse=null;
   for(var ri=0;ri<results.length;ri++){if(results[ri].type==='verse'||results[ri].type==='ref'){topVerse=results[ri];break;}}
   if(topVerse&&topVerse.phraseScore===0&&topVerse.score>50&&topVerse.score<500&&window.QuranSearch){
-    var canon=QuranSearch.canonicalPhrase(topVerse.sn,topVerse.an);
-    if(canon){
-      var dymBar=document.createElement('div');
-      dymBar.className='search-dym-bar';
-      dymBar.appendChild(el('span','search-dym-lbl','ئایە مەبەستت ئەمەیە؟'));
-      var dymBtn=el('button','search-dym-phrase',canon);
-      dymBtn.dir='rtl';
-      on(dymBtn,'click',function(){$('searchInput').value=canon;App.onSearch(canon);});
-      dymBar.appendChild(dymBtn);
-      frag.appendChild(dymBar);
-    }
-  }
+}
   for(var i=0;i<results.length;i++){
     var r=results[i];
     if(r.type==='surah'&&i>0&&results[i-1].type==='verse')
@@ -2615,42 +2518,14 @@ App._execSearch=function(v){
   res.appendChild(frag);
 };
 
-/* Empty state — recent searches + fallback discovery chips */
+/* No-results state — clean message only */
 App._renderSearchNoResults=function(q){
   var res=$('searchResults');
   var wrap=document.createElement('div');
   wrap.className='search-noresult';
   wrap.appendChild(el('div','search-noresult-icon','◌'));
   wrap.appendChild(el('div','search-noresult-msg',t('search.no_results')||'هیچ ئەنجامێک نەدۆزرایەوە'));
-  wrap.appendChild(el('div','search-noresult-sub','"'+ q +'"'  ));
-  var hist=_shGet().slice(0,5);
-  if(hist.length){
-    wrap.appendChild(el('div','search-noresult-sug-hdr','گەۚانی ھێشتا:'));
-    var histRow=document.createElement('div');
-    histRow.className='search-chips';
-    hist.forEach(function(hq){
-      var chip=document.createElement('button');
-      chip.className='search-chip';
-      chip.dir='rtl';
-      chip.textContent=hq;
-      on(chip,'click',function(){$('searchInput').value=hq;App.onSearch(hq);});
-      histRow.appendChild(chip);
-    });
-    wrap.appendChild(histRow);
-  }else{
-    wrap.appendChild(el('div','search-noresult-sug-hdr',t('search.try')||'ئەمانەی ترت تاقی بکەوە:'));
-    var sug=document.createElement('div');
-    sug.className='search-chips';
-    ['توكل','صبر','2:255','الفاتحة','رزق','دعا'].forEach(function(s){
-      var chip=document.createElement('button');
-      chip.className='search-chip';
-      chip.dir='rtl';
-      chip.textContent=s;
-      on(chip,'click',function(){$('searchInput').value=s;App.onSearch(s);});
-      sug.appendChild(chip);
-    });
-    wrap.appendChild(sug);
-  }
+  wrap.appendChild(el('div','search-noresult-sub','دەستنویسی ئەوەی تر تاقی بکە'));
   clear(res);
   res.appendChild(wrap);
   res.classList.add('on');
