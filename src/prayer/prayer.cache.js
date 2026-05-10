@@ -34,6 +34,7 @@
     },
 
     write: function(key, data) {
+      if (window.lsSet) { window.lsSet(key, JSON.stringify(data)); return; }
       try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
     },
 

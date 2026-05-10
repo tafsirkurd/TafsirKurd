@@ -8349,6 +8349,44 @@ function _clearUserLocalData(){
   _loadBookmarks();   // clears _bmMap so new user doesn't inherit old bookmarks
 }
 
+/* Evict stale localStorage entries to recover space.
+   Removes old-prefix prayer keys first, then out-of-window prayer-kurd3 months. */
+function _freeLocalStorage(){
+  var now=new Date();
+  var keepMonths={};
+  for(var d=-1;d<=2;d++){
+    var m=new Date(now.getFullYear(),now.getMonth()+d,1);
+    keepMonths[m.getFullYear()+':'+(m.getMonth()+1)]=true;
+  }
+  var toRemove=[];
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(!k)continue;
+    // Always drop legacy prefix keys
+    if(k.startsWith('prayer3:')||k.startsWith('prayer-kurd1:')||k.startsWith('prayer-kurd2:')){
+      toRemove.push(k);continue;
+    }
+    // Drop prayer-kurd3 entries outside the keep window
+    if(k.startsWith('prayer-kurd3:')){
+      var parts=k.split(':'); // prayer-kurd3:CITY:YYYY:M
+      var ym=parts[2]+':'+parts[3];
+      if(!keepMonths[ym])toRemove.push(k);
+    }
+  }
+  toRemove.forEach(function(k){localStorage.removeItem(k);});
+}
+
+/* Safe localStorage.setItem — frees stale data on QuotaExceededError then retries. */
+function lsSet(key,val){
+  try{localStorage.setItem(key,val);}catch(e){
+    if(e&&(e.name==='QuotaExceededError'||e.code===22)){
+      _freeLocalStorage();
+      try{localStorage.setItem(key,val);}catch(e2){}
+    }
+  }
+}
+window.lsSet=lsSet;
+
 function startCloudSync(){
   stopCloudSync();
   /* Data isolation: wipe previous user's local data when a new user logs in */
@@ -8356,7 +8394,7 @@ function startCloudSync(){
   if(prevUserId&&prevUserId!==S.user.id){
     _clearUserLocalData();
   }
-  localStorage.setItem('_lastUserId',S.user.id);
+  lsSet('_lastUserId',S.user.id);
   loadFromCloud(function(){
     S.syncInterval=setInterval(syncToCloud,30000);
     subscribeRealtime();
