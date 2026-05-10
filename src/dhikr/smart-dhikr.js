@@ -124,14 +124,14 @@
       labelKey: 'adhkar.dhul_hijjah', labelFallback: 'دەیا ذولحیجەیێ',
       subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دهە ڕۆژێن گەورە',
       timeTag: 'ذوالحیجە', basePriority: 70,
-      hijriCond: function(h) { return h.month === 12 && h.day >= 1 && h.day <= 8; }
+      hijriCond: function() { var d = _getDhulHijjahDay(); return d >= 1 && d <= 8; }
     },
     {
       id: 'arafat', categoryKey: 'arafat', icon: 'fas fa-kaaba',
       labelKey: 'adhkar.arafat', labelFallback: 'دوعای عەرەفاتێ',
       subtitleKey: 'gencine.smart.arafat_hint', subtitleFallback: 'باشترین ڕۆژی ساڵ',
       timeTag: 'عەرەفە', basePriority: 85,
-      hijriCond: function(h) { return h.month === 12 && h.day === 9; }
+      hijriCond: function() { return _getDhulHijjahDay() === 9; }
     },
 
   ];
@@ -262,6 +262,45 @@
      HIJRI CALENDAR  (tabular / civil algorithm)
      Pass _baghdadDate() so day changes at Baghdad midnight.
   ───────────────────────────────────────────── */
+
+  /**
+   * Returns the current day number within Dhul Hijjah (1–30),
+   * or -1 if today is not in Dhul Hijjah.
+   *
+   * Priority: admin-set multi-year map from site_settings
+   *   key: hajj_dhul_hijjah_dates — JSON string, e.g.:
+   *   {"2025":"2025-05-28","2026":"2026-05-18","2027":"2027-05-07",...}
+   *   Admin updates the current year's entry each year from
+   *   islamicreliefcanada.org/resources/islamic-calendar after moon sighting.
+   *
+   * Fallback: tabular Hijri algorithm (may be ±1 day off actual sighting).
+   */
+  function _getDhulHijjahDay() {
+    try {
+      var ss   = JSON.parse(localStorage.getItem('siteSettings_v6'));
+      var raw  = ss && ss.d && ss.d.hajj_dhul_hijjah_dates;
+      if (raw) {
+        var map  = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+        var baghdad = _baghdadDate();
+        var year = String(baghdad.getUTCFullYear());
+        var d1   = map[year]; /* "YYYY-MM-DD" */
+        if (d1) {
+          var bISO = year + '-'
+            + String(baghdad.getUTCMonth() + 1).padStart(2, '0') + '-'
+            + String(baghdad.getUTCDate()).padStart(2, '0');
+          var diffDays = Math.round(
+            (new Date(bISO).getTime() - new Date(d1).getTime()) / 86400000
+          );
+          if (diffDays >= 0 && diffDays < 30) return diffDays + 1; /* 1-indexed */
+          return -1; /* outside Dhul Hijjah window */
+        }
+      }
+    } catch(e) {}
+    /* Fallback: tabular algorithm */
+    var h = _toHijri(_baghdadDate());
+    return (h.month === 12) ? h.day : -1;
+  }
+
   function _toHijri(date) {
     var y = date.getUTCFullYear(), m = date.getUTCMonth() + 1, d = date.getUTCDate();
     var a = Math.floor((14 - m) / 12);
