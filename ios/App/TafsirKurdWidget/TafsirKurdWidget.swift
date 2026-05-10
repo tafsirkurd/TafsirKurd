@@ -14,6 +14,10 @@ private let kExtCacheSchema = 1
 private let kDiagnosticsKey = "widgetDiagnostics"
 private let kNonceKey       = "widgetRefreshNonce"       // written by admin force-refresh
 private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted on (App Group UserDefaults)
+// Increment this whenever timeline logic changes. Stored in App Group on each build;
+// if it differs from stored value, extended cache is discarded so new logic applies immediately.
+private let kTimelineVersion = 4
+private let kTimelineVersionKey = "widgetTimelineVersion"
 // All widget loops use kDisplayOrder (includes Sunrise). Adhan notifications use a separate
 // JS-side list; kPrayerOrder no longer exists here to avoid accidental misuse.
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"]
@@ -295,7 +299,8 @@ struct PrayerWidgetData: Codable {
         let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
         let parts = hm.split(separator: ":").compactMap { Int($0) }
         guard parts.count >= 2 else { return hm }
-        return String(format: "%d:%02d", parts[0], parts[1])
+        let h12 = parts[0] % 12 == 0 ? 12 : parts[0] % 12
+        return String(format: "%d:%02d", h12, parts[1])
     }
 
     func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
@@ -427,29 +432,101 @@ struct WidgetExtendedCache: Codable {
 // MARK: — Timeline entry
 
 struct PrayerEntry: TimelineEntry {
-    let date: Date
-    let data: PrayerWidgetData?
-    let next: (name: String, time: Date, ku: String)?
+    let date:   Date
+    let data:   PrayerWidgetData?
+    let next:   (name: String, time: Date, ku: String)?
+    let reason: String
+
+    init(date: Date, data: PrayerWidgetData?,
+         next: (name: String, time: Date, ku: String)?,
+         reason: String = "unknown") {
+        self.date   = date
+        self.data   = data
+        self.next   = next
+        self.reason = reason
+    }
+}
+
+// MARK: — Unified display state
+//
+// Every widget family (Small/Medium/Large/Lock) resolves display state through this
+// single path. No view independently decides current/next prayer — resolve() owns it.
+
+struct WidgetPrayerState {
+    let current:     (name: String, ku: String)?   // prayer in progress right now
+    let next:        (name: String, time: Date, ku: String)?
+    let next3:       [(name: String, ku: String, display: String)]
+    let city:        String
+    let date:        String
+    let isStale:     Bool
+    let entryReason: String
+
+    static func resolve(
+        _ data: PrayerWidgetData?,
+        _ entry: PrayerEntry,
+        now: Date = Date()
+    ) -> WidgetPrayerState {
+        guard let data = data else {
+            return WidgetPrayerState(current: nil, next: nil, next3: [],
+                                     city: "", date: "", isStale: false,
+                                     entryReason: entry.reason)
+        }
+        let np = effectiveNextPrayer(data: data, now: now, tag: "resolve[\(entry.reason)]")
+        let n3 = effectiveNext3(data: data, now: now)
+
+        // Current = last prayer whose time has fully passed (> grace window)
+        var cur: (name: String, ku: String)? = nil
+        for name in kDisplayOrder {
+            if let t = data.prayerDate(name), t <= now.addingTimeInterval(-kGracePastSeconds) {
+                cur = (name, kn(name))
+            }
+        }
+
+        return WidgetPrayerState(
+            current:     cur,
+            next:        np,
+            next3:       n3,
+            city:        data.city,
+            date:        PrayerWidgetData.baghdadDateString(),
+            isStale:     data.isStale,
+            entryReason: entry.reason
+        )
+    }
 }
 
 // MARK: — Provider (untouched)
 
 struct PrayerProvider: TimelineProvider {
     func placeholder(in _: Context) -> PrayerEntry {
-        .init(date: .now, data: nil, next: nil)
+        .init(date: .now, data: nil, next: nil, reason: "placeholder")
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
         WT.reload()
         wLog.info("getSnapshot called")
         let d = PrayerWidgetData.load()
-        completion(.init(date: .now, data: d, next: d?.nextPrayer()))
+        completion(.init(date: .now, data: d, next: d?.nextPrayer(), reason: "snapshot"))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         WT.reload()
         let now        = Date()
         let buildStart = now
         let isLPM      = ProcessInfo.processInfo.isLowPowerModeEnabled
-        wLog.info("[WidgetTimeline] getTimeline called at \(now) lpm=\(isLPM)")
+        let extBuild   = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        wLog.info("[WidgetTimeline] getTimeline called at \(now) lpm=\(isLPM) extBuild=\(extBuild) timelineVersion=\(kTimelineVersion)")
+
+        // Timeline version guard: if kTimelineVersion changed since last build, discard
+        // extended cache so new boundary logic applies immediately without stale entries.
+        if let ud = UserDefaults(suiteName: kAppGroup) {
+            let stored = ud.integer(forKey: kTimelineVersionKey)
+            if stored != kTimelineVersion {
+                wLog.info("[WidgetTimeline] version \(stored) → \(kTimelineVersion) — discarding extended cache")
+                ud.removeObject(forKey: kExtCacheKey)
+                ud.set(kTimelineVersion, forKey: kTimelineVersionKey)
+                ud.set(now.timeIntervalSince1970 * 1000, forKey: "widgetLastVersionBumpMs")
+                ud.set(extBuild, forKey: "widgetLastVersionBumpBuild")
+                ud.synchronize()
+            }
+        }
 
         // Check admin force-refresh nonce — if it changed, discard extended cache so we
         // re-fetch fresh prayer data from the API on this getTimeline call.
@@ -509,22 +586,24 @@ struct PrayerProvider: TimelineProvider {
                 let isSorted = zip(entries, entries.dropFirst()).allSatisfy { $0.date <= $1.date }
                 if !isSorted { wLog.error("[WidgetTimeline] SORT ORDER VIOLATION — entries not chronological!") }
                 writeDiagnostics([
-                    "ts":            Date().timeIntervalSince1970 * 1000,
-                    "source":        "extended",
-                    "city":          ext.city,
-                    "extDays":       ext.days.count,
-                    "extAgeH":       ext.ageHours,
-                    "entries":       entries.count,
-                    "zone1Entries":  zone1Entries,
-                    "heartbeats":    heartbeatCount,
-                    "firstEntryTs":  firstEntryTs,
-                    "lastEntryTs":   lastEntryTs,
-                    "sortedOK":      isSorted,
-                    "policyAt":      policyAt.timeIntervalSince1970,
-                    "policyAtISO":   ISO8601DateFormatter().string(from: policyAt),
-                    "nextPrayer":    nextName,
-                    "lpm":           isLPM,
-                    "buildMs":       buildMs
+                    "ts":               Date().timeIntervalSince1970 * 1000,
+                    "source":           "extended",
+                    "city":             ext.city,
+                    "extDays":          ext.days.count,
+                    "extAgeH":          ext.ageHours,
+                    "entries":          entries.count,
+                    "zone1Entries":     zone1Entries,
+                    "heartbeats":       heartbeatCount,
+                    "firstEntryTs":     firstEntryTs,
+                    "lastEntryTs":      lastEntryTs,
+                    "sortedOK":         isSorted,
+                    "policyAt":         policyAt.timeIntervalSince1970,
+                    "policyAtISO":      ISO8601DateFormatter().string(from: policyAt),
+                    "nextPrayer":       nextName,
+                    "lpm":              isLPM,
+                    "buildMs":          buildMs,
+                    "firstEntryReason": entries.first?.reason ?? "?",
+                    "isOldCache":       true
                 ], legacyData: legacyData)
                 wLog.info("[WidgetTimeline] \(entries.count) entries zone1=\(zone1Entries) heartbeats=\(heartbeatCount) nextPrayer=\(nextName) sorted=\(isSorted) policy=\(fmtHMS(policyAt))")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
@@ -557,16 +636,18 @@ struct PrayerProvider: TimelineProvider {
                 let nextName = entries.first?.next?.name ?? "unknown"
                 let buildMs  = (Date().timeIntervalSince1970 - buildStart.timeIntervalSince1970) * 1000
                 writeDiagnostics([
-                    "ts":          Date().timeIntervalSince1970 * 1000,
-                    "source":      "extended_fetch",
-                    "city":        ext.city,
-                    "extDays":     ext.days.count,
-                    "entries":     entries.count,
-                    "policyAt":    policyAt.timeIntervalSince1970,
-                    "policyAtISO": ISO8601DateFormatter().string(from: policyAt),
-                    "nextPrayer":  nextName,
-                    "lpm":         isLPM,
-                    "buildMs":     buildMs
+                    "ts":               Date().timeIntervalSince1970 * 1000,
+                    "source":           "extended_fetch",
+                    "city":             ext.city,
+                    "extDays":          ext.days.count,
+                    "entries":          entries.count,
+                    "policyAt":         policyAt.timeIntervalSince1970,
+                    "policyAtISO":      ISO8601DateFormatter().string(from: policyAt),
+                    "nextPrayer":       nextName,
+                    "lpm":              isLPM,
+                    "buildMs":          buildMs,
+                    "firstEntryReason": entries.first?.reason ?? "?",
+                    "isOldCache":       false
                 ], legacyData: legacyData)
                 wLog.info("[WidgetTimeline] fetched \(entries.count) entries nextPrayer=\(nextName) policy=\(fmtHMS(policyAt))")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
@@ -652,7 +733,7 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
 
     // Entry covering "right now" — establishes the initial display state
     let nowNext = ext.nextPrayer(from: now)
-    entries.append(.init(date: now, data: todayData, next: nowNext))
+    entries.append(.init(date: now, data: todayData, next: nowNext, reason: "now"))
 
     // Zone cutoffs for tiered safety offsets
     let zone1End = now.addingTimeInterval(48 * 3600)     // 0–48 h: full offsets [+5 s, +60 s, +5 min]
@@ -667,16 +748,21 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
         for name in kDisplayOrder {
             guard let t = ext.prayerDate(name, for: dateStr), t > now else { continue }
             let next = ext.nextPrayer(from: t.addingTimeInterval(30))
-            entries.append(.init(date: t, data: dayData, next: next))
+            let isZone2 = t >= zone1End && t < zone2End
+            entries.append(.init(date: t, data: dayData, next: next,
+                                 reason: isZone2 ? "zone2_boundary_\(name.lowercased())" : "boundary_\(name.lowercased())"))
             boundaryCount += 1
 
-            let offsets: [TimeInterval] = t < zone1End ? [5.0, 60.0, 300.0] :
-                                          t < zone2End ? [5.0]             : []
+            let offsets: [TimeInterval] = t < zone1End ? [5.0, 30.0, 60.0, 300.0] :
+                                          t < zone2End ? [5.0]                      : []
+            let offsetLabels: [TimeInterval: String] = [5.0: "plus5s", 30.0: "plus30s", 60.0: "plus60s", 300.0: "plus5m"]
             for off in offsets {
                 let st = t.addingTimeInterval(off)
                 guard st > now else { continue }
                 let sNext = ext.nextPrayer(from: st.addingTimeInterval(30))
-                entries.append(.init(date: st, data: dayData, next: sNext))
+                let label = offsetLabels[off] ?? "plus\(Int(off))s"
+                entries.append(.init(date: st, data: dayData, next: sNext,
+                                     reason: "boundary_\(name.lowercased())_\(label)"))
             }
         }
 
@@ -688,7 +774,7 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             mc.timeZone = TimeZone(identifier: "Asia/Baghdad")
             if let midnight = PrayerWidgetData.baghdadCal.date(from: mc), midnight > now {
                 let nextAtMid = ext.nextPrayer(from: midnight)
-                entries.append(.init(date: midnight, data: dayData, next: nextAtMid))
+                entries.append(.init(date: midnight, data: dayData, next: nextAtMid, reason: "midnight"))
             }
         }
     }
@@ -711,7 +797,7 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             let hDateStr = String(format: "%04d-%02d-%02d", hy, hm, hd)
             let hData    = syntheticData(from: ext, dateStr: hDateStr) ?? todayData
             let hNext    = ext.nextPrayer(from: hTick)
-            entries.append(.init(date: hTick, data: hData, next: hNext))
+            entries.append(.init(date: hTick, data: hData, next: hNext, reason: "heartbeat"))
             heartbeatCount += 1
         }
         hTick = hTick.addingTimeInterval(15 * 60)
@@ -743,24 +829,25 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
                             policy: .after(now.addingTimeInterval(30 * 60))))
         return
     }
-    var rawEntries: [(date: Date, next: (name: String, time: Date, ku: String)?)] = []
+    var rawEntries: [(date: Date, next: (name: String, time: Date, ku: String)?, reason: String)] = []
     let nowNext = data.nextPrayer(from: now)
     wLog.info("[WidgetTimeline] buildLegacy city=\(data.city) nowNext=\(nowNext?.name ?? "nil") ageH=\(String(format:"%.1f",ageH))")
-    rawEntries.append((now, nowNext))
+    rawEntries.append((now, nowNext, "now"))
 
-    // Today's prayer boundaries — exact + T+5s + T+60s for fast lock-screen switching
-    let legacyBoundaryOffsets: [TimeInterval] = [0, 5, 60]
+    // Today's prayer boundaries — exact + T+5s + T+30s + T+60s for fast lock-screen switching
+    let legacyBoundaryOffsets: [(TimeInterval, String)] = [(0, ""), (5, "plus5s"), (30, "plus30s"), (60, "plus60s")]
     for name in kDisplayOrder {
         guard let t = data.prayerDate(name), t > now else { continue }
         let next = data.nextPrayer(from: t.addingTimeInterval(30))
         wLog.info("[PrayerBoundary] legacy today \(name) -> next=\(next?.name ?? "nil")")
-        for offset in legacyBoundaryOffsets {
+        for (offset, label) in legacyBoundaryOffsets {
             let et = t.addingTimeInterval(offset)
             guard et > now else { continue }
-            rawEntries.append((et, next))
+            let r = label.isEmpty ? "boundary_\(name.lowercased())" : "boundary_\(name.lowercased())_\(label)"
+            rawEntries.append((et, next, r))
         }
     }
-    // Tomorrow's prayer boundaries — exact + T+5s + T+60s
+    // Tomorrow's prayer boundaries — exact + T+5s + T+30s + T+60s
     for i in 0 ..< kDisplayOrder.count {
         let name = kDisplayOrder[i]
         guard let t = data.prayerDate(name, dayOffset: 1) else { continue }
@@ -772,8 +859,9 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
         if nextEntry == nil, let fajr2 = data.prayerDate("Fajr", dayOffset: 2) {
             nextEntry = ("Fajr", fajr2, kn("Fajr"))
         }
-        for offset in legacyBoundaryOffsets {
-            rawEntries.append((t.addingTimeInterval(offset), nextEntry))
+        for (offset, label) in legacyBoundaryOffsets {
+            let r = label.isEmpty ? "boundary_\(name.lowercased())" : "boundary_\(name.lowercased())_\(label)"
+            rawEntries.append((t.addingTimeInterval(offset), nextEntry, r))
         }
     }
 
@@ -782,11 +870,11 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
     if midnightTomorrow > now {
         let nextAtMid = data.nextPrayer(from: midnightTomorrow)
         wLog.info("[PrayerBoundary] legacy midnight -> next=\(nextAtMid?.name ?? "nil")")
-        rawEntries.append((midnightTomorrow, nextAtMid))
+        rawEntries.append((midnightTomorrow, nextAtMid, "midnight"))
     }
 
     // 15-minute safety entries between prayer boundaries (matches heartbeat interval).
-    var safetyEntries: [(date: Date, next: (name: String, time: Date, ku: String)?)] = []
+    var safetyEntries: [(date: Date, next: (name: String, time: Date, ku: String)?, reason: String)] = []
     let sortedRaw = rawEntries.sorted { $0.date < $1.date }
     for i in 0 ..< (sortedRaw.count - 1) {
         let gapStart = sortedRaw[i].date
@@ -794,13 +882,13 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
         var tick = gapStart.addingTimeInterval(15 * 60)
         while tick < gapEnd {
             let n = data.nextPrayer(from: tick)
-            safetyEntries.append((tick, n))
+            safetyEntries.append((tick, n, "heartbeat"))
             tick = tick.addingTimeInterval(15 * 60)
         }
     }
 
     let allRaw = (rawEntries + safetyEntries).sorted { $0.date < $1.date }
-    let entries = allRaw.map { PrayerEntry(date: $0.date, data: data, next: $0.next) }
+    let entries = allRaw.map { PrayerEntry(date: $0.date, data: data, next: $0.next, reason: $0.reason) }
 
     let policyAt = min(PrayerWidgetData.baghdadMidnight(daysAhead: 1).addingTimeInterval(5 * 60),
                        now.addingTimeInterval(25 * 3600))
@@ -908,9 +996,13 @@ private func writeDiagnostics(_ info: [String: Any], legacyData: PrayerWidgetDat
     let realNowMs = realNow.timeIntervalSince1970 * 1000
 
     // ── Core fields ───────────────────────────────────────────────────────────
-    merged["iosVer"]    = UIDevice.current.systemVersion
-    merged["buildTime"] = realNowMs
-    merged["realNowMs"] = realNowMs   // device clock truth for admin drift detection
+    merged["iosVer"]            = UIDevice.current.systemVersion
+    merged["buildTime"]         = realNowMs
+    merged["realNowMs"]         = realNowMs   // device clock truth for admin drift detection
+    merged["timelineVersion"]   = kTimelineVersion
+    merged["extBuildNumber"]    = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+    merged["lastReloadTimeMs"]  = realNowMs   // when getTimeline fired for this rebuild
+    merged["lastReloadReason"]  = info["firstEntryReason"] as? String ?? (info["source"] as? String ?? "?")
 
     // ── Snapshot fields + prayer-drift detection ───────────────────────────────
     if let ld = legacyData {
@@ -1106,7 +1198,7 @@ private func effectiveNextPrayer(
     for n in kDisplayOrder {
         if let t = data.prayerDate(n), stillRelevant(t) {
             let passed = now >= t
-            wLog.info("[WidgetBoundary] \(tag.isEmpty ? "" : tag + " ")now=\(fmtHMS(now)) prayer=\(n) time=\(fmtHMS(t)) passed=\(passed)")
+            wLog.info("[WidgetBoundary] \(tag) now=\(fmtHMS(now)) prayer=\(n) time=\(fmtHMS(t)) passed=\(passed)")
             return (n, t, kn(n))
         }
     }
@@ -1145,7 +1237,8 @@ private func effectiveNext3(
         let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
         let parts = hm.split(separator: ":").compactMap { Int($0) }
         guard parts.count >= 2 else { return hm }
-        return String(format: "%d:%02d", parts[0], parts[1])
+        let h12 = parts[0] % 12 == 0 ? 12 : parts[0] % 12
+        return String(format: "%d:%02d", h12, parts[1])
     }
 
     var result: [(name: String, ku: String, display: String)] = []
@@ -1199,10 +1292,11 @@ private func correctedNext(
 private struct SmallView: View {
     let entry: PrayerEntry
     var body: some View {
+        let state    = WidgetPrayerState.resolve(entry.data, entry)
+        let n        = state.next
+        let showName = n?.ku   ?? kn("Fajr")
+        let showKey  = n?.name ?? "Fajr"
         if let d = entry.data {
-            let n        = correctedNext(data: d, stored: entry.next, tag: "small")
-            let showName = n?.ku   ?? kn("Fajr")
-            let showKey  = n?.name ?? "Fajr"
             VStack(alignment: .trailing, spacing: 0) {
                 CityLabel(city: d.city)
                     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -1249,8 +1343,9 @@ private struct SmallView: View {
 private struct MediumView: View {
     let entry: PrayerEntry
     var body: some View {
+        let state = WidgetPrayerState.resolve(entry.data, entry)
         if let d = entry.data {
-            let n = correctedNext(data: d, stored: entry.next, tag: "medium")
+            let n = state.next
             VStack(spacing: 0) {
                 HStack(alignment: .center, spacing: 0) {
                     if let n = n {
@@ -1282,8 +1377,9 @@ private struct MediumView: View {
 private struct LargeView: View {
     let entry: PrayerEntry
     var body: some View {
+        let state = WidgetPrayerState.resolve(entry.data, entry)
         if let d = entry.data {
-            let n          = correctedNext(data: d, stored: entry.next, tag: "large")
+            let n          = state.next
             let bottomName = n?.name ?? "Fajr"
             let bottomKu   = n?.ku   ?? kn("Fajr")
             VStack(spacing: 0) {
@@ -1382,15 +1478,16 @@ private struct LockRow: View {
 private struct LockView: View {
     let entry: PrayerEntry
     var body: some View {
-        if let d = entry.data {
-            let now     = Date()
-            let prayers = effectiveNext3(data: d, now: now)
+        let now   = Date()
+        let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
+        if let _ = entry.data {
+            let prayers = state.next3
             // Drift detection: if stored next differs from what we computed, log it
             if let stored = entry.next, let first = prayers.first, stored.name != first.name {
-                let _ = wLog.warning("[WidgetDrift] lock: stale=\(stored.name) corrected=\(first.name) now=\(fmtHMS(now))")
+                let _ = wLog.warning("[WidgetDrift] lock: stale=\(stored.name) corrected=\(first.name) now=\(fmtHMS(now)) reason=\(entry.reason)")
             }
             if let first = prayers.first {
-                let _ = wLog.info("[WidgetBoundary] lock: now=\(fmtHMS(now)) next=\(first.name)")
+                let _ = wLog.info("[WidgetBoundary] lock: now=\(fmtHMS(now)) next=\(first.name) reason=\(entry.reason)")
             }
             if prayers.isEmpty {
                 Text("کاتا نوێژ")
