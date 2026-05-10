@@ -1569,7 +1569,7 @@
 
   // Compute {currentPrayer, nextPrayer} from today's and tomorrow's timings.
   function _computePrayerState(timings, dateISO, tom, tomDateISO) {
-    var ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    var ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     var now = Date.now();
     var currentPrayer = null, nextPrayer = null, lastMs = -Infinity;
     ORDER.forEach(function(name) {
@@ -1597,7 +1597,7 @@
   }
   function _schedulePrayerBoundaryTimers(timings, dateISO, tom, tomDateISO) {
     _clearBoundaryTimers();
-    var ORDER = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    var ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     var now = Date.now();
     function schedule(ms, label) {
       var delay = ms - now;
