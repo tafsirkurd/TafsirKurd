@@ -285,7 +285,7 @@ body{background:var(--bg);color:var(--text)}
 
 /* ===== SEARCH BAR ===== */
 .search-bar{background:var(--bg);overflow:hidden;max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none;padding:0 16px;transition:max-height .32s cubic-bezier(.4,0,.2,1),opacity .24s cubic-bezier(.4,0,.2,1),transform .24s cubic-bezier(.4,0,.2,1),padding .32s cubic-bezier(.4,0,.2,1)}
-.search-bar.on{max-height:600px;opacity:1;transform:translateY(0);pointer-events:auto;padding:0 16px 12px}
+.search-bar.on{max-height:600px;opacity:1;transform:translateY(0);pointer-events:auto;padding:10px 16px 12px}
 .search-wrap{display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-full);padding:0 14px;height:44px;gap:10px;transition:border-color .18s,box-shadow .18s}
 .search-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
 .search-wrap i{color:var(--text3);font-size:.9rem;flex-shrink:0;transition:color .18s}
@@ -2826,7 +2826,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
       <div class="search-wrap">
         <i class="fas fa-search"></i>
         <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="گەڕان..." oninput="App.onSearch(this.value)">
-        <button class="search-clear" onclick="App.clearSearch()"><i class="fas fa-times"></i></button>
+        <button class="search-clear" onclick="App.toggleSearch()"><i class="fas fa-times"></i></button>
       </div>
       <div class="search-results" id="searchResults"></div>
     </div>
