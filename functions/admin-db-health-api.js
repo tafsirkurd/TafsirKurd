@@ -13,7 +13,7 @@ const KNOWN_TABLES = [
     'admin_sessions', 'admin_activity_log', 'kurdish_translations',
     'deleted_translation_keys', 'site_settings', 'islamvoice_episodes',
     'gencine_hadiths', 'gencine_duas', 'gencine_adhkar', 'gencine_books',
-    'gencine_sections', 'prayer_cache', 'i18n_cache_health',
+    'gencine_sections', 'prayer_cache_health', 'i18n_cache_health',
 ];
 
 export async function onRequest(context) {
