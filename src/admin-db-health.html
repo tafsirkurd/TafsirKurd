@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="/utils/admin-guard.js?v=1"></script>
@@ -17,31 +17,77 @@
         .sidebar.collapsed + .main-content { margin-left: 64px; }
         @media (max-width: 768px) { .main-content { margin-left: 0; } }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
-        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; }
-        .stat-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        /* ── Stat cards ─────────────────────────────────────────────── */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr; } }
+        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+        .stat-card-top { display: flex; align-items: center; justify-content: space-between; }
+        .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .stat-icon i { width: 16px; height: 16px; }
-        .stat-value { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -0.5px; margin-bottom: 4px; }
-        .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); }
+        .stat-value { font-size: 30px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -1px; }
+        .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-tertiary); }
+        .stat-sub { font-size: 11.5px; color: var(--text-tertiary); }
 
-        .section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .section-title i { width: 16px; height: 16px; color: var(--text-tertiary); }
+        /* ── Main grid ──────────────────────────────────────────────── */
+        .body-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+        @media (max-width: 1024px) { .body-grid { grid-template-columns: 1fr; } }
 
-        .row-bar { background: var(--bg-active); border-radius: 3px; height: 5px; overflow: hidden; width: 80px; display: inline-block; vertical-align: middle; margin-left: 6px; }
-        .row-bar-fill { height: 100%; background: #3b82f6; border-radius: 3px; }
+        /* ── Section card ───────────────────────────────────────────── */
+        .section-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+        .section-card:last-child { margin-bottom: 0; }
+        .section-hdr { display: flex; align-items: center; gap: 8px; padding: 13px 18px; border-bottom: 1px solid var(--border-light); background: var(--bg-active); }
+        .section-hdr-icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .section-hdr-icon i { width: 13px; height: 13px; }
+        .section-hdr-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); flex: 1; }
+        .section-hdr-count { font-size: 11px; font-weight: 600; color: var(--text-tertiary); }
 
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-        .dot-green { background: #10b981; }
-        .dot-yellow { background: #f59e0b; }
-        .dot-red { background: #ef4444; }
+        /* ── Table rows ─────────────────────────────────────────────── */
+        .tbl-row { display: grid; grid-template-columns: 180px 1fr 70px 60px; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--border-light); transition: background .12s; }
+        .tbl-row:last-child { border-bottom: none; }
+        .tbl-row:hover { background: var(--bg-hover); }
+        .tbl-name { font-family: 'Courier New', monospace; font-size: 12.5px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tbl-bar-wrap { display: flex; align-items: center; gap: 10px; }
+        .tbl-bar-bg { flex: 1; background: var(--bg-active); border-radius: 3px; height: 5px; overflow: hidden; }
+        .tbl-bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+        .tbl-count { font-size: 13px; font-weight: 700; color: var(--text-primary); text-align: right; white-space: nowrap; }
+        .tbl-badge { display: inline-flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+        .badge-ok     { background: rgba(16,185,129,.1);  color: #059669; }
+        .badge-empty  { background: rgba(245,158,11,.1);  color: #b45309; }
+        .badge-error  { background: rgba(239,68,68,.1);   color: #dc2626; }
+        .badge-writes { background: rgba(99,102,241,.1);  color: #6366f1; font-size: 10px; }
 
-        .activity-feed { display: flex; flex-direction: column; gap: 0; }
-        .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+        /* ── Activity feed ──────────────────────────────────────────── */
+        .activity-item { display: flex; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border-light); }
         .activity-item:last-child { border-bottom: none; }
-        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; margin-top: 5px; flex-shrink: 0; }
-        .activity-content { flex: 1; min-width: 0; }
-        .activity-desc { font-size: 13px; color: var(--text-primary); }
-        .activity-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+        .activity-line { display: flex; flex-direction: column; align-items: center; gap: 0; }
+        .activity-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+        .activity-body { flex: 1; min-width: 0; }
+        .activity-desc { font-size: 12.5px; color: var(--text-primary); line-height: 1.4; }
+        .activity-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+        .activity-name { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+        .activity-time { font-size: 11px; color: var(--text-tertiary); }
+        .activity-type-chip { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: .3px; }
+
+        /* ── Right column sticky cards ──────────────────────────────── */
+        .right-col { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 20px; }
+
+        /* ── Empty / loading states ─────────────────────────────────── */
+        .state-row { padding: 28px 18px; text-align: center; color: var(--text-tertiary); font-size: 13px; }
+
+        /* ── Auto-refresh badge ─────────────────────────────────────── */
+        .refresh-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-tertiary); }
+        .refresh-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: pulse 1.8s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+        @keyframes spin  { to{transform:rotate(360deg)} }
+        .spin { animation: spin .7s linear infinite; display: inline-block; }
+
+        /* ── Health summary mini-card ───────────────────────────────── */
+        .health-summary { display: flex; flex-direction: column; gap: 0; }
+        .health-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-bottom: 1px solid var(--border-light); font-size: 12.5px; }
+        .health-row:last-child { border-bottom: none; }
+        .health-label { color: var(--text-secondary); font-weight: 500; }
+        .health-val   { font-weight: 700; color: var(--text-primary); }
     </style>
     <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
     <script>
@@ -64,57 +110,7 @@
             </div>
             <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
         </div>
-                    <nav class="sidebar-nav">
-            <div class="nav-section">
-                <div class="nav-section-header">Overview</div>
-                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
-                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
-                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
-                <a href="/admin-tasks.html" class="nav-item"><i data-lucide="check-square"></i><span class="nav-item-label">Tasks</span></a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-header">Content</div>
-                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-badge"></span></a>
-                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
-                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
-                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
-                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
-                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-header">Site</div>
-                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
-                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
-                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-label">Header</span></a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-header">Users</div>
-                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
-                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
-                <a href="/admin-notification-analytics.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Notif Analytics</span></a>
-                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-header">Monitoring</div>
-                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
-                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
-                <a href="/admin-db-health.html" class="nav-item active"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
-                <a href="/admin-jobs.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-label">Jobs</span></a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-header">Security</div>
-                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
-                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
-                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
-            </div>
-            <div class="nav-section">
-                <div class="nav-section-header">Settings</div>
-                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
-                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
-                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
-                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
-            </div>
-        </nav>
+        <nav class="sidebar-nav"></nav>
         <div class="sidebar-footer">
             <div class="sidebar-profile">
                 <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
@@ -142,64 +138,81 @@
 
         <div class="content-area">
             <div class="page-header">
-                <h1 class="page-title">DB Health</h1>
-                <div class="page-actions">
-                    <button class="btn btn-secondary" onclick="loadPage()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                <div>
+                    <h1 class="page-title">DB Health</h1>
+                    <p style="margin:2px 0 0;font-size:13px;color:var(--text-tertiary)" id="last-checked-label">Checking…</p>
+                </div>
+                <div class="page-actions" style="display:flex;align-items:center;gap:10px">
+                    <span class="refresh-badge"><span class="refresh-dot"></span> Auto-refreshes every 60s</span>
+                    <button class="btn btn-secondary" id="refresh-btn" onclick="loadPage()">
+                        <i data-lucide="refresh-cw"></i> Refresh
+                    </button>
                 </div>
             </div>
 
-            <!-- Stats -->
+            <!-- Stat cards -->
             <div class="stats-grid">
-                <div class="stat-card" style="border-left:3px solid #10b981">
-                    <div class="stat-icon" style="background:#10b98120"><i data-lucide="database" style="color:#10b981"></i></div>
+                <div class="stat-card" style="border-top:3px solid #10b981">
+                    <div class="stat-card-top">
+                        <div class="stat-icon" style="background:rgba(16,185,129,.12)"><i data-lucide="database" style="color:#10b981"></i></div>
+                        <span class="stat-sub" id="stat-error-count" style="display:none;color:#ef4444"></span>
+                    </div>
                     <div class="stat-value" id="stat-tables">—</div>
                     <div class="stat-label">Tables Tracked</div>
                 </div>
-                <div class="stat-card" style="border-left:3px solid #3b82f6">
-                    <div class="stat-icon" style="background:#3b82f620"><i data-lucide="rows" style="color:#3b82f6"></i></div>
+                <div class="stat-card" style="border-top:3px solid #3b82f6">
+                    <div class="stat-card-top">
+                        <div class="stat-icon" style="background:rgba(59,130,246,.12)"><i data-lucide="layers" style="color:#3b82f6"></i></div>
+                    </div>
                     <div class="stat-value" id="stat-rows">—</div>
                     <div class="stat-label">Total Rows</div>
                 </div>
-                <div class="stat-card" style="border-left:3px solid #8b5cf6">
-                    <div class="stat-icon" style="background:#8b5cf620"><i data-lucide="zap" style="color:#8b5cf6"></i></div>
-                    <div class="stat-value" id="stat-writes-24h">—</div>
-                    <div class="stat-label">Recent Writes (24h)</div>
+                <div class="stat-card" style="border-top:3px solid #8b5cf6">
+                    <div class="stat-card-top">
+                        <div class="stat-icon" style="background:rgba(139,92,246,.12)"><i data-lucide="zap" style="color:#8b5cf6"></i></div>
+                    </div>
+                    <div class="stat-value" id="stat-writes">—</div>
+                    <div class="stat-label">Writes (24h)</div>
                 </div>
-                <div class="stat-card" style="border-left:3px solid #f59e0b">
-                    <div class="stat-icon" style="background:#f59e0b20"><i data-lucide="clock" style="color:#f59e0b"></i></div>
-                    <div class="stat-value" id="stat-checked">—</div>
-                    <div class="stat-label">Last Checked</div>
+                <div class="stat-card" style="border-top:3px solid #f59e0b">
+                    <div class="stat-card-top">
+                        <div class="stat-icon" style="background:rgba(245,158,11,.12)"><i data-lucide="alert-triangle" style="color:#f59e0b"></i></div>
+                    </div>
+                    <div class="stat-value" id="stat-empty">—</div>
+                    <div class="stat-label">Empty Tables</div>
                 </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start">
-                <!-- Table row counts -->
-                <div>
-                    <div class="section-title"><i data-lucide="table"></i> Table Row Counts</div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Table</th>
-                                    <th>Rows</th>
-                                    <th>Distribution</th>
-                                    <th>Writes 24h</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tables-tbody">
-                                <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
-                            </tbody>
-                        </table>
+            <div class="body-grid">
+                <!-- Left: grouped table list -->
+                <div id="tables-col">
+                    <div class="state-row" style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px">
+                        Loading tables…
                     </div>
                 </div>
 
-                <!-- Recent activity -->
-                <div>
-                    <div class="section-title"><i data-lucide="activity"></i> Recent Admin Activity</div>
-                    <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:16px 20px">
-                        <div class="activity-feed" id="activity-feed">
-                            <div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">Loading…</div>
+                <!-- Right column -->
+                <div class="right-col">
+                    <!-- Summary card -->
+                    <div class="section-card">
+                        <div class="section-hdr">
+                            <div class="section-hdr-icon" style="background:rgba(16,185,129,.12)"><i data-lucide="shield-check" style="color:#10b981"></i></div>
+                            <span class="section-hdr-title">Health Summary</span>
+                        </div>
+                        <div class="health-summary" id="health-summary">
+                            <div class="state-row">Loading…</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent activity -->
+                    <div class="section-card">
+                        <div class="section-hdr">
+                            <div class="section-hdr-icon" style="background:rgba(99,102,241,.12)"><i data-lucide="activity" style="color:#6366f1"></i></div>
+                            <span class="section-hdr-title">Recent Activity</span>
+                            <span class="section-hdr-count" id="activity-count"></span>
+                        </div>
+                        <div id="activity-feed">
+                            <div class="state-row">Loading…</div>
                         </div>
                     </div>
                 </div>
@@ -212,19 +225,51 @@
 <script src="/utils/admin-session-timer-ui.js?v=10"></script>
 <script src="/utils/admin-auth.js?v=6"></script>
 <script src="/utils/admin-live-alerts.js?v=14"></script>
-    <script src="/utils/admin-notifications.js?v=8"></script>
+<script src="/utils/admin-notifications.js?v=8"></script>
 <script>
     lucide.createIcons();
+
+    var autoRefreshTimer = null;
 
     window.addEventListener('DOMContentLoaded', function() {
         window.adminAuth.checkAuth().then(function(data) {
             if (!data) return;
             lucide.createIcons();
             loadPage();
+            autoRefreshTimer = setInterval(loadPage, 60000);
         });
-        document.getElementById('menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('collapsed'); });
-        document.getElementById('mobile-menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('mobile-open'); });
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        });
     });
+
+    // Table groupings
+    var TABLE_GROUPS = [
+        {
+            label: 'Users', color: '#3b82f6', icon: 'users',
+            tables: ['user_data', 'push_tokens', 'admin_users', 'admin_sessions']
+        },
+        {
+            label: 'Content', color: '#10b981', icon: 'book-open',
+            tables: ['kurdish_translations', 'deleted_translation_keys', 'islamvoice_episodes',
+                     'gencine_hadiths', 'gencine_duas', 'gencine_adhkar', 'gencine_books', 'gencine_sections']
+        },
+        {
+            label: 'System', color: '#8b5cf6', icon: 'settings',
+            tables: ['admin_notifications', 'admin_activity_log', 'site_settings']
+        },
+        {
+            label: 'Health & Monitoring', color: '#f59e0b', icon: 'heart-pulse',
+            tables: ['prayer_cache_health', 'i18n_cache_health']
+        },
+    ];
+
+    // Color per group for bars
+    var GROUP_COLOR = {};
+    TABLE_GROUPS.forEach(function(g) { g.tables.forEach(function(t) { GROUP_COLOR[t] = g.color; }); });
 
     async function api(action, payload) {
         var token = sessionStorage.getItem('adminToken');
@@ -240,38 +285,123 @@
     }
 
     async function loadPage() {
-        loadStats();
-        loadActivity();
+        var btn = document.getElementById('refresh-btn');
+        btn.innerHTML = '<span class="spin" style="display:inline-block;width:13px;height:13px;border:2px solid var(--border-light);border-top-color:var(--text-primary);border-radius:50%;vertical-align:middle;margin-right:5px"></span> Refreshing…';
+        btn.disabled = true;
+        try {
+            await Promise.all([loadStats(), loadActivity()]);
+        } finally {
+            btn.innerHTML = '<i data-lucide="refresh-cw"></i> Refresh';
+            btn.disabled = false;
+            lucide.createIcons();
+        }
     }
 
     async function loadStats() {
-        var tbody = document.getElementById('tables-tbody');
+        var col = document.getElementById('tables-col');
         try {
             var d = await api('get_stats');
-            document.getElementById('stat-tables').textContent = (d.tables||[]).filter(function(t){return t.error===null;}).length;
-            document.getElementById('stat-rows').textContent = (d.totalRows||0).toLocaleString();
-            var writes24h = (d.tables||[]).reduce(function(s,t){return s+(t.recent24h||0);},0);
-            document.getElementById('stat-writes-24h').textContent = writes24h.toLocaleString();
-            var checkedAt = new Date(d.checkedAt||Date.now());
-            document.getElementById('stat-checked').textContent = checkedAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+            var tables = d.tables || [];
+            var now = new Date(d.checkedAt || Date.now());
 
-            var maxRows = Math.max.apply(null, (d.tables||[]).map(function(t){return t.count||0;}));
-            tbody.innerHTML = '';
-            (d.tables||[]).forEach(function(t) {
-                var pct = maxRows > 0 ? Math.round(((t.count||0)/maxRows)*100) : 0;
-                var status = t.error ? 'error' : (t.count > 0 ? 'ok' : 'empty');
-                var dotClass = status === 'error' ? 'dot-red' : status === 'empty' ? 'dot-yellow' : 'dot-green';
-                var tr = document.createElement('tr');
-                tr.innerHTML = '<td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--text-primary)">' + esc(t.name) + '</td>'
-                    + '<td style="font-size:13px;font-weight:700">' + (t.count !== null ? (t.count||0).toLocaleString() : '—') + '</td>'
-                    + '<td><div class="row-bar"><div class="row-bar-fill" style="width:' + pct + '%"></div></div></td>'
-                    + '<td style="font-size:12px;color:var(--text-secondary)">' + (t.recent24h !== null ? (t.recent24h||0) : '—') + '</td>'
-                    + '<td><span class="status-dot ' + dotClass + '"></span><span style="font-size:11px;color:var(--text-tertiary)">' + status + '</span></td>';
-                tbody.appendChild(tr);
+            // Update stat cards
+            var okCount    = tables.filter(function(t) { return t.error === null; }).length;
+            var emptyCount = tables.filter(function(t) { return t.error === null && (t.count || 0) === 0; }).length;
+            var errorCount = tables.filter(function(t) { return t.error !== null; }).length;
+            var writes24h  = tables.reduce(function(s, t) { return s + (t.recent24h || 0); }, 0);
+
+            document.getElementById('stat-tables').textContent   = okCount;
+            document.getElementById('stat-rows').textContent     = fmtNum(d.totalRows || 0);
+            document.getElementById('stat-writes').textContent   = fmtNum(writes24h);
+            document.getElementById('stat-empty').textContent    = emptyCount;
+            document.getElementById('last-checked-label').textContent =
+                'Last checked at ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            if (errorCount > 0) {
+                var errEl = document.getElementById('stat-error-count');
+                errEl.textContent = errorCount + ' error' + (errorCount > 1 ? 's' : '');
+                errEl.style.display = '';
+            }
+
+            // Build table map
+            var tableMap = {};
+            tables.forEach(function(t) { tableMap[t.name] = t; });
+
+            var maxRows = Math.max.apply(null, tables.map(function(t) { return t.count || 0; }).concat([1]));
+
+            // Render grouped sections
+            var html = '';
+            TABLE_GROUPS.forEach(function(group) {
+                var groupTables = group.tables.map(function(n) { return tableMap[n] || { name: n, count: null, error: 'not found', recent24h: null }; });
+                var groupTotal  = groupTables.reduce(function(s, t) { return s + (t.count || 0); }, 0);
+
+                html += '<div class="section-card">';
+                html += '<div class="section-hdr">';
+                html += '<div class="section-hdr-icon" style="background:' + hexAlpha(group.color, .12) + '">';
+                html += '<i data-lucide="' + group.icon + '" style="color:' + group.color + '"></i></div>';
+                html += '<span class="section-hdr-title">' + group.label + '</span>';
+                html += '<span class="section-hdr-count">' + fmtNum(groupTotal) + ' rows</span>';
+                html += '</div>';
+
+                groupTables.forEach(function(t) {
+                    var pct    = maxRows > 0 ? Math.round(((t.count || 0) / maxRows) * 100) : 0;
+                    var status = t.error ? 'error' : ((t.count || 0) === 0 ? 'empty' : 'ok');
+                    var barColor = GROUP_COLOR[t.name] || '#3b82f6';
+
+                    html += '<div class="tbl-row">';
+                    html += '<span class="tbl-name" title="' + esc(t.name) + '">' + esc(t.name) + '</span>';
+                    html += '<div class="tbl-bar-wrap"><div class="tbl-bar-bg"><div class="tbl-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div></div>';
+                    html += '<span class="tbl-count">' + (t.count !== null ? fmtNum(t.count) : '—') + '</span>';
+                    html += '<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">';
+                    html += '<span class="tbl-badge badge-' + status + '">' + status + '</span>';
+                    if (t.recent24h !== null && t.recent24h > 0)
+                        html += '<span class="tbl-badge badge-writes">+' + t.recent24h + '</span>';
+                    html += '</div>';
+                    html += '</div>';
+                });
+
+                html += '</div>';
             });
+
+            // Any tables not in a group
+            var knownTables = TABLE_GROUPS.reduce(function(a, g) { return a.concat(g.tables); }, []);
+            var ungrouped   = tables.filter(function(t) { return knownTables.indexOf(t.name) === -1; });
+            if (ungrouped.length) {
+                html += '<div class="section-card">';
+                html += '<div class="section-hdr"><div class="section-hdr-icon" style="background:rgba(148,163,184,.12)"><i data-lucide="table" style="color:#94a3b8"></i></div>';
+                html += '<span class="section-hdr-title">Other</span></div>';
+                ungrouped.forEach(function(t) {
+                    var pct = maxRows > 0 ? Math.round(((t.count || 0) / maxRows) * 100) : 0;
+                    var status = t.error ? 'error' : ((t.count || 0) === 0 ? 'empty' : 'ok');
+                    html += '<div class="tbl-row">';
+                    html += '<span class="tbl-name">' + esc(t.name) + '</span>';
+                    html += '<div class="tbl-bar-wrap"><div class="tbl-bar-bg"><div class="tbl-bar-fill" style="width:' + pct + '%;background:#94a3b8"></div></div></div>';
+                    html += '<span class="tbl-count">' + (t.count !== null ? fmtNum(t.count) : '—') + '</span>';
+                    html += '<span class="tbl-badge badge-' + status + '">' + status + '</span>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            col.innerHTML = html;
+
+            // Health summary
+            var summaryHtml = [
+                { label: 'Total Tables',   val: tables.length },
+                { label: 'Healthy',        val: tables.filter(function(t){return t.error===null&&(t.count||0)>0;}).length,  color: '#10b981' },
+                { label: 'Empty',          val: emptyCount,  color: emptyCount > 0 ? '#f59e0b' : undefined },
+                { label: 'Errors',         val: errorCount,  color: errorCount > 0 ? '#ef4444' : undefined },
+                { label: 'Writes (24h)',   val: fmtNum(writes24h), color: '#6366f1' },
+                { label: 'Total Rows',     val: fmtNum(d.totalRows || 0) },
+            ].map(function(r) {
+                return '<div class="health-row"><span class="health-label">' + r.label + '</span>'
+                    + '<span class="health-val"' + (r.color ? ' style="color:' + r.color + '"' : '') + '>' + r.val + '</span></div>';
+            }).join('');
+            document.getElementById('health-summary').innerHTML = summaryHtml;
+
             lucide.createIcons();
         } catch(e) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#e53e3e">' + esc(e.message) + '</td></tr>';
+            col.innerHTML = '<div class="state-row" style="color:#ef4444">' + esc(e.message) + '</div>';
         }
     }
 
@@ -280,38 +410,67 @@
         try {
             var d = await api('get_recent_activity');
             var items = d.activity || [];
-            if (!items.length) { feed.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">No recent activity.</div>'; return; }
+            document.getElementById('activity-count').textContent = items.length ? items.length : '';
+            if (!items.length) {
+                feed.innerHTML = '<div class="state-row">No recent activity.</div>';
+                return;
+            }
+            var TYPE_COLOR = {
+                i18n_version_bump: '#8b5cf6',
+                delete:            '#ef4444',
+                insert:            '#10b981',
+                update:            '#3b82f6',
+                bump_version:      '#f97316',
+                login:             '#06b6d4',
+                logout:            '#94a3b8',
+            };
+            var TYPE_LABEL = {
+                i18n_version_bump: 'i18n',
+                delete:            'delete',
+                insert:            'insert',
+                update:            'update',
+                bump_version:      'bump',
+                login:             'login',
+                logout:            'logout',
+            };
             var html = '';
             items.forEach(function(a) {
-                var colorMap = { i18n_version_bump:'#8b5cf6', 'delete':'#ef4444', 'insert':'#10b981', 'update':'#3b82f6' };
-                var color = colorMap[a.action_type] || '#94a3b8';
-                var relTime = getRelTime(a.created_at);
-                html += '<div class="activity-item">'
-                    + '<div class="activity-dot" style="background:' + color + '"></div>'
-                    + '<div class="activity-content">'
-                    + '<div class="activity-desc">' + esc(a.description||a.action_type) + '</div>'
-                    + '<div class="activity-meta">' + esc(a.admin_name||'') + ' · ' + relTime + '</div>'
-                    + '</div></div>';
+                var color = TYPE_COLOR[a.action_type] || '#94a3b8';
+                var label = TYPE_LABEL[a.action_type] || a.action_type;
+                html += '<div class="activity-item">';
+                html += '<div class="activity-line"><div class="activity-dot" style="background:' + color + '"></div></div>';
+                html += '<div class="activity-body">';
+                html += '<div class="activity-desc">' + esc(a.description || a.action_type) + '</div>';
+                html += '<div class="activity-meta">';
+                html += '<span class="activity-type-chip" style="background:' + hexAlpha(color, .12) + ';color:' + color + '">' + esc(label) + '</span>';
+                html += '<span class="activity-name">' + esc(a.admin_name || 'Admin') + '</span>';
+                html += '<span class="activity-time">· ' + relTime(a.created_at) + '</span>';
+                html += '</div></div></div>';
             });
             feed.innerHTML = html;
         } catch(e) {
-            feed.innerHTML = '<div style="color:#e53e3e;font-size:13px">' + esc(e.message) + '</div>';
+            feed.innerHTML = '<div class="state-row" style="color:#ef4444">' + esc(e.message) + '</div>';
         }
     }
 
-    function getRelTime(str) {
+    function relTime(str) {
         if (!str) return '—';
         var diff = Date.now() - new Date(str).getTime();
-        var mins = Math.floor(diff/60000);
-        if (mins < 1) return 'just now';
-        if (mins < 60) return mins + 'm ago';
-        var hrs = Math.floor(mins/60);
-        if (hrs < 24) return hrs + 'h ago';
-        return Math.floor(hrs/24) + 'd ago';
+        var m = Math.floor(diff / 60000);
+        if (m < 1)  return 'just now';
+        if (m < 60) return m + 'm ago';
+        var h = Math.floor(m / 60);
+        if (h < 24) return h + 'h ago';
+        return Math.floor(h / 24) + 'd ago';
+    }
+    function fmtNum(n) { return Number(n).toLocaleString(); }
+    function hexAlpha(hex, a) {
+        var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
     }
     function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>
 <script src="/utils/admin-command-palette.js?v=2"></script>
-    <script src="/utils/admin-presence-avatars.js"></script>
+<script src="/utils/admin-presence-avatars.js"></script>
 </body>
 </html>
