@@ -759,36 +759,29 @@
         }
 
         /* ── Codemagic Build Panel ── */
-        .cm-build-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 0;border-bottom:1px solid var(--border-light);}
-        .cm-build-row:last-child{border-bottom:none;}
-        .cm-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+        .cm-build-row{padding:14px 0;}
+        .cm-build-row:last-child{border-bottom:none !important;}
+        .cm-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
         .cm-status-dot.building{background:#f97316;animation:onlinePulse 1.6s ease-in-out infinite;}
         .cm-status-dot.finished{background:#22c55e;}
         .cm-status-dot.failed{background:#ef4444;}
         .cm-status-dot.preparing{background:#f59e0b;animation:onlinePulse 1.6s ease-in-out infinite;}
         .cm-status-dot.canceled{background:#6b7280;}
-        .cm-build-meta{min-width:0;}
-        .cm-build-title{font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-        .cm-build-badge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;flex-shrink:0;}
+        .cm-build-badge{font-weight:700;padding:2px 8px;border-radius:5px;flex-shrink:0;}
         .cm-build-badge.building{background:rgba(249,115,22,.15);color:#f97316;}
         .cm-build-badge.finished{background:rgba(34,197,94,.12);color:#16a34a;}
         .cm-build-badge.failed{background:rgba(239,68,68,.12);color:#ef4444;}
         .cm-build-badge.preparing{background:rgba(245,158,11,.12);color:#d97706;}
         .cm-build-badge.canceled{background:var(--bg-hover);color:var(--text-tertiary);}
-        .cm-build-sub{font-size:11px;color:var(--text-tertiary);margin-top:3px;display:flex;flex-wrap:wrap;gap:8px;}
-        .cm-build-sub span{display:flex;align-items:center;gap:3px;}
-        .cm-steps{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:5px;}
-        .cm-step{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);background:var(--bg-active);border-radius:6px;padding:5px 9px;}
+        .cm-step{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);background:var(--bg-active);border-radius:6px;padding:5px 10px;}
         .cm-step.done{color:var(--text-secondary);}
-        .cm-step.running{color:#f97316;font-weight:600;}
+        .cm-step.running{color:#f97316;font-weight:600;background:rgba(249,115,22,.06);}
         .cm-step.pending{color:var(--text-tertiary);}
-        .cm-step.error{color:#ef4444;font-weight:600;}
-        .cm-step-icon{flex-shrink:0;font-size:12px;line-height:1;}
-        .cm-step-dur{margin-left:auto;font-family:monospace;font-size:10px;color:var(--text-tertiary);flex-shrink:0;}
-        .cm-duration-bar{display:flex;align-items:center;gap:8px;flex-direction:column;align-items:flex-end;}
-        .cm-dur-text{font-size:12px;font-weight:700;color:var(--text-primary);white-space:nowrap;font-family:monospace;}
-        .cm-branch-pill{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(99,102,241,.12);color:#818cf8;font-family:monospace;}
-        .cm-commit-pill{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(139,92,246,.12);color:#a78bfa;font-family:monospace;}
+        .cm-step.error{color:#ef4444;font-weight:600;background:rgba(239,68,68,.06);}
+        .cm-step-icon{flex-shrink:0;width:14px;text-align:center;font-size:11px;}
+        .cm-step-dur{margin-left:auto;font-family:monospace;font-size:11px;color:var(--text-tertiary);flex-shrink:0;}
+        .cm-branch-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:rgba(99,102,241,.12);color:#818cf8;font-family:monospace;}
+        .cm-commit-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:rgba(139,92,246,.12);color:#a78bfa;font-family:monospace;}
 
         /* ── Release History ── */
         .rh-platform-bar{display:flex;align-items:center;gap:8px;padding:12px 20px 4px;flex-wrap:wrap;}
@@ -4273,96 +4266,163 @@
         var cmPollTimer = null;
 
         function cmStatusClass(s) {
-            if (s === 'finished')   return 'finished';
-            if (s === 'failed' || s === 'error') return 'failed';
-            if (s === 'building')  return 'building';
-            if (s === 'preparing') return 'preparing';
+            if (s === 'finished')                    return 'finished';
+            if (s === 'failed' || s === 'error')     return 'failed';
+            if (s === 'building')                    return 'building';
+            if (s === 'preparing' || s === 'publishing') return 'preparing';
             return 'canceled';
         }
         function cmStatusLabel(s) {
-            var m = { finished:'Finished', failed:'Failed', error:'Failed',
-                      building:'Building', preparing:'Preparing', canceled:'Canceled', timeout:'Timeout' };
-            return m[s] || s;
+            return { finished:'Finished', failed:'Failed', error:'Failed', building:'Building',
+                     preparing:'Preparing', publishing:'Publishing', canceled:'Canceled', timeout:'Timeout' }[s] || (s || '—');
+        }
+        function cmIsActive(s) {
+            return s === 'building' || s === 'preparing' || s === 'publishing';
         }
         function cmFormatDur(sec) {
-            if (!sec || sec < 0) return '—';
-            var h = Math.floor(sec / 3600);
-            var m = Math.floor((sec % 3600) / 60);
-            var s = sec % 60;
+            if (sec == null || sec < 0) return '—';
+            if (sec === 0) return '<1s';
+            var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
             if (h > 0) return h + 'h ' + m + 'm';
-            if (m > 0) return m + 'm ' + s + 's';
+            if (m > 0) return m + 'm ' + (s > 0 ? s + 's' : '');
             return s + 's';
+        }
+        function cmStepDur(st) {
+            if (st.startedAt && st.finishedAt) {
+                var sec = Math.round((new Date(st.finishedAt) - new Date(st.startedAt)) / 1000);
+                return sec < 1 ? '<1s' : cmFormatDur(sec);
+            }
+            if (st.status === 'running') return '…';
+            return '';
+        }
+        function cmBuildDur(b) {
+            if (b.startedAt && b.finishedAt)
+                return cmFormatDur(Math.round((new Date(b.finishedAt) - new Date(b.startedAt)) / 1000));
+            if (b.startedAt)
+                return cmFormatDur(Math.round((Date.now() - new Date(b.startedAt).getTime()) / 1000));
+            return '—';
         }
         function cmTimeAgo(isoStr) {
             if (!isoStr) return '—';
-            var d = new Date(isoStr), now = Date.now();
-            var diff = Math.round((now - d.getTime()) / 1000);
-            if (diff < 60)  return diff + 's ago';
-            if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-            if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-            return Math.floor(diff/86400) + 'd ago';
+            var diff = Math.round((Date.now() - new Date(isoStr).getTime()) / 1000);
+            if (diff < 60)   return diff + 's ago';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            return Math.floor(diff / 86400) + 'd ago';
+        }
+        function cmAbsTime(isoStr) {
+            if (!isoStr) return '';
+            var d = new Date(isoStr);
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Baghdad' }) + ' +03';
+        }
+        function cmMachine(t) {
+            return { mac_mini_m2: 'Mac mini M2', mac_mini_m1: 'Mac mini M1',
+                     mac_pro: 'Mac Pro', linux: 'Linux', windows: 'Windows' }[t] || t || '—';
+        }
+        function cmFileSize(bytes) {
+            if (!bytes) return '';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+            return Math.round(bytes / 1024) + ' KB';
+        }
+        function cmExtractSha(b) {
+            var url = (b.config || {}).url || '';
+            var m = url.match(/blob\/([0-9a-f]{7,40})\//);
+            return m ? m[1].slice(0, 7) : ((b.commit || {}).commitSha || '').slice(0, 7);
         }
         function cmStepIcon(s) {
-            if (s === 'success')  return '✓';
+            if (s === 'success')              return '✓';
             if (s === 'failed' || s === 'error') return '✗';
-            if (s === 'running')  return '▶';
-            if (s === 'skipped')  return '—';
+            if (s === 'running')              return '▶';
+            if (s === 'skipped')              return '—';
             return '○';
         }
         function cmStepClass(s) {
-            if (s === 'success')  return 'done';
+            if (s === 'success')              return 'done';
             if (s === 'failed' || s === 'error') return 'error';
-            if (s === 'running')  return 'running';
+            if (s === 'running')              return 'running';
             return 'pending';
         }
 
         function cmRenderBuild(b, isFirst) {
-            var sc  = cmStatusClass(b.status);
-            var dur = b.duration ? cmFormatDur(b.duration) :
-                      (b.startedAt ? cmFormatDur(Math.round((Date.now() - new Date(b.startedAt).getTime()) / 1000)) : '—');
-            var commit = (b.commit && b.commit.commitSha) ? b.commit.commitSha.slice(0,7) : '—';
-            var branch = (b.branch) ? b.branch : '—';
+            var sc       = cmStatusClass(b.status);
+            var dur      = cmBuildDur(b);
+            var commit   = b.commit || {};
+            var sha      = cmExtractSha(b);
+            var branch   = b.branch || '—';
+            var wfName   = (b.config || {}).name || 'TafsirKurd iOS — App Store';
+            var machine  = cmMachine(b.instanceType);
+            var authorName  = commit.authorName  || '';
+            var authorEmail = commit.authorEmail || '';
+            var commitMsg   = (commit.commitMessage || '').split('\n')[0].slice(0, 72);
+            var buildId  = b._id || '';
+            var index    = b.index || '?';
 
+            // ── Metadata grid ──
+            var metaHtml = '<div style="display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:12px;margin:10px 0 0;">'
+                + '<span style="color:var(--text-tertiary);font-weight:600">ID</span><span style="font-family:monospace;font-size:11px;color:var(--text-secondary)">' + buildId + '</span>'
+                + '<span style="color:var(--text-tertiary);font-weight:600">Workflow</span><span style="color:var(--text-secondary)">' + wfName + '</span>'
+                + (authorName ? '<span style="color:var(--text-tertiary);font-weight:600">Started by</span><span style="color:var(--text-secondary)">' + authorName + (authorEmail ? ' <span style="color:var(--text-tertiary)">(' + authorEmail + ')</span>' : '') + '</span>' : '')
+                + '<span style="color:var(--text-tertiary);font-weight:600">Started</span><span style="color:var(--text-secondary)">' + cmTimeAgo(b.startedAt) + ' &middot; <span style="font-size:11px">' + cmAbsTime(b.startedAt) + '</span></span>'
+                + '<span style="color:var(--text-tertiary);font-weight:600">Duration</span><span style="font-family:monospace;font-weight:700;color:var(--text-primary)">' + dur + '</span>'
+                + '<span style="color:var(--text-tertiary);font-weight:600">Machine</span><span style="color:var(--text-secondary)">' + machine + '</span>'
+                + '<span style="color:var(--text-tertiary);font-weight:600">Branch</span><span><span class="cm-branch-pill">' + branch + '</span></span>'
+                + (sha ? '<span style="color:var(--text-tertiary);font-weight:600">Commit</span><span style="display:flex;align-items:center;gap:6px"><span class="cm-commit-pill">' + sha + '</span>' + (commitMsg ? '<span style="font-size:11px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + commitMsg + '</span>' : '') + '</span>' : '')
+                + '</div>';
+
+            // ── Artifacts ──
+            var arts = b.artefacts || [];
+            var artsHtml = '';
+            if (isFirst && arts.length) {
+                artsHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);">'
+                    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-bottom:8px">Artifacts</div>'
+                    + '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+                arts.forEach(function(a) {
+                    var icon = a.type === 'ipa' ? '📦' : '🗜';
+                    var sz   = a.size ? ' [' + cmFileSize(a.size) + ']' : '';
+                    artsHtml += '<a href="' + a.url + '" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--primary);text-decoration:none;background:var(--bg-active);border:1px solid var(--border-light);border-radius:8px;padding:5px 10px;transition:background .15s;" onmouseover="this.style.background=\'var(--bg-hover)\'" onmouseout="this.style.background=\'var(--bg-active)\'">'
+                        + icon + ' <span>' + a.name + '</span>'
+                        + (sz ? '<span style="font-family:monospace;font-size:10px;color:var(--text-tertiary);font-weight:500">' + sz + '</span>' : '')
+                        + '</a>';
+                });
+                artsHtml += '</div></div>';
+            }
+
+            // ── Build steps ──
+            var steps = b.buildActions || [];
             var stepsHtml = '';
-            var steps = b.steps || [];
-            if (steps.length) {
-                stepsHtml = '<div class="cm-steps">';
+            if (isFirst && steps.length) {
+                stepsHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);">'
+                    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-bottom:8px">Build Steps</div>'
+                    + '<div style="display:flex;flex-direction:column;gap:3px">';
                 steps.forEach(function(st) {
                     var cls  = cmStepClass(st.status);
                     var icon = cmStepIcon(st.status);
-                    var dur  = st.duration ? cmFormatDur(st.duration) : (st.status === 'running' ? '…' : '');
+                    var d    = cmStepDur(st);
                     stepsHtml += '<div class="cm-step ' + cls + '">'
                         + '<span class="cm-step-icon">' + icon + '</span>'
                         + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (st.name || 'Step') + '</span>'
-                        + (dur ? '<span class="cm-step-dur">' + dur + '</span>' : '')
+                        + (d ? '<span class="cm-step-dur">' + d + '</span>' : '')
                         + '</div>';
                 });
-                stepsHtml += '</div>';
+                stepsHtml += '</div></div>';
             }
 
-            return '<div class="cm-build-row">'
-                + '<div class="cm-status-dot ' + sc + '" style="margin-top:5px"></div>'
-                + '<div class="cm-build-meta">'
-                + '<div class="cm-build-title">'
-                + '#' + (b.buildNumber || '?')
-                + '<span class="cm-build-badge ' + sc + '">' + cmStatusLabel(b.status) + '</span>'
-                + '<span class="cm-branch-pill">' + branch + '</span>'
-                + '<span class="cm-commit-pill">' + commit + '</span>'
+            return '<div class="cm-build-row" style="border-bottom:1px solid var(--border-light);padding-bottom:' + (isFirst ? '16px' : '12px') + ';margin-bottom:' + (isFirst ? '4px' : '0') + ';">'
+                + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+                + '<div class="cm-status-dot ' + sc + '"></div>'
+                + '<span style="font-size:15px;font-weight:800;color:var(--text-primary)">#' + index + '</span>'
+                + '<span class="cm-build-badge ' + sc + '" style="font-size:11px">' + cmStatusLabel(b.status) + '</span>'
                 + '</div>'
-                + '<div class="cm-build-sub">'
-                + '<span>Started ' + cmTimeAgo(b.startedAt) + '</span>'
-                + (b.startedBy ? '<span>by ' + (b.startedBy.displayName || b.startedBy.email || '?') + '</span>' : '')
-                + '<span>ID: <span style="font-family:monospace">' + (b._id || '').slice(-8) + '</span></span>'
-                + '</div>'
+                + metaHtml
+                + artsHtml
                 + stepsHtml
-                + '</div>'
-                + '<div class="cm-duration-bar"><span class="cm-dur-text">' + dur + '</span></div>'
                 + '</div>';
         }
 
         async function cmFetchBuilds() {
             try {
-                var r = await fetch('https://api.codemagic.io/builds?appId=' + CM_APP_ID + '&branch=main&workflowId=' + CM_WF_ID + '&limit=3', {
+                var r = await fetch('https://api.codemagic.io/builds?appId=' + CM_APP_ID + '&branch=main&limit=3', {
                     headers: { 'x-auth-token': CM_TOKEN }
                 });
                 var j = await r.json();
@@ -4373,14 +4433,13 @@
                     container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;text-align:center;padding:20px 0">No builds found.</div>';
                     return;
                 }
-                container.innerHTML = builds.map(function(b, i) { return cmRenderBuild(b, i===0); }).join('');
+                container.innerHTML = builds.map(function(b, i) { return cmRenderBuild(b, i === 0); }).join('');
                 var ts = document.getElementById('cmLastRefresh');
                 if (ts) ts.textContent = 'Updated ' + cmTimeAgo(new Date().toISOString());
 
-                // Auto-poll while any build is active
-                var hasActive = builds.some(function(b) { return b.status === 'building' || b.status === 'preparing'; });
+                var hasActive = builds.some(function(b) { return cmIsActive(b.status); });
                 clearTimeout(cmPollTimer);
-                if (hasActive) cmPollTimer = setTimeout(cmFetchBuilds, 15000);
+                cmPollTimer = setTimeout(cmFetchBuilds, hasActive ? 12000 : 60000);
             } catch(e) {
                 var container = document.getElementById('cmBuildsContainer');
                 if (container) container.innerHTML = '<div style="color:#ef4444;font-size:13px">Failed to load builds: ' + e.message + '</div>';
@@ -4391,7 +4450,7 @@
             var btn = document.getElementById('cmTriggerBtn');
             if (!btn || btn.disabled) return;
             btn.disabled = true;
-            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;animation:spin 1s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> Triggering…';
+            btn.textContent = 'Triggering…';
             try {
                 var r = await fetch('https://api.codemagic.io/builds', {
                     method: 'POST',
@@ -4400,23 +4459,20 @@
                 });
                 var j = await r.json();
                 if (j.buildId) {
-                    btn.innerHTML = '✓ Build triggered';
+                    btn.textContent = '✓ Triggered';
                     btn.style.background = '#10b981';
                     setTimeout(function() {
-                        btn.disabled = false;
-                        btn.style.background = '#f97316';
+                        btn.disabled = false; btn.style.background = '#f97316';
                         btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="5 3 19 12 5 21 5 3"/></svg> Trigger Build';
                         cmFetchBuilds();
-                    }, 4000);
+                    }, 3000);
                 } else {
-                    btn.innerHTML = 'Failed';
-                    btn.style.background = '#ef4444';
-                    setTimeout(function() { btn.disabled = false; btn.style.background = '#f97316'; btn.innerHTML = 'Trigger Build'; }, 4000);
+                    btn.textContent = 'Failed'; btn.style.background = '#ef4444';
+                    setTimeout(function() { btn.disabled = false; btn.style.background = '#f97316'; btn.textContent = 'Trigger Build'; }, 4000);
                 }
             } catch(e) {
-                btn.innerHTML = 'Error';
-                btn.style.background = '#6b7280';
-                setTimeout(function() { btn.disabled = false; btn.style.background = '#f97316'; btn.innerHTML = 'Trigger Build'; }, 4000);
+                btn.textContent = 'Error'; btn.style.background = '#6b7280';
+                setTimeout(function() { btn.disabled = false; btn.style.background = '#f97316'; btn.textContent = 'Trigger Build'; }, 4000);
             }
         }
 
