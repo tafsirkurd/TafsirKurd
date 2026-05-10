@@ -758,6 +758,38 @@
             .system-widgets-row { grid-template-columns: 1fr 1fr; gap: 16px; }
         }
 
+        /* ── Codemagic Build Panel ── */
+        .cm-build-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 0;border-bottom:1px solid var(--border-light);}
+        .cm-build-row:last-child{border-bottom:none;}
+        .cm-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+        .cm-status-dot.building{background:#f97316;animation:onlinePulse 1.6s ease-in-out infinite;}
+        .cm-status-dot.finished{background:#22c55e;}
+        .cm-status-dot.failed{background:#ef4444;}
+        .cm-status-dot.preparing{background:#f59e0b;animation:onlinePulse 1.6s ease-in-out infinite;}
+        .cm-status-dot.canceled{background:#6b7280;}
+        .cm-build-meta{min-width:0;}
+        .cm-build-title{font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+        .cm-build-badge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;flex-shrink:0;}
+        .cm-build-badge.building{background:rgba(249,115,22,.15);color:#f97316;}
+        .cm-build-badge.finished{background:rgba(34,197,94,.12);color:#16a34a;}
+        .cm-build-badge.failed{background:rgba(239,68,68,.12);color:#ef4444;}
+        .cm-build-badge.preparing{background:rgba(245,158,11,.12);color:#d97706;}
+        .cm-build-badge.canceled{background:var(--bg-hover);color:var(--text-tertiary);}
+        .cm-build-sub{font-size:11px;color:var(--text-tertiary);margin-top:3px;display:flex;flex-wrap:wrap;gap:8px;}
+        .cm-build-sub span{display:flex;align-items:center;gap:3px;}
+        .cm-steps{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:5px;}
+        .cm-step{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);background:var(--bg-active);border-radius:6px;padding:5px 9px;}
+        .cm-step.done{color:var(--text-secondary);}
+        .cm-step.running{color:#f97316;font-weight:600;}
+        .cm-step.pending{color:var(--text-tertiary);}
+        .cm-step.error{color:#ef4444;font-weight:600;}
+        .cm-step-icon{flex-shrink:0;font-size:12px;line-height:1;}
+        .cm-step-dur{margin-left:auto;font-family:monospace;font-size:10px;color:var(--text-tertiary);flex-shrink:0;}
+        .cm-duration-bar{display:flex;align-items:center;gap:8px;flex-direction:column;align-items:flex-end;}
+        .cm-dur-text{font-size:12px;font-weight:700;color:var(--text-primary);white-space:nowrap;font-family:monospace;}
+        .cm-branch-pill{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(99,102,241,.12);color:#818cf8;font-family:monospace;}
+        .cm-commit-pill{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(139,92,246,.12);color:#a78bfa;font-family:monospace;}
+
         /* ── Release History ── */
         .rh-platform-bar{display:flex;align-items:center;gap:8px;padding:12px 20px 4px;flex-wrap:wrap;}
         .rh-platform-item{display:flex;align-items:center;gap:7px;padding:7px 14px;background:var(--bg-active);border:1px solid var(--border-light);border-radius:10px;font-size:12px;font-weight:600;color:var(--text-primary);}
@@ -2336,6 +2368,28 @@
                         </div>
                     </div>
 
+                </div>
+
+                <!-- ══ Codemagic CI/CD ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(249,115,22,.12);color:#f97316;"><i data-lucide="rocket"></i></span>iOS Builds</div>
+                <div class="chart-card card-animate" id="codemagicPanel" style="animation-delay:450ms;margin-bottom:28px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);">
+                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#f97316"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            Codemagic — iOS App Store
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span id="cmLastRefresh" style="font-size:11px;color:var(--text-tertiary);">Loading…</span>
+                            <button id="cmTriggerBtn" onclick="cmTriggerBuild()" style="font-size:12px;font-weight:600;color:#fff;background:#f97316;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity .2s;" title="Trigger new iOS build">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Trigger Build
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Current / recent builds -->
+                    <div id="cmBuildsContainer" style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
+                        <div style="color:var(--text-tertiary);font-size:13px;text-align:center;padding:20px 0;">Loading builds…</div>
+                    </div>
                 </div>
 
                 <!-- ══ Who's Online ══ -->
@@ -4212,6 +4266,160 @@
             }
         }
 
+        // ══ Codemagic CI/CD Panel ══
+        var CM_TOKEN  = 'ZPhILiJ9l8VFN0iveAIgoHrM7ygiA8nAcTWH3Yzjo2U';
+        var CM_APP_ID = '69b1f56e0554bcb6cc4493bf';
+        var CM_WF_ID  = 'ios-app-store';
+        var cmPollTimer = null;
+
+        function cmStatusClass(s) {
+            if (s === 'finished')   return 'finished';
+            if (s === 'failed' || s === 'error') return 'failed';
+            if (s === 'building')  return 'building';
+            if (s === 'preparing') return 'preparing';
+            return 'canceled';
+        }
+        function cmStatusLabel(s) {
+            var m = { finished:'Finished', failed:'Failed', error:'Failed',
+                      building:'Building', preparing:'Preparing', canceled:'Canceled', timeout:'Timeout' };
+            return m[s] || s;
+        }
+        function cmFormatDur(sec) {
+            if (!sec || sec < 0) return '—';
+            var h = Math.floor(sec / 3600);
+            var m = Math.floor((sec % 3600) / 60);
+            var s = sec % 60;
+            if (h > 0) return h + 'h ' + m + 'm';
+            if (m > 0) return m + 'm ' + s + 's';
+            return s + 's';
+        }
+        function cmTimeAgo(isoStr) {
+            if (!isoStr) return '—';
+            var d = new Date(isoStr), now = Date.now();
+            var diff = Math.round((now - d.getTime()) / 1000);
+            if (diff < 60)  return diff + 's ago';
+            if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+            return Math.floor(diff/86400) + 'd ago';
+        }
+        function cmStepIcon(s) {
+            if (s === 'success')  return '✓';
+            if (s === 'failed' || s === 'error') return '✗';
+            if (s === 'running')  return '▶';
+            if (s === 'skipped')  return '—';
+            return '○';
+        }
+        function cmStepClass(s) {
+            if (s === 'success')  return 'done';
+            if (s === 'failed' || s === 'error') return 'error';
+            if (s === 'running')  return 'running';
+            return 'pending';
+        }
+
+        function cmRenderBuild(b, isFirst) {
+            var sc  = cmStatusClass(b.status);
+            var dur = b.duration ? cmFormatDur(b.duration) :
+                      (b.startedAt ? cmFormatDur(Math.round((Date.now() - new Date(b.startedAt).getTime()) / 1000)) : '—');
+            var commit = (b.commit && b.commit.commitSha) ? b.commit.commitSha.slice(0,7) : '—';
+            var branch = (b.branch) ? b.branch : '—';
+
+            var stepsHtml = '';
+            var steps = b.steps || [];
+            if (steps.length) {
+                stepsHtml = '<div class="cm-steps">';
+                steps.forEach(function(st) {
+                    var cls  = cmStepClass(st.status);
+                    var icon = cmStepIcon(st.status);
+                    var dur  = st.duration ? cmFormatDur(st.duration) : (st.status === 'running' ? '…' : '');
+                    stepsHtml += '<div class="cm-step ' + cls + '">'
+                        + '<span class="cm-step-icon">' + icon + '</span>'
+                        + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (st.name || 'Step') + '</span>'
+                        + (dur ? '<span class="cm-step-dur">' + dur + '</span>' : '')
+                        + '</div>';
+                });
+                stepsHtml += '</div>';
+            }
+
+            return '<div class="cm-build-row">'
+                + '<div class="cm-status-dot ' + sc + '" style="margin-top:5px"></div>'
+                + '<div class="cm-build-meta">'
+                + '<div class="cm-build-title">'
+                + '#' + (b.buildNumber || '?')
+                + '<span class="cm-build-badge ' + sc + '">' + cmStatusLabel(b.status) + '</span>'
+                + '<span class="cm-branch-pill">' + branch + '</span>'
+                + '<span class="cm-commit-pill">' + commit + '</span>'
+                + '</div>'
+                + '<div class="cm-build-sub">'
+                + '<span>Started ' + cmTimeAgo(b.startedAt) + '</span>'
+                + (b.startedBy ? '<span>by ' + (b.startedBy.displayName || b.startedBy.email || '?') + '</span>' : '')
+                + '<span>ID: <span style="font-family:monospace">' + (b._id || '').slice(-8) + '</span></span>'
+                + '</div>'
+                + stepsHtml
+                + '</div>'
+                + '<div class="cm-duration-bar"><span class="cm-dur-text">' + dur + '</span></div>'
+                + '</div>';
+        }
+
+        async function cmFetchBuilds() {
+            try {
+                var r = await fetch('https://api.codemagic.io/builds?appId=' + CM_APP_ID + '&branch=main&workflowId=' + CM_WF_ID + '&limit=3', {
+                    headers: { 'x-auth-token': CM_TOKEN }
+                });
+                var j = await r.json();
+                var builds = j.builds || [];
+                var container = document.getElementById('cmBuildsContainer');
+                if (!container) return;
+                if (!builds.length) {
+                    container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;text-align:center;padding:20px 0">No builds found.</div>';
+                    return;
+                }
+                container.innerHTML = builds.map(function(b, i) { return cmRenderBuild(b, i===0); }).join('');
+                var ts = document.getElementById('cmLastRefresh');
+                if (ts) ts.textContent = 'Updated ' + cmTimeAgo(new Date().toISOString());
+
+                // Auto-poll while any build is active
+                var hasActive = builds.some(function(b) { return b.status === 'building' || b.status === 'preparing'; });
+                clearTimeout(cmPollTimer);
+                if (hasActive) cmPollTimer = setTimeout(cmFetchBuilds, 15000);
+            } catch(e) {
+                var container = document.getElementById('cmBuildsContainer');
+                if (container) container.innerHTML = '<div style="color:#ef4444;font-size:13px">Failed to load builds: ' + e.message + '</div>';
+            }
+        }
+
+        async function cmTriggerBuild() {
+            var btn = document.getElementById('cmTriggerBtn');
+            if (!btn || btn.disabled) return;
+            btn.disabled = true;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;animation:spin 1s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> Triggering…';
+            try {
+                var r = await fetch('https://api.codemagic.io/builds', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': CM_TOKEN },
+                    body: JSON.stringify({ appId: CM_APP_ID, workflowId: CM_WF_ID, branch: 'main' })
+                });
+                var j = await r.json();
+                if (j.buildId) {
+                    btn.innerHTML = '✓ Build triggered';
+                    btn.style.background = '#10b981';
+                    setTimeout(function() {
+                        btn.disabled = false;
+                        btn.style.background = '#f97316';
+                        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="5 3 19 12 5 21 5 3"/></svg> Trigger Build';
+                        cmFetchBuilds();
+                    }, 4000);
+                } else {
+                    btn.innerHTML = 'Failed';
+                    btn.style.background = '#ef4444';
+                    setTimeout(function() { btn.disabled = false; btn.style.background = '#f97316'; btn.innerHTML = 'Trigger Build'; }, 4000);
+                }
+            } catch(e) {
+                btn.innerHTML = 'Error';
+                btn.style.background = '#6b7280';
+                setTimeout(function() { btn.disabled = false; btn.style.background = '#f97316'; btn.innerHTML = 'Trigger Build'; }, 4000);
+            }
+        }
+
         async function forceWidgetRefreshAdmin() {
             var btn = event.target;
             if (!btn) return;
@@ -5051,6 +5259,7 @@
             buildNotifAnalyticsWidget(val(20));
             buildAppVersionsWidget(val(21));
             updateRHPlatformBar(val(21));
+            cmFetchBuilds();
 
             // ─── Needs Attention + Notification Bell ───
             var _errData = val(19);
