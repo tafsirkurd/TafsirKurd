@@ -277,21 +277,25 @@ body{background:var(--bg);color:var(--text)}
 .hdr-logo span{font-size:1.15rem;font-weight:800;letter-spacing:-.3px;color:var(--text)}
 .hdr-title{font-size:1.15rem;font-weight:800;flex:1;letter-spacing:-.3px;color:var(--text)}
 .hdr-btn{width:38px;height:38px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--text2);transition:background .15s,transform .15s}
-.hdr-btn:active{background:var(--surface-h);transform:scale(.88)}
+.hdr-btn:active{background:var(--surface-h);transform:scale(.84)}
+.hdr-btn{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hdr-btn.on{background:var(--accent);color:var(--accent-t)}
 .hdr-text-btn{height:34px;padding:0 13px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;transition:transform .12s var(--ease),opacity .12s}
 .hdr-text-btn:active{transform:scale(.92);opacity:.85}
 
 /* ===== SEARCH BAR ===== */
-.search-bar{background:var(--bg);padding:0 16px 12px;display:none}
-.search-bar.on{display:block;animation:fadeUp .2s var(--ease)}
-.search-wrap{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-full);padding:0 14px;height:44px;gap:10px}
-.search-wrap i{color:var(--text3);font-size:.9rem}
-.search-wrap input{flex:1;height:100%;font-size:.9rem;background:none}
+.search-bar{background:var(--bg);overflow:hidden;max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none;padding:0 16px;transition:max-height .32s cubic-bezier(.4,0,.2,1),opacity .24s cubic-bezier(.4,0,.2,1),transform .24s cubic-bezier(.4,0,.2,1),padding .32s cubic-bezier(.4,0,.2,1)}
+.search-bar.on{max-height:600px;opacity:1;transform:translateY(0);pointer-events:auto;padding:0 16px 12px}
+.search-wrap{display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-full);padding:0 14px;height:44px;gap:10px;transition:border-color .18s,box-shadow .18s}
+.search-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.search-wrap i{color:var(--text3);font-size:.9rem;flex-shrink:0;transition:color .18s}
+.search-wrap:focus-within i{color:var(--accent)}
+.search-wrap input{flex:1;height:100%;font-size:.9rem;background:none;outline:none}
 .search-wrap input::placeholder{color:var(--text3)}
-.search-clear{font-size:.85rem;color:var(--text3);cursor:pointer;padding:4px}
-.search-results{margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);max-height:460px;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}
-.search-results.on{display:block}
+.search-clear{font-size:.85rem;color:var(--text3);cursor:pointer;padding:6px;border-radius:50%;transition:background .15s,color .15s,transform .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.search-clear:active{background:var(--surface-h);transform:scale(.82)}
+.search-results{margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);overflow:hidden;max-height:0;opacity:0;transform:translateY(-4px);pointer-events:none;-webkit-overflow-scrolling:touch;transition:max-height .28s cubic-bezier(.4,0,.2,1),opacity .2s cubic-bezier(.4,0,.2,1),transform .2s cubic-bezier(.4,0,.2,1)}
+.search-results.on{max-height:460px;overflow-y:auto;opacity:1;transform:translateY(0);pointer-events:auto}
 .search-result{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:transparent}
 .search-result:last-child{border-bottom:none}
 .search-result:active{background:var(--surface-h)}
@@ -1296,12 +1300,12 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ===== ISLAMVOICE TAB ===== */
-.iv-search-bar{display:none;padding:8px 16px 4px;animation:fadeUp .2s var(--ease)}
-.iv-search-bar.on{display:block}
+.iv-search-bar{overflow:hidden;max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none;padding:0 16px;transition:max-height .32s cubic-bezier(.4,0,.2,1),opacity .24s cubic-bezier(.4,0,.2,1),transform .24s cubic-bezier(.4,0,.2,1),padding .32s cubic-bezier(.4,0,.2,1)}
+.iv-search-bar.on{max-height:80px;opacity:1;transform:translateY(0);pointer-events:auto;padding:8px 16px 4px}
 .iv-search-wrap{position:relative;display:flex;align-items:center}
 .iv-search-icon{position:absolute;right:14px;color:var(--text3);font-size:.85rem;pointer-events:none}
-.iv-search-input{width:100%;height:42px;padding:0 40px 0 36px;border-radius:var(--r-full,20px);background:var(--surface);border:1.5px solid var(--border);font-size:.85rem;font-family:inherit;color:var(--text);transition:border-color .15s}
-.iv-search-input:focus{border-color:var(--accent);outline:none}
+.iv-search-input{width:100%;height:42px;padding:0 40px 0 36px;border-radius:var(--r-full,20px);background:var(--surface);border:1.5px solid var(--border);font-size:.85rem;font-family:inherit;color:var(--text);transition:border-color .18s,box-shadow .18s;outline:none}
+.iv-search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
 .iv-search-input::placeholder{color:var(--text3)}
 .iv-search-clear{position:absolute;left:8px;width:28px;height:28px;border-radius:50%;background:var(--bg3);display:none;align-items:center;justify-content:center;font-size:.7rem;color:var(--text2);cursor:pointer}
 .iv-search-clear.on{display:flex}
