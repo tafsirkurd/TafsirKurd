@@ -198,8 +198,10 @@
     </main>
 </div>
 
-<script src="/utils/admin-auth.js?v=3"></script>
-<script src="/utils/admin-sidebar.js?v=5"></script>
+<script src="/utils/admin-session-timer-ui.js?v=10"></script>
+<script src="/utils/admin-auth.js?v=6"></script>
+<script src="/utils/admin-live-alerts.js?v=14"></script>
+<script src="/utils/admin-notifications.js?v=8"></script>
 <script>
     var RH_TYPES = {
         feat:     { bg:'rgba(59,130,246,.12)',  color:'#3b82f6' },
@@ -373,10 +375,17 @@
         if (btn) btn.disabled = false;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        lucide.createIcons();
-        rhLoad();
+    window.addEventListener('DOMContentLoaded', function() {
+        window.adminAuth.checkAuth().then(function(data) {
+            if (!data) return;
+            lucide.createIcons();
+            rhLoad();
+        });
+        document.getElementById('menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('collapsed'); });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('mobile-open'); });
     });
 </script>
+<script src="/utils/admin-command-palette.js?v=2"></script>
+<script src="/utils/admin-presence-avatars.js"></script>
 </body>
 </html>
