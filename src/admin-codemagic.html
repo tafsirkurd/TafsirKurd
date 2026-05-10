@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/utils/admin-guard.js?v=1"></script>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js?v=2"></script>
+    <title>iOS Builds - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=15">
+    <style>
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; margin-left: 240px; min-width: 0; overflow-x: hidden; transition: margin-left 0.3s; }
+        .sidebar.collapsed + .main-content { margin-left: 64px; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+        /* ── Stats row ── */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 18px 20px; }
+        .stat-value { font-size: 26px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; line-height: 1; margin-bottom: 4px; }
+        .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); }
+
+        /* ── Build cards ── */
+        .build-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 14px; margin-bottom: 16px; overflow: hidden; transition: box-shadow .2s; }
+        .build-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+        .build-card-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer; user-select: none; }
+        .build-card-header:hover { background: var(--bg-active); }
+        .build-index { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+        .build-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .build-status-dot.finished  { background: #22c55e; }
+        .build-status-dot.failed    { background: #ef4444; }
+        .build-status-dot.building  { background: #f97316; animation: pulse 1.6s ease-in-out infinite; }
+        .build-status-dot.preparing { background: #f59e0b; animation: pulse 1.6s ease-in-out infinite; }
+        .build-status-dot.canceled  { background: #6b7280; }
+        .build-badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 5px; flex-shrink: 0; }
+        .build-badge.finished  { background: rgba(34,197,94,.12); color: #16a34a; }
+        .build-badge.failed    { background: rgba(239,68,68,.12); color: #ef4444; }
+        .build-badge.building  { background: rgba(249,115,22,.15); color: #f97316; }
+        .build-badge.preparing { background: rgba(245,158,11,.12); color: #d97706; }
+        .build-badge.canceled  { background: var(--bg-hover); color: var(--text-tertiary); }
+        .build-summary { flex: 1; min-width: 0; }
+        .build-summary-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .build-summary-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .build-dur { font-family: monospace; font-size: 14px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+        .build-chevron { color: var(--text-tertiary); font-size: 11px; flex-shrink: 0; transition: transform .2s; }
+        .build-chevron.open { transform: rotate(180deg); }
+
+        .build-body { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border-light); }
+        .build-body.open { display: block; }
+
+        /* ── Metadata grid ── */
+        .meta-grid { display: grid; grid-template-columns: max-content 1fr; gap: 5px 20px; font-size: 12px; margin: 16px 0 0; }
+        .meta-key { color: var(--text-tertiary); font-weight: 600; white-space: nowrap; padding: 2px 0; }
+        .meta-val { color: var(--text-secondary); padding: 2px 0; }
+
+        /* ── Pills ── */
+        .pill-branch { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; background: rgba(99,102,241,.12); color: #818cf8; font-family: monospace; }
+        .pill-commit { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; background: rgba(139,92,246,.12); color: #a78bfa; font-family: monospace; }
+
+        /* ── Artifacts ── */
+        .artifacts-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .artifact-link { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--primary); text-decoration: none; background: var(--bg-active); border: 1px solid var(--border-light); border-radius: 8px; padding: 6px 12px; transition: background .15s; }
+        .artifact-link:hover { background: var(--bg-hover); }
+        .artifact-size { font-size: 10px; font-weight: 500; color: var(--text-tertiary); font-family: monospace; }
+
+        /* ── Steps ── */
+        .steps-list { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
+        .step-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px 10px; border-radius: 6px; background: var(--bg-active); }
+        .step-row.done    { color: var(--text-secondary); }
+        .step-row.running { color: #f97316; font-weight: 600; background: rgba(249,115,22,.07); }
+        .step-row.pending { color: var(--text-tertiary); }
+        .step-row.error   { color: #ef4444; font-weight: 600; background: rgba(239,68,68,.07); }
+        .step-icon { width: 14px; text-align: center; font-size: 11px; flex-shrink: 0; }
+        .step-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .step-dur  { margin-left: auto; font-family: monospace; font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
+
+        .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); margin: 14px 0 6px; }
+    </style>
+    <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+            if (role === 'custom') css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            if (role && style) style.textContent = css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-tasks.html" class="nav-item"><i data-lucide="check-square"></i><span class="nav-item-label">Tasks</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-badge"></span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Site</div>
+                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-label">Header</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
+                <a href="/admin-notification-analytics.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Notif Analytics</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Monitoring</div>
+                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
+                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
+                <a href="/admin-widget-health.html" class="nav-item"><i data-lucide="layout-grid"></i><span class="nav-item-label">Widget Health</span></a>
+                <a href="/admin-codemagic.html" class="nav-item active"><i data-lucide="rocket"></i><span class="nav-item-label">iOS Builds</span></a>
+                <a href="/admin-release-history.html" class="nav-item"><i data-lucide="git-branch"></i><span class="nav-item-label">Release History</span></a>
+                <a href="/admin-db-health.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
+                <a href="/admin-jobs.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-label">Jobs</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Security</div>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Settings</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s" title="Logout"><i data-lucide="log-out"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="topbar-search">
+                <i data-lucide="rocket"></i>
+                <input type="text" placeholder="iOS Builds — Codemagic" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer" title="Session expires after 2 hours"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
+                <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode"><i data-lucide="moon" id="theme-icon"></i></button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <h1 class="page-title">iOS Builds</h1>
+                <div class="page-actions">
+                    <span id="cmPageRefreshTime" style="font-size:12px;color:var(--text-tertiary);margin-right:8px"></span>
+                    <button class="btn btn-secondary" onclick="cmPageLoad()" id="cmPageRefreshBtn"><i data-lucide="refresh-cw"></i> Refresh</button>
+                    <button class="btn btn-primary" onclick="cmPageTrigger()" id="cmPageTriggerBtn" style="background:#f97316;border-color:#f97316">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Trigger Build
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row" id="cmStatsRow">
+                <div class="stat-card" style="border-top:3px solid #22c55e">
+                    <div class="stat-value" id="cmStatSuccess">—</div>
+                    <div class="stat-label">Successful</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #ef4444">
+                    <div class="stat-value" id="cmStatFailed">—</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #f97316">
+                    <div class="stat-value" id="cmStatActive">—</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #3b82f6">
+                    <div class="stat-value" id="cmStatAvgDur">—</div>
+                    <div class="stat-label">Avg Duration</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #8b5cf6">
+                    <div class="stat-value" id="cmStatLatestBuild">—</div>
+                    <div class="stat-label">Latest Build #</div>
+                </div>
+            </div>
+
+            <!-- Builds list -->
+            <div id="cmPageBuilds">
+                <div style="display:flex;align-items:center;gap:10px;padding:32px;color:var(--text-tertiary);font-size:13px;justify-content:center">
+                    <div style="width:18px;height:18px;border:2px solid var(--border-light);border-top-color:#f97316;border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
+                    Loading builds…
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/utils/admin-auth.js?v=3"></script>
+<script src="/utils/admin-sidebar.js?v=5"></script>
+<script>
+    var CM_TOKEN  = 'ZPhILiJ9l8VFN0iveAIgoHrM7ygiA8nAcTWH3Yzjo2U';
+    var CM_APP_ID = '69b1f56e0554bcb6cc4493bf';
+    var CM_WF_ID  = 'ios-app-store';
+    var cmPagePollTimer = null;
+
+    function cmSC(s) {
+        if (s === 'finished')                    return 'finished';
+        if (s === 'failed' || s === 'error')     return 'failed';
+        if (s === 'building')                    return 'building';
+        if (s === 'preparing' || s === 'publishing') return 'preparing';
+        return 'canceled';
+    }
+    function cmSL(s) {
+        return { finished:'Finished', failed:'Failed', error:'Failed', building:'Building',
+                 preparing:'Preparing', publishing:'Publishing', canceled:'Canceled', timeout:'Timeout' }[s] || (s || '—');
+    }
+    function cmIsActive(s) { return s === 'building' || s === 'preparing' || s === 'publishing'; }
+    function cmFmtDur(sec) {
+        if (sec == null || sec < 0) return '—';
+        if (sec === 0) return '<1s';
+        var h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+        if (h > 0) return h+'h '+m+'m';
+        if (m > 0) return m+'m '+(s>0?s+'s':'');
+        return s+'s';
+    }
+    function cmStepDur(st) {
+        if (st.startedAt && st.finishedAt) {
+            var sec = Math.round((new Date(st.finishedAt) - new Date(st.startedAt)) / 1000);
+            return sec < 1 ? '<1s' : cmFmtDur(sec);
+        }
+        return st.status === 'running' ? '…' : '';
+    }
+    function cmBuildDur(b) {
+        if (b.startedAt && b.finishedAt)
+            return cmFmtDur(Math.round((new Date(b.finishedAt)-new Date(b.startedAt))/1000));
+        if (b.startedAt)
+            return cmFmtDur(Math.round((Date.now()-new Date(b.startedAt).getTime())/1000));
+        return '—';
+    }
+    function cmAgo(iso) {
+        if (!iso) return '—';
+        var diff = Math.round((Date.now()-new Date(iso).getTime())/1000);
+        if (diff < 60)   return diff+'s ago';
+        if (diff < 3600) return Math.floor(diff/60)+'m ago';
+        if (diff < 86400) return Math.floor(diff/3600)+'h ago';
+        return Math.floor(diff/86400)+'d ago';
+    }
+    function cmAbsTime(iso) {
+        if (!iso) return '';
+        return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',
+            hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Baghdad'})+' +03';
+    }
+    function cmMachine(t) {
+        return {mac_mini_m2:'Mac mini M2',mac_mini_m1:'Mac mini M1',mac_pro:'Mac Pro',linux:'Linux',windows:'Windows'}[t]||t||'—';
+    }
+    function cmFileSize(bytes) {
+        if (!bytes) return '';
+        return bytes >= 1048576 ? (bytes/1048576).toFixed(2)+' MB' : Math.round(bytes/1024)+' KB';
+    }
+    function cmSha(b) {
+        var url = (b.config||{}).url||'';
+        var m = url.match(/blob\/([0-9a-f]{7,40})\//);
+        return m ? m[1].slice(0,7) : ((b.commit||{}).commitSha||'').slice(0,7);
+    }
+    function cmStepClass(s) {
+        return {success:'done',failed:'error',error:'error',running:'running'}[s]||'pending';
+    }
+    function cmStepIcon(s) {
+        return {success:'✓',failed:'✗',error:'✗',running:'▶',skipped:'—'}[s]||'○';
+    }
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function cmRenderBuild(b, idx) {
+        var sc       = cmSC(b.status);
+        var dur      = cmBuildDur(b);
+        var sha      = cmSha(b);
+        var wfName   = (b.config||{}).name||'TafsirKurd iOS — App Store';
+        var commit   = b.commit || {};
+        var commitMsg = (commit.commitMessage||'').split('\n')[0].slice(0,80);
+        var author   = commit.authorName || '';
+        var email    = commit.authorEmail || '';
+        var branch   = b.branch || '—';
+        var machine  = cmMachine(b.instanceType);
+        var arts     = b.artefacts || [];
+        var steps    = b.buildActions || [];
+        var id       = 'cmb-' + esc(b._id||idx);
+        var isFirst  = idx === 0;
+
+        var metaHtml = '<div class="meta-grid">'
+            + '<span class="meta-key">ID</span><span class="meta-val" style="font-family:monospace;font-size:11px">'+esc(b._id||'—')+'</span>'
+            + '<span class="meta-key">Workflow</span><span class="meta-val">'+esc(wfName)+'</span>'
+            + (author ? '<span class="meta-key">Started by</span><span class="meta-val">'+esc(author)+(email?' <span style="color:var(--text-tertiary)">('+esc(email)+')</span>':'')+'</span>' : '')
+            + '<span class="meta-key">Started</span><span class="meta-val">'+cmAgo(b.startedAt)+' &middot; <span style="font-size:11px">'+cmAbsTime(b.startedAt)+'</span></span>'
+            + (b.finishedAt ? '<span class="meta-key">Finished</span><span class="meta-val">'+cmAgo(b.finishedAt)+' &middot; <span style="font-size:11px">'+cmAbsTime(b.finishedAt)+'</span></span>' : '')
+            + '<span class="meta-key">Duration</span><span class="meta-val" style="font-family:monospace;font-weight:700;color:var(--text-primary)">'+dur+'</span>'
+            + '<span class="meta-key">Machine</span><span class="meta-val">'+esc(machine)+'</span>'
+            + '<span class="meta-key">Branch</span><span class="meta-val"><span class="pill-branch">'+esc(branch)+'</span></span>'
+            + (sha ? '<span class="meta-key">Commit</span><span class="meta-val" style="display:flex;align-items:center;gap:6px"><span class="pill-commit">'+esc(sha)+'</span>'+(commitMsg?'<span style="font-size:11px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(commitMsg)+'</span>':'')+'</span>' : '')
+            + '</div>';
+
+        var artsHtml = '';
+        if (arts.length) {
+            artsHtml = '<div class="section-divider">Artifacts</div><div class="artifacts-row">';
+            arts.forEach(function(a) {
+                var icon = a.type === 'ipa' ? '📦' : '🗜';
+                var sz = a.size ? ' ['+cmFileSize(a.size)+']' : '';
+                artsHtml += '<a href="'+esc(a.url)+'" target="_blank" rel="noopener" class="artifact-link">'
+                    +icon+' <span>'+esc(a.name)+'</span>'
+                    +(sz?'<span class="artifact-size">'+sz+'</span>':'')+'</a>';
+            });
+            artsHtml += '</div>';
+        }
+
+        var stepsHtml = '';
+        if (steps.length) {
+            stepsHtml = '<div class="section-divider">Build Steps</div><div class="steps-list">';
+            steps.forEach(function(st) {
+                var cls  = cmStepClass(st.status);
+                var icon = cmStepIcon(st.status);
+                var d    = cmStepDur(st);
+                stepsHtml += '<div class="step-row '+cls+'">'
+                    +'<span class="step-icon">'+icon+'</span>'
+                    +'<span class="step-name">'+esc(st.name||'Step')+'</span>'
+                    +(d?'<span class="step-dur">'+d+'</span>':'')
+                    +'</div>';
+            });
+            stepsHtml += '</div>';
+        }
+
+        return '<div class="build-card">'
+            // Header row (always visible)
+            +'<div class="build-card-header" onclick="cmToggle(\''+id+'\')">'
+            +'<div class="build-status-dot '+sc+'"></div>'
+            +'<span class="build-index">#'+(b.index||'?')+'</span>'
+            +'<span class="build-badge '+sc+'">'+cmSL(b.status)+'</span>'
+            +'<div class="build-summary">'
+            +'<div class="build-summary-title">'+esc(commitMsg||wfName)+'</div>'
+            +'<div class="build-summary-meta">'
+            +'<span><span class="pill-branch" style="font-size:10px">'+esc(branch)+'</span></span>'
+            +(sha?'<span><span class="pill-commit" style="font-size:10px">'+esc(sha)+'</span></span>':'')
+            +'<span>'+cmAgo(b.startedAt)+'</span>'
+            +'<span>'+esc(cmMachine(b.instanceType))+'</span>'
+            +'</div>'
+            +'</div>'
+            +'<span class="build-dur">'+dur+'</span>'
+            +'<span class="build-chevron'+(isFirst?' open':'')+'" id="chev-'+id+'">▾</span>'
+            +'</div>'
+            // Body (collapsible)
+            +'<div class="build-body'+(isFirst?' open':'')+'" id="body-'+id+'">'
+            +metaHtml+artsHtml+stepsHtml
+            +'</div>'
+            +'</div>';
+    }
+
+    function cmToggle(id) {
+        var body = document.getElementById('body-'+id);
+        var chev = document.getElementById('chev-'+id);
+        if (!body) return;
+        body.classList.toggle('open');
+        if (chev) chev.classList.toggle('open');
+    }
+
+    async function cmPageLoad() {
+        var btn = document.getElementById('cmPageRefreshBtn');
+        var ts  = document.getElementById('cmPageRefreshTime');
+        var container = document.getElementById('cmPageBuilds');
+        if (!container) return;
+        if (btn) btn.disabled = true;
+        try {
+            var r = await fetch('https://api.codemagic.io/builds?appId='+CM_APP_ID+'&branch=main&limit=10', {
+                headers: { 'x-auth-token': CM_TOKEN }
+            });
+            var j = await r.json();
+            var builds = j.builds || [];
+            if (ts) ts.textContent = 'Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+            // Stats
+            var finished  = builds.filter(function(b){return b.status==='finished';}).length;
+            var failed    = builds.filter(function(b){return b.status==='failed'||b.status==='error';}).length;
+            var active    = builds.filter(function(b){return cmIsActive(b.status);}).length;
+            var durs      = builds.filter(function(b){return b.startedAt&&b.finishedAt;}).map(function(b){return Math.round((new Date(b.finishedAt)-new Date(b.startedAt))/1000);});
+            var avgDur    = durs.length ? Math.round(durs.reduce(function(a,v){return a+v;},0)/durs.length) : null;
+            var latestBuild = null;
+            builds.forEach(function(b){
+                var url=(b.config||{}).url||''; var m=url.match(/blob\/([0-9a-f]{7,})\//);
+                if(!latestBuild&&b.status==='finished') latestBuild=b.index;
+            });
+
+            var ss = document.getElementById('cmStatSuccess'); if(ss) ss.textContent=finished;
+            var sf = document.getElementById('cmStatFailed');  if(sf) sf.textContent=failed;
+            var sa = document.getElementById('cmStatActive');  if(sa) sa.textContent=active;
+            var sd = document.getElementById('cmStatAvgDur');  if(sd) sd.textContent=avgDur?cmFmtDur(avgDur):'—';
+            var sl = document.getElementById('cmStatLatestBuild'); if(sl) sl.textContent=latestBuild||'—';
+
+            if (!builds.length) {
+                container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-tertiary);font-size:13px">No builds found.</div>';
+                return;
+            }
+            container.innerHTML = builds.map(cmRenderBuild).join('');
+
+            var hasActive = builds.some(function(b){return cmIsActive(b.status);});
+            clearTimeout(cmPagePollTimer);
+            cmPagePollTimer = setTimeout(cmPageLoad, hasActive ? 12000 : 90000);
+        } catch(e) {
+            container.innerHTML = '<div style="padding:32px;text-align:center;color:#ef4444;font-size:13px">Failed to load builds: '+esc(e.message)+'</div>';
+        }
+        if (btn) btn.disabled = false;
+    }
+
+    async function cmPageTrigger() {
+        var btn = document.getElementById('cmPageTriggerBtn');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true; btn.textContent = 'Triggering…';
+        try {
+            var r = await fetch('https://api.codemagic.io/builds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': CM_TOKEN },
+                body: JSON.stringify({ appId: CM_APP_ID, workflowId: CM_WF_ID, branch: 'main' })
+            });
+            var j = await r.json();
+            if (j.buildId) {
+                btn.textContent = '✓ Triggered!'; btn.style.background = '#10b981'; btn.style.borderColor = '#10b981';
+                setTimeout(function(){ btn.disabled=false; btn.textContent='Trigger Build'; btn.style.background='#f97316'; btn.style.borderColor='#f97316'; cmPageLoad(); }, 3000);
+            } else {
+                btn.textContent = 'Failed'; btn.style.background='#ef4444'; btn.style.borderColor='#ef4444';
+                setTimeout(function(){ btn.disabled=false; btn.textContent='Trigger Build'; btn.style.background='#f97316'; btn.style.borderColor='#f97316'; }, 4000);
+            }
+        } catch(e) {
+            btn.textContent = 'Error'; btn.style.background='#6b7280'; btn.style.borderColor='#6b7280';
+            setTimeout(function(){ btn.disabled=false; btn.textContent='Trigger Build'; btn.style.background='#f97316'; btn.style.borderColor='#f97316'; }, 4000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        lucide.createIcons();
+        cmPageLoad();
+    });
+</script>
+</body>
+</html>

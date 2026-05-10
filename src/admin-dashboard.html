@@ -2363,26 +2363,38 @@
 
                 </div>
 
-                <!-- ══ Codemagic CI/CD ══ -->
-                <div class="section-label"><span class="sl-icon" style="background:rgba(249,115,22,.12);color:#f97316;"><i data-lucide="rocket"></i></span>iOS Builds</div>
-                <div class="chart-card card-animate" id="codemagicPanel" style="animation-delay:450ms;margin-bottom:28px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);">
-                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#f97316"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                            Codemagic — iOS App Store
+                <!-- ══ Deployments widgets row ══ -->
+                <div class="section-label"><span class="sl-icon" style="background:rgba(249,115,22,.12);color:#f97316;"><i data-lucide="rocket"></i></span>Deployments</div>
+                <div class="system-widgets-row" style="margin-bottom:28px">
+
+                    <!-- iOS Builds widget -->
+                    <div class="card card-animate" style="animation-delay:450ms">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
+                                <span style="flex-shrink:0;width:8px;height:8px;background:#f97316;border-radius:50%"></span>
+                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">iOS Builds</span>
+                            </h3>
+                            <a href="/admin-codemagic.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span id="cmLastRefresh" style="font-size:11px;color:var(--text-tertiary);">Loading…</span>
-                            <button id="cmTriggerBtn" onclick="cmTriggerBuild()" style="font-size:12px;font-weight:600;color:#fff;background:#f97316;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity .2s;" title="Trigger new iOS build">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                                Trigger Build
-                            </button>
+                        <div style="padding:12px 16px 16px" id="cmWidgetBody">
+                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
                         </div>
                     </div>
-                    <!-- Current / recent builds -->
-                    <div id="cmBuildsContainer" style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
-                        <div style="color:var(--text-tertiary);font-size:13px;text-align:center;padding:20px 0;">Loading builds…</div>
+
+                    <!-- Release History widget -->
+                    <div class="card card-animate" style="animation-delay:460ms">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                            <h3 class="card-title" style="display:flex;align-items:center;gap:8px;min-width:0">
+                                <span style="flex-shrink:0;width:8px;height:8px;background:#6366f1;border-radius:50%"></span>
+                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Release History</span>
+                            </h3>
+                            <a href="/admin-release-history.html" style="flex-shrink:0;font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:12px;font-weight:600;margin-left:8px">View all</a>
+                        </div>
+                        <div style="padding:12px 16px 16px" id="rhWidgetBody">
+                            <div style="color:var(--text-tertiary);font-size:13px">Loading…</div>
+                        </div>
                     </div>
+
                 </div>
 
                 <!-- ══ Who's Online ══ -->
@@ -2443,40 +2455,7 @@
                     </div>
                 </div>
 
-                <!-- ══ Release History ══ -->
-                <div class="card card-animate collapsible-card" id="colCard-rh" style="margin-bottom:28px;animation-delay:445ms">
-                    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer;" onclick="toggleCollapse('rh')">
-                        <h3 class="card-title" style="display:flex;align-items:center;gap:9px;margin:0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>
-                            Release History
-                            <span style="font-size:11px;font-weight:600;color:var(--text-tertiary);background:var(--bg-hover);padding:2px 8px;border-radius:8px">main</span>
-                        </h3>
-                        <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
-                            <span id="deployStatus"></span>
-                            <span id="rhFetchTime" style="font-size:11px;color:var(--text-tertiary)"></span>
-                            <button class="rh-btn" id="rhRefreshBtn" onclick="fetchReleaseHistory()">
-                                <i data-lucide="refresh-cw" style="width:12px;height:12px"></i> Refresh
-                            </button>
-                            <a class="rh-gh-link" href="https://github.com/tafsirkurd/TafsirKurd/commits/main" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="flex-shrink:0"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-                                GitHub
-                            </a>
-                            <button class="collapse-btn" id="colBtn-rh" onclick="event.stopPropagation();toggleCollapse('rh')" title="Collapse section">
-                                <i data-lucide="chevron-up" style="width:14px;height:14px;transition:transform .2s;"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="collapsible-body" id="colBody-rh">
-                    <div id="rhPlatformBar" class="rh-platform-bar" style="display:none"></div>
-                    <div id="rhPlatformDivider" class="rh-divider" style="display:none"></div>
-                    <div id="releaseHistoryBody">
-                        <div style="padding:24px 20px;color:var(--text-tertiary);font-size:13px;display:flex;align-items:center;gap:9px">
-                            <div style="width:15px;height:15px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
-                            Loading release history…
-                        </div>
-                    </div>
-                    </div><!-- /collapsible-body rh -->
-                </div>
+                <!-- Release History full page → /admin-release-history.html -->
 
                 <!-- ══ Prayer Times Health ══ -->
                 <div class="card card-animate collapsible-card" id="prayerHealthCard" style="animation-delay:400ms;margin-bottom:20px;">
@@ -2859,7 +2838,7 @@
                 subscribeAdminTeamOnline();
                 setInterval(loadAdminTeamOnline, 15 * 1000);
                 setInterval(loadDashboardData, 5 * 60 * 1000);
-                fetchReleaseHistory();
+                dashFetchReleaseWidget();
                 loadMyTasks();
                 setInterval(loadMyTasks, 3 * 60 * 1000);
             }
@@ -4427,22 +4406,36 @@
                 });
                 var j = await r.json();
                 var builds = j.builds || [];
-                var container = document.getElementById('cmBuildsContainer');
+                var container = document.getElementById('cmWidgetBody');
                 if (!container) return;
                 if (!builds.length) {
-                    container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;text-align:center;padding:20px 0">No builds found.</div>';
+                    container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No builds found.</div>';
                     return;
                 }
-                container.innerHTML = builds.map(function(b, i) { return cmRenderBuild(b, i === 0); }).join('');
-                var ts = document.getElementById('cmLastRefresh');
-                if (ts) ts.textContent = 'Updated ' + cmTimeAgo(new Date().toISOString());
+                // Compact widget: show 3 builds as slim rows
+                var html = '<div style="display:flex;flex-direction:column;gap:8px">';
+                builds.forEach(function(b) {
+                    var sc  = cmStatusClass(b.status);
+                    var dur = cmBuildDur(b);
+                    var sha = cmExtractSha(b);
+                    html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-active);border-radius:8px">'
+                        +'<div class="cm-status-dot '+sc+'" style="flex-shrink:0"></div>'
+                        +'<span style="font-size:13px;font-weight:700;color:var(--text-primary)">#'+(b.index||'?')+'</span>'
+                        +'<span class="cm-build-badge '+sc+'" style="font-size:10px">'+cmStatusLabel(b.status)+'</span>'
+                        +(sha?'<span class="cm-commit-pill" style="font-size:10px">'+sha+'</span>':'')
+                        +'<span style="flex:1;font-size:11px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+cmTimeAgo(b.startedAt)+'</span>'
+                        +'<span style="font-family:monospace;font-size:11px;font-weight:700;color:var(--text-primary);flex-shrink:0">'+dur+'</span>'
+                        +'</div>';
+                });
+                html += '</div>';
+                container.innerHTML = html;
 
                 var hasActive = builds.some(function(b) { return cmIsActive(b.status); });
                 clearTimeout(cmPollTimer);
                 cmPollTimer = setTimeout(cmFetchBuilds, hasActive ? 12000 : 60000);
             } catch(e) {
-                var container = document.getElementById('cmBuildsContainer');
-                if (container) container.innerHTML = '<div style="color:#ef4444;font-size:13px">Failed to load builds: ' + e.message + '</div>';
+                var container = document.getElementById('cmWidgetBody');
+                if (container) container.innerHTML = '<div style="color:#ef4444;font-size:13px">'+e.message+'</div>';
             }
         }
 
@@ -6360,42 +6353,54 @@
             if (ageMs < DEPLOY_WINDOW) {
                 // Auto-refresh commits every 30s while deploying
                 if (_deployPollInterval) clearInterval(_deployPollInterval);
-                _deployPollInterval = setInterval(fetchReleaseHistory, 30 * 1000);
+                _deployPollInterval = setInterval(dashFetchReleaseWidget, 30 * 1000);
             }
         }
 
-        async function fetchReleaseHistory() {
-            var bodyEl = document.getElementById('releaseHistoryBody');
-            var btn    = document.getElementById('rhRefreshBtn');
-            var timeEl = document.getElementById('rhFetchTime');
+        async function dashFetchReleaseWidget() {
+            var bodyEl = document.getElementById('rhWidgetBody');
             if (!bodyEl) return;
-            bodyEl.innerHTML = '<div style="padding:22px 20px;color:var(--text-tertiary);font-size:13px;display:flex;align-items:center;gap:9px"><div style="width:15px;height:15px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>Fetching commits…</div>';
-            if (btn) btn.disabled = true;
             try {
                 var adminToken = sessionStorage.getItem('adminToken') || '';
                 var res = await fetch('/admin-github-commits', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
-                    body: JSON.stringify({ per_page: 20 })
+                    body: JSON.stringify({ per_page: 8 })
                 });
-                if (!res.ok) throw new Error('API returned ' + res.status);
+                if (!res.ok) throw new Error('HTTP '+res.status);
                 var data = await res.json();
-                if (!data.success) throw new Error(data.error || 'Unknown error');
-                if (timeEl) timeEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-                var commits = (data.commits || []).slice(0, 5);
-                buildReleaseHistoryWidget(commits);
+                if (!data.success) throw new Error(data.error||'Unknown');
+                var commits = (data.commits||[]).slice(0,5);
+                if (!commits.length) { bodyEl.innerHTML='<div style="color:var(--text-tertiary);font-size:13px">No commits.</div>'; return; }
 
-                // Update deploy status badge from latest commit date
+                var html = '<div style="display:flex;flex-direction:column">';
+                commits.forEach(function(c, i) {
+                    var p = _rhParseCommit(c.commit.message||'');
+                    var tc = RH_TYPES[p.type] || {bg:'rgba(107,114,128,.1)',color:'#6b7280'};
+                    var sha = (c.sha||'').slice(0,7);
+                    var dateRaw = ((c.commit.author||c.commit.committer||{}).date)||'';
+                    var ago = dateRaw ? getTimeAgo(new Date(dateRaw)) : '';
+                    var url = c.html_url||'#';
+                    html += '<a href="'+_rhEsc(url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--border-light);text-decoration:none;color:inherit;transition:opacity .15s" onmouseover="this.style.opacity=\'.75\'" onmouseout="this.style.opacity=\'1\'">'
+                        +(i===0?'<span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:#6366f1;color:#fff;flex-shrink:0">LATEST</span>':'')
+                        +'<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;background:'+tc.bg+';color:'+tc.color+'">'+_rhEsc(p.type)+'</span>'
+                        +'<span style="flex:1;font-size:12px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_rhEsc(p.body)+'</span>'
+                        +(p.buildNum&&p.isIos?'<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(99,102,241,.15);color:#818cf8;flex-shrink:0">🍎 '+_rhEsc(p.buildNum)+'</span>':'')
+                        +'<span style="font-family:monospace;font-size:10px;color:var(--text-tertiary);flex-shrink:0">'+_rhEsc(sha)+'</span>'
+                        +'<span style="font-size:10px;color:var(--text-tertiary);flex-shrink:0;white-space:nowrap">'+_rhEsc(ago)+'</span>'
+                        +'</a>';
+                });
+                html += '</div>';
+                bodyEl.innerHTML = html;
+
+                // Deploy watch
                 if (commits.length > 0) {
-                    var latest = commits[0];
-                    var dateStr = (latest.commit.author || latest.commit.committer || {}).date || '';
+                    var dateStr = ((commits[0].commit.author||commits[0].commit.committer||{}).date)||'';
                     if (dateStr) _startDeployWatch(new Date(dateStr));
                 }
-            } catch (e) {
-                bodyEl.innerHTML = '<div style="padding:20px;color:var(--text-tertiary);font-size:13px">Could not load: ' + _rhEsc(e.message) + '</div>';
+            } catch(e) {
+                bodyEl.innerHTML = '<div style="color:#ef4444;font-size:12px">'+_rhEsc(e.message)+'</div>';
             }
-            if (btn) btn.disabled = false;
-            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function buildReleaseHistoryWidget(commits) {

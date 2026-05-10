@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/utils/admin-guard.js?v=1"></script>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js?v=2"></script>
+    <title>Release History - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=15">
+    <style>
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; margin-left: 240px; min-width: 0; overflow-x: hidden; transition: margin-left 0.3s; }
+        .sidebar.collapsed + .main-content { margin-left: 64px; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Platform bar ── */
+        .rh-platform-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .rh-platform-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .rh-platform-icon { font-size: 15px; flex-shrink: 0; }
+        .rh-platform-label { color: var(--text-tertiary); font-weight: 500; }
+        .rh-platform-build { font-family: monospace; font-weight: 800; color: var(--primary); }
+
+        /* ── Filter tabs ── */
+        .rh-filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+        .rh-filter-btn { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 8px; border: 1px solid var(--border-light); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; transition: all .15s; }
+        .rh-filter-btn:hover { background: var(--bg-hover); }
+        .rh-filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+        /* ── Commit rows ── */
+        .rh-list { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 14px; overflow: hidden; }
+        .rh-row { display: block; padding: 13px 20px; border-bottom: 1px solid var(--border-light); text-decoration: none; color: var(--text-primary); transition: background .12s; }
+        .rh-row:last-child { border-bottom: none; }
+        .rh-row:hover { background: var(--bg-hover); }
+        .rh-row.latest { background: var(--bg-active); border-left: 3px solid var(--primary); padding-left: 17px; }
+        .rh-line1 { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; flex-wrap: wrap; }
+        .rh-line2 { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+        .rh-type-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; }
+        .rh-latest-pill { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; background: #6366f1; color: #fff; letter-spacing: .08em; text-transform: uppercase; flex-shrink: 0; }
+        .rh-msg { font-size: 13px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+        .rh-row.latest .rh-msg { font-weight: 700; }
+        .rh-sha { font-family: monospace; font-size: 11px; color: var(--text-tertiary); background: var(--bg-hover); padding: 1px 7px; border-radius: 4px; flex-shrink: 0; }
+        .rh-meta { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
+        .rh-dot { color: var(--border-medium); font-size: 10px; margin: 0 2px; }
+        .rh-ios-pill     { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(99,102,241,.15); color: #818cf8; flex-shrink: 0; }
+        .rh-android-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(16,185,129,.15); color: #34d399; flex-shrink: 0; }
+        .rh-build-pill   { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(139,92,246,.15); color: #a78bfa; flex-shrink: 0; }
+
+        /* ── Deploy badge ── */
+        #rhDeployBadge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 8px; }
+        #rhDeployBadge.ds-deploying { background: rgba(245,158,11,.1); color: #d97706; }
+        #rhDeployBadge.ds-live      { background: rgba(34,197,94,.1); color: #16a34a; }
+        .ds-spinner { display: inline-block; width: 8px; height: 8px; border: 1.5px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 4px; }
+
+        .rh-empty { padding: 32px; text-align: center; color: var(--text-tertiary); font-size: 13px; }
+    </style>
+    <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+            if (role === 'custom') css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            if (role && style) style.textContent = css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-tasks.html" class="nav-item"><i data-lucide="check-square"></i><span class="nav-item-label">Tasks</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-badge"></span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Site</div>
+                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-label">Header</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
+                <a href="/admin-notification-analytics.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Notif Analytics</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Monitoring</div>
+                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
+                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
+                <a href="/admin-widget-health.html" class="nav-item"><i data-lucide="layout-grid"></i><span class="nav-item-label">Widget Health</span></a>
+                <a href="/admin-codemagic.html" class="nav-item"><i data-lucide="rocket"></i><span class="nav-item-label">iOS Builds</span></a>
+                <a href="/admin-release-history.html" class="nav-item active"><i data-lucide="git-branch"></i><span class="nav-item-label">Release History</span></a>
+                <a href="/admin-db-health.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
+                <a href="/admin-jobs.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-label">Jobs</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Security</div>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Settings</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s" title="Logout"><i data-lucide="log-out"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="topbar-search">
+                <i data-lucide="git-branch"></i>
+                <input type="text" placeholder="Release History — main" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
+                <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode"><i data-lucide="moon" id="theme-icon"></i></button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <h1 class="page-title" style="display:flex;align-items:center;gap:10px">
+                    Release History
+                    <span style="font-size:13px;font-weight:600;color:var(--text-tertiary);background:var(--bg-hover);padding:2px 10px;border-radius:8px">main</span>
+                </h1>
+                <div class="page-actions">
+                    <span id="rhDeployBadge"></span>
+                    <span id="rhFetchTime" style="font-size:12px;color:var(--text-tertiary);margin-left:4px"></span>
+                    <button class="btn btn-secondary" onclick="rhLoad()" id="rhRefreshBtn"><i data-lucide="refresh-cw"></i> Refresh</button>
+                    <a class="btn btn-secondary" href="https://github.com/tafsirkurd/TafsirKurd/commits/main" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px">
+                        <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+
+            <!-- Platform build bar -->
+            <div id="rhPlatformBar" class="rh-platform-bar" style="display:none"></div>
+
+            <!-- Filter tabs -->
+            <div class="rh-filter-row">
+                <button class="rh-filter-btn active" data-filter="all"     onclick="rhFilter('all')">All Commits</button>
+                <button class="rh-filter-btn"        data-filter="ios"     onclick="rhFilter('ios')">🍎 iOS</button>
+                <button class="rh-filter-btn"        data-filter="android" onclick="rhFilter('android')">🤖 Android</button>
+                <button class="rh-filter-btn"        data-filter="feat"    onclick="rhFilter('feat')">feat</button>
+                <button class="rh-filter-btn"        data-filter="fix"     onclick="rhFilter('fix')">fix</button>
+                <button class="rh-filter-btn"        data-filter="bump"    onclick="rhFilter('bump')">bump</button>
+            </div>
+
+            <!-- Commit list -->
+            <div id="rhBody">
+                <div class="rh-empty" style="display:flex;align-items:center;gap:10px;justify-content:center">
+                    <div style="width:18px;height:18px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
+                    Loading commits…
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/utils/admin-auth.js?v=3"></script>
+<script src="/utils/admin-sidebar.js?v=5"></script>
+<script>
+    var RH_TYPES = {
+        feat:     { bg:'rgba(59,130,246,.12)',  color:'#3b82f6' },
+        fix:      { bg:'rgba(16,185,129,.12)',  color:'#10b981' },
+        bump:     { bg:'rgba(139,92,246,.12)',  color:'#8b5cf6' },
+        remove:   { bg:'rgba(239,68,68,.12)',   color:'#ef4444' },
+        refactor: { bg:'rgba(245,158,11,.12)',  color:'#d97706' },
+        chore:    { bg:'rgba(107,114,128,.12)', color:'#6b7280' },
+        docs:     { bg:'rgba(14,165,233,.12)',  color:'#0ea5e9' },
+        style:    { bg:'rgba(236,72,153,.12)',  color:'#db2777' },
+        perf:     { bg:'rgba(234,179,8,.12)',   color:'#ca8a04' },
+        test:     { bg:'rgba(6,182,212,.12)',   color:'#0891b2' },
+    };
+
+    function rhEsc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function rhAgo(d) {
+        var diff = Math.round((Date.now()-d.getTime())/1000);
+        if (diff<60)   return diff+'s ago';
+        if (diff<3600) return Math.floor(diff/60)+'m ago';
+        if (diff<86400) return Math.floor(diff/3600)+'h ago';
+        return Math.floor(diff/86400)+'d ago';
+    }
+    function rhParseCommit(raw) {
+        var first = raw.split('\n')[0];
+        var m = first.match(/^(\w+)(?:\([\w/.\s-]+\))?!?:\s*(.+)$/);
+        var type = m ? m[1].toLowerCase() : 'commit';
+        var body = m ? m[2] : first;
+        var arrowM = first.match(/(\d+)\s*[→\->]+\s*(\d+)/);
+        var buildM = first.match(/build(?:\s+number)?\s+(\d+)(?!\s*[→\->])/i);
+        var buildNum = arrowM ? arrowM[2] : (buildM ? buildM[1] : null);
+        var isIos     = /\bios\b/i.test(first);
+        var isAndroid = /android/i.test(first);
+        if (!isIos && !isAndroid && buildNum && /\(ios\)/i.test(first)) isIos = true;
+        if (isAndroid) isIos = false;
+        return { type:type, body:body, full:first, buildNum:buildNum, isIos:isIos, isAndroid:isAndroid };
+    }
+
+    var _allCommits = [];
+    var _currentFilter = 'all';
+    var _deployCountdownInterval = null;
+    var _deployPollInterval = null;
+    var _latestCommitDate = null;
+
+    function _updateDeployBadge() {
+        var badge = document.getElementById('rhDeployBadge');
+        if (!badge || !_latestCommitDate) return;
+        var ageMs = Date.now() - _latestCommitDate.getTime();
+        var WINDOW = 4 * 60 * 1000;
+        if (ageMs < WINDOW) {
+            var secLeft = Math.max(0, Math.round((WINDOW-ageMs)/1000));
+            var minLeft = Math.floor(secLeft/60), s = secLeft%60;
+            var cd = minLeft>0 ? minLeft+'m '+s+'s' : s+'s';
+            badge.className = 'ds-deploying';
+            badge.innerHTML = '<span class="ds-spinner"></span>Deploying… '+cd;
+        } else {
+            badge.className = 'ds-live';
+            badge.innerHTML = '✓ Live';
+            if (_deployPollInterval) { clearInterval(_deployPollInterval); _deployPollInterval=null; }
+            if (_deployCountdownInterval) { clearInterval(_deployCountdownInterval); _deployCountdownInterval=null; }
+        }
+    }
+
+    function rhRenderRow(c, isLatest) {
+        var p     = rhParseCommit(c.commit.message || '');
+        var tc    = RH_TYPES[p.type] || { bg:'rgba(107,114,128,.1)', color:'#6b7280' };
+        var sha   = (c.sha||'').slice(0,7);
+        var auth  = ((c.commit.author||c.commit.committer||{}).name||'unknown');
+        var dateRaw = ((c.commit.author||c.commit.committer||{}).date)||'';
+        var ago   = dateRaw ? rhAgo(new Date(dateRaw)) : '';
+        var url   = c.html_url||('https://github.com/tafsirkurd/TafsirKurd/commit/'+(c.sha||''));
+        var h = '<a href="'+rhEsc(url)+'" target="_blank" rel="noopener" class="rh-row'+(isLatest?' latest':'')+'">';
+        h += '<div class="rh-line1">';
+        if (isLatest) h += '<span class="rh-latest-pill">LATEST</span>';
+        h += '<span class="rh-type-pill" style="background:'+tc.bg+';color:'+tc.color+'">'+rhEsc(p.type)+'</span>';
+        h += '<span class="rh-msg" title="'+rhEsc(p.full)+'">'+rhEsc(p.body)+'</span>';
+        h += '</div><div class="rh-line2">';
+        if (p.buildNum) {
+            if (p.isIos)          h += '<span class="rh-ios-pill">🍎 iOS Build '+rhEsc(p.buildNum)+'</span>';
+            else if (p.isAndroid) h += '<span class="rh-android-pill">🤖 Android Build '+rhEsc(p.buildNum)+'</span>';
+            else                  h += '<span class="rh-build-pill">Build '+rhEsc(p.buildNum)+'</span>';
+            h += '<span class="rh-dot">·</span>';
+        }
+        h += '<span class="rh-sha">'+rhEsc(sha)+'</span>';
+        h += '<span class="rh-dot">·</span><span class="rh-meta">'+rhEsc(auth)+'</span>';
+        h += '<span class="rh-dot">·</span><span class="rh-meta">'+rhEsc(ago)+'</span>';
+        h += '</div></a>';
+        return h;
+    }
+
+    function rhRenderList(commits) {
+        if (!commits.length) return '<div class="rh-empty">No commits match this filter.</div>';
+        return '<div class="rh-list">'+commits.map(function(c,i){return rhRenderRow(c,i===0);}).join('')+'</div>';
+    }
+
+    function rhFilter(filter) {
+        _currentFilter = filter;
+        document.querySelectorAll('.rh-filter-btn').forEach(function(btn) {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        var filtered = _allCommits.filter(function(c) {
+            if (filter === 'all') return true;
+            var p = rhParseCommit(c.commit.message||'');
+            if (filter === 'ios')     return p.isIos;
+            if (filter === 'android') return p.isAndroid;
+            return p.type === filter;
+        });
+        var bodyEl = document.getElementById('rhBody');
+        if (bodyEl) bodyEl.innerHTML = rhRenderList(filtered);
+    }
+
+    async function rhLoad() {
+        var bodyEl = document.getElementById('rhBody');
+        var btn    = document.getElementById('rhRefreshBtn');
+        var tsEl   = document.getElementById('rhFetchTime');
+        if (!bodyEl) return;
+        bodyEl.innerHTML = '<div class="rh-empty" style="display:flex;align-items:center;gap:10px;justify-content:center"><div style="width:18px;height:18px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>Fetching commits…</div>';
+        if (btn) btn.disabled = true;
+        try {
+            var adminToken = sessionStorage.getItem('adminToken') || '';
+            var res = await fetch('/admin-github-commits', {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+adminToken },
+                body: JSON.stringify({ per_page: 50 })
+            });
+            if (!res.ok) throw new Error('API returned '+res.status);
+            var data = await res.json();
+            if (!data.success) throw new Error(data.error||'Unknown error');
+            _allCommits = data.commits || [];
+            if (tsEl) tsEl.textContent = 'Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+            // Platform bar
+            var iosB = null, andB = null;
+            _allCommits.forEach(function(c) {
+                var p = rhParseCommit(c.commit.message||'');
+                if (p.buildNum) {
+                    if (p.isIos && !iosB) iosB = p.buildNum;
+                    if (p.isAndroid && !andB) andB = p.buildNum;
+                }
+            });
+            var bar = document.getElementById('rhPlatformBar');
+            if (bar) {
+                var barHtml = '';
+                if (iosB) barHtml += '<div class="rh-platform-item"><span class="rh-platform-icon">🍎</span><span class="rh-platform-label">iOS</span><span class="rh-platform-build">Build '+iosB+'</span></div>';
+                if (andB) barHtml += '<div class="rh-platform-item"><span class="rh-platform-icon">🤖</span><span class="rh-platform-label">Android</span><span class="rh-platform-build">Build '+andB+'</span></div>';
+                bar.innerHTML = barHtml;
+                bar.style.display = (iosB||andB) ? 'flex' : 'none';
+            }
+
+            // Deploy watch
+            if (_allCommits.length > 0) {
+                var dateStr = ((_allCommits[0].commit.author||_allCommits[0].commit.committer||{}).date)||'';
+                if (dateStr) {
+                    _latestCommitDate = new Date(dateStr);
+                    _updateDeployBadge();
+                    if (_deployCountdownInterval) clearInterval(_deployCountdownInterval);
+                    _deployCountdownInterval = setInterval(_updateDeployBadge, 1000);
+                    var ageMs = Date.now()-_latestCommitDate.getTime();
+                    if (ageMs < 4*60*1000) {
+                        if (_deployPollInterval) clearInterval(_deployPollInterval);
+                        _deployPollInterval = setInterval(rhLoad, 30000);
+                    }
+                }
+            }
+
+            rhFilter(_currentFilter);
+        } catch(e) {
+            bodyEl.innerHTML = '<div class="rh-empty" style="color:#ef4444">Could not load: '+rhEsc(e.message)+'</div>';
+        }
+        if (btn) btn.disabled = false;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        lucide.createIcons();
+        rhLoad();
+    });
+</script>
+</body>
+</html>
