@@ -640,7 +640,7 @@
             var res = await fetch('/admin-translations-api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ action: 'upsert_setting', key: 'widget_refresh_nonce', value: nonce })
+                body: JSON.stringify({ action: 'upsert_site_setting', key: 'widget_refresh_nonce', value: nonce })
             });
             var d = await res.json();
             if (!d.success) throw new Error(d.error || 'API error');
