@@ -1,6 +1,43 @@
 /* Tafsir Kurd - Mobile App v2.0 */
 /* Pure DOM methods only - no innerHTML for security */
 
+/* ── localStorage quota guard ──────────────────────────────────────────────────
+   Monkey-patches localStorage.setItem so every call throughout the app
+   automatically evicts stale prayer-cache entries and retries on QuotaExceededError.
+   Must run before any other code. */
+(function(){
+  var _origSet = Storage.prototype.setItem;
+  function _freeSpace() {
+    var now = new Date();
+    var keep = {};
+    for (var d = -1; d <= 2; d++) {
+      var m = new Date(now.getFullYear(), now.getMonth() + d, 1);
+      keep[m.getFullYear() + ':' + (m.getMonth() + 1)] = true;
+    }
+    var drop = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (!k) continue;
+      if (/^prayer3:|^prayer-kurd[12]:/.test(k)) { drop.push(k); continue; }
+      if (k.indexOf('prayer-kurd3:') === 0) {
+        var p = k.split(':'); // prayer-kurd3:CITY:YYYY:M
+        if (!keep[p[2] + ':' + p[3]]) drop.push(k);
+      }
+    }
+    drop.forEach(function(k) { localStorage.removeItem(k); });
+    return drop.length;
+  }
+  Storage.prototype.setItem = function(key, val) {
+    try { _origSet.call(this, key, val); }
+    catch (e) {
+      if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
+        _freeSpace();
+        try { _origSet.call(this, key, val); } catch (e2) { /* storage truly full — skip silently */ }
+      } else { throw e; }
+    }
+  };
+})();
+
 (function(){
 'use strict';
 
