@@ -14,7 +14,7 @@ private let kExtCacheSchema = 1
 private let kDiagnosticsKey = "widgetDiagnostics"
 private let kNonceKey       = "widgetRefreshNonce"       // written by admin force-refresh
 private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted on (UserDefaults.standard)
-private let kPrayerOrder   = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]          // notifications + next-prayer logic
+private let kPrayerOrder   = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]          // adhan notifications only — does NOT include Sunrise
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"] // home widget rows (includes sunrise)
 
 // After a prayer's scheduled second + kGracePastSeconds it is considered "past".
@@ -327,15 +327,16 @@ struct PrayerWidgetData: Codable {
     }
 
     func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
-        // 1. Today's stored prayers (exact timings for stored date)
-        for n in kPrayerOrder {
+        // 1. Today's stored prayers — kDisplayOrder includes Sunrise so Fajr→Sunrise
+        //    transition is explicit and never skips straight to Dhuhr.
+        for n in kDisplayOrder {
             if let t = prayerDate(n), t > now {
                 wLog.info("nextPrayer: today \(n) at \(t)")
                 return (n, t, kn(n))
             }
         }
         // 2. Tomorrow's prayers (uses actual tomorrow data when available)
-        for n in kPrayerOrder {
+        for n in kDisplayOrder {
             if let t = prayerDate(n, dayOffset: 1), t > now {
                 wLog.info("nextPrayer: tomorrow \(n) at \(t)")
                 return (n, t, kn(n))
@@ -346,7 +347,7 @@ struct PrayerWidgetData: Codable {
         wLog.warning("nextPrayer: stored data exhausted, stale-recovery with Baghdad wall clock")
         for offset in 0...1 {
             let targetDate = PrayerWidgetData.baghdadDateString(offset: offset)
-            for n in kPrayerOrder {
+            for n in kDisplayOrder {
                 if let approx = prayerTimeOnDate(n, dateStr: targetDate), approx > now {
                     wLog.info("nextPrayer stale-recovery: \(n) on \(targetDate) at \(approx)")
                     return (n, approx, kn(n))
@@ -437,10 +438,11 @@ struct WidgetExtendedCache: Codable {
         return days.keys.filter { $0 >= today }.sorted()
     }
 
-    // Find next prayer from `now` scanning forward across all future days (up to 30)
+    // Find next prayer from `now` scanning forward across all future days (up to 30).
+    // Uses kDisplayOrder so Sunrise is included — Fajr never skips to Dhuhr.
     func nextPrayer(from now: Date = Date()) -> (name: String, time: Date, ku: String)? {
         for dateStr in futureDays().prefix(30) {
-            for name in kPrayerOrder {
+            for name in kDisplayOrder {
                 if let t = prayerDate(name, for: dateStr), t > now {
                     return (name, t, kn(name))
                 }
@@ -631,7 +633,7 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
     for (_, dateStr) in futureDates.prefix(14).enumerated() {
         let dayData = syntheticData(from: ext, dateStr: dateStr) ?? todayData
 
-        for name in kPrayerOrder {
+        for name in kDisplayOrder {
             guard let t = ext.prayerDate(name, for: dateStr), t > now else { continue }
             let next = ext.nextPrayer(from: t.addingTimeInterval(30))
             wLog.info("[PrayerBoundary] entry \(dateStr) \(name) @ \(fmtHMS(t)) -> next=\(next?.name ?? "nil")")
@@ -714,7 +716,7 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
 
     // Today's prayer boundaries — exact + T+5s + T+60s for fast lock-screen switching
     let legacyBoundaryOffsets: [TimeInterval] = [0, 5, 60]
-    for name in kPrayerOrder {
+    for name in kDisplayOrder {
         guard let t = data.prayerDate(name), t > now else { continue }
         let next = data.nextPrayer(from: t.addingTimeInterval(30))
         wLog.info("[PrayerBoundary] legacy today \(name) -> next=\(next?.name ?? "nil")")
@@ -725,12 +727,12 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
         }
     }
     // Tomorrow's prayer boundaries — exact + T+5s + T+60s
-    for i in 0 ..< kPrayerOrder.count {
-        let name = kPrayerOrder[i]
+    for i in 0 ..< kDisplayOrder.count {
+        let name = kDisplayOrder[i]
         guard let t = data.prayerDate(name, dayOffset: 1) else { continue }
         var nextEntry: (name: String, time: Date, ku: String)? = nil
-        for j in (i + 1) ..< kPrayerOrder.count {
-            let nxt = kPrayerOrder[j]
+        for j in (i + 1) ..< kDisplayOrder.count {
+            let nxt = kDisplayOrder[j]
             if let nt = data.prayerDate(nxt, dayOffset: 1) { nextEntry = (nxt, nt, kn(nxt)); break }
         }
         if nextEntry == nil, let fajr2 = data.prayerDate("Fajr", dayOffset: 2) {
@@ -850,7 +852,7 @@ private func derivedActivePrayer(timings: [String: String], dateStr: String, at 
     var best: (name: String, time: Date)? = nil
     let dp = dateStr.split(separator: "-").compactMap { Int($0) }
     guard dp.count == 3 else { return nil }
-    for name in kPrayerOrder {
+    for name in kDisplayOrder {
         guard let raw = timings[name] else { continue }
         let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
         let parts = hm.split(separator: ":").compactMap { Int($0) }
@@ -1066,15 +1068,18 @@ private func effectiveNextPrayer(
     // A prayer is still "next" while now < t + grace (5-second window after it starts).
     func stillRelevant(_ t: Date) -> Bool { now < t.addingTimeInterval(kGracePastSeconds) }
 
-    // ── Tier 1: stored data for the snapshot's own date ───────────────────────
-    for n in kPrayerOrder {
+    // ── Tier 1: real clock vs full display order (includes Sunrise) ──────────────
+    // kDisplayOrder ensures Fajr→Sunrise transition is detected at render time:
+    // after Fajr + 5s grace, Sunrise is returned (not Dhuhr). After Sunrise + 5s,
+    // Dhuhr is returned. The snapshot's stored value is ALWAYS overridden here.
+    for n in kDisplayOrder {
         if let t = data.prayerDate(n), stillRelevant(t) {
             let passed = now >= t
             wLog.info("[WidgetBoundary] \(tag.isEmpty ? "" : tag + " ")now=\(fmtHMS(now)) prayer=\(n) time=\(fmtHMS(t)) passed=\(passed)")
             return (n, t, kn(n))
         }
     }
-    for n in kPrayerOrder {
+    for n in kDisplayOrder {
         if let t = data.prayerDate(n, dayOffset: 1), stillRelevant(t) {
             return (n, t, kn(n))
         }
@@ -1087,7 +1092,7 @@ private func effectiveNextPrayer(
     wLog.warning("[WidgetBoundary] \(tag) stored dates exhausted — applying timings to Baghdad wall-clock date")
     for offset in 0...1 {
         let targetDate = PrayerWidgetData.baghdadDateString(offset: offset)
-        for n in kPrayerOrder {
+        for n in kDisplayOrder {
             if let approx = data.prayerTimeOnDate(n, dateStr: targetDate), stillRelevant(approx) {
                 wLog.warning("[WidgetBoundary] wall-clock recovery: \(n) on \(targetDate) now=\(fmtHMS(now))")
                 return (n, approx, kn(n))
