@@ -8354,7 +8354,6 @@ function loadFromCloud(cb){
 
 // ── Realtime (instant cross-device push) ─────────────────────────────────────
 
-var _lastLiveToastAt=0;
 function subscribeRealtime(){
   if(!S.supabase||!S.user||S.realtimeChannel)return;
   S.realtimeChannel=S.supabase
@@ -8375,12 +8374,6 @@ function subscribeRealtime(){
       applySyncData(merged);
       localStorage.setItem('_lastSyncTime',merged._syncTime);
       renderCurrentTab();
-      // Throttle: show live-sync toast at most once every 6 seconds
-      var now=Date.now();
-      if(now-_lastLiveToastAt>6000){
-        toast(t('toast.synced_live'));
-        _lastLiveToastAt=now;
-      }
     })
     .subscribe();
 }
