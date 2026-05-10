@@ -126,7 +126,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         var baghdadCal = Calendar(identifier: .gregorian)
         baghdadCal.timeZone = TimeZone(identifier: "Asia/Baghdad") ?? .current
 
-        let prayerOrder = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
+        let prayerOrder = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"]
         let now = Date()
 
         func prayerDate(_ hm: String, _ dateStr: String) -> Date? {

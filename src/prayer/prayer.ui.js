@@ -1747,10 +1747,14 @@
     var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
     // 1. Write new nonce — SharedPrefsPlugin clears ext cache and reloads all widgets
     if (sp) {
-      var nonce = String(Date.now());
+      var nonce   = String(Date.now());
+      var nonceTs = String(Math.floor(Date.now() / 1000));
       sp.set({ key: 'widgetRefreshNonce', value: nonce })
         .then(function() {
-          console.log('[WidgetRefresh] nonce written nonce=' + nonce);
+          return sp.set({ key: 'widgetRefreshNonceTs', value: nonceTs });
+        })
+        .then(function() {
+          console.log('[WidgetRefresh] nonce written nonce=' + nonce + ' ts=' + nonceTs);
           localStorage.setItem('widgetRefreshNonceLocal', nonce);
         })
         .catch(function(e) { console.log('[WidgetRefresh] nonce write FAIL:', e && e.message || e); });
