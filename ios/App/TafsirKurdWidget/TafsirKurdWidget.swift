@@ -670,8 +670,8 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             entries.append(.init(date: t, data: dayData, next: next))
             boundaryCount += 1
 
-            let offsets: [TimeInterval] = t < zone1End ? [5, 60, 5 * 60] :
-                                          t < zone2End ? [5]              : []
+            let offsets: [TimeInterval] = t < zone1End ? [5.0, 60.0, 300.0] :
+                                          t < zone2End ? [5.0]             : []
             for off in offsets {
                 let st = t.addingTimeInterval(off)
                 guard st > now else { continue }
