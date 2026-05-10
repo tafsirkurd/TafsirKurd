@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="/utils/admin-guard.js?v=1"></script>
@@ -186,10 +186,58 @@
                 <div class="page-actions">
                     <span id="cmPageRefreshTime" style="font-size:12px;color:var(--text-tertiary);margin-right:8px"></span>
                     <button class="btn btn-secondary" onclick="cmPageLoad()" id="cmPageRefreshBtn"><i data-lucide="refresh-cw"></i> Refresh</button>
-                    <button class="btn btn-primary" onclick="cmPageTrigger()" id="cmPageTriggerBtn" style="background:#f97316;border-color:#f97316">
+                    <button class="btn btn-primary" onclick="cmOpenTriggerModal()" id="cmPageTriggerBtn" style="background:#f97316;border-color:#f97316">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         Trigger Build
                     </button>
+                </div>
+            </div>
+
+            <!-- ── Trigger Build Modal ──────────────────────────────────────── -->
+            <div id="cmTriggerModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;">
+                <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:16px;padding:28px 28px 24px;width:100%;max-width:400px;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                        <div>
+                            <div style="font-size:16px;font-weight:700;color:var(--text-primary)">New iOS Build</div>
+                            <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">Updates project.pbxproj and triggers Codemagic</div>
+                        </div>
+                        <button onclick="cmCloseTriggerModal()" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:20px;line-height:1;padding:4px;">✕</button>
+                    </div>
+
+                    <div id="cmModalLoadingRow" style="text-align:center;padding:16px 0;color:var(--text-tertiary);font-size:13px;">
+                        <span style="display:inline-block;width:16px;height:16px;border:2px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span>
+                        Loading current version…
+                    </div>
+
+                    <div id="cmModalFields" style="display:none;">
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">
+                                Build Number <span style="font-size:11px;font-weight:400;color:var(--text-tertiary)">(CURRENT_PROJECT_VERSION)</span>
+                            </label>
+                            <input id="cmBuildNumberInput" type="number" min="1" step="1"
+                                style="width:100%;padding:10px 12px;border:1px solid var(--border-light);border-radius:8px;background:var(--bg-active);color:var(--text-primary);font-size:15px;font-weight:600;box-sizing:border-box;outline:none;"
+                                onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-light)'">
+                            <div id="cmBuildHint" style="font-size:11px;color:var(--text-tertiary);margin-top:4px;"></div>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">
+                                Marketing Version <span style="font-size:11px;font-weight:400;color:var(--text-tertiary)">(MARKETING_VERSION)</span>
+                            </label>
+                            <input id="cmMarketingVersionInput" type="text" placeholder="e.g. 2.3.1"
+                                style="width:100%;padding:10px 12px;border:1px solid var(--border-light);border-radius:8px;background:var(--bg-active);color:var(--text-primary);font-size:15px;font-weight:600;box-sizing:border-box;outline:none;"
+                                onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-light)'">
+                        </div>
+
+                        <div id="cmModalError" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;font-size:12px;color:#dc2626;margin-bottom:16px;"></div>
+
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="cmCloseTriggerModal()" class="btn btn-secondary" style="flex:1;">Cancel</button>
+                            <button onclick="cmConfirmTrigger()" id="cmModalConfirmBtn" class="btn btn-primary" style="flex:2;background:#f97316;border-color:#f97316;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Confirm &amp; Build
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -228,6 +276,7 @@
     </main>
 </div>
 
+<script src="/utils/admin-sidebar.js?v=1"></script>
 <script src="/utils/admin-session-timer-ui.js?v=10"></script>
 <script src="/utils/admin-auth.js?v=6"></script>
 <script src="/utils/admin-live-alerts.js?v=14"></script>
@@ -442,31 +491,116 @@
         if (btn) btn.disabled = false;
     }
 
-    async function cmPageTrigger() {
-        var btn = document.getElementById('cmPageTriggerBtn');
-        if (!btn || btn.disabled) return;
-        btn.disabled = true; btn.textContent = 'Triggering…';
+    // ── Trigger Build Modal ────────────────────────────────────────────────────
+
+    var cmCurrentBuild = 0;
+
+    async function cmOpenTriggerModal() {
+        var modal = document.getElementById('cmTriggerModal');
+        var fields = document.getElementById('cmModalFields');
+        var loading = document.getElementById('cmModalLoadingRow');
+        var err = document.getElementById('cmModalError');
+        modal.style.display = 'flex';
+        fields.style.display = 'none';
+        loading.style.display = 'block';
+        err.style.display = 'none';
+
         try {
+            var adminToken = sessionStorage.getItem('adminToken') || '';
+            var r = await fetch('/ios-bump-version', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+                body: JSON.stringify({ action: 'read' })
+            });
+            var text = await r.text();
+            var j = {}; try { j = JSON.parse(text); } catch(pe) { throw new Error('Non-JSON response (' + r.status + '): ' + text.slice(0,200)); }
+            if (!r.ok) throw new Error(j.error || j.detail || ('Server error ' + r.status));
+            cmCurrentBuild = j.buildNumber || 0;
+            document.getElementById('cmBuildNumberInput').value = cmCurrentBuild + 1;
+            document.getElementById('cmBuildHint').textContent = 'Current: ' + cmCurrentBuild + ' — must be higher';
+            document.getElementById('cmMarketingVersionInput').value = j.marketingVersion || '';
+            loading.style.display = 'none';
+            fields.style.display = 'block';
+            document.getElementById('cmBuildNumberInput').focus();
+        } catch(e) {
+            loading.textContent = '⚠ Failed to load current version: ' + e.message;
+        }
+    }
+
+    function cmCloseTriggerModal() {
+        document.getElementById('cmTriggerModal').style.display = 'none';
+    }
+
+    async function cmConfirmTrigger() {
+        var confirmBtn = document.getElementById('cmModalConfirmBtn');
+        var errEl      = document.getElementById('cmModalError');
+        var buildVal   = parseInt(document.getElementById('cmBuildNumberInput').value);
+        var versionVal = document.getElementById('cmMarketingVersionInput').value.trim();
+
+        errEl.style.display = 'none';
+
+        if (!buildVal || buildVal <= cmCurrentBuild) {
+            errEl.textContent = 'Build number must be greater than current (' + cmCurrentBuild + ')';
+            errEl.style.display = 'block'; return;
+        }
+        if (!/^\d+\.\d+(\.\d+)?$/.test(versionVal)) {
+            errEl.textContent = 'Marketing version must be X.Y or X.Y.Z (e.g. 2.3.1)';
+            errEl.style.display = 'block'; return;
+        }
+
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span> Updating…';
+
+        try {
+            var adminToken = sessionStorage.getItem('adminToken') || '';
+
+            // 1. Commit version bump to GitHub
+            var bumpRes = await fetch('/ios-bump-version', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+                body: JSON.stringify({ action: 'commit', buildNumber: buildVal, marketingVersion: versionVal })
+            });
+            var bumpJ = await bumpRes.json();
+            if (!bumpRes.ok) {
+                var msg = bumpJ.error || 'Version bump failed';
+                if (bumpJ.status) msg += ' (GitHub ' + bumpJ.status + ')';
+                if (bumpJ.detail) msg += ': ' + bumpJ.detail;
+                throw new Error(msg);
+            }
+
+            // 2. Trigger Codemagic build
+            confirmBtn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span> Triggering…';
             var r = await fetch('https://api.codemagic.io/builds', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': CM_TOKEN },
                 body: JSON.stringify({ appId: CM_APP_ID, workflowId: CM_WF_ID, branch: 'main' })
             });
             var j = await r.json();
-            if (j.buildId) {
-                btn.textContent = '✓ Triggered!'; btn.style.background = '#10b981'; btn.style.borderColor = '#10b981';
-                setTimeout(function(){ btn.disabled=false; btn.textContent='Trigger Build'; btn.style.background='#f97316'; btn.style.borderColor='#f97316'; cmPageLoad(); }, 3000);
-            } else {
-                btn.textContent = 'Failed'; btn.style.background='#ef4444'; btn.style.borderColor='#ef4444';
-                setTimeout(function(){ btn.disabled=false; btn.textContent='Trigger Build'; btn.style.background='#f97316'; btn.style.borderColor='#f97316'; }, 4000);
-            }
+            if (!j.buildId) throw new Error('Codemagic did not return buildId');
+
+            cmCloseTriggerModal();
+            var btn = document.getElementById('cmPageTriggerBtn');
+            btn.innerHTML = '✓ Build #' + buildVal + ' triggered!';
+            btn.style.background = '#10b981'; btn.style.borderColor = '#10b981';
+            setTimeout(function() {
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg> Trigger Build';
+                btn.style.background = '#f97316'; btn.style.borderColor = '#f97316';
+                cmPageLoad();
+            }, 4000);
         } catch(e) {
-            btn.textContent = 'Error'; btn.style.background='#6b7280'; btn.style.borderColor='#6b7280';
-            setTimeout(function(){ btn.disabled=false; btn.textContent='Trigger Build'; btn.style.background='#f97316'; btn.style.borderColor='#f97316'; }, 4000);
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Confirm &amp; Build';
+            errEl.textContent = e.message;
+            errEl.style.display = 'block';
         }
     }
 
     window.addEventListener('DOMContentLoaded', function() {
+        // Close modal on backdrop click
+        document.getElementById('cmTriggerModal').addEventListener('click', function(e) {
+            if (e.target === this) cmCloseTriggerModal();
+        });
+
         window.adminAuth.checkAuth().then(function(data) {
             if (!data) return;
             lucide.createIcons();
