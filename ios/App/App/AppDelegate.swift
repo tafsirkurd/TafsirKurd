@@ -171,8 +171,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 ud.synchronize()
             }
         }
+        // Belt-and-suspenders: reload every known prayer widget kind explicitly,
+        // then reloadAllTimelines() as a fallback for any stale cache WidgetKit holds.
         WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdWidgetV2")
         WidgetCenter.shared.reloadTimelines(ofKind: "TafsirKurdLockWidgetV2")
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: — Push notification forwarding

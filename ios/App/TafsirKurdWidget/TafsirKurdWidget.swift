@@ -16,7 +16,7 @@ private let kNonceKey       = "widgetRefreshNonce"       // written by admin for
 private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted on (App Group UserDefaults)
 // Increment this whenever timeline logic changes. Stored in App Group on each build;
 // if it differs from stored value, extended cache is discarded so new logic applies immediately.
-private let kTimelineVersion = 4
+private let kTimelineVersion = 5
 private let kTimelineVersionKey = "widgetTimelineVersion"
 // All widget loops use kDisplayOrder (includes Sunrise). Adhan notifications use a separate
 // JS-side list; kPrayerOrder no longer exists here to avoid accidental misuse.
@@ -1475,8 +1475,14 @@ private struct LockRow: View {
     }
 }
 
+// Set to true in a debug build to show a tiny diagnostic line at the bottom of the lock widget.
+// Proves which entry is rendered, what real-now is, what the resolver returned vs the snapshot.
+// Remove once the "Asr still active at 5:38 PM" issue is confirmed fixed.
+private let kLockWidgetDebug = true
+
 private struct LockView: View {
     let entry: PrayerEntry
+    @Environment(\.widgetFamily) private var family
     var body: some View {
         let now   = Date()
         let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
@@ -1494,9 +1500,37 @@ private struct LockView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             } else {
-                VStack(spacing: 6) {
+                VStack(spacing: 4) {
                     ForEach(0..<prayers.count, id: \.self) { i in
                         LockRow(name: prayers[i].ku, time: prayers[i].display, isNext: i == 0)
+                    }
+                    if kLockWidgetDebug {
+                        let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+                        let snap   = entry.next?.name ?? "nil"
+                        let rn     = prayers.first?.name ?? "nil"
+                        let eHMS   = fmtHMS(entry.date)
+                        let nHMS   = fmtHMS(now)
+                        let reason = String(entry.reason.prefix(14))
+                        let fam: String
+                        switch family {
+                        case .accessoryRectangular: fam = "rect"
+                        case .systemSmall:          fam = "sm"
+                        case .systemMedium:         fam = "md"
+                        default:                    fam = "?"
+                        }
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("tv:\(kTimelineVersion) b:\(build) f:\(fam) [\(reason)]")
+                                .font(.system(size: 6, weight: .light).monospacedDigit())
+                                .foregroundStyle(.secondary.opacity(0.75))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                            Text("e:\(eHMS) n:\(nHMS) sn:\(snap) rn:\(rn)")
+                                .font(.system(size: 6, weight: .light).monospacedDigit())
+                                .foregroundStyle(.secondary.opacity(0.75))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 .environment(\.layoutDirection, .rightToLeft)
