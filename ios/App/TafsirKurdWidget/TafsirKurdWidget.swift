@@ -1441,9 +1441,16 @@ private struct LargeView: View {
 
 // MARK: — Lock screen widget  (accessoryRectangular — next 3 upcoming prayers)
 //
-// Shows only the 3 next upcoming prayers relative to entry.date.
-// The list shifts automatically at every prayer boundary because the timeline
-// has one PrayerEntry per prayer transition — no app launch needed.
+// ┌─ DISPLAY GUARANTEE ──────────────────────────────────────────────────────┐
+// │  ALL rows come exclusively from WidgetPrayerState.resolve(now: Date()).   │
+// │  entry.next (snapshot pre-computed at timeline-build time) is NEVER       │
+// │  used for any display element. This means: even if WidgetKit activates   │
+// │  the [boundary_asr] entry late (e.g. at 17:38), the rendered snapshot    │
+// │  will show Maghrib highlighted — not Asr — because effectiveNext3()      │
+// │  re-derives from real Date() at the moment WidgetKit calls body.         │
+// │  12-hour format: prayer times are formatted via formatHM() inside        │
+// │  effectiveNext3() using h12 = parts[0] % 12 == 0 ? 12 : parts[0] % 12. │
+// └──────────────────────────────────────────────────────────────────────────┘
 //
 // Layout (3 rows, 1 prayer each, RTL: Kurdish name RIGHT, time LEFT):
 //   Row 0 — next prayer: 14pt semibold, .primary foreground
@@ -1483,63 +1490,98 @@ private let kLockWidgetDebug = true
 private struct LockView: View {
     let entry: PrayerEntry
     @Environment(\.widgetFamily) private var family
+
     var body: some View {
+        // ── Step 1: resolve display state from real wall-clock time ───────────
+        // now = Date() is evaluated at the moment WidgetKit renders this entry.
+        // All prayer rows come from state.next3 — effectiveNext3(data:now:).
+        // entry.next is NEVER read for display; it is only used in drift logging.
         let now   = Date()
         let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
-        if let _ = entry.data {
-            let prayers = state.next3
-            // Drift detection: if stored next differs from what we computed, log it
-            if let stored = entry.next, let first = prayers.first, stored.name != first.name {
-                let _ = wLog.warning("[WidgetDrift] lock: stale=\(stored.name) corrected=\(first.name) now=\(fmtHMS(now)) reason=\(entry.reason)")
+
+        // ── Step 2: resolved prayer list (source of ALL display elements) ─────
+        // next3[0] = highlighted row  (next upcoming prayer per real clock)
+        // next3[1] = secondary row
+        // next3[2] = tertiary row
+        // name/ku/display all come from effectiveNext3; display is 12h format.
+        let resolvedPrayers = state.next3
+
+        // ── Logging (uses entry.next for drift detection — NOT for display) ───
+        if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
+            if snapshotNext.name != resolvedFirst.name {
+                let _ = wLog.warning("[WidgetDrift] lock: sn=\(snapshotNext.name) rn=\(resolvedFirst.name) now=\(fmtHMS(now)) e=\(fmtHMS(entry.date)) reason=\(entry.reason)")
+            } else {
+                let _ = wLog.info("[WidgetBoundary] lock: now=\(fmtHMS(now)) rn=\(resolvedFirst.name) reason=\(entry.reason)")
             }
-            if let first = prayers.first {
-                let _ = wLog.info("[WidgetBoundary] lock: now=\(fmtHMS(now)) next=\(first.name) reason=\(entry.reason)")
-            }
-            if prayers.isEmpty {
+        }
+
+        if entry.data == nil {
+            return AnyView(
                 Text("کاتا نوێژ")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
-            } else {
-                VStack(spacing: 4) {
-                    ForEach(0..<prayers.count, id: \.self) { i in
-                        LockRow(name: prayers[i].ku, time: prayers[i].display, isNext: i == 0)
-                    }
-                    if kLockWidgetDebug {
-                        let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-                        let snap   = entry.next?.name ?? "nil"
-                        let rn     = prayers.first?.name ?? "nil"
-                        let eHMS   = fmtHMS(entry.date)
-                        let nHMS   = fmtHMS(now)
-                        let reason = String(entry.reason.prefix(14))
-                        let fam: String
-                        switch family {
-                        case .accessoryRectangular: fam = "rect"
-                        case .systemSmall:          fam = "sm"
-                        case .systemMedium:         fam = "md"
-                        default:                    fam = "?"
-                        }
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text("tv:\(kTimelineVersion) b:\(build) f:\(fam) [\(reason)]")
-                                .font(.system(size: 6, weight: .light).monospacedDigit())
-                                .foregroundStyle(.secondary.opacity(0.75))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.5)
-                            Text("e:\(eHMS) n:\(nHMS) sn:\(snap) rn:\(rn)")
-                                .font(.system(size: 6, weight: .light).monospacedDigit())
-                                .foregroundStyle(.secondary.opacity(0.75))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.5)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                .environment(\.layoutDirection, .rightToLeft)
-            }
-        } else {
-            Text("کاتا نوێژ")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+            )
         }
+
+        if resolvedPrayers.isEmpty {
+            return AnyView(
+                Text("کاتا نوێژ")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            )
+        }
+
+        // ── Step 3: render rows from ONLY resolved state ──────────────────────
+        return AnyView(
+            VStack(spacing: 4) {
+                // Row source: resolvedPrayers[i] from effectiveNext3(data:now:Date())
+                // name  → resolvedPrayers[i].ku   (Kurdish, re-derived from clock)
+                // time  → resolvedPrayers[i].display (12h, from formatHM inside effectiveNext3)
+                // isNext → i == 0 (first resolved prayer is highlighted)
+                ForEach(0..<resolvedPrayers.count, id: \.self) { i in
+                    LockRow(
+                        name:   resolvedPrayers[i].ku,
+                        time:   resolvedPrayers[i].display,
+                        isNext: i == 0
+                    )
+                }
+
+                // ── Temporary debug overlay (remove when issue confirmed fixed) ──
+                if kLockWidgetDebug {
+                    let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+                    let sn     = entry.next?.name ?? "nil"          // snapshot: pre-computed at timeline build
+                    let rn     = resolvedPrayers.first?.name ?? "nil" // resolved: computed NOW from Date()
+                    let eHMS   = fmtHMS(entry.date)                 // when this entry was scheduled
+                    let nHMS   = fmtHMS(now)                        // real render time
+                    let reason = String(entry.reason.prefix(14))
+                    let fam: String
+                    switch family {
+                    case .accessoryRectangular: fam = "rect"
+                    case .systemSmall:          fam = "sm"
+                    case .systemMedium:         fam = "md"
+                    default:                    fam = "?"
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Line 1: version / build / widget family / entry reason
+                        Text("tv:\(kTimelineVersion) b:\(build) f:\(fam) [\(reason)]")
+                            .font(.system(size: 6, weight: .light).monospacedDigit())
+                            .foregroundStyle(.secondary.opacity(0.75))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                        // Line 2: e=entry.date  n=real now  sn=snapshot next  rn=resolved next
+                        // If e≠n → WidgetKit delivered entry late; rn must match visual
+                        // If e=n=15:58 & rn=Asr → WidgetKit throttled heartbeats
+                        Text("e:\(eHMS) n:\(nHMS) sn:\(sn) rn:\(rn)")
+                            .font(.system(size: 6, weight: .light).monospacedDigit())
+                            .foregroundStyle(.secondary.opacity(0.75))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .environment(\.layoutDirection, .rightToLeft)
+        )
     }
 }
 
