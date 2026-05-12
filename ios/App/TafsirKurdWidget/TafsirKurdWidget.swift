@@ -1515,29 +1515,13 @@ private struct LockView: View {
             }
         }
 
-        if entry.data == nil {
-            return AnyView(
-                Text("کاتا نوێژ")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-            )
-        }
-
-        if resolvedPrayers.isEmpty {
-            return AnyView(
-                Text("کاتا نوێژ")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-            )
-        }
-
         // ── Step 3: render rows from ONLY resolved state ──────────────────────
-        return AnyView(
+        if entry.data == nil || resolvedPrayers.isEmpty {
+            Text("کاتا نوێژ")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        } else {
             VStack(spacing: 4) {
-                // Row source: resolvedPrayers[i] from effectiveNext3(data:now:Date())
-                // name  → resolvedPrayers[i].ku   (Kurdish, re-derived from clock)
-                // time  → resolvedPrayers[i].display (12h, from formatHM inside effectiveNext3)
-                // isNext → i == 0 (first resolved prayer is highlighted)
                 ForEach(0..<resolvedPrayers.count, id: \.self) { i in
                     LockRow(
                         name:   resolvedPrayers[i].ku,
@@ -1546,13 +1530,12 @@ private struct LockView: View {
                     )
                 }
 
-                // ── Temporary debug overlay (remove when issue confirmed fixed) ──
                 if kLockWidgetDebug {
                     let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-                    let sn     = entry.next?.name ?? "nil"          // snapshot: pre-computed at timeline build
-                    let rn     = resolvedPrayers.first?.name ?? "nil" // resolved: computed NOW from Date()
-                    let eHMS   = fmtHMS(entry.date)                 // when this entry was scheduled
-                    let nHMS   = fmtHMS(now)                        // real render time
+                    let sn     = entry.next?.name ?? "nil"
+                    let rn     = resolvedPrayers.first?.name ?? "nil"
+                    let eHMS   = fmtHMS(entry.date)
+                    let nHMS   = fmtHMS(now)
                     let reason = String(entry.reason.prefix(14))
                     let fam: String
                     switch family {
@@ -1562,15 +1545,11 @@ private struct LockView: View {
                     default:                    fam = "?"
                     }
                     VStack(alignment: .leading, spacing: 0) {
-                        // Line 1: version / build / widget family / entry reason
                         Text("tv:\(kTimelineVersion) b:\(build) f:\(fam) [\(reason)]")
                             .font(.system(size: 6, weight: .light).monospacedDigit())
                             .foregroundStyle(.secondary.opacity(0.75))
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
-                        // Line 2: e=entry.date  n=real now  sn=snapshot next  rn=resolved next
-                        // If e≠n → WidgetKit delivered entry late; rn must match visual
-                        // If e=n=15:58 & rn=Asr → WidgetKit throttled heartbeats
                         Text("e:\(eHMS) n:\(nHMS) sn:\(sn) rn:\(rn)")
                             .font(.system(size: 6, weight: .light).monospacedDigit())
                             .foregroundStyle(.secondary.opacity(0.75))
@@ -1581,7 +1560,7 @@ private struct LockView: View {
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)
-        )
+        }
     }
 }
 
