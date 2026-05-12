@@ -1487,6 +1487,38 @@ private struct LockRow: View {
 // Remove once the "Asr still active at 5:38 PM" issue is confirmed fixed.
 private let kLockWidgetDebug = true
 
+private struct LockDebugView: View {
+    let entry: PrayerEntry
+    let family: WidgetFamily
+    let now: Date
+    let resolvedPrayers: [(name: String, ku: String, display: String)]
+
+    var body: some View {
+        let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        let sn     = entry.next?.name ?? "nil"
+        let rn     = resolvedPrayers.first?.name ?? "nil"
+        let eHMS   = fmtHMS(entry.date)
+        let nHMS   = fmtHMS(now)
+        let reason = String(entry.reason.prefix(14))
+        let fam    = family == .accessoryRectangular ? "rect"
+                   : family == .systemSmall          ? "sm"
+                   : family == .systemMedium         ? "md" : "?"
+        VStack(alignment: .leading, spacing: 0) {
+            Text("tv:\(kTimelineVersion) b:\(build) f:\(fam) [\(reason)]")
+                .font(.system(size: 6, weight: .light).monospacedDigit())
+                .foregroundStyle(.secondary.opacity(0.75))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+            Text("e:\(eHMS) n:\(nHMS) sn:\(sn) rn:\(rn)")
+                .font(.system(size: 6, weight: .light).monospacedDigit())
+                .foregroundStyle(.secondary.opacity(0.75))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 private struct LockView: View {
     let entry: PrayerEntry
     @Environment(\.widgetFamily) private var family
@@ -1531,32 +1563,7 @@ private struct LockView: View {
                 }
 
                 if kLockWidgetDebug {
-                    let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-                    let sn     = entry.next?.name ?? "nil"
-                    let rn     = resolvedPrayers.first?.name ?? "nil"
-                    let eHMS   = fmtHMS(entry.date)
-                    let nHMS   = fmtHMS(now)
-                    let reason = String(entry.reason.prefix(14))
-                    let fam: String
-                    switch family {
-                    case .accessoryRectangular: fam = "rect"
-                    case .systemSmall:          fam = "sm"
-                    case .systemMedium:         fam = "md"
-                    default:                    fam = "?"
-                    }
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("tv:\(kTimelineVersion) b:\(build) f:\(fam) [\(reason)]")
-                            .font(.system(size: 6, weight: .light).monospacedDigit())
-                            .foregroundStyle(.secondary.opacity(0.75))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                        Text("e:\(eHMS) n:\(nHMS) sn:\(sn) rn:\(rn)")
-                            .font(.system(size: 6, weight: .light).monospacedDigit())
-                            .foregroundStyle(.secondary.opacity(0.75))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    LockDebugView(entry: entry, family: family, now: now, resolvedPrayers: resolvedPrayers)
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)
