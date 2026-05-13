@@ -498,7 +498,10 @@ struct WidgetPrayerState {
 
 struct PrayerProvider: TimelineProvider {
     func placeholder(in _: Context) -> PrayerEntry {
-        .init(date: .now, data: nil, next: nil, reason: "placeholder")
+        // Load real data so WidgetKit redacts prayer-shaped content instead of NoDataView.
+        WT.reload()
+        let d = PrayerWidgetData.load()
+        return .init(date: .now, data: d, next: d?.nextPrayer(), reason: "placeholder")
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
         WT.reload()
@@ -730,6 +733,15 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
     let futureDates = ext.futureDays()
     let todayStr  = PrayerWidgetData.baghdadDateString()
     let todayData = syntheticData(from: ext, dateStr: todayStr) ?? legacyData
+    // If todayData is nil the extended cache has no entry for today and there is no
+    // legacy fallback — every entry would have data: nil, showing a blank widget.
+    // Signal this by returning a single retry entry rather than flooding WidgetKit
+    // with hundreds of nil-data entries.
+    guard todayData != nil else {
+        wLog.error("[WidgetTimeline] buildExtended: todayData nil for \(todayStr) — retry 5 min")
+        let retry = now.addingTimeInterval(5 * 60)
+        return ([.init(date: now, data: nil, next: nil, reason: "no_data_retry")], retry)
+    }
 
     // Entry covering "right now" — establishes the initial display state
     let nowNext = ext.nextPrayer(from: now)
@@ -824,8 +836,12 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
     }
     let ageH = data.lastUpdated.map { (now.timeIntervalSince1970 * 1000 - $0) / 3_600_000 } ?? 0
     if data.isStale {
-        wLog.warning("buildLegacyTimeline: STALE ageH=\(String(format:"%.1f",ageH)) — retry 30 min")
-        completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
+        // Show stale data rather than nil — blank widget is worse than slightly stale times.
+        // effectiveNextPrayer() re-derives the highlighted prayer from wall-clock Date(),
+        // so the correct prayer is highlighted even if the time strings are off by ~1 min.
+        wLog.warning("buildLegacyTimeline: STALE ageH=\(String(format:"%.1f",ageH)) — showing stale data, retry 30 min")
+        let staleNext = data.nextPrayer(from: now)
+        completion(Timeline(entries: [PrayerEntry(date: now, data: data, next: staleNext, reason: "stale_legacy")],
                             policy: .after(now.addingTimeInterval(30 * 60))))
         return
     }
@@ -1155,13 +1171,13 @@ private struct NoDataView: View {
         VStack(spacing: 8) {
             Image(systemName: "moon.stars")
                 .font(.system(size: 24, weight: .ultraLight))
-                .foregroundStyle(DS.t3)
+                .foregroundStyle(DS.t2)
             Text(WT.t("widget.prayer.empty_title", "کاتا نوێژ"))
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(DS.t3)
+                .foregroundStyle(DS.t2)
             Text(WT.t("widget.prayer.empty_hint", "بکوژێنەوە بۆ بارکردن"))
                 .font(.system(size: 9))
-                .foregroundStyle(DS.t3.opacity(0.6))
+                .foregroundStyle(DS.t3)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.layoutDirection, .rightToLeft)
