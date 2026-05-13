@@ -548,6 +548,11 @@ function prefetchAyahBlob(surah,ayah){
     if(toFetch.indexOf(u)===-1){
       var slot=_pfCache[u];
       if(slot.xhr){slot.xhr.abort();}
+      if(u===_audioBufKey){
+        // This blob is live inside _audioBuf — clear the prebuf first so playAyah
+        // doesn't pick up the now-revoked URL, then revoke safely.
+        _audioBuf=null;_audioBufKey=null;
+      }
       if(slot.blob){URL.revokeObjectURL(slot.blob);}
       delete _pfCache[u];
     }
