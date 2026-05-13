@@ -7906,8 +7906,9 @@ function renderSettings(){
   }
   // App logo image
   var _appLogoImg=document.createElement('img');_appLogoImg.src='/assets/images/logo.png';_appLogoImg.alt='';
-  // Founder avatar — use cached site settings if available, else fallback icon
+  // Founder avatar — check in-memory cache first, then fall back to localStorage cache
   var _founderImgSrc=(_ssMemory&&_ssMemory.founder_avatar_url)||'';
+  if(!_founderImgSrc){try{var _ssDisk=JSON.parse(localStorage.getItem(_ssCacheKey)||'null');if(_ssDisk&&_ssDisk.d&&_ssDisk.d.founder_avatar_url)_founderImgSrc=_ssDisk.d.founder_avatar_url;}catch(e){}}
   var _founderEl;
   if(_founderImgSrc){_founderEl=document.createElement('img');_founderEl.src=_founderImgSrc;_founderEl.alt='';}
   else{_founderEl=icon('fas fa-user');}
