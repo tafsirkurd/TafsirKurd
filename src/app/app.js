@@ -10761,7 +10761,7 @@ function startApp(){
       i18n.applyTranslations();
       if(window._splashReadyI18n){window._splashReadyI18n();window._splashReadyI18n=null;}
     }
-    setTimeout(_afterI18n, 3000); /* fallback — never wait more than 3s */
+    setTimeout(_afterI18n, 1500); /* fallback — never wait more than 1.5s */
     i18n.initLang().then(function(){
       console.log('[Startup] i18n ready',Date.now()-_startupT0,'ms',
         window.i18n.getStatus ? window.i18n.getStatus() : '');
