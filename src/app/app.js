@@ -7889,7 +7889,8 @@ function renderSettings(){
     var left=el('div','about-nav-left');
     var iconBox=el('div','about-nav-icon');
     if(iconClassOrImg&&iconClassOrImg.tagName==='IMG'){
-      iconBox.classList.add('about-nav-icon--img');
+      var _mod=iconClassOrImg._iconMod||'about-nav-icon--img';
+      _mod.split(' ').forEach(function(c){if(c)iconBox.classList.add(c);});
       iconBox.appendChild(iconClassOrImg);
     }else{
       iconBox.appendChild(icon(iconClassOrImg));
@@ -7904,13 +7905,14 @@ function renderSettings(){
     on(row,'click',onClick);
     return row;
   }
-  // App logo image
+  // App logo — accent circle with padding so PNG sits cleanly on all themes
   var _appLogoImg=document.createElement('img');_appLogoImg.src='/assets/images/logo.png';_appLogoImg.alt='';
+  _appLogoImg._iconMod='about-nav-icon--img about-nav-icon--logo';
   // Founder avatar — check in-memory cache first, then fall back to localStorage cache
   var _founderImgSrc=(_ssMemory&&_ssMemory.founder_avatar_url)||'';
   if(!_founderImgSrc){try{var _ssDisk=JSON.parse(localStorage.getItem(_ssCacheKey)||'null');if(_ssDisk&&_ssDisk.d&&_ssDisk.d.founder_avatar_url)_founderImgSrc=_ssDisk.d.founder_avatar_url;}catch(e){}}
   var _founderEl;
-  if(_founderImgSrc){_founderEl=document.createElement('img');_founderEl.src=_founderImgSrc;_founderEl.alt='';}
+  if(_founderImgSrc){_founderEl=document.createElement('img');_founderEl.src=_founderImgSrc;_founderEl.alt='';_founderEl._iconMod='about-nav-icon--img about-nav-icon--person';}
   else{_founderEl=icon('fas fa-user');}
   g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژە',function(){openAboutSheet('app');}));
   g6.appendChild(mkAboutNavRow(_founderEl,'سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
