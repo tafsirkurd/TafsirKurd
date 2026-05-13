@@ -1319,6 +1319,12 @@ private struct SmallView: View {
                 Spacer()
             }
             .padding(12)
+            .overlay(alignment: .bottomLeading) {
+                if kWidgetDebug {
+                    WidgetDebugOverlay(entry: entry, famStr: "sm", rnName: n?.name ?? "nil")
+                        .padding(4)
+                }
+            }
         } else {
             NoDataView()
         }
@@ -1366,6 +1372,12 @@ private struct MediumView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
+            .overlay(alignment: .bottomLeading) {
+                if kWidgetDebug {
+                    WidgetDebugOverlay(entry: entry, famStr: "md", rnName: n?.name ?? "nil")
+                        .padding(4)
+                }
+            }
         } else {
             NoDataView()
         }
@@ -1482,39 +1494,34 @@ private struct LockRow: View {
     }
 }
 
-// Set to true in a debug build to show a tiny diagnostic line at the bottom of the lock widget.
-// Proves which entry is rendered, what real-now is, what the resolver returned vs the snapshot.
-// Remove once the "Asr still active at 5:38 PM" issue is confirmed fixed.
-private let kLockWidgetDebug = true
+// Shared debug overlay — ultra-subtle (5pt, 18% opacity) so it doesn't obscure production UI.
+// Shows which entry is active, real now, snapshot next vs resolved next, widget family.
+// Flip to false once the home-widget staleness root cause is confirmed.
+private let kWidgetDebug = true
 
-private struct LockDebugView: View {
-    let entry: PrayerEntry
-    let family: WidgetFamily
-    let now: Date
-    let resolvedPrayers: [(name: String, ku: String, display: String)]
+private struct WidgetDebugOverlay: View {
+    let entry:  PrayerEntry
+    let famStr: String
+    let rnName: String  // resolved next prayer name (computed by caller)
 
     var body: some View {
         let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        let now    = Date()
         let sn     = entry.next?.name ?? "nil"
-        let rn     = resolvedPrayers.first?.name ?? "nil"
         let eHMS   = fmtHMS(entry.date)
         let nHMS   = fmtHMS(now)
-        let reason = String(entry.reason.prefix(14))
-        let fam    = family == .accessoryRectangular ? "rect"
-                   : family == .systemSmall          ? "sm"
-                   : family == .systemMedium         ? "md" : "?"
+        let reason = String(entry.reason.prefix(10))
         VStack(alignment: .leading, spacing: 0) {
-            Text("tv:\(kTimelineVersion) b:\(build) f:\(fam) [\(reason)]")
-                .font(.system(size: 6, weight: .light).monospacedDigit())
-                .foregroundStyle(.secondary.opacity(0.75))
+            Text("tv:\(kTimelineVersion) b:\(build) f:\(famStr) [\(reason)]")
+                .font(.system(size: 5).monospacedDigit())
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-            Text("e:\(eHMS) n:\(nHMS) sn:\(sn) rn:\(rn)")
-                .font(.system(size: 6, weight: .light).monospacedDigit())
-                .foregroundStyle(.secondary.opacity(0.75))
+            Text("e:\(eHMS) n:\(nHMS) sn:\(sn) rn:\(rnName)")
+                .font(.system(size: 5).monospacedDigit())
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
         }
+        .foregroundStyle(Color.white.opacity(0.18))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -1562,8 +1569,8 @@ private struct LockView: View {
                     )
                 }
 
-                if kLockWidgetDebug {
-                    LockDebugView(entry: entry, family: family, now: now, resolvedPrayers: resolvedPrayers)
+                if kWidgetDebug {
+                    WidgetDebugOverlay(entry: entry, famStr: "rect", rnName: resolvedPrayers.first?.name ?? "nil")
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)
