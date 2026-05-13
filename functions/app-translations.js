@@ -58,17 +58,17 @@ export async function onRequest(context) {
             });
         }
 
-        // Global deadline — Promise.race ensures a response is always sent within
-        // 10 seconds even if the AbortController signal doesn't propagate correctly
-        // in this CF Workers runtime (known issue: signal may not abort a hung fetch).
-        // ERR_CONNECTION_CLOSED is caused by CF killing the worker at its wall-clock
-        // limit before we can send any response — this prevents that.
+        // Global deadline — CF Pages Functions have a 10s wall-clock limit.
+        // We fire at 7s to guarantee we always send a response before CF closes
+        // the connection (ERR_CONNECTION_CLOSED). The 3s buffer absorbs env setup
+        // time + the fact that AbortController signals may not propagate reliably
+        // in this runtime (known CF Workers issue).
         const globalDeadline = new Promise((_, reject) =>
             setTimeout(() => {
                 const e = new Error('global_timeout');
                 e.name = 'AbortError';
                 reject(e);
-            }, 10000)
+            }, 7000)
         );
 
         // Fetch ALL translations across every page/category (paginated — Supabase max 1000/batch).
@@ -84,10 +84,10 @@ export async function onRequest(context) {
             let rows = [];
             let offset = 0;
             while (true) {
-                // Per-batch AbortController (4s) as inner safety.
-                // The outer Promise.race (10s global) is the real guard against hung workers.
+                // Per-batch AbortController: 3s limit leaves room for 2 batches + JSON parse
+                // within the 7s global deadline. Reduced from 4s to match tighter budget.
                 const controller = new AbortController();
-                const tid = setTimeout(() => controller.abort(), 4000);
+                const tid = setTimeout(() => controller.abort(), 3000);
                 let res;
                 try {
                     res = await fetch(
