@@ -3039,6 +3039,21 @@ function _scrollMushafToAyah(surah,ayah,attempts){
     }
     return;
   }
+  // On first attempt, if the target page isn't loaded yet, estimate its scroll
+  // position from the cached page range so the IntersectionObserver fires and
+  // triggers the page load. Subsequent retries then find the real elements.
+  if(attempts===0&&view){
+    try{
+      var _rc=JSON.parse(localStorage.getItem('qcfRange_'+surah)||'null');
+      if(_rc&&_rc.start){
+        var _sa=SURAHS[surah-1];
+        var _ta=_sa?_sa.a:1;
+        var _estPg=_rc.start+Math.floor((ayah-1)/_ta*(_rc.end-_rc.start+1));
+        _estPg=Math.max(_rc.start,Math.min(_rc.end,_estPg));
+        view.scrollTop=(_estPg-1)*560;
+      }
+    }catch(e){}
+  }
   setTimeout(function(){_scrollMushafToAyah(surah,ayah,attempts+1);},100);
 }
 
@@ -4651,36 +4666,42 @@ function updateHighlight(surah,ayah){
   // Mushaf: scroll to current ayah + notify tafsir sheet
   if(mode==='mushaf'){
     var view=$('mushafView');
-    if(view&&newEls.length){
-      // Find the first element actually inside the mushaf view
-      var _scrollTarget=null;
-      for(var i=0;i<newEls.length;i++){
-        if(view.contains(newEls[i])){_scrollTarget=newEls[i];break;}
-      }
-      if(_scrollTarget){
-        // Defer to next RAF so scroll never blocks audio start.
-        // Batch layout reads inside the RAF to avoid forced sync reflow here.
-        var _scrollEl=_scrollTarget,_isPlaying=S.audio.playing;
-        requestAnimationFrame(function(){
-          var vr=view.getBoundingClientRect();
-          var er=_scrollEl.getBoundingClientRect();
-          // Safe zone: middle 70% of the view height — if already there, skip scroll entirely
-          var _margin=vr.height*0.15;
-          var _inSafe=(er.top>=vr.top+_margin&&er.bottom<=vr.bottom-_margin);
-          if(_inSafe){
-            console.log('[MushafScroll] skipped=true reason=alreadyVisible key='+newKey);
-            return;
-          }
-          if(_isPlaying){
-            // Instant snap during playback — smooth scroll costs 300-800ms and jank on WebView
-            var relTop=er.top-vr.top+view.scrollTop;
-            view.scrollTop=relTop-vr.height/2+er.height/2;
-            console.log('[MushafScroll] instant key='+newKey);
-          }else{
-            _scrollEl.scrollIntoView({behavior:'smooth',block:'center'});
-            console.log('[MushafScroll] smooth key='+newKey);
-          }
-        });
+    if(view&&S.scrollFollowsAudio){
+      if(newEls.length){
+        // Find the first element actually inside the mushaf view
+        var _scrollTarget=null;
+        for(var i=0;i<newEls.length;i++){
+          if(view.contains(newEls[i])){_scrollTarget=newEls[i];break;}
+        }
+        if(_scrollTarget){
+          // Defer to next RAF so scroll never blocks audio start.
+          // Batch layout reads inside the RAF to avoid forced sync reflow here.
+          var _scrollEl=_scrollTarget,_isPlaying=S.audio.playing;
+          requestAnimationFrame(function(){
+            var vr=view.getBoundingClientRect();
+            var er=_scrollEl.getBoundingClientRect();
+            // Safe zone: middle 70% of the view height — if already there, skip scroll entirely
+            var _margin=vr.height*0.15;
+            var _inSafe=(er.top>=vr.top+_margin&&er.bottom<=vr.bottom-_margin);
+            if(_inSafe){
+              console.log('[MushafScroll] skipped=true reason=alreadyVisible key='+newKey);
+              return;
+            }
+            if(_isPlaying){
+              // Instant snap during playback — smooth scroll costs 300-800ms and jank on WebView
+              var relTop=er.top-vr.top+view.scrollTop;
+              view.scrollTop=relTop-vr.height/2+er.height/2;
+              console.log('[MushafScroll] instant key='+newKey);
+            }else{
+              _scrollEl.scrollIntoView({behavior:'smooth',block:'center'});
+              console.log('[MushafScroll] smooth key='+newKey);
+            }
+          });
+        }
+      } else if(S.audio.playing) {
+        // Target page not loaded yet — bootstrap-scroll to estimated position so
+        // the IntersectionObserver fires, loads the page, then retry finds elements.
+        _scrollMushafToAyah(surah,ayah);
       }
     }
     if(window._mushafTafsirSheetUpdate)window._mushafTafsirSheetUpdate(surah,ayah);
