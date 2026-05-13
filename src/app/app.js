@@ -711,8 +711,8 @@ var S={
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:'qcf1',
-  mushafFontSize:parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26,
-  mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||1.8,
+  mushafFontSize:Math.min(28,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||28)),
+  mushafLineH:Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8)),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
 
@@ -5079,10 +5079,10 @@ App.openMushafSettings=function(){
   var fsVal=el('span','stepper-val',S.mushafFontSize+'px');
   var fsMBtn,fsPBtn;
   function setFsSize(v){
-    v=Math.max(14,Math.min(50,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
+    v=Math.max(25,Math.min(28,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
     document.documentElement.style.setProperty('--mushaf-size',v+'px');
     localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));
-    if(fsMBtn)fsMBtn.disabled=(v<=14);if(fsPBtn)fsPBtn.disabled=(v>=50);
+    if(fsMBtn)fsMBtn.disabled=(v<=25);if(fsPBtn)fsPBtn.disabled=(v>=28);
     // Re-fit all rendered pages since line widths changed with font size
     requestAnimationFrame(function(){
       var mv=$('mushafView');
@@ -5093,7 +5093,7 @@ App.openMushafSettings=function(){
   fsMBtn=el('button','stepper-btn','-');fsPBtn=el('button','stepper-btn','+');
   on(fsMBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize-1);});
   on(fsPBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize+1);});
-  fsMBtn.disabled=(S.mushafFontSize<=14);fsPBtn.disabled=(S.mushafFontSize>=50);
+  fsMBtn.disabled=(S.mushafFontSize<=25);fsPBtn.disabled=(S.mushafFontSize>=28);
   fsCtrl.appendChild(fsMBtn);fsCtrl.appendChild(fsVal);fsCtrl.appendChild(fsPBtn);
   body.appendChild(fsCtrl);
 
@@ -5103,7 +5103,7 @@ App.openMushafSettings=function(){
   var lhCtrl=el('div','setting-stepper');
   var lhMBtn=el('button','stepper-btn','-');var lhPBtn=el('button','stepper-btn','+');
   (function(){
-    var min=1.8,max=3.5,step=0.1;
+    var min=1.8,max=2.3,step=0.1;
     function updLh(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;S.mushafLineH=v;lhVal.textContent=v.toFixed(1)+'×';document.documentElement.style.setProperty('--mushaf-lh',String(v));localStorage.setItem('mushafLineH',String(v));lhMBtn.disabled=(v<=min);lhPBtn.disabled=(v>=max);}
     on(lhMBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH-step).toFixed(1)));});
     on(lhPBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH+step).toFixed(1)));});
@@ -8309,8 +8309,8 @@ function applySyncData(data){
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
   S.mushafFont='qcf1';
   try{localStorage.setItem('mushafFont','qcf1');}catch(e){}
-  S.mushafFontSize=parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26;
-  S.mushafLineH=parseFloat(localStorage.getItem('mushafLineH'))||1.8;
+  S.mushafFontSize=Math.min(28,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||28));
+  S.mushafLineH=Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
   S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true';
