@@ -4550,7 +4550,8 @@ function renderReaderSettings(){
       if(window.AudioCache)AudioCache.cancelBg();
       updateAudioBarAvatar();
       if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
-      renderReaderSettings();
+      recList.querySelectorAll('.qs-reciter-chip').forEach(function(c){c.classList.remove('on');});
+      chip.classList.add('on');
     });
     recList.appendChild(chip);
   });
@@ -5379,11 +5380,19 @@ function renderAudioSettings(){
       localStorage.setItem('app_reciter',r.id);
       clearPrefetch();
       updateAudioBarAvatar();
-      renderAudioSettings();
       if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
       else if(S.surah)prefetchAyahBlob(S.surah,(S.audio.ayah||1)-1);
       else showAudioBar();
       toast(r.name);
+      // Update active card in-place — no full re-render, user stays in scroll position
+      recGrid.querySelectorAll('.reciter-card').forEach(function(c){
+        c.classList.remove('on');
+        var ck=c.querySelector('.reciter-avatar-check');
+        if(ck)ck.parentNode.removeChild(ck);
+      });
+      card.classList.add('on');
+      var ckDot2=el('span','reciter-avatar-check');ckDot2.appendChild(el('i','fas fa-check'));
+      avatarWrap.appendChild(ckDot2);
     });
     recGrid.appendChild(card);
   });
@@ -7668,7 +7677,9 @@ function renderSettings(){
       clearPrefetch();
       updateAudioBarAvatar();
       if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
-      renderSettings();
+      // Update active chip in-place — no full re-render, user stays in position
+      recList.querySelectorAll('.qs-reciter-chip').forEach(function(c){c.classList.remove('on');});
+      chip.classList.add('on');
     });
     recList.appendChild(chip);
   });
