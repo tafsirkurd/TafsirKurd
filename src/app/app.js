@@ -3035,7 +3035,10 @@ function _scrollMushafToAyah(surah,ayah,attempts){
         page.scrollTop+=elRect.top-pRect.top-(page.clientHeight-elRect.height)/2;
       }
     }else{
-      _scrollElToCenter(view,els[0]);
+      var _er=els[0].getBoundingClientRect();
+      var _vr=view.getBoundingClientRect();
+      var _relTop=_er.top-_vr.top+view.scrollTop;
+      _mushafSmoothScrollTo(view,_relTop-_vr.height*0.38+_er.height/2,300);
     }
     return;
   }
@@ -3357,6 +3360,10 @@ function renderMushafView(){
       view.addEventListener('scroll',_updateHeaderFromScroll,{passive:true});
     })();
 
+    // Cancel any in-flight smooth scroll when the user touches the mushaf
+    view.addEventListener('touchstart',function(){
+      if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
+    },{passive:true});
 
     // Landscape iPad: rewrap pages into horizontal scroll spreads
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024){
@@ -4018,6 +4025,30 @@ function renderAyahs(surahNum,scrollTo){
 var _progressCleanup=null;
 // Track mushaf lazy-load observer so we can disconnect on re-render
 var _mushafLazyObs=null;
+
+// RAF-based smooth scroll for mushaf — ease-out-cubic, self-cancelling.
+// Avoids browser smooth-scroll which jank on iOS WebView (300-800ms lag).
+var _mushafScrollAnim=null;
+function _mushafSmoothScrollTo(view,targetTop,duration){
+  if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;}
+  targetTop=Math.max(0,Math.round(targetTop));
+  var startTop=view.scrollTop;
+  var delta=targetTop-startTop;
+  if(Math.abs(delta)<2){return;}
+  var anim={cancelled:false};
+  _mushafScrollAnim=anim;
+  var t0=null;
+  function step(ts){
+    if(anim.cancelled)return;
+    if(!t0)t0=ts;
+    var prog=Math.min((ts-t0)/duration,1);
+    var ease=1-Math.pow(1-prog,3); // ease-out-cubic — fast start, gentle landing
+    view.scrollTop=startTop+delta*ease;
+    if(prog<1)requestAnimationFrame(step);
+    else _mushafScrollAnim=null;
+  }
+  requestAnimationFrame(step);
+}
 // Ayah position marker — 2-minute highlight so user knows where they are
 var _ayahMarkTimer=null;
 var _ayahMarkLpAt=0;  // timestamp of last long-press mark, to suppress following click event
@@ -4674,28 +4705,19 @@ function updateHighlight(surah,ayah){
           if(view.contains(newEls[i])){_scrollTarget=newEls[i];break;}
         }
         if(_scrollTarget){
-          // Defer to next RAF so scroll never blocks audio start.
-          // Batch layout reads inside the RAF to avoid forced sync reflow here.
+          // Defer to next RAF so layout reads never block audio start.
           var _scrollEl=_scrollTarget,_isPlaying=S.audio.playing;
           requestAnimationFrame(function(){
             var vr=view.getBoundingClientRect();
             var er=_scrollEl.getBoundingClientRect();
-            // Safe zone: middle 70% of the view height — if already there, skip scroll entirely
-            var _margin=vr.height*0.15;
+            // Safe zone: middle 64% of view — only scroll when ayah drifts outside it
+            var _margin=vr.height*0.18;
             var _inSafe=(er.top>=vr.top+_margin&&er.bottom<=vr.bottom-_margin);
-            if(_inSafe){
-              console.log('[MushafScroll] skipped=true reason=alreadyVisible key='+newKey);
-              return;
-            }
-            if(_isPlaying){
-              // Instant snap during playback — smooth scroll costs 300-800ms and jank on WebView
-              var relTop=er.top-vr.top+view.scrollTop;
-              view.scrollTop=relTop-vr.height/2+er.height/2;
-              console.log('[MushafScroll] instant key='+newKey);
-            }else{
-              _scrollEl.scrollIntoView({behavior:'smooth',block:'center'});
-              console.log('[MushafScroll] smooth key='+newKey);
-            }
+            if(_inSafe){return;}
+            // Position ayah at 38% from top — leaves space below for next-ayah preview
+            var relTop=er.top-vr.top+view.scrollTop;
+            var targetTop=relTop-vr.height*0.38+er.height/2;
+            _mushafSmoothScrollTo(view,targetTop,_isPlaying?220:320);
           });
         }
       } else if(S.audio.playing) {
