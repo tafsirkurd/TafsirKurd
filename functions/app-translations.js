@@ -36,10 +36,12 @@ export async function onRequest(context) {
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',
-        // 5-minute edge cache + 1-hour stale-while-revalidate.
-        // Translations change rarely — a 5-min stale window is fine and prevents
-        // the CF Worker from hitting Supabase on every i18n poll (every 30s).
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600'
+        // 5-minute edge cache + 1-hour stale-while-revalidate + 24-hour stale-if-error.
+        // stale-if-error: when Supabase is unreachable or CF kills the function (503),
+        // the edge cache serves the last-known-good response instead of propagating
+        // the error to the browser. Eliminates "Failed to load resource: 503" console
+        // errors during transient Supabase downtime or CF cold-start race conditions.
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600, stale-if-error=86400'
     };
 
     if (request.method === 'OPTIONS') {
