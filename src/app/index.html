@@ -284,8 +284,8 @@ body{background:var(--bg);color:var(--text)}
 .hdr-text-btn:active{transform:scale(.92);opacity:.85}
 
 /* ===== SEARCH BAR ===== */
-.search-bar{background:var(--bg);overflow:hidden;max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none;padding:0 16px;transition:max-height .32s cubic-bezier(.4,0,.2,1),opacity .24s cubic-bezier(.4,0,.2,1),transform .24s cubic-bezier(.4,0,.2,1),padding .32s cubic-bezier(.4,0,.2,1)}
-.search-bar.on{max-height:600px;opacity:1;transform:translateY(0);pointer-events:auto;padding:10px 16px 12px}
+.search-bar{background:var(--bg);display:flex;flex-direction:column;overflow:hidden;max-height:0;opacity:0;transform:translateY(-4px);pointer-events:none;padding:0 16px;will-change:transform,opacity;transition:max-height 0s .15s,padding 0s .15s,opacity .15s ease-out,transform .15s ease-out}
+.search-bar.on{max-height:600px;opacity:1;transform:none;pointer-events:auto;padding:10px 16px 12px;transition:max-height 0s,padding 0s,opacity .15s ease-out,transform .15s ease-out}
 .search-wrap{display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-full);padding:0 14px;height:44px;gap:10px;transition:border-color .18s,box-shadow .18s}
 .search-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
 .search-wrap i{color:var(--text3);font-size:.9rem;flex-shrink:0;transition:color .18s}
@@ -1315,8 +1315,8 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ===== ISLAMVOICE TAB ===== */
-.iv-search-bar{overflow:hidden;max-height:0;opacity:0;transform:translateY(-8px);pointer-events:none;padding:0 16px;transition:max-height .32s cubic-bezier(.4,0,.2,1),opacity .24s cubic-bezier(.4,0,.2,1),transform .24s cubic-bezier(.4,0,.2,1),padding .32s cubic-bezier(.4,0,.2,1)}
-.iv-search-bar.on{max-height:80px;opacity:1;transform:translateY(0);pointer-events:auto;padding:10px 16px 12px}
+.iv-search-bar{display:flex;flex-direction:column;overflow:hidden;max-height:0;opacity:0;transform:translateY(-4px);pointer-events:none;padding:0 16px;will-change:transform,opacity;transition:max-height 0s .15s,padding 0s .15s,opacity .15s ease-out,transform .15s ease-out}
+.iv-search-bar.on{max-height:80px;opacity:1;transform:none;pointer-events:auto;padding:10px 16px 12px;transition:max-height 0s,padding 0s,opacity .15s ease-out,transform .15s ease-out}
 .iv-search-wrap{position:relative;display:flex;align-items:center}
 .iv-search-icon{position:absolute;right:14px;color:var(--text3);font-size:.85rem;pointer-events:none}
 .iv-search-input{width:100%;height:42px;padding:0 40px 0 36px;border-radius:var(--r-full,20px);background:var(--surface);border:1.5px solid var(--border);font-size:.85rem;font-family:inherit;color:var(--text);transition:border-color .18s,box-shadow .18s;outline:none}
