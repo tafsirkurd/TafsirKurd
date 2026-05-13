@@ -7884,10 +7884,16 @@ function renderSettings(){
   var g6=el('div','settings-group');
   g6.appendChild(el('div','settings-group-title',t('settings.about')));
 
-  function mkAboutNavRow(iconClass,label,sub,onClick){
+  function mkAboutNavRow(iconClassOrImg,label,sub,onClick){
     var row=el('div','about-nav-row s-row');
     var left=el('div','about-nav-left');
-    var iconBox=el('div','about-nav-icon');iconBox.appendChild(icon(iconClass));
+    var iconBox=el('div','about-nav-icon');
+    if(iconClassOrImg&&iconClassOrImg.tagName==='IMG'){
+      iconBox.classList.add('about-nav-icon--img');
+      iconBox.appendChild(iconClassOrImg);
+    }else{
+      iconBox.appendChild(icon(iconClassOrImg));
+    }
     left.appendChild(iconBox);
     var textWrap=el('div');
     textWrap.appendChild(el('div','about-nav-label',label));
@@ -7898,8 +7904,15 @@ function renderSettings(){
     on(row,'click',onClick);
     return row;
   }
-  g6.appendChild(mkAboutNavRow('fas fa-book-quran','تەفسیر کورد','دەربارەی پڕۆژە',function(){openAboutSheet('app');}));
-  g6.appendChild(mkAboutNavRow('fas fa-user','سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
+  // App logo image
+  var _appLogoImg=document.createElement('img');_appLogoImg.src='/assets/images/logo.png';_appLogoImg.alt='';
+  // Founder avatar — use cached site settings if available, else fallback icon
+  var _founderImgSrc=(_ssMemory&&_ssMemory.founder_avatar_url)||'';
+  var _founderEl;
+  if(_founderImgSrc){_founderEl=document.createElement('img');_founderEl.src=_founderImgSrc;_founderEl.alt='';}
+  else{_founderEl=icon('fas fa-user');}
+  g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژە',function(){openAboutSheet('app');}));
+  g6.appendChild(mkAboutNavRow(_founderEl,'سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
   g6.appendChild(mkAboutNavRow('fas fa-heart','سوپاسنامە','بۆ هەر کەسێک یارمەتیدا',function(){openAboutSheet('thanks');}));
   content.appendChild(g6);
 
