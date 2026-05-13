@@ -1225,12 +1225,16 @@ function init(){
     requestAnimationFrame(function(){_doSplashTransition();});
   }
 
-  // Video plays once — app exits splash only after video finishes AND data is ready
+  // Video plays once — when it ends, enter app immediately if timing gate is cleared.
+  // Data loading / tab pre-render finish in background; each tab renders on first visit.
   var _splashVid=document.getElementById('splashVideo');
   if(_splashVid){
     _splashVid.addEventListener('ended',function(){
       if(_splashReady.video)return;
       _splashReady.video=true;
+      // Animation finished — go in right now if timing gate is already cleared.
+      // Don't wait for quran/tabs: data arrives in background, tabs render on demand.
+      if(_splashMinPassed){_doSplashTransition();return;}
       _checkSplashReady();
     });
     _splashVid.play().catch(function(){
@@ -1248,8 +1252,8 @@ function init(){
   window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_checkSplashReady();};
-  // Overall failsafe — force app visible after 12s no matter what
-  setTimeout(function(){_doSplashTransition();},12000);
+  // Overall failsafe — force app visible after 6s no matter what
+  setTimeout(function(){_doSplashTransition();},6000);
   // Data always loads async now (no localStorage cache) — splash waits for both files
 }
 
@@ -1315,7 +1319,7 @@ function _startTabPrerender(){
       return;
     }
     jobs[_ji++]();
-    setTimeout(_nextJob,60);
+    setTimeout(_nextJob,16);
   }
   _nextJob();
 }
