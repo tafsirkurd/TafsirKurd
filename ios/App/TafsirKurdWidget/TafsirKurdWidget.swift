@@ -494,19 +494,49 @@ struct WidgetPrayerState {
     }
 }
 
-// MARK: — Provider (untouched)
+// MARK: — Best-available data loader
+//
+// Never returns nil if ANY cached prayer data exists anywhere on device.
+// Priority: fresh legacy App Group data → stale legacy → extended cache synthetic.
+// Used by placeholder() and getSnapshot() so WidgetKit never caches a nil-data
+// snapshot, which would cause the skeleton/redacted view to persist for minutes.
+// Note: syntheticData() is defined later in this file — Swift forward-references OK.
+private func loadBestAvailableData() -> PrayerWidgetData? {
+    // 1. Legacy App Group data (fastest — single UserDefaults read)
+    if let d = PrayerWidgetData.load() {
+        wLog.info("[loadBestAvailable] using legacy data city=\(d.city) stale=\(d.isStale)")
+        return d
+    }
+    // 2. Extended cache: synthesise a PrayerWidgetData for today from the multi-day cache.
+    //    This handles the case where the legacy key was cleared but the 90-day cache is intact.
+    if let ext = WidgetExtendedCache.load(), ext.isUsable {
+        let todayStr = PrayerWidgetData.baghdadDateString()
+        if let synth = syntheticData(from: ext, dateStr: todayStr) {
+            wLog.info("[loadBestAvailable] legacy nil — using extended cache synthetic for \(todayStr) city=\(ext.city)")
+            return synth
+        }
+    }
+    wLog.warning("[loadBestAvailable] no prayer data found in any cache — app never opened?")
+    return nil
+}
+
+// MARK: — Provider (PrayerProvider)
 
 struct PrayerProvider: TimelineProvider {
     func placeholder(in _: Context) -> PrayerEntry {
-        // Load real data so WidgetKit redacts prayer-shaped content instead of NoDataView.
+        // Always use best-available data so WidgetKit redacts real prayer rows,
+        // not a nil-data skeleton that looks blank forever.
         WT.reload()
-        let d = PrayerWidgetData.load()
+        let d = loadBestAvailableData()
         return .init(date: .now, data: d, next: d?.nextPrayer(), reason: "placeholder")
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
         WT.reload()
         wLog.info("getSnapshot called")
-        let d = PrayerWidgetData.load()
+        // getSnapshot() result is cached by WidgetKit and shown while getTimeline() runs.
+        // Returning nil data here means WidgetKit caches a skeleton screenshot that can
+        // persist for the entire duration of the extended-cache network fetch (≤ 15 s).
+        let d = loadBestAvailableData()
         completion(.init(date: .now, data: d, next: d?.nextPrayer(), reason: "snapshot"))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
@@ -617,8 +647,11 @@ struct PrayerProvider: TimelineProvider {
         // 2. Extended cache missing, stale, or city-mismatched — fetch from prayer-kurd API
         guard !currentCity.isEmpty else {
             wLog.warning("[WidgetTimeline] no city known — retry 3 min")
+            // Use any available data so the widget shows prayer times, not a blank/skeleton view.
+            let fallback     = loadBestAvailableData()
+            let fallbackNext = fallback.flatMap { effectiveNextPrayer(data: $0, now: now, tag: "no_city") }
             writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "no_city", "status": "missingTimeline"])
-            completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
+            completion(Timeline(entries: [PrayerEntry(date: now, data: fallback, next: fallbackNext, reason: "no_city_retry")],
                                 policy: .after(now.addingTimeInterval(3 * 60))))
             return
         }
@@ -733,14 +766,15 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
     let futureDates = ext.futureDays()
     let todayStr  = PrayerWidgetData.baghdadDateString()
     let todayData = syntheticData(from: ext, dateStr: todayStr) ?? legacyData
-    // If todayData is nil the extended cache has no entry for today and there is no
-    // legacy fallback — every entry would have data: nil, showing a blank widget.
-    // Signal this by returning a single retry entry rather than flooding WidgetKit
-    // with hundreds of nil-data entries.
+    // If todayData is nil the extended cache has no entry for today.
+    // Return a retry entry using the legacy data (even if stale) rather than data: nil —
+    // a stale prayer list is always better than a blank/skeleton widget for 5 minutes.
     guard todayData != nil else {
-        wLog.error("[WidgetTimeline] buildExtended: todayData nil for \(todayStr) — retry 5 min")
-        let retry = now.addingTimeInterval(5 * 60)
-        return ([.init(date: now, data: nil, next: nil, reason: "no_data_retry")], retry)
+        wLog.error("[WidgetTimeline] buildExtended: todayData nil for \(todayStr) — retry 5 min, using legacy fallback")
+        let retry        = now.addingTimeInterval(5 * 60)
+        let fallback     = legacyData
+        let fallbackNext = fallback.flatMap { effectiveNextPrayer(data: $0, now: now, tag: "no_today") }
+        return ([.init(date: now, data: fallback, next: fallbackNext, reason: "no_data_retry")], retry)
     }
 
     // Entry covering "right now" — establishes the initial display state
@@ -829,8 +863,18 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
 private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
                                  completion: @escaping (Timeline<PrayerEntry>) -> Void) {
     guard let data = data else {
-        wLog.warning("buildLegacyTimeline: no data — retry 3 min")
-        completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil)],
+        // Before returning a nil-data entry, try the extended cache.
+        // nil-data entries blank the widget; stale-but-real data is always preferable.
+        if let ext = WidgetExtendedCache.load(), ext.isUsable {
+            let todayStr = PrayerWidgetData.baghdadDateString()
+            if let synth = syntheticData(from: ext, dateStr: todayStr) {
+                wLog.warning("buildLegacyTimeline: nil legacy — falling back to extended cache synthetic for \(todayStr)")
+                buildLegacyTimeline(data: synth, now: now, completion: completion)
+                return
+            }
+        }
+        wLog.warning("buildLegacyTimeline: no data anywhere — retry 3 min")
+        completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil, reason: "no_data_retry")],
                             policy: .after(now.addingTimeInterval(3 * 60))))
         return
     }
@@ -1181,6 +1225,10 @@ private struct NoDataView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .environment(\.layoutDirection, .rightToLeft)
+        // Prevent WidgetKit from replacing this with grey skeleton bars during the
+        // placeholder phase. Without this, the moon icon and text become indistinguishable
+        // grey bars that look like broken content rather than a deliberate empty state.
+        .unredacted()
     }
 }
 
@@ -1308,7 +1356,8 @@ private func correctedNext(
 private struct SmallView: View {
     let entry: PrayerEntry
     var body: some View {
-        let state    = WidgetPrayerState.resolve(entry.data, entry)
+        let now      = Date()
+        let state    = WidgetPrayerState.resolve(entry.data, entry, now: now)
         let n        = state.next
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
@@ -1337,7 +1386,7 @@ private struct SmallView: View {
             .padding(12)
             .overlay(alignment: .bottomLeading) {
                 if kWidgetDebug {
-                    WidgetDebugOverlay(entry: entry, famStr: "sm", rnName: n?.name ?? "nil")
+                    WidgetDebugOverlay(entry: entry, famStr: "sm", rnName: n?.name ?? "nil", now: now)
                         .padding(4)
                 }
             }
@@ -1365,7 +1414,8 @@ private struct SmallView: View {
 private struct MediumView: View {
     let entry: PrayerEntry
     var body: some View {
-        let state = WidgetPrayerState.resolve(entry.data, entry)
+        let now   = Date()
+        let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
         if let d = entry.data {
             let n = state.next
             VStack(spacing: 0) {
@@ -1390,7 +1440,7 @@ private struct MediumView: View {
             .padding(.vertical, 4)
             .overlay(alignment: .bottomLeading) {
                 if kWidgetDebug {
-                    WidgetDebugOverlay(entry: entry, famStr: "md", rnName: n?.name ?? "nil")
+                    WidgetDebugOverlay(entry: entry, famStr: "md", rnName: n?.name ?? "nil", now: now)
                         .padding(4)
                 }
             }
@@ -1405,7 +1455,8 @@ private struct MediumView: View {
 private struct LargeView: View {
     let entry: PrayerEntry
     var body: some View {
-        let state = WidgetPrayerState.resolve(entry.data, entry)
+        let now   = Date()
+        let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
         if let d = entry.data {
             let n          = state.next
             let bottomName = n?.name ?? "Fajr"
@@ -1461,6 +1512,12 @@ private struct LargeView: View {
                 .padding(.horizontal, 4)
             }
             .padding(14)
+            .overlay(alignment: .bottomLeading) {
+                if kWidgetDebug {
+                    WidgetDebugOverlay(entry: entry, famStr: "lg", rnName: n?.name ?? "nil", now: now)
+                        .padding(4)
+                }
+            }
         } else {
             NoDataView()
         }
@@ -1519,10 +1576,10 @@ private struct WidgetDebugOverlay: View {
     let entry:  PrayerEntry
     let famStr: String
     let rnName: String  // resolved next prayer name (computed by caller)
+    let now:    Date    // same Date() captured by the parent body — not a second call
 
     var body: some View {
         let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-        let now    = Date()
         let sn     = entry.next?.name ?? "nil"
         let eHMS   = fmtHMS(entry.date)
         let nHMS   = fmtHMS(now)
@@ -1575,6 +1632,7 @@ private struct LockView: View {
             Text("کاتا نوێژ")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
+                .unredacted()
         } else {
             VStack(spacing: 4) {
                 ForEach(0..<resolvedPrayers.count, id: \.self) { i in
@@ -1586,7 +1644,7 @@ private struct LockView: View {
                 }
 
                 if kWidgetDebug {
-                    WidgetDebugOverlay(entry: entry, famStr: "rect", rnName: resolvedPrayers.first?.name ?? "nil")
+                    WidgetDebugOverlay(entry: entry, famStr: "rect", rnName: resolvedPrayers.first?.name ?? "nil", now: now)
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)

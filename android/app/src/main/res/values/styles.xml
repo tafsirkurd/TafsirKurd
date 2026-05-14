@@ -15,9 +15,35 @@
         <item name="android:background">@null</item>
     </style>
 
+    <!-- Launch/splash theme — applied to MainActivity during startup.
+         Parent Theme.SplashScreen enables the Android 12+ SplashScreen API.
 
+         Pre-API 31 (Android < 12):
+           - android:windowBackground shows immediately when the activity window opens.
+             Set to dark color so there is no white flash before Capacitor's splash.
+           - Capacitor SplashScreen plugin draws launch_screen.xml on top.
+
+         API 31+ (Android 12+):
+           - windowSplashScreenBackground: color behind the splash icon.
+           - windowSplashScreenAnimatedIcon: icon shown in the center circle (TafsirKurd logo).
+           - postSplashScreenTheme: theme applied to the activity after the system splash exits.
+             Without this the activity inherits the SplashScreen theme and loses toolbar/status bar.
+
+         The old generic @drawable/splash (blue-X Capacitor placeholder) is no longer referenced
+         here — Capacitor now reads androidSplashResourceName = "launch_screen" from
+         capacitor.config.ts and draws that instead. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
-        <item name="android:windowBackground">@android:color/white</item>
+
+        <!-- Pre-API 31: dark window so no white flash before Capacitor splash -->
+        <item name="android:windowBackground">@color/splashBackground</item>
+
+        <!-- API 31+ SplashScreen API: icon + background -->
+        <item name="windowSplashScreenBackground">@color/splashBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+
+        <!-- Restore normal app theme after the system splash exits -->
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+
     </style>
+
 </resources>

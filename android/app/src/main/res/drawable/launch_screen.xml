@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TafsirKurd branded launch/splash screen.
+     Used by Capacitor SplashScreen plugin (androidSplashResourceName = "launch_screen").
+     Dark background (#0A0A0A) matching the app theme, with the app icon centered.
+     The ic_launcher_foreground mipmap contains the correct TafsirKurd Kurd-text logo PNG. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:opacity="opaque">
+
+    <!-- Full-screen dark background — matches app background (#0A0A0A) -->
+    <item>
+        <color android:color="@color/splashBackground"/>
+    </item>
+
+    <!-- TafsirKurd logo centered at 200dp — uses the correct mipmap PNG foreground -->
+    <item
+        android:width="200dp"
+        android:height="200dp"
+        android:gravity="center">
+        <bitmap
+            android:src="@mipmap/ic_launcher_foreground"
+            android:gravity="center"
+            android:tileMode="disabled"/>
+    </item>
+
+</layer-list>
