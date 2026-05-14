@@ -10859,10 +10859,16 @@ function ivTrackView(episodeId){
 /* ===== START ===== */
 function startApp(){
   console.log('[Startup] startApp()',Date.now()-_startupT0,'ms');
-  // Hide native splash after one rAF — custom splash is painted by then and takes over.
-  // fadeOutDuration:0 = instant swap (both backgrounds are white — no visible gap).
+  // Hide native splash after TWO rAFs — double rAF guarantees the browser has
+  // committed at least one paint of the HTML splash before the native overlay
+  // disappears. Single rAF fires before paint on fast devices, leaving a 1-frame
+  // gap where the raw WebView background is briefly visible.
+  // fadeOutDuration:0 = instant hand-off (WebView and HTML splash both use the
+  // same dark theme background, so the transition is seamless with no visible gap).
   requestAnimationFrame(function(){
-    try{var _ns=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(_ns)_ns.hide({fadeOutDuration:0});}catch(e){}
+    requestAnimationFrame(function(){
+      try{var _ns=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(_ns)_ns.hide({fadeOutDuration:0});}catch(e){}
+    });
   });
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||26)+'px');

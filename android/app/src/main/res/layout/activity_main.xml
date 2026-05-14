@@ -4,9 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/splashBackground"
     tools:context=".MainActivity">
 
+    <!-- android:background="@color/splashBackground" (#0A0A0A) prevents a white
+         flash before MainActivity.onCreate() calls setBackgroundColor() on the WebView.
+         The XML background is applied at layout-inflate time, before any Java code runs,
+         so there is no window where the raw transparent WebView can show through as white. -->
     <WebView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:background="@color/splashBackground" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
