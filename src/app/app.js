@@ -1287,13 +1287,17 @@ var _tabsPrerendering=false; // guard: pre-render runs only once
 var _startupT0=Date.now();   // module load time for debug logs
 
 function _checkDataReady(){
-  if(!_dataReady.quran||!_dataReady.tafsir)return;
-  console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
+  if(!_dataReady.quran)return;
+  // Signal splash gate as soon as quran.json is ready — tafsir (3MB) is only needed
+  // when the user opens a surah to read, so it must not block the splash or tab pre-render.
   if(window._splashReadyQuran){window._splashReadyQuran();window._splashReadyQuran=null;}
+  // Tab pre-render doesn't need tafsir — start immediately when quran is ready.
+  // _tabsPrerendering guard ensures this runs only once even when called twice.
+  setTimeout(_startTabPrerender,50);
+  if(!_dataReady.tafsir)return;
+  console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
   if(S.surah)renderAyahs(S.surah);
   if(window.QuranSearch)QuranSearch.init(S.quranData,S.tafsirData);
-  // Data is ready — start pre-rendering tabs NOW instead of waiting for 900ms timer
-  setTimeout(_startTabPrerender,50);
 }
 
 // Pre-render all 6 tabs so they're built before user ever taps them.

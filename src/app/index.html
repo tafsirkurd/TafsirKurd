@@ -202,10 +202,10 @@ body{background:var(--bg);color:var(--text)}
 .safe-render .about-section img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
 
 /* ===== SPLASH ===== */
-.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#ffffff);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
+.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
 @keyframes splashIn{from{opacity:0}to{opacity:1}}
 .splash-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#ffffff);opacity:0;transition:opacity .12s ease}
+.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#0a0a0a);opacity:0;transition:opacity .12s ease}
 .splash.hide{opacity:0;pointer-events:none}
 
 /* ===== APP CONTAINER ===== */
@@ -3347,7 +3347,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=20260514f"></script>
+<script src="/app/app.js?v=20260515a"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
