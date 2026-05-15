@@ -7526,19 +7526,22 @@ async function openAboutSheet(type){
     // ── Hero ──────────────────────────────────────
     var thHero=el('div','cfg-sheet-hero');
     var thIcon=el('div','cfg-sheet-avatar');
-    thIcon.style.cssText='background:linear-gradient(135deg,#e8445a,#ff7c95);';
+    thIcon.style.cssText='background:linear-gradient(135deg,#e8445a,#ff7c95);font-size:1.7rem;';
     thIcon.appendChild(icon('fas fa-heart'));
     thHero.appendChild(thIcon);
     thHero.appendChild(el('div','cfg-sheet-name','سوپاسنامە'));
+    thHero.appendChild(el('div','cfg-sheet-role','بۆ هەموو دڵسۆزانیێن ڤی پرۆژەی'));
     body.appendChild(thHero);
 
-    // ── Opening praise — styled as a centred highlight ─
-    var thOpen=el('div','cfo-section');
-    var openPara=el('div','cfo-para');
-    openPara.style.cssText='text-align:center;font-weight:600;color:var(--text);font-size:.93rem;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:0;';
-    openPara.textContent='ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن کو هێز و دەرفەت دا مە دا کو ئەڤی پرۆژەی بگەهینینە سەرکەفتنێ.';
-    thOpen.appendChild(openPara);
-    body.appendChild(thOpen);
+    body.appendChild(el('div','cfg-sheet-divider'));
+
+    // ── Opening praise — quote card ───────────────
+    var thQuote=el('div','cfg-sheet-quote');
+    var thQuoteText=el('div','cfg-sheet-para');
+    thQuoteText.style.cssText='font-weight:600;color:var(--text);font-size:.92rem;line-height:1.9;text-align:center;margin:0;padding:0;';
+    thQuoteText.textContent='ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن کو هێز و دەرفەت دا مە دا کو ئەڤی پرۆژەی بگەهینینە سەرکەفتنێ.';
+    thQuote.appendChild(thQuoteText);
+    body.appendChild(thQuote);
 
     // ── Body paragraphs ───────────────────────────
     var thBody=el('div','cfo-section');
@@ -7550,7 +7553,11 @@ async function openAboutSheet(type){
 
     // ── Closing prayer card ───────────────────────
     var thDua=el('div','cfo-dua');
-    thDua.appendChild(el('div','cfo-dua-label','دوعا'));
+    var duaTop=el('div','cfo-dua-label');
+    duaTop.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;';
+    duaTop.appendChild(icon('fas fa-hands-praying'));
+    duaTop.appendChild(document.createTextNode('دوعا'));
+    thDua.appendChild(duaTop);
     var duaText=el('div','cfo-dua-text');
     duaText.textContent='ژ خودایێ میهرەبان دخۆازم خێر و بەرەکەتێ بێخیتە د ژیان و کارێن وه‌ دا. خودێ دەرگەهێن ڕزقێ حەلال و سەرکەفتنێ ل بەردەم هەوە ڤەکەت، و هەوە ژ هەر نەخۆشی و تەنگاڤیەکێ بپارێزیت. ژ دل هیڤیخوازم کو دایم یێن ساخلەم، دلخۆش و سەرکەفتی بن و خودێ جزا و پاداشتێ ڤێ هاریكاری و چاکیا وە بدەتە مه‌زنتر لێ بکەت.';
     thDua.appendChild(duaText);
