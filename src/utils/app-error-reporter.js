@@ -141,6 +141,14 @@
   // ── window.onerror ────────────────────────────────────────────
   var _prevOnError = window.onerror;
   window.onerror = function(msg, src, line, col, error) {
+    // "Script error." with no source/line is the browser's cross-origin sanitization.
+    // It is always produced by errors inside cross-origin iframes (YouTube embeds,
+    // browser extensions, third-party widgets) and never contains actionable info.
+    // Reporting it fills the log with noise — skip it entirely.
+    if (msg === 'Script error.' || msg === 'Script error') {
+      if (_prevOnError) return _prevOnError.apply(this, arguments);
+      return false;
+    }
     var stack = error && error.stack ? error.stack : (src + ':' + line + ':' + col);
     var type  = _classify(msg, stack);
     _send(type, msg, stack, null);
