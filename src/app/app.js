@@ -506,6 +506,18 @@ function loadReciterPhotos(){
       });
       // Persist so next launch is instant
       try{localStorage.setItem('reciter_photos_cache',JSON.stringify(RECITER_PHOTOS))}catch(e){}
+      // Patch any reciter chips that are already in the DOM but showing initials
+      document.querySelectorAll('.qs-reciter-chip[data-reciter-id]').forEach(function(chip){
+        var id=chip.dataset.reciterId;
+        var url=RECITER_PHOTOS[id];
+        if(!url)return;
+        var avatar=chip.querySelector('.qs-reciter-chip-avatar');
+        if(!avatar||avatar.querySelector('img'))return; // already has image
+        var initSpan=avatar.querySelector('.qs-reciter-chip-avatar-initials');
+        if(initSpan)avatar.removeChild(initSpan);
+        var img=document.createElement('img');img.src=url;img.alt='';
+        avatar.appendChild(img);
+      });
       // Priority 1: current reciter + top 3 by index — start immediately, not idle
       _preloadReciterImg(RECITER);
       RECITERS.slice(0,3).forEach(function(r){_preloadReciterImg(r.id);});
@@ -4674,6 +4686,7 @@ function renderReaderSettings(){
   var recList=el('div','qs-reciter-list');
   RECITERS.forEach(function(r){
     var chip=el('div','qs-reciter-chip'+(RECITER===r.id?' on':''));
+    chip.dataset.reciterId=r.id;
     // Avatar
     var chipAvatar=el('div','qs-reciter-chip-avatar');
     var photo=RECITER_PHOTOS[r.id];
@@ -7829,6 +7842,7 @@ function renderSettings(){
   recList.style.cssText='padding:4px 0 0;margin:0;';
   RECITERS.forEach(function(r){
     var chip=el('div','qs-reciter-chip'+(RECITER===r.id?' on':''));
+    chip.dataset.reciterId=r.id;
     var chipAvatar=el('div','qs-reciter-chip-avatar');
     var photo=RECITER_PHOTOS[r.id];
     if(photo){var img=document.createElement('img');img.src=photo;img.alt='';chipAvatar.appendChild(img);}
