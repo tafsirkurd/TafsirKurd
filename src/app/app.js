@@ -7606,51 +7606,15 @@ async function openAboutSheet(type){
   if(type==='thanks'){
     titleEl.textContent='سوپاسنامە';
 
-    // ── Heart icon header ─────────────────────────
-    var thHero=el('div','cfg-sheet-hero');
-    var thIcon=el('div','cfg-sheet-avatar');
-    thIcon.style.cssText='background:linear-gradient(135deg,#e8445a,#ff7c95);';
-    thIcon.appendChild(icon('fas fa-heart'));
-    thHero.appendChild(thIcon);
-    thHero.appendChild(el('div','cfg-sheet-name','سوپاسنامە'));
-    thHero.appendChild(el('div','cfg-sheet-role','بۆ هەر کەسێک بەشدار بوو'));
-    body.appendChild(thHero);
-
-    // ── Main gratitude text ────────────────────────
-    var thMain=el('div','cfo-section');
+    var thSection=el('div','cfo-section');
     var thParas=[
-      'هەر کەسێک بە هەر شێوازێک یارمەتیداوی ئەم پڕۆژەیە بووە، تەنانەت بە وشەیەکی چاک، هاوبەشکردنێک، دوعایەک، یان پشتگیرییەکی بچووک، لە دڵەوە سوپاسی دەکەین.',
-      'داوادەکەین خوای گەورە لە دونیا و قیامەتدا پاداشتیان بدات.'
+      'ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن کو هێز و دەرفەت دا مە دا کو ئەڤی پرۆژەی بگەهینینە سەرکەفتنێ.',
+      'ئەڤ ئەپلیكەیشنە بەرهەمێ کارەکێ ب کۆم و دڵسۆزانەیە. ژ ناخێ دڵێ خۆ سوپاسیا ئێک ب ئێکێ وان دۆست و دڵسۆزان دکەم کو قوناغ ب قوناغ هاریكاریا من د دروستکرن، دیزاینکرن و پێشڤەبرنا ڤی ئەپی دا کری. ئەو ده‌ستێن ڕه‌نگین یێن کار تێدا کری و ئەو هزرێن جوان یێن ڕێبەریا من کری، ئەگەرێ سەرەکی بوون کو ئەڤڕۆ ئەڤ پرۆژە ب سەرکەفتیانە بکەڤیتە د خزمەتا وە دا. ماندووبوونا هەوە ل دەڤ من یا قەدرگران و ب نرخە.',
+      'د هەمان دەم دا، سوپاسیا هەوە یێن ئەزیز و بکارهێنەرێن ئەپی دکەم کو ب متمانە و پشتەڤانیا خۆ، هێز دایە مە. هیڤیدارم ئەڤ کارە پڕ مفا بیت و ببیته‌ جهێ ڕازیبوون و دڵخۆشیا هەوە هەمیای.',
+      'ژ خودایێ میهرەبان دخۆازم خێر و بەرەکەتێ بێخیتە د ژیان و کارێن وه‌ دا. خودێ دەرگەهێن ڕزقێ حەلال و سەرکەفتنێ ل بەردەم هەوە ڤەکەت، و هەوە ژ هەر نەخۆشی و تەنگاڤیەکێ بپارێزیت. ژ دل هیڤیخوازم کو دایم یێن ساخلەم، دلخۆش و سەرکەفتی بن و خودێ جزا و پاداشتێ ڤێ هاریكاری و چاکیا وە بدەتە مه‌زنتر لێ بکەت.'
     ];
-    thParas.forEach(function(p){thMain.appendChild(el('div','cfo-para',p));});
-    body.appendChild(thMain);
-
-    // ── Contributors grid ─────────────────────────
-    var thContribs=el('div','cfo-section');
-    thContribs.appendChild(el('div','cab-sec-label','یارمەتیدەران'));
-    var CONTRIBS=[
-      {icon:'fas fa-share-nodes', label:'هاوبەشکردن'},
-      {icon:'fas fa-comment-dots',label:'فیدباک و ئیده'},
-      {icon:'fas fa-bug',         label:'ڕاپۆرتکردنی کێشەکان'},
-      {icon:'fas fa-vial',        label:'تاقیکردنەوە'},
-      {icon:'fas fa-hand-holding-heart',label:'پشتگیری'},
-      {icon:'fas fa-hands-praying',label:'دوعا'}
-    ];
-    var thGrid=el('div','th-contrib-grid');
-    CONTRIBS.forEach(function(c){
-      var chip=el('div','th-contrib-chip');
-      chip.appendChild(icon(c.icon));
-      chip.appendChild(el('span','',c.label));
-      thGrid.appendChild(chip);
-    });
-    thContribs.appendChild(thGrid);
-    body.appendChild(thContribs);
-
-    // ── Closing dua ───────────────────────────────
-    var thDua=el('div','cfo-dua');
-    thDua.appendChild(el('div','cfo-dua-label','دوعا'));
-    thDua.appendChild(el('div','cfo-ayah-ar','اللهم اجعل هذا العمل صدقة جارية لكل من ساهم فيه ولو بشيء يسير'));
-    body.appendChild(thDua);
+    thParas.forEach(function(p){thSection.appendChild(el('div','cfo-para',p));});
+    body.appendChild(thSection);
   }
 }
 
