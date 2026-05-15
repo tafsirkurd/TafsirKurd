@@ -2932,12 +2932,30 @@ function ensureQCFV4Font(pageNum){
   if(_qcfV4FontLoadP[pageNum])return _qcfV4FontLoadP[pageNum];
   injectQCFV4Font(pageNum);
   var fontName='QCFv4p'+pageNum;
+  // Canvas sentinel: after document.fonts.load() says the font is ready, verify that
+  // PUA glyphs (U+E001–U+E00A) render with a DIFFERENT width than the monospace fallback.
+  // This catches WebKit/Android cases where fonts.load() resolves but the real file was
+  // never applied (e.g. swap-fallback, wrong face, cached-then-evicted).
+  function _sentinelOk(){
+    try{
+      var cv=document.createElement('canvas');
+      var cx=cv.getContext('2d');
+      if(!cx)return false;
+      var s='';
+      cx.font='48px monospace';
+      var wRef=cx.measureText(s).width;
+      cx.font='48px "'+fontName+'",monospace';
+      var wQCF=cx.measureText(s).width;
+      return wQCF>0&&Math.abs(wQCF-wRef)>2;
+    }catch(e){return false;}
+  }
   if(!document.fonts||!document.fonts.load){
     _qcfV4FontLoadP[pageNum]=Promise.resolve(false);
     return _qcfV4FontLoadP[pageNum];
   }
   var loadP=document.fonts.load('1em "'+fontName+'"').then(function(faces){
-    return !!(faces&&faces.length);
+    if(!faces||!faces.length)return false;
+    return _sentinelOk();
   }).catch(function(){return false;});
   var timeoutP=new Promise(function(res){setTimeout(function(){res(false);},5000);});
   _qcfV4FontLoadP[pageNum]=Promise.race([loadP,timeoutP]);
@@ -3009,16 +3027,18 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
     return _loadMushafBundledData().then(function(){
       if(window._mushafV4Pages){
         var bd=window._mushafV4Pages[pageNum-1];
-        if(bd&&bd.verses){
+        if(bd&&bd.verses&&bd.verses.length){
           try{localStorage.setItem(key,JSON.stringify(bd));}catch(e){}
           return bd;
         }
       }
-      // 3. Network fallback
+      // 3. Network fallback — never reject; offline returns noData sentinel so caller
+      //    can show Hafs fallback instead of an × error card.
       return fetch('https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields=code_v2&per_page=300&mushaf=19')
         .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
-        .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;});
-    });
+        .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;})
+        .catch(function(){return{verses:[],_noData:true};});
+    }).catch(function(){return{verses:[],_noData:true};});
   }
   // Other font modes: direct network
   var url='https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields='+fields+'&per_page=300';
@@ -3308,6 +3328,8 @@ function _mushafWrapSpreads(view){
 function renderMushafView(){
   var view=$('mushafView');
   if(!view||!S.surah)return;
+  // Start the 3 MB bundle fetch immediately so it's ready before the first page loads
+  if(S.mushafFont==='qcf4')_loadMushafBundledData();
   clearMushafHighlights();
   // Disconnect previous lazy-load observer to prevent accumulation
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
@@ -3465,6 +3487,55 @@ function _fitQCFLines(pageEl){
   }
 }
 
+// Returns a DocumentFragment rendering Quran text with KFGQPC Hafs font.
+// verses: array from getMushafPageData — may be empty when page data unavailable.
+// pageNum: used to look up which surahs fall on this page when verses is empty.
+function _buildHafsFallbackFrag(verses,pageNum){
+  var frag=document.createDocumentFragment();
+  var prevSn=-1;
+  function _hafsHeader(sn){
+    if(sn===prevSn)return;prevSn=sn;
+    var bn=el('div','mushaf-surah-banner');bn.dataset.surah=String(sn);
+    var nt=document.createElement('div');nt.className='surah-name-ar no-kurdish-convert';
+    var gc='surah'+String(sn).padStart(3,'0');nt.dataset.glyph=gc;
+    var fr=(window.QuranFontManager&&window.QuranFontManager.isReady('SurahName'))||window._surahNameFontReady;
+    var ss=SURAHS[sn-1];nt.textContent=fr?gc:(ss?ss.ar:('سورة '+sn));
+    bn.appendChild(nt);frag.appendChild(bn);
+    if(sn!==1&&sn!==9){var bm=el('div','mushaf-bismillah');bm.textContent='بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';frag.appendChild(bm);}
+  }
+  function _hafsVerse(sn,vn){
+    var sd=S.quranData&&S.quranData[String(sn)];
+    var ao=sd&&sd[vn-1];
+    var txt=(ao&&ao.text)||('('+sn+':'+vn+')');
+    var ve=el('div','mushaf-flow-verse');
+    ve.style.fontFamily="'KFGQPC Hafs','Amiri Quran',serif";
+    ve.textContent=txt+' ﴿'+toArabicNum(vn)+'﴾';
+    (function(v,s){on(ve,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(vn,sn);
+    frag.appendChild(ve);
+  }
+  if(verses&&verses.length){
+    verses.forEach(function(v){
+      var sn=v.surah_number||parseInt((v.verse_key||'1:1').split(':')[0]);
+      var vn=v.verse_number;
+      _hafsHeader(sn);_hafsVerse(sn,vn);
+    });
+  } else {
+    // No verse data available — approximate from quranData for surahs on this page
+    for(var i=0;i<_MUSHAF_PAGE_RANGES.length;i++){
+      var r=_MUSHAF_PAGE_RANGES[i];
+      if(r[0]>pageNum||r[1]<pageNum)continue;
+      var psn=i+1;
+      var psd=S.quranData&&S.quranData[String(psn)];
+      if(!psd)continue;
+      _hafsHeader(psn);
+      for(var vi=0;vi<psd.length;vi++){
+        _hafsVerse(psn,psd[vi].verse||(vi+1));
+      }
+    }
+  }
+  return frag;
+}
+
 function loadMushafPageQCF(pageEl,pageNum){
   var font=S.mushafFont||'qcf1';
   var pf=_getPageFields();
@@ -3485,7 +3556,14 @@ function loadMushafPageQCF(pageEl,pageNum){
   return dataP.then(function(json){
     var _dataMs=Date.now()-_dataT;
     var verses=json.verses||[];
-    if(!verses.length){clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','—'));return;}
+    if(!verses.length){
+      // No page data — render Hafs Arabic text as fallback (never show ×)
+      if(font==='qcf4'){
+        var _nd=_buildHafsFallbackFrag([],pageNum);
+        clear(pageEl);pageEl.classList.add('mushaf-page-hafs-fallback');pageEl.appendChild(_nd);
+      } else {clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','—'));}
+      return;
+    }
 
     // Render into a fragment — spinner stays visible until font is ready
     var frag=document.createDocumentFragment();
@@ -3702,37 +3780,12 @@ function loadMushafPageQCF(pageEl,pageNum){
       var QFM=window.QuranFontManager;
       var _fontMs=Date.now()-_t0-_dataMs;
       if(font==='qcf4'&&!fontOk){
-        // QCF4 font unavailable (offline or not yet installed).
-        // Degrade gracefully: render the same page content using Arabic Unicode
-        // text from quran.json + KFGQPC Hafs font.  No gibberish, no × page.
+        // QCF4 font unavailable — sentinel test failed or font timed out.
+        // Render readable Hafs Arabic text; never show broken PUA glyph codes.
         if(QFM)QFM.qcfPageFailed(pageNum,'font-unavailable');
         clear(pageEl);
-        var fbFrag=document.createDocumentFragment();
-        var _fbPrevSn=-1;
-        verses.forEach(function(verse){
-          var sn=verse.surah_number||parseInt((verse.verse_key||'1:1').split(':')[0]);
-          var vn=verse.verse_number;
-          if(sn!==_fbPrevSn){
-            _fbPrevSn=sn;
-            var fb_bn=el('div','mushaf-surah-banner');fb_bn.dataset.surah=String(sn);
-            var fb_nt=document.createElement('div');fb_nt.className='surah-name-ar no-kurdish-convert';
-            var fb_gc='surah'+String(sn).padStart(3,'0');fb_nt.dataset.glyph=fb_gc;
-            var fb_fr=(window.QuranFontManager&&window.QuranFontManager.isReady('SurahName'))||window._surahNameFontReady;
-            var fb_ss=SURAHS[sn-1];fb_nt.textContent=fb_fr?fb_gc:(fb_ss?fb_ss.ar:('سورة '+sn));
-            fb_bn.appendChild(fb_nt);fbFrag.appendChild(fb_bn);
-            if(sn!==1&&sn!==9){var fb_bm=el('div','mushaf-bismillah');fb_bm.textContent='بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';fbFrag.appendChild(fb_bm);}
-          }
-          var fb_sa=S.quranData&&S.quranData[String(sn)];
-          var fb_ao=fb_sa&&fb_sa[vn-1];
-          var fb_txt=(fb_ao&&fb_ao.text)||('('+sn+':'+vn+')');
-          var fb_ve=el('div','mushaf-flow-verse');
-          fb_ve.style.fontFamily="'KFGQPC Hafs','Amiri Quran',serif";
-          fb_ve.textContent=fb_txt+' ﴿'+toArabicNum(vn)+'﴾';
-          (function(v,s){on(fb_ve,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(vn,sn);
-          fbFrag.appendChild(fb_ve);
-        });
         pageEl.classList.add('mushaf-page-hafs-fallback');
-        pageEl.appendChild(fbFrag);
+        pageEl.appendChild(_buildHafsFallbackFrag(verses,pageNum));
         _mushafRenderMetrics[pageNum]={fontMs:_fontMs,dataMs:_dataMs,total:Date.now()-_t0,ok:false,missing:['qcf4-font']};
         console.log('[MushafPerf] page='+pageNum+' status=hafs-fallback total='+(Date.now()-_t0));
         return;
@@ -3740,9 +3793,15 @@ function loadMushafPageQCF(pageEl,pageNum){
       if(font==='qcf4'&&QFM)QFM.qcfPageLoaded(pageNum,Date.now()-_t0);
       showContent(_fontMs);
     });
-  }).catch(function(){
+  }).catch(function(err){
+    console.warn('[Mushaf] page='+pageNum+' render error:',err&&err.message||err);
     clear(pageEl);
-    pageEl.appendChild(el('div','mushaf-page-ph','✕'));
+    // Never show ×: attempt Hafs fallback using quranData for surahs on this page
+    try{
+      var _ef=_buildHafsFallbackFrag([],pageNum);
+      pageEl.classList.add('mushaf-page-hafs-fallback');
+      pageEl.appendChild(_ef);
+    }catch(e2){pageEl.appendChild(el('div','mushaf-page-ph','—'));}
   });
 }
 
