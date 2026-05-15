@@ -1567,10 +1567,8 @@ private struct LockRow: View {
     }
 }
 
-// Shared debug overlay — ultra-subtle (5pt, 18% opacity) so it doesn't obscure production UI.
-// Shows which entry is active, real now, snapshot next vs resolved next, widget family.
-// Flip to false once the home-widget staleness root cause is confirmed.
-private let kWidgetDebug = true
+// Shared debug overlay — set to true only during local debug sessions.
+private let kWidgetDebug = false
 
 private struct WidgetDebugOverlay: View {
     let entry:  PrayerEntry
