@@ -6876,30 +6876,6 @@ function pushGoalDataToWidget(){
     .catch(function(){/* non-iOS — silent */});
 }
 
-// ── Debug helpers (temporary) ──────────────────────────────────────────
-window.testAyahWidgetPush=function(){
-  console.log('[WidgetAyah] testAyahWidgetPush: writing known-good payload');
-  var payload=JSON.stringify({
-    chapter:1,verse:1,
-    arabic:'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
-    tafsir:'بسمەلە — سوورەتا فاتیحەیێ',
-    surahName:'الفاتحة',
-    showTafsir:true,showReference:true
-  });
-  _sharedPrefsSet('widgetAyahData',payload)
-    .then(function(){console.log('[WidgetAyah] testAyahWidgetPush: SUCCESS ✓');alert('Ayah widget write OK');})
-    .catch(function(e){console.error('[WidgetAyah] testAyahWidgetPush: FAILED',e);alert('Ayah widget write FAILED: '+e);});
-};
-window.testGoalWidgetPush=function(){
-  console.log('[WidgetGoal] testGoalWidgetPush: writing known-good payload');
-  var payload=JSON.stringify({
-    todayCount:5,dailyGoal:10,currentStreak:3,bestStreak:7,
-    weeklyData:[2,4,10,8,5,10,5],todayDate:dateKey(new Date())
-  });
-  _sharedPrefsSet('widgetGoalData',payload)
-    .then(function(){console.log('[WidgetGoal] testGoalWidgetPush: SUCCESS ✓');alert('Goal widget write OK');})
-    .catch(function(e){console.error('[WidgetGoal] testGoalWidgetPush: FAILED',e);alert('Goal widget write FAILED: '+e);});
-};
 
 /* ===== GOAL WIZARD ===== */
 var PRESETS=[
@@ -7963,7 +7939,7 @@ function renderSettings(){
   aboutLogo.src='/assets/images/logo.png';aboutLogo.alt='';
   about.appendChild(aboutLogo);
   about.appendChild(el('div','about-name','Tafsir Kurd'));
-  var verEl=el('div','about-ver','v2.0.0');
+  var verEl=el('div','about-ver','v2.3.0');
   about.appendChild(verEl);
   if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){
     Capacitor.Plugins.App.getInfo().then(function(info){
