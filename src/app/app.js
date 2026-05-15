@@ -7606,15 +7606,38 @@ async function openAboutSheet(type){
   if(type==='thanks'){
     titleEl.textContent='سوپاسنامە';
 
-    var thSection=el('div','cfo-section');
-    var thParas=[
-      'ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن کو هێز و دەرفەت دا مە دا کو ئەڤی پرۆژەی بگەهینینە سەرکەفتنێ.',
+    // ── Hero ──────────────────────────────────────
+    var thHero=el('div','cfg-sheet-hero');
+    var thIcon=el('div','cfg-sheet-avatar');
+    thIcon.style.cssText='background:linear-gradient(135deg,#e8445a,#ff7c95);';
+    thIcon.appendChild(icon('fas fa-heart'));
+    thHero.appendChild(thIcon);
+    thHero.appendChild(el('div','cfg-sheet-name','سوپاسنامە'));
+    body.appendChild(thHero);
+
+    // ── Opening praise — styled as a centred highlight ─
+    var thOpen=el('div','cfo-section');
+    var openPara=el('div','cfo-para');
+    openPara.style.cssText='text-align:center;font-weight:600;color:var(--text);font-size:.93rem;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:0;';
+    openPara.textContent='ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن کو هێز و دەرفەت دا مە دا کو ئەڤی پرۆژەی بگەهینینە سەرکەفتنێ.';
+    thOpen.appendChild(openPara);
+    body.appendChild(thOpen);
+
+    // ── Body paragraphs ───────────────────────────
+    var thBody=el('div','cfo-section');
+    [
       'ئەڤ ئەپلیكەیشنە بەرهەمێ کارەکێ ب کۆم و دڵسۆزانەیە. ژ ناخێ دڵێ خۆ سوپاسیا ئێک ب ئێکێ وان دۆست و دڵسۆزان دکەم کو قوناغ ب قوناغ هاریكاریا من د دروستکرن، دیزاینکرن و پێشڤەبرنا ڤی ئەپی دا کری. ئەو ده‌ستێن ڕه‌نگین یێن کار تێدا کری و ئەو هزرێن جوان یێن ڕێبەریا من کری، ئەگەرێ سەرەکی بوون کو ئەڤڕۆ ئەڤ پرۆژە ب سەرکەفتیانە بکەڤیتە د خزمەتا وە دا. ماندووبوونا هەوە ل دەڤ من یا قەدرگران و ب نرخە.',
-      'د هەمان دەم دا، سوپاسیا هەوە یێن ئەزیز و بکارهێنەرێن ئەپی دکەم کو ب متمانە و پشتەڤانیا خۆ، هێز دایە مە. هیڤیدارم ئەڤ کارە پڕ مفا بیت و ببیته‌ جهێ ڕازیبوون و دڵخۆشیا هەوە هەمیای.',
-      'ژ خودایێ میهرەبان دخۆازم خێر و بەرەکەتێ بێخیتە د ژیان و کارێن وه‌ دا. خودێ دەرگەهێن ڕزقێ حەلال و سەرکەفتنێ ل بەردەم هەوە ڤەکەت، و هەوە ژ هەر نەخۆشی و تەنگاڤیەکێ بپارێزیت. ژ دل هیڤیخوازم کو دایم یێن ساخلەم، دلخۆش و سەرکەفتی بن و خودێ جزا و پاداشتێ ڤێ هاریكاری و چاکیا وە بدەتە مه‌زنتر لێ بکەت.'
-    ];
-    thParas.forEach(function(p){thSection.appendChild(el('div','cfo-para',p));});
-    body.appendChild(thSection);
+      'د هەمان دەم دا، سوپاسیا هەوە یێن ئەزیز و بکارهێنەرێن ئەپی دکەم کو ب متمانە و پشتەڤانیا خۆ، هێز دایە مە. هیڤیدارم ئەڤ کارە پڕ مفا بیت و ببیته‌ جهێ ڕازیبوون و دڵخۆشیا هەوە هەمیای.'
+    ].forEach(function(p){thBody.appendChild(el('div','cfo-para',p));});
+    body.appendChild(thBody);
+
+    // ── Closing prayer card ───────────────────────
+    var thDua=el('div','cfo-dua');
+    thDua.appendChild(el('div','cfo-dua-label','دوعا'));
+    var duaText=el('div','cfo-dua-text');
+    duaText.textContent='ژ خودایێ میهرەبان دخۆازم خێر و بەرەکەتێ بێخیتە د ژیان و کارێن وه‌ دا. خودێ دەرگەهێن ڕزقێ حەلال و سەرکەفتنێ ل بەردەم هەوە ڤەکەت، و هەوە ژ هەر نەخۆشی و تەنگاڤیەکێ بپارێزیت. ژ دل هیڤیخوازم کو دایم یێن ساخلەم، دلخۆش و سەرکەفتی بن و خودێ جزا و پاداشتێ ڤێ هاریكاری و چاکیا وە بدەتە مه‌زنتر لێ بکەت.';
+    thDua.appendChild(duaText);
+    body.appendChild(thDua);
   }
 }
 
