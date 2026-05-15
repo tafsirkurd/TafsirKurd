@@ -2915,8 +2915,11 @@ function injectQCFV4Font(pageNum){
   if(_qcfV4FontInjected[pageNum])return;
   _qcfV4FontInjected[pageNum]=true;
   var s=document.createElement('style');
-  // On iOS the local woff2 is stripped from the bundle → skip to Cloudflare Worker directly
-  var localSrc=_isIOSCap?'':("url('/assets/fonts/qcf4/p"+pageNum+".woff2') format('woff2'),");
+  // iOS: woff2 stripped by strip-ios-fonts.js (ITMS-90853); use bundled TTF in qcf4ttf/
+  // Android/web: use bundled woff2 in qcf4/ (local first, Cloudflare Worker fallback)
+  var localSrc=_isIOSCap
+    ?"url('/assets/fonts/qcf4ttf/p"+pageNum+".ttf') format('truetype'),"
+    :"url('/assets/fonts/qcf4/p"+pageNum+".woff2') format('woff2'),";
   s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:"+localSrc+"url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:swap}";
   document.head.appendChild(s);
 }
@@ -2953,9 +2956,19 @@ function _prefetchMushafPage(pageNum){
   getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).catch(function(){});
 }
 
+// Medina Mushaf (QPC Hafs, mushaf=19) — surah page ranges bundled for offline use.
+// Index = surah number - 1.  Each entry = [firstPage, lastPage].
+// Source: api.quran.com/api/v4/chapters (retrieved 2026-05-15).
+var _MUSHAF_PAGE_RANGES=[[1,1],[2,49],[50,76],[77,106],[106,127],[128,150],[151,176],[177,186],[187,207],[208,221],[221,235],[235,248],[249,255],[255,261],[262,267],[267,281],[282,293],[293,304],[305,312],[312,321],[322,331],[332,341],[342,349],[350,359],[359,366],[367,376],[377,385],[385,396],[396,404],[404,410],[411,414],[415,417],[418,427],[428,434],[434,440],[440,445],[446,452],[453,458],[458,467],[467,476],[477,482],[483,489],[489,495],[496,498],[499,502],[502,506],[507,510],[511,515],[515,517],[518,520],[520,523],[523,525],[526,528],[528,531],[531,534],[534,537],[537,541],[542,545],[545,548],[549,551],[551,552],[553,554],[554,555],[556,557],[558,559],[560,561],[562,564],[564,566],[566,568],[568,570],[570,571],[572,573],[574,575],[575,577],[577,578],[578,580],[580,581],[582,583],[583,584],[585,585],[586,586],[587,587],[587,589],[589,589],[590,590],[591,591],[591,592],[592,592],[593,594],[594,594],[595,595],[595,596],[596,596],[596,596],[597,597],[597,597],[598,598],[598,599],[599,599],[599,600],[600,600],[600,600],[601,601],[601,601],[601,601],[602,602],[602,602],[602,602],[603,603],[603,603],[603,603],[604,604],[604,604],[604,604]];
+
 function getMushafPageRange(surahNum){
+  // Bundled static data — works fully offline
+  var r=_MUSHAF_PAGE_RANGES[surahNum-1];
+  if(r)return Promise.resolve({start:r[0],end:r[1]});
+  // localStorage cache (populated from previous API calls)
   var key='qcfRange_'+surahNum;
   try{var c=JSON.parse(localStorage.getItem(key)||'null');if(c&&c.start)return Promise.resolve(c);}catch(e){}
+  // Network fallback
   return fetch('https://api.quran.com/api/v4/chapters/'+surahNum)
     .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
     .then(function(json){
@@ -2966,10 +2979,32 @@ function getMushafPageRange(surahNum){
     });
 }
 
+// Lazy-load bundled QCF4 page glyph data — populated by scripts/fetch-mushaf-v4-data.js.
+// Loaded once when mushaf view first opens; subsequent calls are no-ops.
+var _mushafV4PagesLoading=false;
+function _loadMushafBundledData(){
+  if(_mushafV4PagesLoading||window._mushafV4Pages)return;
+  _mushafV4PagesLoading=true;
+  fetch('/data/mushaf-v4-pages.json')
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(data){if(data&&Array.isArray(data))window._mushafV4Pages=data;})
+    .catch(function(){});
+}
+
 function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   fields=fields||'code_v1';cachePrefix=cachePrefix||'qcfV1p_';
   var key=cachePrefix+pageNum;
+  // localStorage cache (fastest, survives app restart)
   try{var c=JSON.parse(localStorage.getItem(key)||'null');if(c&&c.verses)return Promise.resolve(c);}catch(e){}
+  // Bundled page data (offline-safe, only for QCF4 mode)
+  if(fields==='code_v2'&&mushafId===19&&window._mushafV4Pages){
+    var bd=window._mushafV4Pages[pageNum-1];
+    if(bd&&bd.verses){
+      try{localStorage.setItem(key,JSON.stringify(bd));}catch(e){}
+      return Promise.resolve(bd);
+    }
+  }
+  // Network fallback
   var url='https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields='+fields+'&per_page=300';
   if(mushafId)url+='&mushaf='+mushafId;
   return fetch(url)
@@ -3267,6 +3302,8 @@ function renderMushafView(){
   clear(view);
   view.scrollTop=0;view.scrollLeft=0;
   view.appendChild(_mushafSkeleton());
+  // Kick off bundled glyph data load in parallel with page range resolution
+  if(S.mushafFont==='qcf4')_loadMushafBundledData();
 
   var _renderSurah=S.surah; // capture at render time — abort if surah changes during async
   getMushafPageRange(S.surah).then(function(pages){
