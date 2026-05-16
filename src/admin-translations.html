@@ -5462,9 +5462,13 @@
             ta.rows = 1;
 
             ta.addEventListener('input', function() {
-                // Auto-grow
+                // Auto-grow — save/restore scroll so mobile doesn't jump to top
+                // when height:'auto' momentarily collapses the element
+                var _ca = document.querySelector('.content-area');
+                var _st = _ca ? _ca.scrollTop : window.scrollY;
                 this.style.height = 'auto';
                 this.style.height = this.scrollHeight + 'px';
+                if (_ca) _ca.scrollTop = _st; else window.scrollTo(0, _st);
                 var isDirty = this.value !== t.kurdish_text;
                 // Re-query row by ID — never use stale closure reference
                 var liveRow = document.getElementById('row-' + t.id);
@@ -5490,8 +5494,11 @@
                     var currentRow = document.getElementById('row-' + t.id);
                     if (currentRow) currentRow.classList.remove('qe-dirty');
                     this.value = t.kurdish_text;
+                    var _ca2 = document.querySelector('.content-area');
+                    var _st2 = _ca2 ? _ca2.scrollTop : window.scrollY;
                     this.style.height = 'auto';
                     this.style.height = this.scrollHeight + 'px';
+                    if (_ca2) _ca2.scrollTop = _st2; else window.scrollTo(0, _st2);
                     updateQeBar();
                     // Escape = stay on current row (discard only, no navigation)
                 }
