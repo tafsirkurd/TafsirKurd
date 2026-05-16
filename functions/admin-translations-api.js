@@ -106,9 +106,11 @@ export async function onRequest(context) {
             const { error } = await supabase.from('kurdish_translations').delete().in('key_id', key_ids);
             if (error) return json({ error: error.message }, 500, corsHeaders);
 
-            // Block all deleted keys so import never re-inserts them
-            const blocks = key_ids.map(function(k) { return { key_id: k }; });
-            await supabase.from('deleted_translation_keys').upsert(blocks, { onConflict: 'key_id' });
+            // Block deleted keys so import never re-inserts them (best-effort — table may not exist)
+            try {
+                const blocks = key_ids.map(k => ({ key_id: k }));
+                await supabase.from('deleted_translation_keys').upsert(blocks, { onConflict: 'key_id' });
+            } catch (_) {}
 
             return json({ success: true, deleted: key_ids.length });
         }
@@ -279,8 +281,8 @@ export async function onRequest(context) {
         return json({ error: 'Unknown action' }, 400, corsHeaders);
 
     } catch (err) {
-        console.error('admin-translations error:', err);
-        return json({ error: 'Internal server error' }, 500, corsHeaders);
+        console.error('admin-translations error [action=' + (body?.action || '?') + ']:', err?.message || err);
+        return json({ error: 'Internal server error', action: body?.action || null, detail: err?.message || null }, 500, corsHeaders);
     }
 }
 

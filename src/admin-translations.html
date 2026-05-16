@@ -3676,12 +3676,12 @@
                 return allTranslations.some(function(t) { return t.key_id === k; });
             });
             if (!present.length) { _removedNotifKeysDone = true; return; }
+            _removedNotifKeysDone = true; // mark done before attempt to avoid repeated 500s
             try {
                 await adminTranslationsAPI('delete_by_keys', { key_ids: present });
                 allTranslations = allTranslations.filter(function(t) {
                     return present.indexOf(t.key_id) === -1;
                 });
-                _removedNotifKeysDone = true;
             } catch(e) {
                 console.warn('_cleanupRemovedNotifKeys failed:', e);
             }
