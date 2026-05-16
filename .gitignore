@@ -98,10 +98,24 @@ android/nul
 
 # Sensitive / personal data
 testers.csv
+testers.csv.txt
 AuthKey_*.p8
+
+# Firebase — contains API keys; add your own google-services.json / GoogleService-Info.plist
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist
+
+# Android signing
+android/keystore.properties
+
+# Apple certificates & keys
+distribution.cer
+distribution (1).cer
+*.p8
 
 # Local Claude settings
 .claude/
+.playwright-mcp/
 
 # Temp / generated files
 duplicate_report.txt
