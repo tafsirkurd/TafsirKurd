@@ -1060,7 +1060,7 @@ function init(){
                       has_completed_signup:true,
                       first_login_at:new Date().toISOString()
                     },{onConflict:'id'}).then(function(){});
-                    startCloudSync();
+                    // startCloudSync() fires via onAuthStateChange(SIGNED_IN) from setSession
                     App.closeLogin();
                     toast(t('toast.logged_in'));
                     if(S.tab==='settings')renderSettings();
@@ -7530,6 +7530,18 @@ async function openAboutSheet(type){
     }
   }
 
+  if(type==='app'){
+    var appHero=el('div','cfg-sheet-hero');
+    var appAv=el('div','cfg-sheet-avatar');
+    var appAvUrl=ss.about_avatar_url||'';
+    if(appAvUrl){var appAvImg=document.createElement('img');appAvImg.alt='';appAvImg.src=appAvUrl;appAv.appendChild(appAvImg);}
+    else{var appLogoImg=document.createElement('img');appLogoImg.src='/assets/images/logo.png';appLogoImg.alt='';appAv.appendChild(appLogoImg);}
+    appHero.appendChild(appAv);
+    appHero.appendChild(el('div','cfg-sheet-name','تەفسیر کورد'));
+    appHero.appendChild(el('div','cfg-sheet-role',_ft('about_hero_sub',ss.about_hero_sub)||'پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز'));
+    body.appendChild(appHero);
+  }
+
   if(type==='thanks'){
     titleEl.textContent='سوپاسنامە';
 
@@ -8511,7 +8523,24 @@ function loadFromCloud(cb){
     if(resp.error){
       if(resp.error.code==='PGRST116'){
         syncToCloud(); // first login — upload local data
-      }else{console.error('Load cloud error:',resp.error)}
+      }else{
+        console.error('Load cloud error:',resp.error);
+        // JWT/auth errors — try refreshing the token once before giving up
+        var isAuthErr=resp.error.status===401||resp.error.message&&resp.error.message.indexOf('JWT')!==-1;
+        if(isAuthErr&&S.supabase){
+          S.supabase.auth.refreshSession().then(function(r){
+            if(r.data&&r.data.session){
+              setUserFromSession(r.data.session);
+              loadFromCloud(cb); // one retry
+            }else{
+              S.syncFailed=true;_updateSyncPanelStatus();
+              if(cb)cb();
+            }
+          }).catch(function(){S.syncFailed=true;_updateSyncPanelStatus();if(cb)cb();});
+          return;
+        }
+        S.syncFailed=true;_updateSyncPanelStatus();
+      }
       if(cb)cb();return;
     }
     if(resp.data&&resp.data.app_data){
@@ -8525,7 +8554,7 @@ function loadFromCloud(cb){
       renderCurrentTab();
     }
     if(cb)cb();
-  }).catch(function(e){console.error('Load cloud failed:',e);if(cb)cb()});
+  }).catch(function(e){console.error('Load cloud failed:',e);S.syncFailed=true;_updateSyncPanelStatus();if(cb)cb();});
 }
 
 // ── Realtime (instant cross-device push) ─────────────────────────────────────
@@ -8628,7 +8657,11 @@ function lsSet(key,val){
 }
 window.lsSet=lsSet;
 
+var _syncLaunching=false;
 function startCloudSync(){
+  if(_syncLaunching)return; // prevent concurrent calls from double-fire events
+  _syncLaunching=true;
+  setTimeout(function(){_syncLaunching=false;},3000);
   stopCloudSync();
   /* Data isolation: wipe previous user's local data when a new user logs in */
   var prevUserId=localStorage.getItem('_lastUserId');
@@ -8971,7 +9004,7 @@ App.openLogin=function(){
 
   function loginSuccess(session){
     setUserFromSession(session);
-    startCloudSync();
+    // startCloudSync() is triggered by onAuthStateChange(SIGNED_IN) — don't call twice
     App.closeLogin();
     App.tab('settings');
     renderSettings();
