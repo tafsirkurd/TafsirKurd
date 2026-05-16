@@ -3350,9 +3350,15 @@
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
       console.log('[PrayerSync] app foregrounded — checking widget staleness');
-      setTimeout(function() { pushWidgetIfStale(); }, 800);
+      setTimeout(function() { pushWidgetIfStale(); reportWidgetHealth(); }, 800);
     }
   });
+
+  // Send one widget health report on startup (iOS/Android only — throttled to once/10 min)
+  if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.getPlatform &&
+      window.Capacitor.getPlatform() !== 'web') {
+    setTimeout(function() { reportWidgetHealth(); }, 3000);
+  }
 
   window.PrayerUI = {
     render: render,
