@@ -3354,11 +3354,8 @@
     }
   });
 
-  // Send one widget health report on startup (iOS/Android only — throttled to once/10 min)
-  if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.getPlatform &&
-      window.Capacitor.getPlatform() !== 'web') {
-    setTimeout(function() { reportWidgetHealth(); }, 3000);
-  }
+  // Send one widget health report on startup (all platforms — throttled to once/10 min)
+  setTimeout(function() { reportWidgetHealth(); }, 3000);
 
   window.PrayerUI = {
     render: render,
