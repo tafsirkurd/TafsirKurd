@@ -7526,39 +7526,40 @@ async function openAboutSheet(type){
     // ── Hero ──────────────────────────────────────
     var thHero=el('div','cfg-sheet-hero');
     var thIcon=el('div','cfg-sheet-avatar');
-    thIcon.style.cssText='background:linear-gradient(135deg,#e8445a,#ff7c95);font-size:1.7rem;';
+    thIcon.style.cssText='background:linear-gradient(135deg,#e8445a,#ff7c95);font-size:1.8rem;width:96px;height:96px;box-shadow:0 8px 24px rgba(232,68,90,.35);';
     thIcon.appendChild(icon('fas fa-heart'));
     thHero.appendChild(thIcon);
     thHero.appendChild(el('div','cfg-sheet-name','سوپاسنامە'));
     thHero.appendChild(el('div','cfg-sheet-role','بۆ هەموو دڵسۆزانیێن ڤی پرۆژەی'));
     body.appendChild(thHero);
 
-    body.appendChild(el('div','cfg-sheet-divider'));
-
-    // ── Opening praise — quote card ───────────────
+    // ── Opening praise — accent-bordered quote ────
     var thQuote=el('div','cfg-sheet-quote');
-    var thQuoteText=el('div','cfg-sheet-para');
-    thQuoteText.style.cssText='font-weight:600;color:var(--text);font-size:.92rem;line-height:1.9;text-align:center;margin:0;padding:0;';
+    thQuote.style.cssText='border-right:3px solid var(--accent);border-radius:0 var(--r-l) var(--r-l) 0;margin:8px 20px 0;';
+    var thQuoteText=document.createElement('div');
+    thQuoteText.style.cssText='font-weight:600;color:var(--text);font-size:.93rem;line-height:2;direction:rtl;';
     thQuoteText.textContent='ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن کو هێز و دەرفەت دا مە دا کو ئەڤی پرۆژەی بگەهینینە سەرکەفتنێ.';
     thQuote.appendChild(thQuoteText);
     body.appendChild(thQuote);
 
     // ── Body paragraphs ───────────────────────────
     var thBody=el('div','cfo-section');
+    thBody.style.cssText='padding:20px 20px 0;';
     [
       'ئەڤ ئەپلیكەیشنە بەرهەمێ کارەکێ ب کۆم و دڵسۆزانەیە. ژ ناخێ دڵێ خۆ سوپاسیا ئێک ب ئێکێ وان دۆست و دڵسۆزان دکەم کو قوناغ ب قوناغ هاریكاریا من د دروستکرن، دیزاینکرن و پێشڤەبرنا ڤی ئەپی دا کری. ئەو ده‌ستێن ڕه‌نگین یێن کار تێدا کری و ئەو هزرێن جوان یێن ڕێبەریا من کری، ئەگەرێ سەرەکی بوون کو ئەڤڕۆ ئەڤ پرۆژە ب سەرکەفتیانە بکەڤیتە د خزمەتا وە دا. ماندووبوونا هەوە ل دەڤ من یا قەدرگران و ب نرخە.',
       'د هەمان دەم دا، سوپاسیا هەوە یێن ئەزیز و بکارهێنەرێن ئەپی دکەم کو ب متمانە و پشتەڤانیا خۆ، هێز دایە مە. هیڤیدارم ئەڤ کارە پڕ مفا بیت و ببیته‌ جهێ ڕازیبوون و دڵخۆشیا هەوە هەمیای.'
-    ].forEach(function(p){thBody.appendChild(el('div','cfo-para',p));});
+    ].forEach(function(p){
+      var para=el('div','cfo-para',p);
+      para.style.cssText='font-size:.9rem;line-height:2;margin-bottom:18px;';
+      thBody.appendChild(para);
+    });
     body.appendChild(thBody);
 
     // ── Closing prayer card ───────────────────────
     var thDua=el('div','cfo-dua');
-    var duaTop=el('div','cfo-dua-label');
-    duaTop.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;';
-    duaTop.appendChild(icon('fas fa-hands-praying'));
-    duaTop.appendChild(document.createTextNode('دوعا'));
-    thDua.appendChild(duaTop);
+    thDua.appendChild(el('div','cfo-dua-label','دوعا'));
     var duaText=el('div','cfo-dua-text');
+    duaText.style.cssText='font-size:.88rem;line-height:2.1;';
     duaText.textContent='ژ خودایێ میهرەبان دخۆازم خێر و بەرەکەتێ بێخیتە د ژیان و کارێن وه‌ دا. خودێ دەرگەهێن ڕزقێ حەلال و سەرکەفتنێ ل بەردەم هەوە ڤەکەت، و هەوە ژ هەر نەخۆشی و تەنگاڤیەکێ بپارێزیت. ژ دل هیڤیخوازم کو دایم یێن ساخلەم، دلخۆش و سەرکەفتی بن و خودێ جزا و پاداشتێ ڤێ هاریكاری و چاکیا وە بدەتە مه‌زنتر لێ بکەت.';
     thDua.appendChild(duaText);
     body.appendChild(thDua);
