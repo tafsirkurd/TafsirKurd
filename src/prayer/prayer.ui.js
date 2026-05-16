@@ -3330,7 +3330,8 @@
         error_msg:    opts.error || null
       };
 
-      fetch('/prayer-health-report', {
+      var _phrUrl = (platform === 'web') ? '/prayer-health-report' : 'https://tafsirkurd.com/prayer-health-report';
+      fetch(_phrUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
