@@ -102,8 +102,7 @@ TafsirKurd/
 ├── scripts/                    # Build & release scripts
 │   └── release-android.sh      # Android release + auto-notify
 ├── database/                   # SQL schemas and migrations
-├── codemagic.yaml              # iOS CI/CD pipeline
-└── wrangler.toml               # Cloudflare config
+└── codemagic.yaml              # iOS CI/CD pipeline
 ```
 
 ---
@@ -175,6 +174,19 @@ Notifications are sent via FCM HTTP v1 API using a Google Service Account JWT, s
 - Gencine book
 - Prayer times
 - App update prompt
+
+---
+
+## Local Build Notes
+
+The following files are **not included** in the repo and must be supplied before building:
+
+| File | Where to get it |
+|---|---|
+| `android/app/google-services.json` | Firebase Console → Project Settings → Android app |
+| `ios/App/App/GoogleService-Info.plist` | Firebase Console → Project Settings → iOS app |
+| `android/keystore.properties` | Your own signing keystore |
+| `wrangler.toml` | Cloudflare dashboard — contains KV namespace IDs |
 
 ---
 
