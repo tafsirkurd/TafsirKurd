@@ -98,6 +98,9 @@ async function checkAuth() {
                 window.adminHeartbeat.start();
             }
 
+            // Restore visibility hidden by admin-guard.js
+            document.documentElement.style.visibility = '';
+
             // Check page permission
             const currentPage = getCurrentPageSlug();
             if (currentPage && !hasPagePermission(currentPage, 'view')) {
@@ -282,3 +285,11 @@ window.addEventListener('admin:session-expired', function() {
     console.log('Session expired, logging out');
     logout();
 });
+
+// Safety fallback: if visibility is still hidden after 4s, force it visible.
+// Guards against cases where checkAuth() is never called or throws before restoring.
+setTimeout(function() {
+    if (document.documentElement.style.visibility === 'hidden') {
+        document.documentElement.style.visibility = '';
+    }
+}, 4000);
