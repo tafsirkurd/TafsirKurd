@@ -723,7 +723,7 @@ var S={
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:'qcf1',
-  mushafFontSize:Math.min(26,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26)),
+  mushafFontSize:Math.min(28,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26)),
   mushafLineH:Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8)),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
@@ -8437,7 +8437,7 @@ function applySyncData(data){
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
   S.mushafFont='qcf1';
   try{localStorage.setItem('mushafFont','qcf1');}catch(e){}
-  S.mushafFontSize=Math.min(26,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26));
+  S.mushafFontSize=Math.min(28,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26));
   S.mushafLineH=Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
