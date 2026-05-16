@@ -579,7 +579,7 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
             if (res.ok) { successCount++; }
             else {
                 const errText = await res.text().catch(() => '');
-                const err = JSON.parse(errText || '{}');
+                const err = (() => { try { return JSON.parse(errText || '{}'); } catch { return {}; } })();
                 apnsErrors.push(`APNs ${res.status}: ${err?.reason || errText}`);
                 if (res.status === 410 || err?.reason === 'BadDeviceToken' || err?.reason === 'Unregistered') staleTokens.push(token);
                 failCount++;

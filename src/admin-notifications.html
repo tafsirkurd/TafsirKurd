@@ -767,13 +767,13 @@
                             <div class="detail-stat-value" style="color:#38a169" id="detail-delivered">0</div>
                             <div class="detail-stat-label">Delivered</div>
                         </div>
-                        <div class="detail-stat">
+                        <div class="detail-stat" id="detail-failed-wrap">
                             <div class="detail-stat-value" style="color:#e53e3e" id="detail-failed">0</div>
-                            <div class="detail-stat-label">Failed</div>
+                            <div class="detail-stat-label">Errors</div>
                         </div>
                         <div class="detail-stat">
                             <div class="detail-stat-value" style="color:var(--text-tertiary)" id="detail-stale">0</div>
-                            <div class="detail-stat-label">Stale Removed</div>
+                            <div class="detail-stat-label">Cleaned Up</div>
                         </div>
                     </div>
                     <div class="progress-bar-wrap">
@@ -1154,14 +1154,16 @@
             if (n.status === 'sent' && n.tokens_targeted > 0) {
                 var statsEl = document.createElement('div');
                 statsEl.className = 'notif-stats';
+                var _stale = n.stale_removed || 0;
+                var _realFail = Math.max(0, (n.tokens_failed || 0) - _stale);
+                var _live = (n.tokens_targeted || 0) - _stale;
                 var okSpan = document.createElement('span');
                 okSpan.className = 'ok';
                 okSpan.textContent = n.tokens_sent + ' ok';
-                var badSpan = document.createElement('span');
-                badSpan.className = 'bad';
-                badSpan.textContent = ' ' + n.tokens_failed + ' fail';
-                statsEl.appendChild(okSpan); statsEl.appendChild(badSpan);
-                var rate = Math.round((n.tokens_sent / n.tokens_targeted) * 100);
+                statsEl.appendChild(okSpan);
+                if (_stale > 0) { var staleSpan = document.createElement('span'); staleSpan.style.cssText='color:var(--text-tertiary);font-size:11px'; staleSpan.textContent = ' ' + _stale + ' cleaned'; statsEl.appendChild(staleSpan); }
+                if (_realFail > 0) { var badSpan = document.createElement('span'); badSpan.className = 'bad'; badSpan.textContent = ' ' + _realFail + ' err'; statsEl.appendChild(badSpan); }
+                var rate = _live > 0 ? Math.round((n.tokens_sent / _live) * 100) : 100;
                 var rateEl = document.createElement('div');
                 rateEl.style.cssText = 'font-size:11px;color:' + (rate >= 80 ? '#38a169' : rate >= 50 ? '#d69e2e' : '#e53e3e');
                 rateEl.textContent = rate + '%';
@@ -1611,11 +1613,20 @@
             var statsSection = document.getElementById('detail-sent-stats');
             if (n.status === 'sent') {
                 statsSection.style.display = 'block';
+                var stale = n.stale_removed || 0;
+                var realFailed = Math.max(0, (n.tokens_failed || 0) - stale);
+                var liveTargeted = (n.tokens_targeted || 0) - stale;
+                var rate = liveTargeted > 0 ? Math.round(((n.tokens_sent || 0) / liveTargeted) * 100) : 0;
                 document.getElementById('detail-targeted').textContent = (n.tokens_targeted || 0).toLocaleString();
                 document.getElementById('detail-delivered').textContent = (n.tokens_sent || 0).toLocaleString();
-                document.getElementById('detail-failed').textContent = (n.tokens_failed || 0).toLocaleString();
-                document.getElementById('detail-stale').textContent = (n.stale_removed || 0).toLocaleString();
-                var rate = n.tokens_targeted > 0 ? Math.round((n.tokens_sent / n.tokens_targeted) * 100) : 0;
+                document.getElementById('detail-stale').textContent = stale.toLocaleString();
+                var failWrap = document.getElementById('detail-failed-wrap');
+                if (realFailed > 0) {
+                    document.getElementById('detail-failed').textContent = realFailed.toLocaleString();
+                    failWrap.style.display = '';
+                } else {
+                    failWrap.style.display = 'none';
+                }
                 document.getElementById('detail-progress').style.width = rate + '%';
                 document.getElementById('detail-rate').textContent = rate + '% delivery rate';
             } else {
