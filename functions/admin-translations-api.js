@@ -128,10 +128,15 @@ export async function onRequest(context) {
 
         // ── UPSERT by key_id (about page translations) ────────────────────
         if (action === 'upsert_by_key') {
-            const { key_id, kurdish_text } = body;
+            const { key_id, kurdish_text, page, context } = body;
             if (!key_id) return json({ error: 'key_id required' }, 400, corsHeaders);
             const { error } = await supabase.from('kurdish_translations')
-                .upsert({ key_id, kurdish_text: kurdish_text || '' }, { onConflict: 'key_id' });
+                .upsert({
+                    key_id,
+                    kurdish_text: kurdish_text || '',
+                    context: context || '',
+                    page: page || 'about'
+                }, { onConflict: 'key_id' });
             if (error) return json({ error: error.message }, 500, corsHeaders);
             return json({ success: true });
         }
