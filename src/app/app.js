@@ -1,4 +1,4 @@
-/* Tafsir Kurd - Mobile App v2.0 */
+﻿/* Tafsir Kurd - Mobile App v2.0 */
 /* Pure DOM methods only - no innerHTML for security */
 
 /* ── localStorage quota guard ──────────────────────────────────────────────────
@@ -723,7 +723,7 @@ var S={
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:'qcf1',
-  mushafFontSize:Math.min(28,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||28)),
+  mushafFontSize:Math.min(26,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26)),
   mushafLineH:Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8)),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
@@ -5231,7 +5231,7 @@ App.openMushafSettings=function(){
   var fsVal=el('span','stepper-val',S.mushafFontSize+'px');
   var fsMBtn,fsPBtn;
   function setFsSize(v){
-    v=Math.max(25,Math.min(28,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
+    v=Math.max(25,Math.min(26,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
     document.documentElement.style.setProperty('--mushaf-size',v+'px');
     localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));
     if(fsMBtn)fsMBtn.disabled=(v<=25);if(fsPBtn)fsPBtn.disabled=(v>=28);
@@ -5245,7 +5245,7 @@ App.openMushafSettings=function(){
   fsMBtn=el('button','stepper-btn','-');fsPBtn=el('button','stepper-btn','+');
   on(fsMBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize-1);});
   on(fsPBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize+1);});
-  fsMBtn.disabled=(S.mushafFontSize<=25);fsPBtn.disabled=(S.mushafFontSize>=28);
+  fsMBtn.disabled=(S.mushafFontSize<=25);fsPBtn.disabled=(S.mushafFontSize>=26);
   fsCtrl.appendChild(fsMBtn);fsCtrl.appendChild(fsVal);fsCtrl.appendChild(fsPBtn);
   body.appendChild(fsCtrl);
 
@@ -8427,7 +8427,7 @@ function applySyncData(data){
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
   S.mushafFont='qcf1';
   try{localStorage.setItem('mushafFont','qcf1');}catch(e){}
-  S.mushafFontSize=Math.min(28,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||28));
+  S.mushafFontSize=Math.min(26,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||26));
   S.mushafLineH=Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
