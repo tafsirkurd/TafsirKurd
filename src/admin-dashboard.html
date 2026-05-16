@@ -2492,6 +2492,7 @@
                                 <tr>
                                     <th>Time</th>
                                     <th>Platform</th>
+                                    <th>Session</th>
                                     <th>City</th>
                                     <th>Status</th>
                                     <th>Cache Age</th>
@@ -2501,7 +2502,7 @@
                                 </tr>
                             </thead>
                             <tbody id="prayerHealthBody">
-                                <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
+                                <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -4086,7 +4087,7 @@
 
             if (!events || !events.length) {
                 summaryEl.innerHTML = '<div style="width:100%;color:var(--text-tertiary);font-size:13px;padding-left:20px;">No reports yet.</div>';
-                bodyEl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:13px;">No data yet</td></tr>';
+                bodyEl.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:13px;">No data yet</td></tr>';
                 return;
             }
 
@@ -4121,8 +4122,12 @@
                     : '<span style="color:var(--text-tertiary)">—</span>';
                 var plat = ev.platform || '—';
                 var platIcon = plat === 'ios' ? '🍎' : plat === 'android' ? '🤖' : '🌐';
+                var sessDisplay = ev.session_id
+                    ? '<span style="font-family:monospace;font-size:10px;color:var(--text-tertiary);background:var(--bg2);padding:1px 5px;border-radius:4px" title="' + escHtml(ev.session_id) + '">…' + ev.session_id.slice(-6) + '</span>'
+                    : '<span style="color:var(--text-tertiary)">—</span>';
                 tr.innerHTML = '<td style="font-size:12px;color:var(--text-tertiary)">' + getTimeAgo(new Date(ev.created_at)) + '</td>' +
                     '<td style="font-size:12px">' + platIcon + ' ' + plat + '</td>' +
+                    '<td>' + sessDisplay + '</td>' +
                     '<td style="font-size:12px;font-weight:600">' + (ev.city || '—') + '</td>' +
                     '<td>' + statusBadge + '</td>' +
                     '<td style="font-size:12px;color:var(--text-secondary)">' + age + '</td>' +
@@ -5140,7 +5145,7 @@
                 /* 14 — recent admin actions */
                 supabase.from('admin_activity_log').select('id,admin_name,action_type,description,created_at').order('created_at', { ascending: false }).limit(15),
                 /* 15 — prayer cache health (last 30 events) */
-                supabase.from('prayer_cache_health').select('id,created_at,platform,city,cache_status,stale_reason,cache_age_hours,fajr_shown,changed_from,notifications_rescheduled,error_msg').order('created_at', { ascending: false }).limit(30),
+                supabase.from('prayer_cache_health').select('id,created_at,session_id,platform,city,cache_status,stale_reason,cache_age_hours,fajr_shown,changed_from,notifications_rescheduled,error_msg').order('created_at', { ascending: false }).limit(30),
                 /* 16 — admin stats via CF function (bypasses user_data RLS via service role) */
                 fetch('/admin-stats', {
                     method: 'POST',
