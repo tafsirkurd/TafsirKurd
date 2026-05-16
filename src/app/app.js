@@ -5223,10 +5223,17 @@ App.audioNext=function(){
     S.audio.currentRepeat=0;
   }
   if(S.audio.ayah<s.a){playAyah(S.audio.surah,S.audio.ayah+1)}
-  else if(S.autoAdvance&&S.audio.surah<114){
+  else if(S.audio.surah<114&&(S.mushafMode||S.autoAdvance)){
     var _advSurah=S.audio.surah+1;
     playAyah(_advSurah,1);
-    if(S.tab==='quran')App.openSurah(_advSurah,1);
+    if(S.mushafMode){
+      // Mushaf shows full 604-page Quran — update state and scroll, no re-render
+      S.surah=_advSurah;
+      _scrollMushafToAyah(_advSurah,1,0);
+      updateMushafPlayBtn();
+    } else if(S.tab==='quran'){
+      App.openSurah(_advSurah,1);
+    }
   }
   else{App.audioClose()}
 };
