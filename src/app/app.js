@@ -5241,7 +5241,7 @@ App.openMushafSettings=function(){
   var fsVal=el('span','stepper-val',S.mushafFontSize+'px');
   var fsMBtn,fsPBtn;
   function setFsSize(v){
-    v=Math.max(25,Math.min(26,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
+    v=Math.max(25,Math.min(28,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
     document.documentElement.style.setProperty('--mushaf-size',v+'px');
     localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));
     if(fsMBtn)fsMBtn.disabled=(v<=25);if(fsPBtn)fsPBtn.disabled=(v>=28);
@@ -5255,7 +5255,7 @@ App.openMushafSettings=function(){
   fsMBtn=el('button','stepper-btn','-');fsPBtn=el('button','stepper-btn','+');
   on(fsMBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize-1);});
   on(fsPBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize+1);});
-  fsMBtn.disabled=(S.mushafFontSize<=25);fsPBtn.disabled=(S.mushafFontSize>=26);
+  fsMBtn.disabled=(S.mushafFontSize<=25);fsPBtn.disabled=(S.mushafFontSize>=28);
   fsCtrl.appendChild(fsMBtn);fsCtrl.appendChild(fsVal);fsCtrl.appendChild(fsPBtn);
   body.appendChild(fsCtrl);
 
