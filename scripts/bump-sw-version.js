@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const swPath = path.join(__dirname, '../src/service-worker.js');
+const indexPath = path.join(__dirname, '../src/app/index.html');
 const isProduction = process.argv[2] === 'production-deploy';
 
 try {
@@ -26,6 +27,15 @@ try {
 
         fs.writeFileSync(swPath, swContent);
         console.log(`✅ Service worker cache bumped: tafsir-kurd-v${nextVersion}`);
+
+        // Also bump the ?v= query param on app.js in index.html so browsers
+        // with the old immutable-cached JS fetch the new file immediately
+        if (fs.existsSync(indexPath)) {
+            let html = fs.readFileSync(indexPath, 'utf8');
+            html = html.replace(/app\/app\.js\?v=[^"']+/, `app/app.js?v=${nextVersion}`);
+            fs.writeFileSync(indexPath, html);
+            console.log(`✅ app.js cache-bust param updated: ?v=${nextVersion}`);
+        }
 
         if (isProduction) {
             console.log('🚀 Production deployment mode');
