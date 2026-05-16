@@ -15,13 +15,24 @@ export async function onRequest(context) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
     if (request.method !== 'POST') return json({ error: 'POST only' }, 405, corsHeaders);
 
+    let body;
+    try {
+        body = await request.json();
+    } catch (_) {
+        return json({ error: 'Invalid JSON body' }, 400, corsHeaders);
+    }
+    const { action } = body;
+
+    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('admin-translations-api: missing env vars SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+        return json({ error: 'Server config error', action: action || null }, 500, corsHeaders);
+    }
+
     const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
         auth: { autoRefreshToken: false, persistSession: false }
     });
 
     try {
-        const body = await request.json();
-        const { action } = body;
 
         const token = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim()
             || (body.token || '').trim();
@@ -281,8 +292,8 @@ export async function onRequest(context) {
         return json({ error: 'Unknown action' }, 400, corsHeaders);
 
     } catch (err) {
-        console.error('admin-translations error [action=' + (body?.action || '?') + ']:', err?.message || err);
-        return json({ error: 'Internal server error', action: body?.action || null, detail: err?.message || null }, 500, corsHeaders);
+        console.error('admin-translations error [action=' + (action || '?') + ']:', err?.message || err);
+        return json({ error: 'Internal server error', action: action || null, detail: err?.message || null }, 500, corsHeaders);
     }
 }
 
