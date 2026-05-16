@@ -3442,6 +3442,8 @@
                 }
             } catch(e) { alert('Save failed: ' + e.message); return; }
             if (badge) { badge.textContent = val ? 'Set' : 'Not Set'; badge.className = 'status-badge ' + (val ? 'set' : 'empty'); }
+            // Bump i18n cache version so all app clients pick up the new text on next load
+            try { await adminTranslationsAPI('bump_i18n_version'); } catch(_) {}
         }
 
         function getPlatformData() {

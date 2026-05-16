@@ -745,7 +745,7 @@ var S={
   rm:{mode:'single',playCount:2,verseRepeat:1,delay:0,isPlaying:false,currentPlay:0},
   readSession:null,
   todayVerses:null,
-  supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,lastSyncTime:0,realtimeChannel:null,
+  supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,syncErrorDetail:null,lastSyncTime:0,realtimeChannel:null,
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:'qcf1',
@@ -8304,7 +8304,7 @@ function _syncStatusInfo(){
   if(!S.user)return null;
   if(!navigator.onLine)return{dot:'⚠',txt:t('settings.sync_status_offline'),col:'#f09000'};
   if(S.isSyncing)return{dot:'⟳',txt:t('settings.sync_status_syncing'),col:'var(--text3)'};
-  if(S.syncFailed)return{dot:'✕',txt:t('settings.sync_status_failed'),col:'#e53935'};
+  if(S.syncFailed)return{dot:'✕',txt:(t('settings.sync_status_failed')||'Sync failed')+(S.syncErrorDetail?' ['+S.syncErrorDetail.slice(0,60)+']':''),col:'#e53935'};
   if(S.lastSyncTime){
     var ts=new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     return{dot:'✓',txt:(t('settings.sync_last')||'')+' '+ts,col:'#43a047'};
@@ -8636,11 +8636,13 @@ function syncToCloud(){
   },{onConflict:'user_id',ignoreDuplicates:false}).then(function(resp){
     if(resp.error){
       console.error('Sync error:',resp.error);
+      S.syncErrorDetail=(resp.error.code||'')+' '+(resp.error.message||'');
       S.syncFailed=true;
       _schedSyncRetry();
     }else{
       S.lastSyncTime=Date.now();
       S.syncFailed=false;
+      S.syncErrorDetail=null;
       localStorage.setItem('_lastSyncTime',payload._syncTime);
       _syncRetryDelay=2000;
     }
@@ -8671,6 +8673,7 @@ function loadFromCloud(cb){
         syncToCloud(); // first login — upload local data
       }else{
         console.error('Load cloud error:',resp.error);
+        S.syncErrorDetail=(resp.error.code||'')+' '+(resp.error.message||'');
         // JWT/auth errors — try refreshing the token once before giving up
         var isAuthErr=resp.error.status===401||resp.error.message&&resp.error.message.indexOf('JWT')!==-1;
         if(isAuthErr&&S.supabase){
@@ -8682,7 +8685,7 @@ function loadFromCloud(cb){
               S.syncFailed=true;_updateSyncPanelStatus();
               if(cb)cb();
             }
-          }).catch(function(){S.syncFailed=true;_updateSyncPanelStatus();if(cb)cb();});
+          }).catch(function(re){S.syncErrorDetail=String(re);S.syncFailed=true;_updateSyncPanelStatus();if(cb)cb();});
           return;
         }
         S.syncFailed=true;_updateSyncPanelStatus();
@@ -8700,7 +8703,7 @@ function loadFromCloud(cb){
       renderCurrentTab();
     }
     if(cb)cb();
-  }).catch(function(e){console.error('Load cloud failed:',e);S.syncFailed=true;_updateSyncPanelStatus();if(cb)cb();});
+  }).catch(function(e){console.error('Load cloud failed:',e);S.syncErrorDetail=String(e);S.syncFailed=true;_updateSyncPanelStatus();if(cb)cb();});
 }
 
 // ── Realtime (instant cross-device push) ─────────────────────────────────────
