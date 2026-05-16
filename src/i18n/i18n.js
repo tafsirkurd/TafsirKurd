@@ -212,6 +212,11 @@ function mergeRemote(){
       if(_fetchTimes.length > 20) _fetchTimes.shift(); // keep last 20 for avg
 
       // ── Validate remote payload ──────────────────────────────────────────
+      // Empty object {} = server timeout fallback (not a real payload rejection)
+      if(remote && typeof remote === 'object' && Object.keys(remote).length === 0){
+        console.log('[i18n] Remote: empty response (timeout) — kept cached/bundled');
+        throw Object.assign(new Error('empty_response'), {name:'OfflineError'});
+      }
       var check = _validateRemotePayload(remote);
       if(!check.valid){
         _rejectedCount++;
