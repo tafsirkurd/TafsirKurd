@@ -433,7 +433,6 @@ function _initDbData(onDone) {
   }
 }
 
-var _sbRetries = 0;
 var _fetchQueue = []; /* callbacks waiting for _fetchDbData to complete */
 
 function _fetchDbData(onDone) {
@@ -444,25 +443,29 @@ function _fetchDbData(onDone) {
   }
   var sb = _getSupabase();
   if (!sb) {
-    /* Supabase not initialised yet — retry every 700ms, give up after 8s */
-    if (_sbRetries < 12) {
-      _sbRetries++;
-      if (onDone) _fetchQueue.push(onDone);
-      setTimeout(function() {
+    /* Supabase not ready yet — subscribe once; fire as soon as app.js sets it */
+    if (onDone) _fetchQueue.push(onDone);
+    if (window._onAppSupabaseReady) {
+      window._onAppSupabaseReady(function() {
         var cbs = _fetchQueue.splice(0);
-        _fetchDbData(function(){
+        _loadingDb = false;
+        _fetchDbData(function() {
           _dbLoaded = true;
           cbs.forEach(function(cb){ try{cb();}catch(e){} });
         });
-      }, 700);
+      });
     } else {
-      _sbRetries = 0;
-      _dbLoaded = true;
-      if (onDone) onDone();
+      /* Fallback: app.js not yet loaded, retry once after 1s */
+      setTimeout(function() {
+        var cbs = _fetchQueue.splice(0);
+        _fetchDbData(function() {
+          _dbLoaded = true;
+          cbs.forEach(function(cb){ try{cb();}catch(e){} });
+        });
+      }, 1000);
     }
     return;
   }
-  _sbRetries = 0;
   if (onDone) _fetchQueue.push(onDone);
 
   _loadingDb = true;
@@ -475,7 +478,11 @@ function _fetchDbData(onDone) {
   var asma99Promise   = sb.from('gencine_asma99').select('n,ku');
   var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order', { ascending: false }).order('created_at', { ascending: false });
   var adhkarPromise   = sb.from('gencine_adhkar').select('*').eq('active', true).order('category_key').order('sort_order');
-  Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise, tasbihPromise, asma99Promise, adhkarPromise]).then(function(results) {
+  var _gcTimeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('gencine_timeout'));},15000);});
+  Promise.race([
+    Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise, tasbihPromise, asma99Promise, adhkarPromise]),
+    _gcTimeout
+  ]).then(function(results) {
     _loadingDb = false;
     var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4], tasbihRes = results[5], asma99Res = results[6], adhkarRes = results[7];
     if (!catRes.error && catRes.data) {
@@ -510,6 +517,9 @@ function _fetchDbData(onDone) {
   }).catch(function() {
     _loadingDb = false;
     _dbLoaded  = true;
+    // Ensure _dbSections is at least an empty array so _renderHome shows static menu
+    // instead of staying on the skeleton forever when Supabase is unreachable.
+    if (!_dbSections) _dbSections = [];
     if (window._splashReadyGencine) window._splashReadyGencine();
     var cbs = _fetchQueue.splice(0);
     cbs.forEach(function(cb){ try{cb();}catch(e){} });

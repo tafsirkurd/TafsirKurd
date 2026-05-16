@@ -21,19 +21,17 @@ const config: CapacitorConfig = {
     backgroundColor: '#0a0a0a',
   },
   android: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#FFFFFF',
   },
   plugins: {
     SplashScreen: {
       launchAutoHide: false,
       launchShowDuration: 0,
-      // Use branded launch_screen.xml (dark bg + TafsirKurd logo).
-      // The old default "splash" resource pointed to generic Capacitor placeholder PNGs.
       androidSplashResourceName: 'launch_screen',
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       splashImmersive: true,
-      backgroundColor: '#0a0a0a',
+      backgroundColor: '#FFFFFF',
       fadeOutDuration: 200,
     },
     PushNotifications: {

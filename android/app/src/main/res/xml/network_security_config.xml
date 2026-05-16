@@ -1,31 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Pin tafsirkurd.com certificate -->
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">tafsirkurd.com</domain>
-        <pin-set expiration="2027-01-01">
-            <pin digest="SHA-256">SRu1a8Qekt3R9fL5vNuIYKY2eDtIp4+ndKNKUHjbnhQ=</pin>
-            <!-- Cloudflare backup pin (root CA) -->
-            <pin digest="SHA-256">hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Vg=</pin>
-        </pin-set>
-    </domain-config>
-
-    <!-- Pin Supabase endpoint -->
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">supabase.co</domain>
-        <pin-set expiration="2027-01-01">
-            <pin digest="SHA-256">GU2W4j1P24T3sqlI+o6YTnidzz0PI8fB/Gvd2ITfSZE=</pin>
-            <!-- Amazon/AWS backup pin -->
-            <pin digest="SHA-256">++MBgDH5WGvL9Bcn5Be30cRcL0f5O+NyoXuWtQdX1aI=</pin>
-        </pin-set>
-    </domain-config>
-
-    <!-- Allow cleartext for local dev server (localhost only) -->
+    <!-- Allow cleartext for local dev server only -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">localhost</domain>
     </domain-config>
 
-    <!-- Block all cleartext traffic -->
+    <!-- All other traffic: HTTPS only, system CA trust -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system"/>

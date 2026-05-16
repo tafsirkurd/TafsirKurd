@@ -12,7 +12,10 @@
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:background">@null</item>
+        <!-- Keep window background parchment so there is no black flash during the
+             postSplashScreenTheme transition and before the WebView first frame renders.
+             The WebView covers this entirely during normal app usage. -->
+        <item name="android:windowBackground">@color/splashBackground</item>
     </style>
 
     <!-- Launch/splash theme — applied to MainActivity during startup.
@@ -34,12 +37,14 @@
          capacitor.config.ts and draws that instead. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
 
-        <!-- Pre-API 31: dark window so no white flash before Capacitor splash -->
+        <!-- Pre-API 31: parchment window shown immediately before Capacitor splash -->
         <item name="android:windowBackground">@color/splashBackground</item>
 
         <!-- API 31+ SplashScreen API: icon + background -->
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <!-- Match icon circle background to splash background so no badge/shape appears -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/splashBackground</item>
 
         <!-- Restore normal app theme after the system splash exits -->
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>

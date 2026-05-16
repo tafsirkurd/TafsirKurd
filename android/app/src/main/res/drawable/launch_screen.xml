@@ -17,7 +17,7 @@
         android:height="200dp"
         android:gravity="center">
         <bitmap
-            android:src="@mipmap/ic_launcher_foreground"
+            android:src="@drawable/splash_icon"
             android:gravity="center"
             android:tileMode="disabled"/>
     </item>

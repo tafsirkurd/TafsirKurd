@@ -76,6 +76,30 @@
 (function(){
 'use strict';
 
+// ── Android diagnostics logger ──────────────────────────────────────────────
+// Lightweight flag-guarded logger. Enable with: localStorage.setItem('android_debug','1')
+var _androidDebug = (typeof localStorage !== 'undefined' && localStorage.getItem('android_debug') === '1');
+window.AndroidLog = {
+  fetch: function(url, status, source, fromCache, ms, err){
+    if(!_androidDebug) return;
+    var msg = '[FETCH] ' + source + ' | ' + (status||'ERR') + ' | ' + (fromCache?'CACHE':'NET') + ' | ' + (ms||0) + 'ms | ' + url;
+    if(err) msg += ' | ' + (err.message||err);
+    console.log(msg);
+  },
+  tab: function(name, ms){
+    if(!_androidDebug) return;
+    console.log('[TAB] ' + name + ' loaded in ' + ms + 'ms');
+  },
+  img: function(url){
+    if(!_androidDebug) return;
+    console.warn('[IMG FAIL] ' + url);
+  },
+  warn: function(label, msg){
+    if(!_androidDebug) return;
+    console.warn('[' + label + '] ' + msg);
+  }
+};
+
 // ── Global safe-translation helper ──────────────────────────────────────────
 // window.t() returns the KEY STRING when a key is missing (truthy) — this
 // wrapper converts that case to null so || fallback chains always work,
@@ -723,7 +747,7 @@ var S={
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:'qcf1',
-  mushafFontSize:Math.min(32,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||30)),
+  mushafFontSize:Math.min(25,Math.max(23,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||24)),
   mushafLineH:Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8)),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
@@ -1340,7 +1364,12 @@ function _startTabPrerender(){
   _nextJob();
 }
 function loadQuranData(){
-  fetch('/data/quran.json').then(function(r){
+  var ctrl=new AbortController();
+  var _t0=Date.now();
+  var tid=setTimeout(function(){ctrl.abort();},10000);
+  fetch('/data/quran.json',{signal:ctrl.signal}).then(function(r){
+    clearTimeout(tid);
+    AndroidLog.fetch('/data/quran.json',r.status,'quran',false,Date.now()-_t0);
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
@@ -1348,8 +1377,13 @@ function loadQuranData(){
     _dataReady.quran=true;
     _checkDataReady();
   }).catch(function(e){
+    clearTimeout(tid);
+    AndroidLog.fetch('/data/quran.json',0,'quran',false,Date.now()-_t0,e);
     console.error('Quran load error:',e);
     toast(t('error.data_load'));
+    // Unblock splash/pre-render even on failure so app doesn't freeze
+    _dataReady.quran=true;
+    _checkDataReady();
   });
 }
 
@@ -1376,7 +1410,10 @@ function groupTafsirBySurah(data){
 }
 
 function loadTafsirData(){
-  fetch('/data/kurdish_tafsir.json').then(function(r){
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},15000);
+  fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
+    clearTimeout(tid);
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
@@ -1384,6 +1421,7 @@ function loadTafsirData(){
     _dataReady.tafsir=true;
     _checkDataReady();
   }).catch(function(e){
+    clearTimeout(tid);
     console.error('Tafsir load error:',e);
     toast(t('error.tafsir_load'));
     // Retry once after 3 seconds — flag prevents concurrent retry fetches
@@ -1391,12 +1429,15 @@ function loadTafsirData(){
     setTimeout(function(){
       if(S.tafsirData||_tafsirRetrying)return;
       _tafsirRetrying=true;
-      fetch('/data/kurdish_tafsir.json').then(function(r){return r.json()}).then(function(d){
+      var ctrl2=new AbortController();
+      var tid2=setTimeout(function(){ctrl2.abort();},15000);
+      fetch('/data/kurdish_tafsir.json',{signal:ctrl2.signal}).then(function(r){return r.json()}).then(function(d){
+        clearTimeout(tid2);
         S.tafsirData=groupTafsirBySurah(d);
         _dataReady.tafsir=true;
         _checkDataReady();
         toast(t('toast.tafsir_loaded'));
-      }).catch(function(){}).then(function(){_tafsirRetrying=false;});
+      }).catch(function(){clearTimeout(tid2);}).then(function(){_tafsirRetrying=false;});
     },3000);
   });
 }
@@ -1589,7 +1630,11 @@ App.tab=function(name){
     if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}}
     if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){renderSettings();_renderHash.settings=_tabHash('settings');}_warmAboutCache();}
     if(name==='prayer'&&window.PrayerUI){PrayerUI.render();if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();}
-    if(name==='gencine'){_loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});}
+    if(name==='gencine'){
+      // Show loading skeleton immediately while scripts fetch (panel is blank until GencineUI loads)
+      if(!window.GencineUI){var _gcEl=document.getElementById('gencineContent');if(_gcEl&&!_gcEl.firstChild){var _gcSk=document.createElement('div');_gcSk.className='genc-scripts-loading';for(var _gi=0;_gi<3;_gi++){var _gc=document.createElement('div');_gc.className='genc-scripts-loading-card';_gcSk.appendChild(_gc);}_gcEl.appendChild(_gcSk);}}
+      _loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});
+    }
   });
 };
 
@@ -1623,7 +1668,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260508a', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260516a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=31',      function() { _p2 = true; _check(); });
 }
@@ -5241,10 +5286,10 @@ App.openMushafSettings=function(){
   var fsVal=el('span','stepper-val',S.mushafFontSize+'px');
   var fsMBtn,fsPBtn;
   function setFsSize(v){
-    v=Math.max(25,Math.min(32,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
+    v=Math.max(23,Math.min(25,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
     document.documentElement.style.setProperty('--mushaf-size',v+'px');
     localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));
-    if(fsMBtn)fsMBtn.disabled=(v<=25);if(fsPBtn)fsPBtn.disabled=(v>=32);
+    if(fsMBtn)fsMBtn.disabled=(v<=23);if(fsPBtn)fsPBtn.disabled=(v>=25);
     // Re-fit all rendered pages since line widths changed with font size
     requestAnimationFrame(function(){
       var mv=$('mushafView');
@@ -5255,7 +5300,7 @@ App.openMushafSettings=function(){
   fsMBtn=el('button','stepper-btn','-');fsPBtn=el('button','stepper-btn','+');
   on(fsMBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize-1);});
   on(fsPBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize+1);});
-  fsMBtn.disabled=(S.mushafFontSize<=25);fsPBtn.disabled=(S.mushafFontSize>=32);
+  fsMBtn.disabled=(S.mushafFontSize<=23);fsPBtn.disabled=(S.mushafFontSize>=25);
   fsCtrl.appendChild(fsMBtn);fsCtrl.appendChild(fsVal);fsCtrl.appendChild(fsPBtn);
   body.appendChild(fsCtrl);
 
@@ -8104,6 +8149,19 @@ function renderSettings(){
 /* ===== SUPABASE AUTH & CLOUD SYNC ===== */
 var SUPA_CONFIG_URL='https://tafsirkurd.com/config';
 
+// Subscribers that want to be called as soon as window._appSupabase is set.
+// Used by Gencine (dhikr.js) and any other module that needs Supabase early.
+var _appSupabaseReadyCbs=[];
+function _notifySupabaseReady(){
+  var cbs=_appSupabaseReadyCbs.splice(0);
+  cbs.forEach(function(fn){try{fn();}catch(e){}});
+}
+// Exposed globally so dhikr.js and other lazy-loaded modules can subscribe
+window._onAppSupabaseReady=function(fn){
+  if(window._appSupabase){try{fn();}catch(e){}}
+  else _appSupabaseReadyCbs.push(fn);
+};
+
 function initSupabase(cb){
   if(S.supabase){if(cb)cb();return}
   if(!window.supabase){console.warn('Supabase JS library not loaded');if(cb)cb();return}
@@ -8114,12 +8172,18 @@ function initSupabase(cb){
   if(cachedCfg&&cachedCfg.supabaseUrl&&cachedCfg.supabaseKey){
     S.supabase=window.supabase.createClient(cachedCfg.supabaseUrl,cachedCfg.supabaseKey);
     window._appSupabase=S.supabase;
+    _notifySupabaseReady();
     checkAuthSession();
     if(cb)cb();
   }
 
   // Update config from network in background
-  fetch(SUPA_CONFIG_URL).then(function(r){
+  var _supaCfgCtrl=new AbortController();
+  var _supaCfgTid=setTimeout(function(){_supaCfgCtrl.abort();},12000);
+  var _supaCfgT0=Date.now();
+  fetch(SUPA_CONFIG_URL,{signal:_supaCfgCtrl.signal}).then(function(r){
+    clearTimeout(_supaCfgTid);
+    AndroidLog.fetch(SUPA_CONFIG_URL,r.status,'supa-config',false,Date.now()-_supaCfgT0);
     if(!r.ok)throw new Error('Config HTTP '+r.status);
     return r.json();
   }).then(function(cfg){
@@ -8128,6 +8192,7 @@ function initSupabase(cb){
       if(!S.supabase){
         S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
         window._appSupabase=S.supabase;
+        _notifySupabaseReady();
         checkAuthSession();
         if(cb)cb();
       }
@@ -8175,7 +8240,9 @@ function initSupabase(cb){
       window.i18nHealthReportingEnabled = cfg.i18nHealthReportingEnabled!=='false';
     }
   }).catch(function(e){
-    console.warn('Supabase config fetch failed (offline?)');
+    clearTimeout(_supaCfgTid);
+    AndroidLog.fetch(SUPA_CONFIG_URL,0,'supa-config',false,Date.now()-_supaCfgT0,e);
+    console.warn('Supabase config fetch failed:',e&&e.message);
     if(!S.supabase&&cb)cb();
   });
 }
@@ -9942,75 +10009,110 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
 /* ===== ISLAMVOICE ===== */
 var IV_CONFIG_URL='https://tafsirkurd.com/config';
 
+// Callback queue: all callers that arrive while init is in-flight get queued here
+// and fired together when the config fetch resolves or fails — no polling needed.
+var _ivInitCbs=[];
+
 function initIslamVoice(cb){
-  if(S.ivSupabase){if(cb)cb();return}
-  if(S.ivInited){
-    var checkInterval=setInterval(function(){
-      if(S.ivSupabase){clearInterval(checkInterval);if(cb)cb()}
-    },200);
-    setTimeout(function(){clearInterval(checkInterval)},10000);
-    return;
-  }
+  // Already ready — fire immediately
+  if(S.ivSupabase){if(cb)cb();return;}
+
+  // In-flight — queue this callback and return; first fetch will fire it
+  if(S.ivInited){if(cb)_ivInitCbs.push(cb);return;}
   S.ivInited=true;
 
-  // Reuse shared Supabase client if available
+  // Reuse shared Supabase client if already created (common case after first launch)
   if(S.supabase){
     S.ivSupabase=S.supabase;
-    console.log('IslamVoice using shared Supabase client');
     if(cb)cb();
+    var _q=_ivInitCbs.splice(0);_q.forEach(function(fn){try{fn();}catch(e){}});
     return;
   }
 
   if(!window.supabase){
-    console.error('Supabase JS library not loaded');
+    console.error('Supabase JS not loaded');
     S.ivInited=false;
-    renderIvError(t('iv.error.supabase'));
+    _ivInitCbs=[];
+    renderIvError(tSafe('iv.error.supabase'),'server');
     return;
   }
 
-  fetch(IV_CONFIG_URL).then(function(r){
+  if(cb)_ivInitCbs.push(cb);
+
+  var _ivCfgCtrl=new AbortController();
+  var _ivCfgTid=setTimeout(function(){_ivCfgCtrl.abort();},12000);
+  var _ivCfgT0=Date.now();
+  fetch(IV_CONFIG_URL,{signal:_ivCfgCtrl.signal}).then(function(r){
+    clearTimeout(_ivCfgTid);
+    AndroidLog.fetch(IV_CONFIG_URL,r.status,'iv-config',false,Date.now()-_ivCfgT0);
     if(!r.ok)throw new Error('Config HTTP '+r.status);
     return r.json();
   }).then(function(cfg){
     if(cfg.supabaseUrl&&cfg.supabaseKey){
       S.ivSupabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
-      if(!S.supabase)S.supabase=S.ivSupabase;
-      if(cb)cb();
+      if(!S.supabase){S.supabase=S.ivSupabase;window._appSupabase=S.ivSupabase;_notifySupabaseReady();}
+      // Fire all queued callbacks — they will each call ivFetchFresh
+      var _q=_ivInitCbs.splice(0);_q.forEach(function(fn){try{fn();}catch(e){}});
     }else{
-      throw new Error('Missing supabaseUrl or supabaseKey in config');
+      throw new Error('Missing supabaseUrl/supabaseKey');
     }
   }).catch(function(e){
+    clearTimeout(_ivCfgTid);
+    AndroidLog.fetch(IV_CONFIG_URL,0,'iv-config',false,Date.now()-_ivCfgT0,e);
     console.error('IslamVoice init error:',e);
     S.ivInited=false;
-    // Use cached data if available instead of showing error
+    _ivInitCbs=[];
     try{
       var cs=localStorage.getItem('iv_series_cache');
       var ce=localStorage.getItem('iv_episodes_cache');
       if(cs&&ce){S.ivSeries=JSON.parse(cs);S.ivEpisodes=JSON.parse(ce);renderIvGrid();return;}
     }catch(err){}
-    renderIvError(t('iv.error.server'));
+    renderIvError(tSafe('iv.error.server'),!navigator.onLine?'offline':'server');
   });
 }
 
-function renderIvError(msg){
+function renderIvError(msg,type){
   // Never show full-page error when we already have videos to display
   if(S.ivSeries&&S.ivSeries.length){renderIvBanner(msg);return;}
   $('ivLoading').classList.remove('on');
   var grid=$('ivGrid');
   clear(grid);
   grid.style.display='';
-  var err=el('div','iv-empty');
-  err.appendChild(icon('fas fa-exclamation-triangle'));
-  err.appendChild(el('p','',msg||t('error.occurred')));
-  var retryBtn=el('button','iv-refresh');
-  retryBtn.appendChild(icon('fas fa-sync-alt'));
-  retryBtn.appendChild(document.createTextNode(' '+t('iv.retry')));
-  on(retryBtn,'click',function(){
+
+  var isOffline=!navigator.onLine||type==='offline';
+  var isTimeout=type==='timeout';
+
+  // Outer wrapper
+  var wrap=el('div','iv-state-wrap');
+  var card=el('div','iv-state-card');
+
+  // Icon circle
+  var icoWrap=el('div','iv-state-ico '+(isOffline?'iv-state-ico--off':'iv-state-ico--err'));
+  var icoName=isOffline?'fas fa-plug':(isTimeout?'fas fa-clock':'fas fa-circle-exclamation');
+  icoWrap.appendChild(icon(icoName));
+  card.appendChild(icoWrap);
+
+  // Title
+  var titleText=isOffline?(tSafe('iv.error.offline_title')||'ئینتەرنێت نیە'):(isTimeout?(tSafe('iv.error.timeout_title')||'وەخت تەواو بوو'):(tSafe('iv.error.title')||'کێشەیەک هەیە'));
+  card.appendChild(el('div','iv-state-title',titleText));
+
+  // Subtitle — show the technical message only if no i18n title was resolved
+  var subText=msg||tSafe('error.occurred')||'تکایە دووبارە هەوڵبدەوە';
+  card.appendChild(el('div','iv-state-sub',subText));
+
+  // Retry button
+  var btn=el('button','iv-state-btn');
+  var btnIco=icon('fas fa-arrows-rotate');
+  btn.appendChild(btnIco);
+  btn.appendChild(document.createTextNode(' '+(tSafe('iv.retry')||'دووبارە هەوڵبدەوە')));
+  on(btn,'click',function(){
     S.ivInited=false;S.ivSupabase=null;
     loadIslamVoiceData(true);
   });
-  err.appendChild(retryBtn);
-  grid.appendChild(err);
+  card.appendChild(btn);
+
+  wrap.appendChild(card);
+  grid.appendChild(wrap);
 }
 
 function renderIvBanner(msg){
@@ -10020,17 +10122,27 @@ function renderIvBanner(msg){
   if(!grid)return;
   $('ivLoading').classList.remove('on');
   grid.style.display='';
-  var banner=el('div','iv-warn-banner');
+
+  var banner=el('div','iv-notice');
   banner.id='ivWarnBanner';
-  banner.appendChild(icon('fas fa-exclamation-circle'));
-  banner.appendChild(el('span','iv-warn-banner-text',msg||t('iv.partial_load_warn')));
-  var retryBtn=el('button','iv-warn-retry');
-  retryBtn.textContent=t('iv.retry');
+
+  // Icon circle
+  var icoWrap=el('div','iv-notice-ico');
+  icoWrap.appendChild(icon('fas fa-triangle-exclamation'));
+  banner.appendChild(icoWrap);
+
+  // Text
+  banner.appendChild(el('span','iv-notice-text',msg||tSafe('iv.partial_load_warn')||'داتا پۆڵەکی بارکرا'));
+
+  // Retry
+  var retryBtn=el('button','iv-notice-btn');
+  retryBtn.textContent=tSafe('iv.retry')||'نوێکردنەوە';
   on(retryBtn,'click',function(){
     if(banner.parentNode)banner.parentNode.removeChild(banner);
     ivFetchFresh(true);
   });
   banner.appendChild(retryBtn);
+
   if(grid.firstChild)grid.insertBefore(banner,grid.firstChild);
   else grid.appendChild(banner);
 }
@@ -10106,10 +10218,15 @@ function ivFetchFresh(force){
   if(S.ivLoading&&!force)return; // in-flight guard — prevent duplicate fetches
   S.ivLoading=true;
   _ivEpsBySeriesId=null; // invalidate cache — fresh data incoming
+  var _ivFetchT0=Date.now();
 
-  Promise.all([
-    S.ivSupabase.from('islamvoice_series').select('*').order('display_order',{ascending:true}),
-    S.ivSupabase.from('islamvoice_episodes').select('*').or('is_published.eq.true,is_published.is.null').order('episode_number',{ascending:true})
+  var _ivTimeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('iv_timeout'));},15000);});
+  Promise.race([
+    Promise.all([
+      S.ivSupabase.from('islamvoice_series').select('*').order('display_order',{ascending:true}),
+      S.ivSupabase.from('islamvoice_episodes').select('*').or('is_published.eq.true,is_published.is.null').order('episode_number',{ascending:true})
+    ]),
+    _ivTimeout
   ]).then(function(results){
     var seriesRes=results[0];
     var epRes=results[1];
@@ -10118,14 +10235,15 @@ function ivFetchFresh(force){
     if(seriesRes.error||epRes.error){
       console.error('IV load error:',seriesRes.error||epRes.error);
       if(S.ivSeries&&S.ivSeries.length){
-        renderIvBanner(t('iv.partial_load_warn'));
+        renderIvBanner(tSafe('iv.partial_load_warn'));
       }else{
-        renderIvError(t('iv.error.load'));
+        renderIvError(tSafe('iv.error.load'),!navigator.onLine?'offline':null);
       }
       if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
       return;
     }
 
+    AndroidLog.fetch('supabase:islamvoice',200,'islamvoice',false,Date.now()-_ivFetchT0);
     S.ivSeries=seriesRes.data||[];
     S.ivEpisodes=epRes.data||[];
     _buildIvEpsCache();
@@ -10147,11 +10265,13 @@ function ivFetchFresh(force){
     if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
   }).catch(function(e){
     S.ivLoading=false;
+    AndroidLog.fetch('supabase:islamvoice',0,'islamvoice',false,Date.now()-_ivFetchT0,e);
     console.error('IV fetch error:',e);
+    var _errType=(e&&e.message==='iv_timeout')?'timeout':(!navigator.onLine?'offline':null);
     if(S.ivSeries&&S.ivSeries.length){
-      renderIvBanner(t('iv.partial_load_warn'));
+      renderIvBanner(tSafe('iv.partial_load_warn'));
     }else{
-      renderIvError(t('iv.error.load_retry'));
+      renderIvError(tSafe('iv.error.load_retry'),_errType);
     }
     if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
   });
@@ -10479,7 +10599,7 @@ function renderIvGrid(){
       // First 4 cards: eager — browser fetches even in hidden panels
       img.loading=_ivCardIdx<4?'eager':'lazy';
       img.onload=function(){this.parentNode.style.animation='none';this.parentNode.style.background='none'};
-      img.onerror=function(){this.style.display='none'};
+      img.onerror=function(){AndroidLog.img(this.src);this.style.display='none'};
       imgWrap.appendChild(img);
     }
     var fallback=el('div','iv-fallback');
@@ -10575,7 +10695,7 @@ function renderIvEpisodes(seriesId){
     if(thumbUrl){
       var tImg=document.createElement('img');
       tImg.src=thumbUrl;tImg.alt='';tImg.loading='lazy';
-      tImg.onerror=function(){this.style.display='none'};
+      tImg.onerror=function(){AndroidLog.img(this.src);this.style.display='none'};
       thumb.appendChild(tImg);
     }
     var playIcon=el('div','iv-play-icon');

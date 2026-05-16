@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Android 12+ (API 31) splash screen — uses NATIVE android: attributes, NOT AndroidX compat.
+         The compat attributes (without android: prefix) wrap drawables in adaptive icon treatment,
+         producing the white circle/squircle container. Native attributes bypass that wrapper.
+
+         android:windowSplashScreenAnimatedIcon: points to @drawable/splash_logo — a plain
+           BitmapDrawable (not adaptive icon, not mipmap launcher asset). Android 12+ only applies
+           the adaptive icon circle mask when the drawable is an AdaptiveIconDrawable. A BitmapDrawable
+           is shown as-is.
+         android:windowSplashScreenIconBackgroundColor: matches splash background — the icon container
+           circle is still technically drawn but is invisible (same color as background).
+         android:windowSplashScreenBackground: parchment shown from the very first frame.
+         postSplashScreenTheme: restores normal app theme. Uses compat attribute (no android: prefix)
+           because it is a SplashScreen library concept, not a native OS attribute. -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:windowBackground">@color/splashBackground</item>
+        <item name="android:windowSplashScreenBackground">@color/splashBackground</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splashBackground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+
+</resources>
