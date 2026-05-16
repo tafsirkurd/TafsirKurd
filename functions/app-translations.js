@@ -59,16 +59,17 @@ export async function onRequest(context) {
         }
 
         // Global deadline — CF Pages Functions have a 10s wall-clock limit.
-        // We fire at 7s to guarantee we always send a response before CF closes
-        // the connection (ERR_CONNECTION_CLOSED). The 3s buffer absorbs env setup
-        // time + the fact that AbortController signals may not propagate reliably
-        // in this runtime (known CF Workers issue).
+        // We fire at 5s (not 7s) to guarantee we always send a response before
+        // CF closes the connection (ERR_CONNECTION_CLOSED). The 5s buffer absorbs
+        // env setup time + AbortController signals not propagating reliably in
+        // CF Workers (known runtime issue where the signal is ignored and the
+        // fetch runs to completion, consuming the full 10s budget).
         const globalDeadline = new Promise((_, reject) =>
             setTimeout(() => {
                 const e = new Error('global_timeout');
                 e.name = 'AbortError';
                 reject(e);
-            }, 7000)
+            }, 5000)
         );
 
         // Fetch ALL translations across every page/category (paginated — Supabase max 1000/batch).
@@ -84,10 +85,11 @@ export async function onRequest(context) {
             let rows = [];
             let offset = 0;
             while (true) {
-                // Per-batch AbortController: 3s limit leaves room for 2 batches + JSON parse
-                // within the 7s global deadline. Reduced from 4s to match tighter budget.
+                // Per-batch AbortController: 2s limit leaves room for 2 batches within the
+                // 5s global deadline. AbortController may be ignored in CF Workers runtime,
+                // so the global deadline is the real backstop.
                 const controller = new AbortController();
-                const tid = setTimeout(() => controller.abort(), 3000);
+                const tid = setTimeout(() => controller.abort(), 2000);
                 let res;
                 try {
                     res = await fetch(
@@ -132,8 +134,10 @@ export async function onRequest(context) {
                 status: 502, headers: corsHeaders
             });
         }
-        return new Response(JSON.stringify({ error: isTimeout ? 'timeout' : 'Internal error' }), {
-            status: isTimeout ? 504 : 500, headers: corsHeaders
+        // On timeout: return empty translations (200) so the app uses its built-in
+        // fallback strings instead of showing a console error. On other errors: 500.
+        return new Response(JSON.stringify(isTimeout ? {} : { error: 'Internal error' }), {
+            status: isTimeout ? 200 : 500, headers: corsHeaders
         });
     }
 }
