@@ -3774,6 +3774,16 @@ function loadMushafPageQCF(pageEl,pageNum){
       if(S.audio.playing&&S.audio.surah===S.surah)_hlRestoreMushafPage(pageEl);
       var _renderMs=Date.now()-_rT;
       var _total=Date.now()-_t0;
+      // Re-fit once QCF1/QCF2 font actually downloads (fontP resolved instantly so
+      // the first RAF below measures with the fallback font — this corrects it)
+      if(font==='qcf1'||font==='qcf2'){
+        var _qcfFam=(font==='qcf2')?"1em 'QCFv2p"+pageNum+"'":"1em 'QCFv1p"+pageNum+"'";
+        if(document.fonts&&document.fonts.load){
+          document.fonts.load(_qcfFam).then(function(){
+            requestAnimationFrame(function(){_fitQCFLines(pageEl);});
+          });
+        }
+      }
       // Integrity validation + line auto-fit — runs after DOM commit
       requestAnimationFrame(function(){
         _fitQCFLines(pageEl);
