@@ -135,7 +135,8 @@ export async function onRequest(context) {
                     key_id,
                     kurdish_text: kurdish_text || '',
                     context: context || '',
-                    page: page || 'about'
+                    page: page || 'about',
+                    category: body.category || 'general'
                 }, { onConflict: 'key_id' });
             if (error) return json({ error: error.message }, 500, corsHeaders);
             return json({ success: true });
