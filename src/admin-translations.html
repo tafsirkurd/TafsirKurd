@@ -2669,6 +2669,60 @@
                     </div>
                 </div>
 
+                <h3 class="section-divider">سوپاسنامە (Thanks)</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Texts shown in the Thanks sheet and nav row.</p>
+                <div class="about-fields-grid">
+                    <div class="about-field-card">
+                        <div class="about-field-label">Nav Subtitle</div>
+                        <div class="about-field-desc"><code>thanks_nav_sub</code></div>
+                        <span class="status-badge empty" id="status-thanks_nav_sub">Not Set</span>
+                        <input class="about-field-input" id="val-thanks_nav_sub" dir="rtl" placeholder="بۆ هەر کەسێک یارمەتیدا">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('thanks_nav_sub')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Hero Role</div>
+                        <div class="about-field-desc"><code>thanks_hero_role</code></div>
+                        <span class="status-badge empty" id="status-thanks_hero_role">Not Set</span>
+                        <input class="about-field-input" id="val-thanks_hero_role" dir="rtl" placeholder="بۆ هەموو دڵسۆزانیێن ڤی پرۆژەی">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('thanks_hero_role')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Quote</div>
+                        <div class="about-field-desc"><code>thanks_quote</code></div>
+                        <span class="status-badge empty" id="status-thanks_quote">Not Set</span>
+                        <textarea class="about-field-input" id="val-thanks_quote" dir="rtl" rows="3" placeholder="ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن..."></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('thanks_quote')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Paragraph 1</div>
+                        <div class="about-field-desc"><code>thanks_para1</code></div>
+                        <span class="status-badge empty" id="status-thanks_para1">Not Set</span>
+                        <textarea class="about-field-input" id="val-thanks_para1" dir="rtl" rows="3" placeholder="ئەڤ ئەپلیكەیشنە بەرهەمێ کارەکێ ب کۆم و دڵسۆزانەیە..."></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('thanks_para1')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Paragraph 2</div>
+                        <div class="about-field-desc"><code>thanks_para2</code></div>
+                        <span class="status-badge empty" id="status-thanks_para2">Not Set</span>
+                        <textarea class="about-field-input" id="val-thanks_para2" dir="rtl" rows="3" placeholder="د هەمان دەم دا، سوپاسیا هەوە یێن ئەزیز..."></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('thanks_para2')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Dua Label</div>
+                        <div class="about-field-desc"><code>thanks_dua_label</code></div>
+                        <span class="status-badge empty" id="status-thanks_dua_label">Not Set</span>
+                        <input class="about-field-input" id="val-thanks_dua_label" dir="rtl" placeholder="دوعا">
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('thanks_dua_label')">Save</button></div>
+                    </div>
+                    <div class="about-field-card">
+                        <div class="about-field-label">Dua Text</div>
+                        <div class="about-field-desc"><code>thanks_dua_text</code></div>
+                        <span class="status-badge empty" id="status-thanks_dua_text">Not Set</span>
+                        <textarea class="about-field-input" id="val-thanks_dua_text" dir="rtl" rows="3" placeholder="ژ خودایێ میهرەبان دخۆازم خێر و بەرەکەتێ..."></textarea>
+                        <div class="image-card-actions" style="margin-top:10px"><button class="btn btn-primary" onclick="saveAboutText('thanks_dua_text')">Save</button></div>
+                    </div>
+                </div>
+
                 <h3 class="section-divider">Social Links</h3>
                 <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Icon buttons shown in app Settings. Leave blank to hide.</p>
                 <div class="about-fields-grid">
@@ -3337,7 +3391,10 @@
             'founder_value3_title','founder_value3_desc','founder_value4_title','founder_value4_desc',
             'founder_dua_label','founder_dua_title','founder_dua_desc',
             'founder_quote2_arabic','founder_quote2_translation','founder_quote2_ref',
-            'founder_closing_title','founder_closing_desc'
+            'founder_closing_title','founder_closing_desc',
+            // thanks sheet keys (7)
+            'thanks_nav_sub','thanks_hero_role','thanks_quote',
+            'thanks_para1','thanks_para2','thanks_dua_label','thanks_dua_text'
         ];
         const ABOUT_TEXT_KEYS = [
             ...ABOUT_KT_KEYS,
