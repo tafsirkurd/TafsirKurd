@@ -1841,7 +1841,8 @@
         snapshot_stale:      snapshot ? (Date.now() > (snapshot.validUntil || Infinity)) : null
       };
       console.log('[WidgetHealth] reporting status=' + payload.status + ' city=' + payload.city);
-      fetch('/widget-health-report', {
+      var _whrUrl = (platform === 'web') ? '/widget-health-report' : 'https://tafsirkurd.com/widget-health-report';
+      fetch(_whrUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
