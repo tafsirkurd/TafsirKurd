@@ -263,6 +263,10 @@
                     <div class="stat-value" id="cmStatLatestBuild">—</div>
                     <div class="stat-label">Latest Build #</div>
                 </div>
+                <div class="stat-card" style="border-top:3px solid #f59e0b">
+                    <div class="stat-value" id="cmStatMinUsed">—</div>
+                    <div class="stat-label" id="cmStatMinLabel">Min Used (month)</div>
+                </div>
             </div>
 
             <!-- Builds list -->
@@ -350,7 +354,11 @@
         return {success:'done',failed:'error',error:'error',running:'running'}[s]||'pending';
     }
     function cmStepIcon(s) {
-        return {success:'✓',failed:'✗',error:'✗',running:'▶',skipped:'—'}[s]||'○';
+        if (s === 'running')
+            return '<span style="display:inline-block;width:11px;height:11px;border:2px solid rgba(249,115,22,.25);border-top-color:#f97316;border-radius:50%;animation:spin .75s linear infinite;vertical-align:middle;flex-shrink:0"></span>';
+        if (!s || s === 'pending')
+            return '<span style="display:inline-block;width:9px;height:9px;border:2px solid var(--border-light);border-radius:50%;opacity:.5;vertical-align:middle"></span>';
+        return {success:'✓',failed:'✗',error:'✗',skipped:'—'}[s]||'○';
     }
     function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -451,7 +459,7 @@
         if (!container) return;
         if (btn) btn.disabled = true;
         try {
-            var r = await fetch('https://api.codemagic.io/builds?appId='+CM_APP_ID+'&branch=main&limit=10', {
+            var r = await fetch('https://api.codemagic.io/builds?appId='+CM_APP_ID+'&branch=main&limit=50', {
                 headers: { 'x-auth-token': CM_TOKEN }
             });
             var j = await r.json();
@@ -475,6 +483,22 @@
             var sa = document.getElementById('cmStatActive');  if(sa) sa.textContent=active;
             var sd = document.getElementById('cmStatAvgDur');  if(sd) sd.textContent=avgDur?cmFmtDur(avgDur):'—';
             var sl = document.getElementById('cmStatLatestBuild'); if(sl) sl.textContent=latestBuild||'—';
+
+            // Monthly usage minutes (billing resets on 1st of each month)
+            var _now = new Date();
+            var _monthStart = new Date(_now.getFullYear(), _now.getMonth(), 1);
+            var _monthName = _now.toLocaleString('en-US',{month:'short'});
+            var _monthBuilds = builds.filter(function(b){ return b.startedAt && new Date(b.startedAt) >= _monthStart; });
+            var _totalSec = _monthBuilds.reduce(function(acc,b){
+                if (b.startedAt && b.finishedAt) return acc + Math.round((new Date(b.finishedAt)-new Date(b.startedAt))/1000);
+                if (b.startedAt && cmIsActive(b.status)) return acc + Math.round((Date.now()-new Date(b.startedAt).getTime())/1000);
+                return acc;
+            }, 0);
+            var _totalMin = Math.ceil(_totalSec / 60);
+            var smm = document.getElementById('cmStatMinUsed');
+            var sml = document.getElementById('cmStatMinLabel');
+            if (smm) smm.textContent = _totalMin + ' min';
+            if (sml) sml.textContent = 'Min Used (' + _monthName + ')';
 
             if (!builds.length) {
                 container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-tertiary);font-size:13px">No builds found.</div>';
