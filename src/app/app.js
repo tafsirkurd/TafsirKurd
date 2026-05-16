@@ -408,6 +408,8 @@ window.ForceUpdate = (function(){
 
 /* ===== i18n ===== */
 function t(k,v){return window.t?window.t(k,v):k}
+// Read from kurdish_translations first (admin-editable), fall back to site_settings or hardcoded
+function _ft(key,fb){var v=window.t&&window.t(key);return(v&&v!==key)?v:(fb||'');}
 
 /* ===== HELPERS ===== */
 function $(id){return document.getElementById(id)}
@@ -7481,9 +7483,6 @@ async function openAboutSheet(type){
   function _addBlocks(parent,text){
     (text||'').split('\n\n').filter(Boolean).forEach(function(p){parent.appendChild(el('div','cfg-sheet-para',p));});
   }
-  // Read from kurdish_translations first (where admin saves), fall back to site_settings
-  function _ft(key,fb){var v=window.t&&window.t(key);return(v&&v!==key)?v:(fb||'');}
-
   if(type==='founder'){
     var fname=_ft('founder_name',ss.founder_name)||'سامان عبدالرحمن عادل';
     titleEl.textContent=fname;
