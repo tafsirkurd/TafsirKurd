@@ -9887,6 +9887,8 @@ function initIslamVoice(cb){
 }
 
 function renderIvError(msg){
+  // Never show full-page error when we already have videos to display
+  if(S.ivSeries&&S.ivSeries.length){renderIvBanner(msg);return;}
   $('ivLoading').classList.remove('on');
   var grid=$('ivGrid');
   clear(grid);
@@ -9903,6 +9905,28 @@ function renderIvError(msg){
   });
   err.appendChild(retryBtn);
   grid.appendChild(err);
+}
+
+function renderIvBanner(msg){
+  var existing=document.getElementById('ivWarnBanner');
+  if(existing&&existing.parentNode)existing.parentNode.removeChild(existing);
+  var grid=$('ivGrid');
+  if(!grid)return;
+  $('ivLoading').classList.remove('on');
+  grid.style.display='';
+  var banner=el('div','iv-warn-banner');
+  banner.id='ivWarnBanner';
+  banner.appendChild(icon('fas fa-exclamation-circle'));
+  banner.appendChild(el('span','iv-warn-banner-text',msg||t('iv.partial_load_warn')));
+  var retryBtn=el('button','iv-warn-retry');
+  retryBtn.textContent=t('iv.retry');
+  on(retryBtn,'click',function(){
+    if(banner.parentNode)banner.parentNode.removeChild(banner);
+    ivFetchFresh(true);
+  });
+  banner.appendChild(retryBtn);
+  if(grid.firstChild)grid.insertBefore(banner,grid.firstChild);
+  else grid.appendChild(banner);
 }
 
 // Episodes grouped by series_id — avoids O(series*episodes) filter on every renderIvGrid call.
@@ -9935,29 +9959,30 @@ function preloadIvThumbnails(){
 }
 
 function loadIslamVoiceData(force){
-  // Only show loading spinner when we have no data at all.
+  // Always pre-populate from cache into memory — even on force=true — so that
+  // a network failure degrades to an inline banner rather than a blank error page.
   if(!S.ivSeries){
-    renderIvLoading();
-  }
-
-  // Load from cache first for instant display
-  if(!force){
     try{
       var cs=localStorage.getItem('iv_series_cache');
       var ce=localStorage.getItem('iv_episodes_cache');
-      if(cs&&ce){
-        S.ivSeries=JSON.parse(cs);
-        S.ivEpisodes=JSON.parse(ce);
-        _buildIvEpsCache();
-        renderIvGrid();
-        preloadIvThumbnails(); // kick off thumbnail fetches before panel is visible
-        if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
-      }
+      if(cs&&ce){S.ivSeries=JSON.parse(cs);S.ivEpisodes=JSON.parse(ce);_buildIvEpsCache();}
     }catch(e){}
   }
 
+  // Only show loading spinner when we have no data at all.
+  if(!S.ivSeries||!S.ivSeries.length){
+    renderIvLoading();
+  }
+
+  // Render cached data immediately for instant display (non-force)
+  if(!force&&S.ivSeries&&S.ivSeries.length){
+    renderIvGrid();
+    preloadIvThumbnails();
+    if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
+  }
+
   // If offline and we already have something to show, stop here
-  if(!navigator.onLine&&S.ivSeries){
+  if(!navigator.onLine&&S.ivSeries&&S.ivSeries.length){
     if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
     return;
   }
@@ -9986,7 +10011,9 @@ function ivFetchFresh(force){
 
     if(seriesRes.error||epRes.error){
       console.error('IV load error:',seriesRes.error||epRes.error);
-      if(!S.ivSeries||!S.ivSeries.length){
+      if(S.ivSeries&&S.ivSeries.length){
+        renderIvBanner(t('iv.partial_load_warn'));
+      }else{
         renderIvError(t('iv.error.load'));
       }
       if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
@@ -10004,6 +10031,10 @@ function ivFetchFresh(force){
       localStorage.setItem('iv_episodes_cache',JSON.stringify(S.ivEpisodes));
     }catch(e){console.warn('IV cache save failed')}
 
+    // Remove any lingering warning banner — fetch succeeded
+    var _wb=document.getElementById('ivWarnBanner');
+    if(_wb&&_wb.parentNode)_wb.parentNode.removeChild(_wb);
+
     renderIvGrid();
     preloadIvThumbnails(); // refresh preload cache with latest data
     if(S.ivCurrentSeries)renderIvEpisodes(S.ivCurrentSeries);
@@ -10011,7 +10042,9 @@ function ivFetchFresh(force){
   }).catch(function(e){
     S.ivLoading=false;
     console.error('IV fetch error:',e);
-    if(!S.ivSeries||!S.ivSeries.length){
+    if(S.ivSeries&&S.ivSeries.length){
+      renderIvBanner(t('iv.partial_load_warn'));
+    }else{
       renderIvError(t('iv.error.load_retry'));
     }
     if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
