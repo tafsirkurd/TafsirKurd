@@ -1014,12 +1014,37 @@ window.GencineUI = {
       grouped[gi].push(key);
     });
 
+    /* Search bar */
+    var adhkarSearchWrap = document.createElement('div');
+    adhkarSearchWrap.className = 'genc-search-wrap';
+    var adhkarPill = document.createElement('div');
+    adhkarPill.className = 'genc-search-pill';
+    var adhkarIco = document.createElement('i');
+    adhkarIco.className = 'fas fa-search genc-search-ico';
+    adhkarPill.appendChild(adhkarIco);
+    var adhkarInput = document.createElement('input');
+    adhkarInput.className = 'genc-search';
+    adhkarInput.type = 'search';
+    adhkarInput.placeholder = T('gencine.adhkar_search_ph', 'گەڕان...');
+    adhkarPill.appendChild(adhkarInput);
+    adhkarSearchWrap.appendChild(adhkarPill);
+    container.appendChild(adhkarSearchWrap);
+
     var wrap = document.createElement('div');
     wrap.className = 'adhkar-list-wrap';
+    container.appendChild(wrap);
 
-    GROUPS.forEach(function(group, gi) {
-      var keys = grouped[gi];
-      if (!keys.length) return;
+    function buildAdhkarGrid(q) {
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      var filter = q ? q.toLowerCase() : '';
+
+      GROUPS.forEach(function(group, gi) {
+        var keys = grouped[gi].filter(function(key) {
+          if (!filter) return true;
+          var label = (window.t && window.t('adhkar.' + key)) || ADHKAR_CAT_LABELS[key] || key;
+          return label.toLowerCase().indexOf(filter) !== -1 || T(group.labelKey, group.label).toLowerCase().indexOf(filter) !== -1;
+        });
+        if (!keys.length) return;
 
       var section = document.createElement('div');
       section.className = 'adhkar-list-section';
@@ -1084,9 +1109,14 @@ window.GencineUI = {
 
       section.appendChild(rows);
       wrap.appendChild(section);
-    });
+      });
+    }
 
-    container.appendChild(wrap);
+    buildAdhkarGrid('');
+
+    adhkarInput.addEventListener('input', function() {
+      buildAdhkarGrid(this.value.trim());
+    });
   },
 
   _renderAdhkarCatList: function(container){
@@ -1157,75 +1187,119 @@ window.GencineUI = {
       return;
     }
 
+    /* Search bar */
+    var duaSearchWrap = document.createElement('div');
+    duaSearchWrap.className = 'genc-search-wrap';
+    var duaPill = document.createElement('div');
+    duaPill.className = 'genc-search-pill';
+    var duaIco = document.createElement('i');
+    duaIco.className = 'fas fa-search genc-search-ico';
+    duaPill.appendChild(duaIco);
+    var duaInput = document.createElement('input');
+    duaInput.className = 'genc-search';
+    duaInput.type = 'search';
+    duaInput.placeholder = T('gencine.dua_search_ph', 'گەڕان...');
+    duaSearchWrap.appendChild(duaPill);
+    duaPill.appendChild(duaInput);
+    container.appendChild(duaSearchWrap);
+
+    /* Count label */
+    var duaCount = document.createElement('div');
+    duaCount.className = 'genc-search-count';
+    duaCount.textContent = duas.length + ' ' + T('gencine.dua_count', 'دوعا');
+    container.appendChild(duaCount);
+
     var list = document.createElement('div');
     list.className = 'dua-list';
+    container.appendChild(list);
 
     var _now = Date.now();
-    duas.forEach(function(dua){
-      var card = document.createElement('div');
-      card.className = 'dua-card';
-
-      if (dua.badge_until && new Date(dua.badge_until).getTime() > _now) {
-        var newChip = document.createElement('div');
-        newChip.className = 'new-badge';
-        newChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
-        card.appendChild(newChip);
+    function buildDuaList(q) {
+      while (list.firstChild) list.removeChild(list.firstChild);
+      var items = q ? duas.filter(function(d){
+        var hay = (d.ar || '') + ' ' + (d.ku || '') + ' ' + (d.source || '');
+        return hay.toLowerCase().indexOf(q.toLowerCase()) !== -1;
+      }) : duas;
+      duaCount.textContent = q
+        ? items.length + ' / ' + duas.length + ' ' + T('gencine.dua_count', 'دوعا')
+        : duas.length + ' ' + T('gencine.dua_count', 'دوعا');
+      if (!items.length) {
+        var noRes = document.createElement('div');
+        noRes.className = 'hadith-empty';
+        noRes.textContent = T('gencine.hadith_empty', 'هیچ ئەنجامێک نەدۆزراوەتەوە');
+        list.appendChild(noRes);
+        return;
       }
+      items.forEach(function(dua){
+        var card = document.createElement('div');
+        card.className = 'dua-card';
 
-      var ar = document.createElement('div');
-      ar.className = 'dua-card-ar';
-      var arText = dua.ar || '';
-      var ayahs = arText.split('۝');
-      if (ayahs.length > 1) {
-        var ARABIC_NUMS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-        function toArabicNum(n) {
-          return String(n).split('').map(function(d){ return ARABIC_NUMS[+d] || d; }).join('');
+        if (dua.badge_until && new Date(dua.badge_until).getTime() > _now) {
+          var newChip = document.createElement('div');
+          newChip.className = 'new-badge';
+          newChip.textContent = (window.t && window.t('iv.new_badge')) || 'نوی';
+          card.appendChild(newChip);
         }
-        var ayahnums = dua.ayahnums || [];
-        var realIdx = 0;
-        ayahs.forEach(function(ayah, idx) {
-          ayah = ayah.trim();
-          if (!ayah) return;
-          ar.appendChild(document.createTextNode(ayah + ' '));
-          var numEl = document.createElement('span');
-          numEl.className = 'dua-ayah-num';
-          numEl.textContent = toArabicNum(ayahnums[realIdx] !== undefined ? ayahnums[realIdx] : idx + 1);
-          realIdx++;
-          ar.appendChild(numEl);
-          ar.appendChild(document.createTextNode(' '));
-        });
-      } else {
-        ar.textContent = arText;
-      }
-      card.appendChild(ar);
 
-      if (dua.ku) {
-        var ku = document.createElement('div');
-        ku.className = 'dua-card-ku';
-        ku.textContent = dua.ku;
-        card.appendChild(ku);
-      }
+        var ar = document.createElement('div');
+        ar.className = 'dua-card-ar';
+        var arText = dua.ar || '';
+        var ayahs = arText.split('۝');
+        if (ayahs.length > 1) {
+          var ARABIC_NUMS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+          function toArabicNum(n) {
+            return String(n).split('').map(function(d){ return ARABIC_NUMS[+d] || d; }).join('');
+          }
+          var ayahnums = dua.ayahnums || [];
+          var realIdx = 0;
+          ayahs.forEach(function(ayah, idx) {
+            ayah = ayah.trim();
+            if (!ayah) return;
+            ar.appendChild(document.createTextNode(ayah + ' '));
+            var numEl = document.createElement('span');
+            numEl.className = 'dua-ayah-num';
+            numEl.textContent = toArabicNum(ayahnums[realIdx] !== undefined ? ayahnums[realIdx] : idx + 1);
+            realIdx++;
+            ar.appendChild(numEl);
+            ar.appendChild(document.createTextNode(' '));
+          });
+        } else {
+          ar.textContent = arText;
+        }
+        card.appendChild(ar);
 
-      var footer = document.createElement('div');
-      footer.className = 'dua-card-footer';
-      var src = document.createElement('span');
-      src.className = 'dua-card-src';
-      src.textContent = dua.source || '';
-      footer.appendChild(src);
-      var repeatCount = dua.repeat || 1;
-      if(repeatCount > 1){
-        var rep = document.createElement('span');
-        rep.className = 'dua-card-repeat';
-        rep.textContent = '\u00D7 ' + repeatCount;
-        footer.appendChild(rep);
-      }
-      var copyText = (dua.ar || '') + (dua.ku ? '\n\n' + dua.ku : '') + (dua.source ? '\n\n' + dua.source : '');
-      footer.appendChild(_mkCopyBtn(copyText));
-      card.appendChild(footer);
-      list.appendChild(card);
+        if (dua.ku) {
+          var ku = document.createElement('div');
+          ku.className = 'dua-card-ku';
+          ku.textContent = dua.ku;
+          card.appendChild(ku);
+        }
+
+        var footer = document.createElement('div');
+        footer.className = 'dua-card-footer';
+        var src = document.createElement('span');
+        src.className = 'dua-card-src';
+        src.textContent = dua.source || '';
+        footer.appendChild(src);
+        var repeatCount = dua.repeat || 1;
+        if (repeatCount > 1) {
+          var rep = document.createElement('span');
+          rep.className = 'dua-card-repeat';
+          rep.textContent = '× ' + repeatCount;
+          footer.appendChild(rep);
+        }
+        var copyText = (dua.ar || '') + (dua.ku ? '\n\n' + dua.ku : '') + (dua.source ? '\n\n' + dua.source : '');
+        footer.appendChild(_mkCopyBtn(copyText));
+        card.appendChild(footer);
+        list.appendChild(card);
+      });
+    }
+
+    buildDuaList('');
+
+    duaInput.addEventListener('input', function() {
+      buildDuaList(this.value.trim());
     });
-
-    container.appendChild(list);
   },
 
   /* ═════════════════════ TASBIH ═════════════════════ */
