@@ -1577,8 +1577,18 @@ private struct LockRow: View {
     }
 }
 
-// Shared debug overlay — true for active staleness diagnosis; flip to false after confirmed fix.
-private let kWidgetDebug = true
+// Debug overlay: visible in DEBUG builds and TestFlight (sandboxReceipt), never in App Store.
+// No manual flag to flip before release — production builds are silent automatically.
+// After the stale-next-prayer diagnosis is complete, remove the sandboxReceipt branch so
+// the overlay disappears from TestFlight too (leave only the #if DEBUG guard).
+private let kWidgetDebug: Bool = {
+    #if DEBUG
+    return true
+    #else
+    // TestFlight and simulator use "sandboxReceipt"; App Store uses "receipt".
+    return Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
+    #endif
+}()
 
 private struct WidgetDebugOverlay: View {
     let entry:  PrayerEntry
