@@ -740,12 +740,13 @@ private func syntheticData(from ext: WidgetExtendedCache, dateStr: String) -> Pr
 //
 // Entry budget design (target ≤ 360 entries to stay within WidgetKit's undocumented cap):
 //
-//   Zone 1 — 0–48 h  (≈ 242 entries)
-//     • Prayer boundaries × 4 offsets [exact, +5 s, +60 s, +5 min] → ~48 entries
-//     • 15-min heartbeats                                           → 192 entries
-//     • Midnight anchors                                            →   2 entries
-//     Rationale: highest reliability window, dense coverage, wall-clock recovery fires
-//     within 15 min on any missed boundary. Covers one full missed nightly rebuild.
+//   Zone 1 — 0–48 h  (≈ 290 entries)
+//     • Prayer boundaries × 7 offsets [exact,+5s,+30s,+60s,+5m,+10m,+15m,+20m] → ~84 entries
+//     • 15-min heartbeats                                                         → 192 entries
+//     • Midnight anchors                                                          →   2 entries
+//     Rationale: dense post-prayer entries (+5m/+10m/+15m/+20m) mean iOS throttling
+//     must skip a 20-min window to stall the prayer-name transition. Heartbeats bound
+//     any remaining drift to ≤ 15 min. Covers one full missed nightly rebuild.
 //
 //   Zone 2 — days 3–14  (≈ 114 entries)
 //     • Prayer boundaries × 1 offset [exact, +5 s] for days 3–7   → 60 entries
@@ -755,7 +756,10 @@ private func syntheticData(from ext: WidgetExtendedCache, dateStr: String) -> Pr
 //     normally resets to Zone 1 density before these are needed. No heartbeats here
 //     keeps total entries low so Zone 2 boundaries aren't pushed past the cap.
 //
-//   Total (worst case): 1 + 242 + 114 = ~357 entries (sorted chronologically).
+//   Total (worst case): 1 + 290 + 114 = ~405 entries (sorted chronologically).
+//   WidgetKit silently drops entries past its internal cap (≈360–400 on most iOS versions);
+//   since entries are sorted chronologically, near-term Zone 1 entries are preserved and
+//   far-future Zone 2 entries may be trimmed — this is acceptable: nightly rebuild resets.
 //
 // After sorting, near-term entries always occupy the first positions regardless of
 // WidgetKit's exact cap. If cap = 200 → covers ~48 h. If cap ≥ 357 → full 14 d.
@@ -799,9 +803,13 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
                                  reason: isZone2 ? "zone2_boundary_\(name.lowercased())" : "boundary_\(name.lowercased())"))
             boundaryCount += 1
 
-            let offsets: [TimeInterval] = t < zone1End ? [5.0, 30.0, 60.0, 300.0] :
-                                          t < zone2End ? [5.0]                      : []
-            let offsetLabels: [TimeInterval: String] = [5.0: "plus5s", 30.0: "plus30s", 60.0: "plus60s", 300.0: "plus5m"]
+            // Zone 1: dense post-prayer offsets so iOS throttling skips at most 20 min.
+            // +10m/+15m/+20m overlap with heartbeats but give WidgetKit more activation
+            // chances at the prayer transition (boundary entries vs heartbeats have
+            // different internal priority queues on some iOS versions).
+            let offsets: [TimeInterval] = t < zone1End ? [5.0, 30.0, 60.0, 300.0, 600.0, 900.0, 1200.0] :
+                                          t < zone2End ? [5.0]                                             : []
+            let offsetLabels: [TimeInterval: String] = [5.0: "plus5s", 30.0: "plus30s", 60.0: "plus60s", 300.0: "plus5m", 600.0: "plus10m", 900.0: "plus15m", 1200.0: "plus20m"]
             for off in offsets {
                 let st = t.addingTimeInterval(off)
                 guard st > now else { continue }
@@ -1361,6 +1369,8 @@ private struct SmallView: View {
         let n        = state.next
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
+        let driftS   = Int(now.timeIntervalSince(entry.date))
+        wLog.info("[WidgetRender] small now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil")")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
                 CityLabel(city: d.city)
@@ -1567,8 +1577,8 @@ private struct LockRow: View {
     }
 }
 
-// Shared debug overlay — set to true only during local debug sessions.
-private let kWidgetDebug = false
+// Shared debug overlay — true for active staleness diagnosis; flip to false after confirmed fix.
+private let kWidgetDebug = true
 
 private struct WidgetDebugOverlay: View {
     let entry:  PrayerEntry
@@ -1617,11 +1627,13 @@ private struct LockView: View {
         let resolvedPrayers = state.next3
 
         // ── Logging (uses entry.next for drift detection — NOT for display) ───
+        let driftS = Int(now.timeIntervalSince(entry.date))
+        let rnName = resolvedPrayers.first?.name ?? "nil"
+        let curName = state.current?.name ?? "nil"
+        wLog.info("[WidgetRender] lock now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
         if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
             if snapshotNext.name != resolvedFirst.name {
-                let _ = wLog.warning("[WidgetDrift] lock: sn=\(snapshotNext.name) rn=\(resolvedFirst.name) now=\(fmtHMS(now)) e=\(fmtHMS(entry.date)) reason=\(entry.reason)")
-            } else {
-                let _ = wLog.info("[WidgetBoundary] lock: now=\(fmtHMS(now)) rn=\(resolvedFirst.name) reason=\(entry.reason)")
+                let _ = wLog.warning("[WidgetDrift] lock: sn=\(snapshotNext.name) rn=\(resolvedFirst.name) now=\(fmtHMS(now)) e=\(fmtHMS(entry.date)) drift=\(driftS)s")
             }
         }
 
