@@ -1370,7 +1370,7 @@ private struct SmallView: View {
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
         let driftS   = Int(now.timeIntervalSince(entry.date))
-        wLog.info("[WidgetRender] small now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil")")
+        let _ = wLog.info("[WidgetRender] small now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil")")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
                 CityLabel(city: d.city)
@@ -1640,7 +1640,7 @@ private struct LockView: View {
         let driftS = Int(now.timeIntervalSince(entry.date))
         let rnName = resolvedPrayers.first?.name ?? "nil"
         let curName = state.current?.name ?? "nil"
-        wLog.info("[WidgetRender] lock now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
+        let _ = wLog.info("[WidgetRender] lock now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
         if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
             if snapshotNext.name != resolvedFirst.name {
                 let _ = wLog.warning("[WidgetDrift] lock: sn=\(snapshotNext.name) rn=\(resolvedFirst.name) now=\(fmtHMS(now)) e=\(fmtHMS(entry.date)) drift=\(driftS)s")
