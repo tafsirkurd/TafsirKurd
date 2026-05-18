@@ -122,7 +122,21 @@ workflows:
           fi
 
       - name: Strip web fonts from iOS bundle (ITMS-90853)
-        script: node scripts/strip-ios-fonts.js
+        script: |
+          set -e
+          PUBLIC=ios/App/App/public
+          echo "Stripping .woff / .woff2 from $PUBLIC ..."
+          find "$PUBLIC" -name "*.woff" -delete
+          find "$PUBLIC" -name "*.woff2" -delete
+          echo "Verifying..."
+          REMAINING=$(find "$PUBLIC" \( -name "*.woff" -o -name "*.woff2" \) | wc -l | tr -d ' ')
+          echo "Web fonts remaining: $REMAINING"
+          if [ "$REMAINING" -gt "0" ]; then
+            find "$PUBLIC" \( -name "*.woff" -o -name "*.woff2" \)
+            echo "ERROR: web fonts not fully stripped"
+            exit 1
+          fi
+          echo "Strip complete — no web fonts remain"
 
       - name: Verify iOS project clean
         script: |
