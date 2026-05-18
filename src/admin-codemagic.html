@@ -569,27 +569,35 @@
             }
             container.innerHTML = builds.map(cmRenderBuild).join('');
 
-            // Auto-start live tracker if an active build exists and tracker isn't already running
+            // Auto-start live tracker on page load if a build is already running
             var activeBuild = builds.find(function(b){return cmIsActive(b.status);});
             if (activeBuild && !cmLiveBuildId && !cmLiveDone) {
-                cmLiveBuildId    = activeBuild._id;
-                cmLiveBuildNum   = activeBuild.index;
-                cmLiveStartedAt  = activeBuild.startedAt ? new Date(activeBuild.startedAt).getTime() : Date.now();
-                cmLiveDone       = false;
+                cmLiveBuildId   = activeBuild._id;
+                cmLiveBuildNum  = activeBuild.index;
+                cmLiveStartedAt = activeBuild.startedAt ? new Date(activeBuild.startedAt).getTime() : Date.now();
+                cmLiveDone      = false;
                 document.getElementById('cmLiveTracker').style.display = 'block';
                 cmRenderLivePanel(activeBuild);
                 clearInterval(cmLiveElapsedTimer);
                 cmLiveElapsedTimer = setInterval(cmTickElapsed, 1000);
-                cmLiveTimer = setTimeout(cmPollLiveBuild, 6000);
-            } else if (cmLiveBuildId) {
-                // Update tracker if already visible
+            } else if (cmLiveBuildId && !cmLiveDone) {
+                // Tracker already open — update it from the freshly fetched list
                 var tracked = builds.find(function(b){return b._id===cmLiveBuildId;});
-                if (tracked) cmRenderLivePanel(tracked);
+                if (tracked) {
+                    cmRenderLivePanel(tracked);
+                    if (!cmIsActive(tracked.status)) {
+                        cmLiveDone = true;
+                        clearInterval(cmLiveElapsedTimer);
+                    }
+                }
+                // If build not in list yet (just triggered), keep showing skeleton — next poll will find it
             }
 
             var hasActive = builds.some(function(b){return cmIsActive(b.status);});
             clearTimeout(cmPagePollTimer);
-            cmPagePollTimer = setTimeout(cmPageLoad, hasActive ? 12000 : 90000);
+            // Poll at 5s while tracking a live build, 12s when something is active, 90s when idle
+            var pollDelay = (cmLiveBuildId && !cmLiveDone) ? 5000 : hasActive ? 12000 : 90000;
+            cmPagePollTimer = setTimeout(cmPageLoad, pollDelay);
         } catch(e) {
             container.innerHTML = '<div style="padding:32px;text-align:center;color:#ef4444;font-size:13px">Failed to load builds: '+esc(e.message)+'</div>';
         }
@@ -607,7 +615,7 @@
         'Verify Xcode workspace','Set up keychain and signing',
         'Convert athan M4A to CAF','Set build number','Build iOS','Publishing','Cleaning up'
     ];
-    var cmLiveBuildId = null, cmLiveTimer = null, cmLiveElapsedTimer = null;
+    var cmLiveBuildId = null, cmLiveElapsedTimer = null;
     var cmLiveStartedAt = null, cmLiveBuildNum = null, cmLiveDone = false;
     var LT_CIRC = 440; // 2π × r70
 
@@ -622,12 +630,13 @@
         cmRenderLivePanel(null);
         clearInterval(cmLiveElapsedTimer);
         cmLiveElapsedTimer = setInterval(cmTickElapsed, 1000);
-        clearTimeout(cmLiveTimer);
-        cmPollLiveBuild();
+        // cmPageLoad drives all tracker updates — cancel current poll, restart immediately
+        clearTimeout(cmPagePollTimer);
+        cmPageLoad();
     }
 
     function cmStopLiveTracking(dismiss) {
-        clearTimeout(cmLiveTimer); clearInterval(cmLiveElapsedTimer);
+        clearInterval(cmLiveElapsedTimer);
         cmLiveBuildId = null; cmLiveDone = false;
         if (dismiss) {
             var t = document.getElementById('cmLiveTracker');
@@ -644,23 +653,6 @@
         if (!cmLiveStartedAt) return;
         var el = document.getElementById('ltElapsed');
         if (el) el.textContent = cmFmtDur(Math.round((Date.now()-cmLiveStartedAt)/1000));
-    }
-
-    async function cmPollLiveBuild() {
-        if (!cmLiveBuildId || cmLiveDone) return;
-        try {
-            var r = await fetch('https://api.codemagic.io/builds/'+cmLiveBuildId, { headers:{'x-auth-token':CM_TOKEN} });
-            var j = await r.json();
-            var build = j.build || j;
-            cmRenderLivePanel(build);
-            if (build.status && !cmIsActive(build.status)) {
-                cmLiveDone = true;
-                clearInterval(cmLiveElapsedTimer);
-                setTimeout(cmPageLoad, 1200);
-                return;
-            }
-        } catch(e) {}
-        if (!cmLiveDone) cmLiveTimer = setTimeout(cmPollLiveBuild, 6000);
     }
 
     function cmRenderLivePanel(build) {
