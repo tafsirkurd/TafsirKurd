@@ -16,7 +16,8 @@ private let kNonceKey       = "widgetRefreshNonce"       // written by admin for
 private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted on (App Group UserDefaults)
 // Increment this whenever timeline logic changes. Stored in App Group on each build;
 // if it differs from stored value, extended cache is discarded so new logic applies immediately.
-private let kTimelineVersion = 5
+// v6: add 6-hour policy cap to prevent stale-widget syndrome when iOS throttles boundary entries.
+private let kTimelineVersion = 6
 private let kTimelineVersionKey = "widgetTimelineVersion"
 // All widget loops use kDisplayOrder (includes Sunrise). Adhan notifications use a separate
 // JS-side list; kPrayerOrder no longer exists here to avoid accidental misuse.
@@ -545,6 +546,8 @@ struct PrayerProvider: TimelineProvider {
         let buildStart = now
         let isLPM      = ProcessInfo.processInfo.isLowPowerModeEnabled
         let extBuild   = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        // Diagnostic requested: real device time at timeline build.
+        print("REAL NOW (getTimeline):", now, "| lpm:", isLPM, "| build:", extBuild)
         wLog.info("[WidgetTimeline] getTimeline called at \(now) lpm=\(isLPM) extBuild=\(extBuild) timelineVersion=\(kTimelineVersion)")
 
         // Timeline version guard: if kTimelineVersion changed since last build, discard
@@ -858,11 +861,17 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
     }
     wLog.info("[WidgetTimeline] boundaries=\(boundaryCount) heartbeats=\(heartbeatCount) total=\(entries.count)")
 
-    // ── Refresh policy: Baghdad midnight TONIGHT + 5 min ──────────────────────
-    // Nightly rebuild keeps heartbeat and boundary entries dense and current.
-    // The 90-day extended cache preserves prayer-time accuracy across long offline
-    // periods — only the timeline density needs nightly regeneration.
-    let policyAt = PrayerWidgetData.baghdadMidnight(daysAhead: 1).addingTimeInterval(5 * 60)
+    // ── Refresh policy ─────────────────────────────────────────────────────────
+    // Primary: Baghdad midnight tonight + 5 min (nightly rebuild for density).
+    // Safety cap: now + 6 h — ensures getTimeline is called mid-day even when
+    // iOS throttles ALL boundary and heartbeat entries (locked device, LPM, low
+    // widget budget). Without the cap the policy can be 23+ hours away, so a
+    // frozen 06:40 snapshot could persist all day. With the cap, worst-case
+    // staleness is 6 hours regardless of iOS entry-activation behaviour.
+    let midnightPolicy  = PrayerWidgetData.baghdadMidnight(daysAhead: 1).addingTimeInterval(5 * 60)
+    let sixHourFallback = now.addingTimeInterval(6 * 3600)
+    let policyAt        = min(midnightPolicy, sixHourFallback)
+    wLog.info("[WidgetTimeline] policy=\(fmtHMS(policyAt)) midnightPolicy=\(fmtHMS(midnightPolicy)) sixHourFallback=\(fmtHMS(sixHourFallback))")
     return (entries.sorted { $0.date < $1.date }, policyAt)
 }
 
@@ -1370,7 +1379,10 @@ private struct SmallView: View {
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
         let driftS   = Int(now.timeIntervalSince(entry.date))
-        let _ = wLog.info("[WidgetRender] small now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil")")
+        // Diagnostic: REAL NOW vs ENTRY DATE — if drift is large (> 30 min) WidgetKit
+        // is holding a stale cached snapshot and not activating boundary/heartbeat entries.
+        print("REAL NOW:", now, "| ENTRY DATE:", entry.date, "| drift:", driftS, "s | rn:", n?.name ?? "nil")
+        let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") STALE=\(abs(driftS) > 1800)")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
                 CityLabel(city: d.city)
@@ -1426,6 +1438,10 @@ private struct MediumView: View {
     var body: some View {
         let now   = Date()
         let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
+        let driftS = Int(now.timeIntervalSince(entry.date))
+        // Diagnostic: REAL NOW vs ENTRY DATE — large drift means WidgetKit snapshot is frozen.
+        print("REAL NOW:", now, "| ENTRY DATE:", entry.date, "| drift:", driftS, "s | rn:", state.next?.name ?? "nil")
+        let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") STALE=\(abs(driftS) > 1800)")
         if let d = entry.data {
             let n = state.next
             VStack(spacing: 0) {
