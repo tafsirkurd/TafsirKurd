@@ -2092,6 +2092,7 @@
                         <div class="action-group">
                             <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn" title="Add new translation"><i data-lucide="plus"></i><span>Add</span></button>
                             <button class="btn btn-secondary" onclick="exportTranslations()" id="exportBtn" title="Export translations as JSON"><i data-lucide="upload"></i><span>Export</span></button>
+                            <button class="btn btn-secondary" onclick="openFindReplace()" id="findReplaceBtn" title="Find & replace in Kurdish text (Ctrl+H)"><i data-lucide="replace"></i><span>Replace</span></button>
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
                             <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
                             <button class="btn btn-secondary" onclick="toggleSelectMode()" id="selectModeBtn" title="Select rows to bulk approve"><i data-lucide="check-square"></i><span>Select</span></button>
@@ -2131,6 +2132,9 @@
                     <div class="stat-pill stat-pill-progress" id="progressPill" style="display:none">
                         <span id="progressPct">--</span>% translated
                     </div>
+                    <div class="stat-pill" id="approveAllPill" onclick="approveAllVisible()" title="Approve all translations on this page" style="cursor:pointer;display:none">
+                        <span id="approveAllCount">0</span> unapproved
+                    </div>
                 </div>
                 <div class="t-progress-bar-wrap" id="progressBarWrap" style="display:none">
                     <div class="t-progress-bar-track">
@@ -2155,6 +2159,10 @@
                     <button class="empty-filter-btn" id="nextEmptyBtn" onclick="jumpNextEmpty()" title="Jump to next empty translation" style="display:none">
                         <i data-lucide="skip-forward"></i>
                         <span>Next</span>
+                    </button>
+                    <button class="empty-filter-btn" id="unapprovedFilterBtn" onclick="toggleUnapprovedFilter()" title="Show only unapproved translations">
+                        <i data-lucide="shield-off"></i>
+                        <span>Unapproved</span>
                     </button>
                     <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
                         <i data-lucide="arrow-down-narrow-wide"></i>
@@ -2910,6 +2918,27 @@
         </main>
     </div>
 
+    <div id="frBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)closeFindReplace()">
+      <div style="background:var(--bg-surface);border-radius:18px;padding:28px 24px;width:min(480px,95vw);box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <strong style="font-size:16px">Find &amp; Replace</strong>
+          <button onclick="closeFindReplace()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-secondary)">&times;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Find</label><input id="frFind" dir="rtl" placeholder="Text to find..." style="width:100%;padding:10px 14px;border:1px solid var(--border-medium);border-radius:10px;background:var(--bg-app);color:var(--text-primary);font-size:14px;font-family:inherit;box-sizing:border-box" oninput="frPreview()"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Replace with</label><input id="frReplace" dir="rtl" placeholder="Replacement text..." style="width:100%;padding:10px 14px;border:1px solid var(--border-medium);border-radius:10px;background:var(--bg-app);color:var(--text-primary);font-size:14px;font-family:inherit;box-sizing:border-box"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="frAllPlatforms"> All platforms</label>
+            <span id="frCount" style="font-size:12px;color:var(--text-tertiary);margin-left:auto"></span>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px">
+            <button onclick="closeFindReplace()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-medium);background:none;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+            <button onclick="doFindReplace()" id="frReplaceBtn" style="flex:2;padding:12px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit" disabled>Replace All</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button class="fab" id="fab" onclick="toggleAddForm()"><i data-lucide="plus"></i></button>
     <div class="toast" id="toast"></div>
 
@@ -3465,6 +3494,7 @@
             } else if (e.key === 'e' || e.key === 'E') {
                 toggleEmptyFilter();
             }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'h') { e.preventDefault(); openFindReplace(); }
         });
 
         function setPlatform(platform, btn) {
@@ -3484,10 +3514,13 @@
             localStorage.setItem('t_platform', platform);
             activePageFilter = '';
             emptyFilter = false;
+            unapprovedFilter = false;
             var efBtn = document.getElementById('emptyFilterBtn');
             if (efBtn) efBtn.classList.remove('active');
             var epill = document.getElementById('emptyPill');
             if (epill) epill.classList.remove('active');
+            var ufBtn = document.getElementById('unapprovedFilterBtn');
+            if (ufBtn) ufBtn.classList.remove('active');
             currentPage = 1;
 
             // Update tab UI
@@ -3729,6 +3762,23 @@
             }
         }
 
+        async function approveAllVisible() {
+            var toApprove = filteredList.filter(function(t) { return !t.approved; });
+            if (!toApprove.length) { showToast('All already approved'); return; }
+            var pill = document.getElementById('approveAllPill');
+            if (pill) pill.style.opacity = '0.5';
+            var ok = 0;
+            for (var i = 0; i < toApprove.length; i++) {
+                try {
+                    await adminTranslationsAPI('update', { id: toApprove[i].id, fields: { approved: true } });
+                    toApprove[i].approved = true;
+                    ok++;
+                } catch(e) {}
+            }
+            filterTranslations();
+            showToast('Approved ' + ok + ' translations');
+        }
+
         function toggleSelectMode() {
             selectMode = !selectMode;
             selectedIds.clear();
@@ -3937,10 +3987,17 @@
                     barFill.style.background = pct >= 95 ? '#22c55e' : pct >= 75 ? '#f59e0b' : '#ef4444';
                 }
             }
+            var unapprovedCnt = platformData.filter(function(t) { return !t.approved; }).length;
+            var approveAllPill = document.getElementById('approveAllPill');
+            if (approveAllPill) {
+                approveAllPill.style.display = unapprovedCnt > 0 ? '' : 'none';
+                document.getElementById('approveAllCount').textContent = unapprovedCnt;
+            }
         }
 
         var activePageFilter = '';
         var emptyFilter = false;
+        var unapprovedFilter = false;
 
         function toggleEmptyFilter() {
             emptyFilter = !emptyFilter;
@@ -3954,8 +4011,26 @@
             filterTranslations();
         }
 
+        function toggleUnapprovedFilter() {
+            unapprovedFilter = !unapprovedFilter;
+            var btn = document.getElementById('unapprovedFilterBtn');
+            if (btn) btn.classList.toggle('active', unapprovedFilter);
+            currentPage = 1;
+            filterTranslations();
+        }
+
         function _isEmpty(t) {
             return !t.kurdish_text || !t.kurdish_text.trim();
+        }
+
+        function _isSuspicious(t) {
+            var v = t.kurdish_text;
+            if (!v || !v.trim()) return false;
+            if (v.trim() === (t.key_id || '').trim()) return true; // value equals key
+            if (v.trim().length < 2) return true; // too short
+            // 3+ consecutive ASCII letters in otherwise Kurdish text
+            if (/[a-zA-Z]{3,}/.test(v) && /[؀-ۿ]/.test(v)) return true;
+            return false;
         }
 
         function _isRtlReversed(text) {
@@ -4322,6 +4397,11 @@
                 matches = matches.filter(_isEmpty);
             }
 
+            // Fourth pass: unapproved-only filter
+            if (unapprovedFilter) {
+                matches = matches.filter(function(t) { return !t.approved; });
+            }
+
             // Sort: relevance when searching, otherwise by sortOrder toggle (newest / A-Z).
             if (search) {
                 matches.sort(function(a, b) {
@@ -4520,6 +4600,17 @@
                 warnDiv.title = 'This text may be reversed — check the direction';
                 warnDiv.textContent = '⚠ reversed?';
                 contentDiv.appendChild(warnDiv);
+            }
+
+            // Suspicious translation warning
+            if (!_isEmpty(t) && _isSuspicious(t)) {
+                var suspDiv = document.createElement('div');
+                suspDiv.className = 't-rtl-warn';
+                suspDiv.style.background = '#fef3c7';
+                suspDiv.style.color = '#92400e';
+                suspDiv.title = 'This translation looks suspicious — value may equal key, be too short, or contain unexpected characters';
+                suspDiv.textContent = '⚠ suspicious';
+                contentDiv.appendChild(suspDiv);
             }
 
             // Widgets platform: show iOS/Android override values if set
@@ -4721,6 +4812,25 @@
                 charEl.className = 'char-count' + (len > 200 ? ' long' : '');
                 localStorage.setItem(draftKey, textArea.value);
             });
+            textArea.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    var saveBtn = row.querySelector('.btn-primary');
+                    if (saveBtn) saveBtn.click();
+                }
+                if (e.key === 'Tab' && !e.shiftKey) {
+                    e.preventDefault();
+                    var saveBtn = row.querySelector('.btn-primary');
+                    if (saveBtn) {
+                        saveBtn.click();
+                        // After save, open next
+                        var idx = filteredList.findIndex(function(t) { return t.id === id; });
+                        if (idx >= 0 && idx < filteredList.length - 1) {
+                            setTimeout(function() { startEdit(filteredList[idx + 1].id); }, 300);
+                        }
+                    }
+                }
+            });
             textField.appendChild(textLabel);
             textField.appendChild(textArea);
             textField.appendChild(charWrap);
@@ -4819,6 +4929,23 @@
             document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // ===== Mobile swipe for page navigation =====
+        (function() {
+            var _swipeX = null;
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 1) _swipeX = e.touches[0].clientX;
+            }, { passive: true });
+            document.addEventListener('touchend', function(e) {
+                if (_swipeX === null) return;
+                var dx = e.changedTouches[0].clientX - _swipeX;
+                _swipeX = null;
+                if (Math.abs(dx) < 60) return;
+                // Only trigger if not swiping on an input
+                if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+                if (dx < 0) changePage(1); else changePage(-1);
+            }, { passive: true });
+        })();
+
         function jumpNextEmpty() {
             var empties = filteredList.filter(_isEmpty);
             if (!empties.length) { showToast('No empty translations'); return; }
@@ -4832,6 +4959,49 @@
             }
             renderPage();
             setTimeout(function() { startEdit(next.id); }, 50);
+        }
+
+        // ===== Find & Replace =====
+        function openFindReplace() {
+            var bd = document.getElementById('frBackdrop');
+            if (bd) { bd.style.display = 'flex'; setTimeout(function(){ document.getElementById('frFind').focus(); }, 50); }
+        }
+        function closeFindReplace() {
+            var bd = document.getElementById('frBackdrop');
+            if (bd) bd.style.display = 'none';
+        }
+        function frPreview() {
+            var find = (document.getElementById('frFind').value || '').trim();
+            var countEl = document.getElementById('frCount');
+            var btn = document.getElementById('frReplaceBtn');
+            if (!find) { countEl.textContent = ''; btn.disabled = true; return; }
+            var pool = document.getElementById('frAllPlatforms').checked ? allTranslations : getPlatformData();
+            var matches = pool.filter(function(t) { return t.kurdish_text && t.kurdish_text.includes(find); });
+            countEl.textContent = matches.length + ' match' + (matches.length !== 1 ? 'es' : '');
+            btn.disabled = matches.length === 0;
+        }
+        async function doFindReplace() {
+            var find = (document.getElementById('frFind').value || '').trim();
+            var replace = document.getElementById('frReplace').value || '';
+            if (!find) return;
+            var pool = document.getElementById('frAllPlatforms').checked ? allTranslations : getPlatformData();
+            var toUpdate = pool.filter(function(t) { return t.kurdish_text && t.kurdish_text.includes(find); });
+            if (!toUpdate.length) return;
+            var btn = document.getElementById('frReplaceBtn');
+            btn.disabled = true; btn.textContent = 'Replacing...';
+            var ok = 0, fail = 0;
+            for (var i = 0; i < toUpdate.length; i++) {
+                var t = toUpdate[i];
+                var newText = t.kurdish_text.split(find).join(replace);
+                try {
+                    await adminTranslationsAPI('update', { id: t.id, fields: { kurdish_text: newText } });
+                    t.kurdish_text = newText;
+                    ok++;
+                } catch(e) { fail++; }
+            }
+            closeFindReplace();
+            filterTranslations();
+            showToast('Replaced in ' + ok + ' entries' + (fail ? ', ' + fail + ' failed' : ''));
         }
 
         function exportTranslations() {
