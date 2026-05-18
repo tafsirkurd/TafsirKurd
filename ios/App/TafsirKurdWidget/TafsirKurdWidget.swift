@@ -546,8 +546,7 @@ struct PrayerProvider: TimelineProvider {
         let buildStart = now
         let isLPM      = ProcessInfo.processInfo.isLowPowerModeEnabled
         let extBuild   = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-        // Diagnostic requested: real device time at timeline build.
-        print("REAL NOW (getTimeline):", now, "| lpm:", isLPM, "| build:", extBuild)
+        print("WIDGET GETTIMELINE REAL NOW:", Date(), "entry:", now)
         wLog.info("[WidgetTimeline] getTimeline called at \(now) lpm=\(isLPM) extBuild=\(extBuild) timelineVersion=\(kTimelineVersion)")
 
         // Timeline version guard: if kTimelineVersion changed since last build, discard
@@ -1379,9 +1378,7 @@ private struct SmallView: View {
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
         let driftS   = Int(now.timeIntervalSince(entry.date))
-        // Diagnostic: REAL NOW vs ENTRY DATE — if drift is large (> 30 min) WidgetKit
-        // is holding a stale cached snapshot and not activating boundary/heartbeat entries.
-        print("REAL NOW:", now, "| ENTRY DATE:", entry.date, "| drift:", driftS, "s | rn:", n?.name ?? "nil")
+        print("WIDGET BODY REAL NOW:", Date(), "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") STALE=\(abs(driftS) > 1800)")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
@@ -1439,8 +1436,7 @@ private struct MediumView: View {
         let now   = Date()
         let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
         let driftS = Int(now.timeIntervalSince(entry.date))
-        // Diagnostic: REAL NOW vs ENTRY DATE — large drift means WidgetKit snapshot is frozen.
-        print("REAL NOW:", now, "| ENTRY DATE:", entry.date, "| drift:", driftS, "s | rn:", state.next?.name ?? "nil")
+        print("WIDGET BODY REAL NOW:", Date(), "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") STALE=\(abs(driftS) > 1800)")
         if let d = entry.data {
             let n = state.next
@@ -1656,6 +1652,7 @@ private struct LockView: View {
         let driftS = Int(now.timeIntervalSince(entry.date))
         let rnName = resolvedPrayers.first?.name ?? "nil"
         let curName = state.current?.name ?? "nil"
+        print("WIDGET BODY REAL NOW:", Date(), "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] lock now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
         if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
             if snapshotNext.name != resolvedFirst.name {
