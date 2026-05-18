@@ -27,6 +27,9 @@ private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Ish
 // 5 s prevents the widget from remaining on a just-passed prayer when WidgetKit
 // activates the boundary entry a few seconds late.
 private let kGracePastSeconds: TimeInterval = 5
+// Shared UserDefaults suite — created once per process, reused everywhere.
+// Avoids the overhead of UserDefaults(suiteName:) construction on every render.
+private let kSharedUD: UserDefaults? = UserDefaults(suiteName: kAppGroup)
 // MARK: — Widget translations (read from App Group UserDefaults, set by main app)
 
 /// Reads the `widgetTranslations` key written by `syncWidgetTranslations()` in app.js.
@@ -109,7 +112,7 @@ private enum DS {
     // Written by _nativeSyncTheme() in app.js every time the user switches theme.
     // Falls back to the original bright green if the key is absent.
     private static func accentComponents() -> (Double, Double, Double) {
-        guard let ud  = UserDefaults(suiteName: kAppGroup),
+        guard let ud  = kSharedUD,
               let hex = ud.string(forKey: "widgetAccentColor"), hex.count >= 7
         else { return (0.14, 0.74, 0.41) }
         let h = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
@@ -525,19 +528,20 @@ private func loadBestAvailableData() -> PrayerWidgetData? {
 
 struct PrayerProvider: TimelineProvider {
     func placeholder(in _: Context) -> PrayerEntry {
-        // Always use best-available data so WidgetKit redacts real prayer rows,
-        // not a nil-data skeleton that looks blank forever.
-        WT.reload()
+        // No WT.reload() here — placeholder must be instant. WidgetKit calls this
+        // synchronously on the main render path; any I/O here delays the first frame.
+        // getSnapshot() and getTimeline() both call WT.reload() before building entries.
         let d = loadBestAvailableData()
         return .init(date: .now, data: d, next: d?.nextPrayer(), reason: "placeholder")
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
+        let snapStart = Date()
         WT.reload()
         wLog.info("getSnapshot called")
-        // getSnapshot() result is cached by WidgetKit and shown while getTimeline() runs.
-        // Returning nil data here means WidgetKit caches a skeleton screenshot that can
-        // persist for the entire duration of the extended-cache network fetch (≤ 15 s).
         let d = loadBestAvailableData()
+        let snapMs = Date().timeIntervalSince(snapStart) * 1000
+        print("WIDGET SNAPSHOT DONE:", Date(), "ms:", String(format: "%.1f", snapMs))
+        wLog.info("[WidgetSnapshot] done ms=\(String(format: "%.1f", snapMs))")
         completion(.init(date: .now, data: d, next: d?.nextPrayer(), reason: "snapshot"))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
@@ -633,7 +637,7 @@ struct PrayerProvider: TimelineProvider {
                     "lastEntryTs":      lastEntryTs,
                     "sortedOK":         isSorted,
                     "policyAt":         policyAt.timeIntervalSince1970,
-                    "policyAtISO":      ISO8601DateFormatter().string(from: policyAt),
+                    "policyAtISO":      _iso8601Fmt.string(from: policyAt),
                     "nextPrayer":       nextName,
                     "lpm":              isLPM,
                     "buildMs":          buildMs,
@@ -641,6 +645,7 @@ struct PrayerProvider: TimelineProvider {
                     "isOldCache":       true
                 ], legacyData: legacyData)
                 wLog.info("[WidgetTimeline] \(entries.count) entries zone1=\(zone1Entries) heartbeats=\(heartbeatCount) nextPrayer=\(nextName) sorted=\(isSorted) policy=\(fmtHMS(policyAt))")
+                print("WIDGET GETTIMELINE DONE:", Date(), "ms:", String(format: "%.1f", buildMs), "entries:", entries.count, "source: cache")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
                 return
             }
@@ -680,7 +685,7 @@ struct PrayerProvider: TimelineProvider {
                     "extDays":          ext.days.count,
                     "entries":          entries.count,
                     "policyAt":         policyAt.timeIntervalSince1970,
-                    "policyAtISO":      ISO8601DateFormatter().string(from: policyAt),
+                    "policyAtISO":      _iso8601Fmt.string(from: policyAt),
                     "nextPrayer":       nextName,
                     "lpm":              isLPM,
                     "buildMs":          buildMs,
@@ -688,6 +693,7 @@ struct PrayerProvider: TimelineProvider {
                     "isOldCache":       false
                 ], legacyData: legacyData)
                 wLog.info("[WidgetTimeline] fetched \(entries.count) entries nextPrayer=\(nextName) policy=\(fmtHMS(policyAt))")
+                print("WIDGET GETTIMELINE DONE:", Date(), "ms:", String(format: "%.1f", buildMs), "entries:", entries.count, "source: fetch")
                 completion(Timeline(entries: entries, policy: .after(policyAt)))
             } else {
                 // Network unavailable — fall back to two-day legacy data
@@ -783,8 +789,26 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
         return ([.init(date: now, data: fallback, next: fallbackNext, reason: "no_data_retry")], retry)
     }
 
+    // Pre-build a flat sorted array of all (time, name) pairs for the next 30 days.
+    // Replaces repeated ext.nextPrayer() calls — each of which internally called
+    // futureDays() (filter+sort of 90 keys) for every boundary offset and heartbeat.
+    // With ~276 nextPrayer calls per timeline build, that was 276 sorts; now just one.
+    var allPrayerTimes: [(time: Date, name: String)] = []
+    for dateStr in futureDates.prefix(30) {
+        for name in kDisplayOrder {
+            if let t = ext.prayerDate(name, for: dateStr) {
+                allPrayerTimes.append((t, name))
+            }
+        }
+    }
+    allPrayerTimes.sort { $0.time < $1.time }
+    func fastNext(after t: Date) -> (name: String, time: Date, ku: String)? {
+        for p in allPrayerTimes where p.time > t { return (p.name, p.time, kn(p.name)) }
+        return nil
+    }
+
     // Entry covering "right now" — establishes the initial display state
-    let nowNext = ext.nextPrayer(from: now)
+    let nowNext = fastNext(after: now)
     entries.append(.init(date: now, data: todayData, next: nowNext, reason: "now"))
 
     // Zone cutoffs for tiered safety offsets
@@ -799,23 +823,20 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
 
         for name in kDisplayOrder {
             guard let t = ext.prayerDate(name, for: dateStr), t > now else { continue }
-            let next = ext.nextPrayer(from: t.addingTimeInterval(30))
+            let next = fastNext(after: t.addingTimeInterval(30))
             let isZone2 = t >= zone1End && t < zone2End
             entries.append(.init(date: t, data: dayData, next: next,
                                  reason: isZone2 ? "zone2_boundary_\(name.lowercased())" : "boundary_\(name.lowercased())"))
             boundaryCount += 1
 
             // Zone 1: dense post-prayer offsets so iOS throttling skips at most 20 min.
-            // +10m/+15m/+20m overlap with heartbeats but give WidgetKit more activation
-            // chances at the prayer transition (boundary entries vs heartbeats have
-            // different internal priority queues on some iOS versions).
             let offsets: [TimeInterval] = t < zone1End ? [5.0, 30.0, 60.0, 300.0, 600.0, 900.0, 1200.0] :
                                           t < zone2End ? [5.0]                                             : []
             let offsetLabels: [TimeInterval: String] = [5.0: "plus5s", 30.0: "plus30s", 60.0: "plus60s", 300.0: "plus5m", 600.0: "plus10m", 900.0: "plus15m", 1200.0: "plus20m"]
             for off in offsets {
                 let st = t.addingTimeInterval(off)
                 guard st > now else { continue }
-                let sNext = ext.nextPrayer(from: st.addingTimeInterval(30))
+                let sNext = fastNext(after: st.addingTimeInterval(30))
                 let label = offsetLabels[off] ?? "plus\(Int(off))s"
                 entries.append(.init(date: st, data: dayData, next: sNext,
                                      reason: "boundary_\(name.lowercased())_\(label)"))
@@ -829,21 +850,16 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             mc.hour = 0; mc.minute = 0; mc.second = 1
             mc.timeZone = TimeZone(identifier: "Asia/Baghdad")
             if let midnight = PrayerWidgetData.baghdadCal.date(from: mc), midnight > now {
-                let nextAtMid = ext.nextPrayer(from: midnight)
+                let nextAtMid = fastNext(after: midnight)
                 entries.append(.init(date: midnight, data: dayData, next: nextAtMid, reason: "midnight"))
             }
         }
     }
 
     // ── Zone 1 heartbeats: every 15 min for the next 48 hours ────────────────
-    // Hard reliability guarantee for the near-term window: even if iOS completely
-    // skips prayer-boundary entries (locked device, LPM, aggressive throttling),
+    // Hard reliability guarantee: even if iOS skips all prayer-boundary entries,
     // a heartbeat fires within 15 min. effectiveNextPrayer() re-derives from the
-    // real clock at render time, bounding staleness to ≤ 15 min.
-    // Only Zone 1 gets heartbeats — no Zone 2/3 heartbeats. This keeps total entries
-    // ≤ 357 so Zone 2 prayer boundaries stay within any reasonable WidgetKit cap.
-    // For days 3–14, the nightly policyAt rebuild resets Zone 1 density; prayer
-    // boundaries alone handle the rare "multiple missed rebuilds" failure path.
+    // real clock at render time so staleness is bounded to ≤ 15 min.
     var hTick = now.addingTimeInterval(15 * 60)
     let hEnd  = now.addingTimeInterval(48 * 3600)
     var heartbeatCount = 0
@@ -852,7 +868,7 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
         if let hy = hComps.year, let hm = hComps.month, let hd = hComps.day {
             let hDateStr = String(format: "%04d-%02d-%02d", hy, hm, hd)
             let hData    = syntheticData(from: ext, dateStr: hDateStr) ?? todayData
-            let hNext    = ext.nextPrayer(from: hTick)
+            let hNext    = fastNext(after: hTick)
             entries.append(.init(date: hTick, data: hData, next: hNext, reason: "heartbeat"))
             heartbeatCount += 1
         }
@@ -1132,16 +1148,22 @@ private func writeDiagnostics(_ info: [String: Any], legacyData: PrayerWidgetDat
 
 // MARK: — Helpers
 
+private let _iso8601Fmt = ISO8601DateFormatter()
+
+private let _gregorianFmt: DateFormatter = {
+    let f = DateFormatter()
+    f.dateFormat = "d MMM yyyy"
+    f.locale = Locale(identifier: "en_US")
+    return f
+}()
+
 private func gregorianDisplay(_ dateISO: String) -> String {
     let parts = dateISO.split(separator: "-").compactMap { Int($0) }
     guard parts.count == 3 else { return dateISO }
     var c = DateComponents()
     c.year = parts[0]; c.month = parts[1]; c.day = parts[2]
     guard let d = Calendar(identifier: .gregorian).date(from: c) else { return dateISO }
-    let f = DateFormatter()
-    f.dateFormat = "d MMM yyyy"
-    f.locale = Locale(identifier: "en_US")
-    return f.string(from: d)
+    return _gregorianFmt.string(from: d)
 }
 
 // MARK: — Live countdown (replaces static remaining() string)
@@ -1277,8 +1299,6 @@ private func effectiveNextPrayer(
     // Dhuhr is returned. The snapshot's stored value is ALWAYS overridden here.
     for n in kDisplayOrder {
         if let t = data.prayerDate(n), stillRelevant(t) {
-            let passed = now >= t
-            wLog.info("[WidgetBoundary] \(tag) now=\(fmtHMS(now)) prayer=\(n) time=\(fmtHMS(t)) passed=\(passed)")
             return (n, t, kn(n))
         }
     }
@@ -1378,7 +1398,7 @@ private struct SmallView: View {
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
         let driftS   = Int(now.timeIntervalSince(entry.date))
-        print("WIDGET BODY REAL NOW:", Date(), "entry:", entry.date)
+        print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") STALE=\(abs(driftS) > 1800)")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
@@ -1436,7 +1456,7 @@ private struct MediumView: View {
         let now   = Date()
         let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
         let driftS = Int(now.timeIntervalSince(entry.date))
-        print("WIDGET BODY REAL NOW:", Date(), "entry:", entry.date)
+        print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") STALE=\(abs(driftS) > 1800)")
         if let d = entry.data {
             let n = state.next
@@ -1652,7 +1672,7 @@ private struct LockView: View {
         let driftS = Int(now.timeIntervalSince(entry.date))
         let rnName = resolvedPrayers.first?.name ?? "nil"
         let curName = state.current?.name ?? "nil"
-        print("WIDGET BODY REAL NOW:", Date(), "entry:", entry.date)
+        print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] lock now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
         if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
             if snapshotNext.name != resolvedFirst.name {
