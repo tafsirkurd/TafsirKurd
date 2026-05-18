@@ -51,10 +51,14 @@ export async function onRequest(context) {
                 last_seen: new Date().toISOString(),
             }, { onConflict: 'platform,build_number' });
 
-        if (error) console.error('[app-version-report]', error.message);
+        if (error) {
+            console.error('[app-version-report] db error:', error.message);
+            return new Response('{"error":"db_error"}', { status: 500, headers: CORS });
+        }
 
         return new Response('{"ok":true}', { status: 200, headers: CORS });
     } catch(e) {
-        return new Response('{"ok":true}', { status: 200, headers: CORS }); // never surface errors to client
+        console.error('[app-version-report] exception:', e?.message || e);
+        return new Response('{"error":"bad_request"}', { status: 400, headers: CORS });
     }
 }

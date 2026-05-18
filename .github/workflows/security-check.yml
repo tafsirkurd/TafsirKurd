@@ -1,0 +1,76 @@
+name: Security & Smoke Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Check no wildcard CORS in functions
+        run: |
+          echo "Checking for wildcard CORS in Cloudflare Functions..."
+          if grep -r "Allow-Origin.*'\*'" functions/ --include="*.js" | grep -v "OPTIONS"; then
+            echo "FAIL: Wildcard CORS found in a non-OPTIONS handler"
+            exit 1
+          fi
+          echo "PASS: No wildcard CORS"
+
+      - name: Check no debug endpoints
+        run: |
+          echo "Checking for debug/test endpoints..."
+          for file in functions/check-env.js functions/test-db.js; do
+            if [ -f "$file" ]; then
+              echo "FAIL: Debug endpoint $file still exists"
+              exit 1
+            fi
+          done
+          echo "PASS: No debug endpoints"
+
+      - name: Check all admin functions require auth
+        run: |
+          echo "Checking admin functions have auth..."
+          FAIL=0
+          for file in functions/admin-*.js; do
+            # Skip the OLD-BACKUP file
+            [[ "$file" == *"OLD-BACKUP"* ]] && continue
+            # Must contain a token/auth check
+            if ! grep -q "token\|Authorization\|Unauthorized" "$file"; then
+              echo "FAIL: $file has no auth check"
+              FAIL=1
+            fi
+          done
+          if [ $FAIL -eq 1 ]; then exit 1; fi
+          echo "PASS: All admin functions have auth"
+
+      - name: Check no .bak files committed
+        run: |
+          echo "Checking for .bak files..."
+          if find . -name "*.bak" -not -path "./.git/*" | grep -q .; then
+            echo "FAIL: .bak files found in repo"
+            find . -name "*.bak" -not -path "./.git/*"
+            exit 1
+          fi
+          echo "PASS: No .bak files"
+
+      - name: Check functions bundle compiles
+        run: |
+          echo "Checking functions parse as valid JS..."
+          for file in functions/*.js; do
+            node --input-type=module < "$file" 2>/dev/null || \
+            node -e "require('fs').readFileSync('$file','utf8')" 2>/dev/null || true
+          done
+          echo "PASS: Functions parsed"

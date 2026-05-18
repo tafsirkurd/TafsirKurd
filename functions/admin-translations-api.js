@@ -70,7 +70,7 @@ export async function onRequest(context) {
         if (action === 'update') {
             const { id, fields } = body;
             if (!id || !fields) return json({ error: 'id and fields required' }, 400, corsHeaders);
-            const { error } = await supabase.from('kurdish_translations').update(fields).eq('id', id);
+            const { error } = await supabase.from('kurdish_translations').update({ ...fields, manually_edited: true }).eq('id', id);
             if (error) return json({ error: error.message }, 500, corsHeaders);
             return json({ success: true });
         }
@@ -80,7 +80,7 @@ export async function onRequest(context) {
             const { fields } = body;
             if (!fields) return json({ error: 'fields required' }, 400, corsHeaders);
             const { data, error } = await supabase
-                .from('kurdish_translations').insert([fields]).select().single();
+                .from('kurdish_translations').insert([{ ...fields, manually_edited: true }]).select().single();
             if (error) return json({ error: error.message }, 500, corsHeaders);
             return json({ success: true, row: data });
         }
@@ -126,17 +126,34 @@ export async function onRequest(context) {
             return json({ success: true, deleted: key_ids.length });
         }
 
-        // ── UPSERT by key_id (about page translations) ────────────────────
+        // ── UPSERT by key_id ──────────────────────────────────────────────
+        // force:true  → always write (admin panel edits)
+        // force:false → skip if row already has a non-empty kurdish_text (bulk scripts)
         if (action === 'upsert_by_key') {
             const { key_id, kurdish_text, page, context } = body;
+            const force = body.force !== false; // default true; bulk scripts pass force:false
             if (!key_id) return json({ error: 'key_id required' }, 400, corsHeaders);
+
+            // Always block permanently-deleted keys
+            const { data: blocked } = await supabase
+                .from('deleted_translation_keys').select('key_id').eq('key_id', key_id).maybeSingle();
+            if (blocked) return json({ success: true, skipped: 'deleted_key' });
+
+            // If not forced, skip rows that already have a non-empty translation
+            if (!force) {
+                const { data: existing } = await supabase
+                    .from('kurdish_translations').select('kurdish_text').eq('key_id', key_id).maybeSingle();
+                if (existing?.kurdish_text?.trim()) return json({ success: true, skipped: 'already_translated' });
+            }
+
             const { error } = await supabase.from('kurdish_translations')
                 .upsert({
                     key_id,
                     kurdish_text: kurdish_text || '',
                     context: context || '',
                     page: page || 'about',
-                    category: body.category || 'general'
+                    category: body.category || 'general',
+                    manually_edited: force ? true : undefined
                 }, { onConflict: 'key_id' });
             if (error) return json({ error: error.message }, 500, corsHeaders);
             return json({ success: true });
@@ -152,12 +169,14 @@ export async function onRequest(context) {
             return json({ success: true });
         }
 
-        // ── BULK INSERT many rows ─────────────────────────────────────────
+        // ── BULK INSERT many rows (never overwrites existing translations) ──
         if (action === 'bulk_insert') {
             const { rows } = body;
             if (!Array.isArray(rows) || rows.length === 0)
                 return json({ error: 'rows array required' }, 400, corsHeaders);
-            const { error } = await supabase.from('kurdish_translations').insert(rows);
+            // Use upsert with ignoreDuplicates so existing rows are never touched
+            const { error } = await supabase.from('kurdish_translations')
+                .upsert(rows, { onConflict: 'key_id', ignoreDuplicates: true });
             if (error) return json({ error: error.message }, 500, corsHeaders);
             return json({ success: true, count: rows.length });
         }
@@ -168,7 +187,7 @@ export async function onRequest(context) {
             if (!Array.isArray(items) || items.length === 0)
                 return json({ error: 'items array required' }, 400, corsHeaders);
             const results = await Promise.all(items.map(item =>
-                supabase.from('kurdish_translations').update(item.fields).eq('key_id', item.key_id)
+                supabase.from('kurdish_translations').update({ ...item.fields, manually_edited: true }).eq('key_id', item.key_id)
             ));
             const errors = results.filter(r => r.error).length;
             return json({ success: true, updated: items.length - errors, errors });
@@ -196,12 +215,9 @@ export async function onRequest(context) {
             // Keys that are bundled-only and never stored in the DB are not listed here —
             // missing from DB + covered by bundle = not broken, not an error.
             const CRITICAL_DB_KEYS = [
-                'tabs.quran','tabs.video','tabs.prayer','tabs.gencine','tabs.settings',
+                'tabs.quran','tabs.video','tabs.settings',
                 'tabs.goals','tabs.bookmarks',
-                'header.prayer','header.gencine',
-                'prayer.fajr','prayer.sunrise','prayer.dhuhr',
-                'prayer.asr','prayer.maghrib','prayer.isha',
-                'settings.language',
+                'header.gencine',
                 'iv.loading'
             ];
 

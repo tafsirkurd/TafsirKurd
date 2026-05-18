@@ -676,6 +676,8 @@
             .fab { display: flex !important; bottom: 80px; z-index: 900; }
             #addBtn span { display: none; }
             #exportBtn span { display: none; }
+            #publishBtn span { display: none; }
+            #publishBtn { padding: 10px 12px; }
             .empty-filter-btn span { display: none; }
             .empty-filter-btn { padding: 10px 12px; }
             .filters { flex-wrap: wrap; gap: 8px; }
@@ -2091,7 +2093,7 @@
                 <div class="topbar-search" style="visibility:hidden;"><input type="text" disabled></div>
                 <div class="topbar-actions">
                     <div class="session-timer" id="sessionTimer" title="Session expires after 2 hours"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
-                    <button class="topbar-btn" style="position: relative;">
+                    <button class="topbar-btn" id="notifBellBtn" style="position: relative;">
                         <i data-lucide="bell"></i>
                         <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
                     <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
@@ -2110,6 +2112,7 @@
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
                             <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
                             <button class="btn btn-secondary" onclick="toggleSelectMode()" id="selectModeBtn" title="Select rows to bulk approve"><i data-lucide="check-square"></i><span>Select</span></button>
+                            <button class="btn" onclick="openPublishModal()" id="publishBtn" title="Validate &amp; publish translations to all devices" style="background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 1px 3px rgba(22,163,74,0.25)"><i data-lucide="send"></i><span>Publish</span></button>
                         </div>
                     </div>
                 </div>
@@ -2949,6 +2952,37 @@
             <button onclick="closeFindReplace()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-medium);background:none;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
             <button onclick="doFindReplace()" id="frReplaceBtn" style="flex:2;padding:12px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit" disabled>Replace All</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Delete confirmation modal ===== -->
+    <div id="delModalBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)closeDelModal()">
+      <div style="background:var(--bg-surface);border-radius:18px;padding:28px 24px;width:min(420px,95vw);box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:40px;height:40px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="trash-2" style="width:18px;height:18px;color:#dc2626"></i></div>
+          <strong style="font-size:16px;color:var(--text-primary)">Delete Translation</strong>
+        </div>
+        <p style="font-size:14px;color:var(--text-secondary);margin:0 0 12px">This will permanently delete the translation and block it from ever being re-imported.</p>
+        <div style="background:var(--bg-app);border:1px solid var(--border-medium);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:13px;color:var(--text-primary);word-break:break-all;margin-bottom:20px" id="delModalKey"></div>
+        <div style="display:flex;gap:10px">
+          <button onclick="closeDelModal()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-medium);background:none;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button onclick="confirmDeleteTranslation()" id="delModalConfirmBtn" style="flex:2;padding:12px;border-radius:10px;border:none;background:#dc2626;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Delete permanently</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Publish modal ===== -->
+    <div id="publishModalBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)closePublishModal()">
+      <div style="background:var(--bg-surface);border-radius:18px;padding:28px 24px;width:min(520px,95vw);box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:80vh;overflow-y:auto">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:40px;height:40px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="send" style="width:18px;height:18px;color:#16a34a"></i></div>
+          <strong style="font-size:16px;color:var(--text-primary)">Publish Translations</strong>
+        </div>
+        <div id="publishModalBody" style="margin-bottom:20px;font-size:14px;color:var(--text-secondary)">Validating translations…</div>
+        <div id="publishModalActions" style="display:flex;gap:10px">
+          <button onclick="closePublishModal()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-medium);background:none;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button id="publishConfirmBtn" onclick="doPublish()" style="flex:2;padding:12px;border-radius:10px;border:none;background:#16a34a;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:none">Publish now</button>
         </div>
       </div>
     </div>
@@ -4580,6 +4614,15 @@
                 keyDiv.classList.add('copied');
                 setTimeout(function() { keyDiv.classList.remove('copied'); }, 1000);
             });
+            // Lock badge for manually-protected rows
+            if (t.manually_edited) {
+                var lockSpan = document.createElement('span');
+                lockSpan.title = 'Protected — manually edited, blocked from bulk overwrites';
+                lockSpan.style.cssText = 'display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:#f0fdf4;color:#16a34a;margin-top:3px;letter-spacing:.02em;white-space:nowrap';
+                lockSpan.innerHTML = '🔒 locked';
+                keyDiv.appendChild(document.createElement('br'));
+                keyDiv.appendChild(lockSpan);
+            }
             row.appendChild(keyDiv);
 
             // Text + context wrapper
@@ -5196,18 +5239,32 @@
             }
         }
 
-        // ===== Delete =====
-        async function deleteTranslation(id) {
+        // ===== Delete (modal-guarded) =====
+        var _pendingDeleteId = null;
+        function deleteTranslation(id) {
             if (!canDelete) return;
-            if (!confirm('Delete this translation permanently? It will never be re-imported.')) return;
-
+            var item = allTranslations.find(function(t) { return t.id === id; });
+            if (!item) return;
+            _pendingDeleteId = id;
+            var keyEl = document.getElementById('delModalKey');
+            if (keyEl) keyEl.textContent = item.key_id;
+            var bd = document.getElementById('delModalBackdrop');
+            if (bd) { bd.style.display = 'flex'; lucide.createIcons({ nodes: [bd] }); }
+        }
+        function closeDelModal() {
+            _pendingDeleteId = null;
+            var bd = document.getElementById('delModalBackdrop');
+            if (bd) bd.style.display = 'none';
+        }
+        async function confirmDeleteTranslation() {
+            var id = _pendingDeleteId;
+            if (!id) return;
+            var btn = document.getElementById('delModalConfirmBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
             try {
                 var delItem = allTranslations.find(function(t) { return t.id === id; });
-
                 await adminTranslationsAPI('delete', { id: id });
-
                 if (delItem) logChange('delete', { key_id: delItem.key_id, old_text: delItem.kurdish_text, page: delItem.page });
-
                 allTranslations = allTranslations.filter(function(t) { return t.id !== id; });
                 filteredList = filteredList.filter(function(t) { return t.id !== id; });
                 delete quickEditDirty[id];
@@ -5215,9 +5272,11 @@
                 updateStats();
                 renderPage();
                 showToast('Deleted');
+                closeDelModal();
             } catch (err) {
                 console.error('Delete error:', err);
                 showToast('Failed to delete');
+                if (btn) { btn.disabled = false; btn.textContent = 'Delete permanently'; }
             }
         }
 
@@ -6269,6 +6328,100 @@
             saveBtn.disabled = Object.keys(quickEditDirty).length === 0;
             saveBtn.querySelector('span').textContent = 'Save All';
         }
+
+        // ===== Publish flow =====
+        async function openPublishModal() {
+            var bd = document.getElementById('publishModalBackdrop');
+            var body = document.getElementById('publishModalBody');
+            var confirmBtn = document.getElementById('publishConfirmBtn');
+            if (!bd) return;
+            body.innerHTML = '<div style="display:flex;align-items:center;gap:10px;color:var(--text-tertiary)"><span style="display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite"></span> Validating translations…</div>';
+            if (confirmBtn) confirmBtn.style.display = 'none';
+            bd.style.display = 'flex';
+            lucide.createIcons({ nodes: [bd] });
+
+            try {
+                var result = await adminTranslationsAPI('validate_translations', {});
+                var html = '';
+                if (result.valid) {
+                    html += '<div style="display:flex;align-items:center;gap:10px;color:#16a34a;font-weight:600;margin-bottom:12px"><span style="font-size:20px">✅</span> All ' + result.total_keys + ' keys passed validation</div>';
+                } else {
+                    html += '<div style="color:#dc2626;font-weight:600;margin-bottom:10px">⚠ ' + result.errors.length + ' error' + (result.errors.length !== 1 ? 's' : '') + ' found — fix before publishing</div>';
+                    html += '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;max-height:160px;overflow-y:auto;margin-bottom:12px">';
+                    result.errors.forEach(function(e) {
+                        html += '<div style="font-size:12px;font-family:monospace;padding:3px 0;border-bottom:1px solid #fecaca;color:#991b1b">';
+                        html += '<strong>' + e.key + '</strong> — ' + e.issue + (e.value ? ': <em>' + e.value + '</em>' : '');
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+                if (result.warnings && result.warnings.length) {
+                    html += '<div style="color:#92400e;font-size:13px;font-weight:600;margin-bottom:6px">⚠ ' + result.warnings.length + ' warning' + (result.warnings.length !== 1 ? 's' : '') + '</div>';
+                    html += '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 14px;max-height:120px;overflow-y:auto;margin-bottom:12px">';
+                    result.warnings.slice(0, 20).forEach(function(w) {
+                        html += '<div style="font-size:11px;font-family:monospace;padding:2px 0;color:#92400e">' + w.key + ' — ' + w.issue + '</div>';
+                    });
+                    if (result.warnings.length > 20) html += '<div style="font-size:11px;color:var(--text-tertiary);padding-top:4px">…and ' + (result.warnings.length - 20) + ' more</div>';
+                    html += '</div>';
+                }
+
+                // Last published info
+                try {
+                    var ss = await supabase.from('site_settings').select('key,value').in('key', ['i18n_last_published_at','i18n_cache_version']);
+                    if (ss.data) {
+                        var pub = ss.data.find(function(r) { return r.key === 'i18n_last_published_at'; });
+                        var ver = ss.data.find(function(r) { return r.key === 'i18n_cache_version'; });
+                        if (pub && pub.value) {
+                            html += '<div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px">Last published: <strong>' + new Date(pub.value).toLocaleString() + '</strong>';
+                            if (ver && ver.value) html += ' (v' + ver.value + ')';
+                            html += '</div>';
+                        }
+                    }
+                } catch(_) {}
+
+                body.innerHTML = html;
+                if (confirmBtn) {
+                    confirmBtn.style.display = '';
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = result.valid ? 'Publish now' : 'Publish anyway (errors exist)';
+                    confirmBtn.style.background = result.valid ? '#16a34a' : '#dc2626';
+                }
+            } catch (err) {
+                body.innerHTML = '<div style="color:#dc2626">Validation failed: ' + err.message + '</div>';
+            }
+        }
+        function closePublishModal() {
+            var bd = document.getElementById('publishModalBackdrop');
+            if (bd) bd.style.display = 'none';
+        }
+        async function doPublish() {
+            var btn = document.getElementById('publishConfirmBtn');
+            var body = document.getElementById('publishModalBody');
+            if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+            try {
+                var result = await adminTranslationsAPI('bump_i18n_version', {});
+                closePublishModal();
+                showToast('✅ Published — all devices will update (v' + result.version + ')');
+            } catch (err) {
+                if (body) body.innerHTML += '<div style="color:#dc2626;margin-top:10px">Publish failed: ' + err.message + '</div>';
+                if (btn) { btn.disabled = false; btn.textContent = 'Retry'; }
+            }
+        }
+
+        // ===== Escape key cancels inline edit =====
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && editingId && !quickEditMode) {
+                cancelEdit();
+            }
+        });
+
+        // ===== Beforeunload warning for unsaved Quick Edit changes =====
+        window.addEventListener('beforeunload', function(e) {
+            if (Object.keys(quickEditDirty).length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
 
         // ===== Toast =====
         function showToast(msg) {

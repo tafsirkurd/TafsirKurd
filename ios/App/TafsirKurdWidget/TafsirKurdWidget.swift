@@ -17,16 +17,14 @@ private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted 
 // Increment this whenever timeline logic changes. Stored in App Group on each build;
 // if it differs from stored value, extended cache is discarded so new logic applies immediately.
 // v6: add 6-hour policy cap to prevent stale-widget syndrome when iOS throttles boundary entries.
-private let kTimelineVersion = 6
+// v7: strict t > now rollover — no grace window; isTomorrow/displayTimings; correct times after Isha.
+private let kTimelineVersion = 7
 private let kTimelineVersionKey = "widgetTimelineVersion"
 // All widget loops use kDisplayOrder (includes Sunrise). Adhan notifications use a separate
 // JS-side list; kPrayerOrder no longer exists here to avoid accidental misuse.
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"]
 
-// After a prayer's scheduled second + kGracePastSeconds it is considered "past".
-// 5 s prevents the widget from remaining on a just-passed prayer when WidgetKit
-// activates the boundary entry a few seconds late.
-private let kGracePastSeconds: TimeInterval = 5
+
 // Shared UserDefaults suite — created once per process, reused everywhere.
 // Avoids the overhead of UserDefaults(suiteName:) construction on every render.
 private let kSharedUD: UserDefaults? = UserDefaults(suiteName: kAppGroup)
@@ -457,13 +455,18 @@ struct PrayerEntry: TimelineEntry {
 // single path. No view independently decides current/next prayer — resolve() owns it.
 
 struct WidgetPrayerState {
-    let current:     (name: String, ku: String)?   // prayer in progress right now
-    let next:        (name: String, time: Date, ku: String)?
-    let next3:       [(name: String, ku: String, display: String)]
-    let city:        String
-    let date:        String
-    let isStale:     Bool
-    let entryReason: String
+    let current:        (name: String, ku: String)?   // prayer in progress right now
+    let next:           (name: String, time: Date, ku: String)?
+    let next3:          [(name: String, ku: String, display: String)]
+    let city:           String
+    let date:           String
+    let isStale:        Bool
+    let entryReason:    String
+    // isTomorrow: true when the next prayer falls on tomorrow's Baghdad date.
+    // displayTimings: tomorrow's timings when isTomorrow so time labels in the
+    // prayer list reflect the correct schedule (not today's already-past times).
+    let isTomorrow:     Bool
+    let displayTimings: [String: String]
 
     static func resolve(
         _ data: PrayerWidgetData?,
@@ -473,27 +476,40 @@ struct WidgetPrayerState {
         guard let data = data else {
             return WidgetPrayerState(current: nil, next: nil, next3: [],
                                      city: "", date: "", isStale: false,
-                                     entryReason: entry.reason)
+                                     entryReason: entry.reason,
+                                     isTomorrow: false, displayTimings: [:])
         }
         let np = effectiveNextPrayer(data: data, now: now, tag: "resolve[\(entry.reason)]")
         let n3 = effectiveNext3(data: data, now: now)
 
-        // Current = last prayer whose time has fully passed (> grace window)
+        // Current = last prayer whose time has fully passed
         var cur: (name: String, ku: String)? = nil
         for name in kDisplayOrder {
-            if let t = data.prayerDate(name), t <= now.addingTimeInterval(-kGracePastSeconds) {
+            if let t = data.prayerDate(name), t <= now {
                 cur = (name, kn(name))
             }
         }
 
+        // isTomorrow: next prayer is on a different Baghdad calendar date than today
+        let todayStr = PrayerWidgetData.baghdadDateString()
+        let npIsTomorrow: Bool = {
+            guard let np = np else { return false }
+            let comps = PrayerWidgetData.baghdadCal.dateComponents([.year, .month, .day], from: np.time)
+            guard let y = comps.year, let m = comps.month, let d = comps.day else { return false }
+            return String(format: "%04d-%02d-%02d", y, m, d) != todayStr
+        }()
+        let displayTimings = npIsTomorrow ? (data.tomorrow ?? data.timings) : data.timings
+
         return WidgetPrayerState(
-            current:     cur,
-            next:        np,
-            next3:       n3,
-            city:        data.city,
-            date:        PrayerWidgetData.baghdadDateString(),
-            isStale:     data.isStale,
-            entryReason: entry.reason
+            current:        cur,
+            next:           np,
+            next3:          n3,
+            city:           data.city,
+            date:           todayStr,
+            isStale:        data.isStale,
+            entryReason:    entry.reason,
+            isTomorrow:     npIsTomorrow,
+            displayTimings: displayTimings
         )
     }
 }
@@ -1272,17 +1288,32 @@ private struct NoDataView: View {
 
 // MARK: — Boundary-aware next prayer helpers
 //
-// effectiveNextPrayer: re-derives from Date() with a 5-second grace window.
-// A prayer is "still next" while now < prayerTime + kGracePastSeconds, preventing
-// the widget from flipping mid-second if WidgetKit activates a boundary entry early.
+// effectiveNextPrayer: re-derives from real Date() — always uses t > now (strict).
+// Never retains the last prayer of the day; after Isha passes, tomorrow's Fajr is
+// returned immediately without any grace window.
 //
 // correctedNext: wraps effectiveNextPrayer for home-screen widgets, logs drift.
 //
-// effectiveNext3: grace-aware version of next3() used by LockView.
+// effectiveNext3: same strict logic used by LockView.
 
 private func fmtHMS(_ d: Date) -> String {
     let c = PrayerWidgetData.baghdadCal.dateComponents([.hour, .minute, .second], from: d)
     return String(format: "%02d:%02d:%02d", c.hour ?? 0, c.minute ?? 0, c.second ?? 0)
+}
+
+// Format a raw "HH:mm" or "HH:mm AM" timing string as 12-hour "h:mm".
+private func formatPrayerTime(_ raw: String) -> String {
+    let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
+    let parts = hm.split(separator: ":").compactMap { Int($0) }
+    guard parts.count >= 2 else { return raw }
+    let h12 = parts[0] % 12 == 0 ? 12 : parts[0] % 12
+    return String(format: "%d:%02d", h12, parts[1])
+}
+
+// Resolve display time for a prayer from state.displayTimings (today or tomorrow).
+private func displayTime(_ name: String, timings: [String: String]) -> String {
+    guard let raw = timings[name] else { return "--:--" }
+    return formatPrayerTime(raw)
 }
 
 private func effectiveNextPrayer(
@@ -1290,34 +1321,45 @@ private func effectiveNextPrayer(
     now: Date,
     tag: String = ""
 ) -> (name: String, time: Date, ku: String)? {
-    // A prayer is still "next" while now < t + grace (5-second window after it starts).
-    func stillRelevant(_ t: Date) -> Bool { now < t.addingTimeInterval(kGracePastSeconds) }
+    // ── Tier 1: today's prayers — strict future only ───────────────────────────
+    // Using t > now (not grace window) so the last prayer of the day never
+    // freezes the display. The moment Isha passes, we roll to tomorrow's Fajr.
+    let todayDbg = kDisplayOrder.map { n -> String in
+        guard let t = data.prayerDate(n) else { return "\(n):nil" }
+        return "\(n):\(fmtHMS(t))[\(t > now ? "↑" : "✓")]"
+    }.joined(separator: " ")
+    wLog.info("[NextPrayer] \(tag) REAL_NOW=\(fmtHMS(now)) date=\(data.date) today=[\(todayDbg)]")
 
-    // ── Tier 1: real clock vs full display order (includes Sunrise) ──────────────
-    // kDisplayOrder ensures Fajr→Sunrise transition is detected at render time:
-    // after Fajr + 5s grace, Sunrise is returned (not Dhuhr). After Sunrise + 5s,
-    // Dhuhr is returned. The snapshot's stored value is ALWAYS overridden here.
     for n in kDisplayOrder {
-        if let t = data.prayerDate(n), stillRelevant(t) {
+        if let t = data.prayerDate(n), t > now {
+            wLog.info("[NextPrayer] \(tag) → \(n) at \(fmtHMS(t)) isTomorrow=false")
             return (n, t, kn(n))
         }
     }
+
+    // ── Tomorrow's prayers ────────────────────────────────────────────────────
+    let tomDbg = kDisplayOrder.map { n -> String in
+        guard let t = data.prayerDate(n, dayOffset: 1) else { return "\(n):nil" }
+        return "\(n):\(fmtHMS(t))[\(t > now ? "↑" : "✓")]"
+    }.joined(separator: " ")
+    wLog.info("[NextPrayer] \(tag) all-today-past — tomorrow=[\(tomDbg)]")
+
     for n in kDisplayOrder {
-        if let t = data.prayerDate(n, dayOffset: 1), stillRelevant(t) {
+        if let t = data.prayerDate(n, dayOffset: 1), t > now {
+            wLog.info("[NextPrayer] \(tag) → \(n) at \(fmtHMS(t)) isTomorrow=true")
             return (n, t, kn(n))
         }
     }
 
     // ── Tier 2: Baghdad wall-clock recovery ───────────────────────────────────
-    // The snapshot's `date` may be yesterday or older (stale data, timezone shift,
-    // or midnight rollover without a fresh push). Apply the stored prayer times to
-    // the REAL Baghdad date so the widget never shows yesterday's Asr at 10 PM.
-    wLog.warning("[WidgetBoundary] \(tag) stored dates exhausted — applying timings to Baghdad wall-clock date")
+    // Stored data is stale (yesterday or older). Apply timings to the real Baghdad
+    // date so the widget never freezes on a past day's schedule.
+    wLog.warning("[WidgetBoundary] \(tag) stored dates exhausted — wall-clock recovery now=\(fmtHMS(now))")
     for offset in 0...1 {
         let targetDate = PrayerWidgetData.baghdadDateString(offset: offset)
         for n in kDisplayOrder {
-            if let approx = data.prayerTimeOnDate(n, dateStr: targetDate), stillRelevant(approx) {
-                wLog.warning("[WidgetBoundary] wall-clock recovery: \(n) on \(targetDate) now=\(fmtHMS(now))")
+            if let approx = data.prayerTimeOnDate(n, dateStr: targetDate), approx > now {
+                wLog.warning("[WidgetBoundary] recovery: \(n) on \(targetDate) now=\(fmtHMS(now))")
                 return (n, approx, kn(n))
             }
         }
@@ -1331,8 +1373,6 @@ private func effectiveNext3(
     data: PrayerWidgetData,
     now: Date
 ) -> [(name: String, ku: String, display: String)] {
-    func stillRelevant(_ t: Date) -> Bool { now < t.addingTimeInterval(kGracePastSeconds) }
-
     func formatHM(_ raw: String) -> String {
         let hm    = String(raw.split(separator: " ").first ?? Substring(raw))
         let parts = hm.split(separator: ":").compactMap { Int($0) }
@@ -1343,11 +1383,11 @@ private func effectiveNext3(
 
     var result: [(name: String, ku: String, display: String)] = []
 
-    // ── Tier 1: stored data for snapshot's date and tomorrow ──────────────────
+    // ── Tier 1: stored data for today and tomorrow (strict future) ────────────
     outer: for offset in 0...1 {
         for name in kDisplayOrder {
             guard result.count < 3 else { break outer }
-            guard let t = data.prayerDate(name, dayOffset: offset), stillRelevant(t) else { continue }
+            guard let t = data.prayerDate(name, dayOffset: offset), t > now else { continue }
             let src = offset == 0 ? data.timings : (data.tomorrow ?? data.timings)
             guard let raw = src[name] else { continue }
             result.append((name: name, ku: kn(name), display: formatHM(raw)))
@@ -1355,9 +1395,6 @@ private func effectiveNext3(
     }
 
     // ── Tier 2: Baghdad wall-clock recovery (handles stale snapshots) ─────────
-    // If the stored date is yesterday (stale push), tier 1 finds nothing — all
-    // stored times are past. Apply timings to the real Baghdad date so the lock
-    // screen never shows yesterday's Asr at 10 PM.
     if result.isEmpty {
         wLog.warning("[effectiveNext3] tier-1 empty — wall-clock recovery now=\(fmtHMS(now))")
         outer2: for offset in 0...1 {
@@ -1365,7 +1402,7 @@ private func effectiveNext3(
             for name in kDisplayOrder {
                 guard result.count < 3 else { break outer2 }
                 guard let approx = data.prayerTimeOnDate(name, dateStr: targetDate),
-                      stillRelevant(approx) else { continue }
+                      approx > now else { continue }
                 guard let raw = data.timings[name] else { continue }
                 result.append((name: name, ku: kn(name), display: formatHM(raw)))
             }
@@ -1398,8 +1435,8 @@ private struct SmallView: View {
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
         let driftS   = Int(now.timeIntervalSince(entry.date))
-        print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
-        let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") STALE=\(abs(driftS) > 1800)")
+        let _ = print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
+        let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") isTomorrow=\(state.isTomorrow) cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") family=sm")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
                 CityLabel(city: d.city)
@@ -1411,7 +1448,7 @@ private struct SmallView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                Text(d.displayTime(showKey))
+                Text(displayTime(showKey, timings: state.displayTimings))
                     .font(.system(size: 22, weight: .ultraLight).monospacedDigit())
                     .foregroundStyle(DS.accent)
                     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -1456,8 +1493,8 @@ private struct MediumView: View {
         let now   = Date()
         let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
         let driftS = Int(now.timeIntervalSince(entry.date))
-        print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
-        let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") STALE=\(abs(driftS) > 1800)")
+        let _ = print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
+        let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=md")
         if let d = entry.data {
             let n = state.next
             VStack(spacing: 0) {
@@ -1472,7 +1509,7 @@ private struct MediumView: View {
                 VStack(spacing: 0) {
                     ForEach(kDisplayOrder, id: \.self) { name in
                         PRow(name: name,
-                             time: d.displayTime(name),
+                             time: displayTime(name, timings: state.displayTimings),
                              isNext: name == n?.name,
                              compact: true)
                     }
@@ -1499,6 +1536,8 @@ private struct LargeView: View {
     var body: some View {
         let now   = Date()
         let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
+        let driftS = Int(now.timeIntervalSince(entry.date))
+        let _ = wLog.info("[WidgetRender] large REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=lg")
         if let d = entry.data {
             let n          = state.next
             let bottomName = n?.name ?? "Fajr"
@@ -1526,7 +1565,7 @@ private struct LargeView: View {
                 VStack(spacing: 3) {
                     ForEach(kDisplayOrder, id: \.self) { name in
                         PRow(name: name,
-                             time: d.displayTime(name),
+                             time: displayTime(name, timings: state.displayTimings),
                              isNext: name == n?.name,
                              fontSize: 15)
                     }
@@ -1538,7 +1577,7 @@ private struct LargeView: View {
                     .padding(.vertical, 14)
 
                 HStack(alignment: .center) {
-                    Text(d.displayTime(bottomName))
+                    Text(displayTime(bottomName, timings: state.displayTimings))
                         .font(.system(size: 40, weight: .thin).monospacedDigit())
                         .foregroundStyle(DS.accent.opacity(0.82))
                     Spacer()
@@ -1672,7 +1711,7 @@ private struct LockView: View {
         let driftS = Int(now.timeIntervalSince(entry.date))
         let rnName = resolvedPrayers.first?.name ?? "nil"
         let curName = state.current?.name ?? "nil"
-        print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
+        let _ = print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] lock now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
         if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
             if snapshotNext.name != resolvedFirst.name {

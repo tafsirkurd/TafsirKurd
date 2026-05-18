@@ -1900,6 +1900,69 @@
             font-size: 1.1rem;
         }
 
+        .search-result-item.focused {
+            background: var(--primary);
+            color: var(--accent);
+        }
+        .search-result-item.focused .search-result-header { color: var(--accent); }
+        .search-result-item.focused .search-result-text { color: var(--accent); }
+        .search-result-item.focused .surah-card-arabic { color: var(--accent) !important; }
+        .search-result-item.focused .search-result-tafsir { color: rgba(255,255,255,0.75); }
+
+        .search-result-tafsir {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: right;
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+        .search-result-item:hover .search-result-tafsir { color: rgba(255,255,255,0.75); }
+
+        .search-results-header {
+            padding: 8px 16px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            z-index: 1;
+            border-radius: 14px 14px 0 0;
+        }
+
+        #searchClearBtn {
+            display: none;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            padding: 4px 6px;
+            border-radius: 8px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        #searchClearBtn:hover { color: var(--text); }
+
+        .hero-search-input:focus { padding-right: 50px; }
+
+        @media (max-width: 768px) {
+            .search-result-tafsir { display: none; }
+        }
+
         .hero-actions {
             display: flex;
             justify-content: center;
@@ -5039,7 +5102,8 @@
                         id="heroSearchInput"
                         aria-label="لێگەریانا قورئانێ"
                     >
-                    <i class="fas fa-search hero-search-icon"></i>
+                    <i class="fas fa-search hero-search-icon" id="heroSearchIcon"></i>
+                    <button id="searchClearBtn" onclick="clearHeroSearch()" aria-label="پاككirin">×</button>
                     <!-- Search Results Dropdown -->
                     <div class="search-results-dropdown" id="searchResultsDropdown"></div>
 
@@ -5377,6 +5441,7 @@
         // This pre-loads data from cache so it's available immediately
         let quranData = null;
         let tafsirData = null;
+        let searchSelectedIndex = -1;
 
         (function() {
             const CACHE_VERSION = 'v1';
@@ -5392,6 +5457,7 @@
                     quranData = JSON.parse(cachedQuran);
                     tafsirData = JSON.parse(cachedTafsir);
                     console.log('⚡ INSTANT: Data pre-loaded from cache synchronously');
+                    setTimeout(initQuranSearch, 0);
                 }
             } catch (e) {
                 // Cache pre-load failed - not critical, will load normally
@@ -6454,6 +6520,7 @@
                     quranData = JSON.parse(cachedQuran);
                     tafsirData = JSON.parse(cachedTafsir);
                     console.log('⚡ Quran data loaded from cache (instant)');
+                    initQuranSearch();
                     return;
                 }
 
@@ -6511,6 +6578,7 @@
                 }
 
                 console.log('✅ Quran data loaded successfully');
+                initQuranSearch();
 
             } catch (error) {
                 console.error('❌ CRITICAL: Failed to load Quran data:', error);
@@ -6701,22 +6769,46 @@
 
             // Hero Search - Real-time search as you type
             let searchTimeout;
+            searchSelectedIndex = -1;
             const searchInput = document.getElementById('heroSearchInput');
             const popularSearches = document.getElementById('popularSearchesSection');
             const searchResultsDropdown = document.getElementById('searchResultsDropdown');
+            const heroSearchIcon = document.getElementById('heroSearchIcon');
+            const searchClearBtn = document.getElementById('searchClearBtn');
+
+            function showPopularSearches() {
+                const rect = searchInput.getBoundingClientRect();
+                popularSearches.style.top = (rect.bottom + 10) + 'px';
+                popularSearches.style.left = rect.left + 'px';
+                popularSearches.style.width = rect.width + 'px';
+                popularSearches.style.transform = 'none';
+                popularSearches.style.display = 'block';
+            }
+
+            function setSearchLoading(on) {
+                heroSearchIcon.className = on
+                    ? 'fas fa-spinner fa-spin hero-search-icon'
+                    : 'fas fa-search hero-search-icon';
+            }
+
+            function getSearchItems() {
+                return Array.from(searchResultsDropdown.querySelectorAll('.search-result-item'));
+            }
+
+            function updateSearchSelection(newIndex) {
+                const items = getSearchItems();
+                items.forEach((item, i) => item.classList.toggle('focused', i === newIndex));
+                if (newIndex >= 0 && items[newIndex]) {
+                    items[newIndex].scrollIntoView({ block: 'nearest' });
+                }
+                searchSelectedIndex = newIndex;
+            }
 
             // Show popular searches when input is focused (if empty)
             searchInput.addEventListener('focus', (e) => {
-                const query = e.target.value.trim();
-                if (!query) {
-                    // Calculate position and width based on search input
-                    const rect = searchInput.getBoundingClientRect();
-                    popularSearches.style.top = (rect.bottom + 10) + 'px';
-                    popularSearches.style.left = rect.left + 'px';
-                    popularSearches.style.width = rect.width + 'px';
-                    popularSearches.style.transform = 'none';
-                    popularSearches.style.display = 'block';
-                    hideSearchResults(); // Hide search results dropdown
+                if (!e.target.value.trim()) {
+                    showPopularSearches();
+                    hideSearchResults();
                 }
             });
 
@@ -6730,44 +6822,61 @@
 
             // Close popup when clicking outside
             document.addEventListener('click', (e) => {
-                if (!searchInput.contains(e.target) && !popularSearches.contains(e.target)) {
+                if (!e.target.closest('.hero-search') && !e.target.closest('#popularSearchesSection')) {
                     popularSearches.style.display = 'none';
+                    hideSearchResults();
                 }
             });
 
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
-
-                // Clear previous timeout
                 clearTimeout(searchTimeout);
+                searchClearBtn.style.display = query ? 'block' : 'none';
 
                 if (!query) {
                     hideSearchResults();
-                    // Show popular searches when input is cleared
-                    const rect = searchInput.getBoundingClientRect();
-                    popularSearches.style.top = (rect.bottom + 10) + 'px';
-                    popularSearches.style.left = rect.left + 'px';
-                    popularSearches.style.width = rect.width + 'px';
-                    popularSearches.style.transform = 'none';
-                    popularSearches.style.display = 'block';
+                    setSearchLoading(false);
+                    showPopularSearches();
                     return;
                 }
 
-                // Hide popular searches when user starts typing
                 popularSearches.style.display = 'none';
+                setSearchLoading(true);
 
-                // Debounce: wait 300ms after user stops typing
                 searchTimeout = setTimeout(() => {
+                    setSearchLoading(false);
                     performSearch(query);
                 }, 300);
             });
 
-            // Still support Enter key
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    clearTimeout(searchTimeout);
-                    const query = e.target.value.trim();
-                    if (query) performSearch(query);
+            // Keyboard navigation: ↑↓ arrows, Enter, Escape
+            searchInput.addEventListener('keydown', (e) => {
+                const isOpen = searchResultsDropdown.classList.contains('active');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (isOpen) {
+                        const items = getSearchItems();
+                        updateSearchSelection(Math.min(searchSelectedIndex + 1, items.length - 1));
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (isOpen) updateSearchSelection(Math.max(searchSelectedIndex - 1, -1));
+                } else if (e.key === 'Enter') {
+                    if (isOpen && searchSelectedIndex >= 0) {
+                        e.preventDefault();
+                        const items = getSearchItems();
+                        if (items[searchSelectedIndex]) items[searchSelectedIndex].click();
+                    } else {
+                        clearTimeout(searchTimeout);
+                        setSearchLoading(false);
+                        const query = e.target.value.trim();
+                        if (query) performSearch(query);
+                    }
+                } else if (e.key === 'Escape') {
+                    hideSearchResults();
+                    popularSearches.style.display = 'none';
+                    searchInput.blur();
                 }
             });
 
@@ -6776,6 +6885,18 @@
                 if (!e.target.closest('.hero-search') && !e.target.closest('#popularSearchesSection')) {
                     hideSearchResults();
                     popularSearches.style.display = 'none';
+                }
+            });
+
+            // Press '/' anywhere to focus the search
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+                    if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
+                        e.preventDefault();
+                        searchInput.focus();
+                        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 }
             });
 
@@ -8401,151 +8522,70 @@
             return matches / Math.max(chars1.length, chars2.length);
         }
 
-        // Search Functionality - ENHANCED with Smart Arabic Text Search
-        function performSearch(query) {
-            if (!quranData) {
-                showNotification('تکایە چاڤەرێ بە هەتا قورئان بار ببت');
+        // Build surahs array for QuranSearch.query()
+        function _buildSurahsArray() {
+            var arr = [];
+            for (var i = 1; i <= 114; i++) {
+                var s = surahNames[i] || {};
+                arr.push({ n: i, en: s.english || ('Surah ' + i), ar: s.arabic || '', a: (quranData[i] && quranData[i].verses) ? quranData[i].verses.length : 0 });
+            }
+            return arr;
+        }
+
+        // Search using QuranSearch v3.0 engine (same engine as the app)
+        function performSearch(q) {
+            if (!quranData) { showNotification('تکایە چاڤەرێ بە هەتا قورئان بار ببت'); return; }
+            q = q.trim();
+            if (!q) return;
+
+            if (typeof QuranSearch !== 'undefined' && QuranSearch.isReady()) {
+                var surahs = _buildSurahsArray();
+                var raw = QuranSearch.query(q, surahs, 30);
+                var mapped = raw.map(function(r) {
+                    if (r.type === 'surah') {
+                        return { surah: r.sn, ayah: null, text: r.surahAr + ' — ' + r.surahEn, surahName: 'سوورەت ' + r.surahEn, similarity: r.score, isSurah: true, ayahCount: r.ayahCount };
+                    }
+                    return { surah: r.sn, ayah: r.an, text: r.arO, surahName: r.surahEn, similarity: r.score, posAr: r.posAr };
+                });
+                showSearchResults(mapped, q);
                 return;
             }
 
-            query = query.trim();
-            if (!query) return;
-
-            const allResults = [];
-
-            // Check for surah:ayah format (e.g., "2:255" or "67 5")
-            const match = query.match(/^(\d+)[:\s]+(\d+)$/);
-            if (match) {
-                const surah = parseInt(match[1]);
-                const ayah = parseInt(match[2]);
-                if (surah >= 1 && surah <= 114 && quranData[surah]) {
-                    const verse = quranData[surah].verses?.find(v => v.verse === ayah);
-                    if (verse) {
-                        allResults.push({
-                            surah: surah,
-                            ayah: ayah,
-                            text: verse.text,
-                            surahName: surahNames[surah]?.english || `Surah ${surah}`,
-                            similarity: 10000 // Highest priority for exact reference
-                        });
-                    }
+            // Fallback: basic search while engine is indexing
+            var allResults = [];
+            var m = q.match(/^(\d+)[:\s]+(\d+)$/);
+            if (m) {
+                var sn = parseInt(m[1]), an = parseInt(m[2]);
+                if (sn >= 1 && sn <= 114 && quranData[sn]) {
+                    var v = quranData[sn].verses && quranData[sn].verses.find(function(v) { return v.verse === an; });
+                    if (v) allResults.push({ surah: sn, ayah: an, text: v.text, surahName: (surahNames[sn] || {}).english || '', similarity: 10000 });
                 }
             }
-
-            // Check for just surah number
-            const surahNum = parseInt(query);
-            if (!isNaN(surahNum) && surahNum >= 1 && surahNum <= 114) {
-                const surahInfo = surahNames[surahNum];
-                if (surahInfo && quranData[surahNum]) {
-                    // Show first ayah as representative
-                    const firstVerse = quranData[surahNum].verses?.[0];
-                    if (firstVerse) {
-                        allResults.push({
-                            surah: surahNum,
-                            ayah: 1,
-                            text: `${surahInfo.arabic} - ${surahInfo.english}`,
-                            surahName: `سوورەتی ${surahInfo.english}`,
-                            similarity: 9000 // High priority for surah number
-                        });
-                    }
-                }
+            var hasArabic = /[؀-ۿ]/.test(q);
+            for (var s = 1; s <= 114; s++) {
+                if (!quranData[s] || !quranData[s].verses) continue;
+                quranData[s].verses.forEach(function(verse) {
+                    var sim = calculateSimilarity(q, verse.text);
+                    if (sim > 50) allResults.push({ surah: s, ayah: verse.verse, text: verse.text, surahName: (surahNames[s] || {}).english || '', similarity: sim });
+                });
             }
-
-            // Check if query contains Arabic text (for ayah search)
-            const hasArabic = /[\u0600-\u06FF]/.test(query);
-
-            if (hasArabic) {
-                // SMART ARABIC SEARCH: Search in ayah text without diacritics
-                console.log('🔍 Smart Arabic search for:', query);
-
-                for (let s = 1; s <= 114; s++) {
-                    if (quranData[s] && quranData[s].verses) {
-                        quranData[s].verses.forEach(verse => {
-                            const similarity = calculateSimilarity(query, verse.text);
-
-                            if (similarity > 0) {
-                                allResults.push({
-                                    surah: s,
-                                    ayah: verse.verse,
-                                    text: verse.text,
-                                    surahName: surahNames[s]?.english || `Surah ${s}`,
-                                    similarity: similarity
-                                });
-                            }
-                        });
-                    }
-                }
-            }
-
-            // Search in surah names with fuzzy matching (for all queries)
-            for (let i = 1; i <= 114; i++) {
-                const surah = surahNames[i];
-                if (surah) {
-                    const englishScore = fuzzyMatch(surah.english, query);
-                    const arabicScore = fuzzyMatch(surah.arabic, query);
-                    const maxScore = Math.max(englishScore, arabicScore);
-
-                    if (maxScore > 0) {
-                        // Add surah as a result option
-                        const firstVerse = quranData[i]?.verses?.[0];
-                        if (firstVerse) {
-                            allResults.push({
-                                surah: i,
-                                ayah: 1,
-                                text: `${surah.arabic} - ${surah.english}`,
-                                surahName: `سوورەتی ${surah.english}`,
-                                similarity: maxScore * 10 // Boost surah matches
-                            });
-                        }
-                    }
-                }
-            }
-
-            // Search in Kurdish tafsir (for Kurdish text)
             if (!hasArabic) {
-                for (let s = 1; s <= 114; s++) {
-                    if (quranData[s] && quranData[s].verses) {
-                        quranData[s].verses.forEach(verse => {
-                            const key = `${s}-${verse.verse}`;
-                            const tafsir = tafsirData[key] || '';
-
-                            if (tafsir.toLowerCase().includes(query.toLowerCase())) {
-                                allResults.push({
-                                    surah: s,
-                                    ayah: verse.verse,
-                                    text: verse.text,
-                                    surahName: surahNames[s]?.english || `Surah ${s}`,
-                                    similarity: 100 // Lower priority for tafsir matches
-                                });
-                            }
-                        });
-                    }
+                for (var s2 = 1; s2 <= 114; s2++) {
+                    if (!quranData[s2] || !quranData[s2].verses) continue;
+                    quranData[s2].verses.forEach(function(verse) {
+                        var tf = tafsirData[s2 + '-' + verse.verse] || '';
+                        if (tf.toLowerCase().includes(q.toLowerCase()))
+                            allResults.push({ surah: s2, ayah: verse.verse, text: verse.text, surahName: (surahNames[s2] || {}).english || '', similarity: 100 });
+                    });
                 }
             }
-
-            // Remove duplicates (same surah:ayah)
-            const uniqueResults = [];
-            const seen = new Set();
-            allResults.forEach(result => {
-                const key = `${result.surah}:${result.ayah}`;
-                if (!seen.has(key)) {
-                    seen.add(key);
-                    uniqueResults.push(result);
-                }
-            });
-
-            // Sort all results by similarity (highest first)
-            uniqueResults.sort((a, b) => b.similarity - a.similarity);
-
-            // Filter out weak matches (keep only good quality results)
-            const qualityResults = uniqueResults.filter(r => r.similarity > 50);
-
-            // Show only top 30 most relevant results
-            const top30Results = qualityResults.slice(0, 30);
-            showSearchResults(top30Results, query);
+            var seen = new Set();
+            var unique = allResults.filter(function(r) { var k = r.surah+':'+r.ayah; return seen.has(k) ? false : seen.add(k); });
+            unique.sort(function(a, b) { return b.similarity - a.similarity; });
+            showSearchResults(unique.slice(0, 30), q);
         }
 
-        // Highlight matching text in search results
+                // Highlight matching text in search results
         function highlightMatch(text, query) {
             if (!query) return text;
 
@@ -8608,6 +8648,7 @@
         // Show search results in dropdown
         function showSearchResults(results, query) {
             const dropdown = document.getElementById('searchResultsDropdown');
+            searchSelectedIndex = -1;
 
             // Position dropdown below search input
             const searchInput = document.getElementById('heroSearchInput');
@@ -8622,12 +8663,31 @@
                 return;
             }
 
+            const countText = KurdishNumbers.toKurdish(results.length) + ' ئەنجام';
+            const hintText = '<span style="font-size:0.72rem;opacity:0.6;">↑↓ گەڕان • Enter کليك • Esc داخistin</span>';
+
             const resultsHTML = results.map((result) => {
                 const decorativeCode = getDecorativeSurahCode(result.surah);
+
+                if (result.isSurah) {
+                    // Surah-level result — opens the surah list view
+                    return `
+                    <div class="search-result-item" onclick="openSurah(${result.surah}); hideSearchResults();">
+                        <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2.5rem; margin-bottom: 10px;">${decorativeCode}</div>
+                        <div class="search-result-header">${result.surahName}</div>
+                        <div class="search-result-text" style="font-size:1.1rem;">${result.text}</div>
+                    </div>`;
+                }
+
                 const highlightedText = highlightMatch(result.text, query);
+                const tafsirKey = result.surah + '-' + result.ayah;
+                const tafsirSnippet = (tafsirData && tafsirData[tafsirKey] || '').slice(0, 120);
+                const tafsirHTML = tafsirSnippet
+                    ? `<div class="search-result-tafsir">${tafsirSnippet}…</div>`
+                    : '';
 
                 return `
-                <div class="search-result-item" onclick="openSurahWithAyah(${result.surah}, ${result.ayah}); hideSearchResults();">
+                <div class="search-result-item" onclick="openSurahWithAyah(${result.surah}, ${result.ayah}); QuranSearch && QuranSearch.trackTap(${result.surah}, ${result.ayah}); hideSearchResults();">
                     <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2.5rem; margin-bottom: 10px;">${decorativeCode}</div>
                     <div class="search-result-header">
                         ${result.surahName} - ئایەت ${KurdishNumbers.toKurdish(result.ayah)}
@@ -8635,11 +8695,14 @@
                     <div class="search-result-text">
                         ${highlightedText}
                     </div>
+                    ${tafsirHTML}
                 </div>
             `;
             }).join('');
 
-            dropdown.innerHTML = resultsHTML;
+            dropdown.innerHTML =
+                `<div class="search-results-header"><span>${countText}</span>${hintText}</div>` +
+                resultsHTML;
             dropdown.classList.add('active');
         }
 
@@ -8648,6 +8711,16 @@
             const dropdown = document.getElementById('searchResultsDropdown');
             dropdown.classList.remove('active');
             dropdown.innerHTML = '';
+            searchSelectedIndex = -1;
+        }
+
+        // Clear search input and reset
+        function clearHeroSearch() {
+            const input = document.getElementById('heroSearchInput');
+            input.value = '';
+            document.getElementById('searchClearBtn').style.display = 'none';
+            hideSearchResults();
+            input.focus();
         }
 
         // Bookmark Functions
@@ -11615,5 +11688,29 @@
     </script>
 
     <script src="/js/app-promo.js?v=20260329" defer></script>
+    <script src="/quran/search.js"></script>
+    <script>
+    // Wire QuranSearch v3.0 into quran.html after data is available
+    function initQuranSearch() {
+        if (!quranData || !tafsirData || typeof QuranSearch === 'undefined') return;
+        if (QuranSearch.isReady()) return;
+
+        // Convert tafsirData from {"sn-an": "text"} → array[sn-1] = {verses:[{tafsir}]}
+        var adaptedTafsir = [];
+        for (var sn = 1; sn <= 114; sn++) {
+            var vCount = (quranData[sn] && quranData[sn].verses) ? quranData[sn].verses.length : 0;
+            var verses = [];
+            for (var an = 1; an <= vCount; an++) {
+                verses.push({ text: '', tafsir: tafsirData[sn + '-' + an] || '' });
+            }
+            adaptedTafsir.push({ verses: verses });
+        }
+
+        QuranSearch.init(quranData, adaptedTafsir);
+    }
+    // Try immediately (if data was pre-loaded from cache)
+    setTimeout(initQuranSearch, 0);
+    // Will also be called by the data-loaded hook below
+    </script>
 </body>
 </html>
