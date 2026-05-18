@@ -609,6 +609,51 @@
         }
         body.dark-mode .t-rtl-warn { background: #431407; color: #fb923c; }
 
+        /* ===== Progress bar ===== */
+        .t-progress-bar-wrap { margin-bottom: 20px; }
+        .t-progress-bar-track {
+            height: 6px; background: var(--border-light);
+            border-radius: 99px; overflow: hidden;
+        }
+        .t-progress-bar-fill {
+            height: 100%; background: #22c55e;
+            border-radius: 99px; transition: width 0.5s ease;
+            width: 0%;
+        }
+        body.dark-mode .t-progress-bar-fill { background: #4ade80; }
+
+        /* ===== Tap to edit hint ===== */
+        .t-text { cursor: pointer; }
+        .t-text:hover { opacity: 0.75; }
+        .t-empty-placeholder {
+            font-size: 13px; color: var(--text-tertiary);
+            font-style: italic; opacity: 0.6;
+        }
+
+        /* ===== Char count ===== */
+        .char-count-wrap {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-top: 4px;
+        }
+        .char-count {
+            font-size: 11px; color: var(--text-tertiary);
+            font-weight: 500;
+        }
+        .char-count.long { color: #f59e0b; }
+
+        /* ===== Mobile: FAB ===== */
+        @media (max-width: 768px) {
+            .fab { display: flex !important; bottom: 80px; z-index: 900; }
+            #addBtn span { display: none; }
+            .empty-filter-btn span { display: none; }
+            .empty-filter-btn { padding: 10px 12px; }
+            .filters { flex-wrap: wrap; gap: 8px; }
+            .filter-search { order: 0; width: 100%; flex: 1 1 100%; }
+            .empty-filter-btn { order: 1; }
+            .sort-btn { order: 2; }
+            .stat-pill-empty strong, .stat-pill-progress strong { font-size: 15px; }
+        }
+
         /* ===== Inline Edit Form ===== */
         .edit-form {
             display: flex;
@@ -2026,9 +2071,9 @@
                         <button class="btn btn-secondary marked-header-btn" id="markedHeaderBtn" onclick="setPlatform('marked', this)" title="Show marked keys">🔖 <span>Marked</span> <span class="tab-count" id="markedCount" style="background:rgba(245,158,11,0.18);color:#d97706">--</span></button>
                         <div class="action-sep"></div>
                         <div class="action-group">
+                            <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn" title="Add new translation"><i data-lucide="plus"></i><span>Add</span></button>
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
                             <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
-
                             <button class="btn btn-secondary" onclick="toggleSelectMode()" id="selectModeBtn" title="Select rows to bulk approve"><i data-lucide="check-square"></i><span>Select</span></button>
                         </div>
                     </div>
@@ -2065,6 +2110,11 @@
                     </div>
                     <div class="stat-pill stat-pill-progress" id="progressPill" style="display:none">
                         <span id="progressPct">--</span>% translated
+                    </div>
+                </div>
+                <div class="t-progress-bar-wrap" id="progressBarWrap" style="display:none">
+                    <div class="t-progress-bar-track">
+                        <div class="t-progress-bar-fill" id="progressBarFill"></div>
                     </div>
                 </div>
 
@@ -3369,12 +3419,25 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                // History drawer takes priority
                 var hp = document.getElementById('historyPanel');
                 if (hp && hp.classList.contains('open')) { toggleHistory(); return; }
                 cancelEdit();
                 var af = document.getElementById('addForm');
                 if (af && af.classList.contains('active')) toggleAddForm();
+                return;
+            }
+            // Skip shortcuts when typing in an input/textarea
+            var tag = document.activeElement && document.activeElement.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (e.key === '/' || e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                var si = document.getElementById('searchInput');
+                if (si) { si.focus(); si.select(); }
+            } else if (e.key === 'n' || e.key === 'N') {
+                e.preventDefault();
+                toggleAddForm();
+            } else if (e.key === 'e' || e.key === 'E') {
+                toggleEmptyFilter();
             }
         });
 
@@ -3803,6 +3866,13 @@
                 var pct = total > 0 ? Math.round(((total - emptyCnt) / total) * 100) : 100;
                 document.getElementById('progressPct').textContent = pct;
                 progressPill.style.display = total > 0 ? '' : 'none';
+                var barWrap = document.getElementById('progressBarWrap');
+                var barFill = document.getElementById('progressBarFill');
+                if (barWrap && barFill) {
+                    barWrap.style.display = total > 0 ? '' : 'none';
+                    barFill.style.width = pct + '%';
+                    barFill.style.background = pct >= 95 ? '#22c55e' : pct >= 75 ? '#f59e0b' : '#ef4444';
+                }
             }
         }
 
@@ -4355,11 +4425,24 @@
             var textDiv = document.createElement('div');
             textDiv.className = 't-text';
             textDiv.dir = 'rtl';
-            if (search) {
+            textDiv.title = 'Click to edit';
+            if (_isEmpty(t)) {
+                var ph = document.createElement('span');
+                ph.className = 't-empty-placeholder';
+                ph.textContent = '— no translation —';
+                ph.dir = 'ltr';
+                textDiv.appendChild(ph);
+            } else if (search) {
                 highlightText(textDiv, t.kurdish_text, search);
             } else {
                 textDiv.textContent = t.kurdish_text;
             }
+            textDiv.addEventListener('click', function(e) {
+                if (!selectMode && !quickEditMode && canEdit) {
+                    e.stopPropagation();
+                    startEdit(t.id);
+                }
+            });
             contentDiv.appendChild(textDiv);
 
             // RTL reversed text warning
@@ -4550,8 +4633,20 @@
             textArea.id = 'editText-' + t.id;
             textArea.value = t.kurdish_text;
             textArea.dir = 'rtl';
+            var charWrap = document.createElement('div');
+            charWrap.className = 'char-count-wrap';
+            var charEl = document.createElement('span');
+            charEl.className = 'char-count';
+            charEl.textContent = (t.kurdish_text || '').length + ' chars';
+            charWrap.appendChild(charEl);
+            textArea.addEventListener('input', function() {
+                var len = textArea.value.length;
+                charEl.textContent = len + ' chars';
+                charEl.className = 'char-count' + (len > 200 ? ' long' : '');
+            });
             textField.appendChild(textLabel);
             textField.appendChild(textArea);
+            textField.appendChild(charWrap);
             form.appendChild(textField);
 
             // Row 3: Context
