@@ -609,6 +609,22 @@
         }
         body.dark-mode .t-rtl-warn { background: #431407; color: #fb923c; }
 
+        /* ===== Per-page select + result count ===== */
+        .per-page-select {
+            font-size: 12px; font-weight: 600; font-family: inherit;
+            padding: 6px 10px; border-radius: 10px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-surface); color: var(--text-secondary);
+            cursor: pointer; margin-left: 8px;
+        }
+        .per-page-select:focus { outline: none; border-color: #3b82f6; }
+        .result-count {
+            font-size: 12px; font-weight: 500; color: var(--text-tertiary);
+            margin-left: 4px; white-space: nowrap;
+        }
+        .pagination-info { cursor: pointer; border-radius: 8px; padding: 4px 8px; transition: background 0.15s; }
+        .pagination-info:hover { background: var(--bg-hover); }
+
         /* ===== Progress bar ===== */
         .t-progress-bar-wrap { margin-bottom: 20px; }
         .t-progress-bar-track {
@@ -645,6 +661,7 @@
         @media (max-width: 768px) {
             .fab { display: flex !important; bottom: 80px; z-index: 900; }
             #addBtn span { display: none; }
+            #exportBtn span { display: none; }
             .empty-filter-btn span { display: none; }
             .empty-filter-btn { padding: 10px 12px; }
             .filters { flex-wrap: wrap; gap: 8px; }
@@ -652,6 +669,8 @@
             .empty-filter-btn { order: 1; }
             .sort-btn { order: 2; }
             .stat-pill-empty strong, .stat-pill-progress strong { font-size: 15px; }
+            .per-page-select { font-size: 13px; padding: 8px 10px; }
+            .result-count { display: none; }
         }
 
         /* ===== Inline Edit Form ===== */
@@ -2072,6 +2091,7 @@
                         <div class="action-sep"></div>
                         <div class="action-group">
                             <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn" title="Add new translation"><i data-lucide="plus"></i><span>Add</span></button>
+                            <button class="btn btn-secondary" onclick="exportTranslations()" id="exportBtn" title="Export translations as JSON"><i data-lucide="upload"></i><span>Export</span></button>
                             <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn" title="Import all translations from source files"><i data-lucide="download"></i><span>Import</span></button>
                             <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" title="View change history" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
                             <button class="btn btn-secondary" onclick="toggleSelectMode()" id="selectModeBtn" title="Select rows to bulk approve"><i data-lucide="check-square"></i><span>Select</span></button>
@@ -2131,6 +2151,10 @@
                     <button class="empty-filter-btn" id="emptyFilterBtn" onclick="toggleEmptyFilter()" title="Show only empty translations">
                         <i data-lucide="alert-circle"></i>
                         <span>Empty</span>
+                    </button>
+                    <button class="empty-filter-btn" id="nextEmptyBtn" onclick="jumpNextEmpty()" title="Jump to next empty translation" style="display:none">
+                        <i data-lucide="skip-forward"></i>
+                        <span>Next</span>
                     </button>
                     <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
                         <i data-lucide="arrow-down-narrow-wide"></i>
@@ -2211,8 +2235,10 @@
 
                 <div class="pagination" id="pagination">
                     <button class="pagination-btn" id="prevPage" onclick="changePage(-1)"><i data-lucide="chevron-left"></i></button>
-                    <span class="pagination-info" id="pageInfo">Page 1</span>
+                    <span class="pagination-info" id="pageInfo" onclick="promptPageJump()" title="Click to jump to page">Page 1</span>
                     <button class="pagination-btn" id="nextPage" onclick="changePage(1)"><i data-lucide="chevron-right"></i></button>
+                    <span class="result-count" id="resultCount"></span>
+                    <select class="per-page-select" id="perPageSelect" onchange="changePerPage(this.value)" title="Items per page"></select>
                 </div>
 
                 </div><!-- /.t-main -->
@@ -3004,7 +3030,7 @@
         let filteredList = [];
         let supabase = null;
         let currentPage = 1;
-        const PER_PAGE = 50;
+        let perPage = parseInt(localStorage.getItem('t_per_page')) || 50;
         let canEdit = true;
         let canDelete = true;
         let editingId = null;
@@ -3764,6 +3790,18 @@
                 opt.textContent = p;
                 sel.appendChild(opt);
             });
+            // Populate per-page select
+            var ppSel = document.getElementById('perPageSelect');
+            if (ppSel) {
+                ppSel.textContent = '';
+                [{v:25,l:'25 / page'},{v:50,l:'50 / page'},{v:100,l:'100 / page'},{v:0,l:'All'}].forEach(function(o) {
+                    var opt = document.createElement('option');
+                    opt.value = o.v;
+                    opt.textContent = o.l;
+                    if (o.v === perPage) opt.selected = true;
+                    ppSel.appendChild(opt);
+                });
+            }
         }
 
         async function loadTranslations() {
@@ -3908,8 +3946,10 @@
             emptyFilter = !emptyFilter;
             var btn = document.getElementById('emptyFilterBtn');
             var pill = document.getElementById('emptyPill');
+            var nextBtn = document.getElementById('nextEmptyBtn');
             if (btn) btn.classList.toggle('active', emptyFilter);
             if (pill) pill.classList.toggle('active', emptyFilter);
+            if (nextBtn) nextBtn.style.display = emptyFilter ? '' : 'none';
             currentPage = 1;
             filterTranslations();
         }
@@ -4370,13 +4410,15 @@
         }
 
         function renderPage() {
-            var total = Math.max(1, Math.ceil(filteredList.length / PER_PAGE));
+            var showAll = perPage === 0;
+            var total = showAll ? 1 : Math.max(1, Math.ceil(filteredList.length / perPage));
             if (currentPage > total) currentPage = total;
 
-            var start = (currentPage - 1) * PER_PAGE;
-            var items = filteredList.slice(start, start + PER_PAGE);
+            var start = showAll ? 0 : (currentPage - 1) * perPage;
+            var end = showAll ? filteredList.length : start + perPage;
+            var items = filteredList.slice(start, end);
             renderList(items);
-            updatePagination(total);
+            updatePagination(total, start, end);
         }
 
         function renderList(items) {
@@ -4665,10 +4707,19 @@
             charEl.className = 'char-count';
             charEl.textContent = (t.kurdish_text || '').length + ' chars';
             charWrap.appendChild(charEl);
+            // Restore draft if exists
+            var draftKey = 'draft_' + t.id;
+            var savedDraft = localStorage.getItem(draftKey);
+            if (savedDraft && savedDraft !== t.kurdish_text) {
+                textArea.value = savedDraft;
+                charEl.textContent = savedDraft.length + ' chars (draft restored)';
+                charEl.className = 'char-count long';
+            }
             textArea.addEventListener('input', function() {
                 var len = textArea.value.length;
                 charEl.textContent = len + ' chars';
                 charEl.className = 'char-count' + (len > 200 ? ' long' : '');
+                localStorage.setItem(draftKey, textArea.value);
             });
             textField.appendChild(textLabel);
             textField.appendChild(textArea);
@@ -4738,14 +4789,68 @@
             row.appendChild(form);
         }
 
-        function updatePagination(totalPages) {
-            document.getElementById('pageInfo').textContent = currentPage + ' / ' + totalPages;
-            document.getElementById('prevPage').disabled = currentPage <= 1;
-            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        function updatePagination(totalPages, start, end) {
+            var showAll = perPage === 0;
+            var total = filteredList.length;
+            var showing = showAll ? total : Math.min(end, total) - start;
+            document.getElementById('pageInfo').textContent = showAll ? 'All' : currentPage + ' / ' + totalPages;
+            document.getElementById('prevPage').disabled = showAll || currentPage <= 1;
+            document.getElementById('nextPage').disabled = showAll || currentPage >= totalPages;
+            var rc = document.getElementById('resultCount');
+            if (rc) rc.textContent = showAll ? total + ' results' : (start + 1) + '–' + Math.min(end, total) + ' of ' + total;
+        }
+
+        function changePerPage(val) {
+            perPage = parseInt(val) || 0;
+            localStorage.setItem('t_per_page', val);
+            currentPage = 1;
+            renderPage();
+        }
+
+        function promptPageJump() {
+            if (perPage === 0) return;
+            var total = Math.max(1, Math.ceil(filteredList.length / perPage));
+            var input = prompt('Go to page (1 – ' + total + '):', currentPage);
+            if (!input) return;
+            var p = parseInt(input);
+            if (isNaN(p) || p < 1 || p > total) return;
+            currentPage = p;
+            renderPage();
+            document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function jumpNextEmpty() {
+            var empties = filteredList.filter(_isEmpty);
+            if (!empties.length) { showToast('No empty translations'); return; }
+            var currentIdx = editingId ? empties.findIndex(function(t) { return t.id === editingId; }) : -1;
+            var next = empties[(currentIdx + 1) % empties.length];
+            if (!next) return;
+            var showAll = perPage === 0;
+            if (!showAll) {
+                var idx = filteredList.indexOf(next);
+                currentPage = Math.ceil((idx + 1) / perPage);
+            }
+            renderPage();
+            setTimeout(function() { startEdit(next.id); }, 50);
+        }
+
+        function exportTranslations() {
+            var data = getPlatformData();
+            var obj = {};
+            data.forEach(function(t) { obj[t.key_id] = t.kurdish_text || ''; });
+            var json = JSON.stringify(obj, null, 2);
+            var blob = new Blob([json], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'translations-' + activePlatform + '-' + new Date().toISOString().slice(0,10) + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported ' + data.length + ' translations');
         }
 
         function changePage(delta) {
-            var total = Math.max(1, Math.ceil(filteredList.length / PER_PAGE));
+            var total = Math.max(1, Math.ceil(filteredList.length / perPage));
             var next = currentPage + delta;
             if (next < 1 || next > total) return;
             currentPage = next;
@@ -4834,6 +4939,7 @@
                     if (droidEl !== null) item.android_text = droidEl.value.trim() || null;
                 }
 
+                localStorage.removeItem('draft_' + id);
                 editingId = null;
                 filterTranslations(); // re-sort so edited item moves to top in Newest mode
                 showToast('Saved');
@@ -5910,8 +6016,8 @@
         }
 
         function focusNextQeRow(id) {
-            var start = (currentPage - 1) * PER_PAGE;
-            var pageItems = filteredList.slice(start, start + PER_PAGE);
+            var start = (currentPage - 1) * perPage;
+            var pageItems = filteredList.slice(start, start + perPage);
             var idx = pageItems.findIndex(function(t) { return String(t.id) === String(id); });
             if (idx >= 0 && idx < pageItems.length - 1) {
                 // Next row on same page
@@ -5919,7 +6025,7 @@
                 if (nextTa) { nextTa.focus(); nextTa.select(); }
             } else if (idx === pageItems.length - 1) {
                 // Last row — advance to next page if there is one
-                var totalPages = Math.max(1, Math.ceil(filteredList.length / PER_PAGE));
+                var totalPages = Math.max(1, Math.ceil(filteredList.length / perPage));
                 if (currentPage < totalPages) {
                     currentPage++;
                     renderPage();
