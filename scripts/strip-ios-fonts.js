@@ -8,25 +8,31 @@
 //
 // Other fonts: CSS already has ttf fallback src entries that survive the strip.
 
-const fs   = require('fs');
-const path = require('path');
+import { existsSync, rmSync, readdirSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'fs';
+import { join, relative } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { createRequire } from 'module';
 
-const IOS_PUBLIC = path.join(__dirname, '..', 'ios', 'App', 'App', 'public');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+
+const IOS_PUBLIC = join(__dirname, '..', 'ios', 'App', 'App', 'public');
 
 const WEB_FONT_EXTS = ['.woff2', '.woff', '.bin'];
 
 function rmDir(dir) {
-  if (!fs.existsSync(dir)) return;
-  fs.rmSync(dir, { recursive: true, force: true });
-  console.log('  rmdir', path.relative(process.cwd(), dir));
+  if (!existsSync(dir)) return;
+  rmSync(dir, { recursive: true, force: true });
+  console.log('  rmdir', relative(process.cwd(), dir));
 }
 
 function rmFonts(dir) {
-  if (!fs.existsSync(dir)) return;
-  for (const f of fs.readdirSync(dir)) {
+  if (!existsSync(dir)) return;
+  for (const f of readdirSync(dir)) {
     if (WEB_FONT_EXTS.some(ext => f.endsWith(ext))) {
-      fs.unlinkSync(path.join(dir, f));
-      console.log('  rm   ', path.relative(process.cwd(), path.join(dir, f)));
+      unlinkSync(join(dir, f));
+      console.log('  rm   ', relative(process.cwd(), join(dir, f)));
     }
   }
 }
@@ -34,7 +40,7 @@ function rmFonts(dir) {
 // Convert all woff2 files in srcDir to TTF files in dstDir using wawoff2.
 // Returns a Promise that resolves when done.
 async function convertQCF4ToTTF(srcDir, dstDir) {
-  if (!fs.existsSync(srcDir)) {
+  if (!existsSync(srcDir)) {
     console.log('  [qcf4] source dir not found, skipping TTF conversion');
     return;
   }
@@ -48,19 +54,19 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
     return;
   }
 
-  const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.woff2'));
+  const files = readdirSync(srcDir).filter(f => f.endsWith('.woff2'));
   if (!files.length) { console.log('  [qcf4] no woff2 files found'); return; }
 
-  fs.mkdirSync(dstDir, { recursive: true });
+  mkdirSync(dstDir, { recursive: true });
 
   console.log(`  [qcf4] converting ${files.length} woff2 → ttf...`);
   let ok = 0, fail = 0;
   for (const file of files) {
     try {
-      const woff2Data = fs.readFileSync(path.join(srcDir, file));
+      const woff2Data = readFileSync(join(srcDir, file));
       const ttfData = await wawoff2.decompress(woff2Data);
       const ttfName = file.replace('.woff2', '.ttf');
-      fs.writeFileSync(path.join(dstDir, ttfName), Buffer.from(ttfData));
+      writeFileSync(join(dstDir, ttfName), Buffer.from(ttfData));
       ok++;
     } catch (e) {
       console.warn('  [qcf4] failed to convert', file, e.message);
@@ -68,8 +74,8 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
     }
   }
   const totalKB = Math.round(
-    fs.readdirSync(dstDir)
-      .reduce((s, f) => s + fs.statSync(path.join(dstDir, f)).size, 0) / 1024
+    readdirSync(dstDir)
+      .reduce((s, f) => s + statSync(join(dstDir, f)).size, 0) / 1024
   );
   console.log(`  [qcf4] ${ok} converted, ${fail} failed — qcf4ttf/ ${totalKB} KB`);
 }
@@ -77,35 +83,35 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
 async function main() {
   console.log('\nPreparing iOS font bundle...');
 
-  const qcf4Src = path.join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4');
-  const qcf4Dst = path.join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4ttf');
+  const qcf4Src = join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4');
+  const qcf4Dst = join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4ttf');
 
   // Convert QCF4 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
   await convertQCF4ToTTF(qcf4Src, qcf4Dst);
 
   // Remove directories/files with web font formats
   rmDir(qcf4Src);
-  rmDir(path.join(IOS_PUBLIC, 'assets', 'fonts', 'qcf2'));
-  rmFonts(path.join(IOS_PUBLIC, 'assets', 'fonts'));
-  rmFonts(path.join(IOS_PUBLIC, 'fonts'));
-  rmFonts(path.join(IOS_PUBLIC, 'assets', 'fontawesome', 'webfonts'));
+  rmDir(join(IOS_PUBLIC, 'assets', 'fonts', 'qcf2'));
+  rmFonts(join(IOS_PUBLIC, 'assets', 'fonts'));
+  rmFonts(join(IOS_PUBLIC, 'fonts'));
+  rmFonts(join(IOS_PUBLIC, 'assets', 'fontawesome', 'webfonts'));
 
   // Verify no web fonts remain — hard fail if any found
   function verifyClean(dir) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
+    if (!existsSync(dir)) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
       if (entry.isDirectory()) {
         verifyClean(full);
       } else if (WEB_FONT_EXTS.some(ext => entry.name.endsWith(ext))) {
-        console.error('ERROR: web font not stripped:', path.relative(process.cwd(), full));
+        console.error('ERROR: web font not stripped:', relative(process.cwd(), full));
         process.exit(1);
       }
     }
   }
-  verifyClean(path.join(IOS_PUBLIC, 'assets', 'fonts'));
-  verifyClean(path.join(IOS_PUBLIC, 'fonts'));
-  verifyClean(path.join(IOS_PUBLIC, 'assets', 'fontawesome'));
+  verifyClean(join(IOS_PUBLIC, 'assets', 'fonts'));
+  verifyClean(join(IOS_PUBLIC, 'fonts'));
+  verifyClean(join(IOS_PUBLIC, 'assets', 'fontawesome'));
 
   console.log('[strip-ios-fonts] verification passed');
   console.log('Done.\n');

@@ -79,6 +79,30 @@
         .step-dur  { margin-left: auto; font-family: monospace; font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
 
         .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); margin: 14px 0 6px; }
+
+        /* ── Live Build Tracker ── */
+        @keyframes slideDown    { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ringGlow     { 0%,100%{filter:drop-shadow(0 0 6px rgba(249,115,22,.35))} 50%{filter:drop-shadow(0 0 20px rgba(249,115,22,.75))} }
+        @keyframes successGlow  { 0%,100%{filter:drop-shadow(0 0 8px rgba(34,197,94,.4))}  50%{filter:drop-shadow(0 0 22px rgba(34,197,94,.85))} }
+        @keyframes successPop   { 0%{transform:scale(.75);opacity:0} 65%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+        @keyframes rippleOut    { 0%{transform:scale(1);opacity:.55} 100%{transform:scale(2.4);opacity:0} }
+        @keyframes stepIn       { from{opacity:0;transform:translateX(-7px)} to{opacity:1;transform:translateX(0)} }
+        #cmLiveTracker          { display:none; margin-bottom:24px; animation:slideDown .35s ease; }
+        .lt-card                { border:1px solid var(--border-light); border-radius:20px; padding:24px 28px; transition:background .5s; position:relative; overflow:hidden; }
+        .lt-ring-wrap           { position:relative; width:164px; height:164px; flex-shrink:0; }
+        .lt-ring-svg            { transform:rotate(-90deg); display:block; }
+        .lt-ring-track          { fill:none; stroke:var(--border-light); stroke-width:11; }
+        .lt-ring-prog           { fill:none; stroke:#f97316; stroke-width:11; stroke-linecap:round; transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1),stroke .6s ease; }
+        .lt-ring-prog.s-success { stroke:#22c55e; }
+        .lt-ring-prog.s-failed  { stroke:#ef4444; }
+        .lt-ring-center         { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none; }
+        .lt-ring-ripple         { position:absolute;inset:8px;border-radius:50%;border:2px solid #22c55e;animation:rippleOut 1.1s ease-out forwards; }
+        .lt-step-item           { display:flex;align-items:center;gap:9px;padding:4px 6px;border-radius:7px;font-size:11.5px;transition:color .25s,opacity .25s,background .25s; }
+        .lt-step-item.done      { color:var(--text-secondary); }
+        .lt-step-item.running   { color:#f97316;font-weight:700;background:rgba(249,115,22,.07);animation:stepIn .25s ease; }
+        .lt-step-item.pending   { color:var(--text-tertiary);opacity:.4; }
+        .lt-step-item.error     { color:#ef4444;font-weight:700;background:rgba(239,68,68,.06); }
+        .lt-cur-step            { display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:600;transition:background .5s,border-color .5s,color .5s; }
     </style>
     <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
     <script>
@@ -238,6 +262,45 @@
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ── Live Build Tracker ── -->
+            <div id="cmLiveTracker">
+                <div class="lt-card" id="ltCard" style="background:linear-gradient(135deg,rgba(249,115,22,.07),rgba(249,115,22,.01))">
+                    <!-- Header -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+                        <div>
+                            <div style="font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--text-primary)" id="ltTitle">Build In Progress</div>
+                            <div style="font-size:12px;color:var(--text-tertiary);margin-top:3px" id="ltSubtitle">Starting…</div>
+                        </div>
+                        <button onclick="cmStopLiveTracking(true)" style="background:var(--bg-active);border:1px solid var(--border-light);color:var(--text-tertiary);cursor:pointer;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;transition:background .15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='var(--bg-active)'">Dismiss</button>
+                    </div>
+                    <!-- Ring + Steps side by side -->
+                    <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+                        <!-- Progress ring -->
+                        <div class="lt-ring-wrap" id="ltRingWrap">
+                            <svg class="lt-ring-svg" width="164" height="164" viewBox="0 0 164 164">
+                                <circle class="lt-ring-track" cx="82" cy="82" r="70"/>
+                                <circle id="ltRingProg" class="lt-ring-prog" cx="82" cy="82" r="70"
+                                    stroke-dasharray="440" stroke-dashoffset="440"/>
+                            </svg>
+                            <div class="lt-ring-center">
+                                <div style="font-size:30px;font-weight:900;color:var(--text-primary);line-height:1;transition:all .4s" id="ltRingNum">0/18</div>
+                                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);margin-top:4px" id="ltRingLabel">steps</div>
+                                <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);margin-top:9px;font-family:monospace" id="ltElapsed">—</div>
+                            </div>
+                        </div>
+                        <!-- Step list -->
+                        <div style="flex:1;min-width:240px;max-height:184px;overflow-y:auto;padding-right:2px" id="ltStepList"></div>
+                    </div>
+                    <!-- Current step / completion bar -->
+                    <div id="ltCurrentStep" class="lt-cur-step" style="display:none;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);color:#f97316">
+                        <span id="ltCurIcon" style="display:inline-block;width:11px;height:11px;border:2px solid rgba(249,115,22,.25);border-top-color:#f97316;border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0"></span>
+                        <span id="ltCurName">—</span>
+                    </div>
+                    <!-- Artifact links (shown on success) -->
+                    <div id="ltArtifacts" style="display:none;margin-top:12px"></div>
                 </div>
             </div>
 
@@ -506,6 +569,24 @@
             }
             container.innerHTML = builds.map(cmRenderBuild).join('');
 
+            // Auto-start live tracker if an active build exists and tracker isn't already running
+            var activeBuild = builds.find(function(b){return cmIsActive(b.status);});
+            if (activeBuild && !cmLiveBuildId && !cmLiveDone) {
+                cmLiveBuildId    = activeBuild._id;
+                cmLiveBuildNum   = activeBuild.index;
+                cmLiveStartedAt  = activeBuild.startedAt ? new Date(activeBuild.startedAt).getTime() : Date.now();
+                cmLiveDone       = false;
+                document.getElementById('cmLiveTracker').style.display = 'block';
+                cmRenderLivePanel(activeBuild);
+                clearInterval(cmLiveElapsedTimer);
+                cmLiveElapsedTimer = setInterval(cmTickElapsed, 1000);
+                cmLiveTimer = setTimeout(cmPollLiveBuild, 6000);
+            } else if (cmLiveBuildId) {
+                // Update tracker if already visible
+                var tracked = builds.find(function(b){return b._id===cmLiveBuildId;});
+                if (tracked) cmRenderLivePanel(tracked);
+            }
+
             var hasActive = builds.some(function(b){return cmIsActive(b.status);});
             clearTimeout(cmPagePollTimer);
             cmPagePollTimer = setTimeout(cmPageLoad, hasActive ? 12000 : 90000);
@@ -513,6 +594,210 @@
             container.innerHTML = '<div style="padding:32px;text-align:center;color:#ef4444;font-size:13px">Failed to load builds: '+esc(e.message)+'</div>';
         }
         if (btn) btn.disabled = false;
+    }
+
+    // ── Live Build Tracker ─────────────────────────────────────────────────────
+
+    var CM_STEPS_KNOWN = [
+        'Preparing build machine','Fetching app sources','Full clean',
+        'Install dependencies','Force exact Capacitor versions (all plugins)',
+        'Verify removed plugins absent from node_modules','Verify Capacitor versions',
+        'Inject GoogleService-Info.plist','Capacitor sync iOS',
+        'Strip web fonts from iOS bundle (ITMS-90853)','Verify iOS project clean',
+        'Verify Xcode workspace','Set up keychain and signing',
+        'Convert athan M4A to CAF','Set build number','Build iOS','Publishing','Cleaning up'
+    ];
+    var cmLiveBuildId = null, cmLiveTimer = null, cmLiveElapsedTimer = null;
+    var cmLiveStartedAt = null, cmLiveBuildNum = null, cmLiveDone = false;
+    var LT_CIRC = 440; // 2π × r70
+
+    function cmStartLiveTracking(buildId, buildNum) {
+        cmLiveBuildId = buildId; cmLiveBuildNum = buildNum; cmLiveDone = false;
+        cmLiveStartedAt = Date.now();
+        var tracker = document.getElementById('cmLiveTracker');
+        tracker.style.display = 'block';
+        tracker.style.animation = 'none';
+        void tracker.offsetWidth;
+        tracker.style.animation = 'slideDown .35s ease';
+        cmRenderLivePanel(null);
+        clearInterval(cmLiveElapsedTimer);
+        cmLiveElapsedTimer = setInterval(cmTickElapsed, 1000);
+        clearTimeout(cmLiveTimer);
+        cmPollLiveBuild();
+    }
+
+    function cmStopLiveTracking(dismiss) {
+        clearTimeout(cmLiveTimer); clearInterval(cmLiveElapsedTimer);
+        cmLiveBuildId = null; cmLiveDone = false;
+        if (dismiss) {
+            var t = document.getElementById('cmLiveTracker');
+            t.style.transition = 'opacity .3s,transform .3s';
+            t.style.opacity = '0'; t.style.transform = 'translateY(-8px)';
+            setTimeout(function() {
+                t.style.display = 'none';
+                t.style.opacity = ''; t.style.transform = ''; t.style.transition = '';
+            }, 320);
+        }
+    }
+
+    function cmTickElapsed() {
+        if (!cmLiveStartedAt) return;
+        var el = document.getElementById('ltElapsed');
+        if (el) el.textContent = cmFmtDur(Math.round((Date.now()-cmLiveStartedAt)/1000));
+    }
+
+    async function cmPollLiveBuild() {
+        if (!cmLiveBuildId || cmLiveDone) return;
+        try {
+            var r = await fetch('https://api.codemagic.io/builds/'+cmLiveBuildId, { headers:{'x-auth-token':CM_TOKEN} });
+            var j = await r.json();
+            var build = j.build || j;
+            cmRenderLivePanel(build);
+            if (build.status && !cmIsActive(build.status)) {
+                cmLiveDone = true;
+                clearInterval(cmLiveElapsedTimer);
+                setTimeout(cmPageLoad, 1200);
+                return;
+            }
+        } catch(e) {}
+        if (!cmLiveDone) cmLiveTimer = setTimeout(cmPollLiveBuild, 6000);
+    }
+
+    function cmRenderLivePanel(build) {
+        var steps   = (build && build.buildActions) || [];
+        var status  = build ? (build.status||'preparing') : 'preparing';
+        var isDone  = status === 'finished';
+        var isFail  = status === 'failed' || status === 'error';
+        var isAct   = cmIsActive(status) || status === 'preparing';
+
+        // Use known steps as fallback skeleton
+        var stepData = steps.length ? steps : CM_STEPS_KNOWN.map(function(n){return{name:n,status:'pending'};});
+        var total    = stepData.length;
+        var done     = stepData.filter(function(s){return s.status==='success';}).length;
+        var offset   = isDone ? 0 : LT_CIRC * (1 - done / total);
+
+        // Title / subtitle
+        var titleEl = document.getElementById('ltTitle'), subEl = document.getElementById('ltSubtitle');
+        if (titleEl) titleEl.textContent = isDone ? 'Build Complete!' : isFail ? 'Build Failed' : 'Build In Progress';
+        if (subEl) {
+            var sub = cmLiveBuildNum ? 'Build #'+cmLiveBuildNum : '';
+            if (build && build._id) sub += (sub?' · ':'')+build._id.slice(-8);
+            subEl.textContent = sub || 'Starting…';
+        }
+
+        // Progress ring
+        var prog = document.getElementById('ltRingProg');
+        if (prog) {
+            prog.style.strokeDashoffset = offset;
+            prog.className = 'lt-ring-prog'+(isDone?' s-success':isFail?' s-failed':'');
+        }
+        var numEl = document.getElementById('ltRingNum'), lblEl = document.getElementById('ltRingLabel');
+        if (numEl) {
+            if (isDone)      numEl.innerHTML = '<span style="font-size:38px;animation:successPop .5s ease">✓</span>';
+            else if (isFail) numEl.innerHTML = '<span style="font-size:38px">✗</span>';
+            else             numEl.textContent = done+'/'+total;
+        }
+        if (lblEl) lblEl.textContent = isDone ? 'done' : isFail ? 'failed' : 'steps';
+
+        // Ring glow
+        var wrap = document.getElementById('ltRingWrap');
+        if (wrap) {
+            if (isDone) {
+                wrap.style.animation = 'successGlow 2s ease-in-out infinite';
+                // Add ripple effect once
+                if (!document.querySelector('.lt-ring-ripple')) {
+                    var rip = document.createElement('div'); rip.className = 'lt-ring-ripple';
+                    wrap.appendChild(rip);
+                    setTimeout(function(){ if(rip.parentNode) rip.parentNode.removeChild(rip); }, 1200);
+                }
+            } else if (isFail) {
+                wrap.style.animation = 'none';
+                wrap.style.filter = 'drop-shadow(0 0 12px rgba(239,68,68,.5))';
+            } else if (isAct) {
+                wrap.style.animation = 'ringGlow 2.2s ease-in-out infinite';
+            }
+        }
+
+        // Card background gradient
+        var card = document.getElementById('ltCard');
+        if (card) {
+            card.style.background = isDone
+                ? 'linear-gradient(135deg,rgba(34,197,94,.09),rgba(34,197,94,.02))'
+                : isFail
+                ? 'linear-gradient(135deg,rgba(239,68,68,.09),rgba(239,68,68,.02))'
+                : 'linear-gradient(135deg,rgba(249,115,22,.07),rgba(249,115,22,.01))';
+        }
+
+        // Steps list
+        var listEl = document.getElementById('ltStepList');
+        if (listEl) {
+            var html = '';
+            stepData.forEach(function(st, i) {
+                var cls = cmStepClass(st.status);
+                var icon;
+                if (st.status === 'success')
+                    icon = '<span style="color:#22c55e;font-size:12px;line-height:1">✓</span>';
+                else if (st.status === 'failed' || st.status === 'error')
+                    icon = '<span style="color:#ef4444;font-size:12px;line-height:1">✗</span>';
+                else if (st.status === 'running')
+                    icon = '<span style="display:inline-block;width:10px;height:10px;border:2px solid rgba(249,115,22,.25);border-top-color:#f97316;border-radius:50%;animation:spin .75s linear infinite;vertical-align:middle"></span>';
+                else
+                    icon = '<span style="display:inline-block;width:8px;height:8px;border:1.5px solid var(--border-light);border-radius:50%;vertical-align:middle"></span>';
+                var dur = '';
+                if (st.startedAt && st.finishedAt) {
+                    var sec = Math.round((new Date(st.finishedAt)-new Date(st.startedAt))/1000);
+                    dur = '<span style="margin-left:auto;font-family:monospace;font-size:10px;color:var(--text-tertiary);flex-shrink:0;padding-left:6px">'+(sec<1?'<1s':cmFmtDur(sec))+'</span>';
+                } else if (st.status === 'running') {
+                    dur = '<span style="margin-left:auto;font-size:10px;color:#f97316;flex-shrink:0;padding-left:6px">…</span>';
+                }
+                html += '<div class="lt-step-item '+cls+'">'
+                    +'<span style="width:16px;text-align:center;flex-shrink:0">'+icon+'</span>'
+                    +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(st.name||'Step '+(i+1))+'</span>'
+                    +dur+'</div>';
+            });
+            listEl.innerHTML = html;
+            // Auto-scroll to running step
+            var runningEl = listEl.querySelector('.lt-step-item.running');
+            if (runningEl) runningEl.scrollIntoView({ block:'nearest', behavior:'smooth' });
+        }
+
+        // Current step / completion bar
+        var csEl = document.getElementById('ltCurrentStep');
+        var curIcon = document.getElementById('ltCurIcon'), curName = document.getElementById('ltCurName');
+        var artsEl = document.getElementById('ltArtifacts');
+        var runSt  = stepData.find(function(s){return s.status==='running';});
+        var failSt = stepData.find(function(s){return s.status==='failed'||s.status==='error';});
+        if (csEl) {
+            if (isDone) {
+                csEl.style.cssText = 'display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:600;background:rgba(34,197,94,.09);border:1px solid rgba(34,197,94,.25);color:#22c55e;transition:background .5s,border-color .5s,color .5s';
+                csEl.innerHTML = '<span style="font-size:18px">✓</span><span>Build published to App Store Connect</span>';
+                // Artifacts
+                if (artsEl) {
+                    var arts = (build && build.artefacts) || [];
+                    if (arts.length) {
+                        var ah = '<div class="artifacts-row">';
+                        arts.forEach(function(a) {
+                            ah += '<a href="'+esc(a.url)+'" target="_blank" rel="noopener" class="artifact-link">'
+                                +'📦 <span>'+esc(a.name)+'</span>'
+                                +(a.size?'<span class="artifact-size"> ['+cmFileSize(a.size)+']</span>':'')+'</a>';
+                        });
+                        ah += '</div>';
+                        artsEl.innerHTML = ah; artsEl.style.display = 'block';
+                    }
+                }
+            } else if (isFail && failSt) {
+                csEl.style.cssText = 'display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:600;background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.22);color:#ef4444;transition:background .5s,border-color .5s,color .5s';
+                csEl.innerHTML = '<span style="font-size:18px">✗</span><span>Failed at: '+esc(failSt.name||'Unknown step')+'</span>';
+            } else if (runSt) {
+                csEl.style.cssText = 'display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:600;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);color:#f97316;transition:background .5s,border-color .5s,color .5s';
+                csEl.innerHTML = '<span style="display:inline-block;width:11px;height:11px;border:2px solid rgba(249,115,22,.25);border-top-color:#f97316;border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0"></span><span>'+esc(runSt.name||'Building…')+'</span>';
+            } else if (isAct) {
+                csEl.style.cssText = 'display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:600;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);color:#f97316;transition:background .5s,border-color .5s,color .5s';
+                csEl.innerHTML = '<span style="display:inline-block;width:11px;height:11px;border:2px solid rgba(249,115,22,.25);border-top-color:#f97316;border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0"></span><span>Preparing build machine…</span>';
+            } else {
+                csEl.style.display = 'none';
+            }
+        }
     }
 
     // ── Trigger Build Modal ────────────────────────────────────────────────────
@@ -603,14 +888,15 @@
             if (!j.buildId) throw new Error('Codemagic did not return buildId');
 
             cmCloseTriggerModal();
+            cmStartLiveTracking(j.buildId, buildVal);
             var btn = document.getElementById('cmPageTriggerBtn');
-            btn.innerHTML = '✓ Build #' + buildVal + ' triggered!';
+            btn.innerHTML = '✓ #' + buildVal + ' triggered!';
             btn.style.background = '#10b981'; btn.style.borderColor = '#10b981';
             setTimeout(function() {
                 btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg> Trigger Build';
                 btn.style.background = '#f97316'; btn.style.borderColor = '#f97316';
-                cmPageLoad();
             }, 4000);
+            cmPageLoad();
         } catch(e) {
             confirmBtn.disabled = false;
             confirmBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Confirm &amp; Build';
