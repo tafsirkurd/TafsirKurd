@@ -564,6 +564,51 @@
         .t-mark-note { font-size: 11px; color: #d97706; margin-top: 3px; font-style: italic; }
         body.dark-mode .t-mark-note { color: #fbbf24; }
 
+        /* ===== Empty filter ===== */
+        .tab-empty-badge {
+            font-size: 10px; font-weight: 700;
+            background: #fee2e2; color: #dc2626;
+            padding: 1px 6px; border-radius: 8px;
+            margin-left: 4px;
+        }
+        body.dark-mode .tab-empty-badge { background: #450a0a; color: #f87171; }
+        .stat-pill-empty {
+            background: #fee2e2 !important; color: #dc2626 !important;
+            font-weight: 600;
+        }
+        .stat-pill-empty:hover { background: #fecaca !important; }
+        .stat-pill-empty.active { background: #dc2626 !important; color: #fff !important; }
+        body.dark-mode .stat-pill-empty { background: #450a0a !important; color: #f87171 !important; }
+        body.dark-mode .stat-pill-empty.active { background: #dc2626 !important; color: #fff !important; }
+        .stat-pill-progress { background: #f0fdf4 !important; color: #16a34a !important; }
+        body.dark-mode .stat-pill-progress { background: #052e16 !important; color: #86efac !important; }
+        .empty-filter-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 10px;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            border: 1.5px solid var(--border-medium);
+            background: var(--bg-surface); color: var(--text-secondary);
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .empty-filter-btn:hover { border-color: #dc2626; color: #dc2626; }
+        .empty-filter-btn.active { background: #dc2626; color: #fff; border-color: #dc2626; }
+        .empty-filter-btn svg { width: 14px; height: 14px; }
+        .t-row.is-empty-row .t-text { opacity: 0.45; }
+        .t-row.is-empty-row::before {
+            content: ''; display: block; position: absolute;
+            left: 0; top: 0; bottom: 0; width: 3px;
+            background: #dc2626; border-radius: 3px 0 0 3px;
+        }
+        .t-row.is-empty-row { position: relative; }
+        .t-rtl-warn {
+            display: inline-flex; align-items: center;
+            font-size: 10px; font-weight: 700; gap: 3px;
+            background: #fff7ed; color: #c2410c;
+            padding: 1px 6px; border-radius: 6px; margin-top: 3px;
+        }
+        body.dark-mode .t-rtl-warn { background: #431407; color: #fb923c; }
+
         /* ===== Inline Edit Form ===== */
         .edit-form {
             display: flex;
@@ -1992,22 +2037,22 @@
                 <div class="platform-tabs-wrap" id="tabsWrap">
                 <div class="platform-tabs" id="platformTabs">
                     <button class="platform-tab active" onclick="setPlatform('web', this)">
-                        <i data-lucide="globe" style="width:16px;height:16px"></i> Web <span class="tab-count" id="webCount">--</span>
+                        <i data-lucide="globe" style="width:16px;height:16px"></i> Web <span class="tab-count" id="webCount">--</span><span class="tab-empty-badge" id="webEmpty" style="display:none"></span>
                     </button>
                     <button class="platform-tab" onclick="setPlatform('mobile', this)">
-                        <i data-lucide="smartphone" style="width:16px;height:16px"></i> Mobile <span class="tab-count" id="androidCount">--</span>
+                        <i data-lucide="smartphone" style="width:16px;height:16px"></i> Mobile <span class="tab-count" id="androidCount">--</span><span class="tab-empty-badge" id="mobileEmpty" style="display:none"></span>
                     </button>
                     <button class="platform-tab" onclick="setPlatform('notifications', this)">
-                        <i data-lucide="bell" style="width:16px;height:16px"></i> Notifications <span class="tab-count" id="notifCount">--</span>
+                        <i data-lucide="bell" style="width:16px;height:16px"></i> Notifications <span class="tab-count" id="notifCount">--</span><span class="tab-empty-badge" id="notifEmpty" style="display:none"></span>
                     </button>
                     <button class="platform-tab" onclick="setPlatform('widgets', this)">
-                        <i data-lucide="layout-dashboard" style="width:16px;height:16px"></i> Widgets <span class="tab-count" id="widgetCount">--</span>
+                        <i data-lucide="layout-dashboard" style="width:16px;height:16px"></i> Widgets <span class="tab-count" id="widgetCount">--</span><span class="tab-empty-badge" id="widgetEmpty" style="display:none"></span>
                     </button>
                     <button class="platform-tab" onclick="setPlatform('updates', this)">
-                        <i data-lucide="arrow-up-circle" style="width:16px;height:16px"></i> Updates <span class="tab-count" id="updatesCount">--</span>
+                        <i data-lucide="arrow-up-circle" style="width:16px;height:16px"></i> Updates <span class="tab-count" id="updatesCount">--</span><span class="tab-empty-badge" id="updatesEmpty" style="display:none"></span>
                     </button>
                     <button class="platform-tab" onclick="setPlatform('about', this)">
-                        <i data-lucide="info" style="width:16px;height:16px"></i> About <span class="tab-count" id="aboutCount">--</span>
+                        <i data-lucide="info" style="width:16px;height:16px"></i> About <span class="tab-count" id="aboutCount">--</span><span class="tab-empty-badge" id="aboutEmpty" style="display:none"></span>
                     </button>
                 </div>
                 </div>
@@ -2015,6 +2060,12 @@
                 <div class="stats-row">
                     <div class="stat-pill"><strong id="totalTranslations">--</strong> translations</div>
                     <div class="stat-pill"><strong id="totalPages">--</strong> <span id="pagesLabel">pages</span></div>
+                    <div class="stat-pill stat-pill-empty" id="emptyPill" onclick="toggleEmptyFilter()" title="Click to show only empty translations" style="cursor:pointer;display:none">
+                        <span id="emptyCount">0</span> empty
+                    </div>
+                    <div class="stat-pill stat-pill-progress" id="progressPill" style="display:none">
+                        <span id="progressPct">--</span>% translated
+                    </div>
                 </div>
 
                 <div class="t-body">
@@ -2027,6 +2078,10 @@
                         <input type="text" id="searchInput" placeholder="Search by key or text..." oninput="onSearchInput()">
                         <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
                     </div>
+                    <button class="empty-filter-btn" id="emptyFilterBtn" onclick="toggleEmptyFilter()" title="Show only empty translations">
+                        <i data-lucide="alert-circle"></i>
+                        <span>Empty</span>
+                    </button>
                     <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
                         <i data-lucide="arrow-down-narrow-wide"></i>
                         <span id="sortLabel">Newest</span>
@@ -3338,6 +3393,11 @@
             }
             activePlatform = platform;
             activePageFilter = '';
+            emptyFilter = false;
+            var efBtn = document.getElementById('emptyFilterBtn');
+            if (efBtn) efBtn.classList.remove('active');
+            var epill = document.getElementById('emptyPill');
+            if (epill) epill.classList.remove('active');
             currentPage = 1;
 
             // Update tab UI
@@ -3486,19 +3546,20 @@
         }
 
         function updatePlatformCounts() {
-            if (!allTranslations.length) return; // data not yet loaded — keep '--' in badges
+            if (!allTranslations.length) return;
             var webCount = 0, mobileCount = 0, notifCount = 0, widgetCnt = 0, updatesCnt = 0, aboutCount = 0;
+            var webEmpty = 0, mobileEmpty = 0, notifEmpty = 0, widgetEmpty = 0, updatesEmpty = 0, aboutEmpty = 0;
             allTranslations.forEach(function(t) {
                 var c = t.category || '';
                 var p = normalizePage(t.page);
                 var k = t.key_id || '';
-                // Widgets + updates: identified by key_id prefix (they live in page=android)
-                if (k.startsWith('widget.')) widgetCnt++;
-                if (k.startsWith('update.')) updatesCnt++;
-                if (c === 'notifications' || c === 'notification') { notifCount++; return; }
-                if (p === 'android' || p === 'ios') { mobileCount++; return; }
-                if (p === 'about' || p === 'founder') { aboutCount++; return; }
-                webCount++;
+                var empty = _isEmpty(t);
+                if (k.startsWith('widget.')) { widgetCnt++; if (empty) widgetEmpty++; }
+                if (k.startsWith('update.')) { updatesCnt++; if (empty) updatesEmpty++; }
+                if (c === 'notifications' || c === 'notification') { notifCount++; if (empty) notifEmpty++; return; }
+                if (p === 'android' || p === 'ios') { mobileCount++; if (empty) mobileEmpty++; return; }
+                if (p === 'about' || p === 'founder') { aboutCount++; if (empty) aboutEmpty++; return; }
+                webCount++; if (empty) webEmpty++;
             });
             document.getElementById('webCount').textContent = webCount;
             document.getElementById('androidCount').textContent = mobileCount;
@@ -3507,6 +3568,19 @@
             document.getElementById('updatesCount').textContent = updatesCnt;
             document.getElementById('aboutCount').textContent = aboutCount;
             document.getElementById('markedCount').textContent = allTranslations.filter(function(t) { return t.marked; }).length;
+
+            function setEmptyBadge(id, count) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                if (count > 0) { el.textContent = count; el.style.display = ''; }
+                else { el.style.display = 'none'; }
+            }
+            setEmptyBadge('webEmpty', webEmpty);
+            setEmptyBadge('mobileEmpty', mobileEmpty);
+            setEmptyBadge('notifEmpty', notifEmpty);
+            setEmptyBadge('widgetEmpty', widgetEmpty);
+            setEmptyBadge('updatesEmpty', updatesEmpty);
+            setEmptyBadge('aboutEmpty', aboutEmpty);
         }
 
         function getTranslationPlatformSrc(t) {
@@ -3714,9 +3788,54 @@
                 document.getElementById('totalPages').textContent = pages.length;
             }
             updatePlatformCounts();
+
+            // Empty count + progress pills
+            var total = platformData.length;
+            var emptyCnt = platformData.filter(_isEmpty).length;
+            var emptyPill = document.getElementById('emptyPill');
+            var progressPill = document.getElementById('progressPill');
+            var emptyCountEl = document.getElementById('emptyCount');
+            if (emptyPill && emptyCountEl) {
+                emptyCountEl.textContent = emptyCnt;
+                emptyPill.style.display = emptyCnt > 0 ? '' : 'none';
+            }
+            if (progressPill) {
+                var pct = total > 0 ? Math.round(((total - emptyCnt) / total) * 100) : 100;
+                document.getElementById('progressPct').textContent = pct;
+                progressPill.style.display = total > 0 ? '' : 'none';
+            }
         }
 
         var activePageFilter = '';
+        var emptyFilter = false;
+
+        function toggleEmptyFilter() {
+            emptyFilter = !emptyFilter;
+            var btn = document.getElementById('emptyFilterBtn');
+            var pill = document.getElementById('emptyPill');
+            if (btn) btn.classList.toggle('active', emptyFilter);
+            if (pill) pill.classList.toggle('active', emptyFilter);
+            currentPage = 1;
+            filterTranslations();
+        }
+
+        function _isEmpty(t) {
+            return !t.kurdish_text || !t.kurdish_text.trim();
+        }
+
+        function _isRtlReversed(text) {
+            if (!text || text.length < 4) return false;
+            // Kurdish/Arabic RTL range: ؀-ۿ
+            var rtlRe = /[؀-ۿ]/;
+            if (!rtlRe.test(text)) return false;
+            // Suspicious: text ends with a letter that's typically a word-start in Kurdish
+            // and starts with a common word-ending suffix character
+            var wordEndingChars = 'یھنمدته'; // ی ه ن م د ت ە
+            var wordStartChars = 'بپتثجچحخ'; // ب پ ت ث ج چ ح خ
+            var first = text[0], last = text[text.length - 1];
+            // If first char looks like a suffix and last looks like a prefix → reversed
+            return wordEndingChars.indexOf(first) !== -1 && wordStartChars.indexOf(last) !== -1;
+        }
 
         function populatePageFilter(filteredData) {
             // Marked view: build sidebar from pages of marked items
@@ -4062,6 +4181,11 @@
                 ? searchMatches.filter(function(t) { return chipKey(t) === activePageFilter; })
                 : searchMatches;
 
+            // Third pass: empty-only filter
+            if (emptyFilter) {
+                matches = matches.filter(_isEmpty);
+            }
+
             // Sort: relevance when searching, otherwise by sortOrder toggle (newest / A-Z).
             if (search) {
                 matches.sort(function(a, b) {
@@ -4179,7 +4303,7 @@
 
             items.forEach(function(t) {
                 var row = document.createElement('div');
-                row.className = 't-row' + (t.marked ? ' is-marked' : '') + (t.approved ? ' is-approved' : '');
+                row.className = 't-row' + (t.marked ? ' is-marked' : '') + (t.approved ? ' is-approved' : '') + (_isEmpty(t) ? ' is-empty-row' : '');
                 row.id = 'row-' + t.id;
 
                 if (quickEditMode) {
@@ -4237,6 +4361,15 @@
                 textDiv.textContent = t.kurdish_text;
             }
             contentDiv.appendChild(textDiv);
+
+            // RTL reversed text warning
+            if (t.kurdish_text && _isRtlReversed(t.kurdish_text)) {
+                var warnDiv = document.createElement('div');
+                warnDiv.className = 't-rtl-warn';
+                warnDiv.title = 'This text may be reversed — check the direction';
+                warnDiv.textContent = '⚠ reversed?';
+                contentDiv.appendChild(warnDiv);
+            }
 
             // Widgets platform: show iOS/Android override values if set
             if (activePlatform === 'widgets' && (t.ios_text || t.android_text)) {
