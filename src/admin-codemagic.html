@@ -365,7 +365,8 @@
         return { finished:'Finished', failed:'Failed', error:'Failed', building:'Building',
                  preparing:'Preparing', publishing:'Publishing', canceled:'Canceled', timeout:'Timeout' }[s] || (s || '—');
     }
-    function cmIsActive(s) { return s === 'building' || s === 'preparing' || s === 'publishing'; }
+    function cmIsActive(s)   { return s === 'building' || s === 'preparing' || s === 'publishing'; }
+    function cmIsTerminal(s) { return s === 'finished' || s === 'failed' || s === 'error' || s === 'canceled' || s === 'timeout'; }
     function cmFmtDur(sec) {
         if (sec == null || sec < 0) return '—';
         if (sec === 0) return '<1s';
@@ -565,6 +566,8 @@
 
             if (!builds.length) {
                 container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-tertiary);font-size:13px">No builds found.</div>';
+                clearTimeout(cmPagePollTimer);
+                cmPagePollTimer = setTimeout(cmPageLoad, cmLiveBuildId && !cmLiveDone ? 5000 : 90000);
                 return;
             }
             container.innerHTML = builds.map(cmRenderBuild).join('');
@@ -585,7 +588,8 @@
                 var tracked = builds.find(function(b){return b._id===cmLiveBuildId;});
                 if (tracked) {
                     cmRenderLivePanel(tracked);
-                    if (!cmIsActive(tracked.status)) {
+                    // Only stop tracking on explicit terminal statuses — never on null/unknown
+                    if (cmIsTerminal(tracked.status)) {
                         cmLiveDone = true;
                         clearInterval(cmLiveElapsedTimer);
                     }
@@ -600,6 +604,9 @@
             cmPagePollTimer = setTimeout(cmPageLoad, pollDelay);
         } catch(e) {
             container.innerHTML = '<div style="padding:32px;text-align:center;color:#ef4444;font-size:13px">Failed to load builds: '+esc(e.message)+'</div>';
+            // Always reschedule even on error so live tracking doesn't silently die
+            clearTimeout(cmPagePollTimer);
+            cmPagePollTimer = setTimeout(cmPageLoad, cmLiveBuildId && !cmLiveDone ? 5000 : 30000);
         }
         if (btn) btn.disabled = false;
     }
@@ -888,7 +895,6 @@
                 btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg> Trigger Build';
                 btn.style.background = '#f97316'; btn.style.borderColor = '#f97316';
             }, 4000);
-            cmPageLoad();
         } catch(e) {
             confirmBtn.disabled = false;
             confirmBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;margin-right:5px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Confirm &amp; Build';

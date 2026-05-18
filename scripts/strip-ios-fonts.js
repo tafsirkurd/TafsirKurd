@@ -9,17 +9,14 @@
 // Other fonts: CSS already has ttf fallback src entries that survive the strip.
 
 import { existsSync, rmSync, readdirSync, unlinkSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'fs';
-import { join, relative } from 'path';
+import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { createRequire } from 'module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
 
 const IOS_PUBLIC = join(__dirname, '..', 'ios', 'App', 'App', 'public');
 
-const WEB_FONT_EXTS = ['.woff2', '.woff', '.bin'];
+const WEB_FONT_EXTS = ['.woff2', '.woff'];
 
 function rmDir(dir) {
   if (!existsSync(dir)) return;
@@ -27,18 +24,21 @@ function rmDir(dir) {
   console.log('  rmdir', relative(process.cwd(), dir));
 }
 
-function rmFonts(dir) {
+// Recursively remove web font files under dir
+function rmFontsRecursive(dir) {
   if (!existsSync(dir)) return;
-  for (const f of readdirSync(dir)) {
-    if (WEB_FONT_EXTS.some(ext => f.endsWith(ext))) {
-      unlinkSync(join(dir, f));
-      console.log('  rm   ', relative(process.cwd(), join(dir, f)));
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      rmFontsRecursive(full);
+    } else if (WEB_FONT_EXTS.some(ext => entry.name.endsWith(ext))) {
+      unlinkSync(full);
+      console.log('  rm   ', relative(process.cwd(), full));
     }
   }
 }
 
 // Convert all woff2 files in srcDir to TTF files in dstDir using wawoff2.
-// Returns a Promise that resolves when done.
 async function convertQCF4ToTTF(srcDir, dstDir) {
   if (!existsSync(srcDir)) {
     console.log('  [qcf4] source dir not found, skipping TTF conversion');
@@ -47,7 +47,8 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
 
   let wawoff2;
   try {
-    wawoff2 = require('wawoff2');
+    const mod = await import('wawoff2');
+    wawoff2 = mod.default || mod;
   } catch (e) {
     console.warn('  [qcf4] wawoff2 not installed — run: npm install --save-dev wawoff2');
     console.warn('  [qcf4] Skipping TTF conversion; iOS Mushaf will fall back to network fonts.');
@@ -82,6 +83,7 @@ async function convertQCF4ToTTF(srcDir, dstDir) {
 
 async function main() {
   console.log('\nPreparing iOS font bundle...');
+  console.log('  IOS_PUBLIC:', IOS_PUBLIC);
 
   const qcf4Src = join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4');
   const qcf4Dst = join(IOS_PUBLIC, 'assets', 'fonts', 'qcf4ttf');
@@ -89,14 +91,17 @@ async function main() {
   // Convert QCF4 woff2 → TTF for offline Mushaf on iOS (ITMS-90853 safe)
   await convertQCF4ToTTF(qcf4Src, qcf4Dst);
 
-  // Remove directories/files with web font formats
+  // Remove known web-font directories entirely
   rmDir(qcf4Src);
   rmDir(join(IOS_PUBLIC, 'assets', 'fonts', 'qcf2'));
-  rmFonts(join(IOS_PUBLIC, 'assets', 'fonts'));
-  rmFonts(join(IOS_PUBLIC, 'fonts'));
-  rmFonts(join(IOS_PUBLIC, 'assets', 'fontawesome', 'webfonts'));
 
-  // Verify no web fonts remain — hard fail if any found
+  // Recursively strip all remaining .woff / .woff2 from font directories
+  rmFontsRecursive(join(IOS_PUBLIC, 'assets', 'fonts'));
+  rmFontsRecursive(join(IOS_PUBLIC, 'fonts'));
+  rmFontsRecursive(join(IOS_PUBLIC, 'assets', 'fontawesome'));
+
+  // Verify no web fonts remain in the bundle — hard fail if any found
+  let foundBad = 0;
   function verifyClean(dir) {
     if (!existsSync(dir)) return;
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -105,13 +110,17 @@ async function main() {
         verifyClean(full);
       } else if (WEB_FONT_EXTS.some(ext => entry.name.endsWith(ext))) {
         console.error('ERROR: web font not stripped:', relative(process.cwd(), full));
-        process.exit(1);
+        foundBad++;
       }
     }
   }
-  verifyClean(join(IOS_PUBLIC, 'assets', 'fonts'));
+  verifyClean(join(IOS_PUBLIC, 'assets'));
   verifyClean(join(IOS_PUBLIC, 'fonts'));
-  verifyClean(join(IOS_PUBLIC, 'assets', 'fontawesome'));
+
+  if (foundBad > 0) {
+    console.error(`[strip-ios-fonts] ${foundBad} web font(s) remain — aborting`);
+    process.exit(1);
+  }
 
   console.log('[strip-ios-fonts] verification passed');
   console.log('Done.\n');
