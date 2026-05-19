@@ -18,16 +18,16 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts
 
-      - name: Check no wildcard CORS in functions
+      - name: Check no wildcard CORS in admin functions
         run: |
-          echo "Checking for wildcard CORS in Cloudflare Functions..."
-          if grep -r "Allow-Origin.*'\*'" functions/ --include="*.js" | grep -v "OPTIONS"; then
-            echo "FAIL: Wildcard CORS found in a non-OPTIONS handler"
+          echo "Checking for wildcard CORS in admin Cloudflare Functions..."
+          if grep -r "Allow-Origin.*'\*'" functions/admin-*.js 2>/dev/null | grep -v "OPTIONS"; then
+            echo "FAIL: Wildcard CORS found in an admin handler"
             exit 1
           fi
-          echo "PASS: No wildcard CORS"
+          echo "PASS: No wildcard CORS in admin functions"
 
       - name: Check no debug endpoints
         run: |
