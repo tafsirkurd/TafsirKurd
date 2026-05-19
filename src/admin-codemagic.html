@@ -334,8 +334,14 @@
                     <div class="stat-label">Latest Build #</div>
                 </div>
                 <div class="stat-card" style="border-top:3px solid #f59e0b">
-                    <div class="stat-value" id="cmStatMinUsed">—</div>
-                    <div class="stat-label" id="cmStatMinLabel">Min Used (month)</div>
+                    <div style="display:flex;align-items:baseline;gap:5px;line-height:1;margin-bottom:4px">
+                        <span class="stat-value" id="cmStatMinUsed" style="margin-bottom:0">—</span>
+                        <span style="font-size:13px;font-weight:600;color:var(--text-tertiary)" id="cmStatMinTotal"></span>
+                    </div>
+                    <div style="height:5px;background:var(--bg-hover);border-radius:3px;margin:7px 0 6px;overflow:hidden">
+                        <div id="cmStatMinBar" style="height:100%;width:0%;border-radius:3px;background:#f59e0b;transition:width .8s cubic-bezier(.4,0,.2,1)"></div>
+                    </div>
+                    <div class="stat-label" id="cmStatMinLabel">Free macOS Minutes</div>
                 </div>
             </div>
 
@@ -566,10 +572,19 @@
                 return acc;
             }, 0);
             var _totalMin = Math.ceil(_totalSec / 60);
-            var smm = document.getElementById('cmStatMinUsed');
-            var sml = document.getElementById('cmStatMinLabel');
-            if (smm) smm.textContent = _totalMin + ' min';
-            if (sml) sml.textContent = 'Min Used (' + _monthName + ')';
+            var CM_FREE_MIN = 500;
+            var smm  = document.getElementById('cmStatMinUsed');
+            var smt  = document.getElementById('cmStatMinTotal');
+            var smb  = document.getElementById('cmStatMinBar');
+            var sml  = document.getElementById('cmStatMinLabel');
+            var pctUsed = Math.min(100, Math.round(_totalMin / CM_FREE_MIN * 100));
+            if (smm) smm.textContent = _totalMin;
+            if (smt) smt.textContent = '/ ' + CM_FREE_MIN + ' min';
+            if (smb) {
+                smb.style.width = pctUsed + '%';
+                smb.style.background = pctUsed >= 90 ? '#ef4444' : pctUsed >= 70 ? '#f97316' : '#f59e0b';
+            }
+            if (sml) sml.textContent = 'Free macOS Minutes (' + _monthName + ')';
 
             if (!builds.length) {
                 container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-tertiary);font-size:13px">No builds found.</div>';
