@@ -5550,10 +5550,6 @@
                         <i class="fas fa-arrow-right"></i> گەڕیان
                     </button>
                     <div class="mushaf-toolbar-title" id="mushafTitle"></div>
-                    <button class="mushaf-toolbar-btn" id="mushafStyleBtn" onclick="cycleMushafTransition()" title="Change page turn style">↔ Slide</button>
-                    <button class="mushaf-toolbar-btn" id="mushafTafsirBtn" onclick="toggleMushafTafsir()">
-                        تەفسیر
-                    </button>
                 </div>
                 <div class="mushaf-spread-wrapper">
                     <div class="mushaf-page" id="mushafLeftPage">
@@ -5569,7 +5565,11 @@
                     <button class="mushaf-nav-btn" id="mushafPrevBtn" onclick="mushafNavigate('prev')">
                         <i class="fas fa-chevron-right"></i> پێشوو
                     </button>
-                    <div class="mushaf-page-info" id="mushafPageInfo"></div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button class="mushaf-toolbar-btn" id="mushafStyleBtn" onclick="cycleMushafTransition()" title="Change page turn style">↔ Slide</button>
+                        <div class="mushaf-page-info" id="mushafPageInfo"></div>
+                        <button class="mushaf-toolbar-btn" id="mushafTafsirBtn" onclick="toggleMushafTafsir()">تەفسیر</button>
+                    </div>
                     <button class="mushaf-nav-btn" id="mushafNextBtn" onclick="mushafNavigate('next')">
                         دواتر <i class="fas fa-chevron-left"></i>
                     </button>
