@@ -2671,10 +2671,17 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   }
   .prayer-grid-time{font-size:1.9rem}
 
-  /* GENCINE: 3-col grid, cinematic cards */
-  .genc-home{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:24px 24px 40px}
+  /* GENCINE: 6-col internal grid, each card spans 2 → visually 3-col.
+     This lets CSS center a 2-item last row (5,8… items) automatically. */
+  .genc-home{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;padding:24px 24px 40px}
+  .genc-home>*{grid-column:span 2}
+  /* reset mobile lone-item rule */
   .genc-home>:last-child:nth-child(odd){grid-column:unset}
+  /* lone last item (1,4,7…): full width */
   .genc-home>:last-child:nth-child(3n+1){grid-column:1/-1}
+  /* 2-item last row (5,8…): center the pair */
+  .genc-home>:nth-last-child(2):nth-child(3n+1){grid-column:2/span 2}
+  .genc-home>:last-child:nth-child(3n+2){grid-column:4/span 2}
   .genc-card-btn{height:175px}
   .genc-card-body{padding:14px 18px 18px;gap:14px}
   .genc-card-icon{width:50px;height:50px;border-radius:14px;font-size:1.4rem}
@@ -2892,9 +2899,12 @@ html.is-ipad .sky-countdown{font-size:3.2rem}
 html.is-ipad .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:20px 24px 60px;gap:16px;align-content:start}
 html.is-ipad .prayer-grid-card{padding:20px 18px 18px!important;border-radius:20px!important;min-height:120px}
 html.is-ipad .prayer-grid-time{font-size:1.9rem}
-html.is-ipad .genc-home{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:24px 24px 40px}
+html.is-ipad .genc-home{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;padding:24px 24px 40px}
+html.is-ipad .genc-home>*{grid-column:span 2}
 html.is-ipad .genc-home>:last-child:nth-child(odd){grid-column:unset}
 html.is-ipad .genc-home>:last-child:nth-child(3n+1){grid-column:1/-1}
+html.is-ipad .genc-home>:nth-last-child(2):nth-child(3n+1){grid-column:2/span 2}
+html.is-ipad .genc-home>:last-child:nth-child(3n+2){grid-column:4/span 2}
 html.is-ipad .genc-card-btn{height:175px}
 html.is-ipad .genc-card-body{padding:14px 18px 18px;gap:14px}
 html.is-ipad .genc-card-icon{width:50px;height:50px;border-radius:14px;font-size:1.4rem}
