@@ -29,6 +29,9 @@
 		ATHN000000000013 /* athan_omar.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000003 /* athan_omar.caf */; };
 		ATHN000000000014 /* athan_peshawa.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000004 /* athan_peshawa.caf */; };
 		ATHN000000000015 /* athan_raad.caf in Resources */ = {isa = PBXBuildFile; fileRef = ATHN000000000005 /* athan_raad.caf */; };
+		TEST000000000001 /* TafsirKurdWidgetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TEST000000000011 /* TafsirKurdWidgetTests.swift */; };
+		TEST000000000002 /* WidgetLogic.swift in test Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000017 /* WidgetLogic.swift */; };
+		WDGT000000000016 /* WidgetLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = WDGT000000000017 /* WidgetLogic.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +62,9 @@
 		ATHN000000000003 /* athan_omar.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_omar.caf; sourceTree = "<group>"; };
 		ATHN000000000004 /* athan_peshawa.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_peshawa.caf; sourceTree = "<group>"; };
 		ATHN000000000005 /* athan_raad.caf */ = {isa = PBXFileReference; lastKnownFileType = audio.caf; path = athan_raad.caf; sourceTree = "<group>"; };
+		TEST000000000010 /* TafsirKurdWidgetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TafsirKurdWidgetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		TEST000000000011 /* TafsirKurdWidgetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TafsirKurdWidgetTests.swift; sourceTree = "<group>"; };
+		WDGT000000000017 /* WidgetLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLogic.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -100,6 +106,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TEST000000000032 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -109,6 +122,7 @@
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
 				WDGT000000000020 /* TafsirKurdWidget */,
+				TEST000000000020 /* TafsirKurdWidgetTests */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -118,6 +132,7 @@
 			children = (
 				504EC3041FED79650016851F /* App.app */,
 				WDGT000000000010 /* TafsirKurdWidget.appex */,
+				TEST000000000010 /* TafsirKurdWidgetTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -162,10 +177,19 @@
 			isa = PBXGroup;
 			children = (
 				WDGT000000000011 /* TafsirKurdWidget.swift */,
+				WDGT000000000017 /* WidgetLogic.swift */,
 				WDGT000000000012 /* Info.plist */,
 				WDGT000000000013 /* TafsirKurdWidget.entitlements */,
 			);
 			path = TafsirKurdWidget;
+			sourceTree = "<group>";
+		};
+		TEST000000000020 /* TafsirKurdWidgetTests */ = {
+			isa = PBXGroup;
+			children = (
+				TEST000000000011 /* TafsirKurdWidgetTests.swift */,
+			);
+			path = TafsirKurdWidgetTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -207,6 +231,22 @@
 			productReference = WDGT000000000010 /* TafsirKurdWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		TEST000000000030 /* TafsirKurdWidgetTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = TEST000000000042 /* Build configuration list for PBXNativeTarget "TafsirKurdWidgetTests" */;
+			buildPhases = (
+				TEST000000000031 /* Sources */,
+				TEST000000000032 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TafsirKurdWidgetTests;
+			productName = TafsirKurdWidgetTests;
+			productReference = TEST000000000010 /* TafsirKurdWidgetTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -222,6 +262,10 @@
 						ProvisioningStyle = Automatic;
 					};
 					WDGT000000000030 = {
+						CreatedOnToolsVersion = 15.0;
+						ProvisioningStyle = Automatic;
+					};
+					TEST000000000030 = {
 						CreatedOnToolsVersion = 15.0;
 						ProvisioningStyle = Automatic;
 					};
@@ -242,6 +286,7 @@
 			targets = (
 				504EC3031FED79650016851F /* App */,
 				WDGT000000000030 /* TafsirKurdWidget */,
+				TEST000000000030 /* TafsirKurdWidgetTests */,
 			);
 		};
 /* End PBXProject section */
@@ -296,6 +341,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				WDGT000000000001 /* TafsirKurdWidget.swift in Sources */,
+				WDGT000000000016 /* WidgetLogic.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TEST000000000031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WDGT000000000016 /* WidgetLogic.swift in Sources */,
+				TEST000000000001 /* TafsirKurdWidgetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -536,6 +591,34 @@
 			};
 			name = Release;
 		};
+		TEST000000000040 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 208;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tafsirkurd.app.TafsirKurdWidgetTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		TEST000000000041 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 208;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tafsirkurd.app.TafsirKurdWidgetTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -562,6 +645,15 @@
 			buildConfigurations = (
 				WDGT000000000040 /* Debug */,
 				WDGT000000000041 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		TEST000000000042 /* Build configuration list for PBXNativeTarget "TafsirKurdWidgetTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				TEST000000000040 /* Debug */,
+				TEST000000000041 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
