@@ -2311,14 +2311,20 @@ struct TafsirKurdGoalEntryView: View {
 struct LockPrayerEntry: TimelineEntry {
     let date:          Date
     let city:          String
-    let nextNameKu:    String   // Kurdish prayer name
-    let nextTimeStr:   String   // formatted "H:mm"
-    let remainingStr:  String   // e.g. "١:٢٣ مایە"
+    let nextNameKu:    String   // prayer 1 — highlighted
+    let nextTimeStr:   String
+    let next2NameKu:   String   // prayer 2
+    let next2TimeStr:  String
+    let next3NameKu:   String   // prayer 3
+    let next3TimeStr:  String
+    let remainingStr:  String   // countdown to prayer 1
     let version:       Int
 
     static var placeholder: LockPrayerEntry {
         LockPrayerEntry(date: .now, city: "", nextNameKu: "نمازی",
-                        nextTimeStr: "--:--", remainingStr: "", version: kTimelineVersion)
+                        nextTimeStr: "--:--", next2NameKu: "",
+                        next2TimeStr: "", next3NameKu: "",
+                        next3TimeStr: "", remainingStr: "", version: kTimelineVersion)
     }
 }
 
@@ -2390,39 +2396,46 @@ struct LockPrayerProvider: TimelineProvider {
     private func buildEntry(at date: Date, data: PrayerWidgetData? = nil, reason: String) -> LockPrayerEntry {
         guard let d = data ?? PrayerWidgetData.load() else { return LockPrayerEntry.placeholder }
 
-        var foundName:    String?  = nil
-        var foundTime:    Date?    = nil
-        var foundTimeStr: String   = "--:--"
+        // effectiveNext3 returns up to 3 upcoming prayers in display order (strict t > date).
+        // All display values (Kurdish name + 12h time string) are precomputed here so
+        // the view body stays 100% pure — no date math, no UserDefaults.
+        let n3 = effectiveNext3(data: d, now: date)
 
-        outer: for offset in 0...1 {
-            let src = offset == 0 ? d.timings : (d.tomorrow ?? d.timings)
-            for name in kDisplayOrder {
-                guard let t = d.prayerDate(name, dayOffset: offset), t > date else { continue }
-                foundName    = name
-                foundTime    = t
-                foundTimeStr = src[name].map { formatPrayerTime($0) } ?? "--:--"
-                break outer
-            }
-        }
-
-        guard let nm = foundName, let nt = foundTime else {
+        guard let first = n3.first else {
             wLog.warning("[LOCK] buildEntry(\(reason)) no next prayer found")
             return LockPrayerEntry(date: date, city: d.city,
                                    nextNameKu: kn("Fajr"), nextTimeStr: "--:--",
+                                   next2NameKu: "", next2TimeStr: "",
+                                   next3NameKu: "", next3TimeStr: "",
                                    remainingStr: "", version: kTimelineVersion)
         }
 
-        let remaining = lockRemaining(to: nt, from: date)
-        wLog.info("[LOCK] buildEntry reason=\(reason) next=\(nm) time=\(foundTimeStr) rem=\(remaining)")
-        return LockPrayerEntry(date: date, city: d.city,
-                               nextNameKu:   kn(nm),
-                               nextTimeStr:  foundTimeStr,
-                               remainingStr: remaining,
-                               version:      kTimelineVersion)
+        // Resolve the actual Date of prayer 1 so we can compute remaining time.
+        let firstDate: Date? = {
+            for offset in 0...1 {
+                if let t = d.prayerDate(first.name, dayOffset: offset), t > date { return t }
+            }
+            return nil
+        }()
+        let remaining = firstDate.map { lockRemaining(to: $0, from: date) } ?? ""
+
+        wLog.info("[LOCK] buildEntry reason=\(reason) n3=[\(n3.map{$0.name}.joined(separator:","))] rem=\(remaining)")
+        return LockPrayerEntry(
+            date:         date,
+            city:         d.city,
+            nextNameKu:   first.ku,
+            nextTimeStr:  first.display,
+            next2NameKu:  n3.count > 1 ? n3[1].ku : "",
+            next2TimeStr: n3.count > 1 ? n3[1].display : "",
+            next3NameKu:  n3.count > 2 ? n3[2].ku : "",
+            next3TimeStr: n3.count > 2 ? n3[2].display : "",
+            remainingStr: remaining,
+            version:      kTimelineVersion
+        )
     }
 }
 
-/// Ultra-minimal lock-screen view.
+/// Lock-screen view: 3 upcoming prayers, first row highlighted.
 /// Body is 100% pure: reads precomputed entry values only — no logging,
 /// no UserDefaults, no date math, no heavy computation.
 private struct LockMinimalView: View {
@@ -2430,38 +2443,57 @@ private struct LockMinimalView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        // Logs family once — outside any conditional so WidgetKit sees stable identity
         let _ = wLog.info("[LOCK] body render family=\(String(describing: family)) next=\(entry.nextNameKu)")
-        return VStack(alignment: .trailing, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
+        return VStack(alignment: .trailing, spacing: 5) {
+            // Row 1 — highlighted (next upcoming prayer)
+            HStack(spacing: 4) {
                 Text(entry.nextNameKu)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.primary)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AnyShapeStyle(.primary))
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                Text(entry.nextTimeStr)
-                    .font(.system(size: 16, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-
-            HStack(spacing: 4) {
-                if !entry.city.isEmpty {
-                    Text(entry.city)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                Spacer(minLength: 0)
                 if !entry.remainingStr.isEmpty {
                     Text(entry.remainingStr)
                         .font(.system(size: 11).monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AnyShapeStyle(.secondary))
                         .lineLimit(1)
                 }
+                Text(entry.nextTimeStr)
+                    .font(.system(size: 14, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(AnyShapeStyle(.primary))
+                    .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
+            // Row 2 — second upcoming prayer
+            if !entry.next2NameKu.isEmpty {
+                HStack(spacing: 4) {
+                    Text(entry.next2NameKu)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(AnyShapeStyle(.secondary))
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(entry.next2TimeStr)
+                        .font(.system(size: 12, weight: .regular).monospacedDigit())
+                        .foregroundStyle(AnyShapeStyle(.secondary))
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            // Row 3 — third upcoming prayer
+            if !entry.next3NameKu.isEmpty {
+                HStack(spacing: 4) {
+                    Text(entry.next3NameKu)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(AnyShapeStyle(.secondary))
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(entry.next3TimeStr)
+                        .font(.system(size: 12, weight: .regular).monospacedDigit())
+                        .foregroundStyle(AnyShapeStyle(.secondary))
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity)
+            }
         }
         .environment(\.layoutDirection, .rightToLeft)
     }
