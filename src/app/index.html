@@ -2604,14 +2604,13 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   [data-theme="sakina"] #quranHome{box-shadow:-2px 0 0 var(--border), -4px 0 16px rgba(0,0,0,.2)}
 
   #quranHome .hdr,
-  #quranHome .search-bar,
-  #quranHome #continueReading{flex-shrink:0}
+  #quranHome .search-bar{flex-shrink:0}
 
-  /* Single-column list in sidebar feels more app-like */
+  /* Single-column list in sidebar — quranHome scrolls as one unit so
+     the continue-card scrolls away with the list instead of staying frozen */
   #quranHome .surah-grid{
     grid-template-columns:1fr!important;
     gap:6px;padding:10px 10px 20px;
-    flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   }
   #quranHome .surah-card{min-height:88px}
 
@@ -2853,7 +2852,7 @@ html.is-ipad #quranHome{
   box-shadow:-2px 0 0 var(--border),-4px 0 16px rgba(0,0,0,.06);
   background:var(--bg2);overflow-y:auto;overflow-x:hidden;padding-bottom:100px;
 }
-html.is-ipad #quranHome .surah-grid{grid-template-columns:1fr!important;gap:6px;padding:10px 10px 20px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+html.is-ipad #quranHome .surah-grid{grid-template-columns:1fr!important;gap:6px;padding:10px 10px 20px}
 html.is-ipad #quranHome .surah-card{min-height:88px}
 html.is-ipad #quranReader{display:flex!important;flex:1;min-width:0;background:var(--bg)}
 html.is-ipad #quranReader:not(.on) .reader-placeholder{display:flex}
