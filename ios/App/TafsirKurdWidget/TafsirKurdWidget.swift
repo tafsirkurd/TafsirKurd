@@ -435,84 +435,73 @@ struct WidgetExtendedCache: Codable {
 
 // MARK: — Timeline entry
 
-struct PrayerEntry: TimelineEntry {
-    let date:   Date
-    let data:   PrayerWidgetData?
-    let next:   (name: String, time: Date, ku: String)?
-    let reason: String
+private struct EntryDisplay {
+    let hasData:       Bool
+    let city:          String
+    let hijri:         String
+    let highlightName: String        // prayer name to bold/accent ("" = none)
+    let nextKu:        String        // Kurdish name of next prayer
+    let nextTime:      Date          // for LiveCountdown (.distantFuture if none)
+    let nextDisplay:   String        // "6:23" formatted time
+    let displayTimes:  [String: String]  // "Fajr" → "4:12" for all 6 prayers
+    let gregorianDate: String        // "19 May 2026"
+    let isTomorrow:    Bool
 
-    init(date: Date, data: PrayerWidgetData?,
-         next: (name: String, time: Date, ku: String)?,
-         reason: String = "unknown") {
-        self.date   = date
-        self.data   = data
-        self.next   = next
-        self.reason = reason
+    static let empty = EntryDisplay(
+        hasData: false, city: "", hijri: "", highlightName: "",
+        nextKu: "", nextTime: .distantFuture, nextDisplay: "--:--",
+        displayTimes: [:], gregorianDate: "", isTomorrow: false)
+
+    static func make(
+        data:    PrayerWidgetData,
+        next:    (name: String, time: Date, ku: String)?,
+        refDate: Date
+    ) -> EntryDisplay {
+        // isTomorrow: next prayer on different Baghdad day than refDate
+        let refC = PrayerWidgetData.baghdadCal.dateComponents([.year, .month, .day], from: refDate)
+        let isTom: Bool = {
+            guard let nt = next?.time else { return false }
+            let nc = PrayerWidgetData.baghdadCal.dateComponents([.year, .month, .day], from: nt)
+            return nc.year != refC.year || nc.month != refC.month || nc.day != refC.day
+        }()
+        let displayTimings = isTom ? (data.tomorrow ?? data.timings) : data.timings
+
+        var dtimes: [String: String] = [:]
+        for name in kDisplayOrder {
+            dtimes[name] = displayTimings[name].map { formatPrayerTime($0) } ?? "--:--"
+        }
+        let hl       = next?.name ?? ""
+        let nDisplay = hl.isEmpty ? "--:--" : (dtimes[hl] ?? "--:--")
+
+        var c = DateComponents()
+        c.year = refC.year; c.month = refC.month; c.day = refC.day
+        let gDate = Calendar(identifier: .gregorian).date(from: c)
+            .map { _gregorianFmt.string(from: $0) } ?? ""
+
+        return EntryDisplay(
+            hasData: true, city: data.city, hijri: data.hijri,
+            highlightName: hl, nextKu: next?.ku ?? "",
+            nextTime: next?.time ?? .distantFuture, nextDisplay: nDisplay,
+            displayTimes: dtimes, gregorianDate: gDate, isTomorrow: isTom)
     }
 }
 
-// MARK: — Unified display state
-//
-// Every widget family (Small/Medium/Large/Lock) resolves display state through this
-// single path. No view independently decides current/next prayer — resolve() owns it.
+struct PrayerEntry: TimelineEntry {
+    let date:    Date
+    let data:    PrayerWidgetData?
+    let next:    (name: String, time: Date, ku: String)?
+    let reason:  String
+    let display: EntryDisplay
 
-struct WidgetPrayerState {
-    let current:        (name: String, ku: String)?   // prayer in progress right now
-    let next:           (name: String, time: Date, ku: String)?
-    let next3:          [(name: String, ku: String, display: String)]
-    let city:           String
-    let date:           String
-    let isStale:        Bool
-    let entryReason:    String
-    // isTomorrow: true when the next prayer falls on tomorrow's Baghdad date.
-    // displayTimings: tomorrow's timings when isTomorrow so time labels in the
-    // prayer list reflect the correct schedule (not today's already-past times).
-    let isTomorrow:     Bool
-    let displayTimings: [String: String]
-
-    static func resolve(
-        _ data: PrayerWidgetData?,
-        _ entry: PrayerEntry,
-        now: Date = Date()
-    ) -> WidgetPrayerState {
-        guard let data = data else {
-            return WidgetPrayerState(current: nil, next: nil, next3: [],
-                                     city: "", date: "", isStale: false,
-                                     entryReason: entry.reason,
-                                     isTomorrow: false, displayTimings: [:])
-        }
-        let np = effectiveNextPrayer(data: data, now: now, tag: "resolve[\(entry.reason)]")
-        let n3 = effectiveNext3(data: data, now: now)
-
-        // Current = last prayer whose time has fully passed
-        var cur: (name: String, ku: String)? = nil
-        for name in kDisplayOrder {
-            if let t = data.prayerDate(name), t <= now {
-                cur = (name, kn(name))
-            }
-        }
-
-        // isTomorrow: next prayer is on a different Baghdad calendar date than today
-        let todayStr = PrayerWidgetData.baghdadDateString()
-        let npIsTomorrow: Bool = {
-            guard let np = np else { return false }
-            let comps = PrayerWidgetData.baghdadCal.dateComponents([.year, .month, .day], from: np.time)
-            guard let y = comps.year, let m = comps.month, let d = comps.day else { return false }
-            return String(format: "%04d-%02d-%02d", y, m, d) != todayStr
-        }()
-        let displayTimings = npIsTomorrow ? (data.tomorrow ?? data.timings) : data.timings
-
-        return WidgetPrayerState(
-            current:        cur,
-            next:           np,
-            next3:          n3,
-            city:           data.city,
-            date:           todayStr,
-            isStale:        data.isStale,
-            entryReason:    entry.reason,
-            isTomorrow:     npIsTomorrow,
-            displayTimings: displayTimings
-        )
+    init(date: Date, data: PrayerWidgetData?,
+         next: (name: String, time: Date, ku: String)?,
+         reason: String = "unknown",
+         display: EntryDisplay = .empty) {
+        self.date    = date
+        self.data    = data
+        self.next    = next
+        self.reason  = reason
+        self.display = display
     }
 }
 
@@ -551,7 +540,9 @@ struct PrayerProvider: TimelineProvider {
         // the first visible frame. loadBestAvailableData() can fall through to a 90-day
         // JSON decode which is too slow here. getSnapshot/getTimeline handle the full load.
         let d = PrayerWidgetData.load()
-        return .init(date: .now, data: d, next: d?.nextPrayer(), reason: "placeholder")
+        let next = d?.nextPrayer()
+        let disp = d.map { EntryDisplay.make(data: $0, next: next, refDate: .now) } ?? .empty
+        return .init(date: .now, data: d, next: next, reason: "placeholder", display: disp)
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
         let snapStart = Date()
@@ -561,7 +552,9 @@ struct PrayerProvider: TimelineProvider {
         let snapMs = Date().timeIntervalSince(snapStart) * 1000
         print("WIDGET SNAPSHOT DONE:", Date(), "ms:", String(format: "%.1f", snapMs))
         wLog.info("[WidgetSnapshot] done ms=\(String(format: "%.1f", snapMs))")
-        completion(.init(date: .now, data: d, next: d?.nextPrayer(), reason: "snapshot"))
+        let next = d?.nextPrayer()
+        let disp = d.map { EntryDisplay.make(data: $0, next: next, refDate: .now) } ?? .empty
+        completion(.init(date: .now, data: d, next: next, reason: "snapshot", display: disp))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         WT.reload()
@@ -676,8 +669,9 @@ struct PrayerProvider: TimelineProvider {
             // Use any available data so the widget shows prayer times, not a blank/skeleton view.
             let fallback     = loadBestAvailableData()
             let fallbackNext = fallback.flatMap { effectiveNextPrayer(data: $0, now: now, tag: "no_city") }
+            let fallbackDisp = fallback.map { EntryDisplay.make(data: $0, next: fallbackNext, refDate: now) } ?? .empty
             writeDiagnostics(["ts": Date().timeIntervalSince1970 * 1000, "source": "no_city", "status": "missingTimeline"])
-            completion(Timeline(entries: [PrayerEntry(date: now, data: fallback, next: fallbackNext, reason: "no_city_retry")],
+            completion(Timeline(entries: [PrayerEntry(date: now, data: fallback, next: fallbackNext, reason: "no_city_retry", display: fallbackDisp)],
                                 policy: .after(now.addingTimeInterval(3 * 60))))
             return
         }
@@ -805,7 +799,8 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
         let retry        = now.addingTimeInterval(5 * 60)
         let fallback     = legacyData
         let fallbackNext = fallback.flatMap { effectiveNextPrayer(data: $0, now: now, tag: "no_today") }
-        return ([.init(date: now, data: fallback, next: fallbackNext, reason: "no_data_retry")], retry)
+        let fallbackDisp = fallback.map { EntryDisplay.make(data: $0, next: fallbackNext, refDate: now) } ?? .empty
+        return ([.init(date: now, data: fallback, next: fallbackNext, reason: "no_data_retry", display: fallbackDisp)], retry)
     }
 
     // Pre-build a flat sorted array of all (time, name) pairs for the next 30 days.
@@ -828,7 +823,8 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
 
     // Entry covering "right now" — establishes the initial display state
     let nowNext = fastNext(after: now)
-    entries.append(.init(date: now, data: todayData, next: nowNext, reason: "now"))
+    entries.append(.init(date: now, data: todayData, next: nowNext, reason: "now",
+                         display: todayData.map { EntryDisplay.make(data: $0, next: nowNext, refDate: now) } ?? .empty))
 
     // Zone cutoffs for tiered safety offsets
     let zone1End = now.addingTimeInterval(48 * 3600)     // 0–48 h: full offsets [+5 s, +60 s, +5 min]
@@ -845,7 +841,8 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             let next = fastNext(after: t.addingTimeInterval(30))
             let isZone2 = t >= zone1End && t < zone2End
             entries.append(.init(date: t, data: dayData, next: next,
-                                 reason: isZone2 ? "zone2_boundary_\(name.lowercased())" : "boundary_\(name.lowercased())"))
+                                 reason: isZone2 ? "zone2_boundary_\(name.lowercased())" : "boundary_\(name.lowercased())",
+                                 display: dayData.map { EntryDisplay.make(data: $0, next: next, refDate: t) } ?? .empty))
             boundaryCount += 1
 
             // Zone 1: dense post-prayer offsets so iOS throttling skips at most 20 min.
@@ -858,7 +855,8 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
                 let sNext = fastNext(after: st.addingTimeInterval(30))
                 let label = offsetLabels[off] ?? "plus\(Int(off))s"
                 entries.append(.init(date: st, data: dayData, next: sNext,
-                                     reason: "boundary_\(name.lowercased())_\(label)"))
+                                     reason: "boundary_\(name.lowercased())_\(label)",
+                                     display: dayData.map { EntryDisplay.make(data: $0, next: sNext, refDate: st) } ?? .empty))
             }
         }
 
@@ -870,7 +868,8 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             mc.timeZone = TimeZone(identifier: "Asia/Baghdad")
             if let midnight = PrayerWidgetData.baghdadCal.date(from: mc), midnight > now {
                 let nextAtMid = fastNext(after: midnight)
-                entries.append(.init(date: midnight, data: dayData, next: nextAtMid, reason: "midnight"))
+                entries.append(.init(date: midnight, data: dayData, next: nextAtMid, reason: "midnight",
+                                     display: dayData.map { EntryDisplay.make(data: $0, next: nextAtMid, refDate: midnight) } ?? .empty))
             }
         }
     }
@@ -888,7 +887,8 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
             let hDateStr = String(format: "%04d-%02d-%02d", hy, hm, hd)
             let hData    = syntheticData(from: ext, dateStr: hDateStr) ?? todayData
             let hNext    = fastNext(after: hTick)
-            entries.append(.init(date: hTick, data: hData, next: hNext, reason: "heartbeat"))
+            entries.append(.init(date: hTick, data: hData, next: hNext, reason: "heartbeat",
+                                 display: hData.map { EntryDisplay.make(data: $0, next: hNext, refDate: hTick) } ?? .empty))
             heartbeatCount += 1
         }
         hTick = hTick.addingTimeInterval(15 * 60)
@@ -925,7 +925,7 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
             }
         }
         wLog.warning("buildLegacyTimeline: no data anywhere — retry 3 min")
-        completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil, reason: "no_data_retry")],
+        completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil, reason: "no_data_retry", display: .empty)],
                             policy: .after(now.addingTimeInterval(3 * 60))))
         return
     }
@@ -936,7 +936,8 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
         // so the correct prayer is highlighted even if the time strings are off by ~1 min.
         wLog.warning("buildLegacyTimeline: STALE ageH=\(String(format:"%.1f",ageH)) — showing stale data, retry 30 min")
         let staleNext = data.nextPrayer(from: now)
-        completion(Timeline(entries: [PrayerEntry(date: now, data: data, next: staleNext, reason: "stale_legacy")],
+        let staleDisp = EntryDisplay.make(data: data, next: staleNext, refDate: now)
+        completion(Timeline(entries: [PrayerEntry(date: now, data: data, next: staleNext, reason: "stale_legacy", display: staleDisp)],
                             policy: .after(now.addingTimeInterval(30 * 60))))
         return
     }
@@ -999,7 +1000,10 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
     }
 
     let allRaw = (rawEntries + safetyEntries).sorted { $0.date < $1.date }
-    let entries = allRaw.map { PrayerEntry(date: $0.date, data: data, next: $0.next, reason: $0.reason) }
+    let entries = allRaw.map { raw in
+        PrayerEntry(date: raw.date, data: data, next: raw.next, reason: raw.reason,
+                    display: EntryDisplay.make(data: data, next: raw.next, refDate: raw.date))
+    }
 
     let policyAt = min(PrayerWidgetData.baghdadMidnight(daysAhead: 1).addingTimeInterval(5 * 60),
                        now.addingTimeInterval(25 * 3600))
@@ -1301,12 +1305,9 @@ private struct NoDataView: View {
 //   05:06 → Dhuhr    (Fajr + Sunrise both past; Dhuhr is next)
 //   22:xx after Isha → tomorrow Fajr
 //
-// All four widget sizes (Small/Medium/Large/Lock) go through resolve() which
-// calls effectiveNextPrayer and effectiveNext3 with the same now reference.
-// The now reference is max(Date(), entry.date) to guard against WidgetKit
-// pre-rendering entries before their scheduled time.
-//
-// correctedNext: unused wrapper kept for reference; resolve() calls effectiveNextPrayer directly.
+// Used at timeline-build time in buildExtendedTimeline, buildLegacyTimeline, and
+// LockPrayerProvider. All display state for home-screen widgets is precomputed into
+// EntryDisplay at build time; view bodies read entry.display and never call these.
 // effectiveNext3: same strict t > now logic, returns the next 3 upcoming prayers.
 
 private func fmtHMS(_ d: Date) -> String {
@@ -1425,54 +1426,28 @@ private func effectiveNext3(
     return result
 }
 
-private func correctedNext(
-    data: PrayerWidgetData,
-    stored: (name: String, time: Date, ku: String)?,
-    tag: String
-) -> (name: String, time: Date, ku: String)? {
-    let rederived = effectiveNextPrayer(data: data, now: Date(), tag: tag)
-    if let rd = rederived, let st = stored, rd.name != st.name {
-        wLog.warning("[WidgetDrift] \(tag): stale=\(st.name) corrected=\(rd.name)")
-    }
-    return rederived ?? stored
-}
-
 // MARK: — Small widget
 
 private struct SmallView: View {
     let entry: PrayerEntry
     var body: some View {
-        // max(Date(), entry.date) guards against WidgetKit pre-rendering entries
-        // before their scheduled time — if WidgetKit renders at 3:20 AM for the
-        // 3:21 AM Fajr boundary entry, Date() = 3:20 and prayerDate("Fajr") = 3:21
-        // would still appear future, freezing Fajr as highlighted until 3:37 heartbeat.
-        // Using max() forces the reference to be at least entry.date so Fajr is
-        // correctly treated as past the moment its boundary entry activates.
-        let realNow  = Date()
-        let now      = max(realNow, entry.date)
-        let state    = WidgetPrayerState.resolve(entry.data, entry, now: now)
-        let n        = state.next
-        let showName = n?.ku   ?? kn("Fajr")
-        let showKey  = n?.name ?? "Fajr"
-        let driftS   = Int(realNow.timeIntervalSince(entry.date))
-        let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") isTomorrow=\(state.isTomorrow) cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") family=sm")
-        if let d = entry.data {
+        let ds = entry.display
+        if ds.hasData {
             VStack(alignment: .trailing, spacing: 0) {
-                CityLabel(city: d.city)
+                CityLabel(city: ds.city)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Spacer()
-                Text(showName)
+                Text(ds.nextKu)
                     .font(.system(size: 30, weight: .semibold))
                     .foregroundStyle(DS.t1)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
+                    .lineLimit(1).minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                Text(displayTime(showKey, timings: state.displayTimings))
+                Text(ds.nextDisplay)
                     .font(.system(size: 22, weight: .ultraLight).monospacedDigit())
                     .foregroundStyle(DS.accent)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                if let n = n {
-                    LiveCountdown(to: n.time)
+                if ds.nextTime < .distantFuture {
+                    LiveCountdown(to: ds.nextTime)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.top, 2)
                 }
@@ -1481,7 +1456,10 @@ private struct SmallView: View {
             .padding(12)
             .overlay(alignment: .bottomLeading) {
                 if kWidgetDebug {
-                    WidgetDebugOverlay(entry: entry, famStr: "sm", rnName: n?.name ?? "nil", now: now)
+                    Text("b:\(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "?") sm [\(String(entry.reason.prefix(8)))] next:\(ds.highlightName)")
+                        .font(.system(size: 5).monospacedDigit())
+                        .foregroundStyle(Color.white.opacity(0.18))
+                        .lineLimit(1).minimumScaleFactor(0.4)
                         .padding(4)
                 }
             }
@@ -1509,27 +1487,22 @@ private struct SmallView: View {
 private struct MediumView: View {
     let entry: PrayerEntry
     var body: some View {
-        let realNow = Date()
-        let now     = max(realNow, entry.date)
-        let state   = WidgetPrayerState.resolve(entry.data, entry, now: now)
-        let driftS  = Int(realNow.timeIntervalSince(entry.date))
-        let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=md")
-        if let d = entry.data {
-            let n = state.next
+        let ds = entry.display
+        if ds.hasData {
             VStack(spacing: 0) {
                 HStack(alignment: .center, spacing: 0) {
-                    if let n = n {
-                        LiveCountdown(to: n.time)
+                    if ds.nextTime < .distantFuture {
+                        LiveCountdown(to: ds.nextTime)
                     }
                     Spacer(minLength: 6)
-                    CityLabel(city: d.city)
+                    CityLabel(city: ds.city)
                 }
                 .padding(.bottom, 3)
                 VStack(spacing: 0) {
                     ForEach(kDisplayOrder, id: \.self) { name in
                         PRow(name: name,
-                             time: displayTime(name, timings: state.displayTimings),
-                             isNext: name == n?.name,
+                             time: ds.displayTimes[name] ?? "--:--",
+                             isNext: name == ds.highlightName,
                              compact: true)
                     }
                 }
@@ -1538,7 +1511,10 @@ private struct MediumView: View {
             .padding(.vertical, 4)
             .overlay(alignment: .bottomLeading) {
                 if kWidgetDebug {
-                    WidgetDebugOverlay(entry: entry, famStr: "md", rnName: n?.name ?? "nil", now: now)
+                    Text("b:\(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "?") md [\(String(entry.reason.prefix(8)))] next:\(ds.highlightName)")
+                        .font(.system(size: 5).monospacedDigit())
+                        .foregroundStyle(Color.white.opacity(0.18))
+                        .lineLimit(1).minimumScaleFactor(0.4)
                         .padding(4)
                 }
             }
@@ -1553,60 +1529,46 @@ private struct MediumView: View {
 private struct LargeView: View {
     let entry: PrayerEntry
     var body: some View {
-        let realNow = Date()
-        let now     = max(realNow, entry.date)
-        let state   = WidgetPrayerState.resolve(entry.data, entry, now: now)
-        let driftS  = Int(realNow.timeIntervalSince(entry.date))
-        let _ = wLog.info("[WidgetRender] large REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=lg")
-        if let d = entry.data {
-            let n          = state.next
-            let bottomName = n?.name ?? "Fajr"
-            let bottomKu   = n?.ku   ?? kn("Fajr")
+        let ds = entry.display
+        if ds.hasData {
             VStack(spacing: 0) {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 3) {
-                        if let n = n {
-                            LiveCountdown(to: n.time)
+                        if ds.nextTime < .distantFuture {
+                            LiveCountdown(to: ds.nextTime)
                         }
-                        Text(gregorianDisplay(PrayerWidgetData.baghdadDateString()))
+                        Text(ds.gregorianDate)
                             .font(.system(size: 10))
                             .foregroundStyle(DS.t3)
                     }
                     Spacer()
-                    Text(d.city)
+                    Text(ds.city)
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(DS.t1)
                 }
                 .padding(.bottom, 14)
-
-                DS.sep.frame(height: 1)
-                    .padding(.bottom, 10)
-
+                DS.sep.frame(height: 1).padding(.bottom, 10)
                 VStack(spacing: 3) {
                     ForEach(kDisplayOrder, id: \.self) { name in
                         PRow(name: name,
-                             time: displayTime(name, timings: state.displayTimings),
-                             isNext: name == n?.name,
+                             time: ds.displayTimes[name] ?? "--:--",
+                             isNext: name == ds.highlightName,
                              fontSize: 15)
                     }
                 }
-
                 Spacer(minLength: 0)
-
-                DS.sep.frame(height: 1)
-                    .padding(.vertical, 14)
-
+                DS.sep.frame(height: 1).padding(.vertical, 14)
                 HStack(alignment: .center) {
-                    Text(displayTime(bottomName, timings: state.displayTimings))
+                    Text(ds.highlightName.isEmpty ? "--:--" : (ds.displayTimes[ds.highlightName] ?? "--:--"))
                         .font(.system(size: 40, weight: .thin).monospacedDigit())
                         .foregroundStyle(DS.accent.opacity(0.82))
                     Spacer()
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text(bottomKu)
+                        Text(ds.nextKu)
                             .font(.system(size: 26, weight: .bold))
                             .foregroundStyle(DS.t1)
-                        if let n = n {
-                            LiveCountdown(to: n.time, fontSize: 10)
+                        if ds.nextTime < .distantFuture {
+                            LiveCountdown(to: ds.nextTime, fontSize: 10)
                         }
                     }
                 }
@@ -1615,56 +1577,16 @@ private struct LargeView: View {
             .padding(14)
             .overlay(alignment: .bottomLeading) {
                 if kWidgetDebug {
-                    WidgetDebugOverlay(entry: entry, famStr: "lg", rnName: n?.name ?? "nil", now: now)
+                    Text("b:\(Bundle.main.object(forInfoDictionaryKey:"CFBundleVersion") as? String ?? "?") lg [\(String(entry.reason.prefix(8)))] next:\(ds.highlightName)")
+                        .font(.system(size: 5).monospacedDigit())
+                        .foregroundStyle(Color.white.opacity(0.18))
+                        .lineLimit(1).minimumScaleFactor(0.4)
                         .padding(4)
                 }
             }
         } else {
             NoDataView()
         }
-    }
-}
-
-// MARK: — Lock screen widget  (accessoryRectangular — next 3 upcoming prayers)
-//
-// ┌─ DISPLAY GUARANTEE ──────────────────────────────────────────────────────┐
-// │  ALL rows come exclusively from WidgetPrayerState.resolve(now: Date()).   │
-// │  entry.next (snapshot pre-computed at timeline-build time) is NEVER       │
-// │  used for any display element. This means: even if WidgetKit activates   │
-// │  the [boundary_asr] entry late (e.g. at 17:38), the rendered snapshot    │
-// │  will show Maghrib highlighted — not Asr — because effectiveNext3()      │
-// │  re-derives from real Date() at the moment WidgetKit calls body.         │
-// │  12-hour format: prayer times are formatted via formatHM() inside        │
-// │  effectiveNext3() using h12 = parts[0] % 12 == 0 ? 12 : parts[0] % 12. │
-// └──────────────────────────────────────────────────────────────────────────┘
-//
-// Layout (3 rows, 1 prayer each, RTL: Kurdish name RIGHT, time LEFT):
-//   Row 0 — next prayer: 14pt semibold, .primary foreground
-//   Row 1 — 2nd upcoming: 12pt medium,  .secondary foreground
-//   Row 2 — 3rd upcoming: 12pt medium,  .secondary foreground
-//
-// Height estimate (spacing 6, line heights ≈ 17 / 15 / 15):
-//   3 rows × avg 16pt = 47pt
-//   2 gaps × 6pt      = 12pt
-//   total              ≈ 59pt  ✓ fits all devices (standard ≥ 73pt available)
-
-private struct LockRow: View {
-    let name: String
-    let time: String
-    let isNext: Bool
-    var body: some View {
-        HStack(spacing: 4) {
-            Text(name)
-                .font(.system(size: isNext ? 14 : 12, weight: isNext ? .semibold : .medium))
-                .foregroundStyle(isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .lineLimit(1)
-            Spacer(minLength: 4)
-            Text(time)
-                .font(.system(size: isNext ? 14 : 12, weight: isNext ? .semibold : .regular).monospacedDigit())
-                .foregroundStyle(isNext ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 
@@ -1680,92 +1602,6 @@ private let kWidgetDebug: Bool = {
     return Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
     #endif
 }()
-
-private struct WidgetDebugOverlay: View {
-    let entry:  PrayerEntry
-    let famStr: String
-    let rnName: String  // resolved next prayer name (computed by caller)
-    let now:    Date    // same Date() captured by the parent body — not a second call
-
-    var body: some View {
-        let build  = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-        let sn     = entry.next?.name ?? "nil"
-        let eHMS   = fmtHMS(entry.date)
-        let nHMS   = fmtHMS(now)
-        let reason = String(entry.reason.prefix(10))
-        VStack(alignment: .leading, spacing: 0) {
-            Text("tv:\(kTimelineVersion) b:\(build) f:\(famStr) [\(reason)]")
-                .font(.system(size: 5).monospacedDigit())
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-            Text("e:\(eHMS) n:\(nHMS) sn:\(sn) rn:\(rnName)")
-                .font(.system(size: 5).monospacedDigit())
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-        }
-        .foregroundStyle(Color.white.opacity(0.18))
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct LockView: View {
-    let entry: PrayerEntry
-    @Environment(\.widgetFamily) private var family
-
-    var body: some View {
-        // ── Step 1: resolve display state from real wall-clock time ───────────
-        // max(Date(), entry.date) guards against WidgetKit pre-rendering entries
-        // before their scheduled time. Without this, a Fajr boundary entry rendered
-        // at 3:20 AM (before the 3:21 AM schedule) would still see Fajr as future
-        // and highlight it, keeping the wrong prayer frozen until the next heartbeat.
-        // All prayer rows come from state.next3 — effectiveNext3(data:now:).
-        // entry.next is NEVER read for display; it is only used in drift logging.
-        let realNow = Date()
-        let now     = max(realNow, entry.date)
-        let state   = WidgetPrayerState.resolve(entry.data, entry, now: now)
-
-        // ── Step 2: resolved prayer list (source of ALL display elements) ─────
-        // next3[0] = highlighted row  (next upcoming prayer per real clock)
-        // next3[1] = secondary row
-        // next3[2] = tertiary row
-        // name/ku/display all come from effectiveNext3; display is 12h format.
-        let resolvedPrayers = state.next3
-
-        // ── Logging (uses entry.next for drift detection — NOT for display) ───
-        let driftS = Int(realNow.timeIntervalSince(entry.date))
-        let rnName = resolvedPrayers.first?.name ?? "nil"
-        let curName = state.current?.name ?? "nil"
-        let _ = wLog.info("[WidgetRender] lock REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
-        if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
-            if snapshotNext.name != resolvedFirst.name {
-                let _ = wLog.warning("[WidgetDrift] lock: sn=\(snapshotNext.name) rn=\(resolvedFirst.name) realNow=\(fmtHMS(realNow)) effNow=\(fmtHMS(now)) e=\(fmtHMS(entry.date)) drift=\(driftS)s")
-            }
-        }
-
-        // ── Step 3: render rows from ONLY resolved state ──────────────────────
-        if entry.data == nil || resolvedPrayers.isEmpty {
-            Text("کاتا نوێژ")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .unredacted()
-        } else {
-            VStack(spacing: 4) {
-                ForEach(0..<resolvedPrayers.count, id: \.self) { i in
-                    LockRow(
-                        name:   resolvedPrayers[i].ku,
-                        time:   resolvedPrayers[i].display,
-                        isNext: i == 0
-                    )
-                }
-
-                if kWidgetDebug {
-                    WidgetDebugOverlay(entry: entry, famStr: "rect", rnName: resolvedPrayers.first?.name ?? "nil", now: now)
-                }
-            }
-            .environment(\.layoutDirection, .rightToLeft)
-        }
-    }
-}
 
 // MARK: — Entry view routers
 //
