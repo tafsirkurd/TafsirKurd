@@ -2605,6 +2605,11 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 
   #quranHome .hdr,
   #quranHome .search-bar{flex-shrink:0}
+  /* Sidebar hdr: 300px → override generic 28px padding to prevent logo text wrapping */
+  #quranHome .hdr{padding:10px 14px}
+  #quranHome .hdr .hdr-logo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #quranHome .search-bar.on{padding:8px 14px 10px}
+  #quranHome .search-wrap{height:40px}
 
   /* Single-column list in sidebar — quranHome scrolls as one unit so
      the continue-card scrolls away with the list instead of staying frozen */
@@ -2901,8 +2906,11 @@ html.is-ipad .rating-overlay,
 html.is-ipad .iv-overlay{right:var(--nav-rail-w)}
 html.is-ipad .repeat-status{right:calc(var(--nav-rail-w) + 16px)}
 html.is-ipad .toast{left:calc(50% - var(--nav-rail-w) / 2)}
-html.is-ipad #quranHome .hdr{background:var(--bg2)}
+html.is-ipad #quranHome .hdr{background:var(--bg2);padding:10px 14px}
+html.is-ipad #quranHome .hdr .hdr-logo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html.is-ipad #quranHome .search-bar{background:var(--bg2)}
+html.is-ipad #quranHome .search-bar.on{padding:8px 14px 10px}
+html.is-ipad #quranHome .search-wrap{height:40px}
 html.is-ipad .surah-nav{max-width:var(--reading-max-w);width:calc(100% - 56px);margin-left:auto!important;margin-right:auto!important}
 /* Mushaf portrait: bigger, book-like */
 html.is-ipad .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + var(--audio-bar-h) + 32px)}
