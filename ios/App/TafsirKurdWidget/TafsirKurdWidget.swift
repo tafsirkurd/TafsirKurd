@@ -20,8 +20,10 @@ private let kNonceSeenKey   = "widgetRefreshNonceSeen"   // last nonce we acted 
 // v7: strict t > now rollover — no grace window; isTomorrow/displayTimings; correct times after Isha.
 private let kTimelineVersion = 7
 private let kTimelineVersionKey = "widgetTimelineVersion"
-// All widget loops use kDisplayOrder (includes Sunrise). Adhan notifications use a separate
-// JS-side list; kPrayerOrder no longer exists here to avoid accidental misuse.
+// kDisplayOrder is the canonical scan order for ALL next-prayer resolution.
+// Sunrise MUST stay at index 1 — effectiveNextPrayer, effectiveNext3, fastNext,
+// and all timeline builders use this array so Fajr→Sunrise→Dhuhr transitions
+// are explicit. Removing or reordering Sunrise here breaks the highlighting fix.
 private let kDisplayOrder  = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"]
 
 
@@ -1288,13 +1290,23 @@ private struct NoDataView: View {
 
 // MARK: — Boundary-aware next prayer helpers
 //
-// effectiveNextPrayer: re-derives from real Date() — always uses t > now (strict).
-// Never retains the last prayer of the day; after Isha passes, tomorrow's Fajr is
-// returned immediately without any grace window.
+// effectiveNextPrayer: scans kDisplayOrder (Fajr→Sunrise→Dhuhr→Asr→Maghrib→Isha)
+// and returns the first prayer whose time is strictly > now. Sunrise is a full
+// selectable event — it advances the highlight exactly like any other prayer.
 //
-// correctedNext: wraps effectiveNextPrayer for home-screen widgets, logs drift.
+// Expected test cases (Baghdad local time):
+//   03:00 → Fajr  (Fajr 3:21 is still future)
+//   03:34 → Sunrise  (Fajr 3:21 past; Sunrise 5:05 is next future)
+//   05:06 → Dhuhr    (Fajr + Sunrise both past; Dhuhr is next)
+//   22:xx after Isha → tomorrow Fajr
 //
-// effectiveNext3: same strict logic used by LockView.
+// All four widget sizes (Small/Medium/Large/Lock) go through resolve() which
+// calls effectiveNextPrayer and effectiveNext3 with the same now reference.
+// The now reference is max(Date(), entry.date) to guard against WidgetKit
+// pre-rendering entries before their scheduled time.
+//
+// correctedNext: unused wrapper kept for reference; resolve() calls effectiveNextPrayer directly.
+// effectiveNext3: same strict t > now logic, returns the next 3 upcoming prayers.
 
 private func fmtHMS(_ d: Date) -> String {
     let c = PrayerWidgetData.baghdadCal.dateComponents([.hour, .minute, .second], from: d)
@@ -1429,14 +1441,21 @@ private func correctedNext(
 private struct SmallView: View {
     let entry: PrayerEntry
     var body: some View {
-        let now      = Date()
+        // max(Date(), entry.date) guards against WidgetKit pre-rendering entries
+        // before their scheduled time — if WidgetKit renders at 3:20 AM for the
+        // 3:21 AM Fajr boundary entry, Date() = 3:20 and prayerDate("Fajr") = 3:21
+        // would still appear future, freezing Fajr as highlighted until 3:37 heartbeat.
+        // Using max() forces the reference to be at least entry.date so Fajr is
+        // correctly treated as past the moment its boundary entry activates.
+        let realNow  = Date()
+        let now      = max(realNow, entry.date)
         let state    = WidgetPrayerState.resolve(entry.data, entry, now: now)
         let n        = state.next
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
-        let driftS   = Int(now.timeIntervalSince(entry.date))
-        let _ = print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
-        let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") isTomorrow=\(state.isTomorrow) cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") family=sm")
+        let driftS   = Int(realNow.timeIntervalSince(entry.date))
+        let _ = print("WIDGET BODY REAL NOW:", realNow, "entry:", entry.date)
+        let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") isTomorrow=\(state.isTomorrow) cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") family=sm")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
                 CityLabel(city: d.city)
@@ -1490,11 +1509,12 @@ private struct SmallView: View {
 private struct MediumView: View {
     let entry: PrayerEntry
     var body: some View {
-        let now   = Date()
-        let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
-        let driftS = Int(now.timeIntervalSince(entry.date))
-        let _ = print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
-        let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=md")
+        let realNow = Date()
+        let now     = max(realNow, entry.date)
+        let state   = WidgetPrayerState.resolve(entry.data, entry, now: now)
+        let driftS  = Int(realNow.timeIntervalSince(entry.date))
+        let _ = print("WIDGET BODY REAL NOW:", realNow, "entry:", entry.date)
+        let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=md")
         if let d = entry.data {
             let n = state.next
             VStack(spacing: 0) {
@@ -1534,10 +1554,11 @@ private struct MediumView: View {
 private struct LargeView: View {
     let entry: PrayerEntry
     var body: some View {
-        let now   = Date()
-        let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
-        let driftS = Int(now.timeIntervalSince(entry.date))
-        let _ = wLog.info("[WidgetRender] large REAL_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=lg")
+        let realNow = Date()
+        let now     = max(realNow, entry.date)
+        let state   = WidgetPrayerState.resolve(entry.data, entry, now: now)
+        let driftS  = Int(realNow.timeIntervalSince(entry.date))
+        let _ = wLog.info("[WidgetRender] large REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=lg")
         if let d = entry.data {
             let n          = state.next
             let bottomName = n?.name ?? "Fajr"
@@ -1694,11 +1715,15 @@ private struct LockView: View {
 
     var body: some View {
         // ── Step 1: resolve display state from real wall-clock time ───────────
-        // now = Date() is evaluated at the moment WidgetKit renders this entry.
+        // max(Date(), entry.date) guards against WidgetKit pre-rendering entries
+        // before their scheduled time. Without this, a Fajr boundary entry rendered
+        // at 3:20 AM (before the 3:21 AM schedule) would still see Fajr as future
+        // and highlight it, keeping the wrong prayer frozen until the next heartbeat.
         // All prayer rows come from state.next3 — effectiveNext3(data:now:).
         // entry.next is NEVER read for display; it is only used in drift logging.
-        let now   = Date()
-        let state = WidgetPrayerState.resolve(entry.data, entry, now: now)
+        let realNow = Date()
+        let now     = max(realNow, entry.date)
+        let state   = WidgetPrayerState.resolve(entry.data, entry, now: now)
 
         // ── Step 2: resolved prayer list (source of ALL display elements) ─────
         // next3[0] = highlighted row  (next upcoming prayer per real clock)
@@ -1708,14 +1733,14 @@ private struct LockView: View {
         let resolvedPrayers = state.next3
 
         // ── Logging (uses entry.next for drift detection — NOT for display) ───
-        let driftS = Int(now.timeIntervalSince(entry.date))
+        let driftS = Int(realNow.timeIntervalSince(entry.date))
         let rnName = resolvedPrayers.first?.name ?? "nil"
         let curName = state.current?.name ?? "nil"
-        let _ = print("WIDGET BODY REAL NOW:", now, "entry:", entry.date)
-        let _ = wLog.info("[WidgetRender] lock now=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
+        let _ = print("WIDGET BODY REAL NOW:", realNow, "entry:", entry.date)
+        let _ = wLog.info("[WidgetRender] lock REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
         if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
             if snapshotNext.name != resolvedFirst.name {
-                let _ = wLog.warning("[WidgetDrift] lock: sn=\(snapshotNext.name) rn=\(resolvedFirst.name) now=\(fmtHMS(now)) e=\(fmtHMS(entry.date)) drift=\(driftS)s")
+                let _ = wLog.warning("[WidgetDrift] lock: sn=\(snapshotNext.name) rn=\(resolvedFirst.name) realNow=\(fmtHMS(realNow)) effNow=\(fmtHMS(now)) e=\(fmtHMS(entry.date)) drift=\(driftS)s")
             }
         }
 
