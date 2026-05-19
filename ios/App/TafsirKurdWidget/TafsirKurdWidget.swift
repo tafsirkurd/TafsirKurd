@@ -2306,7 +2306,6 @@ struct LockPrayerProvider: TimelineProvider {
 /// no UserDefaults, no date math, no heavy computation.
 private struct LockMinimalView: View {
     let entry: LockPrayerEntry
-    @Environment(\.widgetFamily) private var family
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 5) {
