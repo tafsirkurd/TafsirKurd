@@ -209,7 +209,7 @@ body{background:var(--bg);color:var(--text)}
 .splash.hide{opacity:0;pointer-events:none}
 
 /* ===== APP CONTAINER ===== */
-.app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t);opacity:0;transition:opacity .15s ease-out;will-change:opacity;transform:translateZ(0)}
+.app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t);opacity:0;transition:opacity .15s ease-out}
 .app.visible{opacity:1}
 
 /* ===== HARD UPDATE OVERLAY — theme-aware ===== */
@@ -2613,7 +2613,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
     gap:6px;padding:10px 10px 20px;
     flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   }
-  #quranHome .surah-card{min-height:84px}
+  #quranHome .surah-card{min-height:88px}
 
   /* Reader: centered book canvas */
   #quranReader{display:flex!important;flex:1;min-width:0;background:var(--bg)}
@@ -2854,7 +2854,7 @@ html.is-ipad #quranHome{
   background:var(--bg2);overflow-y:auto;overflow-x:hidden;padding-bottom:100px;
 }
 html.is-ipad #quranHome .surah-grid{grid-template-columns:1fr!important;gap:6px;padding:10px 10px 20px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-html.is-ipad #quranHome .surah-card{min-height:84px}
+html.is-ipad #quranHome .surah-card{min-height:88px}
 html.is-ipad #quranReader{display:flex!important;flex:1;min-width:0;background:var(--bg)}
 html.is-ipad #quranReader:not(.on) .reader-placeholder{display:flex}
 html.is-ipad #quranReader:not(.on) .reader-hdr,
