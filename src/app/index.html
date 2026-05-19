@@ -2664,9 +2664,9 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
     min-height:120px;
   }
 
-  /* GENCINE: 2-col grid, cinematic cards */
-  .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:24px 24px 40px}
-  .genc-home > :last-child:nth-child(odd){grid-column:1/-1}
+  /* GENCINE: 3-col grid, cinematic cards */
+  .genc-home{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:24px 24px 40px}
+  .genc-home > :last-child:nth-child(3n+1){grid-column:1/-1}
   .genc-card-btn{height:175px}
 
   /* AUDIO BAR: floating native mini-player, not edge-to-edge banner */
@@ -2874,8 +2874,8 @@ html.is-ipad .ayah-card{max-width:var(--reading-max-w)!important;width:calc(100%
 html.is-ipad .sky-scene{height:310px}
 html.is-ipad .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:20px 24px 60px;gap:16px;align-content:start}
 html.is-ipad .prayer-grid-card{padding:20px 18px 18px!important;border-radius:20px!important;min-height:120px}
-html.is-ipad .genc-home{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:24px 24px 40px}
-html.is-ipad .genc-home>:last-child:nth-child(odd){grid-column:1/-1}
+html.is-ipad .genc-home{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:24px 24px 40px}
+html.is-ipad .genc-home>:last-child:nth-child(3n+1){grid-column:1/-1}
 html.is-ipad .genc-card-btn{height:175px}
 html.is-ipad .audio-bar{
   left:12px;right:calc(var(--nav-rail-w) + 12px);
