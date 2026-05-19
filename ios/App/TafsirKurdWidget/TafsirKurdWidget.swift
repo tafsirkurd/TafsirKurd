@@ -111,17 +111,25 @@ private enum DS {
     // Accent follows the app theme — reads `widgetAccentColor` from App Group UserDefaults.
     // Written by _nativeSyncTheme() in app.js every time the user switches theme.
     // Falls back to the original bright green if the key is absent.
+    // Cached for the process lifetime; call reloadAccent() at the top of every
+    // getTimeline/getSnapshot so theme changes are picked up on the next rebuild.
+    private static var _accentCache: (Double, Double, Double)? = nil
+
+    static func reloadAccent() { _accentCache = nil }
+
     private static func accentComponents() -> (Double, Double, Double) {
+        if let c = _accentCache { return c }
         guard let ud  = kSharedUD,
               let hex = ud.string(forKey: "widgetAccentColor"), hex.count >= 7
-        else { return (0.14, 0.74, 0.41) }
+        else { _accentCache = (0.14, 0.74, 0.41); return _accentCache! }
         let h = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
-        guard h.count == 6, let val = UInt64(h, radix: 16) else { return (0.14, 0.74, 0.41) }
-        return (
+        guard h.count == 6, let val = UInt64(h, radix: 16) else { _accentCache = (0.14, 0.74, 0.41); return _accentCache! }
+        _accentCache = (
             Double((val >> 16) & 0xFF) / 255.0,
             Double((val >>  8) & 0xFF) / 255.0,
             Double( val        & 0xFF) / 255.0
         )
+        return _accentCache!
     }
 
     static var accent: Color {
@@ -546,7 +554,7 @@ struct PrayerProvider: TimelineProvider {
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
         let snapStart = Date()
-        WT.reload()
+        WT.reload(); DS.reloadAccent()
         wLog.info("getSnapshot called")
         let d = loadBestAvailableData()
         let snapMs = Date().timeIntervalSince(snapStart) * 1000
@@ -557,7 +565,7 @@ struct PrayerProvider: TimelineProvider {
         completion(.init(date: .now, data: d, next: next, reason: "snapshot", display: disp))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
-        WT.reload()
+        WT.reload(); DS.reloadAccent()
         let now        = Date()
         let buildStart = now
         let isLPM      = ProcessInfo.processInfo.isLowPowerModeEnabled
@@ -1338,11 +1346,13 @@ private func effectiveNextPrayer(
     // ── Tier 1: today's prayers — strict future only ───────────────────────────
     // Using t > now (not grace window) so the last prayer of the day never
     // freezes the display. The moment Isha passes, we roll to tomorrow's Fajr.
+    #if DEBUG
     let todayDbg = kDisplayOrder.map { n -> String in
         guard let t = data.prayerDate(n) else { return "\(n):nil" }
         return "\(n):\(fmtHMS(t))[\(t > now ? "↑" : "✓")]"
     }.joined(separator: " ")
     wLog.info("[NextPrayer] \(tag) REAL_NOW=\(fmtHMS(now)) date=\(data.date) today=[\(todayDbg)]")
+    #endif
 
     for n in kDisplayOrder {
         if let t = data.prayerDate(n), t > now {
@@ -1352,11 +1362,13 @@ private func effectiveNextPrayer(
     }
 
     // ── Tomorrow's prayers ────────────────────────────────────────────────────
+    #if DEBUG
     let tomDbg = kDisplayOrder.map { n -> String in
         guard let t = data.prayerDate(n, dayOffset: 1) else { return "\(n):nil" }
         return "\(n):\(fmtHMS(t))[\(t > now ? "↑" : "✓")]"
     }.joined(separator: " ")
     wLog.info("[NextPrayer] \(tag) all-today-past — tomorrow=[\(tomDbg)]")
+    #endif
 
     for n in kDisplayOrder {
         if let t = data.prayerDate(n, dayOffset: 1), t > now {
@@ -1737,11 +1749,11 @@ struct AyahEntry: TimelineEntry {
 struct AyahProvider: TimelineProvider {
     func placeholder(in _: Context) -> AyahEntry { .init(date: .now, data: nil) }
     func getSnapshot(in _: Context, completion: @escaping (AyahEntry) -> Void) {
-        WT.reload()
+        WT.reload(); DS.reloadAccent()
         completion(.init(date: .now, data: AyahWidgetData.load()))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<AyahEntry>) -> Void) {
-        WT.reload()
+        WT.reload(); DS.reloadAccent()
         let now = Date()
         let e   = AyahEntry(date: now, data: AyahWidgetData.load())
         // 6h policy — app calls reloadTimelines when ayah changes, so hourly polling is wasteful
@@ -1759,11 +1771,11 @@ struct GoalEntry: TimelineEntry {
 struct GoalProvider: TimelineProvider {
     func placeholder(in _: Context) -> GoalEntry { .init(date: .now, data: nil) }
     func getSnapshot(in _: Context, completion: @escaping (GoalEntry) -> Void) {
-        WT.reload()
+        WT.reload(); DS.reloadAccent()
         completion(.init(date: .now, data: GoalWidgetData.load()))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<GoalEntry>) -> Void) {
-        WT.reload()
+        WT.reload(); DS.reloadAccent()
         let now = Date()
         let e   = GoalEntry(date: now, data: GoalWidgetData.load())
         // 2h policy — app calls reloadTimelines when goal data changes, so 30-min polling is wasteful
@@ -2175,6 +2187,7 @@ struct LockPrayerProvider: TimelineProvider {
     }
 
     func getSnapshot(in _: Context, completion: @escaping (LockPrayerEntry) -> Void) {
+        WT.reload(); DS.reloadAccent()
         wLog.info("[LOCK] snapshot start")
         let entry = buildEntry(at: Date(), reason: "snapshot")
         wLog.info("[LOCK] snapshot done nextName=\(entry.nextNameKu) time=\(entry.nextTimeStr)")
@@ -2182,6 +2195,7 @@ struct LockPrayerProvider: TimelineProvider {
     }
 
     func getTimeline(in _: Context, completion: @escaping (Timeline<LockPrayerEntry>) -> Void) {
+        WT.reload(); DS.reloadAccent()
         wLog.info("[LOCK] timeline start")
         let now = Date()
         guard let data = PrayerWidgetData.load() else {
@@ -2236,8 +2250,9 @@ struct LockPrayerProvider: TimelineProvider {
             entries.append(make(at: upcoming[i].date, fromIdx: i + 1))
         }
 
-        let policyAt = entries.last.map { $0.date.addingTimeInterval(60) }
-            ?? now.addingTimeInterval(3600)
+        // Rebuild at Baghdad midnight of day+2 (always after tomorrow's last prayer).
+        // Avoids the previous 60s spin-retry after Isha when no data for day+2 exists yet.
+        let policyAt = PrayerWidgetData.baghdadMidnight(daysAhead: 2).addingTimeInterval(5 * 60)
         wLog.info("[LOCK] timeline done entries=\(entries.count) firstNext=\(upcoming.count > nowIdx ? upcoming[nowIdx].name : "?") policy=\(fmtHMS(policyAt))")
         completion(Timeline(entries: entries, policy: .after(policyAt)))
     }
@@ -2294,8 +2309,7 @@ private struct LockMinimalView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        let _ = wLog.info("[LOCK] body render family=\(String(describing: family)) next=\(entry.nextNameKu)")
-        return VStack(alignment: .trailing, spacing: 5) {
+        VStack(alignment: .trailing, spacing: 5) {
             // Row 1 — highlighted (next upcoming prayer)
             HStack(spacing: 4) {
                 Text(entry.nextNameKu)
