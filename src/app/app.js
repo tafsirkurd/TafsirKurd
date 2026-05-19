@@ -11182,7 +11182,7 @@ function ivTrackView(episodeId){
   var vk='iv_viewed_'+episodeId;
   if(sessionStorage.getItem(vk))return;
   sessionStorage.setItem(vk,'1');
-  S.ivSupabase.rpc('increment_episode_view',{episode_id:episodeId}).catch(function(){});
+  Promise.resolve(S.ivSupabase.rpc('increment_episode_view',{episode_id:episodeId})).catch(function(){});
 }
 
 
