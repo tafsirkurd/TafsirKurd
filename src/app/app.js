@@ -3273,8 +3273,7 @@ App.cycleMushafStyle=function(){
 function _syncMushafStyleBtn(){
   var b=$('mushafStyleBtn');
   if(!b)return;
-  var iPadLandscape=document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024;
-  b.style.display=(S.mushafMode&&S.surah&&iPadLandscape)?'':'none';
+  b.style.display=(S.mushafMode&&S.surah)?'':'none';
 }
 
 // On spread snap settle, play the chosen arrival animation
@@ -3567,12 +3566,12 @@ function renderMushafView(){
       if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
     },{passive:true});
 
+    _updateMushafStyleBtn();
+    _syncMushafStyleBtn();
     // Landscape iPad: rewrap pages into horizontal scroll spreads
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024){
       _mushafWrapSpreads(view);
       _mLastSpreadIdx=-1;
-      _updateMushafStyleBtn();
-      _syncMushafStyleBtn();
       // Listen for snap settle to apply transition animation
       var _mScrollTimer=null;
       view.addEventListener('scroll',function(){
