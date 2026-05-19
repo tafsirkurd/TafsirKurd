@@ -778,7 +778,7 @@
 
     // Islamic city / mosque skyline — city lights, palms, crescent finial
     var horizSVG =
-      '<svg class="sky-horizon" viewBox="0 0 400 78" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">' +
+      '<svg class="sky-horizon" viewBox="0 0 400 78" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet">' +
       '<path d="M0,78 L0,58 Q25,50 50,55 Q80,46 110,52 Q140,44 170,50 Q200,42 230,48 Q260,40 290,47 Q320,40 350,46 Q375,38 400,44 L400,78 Z" fill="rgba(0,0,0,0.20)"/>' +
       '<path d="M0,78 L0,65 L22,65 L22,56 L24,53 L26,56 L26,65 L42,65 L42,56 L44,52 Q46,45 48,52 L48,56 L48,65 L65,65 L65,58 L67,55 L69,58 L69,65 L88,65 L88,52 L90,48 L92,52 L92,65 L108,65 L108,60 L110,58 L112,60 L112,65 L130,65 L130,56 L132,53 L134,56 L134,65 L148,65 L148,58 L150,56 L152,58 L152,68 Z" fill="rgba(0,0,0,0.70)"/>' +
       '<path d="M141,68 Q140,58 138,50" stroke="rgba(0,0,0,0.80)" stroke-width="2" fill="none"/>' +
