@@ -2553,6 +2553,16 @@ App.toggleSearch=function(){
     } else {
       App._renderSearchEmpty();
     }
+    // Close when tapping outside the search bar
+    setTimeout(function(){
+      function _outsideClose(e){
+        if(!bar.contains(e.target)){
+          document.removeEventListener('pointerdown',_outsideClose,true);
+          if(bar.classList.contains('on'))App.toggleSearch();
+        }
+      }
+      document.addEventListener('pointerdown',_outsideClose,true);
+    },0);
   } else {
     App.clearSearch();
   }
