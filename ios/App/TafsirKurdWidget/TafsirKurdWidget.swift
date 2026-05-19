@@ -2153,32 +2153,21 @@ struct LockPrayerEntry: TimelineEntry {
     let city:          String
     let nextNameKu:    String   // prayer 1 — highlighted
     let nextTimeStr:   String
+    let nextTime:      Date     // prayer 1 Date — for live Text(.timer) countdown
     let next2NameKu:   String   // prayer 2
     let next2TimeStr:  String
     let next3NameKu:   String   // prayer 3
     let next3TimeStr:  String
-    let remainingStr:  String   // countdown to prayer 1
     let version:       Int
 
     static var placeholder: LockPrayerEntry {
         LockPrayerEntry(date: .now, city: "", nextNameKu: "نمازی",
-                        nextTimeStr: "--:--", next2NameKu: "",
-                        next2TimeStr: "", next3NameKu: "",
-                        next3TimeStr: "", remainingStr: "", version: kTimelineVersion)
+                        nextTimeStr: "--:--", nextTime: .distantFuture,
+                        next2NameKu: "", next2TimeStr: "",
+                        next3NameKu: "", next3TimeStr: "", version: kTimelineVersion)
     }
 }
 
-/// Format seconds-until-prayer as Kurdish "H:MM مایە" or "MM خچ مایە".
-private func lockRemaining(to prayerTime: Date, from now: Date) -> String {
-    let diff = prayerTime.timeIntervalSince(now)
-    guard diff > 60 else { return "" }
-    let totalMin = Int(diff / 60)
-    let h = totalMin / 60
-    let m = totalMin % 60
-    return h > 0
-        ? "\(h):\(String(format: "%02d", m)) مایە"
-        : "\(m) خچ مایە"
-}
 
 struct LockPrayerProvider: TimelineProvider {
 
@@ -2224,17 +2213,16 @@ struct LockPrayerProvider: TimelineProvider {
             let p1 = i     < upcoming.count ? upcoming[i]     : nil
             let p2 = i + 1 < upcoming.count ? upcoming[i + 1] : nil
             let p3 = i + 2 < upcoming.count ? upcoming[i + 2] : nil
-            let rem = p1.map { lockRemaining(to: $0.date, from: date) } ?? ""
             return LockPrayerEntry(
                 date:         date,
                 city:         data.city,
-                nextNameKu:   p1?.ku    ?? kn("Fajr"),
+                nextNameKu:   p1?.ku      ?? kn("Fajr"),
                 nextTimeStr:  p1?.display ?? "--:--",
-                next2NameKu:  p2?.ku    ?? "",
+                nextTime:     p1?.date    ?? .distantFuture,
+                next2NameKu:  p2?.ku      ?? "",
                 next2TimeStr: p2?.display ?? "",
-                next3NameKu:  p3?.ku    ?? "",
+                next3NameKu:  p3?.ku      ?? "",
                 next3TimeStr: p3?.display ?? "",
-                remainingStr: rem,
                 version:      kTimelineVersion
             )
         }
@@ -2271,31 +2259,31 @@ struct LockPrayerProvider: TimelineProvider {
             wLog.warning("[LOCK] buildEntry(\(reason)) no next prayer found")
             return LockPrayerEntry(date: date, city: d.city,
                                    nextNameKu: kn("Fajr"), nextTimeStr: "--:--",
+                                   nextTime: .distantFuture,
                                    next2NameKu: "", next2TimeStr: "",
                                    next3NameKu: "", next3TimeStr: "",
-                                   remainingStr: "", version: kTimelineVersion)
+                                   version: kTimelineVersion)
         }
 
-        // Resolve the actual Date of prayer 1 so we can compute remaining time.
-        let firstDate: Date? = {
+        // Resolve the actual Date of prayer 1 for the live countdown.
+        let firstDate: Date = {
             for offset in 0...1 {
                 if let t = d.prayerDate(first.name, dayOffset: offset), t > date { return t }
             }
-            return nil
+            return .distantFuture
         }()
-        let remaining = firstDate.map { lockRemaining(to: $0, from: date) } ?? ""
 
-        wLog.info("[LOCK] snapshot entry next=\(first.name) rem=\(remaining)")
+        wLog.info("[LOCK] snapshot entry next=\(first.name)")
         return LockPrayerEntry(
             date:         date,
             city:         d.city,
             nextNameKu:   first.ku,
             nextTimeStr:  first.display,
+            nextTime:     firstDate,
             next2NameKu:  n3.count > 1 ? n3[1].ku : "",
             next2TimeStr: n3.count > 1 ? n3[1].display : "",
             next3NameKu:  n3.count > 2 ? n3[2].ku : "",
             next3TimeStr: n3.count > 2 ? n3[2].display : "",
-            remainingStr: remaining,
             version:      kTimelineVersion
         )
     }
@@ -2316,8 +2304,8 @@ private struct LockMinimalView: View {
                     .foregroundStyle(AnyShapeStyle(.primary))
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                if !entry.remainingStr.isEmpty {
-                    Text(entry.remainingStr)
+                if entry.nextTime < .distantFuture {
+                    Text(entry.nextTime, style: .timer)
                         .font(.system(size: 11).monospacedDigit())
                         .foregroundStyle(AnyShapeStyle(.secondary))
                         .lineLimit(1)
