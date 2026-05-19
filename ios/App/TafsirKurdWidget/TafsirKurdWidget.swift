@@ -546,10 +546,11 @@ private func loadBestAvailableData() -> PrayerWidgetData? {
 
 struct PrayerProvider: TimelineProvider {
     func placeholder(in _: Context) -> PrayerEntry {
-        // No WT.reload() here — placeholder must be instant. WidgetKit calls this
-        // synchronously on the main render path; any I/O here delays the first frame.
-        // getSnapshot() and getTimeline() both call WT.reload() before building entries.
-        let d = loadBestAvailableData()
+        // Fast path only — one UserDefaults read, no WT.reload(), no extended cache decode.
+        // placeholder() is synchronous on the main render path; any heavy I/O here delays
+        // the first visible frame. loadBestAvailableData() can fall through to a 90-day
+        // JSON decode which is too slow here. getSnapshot/getTimeline handle the full load.
+        let d = PrayerWidgetData.load()
         return .init(date: .now, data: d, next: d?.nextPrayer(), reason: "placeholder")
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
@@ -1454,7 +1455,6 @@ private struct SmallView: View {
         let showName = n?.ku   ?? kn("Fajr")
         let showKey  = n?.name ?? "Fajr"
         let driftS   = Int(realNow.timeIntervalSince(entry.date))
-        let _ = print("WIDGET BODY REAL NOW:", realNow, "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] small REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(n?.name ?? "nil") isTomorrow=\(state.isTomorrow) cur=\(state.current?.name ?? "nil") date=\(entry.data?.date ?? "nil") family=sm")
         if let d = entry.data {
             VStack(alignment: .trailing, spacing: 0) {
@@ -1513,7 +1513,6 @@ private struct MediumView: View {
         let now     = max(realNow, entry.date)
         let state   = WidgetPrayerState.resolve(entry.data, entry, now: now)
         let driftS  = Int(realNow.timeIntervalSince(entry.date))
-        let _ = print("WIDGET BODY REAL NOW:", realNow, "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] medium REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) ENTRY_DATE=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(state.next?.name ?? "nil") isTomorrow=\(state.isTomorrow) family=md")
         if let d = entry.data {
             let n = state.next
@@ -1736,7 +1735,6 @@ private struct LockView: View {
         let driftS = Int(realNow.timeIntervalSince(entry.date))
         let rnName = resolvedPrayers.first?.name ?? "nil"
         let curName = state.current?.name ?? "nil"
-        let _ = print("WIDGET BODY REAL NOW:", realNow, "entry:", entry.date)
         let _ = wLog.info("[WidgetRender] lock REAL_NOW=\(fmtHMS(realNow)) EFFECTIVE_NOW=\(fmtHMS(now)) entry=\(fmtHMS(entry.date)) drift=\(driftS)s reason=\(entry.reason) next=\(rnName) cur=\(curName) date=\(entry.data?.date ?? "nil")")
         if let snapshotNext = entry.next, let resolvedFirst = resolvedPrayers.first {
             if snapshotNext.name != resolvedFirst.name {
@@ -1797,14 +1795,6 @@ struct TafsirKurdWidgetEntryView: View {
     }
 }
 
-struct TafsirKurdLockWidgetEntryView: View {
-    let entry: PrayerEntry
-    var body: some View {
-        LockView(entry: entry)
-            .widgetBackground { Color.clear }
-            .widgetURL(kDeepLink)
-    }
-}
 
 // MARK: — Background compatibility
 
@@ -1918,7 +1908,8 @@ struct AyahProvider: TimelineProvider {
         WT.reload()
         let now = Date()
         let e   = AyahEntry(date: now, data: AyahWidgetData.load())
-        completion(Timeline(entries: [e], policy: .after(now.addingTimeInterval(3600))))
+        // 6h policy — app calls reloadTimelines when ayah changes, so hourly polling is wasteful
+        completion(Timeline(entries: [e], policy: .after(now.addingTimeInterval(6 * 3600))))
     }
 }
 
@@ -1939,7 +1930,8 @@ struct GoalProvider: TimelineProvider {
         WT.reload()
         let now = Date()
         let e   = GoalEntry(date: now, data: GoalWidgetData.load())
-        completion(Timeline(entries: [e], policy: .after(now.addingTimeInterval(1800))))
+        // 2h policy — app calls reloadTimelines when goal data changes, so 30-min polling is wasteful
+        completion(Timeline(entries: [e], policy: .after(now.addingTimeInterval(2 * 3600))))
     }
 }
 
@@ -2343,10 +2335,7 @@ private func lockRemaining(to prayerTime: Date, from now: Date) -> String {
 struct LockPrayerProvider: TimelineProvider {
 
     func placeholder(in _: Context) -> LockPrayerEntry {
-        wLog.info("[LOCK] placeholder start")
-        let e = LockPrayerEntry.placeholder
-        wLog.info("[LOCK] placeholder done")
-        return e
+        return LockPrayerEntry.placeholder
     }
 
     func getSnapshot(in _: Context, completion: @escaping (LockPrayerEntry) -> Void) {
