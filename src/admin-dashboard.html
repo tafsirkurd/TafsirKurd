@@ -54,6 +54,11 @@
         @keyframes toastIn  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
         @keyframes toastOut { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(8px); } }
 
+        /* ── Clickable list-row links ── */
+        .rv-item, .ru-item { display:flex; align-items:center; gap:10px; padding:6px; border-radius:8px; transition:background 0.15s; text-decoration:none; color:inherit; cursor:pointer; }
+        .ru-item { justify-content:space-between; }
+        .rv-item:hover, .ru-item:hover { background:var(--bg-hover) !important; }
+
         /* ── Staggered fade-in ── */
         @keyframes cardIn {
             from { opacity: 0; transform: translateY(16px); }
@@ -3283,7 +3288,14 @@
             var chips = [];
 
             function chip(icon, text, cls) {
-                chips.push('<div class="insight-chip ' + cls + '"><span class="insight-icon">' + icon + '</span>' + text + '</div>');
+                var d = document.createElement('div');
+                d.className = 'insight-chip ' + cls;
+                var s = document.createElement('span');
+                s.className = 'insight-icon';
+                s.textContent = icon;
+                d.appendChild(s);
+                d.appendChild(document.createTextNode(text));
+                chips.push(d);
             }
 
             // User activity vs yesterday
@@ -3331,7 +3343,8 @@
                 row.style.display = 'none';
                 return;
             }
-            row.innerHTML = chips.join('');
+            while (row.firstChild) row.removeChild(row.firstChild);
+            chips.forEach(function(c) { row.appendChild(c); });
             row.style.display = 'flex';
         }
 
@@ -6284,7 +6297,10 @@
                 if (newCount > 0) {
                     var badge = document.createElement('span');
                     badge.className = 'new-video-badge';
-                    badge.innerHTML = '<span class="nvb-dot"></span>' + newCount + ' NEW';
+                    var nvbDot = document.createElement('span');
+                    nvbDot.className = 'nvb-dot';
+                    badge.appendChild(nvbDot);
+                    badge.appendChild(document.createTextNode(newCount + ' NEW'));
                     var titleEl = cardTitle.querySelector('.content-card-title');
                     if (titleEl) titleEl.appendChild(badge);
                 }
@@ -6295,12 +6311,10 @@
 
             videos.forEach(function(video) {
                 var isNew = now - new Date(video.created_at).getTime() < 24 * 3600000;
-                var item = document.createElement('div');
-                item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px;transition:background 0.15s;cursor:pointer;' +
-                    (isNew ? 'background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);' : '');
-                item.onmouseenter = function() { item.style.background = 'var(--bg-hover)'; };
-                item.onmouseleave = function() { item.style.background = isNew ? 'rgba(239,68,68,0.04)' : 'transparent'; };
-                item.onclick = function() { window.location.href = '/admin-islamvoice-management.html'; };
+                var item = document.createElement('a');
+                item.href = '/admin-islamvoice-management.html';
+                item.className = 'rv-item';
+                if (isNew) item.style.cssText = 'background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);';
 
                 var thumb = document.createElement('img');
                 thumb.src = video.thumbnail_url || '/assets/images/logo.png';
@@ -6357,11 +6371,9 @@
             wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
 
             users.forEach(function(user) {
-                var item = document.createElement('div');
-                item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px;border-radius:8px;transition:background 0.15s;cursor:pointer;';
-                item.onmouseenter = function() { item.style.background = 'var(--bg-hover)'; };
-                item.onmouseleave = function() { item.style.background = 'transparent'; };
-                item.onclick = function() { window.location.href = '/admin-users.html?userId=' + user.id; };
+                var item = document.createElement('a');
+                item.href = '/admin-users.html?userId=' + encodeURIComponent(user.id);
+                item.className = 'ru-item';
 
                 var left = document.createElement('div');
                 left.style.cssText = 'display:flex;align-items:center;gap:10px;min-width:0;flex:1;';
@@ -6467,16 +6479,20 @@
             if (!badge || !_latestCommitDate) return;
             var ageMs = Date.now() - _latestCommitDate.getTime();
             var DEPLOY_WINDOW = 4 * 60 * 1000; // 4 minutes
+            while (badge.firstChild) badge.removeChild(badge.firstChild);
             if (ageMs < DEPLOY_WINDOW) {
                 var secLeft = Math.max(0, Math.round((DEPLOY_WINDOW - ageMs) / 1000));
                 var minLeft = Math.floor(secLeft / 60);
                 var s = secLeft % 60;
                 var countdown = minLeft > 0 ? minLeft + 'm ' + s + 's' : s + 's';
                 badge.className = 'ds-deploying';
-                badge.innerHTML = '<span class="ds-spinner"></span>Deploying… ' + countdown;
+                var sp = document.createElement('span');
+                sp.className = 'ds-spinner';
+                badge.appendChild(sp);
+                badge.appendChild(document.createTextNode('Deploying… ' + countdown));
             } else {
                 badge.className = 'ds-live';
-                badge.innerHTML = '✓ Live';
+                badge.textContent = '✓ Live';
                 // Stop polling and countdown once live
                 if (_deployPollInterval) { clearInterval(_deployPollInterval); _deployPollInterval = null; }
                 if (_deployCountdownInterval) { clearInterval(_deployCountdownInterval); _deployCountdownInterval = null; }
@@ -6566,10 +6582,15 @@
             var bar = document.getElementById('rhPlatformBar');
             var divider = document.getElementById('rhPlatformDivider');
             if (bar && (gitIosBuild || gitAndBuild)) {
-                var barHtml = '';
-                if (gitIosBuild) barHtml += '<div class="rh-platform-item"><span class="rh-platform-icon">🍎</span><span class="rh-platform-label">iOS</span><span class="rh-platform-build">Build ' + gitIosBuild + '</span></div>';
-                if (gitAndBuild) barHtml += '<div class="rh-platform-item"><span class="rh-platform-icon">🤖</span><span class="rh-platform-label">Android</span><span class="rh-platform-build">Build ' + gitAndBuild + '</span></div>';
-                bar.innerHTML = barHtml;
+                while (bar.firstChild) bar.removeChild(bar.firstChild);
+                [gitIosBuild && ['🍎', 'iOS', gitIosBuild], gitAndBuild && ['🤖', 'Android', gitAndBuild]].forEach(function(parts) {
+                    if (!parts) return;
+                    var d = document.createElement('div'); d.className = 'rh-platform-item';
+                    var iEl = document.createElement('span'); iEl.className = 'rh-platform-icon'; iEl.textContent = parts[0]; d.appendChild(iEl);
+                    var lEl = document.createElement('span'); lEl.className = 'rh-platform-label'; lEl.textContent = parts[1]; d.appendChild(lEl);
+                    var bEl = document.createElement('span'); bEl.className = 'rh-platform-build'; bEl.textContent = 'Build ' + parts[2]; d.appendChild(bEl);
+                    bar.appendChild(d);
+                });
                 bar.style.display = 'flex';
                 if (divider) divider.style.display = 'block';
             }
@@ -6649,22 +6670,15 @@
             var ios = lb.ios;
             var and = lb.android;
             if (!ios && !and) { bar.style.display = 'none'; if (divider) divider.style.display = 'none'; return; }
-            var html = '';
-            if (ios) {
-                html += '<div class="rh-platform-item">'
-                    + '<span class="rh-platform-icon">🍎</span>'
-                    + '<span class="rh-platform-label">iOS</span>'
-                    + '<span class="rh-platform-build">Build ' + _rhEsc(String(ios)) + '</span>'
-                    + '</div>';
-            }
-            if (and) {
-                html += '<div class="rh-platform-item">'
-                    + '<span class="rh-platform-icon">🤖</span>'
-                    + '<span class="rh-platform-label">Android</span>'
-                    + '<span class="rh-platform-build">Build ' + _rhEsc(String(and)) + '</span>'
-                    + '</div>';
-            }
-            bar.innerHTML = html;
+            while (bar.firstChild) bar.removeChild(bar.firstChild);
+            [[ios, '🍎', 'iOS'], [and, '🤖', 'Android']].forEach(function(parts) {
+                if (!parts[0]) return;
+                var d = document.createElement('div'); d.className = 'rh-platform-item';
+                var iEl = document.createElement('span'); iEl.className = 'rh-platform-icon'; iEl.textContent = parts[1]; d.appendChild(iEl);
+                var lEl = document.createElement('span'); lEl.className = 'rh-platform-label'; lEl.textContent = parts[2]; d.appendChild(lEl);
+                var bEl = document.createElement('span'); bEl.className = 'rh-platform-build'; bEl.textContent = 'Build ' + String(parts[0]); d.appendChild(bEl);
+                bar.appendChild(d);
+            });
             bar.style.display = 'flex';
             if (divider) divider.style.display = 'block';
         }
@@ -6714,19 +6728,19 @@
                 var actions = document.createElement('div');
                 actions.className = 'table-actions';
 
-                var viewBtn = document.createElement('button');
+                var viewBtn = document.createElement('a');
                 viewBtn.className = 'table-btn';
                 viewBtn.title = 'View';
-                viewBtn.onclick = function() { window.location.href = '/admin-messages.html'; };
+                viewBtn.href = '/admin-messages.html';
                 var vi = document.createElement('i');
                 vi.setAttribute('data-lucide', 'eye');
                 viewBtn.appendChild(vi);
                 actions.appendChild(viewBtn);
 
-                var replyBtn = document.createElement('button');
+                var replyBtn = document.createElement('a');
                 replyBtn.className = 'table-btn';
                 replyBtn.title = 'Reply';
-                replyBtn.onclick = function() { window.location.href = 'mailto:' + msg.email + '?subject=Re: ' + encodeURIComponent(msg.subject || ''); };
+                replyBtn.href = 'mailto:' + (msg.email || '') + '?subject=Re: ' + encodeURIComponent(msg.subject || '');
                 var ri = document.createElement('i');
                 ri.setAttribute('data-lucide', 'reply');
                 replyBtn.appendChild(ri);
