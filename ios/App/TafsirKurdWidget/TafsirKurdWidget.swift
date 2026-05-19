@@ -2366,28 +2366,54 @@ struct LockPrayerProvider: TimelineProvider {
             return
         }
 
-        var entries: [LockPrayerEntry] = []
-        // Snapshot at "now" so the widget renders immediately
-        entries.append(buildEntry(at: now, data: data, reason: "current"))
-
-        // Entry at each prayer boundary for today + tomorrow
+        // ── Single-pass: build flat sorted prayer list for today + tomorrow ──────
+        // This is done ONCE here instead of calling effectiveNext3() per entry
+        // (which would re-parse dates 12× per entry × ~12 entries = ~144 date ops).
+        struct PInfo { let name: String; let ku: String; let display: String; let date: Date }
+        var upcoming: [PInfo] = []
         for offset in 0...1 {
+            let src = offset == 0 ? data.timings : (data.tomorrow ?? data.timings)
             for name in kDisplayOrder {
-                guard let t = data.prayerDate(name, dayOffset: offset), t > now else { continue }
-                // Transition entry: at exactly this prayer time the "next" prayer advances
-                entries.append(buildEntry(at: t, data: data, reason: "\(name)\(offset == 1 ? "_tom" : "")"))
-                // 5-min heartbeat after transition to catch any stale rendering
-                entries.append(buildEntry(at: t.addingTimeInterval(5 * 60), data: data, reason: "\(name)_hb"))
+                guard let t = data.prayerDate(name, dayOffset: offset), let raw = src[name] else { continue }
+                upcoming.append(PInfo(name: name, ku: kn(name), display: formatPrayerTime(raw), date: t))
             }
         }
+        upcoming.sort { $0.date < $1.date }
 
-        entries.sort { $0.date < $1.date }
+        // Helper: build one entry given the index of the highlighted prayer
+        func make(at date: Date, fromIdx i: Int) -> LockPrayerEntry {
+            let p1 = i     < upcoming.count ? upcoming[i]     : nil
+            let p2 = i + 1 < upcoming.count ? upcoming[i + 1] : nil
+            let p3 = i + 2 < upcoming.count ? upcoming[i + 2] : nil
+            let rem = p1.map { lockRemaining(to: $0.date, from: date) } ?? ""
+            return LockPrayerEntry(
+                date:         date,
+                city:         data.city,
+                nextNameKu:   p1?.ku    ?? kn("Fajr"),
+                nextTimeStr:  p1?.display ?? "--:--",
+                next2NameKu:  p2?.ku    ?? "",
+                next2TimeStr: p2?.display ?? "",
+                next3NameKu:  p3?.ku    ?? "",
+                next3TimeStr: p3?.display ?? "",
+                remainingStr: rem,
+                version:      kTimelineVersion
+            )
+        }
 
-        // Policy: refresh once after the last entry (iOS will schedule sooner if needed)
+        // ── Current state entry ───────────────────────────────────────────────────
+        // nowIdx: index of the first prayer whose time is strictly in the future
+        let nowIdx = upcoming.firstIndex(where: { $0.date > now }) ?? upcoming.count
+        var entries: [LockPrayerEntry] = [make(at: now, fromIdx: nowIdx)]
+
+        // ── One entry per prayer boundary (no heartbeats needed — view is pure) ──
+        // At prayer[i]'s time it becomes "current" → highlighted advances to prayer[i+1].
+        for i in nowIdx..<upcoming.count {
+            entries.append(make(at: upcoming[i].date, fromIdx: i + 1))
+        }
+
         let policyAt = entries.last.map { $0.date.addingTimeInterval(60) }
             ?? now.addingTimeInterval(3600)
-        let nextSelected = entries.first?.nextNameKu ?? "?"
-        wLog.info("[LOCK] timeline done entries=\(entries.count) selected=\(nextSelected) policy=\(fmtHMS(policyAt))")
+        wLog.info("[LOCK] timeline done entries=\(entries.count) firstNext=\(upcoming.count > nowIdx ? upcoming[nowIdx].name : "?") policy=\(fmtHMS(policyAt))")
         completion(Timeline(entries: entries, policy: .after(policyAt)))
     }
 
@@ -2419,7 +2445,7 @@ struct LockPrayerProvider: TimelineProvider {
         }()
         let remaining = firstDate.map { lockRemaining(to: $0, from: date) } ?? ""
 
-        wLog.info("[LOCK] buildEntry reason=\(reason) n3=[\(n3.map{$0.name}.joined(separator:","))] rem=\(remaining)")
+        wLog.info("[LOCK] snapshot entry next=\(first.name) rem=\(remaining)")
         return LockPrayerEntry(
             date:         date,
             city:         d.city,
