@@ -2879,6 +2879,12 @@ App.openSurah=function(num,scrollTo){
   if(!s){console.warn('[openSurah] invalid surah num:',num);return;}
   haptic([8]);
   var _isT=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
+  // Auto-enable mushaf mode on iPad when no preference saved yet
+  if(_isT&&!S.mushafMode&&localStorage.getItem('mushafMode')===null){
+    S.mushafMode=true;
+    localStorage.setItem('mushafMode','true');
+    var _tmb=$('mushafToggleBtn');if(_tmb)_tmb.classList.add('on');
+  }
   var _pq=$('panelQuran');
   if(_pq)S._quranListScroll=_isT?($('quranHome')||{scrollTop:0}).scrollTop:_pq.scrollTop;
   _startSession(num);
