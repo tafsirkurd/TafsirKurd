@@ -3251,91 +3251,6 @@ App.toggleMushafMode=function(){
   }
 };
 
-/* ── Mushaf page-turn transition style ─────────────────────────────── */
-var _MSTYLES=['slide','fade','scale','flip'];
-var _MSLABELS={slide:'↔',fade:'✦',scale:'⊙',flip:'📖'};
-var _mStyle=localStorage.getItem('mushafTransStyle')||'slide';
-
-function _updateMushafStyleBtn(){
-  var b=$('mushafStyleBtn');
-  if(b)b.textContent=_MSLABELS[_mStyle]||'↔';
-}
-
-function _mushafDemoAnim(){
-  if(_mStyle==='slide')return;
-  var view=$('mushafView');
-  if(!view)return;
-  var animCls=_mStyle==='fade'?'msp-fade':_mStyle==='scale'?'msp-scale':'msp-flip';
-  // Find all visible elements to animate
-  var targets=view.querySelectorAll('.mushaf-spread, .mushaf-text-page[data-loaded]');
-  if(!targets.length)targets=view.querySelectorAll('.mushaf-text-page');
-  var vTop=view.scrollTop,vBot=vTop+view.clientHeight;
-  targets.forEach(function(el){
-    var top=el.offsetTop,bot=top+el.offsetHeight;
-    if(bot>vTop&&top<vBot){
-      el.classList.remove('msp-fade','msp-scale','msp-flip');
-      void el.offsetWidth;
-      el.classList.add(animCls);
-      setTimeout(function(){el.classList.remove(animCls);},700);
-    }
-  });
-}
-
-App.cycleMushafStyle=function(){
-  var idx=_MSTYLES.indexOf(_mStyle);
-  _mStyle=_MSTYLES[(idx+1)%_MSTYLES.length];
-  localStorage.setItem('mushafTransStyle',_mStyle);
-  _updateMushafStyleBtn();
-  haptic([8]);
-  _mushafDemoAnim();
-};
-
-// Show/hide style button based on mushaf mode + iPad landscape
-function _syncMushafStyleBtn(){
-  var b=$('mushafStyleBtn');
-  if(!b)return;
-  b.style.display=(S.mushafMode&&S.surah)?'':'none';
-}
-
-// On scroll settle, play the chosen arrival animation on the most visible page/spread
-var _mLastSpreadIdx=-1;
-var _mLastPageEl=null;
-function _onMushafScrollSettle(view){
-  if(_mStyle==='slide')return;
-  var animCls=_mStyle==='fade'?'msp-fade':_mStyle==='scale'?'msp-scale':'msp-flip';
-
-  // Horizontal iPad spread mode
-  if(view.scrollLeft>0||view.children[0]&&view.children[0].classList.contains('mushaf-spread')){
-    var idx=Math.round(view.scrollLeft/view.clientWidth);
-    if(idx===_mLastSpreadIdx)return;
-    _mLastSpreadIdx=idx;
-    var spread=view.children[idx];
-    if(!spread||!spread.classList.contains('mushaf-spread'))return;
-    spread.classList.remove('msp-fade','msp-scale','msp-flip');
-    void spread.offsetWidth;
-    spread.classList.add(animCls);
-    setTimeout(function(){spread.classList.remove(animCls);},600);
-    return;
-  }
-
-  // Vertical scroll mode — find most visible .mushaf-text-page
-  var pages=view.querySelectorAll('.mushaf-text-page');
-  if(!pages.length)return;
-  var best=null,bestVis=0;
-  var vTop=view.scrollTop,vBot=vTop+view.clientHeight;
-  for(var i=0;i<pages.length;i++){
-    var p=pages[i];
-    var pTop=p.offsetTop,pBot=pTop+p.offsetHeight;
-    var vis=Math.max(0,Math.min(pBot,vBot)-Math.max(pTop,vTop));
-    if(vis>bestVis){bestVis=vis;best=p;}
-  }
-  if(!best||best===_mLastPageEl)return;
-  _mLastPageEl=best;
-  best.classList.remove('msp-fade','msp-scale','msp-flip');
-  void best.offsetWidth;
-  best.classList.add(animCls);
-  setTimeout(function(){best.classList.remove(animCls);},600);
-}
 
 // Standard Medina Mushaf (604-page Hafs/Uthmani) — juz start pages
 var JUZ_PAGES=[1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
@@ -3455,18 +3370,21 @@ window.MushafDebug={
   }
 };
 
-// Wrap mushaf pages into horizontal snap spreads for landscape iPad
+// Wrap mushaf pages into horizontal snap spreads for iPad
+// Landscape (≥1024px): 2 pages per spread. Portrait (<1024px): 1 page per spread.
 function _mushafWrapSpreads(view){
+  var isLandscape=window.innerWidth>=1024;
+  var step=isLandscape?2:1;
   var pages=Array.prototype.slice.call(view.querySelectorAll(':scope>.mushaf-text-page'));
   var nav=view.querySelector(':scope>.mushaf-surah-nav');
   pages.forEach(function(p){view.removeChild(p);});
   if(nav)view.removeChild(nav);
-  for(var i=0;i<pages.length;i+=2){
+  for(var i=0;i<pages.length;i+=step){
     var spread=document.createElement('div');
     spread.className='mushaf-spread';
     spread.appendChild(pages[i]);
-    if(pages[i+1])spread.appendChild(pages[i+1]);
-    else spread.classList.add('spread-single');
+    if(isLandscape&&pages[i+1])spread.appendChild(pages[i+1]);
+    else if(isLandscape)spread.classList.add('spread-single');
     view.appendChild(spread);
   }
   if(nav)view.appendChild(nav);
@@ -3611,18 +3529,8 @@ function renderMushafView(){
       if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
     },{passive:true});
 
-    _updateMushafStyleBtn();
-    _syncMushafStyleBtn();
-    _mLastSpreadIdx=-1;
-    _mLastPageEl=null;
-    // Wire scroll-settle animation for all modes
-    var _mScrollTimer=null;
-    view.addEventListener('scroll',function(){
-      clearTimeout(_mScrollTimer);
-      _mScrollTimer=setTimeout(function(){_onMushafScrollSettle(view);},120);
-    },{passive:true});
-    // Landscape iPad: rewrap pages into horizontal scroll spreads
-    if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024){
+    // iPad (any orientation ≥768px): page-by-page horizontal navigation
+    if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=768){
       _mushafWrapSpreads(view);
     }
   }).catch(function(){
