@@ -2295,6 +2295,178 @@ struct TafsirKurdGoalEntryView: View {
     }
 }
 
+// MARK: — Lock widget: dedicated minimal provider + entry + view
+//
+// TafsirKurdLockWidget must NOT share PrayerProvider.
+// WidgetKit accessory (lock-screen) widgets have a much smaller CPU/memory
+// budget than home-screen widgets. Heavy work in a shared provider
+// (network fetch, JSON decode of 90-day cache, multiple wLog calls)
+// can cause the lock widget to stay in placeholder/skeleton state for an hour.
+//
+// This provider does:
+//   • One UserDefaults read (PrayerWidgetData.load) — no network, no extended cache
+//   • Builds entries at each prayer boundary for today + tomorrow
+//   • All display values precomputed in buildEntry() — body is purely declarative
+
+struct LockPrayerEntry: TimelineEntry {
+    let date:          Date
+    let city:          String
+    let nextNameKu:    String   // Kurdish prayer name
+    let nextTimeStr:   String   // formatted "H:mm"
+    let remainingStr:  String   // e.g. "١:٢٣ مایە"
+    let version:       Int
+
+    static var placeholder: LockPrayerEntry {
+        LockPrayerEntry(date: .now, city: "", nextNameKu: "نمازی",
+                        nextTimeStr: "--:--", remainingStr: "", version: kTimelineVersion)
+    }
+}
+
+/// Format seconds-until-prayer as Kurdish "H:MM مایە" or "MM خچ مایە".
+private func lockRemaining(to prayerTime: Date, from now: Date) -> String {
+    let diff = prayerTime.timeIntervalSince(now)
+    guard diff > 60 else { return "" }
+    let totalMin = Int(diff / 60)
+    let h = totalMin / 60
+    let m = totalMin % 60
+    return h > 0
+        ? "\(h):\(String(format: "%02d", m)) مایە"
+        : "\(m) خچ مایە"
+}
+
+struct LockPrayerProvider: TimelineProvider {
+
+    func placeholder(in _: Context) -> LockPrayerEntry {
+        wLog.info("[LOCK] placeholder start")
+        let e = LockPrayerEntry.placeholder
+        wLog.info("[LOCK] placeholder done")
+        return e
+    }
+
+    func getSnapshot(in _: Context, completion: @escaping (LockPrayerEntry) -> Void) {
+        wLog.info("[LOCK] snapshot start")
+        let entry = buildEntry(at: Date(), reason: "snapshot")
+        wLog.info("[LOCK] snapshot done nextName=\(entry.nextNameKu) time=\(entry.nextTimeStr)")
+        completion(entry)
+    }
+
+    func getTimeline(in _: Context, completion: @escaping (Timeline<LockPrayerEntry>) -> Void) {
+        wLog.info("[LOCK] timeline start")
+        let now = Date()
+        guard let data = PrayerWidgetData.load() else {
+            wLog.warning("[LOCK] timeline no data — retry 30 min")
+            completion(Timeline(entries: [LockPrayerEntry.placeholder],
+                                policy: .after(now.addingTimeInterval(30 * 60))))
+            return
+        }
+
+        var entries: [LockPrayerEntry] = []
+        // Snapshot at "now" so the widget renders immediately
+        entries.append(buildEntry(at: now, data: data, reason: "current"))
+
+        // Entry at each prayer boundary for today + tomorrow
+        for offset in 0...1 {
+            for name in kDisplayOrder {
+                guard let t = data.prayerDate(name, dayOffset: offset), t > now else { continue }
+                // Transition entry: at exactly this prayer time the "next" prayer advances
+                entries.append(buildEntry(at: t, data: data, reason: "\(name)\(offset == 1 ? "_tom" : "")"))
+                // 5-min heartbeat after transition to catch any stale rendering
+                entries.append(buildEntry(at: t.addingTimeInterval(5 * 60), data: data, reason: "\(name)_hb"))
+            }
+        }
+
+        entries.sort { $0.date < $1.date }
+
+        // Policy: refresh once after the last entry (iOS will schedule sooner if needed)
+        let policyAt = entries.last.map { $0.date.addingTimeInterval(60) }
+            ?? now.addingTimeInterval(3600)
+        let nextSelected = entries.first?.nextNameKu ?? "?"
+        wLog.info("[LOCK] timeline done entries=\(entries.count) selected=\(nextSelected) policy=\(fmtHMS(policyAt))")
+        completion(Timeline(entries: entries, policy: .after(policyAt)))
+    }
+
+    /// Build one minimal entry. `data` may be passed in from getTimeline to avoid
+    /// repeated UserDefaults reads; when nil it is loaded fresh (snapshot / error paths).
+    private func buildEntry(at date: Date, data: PrayerWidgetData? = nil, reason: String) -> LockPrayerEntry {
+        guard let d = data ?? PrayerWidgetData.load() else { return LockPrayerEntry.placeholder }
+
+        var foundName:    String?  = nil
+        var foundTime:    Date?    = nil
+        var foundTimeStr: String   = "--:--"
+
+        outer: for offset in 0...1 {
+            let src = offset == 0 ? d.timings : (d.tomorrow ?? d.timings)
+            for name in kDisplayOrder {
+                guard let t = d.prayerDate(name, dayOffset: offset), t > date else { continue }
+                foundName    = name
+                foundTime    = t
+                foundTimeStr = src[name].map { formatPrayerTime($0) } ?? "--:--"
+                break outer
+            }
+        }
+
+        guard let nm = foundName, let nt = foundTime else {
+            wLog.warning("[LOCK] buildEntry(\(reason)) no next prayer found")
+            return LockPrayerEntry(date: date, city: d.city,
+                                   nextNameKu: kn("Fajr"), nextTimeStr: "--:--",
+                                   remainingStr: "", version: kTimelineVersion)
+        }
+
+        let remaining = lockRemaining(to: nt, from: date)
+        wLog.info("[LOCK] buildEntry reason=\(reason) next=\(nm) time=\(foundTimeStr) rem=\(remaining)")
+        return LockPrayerEntry(date: date, city: d.city,
+                               nextNameKu:   kn(nm),
+                               nextTimeStr:  foundTimeStr,
+                               remainingStr: remaining,
+                               version:      kTimelineVersion)
+    }
+}
+
+/// Ultra-minimal lock-screen view.
+/// Body is 100% pure: reads precomputed entry values only — no logging,
+/// no UserDefaults, no date math, no heavy computation.
+private struct LockMinimalView: View {
+    let entry: LockPrayerEntry
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        // Logs family once — outside any conditional so WidgetKit sees stable identity
+        let _ = wLog.info("[LOCK] body render family=\(String(describing: family)) next=\(entry.nextNameKu)")
+        return VStack(alignment: .trailing, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(entry.nextNameKu)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Text(entry.nextTimeStr)
+                    .font(.system(size: 16, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+
+            HStack(spacing: 4) {
+                if !entry.city.isEmpty {
+                    Text(entry.city)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                if !entry.remainingStr.isEmpty {
+                    Text(entry.remainingStr)
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .environment(\.layoutDirection, .rightToLeft)
+    }
+}
+
 // MARK: — Widget declarations
 
 struct TafsirKurdWidget: Widget {
@@ -2312,8 +2484,14 @@ struct TafsirKurdWidget: Widget {
 struct TafsirKurdLockWidget: Widget {
     let kind = "TafsirKurdLockWidgetV2"
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
-            TafsirKurdLockWidgetEntryView(entry: entry)
+        // Uses LockPrayerProvider — NOT PrayerProvider.
+        // Lock widgets run under a much tighter budget; the shared provider's
+        // network fetch and 90-day cache work exceeds that budget and causes
+        // the widget to stay in placeholder/skeleton state for ~1 hour.
+        StaticConfiguration(kind: kind, provider: LockPrayerProvider()) { entry in
+            LockMinimalView(entry: entry)
+                .widgetBackground { Color.clear }
+                .widgetURL(kDeepLink)
         }
         .configurationDisplayName(WT.t("widget.prayer.lock_name", "دەمێن نڤێژان"))
         .description(WT.t("widget.prayer.lock_desc", "دیارکرنا دەمێن نڤێژان"))
