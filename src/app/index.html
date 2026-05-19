@@ -2613,7 +2613,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
     gap:6px;padding:10px 10px 20px;
     flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   }
-  #quranHome .surah-card{min-height:70px}
+  #quranHome .surah-card{min-height:84px}
 
   /* Reader: centered book canvas */
   #quranReader{display:flex!important;flex:1;min-width:0;background:var(--bg)}
@@ -2669,10 +2669,11 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   .audio-bar{
     left:12px;
     right:calc(var(--nav-rail-w) + 12px);
-    bottom:max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+    bottom:calc(var(--tab-h) + var(--safe-b) + 8px);
     border-radius:20px;
     padding:10px 14px;
     box-shadow:0 8px 32px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.1);
+    z-index:350;
   }
   .audio-bar-progress{border-radius:0 0 20px 20px}
 
@@ -2853,7 +2854,7 @@ html.is-ipad #quranHome{
   background:var(--bg2);overflow-y:auto;overflow-x:hidden;padding-bottom:100px;
 }
 html.is-ipad #quranHome .surah-grid{grid-template-columns:1fr!important;gap:6px;padding:10px 10px 20px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-html.is-ipad #quranHome .surah-card{min-height:70px}
+html.is-ipad #quranHome .surah-card{min-height:84px}
 html.is-ipad #quranReader{display:flex!important;flex:1;min-width:0;background:var(--bg)}
 html.is-ipad #quranReader:not(.on) .reader-placeholder{display:flex}
 html.is-ipad #quranReader:not(.on) .reader-hdr,
@@ -2872,9 +2873,10 @@ html.is-ipad .genc-home>:last-child:nth-child(odd){grid-column:1/-1}
 html.is-ipad .genc-card-btn{height:175px}
 html.is-ipad .audio-bar{
   left:12px;right:calc(var(--nav-rail-w) + 12px);
-  bottom:max(12px,calc(env(safe-area-inset-bottom,0px)+8px));
+  bottom:calc(var(--tab-h) + var(--safe-b) + 8px);
   border-radius:20px;padding:10px 14px;
   box-shadow:0 8px 32px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.1);
+  z-index:350;
 }
 html.is-ipad .audio-bar-progress{border-radius:0 0 20px 20px}
 html.is-ipad .copy-modal{align-items:center!important;right:var(--nav-rail-w)!important;left:env(safe-area-inset-left,0px)!important}
