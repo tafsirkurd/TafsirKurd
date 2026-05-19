@@ -2219,25 +2219,50 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .genc-card-btn:active{transform:scale(.96);box-shadow:0 2px 10px rgba(0,0,0,.3)}
 /* Top accent bar */
 .genc-card-topbar{position:absolute;top:0;left:0;right:0;height:2px;z-index:3;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);opacity:.8}
-/* Card body — centered, stacked vertically at bottom */
-.genc-card-body{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 12px 16px;gap:7px;z-index:2}
-/* Icon — frosted glass circle */
-.genc-card-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-/* Texts — centered */
+/* Card body — icon floats top-center, title anchors bottom-center */
+.genc-card-body{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:20px 12px 15px;z-index:2}
+/* Icon — frosted glass circle at top */
+.genc-card-icon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,.3)}
+/* Texts — centered at bottom */
 .genc-card-texts{min-width:0;width:100%;text-align:center}
-.genc-card-title{font-size:1.12rem;font-weight:800;color:#fff;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.genc-card-title{font-size:1.12rem;font-weight:800;color:#fff;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 /* subtitle hidden on narrow 2-col; shown on full-width lone card and iPad+ */
-.genc-card-sub{font-size:.72rem;color:rgba(255,255,255,.6);margin-top:3px;line-height:1.4;display:none;text-align:center}
+.genc-card-sub{font-size:.72rem;color:rgba(255,255,255,.65);margin-top:3px;line-height:1.4;display:none;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 .genc-home>:last-child:nth-child(odd) .genc-card-sub{display:block}
-/* arrow removed — not needed in a tap grid */
+/* arrow removed */
 .genc-card-arrow{display:none}
+/* Section colour themes — background, topbar, overlay, icon tint */
+.genc-card-btn[data-sec="hadith"]{background:linear-gradient(145deg,#5c3408,#1c0d02)}
+.genc-card-btn[data-sec="hadith"] .genc-card-topbar{background:linear-gradient(90deg,transparent,rgba(251,191,36,.8),transparent)}
+.genc-card-btn[data-sec="hadith"] .genc-card-overlay{background:linear-gradient(to top,rgba(80,35,5,.92) 0%,rgba(40,18,3,.48) 50%,transparent 100%)}
+.genc-card-btn[data-sec="hadith"] .genc-card-icon{background:rgba(251,146,60,.22);border-color:rgba(251,191,36,.5);color:#fbbf24}
+.genc-card-btn[data-sec="adhkar"]{background:linear-gradient(145deg,#064e3b,#011a14)}
+.genc-card-btn[data-sec="adhkar"] .genc-card-topbar{background:linear-gradient(90deg,transparent,rgba(52,211,153,.8),transparent)}
+.genc-card-btn[data-sec="adhkar"] .genc-card-overlay{background:linear-gradient(to top,rgba(4,60,42,.92) 0%,rgba(2,28,20,.48) 50%,transparent 100%)}
+.genc-card-btn[data-sec="adhkar"] .genc-card-icon{background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.45);color:#34d399}
+.genc-card-btn[data-sec="dua"]{background:linear-gradient(145deg,#4c1d95,#1a0a3e)}
+.genc-card-btn[data-sec="dua"] .genc-card-topbar{background:linear-gradient(90deg,transparent,rgba(167,139,250,.8),transparent)}
+.genc-card-btn[data-sec="dua"] .genc-card-overlay{background:linear-gradient(to top,rgba(55,20,110,.92) 0%,rgba(26,10,62,.48) 50%,transparent 100%)}
+.genc-card-btn[data-sec="dua"] .genc-card-icon{background:rgba(167,139,250,.2);border-color:rgba(167,139,250,.45);color:#a78bfa}
+.genc-card-btn[data-sec="tasbih"]{background:linear-gradient(145deg,#164e63,#061928)}
+.genc-card-btn[data-sec="tasbih"] .genc-card-topbar{background:linear-gradient(90deg,transparent,rgba(34,211,238,.8),transparent)}
+.genc-card-btn[data-sec="tasbih"] .genc-card-overlay{background:linear-gradient(to top,rgba(10,55,72,.92) 0%,rgba(4,22,38,.48) 50%,transparent 100%)}
+.genc-card-btn[data-sec="tasbih"] .genc-card-icon{background:rgba(34,211,238,.18);border-color:rgba(34,211,238,.4);color:#22d3ee}
+.genc-card-btn[data-sec="asma"]{background:linear-gradient(145deg,#713f12,#280e04)}
+.genc-card-btn[data-sec="asma"] .genc-card-topbar{background:linear-gradient(90deg,transparent,rgba(234,179,8,.82),transparent)}
+.genc-card-btn[data-sec="asma"] .genc-card-overlay{background:linear-gradient(to top,rgba(90,44,8,.92) 0%,rgba(38,18,4,.48) 50%,transparent 100%)}
+.genc-card-btn[data-sec="asma"] .genc-card-icon{background:rgba(234,179,8,.2);border-color:rgba(234,179,8,.48);color:#fde047}
+.genc-card-btn[data-sec="books"]{background:linear-gradient(145deg,#1e3a8a,#0a1540)}
+.genc-card-btn[data-sec="books"] .genc-card-topbar{background:linear-gradient(90deg,transparent,rgba(96,165,250,.8),transparent)}
+.genc-card-btn[data-sec="books"] .genc-card-overlay{background:linear-gradient(to top,rgba(18,38,100,.92) 0%,rgba(8,16,50,.48) 50%,transparent 100%)}
+.genc-card-btn[data-sec="books"] .genc-card-icon{background:rgba(96,165,250,.2);border-color:rgba(96,165,250,.45);color:#60a5fa}
 /* NEW / نوی badge */
 @keyframes genc-badge-pulse{0%,100%{box-shadow:0 2px 10px rgba(239,68,68,.5),0 0 0 0 rgba(239,68,68,.35)}60%{box-shadow:0 2px 10px rgba(239,68,68,.5),0 0 0 6px rgba(239,68,68,0)}}
 .genc-card-badge{position:absolute;top:12px;right:12px;z-index:4;display:flex;align-items:center;gap:4px;padding:4px 11px 4px 8px;border-radius:20px;background:linear-gradient(135deg,#f43f5e,#ef4444);color:#fff;font-size:.76rem;font-weight:800;letter-spacing:.05em;direction:rtl;animation:genc-badge-pulse 2s ease-in-out infinite;pointer-events:none;border:1.5px solid rgba(255,255,255,.3)}
 .genc-card-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;opacity:.9;flex-shrink:0}
 .genc-notif-count{position:absolute;top:10px;left:10px;z-index:5;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(220,38,38,.55);pointer-events:none;border:2px solid rgba(255,255,255,.25);line-height:1}
-/* Overlay — stronger at bottom for text legibility */
-.genc-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.86) 0%,rgba(0,0,0,.44) 45%,rgba(0,0,0,.06) 100%);opacity:1;z-index:1;pointer-events:none}
+/* Overlay — base (overridden per-section above) */
+.genc-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.45) 45%,rgba(0,0,0,.05) 100%);opacity:1;z-index:1;pointer-events:none}
 /* back row */
 .genc-back-row{display:flex;align-items:center;gap:12px;padding:12px 16px 4px}
 .genc-back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;flex-shrink:0}
@@ -2684,9 +2709,9 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   .genc-home>:nth-last-child(2):nth-child(3n+1){grid-column:2/span 2}
   .genc-home>:last-child:nth-child(3n+2){grid-column:4/span 2}
   .genc-card-btn{height:178px;border-radius:24px}
-  .genc-card-body{padding:0 16px 20px;gap:9px}
-  .genc-card-icon{width:52px;height:52px;border-radius:14px;font-size:1.4rem}
-  .genc-card-title{font-size:1.32rem}
+  .genc-card-body{padding:22px 16px 18px}
+  .genc-card-icon{width:54px;height:54px;font-size:1.45rem}
+  .genc-card-title{font-size:1.3rem}
   .genc-card-sub{display:block}
 
   /* AUDIO BAR: floating native mini-player, not edge-to-edge banner */
@@ -2797,8 +2822,8 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   .prayer-grid-time{font-size:2rem}
 
   .genc-card-btn{height:194px}
-  .genc-card-body{padding:0 18px 22px;gap:10px}
-  .genc-card-icon{width:56px;height:56px;font-size:1.5rem}
+  .genc-card-body{padding:24px 18px 20px}
+  .genc-card-icon{width:58px;height:58px;font-size:1.55rem}
   .genc-card-title{font-size:1.4rem}
   .genc-home{padding:28px 32px 48px;gap:22px}
 
@@ -2910,9 +2935,9 @@ html.is-ipad .genc-home>:last-child:nth-child(3n+1){grid-column:1/-1}
 html.is-ipad .genc-home>:nth-last-child(2):nth-child(3n+1){grid-column:2/span 2}
 html.is-ipad .genc-home>:last-child:nth-child(3n+2){grid-column:4/span 2}
 html.is-ipad .genc-card-btn{height:178px;border-radius:24px}
-html.is-ipad .genc-card-body{padding:0 16px 20px;gap:9px}
-html.is-ipad .genc-card-icon{width:52px;height:52px;border-radius:14px;font-size:1.4rem}
-html.is-ipad .genc-card-title{font-size:1.32rem}
+html.is-ipad .genc-card-body{padding:22px 16px 18px}
+html.is-ipad .genc-card-icon{width:54px;height:54px;font-size:1.45rem}
+html.is-ipad .genc-card-title{font-size:1.3rem}
 html.is-ipad .genc-card-sub{display:block}
 html.is-ipad .audio-bar{
   left:12px;right:calc(var(--nav-rail-w) + 12px);
