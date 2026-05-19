@@ -3261,12 +3261,33 @@ function _updateMushafStyleBtn(){
   if(b)b.textContent=_MSLABELS[_mStyle]||'↔';
 }
 
+function _mushafDemoAnim(){
+  if(_mStyle==='slide')return;
+  var view=$('mushafView');
+  if(!view)return;
+  var animCls=_mStyle==='fade'?'msp-fade':_mStyle==='scale'?'msp-scale':'msp-flip';
+  // Find all visible elements to animate
+  var targets=view.querySelectorAll('.mushaf-spread, .mushaf-text-page[data-loaded]');
+  if(!targets.length)targets=view.querySelectorAll('.mushaf-text-page');
+  var vTop=view.scrollTop,vBot=vTop+view.clientHeight;
+  targets.forEach(function(el){
+    var top=el.offsetTop,bot=top+el.offsetHeight;
+    if(bot>vTop&&top<vBot){
+      el.classList.remove('msp-fade','msp-scale','msp-flip');
+      void el.offsetWidth;
+      el.classList.add(animCls);
+      setTimeout(function(){el.classList.remove(animCls);},700);
+    }
+  });
+}
+
 App.cycleMushafStyle=function(){
   var idx=_MSTYLES.indexOf(_mStyle);
   _mStyle=_MSTYLES[(idx+1)%_MSTYLES.length];
   localStorage.setItem('mushafTransStyle',_mStyle);
   _updateMushafStyleBtn();
   haptic([8]);
+  _mushafDemoAnim();
 };
 
 // Show/hide style button based on mushaf mode + iPad landscape
