@@ -3230,10 +3230,12 @@ App.toggleMushafMode=function(){
     var fromAyah=_visibleAyahInList()||1;
     if(ayahList)ayahList.style.display='none';
     if(mushafView){mushafView.style.display='';renderMushafView();}
+    _syncMushafStyleBtn();
     _preBufferMushafAyah();
     // After mushaf renders, scroll to where user was
     _scrollMushafToAyah(S.surah,fromAyah,0);
   }else{
+    _syncMushafStyleBtn();
     // Capture position before hiding mushaf
     var fromAyahM=_visibleAyahInMushaf()||1;
     clearMushafHighlights();
@@ -3248,6 +3250,48 @@ App.toggleMushafMode=function(){
     });
   }
 };
+
+/* ── Mushaf page-turn transition style ─────────────────────────────── */
+var _MSTYLES=['slide','fade','scale','flip'];
+var _MSLABELS={slide:'↔',fade:'✦',scale:'⊙',flip:'📖'};
+var _mStyle=localStorage.getItem('mushafTransStyle')||'slide';
+
+function _updateMushafStyleBtn(){
+  var b=$('mushafStyleBtn');
+  if(b)b.textContent=_MSLABELS[_mStyle]||'↔';
+}
+
+App.cycleMushafStyle=function(){
+  var idx=_MSTYLES.indexOf(_mStyle);
+  _mStyle=_MSTYLES[(idx+1)%_MSTYLES.length];
+  localStorage.setItem('mushafTransStyle',_mStyle);
+  _updateMushafStyleBtn();
+  haptic([8]);
+};
+
+// Show/hide style button based on mushaf mode + iPad landscape
+function _syncMushafStyleBtn(){
+  var b=$('mushafStyleBtn');
+  if(!b)return;
+  var iPadLandscape=document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024;
+  b.style.display=(S.mushafMode&&S.surah&&iPadLandscape)?'':'none';
+}
+
+// On spread snap settle, play the chosen arrival animation
+var _mLastSpreadIdx=-1;
+function _onMushafScrollSettle(view){
+  var idx=Math.round(view.scrollLeft/view.clientWidth);
+  if(idx===_mLastSpreadIdx||_mStyle==='slide')return;
+  _mLastSpreadIdx=idx;
+  var spread=view.children[idx];
+  if(!spread||!spread.classList.contains('mushaf-spread'))return;
+  var animCls=_mStyle==='fade'?'msp-fade':_mStyle==='scale'?'msp-scale':'msp-flip';
+  spread.classList.remove('msp-fade','msp-scale','msp-flip');
+  // force reflow so animation replays
+  void spread.offsetWidth;
+  spread.classList.add(animCls);
+  setTimeout(function(){spread.classList.remove(animCls);},500);
+}
 
 // Standard Medina Mushaf (604-page Hafs/Uthmani) — juz start pages
 var JUZ_PAGES=[1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
@@ -3526,6 +3570,15 @@ function renderMushafView(){
     // Landscape iPad: rewrap pages into horizontal scroll spreads
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024){
       _mushafWrapSpreads(view);
+      _mLastSpreadIdx=-1;
+      _updateMushafStyleBtn();
+      _syncMushafStyleBtn();
+      // Listen for snap settle to apply transition animation
+      var _mScrollTimer=null;
+      view.addEventListener('scroll',function(){
+        clearTimeout(_mScrollTimer);
+        _mScrollTimer=setTimeout(function(){_onMushafScrollSettle(view);},80);
+      },{passive:true});
     }
   }).catch(function(){
     clear(view);

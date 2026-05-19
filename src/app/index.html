@@ -3016,6 +3016,13 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1060px;margin:0 auto;width:100%
   html.is-ipad .mushaf-spread.spread-single::before{display:none}
   html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100vw;min-width:100vw;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;gap:32px;flex-shrink:0}
   html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:24px!important;line-height:1.95!important}
+  /* Spread arrival animations */
+  @keyframes mspread-fade-in{from{opacity:0}to{opacity:1}}
+  @keyframes mspread-scale-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+  @keyframes mspread-flip-in{from{opacity:.1;transform:perspective(1200px) rotateY(-70deg)}to{opacity:1;transform:perspective(1200px) rotateY(0deg)}}
+  html.is-ipad .mushaf-spread.msp-fade{animation:mspread-fade-in .38s ease forwards}
+  html.is-ipad .mushaf-spread.msp-scale{animation:mspread-scale-in .38s cubic-bezier(.34,1.56,.64,1) forwards}
+  html.is-ipad .mushaf-spread.msp-flip{animation:mspread-flip-in .42s cubic-bezier(.4,0,.2,1) forwards}
 }
 
 /* ─── FastScrollController — right-side scroll grabber ─────────────────── */
@@ -3125,6 +3132,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
       <div class="reader-title"><span class="surah-label" id="readerName"></span></div>
       <div style="display:flex;gap:2px;align-items:center">
         <button class="hdr-btn" id="mushafPlayBtn" onclick="App.mushafPlayToggle()" style="display:none" title="Play"><i class="fas fa-play"></i></button>
+        <button class="hdr-btn" id="mushafStyleBtn" onclick="App.cycleMushafStyle()" style="display:none;font-size:.7rem;font-weight:700;padding:0 8px;width:auto;min-width:38px" title="Page turn style">↔</button>
         <button class="hdr-btn" id="mushafToggleBtn" onclick="App.toggleMushafMode()" title="Mushaf"><i class="fas fa-book-open"></i></button>
         <button class="hdr-btn" onclick="App.openReaderSettings()"><i class="fas fa-cog"></i></button>
       </div>
@@ -3604,7 +3612,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=716"></script>
+<script src="/app/app.js?v=717"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
