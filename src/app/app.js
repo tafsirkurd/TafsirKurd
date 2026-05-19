@@ -3276,20 +3276,44 @@ function _syncMushafStyleBtn(){
   b.style.display=(S.mushafMode&&S.surah)?'':'none';
 }
 
-// On spread snap settle, play the chosen arrival animation
+// On scroll settle, play the chosen arrival animation on the most visible page/spread
 var _mLastSpreadIdx=-1;
+var _mLastPageEl=null;
 function _onMushafScrollSettle(view){
-  var idx=Math.round(view.scrollLeft/view.clientWidth);
-  if(idx===_mLastSpreadIdx||_mStyle==='slide')return;
-  _mLastSpreadIdx=idx;
-  var spread=view.children[idx];
-  if(!spread||!spread.classList.contains('mushaf-spread'))return;
+  if(_mStyle==='slide')return;
   var animCls=_mStyle==='fade'?'msp-fade':_mStyle==='scale'?'msp-scale':'msp-flip';
-  spread.classList.remove('msp-fade','msp-scale','msp-flip');
-  // force reflow so animation replays
-  void spread.offsetWidth;
-  spread.classList.add(animCls);
-  setTimeout(function(){spread.classList.remove(animCls);},500);
+
+  // Horizontal iPad spread mode
+  if(view.scrollLeft>0||view.children[0]&&view.children[0].classList.contains('mushaf-spread')){
+    var idx=Math.round(view.scrollLeft/view.clientWidth);
+    if(idx===_mLastSpreadIdx)return;
+    _mLastSpreadIdx=idx;
+    var spread=view.children[idx];
+    if(!spread||!spread.classList.contains('mushaf-spread'))return;
+    spread.classList.remove('msp-fade','msp-scale','msp-flip');
+    void spread.offsetWidth;
+    spread.classList.add(animCls);
+    setTimeout(function(){spread.classList.remove(animCls);},600);
+    return;
+  }
+
+  // Vertical scroll mode — find most visible .mushaf-text-page
+  var pages=view.querySelectorAll('.mushaf-text-page');
+  if(!pages.length)return;
+  var best=null,bestVis=0;
+  var vTop=view.scrollTop,vBot=vTop+view.clientHeight;
+  for(var i=0;i<pages.length;i++){
+    var p=pages[i];
+    var pTop=p.offsetTop,pBot=pTop+p.offsetHeight;
+    var vis=Math.max(0,Math.min(pBot,vBot)-Math.max(pTop,vTop));
+    if(vis>bestVis){bestVis=vis;best=p;}
+  }
+  if(!best||best===_mLastPageEl)return;
+  _mLastPageEl=best;
+  best.classList.remove('msp-fade','msp-scale','msp-flip');
+  void best.offsetWidth;
+  best.classList.add(animCls);
+  setTimeout(function(){best.classList.remove(animCls);},600);
 }
 
 // Standard Medina Mushaf (604-page Hafs/Uthmani) — juz start pages
@@ -3568,16 +3592,17 @@ function renderMushafView(){
 
     _updateMushafStyleBtn();
     _syncMushafStyleBtn();
+    _mLastSpreadIdx=-1;
+    _mLastPageEl=null;
+    // Wire scroll-settle animation for all modes
+    var _mScrollTimer=null;
+    view.addEventListener('scroll',function(){
+      clearTimeout(_mScrollTimer);
+      _mScrollTimer=setTimeout(function(){_onMushafScrollSettle(view);},120);
+    },{passive:true});
     // Landscape iPad: rewrap pages into horizontal scroll spreads
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=1024){
       _mushafWrapSpreads(view);
-      _mLastSpreadIdx=-1;
-      // Listen for snap settle to apply transition animation
-      var _mScrollTimer=null;
-      view.addEventListener('scroll',function(){
-        clearTimeout(_mScrollTimer);
-        _mScrollTimer=setTimeout(function(){_onMushafScrollSettle(view);},80);
-      },{passive:true});
     }
   }).catch(function(){
     clear(view);

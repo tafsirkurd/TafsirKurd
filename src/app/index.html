@@ -3018,12 +3018,19 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1060px;margin:0 auto;width:100%
   html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:24px!important;line-height:1.95!important}
   /* Spread arrival animations */
   @keyframes mspread-fade-in{from{opacity:0}to{opacity:1}}
-  @keyframes mspread-scale-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
-  @keyframes mspread-flip-in{from{opacity:.1;transform:perspective(1200px) rotateY(-70deg)}to{opacity:1;transform:perspective(1200px) rotateY(0deg)}}
-  html.is-ipad .mushaf-spread.msp-fade{animation:mspread-fade-in .38s ease forwards}
-  html.is-ipad .mushaf-spread.msp-scale{animation:mspread-scale-in .38s cubic-bezier(.34,1.56,.64,1) forwards}
-  html.is-ipad .mushaf-spread.msp-flip{animation:mspread-flip-in .42s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes mspread-scale-in{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+  @keyframes mspread-flip-in{from{opacity:.05;transform:perspective(1200px) rotateY(-80deg)}to{opacity:1;transform:perspective(1200px) rotateY(0deg)}}
+  html.is-ipad .mushaf-spread.msp-fade{animation:mspread-fade-in .4s ease forwards}
+  html.is-ipad .mushaf-spread.msp-scale{animation:mspread-scale-in .4s cubic-bezier(.34,1.56,.64,1) forwards}
+  html.is-ipad .mushaf-spread.msp-flip{animation:mspread-flip-in .45s cubic-bezier(.4,0,.2,1) forwards}
 }
+/* Vertical mushaf page arrival animations (all devices) */
+@keyframes mpage-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes mpage-scale-in{from{opacity:0;transform:scale(.82) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes mpage-flip-in{from{opacity:.05;transform:perspective(900px) rotateX(-60deg);transform-origin:top center}to{opacity:1;transform:perspective(900px) rotateX(0deg);transform-origin:top center}}
+.mushaf-text-page.msp-fade{animation:mpage-fade-in .4s ease forwards}
+.mushaf-text-page.msp-scale{animation:mpage-scale-in .4s cubic-bezier(.34,1.56,.64,1) forwards}
+.mushaf-text-page.msp-flip{animation:mpage-flip-in .45s cubic-bezier(.4,0,.2,1) forwards}
 
 /* ─── FastScrollController — right-side scroll grabber ─────────────────── */
 .fsc-track{position:fixed;right:3px;top:calc(var(--hdr-h,52px) + 10px);bottom:calc(var(--tab-h,60px) + env(safe-area-inset-bottom,0px) + 10px);width:4px;border-radius:2px;z-index:292;opacity:0;transition:opacity .22s var(--ease);pointer-events:none;touch-action:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -3612,7 +3619,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=718"></script>
+<script src="/app/app.js?v=719"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
