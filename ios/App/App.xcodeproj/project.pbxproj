@@ -349,7 +349,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				WDGT000000000016 /* WidgetLogic.swift in Sources */,
+				TEST000000000002 /* WidgetLogic.swift in test Sources */,
 				TEST000000000001 /* TafsirKurdWidgetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
