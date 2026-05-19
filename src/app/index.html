@@ -2768,11 +2768,18 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   .mushaf-qcf-line,.mushaf-flow-verse{font-size:28px!important;line-height:2.0!important}
   .mushaf-surah-nav{max-width:680px;width:100%;margin-left:auto;margin-right:auto}
 
-  /* IV hero: taller on iPad for more cinematic feel */
-  .iv-hero{height:260px}
+  /* IV: 3-col grid, taller hero, roomier cards */
+  .iv-hero{height:280px}
+  .iv-hero-ep{font-size:.9rem}
+  .iv-hero-series{font-size:.74rem}
+  .iv-hero-play{width:54px;height:54px;font-size:1.1rem}
+  .iv-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:20px 20px 80px}
+  .iv-card-body{padding:12px 14px 14px}
+  .iv-card-title{font-size:.88rem}
+  .iv-card-speaker{font-size:.72rem}
 
   /* IslamVoice: centered content with comfortable max-width */
-  #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%}
+  #panelIslamvoice .iv-home{max-width:1060px;margin:0 auto;width:100%}
 }
 
 /* ─────────────────────────────────────────────────
@@ -2801,9 +2808,10 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   .genc-card-title{font-size:1.4rem}
   .genc-home{padding:28px 32px 48px;gap:22px}
 
-  /* 3-column IslamVoice on landscape iPad */
-  .iv-grid{grid-template-columns:repeat(3,1fr)}
-  .iv-hero{height:280px}
+  /* IslamVoice: landscape iPad */
+  .iv-grid{grid-template-columns:repeat(3,1fr);gap:18px;padding:22px 24px 80px}
+  .iv-hero{height:320px}
+  .iv-card-title{font-size:.92rem}
 
   .settings-content{max-width:700px;margin-left:auto;margin-right:auto}
 
@@ -2954,9 +2962,16 @@ html.is-ipad .mushaf-view{padding:20px 20px calc(var(--tab-h) + var(--safe-b) + 
 html.is-ipad .mushaf-text-page{max-width:680px!important;margin:0 auto 24px!important;padding:44px 36px 32px!important;border-radius:24px!important;box-shadow:0 6px 40px rgba(0,0,0,.13)!important}
 html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:28px!important;line-height:2.0!important}
 html.is-ipad .mushaf-surah-nav{max-width:680px;width:100%;margin-left:auto;margin-right:auto}
-html.is-ipad .iv-hero{height:260px}
+html.is-ipad .iv-hero{height:280px}
+html.is-ipad .iv-hero-ep{font-size:.9rem}
+html.is-ipad .iv-hero-series{font-size:.74rem}
+html.is-ipad .iv-hero-play{width:54px;height:54px;font-size:1.1rem}
+html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:20px 20px 80px}
+html.is-ipad .iv-card-body{padding:12px 14px 14px}
+html.is-ipad .iv-card-title{font-size:.88rem}
+html.is-ipad .iv-card-speaker{font-size:.72rem}
 html.is-ipad .book-grid{grid-template-columns:repeat(3,1fr)}
-html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%}
+html.is-ipad #panelIslamvoice .iv-home{max-width:1060px;margin:0 auto;width:100%}
 
 /* Landscape iPad: 3-col IslamVoice, two-page mushaf */
 /* Mushaf: wider phones / non-iPad tablets — center the page column */
@@ -2966,8 +2981,9 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1020px;margin:0 auto;width:100%
 @media(min-width:1024px){
   html.is-ipad{--reading-max-w:800px}
   html.is-ipad #quranHome{width:340px}
-  html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr)}
-  html.is-ipad .iv-hero{height:280px}
+  html.is-ipad .iv-grid{grid-template-columns:repeat(3,1fr);gap:18px;padding:22px 24px 80px}
+  html.is-ipad .iv-hero{height:320px}
+  html.is-ipad .iv-card-title{font-size:.92rem}
   html.is-ipad .settings-content{max-width:700px;margin-left:auto;margin-right:auto}
   html.is-ipad .mushaf-view{display:flex;flex-direction:row;align-items:stretch;overflow-x:scroll;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0!important;position:relative}
   html.is-ipad .mushaf-spread{width:100vw;min-width:100vw;height:100%;display:flex;flex-direction:row;direction:rtl;scroll-snap-align:start;scroll-snap-stop:always;position:relative;overflow:hidden;flex-shrink:0}
