@@ -71,6 +71,7 @@ export async function onRequest(context) {
                 .select('key, value')
                 .in('key', [
                     'prayer_cache_version',
+                    'widget_refresh_nonce',
                     'i18n_cache_version',
                     'i18n_health_reporting_enabled',
                     'i18n_last_published_at'
@@ -78,6 +79,7 @@ export async function onRequest(context) {
             if (rows) {
                 const m = Object.fromEntries(rows.map(r => [r.key, r.value]));
                 if (m.prayer_cache_version)           config.prayerCacheVersion           = m.prayer_cache_version;
+                if (m.widget_refresh_nonce)           config.widgetRefreshNonce           = m.widget_refresh_nonce;
                 if (m.i18n_cache_version)             config.i18nCacheVersion             = m.i18n_cache_version;
                 if (m.i18n_health_reporting_enabled !== undefined)
                                                       config.i18nHealthReportingEnabled   = m.i18n_health_reporting_enabled;
