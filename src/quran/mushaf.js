@@ -14,8 +14,11 @@
     var _anim   = 360; // ms — must match --m-anim in CSS
 
     function _updateStyleBtn() {
+        var label = LABELS[_style] || _style;
         var btn = document.getElementById('mushafStyleBtn');
-        if (btn) btn.textContent = LABELS[_style] || _style;
+        if (btn) btn.textContent = label;
+        var fab = document.getElementById('mushafStyleFab');
+        if (fab) fab.textContent = label;
     }
 
     window.cycleMushafTransition = function() {
@@ -162,6 +165,34 @@
     }
 
     /* ── Public API ─────────────────────────────────────────────────────── */
+    /* ── Floating style button (body-level, immune to layout issues) ──── */
+    function _ensureStyleFab() {
+        var fab = document.getElementById('mushafStyleFab');
+        if (fab) return fab;
+        fab = document.createElement('button');
+        fab.id = 'mushafStyleFab';
+        fab.onclick = window.cycleMushafTransition;
+        fab.style.cssText = [
+            'position:fixed',
+            'top:12px',
+            'left:50%',
+            'transform:translateX(-50%)',
+            'z-index:99999',
+            'background:rgba(26,14,3,0.92)',
+            'border:1.5px solid #c9a227',
+            'color:#c9a227',
+            'border-radius:20px',
+            'padding:6px 18px',
+            'font-size:0.88rem',
+            'cursor:pointer',
+            'letter-spacing:.5px',
+            'box-shadow:0 2px 10px rgba(0,0,0,.5)',
+            'display:none'
+        ].join(';');
+        document.body.appendChild(fab);
+        return fab;
+    }
+
     window.enterMushafMode = function(surahNum) {
         if (!window.quranData || !quranData[surahNum]) return;
         _mushafActive  = true;
@@ -178,6 +209,8 @@
         var btn = document.getElementById('mushafTafsirBtn');
         if (btn) btn.classList.toggle('active', tafsirOn);
         _updateStyleBtn();
+        var fab = _ensureStyleFab();
+        fab.style.display = 'block';
         _renderSpread(0);
     };
 
@@ -186,6 +219,8 @@
         _mushafBusy   = false;
         document.getElementById('mushafContainer').classList.remove('mushaf-active');
         document.body.classList.remove('mushaf-mode');
+        var fab = document.getElementById('mushafStyleFab');
+        if (fab) fab.style.display = 'none';
     };
 
     window.mushafNavigate = function(dir) {
