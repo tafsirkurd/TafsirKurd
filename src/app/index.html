@@ -2651,8 +2651,10 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   [data-theme="dark"] .ayah-card,
   [data-theme="sakina"] .ayah-card{box-shadow:0 2px 8px rgba(0,0,0,.22)}
 
-  /* PRAYER: taller sky, roomier cards */
-  .sky-scene{height:310px}
+  /* PRAYER: taller sky, bigger text, roomier cards */
+  .sky-scene{height:360px}
+  .sky-city{font-size:2.4rem}
+  .sky-countdown{font-size:3.2rem}
   .prayer-grid{
     grid-template-columns:1fr 1fr 1fr;
     padding:20px 24px 60px;
@@ -2663,6 +2665,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
     border-radius:20px!important;
     min-height:120px;
   }
+  .prayer-grid-time{font-size:1.9rem}
 
   /* GENCINE: 3-col grid, cinematic cards */
   .genc-home{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:24px 24px 40px}
@@ -2770,7 +2773,9 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
   #quranHome{width:340px}
   .ayah-card{padding:32px 44px!important}
 
-  .sky-scene{height:340px}
+  .sky-scene{height:360px}
+  .sky-city{font-size:2.6rem}
+  .sky-countdown{font-size:3.4rem}
   .prayer-grid{padding:24px 32px 72px;gap:18px}
   .prayer-grid-time{font-size:2rem}
 
@@ -2871,9 +2876,12 @@ html.is-ipad .reader-hdr .back-btn{display:none!important}
 html.is-ipad .surah-reader-header{border-radius:0!important;padding:40px max(32px,calc((100% - var(--reading-max-w)) / 2)) 32px!important;margin-bottom:8px!important}
 html.is-ipad .ayah-list{padding:0 0 120px!important}
 html.is-ipad .ayah-card{max-width:var(--reading-max-w)!important;width:calc(100% - 56px)!important;margin:0 auto 18px!important;padding:28px 36px!important;border-radius:20px!important;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-html.is-ipad .sky-scene{height:310px}
+html.is-ipad .sky-scene{height:360px}
+html.is-ipad .sky-city{font-size:2.4rem}
+html.is-ipad .sky-countdown{font-size:3.2rem}
 html.is-ipad .prayer-grid{grid-template-columns:1fr 1fr 1fr;padding:20px 24px 60px;gap:16px;align-content:start}
 html.is-ipad .prayer-grid-card{padding:20px 18px 18px!important;border-radius:20px!important;min-height:120px}
+html.is-ipad .prayer-grid-time{font-size:1.9rem}
 html.is-ipad .genc-home{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:24px 24px 40px}
 html.is-ipad .genc-home>:last-child:nth-child(3n+1){grid-column:1/-1}
 html.is-ipad .genc-card-btn{height:175px}
