@@ -439,6 +439,14 @@
             '#cp-footer{display:flex;align-items:center;gap:14px;padding:8px 14px;border-top:1px solid var(--cp-border);background:var(--cp-input-bg);}',
             '.cp-key{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--cp-muted);}',
             '.cp-kbd{background:var(--cp-hover);border:1px solid var(--cp-border);border-radius:5px;padding:1px 6px;font-size:10px;font-family:inherit;color:var(--cp-muted);}',
+
+            /* Recent sidebar section */
+            '#rpSection{border-bottom:1px solid var(--border-light);margin-bottom:4px;padding-bottom:2px;}',
+            '.nav-item-recent{transition:background .15s,box-shadow .15s;}',
+            '.nav-item-recent:hover{box-shadow:inset 2px 0 0 var(--rp-color,var(--primary));}',
+            '.nav-item-rp-dot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0;animation:rpPulse 2.4s ease-in-out infinite;}',
+            '.sidebar.collapsed .nav-item-rp-dot,.sidebar.collapsed #rpSection .nav-section-header{display:none;}',
+            '@keyframes rpPulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.55)}}',
         ].join('');
         document.head.appendChild(s);
     }
@@ -541,12 +549,84 @@
         searchInput.style.cursor = 'pointer';
     }
 
+    // ── Recent pages sidebar section ──────────────────────────────
+    function injectRecentSidebar() {
+        // Record this page visit unconditionally
+        addRecent(window.location.pathname);
+
+        var allowed = visiblePages();
+        if (!allowed.length) {
+            // Auth not settled yet — retry up to 5 times
+            injectRecentSidebar._t = (injectRecentSidebar._t || 0) + 1;
+            if (injectRecentSidebar._t < 6) { setTimeout(injectRecentSidebar, 500); }
+            return;
+        }
+
+        var curPath = window.location.pathname;
+        var rec = getRecent()
+            .filter(function(h) { return h !== curPath; })
+            .filter(function(h) { return allowed.some(function(p) { return p.href === h; }); })
+            .slice(0, 3);
+
+        // Remove stale section from a previous run
+        var old = document.getElementById('rpSection');
+        if (old) old.parentNode.removeChild(old);
+        if (!rec.length) return;
+
+        var nav = document.querySelector('.sidebar-nav');
+        if (!nav) return;
+
+        var section = document.createElement('div');
+        section.id = 'rpSection';
+        section.className = 'nav-section';
+
+        var hdr = document.createElement('div');
+        hdr.className = 'nav-section-header';
+        hdr.textContent = 'Recent';
+        section.appendChild(hdr);
+
+        rec.forEach(function(href) {
+            var page = allowed.find(function(p) { return p.href === href; });
+            if (!page) return;
+            var color = SECTION_COLORS[page.section] || '#6b7280';
+
+            var item = document.createElement('a');
+            item.href = href;
+            item.className = 'nav-item nav-item-recent';
+            item.style.setProperty('--rp-color', color);
+
+            var ic = document.createElement('i');
+            ic.setAttribute('data-lucide', page.icon);
+            ic.style.color = color;
+            item.appendChild(ic);
+
+            var lbl = document.createElement('span');
+            lbl.className = 'nav-item-label';
+            lbl.textContent = page.label;
+            item.appendChild(lbl);
+
+            var dot = document.createElement('span');
+            dot.className = 'nav-item-rp-dot';
+            dot.style.background = color;
+            item.appendChild(dot);
+
+            section.appendChild(item);
+        });
+
+        nav.insertBefore(section, nav.firstChild);
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons({ nodes: Array.from(section.querySelectorAll('i[data-lucide]')) });
+        }
+    }
+
     // ── Init ──────────────────────────────────────────────────────
     function init() {
         buildStyles();
         buildDOM();
         injectTopbarTrigger();
         hookTopbarSearch();
+        injectRecentSidebar();
         document.addEventListener('keydown', onGlobalKey);
     }
 
