@@ -393,7 +393,7 @@ body{background:var(--bg);color:var(--text)}
 .sticky-progress-info{display:flex;justify-content:space-between;align-items:center}
 /* Mushaf QCF V1 (Madinah) */
 .mushaf-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:8px clamp(8px,3vw,24px) calc(var(--tab-h) + var(--safe-b) + var(--audio-bar-h) + 48px);position:relative;display:flex;flex-direction:column;align-items:center}
-.mushaf-text-page{background:var(--surface);border-radius:18px;padding:clamp(40px,8vw,52px) clamp(16px,4.5vw,40px) 28px;margin-bottom:16px;width:100%;max-width:540px;box-shadow:0 2px 24px rgba(0,0,0,.11);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s ease;overflow:visible}
+.mushaf-text-page{background:var(--surface);border-radius:18px;padding:clamp(40px,8vw,52px) clamp(16px,4.5vw,40px) 28px;margin-bottom:16px;width:100%;max-width:540px;box-shadow:0 2px 24px rgba(0,0,0,.11);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s ease;overflow:visible;display:flex;flex-direction:column}
 .mushaf-text-page:active{opacity:.75}
 /* Warm manuscript paper feel — dark + sakina modes */
 [data-theme="dark"] .mushaf-view{background:radial-gradient(ellipse 100% 70% at 50% 30%,#0E0D0A 0%,#050504 100%)}
@@ -402,7 +402,7 @@ body{background:var(--bg);color:var(--text)}
 [data-theme="sakina"] .mushaf-text-page{background:linear-gradient(160deg,#101A11 0%,#09100A 100%);border:1px solid rgba(255,220,140,.06);box-shadow:0 0 60px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,220,140,.05),0 0 40px rgba(29,122,91,.04)}
 .mushaf-surah-nav{padding:8px 16px 24px;display:flex;justify-content:space-between;gap:10px;width:100%;max-width:540px}
 .mushaf-surah-nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 16px;border-radius:var(--r-xl);background:var(--accent);color:var(--accent-t);font-size:.85rem;font-weight:600;border:none;cursor:pointer;direction:rtl}
-.mushaf-surah-banner{position:relative;text-align:center;font-family:'KFGQPC Hafs',serif;font-size:1rem;color:var(--text);margin:0 0 12px;padding:0 44px}
+.mushaf-surah-banner{position:relative;text-align:center;font-family:'KFGQPC Hafs',serif;font-size:1rem;color:var(--text);margin:0 0 12px;padding:0 44px;min-height:3rem;display:flex;align-items:center;justify-content:center}
 .mushaf-surah-banner::before,.mushaf-surah-banner::after{content:'';position:absolute;top:50%;transform:translateY(-50%);height:1px;background:var(--border2);width:36%}
 .mushaf-surah-banner::before{right:0}.mushaf-surah-banner::after{left:0}
 .mushaf-bismillah{text-align:center;font-family:'KFGQPC Hafs',serif;font-size:1.5rem;line-height:2.2;color:var(--text);margin-bottom:4px}
@@ -426,7 +426,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--next{animation:none!important;box-sh
 body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .mushaf-flow-verse{font-size:var(--mushaf-size,24px);line-height:var(--mushaf-lh,1.9);display:flex;justify-content:center;flex-wrap:wrap;direction:rtl;color:var(--text);padding:0.4em 0 0.35em;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px;transition:background .12s}
 .mushaf-flow-verse:active{background:rgba(128,128,128,.12)}
-.mushaf-page-foot{text-align:center;margin-top:12px;padding-top:8px;border-top:1px solid var(--border)}
+.mushaf-page-foot{text-align:center;margin-top:auto;padding-top:8px;border-top:1px solid var(--border);flex-shrink:0}
 .mushaf-page-num{font-size:.78rem;color:var(--text3);font-variant-numeric:tabular-nums}
 .mushaf-juz-banner{text-align:center;padding:6px 0 2px;font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.08em;border-bottom:1px solid var(--border2);margin-bottom:6px}
 .mushaf-page-ph{padding:40px 0;text-align:center;color:var(--text3);font-size:1.4rem}
