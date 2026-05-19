@@ -4593,6 +4593,191 @@
         .preloader {
             z-index: 99999 !important;
         }
+
+        /* ─── Mushaf Mode ─────────────────────────────────────────────────── */
+        :root {
+            --mushaf-parchment: #f5edd6;
+            --mushaf-parchment-dark: #e8d9b8;
+            --mushaf-gold: #8b6914;
+            --mushaf-gold-light: #c9a227;
+            --mushaf-ink: #1a0a00;
+            --mushaf-border: #b8921a;
+        }
+
+        .mushaf-container {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            background: #2c1f0e;
+        }
+        .mushaf-container.mushaf-active {
+            display: flex;
+        }
+
+        .mushaf-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #1a0e03 0%, #3a2510 100%);
+            border-bottom: 2px solid var(--mushaf-gold);
+            flex-shrink: 0;
+            gap: 10px;
+        }
+        .mushaf-toolbar-btn {
+            background: transparent;
+            border: 1px solid var(--mushaf-gold-light);
+            color: var(--mushaf-gold-light);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .mushaf-toolbar-btn:hover { background: rgba(201,162,39,0.15); }
+        .mushaf-toolbar-btn.active { background: rgba(201,162,39,0.3); }
+        .mushaf-toolbar-title {
+            color: var(--mushaf-gold-light);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+        }
+
+        .mushaf-spread-wrapper {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+            padding: 12px 8px;
+            gap: 4px;
+        }
+
+        .mushaf-page {
+            flex: 1;
+            background: var(--mushaf-parchment);
+            border: 2px solid var(--mushaf-border);
+            border-radius: 4px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.12), 0 4px 20px rgba(0,0,0,0.4);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .mushaf-page::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid rgba(139,105,20,0.3);
+            pointer-events: none;
+        }
+        .mushaf-page-inner {
+            padding: 28px 22px 20px;
+            flex: 1;
+            direction: rtl;
+        }
+        .mushaf-surah-header {
+            text-align: center;
+            margin-bottom: 14px;
+            color: var(--mushaf-gold);
+        }
+        .mushaf-surah-header .surah-title {
+            font-family: var(--arabic-font), 'Scheherazade New', serif;
+            font-size: 1.4rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .mushaf-surah-header .basmala {
+            font-family: var(--arabic-font), 'Scheherazade New', serif;
+            font-size: 1.6rem;
+            display: block;
+            color: var(--mushaf-ink);
+        }
+        .mushaf-page-number {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--mushaf-gold);
+            padding: 6px 0 2px;
+            border-top: 1px solid rgba(139,105,20,0.3);
+            margin-top: auto;
+        }
+
+        .mushaf-ayah-block {
+            margin-bottom: 0;
+        }
+        .mushaf-ayah-text {
+            font-family: var(--arabic-font), 'Scheherazade New', serif;
+            font-size: 1.65rem;
+            line-height: 2.2;
+            color: var(--mushaf-ink);
+            direction: rtl;
+            text-align: justify;
+        }
+        .mushaf-ayah-number {
+            display: inline;
+            font-family: var(--arabic-font), serif;
+            font-size: 1.1rem;
+            color: var(--mushaf-gold);
+            margin: 0 2px;
+        }
+        .mushaf-tafsir {
+            font-family: var(--tafsir-font), sans-serif;
+            font-size: 0.82rem;
+            color: #4a3000;
+            background: rgba(139,105,20,0.08);
+            border-right: 3px solid var(--mushaf-gold-light);
+            padding: 6px 8px;
+            margin: 4px 0 10px;
+            border-radius: 0 4px 4px 0;
+            line-height: 1.6;
+            direction: rtl;
+            display: none;
+        }
+        body.mushaf-tafsir-on .mushaf-tafsir { display: block; }
+
+        .mushaf-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #1a0e03 0%, #3a2510 100%);
+            border-top: 2px solid var(--mushaf-gold);
+            flex-shrink: 0;
+        }
+        .mushaf-nav-btn {
+            background: transparent;
+            border: 1px solid var(--mushaf-gold-light);
+            color: var(--mushaf-gold-light);
+            border-radius: 6px;
+            padding: 7px 18px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .mushaf-nav-btn:hover { background: rgba(201,162,39,0.15); }
+        .mushaf-nav-btn:disabled { opacity: 0.35; cursor: default; }
+        .mushaf-page-info {
+            color: var(--mushaf-gold-light);
+            font-size: 0.88rem;
+            text-align: center;
+        }
+
+        /* Hide normal reader content when mushaf active */
+        body.mushaf-mode .reader-header,
+        body.mushaf-mode .ayah-container,
+        body.mushaf-mode .surah-navigation,
+        body.mushaf-mode .reader-back-btn {
+            display: none !important;
+        }
+        body.mushaf-mode .surah-reader-page {
+            padding: 0 !important;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - var(--nav-height));
+            overflow: hidden;
+        }
+        /* ─────────────────────────────────────────────────────────────────── */
     </style>
 
     <!-- 🎯 SEO: JSON-LD Structured Data for 100/100 Score -->
@@ -5318,6 +5503,38 @@
                     <span id="nextSurahName" data-t="quran_next_surah">سوورەتا دواتر</span>
                     <i class="fas fa-arrow-left"></i>
                 </button>
+            </div>
+
+            <!-- MUSHAF MODE CONTAINER (iPad / tablet) -->
+            <div id="mushafContainer" class="mushaf-container">
+                <div class="mushaf-toolbar">
+                    <button class="mushaf-toolbar-btn" onclick="exitMushafMode()">
+                        <i class="fas fa-arrow-right"></i> گەڕیان
+                    </button>
+                    <div class="mushaf-toolbar-title" id="mushafTitle"></div>
+                    <button class="mushaf-toolbar-btn" id="mushafTafsirBtn" onclick="toggleMushafTafsir()">
+                        تەفسیر
+                    </button>
+                </div>
+                <div class="mushaf-spread-wrapper">
+                    <div class="mushaf-page" id="mushafLeftPage">
+                        <div class="mushaf-page-inner" id="mushafLeftInner"></div>
+                        <div class="mushaf-page-number" id="mushafLeftNum"></div>
+                    </div>
+                    <div class="mushaf-page" id="mushafRightPage">
+                        <div class="mushaf-page-inner" id="mushafRightInner"></div>
+                        <div class="mushaf-page-number" id="mushafRightNum"></div>
+                    </div>
+                </div>
+                <div class="mushaf-nav-bar">
+                    <button class="mushaf-nav-btn" id="mushafPrevBtn" onclick="mushafNavigate('prev')">
+                        <i class="fas fa-chevron-right"></i> پێشوو
+                    </button>
+                    <div class="mushaf-page-info" id="mushafPageInfo"></div>
+                    <button class="mushaf-nav-btn" id="mushafNextBtn" onclick="mushafNavigate('next')">
+                        دواتر <i class="fas fa-chevron-left"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -11687,6 +11904,7 @@
         }
     </script>
 
+    <script src="/quran/mushaf.js?v=1"></script>
     <script src="/js/app-promo.js?v=20260329" defer></script>
     <script src="/quran/search.js"></script>
     <script>
