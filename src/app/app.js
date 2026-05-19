@@ -3230,12 +3230,10 @@ App.toggleMushafMode=function(){
     var fromAyah=_visibleAyahInList()||1;
     if(ayahList)ayahList.style.display='none';
     if(mushafView){mushafView.style.display='';renderMushafView();}
-    _syncMushafStyleBtn();
     _preBufferMushafAyah();
     // After mushaf renders, scroll to where user was
     _scrollMushafToAyah(S.surah,fromAyah,0);
   }else{
-    _syncMushafStyleBtn();
     // Capture position before hiding mushaf
     var fromAyahM=_visibleAyahInMushaf()||1;
     clearMushafHighlights();
