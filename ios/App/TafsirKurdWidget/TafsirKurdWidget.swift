@@ -62,7 +62,7 @@ private var widgetGradient: LinearGradient {
 
 // MARK: — Timeline entry
 
-private struct EntryDisplay {
+struct EntryDisplay {
     let hasData:       Bool
     let city:          String
     let hijri:         String
