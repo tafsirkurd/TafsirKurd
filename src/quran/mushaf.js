@@ -4,8 +4,61 @@
     var _mushafSpreads  = [];
     var _mushafSpread   = 0;
     var _mushafActive   = false;
+    var _mushafBusy     = false;
     var VERSES_PER_PAGE = 10;
 
+    /* ── Transition styles ──────────────────────────────────────────────── */
+    var STYLES  = ['slide', 'fade', 'scale', 'flip'];
+    var LABELS  = { slide:'↔ Slide', fade:'✦ Fade', scale:'⊙ Pop', flip:'📖 Flip' };
+    var _style  = localStorage.getItem('mushafTransition') || 'slide';
+    var _anim   = 360; // ms — must match --m-anim in CSS
+
+    function _updateStyleBtn() {
+        var btn = document.getElementById('mushafStyleBtn');
+        if (btn) btn.textContent = LABELS[_style] || _style;
+    }
+
+    window.cycleMushafTransition = function() {
+        var idx = STYLES.indexOf(_style);
+        _style = STYLES[(idx + 1) % STYLES.length];
+        localStorage.setItem('mushafTransition', _style);
+        _updateStyleBtn();
+    };
+
+    /* ── Animation helper ───────────────────────────────────────────────── */
+    function _animate(dir, renderFn) {
+        if (_mushafBusy) return;
+        _mushafBusy = true;
+
+        var w = document.querySelector('.mushaf-spread-wrapper');
+        if (!w) { renderFn(); _mushafBusy = false; return; }
+
+        var outCls, inCls;
+        if (_style === 'slide') {
+            outCls = dir === 'next' ? 'ms-sl-out' : 'ms-sr-out';
+            inCls  = dir === 'next' ? 'ms-sl-in'  : 'ms-sr-in';
+        } else if (_style === 'fade') {
+            outCls = 'ms-fo'; inCls = 'ms-fi';
+        } else if (_style === 'scale') {
+            outCls = 'ms-so'; inCls = 'ms-si';
+        } else {
+            outCls = dir === 'next' ? 'ms-flo' : 'ms-flro';
+            inCls  = dir === 'next' ? 'ms-fli' : 'ms-flri';
+        }
+
+        w.classList.add(outCls);
+        setTimeout(function() {
+            w.classList.remove(outCls);
+            renderFn();
+            w.classList.add(inCls);
+            setTimeout(function() {
+                w.classList.remove(inCls);
+                _mushafBusy = false;
+            }, _anim);
+        }, _anim);
+    }
+
+    /* ── Data helpers ───────────────────────────────────────────────────── */
     function _isTablet() { return window.innerWidth >= 768; }
 
     function _arabicNum(n) {
@@ -33,6 +86,7 @@
         return spreads;
     }
 
+    /* ── Page renderer ──────────────────────────────────────────────────── */
     function _renderPage(innerEl, numEl, verses, surahNum, spreadIdx, side) {
         while (innerEl.firstChild) innerEl.removeChild(innerEl.firstChild);
         if (!verses.length) { numEl.textContent = ''; return; }
@@ -45,7 +99,7 @@
             header.appendChild(titleSpan);
             if (surahNum !== 1 && surahNum !== 9) {
                 var basmala = _mkEl('span', 'basmala');
-                basmala.textContent = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
+                basmala.textContent = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
                 header.appendChild(basmala);
             }
             innerEl.appendChild(header);
@@ -107,12 +161,14 @@
         document.getElementById('mushafPageInfo').textContent = p1 + p2 + ' / ' + _arabicNum(totalPages);
     }
 
+    /* ── Public API ─────────────────────────────────────────────────────── */
     window.enterMushafMode = function(surahNum) {
         if (!window.quranData || !quranData[surahNum]) return;
         _mushafActive  = true;
         _mushafSurah   = surahNum;
         _mushafSpreads = _buildSpreads(surahNum);
         _mushafSpread  = 0;
+        _mushafBusy    = false;
         var info = window.surahNames && surahNames[surahNum];
         document.getElementById('mushafTitle').textContent =
             info ? info.english + ' (' + (info.arabic || '') + ')' : '';
@@ -121,17 +177,21 @@
         var tafsirOn = document.body.classList.contains('mushaf-tafsir-on');
         var btn = document.getElementById('mushafTafsirBtn');
         if (btn) btn.classList.toggle('active', tafsirOn);
+        _updateStyleBtn();
         _renderSpread(0);
     };
 
     window.exitMushafMode = function() {
         _mushafActive = false;
+        _mushafBusy   = false;
         document.getElementById('mushafContainer').classList.remove('mushaf-active');
         document.body.classList.remove('mushaf-mode');
     };
 
     window.mushafNavigate = function(dir) {
-        _renderSpread(dir === 'prev' ? _mushafSpread - 1 : _mushafSpread + 1);
+        var nextIdx = dir === 'prev' ? _mushafSpread - 1 : _mushafSpread + 1;
+        if (nextIdx < 0 || nextIdx >= _mushafSpreads.length) return;
+        _animate(dir, function() { _renderSpread(nextIdx); });
     };
 
     window.toggleMushafTafsir = function() {
@@ -141,6 +201,21 @@
         localStorage.setItem('mushafTafsir', on ? '1' : '0');
     };
 
+    /* ── Swipe (iPad touch) ─────────────────────────────────────────────── */
+    var _swipeStartX = null;
+    document.addEventListener('touchstart', function(e) {
+        if (!_mushafActive) return;
+        _swipeStartX = e.touches[0].clientX;
+    }, { passive: true });
+    document.addEventListener('touchend', function(e) {
+        if (!_mushafActive || _swipeStartX === null) return;
+        var dx = e.changedTouches[0].clientX - _swipeStartX;
+        _swipeStartX = null;
+        if (Math.abs(dx) < 50) return;
+        mushafNavigate(dx < 0 ? 'next' : 'prev');
+    }, { passive: true });
+
+    /* ── Auto-enter on tablet ───────────────────────────────────────────── */
     function _maybeAutoMushaf(surahNum) {
         if (!_isTablet()) return;
         setTimeout(function() { window.enterMushafMode(surahNum); }, 80);
@@ -151,6 +226,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        _updateStyleBtn();
         var _orig = window.showSurahReader;
         if (typeof _orig === 'function') {
             window.showSurahReader = function(surahNum, highlightAyah) {

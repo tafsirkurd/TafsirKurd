@@ -4777,6 +4777,34 @@
             height: calc(100vh - var(--nav-height));
             overflow: hidden;
         }
+        /* ─── Mushaf Transitions ─────────────────────────────────────────── */
+        :root { --m-anim: 360ms; }
+
+        @keyframes ms-sl-out { to   { transform:translateX(-115%); } }
+        @keyframes ms-sl-in  { from { transform:translateX( 115%); } }
+        @keyframes ms-sr-out { to   { transform:translateX( 115%); } }
+        @keyframes ms-sr-in  { from { transform:translateX(-115%); } }
+        @keyframes ms-fo     { to   { opacity:0; } }
+        @keyframes ms-fi     { from { opacity:0; } }
+        @keyframes ms-so     { to   { transform:scale(.84) translateY(12px); opacity:0; } }
+        @keyframes ms-si     { from { transform:scale(.84) translateY(12px); opacity:0; } }
+        @keyframes ms-flo    { to   { transform:perspective(1100px) rotateY( 88deg); opacity:.1; } }
+        @keyframes ms-fli    { from { transform:perspective(1100px) rotateY(-88deg); opacity:.1; } }
+        @keyframes ms-flro   { to   { transform:perspective(1100px) rotateY(-88deg); opacity:.1; } }
+        @keyframes ms-flri   { from { transform:perspective(1100px) rotateY( 88deg); opacity:.1; } }
+
+        .ms-sl-out { animation:ms-sl-out var(--m-anim) cubic-bezier(.4,0,.2,1) forwards; }
+        .ms-sl-in  { animation:ms-sl-in  var(--m-anim) cubic-bezier(.4,0,.2,1) forwards; }
+        .ms-sr-out { animation:ms-sr-out var(--m-anim) cubic-bezier(.4,0,.2,1) forwards; }
+        .ms-sr-in  { animation:ms-sr-in  var(--m-anim) cubic-bezier(.4,0,.2,1) forwards; }
+        .ms-fo     { animation:ms-fo     var(--m-anim) ease                    forwards; }
+        .ms-fi     { animation:ms-fi     var(--m-anim) ease                    forwards; }
+        .ms-so     { animation:ms-so     var(--m-anim) ease                    forwards; }
+        .ms-si     { animation:ms-si     var(--m-anim) ease                    forwards; }
+        .ms-flo    { animation:ms-flo    var(--m-anim) ease                    forwards; }
+        .ms-fli    { animation:ms-fli    var(--m-anim) ease                    forwards; }
+        .ms-flro   { animation:ms-flro   var(--m-anim) ease                    forwards; }
+        .ms-flri   { animation:ms-flri   var(--m-anim) ease                    forwards; }
         /* ─────────────────────────────────────────────────────────────────── */
     </style>
 
@@ -5512,6 +5540,7 @@
                         <i class="fas fa-arrow-right"></i> گەڕیان
                     </button>
                     <div class="mushaf-toolbar-title" id="mushafTitle"></div>
+                    <button class="mushaf-toolbar-btn" id="mushafStyleBtn" onclick="cycleMushafTransition()" title="Change page turn style"></button>
                     <button class="mushaf-toolbar-btn" id="mushafTafsirBtn" onclick="toggleMushafTafsir()">
                         تەفسیر
                     </button>
