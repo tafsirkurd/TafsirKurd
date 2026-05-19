@@ -103,6 +103,11 @@
         .lt-step-item.pending   { color:var(--text-tertiary);opacity:.4; }
         .lt-step-item.error     { color:#ef4444;font-weight:700;background:rgba(239,68,68,.06); }
         .lt-cur-step            { display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px 15px;border-radius:11px;font-size:13px;font-weight:600;transition:background .5s,border-color .5s,color .5s; }
+        /* Progress bar at top of card */
+        .lt-top-bar             { position:absolute;top:0;left:0;right:0;height:3px;border-radius:20px 20px 0 0;overflow:hidden; }
+        .lt-top-bar-inner       { height:100%;transition:width .9s cubic-bezier(.4,0,.2,1),background .6s; }
+        /* Step hover */
+        .lt-step-item:hover     { background:var(--bg-hover)!important;border-radius:6px; }
     </style>
     <style id="early-sidebar-hide">.sidebar-nav{visibility:visible}</style>
     <script>
@@ -268,6 +273,8 @@
             <!-- ── Live Build Tracker ── -->
             <div id="cmLiveTracker">
                 <div class="lt-card" id="ltCard" style="background:linear-gradient(135deg,rgba(249,115,22,.07),rgba(249,115,22,.01))">
+                    <!-- Progress bar -->
+                    <div class="lt-top-bar"><div class="lt-top-bar-inner" id="ltTopBar" style="width:0%;background:linear-gradient(90deg,#f97316,#fb923c)"></div></div>
                     <!-- Header -->
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
                         <div>
@@ -624,10 +631,42 @@
     ];
     var cmLiveBuildId = null, cmLiveElapsedTimer = null;
     var cmLiveStartedAt = null, cmLiveBuildNum = null, cmLiveDone = false;
+    var cmLiveSoundPlayed = false;
     var LT_CIRC = 440; // 2π × r70
+
+    function cmPlaySound(type) {
+        try {
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (type === 'success') {
+                // Ascending chime: C5 E5 G5 C6
+                [[523,0],[659,.18],[784,.36],[1047,.6]].forEach(function(n){
+                    var o=ctx.createOscillator(),g=ctx.createGain();
+                    o.connect(g);g.connect(ctx.destination);
+                    o.type='sine';o.frequency.value=n[0];
+                    g.gain.setValueAtTime(0,ctx.currentTime+n[1]);
+                    g.gain.linearRampToValueAtTime(.3,ctx.currentTime+n[1]+.025);
+                    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+n[1]+.55);
+                    o.start(ctx.currentTime+n[1]);o.stop(ctx.currentTime+n[1]+.65);
+                });
+            } else {
+                // Descending fail tones
+                [[392,0],[294,.25]].forEach(function(n){
+                    var o=ctx.createOscillator(),g=ctx.createGain();
+                    o.connect(g);g.connect(ctx.destination);
+                    o.type='sawtooth';o.frequency.value=n[0];
+                    g.gain.setValueAtTime(0,ctx.currentTime+n[1]);
+                    g.gain.linearRampToValueAtTime(.22,ctx.currentTime+n[1]+.03);
+                    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+n[1]+.45);
+                    o.start(ctx.currentTime+n[1]);o.stop(ctx.currentTime+n[1]+.55);
+                });
+            }
+            setTimeout(function(){try{ctx.close();}catch(e){}},2500);
+        } catch(e){}
+    }
 
     function cmStartLiveTracking(buildId, buildNum) {
         cmLiveBuildId = buildId; cmLiveBuildNum = buildNum; cmLiveDone = false;
+        cmLiveSoundPlayed = false;
         cmLiveStartedAt = Date.now();
         var tracker = document.getElementById('cmLiveTracker');
         tracker.style.display = 'block';
@@ -675,12 +714,29 @@
         var done     = stepData.filter(function(s){return s.status==='success';}).length;
         var offset   = isDone ? 0 : LT_CIRC * (1 - done / total);
 
+        // Sound on terminal (once per build)
+        if ((isDone || isFail) && !cmLiveSoundPlayed && build) {
+            cmLiveSoundPlayed = true;
+            cmPlaySound(isDone ? 'success' : 'fail');
+        }
+
+        // Top progress bar
+        var topBar = document.getElementById('ltTopBar');
+        if (topBar) {
+            var pct = total > 0 ? (isDone ? 100 : Math.round(done/total*100)) : 0;
+            topBar.style.width = pct + '%';
+            topBar.style.background = isDone ? 'linear-gradient(90deg,#22c55e,#4ade80)'
+                                    : isFail ? 'linear-gradient(90deg,#ef4444,#f87171)'
+                                    : 'linear-gradient(90deg,#f97316,#fb923c)';
+        }
+
         // Title / subtitle
         var titleEl = document.getElementById('ltTitle'), subEl = document.getElementById('ltSubtitle');
         if (titleEl) titleEl.textContent = isDone ? 'Build Complete!' : isFail ? 'Build Failed' : 'Build In Progress';
         if (subEl) {
-            var sub = cmLiveBuildNum ? 'Build #'+cmLiveBuildNum : '';
+            var sub = cmLiveBuildNum ? '#'+cmLiveBuildNum : '';
             if (build && build._id) sub += (sub?' · ':'')+build._id.slice(-8);
+            if (build && build.branch) sub += (sub?' · ':'')+build.branch;
             subEl.textContent = sub || 'Starting…';
         }
 
@@ -696,7 +752,10 @@
             else if (isFail) numEl.innerHTML = '<span style="font-size:38px">✗</span>';
             else             numEl.textContent = done+'/'+total;
         }
-        if (lblEl) lblEl.textContent = isDone ? 'done' : isFail ? 'failed' : 'steps';
+        if (lblEl) {
+            var ringPct = total > 0 ? (isDone ? 100 : Math.round(done/total*100)) : 0;
+            lblEl.textContent = ringPct + '%';
+        }
 
         // Ring glow
         var wrap = document.getElementById('ltRingWrap');
