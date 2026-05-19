@@ -1,5 +1,5 @@
 /* =========================================================
-   admin-live-alerts.js  v8  —  Smart Online/Offline Edition
+   admin-live-alerts.js  v9  —  Smart Online/Offline Edition
    Real-time event popups for the TafsirKurd admin panel.
 
    Online tracking: user_sessions.last_active_at (correct table)
@@ -231,7 +231,7 @@
   var _contentTimer    = null;
 
   function _pollContent() {
-    var sb = window._supabase;
+    var sb = window.adminAuth && window.adminAuth.getSupabase && window.adminAuth.getSupabase();
     if (!sb) return;
 
     /* new episodes ------------------------------------------ */
@@ -755,11 +755,15 @@
     /* online/offline: poll /admin-users-data every 30s */
     _startPolling();
 
-    /* videos, messages, new users: poll Supabase directly every 45s */
-    if (window._supabase) { _startContentPoll(); return; }
+    /* videos, messages, new users: poll Supabase directly every 45s.
+       Uses window.adminAuth.getSupabase() — set after adminAuth.checkAuth() completes. */
+    function _sbReady() {
+      return window.adminAuth && window.adminAuth.getSupabase && window.adminAuth.getSupabase();
+    }
+    if (_sbReady()) { _startContentPoll(); return; }
     var n=0, wait=setInterval(function(){
-      if (window._supabase) { clearInterval(wait); _startContentPoll(); }
-      else if (++n > 60)    { clearInterval(wait); console.warn('[LiveAlerts] _supabase unavailable'); }
+      if (_sbReady())     { clearInterval(wait); _startContentPoll(); }
+      else if (++n > 60)  { clearInterval(wait); console.warn('[LiveAlerts] adminAuth.getSupabase unavailable after 30s — content alerts disabled'); }
     }, 500);
   }
 
