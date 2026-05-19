@@ -15,6 +15,45 @@
     <style>
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ── Toast notifications ── */
+        #adminToastStack {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .admin-toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+            max-width: 380px;
+            min-width: 200px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+            pointer-events: all;
+            animation: toastIn .22s cubic-bezier(.4,0,.2,1) forwards;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+        .admin-toast.toast-success { background: #065f46; border: 1px solid #10b981; }
+        .admin-toast.toast-error   { background: #7f1d1d; border: 1px solid #ef4444; }
+        .admin-toast.toast-warn    { background: #78350f; border: 1px solid #f59e0b; }
+        .admin-toast.toast-info    { background: #1e3a5f; border: 1px solid #3b82f6; }
+        .admin-toast.toast-out     { animation: toastOut .18s ease forwards; }
+        .admin-toast-icon          { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+        .admin-toast-body          { flex: 1; }
+        .admin-toast-title         { font-weight: 700; margin-bottom: 2px; }
+        .admin-toast-msg           { font-size: 12px; opacity: .85; }
+        @keyframes toastIn  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+        @keyframes toastOut { from { opacity:1; transform:none; } to { opacity:0; transform:translateY(8px); } }
+
         /* ── Staggered fade-in ── */
         @keyframes cardIn {
             from { opacity: 0; transform: translateY(16px); }
@@ -2474,7 +2513,7 @@
                         </h3>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="prayerHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
-                            <button onclick="forcePrayerCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
+                            <button onclick="forcePrayerCacheRefresh(this)" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps prayer_cache_version — all phones purge cache on next open">
                                 Force Refresh All Phones
                             </button>
                             <button class="collapse-btn" id="colBtn-prayer" onclick="event.stopPropagation();toggleCollapse('prayer')" title="Collapse section">
@@ -2523,10 +2562,10 @@
                                 <span>Reports</span>
                                 <input type="checkbox" id="i18nReportingToggle" onchange="toggleI18nReporting(this.checked)" style="cursor:pointer;">
                             </label>
-                            <button onclick="validateI18nTranslations()" style="font-size:12px;color:#fff;background:#8b5cf6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
+                            <button onclick="validateI18nTranslations(this)" style="font-size:12px;color:#fff;background:#8b5cf6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
                                 Validate
                             </button>
-                            <button onclick="forceI18nCacheRefresh()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps i18n_cache_version — all devices clear translation cache on next open">
+                            <button onclick="forceI18nCacheRefresh(this)" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps i18n_cache_version — all devices clear translation cache on next open">
                                 Force Clear All Caches
                             </button>
                             <button class="collapse-btn" id="colBtn-i18n" onclick="event.stopPropagation();toggleCollapse('i18n')" title="Collapse section">
@@ -2570,13 +2609,13 @@
                         </h3>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
                             <span id="widgetHealthUpdated" style="font-size:11px;color:var(--text-tertiary);"></span>
-                            <button onclick="forceWidgetRefreshAdmin()" style="font-size:12px;color:#fff;background:#3b82f6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps widget_refresh_nonce — all iOS devices force-refresh on next open">
+                            <button onclick="forceWidgetRefreshAdmin(this)" style="font-size:12px;color:#fff;background:#3b82f6;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Bumps widget_refresh_nonce — all iOS devices force-refresh on next open">
                                 Force Refresh All Widgets
                             </button>
-                            <button onclick="clearWidgetCacheAdmin()" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Clears extended cache — widget will re-fetch from API">
+                            <button onclick="clearWidgetCacheAdmin(this)" style="font-size:12px;color:#fff;background:#ef4444;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;" title="Clears extended cache — widget will re-fetch from API">
                                 Clear Widget Cache
                             </button>
-                            <button onclick="validateWidgetHealth()" style="font-size:12px;color:#fff;background:#10b981;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
+                            <button onclick="validateWidgetHealth(this)" style="font-size:12px;color:#fff;background:#10b981;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:opacity .2s;">
                                 Validate
                             </button>
                             <button class="collapse-btn" id="colBtn-widget" onclick="event.stopPropagation();toggleCollapse('widget')" title="Collapse section">
@@ -2733,6 +2772,7 @@
 
     <!-- ══ Focus mode badge ══ -->
     <div id="focusBadge" onclick="toggleFocusMode()" title="Exit Focus Mode (F)">Focus Mode — press F to exit</div>
+    <div id="adminToastStack"></div>
 
     <!-- ══ Back to Top ══ -->
     <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
@@ -2954,6 +2994,46 @@
         /* ═══════════════════════════════════════════════
            HELPERS
            ═══════════════════════════════════════════════ */
+        /* ── Toast helper ─────────────────────────────────────────────────────────
+           showToast(type, title, message, durationMs)
+           type: 'success' | 'error' | 'warn' | 'info'
+        ── */
+        function showToast(type, title, message, duration) {
+            var stack = document.getElementById('adminToastStack');
+            if (!stack) return;
+            var icons = { success: '✓', error: '✗', warn: '⚠', info: 'ℹ' };
+            var toast = document.createElement('div');
+            toast.className = 'admin-toast toast-' + (type || 'info');
+
+            var iconEl = document.createElement('span');
+            iconEl.className = 'admin-toast-icon';
+            iconEl.textContent = icons[type] || 'ℹ';
+            toast.appendChild(iconEl);
+
+            var body = document.createElement('div');
+            body.className = 'admin-toast-body';
+            if (title) {
+                var titleEl = document.createElement('div');
+                titleEl.className = 'admin-toast-title';
+                titleEl.textContent = title;
+                body.appendChild(titleEl);
+            }
+            if (message) {
+                var msgEl = document.createElement('div');
+                msgEl.className = 'admin-toast-msg';
+                msgEl.textContent = message;
+                body.appendChild(msgEl);
+            }
+            toast.appendChild(body);
+            stack.appendChild(toast);
+
+            var ms = duration || (type === 'error' ? 7000 : 4500);
+            setTimeout(function() {
+                toast.classList.add('toast-out');
+                setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 200);
+            }, ms);
+        }
+
         function refreshDashboard() {
             var btn = document.getElementById('refreshBtn');
             if (btn) btn.disabled = true;
@@ -4138,8 +4218,7 @@
             });
         }
 
-        async function forcePrayerCacheRefresh() {
-            var btn = event.target;
+        async function forcePrayerCacheRefresh(btn) {
             if (!btn) return;
             var newVersion = String(Date.now());
             btn.disabled = true;
@@ -4485,8 +4564,7 @@
             }
         }
 
-        async function forceWidgetRefreshAdmin() {
-            var btn = event.target;
+        async function forceWidgetRefreshAdmin(btn) {
             if (!btn) return;
             var newNonce = String(Date.now());
             btn.disabled = true; btn.textContent = 'Sending...';
@@ -4506,8 +4584,7 @@
             } catch(e) { btn.textContent = 'Error'; btn.style.background = '#6b7280'; btn.disabled = false; }
         }
 
-        async function clearWidgetCacheAdmin() {
-            var btn = event.target;
+        async function clearWidgetCacheAdmin(btn) {
             if (!btn) return;
             // Clear extended cache by writing a new nonce — SharedPrefsPlugin removes widgetExtendedCache
             btn.disabled = true; btn.textContent = 'Clearing...';
@@ -4527,8 +4604,7 @@
             } catch(e) { btn.textContent = 'Error'; btn.style.background = '#6b7280'; btn.disabled = false; }
         }
 
-        async function validateWidgetHealth() {
-            var btn = event.target;
+        async function validateWidgetHealth(btn) {
             if (!btn) return;
             btn.disabled = true; btn.textContent = 'Validating...';
             try {
@@ -4750,8 +4826,7 @@
             });
         }
 
-        async function forceI18nCacheRefresh() {
-            var btn = event.target;
+        async function forceI18nCacheRefresh(btn) {
             if (!btn) return;
             btn.disabled = true;
             btn.textContent = 'Sending...';
@@ -4796,8 +4871,7 @@
             } catch(e) {}
         }
 
-        async function validateI18nTranslations() {
-            var btn = event.target;
+        async function validateI18nTranslations(btn) {
             if (!btn) return;
             btn.disabled = true;
             btn.textContent = 'Validating...';
@@ -4810,14 +4884,13 @@
                 });
                 var j = await r.json();
                 if (j.success) {
-                    var msg = j.valid
-                        ? '✓ Valid — ' + j.total_keys + ' keys, 0 errors'
-                        : '✗ ' + j.errors.length + ' error(s) in ' + j.total_keys + ' keys';
-                    var details = j.errors.length
-                        ? '\n\nErrors:\n' + j.errors.map(function(e) { return '• ' + e.key + ' [' + e.issue + ']'; }).join('\n')
-                        : '';
-                    if (j.warnings.length) details += '\n\nWarnings (' + j.warnings.length + ' empty keys)';
-                    alert(msg + details);
+                    if (j.valid) {
+                        showToast('success', '✓ Translations valid', j.total_keys + ' keys — 0 errors');
+                    } else {
+                        var errLines = (j.errors || []).slice(0, 5).map(function(e) { return '• ' + e.key + ' [' + e.issue + ']'; }).join('\n');
+                        var warnNote = (j.warnings || []).length ? '\n+ ' + j.warnings.length + ' empty-key warnings' : '';
+                        showToast('error', '✗ ' + j.errors.length + ' error(s) in ' + j.total_keys + ' keys', errLines + warnNote, 9000);
+                    }
                     btn.textContent = j.valid ? '✓ Valid' : '✗ ' + j.errors.length + ' errors';
                     btn.style.background = j.valid ? '#10b981' : '#ef4444';
                 } else {
@@ -4929,10 +5002,10 @@
         }
 
         function escHtml(str) {
-            var d = document.createElement('div');
-            d.textContent = str;
-            return d.innerHTML;
+            return (str == null ? '' : String(str))
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
+        var _escHtml = escHtml; // single implementation, two names for back-compat
 
 
         function buildAuditLogs(logs) {
@@ -5109,10 +5182,6 @@
                         '</a>';
                 }).join('');
             }
-        }
-
-        function _escHtml(s) {
-            return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
         async function loadDashboardData() {
@@ -5724,17 +5793,75 @@
 
         function promptGoal(key) {
             var labels = { users: 'Total Users', activeToday: 'Active Today', active7d: 'Active 7 days', active30d: 'Active 30 days' };
-            var current = _goals[key] ? String(_goals[key]) : '';
-            var val = prompt('Goal for ' + (labels[key] || key) + ':\n(Enter a number to set, leave blank to remove)', current);
-            if (val === null) return;
-            var num = parseInt(val.replace(/[^0-9]/g, ''), 10);
-            if (!val.trim()) { delete _goals[key]; }
-            else if (!isNaN(num) && num > 0) { _goals[key] = num; }
-            saveGoals();
             var metricIds = { users: 'metricUsers', activeToday: 'metricActiveToday', active7d: 'metricActive7d', active30d: 'metricActive30d' };
-            var valEl = document.getElementById(metricIds[key]);
-            var currentVal = valEl ? (parseInt(valEl.textContent.replace(/[^0-9]/g, ''), 10) || 0) : 0;
-            renderMetricGoal(key, currentVal);
+
+            // Remove any existing goal modal
+            var existing = document.getElementById('goalInputModal');
+            if (existing) existing.parentNode.removeChild(existing);
+
+            var overlay = document.createElement('div');
+            overlay.id = 'goalInputModal';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;display:flex;align-items:center;justify-content:center;';
+
+            var box = document.createElement('div');
+            box.style.cssText = 'background:var(--bg-surface);border:1px solid var(--border-light);border-radius:14px;padding:24px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.25);';
+
+            var title = document.createElement('div');
+            title.style.cssText = 'font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:6px;';
+            title.textContent = 'Set goal — ' + (labels[key] || key);
+
+            var hint = document.createElement('div');
+            hint.style.cssText = 'font-size:12px;color:var(--text-tertiary);margin-bottom:14px;';
+            hint.textContent = 'Enter a target number, or leave blank to remove.';
+
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.min = '1';
+            input.value = _goals[key] ? String(_goals[key]) : '';
+            input.placeholder = 'e.g. 5000';
+            input.style.cssText = 'width:100%;box-sizing:border-box;padding:9px 12px;font-size:14px;border:1px solid var(--border-light);border-radius:8px;background:var(--bg-hover);color:var(--text-primary);outline:none;margin-bottom:16px;font-family:inherit;';
+
+            var btns = document.createElement('div');
+            btns.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
+
+            var cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.cssText = 'padding:7px 16px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-hover);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;';
+
+            var saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Save';
+            saveBtn.style.cssText = 'padding:7px 16px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;';
+
+            function closeModal() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+            function applyGoal() {
+                var raw = input.value.trim();
+                var num = parseInt(raw.replace(/[^0-9]/g, ''), 10);
+                if (!raw) { delete _goals[key]; }
+                else if (!isNaN(num) && num > 0) { _goals[key] = num; }
+                saveGoals();
+                var valEl = document.getElementById(metricIds[key]);
+                var currentVal = valEl ? (parseInt(valEl.textContent.replace(/[^0-9]/g, ''), 10) || 0) : 0;
+                renderMetricGoal(key, currentVal);
+                closeModal();
+            }
+
+            cancelBtn.addEventListener('click', closeModal);
+            saveBtn.addEventListener('click', applyGoal);
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') applyGoal();
+                if (e.key === 'Escape') closeModal();
+            });
+
+            btns.appendChild(cancelBtn);
+            btns.appendChild(saveBtn);
+            box.appendChild(title);
+            box.appendChild(hint);
+            box.appendChild(input);
+            box.appendChild(btns);
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            setTimeout(function() { input.focus(); input.select(); }, 30);
         }
 
         /* ── Overdue task banner ── */
