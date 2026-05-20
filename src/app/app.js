@@ -749,8 +749,8 @@ var S={
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
   mushafFont:'qcf1',
-  mushafFontSize:Math.min(25,Math.max(23,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||24)),
-  mushafLineH:Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8)),
+  mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qcf1':'mushafFontSize_qcf1'))||0;return ip?Math.min(34,Math.max(24,raw||28)):Math.min(25,Math.max(23,raw||24));})(),
+  mushafLineH:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseFloat(localStorage.getItem(ip?'mushafLineH_ipad':'mushafLineH'))||0;return ip?Math.min(2.4,Math.max(1.8,raw||2.0)):Math.min(2.3,Math.max(1.8,raw||1.8));})(),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
 
@@ -5310,16 +5310,21 @@ App.openMushafSettings=function(){
   var _abH=(_abEl&&_abEl.classList.contains('on'))?_abEl.offsetHeight:0;
   if(_abH>0)body.style.paddingBottom='calc(var(--tab-h) + var(--safe-b) + '+(_abH+20)+'px)';
 
+  var _isIpad=document.documentElement.classList.contains('is-ipad');
+  var _fsMin=_isIpad?24:23, _fsMax=_isIpad?34:25;
+  var _fsKey=_isIpad?'mushafFontSize_ipad_'+S.mushafFont:'mushafFontSize_'+S.mushafFont;
+  var _lhKey=_isIpad?'mushafLineH_ipad':'mushafLineH';
+  var _lhMax=_isIpad?2.4:2.3;
+
   // Font Size stepper
   body.appendChild(el('div','ms-section-label',t('qs.font_size_label')));
   var fsVal=el('span','stepper-val',S.mushafFontSize+'px');
   var fsMBtn,fsPBtn;
   function setFsSize(v){
-    v=Math.max(23,Math.min(25,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
+    v=Math.max(_fsMin,Math.min(_fsMax,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';
     document.documentElement.style.setProperty('--mushaf-size',v+'px');
-    localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));
-    if(fsMBtn)fsMBtn.disabled=(v<=23);if(fsPBtn)fsPBtn.disabled=(v>=25);
-    // Re-fit all rendered pages since line widths changed with font size
+    localStorage.setItem(_fsKey,String(v));
+    if(fsMBtn)fsMBtn.disabled=(v<=_fsMin);if(fsPBtn)fsPBtn.disabled=(v>=_fsMax);
     requestAnimationFrame(function(){
       var mv=$('mushafView');
       if(mv){var pgs=mv.querySelectorAll('.mushaf-text-page[data-loaded]');for(var _i=0;_i<pgs.length;_i++)_fitQCFLines(pgs[_i]);}
@@ -5329,7 +5334,7 @@ App.openMushafSettings=function(){
   fsMBtn=el('button','stepper-btn','-');fsPBtn=el('button','stepper-btn','+');
   on(fsMBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize-1);});
   on(fsPBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize+1);});
-  fsMBtn.disabled=(S.mushafFontSize<=23);fsPBtn.disabled=(S.mushafFontSize>=25);
+  fsMBtn.disabled=(S.mushafFontSize<=_fsMin);fsPBtn.disabled=(S.mushafFontSize>=_fsMax);
   fsCtrl.appendChild(fsMBtn);fsCtrl.appendChild(fsVal);fsCtrl.appendChild(fsPBtn);
   body.appendChild(fsCtrl);
 
@@ -5339,8 +5344,8 @@ App.openMushafSettings=function(){
   var lhCtrl=el('div','setting-stepper');
   var lhMBtn=el('button','stepper-btn','-');var lhPBtn=el('button','stepper-btn','+');
   (function(){
-    var min=1.8,max=2.3,step=0.1;
-    function updLh(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;S.mushafLineH=v;lhVal.textContent=v.toFixed(1)+'×';document.documentElement.style.setProperty('--mushaf-lh',String(v));localStorage.setItem('mushafLineH',String(v));lhMBtn.disabled=(v<=min);lhPBtn.disabled=(v>=max);}
+    var min=1.8,max=_lhMax,step=0.1;
+    function updLh(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;S.mushafLineH=v;lhVal.textContent=v.toFixed(1)+'×';document.documentElement.style.setProperty('--mushaf-lh',String(v));localStorage.setItem(_lhKey,String(v));lhMBtn.disabled=(v<=min);lhPBtn.disabled=(v>=max);}
     on(lhMBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH-step).toFixed(1)));});
     on(lhPBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH+step).toFixed(1)));});
     lhMBtn.disabled=(S.mushafLineH<=min);lhPBtn.disabled=(S.mushafLineH>=max);
