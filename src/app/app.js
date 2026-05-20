@@ -5310,7 +5310,7 @@ App.openMushafSettings=function(){
   var _abH=(_abEl&&_abEl.classList.contains('on'))?_abEl.offsetHeight:0;
   if(_abH>0)body.style.paddingBottom='calc(var(--tab-h) + var(--safe-b) + '+(_abH+20)+'px)';
 
-  var _isIpad=document.documentElement.classList.contains('is-ipad');
+  var _isIpad=document.documentElement.classList.contains('is-ipad')||window.innerWidth>=768;
   var _fsMin=_isIpad?24:23, _fsMax=_isIpad?34:25;
   var _fsKey=_isIpad?'mushafFontSize_ipad_'+S.mushafFont:'mushafFontSize_'+S.mushafFont;
   var _lhKey=_isIpad?'mushafLineH_ipad':'mushafLineH';
