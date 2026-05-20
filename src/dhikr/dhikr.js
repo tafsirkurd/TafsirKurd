@@ -2415,14 +2415,14 @@ window.GencineUI = {
     var NS = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('viewBox', '0 0 160 160');
-    svg.setAttribute('class', 'pdf-ring-svg');
+    svg.classList.add('pdf-ring-svg');
     var track = document.createElementNS(NS, 'circle');
     track.setAttribute('cx','80'); track.setAttribute('cy','80'); track.setAttribute('r','70');
-    track.setAttribute('class','pdf-ring-track');
+    track.classList.add('pdf-ring-track');
     svg.appendChild(track);
     var arc = document.createElementNS(NS, 'circle');
     arc.setAttribute('cx','80'); arc.setAttribute('cy','80'); arc.setAttribute('r','70');
-    arc.setAttribute('class','pdf-ring-fill');
+    arc.classList.add('pdf-ring-fill');
     svg.appendChild(arc);
     ringWrap.appendChild(svg);
     // Book icon shown during idle; swapped for percentage when download starts
@@ -2861,7 +2861,7 @@ window.GencineUI = {
         // First progress tick: switch from idle spinner to progress ring
         if (ringWrap.classList.contains('pdf-ring-idle')) {
           ringWrap.classList.remove('pdf-ring-idle');
-          arc.setAttribute('class', 'pdf-ring-fill pdf-ring-progress');
+          arc.classList.add('pdf-ring-progress');
           arc.style.strokeDashoffset = String(CIRC); // start fully hidden, let transition fill in
           ringIcon.style.display = 'none';
           progressPct.style.display = 'block';
