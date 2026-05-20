@@ -1783,17 +1783,21 @@
       var stamp     = JSON.parse(localStorage.getItem('widgetHealthStamp') || 'null');
       var lastPushedTs = parseInt(localStorage.getItem('widgetLastPushedTs') || '0', 10);
       var lastCity  = localStorage.getItem('widgetLastPushedCity') || '';
+      var lastDate  = localStorage.getItem('widgetLastPushedDate') || '';
       var lastSrc   = localStorage.getItem('widgetLastPushedSource') || '';
       var extTs     = parseInt(localStorage.getItem('widgetExtCacheLastPush') || '0', 10);
       var extCity   = localStorage.getItem('widgetExtCacheLastCity') || '';
       var now       = Date.now();
       var ageMin    = lastPushedTs ? Math.round((now - lastPushedTs) / 60000) : null;
       var extAgeH   = extTs        ? Math.round((now - extTs) / 3600000 * 10) / 10 : null;
+      var today     = window.PrayerLogic ? window.PrayerLogic.todayBaghdad() : '';
+      var curCity   = getCity();
       var status    = 'unknown';
-      if (!lastPushedTs)             status = 'missingTimeline';
-      else if (ageMin > 1440)        status = 'stale';       // >24 h
-      else if (ageMin > 60)          status = 'delayed';     // >1 h
-      else                           status = 'healthy';
+      if (!lastPushedTs)                                    status = 'missingTimeline';
+      else if (ageMin > 1440)                               status = 'stale';       // >24 h
+      else if (lastDate === today && lastCity === curCity)  status = 'healthy';     // data is current for today
+      else if (ageMin > 60)                                 status = 'delayed';     // >1 h, different date/city
+      else                                                  status = 'healthy';
       return {
         status:      status,
         lastPushedTs: lastPushedTs,
