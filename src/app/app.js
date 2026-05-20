@@ -3270,13 +3270,36 @@ function juzForPage(p){for(var j=JUZ_PAGES.length-1;j>=0;j--){if(p>=JUZ_PAGES[j]
 
 function _mushafSkeleton(){
   var sk=el('div','mushaf-skeleton');
-  for(var i=0;i<15;i++){
-    var line=document.createElement('div');
-    line.className='mushaf-skeleton-line';
-    // vary widths so it looks like real text lines
-    line.style.width=(i%5===2?'60%':i%3===0?'80%':'100%');
-    sk.appendChild(line);
-  }
+
+  // Surah header — title + basmala
+  var hdr=el('div','mushaf-skel-hdr');
+  var nm=el('div','mushaf-skel-name'); hdr.appendChild(nm);
+  var bsm=el('div','mushaf-skel-basml'); bsm.style.animationDelay='.12s'; hdr.appendChild(bsm);
+  sk.appendChild(hdr);
+
+  // Text rows — widths + marker positions mimic a real Quran page
+  // marker:true = verse ends on this line (shows circle at the left/end in RTL)
+  var rows=[
+    {w:'100',m:false},{w:'100',m:false},{w:'82',m:true},
+    {w:'100',m:false},{w:'100',m:false},{w:'100',m:false},{w:'90',m:true},
+    {w:'100',m:false},{w:'100',m:false},{w:'75',m:true},
+    {w:'100',m:false},{w:'100',m:false},{w:'88',m:true},
+    {w:'100',m:false},{w:'58',m:true}
+  ];
+  rows.forEach(function(r,i){
+    var row=el('div','mushaf-skel-row');
+    var delay=(i*0.045).toFixed(2)+'s';
+    var ln=el('div','mushaf-skel-line');
+    ln.style.width=r.w+'%';
+    ln.style.animationDelay=delay;
+    row.appendChild(ln); // first child = rightmost in RTL (text start)
+    if(r.m){
+      var num=el('div','mushaf-skel-num');
+      num.style.animationDelay=delay;
+      row.appendChild(num); // last child = leftmost in RTL (verse end marker)
+    }
+    sk.appendChild(row);
+  });
   return sk;
 }
 

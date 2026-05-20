@@ -432,8 +432,15 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .mushaf-page-ph{padding:40px 0;text-align:center;color:var(--text3);font-size:1.4rem}
 .mushaf-loading{padding:80px 0;text-align:center;color:var(--text3);font-size:1.6rem}
 .mushaf-text-page:empty{min-height:560px}
-.mushaf-skeleton{padding:24px 16px}
-.mushaf-skeleton-line{height:20px;margin:10px 0;border-radius:6px;background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3,#e8e8e8) 50%,var(--bg2) 75%);background-size:200% 100%;animation:mushaf-shimmer 1.4s infinite}
+.mushaf-skeleton{padding:28px 20px 16px;direction:rtl}
+.mushaf-skel-hdr{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.mushaf-skel-name{height:22px;width:120px;border-radius:10px}
+.mushaf-skel-basml{height:14px;width:210px;border-radius:6px}
+.mushaf-skel-row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.mushaf-skel-line{flex:1;height:19px;border-radius:5px}
+.mushaf-skel-num{width:23px;height:23px;border-radius:50%;flex-shrink:0}
+.mushaf-skel-name,.mushaf-skel-basml,.mushaf-skel-line,.mushaf-skel-num{background:linear-gradient(270deg,var(--bg2) 25%,var(--bg3,color-mix(in srgb,var(--bg2) 60%,var(--text))) 50%,var(--bg2) 75%);background-size:200% 100%;animation:mushaf-shimmer 1.6s ease-in-out infinite}
+.mushaf-skeleton-line{height:19px;margin:6px 0;border-radius:5px;background:linear-gradient(270deg,var(--bg2) 25%,var(--bg3,color-mix(in srgb,var(--bg2) 60%,var(--text))) 50%,var(--bg2) 75%);background-size:200% 100%;animation:mushaf-shimmer 1.6s ease-in-out infinite}
 @keyframes mushaf-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes ayah-pulse-in{0%{box-shadow:var(--ayah-current-glow),0 0 0 5px color-mix(in srgb,var(--accent) 16%,transparent)}100%{box-shadow:var(--ayah-current-glow)}}
 @keyframes seg-pulse-in{0%{background:color-mix(in srgb,var(--accent) 18%,transparent);box-shadow:0 2px 0 0 color-mix(in srgb,var(--accent) 75%,transparent)}100%{background:var(--mhl-cur-bg);box-shadow:0 2px 0 0 var(--mhl-cur-line),var(--mhl-cur-glow)}}
@@ -3609,7 +3616,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=732"></script>
+<script src="/app/app.js?v=733"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
