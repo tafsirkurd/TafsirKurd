@@ -2524,10 +2524,22 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 /* ── Book Reader ── */
 .book-reader-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 0}
 .book-reader-canvas{width:100%;display:block;opacity:1;transition:opacity .2s}
-.book-reader-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:60px 40px;color:var(--text2)}
-.pdf-progress-pct{font-size:1.6rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
-.pdf-progress-bar{width:200px;height:4px;background:var(--bg2);border-radius:2px;overflow:hidden}
-.pdf-progress-fill{height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .15s ease}
+.book-reader-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:64px 40px;min-height:320px;animation:pdf-load-in .35s cubic-bezier(.34,1.2,.64,1) both}
+@keyframes pdf-load-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.pdf-ring-wrap{position:relative;width:130px;height:130px}
+.pdf-ring-svg{width:130px;height:130px;transform:rotate(-90deg)}
+.pdf-ring-track{fill:none;stroke:var(--bg2);stroke-width:7}
+.pdf-ring-fill{fill:none;stroke:var(--accent);stroke-width:7;stroke-linecap:round;stroke-dasharray:345.4;stroke-dashoffset:345.4;transition:stroke-dashoffset .2s ease,filter .4s ease}
+.pdf-ring-fill.pdf-ring-done{filter:drop-shadow(0 0 6px var(--accent))}
+.pdf-ring-idle{animation:pdf-ring-pulse 1.8s ease-in-out infinite}
+@keyframes pdf-ring-pulse{0%,100%{opacity:.35}50%{opacity:.9}}
+.pdf-ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.55rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pdf-load-title{font-size:.88rem;font-weight:600;color:var(--text2);text-align:center;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdf-load-dots{display:flex;gap:5px;align-items:center}
+.pdf-load-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.25;animation:pdf-dot 1.3s ease-in-out infinite}
+.pdf-load-dot:nth-child(2){animation-delay:.18s}
+.pdf-load-dot:nth-child(3){animation-delay:.36s}
+@keyframes pdf-dot{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1.2)}}
 .book-reader-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;width:100%;background:var(--bg);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:10;margin-bottom:calc(var(--tab-h) + var(--safe-b))}
 .book-nav-btn{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .book-nav-btn:disabled{opacity:.35;cursor:default}
@@ -3616,7 +3628,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=733"></script>
+<script src="/app/app.js?v=734"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){

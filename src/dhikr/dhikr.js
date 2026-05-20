@@ -2407,17 +2407,49 @@ window.GencineUI = {
 
     var loadingEl = document.createElement('div');
     loadingEl.className = 'book-reader-loading';
+
+    // Circular SVG progress ring
+    var CIRC = 345.4; // 2π × 55
+    var ringWrap = document.createElement('div');
+    ringWrap.className = 'pdf-ring-wrap';
+    var NS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 130 130');
+    svg.className = 'pdf-ring-svg';
+    var track = document.createElementNS(NS, 'circle');
+    track.setAttribute('cx','65'); track.setAttribute('cy','65'); track.setAttribute('r','55');
+    track.className = 'pdf-ring-track';
+    svg.appendChild(track);
+    var arc = document.createElementNS(NS, 'circle');
+    arc.setAttribute('cx','65'); arc.setAttribute('cy','65'); arc.setAttribute('r','55');
+    arc.className = 'pdf-ring-fill pdf-ring-idle';
+    svg.appendChild(arc);
+    ringWrap.appendChild(svg);
     var progressPct = document.createElement('div');
-    progressPct.className = 'pdf-progress-pct';
+    progressPct.className = 'pdf-ring-pct';
     progressPct.textContent = '0%';
-    var progressBarWrap = document.createElement('div');
-    progressBarWrap.className = 'pdf-progress-bar';
-    var progressFill = document.createElement('div');
-    progressFill.className = 'pdf-progress-fill';
-    progressBarWrap.appendChild(progressFill);
-    loadingEl.appendChild(progressPct);
-    loadingEl.appendChild(progressBarWrap);
+    ringWrap.appendChild(progressPct);
+    loadingEl.appendChild(ringWrap);
+
+    // Book title
+    var titleEl = document.createElement('div');
+    titleEl.className = 'pdf-load-title';
+    titleEl.textContent = book && book.title || '';
+    loadingEl.appendChild(titleEl);
+
+    // Pulsing dots
+    var dotsEl = document.createElement('div');
+    dotsEl.className = 'pdf-load-dots';
+    for (var _di = 0; _di < 3; _di++) {
+      var dot = document.createElement('div');
+      dot.className = 'pdf-load-dot';
+      dotsEl.appendChild(dot);
+    }
+    loadingEl.appendChild(dotsEl);
     container.appendChild(loadingEl);
+
+    // Alias for backward compat with progress update code
+    var progressFill = arc;
 
     var pagesWrap = document.createElement('div');
     pagesWrap.style.cssText = 'padding:4px 2px 80px;display:flex;flex-direction:column;gap:3px;';
@@ -2824,7 +2856,9 @@ window.GencineUI = {
       if (data.total > 0) {
         var pct = Math.min(100, Math.round(data.loaded / data.total * 100));
         progressPct.textContent = pct + '%';
-        progressFill.style.width = pct + '%';
+        arc.classList.remove('pdf-ring-idle');
+        arc.style.strokeDashoffset = (CIRC * (1 - pct / 100)).toFixed(2);
+        if (pct >= 100) arc.classList.add('pdf-ring-done');
         clearTimeout(_loadTimer);
         if (pct < 100) {
           _loadTimer = setTimeout(function() {
