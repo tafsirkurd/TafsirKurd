@@ -2524,21 +2524,25 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 /* ── Book Reader ── */
 .book-reader-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 0}
 .book-reader-canvas{width:100%;display:block;opacity:1;transition:opacity .2s}
-.book-reader-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:64px 40px;min-height:320px}
-.pdf-ring-wrap{position:relative;width:130px;height:130px}
-.pdf-ring-svg{width:130px;height:130px;transform:rotate(-90deg)}
-.pdf-ring-track{fill:none;stroke:var(--bg2);stroke-width:7}
-.pdf-ring-fill{fill:none;stroke:var(--accent);stroke-width:7;stroke-linecap:round;stroke-dasharray:345.4;stroke-dashoffset:345.4;transition:stroke-dashoffset .2s ease,filter .4s ease}
-.pdf-ring-fill.pdf-ring-done{filter:drop-shadow(0 0 6px var(--accent))}
-.pdf-ring-idle{animation:pdf-ring-pulse 1.8s ease-in-out infinite}
-@keyframes pdf-ring-pulse{0%,100%{opacity:.35}50%{opacity:.9}}
-.pdf-ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.55rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.pdf-load-title{font-size:.88rem;font-weight:600;color:var(--text2);text-align:center;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pdf-load-dots{display:flex;gap:5px;align-items:center}
-.pdf-load-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.25;animation:pdf-dot 1.3s ease-in-out infinite}
-.pdf-load-dot:nth-child(2){animation-delay:.18s}
-.pdf-load-dot:nth-child(3){animation-delay:.36s}
-@keyframes pdf-dot{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1.2)}}
+.book-reader-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:32px 40px;min-height:calc(100vh - var(--hdr-h,56px) - var(--tab-h,56px) - var(--safe-t,0px) - var(--safe-b,0px))}
+.pdf-ring-wrap{position:relative;width:160px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pdf-ring-svg{position:absolute;inset:0;width:160px;height:160px;transform:rotate(-90deg)}
+.pdf-ring-track{fill:none;stroke:var(--bg2);stroke-width:9}
+.pdf-ring-fill{fill:none;stroke:var(--accent);stroke-width:9;stroke-linecap:round;stroke-dasharray:439.8;stroke-dashoffset:439.8}
+.pdf-ring-idle .pdf-ring-svg{animation:pdf-ring-spin 1.15s cubic-bezier(.4,0,.6,1) infinite}
+@keyframes pdf-ring-spin{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}
+.pdf-ring-idle .pdf-ring-fill{stroke-dasharray:110 330;stroke-dashoffset:0}
+.pdf-ring-fill.pdf-ring-progress{stroke-dasharray:439.8;animation:none;transition:stroke-dashoffset .3s ease,filter .4s ease}
+.pdf-ring-fill.pdf-ring-done{filter:drop-shadow(0 0 10px var(--accent))}
+.pdf-ring-icon{font-size:2rem;color:var(--accent);opacity:.6;z-index:1;transition:opacity .2s}
+.pdf-ring-pct{font-size:1.65rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.02em;display:none;z-index:1}
+.pdf-load-info{display:flex;flex-direction:column;align-items:center;gap:10px}
+.pdf-load-title{font-size:1rem;font-weight:700;color:var(--text);text-align:center;max-width:240px;line-height:1.4}
+.pdf-load-dots{display:flex;gap:7px;align-items:center}
+.pdf-load-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.28;animation:pdf-dot 1.3s ease-in-out infinite}
+.pdf-load-dot:nth-child(2){animation-delay:.2s}
+.pdf-load-dot:nth-child(3){animation-delay:.4s}
+@keyframes pdf-dot{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1.35)}}
 .book-reader-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;width:100%;background:var(--bg);border-top:1px solid var(--border);position:sticky;bottom:0;z-index:10;margin-bottom:calc(var(--tab-h) + var(--safe-b))}
 .book-nav-btn{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .book-nav-btn:disabled{opacity:.35;cursor:default}
@@ -3627,7 +3631,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=735"></script>
+<script src="/app/app.js?v=736"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){

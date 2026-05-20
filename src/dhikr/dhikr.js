@@ -2408,36 +2408,39 @@ window.GencineUI = {
     var loadingEl = document.createElement('div');
     loadingEl.className = 'book-reader-loading';
 
-    // Circular SVG progress ring
-    var CIRC = 345.4; // 2π × 55
+    // Circular SVG progress ring — idle: spinning 25 % arc; progress: fills to 100 %
+    var CIRC = 439.8; // 2π × 70
     var ringWrap = document.createElement('div');
-    ringWrap.className = 'pdf-ring-wrap';
+    ringWrap.className = 'pdf-ring-wrap pdf-ring-idle'; // idle spinner until download begins
     var NS = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('viewBox', '0 0 130 130');
-    svg.className = 'pdf-ring-svg';
+    svg.setAttribute('viewBox', '0 0 160 160');
+    svg.setAttribute('class', 'pdf-ring-svg');
     var track = document.createElementNS(NS, 'circle');
-    track.setAttribute('cx','65'); track.setAttribute('cy','65'); track.setAttribute('r','55');
-    track.className = 'pdf-ring-track';
+    track.setAttribute('cx','80'); track.setAttribute('cy','80'); track.setAttribute('r','70');
+    track.setAttribute('class','pdf-ring-track');
     svg.appendChild(track);
     var arc = document.createElementNS(NS, 'circle');
-    arc.setAttribute('cx','65'); arc.setAttribute('cy','65'); arc.setAttribute('r','55');
-    arc.className = 'pdf-ring-fill pdf-ring-idle';
+    arc.setAttribute('cx','80'); arc.setAttribute('cy','80'); arc.setAttribute('r','70');
+    arc.setAttribute('class','pdf-ring-fill');
     svg.appendChild(arc);
     ringWrap.appendChild(svg);
+    // Book icon shown during idle; swapped for percentage when download starts
+    var ringIcon = document.createElement('i');
+    ringIcon.className = 'fas fa-book-open pdf-ring-icon';
+    ringWrap.appendChild(ringIcon);
     var progressPct = document.createElement('div');
     progressPct.className = 'pdf-ring-pct';
-    progressPct.textContent = '0%';
     ringWrap.appendChild(progressPct);
     loadingEl.appendChild(ringWrap);
 
-    // Book title
+    // Title + dots grouped
+    var infoEl = document.createElement('div');
+    infoEl.className = 'pdf-load-info';
     var titleEl = document.createElement('div');
     titleEl.className = 'pdf-load-title';
     titleEl.textContent = book && book.title || '';
-    loadingEl.appendChild(titleEl);
-
-    // Pulsing dots
+    infoEl.appendChild(titleEl);
     var dotsEl = document.createElement('div');
     dotsEl.className = 'pdf-load-dots';
     for (var _di = 0; _di < 3; _di++) {
@@ -2445,7 +2448,8 @@ window.GencineUI = {
       dot.className = 'pdf-load-dot';
       dotsEl.appendChild(dot);
     }
-    loadingEl.appendChild(dotsEl);
+    infoEl.appendChild(dotsEl);
+    loadingEl.appendChild(infoEl);
     container.appendChild(loadingEl);
 
     // Alias for backward compat with progress update code
@@ -2810,16 +2814,15 @@ window.GencineUI = {
          Guard against double-load if user taps button twice. */
       if (window._pdfJsLoading) return;
       window._pdfJsLoading = true;
-      loadingEl.textContent = 'جێبارکرن…';
       var scr = document.createElement('script');
       scr.src = _PDF_CDN + 'pdf.min.js';
       scr.onload = function() {
         window._pdfJsLoading = false;
         var lib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
         if (lib) { lib.GlobalWorkerOptions.workerSrc = _PDF_CDN + 'pdf.worker.min.js'; self._draw(); }
-        else { loadingEl.textContent = 'PDF.js failed to load'; }
+        else { titleEl.textContent = 'PDF.js failed to load'; }
       };
-      scr.onerror = function() { window._pdfJsLoading = false; loadingEl.textContent = 'Failed to load PDF viewer'; };
+      scr.onerror = function() { window._pdfJsLoading = false; titleEl.textContent = 'Failed to load PDF viewer'; };
       document.head.appendChild(scr);
       return;
     }
@@ -2855,8 +2858,15 @@ window.GencineUI = {
     loadingTask.onProgress = function(data) {
       if (data.total > 0) {
         var pct = Math.min(100, Math.round(data.loaded / data.total * 100));
+        // First progress tick: switch from idle spinner to progress ring
+        if (ringWrap.classList.contains('pdf-ring-idle')) {
+          ringWrap.classList.remove('pdf-ring-idle');
+          arc.setAttribute('class', 'pdf-ring-fill pdf-ring-progress');
+          arc.style.strokeDashoffset = String(CIRC); // start fully hidden, let transition fill in
+          ringIcon.style.display = 'none';
+          progressPct.style.display = 'block';
+        }
         progressPct.textContent = pct + '%';
-        arc.classList.remove('pdf-ring-idle');
         arc.style.strokeDashoffset = (CIRC * (1 - pct / 100)).toFixed(2);
         if (pct >= 100) arc.classList.add('pdf-ring-done');
         clearTimeout(_loadTimer);
