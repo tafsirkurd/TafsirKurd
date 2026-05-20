@@ -3495,10 +3495,22 @@ function renderMushafView(){
       pageEl.appendChild(ph);
     }
 
-    // Scroll to surah banner — direct scrollTop, no parent-container shift.
+    // Scroll to surah banner — retry loop corrects for layout shifts as nearby
+    // pages render (their height grows from min-height CSS, pushing the banner down).
     function _scrollToSurah(){
-      var banner=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-      if(banner){view.scrollTop=banner.offsetTop;}
+      var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+      if(!b)return;
+      view.scrollTop=b.offsetTop;
+      var _a=0;
+      (function _fix(){
+        if(_a++>=8)return;
+        setTimeout(function(){
+          var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+          if(!b2)return;
+          var delta=b2.getBoundingClientRect().top-view.getBoundingClientRect().top;
+          if(Math.abs(delta)>6){view.scrollTop+=delta;_fix();}
+        },200);
+      })();
     }
 
     // Lazy-load: 3000px lookahead in BOTH directions so scrolling up (back to
