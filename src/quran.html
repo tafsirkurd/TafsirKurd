@@ -8796,14 +8796,17 @@
 
             if (typeof QuranSearch !== 'undefined' && QuranSearch.isReady()) {
                 var surahs = _buildSurahsArray();
-                var raw = QuranSearch.query(q, surahs, 30);
-                var mapped = raw.map(function(r) {
-                    if (r.type === 'surah') {
-                        return { surah: r.sn, ayah: null, text: r.surahAr + ' — ' + r.surahEn, surahName: 'سوورەت ' + r.surahEn, similarity: r.score, isSurah: true, ayahCount: r.ayahCount };
-                    }
-                    return { surah: r.sn, ayah: r.an, text: r.arO, surahName: r.surahEn, similarity: r.score, posAr: r.posAr };
+                var _lastQ = q;
+                QuranSearch.queryAsync(q, surahs, 30, function(raw, isFinal) {
+                    if (_lastQ !== q) return; // stale callback — user typed something new
+                    var mapped = raw.map(function(r) {
+                        if (r.type === 'surah') {
+                            return { surah: r.sn, ayah: null, text: r.surahAr + ' — ' + r.surahEn, surahName: 'سوورەت ' + r.surahEn, similarity: r.score, isSurah: true, ayahCount: r.ayahCount };
+                        }
+                        return { surah: r.sn, ayah: r.an, text: r.arO, surahName: r.surahEn, similarity: r.score, posAr: r.posAr };
+                    });
+                    showSearchResults(mapped, q);
                 });
-                showSearchResults(mapped, q);
                 return;
             }
 
@@ -11945,7 +11948,7 @@
 
     <script src="/quran/mushaf.js?v=3"></script>
     <script src="/js/app-promo.js?v=20260329" defer></script>
-    <script src="/quran/search.js"></script>
+    <script src="/quran/search.js?v=20260520"></script>
     <script>
     // Wire QuranSearch v3.0 into quran.html after data is available
     function initQuranSearch() {

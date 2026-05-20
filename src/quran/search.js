@@ -111,6 +111,38 @@
     return t !== tok ? t : null;
   }
 
+  /* ── Deep stem: strip verbal prefixes to approach trilateral root ─
+   * Handles forms like يكتب→كتب، مكتوب→كتب، تكتب→كتب، استغفر→غفر.
+   * Applied as a last-resort fallback — more aggressive than _stripSfx. */
+  function _deepStem(tok) {
+    if (!tok || tok.length < 4) return null;
+    var t = tok;
+    // Strip definite article first
+    if (t.slice(0, 2) === 'ال' && t.length > 4) t = t.slice(2);
+    var orig = t;
+    // Multi-letter verbal prefixes (most specific first)
+    var pfxs = ['استف','استغ','است','انت','يست','تست','مست',
+                'است','انف','يت','تت','مت',
+                'ي','ت','أ','ا','م','ن'];
+    for (var i = 0; i < pfxs.length; i++) {
+      var p = pfxs[i];
+      if (t.length > p.length + 2 && t.slice(0, p.length) === p) {
+        var cand = t.slice(p.length);
+        if (cand.length >= 3) { t = cand; break; }
+      }
+    }
+    // Also strip common suffixes from the result
+    var sfxs2 = ['ون','ين','ات','وا','تم','نا','ها','هم'];
+    for (var j = 0; j < sfxs2.length; j++) {
+      var s2 = sfxs2[j];
+      if (t.length > s2.length + 2 && t.slice(-s2.length) === s2) {
+        var base2 = t.slice(0, -s2.length);
+        if (base2.length >= 3) { t = base2; break; }
+      }
+    }
+    return t !== orig ? t : null;
+  }
+
   /* ── Typo tolerance: fix common Arabic keyboard/input errors ─── */
   function _typoFix(s) {
     if (!s) return s;
@@ -154,6 +186,12 @@
         if (psh) for (var l = 0; l < psh.length; l++) s.add(psh[l]);
       }
     }
+    // Deep stem: verb forms يكتب→كتب (offline root approximation)
+    var dstem = _deepStem(tok);
+    if (dstem && dstem !== tok && dstem !== stem) {
+      var dh = _tokenIdx[dstem];
+      if (dh) for (var m2 = 0; m2 < dh.length; m2++) s.add(dh[m2]);
+    }
     return s;
   }
 
@@ -191,6 +229,11 @@
     if (vss && (vss === qTok || vss === qs)) return true;
     if (qss && (qss === vWord || qss === vs)) return true;
     if (vss && qss && vss === qss) return true;
+    // Deep stem: verb forms يكتب ↔ كتب, مكتوب ↔ كتب (offline root approximation)
+    var vds = _deepStem(vWord), qds = _deepStem(qTok);
+    if (vds && (vds === qTok || vds === qs || vds === qss)) return true;
+    if (qds && (qds === vWord || qds === vs || qds === vss)) return true;
+    if (vds && qds && vds === qds) return true;
     return false;
   }
 
