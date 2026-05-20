@@ -50,7 +50,9 @@ console.log(`📖  Loaded ${verses.length} verses`);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 async function embedBatch(texts) {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/${encodeURIComponent(AI_MODEL)}`;
+  // Model path must NOT be fully URL-encoded — only encode @ but keep slashes as-is
+  const modelPath = AI_MODEL.replace('@', '%40');
+  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/${modelPath}`;
   const res = await fetch(url, {
     method: 'POST',
     headers: {
