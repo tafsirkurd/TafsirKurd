@@ -13,6 +13,7 @@ const config: CapacitorConfig = {
       'api.aladhan.com',
       'www.youtube-nocookie.com',
       'www.youtube.com',
+      'quran-search.tefsirkurd.workers.dev',
     ],
   },
   ios: {
