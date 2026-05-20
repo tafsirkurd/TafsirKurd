@@ -9925,16 +9925,16 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   // DEAD_ZONE: raw finger distance before any visual or pull state engages.
   // This prevents accidental triggers from normal scroll, bounce, or a tiny
   // downward nudge at the top of the page.
-  var DEAD_ZONE=90;
+  var DEAD_ZONE=72;
   // DIR_RATIO: minimum fraction of dy/distance required to confirm vertical intent.
   // Diagonal and horizontal gestures below this threshold are ignored.
-  var DIR_RATIO=0.90;
+  var DIR_RATIO=0.88;
   // MOMENTUM_LOCK_MS: after any touchend/cancel, block new PTR arm for this long.
   // Prevents "scrolled fast to top → touch screen → accidental PTR".
-  var MOMENTUM_LOCK_MS=700;
+  var MOMENTUM_LOCK_MS=600;
 
-  var startY=0,startX=0,armed=false,pulling=false,refreshing=false;
-  var threshold=200,maxPull=260,panelOrigTop=0;
+  var startY=0,startX=0,armed=false,pulling=false,refreshing=false,_ticked=false;
+  var threshold=175,maxPull=240,panelOrigTop=0;
   var _momentumLock=false,_momentumTimer=null;
 
   function _setMomentumLock(){
@@ -9952,6 +9952,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       panel.classList.remove('ptr-pulling');
     }
     armed=false;
+    _ticked=false;
   }
 
   on(panel,'touchstart',function(e){
@@ -10012,10 +10013,13 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+sc+')';
     var arc=ptrSpinner.querySelector('.ptr-arc');
     if(arc)arc.style.transform='rotate('+Math.min(pullRaw*3,720)+'deg)';
+    // Haptic tick the moment threshold is crossed — "you can release now"
+    if(!_ticked&&pullRaw>=threshold){_ticked=true;haptic([12]);}
   },{passive:false});
 
   on(panel,'touchend',function(){
     _setMomentumLock();
+    _ticked=false;
     if(!pulling||refreshing){ armed=false; return; }
     pulling=false;
     armed=false;
