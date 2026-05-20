@@ -3458,10 +3458,17 @@ function renderMushafView(){
       pageEl.appendChild(ph);
     }
 
-    // Scroll to surah banner — direct scrollTop, no parent-container shift.
+    // Scroll to surah banner — horizontal spread layout uses scrollLeft.
     function _scrollToSurah(){
       var banner=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-      if(banner){view.scrollTop=banner.offsetTop;}
+      if(!banner)return;
+      var spread=banner.closest&&banner.closest('.mushaf-spread');
+      if(spread){
+        var idx=Array.prototype.indexOf.call(view.children,spread);
+        view.scrollLeft=idx*view.clientWidth;
+      }else{
+        view.scrollLeft=banner.offsetLeft;
+      }
     }
 
     // Lazy-load: 3000px lookahead in BOTH directions so scrolling up (back to
@@ -3505,12 +3512,12 @@ function renderMushafView(){
           if(S.surah!==capturedSurah)return;
           var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
           var viewRect=view.getBoundingClientRect();
-          var best=null,bestTop=Infinity;
+          var best=null,bestDist=Infinity;
           for(var b=0;b<banners.length;b++){
             var br=banners[b].getBoundingClientRect();
-            var dist=Math.abs(br.top-viewRect.top);
-            if(br.bottom>viewRect.top&&br.top<viewRect.bottom&&dist<bestTop){
-              bestTop=dist;best=banners[b];
+            var dist=Math.abs(br.left-viewRect.left);
+            if(br.right>viewRect.left&&br.left<viewRect.right&&dist<bestDist){
+              bestDist=dist;best=banners[b];
             }
           }
           if(!best)return;
@@ -3527,10 +3534,8 @@ function renderMushafView(){
       if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
     },{passive:true});
 
-    // iPad (any orientation ≥768px): page-by-page horizontal navigation
-    if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=768){
-      _mushafWrapSpreads(view);
-    }
+    // Horizontal page-by-page navigation on all devices
+    _mushafWrapSpreads(view);
   }).catch(function(){
     clear(view);
     var errWrap=el('div','mushaf-offline-err');
