@@ -1335,7 +1335,10 @@ function _checkDataReady(){
   if(!_dataReady.tafsir)return;
   console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
   if(S.surah)renderAyahs(S.surah);
-  if(window.QuranSearch)QuranSearch.init(S.quranData,S.tafsirData);
+  if(window.QuranSearch){
+    QuranSearch.init(S.quranData,S.tafsirData);
+    QuranSearch.setWorkerUrl('https://quran-search.tefsirkurd.workers.dev');
+  }
 }
 
 // Pre-render all 6 tabs so they're built before user ever taps them.
@@ -2636,25 +2639,36 @@ App._execSearch=function(v){
   };
 
   // Serve from cache if available (instant, no recompute)
-  var results=_searchCache.get(q);
-  if(!results){
-    res.classList.add('loading');
-    var t0=performance.now?performance.now():Date.now();
-    results=window.QuranSearch&&QuranSearch.isReady()
-      ? QuranSearch.query(q,SURAHS,30)
-      : App._basicSearch(q);
-    var elapsed=Math.round((performance.now?performance.now():Date.now())-t0);
-    _cachePut(q,results);
-    var top=results[0];
-    console.log('[QSearchPerf] query="'+q+'" scanMs='+elapsed+' results='+results.length+(top?' top='+top.sn+':'+(top.an||'')+' score='+top.score:''));
-    res.classList.remove('loading');
+  var cached=_searchCache.get(q);
+  if(cached){
+    App._renderSearchResults(q,cached,isExactMode);
+    return;
   }
 
   // Persist last successful query for session continuity
   try{sessionStorage.setItem('qs_last',q);}catch(e){}
 
+  if(window.QuranSearch&&QuranSearch.isReady()){
+    // queryAsync: cb fires immediately with keyword results, then again with
+    // semantic-merged results when the CF Worker responds (or not at all on timeout)
+    var _semActiveQ=q; // detect if user typed something new before semantic returns
+    QuranSearch.queryAsync(q,SURAHS,30,function(results,isFinal){
+      // Discard stale callbacks if the user has moved on
+      if(S.search!==_semActiveQ) return;
+      _cachePut(q,results);
+      App._renderSearchResults(q,results,isExactMode);
+    });
+  } else {
+    var results=App._basicSearch(q);
+    _cachePut(q,results);
+    App._renderSearchResults(q,results,isExactMode);
+  }
+};
+
+App._renderSearchResults=function(q,results,isExactMode){
+  var res=$('searchResults');
   clear(res);
-  if(!results.length){App._renderSearchNoResults(q);return;}
+  if(!results||!results.length){App._renderSearchNoResults(q);return;}
   res.classList.add('on');
 
   var frag=document.createDocumentFragment();
@@ -2663,11 +2677,6 @@ App._execSearch=function(v){
     var exactBanner=el('div','search-exact-banner',t('search.exact_mode'));
     frag.appendChild(exactBanner);
   }
-  // "Did you mean this ayah?" — surface canonical phrase when match is semantic/token only
-  var topVerse=null;
-  for(var ri=0;ri<results.length;ri++){if(results[ri].type==='verse'||results[ri].type==='ref'){topVerse=results[ri];break;}}
-  if(topVerse&&topVerse.phraseScore===0&&topVerse.score>50&&topVerse.score<500&&window.QuranSearch){
-}
   // Ayah-first: when query has 2+ tokens, verses always lead; surah cards follow (max 1)
   var _av=results.filter(function(r){return r.type!=='surah';});
   var _as=results.filter(function(r){return r.type==='surah';});

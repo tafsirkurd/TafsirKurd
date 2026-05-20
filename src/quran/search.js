@@ -1545,6 +1545,88 @@
     return suggs.slice(0, 5);
   }
 
+  /* ── Semantic worker (CF Workers AI + Vectorize) ────────────── */
+  var _workerUrl = null; // set via QuranSearch.setWorkerUrl()
+
+  /* Fire a semantic search request to the CF worker.
+   * Calls cb(results) where results is [{sn,an,score}] or [] on error/timeout. */
+  function _semanticFetch(q, cb) {
+    if (!_workerUrl) { cb([]); return; }
+    var done = false;
+    var timer = setTimeout(function () {
+      if (!done) { done = true; cb([]); }
+    }, 1800); // 1.8s timeout — fall back to keyword-only
+    try {
+      fetch(_workerUrl + '/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: q })
+      }).then(function (r) { return r.json(); }).then(function (body) {
+        clearTimeout(timer);
+        if (!done) { done = true; cb(body.results || []); }
+      }).catch(function () {
+        clearTimeout(timer);
+        if (!done) { done = true; cb([]); }
+      });
+    } catch (e) {
+      clearTimeout(timer);
+      if (!done) { done = true; cb([]); }
+    }
+  }
+
+  /* Merge semantic results into existing keyword hits.
+   * - Verses found by BOTH engines get a strong boost (semantic confidence).
+   * - Verses found only by semantic are added with a base semantic score.
+   * The keyword engine's internal ranking stays dominant; semantic is a boost layer. */
+  function _mergeWithSemantic(keywordHits, semanticHits, surahs) {
+    if (!semanticHits || !semanticHits.length) return keywordHits;
+
+    // Build lookup: "sn:an" → index in keywordHits
+    var kwMap = {};
+    for (var i = 0; i < keywordHits.length; i++) {
+      if (keywordHits[i].sn && keywordHits[i].an) {
+        kwMap[keywordHits[i].sn + ':' + keywordHits[i].an] = i;
+      }
+    }
+
+    var merged = keywordHits.slice();
+    for (var j = 0; j < semanticHits.length; j++) {
+      var sem = semanticHits[j];
+      var semKey = sem.sn + ':' + sem.an;
+      var semBoost = Math.round(sem.score * 280); // 0.95 score → +266 pts
+      var kwIdx = kwMap[semKey];
+      if (kwIdx !== undefined) {
+        // Already in keyword results — boost its score
+        merged[kwIdx] = Object.assign({}, merged[kwIdx], {
+          score: merged[kwIdx].score + semBoost,
+          finalScore: (merged[kwIdx].finalScore || merged[kwIdx].score) + semBoost,
+          matchSrcs: (merged[kwIdx].matchSrcs || []).indexOf('semantic') === -1
+            ? (merged[kwIdx].matchSrcs || []).concat(['semantic']) : merged[kwIdx].matchSrcs,
+          semanticScore: sem.score,
+          semanticBoost: semBoost
+        });
+      } else if (merged.length < 30) {
+        // Not in keyword results — add as pure semantic hit
+        var e = findVerse(sem.sn, sem.an);
+        if (!e) continue;
+        var sh = surahs[e.sn - 1] || {};
+        merged.push({
+          type: 'verse', sn: e.sn, an: e.an, arO: e.arO, kuO: e.kuO,
+          surahAr: sh.ar || '', surahEn: sh.en || '',
+          score: semBoost, matchSrcs: ['semantic'],
+          posAr: -1, posKu: -1, mode: 'arabic',
+          phraseScore: 0, consecutiveScore: 0, tokenScore: 0,
+          translationScore: 0, finalScore: semBoost,
+          semanticScore: sem.score, semanticBoost: semBoost
+        });
+        kwMap[semKey] = merged.length - 1;
+      }
+    }
+
+    merged.sort(function (a, b) { return b.score - a.score; });
+    return merged.slice(0, 30);
+  }
+
   /* ── Public API ─────────────────────────────────────────────── */
   window.QuranSearch = {
     init: function (quranData, tafsirData) {
@@ -1553,7 +1635,37 @@
       setTimeout(function () { buildIndex(quranData, tafsirData); }, 0);
     },
 
+    /* Configure the semantic search worker URL.
+     * Call once on app init: QuranSearch.setWorkerUrl('https://quran-search.tefsirkurd.workers.dev') */
+    setWorkerUrl: function (url) { _workerUrl = url || null; },
+
     query: function (q, surahs, max) { return query(q, surahs, max); },
+
+    /* queryAsync: fires keyword search instantly (cb called once),
+     * then fires semantic search in parallel and calls cb again with
+     * merged+re-ranked results when the worker responds.
+     * If semantic times out or fails, cb is only called once (keyword only).
+     * cb signature: function(results, isFinal) */
+    queryAsync: function (q, surahs, max, cb) {
+      if (!_ready || !q) { cb([], true); return; }
+      var kwResults = query(q, surahs, max);
+
+      // Call back immediately with keyword results
+      var semPending = !!_workerUrl;
+      cb(kwResults, !semPending);
+      if (!semPending) return;
+
+      // Minimal query length for semantic: Arabic 3+ chars or 2+ words
+      var qTrim = q.trim();
+      var worthSemantic = qTrim.length >= 3 && /[؀-ۿ]/.test(qTrim);
+      if (!worthSemantic) { cb(kwResults, true); return; }
+
+      _semanticFetch(qTrim, function (semHits) {
+        if (!semHits.length) { cb(kwResults, true); return; }
+        var merged = _mergeWithSemantic(kwResults, semHits, surahs);
+        cb(merged, true);
+      });
+    },
 
     suggest: function (q) { return _ready ? suggest(q) : []; },
 
@@ -1598,7 +1710,8 @@
         aliasHitRate:     Math.round(_stats.aliasHits / q * 100) + '%',
         candidateCountAvg: _stats.candidateCount ? Math.round(_stats.candidateSum / _stats.candidateCount) : 0,
         cacheHits:        _stats.cacheHits,
-        workerEnabled:    false
+        workerEnabled:    !!_workerUrl,
+        workerUrl:        _workerUrl || null
       };
     },
 

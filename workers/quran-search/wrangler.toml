@@ -1,0 +1,10 @@
+name            = "quran-search"
+main            = "index.js"
+compatibility_date = "2024-09-23"
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding  = "VECTORIZE"
+index_name = "quran-verses"
