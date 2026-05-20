@@ -2488,7 +2488,12 @@ function _hlNodes(text,tokens,isAr){
       var nEnd=Math.min(idx+tok.length-1,toOrig.length-1);
       if(toOrig[idx]!==undefined&&toOrig[nEnd]!==undefined){
         var oS=toOrig[idx],oE=toOrig[nEnd]+1;
-        if(isAr){while(oE<text.length&&REMOVE_AR.test(text[oE]))oE++;}
+        if(isAr){
+          while(oE<text.length&&REMOVE_AR.test(text[oE]))oE++;
+          // expand to full word so Arabic letter-joining is never broken at element boundaries
+          while(oS>0&&text[oS-1]!==' '&&text[oS-1]!=='\n'&&text[oS-1]!=='،'&&text[oS-1]!=='۔')oS--;
+          while(oE<text.length&&text[oE]!==' '&&text[oE]!=='\n'&&text[oE]!=='،'&&text[oE]!=='۔')oE++;
+        }
         if(oS<oE)ranges.push([oS,oE,isPhraseTok?1:0]);
       }
       pos=idx+1;
