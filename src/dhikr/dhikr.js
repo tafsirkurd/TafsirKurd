@@ -537,6 +537,10 @@ function _bookToggleSave(id, book){
   localStorage.setItem('book_saved', JSON.stringify(saved));
 }
 
+/* ── Book reading-progress helpers ── */
+function _bookGetProgress(id){ try{ return JSON.parse(localStorage.getItem('pdfProg_'+id)||'null'); }catch(e){ return null; } }
+function _bookClearProgress(id){ try{ localStorage.removeItem('pdfProg_'+id); }catch(e){} }
+
 /* Return category keys+labels from DB or fallback */
 function _getCatKeys() {
   if (_dbCats && _dbCats.length) return _dbCats.map(function(c){ return c.key; });
@@ -2184,11 +2188,13 @@ window.GencineUI = {
     /* ── Show header buttons in the panel hdr ── */
     var sheikhBtn = document.getElementById('bookSheikhBtn');
     var savedBtn  = document.getElementById('bookSavedBtn');
+    var readBtn   = document.getElementById('bookReadBtn');
     var searchTogBtn = document.getElementById('bookSearchBtn');
     var hdrBtnsWrap = document.getElementById('booksHdrBtns');
     if (hdrBtnsWrap) hdrBtnsWrap.style.display = 'flex';
     if (sheikhBtn) sheikhBtn.classList.toggle('on', !!self._bookAuthor);
     if (savedBtn)  savedBtn.classList.toggle('on', self._bookCat === 'saved');
+    if (readBtn)   readBtn.classList.toggle('on', self._bookCat === 'reading');
 
     /* ── Collapsible search bar ── */
     var searchBar = document.createElement('div');
@@ -2274,6 +2280,13 @@ window.GencineUI = {
     if (savedBtn) savedBtn.onclick = function(){
       self._bookCat = self._bookCat === 'saved' ? 'all' : 'saved';
       savedBtn.classList.toggle('on', self._bookCat === 'saved');
+      if (readBtn) readBtn.classList.remove('on');
+      renderGrid();
+    };
+    if (readBtn) readBtn.onclick = function(){
+      self._bookCat = self._bookCat === 'reading' ? 'all' : 'reading';
+      readBtn.classList.toggle('on', self._bookCat === 'reading');
+      if (savedBtn) savedBtn.classList.remove('on');
       renderGrid();
     };
     if (searchTogBtn) searchTogBtn.onclick = function(){
@@ -2317,6 +2330,8 @@ window.GencineUI = {
       var q = (self._bookSearch || '').trim().toLowerCase();
       var pool = self._bookCat === 'saved'
         ? books.filter(function(b){ return _bookIsSaved(b.id); })
+        : self._bookCat === 'reading'
+        ? books.filter(function(b){ return !!_bookGetProgress(b.id); })
         : self._bookCat === 'all' ? books
         : books.filter(function(b){ return b.category === self._bookCat; });
       if (self._bookAuthor) pool = pool.filter(function(b){ return (b.author_ku||b.author_ar) === self._bookAuthor; });
@@ -2350,6 +2365,32 @@ window.GencineUI = {
         } else {
           var ph = document.createElement('div'); ph.className = 'book-cover-placeholder';
           var pi = document.createElement('i'); pi.className = 'fas fa-book'; ph.appendChild(pi); coverWrap.appendChild(ph);
+        }
+        /* ── Reading progress overlay ── */
+        var _prog = _bookGetProgress(book.id);
+        if (_prog) {
+          coverWrap.classList.add('has-progress');
+          var _pct = _prog.total > 1 ? Math.min(100, Math.round(_prog.page / _prog.total * 100)) : 0;
+          // Gradient + bar + percentage
+          var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
+          var _pbw = document.createElement('div'); _pbw.className = 'book-prog-bar-wrap';
+          var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
+          _pbw.appendChild(_pb); _po.appendChild(_pbw);
+          var _pt = document.createElement('div'); _pt.className = 'book-prog-text';
+          _pt.textContent = _pct + '%  ·  ' + T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _prog.total;
+          _po.appendChild(_pt);
+          coverWrap.appendChild(_po);
+          // Clear-progress X button (top-right of cover)
+          var _pcb = document.createElement('button'); _pcb.className = 'book-prog-clear';
+          var _pci = document.createElement('i'); _pci.className = 'fas fa-times'; _pcb.appendChild(_pci);
+          _pcb.onclick = function(e){
+            e.stopPropagation();
+            _bookClearProgress(book.id);
+            coverWrap.classList.remove('has-progress');
+            _po.remove(); _pcb.remove();
+            if (self._bookCat === 'reading') renderGrid();
+          };
+          coverWrap.appendChild(_pcb);
         }
         card.appendChild(coverWrap);
 
@@ -2665,6 +2706,10 @@ window.GencineUI = {
       if (self._currentBook !== book) return; // user switched books while loading — discard
       self._pdfDoc = pdf;
       loadingEl.style.display = 'none';
+      // Mark book as started if not already tracked
+      if (book && book.id && !_bookGetProgress(String(book.id))) {
+        try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:1,total:pdf.numPages,ts:Date.now()})); } catch(e2) {}
+      }
       var slots = [];
       for (var i = 1; i <= pdf.numPages; i++) {
         var slot = document.createElement('div');
@@ -2756,7 +2801,10 @@ window.GencineUI = {
           var dist = Math.abs(sl.getBoundingClientRect().top - (panelTop + hdrH));
           if (dist < bestDist) { bestDist = dist; best = i + 1; }
         });
-        if (best !== _curPage) { _curPage = best; _updatePageNav(); }
+        if (best !== _curPage) {
+          _curPage = best; _updatePageNav();
+          if (book && book.id) try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:pdf.numPages,ts:Date.now()})); } catch(e2) {}
+        }
       }
 
       var _navScrollHandler = function() {

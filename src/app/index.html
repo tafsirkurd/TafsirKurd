@@ -2480,7 +2480,15 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px 16px 32px}
 .book-card{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;cursor:pointer;text-align:right;direction:rtl;display:flex;flex-direction:column;transition:transform .15s;padding:0;position:relative}
 .book-card:active{transform:scale(.97)}
-.book-cover-wrap{width:100%;overflow:hidden;background:var(--bg2)}
+.book-cover-wrap{width:100%;overflow:hidden;background:var(--bg2);position:relative}
+.book-cover-wrap.has-progress .book-cover.loaded{opacity:.62}
+.book-cover-wrap.has-progress .book-cover-placeholder{opacity:.62}
+.book-prog-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent 0%,rgba(0,0,0,.76) 100%);padding:24px 8px 8px;display:flex;flex-direction:column;gap:4px;pointer-events:none}
+.book-prog-bar-wrap{width:100%;height:3px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.book-prog-bar{height:100%;background:var(--accent);border-radius:2px}
+.book-prog-text{font-size:.58rem;font-weight:700;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1}
+.book-prog-clear{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);border:1.5px solid rgba(255,255,255,.22);color:rgba(255,255,255,.85);font-size:.55rem;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:background .15s,transform .15s;z-index:2}
+.book-prog-clear:active{background:rgba(220,55,55,.75);transform:scale(.88)}
 .new-badge{position:absolute;top:8px;right:8px;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.04em;z-index:2;box-shadow:0 2px 6px rgba(229,62,62,.4)}
 .iv-new-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em;flex-shrink:0;align-self:center;margin-right:6px;box-shadow:0 2px 5px rgba(229,62,62,.35)}
 .book-cover{width:100%;height:auto;display:block;opacity:0;transition:opacity .3s}
@@ -3264,6 +3272,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
     <div id="booksHdrBtns" style="display:none;gap:2px">
       <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
       <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
+      <button class="hdr-btn" id="bookReadBtn" title="خوێندراو" data-i18n-title="iv.read_title"><i class="fas fa-glasses"></i></button>
       <button class="hdr-btn" id="bookSearchBtn" title="گەڕان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
     </div>
     <div id="pdfNavBtns" style="display:none;align-items:center;gap:2px">
@@ -3631,7 +3640,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=737"></script>
+<script src="/app/app.js?v=738"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
