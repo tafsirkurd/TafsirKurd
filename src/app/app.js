@@ -5315,6 +5315,14 @@ App.openMushafSettings=function(){
   var _fsKey=_isIpad?'mushafFontSize_ipad_'+S.mushafFont:'mushafFontSize_'+S.mushafFont;
   var _lhKey=_isIpad?'mushafLineH_ipad':'mushafLineH';
   var _lhMax=_isIpad?2.4:2.3;
+  // Sync S values and CSS vars from the correct key for this device type
+  if(_isIpad){
+    var _iFs=Math.min(_fsMax,Math.max(_fsMin,parseInt(localStorage.getItem(_fsKey))||28));
+    var _iLh=Math.min(_lhMax,Math.max(1.8,parseFloat(localStorage.getItem(_lhKey))||2.0));
+    S.mushafFontSize=_iFs; S.mushafLineH=_iLh;
+    document.documentElement.style.setProperty('--mushaf-size',_iFs+'px');
+    document.documentElement.style.setProperty('--mushaf-lh',String(_iLh));
+  }
 
   // Font Size stepper
   body.appendChild(el('div','ms-section-label',t('qs.font_size_label')));
