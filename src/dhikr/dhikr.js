@@ -541,6 +541,23 @@ function _bookToggleSave(id, book){
 function _bookGetProgress(id){ try{ return JSON.parse(localStorage.getItem('pdfProg_'+id)||'null'); }catch(e){ return null; } }
 function _bookClearProgress(id){ try{ localStorage.removeItem('pdfProg_'+id); }catch(e){} }
 
+/* ── Reading history (separate from progress, tracks opened books) ── */
+var _readingHistory = null;
+function _getReadingHistory(){
+  if(_readingHistory===null){
+    try{ var arr=JSON.parse(localStorage.getItem('book_read_ids')||'[]'); _readingHistory={}; arr.forEach(function(id){ _readingHistory[String(id)]=true; }); }catch(e){ _readingHistory={}; }
+  }
+  return _readingHistory;
+}
+function _addToReadingHistory(id){
+  var h=_getReadingHistory(); h[String(id)]=true;
+  try{ localStorage.setItem('book_read_ids',JSON.stringify(Object.keys(h))); }catch(e){}
+}
+function _removeFromReadingHistory(id){
+  var h=_getReadingHistory(); delete h[String(id)];
+  try{ localStorage.setItem('book_read_ids',JSON.stringify(Object.keys(h))); }catch(e){}
+}
+
 /* Return category keys+labels from DB or fallback */
 function _getCatKeys() {
   if (_dbCats && _dbCats.length) return _dbCats.map(function(c){ return c.key; });
@@ -2331,7 +2348,7 @@ window.GencineUI = {
       var pool = self._bookCat === 'saved'
         ? books.filter(function(b){ return _bookIsSaved(b.id); })
         : self._bookCat === 'reading'
-        ? books.filter(function(b){ return !!_bookGetProgress(b.id); })
+        ? books.filter(function(b){ return !!_getReadingHistory()[String(b.id)] || !!_bookGetProgress(b.id); })
         : self._bookCat === 'all' ? books
         : books.filter(function(b){ return b.category === self._bookCat; });
       if (self._bookAuthor) pool = pool.filter(function(b){ return (b.author_ku||b.author_ar) === self._bookAuthor; });
@@ -2387,6 +2404,7 @@ window.GencineUI = {
           _pcb.onclick = function(e){
             e.stopPropagation();
             _bookClearProgress(book.id);
+            _removeFromReadingHistory(book.id);
             coverWrap.classList.remove('has-progress');
             _po.remove(); _pcb.remove();
             if (self._bookCat === 'reading') renderGrid();
@@ -2430,6 +2448,7 @@ window.GencineUI = {
           if (e.target.closest('.book-save-btn') || e.target.closest('.book-prog-clear')) return;
           var panel = document.getElementById('panelGencine');
           self._booksScrollPos = panel ? panel.scrollTop : 0;
+          _addToReadingHistory(book.id);
           if (!_bookGetProgress(String(book.id))) {
             try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:1,total:book.pages||0,ts:Date.now()})); } catch(e3) {}
           }
