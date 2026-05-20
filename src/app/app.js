@@ -9958,6 +9958,11 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   on(panel,'touchstart',function(e){
     if(refreshing||_momentumLock)return;
     if(checkFn&&!checkFn())return;
+    // Don't arm while a text input is focused (search box, etc.)
+    var ae=document.activeElement;
+    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))return;
+    // Don't arm while search results are open anywhere in the panel
+    if(panel.querySelector('.search-results.on'))return;
     // Only arm when panel is truly at the top (strict 0, not ≤2).
     // ≤2 was letting iOS bounce-back scrollTop briefly read as "top".
     if(panel.scrollTop===0){
