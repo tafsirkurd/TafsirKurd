@@ -2377,7 +2377,8 @@ window.GencineUI = {
           var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
           _pbw.appendChild(_pb); _po.appendChild(_pbw);
           var _pt = document.createElement('div'); _pt.className = 'book-prog-text';
-          _pt.textContent = _pct + '%  ·  ' + T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _prog.total;
+          var _totTxt = _prog.total > 0 ? _prog.page + '/' + _prog.total : T('gencine.started_lbl','دەستپێکرا');
+          _pt.textContent = (_prog.total > 0 ? _pct + '%  ·  ' : '') + T('gencine.page_lbl','پ') + '. ' + _totTxt;
           _po.appendChild(_pt);
           coverWrap.appendChild(_po);
           // Clear-progress X button (top-right of cover)
@@ -2426,9 +2427,12 @@ window.GencineUI = {
         card.appendChild(info);
 
         card.onclick = function(e){
-          if (e.target.closest('.book-save-btn')) return;
+          if (e.target.closest('.book-save-btn') || e.target.closest('.book-prog-clear')) return;
           var panel = document.getElementById('panelGencine');
           self._booksScrollPos = panel ? panel.scrollTop : 0;
+          if (!_bookGetProgress(String(book.id))) {
+            try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:1,total:book.pages||0,ts:Date.now()})); } catch(e3) {}
+          }
           self._currentBook = book; self._pdfDoc = null; self._pdfPage = 1;
           self._view = 'book-reader'; self._draw();
         };
@@ -2706,9 +2710,13 @@ window.GencineUI = {
       if (self._currentBook !== book) return; // user switched books while loading — discard
       self._pdfDoc = pdf;
       loadingEl.style.display = 'none';
-      // Mark book as started if not already tracked
-      if (book && book.id && !_bookGetProgress(String(book.id))) {
-        try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:1,total:pdf.numPages,ts:Date.now()})); } catch(e2) {}
+      // Always update with confirmed numPages from loaded PDF
+      if (book && book.id) {
+        try {
+          var _ep = _bookGetProgress(String(book.id));
+          var _pg = (_ep && _ep.page > 1 && _ep.page <= pdf.numPages) ? _ep.page : 1;
+          localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_pg,total:pdf.numPages,ts:Date.now()}));
+        } catch(e2) {}
       }
       var slots = [];
       for (var i = 1; i <= pdf.numPages; i++) {
