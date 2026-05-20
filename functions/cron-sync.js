@@ -80,9 +80,9 @@ export async function onRequest(context) {
         // Log to console for Cloudflare logs
         console.log(`[CRON SYNC] ${new Date().toISOString()} - Synced ${seriesList.length} series, ${totalNew} new episodes`);
 
-        // If new episodes were added, trigger auto-notifications
+        // Always trigger auto-notifications — checks videos, books, hadiths added in last 2h
         const _notifSecret = env.NOTIF_CRON_SECRET || env.CRON_SECRET;
-        if (totalNew > 0 && _notifSecret) {
+        if (_notifSecret) {
             const baseUrl = new URL(request.url).origin;
             fetch(`${baseUrl}/admin-notifications-api`, {
                 method: 'POST',
