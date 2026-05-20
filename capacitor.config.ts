@@ -5,6 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Tafsir Kurd',
   webDir: 'src',
   server: {
+    url: 'https://tafsirkurd.com/app/',
+    cleartext: false,
     allowNavigation: [
       'tafsirkurd.com',
       'gijupzejtbpifjzwadee.supabase.co',
