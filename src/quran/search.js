@@ -1084,9 +1084,19 @@
       if (ap !== -1) {
         posAr = ap;
         phraseScore = 1000;
+        // Position bonus: phrase near verse start is stronger
         if (ap === 0)       phraseScore += 150;
         else if (ap < 20)   phraseScore += 80;
         else if (ap < 60)   phraseScore += 40;
+        // Word-boundary bonus: phrase aligns to word edges (not mid-word substring)
+        var atStart = (ap === 0 || e.arN[ap - 1] === ' ');
+        var atEnd   = (ap + qArN.length >= e.arN.length || e.arN[ap + qArN.length] === ' ');
+        if (atStart) phraseScore += 50;
+        if (atEnd)   phraseScore += 50;
+        // Coverage ratio: query covers X% of this verse → reward short/exact-match verses
+        // e.g. 4 words from a 5-word verse scores much higher than 4 words from a 40-word verse
+        var coverageBonus = Math.round((qArN.length / Math.max(e.arN.length, 1)) * 500);
+        phraseScore += coverageBonus;
         if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
       }
     }
@@ -1100,6 +1110,9 @@
         else if (consec >= 4)               consecutiveScore = 400 + consec * 20;
         else if (consec >= 3)               consecutiveScore = 200 + consec * 20;
         else                                consecutiveScore = 80;
+        // Coverage ratio: how much of this verse the query covers
+        var cCovBonus = Math.round((consec / Math.max(e.arW.length, 1)) * 300);
+        consecutiveScore += cCovBonus;
         if (srcs.indexOf('arabic') === -1) srcs.push('arabic');
         if (posAr === -1) posAr = 0;
       }
@@ -1427,7 +1440,8 @@
         if (sv.score <= 0 && famousWeight <= 0) continue;
         if (exactMode && sv.phraseScore === 0 && !famousWeight) continue;
         var isFamous = famousWeight > 0;
-        var priorityBonus = pFactor > 0 ? Math.round((AYAH_PRIORITY[eKey] || 0) * pFactor) : 0;
+        // Suppress priority bonus when a strong phrase match already guarantees relevance
+        var priorityBonus = (pFactor > 0 && sv.phraseScore < 800) ? Math.round((AYAH_PRIORITY[eKey] || 0) * pFactor) : 0;
         var popBonus = Math.min(_getLocalPop(eKey) * 12, 90);
         var totalScore = sv.score + famousWeight + priorityBonus + popBonus;
         var sh = surahs[e.sn-1] || {};
