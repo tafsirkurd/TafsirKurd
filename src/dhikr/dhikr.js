@@ -2385,20 +2385,25 @@ window.GencineUI = {
         }
         /* ── Reading progress overlay ── */
         var _prog = _bookGetProgress(book.id);
-        if (_prog) {
+        var _inHistory = !!_getReadingHistory()[String(book.id)];
+        if (_prog || _inHistory) {
           coverWrap.classList.add('has-progress');
-          var _pct = _prog.total > 1 ? Math.min(100, Math.round(_prog.page / _prog.total * 100)) : 0;
-          // Gradient + bar + percentage
+          var _pct = (_prog && _prog.total > 1) ? Math.min(100, Math.round(_prog.page / _prog.total * 100)) : 0;
           var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
           var _pbw = document.createElement('div'); _pbw.className = 'book-prog-bar-wrap';
           var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
           _pbw.appendChild(_pb); _po.appendChild(_pbw);
           var _pt = document.createElement('div'); _pt.className = 'book-prog-text';
-          var _totTxt = _prog.total > 0 ? _prog.page + '/' + _prog.total : T('gencine.started_lbl','دەستپێکرا');
-          _pt.textContent = (_prog.total > 0 ? _pct + '%  ·  ' : '') + T('gencine.page_lbl','پ') + '. ' + _totTxt;
+          if (_prog && _prog.total > 0) {
+            _pt.textContent = _pct + '%  ·  ' + T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _prog.total;
+          } else if (_prog && _prog.page) {
+            _pt.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page;
+          } else {
+            _pt.textContent = T('gencine.started_lbl','دەستپێکرا');
+          }
           _po.appendChild(_pt);
           coverWrap.appendChild(_po);
-          // Clear-progress X button (top-right of cover)
+          // Clear-progress X button
           var _pcb = document.createElement('button'); _pcb.className = 'book-prog-clear';
           var _pci = document.createElement('i'); _pci.className = 'fas fa-times'; _pcb.appendChild(_pci);
           _pcb.onclick = function(e){
