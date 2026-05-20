@@ -3005,17 +3005,17 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1060px;margin:0 auto;width:100%
   html.is-ipad .settings-content{max-width:820px;margin:0 auto;padding:24px 32px 56px}
   html.is-ipad .settings-group{margin-bottom:32px}
   html.is-ipad .settings-group-title{font-size:.76rem;margin-bottom:12px}
-  /* ── Page-by-page mushaf (landscape iPad ≥1024px): two pages side by side ── */
-  html.is-ipad .mushaf-view{display:flex;flex-direction:row;align-items:stretch;overflow-x:scroll;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0!important;position:relative}
-  html.is-ipad .mushaf-spread{width:100vw;min-width:100vw;height:100%;display:flex;flex-direction:row;direction:rtl;scroll-snap-align:start;scroll-snap-stop:always;position:relative;overflow:hidden;flex-shrink:0}
+  /* ── Mushaf two-page spread (landscape iPad ≥1024px): vertical scroll ── */
+  html.is-ipad .mushaf-view{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:0 0 calc(var(--safe-b,0px) + 16px) 0!important;position:relative}
+  html.is-ipad .mushaf-spread{width:100%;display:flex;flex-direction:row;direction:rtl;position:relative;overflow:hidden}
   html.is-ipad .mushaf-spread::before{content:'';position:absolute;top:5%;bottom:5%;left:50%;width:1px;background:linear-gradient(to bottom,transparent 0%,var(--border) 10%,var(--border) 90%,transparent 100%);z-index:2;pointer-events:none}
-  html.is-ipad .mushaf-spread .mushaf-text-page{flex:1!important;min-width:0!important;max-width:50%!important;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;margin:0!important;border-radius:0!important;padding:clamp(18px,3vh,38px) clamp(12px,2vw,26px) clamp(12px,2.2vh,26px)!important;direction:rtl;box-sizing:border-box}
+  html.is-ipad .mushaf-spread .mushaf-text-page{flex:1!important;min-width:0!important;max-width:50%!important;overflow-x:hidden;margin:0!important;border-radius:0!important;padding:clamp(18px,3vh,38px) clamp(12px,2vw,26px) clamp(12px,2.2vh,26px)!important;direction:rtl;box-sizing:border-box}
   html.is-ipad .mushaf-spread .mushaf-text-page:first-child{box-shadow:inset -1px 0 0 var(--border),-4px 0 12px rgba(0,0,0,.06)!important}
   html.is-ipad .mushaf-spread .mushaf-text-page:last-child:not(:first-child){box-shadow:inset 1px 0 0 var(--border),4px 0 12px rgba(0,0,0,.06)!important}
   html.is-ipad .mushaf-spread.spread-single{justify-content:center}
-  html.is-ipad .mushaf-spread.spread-single .mushaf-text-page{width:100%!important;max-width:560px!important;height:auto!important;margin:auto!important;border-radius:20px!important;padding:40px 36px 32px!important;box-shadow:0 4px 32px rgba(0,0,0,.1)!important}
+  html.is-ipad .mushaf-spread.spread-single .mushaf-text-page{width:100%!important;max-width:560px!important;margin:auto!important;border-radius:20px!important;padding:40px 36px 32px!important;box-shadow:0 4px 32px rgba(0,0,0,.1)!important}
   html.is-ipad .mushaf-spread.spread-single::before{display:none}
-  html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100vw;min-width:100vw;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;gap:32px;flex-shrink:0}
+  html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100%;display:flex;align-items:center;justify-content:center;gap:32px}
   html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:clamp(19px,2.2vw,25px)!important;line-height:1.88!important}
 }
 /* ── Page-by-page mushaf (portrait iPad 768–1023px): one page per swipe ── */
