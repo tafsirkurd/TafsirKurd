@@ -9925,16 +9925,16 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   // DEAD_ZONE: raw finger distance before any visual or pull state engages.
   // This prevents accidental triggers from normal scroll, bounce, or a tiny
   // downward nudge at the top of the page.
-  var DEAD_ZONE=44;
+  var DEAD_ZONE=64;
   // DIR_RATIO: minimum fraction of dy/distance required to confirm vertical intent.
   // Diagonal and horizontal gestures below this threshold are ignored.
-  var DIR_RATIO=0.72;
+  var DIR_RATIO=0.82;
   // MOMENTUM_LOCK_MS: after any touchend/cancel, block new PTR arm for this long.
   // Prevents "scrolled fast to top → touch screen → accidental PTR".
-  var MOMENTUM_LOCK_MS=300;
+  var MOMENTUM_LOCK_MS=500;
 
   var startY=0,startX=0,armed=false,pulling=false,refreshing=false;
-  var threshold=130,maxPull=200,panelOrigTop=0;
+  var threshold=160,maxPull=220,panelOrigTop=0;
   var _momentumLock=false,_momentumTimer=null;
 
   function _setMomentumLock(){
