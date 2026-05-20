@@ -2185,6 +2185,10 @@
                         <i data-lucide="arrow-down-narrow-wide"></i>
                         <span id="sortLabel">Newest</span>
                     </button>
+                    <button class="empty-filter-btn" id="seedAppKeysBtn" onclick="seedMobileAppKeys()" title="Insert all missing mobile app keys (safe — won't overwrite existing)" style="display:none;background:#f0fdf4;color:#166534;border-color:#bbf7d0">
+                        <i data-lucide="plus-circle"></i>
+                        <span>Seed App Keys</span>
+                    </button>
                 </div>
                 <button class="mobile-filter-bar" id="mobileFilterBar" onclick="openFilterSheet()">
                     <i data-lucide="filter" style="width:16px;height:16px"></i>
@@ -3588,6 +3592,9 @@
             var tBody = document.querySelector('.t-body');
             var statsRow = document.querySelector('.stats-row');
 
+            var seedBtn = document.getElementById('seedAppKeysBtn');
+            if (seedBtn) seedBtn.style.display = platform === 'mobile' ? '' : 'none';
+
             if (platform === 'about') {
                 if (aboutPanel) aboutPanel.style.display = '';
                 if (tBody) tBody.style.display = 'none';
@@ -3600,6 +3607,94 @@
                 updateStats();
                 populatePageFilter();
                 filterTranslations();
+            }
+        }
+
+        /* ── All mobile app (gencine + iv) translation keys ── */
+        var MOBILE_APP_KEYS = [
+            // Gencine sections
+            {key_id:'gencine.hadith',          kurdish_text:'حەدیس',                     page:'android',context:'Gencine section: Hadiths'},
+            {key_id:'gencine.hadith_sub',       kurdish_text:'فەرمودێن پێغەمبەرێ ئیسلامێ', page:'android',context:'Gencine hadith subtitle'},
+            {key_id:'gencine.adhkar',           kurdish_text:'زکیر',                      page:'android',context:'Gencine section: Adhkar'},
+            {key_id:'gencine.adhkar_sub',       kurdish_text:'زکرێن بەیانی، ئێوار و زیاتر',page:'android',context:'Gencine adhkar subtitle'},
+            {key_id:'gencine.dua',              kurdish_text:'دوعا',                      page:'android',context:'Gencine section: Dua'},
+            {key_id:'gencine.dua_sub',          kurdish_text:'دعاهای قورئانی',            page:'android',context:'Gencine dua subtitle'},
+            {key_id:'gencine.tasbih',           kurdish_text:'تەسبیح',                    page:'android',context:'Gencine section: Tasbih'},
+            {key_id:'gencine.tasbih_sub',       kurdish_text:'ژمارتنا دیکرێن ئیسلامی',   page:'android',context:'Gencine tasbih subtitle'},
+            {key_id:'gencine.asma',             kurdish_text:'ناوێن خوا',                 page:'android',context:'Gencine section: Asma 99'},
+            {key_id:'gencine.asma_sub',         kurdish_text:'٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار',page:'android',context:'Gencine asma subtitle'},
+            {key_id:'gencine.books',            kurdish_text:'کتێب',                      page:'android',context:'Gencine section: Books'},
+            {key_id:'gencine.books_sub',        kurdish_text:'کتێبێن ئیسلامی',            page:'android',context:'Gencine books subtitle'},
+            // Adhkar categories
+            {key_id:'gencine.cat_morning',      kurdish_text:'بەیانیکردن',               page:'android',context:'Adhkar category: morning'},
+            {key_id:'gencine.cat_evening',      kurdish_text:'ئێواربوون',                page:'android',context:'Adhkar category: evening'},
+            {key_id:'gencine.cat_travel',       kurdish_text:'گەشت',                     page:'android',context:'Adhkar category: travel'},
+            {key_id:'gencine.cat_eating',       kurdish_text:'خواردن',                   page:'android',context:'Adhkar category: eating'},
+            {key_id:'gencine.cat_sleep',        kurdish_text:'خەو',                      page:'android',context:'Adhkar category: sleep'},
+            {key_id:'gencine.cat_general',      kurdish_text:'گشتی',                     page:'android',context:'Adhkar category: general'},
+            // Common UI
+            {key_id:'gencine.cat_all',          kurdish_text:'هەمێ',                     page:'android',context:'Filter: All categories / items'},
+            {key_id:'gencine.loading',          kurdish_text:'بارکرن...',                page:'android',context:'Loading state text'},
+            {key_id:'gencine.retry',            kurdish_text:'دووبارە هەوڵ بدە',         page:'android',context:'Retry button'},
+            // Books
+            {key_id:'gencine.search_books',     kurdish_text:'گەڕان...',                 page:'android',context:'Books search input placeholder'},
+            {key_id:'gencine.sheikh_filter',    kurdish_text:'ماموستا',                  page:'android',context:'Books: filter by sheikh/author title'},
+            {key_id:'gencine.books_unit',       kurdish_text:'کتێب',                     page:'android',context:'Books count unit (e.g. 5 کتێب)'},
+            {key_id:'gencine.books_empty',      kurdish_text:'کتێبەکە نیە',             page:'android',context:'Books: empty state message'},
+            {key_id:'gencine.books_error',      kurdish_text:'هەلەیەک هەیە',            page:'android',context:'Books: error state message'},
+            {key_id:'gencine.pages_unit',       kurdish_text:'ڕۆپەل',                   page:'android',context:'Book page count unit (e.g. 120 ڕۆپەل)'},
+            {key_id:'gencine.page_lbl',         kurdish_text:'پ',                        page:'android',context:'Book page abbreviation label (e.g. پ. 7/120)'},
+            {key_id:'gencine.started_lbl',      kurdish_text:'دەستپێکرا',               page:'android',context:'Reading history: book started (no page data yet)'},
+            // Tasbih
+            {key_id:'gencine.tasbih_of',        kurdish_text:'من',                       page:'android',context:'Tasbih counter "X of Y" — the word "of"'},
+            {key_id:'gencine.tap_hint',         kurdish_text:'بتاپینێ',                  page:'android',context:'Tasbih: tap to count hint'},
+            {key_id:'gencine.reset',            kurdish_text:'سفر',                      page:'android',context:'Tasbih: reset counter button'},
+            {key_id:'gencine.change_dhikr',     kurdish_text:'دیکرەکا بگۆرە',           page:'android',context:'Tasbih: change dhikr button'},
+            {key_id:'gencine.pick_dhikr',       kurdish_text:'دیکرێکا هەلبژارە',        page:'android',context:'Tasbih: pick a dhikr sheet title'},
+            // Voice
+            {key_id:'gencine.voice_start',      kurdish_text:'دانگ',                     page:'android',context:'Voice recognition: start button label'},
+            {key_id:'gencine.voice_stop',       kurdish_text:'وەستان',                   page:'android',context:'Voice recognition: stop button label'},
+            {key_id:'gencine.voice_listening',  kurdish_text:'...دابیستم',               page:'android',context:'Voice recognition: actively listening state'},
+            {key_id:'gencine.voice_hint',       kurdish_text:'تاپ بکە و دکرێکێ بêجە',   page:'android',context:'Voice recognition: hint text'},
+            {key_id:'gencine.voice_unavailable',kurdish_text:'دانگ li vê cihazê pêşkeftî nîne',page:'android',context:'Voice: not supported on this device'},
+            {key_id:'gencine.voice_requesting', kurdish_text:'...destûr dixwaze',         page:'android',context:'Voice: requesting mic permission'},
+            {key_id:'gencine.voice_permission', kurdish_text:'مایکرۆفۆن destûr bide',    page:'android',context:'Voice: mic permission required message'},
+            {key_id:'gencine.voice_error',      kurdish_text:'هەلەیەک çêbû',             page:'android',context:'Voice: error occurred'},
+            // Adhkar UI
+            {key_id:'gencine.adhkar_search_ph', kurdish_text:'گەڕان...',                 page:'android',context:'Adhkar search placeholder'},
+            {key_id:'gencine.adhkar_empty',     kurdish_text:'هیچ زکرێک نییە',           page:'android',context:'Adhkar: empty state'},
+            // Dua
+            {key_id:'gencine.dua_empty',        kurdish_text:'هیچ دوعایەک نییە',         page:'android',context:'Dua: empty state'},
+            {key_id:'gencine.dua_search_ph',    kurdish_text:'گەڕان...',                 page:'android',context:'Dua search placeholder'},
+            {key_id:'gencine.dua_count',        kurdish_text:'دوعا',                     page:'android',context:'Dua count unit (e.g. 5 دوعا)'},
+            // Hadith
+            {key_id:'gencine.hadith_count',     kurdish_text:'فەرمودە',                  page:'android',context:'Hadith count unit (e.g. 42 فەرمودە)'},
+            {key_id:'gencine.hadith_prev',      kurdish_text:'پێشوو',                    page:'android',context:'Hadith navigation: previous'},
+            {key_id:'gencine.hadith_next',      kurdish_text:'دواتر',                    page:'android',context:'Hadith navigation: next'},
+            {key_id:'gencine.hadith_search_ph', kurdish_text:'گەڕان بە ناو یا دەق...',   page:'android',context:'Hadith search placeholder'},
+            {key_id:'gencine.hadith_empty',     kurdish_text:'هیچ فەرمودەیەک نەدۆزراوەتەوە',page:'android',context:'Hadith: no results state'},
+            // Asma
+            {key_id:'gencine.asma_search_ph',   kurdish_text:'گەڕان...',                 page:'android',context:'Asma search placeholder'},
+            {key_id:'gencine.asma_count',       kurdish_text:'٩٩ ناوێن خوا',             page:'android',context:'Asma: 99 names count label'},
+            // IV — app-wide labels
+            {key_id:'iv.new_badge',             kurdish_text:'نوی',                      page:'android',context:'New badge shown on recently added items'},
+            {key_id:'iv.saved_title',           kurdish_text:'پاراستە',                  page:'android',context:'Books header: saved books filter button tooltip'},
+            {key_id:'iv.read_title',            kurdish_text:'خوێندراو',                 page:'android',context:'Books header: reading history button tooltip'},
+            {key_id:'iv.search_title',          kurdish_text:'گەڕان',                    page:'android',context:'Books header: search button tooltip'},
+        ];
+
+        async function seedMobileAppKeys() {
+            var btn = document.getElementById('seedAppKeysBtn');
+            if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Seeding...'; }
+            try {
+                var result = await adminTranslationsAPI('bulk_insert', { rows: MOBILE_APP_KEYS });
+                if (result.error) throw new Error(result.error);
+                showToast('✅ Seeded ' + MOBILE_APP_KEYS.length + ' mobile app keys (skipped existing)');
+                await loadTranslations();
+            } catch(e) {
+                showToast('❌ Seed failed: ' + e.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Seed App Keys'; }
             }
         }
 

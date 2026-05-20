@@ -2389,21 +2389,34 @@ window.GencineUI = {
         if (_prog || _inHistory) {
           coverWrap.classList.add('has-progress');
           var _pct = (_prog && _prog.total > 1) ? Math.min(100, Math.round(_prog.page / _prog.total * 100)) : 0;
+          // Glasses badge (top-left)
+          var _rb = document.createElement('div'); _rb.className = 'book-read-badge';
+          var _rbi = document.createElement('i'); _rbi.className = 'fas fa-glasses'; _rb.appendChild(_rbi);
+          coverWrap.appendChild(_rb);
+          // Gradient overlay
           var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
+          // Progress bar
           var _pbw = document.createElement('div'); _pbw.className = 'book-prog-bar-wrap';
           var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
           _pbw.appendChild(_pb); _po.appendChild(_pbw);
-          var _pt = document.createElement('div'); _pt.className = 'book-prog-text';
+          // Stats row: percentage left, page right
+          var _prow = document.createElement('div'); _prow.className = 'book-prog-row';
+          var _ppct = document.createElement('span'); _ppct.className = 'book-prog-pct';
+          var _ppage = document.createElement('span'); _ppage.className = 'book-prog-page';
           if (_prog && _prog.total > 0) {
-            _pt.textContent = _pct + '%  ·  ' + T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _prog.total;
+            _ppct.textContent = _pct + '%';
+            _ppage.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _prog.total;
           } else if (_prog && _prog.page) {
-            _pt.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page;
+            _ppct.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page;
+            _ppage.textContent = '';
           } else {
-            _pt.textContent = T('gencine.started_lbl','دەستپێکرا');
+            _ppct.textContent = T('gencine.started_lbl','دەستپێکرا');
+            _ppage.textContent = '';
           }
-          _po.appendChild(_pt);
+          _prow.appendChild(_ppct); _prow.appendChild(_ppage);
+          _po.appendChild(_prow);
           coverWrap.appendChild(_po);
-          // Clear-progress X button
+          // X button (top-right)
           var _pcb = document.createElement('button'); _pcb.className = 'book-prog-clear';
           var _pci = document.createElement('i'); _pci.className = 'fas fa-times'; _pcb.appendChild(_pci);
           _pcb.onclick = function(e){
@@ -2411,7 +2424,7 @@ window.GencineUI = {
             _bookClearProgress(book.id);
             _removeFromReadingHistory(book.id);
             coverWrap.classList.remove('has-progress');
-            _po.remove(); _pcb.remove();
+            _po.remove(); _pcb.remove(); _rb.remove();
             if (self._bookCat === 'reading') renderGrid();
           };
           coverWrap.appendChild(_pcb);

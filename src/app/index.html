@@ -2481,14 +2481,18 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-card{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;cursor:pointer;text-align:right;direction:rtl;display:flex;flex-direction:column;transition:transform .15s;padding:0;position:relative}
 .book-card:active{transform:scale(.97)}
 .book-cover-wrap{width:100%;overflow:hidden;background:var(--bg2);position:relative}
-.book-cover-wrap.has-progress .book-cover.loaded{opacity:.62}
-.book-cover-wrap.has-progress .book-cover-placeholder{opacity:.62}
-.book-prog-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent 0%,rgba(0,0,0,.76) 100%);padding:24px 8px 8px;display:flex;flex-direction:column;gap:4px;pointer-events:none}
-.book-prog-bar-wrap{width:100%;height:3px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
-.book-prog-bar{height:100%;background:var(--accent);border-radius:2px}
-.book-prog-text{font-size:.58rem;font-weight:700;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1}
-.book-prog-clear{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.55);border:1.5px solid rgba(255,255,255,.22);color:rgba(255,255,255,.85);font-size:.55rem;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:background .15s,transform .15s;z-index:2}
-.book-prog-clear:active{background:rgba(220,55,55,.75);transform:scale(.88)}
+.book-cover-wrap.has-progress .book-cover.loaded{opacity:.55;transition:opacity .3s}
+.book-cover-wrap.has-progress .book-cover-placeholder{opacity:.55}
+.book-prog-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent 0%,rgba(0,0,0,.5) 38%,rgba(0,0,0,.88) 100%);padding:36px 10px 10px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.book-prog-bar-wrap{width:100%;height:5px;background:rgba(255,255,255,.22);border-radius:3px;overflow:hidden}
+.book-prog-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .4s ease}
+.book-prog-row{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.book-prog-pct{font-size:.7rem;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1}
+.book-prog-page{font-size:.6rem;font-weight:600;color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums;line-height:1}
+.book-read-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);color:rgba(255,255,255,.92);font-size:.6rem;padding:3px 7px 3px 6px;border-radius:20px;display:flex;align-items:center;gap:4px;border:1px solid rgba(255,255,255,.18);pointer-events:none;z-index:2}
+.book-read-badge i{font-size:.58rem;opacity:.85}
+.book-prog-clear{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.62);border:1.5px solid rgba(255,255,255,.28);color:rgba(255,255,255,.9);font-size:.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:background .15s,transform .15s,border-color .15s;z-index:2}
+.book-prog-clear:active{background:rgba(220,55,55,.82);border-color:rgba(220,55,55,.6);transform:scale(.86)}
 .new-badge{position:absolute;top:8px;right:8px;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.04em;z-index:2;box-shadow:0 2px 6px rgba(229,62,62,.4)}
 .iv-new-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em;flex-shrink:0;align-self:center;margin-right:6px;box-shadow:0 2px 5px rgba(229,62,62,.35)}
 .book-cover{width:100%;height:auto;display:block;opacity:0;transition:opacity .3s}
@@ -3640,7 +3644,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=742"></script>
+<script src="/app/app.js?v=743"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
