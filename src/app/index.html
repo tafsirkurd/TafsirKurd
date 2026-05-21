@@ -2484,32 +2484,40 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-cover-wrap.has-progress .book-cover.loaded{opacity:.6;transition:opacity .3s}
 .book-cover-wrap.has-progress .book-cover-placeholder{opacity:.55}
 .book-cover-wrap.has-progress::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.38) 0%,transparent 30%,transparent 50%,rgba(0,0,0,.88) 100%);pointer-events:none;z-index:1}
-.book-prog-overlay{position:absolute;bottom:0;left:0;right:52px;padding:0 8px 9px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none;z-index:2}
-.book-prog-pct{font-size:.84rem;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1;text-shadow:0 1px 6px rgba(0,0,0,.8)}
-.book-prog-page{font-size:.66rem;font-weight:700;color:rgba(255,255,255,.78);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,.7)}
-.book-ring-wrap{position:absolute;bottom:7px;right:7px;width:48px;height:48px;z-index:3;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 8px rgba(0,0,0,.55))}
+/* ── Progress ring pill ────────────────────────────────────── */
+.book-ring-wrap{position:absolute;bottom:8px;right:8px;width:48px;height:48px;z-index:3;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:50%;border:1.5px solid rgba(255,255,255,.13);box-shadow:0 2px 12px rgba(0,0,0,.5)}
 .book-ring-svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.book-ring-track{fill:none;stroke:rgba(255,255,255,.22);stroke-width:5}
-.book-ring-fill{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round}
-.book-ring-pct{position:relative;z-index:1;font-size:.54rem;font-weight:900;color:#fff;text-align:center;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,.9);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.book-ring-ico{position:relative;z-index:1;font-size:.7rem;color:rgba(255,255,255,.75)}
-.book-read-badge{position:absolute;top:8px;left:8px;background:var(--accent);color:#fff;font-size:.58rem;font-weight:700;padding:4px 8px 4px 7px;border-radius:20px;display:flex;align-items:center;gap:4px;pointer-events:none;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s}
-.book-read-badge i{font-size:.6rem}
+.book-ring-track{fill:none;stroke:rgba(255,255,255,.18);stroke-width:4.5}
+.book-ring-fill{fill:none;stroke:var(--accent);stroke-width:4.5;stroke-linecap:round}
+.book-ring-pct{position:relative;z-index:1;font-size:.56rem;font-weight:900;color:#fff;text-align:center;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.book-ring-ico{position:relative;z-index:1;font-size:.72rem;color:rgba(255,255,255,.8)}
+/* ── Thin progress bar at cover bottom ─────────────────────── */
+.book-cover-bar{position:absolute;bottom:0;left:0;right:0;height:3px;z-index:4;background:rgba(255,255,255,.1)}
+.book-cover-bar-fill{height:100%;background:var(--accent);border-radius:0 1.5px 1.5px 0}
+/* ── "Read" badge ──────────────────────────────────────────── */
+.book-read-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-size:.58rem;font-weight:700;padding:4px 9px 4px 8px;border-radius:20px;display:flex;align-items:center;gap:4px;pointer-events:none;z-index:3;border:1px solid rgba(255,255,255,.15)}
+.book-read-badge i{font-size:.58rem;color:var(--accent)}
 .book-read-badge.removable{pointer-events:auto;cursor:pointer}
-.book-read-badge.removable:active{transform:scale(.9)}
-.book-confirm-remove{position:absolute;inset:0;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:10;border-radius:inherit;padding:12px}
-.book-confirm-msg{color:#fff;font-size:.75rem;font-weight:700;text-align:center;line-height:1.4}
-.book-confirm-yes{background:#dc2626;color:#fff;border:none;border-radius:10px;padding:8px 18px;font-size:.78rem;font-weight:800;cursor:pointer;width:100%}
-.book-confirm-no{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:10px;padding:7px 18px;font-size:.75rem;font-weight:600;cursor:pointer;width:100%}
-.book-confirm-yes:active{opacity:.8}
-.book-confirm-no:active{opacity:.7}
-.book-last-read{font-size:.67rem;color:var(--text-muted,rgba(128,128,128,.75));margin-top:3px;display:flex;align-items:center;gap:3px}
-.book-last-read i{font-size:.6rem;opacity:.65}
-.book-stats-bar{display:flex;align-items:center;gap:7px;padding:7px 16px;font-size:.74rem;color:var(--text-muted,rgba(120,120,120,.85));border-bottom:1px solid var(--border)}
-.book-stats-bar i{color:var(--accent);font-size:.72rem}
-.book-resume-banner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 58px);left:50%;transform:translateX(-50%) translateY(-16px);background:rgba(20,20,20,.88);color:#fff;font-size:.78rem;font-weight:700;padding:10px 20px;border-radius:24px;z-index:9999;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 24px rgba(0,0,0,.45);direction:rtl}
+.book-read-badge.removable:active{transform:scale(.9);transition:transform .1s}
+/* ── Confirm-remove overlay ─────────────────────────────────── */
+.book-confirm-remove{position:absolute;inset:0;background:rgba(0,0,0,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:10;border-radius:inherit;padding:14px}
+.book-confirm-msg{color:#fff;font-size:.76rem;font-weight:700;text-align:center;line-height:1.4}
+.book-confirm-yes{background:#dc2626;color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:.78rem;font-weight:800;cursor:pointer;width:100%}
+.book-confirm-no{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 18px;font-size:.75rem;font-weight:600;cursor:pointer;width:100%}
+.book-confirm-yes:active,.book-confirm-no:active{opacity:.75}
+/* ── Last-read tag ──────────────────────────────────────────── */
+.book-last-read{font-size:.63rem;color:var(--text2,rgba(120,120,120,.8));margin-top:3px;display:flex;align-items:center;gap:3px}
+.book-last-read i{font-size:.56rem;opacity:.55}
+/* ── Stats bar (3-column pill) ──────────────────────────────── */
+.book-stats-bar{display:flex;align-items:stretch;margin:0 16px 12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.book-stats-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:10px 6px}
+.book-stats-ico{color:var(--accent);font-size:.62rem;margin-bottom:2px}
+.book-stats-val{font-size:.88rem;font-weight:800;color:var(--text);line-height:1}
+.book-stats-lbl{font-size:.58rem;color:var(--text2);font-weight:500;margin-top:1px}
+.book-stats-sep{width:1px;background:var(--border);flex-shrink:0}
+/* ── Resume banner ──────────────────────────────────────────── */
+.book-resume-banner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 60px);left:50%;transform:translateX(-50%) translateY(-20px);background:var(--accent);color:#fff;font-size:.8rem;font-weight:700;padding:11px 22px 11px 16px;border-radius:28px;z-index:9999;opacity:0;transition:opacity .3s ease,transform .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:8px;box-shadow:0 6px 28px rgba(0,0,0,.28);direction:rtl}
 .book-resume-banner.visible{opacity:1;transform:translateX(-50%) translateY(0)}
-.book-resume-banner i{margin-left:6px;color:var(--accent)}
 .new-badge{position:absolute;top:8px;right:8px;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.04em;z-index:2;box-shadow:0 2px 6px rgba(229,62,62,.4)}
 .iv-new-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em;flex-shrink:0;align-self:center;margin-right:6px;box-shadow:0 2px 5px rgba(229,62,62,.35)}
 .book-cover{width:100%;height:auto;display:block;opacity:0;transition:opacity .3s}
@@ -3661,7 +3669,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=754"></script>
+<script src="/app/app.js?v=755"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
