@@ -2779,7 +2779,7 @@ window.GencineUI = {
       if (slots[1]) renderPage(2, slots[1], pdf);
 
       /* ── Page navigation ── */
-      var _curPage = 1;
+      var _curPage = (_pg && _pg > 1) ? _pg : 1;
       var _navScrollTimer = null;
       var _panelEl = document.getElementById('panelGencine');
       var _prevBtn = document.getElementById('pdfPrevBtn');
@@ -2891,6 +2891,7 @@ window.GencineUI = {
       }
 
       _updatePageNav();
+      if (_curPage > 1) _jumpToPage(_curPage);
 
       /* Extend existing cleanup to remove nav listeners */
       var _prevCleanup = self._pdfCleanup;
