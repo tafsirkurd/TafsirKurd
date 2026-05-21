@@ -2391,7 +2391,7 @@ window.GencineUI = {
           var _pct = (_prog && _prog.total > 1) ? Math.min(100, Math.round(_prog.page / _prog.total * 100)) : 0;
           // Glasses badge (top-left) with label
           var _rb = document.createElement('div'); _rb.className = 'book-read-badge';
-          var _rbi = document.createElement('i'); _rbi.className = 'fas fa-glasses'; _rb.appendChild(_rbi);
+          var _rbi = document.createElement('i'); _rbi.className = 'fas fa-check-circle'; _rb.appendChild(_rbi);
           var _rbt = document.createElement('span'); _rbt.textContent = T('iv.read_title','خوێندراو'); _rb.appendChild(_rbt);
           coverWrap.appendChild(_rb);
           // Gradient overlay
