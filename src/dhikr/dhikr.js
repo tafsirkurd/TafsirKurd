@@ -3,7 +3,7 @@
 'use strict';
 
 function _sections(){
-  var T = window.t || function(k,d){ return d||k; };
+  var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
   var all = [
     { name:'hadith', label:T('gencine.hadith','حەدیس'),     sub:T('gencine.hadith_sub','فەرمودێن پێغەمبەرێ ئیسلامێ'),           icon:'fas fa-scroll'             },
     { name:'adhkar', label:T('gencine.adhkar','زکیر'),        sub:T('gencine.adhkar_sub','زکرێن بەیانی، ئێوار و زیاتر'),         icon:'fas fa-heart'               },
@@ -1006,7 +1006,7 @@ window.GencineUI = {
 
   _renderAdhkarGrid: function(container){
     var self = this;
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     var catKeys = _getAdhkarCatKeys();
 
     var GROUPS = [
@@ -1142,7 +1142,7 @@ window.GencineUI = {
 
   _renderAdhkarCatList: function(container){
     var self = this;
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
 
     var items = _getAdhkar(this._adhkarCat);
     if (!items.length) {
@@ -1197,7 +1197,7 @@ window.GencineUI = {
 
   /* ═══════════════════ DUA (Quran only) ═══════════════════ */
   _renderDua: function(container){
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     var duas = _getDuas('quran');
 
     if (!duas.length) {
@@ -1326,7 +1326,7 @@ window.GencineUI = {
   /* ═════════════════════ TASBIH ═════════════════════ */
   _renderTasbih: function(container){
     var self = this;
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     
 
     var wrap = document.createElement('div');
@@ -1594,7 +1594,7 @@ window.GencineUI = {
 
   _renderHadith: function(container){
     var self = this;
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     var hadiths = _getHadiths();
 
     /* ── Detail view ── */
@@ -1868,7 +1868,7 @@ window.GencineUI = {
 
   /* ═══════════════════ 99 NAMES ═══════════════════ */
   _renderAsma: function(container){
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     
 
     /* sticky search bar */
@@ -2044,7 +2044,7 @@ window.GencineUI = {
 
   _startVoice: function(){
     var self = this;
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     var SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SRClass){
       self._setVoiceStatus(T('gencine.voice_unavailable','دانگ li vê cihazê pêşkeftî nîne'));
@@ -2165,7 +2165,7 @@ window.GencineUI = {
 
   _stopVoice: function(){
     var self = this;
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     self._voiceActive = false;
     if(self._recognition){
       try{ self._recognition.abort(); }catch(e){}
@@ -2197,7 +2197,7 @@ window.GencineUI = {
   /* =========== BOOKS =========== */
   _renderBooks: function(container){
     var self = this;
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
 
     var books = _dbBooks.filter(function(b){ return b.active !== false; });
 
@@ -2485,7 +2485,7 @@ window.GencineUI = {
     var self = this;
     var book = self._currentBook;
     if (!book) { self._view = 'books'; self._draw(); return; }
-    var T = window.t || function(k,d){ return d||k; };
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
 
 
     var loadingEl = document.createElement('div');
