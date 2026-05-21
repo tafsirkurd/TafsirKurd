@@ -2397,19 +2397,15 @@ window.GencineUI = {
           coverWrap.appendChild(_rb);
           // Gradient overlay
           var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
-          // Progress bar
-          var _pbw = document.createElement('div'); _pbw.className = 'book-prog-bar-wrap';
-          var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
-          _pbw.appendChild(_pb); _po.appendChild(_pbw);
-          // Stats row: percentage left, page right
+          // Stats row first (sits above bar, closer to centre of card)
           var _prow = document.createElement('div'); _prow.className = 'book-prog-row';
           var _ppct = document.createElement('span'); _ppct.className = 'book-prog-pct';
           var _ppage = document.createElement('span'); _ppage.className = 'book-prog-page';
           if (_prog && _total > 0) {
             _ppct.textContent = _pct + '%';
-            _ppage.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _total;
+            _ppage.textContent = _prog.page + ' / ' + _total;
           } else if (_prog && _prog.page) {
-            _ppct.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page;
+            _ppct.textContent = T('gencine.page_lbl','پ') + ' ' + _prog.page;
             _ppage.textContent = '';
           } else {
             _ppct.textContent = T('gencine.started_lbl','دەستپێکرا');
@@ -2417,6 +2413,10 @@ window.GencineUI = {
           }
           _prow.appendChild(_ppct); _prow.appendChild(_ppage);
           _po.appendChild(_prow);
+          // Progress bar at very bottom
+          var _pbw = document.createElement('div'); _pbw.className = 'book-prog-bar-wrap';
+          var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
+          _pbw.appendChild(_pb); _po.appendChild(_pbw);
           coverWrap.appendChild(_po);
           // X button (top-right)
           var _pcb = document.createElement('button'); _pcb.className = 'book-prog-clear';
@@ -2897,6 +2897,7 @@ window.GencineUI = {
       /* Extend existing cleanup to remove nav listeners */
       var _prevCleanup = self._pdfCleanup;
       self._pdfCleanup = function() {
+        _syncPage(); _saveProgress();
         if (_panelEl) _panelEl.removeEventListener('scroll', _navScrollHandler);
         clearTimeout(_navScrollTimer);
         if (_prevBtn) _prevBtn.onclick = null;
