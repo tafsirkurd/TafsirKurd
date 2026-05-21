@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260544 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260545 */
 (function(){
 'use strict';
 
@@ -3015,7 +3015,20 @@ window.GencineUI = {
       /* Extend existing cleanup to remove nav listeners */
       var _prevCleanup = self._pdfCleanup;
       self._pdfCleanup = function() {
-        _syncPage(); _saveProgress();
+        // Synchronous final page detect — no rAF needed, no active scroll at exit time.
+        // Must run before _renderBooks so the grid gets the correct page.
+        if (_panelEl && slots.length) {
+          var _pt = _panelEl.getBoundingClientRect().top;
+          var _st = _panelEl.scrollTop;
+          var _rf = _st + (_hdrH() || 0);
+          var _bst = 1, _bd = Infinity;
+          slots.forEach(function(sl, i) {
+            var d = Math.abs(sl.getBoundingClientRect().top - _pt + _st - _rf);
+            if (d < _bd) { _bd = d; _bst = i + 1; }
+          });
+          if (_bst !== _curPage) _curPage = _bst;
+        }
+        _saveProgress();
         if (_panelEl) _panelEl.removeEventListener('scroll', _navScrollHandler);
         if (_panelEl) _panelEl.removeEventListener('touchend', _touchEndHandler);
         clearTimeout(_navScrollTimer);
