@@ -2388,7 +2388,8 @@ window.GencineUI = {
         var _inHistory = !!_getReadingHistory()[String(book.id)];
         if (_prog || _inHistory) {
           coverWrap.classList.add('has-progress');
-          var _pct = (_prog && _prog.total > 1) ? Math.min(100, Math.round(_prog.page / _prog.total * 100)) : 0;
+          var _total = (_prog && _prog.total > 1) ? _prog.total : (book.pages > 1 ? book.pages : 0);
+          var _pct = (_prog && _total > 0) ? Math.min(100, Math.round(_prog.page / _total * 100)) : 0;
           // Glasses badge (top-left) with label
           var _rb = document.createElement('div'); _rb.className = 'book-read-badge';
           var _rbi = document.createElement('i'); _rbi.className = 'fas fa-check-circle'; _rb.appendChild(_rbi);
@@ -2404,9 +2405,9 @@ window.GencineUI = {
           var _prow = document.createElement('div'); _prow.className = 'book-prog-row';
           var _ppct = document.createElement('span'); _ppct.className = 'book-prog-pct';
           var _ppage = document.createElement('span'); _ppage.className = 'book-prog-page';
-          if (_prog && _prog.total > 0) {
+          if (_prog && _total > 0) {
             _ppct.textContent = _pct + '%';
-            _ppage.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _prog.total;
+            _ppage.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page + '/' + _total;
           } else if (_prog && _prog.page) {
             _ppct.textContent = T('gencine.page_lbl','پ') + '. ' + _prog.page;
             _ppage.textContent = '';
