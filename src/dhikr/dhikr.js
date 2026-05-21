@@ -2848,8 +2848,7 @@ window.GencineUI = {
           if (dist < bestDist) { bestDist = dist; best = i + 1; }
         });
         if (best !== _curPage) {
-          _curPage = best; _updatePageNav();
-          if (book && book.id) try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:pdf.numPages,ts:Date.now()})); } catch(e2) {}
+          _curPage = best; _updatePageNav(); _saveProgress();
         }
       }
 
@@ -2859,16 +2858,21 @@ window.GencineUI = {
       };
       if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler);
 
+      function _saveProgress() {
+        if (book && book.id) try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:pdf.numPages,ts:Date.now()})); } catch(e2) {}
+      }
       if (_prevBtn) _prevBtn.onclick = function() {
         if (_curPage > 1) {
           renderPage(_curPage - 1, slots[_curPage - 2], pdf);
           _scrollToSlot(slots[_curPage - 2]);
+          _curPage--; _updatePageNav(); _saveProgress();
         }
       };
       if (_nextBtn) _nextBtn.onclick = function() {
         if (_curPage < pdf.numPages) {
           renderPage(_curPage, slots[_curPage], pdf);
           _scrollToSlot(slots[_curPage]);
+          _curPage++; _updatePageNav(); _saveProgress();
         }
       };
       if (_pageInd) {
@@ -2879,6 +2883,7 @@ window.GencineUI = {
           var n = parseInt(_pageInd.value);
           if (!isNaN(n) && n >= 1 && n <= pdf.numPages) {
             _jumpToPage(n);
+            _curPage = n; _updatePageNav(); _saveProgress();
           } else {
             _pageInd.value = _curPage;
           }
