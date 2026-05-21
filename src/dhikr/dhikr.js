@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260541 */
 (function(){
 'use strict';
 
@@ -556,6 +556,49 @@ function _addToReadingHistory(id){
 function _removeFromReadingHistory(id){
   var h=_getReadingHistory(); delete h[String(id)];
   try{ localStorage.setItem('book_read_ids',JSON.stringify(Object.keys(h))); }catch(e){}
+}
+
+/* ── Time-ago helper ── */
+function _timeAgo(ts) {
+  if (!ts) return '';
+  var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
+  var diff = Math.floor((Date.now() - ts) / 86400000);
+  if (diff < 1) return T('gencine.today','ئەمڕۆ');
+  if (diff === 1) return T('gencine.yesterday','دوێنێ');
+  if (diff < 7) return diff + ' ' + T('gencine.days_ago','ڕۆژ');
+  if (diff < 30) return Math.floor(diff/7) + ' ' + T('gencine.weeks_ago','هەفتە');
+  return Math.floor(diff/30) + ' ' + T('gencine.months_ago','مانگ');
+}
+
+/* ── Supabase progress sync — only fires when user is logged in ── */
+var _sbSyncTimer = null;
+function _syncProgressToSupabase(bookId, page, total, ts) {
+  clearTimeout(_sbSyncTimer);
+  _sbSyncTimer = setTimeout(function() {
+    var sb = window._appSupabase; if (!sb) return;
+    sb.auth.getSession().then(function(r) {
+      var uid = r && r.data && r.data.session && r.data.session.user && r.data.session.user.id;
+      if (!uid) return;
+      sb.from('book_reading_progress').upsert({user_id:uid,book_id:parseInt(bookId,10),page:page,total:total,ts:ts,updated_at:new Date().toISOString()},{onConflict:'user_id,book_id'}).then(function(){}).catch(function(){});
+    }).catch(function(){});
+  }, 1200);
+}
+
+/* Merge Supabase progress with localStorage — takes whichever is newer */
+function _mergeProgressFromSupabase(bookId, localProg, cb) {
+  var sb = window._appSupabase; if (!sb) { cb(localProg); return; }
+  sb.auth.getSession().then(function(r) {
+    var uid = r && r.data && r.data.session && r.data.session.user && r.data.session.user.id;
+    if (!uid) { cb(localProg); return; }
+    sb.from('book_reading_progress').select('page,total,ts').eq('user_id',uid).eq('book_id',parseInt(bookId,10)).maybeSingle().then(function(res) {
+      var remote = res && res.data;
+      if (!remote) { cb(localProg); return; }
+      if (!localProg || (remote.ts && remote.ts > (localProg.ts||0))) {
+        try { localStorage.setItem('pdfProg_'+bookId, JSON.stringify({page:remote.page,total:remote.total,ts:remote.ts})); } catch(e) {}
+        cb({page:remote.page,total:remote.total,ts:remote.ts});
+      } else { cb(localProg); }
+    }).catch(function(){ cb(localProg); });
+  }).catch(function(){ cb(localProg); });
 }
 
 /* Return category keys+labels from DB or fallback */
@@ -2333,17 +2376,28 @@ window.GencineUI = {
     }
 
     /* ── Grid + empty state ── */
+    var statsBar = document.createElement('div'); statsBar.className = 'book-stats-bar'; statsBar.style.display = 'none';
     var grid = document.createElement('div'); grid.className = 'book-grid';
     var emptyState = document.createElement('div'); emptyState.className = 'genc-coming'; emptyState.style.display = 'none';
     var ei = document.createElement('i'); ei.className = 'fas fa-book-open genc-coming-icon';
     var et = document.createElement('div'); et.className = 'genc-coming-title';
     emptyState.appendChild(ei); emptyState.appendChild(et);
+    container.appendChild(statsBar);
     container.appendChild(grid);
     container.appendChild(emptyState);
 
     function renderGrid() {
       while (grid.firstChild) grid.removeChild(grid.firstChild);
       emptyState.style.display = 'none';
+      // Stats bar
+      var _rCount=0, _pCount=0;
+      books.forEach(function(b){ var _p=_bookGetProgress(b.id); if(_p||_getReadingHistory()[String(b.id)]){_rCount++; if(_p&&_p.page)_pCount+=_p.page;} });
+      if (_rCount > 0) {
+        while(statsBar.firstChild) statsBar.removeChild(statsBar.firstChild);
+        var _sIco=document.createElement('i'); _sIco.className='fas fa-chart-line'; statsBar.appendChild(_sIco);
+        var _sTxt=document.createElement('span'); _sTxt.textContent=_rCount+' '+T('gencine.books_read','کتێب')+'  ·  '+_pCount+' '+T('gencine.pages_unit','ڕۆپەل'); statsBar.appendChild(_sTxt);
+        statsBar.style.display='flex';
+      } else { statsBar.style.display='none'; }
       var q = (self._bookSearch || '').trim().toLowerCase();
       var pool = self._bookCat === 'saved'
         ? books.filter(function(b){ return _bookIsSaved(b.id); })
@@ -2390,69 +2444,53 @@ window.GencineUI = {
           coverWrap.classList.add('has-progress');
           var _total = (_prog && _prog.total > 1) ? _prog.total : (book.pages > 1 ? book.pages : 0);
           var _pct = (_prog && _total > 0) ? Math.min(100, Math.round(_prog.page / _total * 100)) : 0;
+          var _inReadingMode = (self._bookCat === 'reading');
           // Badge (top-left) — tappable in reading-filter mode only
           var _rb = document.createElement('div');
-          var _inReadingMode = (self._bookCat === 'reading');
           _rb.className = 'book-read-badge' + (_inReadingMode ? ' removable' : '');
           var _rbi = document.createElement('i'); _rbi.className = 'fas fa-check-circle'; _rb.appendChild(_rbi);
           var _rbt = document.createElement('span'); _rbt.textContent = T('iv.read_title','خوێندراو'); _rb.appendChild(_rbt);
           if (_inReadingMode) {
             _rb.onclick = function(e) {
               e.stopPropagation();
-              if (coverWrap.classList.contains('confirm-remove')) {
-                // already showing — do nothing (buttons handle it)
-                return;
-              }
+              if (coverWrap.classList.contains('confirm-remove')) return;
               coverWrap.classList.add('confirm-remove');
               _confirmBox.style.display = 'flex';
             };
           }
           coverWrap.appendChild(_rb);
-          // Gradient overlay
+          // SVG circular ring (bottom-right)
+          var _CCIRC = 138.23; // 2π × 22
+          var _ringWrap = document.createElement('div'); _ringWrap.className = 'book-ring-wrap';
+          var _NS = 'http://www.w3.org/2000/svg';
+          var _rsvg = document.createElementNS(_NS,'svg'); _rsvg.setAttribute('viewBox','0 0 50 50'); _rsvg.classList.add('book-ring-svg');
+          var _rtrack = document.createElementNS(_NS,'circle'); _rtrack.setAttribute('cx','25'); _rtrack.setAttribute('cy','25'); _rtrack.setAttribute('r','22'); _rtrack.classList.add('book-ring-track'); _rsvg.appendChild(_rtrack);
+          var _rfill = document.createElementNS(_NS,'circle'); _rfill.setAttribute('cx','25'); _rfill.setAttribute('cy','25'); _rfill.setAttribute('r','22'); _rfill.classList.add('book-ring-fill');
+          var _visualPct = _pct > 0 ? _pct : (_prog && _prog.page > 0 ? 4 : 0);
+          _rfill.setAttribute('stroke-dasharray', '138.23');
+          _rfill.setAttribute('stroke-dashoffset', _visualPct > 0 ? String(_CCIRC * (1 - _visualPct / 100)) : String(_CCIRC));
+          _rsvg.appendChild(_rfill); _ringWrap.appendChild(_rsvg);
+          if (_pct > 0) { var _rpct = document.createElement('div'); _rpct.className = 'book-ring-pct'; _rpct.textContent = _pct + '%'; _ringWrap.appendChild(_rpct); }
+          else if (_prog && _prog.page > 1) { var _rpn = document.createElement('div'); _rpn.className = 'book-ring-pct'; _rpn.textContent = 'پ' + _prog.page; _ringWrap.appendChild(_rpn); }
+          else { var _rico = document.createElement('i'); _rico.className = 'fas fa-book-open book-ring-ico'; _ringWrap.appendChild(_rico); }
+          coverWrap.appendChild(_ringWrap);
+          // Bottom text overlay (% + page count)
           var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
-          // Stats row first (above bar)
-          var _prow = document.createElement('div'); _prow.className = 'book-prog-row';
           var _ppct = document.createElement('span'); _ppct.className = 'book-prog-pct';
           var _ppage = document.createElement('span'); _ppage.className = 'book-prog-page';
-          if (_prog && _total > 0) {
-            _ppct.textContent = _pct + '%';
-            _ppage.textContent = _prog.page + ' / ' + _total;
-          } else if (_prog && _prog.page) {
-            _ppct.textContent = T('gencine.page_lbl','پ') + ' ' + _prog.page;
-            _ppage.textContent = '';
-          } else {
-            _ppct.textContent = T('gencine.started_lbl','دەستپێکرا');
-            _ppage.textContent = '';
-          }
-          _prow.appendChild(_ppct); _prow.appendChild(_ppage);
-          _po.appendChild(_prow);
-          // Progress bar at very bottom
-          var _pbw = document.createElement('div'); _pbw.className = 'book-prog-bar-wrap';
-          var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
-          _pbw.appendChild(_pb); _po.appendChild(_pbw);
+          if (_prog && _total > 0) { _ppct.textContent = _pct + '%'; _ppage.textContent = _prog.page + '/' + _total; }
+          else if (_prog && _prog.page) { _ppct.textContent = T('gencine.page_lbl','پ') + ' ' + _prog.page; }
+          else { _ppct.textContent = T('gencine.started_lbl','دەستپێکرا'); }
+          _po.appendChild(_ppct); _po.appendChild(_ppage);
           coverWrap.appendChild(_po);
-          // Inline confirm box (hidden by default, shown when badge tapped in reading mode)
+          // Inline confirm box
           var _confirmBox = document.createElement('div'); _confirmBox.className = 'book-confirm-remove'; _confirmBox.style.display = 'none';
-          var _confirmMsg = document.createElement('span'); _confirmMsg.className = 'book-confirm-msg';
-          _confirmMsg.textContent = T('iv.confirm_remove_read','دڵنیایت؟');
-          var _confirmYes = document.createElement('button'); _confirmYes.className = 'book-confirm-yes';
-          _confirmYes.textContent = T('iv.delete','سڕینەوە');
-          var _confirmNo = document.createElement('button'); _confirmNo.className = 'book-confirm-no';
-          _confirmNo.textContent = T('iv.cancel','نە');
-          _confirmBox.appendChild(_confirmMsg);
-          _confirmBox.appendChild(_confirmYes);
-          _confirmBox.appendChild(_confirmNo);
-          _confirmYes.onclick = function(e) {
-            e.stopPropagation();
-            _bookClearProgress(book.id);
-            _removeFromReadingHistory(book.id);
-            renderGrid();
-          };
-          _confirmNo.onclick = function(e) {
-            e.stopPropagation();
-            coverWrap.classList.remove('confirm-remove');
-            _confirmBox.style.display = 'none';
-          };
+          var _confirmMsg = document.createElement('span'); _confirmMsg.className = 'book-confirm-msg'; _confirmMsg.textContent = T('iv.confirm_remove_read','دڵنیایت؟');
+          var _confirmYes = document.createElement('button'); _confirmYes.className = 'book-confirm-yes'; _confirmYes.textContent = T('iv.delete','سڕینەوە');
+          var _confirmNo = document.createElement('button'); _confirmNo.className = 'book-confirm-no'; _confirmNo.textContent = T('iv.cancel','نە');
+          _confirmBox.appendChild(_confirmMsg); _confirmBox.appendChild(_confirmYes); _confirmBox.appendChild(_confirmNo);
+          _confirmYes.onclick = function(e) { e.stopPropagation(); _bookClearProgress(book.id); _removeFromReadingHistory(book.id); renderGrid(); };
+          _confirmNo.onclick = function(e) { e.stopPropagation(); coverWrap.classList.remove('confirm-remove'); _confirmBox.style.display = 'none'; };
           coverWrap.appendChild(_confirmBox);
         }
         card.appendChild(coverWrap);
@@ -2478,6 +2516,12 @@ window.GencineUI = {
         if (book.author_ku || book.author_ar) {
           var auth = document.createElement('div'); auth.className = 'book-author';
           auth.textContent = book.author_ku || book.author_ar; info.appendChild(auth);
+        }
+        if (_prog && _prog.ts) {
+          var _lrEl = document.createElement('div'); _lrEl.className = 'book-last-read';
+          var _lrIco = document.createElement('i'); _lrIco.className = 'fas fa-clock'; _lrEl.appendChild(_lrIco);
+          _lrEl.appendChild(document.createTextNode(' ' + _timeAgo(_prog.ts)));
+          info.appendChild(_lrEl);
         }
         var infoFoot = document.createElement('div'); infoFoot.className = 'book-info-foot';
         if (book.pages) {
@@ -2512,6 +2556,8 @@ window.GencineUI = {
     if (!book) { self._view = 'books'; self._draw(); return; }
     var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
 
+    // Kick off Supabase merge immediately — updates localStorage before doLoad reads it
+    _mergeProgressFromSupabase(book.id, _bookGetProgress(String(book.id)), function(){});
 
     var loadingEl = document.createElement('div');
     loadingEl.className = 'book-reader-loading';
@@ -2881,10 +2927,28 @@ window.GencineUI = {
         clearTimeout(_navScrollTimer);
         _navScrollTimer = setTimeout(_syncPage, 80);
       };
-      if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler);
+      if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler, {passive:true});
+
+      // touchend: most reliable iOS trigger — fires after finger lifts off screen
+      var _touchEndHandler = function() {
+        clearTimeout(_navScrollTimer);
+        _navScrollTimer = setTimeout(_syncPage, 250);
+      };
+      if (_panelEl) _panelEl.addEventListener('touchend', _touchEndHandler, {passive:true});
+
+      // Visibility-based tracker: any slot crossing a threshold triggers _syncPage
+      var _visObs = new IntersectionObserver(function() { _syncPage(); }, { threshold: [0.1, 0.5] });
+      slots.forEach(function(s) { _visObs.observe(s); });
+
+      // Periodic flush every 10 s — safety net
+      var _periodicSave = setInterval(_syncPage, 10000);
 
       function _saveProgress() {
-        if (book && book.id) try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:pdf.numPages,ts:Date.now()})); } catch(e2) {}
+        if (book && book.id) {
+          var _ts = Date.now();
+          try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:pdf.numPages,ts:_ts})); } catch(e2) {}
+          _syncProgressToSupabase(book.id, _curPage, pdf.numPages, _ts);
+        }
       }
       if (_prevBtn) _prevBtn.onclick = function() {
         if (_curPage > 1) {
@@ -2918,12 +2982,25 @@ window.GencineUI = {
       _updatePageNav();
       if (_curPage > 1) _jumpToPage(_curPage);
 
+      // Resume banner — shown when continuing a book already in progress
+      if (_curPage > 1) {
+        var _resumeBanner = document.createElement('div'); _resumeBanner.className = 'book-resume-banner';
+        var _rBanIco = document.createElement('i'); _rBanIco.className = 'fas fa-bookmark'; _resumeBanner.appendChild(_rBanIco);
+        _resumeBanner.appendChild(document.createTextNode(' ' + T('gencine.resuming','بەردەوامبوون') + ' — ' + T('gencine.page_lbl','پ') + ' ' + _curPage));
+        container.appendChild(_resumeBanner);
+        setTimeout(function(){ _resumeBanner.classList.add('visible'); }, 60);
+        setTimeout(function(){ _resumeBanner.classList.remove('visible'); setTimeout(function(){ if(_resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner); }, 400); }, 3200);
+      }
+
       /* Extend existing cleanup to remove nav listeners */
       var _prevCleanup = self._pdfCleanup;
       self._pdfCleanup = function() {
         _syncPage(); _saveProgress();
         if (_panelEl) _panelEl.removeEventListener('scroll', _navScrollHandler);
+        if (_panelEl) _panelEl.removeEventListener('touchend', _touchEndHandler);
         clearTimeout(_navScrollTimer);
+        clearInterval(_periodicSave);
+        if (_visObs) _visObs.disconnect();
         if (_prevBtn) _prevBtn.onclick = null;
         if (_nextBtn) _nextBtn.onclick = null;
         if (_pageInd) { _pageInd.onblur = null; _pageInd.onkeydown = null; _pageInd.value = ''; }
