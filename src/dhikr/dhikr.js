@@ -2390,14 +2390,27 @@ window.GencineUI = {
           coverWrap.classList.add('has-progress');
           var _total = (_prog && _prog.total > 1) ? _prog.total : (book.pages > 1 ? book.pages : 0);
           var _pct = (_prog && _total > 0) ? Math.min(100, Math.round(_prog.page / _total * 100)) : 0;
-          // Glasses badge (top-left) with label
-          var _rb = document.createElement('div'); _rb.className = 'book-read-badge';
+          // Badge (top-left) — tappable in reading-filter mode only
+          var _rb = document.createElement('div');
+          var _inReadingMode = (self._bookCat === 'reading');
+          _rb.className = 'book-read-badge' + (_inReadingMode ? ' removable' : '');
           var _rbi = document.createElement('i'); _rbi.className = 'fas fa-check-circle'; _rb.appendChild(_rbi);
           var _rbt = document.createElement('span'); _rbt.textContent = T('iv.read_title','خوێندراو'); _rb.appendChild(_rbt);
+          if (_inReadingMode) {
+            _rb.onclick = function(e) {
+              e.stopPropagation();
+              if (coverWrap.classList.contains('confirm-remove')) {
+                // already showing — do nothing (buttons handle it)
+                return;
+              }
+              coverWrap.classList.add('confirm-remove');
+              _confirmBox.style.display = 'flex';
+            };
+          }
           coverWrap.appendChild(_rb);
           // Gradient overlay
           var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
-          // Stats row first (sits above bar, closer to centre of card)
+          // Stats row first (above bar)
           var _prow = document.createElement('div'); _prow.className = 'book-prog-row';
           var _ppct = document.createElement('span'); _ppct.className = 'book-prog-pct';
           var _ppage = document.createElement('span'); _ppage.className = 'book-prog-page';
@@ -2418,18 +2431,29 @@ window.GencineUI = {
           var _pb = document.createElement('div'); _pb.className = 'book-prog-bar'; _pb.style.width = _pct + '%';
           _pbw.appendChild(_pb); _po.appendChild(_pbw);
           coverWrap.appendChild(_po);
-          // X button (top-right)
-          var _pcb = document.createElement('button'); _pcb.className = 'book-prog-clear';
-          var _pci = document.createElement('i'); _pci.className = 'fas fa-times'; _pcb.appendChild(_pci);
-          _pcb.onclick = function(e){
+          // Inline confirm box (hidden by default, shown when badge tapped in reading mode)
+          var _confirmBox = document.createElement('div'); _confirmBox.className = 'book-confirm-remove'; _confirmBox.style.display = 'none';
+          var _confirmMsg = document.createElement('span'); _confirmMsg.className = 'book-confirm-msg';
+          _confirmMsg.textContent = T('iv.confirm_remove_read','دڵنیایت؟');
+          var _confirmYes = document.createElement('button'); _confirmYes.className = 'book-confirm-yes';
+          _confirmYes.textContent = T('iv.delete','سڕینەوە');
+          var _confirmNo = document.createElement('button'); _confirmNo.className = 'book-confirm-no';
+          _confirmNo.textContent = T('iv.cancel','نە');
+          _confirmBox.appendChild(_confirmMsg);
+          _confirmBox.appendChild(_confirmYes);
+          _confirmBox.appendChild(_confirmNo);
+          _confirmYes.onclick = function(e) {
             e.stopPropagation();
             _bookClearProgress(book.id);
             _removeFromReadingHistory(book.id);
-            coverWrap.classList.remove('has-progress');
-            _po.remove(); _pcb.remove(); _rb.remove();
-            if (self._bookCat === 'reading') renderGrid();
+            renderGrid();
           };
-          coverWrap.appendChild(_pcb);
+          _confirmNo.onclick = function(e) {
+            e.stopPropagation();
+            coverWrap.classList.remove('confirm-remove');
+            _confirmBox.style.display = 'none';
+          };
+          coverWrap.appendChild(_confirmBox);
         }
         card.appendChild(coverWrap);
 
