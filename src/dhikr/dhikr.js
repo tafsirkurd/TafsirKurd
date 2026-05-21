@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260543 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260544 */
 (function(){
 'use strict';
 
@@ -2923,19 +2923,25 @@ window.GencineUI = {
         _retry();
       }
 
+      /* _syncPage — scroll-independent formula:
+         slot.getBCR.top - panel.getBCR.top + panel.scrollTop = slot's absolute
+         distance from panel content-top, same value regardless of scroll position.
+         Running inside rAF ensures iOS compositor has committed positions first. */
       function _syncPage() {
         if (!_panelEl) return;
-        var panelTop = _panelEl.getBoundingClientRect().top;
-        var hdrH     = _hdrH();
-        /* page whose top edge is closest to just below the header */
-        var best = 1, bestDist = Infinity;
-        slots.forEach(function(sl, i) {
-          var dist = Math.abs(sl.getBoundingClientRect().top - (panelTop + hdrH));
-          if (dist < bestDist) { bestDist = dist; best = i + 1; }
+        requestAnimationFrame(function() {
+          if (!_panelEl) return;
+          var panelTop  = _panelEl.getBoundingClientRect().top;
+          var scrollTop = _panelEl.scrollTop;
+          var ref       = scrollTop + (_hdrH() || 0);
+          var best = 1, bestDist = Infinity;
+          slots.forEach(function(sl, i) {
+            var absTop = sl.getBoundingClientRect().top - panelTop + scrollTop;
+            var dist   = Math.abs(absTop - ref);
+            if (dist < bestDist) { bestDist = dist; best = i + 1; }
+          });
+          if (best !== _curPage) { _curPage = best; _updatePageNav(); _saveProgress(); }
         });
-        if (best !== _curPage) {
-          _curPage = best; _updatePageNav(); _saveProgress();
-        }
       }
 
       var _navScrollHandler = function() {
@@ -2944,33 +2950,18 @@ window.GencineUI = {
       };
       if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler, {passive:true});
 
-      // touchend: most reliable iOS trigger — fires after finger lifts off screen
       var _touchEndHandler = function() {
         clearTimeout(_navScrollTimer);
         _navScrollTimer = setTimeout(_syncPage, 250);
       };
       if (_panelEl) _panelEl.addEventListener('touchend', _touchEndHandler, {passive:true});
 
-      // IO-based tracker: root=_panelEl so visibility is relative to the scroll container,
-      // not the viewport — immune to iOS async scroll & viewport offset issues.
-      var _pageRatios = {};
-      var _visObs = new IntersectionObserver(function(entries) {
-        entries.forEach(function(e) {
-          var n = parseInt(e.target.getAttribute('data-page'));
-          if (!n) return;
-          if (e.isIntersecting) { _pageRatios[n] = e.intersectionRatio; }
-          else { delete _pageRatios[n]; }
-        });
-        var best = _curPage, bestRatio = -1;
-        Object.keys(_pageRatios).forEach(function(k) {
-          if (_pageRatios[k] > bestRatio) { bestRatio = _pageRatios[k]; best = parseInt(k); }
-        });
-        if (best !== _curPage) { _curPage = best; _updatePageNav(); _saveProgress(); }
-      }, { root: _panelEl, threshold: [0, 0.1, 0.25, 0.5] });
+      // Viewport IO — fires when a page crosses visibility threshold → triggers _syncPage
+      var _visObs = new IntersectionObserver(function() { _syncPage(); }, { threshold: [0.1, 0.5] });
       slots.forEach(function(s) { _visObs.observe(s); });
 
-      // Periodic flush every 5 s — always save even if page didn't change
-      var _periodicSave = setInterval(function() { _syncPage(); _saveProgress(); }, 5000);
+      // Guaranteed flush every 2 s — catches any event the other mechanisms miss
+      var _periodicSave = setInterval(function() { _syncPage(); _saveProgress(); }, 2000);
 
       function _saveProgress() {
         if (book && book.id) {
