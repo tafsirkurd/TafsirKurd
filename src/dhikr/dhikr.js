@@ -2363,7 +2363,7 @@ window.GencineUI = {
       if (catMap[b.category] === undefined || b.sort_order < catMap[b.category]) catMap[b.category] = b.sort_order;
     });
     var cats = ['all'].concat(Object.keys(catMap).sort(function(a,b){ return catMap[a] - catMap[b]; }));
-    if (cats.length > 1) {
+    if (cats.length > 1 && self._bookCat !== 'reading') {
       var catRow = document.createElement('div'); catRow.className = 'book-cat-row';
       cats.forEach(function(cat){
         var btn = document.createElement('button');
@@ -2464,8 +2464,8 @@ window.GencineUI = {
           // Badge (top-left) — tappable in reading-filter mode only
           var _rb = document.createElement('div');
           _rb.className = 'book-read-badge' + (_inReadingMode ? ' removable' : '');
-          var _rbi = document.createElement('i'); _rbi.className = 'fas fa-check-circle'; _rb.appendChild(_rbi);
-          var _rbt = document.createElement('span'); _rbt.textContent = T('iv.read_title','خوێندراو'); _rb.appendChild(_rbt);
+          var _rbi = document.createElement('i'); _rbi.className = _inReadingMode ? 'fas fa-trash-alt' : 'fas fa-check-circle'; _rb.appendChild(_rbi);
+          var _rbt = document.createElement('span'); _rbt.textContent = _inReadingMode ? T('iv.delete','سڕینەوە') : T('iv.read_title','خوێندراو'); _rb.appendChild(_rbt);
           if (_inReadingMode) {
             _rb.onclick = function(e) {
               e.stopPropagation();

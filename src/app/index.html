@@ -2497,7 +2497,8 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 /* ── "Read" badge ──────────────────────────────────────────── */
 .book-read-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-size:.58rem;font-weight:700;padding:4px 9px 4px 8px;border-radius:20px;display:flex;align-items:center;gap:4px;pointer-events:none;z-index:3;border:1px solid rgba(255,255,255,.15)}
 .book-read-badge i{font-size:.58rem;color:var(--accent)}
-.book-read-badge.removable{pointer-events:auto;cursor:pointer}
+.book-read-badge.removable{pointer-events:auto;cursor:pointer;background:rgba(200,30,30,.78);border-color:rgba(255,120,120,.3)}
+.book-read-badge.removable i{color:#fca5a5}
 .book-read-badge.removable:active{transform:scale(.9);transition:transform .1s}
 /* ── Confirm-remove overlay ─────────────────────────────────── */
 .book-confirm-remove{position:absolute;inset:0;background:rgba(0,0,0,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:10;border-radius:inherit;padding:14px}
@@ -2516,7 +2517,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-stats-lbl{font-size:.58rem;color:var(--text2);font-weight:500;margin-top:1px}
 .book-stats-sep{width:1px;background:var(--border);flex-shrink:0}
 /* ── Resume banner ──────────────────────────────────────────── */
-.book-resume-banner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 60px);left:50%;transform:translateX(-50%) translateY(-20px);background:var(--accent);color:#fff;font-size:.8rem;font-weight:700;padding:11px 22px 11px 16px;border-radius:28px;z-index:9999;opacity:0;transition:opacity .3s ease,transform .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:8px;box-shadow:0 6px 28px rgba(0,0,0,.28);direction:rtl}
+.book-resume-banner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 74px);left:50%;transform:translateX(-50%) translateY(-20px);background:var(--accent);color:#fff;font-size:.8rem;font-weight:700;padding:11px 22px 11px 16px;border-radius:28px;z-index:9999;opacity:0;transition:opacity .3s ease,transform .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:8px;box-shadow:0 6px 28px rgba(0,0,0,.28);direction:rtl}
 .book-resume-banner.visible{opacity:1;transform:translateX(-50%) translateY(0)}
 .new-badge{position:absolute;top:8px;right:8px;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.04em;z-index:2;box-shadow:0 2px 6px rgba(229,62,62,.4)}
 .iv-new-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em;flex-shrink:0;align-self:center;margin-right:6px;box-shadow:0 2px 5px rgba(229,62,62,.35)}
@@ -3669,7 +3670,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=762"></script>
+<script src="/app/app.js?v=763"></script>
 <script>
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
