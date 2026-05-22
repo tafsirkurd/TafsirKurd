@@ -573,13 +573,14 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Platform</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
                                         <th>Token</th>
                                         <th>Registered</th>
-                                        <th>Last Updated</th>
                                     </tr>
                                 </thead>
                                 <tbody id="devices-tbody">
-                                    <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-tertiary)">Loading…</td></tr>
+                                    <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-tertiary)">Loading…</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1065,10 +1066,12 @@
                 // Stats
                 var android = tokens.filter(function(t){ return t.platform === 'android'; }).length;
                 var ios = tokens.filter(function(t){ return t.platform === 'ios'; }).length;
+                var signedIn = tokens.filter(function(t){ return t.user_id; }).length;
                 statsEl.innerHTML = [
                     { val: tokens.length, lbl: 'Total Devices' },
                     { val: android, lbl: 'Android' },
                     { val: ios, lbl: 'iOS' },
+                    { val: signedIn, lbl: 'Signed In' },
                 ].map(function(s) {
                     return '<div class="devices-stat"><div class="devices-stat-val">' + s.val + '</div><div class="devices-stat-lbl">' + s.lbl + '</div></div>';
                 }).join('');
@@ -1080,7 +1083,7 @@
 
                 // Rows
                 if (!tokens.length) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-tertiary)">No registered devices yet.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-tertiary)">No registered devices yet.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = '';
@@ -1088,13 +1091,19 @@
                     var tr = document.createElement('tr');
                     var short = t.token.length > 20 ? t.token.slice(0, 12) + '…' + t.token.slice(-8) : t.token;
                     var regDate = t.created_at ? new Date(t.created_at).toLocaleString() : '—';
-                    var updDate = t.updated_at ? new Date(t.updated_at).toLocaleString() : '—';
+                    var nameCell = t.user_name
+                        ? '<span style="font-weight:600;color:var(--text-primary)">' + t.user_name + '</span>'
+                        : '<span style="color:var(--text-tertiary);font-style:italic">Guest</span>';
+                    var emailCell = t.user_email
+                        ? '<span style="font-size:12px;color:var(--text-secondary)">' + t.user_email + '</span>'
+                        : '—';
                     tr.innerHTML =
                         '<td style="color:var(--text-tertiary);font-size:12px">' + (i + 1) + '</td>' +
                         '<td><span class="plat-badge ' + t.platform + '">' + (t.platform === 'android' ? '🤖' : '🍎') + ' ' + t.platform + '</span></td>' +
+                        '<td>' + nameCell + '</td>' +
+                        '<td>' + emailCell + '</td>' +
                         '<td><span class="token-mono" title="' + t.token + '">' + short + '</span></td>' +
-                        '<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">' + regDate + '</td>' +
-                        '<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">' + updDate + '</td>';
+                        '<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">' + regDate + '</td>';
                     tbody.appendChild(tr);
                 });
                 lucide.createIcons();

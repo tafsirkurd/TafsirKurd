@@ -2324,7 +2324,7 @@ function initPushToken(){
       fetch('https://tafsirkurd.com/register-push-token',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({token:token,platform:platform})
+        body:JSON.stringify({token:token,platform:platform,user_id:(S.user&&S.user.id)||null})
       }).then(function(r){return r.json();}).then(function(res){
         if(res.error){
           _pushLog('register FAILED: '+res.error);

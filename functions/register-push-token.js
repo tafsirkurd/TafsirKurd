@@ -18,7 +18,7 @@ export async function onRequest(context) {
     let body;
     try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
-    const { token, platform } = body || {};
+    const { token, platform, user_id } = body || {};
     if (!token || typeof token !== 'string' || token.length < 32)
         return json({ error: 'Invalid token' }, 400);
     if (!platform || !['ios', 'android'].includes(platform))
@@ -36,7 +36,7 @@ export async function onRequest(context) {
         body: JSON.stringify({
             token,
             platform,
-            user_id: null,
+            user_id: user_id || null,
             updated_at: new Date().toISOString(),
         }),
     });

@@ -256,11 +256,38 @@ export async function onRequest(context) {
     if (action === 'list_tokens') {
         const { data, error } = await supabase
             .from('push_tokens')
-            .select('id,token,platform,created_at,updated_at')
+            .select('id,token,platform,user_id,created_at,updated_at')
             .order('created_at', { ascending: false })
             .limit(1000);
         if (error) return json({ error: error.message }, 500);
-        return json({ success: true, tokens: data || [] });
+
+        // Enrich tokens that have a user_id with name/email from auth.users
+        const userIds = [...new Set((data || []).map(t => t.user_id).filter(Boolean))];
+        let userMap = {};
+        if (userIds.length) {
+            const usersRes = await fetch(
+                `${env.SUPABASE_URL}/auth/v1/admin/users?per_page=1000`,
+                { headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` } }
+            ).catch(() => null);
+            if (usersRes?.ok) {
+                const usersData = await usersRes.json().catch(() => ({}));
+                for (const u of (usersData.users || [])) {
+                    if (userIds.includes(u.id)) {
+                        userMap[u.id] = {
+                            name: u.user_metadata?.full_name || u.user_metadata?.name || null,
+                            email: u.email || null,
+                        };
+                    }
+                }
+            }
+        }
+
+        const tokens = (data || []).map(t => ({
+            ...t,
+            user_name: t.user_id ? (userMap[t.user_id]?.name || null) : null,
+            user_email: t.user_id ? (userMap[t.user_id]?.email || null) : null,
+        }));
+        return json({ success: true, tokens });
     }
 
     // ── GET TOKEN COUNT (preview) ─────────────────────────────────
