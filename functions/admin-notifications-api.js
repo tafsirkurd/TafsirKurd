@@ -143,7 +143,7 @@ export async function onRequest(context) {
             const bookTitle = book.title_ku || book.title_ar || 'کتێبێ نوی';
             const r = await sendAutoNotif(
                 bookTitle,
-                'کتێبێ نوی بەردەستە 📚',
+                'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.',
                 book.cover_url,
                 'book',
                 book.id
@@ -163,7 +163,7 @@ export async function onRequest(context) {
             if (await alreadyNotified('hadith', h.id)) continue;
             const r = await sendAutoNotif(
                 h.title || 'حەدیس',
-                null,
+                'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.',
                 null,
                 'hadith',
                 h.id
