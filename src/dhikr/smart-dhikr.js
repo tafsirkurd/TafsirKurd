@@ -1514,6 +1514,44 @@
     _sectionCache.seasonalKey = null;
   }
 
+  /* ─────────────────────────────────────────────
+     LIVE WATCHER — detects slide changes without user interaction
+     Checks every 20 s for:
+       • seasonal items appearing / disappearing (e.g. breaking_fast at Maghrib)
+       • card-1 zikr item switching window (e.g. morning → after_prayer)
+       • Baghdad day rollover at midnight (daily cards refresh)
+     On any change: bust cache + redraw immediately if home is visible.
+  ───────────────────────────────────────────── */
+  (function() {
+    var _prevSeasonalKey = null;
+    var _prevZikrId      = null;
+    var _prevDaySeed     = null;
+
+    setInterval(function() {
+      try {
+        var seasonalKey = _getSeasonalItems()
+          .map(function(s) { return s._adhkarItem.id; }).join(',');
+        var zikrId  = _getZikrItem().id;
+        var daySeed = _daySeed();
+
+        var changed = seasonalKey !== _prevSeasonalKey
+                   || zikrId     !== _prevZikrId
+                   || daySeed    !== _prevDaySeed;
+
+        _prevSeasonalKey = seasonalKey;
+        _prevZikrId      = zikrId;
+        _prevDaySeed     = daySeed;
+
+        if (changed) {
+          clearCache();
+          if (window.GencineUI && GencineUI._view === 'home') {
+            GencineUI._draw();
+          }
+        }
+      } catch(e) {}
+    }, 20 * 1000);
+  }());
+
   window.SmartDhikr = {
     getItemsNow:      getItemsNow,
     markOpened:       _markOpened,
