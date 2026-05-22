@@ -563,10 +563,32 @@
                 <div id="panel-devices" class="page-panel">
                     <div class="devices-stats" id="devices-stats"></div>
                     <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;overflow:hidden;">
-                        <div style="padding:14px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;">
-                            <span style="font-size:14px;font-weight:600;color:var(--text-primary)">Registered Devices</span>
-                            <button class="btn" style="padding:5px 12px;font-size:12px" onclick="loadDevices()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                        <!-- Toolbar -->
+                        <div style="padding:12px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <input id="devices-search" type="text" placeholder="Search name, email, token…"
+                                style="flex:1;min-width:160px;padding:6px 10px;border:1px solid var(--border-medium);border-radius:7px;background:var(--bg-app);color:var(--text-primary);font-size:13px;font-family:inherit"
+                                oninput="renderDevicesTable()">
+                            <select id="devices-plat" onchange="renderDevicesTable()"
+                                style="padding:6px 10px;border:1px solid var(--border-medium);border-radius:7px;background:var(--bg-app);color:var(--text-primary);font-size:13px;font-family:inherit">
+                                <option value="">All Platforms</option>
+                                <option value="android">Android</option>
+                                <option value="ios">iOS</option>
+                            </select>
+                            <select id="devices-auth" onchange="renderDevicesTable()"
+                                style="padding:6px 10px;border:1px solid var(--border-medium);border-radius:7px;background:var(--bg-app);color:var(--text-primary);font-size:13px;font-family:inherit">
+                                <option value="">All Users</option>
+                                <option value="signed">Signed In</option>
+                                <option value="guest">Guest</option>
+                            </select>
+                            <select id="devices-sort" onchange="renderDevicesTable()"
+                                style="padding:6px 10px;border:1px solid var(--border-medium);border-radius:7px;background:var(--bg-app);color:var(--text-primary);font-size:13px;font-family:inherit">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                            <span id="devices-result-count" style="font-size:12px;color:var(--text-tertiary);white-space:nowrap"></span>
+                            <button class="btn" style="padding:5px 12px;font-size:12px;margin-left:auto" onclick="loadDevices()"><i data-lucide="refresh-cw"></i> Refresh</button>
                         </div>
+                        <!-- Table -->
                         <div style="overflow-x:auto">
                             <table class="devices-table">
                                 <thead>
@@ -583,6 +605,14 @@
                                     <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-tertiary)">Loading…</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div id="devices-pagination" style="display:none;padding:12px 16px;border-top:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                            <span id="devices-page-info" style="font-size:12px;color:var(--text-tertiary)"></span>
+                            <div style="display:flex;gap:6px">
+                                <button id="devices-prev" class="btn" style="padding:5px 14px;font-size:12px" onclick="devicesChangePage(-1)">← Prev</button>
+                                <button id="devices-next" class="btn" style="padding:5px 14px;font-size:12px" onclick="devicesChangePage(1)">Next →</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1055,61 +1085,108 @@
             lucide.createIcons();
         }
 
+        var _allDevices = [], _devicesPage = 0, _devicesPerPage = 50;
+
         async function loadDevices() {
             var tbody = document.getElementById('devices-tbody');
             var statsEl = document.getElementById('devices-stats');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-tertiary)">Loading…</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-tertiary)">Loading…</td></tr>';
+            statsEl.innerHTML = '';
             try {
                 var data = await notifAPI('list_tokens');
-                var tokens = data.tokens || [];
+                _allDevices = data.tokens || [];
+                _devicesPage = 0;
 
-                // Stats
-                var android = tokens.filter(function(t){ return t.platform === 'android'; }).length;
-                var ios = tokens.filter(function(t){ return t.platform === 'ios'; }).length;
-                var signedIn = tokens.filter(function(t){ return t.user_id; }).length;
+                var android = _allDevices.filter(function(t){ return t.platform === 'android'; }).length;
+                var ios     = _allDevices.filter(function(t){ return t.platform === 'ios'; }).length;
+                var signedIn = _allDevices.filter(function(t){ return t.user_id; }).length;
                 statsEl.innerHTML = [
-                    { val: tokens.length, lbl: 'Total Devices' },
-                    { val: android, lbl: 'Android' },
-                    { val: ios, lbl: 'iOS' },
-                    { val: signedIn, lbl: 'Signed In' },
+                    { val: _allDevices.length, lbl: 'Total Devices' },
+                    { val: android,   lbl: 'Android' },
+                    { val: ios,       lbl: 'iOS' },
+                    { val: signedIn,  lbl: 'Signed In' },
                 ].map(function(s) {
                     return '<div class="devices-stat"><div class="devices-stat-val">' + s.val + '</div><div class="devices-stat-lbl">' + s.lbl + '</div></div>';
                 }).join('');
 
-                // Badge count
                 var badge = document.getElementById('devices-count');
-                badge.textContent = tokens.length;
-                badge.style.display = tokens.length ? '' : 'none';
+                badge.textContent = _allDevices.length;
+                badge.style.display = _allDevices.length ? '' : 'none';
 
-                // Rows
-                if (!tokens.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-tertiary)">No registered devices yet.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = '';
-                tokens.forEach(function(t, i) {
-                    var tr = document.createElement('tr');
-                    var short = t.token.length > 20 ? t.token.slice(0, 12) + '…' + t.token.slice(-8) : t.token;
-                    var regDate = t.created_at ? new Date(t.created_at).toLocaleString() : '—';
-                    var nameCell = t.user_name
-                        ? '<span style="font-weight:600;color:var(--text-primary)">' + t.user_name + '</span>'
-                        : '<span style="color:var(--text-tertiary);font-style:italic">Guest</span>';
-                    var emailCell = t.user_email
-                        ? '<span style="font-size:12px;color:var(--text-secondary)">' + t.user_email + '</span>'
-                        : '—';
-                    tr.innerHTML =
-                        '<td style="color:var(--text-tertiary);font-size:12px">' + (i + 1) + '</td>' +
-                        '<td><span class="plat-badge ' + t.platform + '">' + (t.platform === 'android' ? '🤖' : '🍎') + ' ' + t.platform + '</span></td>' +
-                        '<td>' + nameCell + '</td>' +
-                        '<td>' + emailCell + '</td>' +
-                        '<td><span class="token-mono" title="' + t.token + '">' + short + '</span></td>' +
-                        '<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">' + regDate + '</td>';
-                    tbody.appendChild(tr);
-                });
-                lucide.createIcons();
+                renderDevicesTable();
             } catch(e) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#ef4444">' + e.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#ef4444">' + e.message + '</td></tr>';
             }
+        }
+
+        function renderDevicesTable() {
+            var search = (document.getElementById('devices-search').value || '').toLowerCase();
+            var plat   = document.getElementById('devices-plat').value;
+            var auth   = document.getElementById('devices-auth').value;
+            var sort   = document.getElementById('devices-sort').value;
+
+            var filtered = _allDevices.filter(function(t) {
+                if (plat && t.platform !== plat) return false;
+                if (auth === 'signed' && !t.user_id) return false;
+                if (auth === 'guest'  &&  t.user_id) return false;
+                if (search) {
+                    var hay = ((t.user_name||'') + ' ' + (t.user_email||'') + ' ' + t.token).toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            });
+
+            if (sort === 'oldest') filtered = filtered.slice().reverse();
+
+            var total = filtered.length;
+            var pageCount = Math.max(1, Math.ceil(total / _devicesPerPage));
+            if (_devicesPage >= pageCount) _devicesPage = pageCount - 1;
+            var start = _devicesPage * _devicesPerPage;
+            var page  = filtered.slice(start, start + _devicesPerPage);
+
+            document.getElementById('devices-result-count').textContent = total + ' device' + (total !== 1 ? 's' : '');
+
+            var pagEl = document.getElementById('devices-pagination');
+            if (total > _devicesPerPage) {
+                pagEl.style.display = 'flex';
+                document.getElementById('devices-page-info').textContent = 'Page ' + (_devicesPage + 1) + ' of ' + pageCount + ' (' + total + ' total)';
+                document.getElementById('devices-prev').disabled = _devicesPage === 0;
+                document.getElementById('devices-next').disabled = _devicesPage >= pageCount - 1;
+            } else {
+                pagEl.style.display = 'none';
+            }
+
+            var tbody = document.getElementById('devices-tbody');
+            if (!page.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-tertiary)">No devices match.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            page.forEach(function(t, i) {
+                var tr = document.createElement('tr');
+                var short   = t.token.length > 20 ? t.token.slice(0, 12) + '…' + t.token.slice(-8) : t.token;
+                var regDate = t.created_at ? new Date(t.created_at).toLocaleString() : '—';
+                var nameCell  = t.user_name
+                    ? '<span style="font-weight:600;color:var(--text-primary)">' + t.user_name + '</span>'
+                    : '<span style="color:var(--text-tertiary);font-style:italic">Guest</span>';
+                var emailCell = t.user_email
+                    ? '<span style="font-size:12px;color:var(--text-secondary)">' + t.user_email + '</span>'
+                    : '<span style="color:var(--text-tertiary)">—</span>';
+                tr.innerHTML =
+                    '<td style="color:var(--text-tertiary);font-size:12px">' + (start + i + 1) + '</td>' +
+                    '<td><span class="plat-badge ' + t.platform + '">' + (t.platform === 'android' ? '🤖' : '🍎') + ' ' + t.platform + '</span></td>' +
+                    '<td>' + nameCell + '</td>' +
+                    '<td>' + emailCell + '</td>' +
+                    '<td><span class="token-mono" title="' + t.token + '">' + short + '</span></td>' +
+                    '<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">' + regDate + '</td>';
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function devicesChangePage(dir) {
+            _devicesPage += dir;
+            renderDevicesTable();
         }
 
 
