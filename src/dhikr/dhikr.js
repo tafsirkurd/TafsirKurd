@@ -762,13 +762,14 @@ window.GencineUI = {
   /* ── pull-to-refresh: clear cache + re-fetch + re-render ── */
   refresh: function(){
     var self = this;
-    localStorage.removeItem('gencine_cats_v2');
+    localStorage.removeItem('gencine_cats_v5');
     localStorage.removeItem('gencine_duas_v3');
     localStorage.removeItem('gencine_hadiths_v2');
     localStorage.removeItem('gencine_books_v3');
     localStorage.removeItem('gencine_sections_v1');
     localStorage.removeItem('gencine_tasbih_v1');
     localStorage.removeItem('gencine_adhkar_v1');
+    localStorage.removeItem('gencine_asma99_v1');
     _dbLoaded  = false;
     _loadingDb = false;
     this._homeEl = null;
@@ -2384,6 +2385,7 @@ window.GencineUI = {
     container.appendChild(emptyState);
 
     function renderGrid() {
+      if (catRow) catRow.style.display = self._bookCat === 'reading' ? 'none' : '';
       while (grid.firstChild) grid.removeChild(grid.firstChild);
       emptyState.style.display = 'none';
       var _history = _getReadingHistory(); // read once per render
@@ -2869,6 +2871,7 @@ window.GencineUI = {
       /* ── Page navigation ── */
       var _curPage = (_pg && _pg > 1) ? _pg : 1;
       var _navScrollTimer = null;
+      var _jumpActive = false;
       var _panelEl = document.getElementById('panelGencine');
       var _prevBtn = document.getElementById('pdfPrevBtn');
       var _nextBtn = document.getElementById('pdfNextBtn');
@@ -2903,6 +2906,7 @@ window.GencineUI = {
       function _jumpToPage(n) {
         var slot = slots[n - 1];
         if (!slot) return;
+        _jumpActive = true;
         renderPage(n, slot, pdf);
         if (n > 1) renderPage(n - 1, slots[n - 2], pdf);
         if (n < pdf.numPages) renderPage(n + 1, slots[n], pdf);
@@ -2911,7 +2915,7 @@ window.GencineUI = {
 
         var _attempts = 0;
         function _retry() {
-          if (_attempts++ >= 4) return;
+          if (_attempts++ >= 4) { setTimeout(function(){ _jumpActive = false; }, 200); return; }
           setTimeout(function() {
             var slotTop  = slot.getBoundingClientRect().top;
             var panelTop = _panelEl.getBoundingClientRect().top;
@@ -2919,6 +2923,8 @@ window.GencineUI = {
             if (Math.abs(off) > 4) {
               _panelEl.scrollTop = _panelEl.scrollTop + off;
               _retry();
+            } else {
+              _jumpActive = false;
             }
           }, 160);
         }
@@ -2932,7 +2938,7 @@ window.GencineUI = {
       function _syncPage() {
         if (!_panelEl) return;
         requestAnimationFrame(function() {
-          if (!_panelEl) return;
+          if (!_panelEl || _jumpActive) return;
           var panelTop  = _panelEl.getBoundingClientRect().top;
           var scrollTop = _panelEl.scrollTop;
           var ref       = scrollTop + (_hdrH() || 0);
@@ -3117,13 +3123,20 @@ window.GencineUI = {
         }
       }
     };
+    var _loadCancelled = false;
+    var _cleanupBeforeLoad = self._pdfCleanup;
+    self._pdfCleanup = function() {
+      _loadCancelled = true;
+      try { loadingTask.destroy(); } catch(e3) {}
+      clearTimeout(_loadTimer);
+      if (_cleanupBeforeLoad) _cleanupBeforeLoad();
+    };
     loadingTask.promise.then(function(pdf) {
       clearTimeout(_loadTimer);
-      doLoad(pdf);
+      if (!_loadCancelled) doLoad(pdf);
     }).catch(function(e) {
       clearTimeout(_loadTimer);
-      _showPdfRetry();
-      console.error('PDF load error:', e);
+      if (!_loadCancelled) { _showPdfRetry(); console.error('PDF load error:', e); }
     });
   },
 

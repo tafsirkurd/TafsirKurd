@@ -1334,6 +1334,13 @@
     if (_issTimeout)       { clearTimeout(_issTimeout);       _issTimeout = null; }
     if (_issRaf)           { cancelAnimationFrame(_issRaf);   _issRaf = null; }
     if (_carTimeout)       { clearTimeout(_carTimeout);       _carTimeout = null; }
+    // Remove any mid-flight JS-animated elements so they don't freeze in scene on re-entry
+    var _scene = document.getElementById('prayerSkyScene');
+    if (_scene) {
+      ['sky-aircraft','sky-balloon','sky-satellite','sky-iss','sky-car'].forEach(function(cls){
+        _scene.querySelectorAll('.'+cls).forEach(function(e){ if(e.parentNode) e.parentNode.removeChild(e); });
+      });
+    }
     _majorEventActive  = false;
     _urgencyLevel      = -1;
     _lastMinuteMark    = '';

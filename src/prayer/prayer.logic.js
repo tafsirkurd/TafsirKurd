@@ -39,6 +39,7 @@
    * @returns {Date}
    */
   function parseAsDate(timeStr, dateISO) {
+    if (!timeStr) return new Date(NaN);
     // Take only "HH:MM" (ignore any trailing timezone label)
     var hm = timeStr.trim().split(' ')[0].split(':');
     var h = parseInt(hm[0], 10);
@@ -87,6 +88,7 @@
    * @returns {string}
    */
   function formatTime(timeStr, use12h) {
+    if (!timeStr) return '--:--';
     var hm = timeStr.trim().split(' ')[0].split(':');
     var h = parseInt(hm[0], 10);
     var m = parseInt(hm[1], 10);

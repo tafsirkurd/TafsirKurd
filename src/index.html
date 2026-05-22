@@ -195,17 +195,17 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
   <!-- Critical Font Preloading - Only preload fonts actually used on this page -->
-  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=17" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/hafs.woff2?v=17" as="font" type="font/woff2" crossorigin>
 
   <!-- Local Fonts - Load async, fonts have font-display: swap -->
-  <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="/assets/fonts/fonts.css?v=16"></noscript>
+  <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/assets/fonts/fonts.css?v=17"></noscript>
 
   <!-- Local Font Awesome - Load async to not block render -->
-  <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16"></noscript>
+  <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17"></noscript>
 
   <!-- Critical CSS - Inline for instant rendering -->
   <style>
@@ -4606,7 +4606,7 @@ window.addEventListener('error', function(e) {
     <div class="header-scroll-shimmer"></div>
     <div class="header-edge-bottom"></div>
     <div class="hero-inner">
-        <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" loading="lazy" width="400" height="150" style="height: 150px; width: auto; filter: brightness(0) invert(1);">
+        <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" loading="eager" fetchpriority="high" width="400" height="150" style="height: 150px; width: auto; filter: brightness(0) invert(1);">
         <p class="hero-sub" data-t="hero_subtitle">بەردەستکرنا شرۆڤەکرنەکا ڕوون و ڕەسەن یا قورئانا پیرۆز ب زمانێ کوردی. ب شێوەیەکێ ڕوون و ب دلسۆزی و ڕێزگرتن، ئەم وانەیان ب شێوازێ ڤیدیویێن کورت و ئاسۆیی و هەروەسا تەفسیرا تەمام دروست دکەین دا کو پەیاما قورئانێ بگەهیتە هەمی ماڵان.</p>
 
         <div class="hero-cards">

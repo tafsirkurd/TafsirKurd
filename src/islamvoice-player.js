@@ -1123,6 +1123,7 @@
     // ===== YOUTUBE PLAYER =====
     let youtubePlayer = null;
     let pendingVideoId = null; // Store video ID while waiting for API
+    let _progressInterval = null;
 
     // Initialize YouTube Player with custom settings
     function initializeYouTubePlayer(videoId) {
@@ -1231,8 +1232,9 @@
             };
         }
 
-        // Update progress bar
-        setInterval(() => {
+        // Update progress bar (clear any prior interval to avoid stacking)
+        if (_progressInterval) clearInterval(_progressInterval);
+        _progressInterval = setInterval(() => {
             if (youtubePlayer && youtubePlayer.getCurrentTime) {
                 try {
                     const currentTime = youtubePlayer.getCurrentTime();

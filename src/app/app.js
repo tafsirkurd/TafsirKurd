@@ -1436,7 +1436,7 @@ function loadTafsirData(){
       _tafsirRetrying=true;
       var ctrl2=new AbortController();
       var tid2=setTimeout(function(){ctrl2.abort();},15000);
-      fetch('/data/kurdish_tafsir.json',{signal:ctrl2.signal}).then(function(r){return r.json()}).then(function(d){
+      fetch('/data/kurdish_tafsir.json',{signal:ctrl2.signal}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(d){
         clearTimeout(tid2);
         S.tafsirData=groupTafsirBySurah(d);
         _dataReady.tafsir=true;
@@ -3132,9 +3132,11 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   // Other font modes: direct network
   var url='https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields='+fields+'&per_page=300';
   if(mushafId)url+='&mushaf='+mushafId;
-  return fetch(url)
-    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
-    .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;});
+  var _mc=new AbortController();var _mt=setTimeout(function(){_mc.abort();},10000);
+  return fetch(url,{signal:_mc.signal})
+    .then(function(r){clearTimeout(_mt);if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;})
+    .catch(function(e){clearTimeout(_mt);throw e;});
 }
 function _getPageFields(){
   if(S.mushafFont==='qcf2')return{fields:'code_v2',cache:'qcfV2p_'};
@@ -9443,11 +9445,15 @@ App.closeLogin=function(){
 
 App.logout=function(){
   if(!S.supabase)return;
-  if(!confirm(t('profile.confirm_logout')))return;
+  // confirm() is blocked in iOS WKWebView — skip it on native; the explicit tap is confirmation
+  var _plat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
+  var _isNative=(_plat==='ios'||_plat==='android');
+  if(!_isNative&&!confirm(t('profile.confirm_logout')))return;
   _removeCurrentDeviceSession(); // clean up before sign-out
   S.supabase.auth.signOut().then(function(){
     S.user=null;
     stopCloudSync();
+    App.closeProfile(); // close only after successful logout
     toast(t('toast.logged_out'));
     renderSettings();
   }).catch(function(e){console.error('Logout error:',e)});
@@ -9821,7 +9827,7 @@ function renderProfile(panel){
   var logoutBtn=el('button','pp-action-btn pp-logout');
   logoutBtn.appendChild(icon('fas fa-sign-out-alt'));
   logoutBtn.appendChild(document.createTextNode(' '+t('profile.logout')));
-  on(logoutBtn,'click',function(){App.logout();App.closeProfile();});
+  on(logoutBtn,'click',function(){App.logout();});
   actWrap.appendChild(logoutBtn);
 
   // ── Downloads / Storage ─────────────────────────────────
@@ -10189,13 +10195,14 @@ function initIslamVoice(cb){
     AndroidLog.fetch(IV_CONFIG_URL,0,'iv-config',false,Date.now()-_ivCfgT0,e);
     console.error('IslamVoice init error:',e);
     S.ivInited=false;
-    _ivInitCbs=[];
+    var _pendingCbs=_ivInitCbs.splice(0); // clear before any render so re-entrant calls queue fresh
     try{
       var cs=localStorage.getItem('iv_series_cache');
       var ce=localStorage.getItem('iv_episodes_cache');
-      if(cs&&ce){S.ivSeries=JSON.parse(cs);S.ivEpisodes=JSON.parse(ce);renderIvGrid();return;}
+      if(cs&&ce){S.ivSeries=JSON.parse(cs);S.ivEpisodes=JSON.parse(ce);renderIvGrid();_pendingCbs.forEach(function(fn){try{fn();}catch(e){}});return;}
     }catch(err){}
     renderIvError(tSafe('iv.error.server'),!navigator.onLine?'offline':'server');
+    _pendingCbs.forEach(function(fn){try{fn();}catch(e){}});
   });
 }
 
@@ -10942,6 +10949,7 @@ App.ivPlay=function(episodeId){
     img.src='https://img.youtube.com/vi/'+videoId+'/hqdefault.jpg';
     img.alt=ep.title||'';
     img.loading='lazy';
+    img.onerror=function(){this.style.display='none';};
     thumbDiv.appendChild(img);
     var playOver=el('div','iv-yt-play-over');
     var playCircle=el('div','iv-yt-play-circle');
@@ -11070,7 +11078,7 @@ App.ivPlay=function(episodeId){
         var pct=(video.currentTime/video.duration)*100;
         try{
           var p=JSON.parse(localStorage.getItem('iv_watch_progress')||'{}');
-          p[episodeId]={currentTime:video.currentTime,duration:video.duration,percent:pct};
+          p[episodeId]={currentTime:video.currentTime,duration:video.duration,percent:pct,ts:Date.now()};
           localStorage.setItem('iv_watch_progress',JSON.stringify(p));
         }catch(e3){}
       });
@@ -11086,7 +11094,7 @@ App.ivPlay=function(episodeId){
   // Highlight playing episode
   var items=document.querySelectorAll('.iv-ep-item');
   items.forEach(function(it){
-    it.classList.toggle('playing',it.getAttribute('data-ep-id')===episodeId);
+    it.classList.toggle('playing',String(it.getAttribute('data-ep-id'))===String(episodeId));
   });
 
   // Scroll player into view
@@ -11141,7 +11149,7 @@ function ivRenderSavedList(){
       if(ep.series_title)info.appendChild(el('div','iv-overlay-ep-series',ep.series_title));
       info.appendChild(el('div','iv-overlay-ep-title',ep.title||('ئەپیسۆد '+(ep.episode_number||''))));
       item.appendChild(info);
-      var del=el('button','iv-overlay-ep-del');del.appendChild(icon('fas fa-bookmark-slash'));
+      var del=el('button','iv-overlay-ep-del');del.appendChild(icon('fas fa-xmark'));
       on(del,'click',function(e){e.stopPropagation();ivToggleSave(ep.id,ep);haptic([8]);ivRenderSavedList();
         // also update bookmark button in episode list if visible
         document.querySelectorAll('.iv-ep-save').forEach(function(b){var row=b.closest('[data-ep-id]');if(row&&row.dataset.epId==ep.id)b.classList.toggle('saved',ivIsSaved(ep.id))});
