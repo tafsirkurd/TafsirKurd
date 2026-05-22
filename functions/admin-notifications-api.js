@@ -112,21 +112,22 @@ export async function onRequest(context) {
         // ── New episodes ──────────────────────────────────────────
         const { data: episodes } = await supabase
             .from('islamvoice_episodes')
-            .select('id,title,thumbnail_url,created_at')
+            .select('id,title,thumbnail_url,created_at,islamvoice_series(name_ku)')
             .eq('is_published', true)
             .gte('created_at', twoHoursAgo)
             .order('created_at', { ascending: false });
 
         for (const ep of (episodes || [])) {
             if (await alreadyNotified('video', ep.id)) continue;
+            const seriesName = ep.islamvoice_series?.name_ku || ep.title;
             const r = await sendAutoNotif(
+                seriesName,
                 ep.title,
-                'وانێ نوی بەردەستە 🎬',
                 ep.thumbnail_url,
                 'video',
                 ep.id
             );
-            notified.push({ type: 'video', id: ep.id, title: ep.title, ...r });
+            notified.push({ type: 'video', id: ep.id, title: seriesName, ...r });
         }
 
         // ── New books ─────────────────────────────────────────────
