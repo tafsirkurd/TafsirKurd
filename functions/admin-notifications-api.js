@@ -76,6 +76,15 @@ export async function onRequest(context) {
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
         const notified = [];
 
+        // Load editable auto-notification texts from translations DB
+        const AUTO_KEYS = ['notif.auto_book_body','notif.auto_book_title_fallback','notif.auto_hadith_body','notif.auto_hadith_title_fallback'];
+        const { data: txRows } = await supabase.from('kurdish_translations').select('key_id,kurdish_text').in('key_id', AUTO_KEYS);
+        const tx = Object.fromEntries((txRows || []).map(r => [r.key_id, r.kurdish_text]));
+        const autoBookBody           = tx['notif.auto_book_body']            || 'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+        const autoBookTitleFallback  = tx['notif.auto_book_title_fallback']  || 'کتێبێ نوی';
+        const autoHadithBody         = tx['notif.auto_hadith_body']          || 'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+        const autoHadithTitleFallback= tx['notif.auto_hadith_title_fallback']|| 'حەدیس';
+
         // Helper: check if we already sent a notification for this content
         async function alreadyNotified(dlType, dlId) {
             const { data } = await supabase
@@ -140,10 +149,10 @@ export async function onRequest(context) {
 
         for (const book of (books || [])) {
             if (await alreadyNotified('book', book.id)) continue;
-            const bookTitle = book.title_ku || book.title_ar || 'کتێبێ نوی';
+            const bookTitle = book.title_ku || book.title_ar || autoBookTitleFallback;
             const r = await sendAutoNotif(
                 bookTitle,
-                'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.',
+                autoBookBody,
                 book.cover_url,
                 'book',
                 book.id
@@ -162,8 +171,8 @@ export async function onRequest(context) {
         for (const h of (hadiths || [])) {
             if (await alreadyNotified('hadith', h.id)) continue;
             const r = await sendAutoNotif(
-                h.title || 'حەدیس',
-                'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.',
+                h.title || autoHadithTitleFallback,
+                autoHadithBody,
                 null,
                 'hadith',
                 h.id
