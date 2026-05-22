@@ -684,7 +684,7 @@ function buildFCMMessage(token, platform, title, body, imageUrl, data) {
                 notification: {
                     icon: 'ic_notification',
                     color: '#1f5f4a',
-                    image_url: imageUrl,
+                    image: imageUrl,
                 },
             };
         } else if (platform === 'ios') {
