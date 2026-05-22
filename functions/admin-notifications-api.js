@@ -132,26 +132,29 @@ export async function onRequest(context) {
         // ── New books ─────────────────────────────────────────────
         const { data: books } = await supabase
             .from('gencine_books')
-            .select('id,title,cover_url,created_at')
+            .select('id,title_ku,title_ar,cover_url,created_at')
+            .eq('active', true)
             .gte('created_at', twoHoursAgo)
             .order('created_at', { ascending: false });
 
         for (const book of (books || [])) {
             if (await alreadyNotified('book', book.id)) continue;
+            const bookTitle = book.title_ku || book.title_ar || 'کتێبێ نوی';
             const r = await sendAutoNotif(
-                book.title,
+                bookTitle,
                 'کتێبێ نوی بەردەستە 📚',
                 book.cover_url,
                 'book',
                 book.id
             );
-            notified.push({ type: 'book', id: book.id, title: book.title, ...r });
+            notified.push({ type: 'book', id: book.id, title: bookTitle, ...r });
         }
 
         // ── New hadiths ───────────────────────────────────────────
         const { data: hadiths } = await supabase
             .from('gencine_hadiths')
             .select('id,title,created_at')
+            .eq('active', true)
             .gte('created_at', twoHoursAgo)
             .order('created_at', { ascending: false });
 
