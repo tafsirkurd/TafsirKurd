@@ -8535,7 +8535,7 @@ var SYNC_SIMPLE_KEYS=[
   'bestStreak',
   'mushafMode','readerFont','mushafFont','mushafLineH',
   'mushafFontSize_qcf1',
-  'book_saved',
+  'book_saved','book_read_ids',
   'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
   'prayerAthanVoice','prayerTimeFormat',
   'tasbihDhikr','tasbihTarget'
@@ -8634,6 +8634,27 @@ function mergeSyncData(local,cloud){
     }
   }catch(e){}
 
+  // book_read_ids — additive union across devices
+  try{
+    var _lIds=JSON.parse(local.book_read_ids||'[]');
+    var _cIds=JSON.parse(cloud.book_read_ids||'[]');
+    var _idSet={};
+    _lIds.forEach(function(id){_idSet[String(id)]=true;});
+    _cIds.forEach(function(id){_idSet[String(id)]=true;});
+    result.book_read_ids=JSON.stringify(Object.keys(_idSet));
+  }catch(e){}
+  // pdfProg_* — per-book LWW by ts (highest ts = most recently read)
+  var _allBpKeys={};
+  Object.keys(local).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
+  Object.keys(cloud).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
+  Object.keys(_allBpKeys).forEach(function(k){
+    var lv=local[k]?JSON.parse(local[k]):null;
+    var cv=cloud[k]?JSON.parse(cloud[k]):null;
+    if(!lv)result[k]=cloud[k];
+    else if(!cv)result[k]=local[k];
+    else result[k]=(cv.ts||0)>(lv.ts||0)?cloud[k]:local[k];
+  });
+
   result._syncTime=new Date().toISOString();
   return result;
 }
@@ -8653,6 +8674,10 @@ function gatherSyncData(){
     if(sv!==null)data[sk]=sv;
     if(rv!==null)data[rk]=rv;
   }
+  // Book reading progress — pdfProg_{bookId} keys
+  var _bpKeys=[];
+  for(var _bi=0;_bi<localStorage.length;_bi++){var _bk=localStorage.key(_bi);if(_bk&&_bk.indexOf('pdfProg_')===0)_bpKeys.push(_bk);}
+  _bpKeys.forEach(function(k){var v=localStorage.getItem(k);if(v!==null)data[k]=v;});
   // _syncTime set by caller so reads never pollute the timestamp
   return data;
 }
@@ -8833,6 +8858,9 @@ function _clearUserLocalData(){
     localStorage.removeItem('surah_read_v3_'+i);  // list-mode read progress
   }
   ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions'].forEach(function(k){localStorage.removeItem(k);});
+  var _clearBpKeys=[];
+  for(var _ci=0;_ci<localStorage.length;_ci++){var _ck=localStorage.key(_ci);if(_ck&&_ck.indexOf('pdfProg_')===0)_clearBpKeys.push(_ck);}
+  _clearBpKeys.forEach(function(k){localStorage.removeItem(k);});
   /* Cancel all old user's scheduled notifications */
   scheduleStreakReminder();     // cancels streak ID 30 (streak=0 after log clear → no reschedule)
   /* Cancel old reminder/verse slots in case user upgrading from old build */

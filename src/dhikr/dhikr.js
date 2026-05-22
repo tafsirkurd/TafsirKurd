@@ -542,12 +542,9 @@ function _bookGetProgress(id){ try{ return JSON.parse(localStorage.getItem('pdfP
 function _bookClearProgress(id){ try{ localStorage.removeItem('pdfProg_'+id); }catch(e){} }
 
 /* ── Reading history (separate from progress, tracks opened books) ── */
-var _readingHistory = null;
+// Always reads fresh from localStorage so cross-device sync via applySyncData is visible immediately.
 function _getReadingHistory(){
-  if(_readingHistory===null){
-    try{ var arr=JSON.parse(localStorage.getItem('book_read_ids')||'[]'); _readingHistory={}; arr.forEach(function(id){ _readingHistory[String(id)]=true; }); }catch(e){ _readingHistory={}; }
-  }
-  return _readingHistory;
+  try{ var arr=JSON.parse(localStorage.getItem('book_read_ids')||'[]'); var h={}; arr.forEach(function(id){ h[String(id)]=true; }); return h; }catch(e){ return {}; }
 }
 function _addToReadingHistory(id){
   var h=_getReadingHistory(); h[String(id)]=true;
@@ -2389,9 +2386,10 @@ window.GencineUI = {
     function renderGrid() {
       while (grid.firstChild) grid.removeChild(grid.firstChild);
       emptyState.style.display = 'none';
+      var _history = _getReadingHistory(); // read once per render
       // Stats bar
       var _rCount=0, _pCount=0;
-      books.forEach(function(b){ var _p=_bookGetProgress(b.id); if(_p||_getReadingHistory()[String(b.id)]){_rCount++; if(_p&&_p.page)_pCount+=_p.page;} });
+      books.forEach(function(b){ var _p=_bookGetProgress(b.id); if(_p||_history[String(b.id)]){_rCount++; if(_p&&_p.page)_pCount+=_p.page;} });
       if (_rCount > 0 && self._bookCat === 'reading') {
         while(statsBar.firstChild) statsBar.removeChild(statsBar.firstChild);
         var _lastTs=0; books.forEach(function(b){ var _p=_bookGetProgress(b.id); if(_p&&_p.ts>_lastTs)_lastTs=_p.ts; });
@@ -2414,7 +2412,7 @@ window.GencineUI = {
       var pool = self._bookCat === 'saved'
         ? books.filter(function(b){ return _bookIsSaved(b.id); })
         : self._bookCat === 'reading'
-        ? books.filter(function(b){ return !!_getReadingHistory()[String(b.id)] || !!_bookGetProgress(b.id); })
+        ? books.filter(function(b){ return !!_history[String(b.id)] || !!_bookGetProgress(b.id); })
         : self._bookCat === 'all' ? books
         : books.filter(function(b){ return b.category === self._bookCat; });
       if (self._bookAuthor) pool = pool.filter(function(b){ return (b.author_ku||b.author_ar) === self._bookAuthor; });
@@ -2455,7 +2453,7 @@ window.GencineUI = {
         if (self._lastClosedBook && self._lastClosedBook.id === String(book.id)) {
           _prog = { page: self._lastClosedBook.page, total: self._lastClosedBook.total, ts: Date.now() };
         }
-        var _inHistory = !!_getReadingHistory()[String(book.id)];
+        var _inHistory = !!_history[String(book.id)];
         if (_prog || _inHistory) {
           coverWrap.classList.add('has-progress');
           var _total = (_prog && _prog.total > 1) ? _prog.total : (book.pages > 1 ? book.pages : 0);
