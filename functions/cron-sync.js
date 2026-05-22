@@ -2,7 +2,7 @@
 // Called by scheduled trigger to auto-sync YouTube playlists
 
 export async function onRequest(context) {
-    const { request, env } = context;
+    const { request, env, waitUntil } = context;
 
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
@@ -84,14 +84,14 @@ export async function onRequest(context) {
         const _notifSecret = env.NOTIF_CRON_SECRET || env.CRON_SECRET;
         if (_notifSecret) {
             const baseUrl = new URL(request.url).origin;
-            fetch(`${baseUrl}/admin-notifications-api`, {
+            waitUntil(fetch(`${baseUrl}/admin-notifications-api`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${_notifSecret}`,
                 },
                 body: JSON.stringify({ action: 'auto_notify_content' }),
-            }).catch(() => {}); // fire-and-forget, don't block response
+            }).catch(() => {}));
         }
 
         return new Response(
