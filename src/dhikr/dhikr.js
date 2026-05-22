@@ -3103,12 +3103,12 @@ window.GencineUI = {
         if (ringWrap.classList.contains('pdf-ring-idle')) {
           ringWrap.classList.remove('pdf-ring-idle');
           arc.classList.add('pdf-ring-progress');
-          arc.style.strokeDashoffset = String(CIRC); // start fully hidden, let transition fill in
+          arc.style.setProperty('stroke-dashoffset', String(CIRC));
           ringIcon.style.display = 'none';
           progressPct.style.display = 'block';
         }
         progressPct.textContent = pct + '%';
-        arc.style.strokeDashoffset = (CIRC * (1 - pct / 100)).toFixed(2);
+        arc.style.setProperty('stroke-dashoffset', (CIRC * (1 - pct / 100)).toFixed(2));
         if (pct >= 100) arc.classList.add('pdf-ring-done');
         clearTimeout(_loadTimer);
         if (pct < 100) {
