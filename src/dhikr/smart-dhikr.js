@@ -1382,7 +1382,7 @@
      Returning the same DOM node on pull-to-refresh
      preserves slider position + timer — no visual reset.
   ───────────────────────────────────────────── */
-  var _sectionCache = { el: null, seed: null, hasData: false };
+  var _sectionCache = { el: null, seed: null, hasData: false, seasonalKey: null };
 
   /* ─────────────────────────────────────────────
      RENDER
@@ -1402,10 +1402,17 @@
         return !!(Array.isArray(hArr) && hArr.length && Array.isArray(bArr) && bArr.length);
       } catch(e) { return false; }
     }());
-    /* Cache hit: same day AND (data was already full OR still no data).
+    /* Seasonal key — string of active seasonal item IDs.
+       Cache must miss when seasonal state changes mid-day
+       (e.g. breaking_fast slide appears at Maghrib time). */
+    var currentSeasonalKey = _getSeasonalItems()
+      .map(function(s) { return s._adhkarItem.id; }).join(',');
+
+    /* Cache hit: same day, same seasonal state, AND (data was already full OR still no data).
        Only rebuild mid-day if cache was built with placeholders but real
        data has now loaded — this is what makes hadith/book show real content. */
-    if (_sectionCache.el && _sectionCache.seed === seed) {
+    if (_sectionCache.el && _sectionCache.seed === seed
+        && _sectionCache.seasonalKey === currentSeasonalKey) {
       if (_sectionCache.hasData || !hasData) {
         /* Resume slider progress bar — it may have stopped while the section
            was outside the DOM during within-tab navigation. */
@@ -1490,9 +1497,10 @@
       }
     }
 
-    _sectionCache.el      = section;
-    _sectionCache.seed    = seed;
-    _sectionCache.hasData = hasData;
+    _sectionCache.el          = section;
+    _sectionCache.seed        = seed;
+    _sectionCache.hasData     = hasData;
+    _sectionCache.seasonalKey = currentSeasonalKey;
     return section;
   }
 
@@ -1500,9 +1508,10 @@
      PUBLIC API
   ───────────────────────────────────────────── */
   function clearCache() {
-    _sectionCache.el      = null;
-    _sectionCache.seed    = null;
-    _sectionCache.hasData = false;
+    _sectionCache.el          = null;
+    _sectionCache.seed        = null;
+    _sectionCache.hasData     = false;
+    _sectionCache.seasonalKey = null;
   }
 
   window.SmartDhikr = {
