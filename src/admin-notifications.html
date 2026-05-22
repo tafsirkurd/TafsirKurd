@@ -220,6 +220,21 @@
         .page-tab.active { color:#6b21a8;border-bottom-color:#6b21a8; }
         .page-panel { display:none; }
         .page-panel.active { display:block; }
+
+        /* ── Devices tab ─────────────────────────────────────────── */
+        .devices-stats { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px; }
+        .devices-stat { background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:16px;text-align:center; }
+        .devices-stat-val { font-size:26px;font-weight:800;color:var(--text-primary);line-height:1; }
+        .devices-stat-lbl { font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);margin-top:4px; }
+        .devices-table { width:100%;border-collapse:collapse;font-size:13px; }
+        .devices-table th { padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-tertiary);border-bottom:2px solid var(--border-light); }
+        .devices-table td { padding:10px 12px;border-bottom:1px solid var(--border-light);color:var(--text-primary);vertical-align:middle; }
+        .devices-table tr:last-child td { border-bottom:none; }
+        .devices-table tr:hover td { background:var(--bg-active); }
+        .plat-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600; }
+        .plat-badge.android { background:#e8f5e9;color:#2e7d32; }
+        .plat-badge.ios { background:#e3f2fd;color:#1565c0; }
+        .token-mono { font-family:monospace;font-size:11px;color:var(--text-secondary);word-break:break-all; }
     </style>
 
     <style id="early-sidebar-hide">
@@ -484,6 +499,10 @@
                         <i data-lucide="bookmark"></i> Templates
                         <span id="template-count" class="tmpl-count" style="display:none"></span>
                     </button>
+                    <button class="page-tab" id="tab-devices" onclick="switchPageTab('devices')">
+                        <i data-lucide="smartphone"></i> Devices
+                        <span id="devices-count" class="tmpl-count" style="display:none"></span>
+                    </button>
                 </div>
 
                 <!-- Notifications Panel -->
@@ -538,6 +557,33 @@
                         </button>
                     </div>
                     <div id="templates-list"></div>
+                </div>
+
+                <!-- Devices Panel -->
+                <div id="panel-devices" class="page-panel">
+                    <div class="devices-stats" id="devices-stats"></div>
+                    <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;overflow:hidden;">
+                        <div style="padding:14px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;">
+                            <span style="font-size:14px;font-weight:600;color:var(--text-primary)">Registered Devices</span>
+                            <button class="btn" style="padding:5px 12px;font-size:12px" onclick="loadDevices()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table class="devices-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Platform</th>
+                                        <th>Token</th>
+                                        <th>Registered</th>
+                                        <th>Last Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="devices-tbody">
+                                    <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-tertiary)">Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
             </div><!-- /content-area -->
@@ -1000,11 +1046,61 @@
         }
 
         function switchPageTab(tab) {
-            ['notifications', 'templates'].forEach(function(t) {
+            ['notifications', 'templates', 'devices'].forEach(function(t) {
                 document.getElementById('tab-' + t).classList.toggle('active', t === tab);
                 document.getElementById('panel-' + t).classList.toggle('active', t === tab);
             });
+            if (tab === 'devices') loadDevices();
             lucide.createIcons();
+        }
+
+        async function loadDevices() {
+            var tbody = document.getElementById('devices-tbody');
+            var statsEl = document.getElementById('devices-stats');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-tertiary)">Loading…</td></tr>';
+            try {
+                var data = await notifAPI('list_tokens');
+                var tokens = data.tokens || [];
+
+                // Stats
+                var android = tokens.filter(function(t){ return t.platform === 'android'; }).length;
+                var ios = tokens.filter(function(t){ return t.platform === 'ios'; }).length;
+                statsEl.innerHTML = [
+                    { val: tokens.length, lbl: 'Total Devices' },
+                    { val: android, lbl: 'Android' },
+                    { val: ios, lbl: 'iOS' },
+                ].map(function(s) {
+                    return '<div class="devices-stat"><div class="devices-stat-val">' + s.val + '</div><div class="devices-stat-lbl">' + s.lbl + '</div></div>';
+                }).join('');
+
+                // Badge count
+                var badge = document.getElementById('devices-count');
+                badge.textContent = tokens.length;
+                badge.style.display = tokens.length ? '' : 'none';
+
+                // Rows
+                if (!tokens.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-tertiary)">No registered devices yet.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = '';
+                tokens.forEach(function(t, i) {
+                    var tr = document.createElement('tr');
+                    var short = t.token.length > 20 ? t.token.slice(0, 12) + '…' + t.token.slice(-8) : t.token;
+                    var regDate = t.created_at ? new Date(t.created_at).toLocaleString() : '—';
+                    var updDate = t.updated_at ? new Date(t.updated_at).toLocaleString() : '—';
+                    tr.innerHTML =
+                        '<td style="color:var(--text-tertiary);font-size:12px">' + (i + 1) + '</td>' +
+                        '<td><span class="plat-badge ' + t.platform + '">' + (t.platform === 'android' ? '🤖' : '🍎') + ' ' + t.platform + '</span></td>' +
+                        '<td><span class="token-mono" title="' + t.token + '">' + short + '</span></td>' +
+                        '<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">' + regDate + '</td>' +
+                        '<td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">' + updDate + '</td>';
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons();
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#ef4444">' + e.message + '</td></tr>';
+            }
         }
 
 

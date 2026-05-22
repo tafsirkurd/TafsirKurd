@@ -252,6 +252,17 @@ export async function onRequest(context) {
         });
     }
 
+    // ── LIST TOKENS (devices tab) ─────────────────────────────────
+    if (action === 'list_tokens') {
+        const { data, error } = await supabase
+            .from('push_tokens')
+            .select('id,token,platform,created_at,updated_at')
+            .order('created_at', { ascending: false })
+            .limit(1000);
+        if (error) return json({ error: error.message }, 500);
+        return json({ success: true, tokens: data || [] });
+    }
+
     // ── GET TOKEN COUNT (preview) ─────────────────────────────────
     if (action === 'get_token_count') {
         const audience = body.audience || 'all';
