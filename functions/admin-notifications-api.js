@@ -23,7 +23,7 @@ export async function onRequest(context) {
 
     // ── PROCESS SCHEDULED (cron — no admin auth, CRON_SECRET only) ──
     if (body.action === 'process_scheduled') {
-        const cronSecret = env.NOTIF_CRON_SECRET || env.CRON_SECRET;
+        const cronSecret = env.CRON_SECRET || env.NOTIF_CRON_SECRET;
         const authHeader = request.headers.get('Authorization') || '';
         if (!cronSecret || authHeader !== `Bearer ${cronSecret}`)
             return json({ error: 'Unauthorized' }, 401);
@@ -65,7 +65,7 @@ export async function onRequest(context) {
 
     // ── AUTO-NOTIFY NEW CONTENT (cron — no admin auth) ────────────
     if (body.action === 'auto_notify_content') {
-        const cronSecret = env.NOTIF_CRON_SECRET || env.CRON_SECRET;
+        const cronSecret = env.CRON_SECRET || env.NOTIF_CRON_SECRET;
         const authHeader = request.headers.get('Authorization') || '';
         if (!cronSecret || authHeader !== `Bearer ${cronSecret}`)
             return json({ error: 'Unauthorized' }, 401);
