@@ -24,7 +24,7 @@ export async function onRequest(context) {
     if (!platform || !['ios', 'android'].includes(platform))
         return json({ error: 'platform must be ios or android' }, 400);
 
-    const url = `${env.SUPABASE_URL}/rest/v1/push_tokens`;
+    const url = `${env.SUPABASE_URL}/rest/v1/push_tokens?on_conflict=token`;
     const res = await fetch(url, {
         method: 'POST',
         headers: {

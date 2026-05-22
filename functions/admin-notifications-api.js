@@ -561,8 +561,10 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
     const staleTokens = [], apnsErrors = [];
     let successCount = 0, failCount = 0;
 
-    await Promise.allSettled([
-        ...fcmTokens.map(async ({ token, platform }) => {
+    // Send in chunks of 200 to stay within Cloudflare's 1000-subrequest limit
+    const CHUNK = 200;
+    const allJobs = [
+        ...fcmTokens.map(({ token, platform }) => async () => {
             if (!accessToken) { failCount++; return; }
             const res = await fetch(FCM_URL, {
                 method: 'POST',
@@ -576,7 +578,7 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
                 failCount++;
             }
         }),
-        ...apnsTokens.map(async ({ token }) => {
+        ...apnsTokens.map(({ token }) => async () => {
             if (!apnsJwt) { apnsErrors.push(apnsJwtError || 'JWT missing'); failCount++; return; }
             const res = await sendApns(token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
             if (res.ok) { successCount++; }
@@ -588,7 +590,10 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
                 failCount++;
             }
         }),
-    ]);
+    ];
+    for (let i = 0; i < allJobs.length; i += CHUNK) {
+        await Promise.allSettled(allJobs.slice(i, i + CHUNK).map(fn => fn()));
+    }
 
     if (staleTokens.length) await removeStaleTokens(env, staleTokens).catch(() => {});
 
