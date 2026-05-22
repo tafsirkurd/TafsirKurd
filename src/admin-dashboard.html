@@ -2285,6 +2285,24 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Recent Books -->
+                    <div class="content-card card-animate" style="animation-delay:720ms">
+                        <div class="content-card-header">
+                            <div class="content-card-title">
+                                <div class="cct-icon" style="background:rgba(245,158,11,.1);color:#f59e0b;"><i data-lucide="book-open"></i></div>
+                                Recent Books
+                            </div>
+                            <a href="/admin-gencine.html" class="content-card-link">View all</a>
+                        </div>
+                        <div class="content-card-body" id="recentBooksBody">
+                            <div class="card-skel-list">
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:40px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:75%"></div><div class="card-skel-line" style="width:40%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:40px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:35%"></div></div></div>
+                                <div class="card-skel-item"><div class="card-skel-avatar" style="border-radius:6px;width:32px;height:40px;"></div><div class="card-skel-lines"><div class="card-skel-line" style="width:70%"></div><div class="card-skel-line" style="width:30%"></div></div></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ══ My Tasks Widget ══ -->
@@ -2476,17 +2494,30 @@
 
                 <!-- ══ Admin Actions Log ══ -->
                 <div class="timeline-section card-animate" style="animation-delay:360ms">
-                    <div class="timeline-header">
-                        <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                    <div class="timeline-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="timeline-title">⚙️ Recent Admin Actions</div>
+                            <span id="alCountBadge" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--bg-hover);color:var(--text-tertiary);display:none;">0</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span id="alLastRefresh" style="font-size:11px;color:var(--text-tertiary);"></span>
+                            <button onclick="refreshAdminActions()" id="alRefreshBtn" title="Refresh" style="padding:4px 8px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-hover);cursor:pointer;font-size:13px;color:var(--text-secondary);font-family:inherit;line-height:1;transition:background .15s;">↻</button>
+                            <a href="/admin-account-management.html" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 10px;background:var(--bg-active);border-radius:10px;font-weight:600;">View all →</a>
+                        </div>
+                    </div>
+                    <div style="padding:8px 0 4px;">
+                        <input type="text" id="alSearchInput" placeholder="Search by admin name or description…" oninput="filterAdminActions()" style="width:100%;box-sizing:border-box;padding:7px 12px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-hover);color:var(--text-primary);font-size:12px;font-family:inherit;outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border-light)'">
                     </div>
                     <div class="al-filter-row" id="alFilterRow">
                         <button class="al-filter-btn active" data-cat="all"     onclick="setActionsFilter('all')">All</button>
                         <button class="al-filter-btn"        data-cat="content" onclick="setActionsFilter('content')">Content</button>
+                        <button class="al-filter-btn"        data-cat="videos"  onclick="setActionsFilter('videos')">Videos</button>
                         <button class="al-filter-btn"        data-cat="notifs"  onclick="setActionsFilter('notifs')">Notifications</button>
                         <button class="al-filter-btn"        data-cat="i18n"    onclick="setActionsFilter('i18n')">i18n</button>
                         <button class="al-filter-btn"        data-cat="auth"    onclick="setActionsFilter('auth')">Auth</button>
+                        <button class="al-filter-btn"        data-cat="system"  onclick="setActionsFilter('system')">System</button>
                     </div>
-                    <div class="timeline-list" id="adminActionsLog">
+                    <div class="timeline-list" id="adminActionsLog" style="max-height:420px;overflow-y:auto;">
                         <div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">Loading...</div>
                     </div>
                 </div>
@@ -2893,6 +2924,7 @@
                 subscribeAdminTeamOnline();
                 setInterval(loadAdminTeamOnline, 15 * 1000);
                 setInterval(loadDashboardData, 5 * 60 * 1000);
+                setInterval(refreshAdminActions, 60 * 1000);
                 dashFetchReleaseWidget();
                 loadMyTasks();
                 setInterval(loadMyTasks, 3 * 60 * 1000);
@@ -3887,24 +3919,63 @@
         /* ── Admin Actions filter ── */
         var _allAdminLogs = [];
         var _actionsFilter = 'all';
+        var _actionsSearch = '';
         var ACTION_CATEGORIES = {
             content: ['hadith_add','hadith_edit','hadith_delete','dua_add','dua_edit','dua_delete',
                       'adhkar_add','adhkar_edit','adhkar_delete','book_add','book_edit','book_delete',
-                      'tasbih_add','tasbih_edit','tasbih_delete','mark_add','mark_remove'],
-            notifs:  ['notif_send'],
+                      'tasbih_add','tasbih_edit','tasbih_delete','mark_add','mark_remove',
+                      'section_add','section_edit','section_delete','badge_set','page_edit'],
+            videos:  ['video_add','video_edit','video_delete','video_publish','video_unpublish'],
+            notifs:  ['notif_send','notif_auto_send','notif_scheduled','notif_cancelled'],
             i18n:    ['i18n_version_bump','translation_edit'],
-            auth:    ['login','logout']
+            auth:    ['login','logout','password_change','role_change'],
+            system:  ['settings_update','user_suspend','user_unsuspend','cache_flush','deploy','prayer_cache_refresh','widget_cache_clear'],
         };
 
         function setActionsFilter(cat) {
             _actionsFilter = cat;
             var btns = document.querySelectorAll('#alFilterRow .al-filter-btn');
             btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-cat') === cat); });
-            var filtered = cat === 'all' ? _allAdminLogs
+            _applyAdminActionsFilter();
+        }
+
+        function filterAdminActions() {
+            var inp = document.getElementById('alSearchInput');
+            _actionsSearch = inp ? inp.value.trim().toLowerCase() : '';
+            _applyAdminActionsFilter();
+        }
+
+        function _applyAdminActionsFilter() {
+            var filtered = _actionsFilter === 'all' ? _allAdminLogs
                 : _allAdminLogs.filter(function(l) {
-                    return (ACTION_CATEGORIES[cat] || []).indexOf(l.action_type) !== -1;
+                    return (ACTION_CATEGORIES[_actionsFilter] || []).indexOf(l.action_type) !== -1;
                 });
+            if (_actionsSearch) {
+                filtered = filtered.filter(function(l) {
+                    return (l.admin_name || '').toLowerCase().indexOf(_actionsSearch) !== -1
+                        || (l.description || '').toLowerCase().indexOf(_actionsSearch) !== -1
+                        || (l.action_type || '').toLowerCase().indexOf(_actionsSearch) !== -1;
+                });
+            }
             _renderAdminActions(filtered);
+        }
+
+        async function refreshAdminActions() {
+            var btn = document.getElementById('alRefreshBtn');
+            if (btn) { btn.style.opacity = '0.5'; btn.disabled = true; }
+            try {
+                var supabase = window.adminAuth.getSupabase();
+                if (!supabase) return;
+                var { data } = await supabase.from('admin_activity_log')
+                    .select('id,admin_name,action_type,description,created_at')
+                    .order('created_at', { ascending: false }).limit(50);
+                _allAdminLogs = data || [];
+                var lastEl = document.getElementById('alLastRefresh');
+                if (lastEl) lastEl.textContent = 'Updated just now';
+                _applyAdminActionsFilter();
+            } finally {
+                if (btn) { btn.style.opacity = ''; btn.disabled = false; }
+            }
         }
 
         function _buildChartInsights(containerId, data, valKey, totalLabel, peakLabel, avgLabel) {
@@ -4085,6 +4156,28 @@
             translation_edit:   { icon: 'fa-pen',             color: '#6366f1', label: 'Translation Edited' },
             mark_add:           { icon: 'fa-bookmark',        color: '#f59e0b', label: 'Mark Added' },
             mark_remove:        { icon: 'fa-bookmark',        color: '#f59e0b', label: 'Mark Removed' },
+            section_add:        { icon: 'fa-folder-plus',     color: '#8b5cf6', label: 'Section Added' },
+            section_edit:       { icon: 'fa-folder',          color: '#8b5cf6', label: 'Section Updated' },
+            section_delete:     { icon: 'fa-folder-minus',    color: '#8b5cf6', label: 'Section Deleted' },
+            badge_set:          { icon: 'fa-tag',             color: '#f59e0b', label: 'Badge Set' },
+            page_edit:          { icon: 'fa-file-pen',        color: '#6366f1', label: 'Page Edited' },
+            video_add:          { icon: 'fa-video',           color: '#ef4444', label: 'Video Added' },
+            video_edit:         { icon: 'fa-video',           color: '#ef4444', label: 'Video Updated' },
+            video_delete:       { icon: 'fa-video',           color: '#ef4444', label: 'Video Deleted' },
+            video_publish:      { icon: 'fa-video',           color: '#10b981', label: 'Video Published' },
+            video_unpublish:    { icon: 'fa-video',           color: '#6b7280', label: 'Video Unpublished' },
+            notif_auto_send:    { icon: 'fa-bell',            color: '#f97316', label: 'Auto-Notification Sent' },
+            notif_scheduled:    { icon: 'fa-bell',            color: '#3b82f6', label: 'Notification Scheduled' },
+            notif_cancelled:    { icon: 'fa-bell-slash',      color: '#6b7280', label: 'Notification Cancelled' },
+            settings_update:    { icon: 'fa-gear',            color: '#06b6d4', label: 'Settings Updated' },
+            user_suspend:       { icon: 'fa-user-xmark',      color: '#ef4444', label: 'User Suspended' },
+            user_unsuspend:     { icon: 'fa-user-check',      color: '#10b981', label: 'User Reinstated' },
+            password_change:    { icon: 'fa-key',             color: '#f59e0b', label: 'Password Changed' },
+            role_change:        { icon: 'fa-shield',          color: '#8b5cf6', label: 'Role Changed' },
+            cache_flush:        { icon: 'fa-rotate',          color: '#06b6d4', label: 'Cache Flushed' },
+            deploy:             { icon: 'fa-rocket',          color: '#6366f1', label: 'Deployed' },
+            prayer_cache_refresh: { icon: 'fa-rotate',        color: '#f59e0b', label: 'Prayer Cache Refreshed' },
+            widget_cache_clear: { icon: 'fa-rotate',          color: '#3b82f6', label: 'Widget Cache Cleared' },
             login:              { icon: 'fa-right-to-bracket', color: '#10b981', label: 'Admin Login' },
             logout:             { icon: 'fa-right-from-bracket', color: '#6b7280', label: 'Admin Logout' },
         };
@@ -4092,8 +4185,15 @@
         function buildAdminActions(logs) {
             _allAdminLogs = logs || [];
             _actionsFilter = 'all';
+            _actionsSearch = '';
+            var inp = document.getElementById('alSearchInput');
+            if (inp) inp.value = '';
             var btns = document.querySelectorAll('#alFilterRow .al-filter-btn');
             btns.forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-cat') === 'all'); });
+            var badge = document.getElementById('alCountBadge');
+            if (badge) { badge.textContent = _allAdminLogs.length; badge.style.display = _allAdminLogs.length ? '' : 'none'; }
+            var lastEl = document.getElementById('alLastRefresh');
+            if (lastEl) lastEl.textContent = 'Updated ' + getTimeAgo(new Date());
             _renderAdminActions(_allAdminLogs);
         }
 
@@ -4102,60 +4202,67 @@
             if (!container) return;
             container.innerHTML = '';
             if (!logs || !logs.length) {
-                container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">No actions logged yet.</div>';
+                container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-tertiary);font-size:13px;">'
+                    + (_actionsSearch ? 'No results for "' + escHtml(_actionsSearch) + '"' : 'No actions logged yet.')
+                    + '</div>';
                 return;
             }
-            var SHOW_ADMIN = 5;
-            var visibleLogs = logs.slice(0, SHOW_ADMIN);
-            var hiddenLogs  = logs.slice(SHOW_ADMIN);
 
-            function _renderAdminItem(log) {
-                var meta = ACTION_META[log.action_type] || { icon: 'fa-circle-dot', color: '#6b7280', label: log.action_type };
+            var ACTION_EMOJI = {
+                hadith_add:'📜', hadith_edit:'📜', hadith_delete:'📜',
+                dua_add:'🤲', dua_edit:'🤲', dua_delete:'🤲',
+                adhkar_add:'💚', adhkar_edit:'💚', adhkar_delete:'💚',
+                book_add:'📗', book_edit:'📗', book_delete:'📗',
+                tasbih_add:'📿', tasbih_edit:'📿', tasbih_delete:'📿',
+                section_add:'📁', section_edit:'📁', section_delete:'📁',
+                badge_set:'🏷', page_edit:'📝',
+                video_add:'🎬', video_edit:'🎬', video_delete:'🎬', video_publish:'🎬', video_unpublish:'🎬',
+                notif_send:'🔔', notif_auto_send:'🤖', notif_scheduled:'🔔', notif_cancelled:'🔕',
+                i18n_version_bump:'🌐', translation_edit:'✏️',
+                login:'🟢', logout:'⚪',
+                password_change:'🔑', role_change:'🛡',
+                settings_update:'⚙️', user_suspend:'🚫', user_unsuspend:'✅',
+                cache_flush:'♻️', deploy:'🚀', prayer_cache_refresh:'🕌', widget_cache_clear:'🟦',
+                mark_add:'🔖', mark_remove:'🔖',
+            };
+
+            logs.forEach(function(log) {
+                var meta = ACTION_META[log.action_type] || { color: '#6b7280', label: log.action_type || '—' };
+                var emoji = ACTION_EMOJI[log.action_type] || '⚙️';
                 var item = document.createElement('div');
                 item.className = 'timeline-item';
 
-                // Show admin initials in dot
                 var initials = (log.admin_name || '?').split(' ').map(function(w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
                 var dot = document.createElement('div');
                 dot.className = 'timeline-dot';
-                dot.style.cssText = 'background:' + meta.color + ';font-size:10px;font-weight:800;color:#fff;letter-spacing:-.5px;';
+                dot.style.cssText = 'background:' + meta.color + ';font-size:10px;font-weight:800;color:#fff;letter-spacing:-.5px;flex-shrink:0;';
                 dot.textContent = initials;
 
                 var content = document.createElement('div');
                 content.className = 'timeline-content';
+                content.style.minWidth = '0';
 
                 var label = document.createElement('div');
                 label.className = 'timeline-text';
-                label.style.cssText = 'direction:rtl;text-align:right';
-                label.innerHTML = '<span style="font-weight:700;color:' + meta.color + '">' + meta.label + '</span> — ' + escHtml(log.description || '');
+                var desc = log.description || '';
+                var descHtml = _actionsSearch
+                    ? escHtml(desc).replace(new RegExp('(' + escHtml(_actionsSearch).replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'), '<mark style="background:rgba(234,179,8,.3);border-radius:2px;padding:0 1px;">$1</mark>')
+                    : escHtml(desc);
+                label.innerHTML = emoji + ' <span style="font-weight:700;color:' + meta.color + '">' + escHtml(meta.label) + '</span>'
+                    + (desc ? ' — <span style="direction:rtl;display:inline">' + descHtml + '</span>' : '');
 
                 var time = document.createElement('div');
                 time.className = 'timeline-time';
+                var absDate = new Date(log.created_at).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                time.title = absDate;
                 time.textContent = (log.admin_name || '') + ' · ' + getTimeAgo(new Date(log.created_at));
 
                 content.appendChild(label);
                 content.appendChild(time);
                 item.appendChild(dot);
                 item.appendChild(content);
-                return item;
-            }
-
-            visibleLogs.forEach(function(log) {
-                container.appendChild(_renderAdminItem(log));
+                container.appendChild(item);
             });
-
-            if (hiddenLogs.length > 0) {
-                var moreAdminBtn = document.createElement('button');
-                moreAdminBtn.className = 'tl-more-btn';
-                moreAdminBtn.textContent = 'Show ' + hiddenLogs.length + ' more';
-                moreAdminBtn.addEventListener('click', function() {
-                    moreAdminBtn.parentNode.removeChild(moreAdminBtn);
-                    hiddenLogs.forEach(function(log) {
-                        container.appendChild(_renderAdminItem(log));
-                    });
-                });
-                container.appendChild(moreAdminBtn);
-            }
         }
 
         /* ═══════════════════════════════════════════════
@@ -5225,7 +5332,7 @@
                 /* 13 — recent audit logs (super_admin only) */
                 supabase.from('admin_audit_logs').select('id,created_at,action,severity,email,ip_address').order('created_at', { ascending: false }).limit(8),
                 /* 14 — recent admin actions */
-                supabase.from('admin_activity_log').select('id,admin_name,action_type,description,created_at').order('created_at', { ascending: false }).limit(15),
+                supabase.from('admin_activity_log').select('id,admin_name,action_type,description,created_at').order('created_at', { ascending: false }).limit(50),
                 /* 15 — prayer cache health (last 30 events) */
                 supabase.from('prayer_cache_health').select('id,created_at,session_id,platform,city,cache_status,stale_reason,cache_age_hours,fajr_shown,changed_from,notifications_rescheduled,error_msg').order('created_at', { ascending: false }).limit(30),
                 /* 16 — admin stats via CF function (bypasses user_data RLS via service role) */
@@ -5259,7 +5366,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (sessionStorage.getItem('adminToken')||'') },
                     body: JSON.stringify({ action: 'get_stats' })
-                }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
+                }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+                /* 22 — recent books */
+                supabase.from('gencine_books').select('id,title_ku,title_ar,cover_url,created_at').order('created_at', { ascending: false }).limit(5)
             ]);
 
             // Shorthand
@@ -5405,6 +5514,7 @@
             buildErrorsWidget(val(19));
             buildNotifAnalyticsWidget(val(20));
             buildAppVersionsWidget(val(21));
+            buildRecentBooks(dat(22));
             updateRHPlatformBar(val(21));
             cmFetchBuilds();
 
@@ -6345,6 +6455,73 @@
                 var meta = document.createElement('div');
                 meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:3px;';
                 meta.textContent = getTimeAgo(new Date(video.created_at));
+                info.appendChild(meta);
+
+                item.appendChild(info);
+                wrap.appendChild(item);
+            });
+
+            container.appendChild(wrap);
+        }
+
+        function buildRecentBooks(books) {
+            var container = document.getElementById('recentBooksBody');
+            if (!container) return;
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            if (!books || !books.length) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-tertiary);font-size:13px;">No books yet</div>';
+                return;
+            }
+
+            var now = Date.now();
+            var wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+
+            books.forEach(function(book) {
+                var isNew = now - new Date(book.created_at).getTime() < 48 * 3600000;
+                var title = book.title_ku || book.title_ar || '—';
+                var item = document.createElement('a');
+                item.href = '/admin-gencine.html';
+                item.className = 'rv-item';
+                if (isNew) item.style.cssText = 'background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);';
+
+                if (book.cover_url) {
+                    var cover = document.createElement('img');
+                    cover.src = book.cover_url;
+                    cover.alt = title;
+                    cover.style.cssText = 'width:32px;height:42px;border-radius:4px;object-fit:cover;flex-shrink:0;background:var(--bg-hover);';
+                    cover.onerror = function() { cover.style.display = 'none'; };
+                    item.appendChild(cover);
+                } else {
+                    var placeholder = document.createElement('div');
+                    placeholder.style.cssText = 'width:32px;height:42px;border-radius:4px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;';
+                    placeholder.textContent = '📗';
+                    item.appendChild(placeholder);
+                }
+
+                var info = document.createElement('div');
+                info.style.cssText = 'flex:1;min-width:0;';
+
+                var titleRow = document.createElement('div');
+                titleRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+                var titleEl = document.createElement('div');
+                titleEl.textContent = title;
+                titleEl.style.cssText = 'font-size:13px;font-weight:500;color:var(--text-primary);direction:rtl;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;';
+                titleRow.appendChild(titleEl);
+
+                if (isNew) {
+                    var pill = document.createElement('span');
+                    pill.textContent = 'NEW';
+                    pill.style.cssText = 'flex-shrink:0;background:#f59e0b;color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:20px;';
+                    titleRow.appendChild(pill);
+                }
+                info.appendChild(titleRow);
+
+                var meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:3px;';
+                meta.textContent = getTimeAgo(new Date(book.created_at));
                 info.appendChild(meta);
 
                 item.appendChild(info);
