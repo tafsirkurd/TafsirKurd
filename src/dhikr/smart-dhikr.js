@@ -1,8 +1,10 @@
 /**
- * Smart Daily Companion  v31
- * Always exactly 5 cards:
+ * Smart Daily Companion  v32
+ * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
- *   2. Ayah of the day        (Baghdad-seeded, salt 1)
+ *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
+ *   next. Weather slide       (rain/thunder/wind only)
+ *   then. Ayah of the day     (Baghdad-seeded, salt 1)
  *   3. Hadith of the day      (Baghdad-seeded, salt 2)
  *   4. Book of the day        (Baghdad-seeded, salt 4)
  *   5. Weather dhikr          (rain when raining, thunder/wind otherwise)
@@ -84,12 +86,20 @@
       thursdayNightBoost: true
     },
 
+  ];
+
+  /* ─────────────────────────────────────────────
+     SEASONAL ITEMS  — added as extra slides, never replace card 1
+     Each active seasonal item gets its own dedicated slide inserted
+     after the regular zikr slide so nothing is displaced.
+  ───────────────────────────────────────────── */
+  var SEASONAL_ITEMS = [
     /* ── Ramadan ── */
     {
       id: 'fasting', categoryKey: 'fasting', icon: 'fas fa-moon',
       labelKey: 'adhkar.fasting', labelFallback: 'نیەتا ڕۆژوو',
       subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕوژیدارییەکت خوا قبوڵ بکات',
-      timeTag: 'ڕەمەزان', basePriority: 60,
+      timeTag: 'ڕەمەزان',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= fajrMin && nowMin < maghribMin;
       }
@@ -98,7 +108,7 @@
       id: 'breaking_fast', categoryKey: 'breaking_fast', icon: 'fas fa-utensils',
       labelKey: 'adhkar.breaking_fast', labelFallback: 'کاتا ئیفتارێ',
       subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ئیفتارا خوش',
-      timeTag: 'ئیفتار', basePriority: 95, /* highest — iftar beats even prayer windows */
+      timeTag: 'ئیفتار',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= maghribMin && nowMin < maghribMin + 45;
       }
@@ -107,33 +117,30 @@
       id: 'lailat_qadr', categoryKey: 'lailat_qadr', icon: 'fas fa-star',
       labelKey: 'adhkar.lailat_qadr', labelFallback: 'شەوا قەدرێ',
       subtitleKey: 'gencine.smart.lailat_qadr_hint', subtitleFallback: 'شەوا هەزار مانگ',
-      timeTag: 'لێلەتول قەدر', basePriority: 80,
+      timeTag: 'لێلەتول قەدر',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         if (h.month !== 9) return false;
-        /* nights 21-29: show after Maghrib of day 20-28, or before Fajr on days 21-29 */
         var isNight = nowMin >= maghribMin || nowMin < fajrMin;
         if (h.day >= 21 && h.day <= 29 && isNight) return true;
-        if (h.day === 20 && nowMin >= maghribMin)   return true; /* night 21 starts */
+        if (h.day === 20 && nowMin >= maghribMin)   return true;
         return false;
       }
     },
-
     /* ── Dhul Hijjah ── */
     {
       id: 'dhul_hijjah', categoryKey: 'dhul_hijjah', icon: 'fas fa-kaaba',
       labelKey: 'adhkar.dhul_hijjah', labelFallback: 'دەیا ذولحیجەیێ',
       subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دهە ڕۆژێن گەورە',
-      timeTag: 'ذوالحیجە', basePriority: 70,
+      timeTag: 'ذوالحیجە',
       hijriCond: function() { var d = _getDhulHijjahDay(); return d >= 1 && d <= 8; }
     },
     {
       id: 'arafat', categoryKey: 'arafat', icon: 'fas fa-kaaba',
       labelKey: 'adhkar.arafat', labelFallback: 'دوعای عەرەفاتێ',
       subtitleKey: 'gencine.smart.arafat_hint', subtitleFallback: 'باشترین ڕۆژی ساڵ',
-      timeTag: 'عەرەفە', basePriority: 85,
+      timeTag: 'عەرەفە',
       hijriCond: function() { return _getDhulHijjahDay() === 9; }
-    },
-
+    }
   ];
 
   /* ─────────────────────────────────────────────
@@ -870,20 +877,53 @@
   }
 
   /* ─────────────────────────────────────────────
-     getItemsNow — 4 or 5 items depending on weather data
+     SEASONAL ITEMS CHECK — returns all currently active seasonal items
+     as separate slides (none replace the regular zikr slide).
+  ───────────────────────────────────────────── */
+  function _getSeasonalItems() {
+    var now        = new Date();
+    var nowMin     = now.getHours() * 60 + now.getMinutes();
+    var dow        = now.getDay();
+    var prayers    = _getPrayerTimings();
+    var maghribMin = (prayers && _toMin(prayers.Maghrib) >= 0) ? _toMin(prayers.Maghrib) : 18 * 60;
+    var fajrMin    = (prayers && _toMin(prayers.Fajr)    >= 0) ? _toMin(prayers.Fajr)    :  5 * 60;
+
+    return SEASONAL_ITEMS
+      .filter(function(item) {
+        return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin, fajrMin);
+      })
+      .map(function(item) { return { _type: 'adhkar', _adhkarItem: item }; });
+  }
+
+  /* ─────────────────────────────────────────────
+     getItemsNow — variable number of slides:
+       1. Regular time zikr (always)
+       2+. Active seasonal items (each gets own slide — none displace card 1)
+       next. Weather dhikr (only when raining/thunder/wind)
+       then. Ayah of the day
+       then. Hadith of the day
+       last. Book of the day
   ───────────────────────────────────────────── */
   function getItemsNow() {
     var items = [
-      { _type: 'adhkar', _adhkarItem: _getZikrItem() }    /* card 1: zikr    */
+      { _type: 'adhkar', _adhkarItem: _getZikrItem() }    /* card 1: time zikr — never displaced */
     ];
-    /* card 2: weather dhikr — only added when data exists and weather is active */
+
+    /* seasonal slides — added after card 1, one slide each */
+    var seasonal = _getSeasonalItems();
+    for (var si = 0; si < seasonal.length; si++) {
+      items.push(seasonal[si]);
+    }
+
+    /* weather slide — added when condition is not clear */
     var weatherItem = (_getWeatherCondition() !== 'clear') ? _getWeatherItem() : null;
     if (weatherItem) {
       items.push({ _type: 'adhkar', _adhkarItem: weatherItem });
     }
-    items.push(_buildAyahItem());                          /* card 3: ayah    */
-    items.push(_buildHadithItem());                        /* card 4: hadith  */
-    items.push(_buildBookItem());                          /* card 5: book    */
+
+    items.push(_buildAyahItem());
+    items.push(_buildHadithItem());
+    items.push(_buildBookItem());
     return items;
   }
 
