@@ -2451,6 +2451,10 @@ window.GencineUI = {
         }
         /* ── Reading progress overlay ── */
         var _prog = _bookGetProgress(book.id);
+        // If this is the book we just closed, use the in-memory final state — it's always fresh.
+        if (self._lastClosedBook && self._lastClosedBook.id === String(book.id)) {
+          _prog = { page: self._lastClosedBook.page, total: self._lastClosedBook.total, ts: Date.now() };
+        }
         var _inHistory = !!_getReadingHistory()[String(book.id)];
         if (_prog || _inHistory) {
           coverWrap.classList.add('has-progress');
@@ -3016,7 +3020,6 @@ window.GencineUI = {
       var _prevCleanup = self._pdfCleanup;
       self._pdfCleanup = function() {
         // Synchronous final page detect — no rAF needed, no active scroll at exit time.
-        // Must run before _renderBooks so the grid gets the correct page.
         if (_panelEl && slots.length) {
           var _pt = _panelEl.getBoundingClientRect().top;
           var _st = _panelEl.scrollTop;
@@ -3028,6 +3031,8 @@ window.GencineUI = {
           });
           if (_bst !== _curPage) _curPage = _bst;
         }
+        // Cache final state on self so _renderBooks can use it even if localStorage lags.
+        self._lastClosedBook = { id: String(book.id), page: _curPage, total: pdf.numPages };
         _saveProgress();
         if (_panelEl) _panelEl.removeEventListener('scroll', _navScrollHandler);
         if (_panelEl) _panelEl.removeEventListener('touchend', _touchEndHandler);
