@@ -558,7 +558,7 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
 
     const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
     const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
-    const staleTokens = [], apnsErrors = [];
+    const staleTokens = [], apnsErrors = [], fcmErrors = [];
     let successCount = 0, failCount = 0;
 
     // Send in chunks of 200 to stay within Cloudflare's 1000-subrequest limit
@@ -574,6 +574,7 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
             if (res.ok) { successCount++; }
             else {
                 const err = await res.json().catch(() => ({}));
+                fcmErrors.push(`FCM ${res.status} ${err?.error?.status || ''}: ${err?.error?.message || JSON.stringify(err)}`);
                 if (err?.error?.status === 'NOT_FOUND' || err?.error?.status === 'UNREGISTERED') staleTokens.push(token);
                 failCount++;
             }
@@ -601,7 +602,7 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
         status: 'sent', sent_at: new Date().toISOString(),
         tokens_targeted: tokens.length, tokens_sent: successCount,
         tokens_failed: failCount, stale_removed: staleTokens.length,
-        error_message: apnsErrors.length ? apnsErrors[0] : null,
+        error_message: apnsErrors.length ? apnsErrors[0] : (fcmErrors.length ? fcmErrors[0] : null),
     }).eq('id', trackingId);
 
     // Auto-schedule next occurrence for recurring notifications
