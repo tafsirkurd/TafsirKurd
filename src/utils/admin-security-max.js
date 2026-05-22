@@ -181,7 +181,7 @@
     }
 
     var TAB_KEY = 'tkAdminTab';
-    var TAB_TTL = 6000;
+    var TAB_TTL = 4000;
     var TAB_HB  = 2500;
     var _tabHbInterval = null;
     var _isSecondary = false;
@@ -193,13 +193,16 @@
     function _startTabHeartbeat() {
         _tabBeat();
         _tabHbInterval = setInterval(_tabBeat, TAB_HB);
-        window.addEventListener('beforeunload', function () {
+        function _tabCleanup() {
             clearInterval(_tabHbInterval);
             try {
                 var cur = JSON.parse(localStorage.getItem(TAB_KEY) || 'null');
                 if (cur && cur.id === TAB_ID) localStorage.removeItem(TAB_KEY);
             } catch(e) {}
-        });
+        }
+        // beforeunload fires on desktop; pagehide fires on iOS Safari navigation
+        window.addEventListener('beforeunload', _tabCleanup);
+        window.addEventListener('pagehide', _tabCleanup);
     }
 
     function _checkForExistingTab() {
