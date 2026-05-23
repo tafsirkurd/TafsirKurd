@@ -99,12 +99,12 @@
       '#tk-pp-ov.tk-in #tk-pp-card{transform:scale(1) translateY(0);}',
 
       /* Close */
-      '#tk-pp-x{position:absolute;top:14px;right:16px;z-index:3;',
-        'background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.6);',
-        'width:32px;height:32px;border-radius:50%;font-size:19px;line-height:1;',
+      '#tk-pp-x{position:absolute;top:10px;right:10px;z-index:10;',
+        'background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);color:#fff;',
+        'width:30px;height:30px;border-radius:50%;font-size:18px;line-height:1;',
         'cursor:pointer;display:flex;align-items:center;justify-content:center;',
-        'transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}',
-      '#tk-pp-x:hover{background:rgba(255,255,255,.16);color:#fff;}',
+        'transition:background .15s;-webkit-tap-highlight-color:transparent;}',
+      '#tk-pp-x:hover{background:rgba(0,0,0,.8);}',
 
       /* Image panel */
       '#tk-pp-img{width:100%;aspect-ratio:5/3;position:relative;overflow:hidden;',
@@ -132,7 +132,7 @@
         '#tk-pp-body{padding:24px 22px 30px;}',
         '#tk-pp-h{font-size:1.4rem;}',
         '#tk-pp-card.tk-no-img{max-width:100%;}',
-        '#tk-pp-x{top:10px;right:12px;}',
+        '#tk-pp-x{top:8px;right:8px;}',
       '}',
       '@media(max-width:380px){',
         '#tk-pp-body{padding:20px 18px 26px;}',
@@ -141,8 +141,8 @@
 
       /* ── Noor theme overrides ── */
       '[data-theme="noor"] #tk-pp-card{background:#fdf4e3;border-color:#d9c9a8;box-shadow:0 32px 96px rgba(0,0,0,.18);}',
-      '[data-theme="noor"] #tk-pp-x{background:rgba(26,14,4,.08);color:rgba(26,14,4,.5);}',
-      '[data-theme="noor"] #tk-pp-x:hover{background:rgba(26,14,4,.16);color:#1a0e04;}',
+      '[data-theme="noor"] #tk-pp-x{background:rgba(26,14,4,.45);border-color:rgba(26,14,4,.25);color:#1a0e04;}',
+      '[data-theme="noor"] #tk-pp-x:hover{background:rgba(26,14,4,.65);}',
       '[data-theme="noor"] #tk-pp-img{background:linear-gradient(160deg,#eddfc0 0%,#f4e8cc 100%);}',
       '[data-theme="noor"] #tk-pp-h{color:#1a0e04;}',
       '[data-theme="noor"] #tk-pp-sub{color:rgba(26,14,4,.5);}',
