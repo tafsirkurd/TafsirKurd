@@ -3284,6 +3284,9 @@ section.show {
 [data-theme="dark"] .founder-mission {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(200, 200, 200, 0.05));
 }
+[data-theme="sakina"] .founder-mission {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.04), rgba(100, 150, 100, 0.03));
+}
 
 .founder-mission-text {
     font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -3332,6 +3335,9 @@ section.show {
 
 [data-theme="dark"] .form-control:focus {
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+[data-theme="sakina"] .form-control:focus {
+    box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.15);
 }
 
 textarea.form-control {
@@ -3569,6 +3575,9 @@ textarea.form-control {
 
 [data-theme="dark"] .contact-form .form-control:focus {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+[data-theme="sakina"] .contact-form .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12);
 }
 
 .contact-submit-btn {
@@ -4461,6 +4470,19 @@ footer {
 /* ── Light theme dark-section overrides ───────────────────────── */
 [data-theme="light"] .reach-showcase   { background: #f2f2f2; }
 [data-theme="light"] .videos-showcase  { background: #f2f2f2; }
+[data-theme="light"] .reach-showcase .reach-title,
+[data-theme="light"] .reach-showcase .stat-number,
+[data-theme="light"] .reach-showcase .stat-unit  { color: #000000 !important; }
+[data-theme="light"] .reach-showcase .stat-label  { color: rgba(0,0,0,.65); }
+[data-theme="light"] .reach-showcase .stat-icon i { color: #000000 !important; }
+[data-theme="light"] .reach-showcase .stat-card:hover .stat-number,
+[data-theme="light"] .reach-showcase .stat-card:hover .stat-unit  { color: #000000; }
+[data-theme="light"] .reach-showcase .stat-card:hover .stat-label { color: rgba(0,0,0,.8); }
+[data-theme="light"] .videos-showcase .videos-title   { color: #000000; }
+[data-theme="light"] .videos-showcase .loading-content { color: rgba(0,0,0,.5); }
+[data-theme="light"] .videos-showcase .spinner { border-color: rgba(0,0,0,.15); border-top-color: #000000; }
+[data-theme="light"] .videos-showcase .video-card { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .videos-showcase .video-card:hover { background: rgba(0,0,0,.07); border-color: rgba(0,0,0,.16); }
 [data-theme="light"] #testimonials     { background: #f8f8f8; }
 [data-theme="light"] .testimonial-card { background: #ffffff; border-color: #e8e8e8; }
   </style>
