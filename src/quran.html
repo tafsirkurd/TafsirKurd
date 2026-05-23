@@ -4852,9 +4852,17 @@
         [data-theme="noor"] .surah-card-number          { background: #1a5c3a; color: #fdf4e3; }
         [data-theme="noor"] .filter-sort-controls       { background: #1a5c3a; }
 
+        /* dark theme: primary=#fff so white tafsir/highlight becomes invisible on hover/focus */
+        [data-theme="dark"] .search-result-item:hover .search-result-tafsir,
+        [data-theme="dark"] .search-result-item.focused .search-result-tafsir { color: rgba(0,0,0,0.65); }
+        [data-theme="dark"] .search-result-item:hover .search-result-text strong { background: rgba(0,0,0,0.08) !important; }
+
         /* ── Sakina theme: black → gold ── */
         [data-theme="sakina"] .sidebar-tab.active        { background: #c9a84c; color: #0c1c12; }
-        [data-theme="sakina"] .surah-item-sidebar.active { background: #1e3528; }
+        [data-theme="sakina"] .surah-item-sidebar.active                          { background: #1e3528; }
+        [data-theme="sakina"] .surah-item-sidebar.active .surah-num-sidebar       { background: #c9a84c; color: #0c1c12; }
+        [data-theme="sakina"] .surah-item-sidebar.active .surah-name-sidebar,
+        [data-theme="sakina"] .surah-item-sidebar.active .surah-arabic-sidebar    { color: #e8d5b0; }
         [data-theme="sakina"] .sidebar-toggle            { background: #c9a84c; }
         [data-theme="sakina"] .surah-card::before        { background: #c9a84c; }
         [data-theme="sakina"] .surah-card-number         { background: #c9a84c; color: #0c1c12; }
@@ -4864,6 +4872,8 @@
         [data-theme="sakina"] .play-btn.playing          { background: #c9a84c !important; color: #0c1c12 !important; border-color: #c9a84c !important; }
         [data-theme="sakina"] .user-profile-btn          { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.2); }
         [data-theme="sakina"] .user-profile-btn:hover    { background: rgba(201,168,76,0.18); }
+        [data-theme="sakina"] .search-result-item:hover .search-result-tafsir,
+        [data-theme="sakina"] .search-result-item.focused .search-result-tafsir { color: rgba(12,28,18,0.65); }
 
         /* ── Light theme: keep dark primary ── */
         [data-theme="light"] .sidebar-tab.active         { background: #111; color: #fff; }

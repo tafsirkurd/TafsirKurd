@@ -76,6 +76,32 @@
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
         }
 
+        [data-theme="noor"] {
+            --primary: #1a5c3a;
+            --primary-light: #2d7a52;
+            --accent: #f4e8cc;
+            --bg: #f4e8cc;
+            --card-bg: #fdf4e3;
+            --text: #1a0e04;
+            --text-muted: #7a6040;
+            --border: #e0d5b0;
+            --shadow: 0 4px 20px rgba(26,92,58,0.1);
+            --shadow-lg: 0 20px 40px rgba(26,92,58,0.15);
+        }
+
+        [data-theme="sakina"] {
+            --primary: #c9a84c;
+            --primary-light: #d4b86a;
+            --accent: #0c1c12;
+            --bg: #0c1c12;
+            --card-bg: #112318;
+            --text: #e8d5b0;
+            --text-muted: #8a7a60;
+            --border: #1e3528;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -319,6 +345,9 @@
 
         [data-theme="dark"] .form-input:focus {
             box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+        [data-theme="sakina"] .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
         }
 
         .form-input::placeholder {
