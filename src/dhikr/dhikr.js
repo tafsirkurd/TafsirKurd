@@ -2496,6 +2496,15 @@ window.GencineUI = {
             var _rico = document.createElement('i'); _rico.className = 'fas fa-book-open book-ring-ico'; _ringWrap.appendChild(_rico);
           }
           coverWrap.appendChild(_ringWrap);
+          // Page pill (bottom-left): "65 / 245"
+          if (_prog && _prog.page >= 1) {
+            var _pill = document.createElement('div'); _pill.className = 'book-page-pill';
+            var _pgCur = document.createElement('span'); _pgCur.className = 'pg-cur'; _pgCur.textContent = _prog.page;
+            var _pgSep = document.createElement('span'); _pgSep.className = 'pg-sep'; _pgSep.textContent = '/';
+            var _pgTot = document.createElement('span'); _pgTot.className = 'pg-tot'; _pgTot.textContent = _total > 1 ? _total : (book.pages || '?');
+            _pill.appendChild(_pgCur); _pill.appendChild(_pgSep); _pill.appendChild(_pgTot);
+            coverWrap.appendChild(_pill);
+          }
           // Bottom gradient overlay
           var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
           coverWrap.appendChild(_po);
