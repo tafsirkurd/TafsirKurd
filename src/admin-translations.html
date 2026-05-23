@@ -1936,6 +1936,101 @@
             .platform-tab .tab-count { padding: 1px 5px; font-size: 9px; }
         }
 
+        /* ===== Skeleton loader ===== */
+        .skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+        .skeleton-card {
+            height: 88px; border-radius: 16px;
+            background: var(--bg-surface); border: 1px solid var(--border-light);
+            overflow: hidden; position: relative;
+        }
+        .skeleton-card:nth-child(2) { height: 72px; }
+        .skeleton-card:nth-child(3) { height: 100px; }
+        .skeleton-card:nth-child(4) { height: 72px; }
+        .skeleton-card:nth-child(5) { height: 88px; }
+        .skeleton-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(128,128,128,0.08) 50%, transparent 100%);
+            transform: translateX(-100%);
+            animation: sk-shimmer 1.4s infinite;
+        }
+        @keyframes sk-shimmer { 100% { transform: translateX(100%); } }
+
+        /* ===== Add form backdrop ===== */
+        #addFormBackdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 1199;
+            opacity: 0; transition: opacity 0.25s;
+        }
+        #addFormBackdrop.open { opacity: 1; }
+
+        /* ===== Add form → bottom sheet on mobile ===== */
+        @media (max-width: 768px) {
+            #addFormBackdrop { display: block; pointer-events: none; }
+            #addFormBackdrop.open { pointer-events: auto; }
+
+            .add-row {
+                position: fixed !important;
+                bottom: 0; left: 0; right: 0;
+                z-index: 1200;
+                border-radius: 24px 24px 0 0 !important;
+                border: none !important;
+                border-top: 1px solid var(--border-light) !important;
+                max-height: 88vh; overflow-y: auto;
+                transform: translateY(100%) !important;
+                transition: transform 0.32s cubic-bezier(0.32,0.72,0,1) !important;
+                margin: 0 !important; display: block !important;
+                padding-bottom: env(safe-area-inset-bottom, 16px);
+                background: var(--bg-app) !important;
+                box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+            }
+            .add-row.active { transform: translateY(0) !important; }
+            .add-row::before {
+                content: ''; display: block;
+                width: 36px; height: 4px;
+                background: var(--border-medium); border-radius: 2px;
+                margin: 14px auto 0;
+            }
+            .add-row .edit-form { padding: 16px 16px 8px; }
+
+            /* Edit form: Kurdish text first, Key+Page second, Context hidden */
+            .edit-form { display: flex; flex-direction: column; }
+            .edit-row.edit-row-meta { order: 2; }
+            .edit-field.field-kurdish { order: 1; }
+            .edit-field.field-context { order: 3; display: none; }
+            .edit-actions { order: 10; }
+
+            /* Empty cards: dashed red border + subtle tint */
+            .t-row.is-empty-row {
+                border: 1.5px dashed rgba(220,38,38,0.45) !important;
+                background: rgba(254,242,242,0.6) !important;
+            }
+            body.dark-mode .t-row.is-empty-row {
+                background: rgba(69,10,10,0.25) !important;
+                border-color: rgba(239,68,68,0.3) !important;
+            }
+            .t-row.is-empty-row .t-text { opacity: 0.55; }
+            /* Red accent dot on empty cards */
+            .t-row.is-empty-row .t-key::before {
+                content: '•'; color: #ef4444; margin-right: 4px; font-size: 14px; line-height: 1;
+            }
+
+            /* Bulk bar: full-width strip at bottom */
+            #bulkBar {
+                left: 0 !important; right: 0 !important;
+                bottom: 0 !important; transform: none !important;
+                border-radius: 20px 20px 0 0 !important;
+                border-left: none !important; border-right: none !important; border-bottom: none !important;
+                padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+                gap: 10px !important; flex-direction: column !important;
+            }
+            #bulkCount { font-size: 15px !important; text-align: center; }
+            #bulkBar .btn { flex: 1 !important; height: 50px !important; font-size: 15px !important; font-weight: 700 !important; border-radius: 14px !important; justify-content: center; min-width: 0; }
+
+            /* QE mode: save-all button prominent */
+            #qeSaveBtn { flex-shrink: 0; }
+            .qe-bar { margin-bottom: 8px; }
+        }
+
         /* ===== History Drawer ===== */
         .history-drawer-overlay {
             position: fixed;
@@ -2374,9 +2469,10 @@
                     <i data-lucide="chevron-up" style="width:16px;height:16px"></i>
                 </button>
 
+                <div id="addFormBackdrop" onclick="toggleAddForm()"></div>
                 <div class="add-row" id="addForm">
                     <div class="edit-form">
-                        <div class="edit-row">
+                        <div class="edit-row edit-row-meta">
                             <div class="edit-field">
                                 <label>Key ID</label>
                                 <input type="text" id="newKeyId" placeholder="e.g. home_hero_title">
@@ -2428,7 +2524,7 @@
                 </div>
 
                 <div class="translation-list" id="translationList">
-                    <div class="empty-state"><p>Loading...</p></div>
+                    <div class="skeleton-list"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
                 </div>
 
                 <!-- Bulk approve bar -->
@@ -4312,6 +4408,14 @@
         }
 
         async function loadTranslations() {
+            var _list = document.getElementById('translationList');
+            if (_list) {
+                var _skList = document.createElement('div');
+                _skList.className = 'skeleton-list';
+                for (var _ski = 0; _ski < 5; _ski++) { var _skc = document.createElement('div'); _skc.className = 'skeleton-card'; _skList.appendChild(_skc); }
+                while (_list.firstChild) _list.removeChild(_list.firstChild);
+                _list.appendChild(_skList);
+            }
             try {
                 // Paginate — use 500 per batch; this project's PostgREST max_rows is 500,
                 // so requesting 1000 returns only 500 and breaks the loop prematurely.
@@ -5258,7 +5362,7 @@
 
             // Row 1: Key + Page
             var editRow = document.createElement('div');
-            editRow.className = 'edit-row';
+            editRow.className = 'edit-row edit-row-meta';
 
             var keyField = document.createElement('div');
             keyField.className = 'edit-field';
@@ -5295,7 +5399,7 @@
 
             // Row 2: Kurdish Text
             var textField = document.createElement('div');
-            textField.className = 'edit-field';
+            textField.className = 'edit-field field-kurdish';
             var textLabel = document.createElement('label');
             textLabel.textContent = 'Kurdish Text';
             var textArea = document.createElement('textarea');
@@ -5348,7 +5452,7 @@
 
             // Row 3: Context
             var ctxField = document.createElement('div');
-            ctxField.className = 'edit-field';
+            ctxField.className = 'edit-field field-context';
             var ctxLabel = document.createElement('label');
             ctxLabel.textContent = 'Context (optional)';
             var ctxInput = document.createElement('input');
@@ -5635,8 +5739,11 @@
         // ===== Add New =====
         function toggleAddForm() {
             var form = document.getElementById('addForm');
+            var backdrop = document.getElementById('addFormBackdrop');
             form.classList.toggle('active');
             if (form.classList.contains('active')) {
+                if (backdrop) { backdrop.style.display = 'block'; requestAnimationFrame(function() { backdrop.classList.add('open'); }); }
+                document.body.style.overflow = 'hidden';
                 document.getElementById('newKeyId').value = '';
                 document.getElementById('newKurdishText').value = '';
                 var isWidgetsPlatform = (activePlatform === 'widgets');
@@ -5649,7 +5756,15 @@
                     document.getElementById('newIosText').value = '';
                     document.getElementById('newAndroidText').value = '';
                 }
-                document.getElementById('newKeyId').focus();
+                setTimeout(function() {
+                    var focusEl = window.innerWidth <= 768
+                        ? document.getElementById('newKurdishText')
+                        : document.getElementById('newKeyId');
+                    if (focusEl) focusEl.focus();
+                }, 80);
+            } else {
+                if (backdrop) { backdrop.classList.remove('open'); setTimeout(function() { backdrop.style.display = 'none'; }, 260); }
+                document.body.style.overflow = '';
             }
         }
 
