@@ -171,7 +171,7 @@
       '.tk-fa-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}',
       '.tk-fa-brand{display:flex;align-items:center;gap:11px;min-width:0;}',
       '.tk-fa-brand img{width:34px;height:34px;border-radius:8px;flex-shrink:0;}',
-      '[data-theme="light"]  .tk-fa-brand img{filter:brightness(0);}',
+      '[data-theme="light"]  .tk-fa-brand img{filter:brightness(0) invert(1);}',
       '[data-theme="dark"]   .tk-fa-brand img{filter:brightness(0) invert(1);}',
       '[data-theme="noor"]   .tk-fa-brand img{filter:none;}',
       '[data-theme="sakina"] .tk-fa-brand img{filter:brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%);}',
