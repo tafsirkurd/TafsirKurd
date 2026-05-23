@@ -4425,30 +4425,32 @@ footer {
 }
 
 /* ── Noor (Parchment) theme overrides ─────────────────────────── */
-[data-theme="noor"] header                 { background: #1f1500; }
-[data-theme="noor"] .reach-showcase        { background: #1a1200; }
-[data-theme="noor"] .videos-showcase       { background: #1a1200; }
+[data-theme="noor"] header {
+    background: radial-gradient(ellipse at 60% 0%, #2a1a00 0%, #1a1000 50%, #120c00 100%);
+}
+[data-theme="noor"] .reach-showcase        { background: linear-gradient(180deg, #1a1200 0%, #150e00 100%); }
+[data-theme="noor"] .videos-showcase       { background: linear-gradient(180deg, #150e00 0%, #1a1200 100%); }
 [data-theme="noor"] #testimonials          { background: #fdf4e3; }
-[data-theme="noor"] .testimonial-card      { background: #fdf4e3; border-color: #e0d5b0; }
-[data-theme="noor"] .contact-info-panel    { background: #1a1200; color: #fdf4e3; }
+[data-theme="noor"] .testimonial-card      { background: #fff8ee; border-color: #e0d5b0; box-shadow: 0 4px 20px rgba(26,92,58,0.08); }
+[data-theme="noor"] .contact-info-panel    { background: linear-gradient(135deg, #1a1200 0%, #241600 100%); color: #fdf4e3; }
 [data-theme="noor"] .daily-card-badge      { background: #1a5c3a; color: #fdf4e3; }
-[data-theme="noor"] .hero-search-input     { background: #fdf4e3; color: #1a1a0f; border-color: #e0d5b0; }
-[data-theme="noor"] .hero-search-btn       { background: #1a5c3a; }
 
 /* ── Sakina (Emerald) theme overrides ─────────────────────────── */
-[data-theme="sakina"] header               { background: #050d07; }
-[data-theme="sakina"] .reach-showcase      { background: #060e08; }
-[data-theme="sakina"] .videos-showcase     { background: #060e08; }
+[data-theme="sakina"] header {
+    background: radial-gradient(ellipse at 60% 0%, #0a1f10 0%, #060e08 50%, #030806 100%);
+}
+[data-theme="sakina"] .reach-showcase      { background: linear-gradient(180deg, #060e08 0%, #040a05 100%); }
+[data-theme="sakina"] .videos-showcase     { background: linear-gradient(180deg, #040a05 0%, #060e08 100%); }
 [data-theme="sakina"] #testimonials        { background: #091409; }
-[data-theme="sakina"] .testimonial-card    { background: #0c1c12; border-color: #1e3528; }
-[data-theme="sakina"] .contact-info-panel  { background: #060e08; color: #e8f5ec; }
+[data-theme="sakina"] .testimonial-card    { background: #0c1c12; border-color: #1e3528; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+[data-theme="sakina"] .contact-info-panel  { background: linear-gradient(135deg, #060e08 0%, #0a1a0d 100%); color: #e8f5ec; }
 [data-theme="sakina"] .daily-card-badge    { background: #c9a84c; color: #0c1c12; }
 
 /* ── Light theme dark-section overrides ───────────────────────── */
-[data-theme="light"] .reach-showcase   { background: #f5f5f5; }
-[data-theme="light"] .videos-showcase  { background: #f5f5f5; }
+[data-theme="light"] .reach-showcase   { background: #f2f2f2; }
+[data-theme="light"] .videos-showcase  { background: #f2f2f2; }
 [data-theme="light"] #testimonials     { background: #f8f8f8; }
-[data-theme="light"] .testimonial-card { background: #ffffff; border-color: #ebebeb; }
+[data-theme="light"] .testimonial-card { background: #ffffff; border-color: #e8e8e8; }
   </style>
 
   <!-- Prefetch key pages for instant navigation -->
@@ -5306,6 +5308,11 @@ async function initHeroCanvas() {
     let currentTheme = 'islamic'; // Default theme
     let logoImage = null;
 
+    const HERO_BG = { noor: '#1a1000', sakina: '#060e08', light: '#141414', dark: '#141414' };
+    function getHeroBg() {
+        return HERO_BG[document.documentElement.getAttribute('data-theme')] || '#141414';
+    }
+
     // Load theme from Supabase
     async function loadTheme() {
         try {
@@ -5356,7 +5363,7 @@ async function initHeroCanvas() {
         ctx.fill();
         ctx.beginPath();
         ctx.arc(size * 0.35, -size * 0.1, size * 0.75, 0, Math.PI * 2);
-        ctx.fillStyle = '#141414';
+        ctx.fillStyle = getHeroBg();
         ctx.fill();
         ctx.restore();
     }
@@ -5517,7 +5524,7 @@ async function initHeroCanvas() {
         ctx.closePath();
         ctx.fill();
         // Center line
-        ctx.strokeStyle = '#141414';
+        ctx.strokeStyle = getHeroBg();
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(0, -size * 0.5);
@@ -5539,7 +5546,7 @@ async function initHeroCanvas() {
             ctx.beginPath();
             ctx.arc(x, y, size, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#141414';
+            ctx.fillStyle = getHeroBg();
             ctx.font = `bold ${size}px Inter, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -5721,7 +5728,7 @@ async function initHeroCanvas() {
     function animate() {
         frame++;
         ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#141414';
+        ctx.fillStyle = getHeroBg();
         ctx.fillRect(0, 0, w, h);
 
         elements.forEach(el => {
