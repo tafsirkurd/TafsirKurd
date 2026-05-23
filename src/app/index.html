@@ -139,7 +139,7 @@ img{display:block;max-width:100%}
   --mhl-next-line:color-mix(in srgb,var(--accent) 16%,transparent);
   --mhl-next-glow:0 0 5px color-mix(in srgb,var(--accent) 2%,transparent);
   --fu-glow:rgba(38,100,58,.22);--fu-ring:rgba(56,130,78,.3);
-  --logo-filter:invert(1);--logo-blend:screen;--mushaf-filter:none;
+  --logo-filter:brightness(0) invert(1);--logo-blend:normal;--mushaf-filter:none;
   --fu-logo-filter:invert(1) brightness(1.1);
 }
 /* ── Sakina: deep emerald night × gold ── */
@@ -164,7 +164,7 @@ img{display:block;max-width:100%}
   --mhl-next-line:color-mix(in srgb,var(--accent) 28%,transparent);
   --mhl-next-glow:0 0 9px color-mix(in srgb,var(--accent) 4%,transparent);
   --fu-glow:rgba(201,168,76,.18);--fu-ring:rgba(201,168,76,.3);
-  --logo-filter:invert(1) sepia(1) saturate(6) hue-rotate(-15deg) brightness(0.78);--logo-blend:screen;--mushaf-filter:none;
+  --logo-filter:brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%);--logo-blend:normal;--mushaf-filter:none;
   --fu-logo-filter:invert(1) sepia(1) saturate(4) hue-rotate(-15deg) brightness(0.85);
 }
 /* ── Noor: warm parchment × deep green ── */
@@ -200,9 +200,9 @@ body{background:var(--bg);color:var(--text)}
 /* mix-blend-mode + filter — theme-aware logo coloring (GPU composite op) */
 .safe-render .hdr-logo img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
 .safe-render .about-section img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
-/* noor theme: recolor logo to green via filter */
+/* noor theme: marks already green, just show them */
 [data-theme="noor"] .hdr-logo img,
-[data-theme="noor"] .about-section img{filter:brightness(0) saturate(100%) invert(28%) sepia(71%) saturate(500%) hue-rotate(107deg) brightness(90%);mix-blend-mode:normal}
+[data-theme="noor"] .about-section img{filter:none;mix-blend-mode:normal}
 
 /* ===== SPLASH ===== */
 .splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}

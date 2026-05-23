@@ -237,7 +237,7 @@
         }
 
         [data-theme="dark"] .logo-image {
-            filter: invert(1) brightness(1.2);
+            filter: brightness(0) invert(1);
         }
 
         [data-theme="dark"] .surah-card-number {
@@ -297,8 +297,8 @@
             border-bottom: 1px solid var(--border);
         }
 
-        [data-theme="noor"] .logo-image   { filter: brightness(0) saturate(100%) invert(28%) sepia(71%) saturate(500%) hue-rotate(107deg) brightness(90%); }
-        [data-theme="sakina"] .logo-image { filter: invert(1) sepia(1) saturate(4) hue-rotate(-20deg) brightness(.85); }
+        [data-theme="noor"]   .logo-image { filter: none; }
+        [data-theme="sakina"] .logo-image { filter: brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%); }
 
         .nav-container {
             width: 100%;
