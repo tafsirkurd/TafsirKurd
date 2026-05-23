@@ -61,7 +61,7 @@
     // Universal logo filter rules — one place, all public pages
     var S = '[data-theme="light"]  %{filter:brightness(0) invert(1)!important}' +
             '[data-theme="dark"]   %{filter:brightness(0) invert(1)!important}' +
-            '[data-theme="noor"]   %{filter:none!important}'                    +
+            '[data-theme="noor"]   %{filter:brightness(0) saturate(100%) invert(25%) sepia(60%) saturate(800%) hue-rotate(118deg) brightness(85%)!important}' +
             '[data-theme="sakina"] %{filter:brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%)!important}';
     var LOGO_SEL = '.logo-image,.hero-logo-static,.nav-dropdown-img,.footer-logo img';
     var st = document.createElement('style');

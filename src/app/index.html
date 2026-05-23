@@ -200,9 +200,9 @@ body{background:var(--bg);color:var(--text)}
 /* mix-blend-mode + filter — theme-aware logo coloring (GPU composite op) */
 .safe-render .hdr-logo img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
 .safe-render .about-section img{filter:var(--logo-filter,none);mix-blend-mode:var(--logo-blend,normal)}
-/* noor theme: marks already green, just show them */
+/* noor theme: green logo */
 [data-theme="noor"] .hdr-logo img,
-[data-theme="noor"] .about-section img{filter:none;mix-blend-mode:normal}
+[data-theme="noor"] .about-section img{filter:brightness(0) saturate(100%) invert(25%) sepia(60%) saturate(800%) hue-rotate(118deg) brightness(85%);mix-blend-mode:normal}
 
 /* ===== SPLASH ===== */
 .splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
