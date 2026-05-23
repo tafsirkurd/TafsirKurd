@@ -1824,7 +1824,7 @@
   function reportWidgetHealth(opts) {
     try {
       var now = Date.now();
-      if (now - _widgetHealthReportedAt < 10 * 60 * 1000) return; // throttle
+      if (now - _widgetHealthReportedAt < 60 * 60 * 1000) return; // throttle: once per hour
       _widgetHealthReportedAt = now;
       var health = getWidgetHealthStatus();
       var platform = 'web';
