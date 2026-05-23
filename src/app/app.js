@@ -8690,7 +8690,7 @@ function applySyncData(data){
     if(k==='_syncTime')return;
     try{localStorage.setItem(k,data[k]);}catch(e){}
   });
-  S.theme=localStorage.getItem('theme')||'light';
+  S.theme=localStorage.getItem('theme')||'noor';
   S.arSize=parseFloat(localStorage.getItem('app_arSize'))||2.0;
   S.tfSize=parseFloat(localStorage.getItem('app_tfSize'))||1.0;
   S.lineH=parseFloat(localStorage.getItem('app_lineH'))||2.2;
@@ -8873,7 +8873,7 @@ function _clearUserLocalData(){
   S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;S.showTafsir=true;S.bgAudio=false;
   S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;
   S.hapticFeedback=true;
-  if(S.theme!=='light'){S.theme='light';applyTheme();}
+  if(S.theme!=='noor'){S.theme='noor';applyTheme();}
   applySizes();
   /* Reset in-memory caches that mirror now-cleared localStorage keys */
   initTodayVerses();  // clears S.todayVerses so new user doesn't inherit old counts
