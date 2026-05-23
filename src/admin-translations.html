@@ -246,6 +246,14 @@
         }
         .filter-clear.visible { display: flex; }
 
+        /* ===== Filter chips row ===== */
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
         /* ===== Sort button ===== */
         .sort-btn {
             display: flex;
@@ -678,12 +686,8 @@
             #exportBtn span { display: none; }
             #publishBtn span { display: none; }
             #publishBtn { padding: 10px 12px; }
-            .empty-filter-btn span { display: none; }
-            .empty-filter-btn { padding: 10px 12px; }
-            .filters { flex-wrap: wrap; gap: 8px; }
+            .filters { flex-wrap: nowrap; gap: 8px; }
             .filter-search { order: 0; width: 100%; flex: 1 1 100%; }
-            .empty-filter-btn { order: 1; }
-            .sort-btn { order: 2; }
             .stat-pill-empty strong, .stat-pill-progress strong { font-size: 15px; }
             .per-page-select { font-size: 13px; padding: 8px 10px; }
             .result-count { display: none; }
@@ -703,6 +707,61 @@
             .action-group { border: none; border-radius: 0; box-shadow: none; background: transparent; gap: 4px; }
             .action-group .btn { border-radius: 12px !important; border: 1px solid var(--border-light) !important; background: var(--bg-surface) !important; }
             .action-group .btn:hover { background: var(--bg-hover) !important; }
+
+            /* ── Filter chips row ────────────────────────────────────── */
+            .filters {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            .filter-chips {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+                width: 100%;
+            }
+            .filter-chips::-webkit-scrollbar { display: none; }
+
+            /* Chip style for all filter buttons */
+            .filter-chips .sort-btn,
+            .filter-chips .empty-filter-btn {
+                display: flex !important;
+                flex-shrink: 0;
+                align-items: center;
+                gap: 7px;
+                padding: 9px 16px;
+                height: auto;
+                width: auto;
+                border-radius: 22px;
+                font-size: 13px;
+                font-weight: 600;
+                white-space: nowrap;
+                border: 1.5px solid var(--border-light);
+                background: var(--bg-surface);
+                color: var(--text-secondary);
+            }
+            /* Show labels on mobile */
+            .filter-chips .sort-btn span,
+            .filter-chips .empty-filter-btn span { display: inline !important; }
+            /* Icon size inside chips */
+            .filter-chips .sort-btn svg,
+            .filter-chips .empty-filter-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+            /* Active chip — sort */
+            .filter-chips .sort-btn.active {
+                border-color: #3b82f6;
+                color: #3b82f6;
+                background: rgba(59,130,246,0.08);
+            }
+            /* Active chip — empty filter */
+            .filter-chips .empty-filter-btn.active {
+                background: #dc2626;
+                color: #fff;
+                border-color: #dc2626;
+            }
         }
 
         /* ===== More sheet (mobile overflow actions) ===== */
@@ -1805,12 +1864,8 @@
                 padding-right: 10px;
             }
 
-            /* Sort & filter icon buttons — larger touch target */
-            .sort-btn { width: 48px; height: 48px; padding: 0; justify-content: center; border-radius: 14px; }
-            .sort-btn span { display: none; }
-            .sort-btn svg { width: 20px; height: 20px; }
-            .empty-filter-btn { width: 48px; height: 48px; border-radius: 14px; justify-content: center; }
-            .empty-filter-btn svg { width: 20px; height: 20px; }
+            /* filter-search full-width */
+            .filter-search { width: 100%; }
 
             /* Translation card: slightly more spacious */
             .t-row { padding: 16px; border-radius: 16px; }
@@ -2299,26 +2354,28 @@
                         <input type="text" id="searchInput" placeholder="Search by key or text..." oninput="onSearchInput()">
                         <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
                     </div>
-                    <button class="empty-filter-btn" id="emptyFilterBtn" onclick="toggleEmptyFilter()" title="Show only empty translations">
-                        <i data-lucide="alert-circle"></i>
-                        <span>Empty</span>
-                    </button>
-                    <button class="empty-filter-btn" id="nextEmptyBtn" onclick="jumpNextEmpty()" title="Jump to next empty translation" style="display:none">
-                        <i data-lucide="skip-forward"></i>
-                        <span>Next</span>
-                    </button>
-                    <button class="empty-filter-btn" id="unapprovedFilterBtn" onclick="toggleUnapprovedFilter()" title="Show only unapproved translations">
-                        <i data-lucide="shield-off"></i>
-                        <span>Unapproved</span>
-                    </button>
-                    <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
-                        <i data-lucide="arrow-down-narrow-wide"></i>
-                        <span id="sortLabel">Newest</span>
-                    </button>
-                    <button class="empty-filter-btn" id="seedAppKeysBtn" onclick="seedMobileAppKeys()" title="Insert all missing mobile app keys (safe — won't overwrite existing)" style="display:none;background:#f0fdf4;color:#166534;border-color:#bbf7d0">
-                        <i data-lucide="plus-circle"></i>
-                        <span>Seed App Keys</span>
-                    </button>
+                    <div class="filter-chips" id="filterChips">
+                        <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
+                            <i data-lucide="arrow-down-narrow-wide"></i>
+                            <span id="sortLabel">Newest</span>
+                        </button>
+                        <button class="empty-filter-btn" id="emptyFilterBtn" onclick="toggleEmptyFilter()" title="Show only empty translations">
+                            <i data-lucide="alert-circle"></i>
+                            <span>Empty</span>
+                        </button>
+                        <button class="empty-filter-btn" id="nextEmptyBtn" onclick="jumpNextEmpty()" title="Jump to next empty translation" style="display:none">
+                            <i data-lucide="skip-forward"></i>
+                            <span>Next empty</span>
+                        </button>
+                        <button class="empty-filter-btn" id="unapprovedFilterBtn" onclick="toggleUnapprovedFilter()" title="Show only unapproved translations">
+                            <i data-lucide="shield-off"></i>
+                            <span>Unapproved</span>
+                        </button>
+                        <button class="empty-filter-btn" id="seedAppKeysBtn" onclick="seedMobileAppKeys()" title="Insert all missing mobile app keys (safe — won't overwrite existing)" style="display:none;background:#f0fdf4;color:#166534;border-color:#bbf7d0">
+                            <i data-lucide="plus-circle"></i>
+                            <span>Seed App Keys</span>
+                        </button>
+                    </div>
                 </div>
                 <button class="mobile-filter-bar" id="mobileFilterBar" onclick="openFilterSheet()">
                     <i data-lucide="filter" style="width:16px;height:16px"></i>
