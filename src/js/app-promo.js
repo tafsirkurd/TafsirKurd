@@ -176,7 +176,7 @@
       '.tk-fa-brand{display:flex;align-items:center;gap:11px;min-width:0;}',
       '.tk-fa-brand img{width:34px;height:34px;border-radius:8px;flex-shrink:0;}',
       '[data-theme="dark"] .tk-fa-brand img{filter:invert(1);}',
-      '[data-theme="noor"] .tk-fa-brand img{content:url("/assets/images/TafsirKurd-green.png");border-radius:4px;}',
+      '[data-theme="noor"] .tk-fa-brand img{filter:brightness(0) saturate(100%) invert(28%) sepia(71%) saturate(500%) hue-rotate(107deg) brightness(90%);}',
       '[data-theme="sakina"] .tk-fa-brand img{filter:invert(1) sepia(1) saturate(4) hue-rotate(-20deg) brightness(.85);}',
       '.tk-fa-info{display:flex;flex-direction:column;gap:2px;}',
       '.tk-fa-name{font-size:.85rem;font-weight:700;color:var(--text,#000);}',
