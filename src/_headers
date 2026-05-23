@@ -4,14 +4,31 @@
   Cross-Origin-Embedder-Policy: credentialless
   Cache-Control: no-cache, no-store, must-revalidate
 
-# 🚀 HTML FILES - NO CACHE (always fetch fresh from server)
+# 🚀 HTML FILES + DIRECTORY INDEXES - NO CACHE (always fetch fresh from server)
 # This prevents Cloudflare from serving stale HTML after deployments
+# NOTE: directory index files (e.g. /app/ → app/index.html) are served without .html in URL,
+# so they need explicit path rules in addition to the *.html glob rules.
 /*.html
   Cache-Control: no-cache, no-store, must-revalidate
   Pragma: no-cache
   Expires: 0
 
 /**/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+/app/
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+/app
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+/
   Cache-Control: no-cache, no-store, must-revalidate
   Pragma: no-cache
   Expires: 0
