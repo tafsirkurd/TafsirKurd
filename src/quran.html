@@ -10812,13 +10812,11 @@
         // Register Service Worker for offline support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js?v=506')
+                navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
                     .then(registration => {
-                        console.log('✅ Service Worker registered successfully:', registration.scope);
+                        registration.update();
                     })
-                    .catch(error => {
-                        console.log('❌ Service Worker registration failed:', error);
-                    });
+                    .catch(error => {});
             });
 
             // Service worker controller change - don't auto-reload to prevent loops
