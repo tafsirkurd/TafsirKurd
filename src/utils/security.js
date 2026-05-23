@@ -25,27 +25,33 @@
 // ============================================================================
 
 function logSecurityEvent(eventType, details = {}) {
-    const events = JSON.parse(localStorage.getItem('securityEvents') || '[]');
+    try {
+        const events = JSON.parse(localStorage.getItem('securityEvents') || '[]');
 
-    const event = {
-        type: eventType,
-        timestamp: new Date().toISOString(),
-        page: window.location.pathname,
-        userAgent: navigator.userAgent,
-        ...details
-    };
+        const event = {
+            type: eventType,
+            timestamp: new Date().toISOString(),
+            page: window.location.pathname,
+            ...details
+        };
 
-    events.push(event);
+        events.push(event);
 
-    // Keep last 100 events only
-    if (events.length > 100) {
-        events.shift();
+        // Keep last 20 events only
+        if (events.length > 20) {
+            events.splice(0, events.length - 20);
+        }
+
+        try {
+            localStorage.setItem('securityEvents', JSON.stringify(events));
+        } catch (e) {
+            // Quota exceeded — clear and store only the latest event
+            localStorage.removeItem('securityEvents');
+            localStorage.setItem('securityEvents', JSON.stringify([event]));
+        }
+    } catch (e) {
+        // localStorage unavailable — fail silently
     }
-
-    localStorage.setItem('securityEvents', JSON.stringify(events));
-
-    // Log to console in development
-    // Security Event logged
 }
 
 // ============================================================================
