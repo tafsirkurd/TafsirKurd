@@ -2477,27 +2477,31 @@ window.GencineUI = {
             };
           }
           coverWrap.appendChild(_rb);
-          // SVG circular ring (bottom-right)
+          // SVG circular ring (bottom-right) — always full, reading bookmark indicator
           var _CCIRC = 138.23; // 2π × 22
           var _ringWrap = document.createElement('div'); _ringWrap.className = 'book-ring-wrap';
           var _NS = 'http://www.w3.org/2000/svg';
           var _rsvg = document.createElementNS(_NS,'svg'); _rsvg.setAttribute('viewBox','0 0 50 50'); _rsvg.classList.add('book-ring-svg');
           var _rtrack = document.createElementNS(_NS,'circle'); _rtrack.setAttribute('cx','25'); _rtrack.setAttribute('cy','25'); _rtrack.setAttribute('r','22'); _rtrack.classList.add('book-ring-track'); _rsvg.appendChild(_rtrack);
           var _rfill = document.createElementNS(_NS,'circle'); _rfill.setAttribute('cx','25'); _rfill.setAttribute('cy','25'); _rfill.setAttribute('r','22'); _rfill.classList.add('book-ring-fill');
-          var _visualPct = _pct > 0 ? _pct : (_prog && _prog.page > 0 ? 4 : 0);
           _rfill.setAttribute('stroke-dasharray', '138.23');
-          _rfill.setAttribute('stroke-dashoffset', _visualPct > 0 ? String(_CCIRC * (1 - _visualPct / 100)) : String(_CCIRC));
+          _rfill.setAttribute('stroke-dashoffset', '0'); // always full ring
           _rsvg.appendChild(_rfill); _ringWrap.appendChild(_rsvg);
-          if (_prog && _prog.page >= 1) {
-            var _rpn = document.createElement('div'); _rpn.className = 'book-ring-pct'; _rpn.textContent = 'پ' + _prog.page; _ringWrap.appendChild(_rpn);
-          } else {
-            var _rico = document.createElement('i'); _rico.className = 'fas fa-book-open book-ring-ico'; _ringWrap.appendChild(_rico);
-          }
+          var _rico = document.createElement('i'); _rico.className = 'fas fa-bookmark book-ring-ico'; _ringWrap.appendChild(_rico);
           coverWrap.appendChild(_ringWrap);
-          // Bottom gradient overlay (no text — ring handles display)
+          // Page number chip (bottom-left)
+          if (_prog && _prog.page >= 1) {
+            var _chip = document.createElement('div'); _chip.className = 'book-page-chip';
+            var _chipIco = document.createElement('i'); _chipIco.className = 'fas fa-book-open';
+            var _chipTxt = document.createElement('span'); _chipTxt.textContent = 'پ ' + _prog.page;
+            _chip.appendChild(_chipIco); _chip.appendChild(_chipTxt);
+            coverWrap.appendChild(_chip);
+          }
+          // Bottom gradient overlay
           var _po = document.createElement('div'); _po.className = 'book-prog-overlay';
           coverWrap.appendChild(_po);
           // Thin progress bar at cover bottom
+          var _visualPct = _pct > 0 ? _pct : (_prog && _prog.page > 0 ? 4 : 0);
           var _bar = document.createElement('div'); _bar.className = 'book-cover-bar';
           var _barFill = document.createElement('div'); _barFill.className = 'book-cover-bar-fill';
           _barFill.style.width = (_visualPct > 0 ? Math.max(_visualPct, 2) : 0) + '%';
