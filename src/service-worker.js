@@ -50,7 +50,7 @@ const PRECACHE = [
   '/app/quran-font-manager.js',
   // Images
   '/assets/images/logo.png',
-  '/assets/images/TafsirKurd.png?v=2',
+  '/assets/images/TafsirKurd.png?v=3',
   '/assets/icons/genc-asma-bg.webp',
   '/manifest.json'
 ];
