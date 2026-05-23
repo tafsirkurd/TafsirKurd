@@ -1242,6 +1242,23 @@ nav.scrolled-nav {
     color: #999;
 }
 
+/* ── Sakina (emerald) nav overrides ── */
+[data-theme="sakina"] .nav-link                          { color: var(--text); }
+[data-theme="sakina"] .nav-link i                        { color: var(--text); }
+[data-theme="sakina"] .nav-link:hover,
+[data-theme="sakina"] .nav-link.active                   { color: #0c1c12; }
+[data-theme="sakina"] .nav-link:hover::after,
+[data-theme="sakina"] .nav-link.active::after            { opacity: 0.2; }
+[data-theme="sakina"] .nav-link.active .nav-active-dot   { background: var(--primary); box-shadow: 0 0 8px rgba(201,168,76,.5); }
+[data-theme="sakina"] .nav-dropdown-menu                 { background: #0f2218; border-color: rgba(201,168,76,.15); box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 8px 20px rgba(0,0,0,.3); }
+[data-theme="sakina"] .nav-dropdown-item::before         { background: rgba(201,168,76,.07); }
+[data-theme="sakina"] .nav-dropdown-item:hover           { background: rgba(201,168,76,.07); }
+[data-theme="sakina"] .nav-dropdown-item:hover .nav-dropdown-avatar { border-color: rgba(201,168,76,.3); box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+[data-theme="sakina"] .nav-dropdown-avatar               { border-color: rgba(201,168,76,.15); }
+[data-theme="sakina"] .nav-dropdown-name                 { color: var(--text); }
+[data-theme="sakina"] .nav-dropdown-role                 { color: var(--text-muted); }
+[data-theme="sakina"] .nav-dropdown-placeholder          { background: linear-gradient(135deg,#1e3528,#2a4a38); color: #e8d5b0; }
+
 .nav-overlay {
     display: none;
 }
