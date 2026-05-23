@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
-    <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/site-theme.js"></script>
     <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
   <script src="/utils/translations.js?v=20260225"></script>
     <script src="/utils/scroll-position.js"></script>
@@ -59,6 +59,41 @@
             --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
         }
+        [data-theme="noor"] {
+            --primary: #1a5c3a;
+            --accent: #f4e8cc;
+            --bg: #f4e8cc;
+            --card-bg: #fdf4e3;
+            --item-bg: #f5ecce;
+            --text: #1a1a0f;
+            --text-muted: #5c5c3d;
+            --border: #e0d5b0;
+            --shadow-sm: 0 2px 10px rgba(26,92,58,0.08);
+            --shadow-md: 0 8px 25px rgba(26,92,58,0.12);
+        }
+        [data-theme="sakina"] {
+            --primary: #c9a84c;
+            --accent: #0c1c12;
+            --bg: #0c1c12;
+            --card-bg: #112318;
+            --item-bg: #162d1e;
+            --text: #e8f5ec;
+            --text-muted: #8aaf94;
+            --border: #1e3528;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        /* Site theme grid */
+        .site-theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 4px 0; }
+        .site-theme-card { border: 2px solid var(--border); border-radius: 16px; padding: 14px 12px 10px; cursor: pointer; text-align: center; background: var(--item-bg); transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s; position: relative; }
+        .site-theme-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .site-theme-card.on { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent); }
+        .site-theme-swatch { width: 100%; height: 44px; border-radius: 10px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,0,0,0.08); }
+        .site-theme-name { font-size: 13px; font-weight: 700; color: var(--text); }
+        .site-theme-sub  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .site-theme-check { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: var(--accent, #fff); font-size: 11px; display: none; align-items: center; justify-content: center; }
+        .site-theme-card.on .site-theme-check { display: flex; }
 
         * {
             margin: 0;
@@ -622,17 +657,39 @@
                     <i class="fas fa-palette"></i>
                     <span data-t="settings_display_title">رۆکار</span>
                 </h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">
-                            <i class="fas fa-moon"></i>
-                            <span data-t="settings_dark_mode_label">رەوشا تاریک</span>
+                <div class="site-theme-grid" id="siteThemeGrid">
+                    <button class="site-theme-card" data-theme-id="noor" onclick="SiteTheme.set('noor')">
+                        <div class="site-theme-swatch" style="background:#f4e8cc">
+                            <span style="width:20px;height:20px;border-radius:50%;background:#1a5c3a;display:inline-block"></span>
                         </div>
-                        <div class="setting-description" data-t="settings_dark_mode_desc">گوهۆڕین بۆ رەوشا تاریک بۆ خواندنا ئاسانتر</div>
-                    </div>
-                    <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
-                        <div class="setting-toggle-knob"></div>
-                    </div>
+                        <div class="site-theme-name">نوور</div>
+                        <div class="site-theme-sub">Parchment</div>
+                        <div class="site-theme-check"><i class="fas fa-check"></i></div>
+                    </button>
+                    <button class="site-theme-card" data-theme-id="sakina" onclick="SiteTheme.set('sakina')">
+                        <div class="site-theme-swatch" style="background:#0c1c12">
+                            <span style="width:20px;height:20px;border-radius:50%;background:#c9a84c;display:inline-block"></span>
+                        </div>
+                        <div class="site-theme-name">سکینە</div>
+                        <div class="site-theme-sub">Emerald</div>
+                        <div class="site-theme-check"><i class="fas fa-check"></i></div>
+                    </button>
+                    <button class="site-theme-card" data-theme-id="light" onclick="SiteTheme.set('light')">
+                        <div class="site-theme-swatch" style="background:#fafafa;border-color:#e0e0e0">
+                            <span style="width:20px;height:20px;border-radius:50%;background:#000;display:inline-block"></span>
+                        </div>
+                        <div class="site-theme-name">ڕووناک</div>
+                        <div class="site-theme-sub">Light</div>
+                        <div class="site-theme-check"><i class="fas fa-check"></i></div>
+                    </button>
+                    <button class="site-theme-card" data-theme-id="dark" onclick="SiteTheme.set('dark')">
+                        <div class="site-theme-swatch" style="background:#0a0a0a">
+                            <span style="width:20px;height:20px;border-radius:50%;background:#fff;display:inline-block"></span>
+                        </div>
+                        <div class="site-theme-name">تاریکی</div>
+                        <div class="site-theme-sub">Dark</div>
+                        <div class="site-theme-check"><i class="fas fa-check"></i></div>
+                    </button>
                 </div>
             </div>
 
@@ -904,14 +961,8 @@
         }
 
         function loadSettings() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            if (savedTheme === 'dark') {
-                darkModeToggle.classList.add('active');
-            } else {
-                darkModeToggle.classList.remove('active');
-            }
+            // Sync theme grid active state
+            SiteTheme.set(SiteTheme.current());
 
             const savedArabicFont = localStorage.getItem('arabicFont') || 'KFGQPC Hafs';
             const savedArabicSize = localStorage.getItem('arabicSize') || '2.2';
@@ -969,25 +1020,6 @@
             }
         }
 
-        function toggleDarkMode() {
-            console.log('toggleDarkMode function called');
-            const toggle = document.getElementById('darkModeToggle');
-            const current = document.documentElement.getAttribute('data-theme') || 'light';
-            const newTheme = current === 'light' ? 'dark' : 'light';
-
-            console.log('Switching theme from', current, 'to', newTheme);
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            // Explicitly set active class based on new theme
-            if (newTheme === 'dark') {
-                toggle.classList.add('active');
-            } else {
-                toggle.classList.remove('active');
-            }
-
-            showNotification(newTheme === 'dark' ? 'رەوشا تاری هاتە چالاککرن' : 'رەوشا ڕووناهیێ هاتە چالاککرن');
-        }
 
         function changeArabicFont() {
             const font = document.getElementById('arabicFontSelect').value;

@@ -4,18 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <!-- Theme loader inline to prevent flash - no network request -->
-  <script>
-    (function(){
-      var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}'),theme=t||(p.darkMode?'dark':'light');
-      var bg=theme==='dark'?'#0a0a0a':'#fafafa';
-      var el=document.documentElement;
-      el.setAttribute('data-theme',theme);
-      el.style.background=bg;
-      el.style.backgroundColor=bg;
-      el.style.colorScheme=theme==='dark'?'dark':'light';
-      el.classList.add('preload');
-    })();
-  </script>
+  <script src="/utils/site-theme.js"></script>
   <script src="/utils/platform.js"></script>
   <script src="/utils/app-error-reporter.js?v=1"></script>
   <script>
@@ -251,6 +240,38 @@ html.preload *, html.preload *::before, html.preload *::after {
     --shadow-sm: 0 2px 10px rgba(255, 255, 255, 0.05);
     --shadow-md: 0 8px 25px rgba(255, 255, 255, 0.08);
     --shadow-lg: 0 20px 40px rgba(255, 255, 255, 0.1);
+}
+[data-theme="noor"] {
+    --primary: #1a5c3a;
+    --primary-light: #2d7a52;
+    --primary-dark: #0f3d26;
+    --accent: #f4e8cc;
+    --bg: #f4e8cc;
+    --card-bg: #fdf4e3;
+    --text: #1a1a0f;
+    --text-muted: #5c5c3d;
+    --text-light: #8a8a6b;
+    --border: #e0d5b0;
+    --border-light: #ede5c8;
+    --shadow-sm: 0 2px 10px rgba(26, 92, 58, 0.08);
+    --shadow-md: 0 8px 25px rgba(26, 92, 58, 0.12);
+    --shadow-lg: 0 20px 40px rgba(26, 92, 58, 0.16);
+}
+[data-theme="sakina"] {
+    --primary: #c9a84c;
+    --primary-light: #d4b86a;
+    --primary-dark: #b8922e;
+    --accent: #0c1c12;
+    --bg: #0c1c12;
+    --card-bg: #112318;
+    --text: #e8f5ec;
+    --text-muted: #8aaf94;
+    --text-light: #5a7d62;
+    --border: #1e3528;
+    --border-light: #1a2e20;
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="dark"] .logo-image {
@@ -601,6 +622,40 @@ body.no-scroll {
     opacity: 1;
     transform: translateX(0) scale(1);
 }
+
+/* Theme dot picker row inside FAB */
+.fab-theme-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 40px;
+    padding: 8px 12px;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transform: translateX(100px) scale(0);
+    transition: all var(--transition-medium) var(--cubic);
+}
+.fab-group.active .fab-theme-row {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+}
+.fab-theme-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+    flex-shrink: 0;
+}
+.fab-theme-dot[data-theme-pick="noor"]   { background: #f4e8cc; border-color: #d4c99a; }
+.fab-theme-dot[data-theme-pick="sakina"] { background: #0c1c12; border-color: #1e3528; }
+.fab-theme-dot[data-theme-pick="light"]  { background: #fafafa; border-color: #ddd; }
+.fab-theme-dot[data-theme-pick="dark"]   { background: #0a0a0a; border-color: #333; }
+.fab-theme-dot:hover { transform: scale(1.15); }
+.fab-theme-dot.active { box-shadow: 0 0 0 3px var(--primary); transform: scale(1.1); }
 
 .fab-sub:hover {
     transform: scale(1.1) rotate(15deg);
@@ -4522,9 +4577,12 @@ window.addEventListener('error', function(e) {
             <button class="fab-sub fab-scroll" id="fabScroll" aria-label="Scroll to top">
                 <i class="fas fa-arrow-up"></i>
             </button>
-            <button class="fab-sub fab-dark" id="fabDark" aria-label="Toggle dark mode">
-                <i class="fas fa-moon"></i>
-            </button>
+            <div class="fab-theme-row">
+                <button class="fab-theme-dot" data-theme-pick="noor"   title="Parchment" onclick="SiteTheme.set('noor');fabGroup&&fabGroup.classList.remove('active')"></button>
+                <button class="fab-theme-dot" data-theme-pick="sakina" title="Emerald"   onclick="SiteTheme.set('sakina');fabGroup&&fabGroup.classList.remove('active')"></button>
+                <button class="fab-theme-dot" data-theme-pick="light"  title="Light"     onclick="SiteTheme.set('light');fabGroup&&fabGroup.classList.remove('active')"></button>
+                <button class="fab-theme-dot" data-theme-pick="dark"   title="Dark"      onclick="SiteTheme.set('dark');fabGroup&&fabGroup.classList.remove('active')"></button>
+            </div>
         </div>
         <button class="fab-main" id="fabMain" aria-label="Menu" aria-expanded="false">
             <i class="fas fa-plus"></i>
@@ -5769,7 +5827,6 @@ class FloatingActionButtons {
         this.fabMain = document.getElementById('fabMain');
         this.fabGroup = document.getElementById('fabGroup');
         this.fabScroll = document.getElementById('fabScroll');
-        this.fabDark = document.getElementById('fabDark');
         this.backdrop = document.querySelector('.fab-backdrop');
         this.isOpen = false;
         this.init();
@@ -5778,7 +5835,8 @@ class FloatingActionButtons {
     init() {
         this.setupEventListeners();
         this.setupScrollVisibility();
-        this.setupDarkModeState();
+        // Mark active theme dot
+        SiteTheme.set(SiteTheme.current());
     }
 
     setupEventListeners() {
@@ -5796,7 +5854,6 @@ class FloatingActionButtons {
         });
 
         this.fabScroll.addEventListener('click', () => this.handleScrollToTop());
-        this.fabDark.addEventListener('click', () => this.handleDarkMode());
     }
 
     setupScrollVisibility() {
@@ -5824,15 +5881,6 @@ class FloatingActionButtons {
         toggleVisibility();
     }
 
-    setupDarkModeState() {
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        const icon = this.fabDark.querySelector('i');
-
-        if (savedTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            icon.className = 'fas fa-sun';
-        }
-    }
 
     toggle() {
         this.isOpen ? this.close() : this.open();
@@ -5857,18 +5905,6 @@ class FloatingActionButtons {
         this.close();
     }
 
-    handleDarkMode() {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-
-        const icon = this.fabDark.querySelector('i');
-        icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-
-        this.close();
-    }
 }
 
 function setupMobileMenu() {
