@@ -687,7 +687,108 @@
             .stat-pill-empty strong, .stat-pill-progress strong { font-size: 15px; }
             .per-page-select { font-size: 13px; padding: 8px 10px; }
             .result-count { display: none; }
+
+            /* ── Header: collapse secondary actions into More sheet ──── */
+            #exportBtn, #findReplaceBtn, #importBtn, #selectModeBtn { display: none !important; }
+            #markedHeaderBtn { display: none !important; }
+            .action-sep { display: none !important; }
+            #historyBtn { display: none !important; }
+            #mobileMoreBtn { display: flex !important; }
+
+            /* ── Seed App Keys: hide from filter bar, lives in More sheet ── */
+            #seedAppKeysBtn { display: none !important; }
+
+            /* ── Tighter header row ──────────────────────────────────── */
+            .page-actions { gap: 6px; }
+            .action-group { border: none; border-radius: 0; box-shadow: none; background: transparent; gap: 4px; }
+            .action-group .btn { border-radius: 12px !important; border: 1px solid var(--border-light) !important; background: var(--bg-surface) !important; }
+            .action-group .btn:hover { background: var(--bg-hover) !important; }
         }
+
+        /* ===== More sheet (mobile overflow actions) ===== */
+        .more-sheet-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1100;
+            opacity: 0;
+            transition: opacity 0.22s;
+        }
+        .more-sheet-backdrop.open { opacity: 1; }
+        .more-sheet {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-app);
+            border-radius: 20px 20px 0 0;
+            z-index: 1101;
+            flex-direction: column;
+            max-height: 75vh;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            transform: translateY(100%);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+        }
+        .more-sheet.open { transform: translateY(0); }
+        .more-sheet-handle {
+            width: 36px; height: 4px;
+            background: var(--border-medium);
+            border-radius: 2px;
+            margin: 12px auto 4px;
+            flex-shrink: 0;
+        }
+        .more-sheet-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 8px 20px 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .more-sheet-list {
+            overflow-y: auto;
+            flex: 1;
+            padding: 8px 0 12px;
+        }
+        .more-sheet-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 15px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        .more-sheet-item:hover, .more-sheet-item:active { background: var(--bg-hover); }
+        .more-sheet-item svg { width: 20px; height: 20px; color: var(--text-secondary); flex-shrink: 0; }
+        .more-sheet-item .msi-badge {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--bg-active);
+            color: var(--text-secondary);
+        }
+        .more-sheet-item.msi-marked .msi-badge { background: rgba(245,158,11,.18); color: #d97706; }
+        .more-sheet-item.msi-publish { color: #16a34a; }
+        body.dark-mode .more-sheet-item.msi-publish { color: #4ade80; }
+        .more-sheet-item.msi-publish svg { color: #16a34a; }
+        body.dark-mode .more-sheet-item.msi-publish svg { color: #4ade80; }
+        .more-sheet-sep { height: 1px; background: var(--border-light); margin: 4px 0; }
+        .more-sheet-item.msi-active { color: var(--text-primary); font-weight: 700; }
+        .more-sheet-item.msi-active svg { color: var(--text-primary); }
 
         /* ===== Inline Edit Form ===== */
         .edit-form {
@@ -1689,6 +1790,34 @@
 
             .empty-state { padding: 50px 20px; border-radius: 14px; }
             .empty-state p { font-size: 15px; }
+
+            /* Sticky search bar so it stays accessible while scrolling */
+            .filters {
+                position: sticky;
+                top: 56px;
+                z-index: 30;
+                background: var(--bg-app);
+                padding-top: 4px;
+                padding-bottom: 4px;
+                margin-left: -10px;
+                margin-right: -10px;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            /* Sort & filter icon buttons — larger touch target */
+            .sort-btn { width: 48px; height: 48px; padding: 0; justify-content: center; border-radius: 14px; }
+            .sort-btn span { display: none; }
+            .sort-btn svg { width: 20px; height: 20px; }
+            .empty-filter-btn { width: 48px; height: 48px; border-radius: 14px; justify-content: center; }
+            .empty-filter-btn svg { width: 20px; height: 20px; }
+
+            /* Translation card: slightly more spacious */
+            .t-row { padding: 16px; border-radius: 16px; }
+            .t-text { font-size: 17px; }
+
+            /* Approve / mark buttons bigger on mobile */
+            .t-btn { width: 44px; height: 44px; }
         }
 
         /* ===== Quick Edit Mode ===== */
@@ -2114,6 +2243,7 @@
                             <button class="btn btn-secondary" onclick="toggleSelectMode()" id="selectModeBtn" title="Select rows to bulk approve"><i data-lucide="check-square"></i><span>Select</span></button>
                             <button class="btn" onclick="openPublishModal()" id="publishBtn" title="Validate &amp; publish translations to all devices" style="background:#16a34a;color:#fff;border-color:#16a34a;box-shadow:0 1px 3px rgba(22,163,74,0.25)"><i data-lucide="send"></i><span>Publish</span></button>
                         </div>
+                        <button class="btn btn-secondary" id="mobileMoreBtn" onclick="openMoreSheet()" title="More actions" style="display:none;gap:6px;padding:10px 14px"><i data-lucide="more-horizontal"></i></button>
                     </div>
                 </div>
 
@@ -2993,6 +3123,39 @@
 
     <button class="fab" id="fab" onclick="toggleAddForm()"><i data-lucide="plus"></i></button>
     <div class="toast" id="toast"></div>
+
+    <!-- Mobile More sheet -->
+    <div class="more-sheet-backdrop" id="moreSheetBackdrop" onclick="closeMoreSheet()"></div>
+    <div class="more-sheet" id="moreSheet">
+        <div class="more-sheet-handle"></div>
+        <div class="more-sheet-title">Actions</div>
+        <div class="more-sheet-list">
+            <button class="more-sheet-item msi-marked" onclick="closeMoreSheet();setPlatform('marked',document.getElementById('markedHeaderBtn'))">
+                <i data-lucide="bookmark"></i> Marked <span class="msi-badge" id="moreMarkedCount">--</span>
+            </button>
+            <div class="more-sheet-sep"></div>
+            <button class="more-sheet-item" id="moreHistoryBtn" onclick="closeMoreSheet();toggleHistory()">
+                <i data-lucide="history"></i> History <span id="moreHistoryBadge" class="msi-badge" style="display:none">0</span>
+            </button>
+            <button class="more-sheet-item" onclick="closeMoreSheet();toggleSelectMode()">
+                <i data-lucide="check-square"></i> Select
+            </button>
+            <div class="more-sheet-sep"></div>
+            <button class="more-sheet-item" onclick="closeMoreSheet();openFindReplace()">
+                <i data-lucide="replace"></i> Find &amp; Replace
+            </button>
+            <button class="more-sheet-item" onclick="closeMoreSheet();exportTranslations()">
+                <i data-lucide="upload"></i> Export JSON
+            </button>
+            <button class="more-sheet-item" onclick="closeMoreSheet();importAllTranslations()">
+                <i data-lucide="download"></i> Import
+            </button>
+            <div class="more-sheet-sep" id="moreSeedSep" style="display:none"></div>
+            <button class="more-sheet-item" id="moreSeedBtn" onclick="closeMoreSheet();seedMobileAppKeys()" style="display:none;color:#166534">
+                <i data-lucide="plus-circle"></i> Seed App Keys
+            </button>
+        </div>
+    </div>
 
     <script src="/utils/admin-sidebar.js?v=1"></script>
 <script src="/utils/admin-session-timer-ui.js?v=10"></script>
@@ -4462,6 +4625,45 @@
             filterTranslations();
         }
 
+        function openMoreSheet() {
+            var backdrop = document.getElementById('moreSheetBackdrop');
+            var sheet = document.getElementById('moreSheet');
+            // Sync badges
+            var mc = document.getElementById('markedCount');
+            var dest = document.getElementById('moreMarkedCount');
+            if (mc && dest) dest.textContent = mc.textContent;
+            var hb = document.getElementById('historyBadge');
+            var mhb = document.getElementById('moreHistoryBadge');
+            if (hb && mhb) {
+                mhb.textContent = hb.textContent;
+                mhb.style.display = hb.style.display;
+            }
+            // Show Seed button only on mobile platform
+            var seedVisible = activePlatform === 'mobile';
+            document.getElementById('moreSeedBtn').style.display = seedVisible ? 'flex' : 'none';
+            document.getElementById('moreSeedSep').style.display = seedVisible ? 'block' : 'none';
+            backdrop.style.display = 'block';
+            sheet.style.display = 'flex';
+            backdrop.offsetHeight;
+            backdrop.classList.add('open');
+            sheet.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons({ nodes: [sheet] });
+        }
+
+        function closeMoreSheet() {
+            var backdrop = document.getElementById('moreSheetBackdrop');
+            var sheet = document.getElementById('moreSheet');
+            if (!sheet) return;
+            backdrop.classList.remove('open');
+            sheet.classList.remove('open');
+            document.body.style.overflow = '';
+            setTimeout(function() {
+                backdrop.style.display = 'none';
+                sheet.style.display = 'none';
+            }, 300);
+        }
+
         function openFilterSheet() {
             var backdrop = document.getElementById('filterSheetBackdrop');
             var sheet = document.getElementById('filterSheet');
@@ -5666,12 +5868,13 @@
         function updateHistoryBadge() {
             var badge = document.getElementById('historyBadge');
             if (!badge) return;
-            if (_unreadCount > 0) {
-                badge.textContent = _unreadCount > 9 ? '9+' : String(_unreadCount);
-                badge.style.display = '';
-            } else {
-                badge.style.display = 'none';
-            }
+            var txt = _unreadCount > 0 ? (_unreadCount > 9 ? '9+' : String(_unreadCount)) : '';
+            var vis = _unreadCount > 0;
+            badge.textContent = txt;
+            badge.style.display = vis ? '' : 'none';
+            // Sync to More sheet badge
+            var mhb = document.getElementById('moreHistoryBadge');
+            if (mhb) { mhb.textContent = txt; mhb.style.display = vis ? '' : 'none'; }
         }
 
         // Supabase Realtime subscription — instant push for new history entries
