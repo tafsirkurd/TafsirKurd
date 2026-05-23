@@ -51,6 +51,7 @@ const PRECACHE = [
   // Images
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png?v=3',
+  '/assets/images/TafsirKurd-green.png',
   '/assets/icons/genc-asma-bg.webp',
   '/manifest.json'
 ];
