@@ -1713,6 +1713,8 @@
         /* ===== Mobile ===== */
         @media (max-width: 768px) {
             /* ── Layout ────────────────────────────────────────────── */
+            /* Must be visible so iOS doesn't intercept touch on nested horizontal scrollers */
+            .main-content, .content-area { overflow-x: visible; }
             .content-area { padding: 12px 10px 32px; }
             .page-header { margin-bottom: 12px; }
             .page-title { font-size: 20px; }
@@ -7078,21 +7080,19 @@
             if (Math.abs(dx) > 4) { dragged = true; if (onScroll) onScroll(); }
         }, { passive: false });
 
-        el.addEventListener('touchend', function() {
-            if (!isH || !dragged) return;
-            var v = velX * 14;
-            (function momentum() {
-                v *= 0.88;
-                el.scrollLeft -= v;
-                if (Math.abs(v) > 0.5) raf = requestAnimationFrame(momentum);
-                else if (onScroll) onScroll();
-            })();
-        }, { passive: true });
-
-        // Capture phase — fires before onclick attribute, cancels accidental tap after drag
-        el.addEventListener('click', function(e) {
-            if (dragged) { e.stopImmediatePropagation(); dragged = false; }
-        }, true);
+        el.addEventListener('touchend', function(e) {
+            if (isH && dragged) {
+                e.preventDefault(); // stops browser synthesising a click after drag
+                var v = velX * 14;
+                (function momentum() {
+                    v *= 0.88;
+                    el.scrollLeft -= v;
+                    if (Math.abs(v) > 0.5) raf = requestAnimationFrame(momentum);
+                    else if (onScroll) onScroll();
+                })();
+            }
+            dragged = false;
+        }, { passive: false });
     }
 
     // Platform tabs
