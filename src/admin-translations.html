@@ -7049,7 +7049,53 @@
     </script>
 <script>
 (function(){
-    // Platform tabs — fade edges + scroll active into view on load
+    // Manual touch-scroll: handles both "accidental click on drag" and "needs first tap" issues.
+    // Uses non-passive touchmove so we can preventDefault on horizontal gestures,
+    // and blocks click via capture listener when the user actually dragged.
+    function makeTouchScrollable(el, onScroll) {
+        var startX = 0, startY = 0, startLeft = 0;
+        var isH = null, dragged = false, velX = 0, lastX = 0, lastT = 0, raf;
+
+        el.addEventListener('touchstart', function(e) {
+            cancelAnimationFrame(raf);
+            startX = lastX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            startLeft = el.scrollLeft;
+            isH = null; dragged = false; velX = 0; lastT = Date.now();
+        }, { passive: true });
+
+        el.addEventListener('touchmove', function(e) {
+            var x = e.touches[0].clientX, y = e.touches[0].clientY;
+            var dx = x - startX, dy = y - startY;
+            if (isH === null && (Math.abs(dx) > 3 || Math.abs(dy) > 3))
+                isH = Math.abs(dx) > Math.abs(dy);
+            if (!isH) return;
+            e.preventDefault();
+            el.scrollLeft = startLeft - dx;
+            var now = Date.now();
+            velX = (x - lastX) / Math.max(1, now - lastT);
+            lastX = x; lastT = now;
+            if (Math.abs(dx) > 4) { dragged = true; if (onScroll) onScroll(); }
+        }, { passive: false });
+
+        el.addEventListener('touchend', function() {
+            if (!isH || !dragged) return;
+            var v = velX * 14;
+            (function momentum() {
+                v *= 0.88;
+                el.scrollLeft -= v;
+                if (Math.abs(v) > 0.5) raf = requestAnimationFrame(momentum);
+                else if (onScroll) onScroll();
+            })();
+        }, { passive: true });
+
+        // Capture phase — fires before onclick attribute, cancels accidental tap after drag
+        el.addEventListener('click', function(e) {
+            if (dragged) { e.stopImmediatePropagation(); dragged = false; }
+        }, true);
+    }
+
+    // Platform tabs
     var tabs = document.getElementById('platformTabs');
     var wrap = document.getElementById('tabsWrap');
     if (tabs && wrap) {
@@ -7060,19 +7106,12 @@
         tabs.addEventListener('scroll', updateTabFade, { passive: true });
         window.addEventListener('resize', updateTabFade);
         updateTabFade();
-        // Disable pointer events while scrolling so drag never fires a tab switch
-        var _tabsScrollTimer;
-        tabs.addEventListener('scroll', function() {
-            tabs.style.pointerEvents = 'none';
-            clearTimeout(_tabsScrollTimer);
-            _tabsScrollTimer = setTimeout(function() { tabs.style.pointerEvents = ''; }, 150);
-        }, { passive: true });
-        // Scroll active tab into view on load
+        makeTouchScrollable(tabs, updateTabFade);
         var activeTab = tabs.querySelector('.platform-tab.active');
         if (activeTab) activeTab.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
     }
 
-    // Filter chips — fade edges + scroll active chip into view on click
+    // Filter chips
     var chips = document.getElementById('filterChips');
     var chipsWrap = document.getElementById('filterChipsWrap');
     if (chips && chipsWrap) {
@@ -7083,13 +7122,7 @@
         chips.addEventListener('scroll', updateChipFade, { passive: true });
         window.addEventListener('resize', updateChipFade);
         updateChipFade();
-        // Disable pointer events while scrolling so drag-scroll never fires a button click
-        var _chipsScrollTimer;
-        chips.addEventListener('scroll', function() {
-            chips.style.pointerEvents = 'none';
-            clearTimeout(_chipsScrollTimer);
-            _chipsScrollTimer = setTimeout(function() { chips.style.pointerEvents = ''; }, 150);
-        }, { passive: true });
+        makeTouchScrollable(chips, updateChipFade);
         // Scroll active chip into view after a real tap
         chips.addEventListener('click', function(e) {
             var btn = e.target.closest('button');
