@@ -7057,6 +7057,13 @@
         tabs.addEventListener('scroll', updateTabFade, { passive: true });
         window.addEventListener('resize', updateTabFade);
         updateTabFade();
+        // Disable pointer events while scrolling so drag never fires a tab switch
+        var _tabsScrollTimer;
+        tabs.addEventListener('scroll', function() {
+            tabs.style.pointerEvents = 'none';
+            clearTimeout(_tabsScrollTimer);
+            _tabsScrollTimer = setTimeout(function() { tabs.style.pointerEvents = ''; }, 150);
+        }, { passive: true });
         // Scroll active tab into view on load
         var activeTab = tabs.querySelector('.platform-tab.active');
         if (activeTab) activeTab.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
@@ -7073,7 +7080,14 @@
         chips.addEventListener('scroll', updateChipFade, { passive: true });
         window.addEventListener('resize', updateChipFade);
         updateChipFade();
-        // Scroll active chip into view whenever any chip button is clicked
+        // Disable pointer events while scrolling so drag-scroll never fires a button click
+        var _chipsScrollTimer;
+        chips.addEventListener('scroll', function() {
+            chips.style.pointerEvents = 'none';
+            clearTimeout(_chipsScrollTimer);
+            _chipsScrollTimer = setTimeout(function() { chips.style.pointerEvents = ''; }, 150);
+        }, { passive: true });
+        // Scroll active chip into view after a real tap
         chips.addEventListener('click', function(e) {
             var btn = e.target.closest('button');
             if (btn) setTimeout(function() {
