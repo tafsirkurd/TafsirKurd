@@ -39,8 +39,10 @@
         }
 
         /* ===== No horizontal scroll ===== */
-        .main-content { overflow-x: hidden; }
-        .content-area { overflow-x: hidden; }
+        /* clip instead of hidden — hidden creates a scroll context on iOS that
+           intercepts touch gestures from nested horizontal scrollers */
+        .main-content { overflow-x: clip; }
+        .content-area { overflow-x: clip; }
 
         /* ===== Platform Tabs ===== */
         .platform-tabs {
