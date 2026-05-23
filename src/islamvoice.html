@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- Theme loader inline to prevent flash - no network request -->
-    <script>(function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();</script>
+    <script src="/utils/site-theme.js"></script>
 
     <!-- Preload critical resources -->
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2?v=17" as="font" type="font/woff2" crossorigin>
@@ -247,6 +247,32 @@
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
+        [data-theme="noor"] {
+            --primary: #1a5c3a;
+            --primary-light: #2d7a52;
+            --accent: #f4e8cc;
+            --bg: #f4e8cc;
+            --card-bg: #fdf4e3;
+            --text: #1a1a0f;
+            --text-muted: #5c5c3d;
+            --border: #e0d5b0;
+            --shadow-sm: 0 2px 10px rgba(26,92,58,0.08);
+            --shadow-md: 0 8px 25px rgba(26,92,58,0.12);
+            --shadow-lg: 0 20px 40px rgba(26,92,58,0.16);
+        }
+        [data-theme="sakina"] {
+            --primary: #c9a84c;
+            --primary-light: #d4b86a;
+            --accent: #0c1c12;
+            --bg: #0c1c12;
+            --card-bg: #112318;
+            --text: #e8f5ec;
+            --text-muted: #8aaf94;
+            --border: #1e3528;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+        }
 
         /* Dark mode nav styles */
         [data-theme="dark"] .nav {
@@ -257,6 +283,19 @@
         [data-theme="dark"] .nav.scrolled {
             background: rgba(0, 0, 0, 0.95);
         }
+        [data-theme="noor"] .nav {
+            background: rgba(244,232,204,0.95);
+            border-bottom-color: rgba(26,92,58,0.12);
+        }
+        [data-theme="noor"] .nav.scrolled { background: rgba(244,232,204,0.98); }
+        [data-theme="sakina"] .nav {
+            background: rgba(12,28,18,0.95);
+            border-bottom-color: rgba(201,168,76,0.12);
+        }
+        [data-theme="sakina"] .nav.scrolled { background: rgba(12,28,18,0.98); }
+        [data-theme="noor"] .nav-logo .logo-image   { filter: none; }
+        [data-theme="sakina"] .nav-logo .logo-image { filter: brightness(0.9) saturate(1.2); }
+        [data-theme="dark"] .nav-logo .logo-image   { filter: invert(1) brightness(1.2); }
 
         [data-theme="dark"] .nav-logo .header-title {
             color: #ffffff;
@@ -1012,10 +1051,10 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid var(--border);
             z-index: 1000;
             transition: background var(--transition-medium), border-color var(--transition-medium);
             width: 100%;
@@ -1025,7 +1064,7 @@
         }
 
         .nav.scrolled {
-            background: rgba(255, 255, 255, 0.98);
+            background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }

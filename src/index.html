@@ -274,9 +274,9 @@ html.preload *, html.preload *::before, html.preload *::after {
     --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
-[data-theme="dark"] .logo-image {
-    filter: invert(1) brightness(1.2);
-}
+[data-theme="dark"] .logo-image { filter: invert(1) brightness(1.2); }
+[data-theme="sakina"] .logo-image { filter: brightness(0.9) saturate(1.2); }
+[data-theme="noor"] .logo-image { filter: none; }
 
 * {
     margin: 0;
@@ -694,10 +694,10 @@ nav {
     top: 0;
     left: 0;
     width: 100%;
-    background: #ffffff !important;
+    background: var(--card-bg) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 1px 0 var(--border) !important;
     border-bottom: none !important;
     z-index: 900;
     padding: 14px 0;
@@ -710,14 +710,10 @@ nav.scrolled-nav {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
 }
 
-[data-theme="dark"] nav {
-    background: #0a0a0a !important;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-}
-
-[data-theme="dark"] nav.scrolled-nav {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-}
+[data-theme="dark"] nav { box-shadow: 0 1px 0 rgba(255,255,255,0.06) !important; }
+[data-theme="dark"] nav.scrolled-nav { box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important; }
+[data-theme="noor"] nav { box-shadow: 0 1px 0 rgba(26,92,58,0.12) !important; }
+[data-theme="sakina"] nav { box-shadow: 0 1px 0 rgba(201,168,76,0.12) !important; }
 
 @keyframes navItemReveal {
     0% {
@@ -1076,8 +1072,8 @@ nav.scrolled-nav {
     top: calc(100% + 8px);
     right: 0;
     min-width: 280px;
-    background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 20px;
     padding: 10px;
     opacity: 0;
@@ -4427,6 +4423,32 @@ footer {
 .main-content.loaded {
     opacity: 1;
 }
+
+/* ── Noor (Parchment) theme overrides ─────────────────────────── */
+[data-theme="noor"] header                 { background: #1f1500; }
+[data-theme="noor"] .reach-showcase        { background: #1a1200; }
+[data-theme="noor"] .videos-showcase       { background: #1a1200; }
+[data-theme="noor"] #testimonials          { background: #fdf4e3; }
+[data-theme="noor"] .testimonial-card      { background: #fdf4e3; border-color: #e0d5b0; }
+[data-theme="noor"] .contact-info-panel    { background: #1a1200; color: #fdf4e3; }
+[data-theme="noor"] .daily-card-badge      { background: #1a5c3a; color: #fdf4e3; }
+[data-theme="noor"] .hero-search-input     { background: #fdf4e3; color: #1a1a0f; border-color: #e0d5b0; }
+[data-theme="noor"] .hero-search-btn       { background: #1a5c3a; }
+
+/* ── Sakina (Emerald) theme overrides ─────────────────────────── */
+[data-theme="sakina"] header               { background: #050d07; }
+[data-theme="sakina"] .reach-showcase      { background: #060e08; }
+[data-theme="sakina"] .videos-showcase     { background: #060e08; }
+[data-theme="sakina"] #testimonials        { background: #091409; }
+[data-theme="sakina"] .testimonial-card    { background: #0c1c12; border-color: #1e3528; }
+[data-theme="sakina"] .contact-info-panel  { background: #060e08; color: #e8f5ec; }
+[data-theme="sakina"] .daily-card-badge    { background: #c9a84c; color: #0c1c12; }
+
+/* ── Light theme dark-section overrides ───────────────────────── */
+[data-theme="light"] .reach-showcase   { background: #f5f5f5; }
+[data-theme="light"] .videos-showcase  { background: #f5f5f5; }
+[data-theme="light"] #testimonials     { background: #f8f8f8; }
+[data-theme="light"] .testimonial-card { background: #ffffff; border-color: #ebebeb; }
   </style>
 
   <!-- Prefetch key pages for instant navigation -->
@@ -4578,10 +4600,10 @@ window.addEventListener('error', function(e) {
                 <i class="fas fa-arrow-up"></i>
             </button>
             <div class="fab-theme-row">
-                <button class="fab-theme-dot" data-theme-pick="noor"   title="Parchment" onclick="SiteTheme.set('noor');fabGroup&&fabGroup.classList.remove('active')"></button>
-                <button class="fab-theme-dot" data-theme-pick="sakina" title="Emerald"   onclick="SiteTheme.set('sakina');fabGroup&&fabGroup.classList.remove('active')"></button>
-                <button class="fab-theme-dot" data-theme-pick="light"  title="Light"     onclick="SiteTheme.set('light');fabGroup&&fabGroup.classList.remove('active')"></button>
-                <button class="fab-theme-dot" data-theme-pick="dark"   title="Dark"      onclick="SiteTheme.set('dark');fabGroup&&fabGroup.classList.remove('active')"></button>
+                <button class="fab-theme-dot" data-theme-pick="noor"   title="Parchment" onclick="pickTheme('noor')"></button>
+                <button class="fab-theme-dot" data-theme-pick="sakina" title="Emerald"   onclick="pickTheme('sakina')"></button>
+                <button class="fab-theme-dot" data-theme-pick="light"  title="Light"     onclick="pickTheme('light')"></button>
+                <button class="fab-theme-dot" data-theme-pick="dark"   title="Dark"      onclick="pickTheme('dark')"></button>
             </div>
         </div>
         <button class="fab-main" id="fabMain" aria-label="Menu" aria-expanded="false">
@@ -6915,6 +6937,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.hidePreloader();
         }
     }, 5000);
+
+    // Global theme picker — used by FAB dot onclick attributes
+    window.pickTheme = function(id) {
+        SiteTheme.set(id);
+        var fg = document.getElementById('fabGroup');
+        if (fg) fg.classList.remove('active');
+    };
 
     new FloatingActionButtons();
     setupHomeNavigation();

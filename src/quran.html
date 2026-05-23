@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <!-- Theme loader inline to prevent flash - no network request -->
-    <script>(function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();</script>
+    <script src="/utils/site-theme.js"></script>
     <script src="/utils/platform.js"></script>
     <script>
       if (window.isNativePlatform && window.Capacitor.Plugins.StatusBar) {
@@ -209,6 +209,32 @@
             --shadow-md: 0 8px 25px rgba(255, 255, 255, 0.08);
             --shadow-lg: 0 20px 40px rgba(255, 255, 255, 0.1);
         }
+        [data-theme="noor"] {
+            --primary: #1a5c3a;
+            --primary-light: #2d7a52;
+            --accent: #f4e8cc;
+            --bg: #f4e8cc;
+            --card-bg: #fdf4e3;
+            --text: #1a1a0f;
+            --text-muted: #5c5c3d;
+            --border: #e0d5b0;
+            --shadow-sm: 0 2px 10px rgba(26,92,58,0.08);
+            --shadow-md: 0 8px 25px rgba(26,92,58,0.12);
+            --shadow-lg: 0 20px 40px rgba(26,92,58,0.16);
+        }
+        [data-theme="sakina"] {
+            --primary: #c9a84c;
+            --primary-light: #d4b86a;
+            --accent: #0c1c12;
+            --bg: #0c1c12;
+            --card-bg: #112318;
+            --text: #e8f5ec;
+            --text-muted: #8aaf94;
+            --border: #1e3528;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.4);
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.5);
+        }
 
         [data-theme="dark"] .logo-image {
             filter: invert(1) brightness(1.2);
@@ -256,7 +282,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            background: #ffffff;
+            background: var(--card-bg);
             z-index: 1000;
             display: flex;
             flex-direction: column;
@@ -271,9 +297,8 @@
             border-bottom: 1px solid var(--border);
         }
 
-        [data-theme="dark"] .quran-nav {
-            background: #0a0a0a;
-        }
+        [data-theme="noor"] .logo-image   { filter: none; }
+        [data-theme="sakina"] .logo-image { filter: brightness(0.9) saturate(1.2); }
 
         .nav-container {
             width: 100%;
@@ -1720,6 +1745,14 @@
 
         [data-theme="dark"] .hero-section {
             background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%),
+                url('https://images.unsplash.com/photo-1535552081922-631f7dea1e9d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1600') center/cover;
+        }
+        [data-theme="noor"] .hero-section {
+            background: linear-gradient(135deg, rgba(26,92,58,0.75) 0%, rgba(15,61,38,0.6) 100%),
+                url('https://images.unsplash.com/photo-1535552081922-631f7dea1e9d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1600') center/cover;
+        }
+        [data-theme="sakina"] .hero-section {
+            background: linear-gradient(135deg, rgba(6,14,8,0.85) 0%, rgba(12,28,18,0.7) 100%),
                 url('https://images.unsplash.com/photo-1535552081922-631f7dea1e9d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1600') center/cover;
         }
 
