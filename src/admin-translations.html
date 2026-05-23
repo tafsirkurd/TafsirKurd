@@ -45,11 +45,13 @@
         /* ===== Platform Tabs ===== */
         .platform-tabs {
             display: flex;
+            flex-wrap: nowrap;
             gap: 0;
             margin-bottom: 24px;
             border-bottom: 2px solid var(--border-light);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
             scrollbar-width: none;
         }
         .platform-tabs::-webkit-scrollbar { display: none; }
@@ -249,6 +251,7 @@
         /* ===== Filter chips row ===== */
         .filter-chips {
             display: flex;
+            flex-wrap: nowrap;
             gap: 8px;
             align-items: center;
             flex-shrink: 0;
@@ -709,9 +712,11 @@
             }
             .filter-chips {
                 display: flex;
+                flex-wrap: nowrap;
                 gap: 8px;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                touch-action: pan-x;
                 scrollbar-width: none;
                 padding-bottom: 2px;
                 width: 100%;
