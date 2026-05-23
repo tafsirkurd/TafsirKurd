@@ -154,7 +154,6 @@
                 border-bottom: none;
                 padding: 4px 16px 12px;
                 gap: 8px;
-                scroll-behavior: smooth;
                 scroll-padding-inline: 16px;
                 margin-bottom: 16px;
             }
@@ -2430,7 +2429,7 @@
                 </div>
 
                 <div class="platform-tabs-wrap" id="tabsWrap">
-                <div class="platform-tabs" id="platformTabs">
+                <div class="platform-tabs" id="platformTabs" ontouchstart="">
                     <button class="platform-tab active" onclick="setPlatform('web', this)">
                         <i data-lucide="globe" style="width:16px;height:16px"></i> Web <span class="tab-count" id="webCount">--</span><span class="tab-empty-badge" id="webEmpty" style="display:none"></span>
                     </button>
@@ -2482,7 +2481,7 @@
                         <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
                     </div>
                     <div class="filter-chips-wrap" id="filterChipsWrap">
-                    <div class="filter-chips" id="filterChips">
+                    <div class="filter-chips" id="filterChips" ontouchstart="">
                         <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
                             <i data-lucide="arrow-down-narrow-wide"></i>
                             <span id="sortLabel">Newest</span>
