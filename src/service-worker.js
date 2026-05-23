@@ -4,7 +4,7 @@ const CACHE_NAME = 'tafsir-kurd-v775';
 const PRECACHE = [
   // Core app shell
   '/app/index.html',
-  '/app/app.js?v=765',
+  '/app/app.js?v=766',
   // Prayer module
   '/prayer/prayer.api.js',
   '/prayer/prayer.cache.js',
