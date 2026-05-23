@@ -11,7 +11,7 @@
 <script>
 (function(){
   var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');
-  var theme=t||(p.darkMode?'dark':'light');
+  var theme=t||(p.darkMode?'dark':'noor');
   document.documentElement.setAttribute('data-theme',theme);
   // Kill white flash: set bg on html+body immediately before any CSS class renders
   var bg={dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc',light:'#fafafa'}[theme]||'#0a0a0a';

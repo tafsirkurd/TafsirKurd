@@ -7902,10 +7902,10 @@ function renderSettings(){
   var g1=el('div','settings-group');
   g1.appendChild(el('div','settings-group-title',t('settings.appearance')));
   var themes=[
+    {id:'noor',  name:t('settings.theme_noor')||'نوور',       sub:'Parchment',bg:'#f4e8cc',surface:'#fdf4e3', accent:'#1a5c3a'},
+    {id:'sakina',name:t('settings.theme_sakina')||'سکینە',   sub:'Emerald', bg:'#0c1c12', surface:'#112318', accent:'#c9a84c'},
     {id:'light', name:t('settings.theme_light')||'ڕووناک',    sub:'Light',   bg:'#fafafa', surface:'#ffffff', accent:'#000000'},
     {id:'dark',  name:t('settings.theme_dark')||'تاریکی',    sub:'Dark',    bg:'#0a0a0a', surface:'#161616', accent:'#ffffff'},
-    {id:'sakina',name:t('settings.theme_sakina')||'سکینە',   sub:'Emerald', bg:'#0c1c12', surface:'#112318', accent:'#c9a84c'},
-    {id:'noor',  name:t('settings.theme_noor')||'نوور',       sub:'Parchment',bg:'#f4e8cc',surface:'#fdf4e3', accent:'#1a5c3a'}
   ];
   var tGrid=el('div','theme-grid');
   themes.forEach(function(th){
