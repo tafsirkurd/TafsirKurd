@@ -681,16 +681,9 @@
 
         /* ===== Mobile: FAB ===== */
         @media (max-width: 768px) {
-            .fab { display: flex !important; bottom: 80px; z-index: 900; }
             #addBtn span { display: none; }
-            #exportBtn span { display: none; }
             #publishBtn span { display: none; }
             #publishBtn { padding: 10px 12px; }
-            .filters { flex-wrap: nowrap; gap: 8px; }
-            .filter-search { order: 0; width: 100%; flex: 1 1 100%; }
-            .stat-pill-empty strong, .stat-pill-progress strong { font-size: 15px; }
-            .per-page-select { font-size: 13px; padding: 8px 10px; }
-            .result-count { display: none; }
 
             /* ── Header: collapse secondary actions into More sheet ──── */
             #exportBtn, #findReplaceBtn, #importBtn, #selectModeBtn { display: none !important; }
@@ -1676,80 +1669,112 @@
 
         /* ===== Mobile ===== */
         @media (max-width: 768px) {
-            .content-area { padding: 14px 10px; }
-            .page-header { margin-bottom: 14px; }
+            /* ── Layout ────────────────────────────────────────────── */
+            .content-area { padding: 12px 10px 32px; }
+            .page-header { margin-bottom: 12px; }
             .page-title { font-size: 20px; }
 
-            /* Stats compact */
+            /* ── Stats: 2-column grid so pills never squash ─────────── */
             .stats-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
                 gap: 8px;
-                margin-bottom: 14px;
+                margin-bottom: 12px;
             }
             .stat-pill {
-                padding: 12px;
+                padding: 12px 14px;
                 font-size: 12px;
-                flex: 1;
-                justify-content: center;
-                flex-direction: column;
-                gap: 2px;
-                text-align: center;
-                border-radius: 12px;
+                flex: none;
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 8px;
+                border-radius: 14px;
             }
-            .stat-pill strong { font-size: 20px; }
+            .stat-pill strong { font-size: 19px; letter-spacing: -0.5px; }
 
-            /* Search */
+            /* ── Sticky search bar (topbar is 64px on mobile) ────────── */
             .filters {
-                margin-bottom: 10px;
+                position: sticky;
+                top: 64px;
+                z-index: 30;
+                background: var(--bg-app);
+                padding: 6px 10px;
+                margin: 0 -10px 0;
+                box-shadow: 0 1px 0 var(--border-light);
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 0;
+                align-items: stretch;
             }
-            .filter-search {
-                min-width: unset;
-                width: 100%;
-            }
+
+            /* ── Search input ───────────────────────────────────────── */
+            .filter-search { min-width: unset; width: 100%; }
             .filter-search input {
                 height: 48px;
                 font-size: 16px;
                 border-radius: 14px;
-                padding-left: 44px;
+                padding-left: 46px;
             }
             .filter-search svg { left: 16px; width: 18px; height: 18px; }
             .filter-clear { right: 8px; width: 40px; height: 40px; font-size: 18px; border-radius: 50%; }
 
-            /* Sidebar hidden on mobile — replaced by bottom sheet */
+            /* ── Sidebar → bottom sheet ─────────────────────────────── */
             .t-body { flex-direction: column; gap: 0; }
             .cat-sidebar { display: none; }
             .t-main { width: 100%; }
 
-            /* Mobile filter trigger bar */
-            .mobile-filter-bar { display: flex; }
+            /* ── Category bar (opens bottom sheet) ──────────────────── */
+            .mobile-filter-bar {
+                display: flex;
+                min-height: 52px;
+                border-radius: 14px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                padding: 0 16px;
+                font-size: 14px;
+                border-color: var(--border-medium);
+            }
+            .mobile-filter-bar .mfb-label { font-size: 14px; font-weight: 600; }
+            .mobile-filter-bar .mfb-count { font-size: 13px; padding: 3px 10px; border-radius: 12px; }
 
-            /* Bottom sheet */
+            /* ── Bottom sheet ───────────────────────────────────────── */
             .filter-sheet-backdrop { display: block; }
             .filter-sheet { display: flex; }
 
-            /* Cards */
+            /* ── Translation cards ──────────────────────────────────── */
             .translation-list { gap: 8px; }
             .t-row {
+                display: grid;
                 grid-template-columns: 1fr auto;
                 grid-template-rows: auto auto auto;
-                gap: 8px 10px;
+                gap: 4px 12px;
                 padding: 14px;
-                border-radius: 14px;
+                border-radius: 16px;
             }
+            /* Key: small, dim, monospace — just for identification */
             .t-key {
                 grid-column: 1;
                 grid-row: 1;
-                font-size: 12px;
-                color: var(--text-secondary);
+                font-size: 11px;
+                font-weight: 500;
+                color: var(--text-tertiary);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
+            /* Kurdish text: hero of the card */
             .t-text {
                 grid-column: 1 / -1;
                 grid-row: 2;
                 white-space: normal;
-                font-size: 16px;
-                line-height: 1.7;
+                font-size: 17px;
+                line-height: 1.75;
                 color: var(--text-primary);
                 font-weight: 500;
+                margin: 2px 0;
             }
+            /* Badge row */
             .t-page-badge {
                 grid-column: 1;
                 grid-row: 3;
@@ -1757,42 +1782,40 @@
                 padding: 4px 10px;
                 border-radius: 6px;
                 width: fit-content;
+                align-self: center;
             }
-            .t-badge-wrap {
-                grid-column: 1;
-                grid-row: 3;
-            }
-            .t-context {
-                font-size: 11px;
-                margin-top: 4px;
-                white-space: normal;
-            }
+            .t-badge-wrap { grid-column: 1; grid-row: 3; align-self: center; }
+            /* Context: hidden on mobile — clutter */
+            .t-context { display: none; }
+            /* Actions: span all rows, vertically centered */
             .t-actions {
                 grid-column: 2;
-                grid-row: 1 / 2;
+                grid-row: 1 / 4;
                 position: static;
-                gap: 4px;
-                align-self: start;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                align-self: center;
+                justify-content: center;
             }
             .t-btn {
-                width: 40px;
-                height: 40px;
+                width: 44px;
+                height: 44px;
                 border: 1px solid var(--border-light);
                 border-radius: 12px;
                 background: var(--bg-app);
             }
-            .t-btn svg { width: 16px; height: 16px; }
+            .t-btn svg { width: 17px; height: 17px; }
 
-            /* Editing card */
+            /* ── Inline edit form ───────────────────────────────────── */
             .t-row.editing {
-                padding: 20px 16px;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                padding: 18px 14px;
                 border-color: #3b82f6;
                 border-width: 2px;
             }
-            .edit-row {
-                flex-direction: column;
-                gap: 14px;
-            }
+            .edit-row { flex-direction: column; gap: 12px; }
             .edit-field label { font-size: 12px; }
             .edit-field input,
             .edit-field select {
@@ -1805,80 +1828,47 @@
                 font-size: 16px;
                 padding: 14px;
                 border-radius: 12px;
-                min-height: 110px;
+                min-height: 120px;
             }
-            .edit-actions {
-                flex-direction: row;
-                gap: 10px;
-                padding-top: 8px;
-            }
+            .edit-actions { flex-direction: row; gap: 10px; padding-top: 8px; }
             .edit-actions .btn {
                 flex: 1;
-                height: 50px;
+                height: 52px;
                 font-size: 15px;
                 font-weight: 700;
-                border-radius: 12px;
+                border-radius: 14px;
                 justify-content: center;
             }
 
-            /* Add form */
+            /* ── Add new row ────────────────────────────────────────── */
             .add-row { border-radius: 14px; margin-bottom: 12px; }
             .add-row .edit-form { padding: 18px 14px; }
 
-            /* Hide FAB on mobile */
+            /* ── Hide FAB on mobile ─────────────────────────────────── */
             .fab { display: none !important; }
 
-            /* Pagination */
+            /* ── Pagination ─────────────────────────────────────────── */
             .pagination { gap: 16px; padding: 18px 0; }
-            .pagination-btn {
-                width: 50px;
-                height: 50px;
-                border-radius: 14px;
-            }
+            .pagination-btn { width: 52px; height: 52px; border-radius: 14px; }
             .pagination-info { font-size: 15px; }
 
-            /* Toast */
-            .toast {
-                bottom: 94px;
-                font-size: 14px;
-                padding: 14px 28px;
-                border-radius: 14px;
-            }
+            /* ── Toast ──────────────────────────────────────────────── */
+            .toast { bottom: 94px; font-size: 14px; padding: 14px 28px; border-radius: 14px; }
 
-            /* History badge position fix */
-
+            /* ── Empty state ─────────────────────────────────────────── */
             .empty-state { padding: 50px 20px; border-radius: 14px; }
             .empty-state p { font-size: 15px; }
 
-            /* Sticky search bar so it stays accessible while scrolling */
-            .filters {
-                position: sticky;
-                top: 56px;
-                z-index: 30;
-                background: var(--bg-app);
-                padding-top: 4px;
-                padding-bottom: 4px;
-                margin-left: -10px;
-                margin-right: -10px;
-                padding-left: 10px;
-                padding-right: 10px;
-            }
-
-            /* filter-search full-width */
-            .filter-search { width: 100%; }
-
-            /* Translation card: slightly more spacious */
-            .t-row { padding: 16px; border-radius: 16px; }
-            .t-text { font-size: 17px; }
-
-            /* Approve / mark buttons bigger on mobile */
-            .t-btn { width: 44px; height: 44px; }
+            /* ── Misc ───────────────────────────────────────────────── */
+            .stat-pill-empty strong, .stat-pill-progress strong { font-size: 17px; }
+            .per-page-select { font-size: 13px; padding: 8px 10px; }
+            .result-count { display: none; }
         }
 
         /* ===== Quick Edit Mode ===== */
         .qe-bar {
             position: sticky;
-            top: 56px;
+            top: 64px;
             z-index: 20;
             background: var(--bg-surface);
             border: 1px solid var(--border-medium);
@@ -2023,7 +2013,7 @@
             .history-close-btn { width: 44px; height: 44px; font-size: 22px; border-radius: 10px; }
 
             /* Quick Edit bar on mobile */
-            .qe-bar { flex-wrap: wrap; gap: 8px; top: 56px; border-radius: 0; border-left: none; border-right: none; border-top: none; margin: 0 -10px 12px; padding: 10px 14px; }
+            .qe-bar { flex-wrap: wrap; gap: 8px; top: 64px; border-radius: 0; border-left: none; border-right: none; border-top: none; margin: 0 -10px 12px; padding: 10px 14px; }
             .qe-hint { display: none; }
             .qe-count { width: 100%; font-size: 12px; }
 
