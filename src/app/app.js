@@ -1673,7 +1673,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260550', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260551', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=32',      function() { _p2 = true; _check(); });
 }
@@ -7932,7 +7932,7 @@ function renderSettings(){
     card.appendChild(el('div','theme-card-name',th.name));
     card.appendChild(el('div','theme-card-sub',th.sub));
     var chk=el('div','theme-card-check');chk.appendChild(icon('fas fa-check'));card.appendChild(chk);
-    on(card,'click',function(){S.theme=th.id;applyTheme();haptic([10]);renderSettings()});
+    on(card,'click',function(){S.theme=th.id;applyTheme();try{localStorage.setItem('themeUserChosen','1');}catch(e){}haptic([10]);renderSettings()});
     tGrid.appendChild(card);
   });
   g1.appendChild(tGrid);
