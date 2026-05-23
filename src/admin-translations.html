@@ -120,17 +120,47 @@
         .platform-tabs-wrap.can-scroll-left::before  { opacity: 1; }
         .platform-tabs-wrap.can-scroll-right::after  { opacity: 1; }
 
+        /* ===== Filter chips wrap — fade edges ===== */
+        .filter-chips-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+        .filter-chips-wrap::before,
+        .filter-chips-wrap::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 24px;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.2s;
+        }
+        .filter-chips-wrap::before {
+            left: 0;
+            background: linear-gradient(to right, var(--bg-app), transparent);
+            opacity: 0;
+        }
+        .filter-chips-wrap::after {
+            right: 0;
+            background: linear-gradient(to left, var(--bg-app), transparent);
+            opacity: 0;
+        }
+        .filter-chips-wrap.can-scroll-left::before  { opacity: 1; }
+        .filter-chips-wrap.can-scroll-right::after  { opacity: 1; }
+
         @media (max-width: 768px) {
             .platform-tabs {
                 border-bottom: none;
                 padding: 4px 16px 12px;
                 gap: 8px;
                 scroll-behavior: smooth;
+                scroll-padding-inline: 16px;
                 margin-bottom: 16px;
             }
             .platform-tab {
                 flex-direction: row;
-                padding: 8px 14px;
+                padding: 8px 16px;
                 font-size: 13px;
                 font-weight: 600;
                 gap: 6px;
@@ -141,22 +171,25 @@
                 background: var(--bg-surface);
                 color: var(--text-secondary);
                 white-space: nowrap;
-                min-height: 38px;
+                min-height: 40px;
+                transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
             }
             .platform-tab.active {
                 background: var(--text-primary);
                 color: var(--bg-app);
                 border-color: transparent;
                 border-bottom-color: transparent;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.18);
             }
             .platform-tab .tab-count {
-                padding: 1px 7px;
+                padding: 2px 7px;
                 font-size: 10px;
+                border-radius: 10px;
                 background: var(--bg-hover);
                 color: var(--text-secondary);
             }
             .platform-tab.active .tab-count {
-                background: rgba(128,128,128,0.25);
+                background: rgba(255,255,255,0.18);
                 color: inherit;
             }
         }
@@ -710,6 +743,7 @@
                 gap: 10px;
                 align-items: stretch;
             }
+            .filter-chips-wrap { flex: 1; min-width: 0; }
             .filter-chips {
                 display: flex;
                 flex-wrap: nowrap;
@@ -718,7 +752,8 @@
                 -webkit-overflow-scrolling: touch;
                 touch-action: pan-x;
                 scrollbar-width: none;
-                padding-bottom: 2px;
+                padding: 2px 4px 4px;
+                scroll-padding-inline: 4px;
                 width: 100%;
             }
             .filter-chips::-webkit-scrollbar { display: none; }
@@ -2444,6 +2479,7 @@
                         <input type="text" id="searchInput" placeholder="Search by key or text..." oninput="onSearchInput()">
                         <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
                     </div>
+                    <div class="filter-chips-wrap" id="filterChipsWrap">
                     <div class="filter-chips" id="filterChips">
                         <button class="sort-btn active" id="sortBtn" onclick="toggleSort()" title="Toggle sort order">
                             <i data-lucide="arrow-down-narrow-wide"></i>
@@ -2466,6 +2502,7 @@
                             <span>Seed App Keys</span>
                         </button>
                     </div>
+                    </div><!-- /.filter-chips-wrap -->
                 </div>
                 <button class="mobile-filter-bar" id="mobileFilterBar" onclick="openFilterSheet()">
                     <i data-lucide="filter" style="width:16px;height:16px"></i>
@@ -7009,16 +7046,42 @@
     </script>
 <script>
 (function(){
+    // Platform tabs — fade edges + scroll active into view on load
     var tabs = document.getElementById('platformTabs');
     var wrap = document.getElementById('tabsWrap');
-    if (!tabs || !wrap) return;
-    function updateFade() {
-        wrap.classList.toggle('can-scroll-left',  tabs.scrollLeft > 8);
-        wrap.classList.toggle('can-scroll-right', tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 8);
+    if (tabs && wrap) {
+        function updateTabFade() {
+            wrap.classList.toggle('can-scroll-left',  tabs.scrollLeft > 8);
+            wrap.classList.toggle('can-scroll-right', tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 8);
+        }
+        tabs.addEventListener('scroll', updateTabFade, { passive: true });
+        window.addEventListener('resize', updateTabFade);
+        updateTabFade();
+        // Scroll active tab into view on load
+        var activeTab = tabs.querySelector('.platform-tab.active');
+        if (activeTab) activeTab.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
     }
-    tabs.addEventListener('scroll', updateFade, { passive: true });
-    window.addEventListener('resize', updateFade);
-    updateFade();
+
+    // Filter chips — fade edges + scroll active chip into view on click
+    var chips = document.getElementById('filterChips');
+    var chipsWrap = document.getElementById('filterChipsWrap');
+    if (chips && chipsWrap) {
+        function updateChipFade() {
+            chipsWrap.classList.toggle('can-scroll-left',  chips.scrollLeft > 8);
+            chipsWrap.classList.toggle('can-scroll-right', chips.scrollLeft + chips.clientWidth < chips.scrollWidth - 8);
+        }
+        chips.addEventListener('scroll', updateChipFade, { passive: true });
+        window.addEventListener('resize', updateChipFade);
+        updateChipFade();
+        // Scroll active chip into view whenever any chip button is clicked
+        chips.addEventListener('click', function(e) {
+            var btn = e.target.closest('button');
+            if (btn) setTimeout(function() {
+                var active = chips.querySelector('button.active');
+                if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }, 60);
+        });
+    }
 })();
 </script>
 <script src="/utils/admin-command-palette.js?v=2"></script>
