@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+  <script src="/utils/site-theme.js"></script>
   <script src="/utils/console-cleaner.js?v=2"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,6 +19,78 @@
   <meta property="og:locale" content="ku_IQ">
 
   <style>
+    :root {
+      --bg: #fafafa;
+      --bg-card: #ffffff;
+      --bg-muted: #f5f5f5;
+      --text: #000000;
+      --text-muted: #444444;
+      --text-faint: #666666;
+      --border: #e8e8e8;
+      --border-muted: #f0f0f0;
+      --header-bg: #000000;
+      --btn-bg: #000000;
+      --btn-text: #ffffff;
+      --warning-bg: #fff8f0;
+      --warning-border: #f0e0cc;
+      --warning-text: #b45309;
+      --data-item-bg: #fff5eb;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a0a0a;
+      --bg-card: #1a1a1a;
+      --bg-muted: #141414;
+      --text: #ffffff;
+      --text-muted: #cccccc;
+      --text-faint: #999999;
+      --border: #2a2a2a;
+      --border-muted: #222222;
+      --header-bg: #111111;
+      --btn-bg: #ffffff;
+      --btn-text: #000000;
+      --warning-bg: #1a1000;
+      --warning-border: #3a2800;
+      --warning-text: #e8a040;
+      --data-item-bg: #1a1200;
+    }
+
+    [data-theme="noor"] {
+      --bg: #f4e8cc;
+      --bg-card: #fdf4e3;
+      --bg-muted: #f0e0c0;
+      --text: #1a0e04;
+      --text-muted: #5c3d1a;
+      --text-faint: #9b7650;
+      --border: #e0d5b0;
+      --border-muted: #ecdfc0;
+      --header-bg: #1a5c3a;
+      --btn-bg: #1a5c3a;
+      --btn-text: #fdf4e3;
+      --warning-bg: #fff8f0;
+      --warning-border: #e0c89a;
+      --warning-text: #8a4a10;
+      --data-item-bg: #f5ead0;
+    }
+
+    [data-theme="sakina"] {
+      --bg: #0c1c12;
+      --bg-card: #112318;
+      --bg-muted: #0f2218;
+      --text: #e8d5b0;
+      --text-muted: #b8a888;
+      --text-faint: #8a7a60;
+      --border: #1e3528;
+      --border-muted: #162a1e;
+      --header-bg: #0a1a0e;
+      --btn-bg: #c9a84c;
+      --btn-text: #0c1c12;
+      --warning-bg: #1a1400;
+      --warning-border: #3a2e00;
+      --warning-text: #c9a84c;
+      --data-item-bg: #1a1800;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -26,14 +99,14 @@
 
     body {
       font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #fafafa;
-      color: #000;
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.8;
       -webkit-font-smoothing: antialiased;
     }
 
     header {
-      background: #000;
+      background: var(--header-bg);
       color: #fff;
       padding: 32px 20px;
       text-align: center;
@@ -66,14 +139,14 @@
 
     .intro {
       font-size: 15px;
-      color: #444;
+      color: var(--text-muted);
       margin-bottom: 28px;
       line-height: 1.9;
     }
 
     section {
-      background: #fff;
-      border: 1px solid #e8e8e8;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 24px;
       margin-bottom: 24px;
@@ -83,16 +156,16 @@
       font-size: 17px;
       font-weight: 600;
       margin-bottom: 14px;
-      color: #000;
+      color: var(--text);
     }
 
     p, li {
       font-size: 15px;
-      color: #333;
+      color: var(--text-muted);
     }
 
     a {
-      color: #000;
+      color: var(--text);
       font-weight: 600;
     }
 
@@ -122,8 +195,8 @@
 
     .step-num {
       display: inline-block;
-      background: #000;
-      color: #fff;
+      background: var(--btn-bg);
+      color: var(--btn-text);
       width: 24px;
       height: 24px;
       border-radius: 50%;
@@ -145,7 +218,7 @@
       align-items: flex-start;
       gap: 12px;
       padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--border-muted);
     }
 
     .steps-list li:last-child {
@@ -159,13 +232,13 @@
     .steps-list .step-label {
       font-weight: 600;
       font-size: 14px;
-      color: #000;
+      color: var(--text);
       display: block;
     }
 
     .steps-list .step-detail {
       font-size: 13px;
-      color: #666;
+      color: var(--text-faint);
       margin-top: 2px;
       display: block;
     }
@@ -177,8 +250,8 @@
 
     .mailto-btn {
       display: inline-block;
-      background: #000;
-      color: #fff;
+      background: var(--btn-bg);
+      color: var(--btn-text);
       text-decoration: none;
       padding: 14px 40px;
       border-radius: 6px;
@@ -200,12 +273,12 @@
     }
 
     .warning {
-      background: #fff8f0;
-      border-color: #f0e0cc;
+      background: var(--warning-bg);
+      border-color: var(--warning-border);
     }
 
     .warning h2 {
-      color: #b45309;
+      color: var(--warning-text);
     }
 
     .data-list {
@@ -220,18 +293,18 @@
     .data-list li {
       font-size: 14px;
       padding: 8px 12px;
-      background: #fff5eb;
+      background: var(--data-item-bg);
       border-radius: 4px;
     }
 
     .data-list li::before {
       content: "✕ ";
-      color: #b45309;
+      color: var(--warning-text);
       font-weight: 700;
     }
 
     .notice-box {
-      background: #f5f5f5;
+      background: var(--bg-muted);
       border: none;
       padding: 16px 20px;
       border-radius: 6px;
@@ -240,7 +313,7 @@
 
     .notice-box p {
       font-size: 13px;
-      color: #666;
+      color: var(--text-faint);
       margin-bottom: 4px;
     }
 
@@ -249,20 +322,20 @@
     }
 
     .info-section {
-      background: #f9f9f9;
-      border-color: #eee;
+      background: var(--bg-muted);
+      border-color: var(--border-muted);
     }
 
     .divider {
       height: 1px;
-      background: #e8e8e8;
+      background: var(--border);
       margin: 28px 0;
       border: none;
     }
 
     .privacy-section {
-      background: #fafafa;
-      border: 1px solid #eee;
+      background: var(--bg);
+      border: 1px solid var(--border-muted);
     }
 
     .privacy-section ul {
@@ -273,25 +346,25 @@
     .privacy-section li {
       padding: 6px 0;
       font-size: 14px;
-      color: #444;
+      color: var(--text-muted);
     }
 
     .privacy-section li::before {
       content: "— ";
-      color: #999;
+      color: var(--text-faint);
     }
 
     footer {
       text-align: center;
       padding: 24px 20px;
       font-size: 12px;
-      color: #999;
-      border-top: 1px solid #e8e8e8;
+      color: var(--text-faint);
+      border-top: 1px solid var(--border);
       line-height: 1.8;
     }
 
     footer a {
-      color: #666;
+      color: var(--text-muted);
       font-weight: 400;
     }
 
