@@ -2387,7 +2387,7 @@ window.GencineUI = {
     container.appendChild(emptyState);
 
     function renderGrid() {
-      if (catRow) catRow.style.display = self._bookCat === 'reading' ? 'none' : '';
+      container.querySelectorAll('.book-cat-row').forEach(function(cr){ cr.style.display = self._bookCat === 'reading' ? 'none' : ''; });
       while (grid.firstChild) grid.removeChild(grid.firstChild);
       emptyState.style.display = 'none';
       var _history = _getReadingHistory(); // read once per render
@@ -2488,9 +2488,7 @@ window.GencineUI = {
           _rfill.setAttribute('stroke-dasharray', '138.23');
           _rfill.setAttribute('stroke-dashoffset', _visualPct > 0 ? String(_CCIRC * (1 - _visualPct / 100)) : String(_CCIRC));
           _rsvg.appendChild(_rfill); _ringWrap.appendChild(_rsvg);
-          if (_pct > 0) {
-            var _rpct = document.createElement('div'); _rpct.className = 'book-ring-pct'; _rpct.textContent = _pct + '%'; _ringWrap.appendChild(_rpct);
-          } else if (_prog && _prog.page >= 1) {
+          if (_prog && _prog.page >= 1) {
             var _rpn = document.createElement('div'); _rpn.className = 'book-ring-pct'; _rpn.textContent = 'پ' + _prog.page; _ringWrap.appendChild(_rpn);
           } else {
             var _rico = document.createElement('i'); _rico.className = 'fas fa-book-open book-ring-ico'; _ringWrap.appendChild(_rico);
