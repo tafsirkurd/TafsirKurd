@@ -51,6 +51,30 @@
             --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
+        [data-theme="noor"] {
+            --primary: #1a5c3a;
+            --accent: #fdf4e3;
+            --bg: #f4e8cc;
+            --card-bg: #fdf4e3;
+            --sidebar-bg: #eddfc0;
+            --text: #1a0e04;
+            --text-muted: #9b7650;
+            --border: #d9c9a8;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        [data-theme="sakina"] {
+            --primary: #c9a84c;
+            --accent: #0c1c12;
+            --bg: #060e08;
+            --card-bg: #0f2218;
+            --sidebar-bg: #0c1c12;
+            --text: #e8d5b0;
+            --text-muted: #8a7a60;
+            --border: rgba(201, 168, 76, 0.12);
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
 
         * {
             margin: 0;
@@ -2345,5 +2369,7 @@
             initializeSettings();
         });
     </script>
+    <div id="footer-placeholder"></div>
+    <script src="/utils/footer-loader.js"></script>
 </body>
 </html>
