@@ -3681,6 +3681,16 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script src="/app/app.js?v=766"></script>
 <script>
+/* Register service worker — updateViaCache:'none' ensures browser always checks for new SW */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js', { scope: '/', updateViaCache: 'none' })
+    .then(function(reg) {
+      reg.update(); // immediately check for updates on every app load
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        window.location.reload(); // reload once when new SW takes over
+      });
+    }).catch(function() {});
+}
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){
   var sp=document.getElementById('splash');
