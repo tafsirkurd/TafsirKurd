@@ -274,10 +274,10 @@ html.preload *, html.preload *::before, html.preload *::after {
     --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
-[data-theme="light"]  .logo-image { filter: brightness(0); }
-[data-theme="dark"]   .logo-image { filter: brightness(0) invert(1); }
-[data-theme="noor"]   .logo-image { filter: none; }
-[data-theme="sakina"] .logo-image { filter: brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%); }
+[data-theme="light"]  .logo-image, [data-theme="light"]  .hero-logo-static { filter: brightness(0); }
+[data-theme="dark"]   .logo-image, [data-theme="dark"]   .hero-logo-static { filter: brightness(0) invert(1); }
+[data-theme="noor"]   .logo-image, [data-theme="noor"]   .hero-logo-static { filter: none; }
+[data-theme="sakina"] .logo-image, [data-theme="sakina"] .hero-logo-static { filter: brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%); }
 
 * {
     margin: 0;
