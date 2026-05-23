@@ -4845,6 +4845,39 @@
         .ms-flro   { animation:ms-flro   var(--m-anim) ease                    forwards; }
         .ms-flri   { animation:ms-flri   var(--m-anim) ease                    forwards; }
         /* ─────────────────────────────────────────────────────────────────── */
+
+        /* ── Noor theme: black → green ── */
+        [data-theme="noor"] .sidebar-tab.active          { background: #1a5c3a; color: #fdf4e3; }
+        [data-theme="noor"] .surah-item-sidebar.active   { background: #1a5c3a; }
+        [data-theme="noor"] .surah-item-sidebar.active .surah-num-sidebar,
+        [data-theme="noor"] .surah-item-sidebar.active .surah-name-sidebar,
+        [data-theme="noor"] .surah-item-sidebar.active .surah-arabic-sidebar { color: #fdf4e3; }
+        [data-theme="noor"] .sidebar-toggle             { background: #1a5c3a; }
+        [data-theme="noor"] .surah-card::before         { background: #1a5c3a; }
+        [data-theme="noor"] .surah-card-number          { background: #1a5c3a; color: #fdf4e3; }
+        [data-theme="noor"] .filter-sort-controls       { background: #1a5c3a; }
+
+        /* ── Sakina theme: black → gold ── */
+        [data-theme="sakina"] .sidebar-tab.active        { background: #c9a84c; color: #0c1c12; }
+        [data-theme="sakina"] .surah-item-sidebar.active { background: #1e3528; }
+        [data-theme="sakina"] .sidebar-toggle            { background: #c9a84c; }
+        [data-theme="sakina"] .surah-card::before        { background: #c9a84c; }
+        [data-theme="sakina"] .surah-card-number         { background: #c9a84c; color: #0c1c12; }
+        [data-theme="sakina"] .filter-sort-controls      { background: #1e3528; }
+
+        /* ── Light theme: keep dark primary ── */
+        [data-theme="light"] .sidebar-tab.active         { background: #111; color: #fff; }
+        [data-theme="light"] .surah-item-sidebar.active  { background: #111; }
+        [data-theme="light"] .sidebar-toggle             { background: #111; }
+        [data-theme="light"] .surah-card-number          { background: #111; color: #fff; }
+
+        /* ── Action cards & icon badges (inline-styled elements) ── */
+        [data-theme="noor"] #continueReadingCard   { background: #1a5c3a !important; }
+        [data-theme="noor"] #goalsCardContainer    { background: #1a5c3a !important; }
+        [data-theme="noor"] #noGoalsCard .fa-bullseye,
+        [data-theme="noor"] #dailyVerseSection .fa-star { color: #fdf4e3 !important; }
+        [data-theme="sakina"] #continueReadingCard { background: #1e3528 !important; }
+        [data-theme="sakina"] #goalsCardContainer  { background: #1e3528 !important; }
     </style>
 
     <!-- 🎯 SEO: JSON-LD Structured Data for 100/100 Score -->
@@ -5428,8 +5461,8 @@
                     <!-- Header Row -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 32px; height: 32px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-star" style="color: #fff; font-size: 0.8rem;"></i>
+                            <div style="width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-star" style="color: var(--accent); font-size: 0.8rem;"></i>
                             </div>
                             <span style="font-size: 0.95rem; font-weight: 600; color: var(--text);" data-t="quran_daily_ayah">ئایەتا رۆژانە</span>
                         </div>
@@ -5447,7 +5480,7 @@
                     <!-- Footer Row -->
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border);">
                         <div id="randomAyahRef" style="font-size: 0.85rem; font-weight: 600; color: var(--text);"></div>
-                        <button onclick="gotoRandomAyah()" style="background: #000; color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit;">
+                        <button onclick="gotoRandomAyah()" style="background: var(--primary); color: var(--accent); border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit;">
                             <i class="fas fa-arrow-left"></i>
                             بخوێنە
                         </button>
@@ -5479,8 +5512,8 @@
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
                     <!-- Goals Button -->
                     <div id="noGoalsCard" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 34px; height: 34px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-bullseye" style="color: #fff; font-size: 0.85rem;"></i>
+                        <div style="width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-bullseye" style="color: var(--accent); font-size: 0.85rem;"></i>
                         </div>
                         <div>
                             <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);" data-t="quran_div_27">ئارمانج</div>
@@ -5489,7 +5522,7 @@
                     </div>
 
                     <!-- Goals Card with Streak (hidden by default) -->
-                    <div id="goalsCardContainer" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: #000; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; display: none; align-items: center; gap: 10px;">
+                    <div id="goalsCardContainer" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: var(--primary); border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; display: none; align-items: center; gap: 10px;">
                         <div id="streakBadgeContainer" style="display: flex; align-items: center; gap: 10px; width: 100%;">
                             <div id="streakEmoji" style="font-size: 1.4rem;">🌱</div>
                             <div>
@@ -5501,8 +5534,8 @@
 
                     <!-- Bookmarks Button -->
                     <div onclick="requireLogin('bookmarks')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 34px; height: 34px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-bookmark" style="color: #fff; font-size: 0.85rem;"></i>
+                        <div style="width: 34px; height: 34px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-bookmark" style="color: var(--accent); font-size: 0.85rem;"></i>
                         </div>
                         <div>
                             <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);" data-t="quran_div_29">نیشانەکان</div>
