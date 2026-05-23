@@ -57,4 +57,15 @@
     } catch (e) {}
 
     window.SiteTheme = { themes: THEMES, current: current, set: set };
+
+    // Universal logo filter rules — one place, all public pages
+    var S = '[data-theme="light"]  %{filter:brightness(0) invert(1)!important}' +
+            '[data-theme="dark"]   %{filter:brightness(0) invert(1)!important}' +
+            '[data-theme="noor"]   %{filter:none!important}'                    +
+            '[data-theme="sakina"] %{filter:brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%)!important}';
+    var LOGO_SEL = '.logo-image,.hero-logo-static,.nav-dropdown-img,.footer-logo img';
+    var st = document.createElement('style');
+    st.id = 'tk-logo-filters';
+    st.textContent = S.replace(/%/g, LOGO_SEL);
+    document.head.appendChild(st);
 })();

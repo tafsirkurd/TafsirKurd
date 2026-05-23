@@ -196,9 +196,10 @@
             display: block;
         }
 
-        [data-theme="dark"] .logo {
-            filter: invert(1) brightness(1.2);
-        }
+        [data-theme="light"]  .logo { filter: brightness(0) invert(1); }
+        [data-theme="dark"]   .logo { filter: brightness(0) invert(1); }
+        [data-theme="noor"]   .logo { filter: none; }
+        [data-theme="sakina"] .logo { filter: brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%); }
 
         .auth-title {
             font-size: 1.75rem;
