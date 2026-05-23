@@ -2361,8 +2361,10 @@ window.GencineUI = {
       if (catMap[b.category] === undefined || b.sort_order < catMap[b.category]) catMap[b.category] = b.sort_order;
     });
     var cats = ['all'].concat(Object.keys(catMap).sort(function(a,b){ return catMap[a] - catMap[b]; }));
-    if (cats.length > 1 && self._bookCat !== 'reading') {
-      var catRow = document.createElement('div'); catRow.className = 'book-cat-row';
+    var catRow;
+    if (cats.length > 1) {
+      catRow = document.createElement('div'); catRow.className = 'book-cat-row';
+      catRow.style.display = self._bookCat === 'reading' ? 'none' : '';
       cats.forEach(function(cat){
         var btn = document.createElement('button');
         btn.className = 'book-cat-btn' + (cat === self._bookCat ? ' on' : '');
