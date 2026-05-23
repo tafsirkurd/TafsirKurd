@@ -24,7 +24,6 @@
     var deferredPrompt = null;
 
     function handleBeforeInstall(e) {
-        e.preventDefault();
         deferredPrompt = e;
     }
 
