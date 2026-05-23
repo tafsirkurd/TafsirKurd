@@ -737,7 +737,7 @@ var S={
   prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'13'),
   prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true',
   prayerToggles:(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return {}}}()),
-  theme:localStorage.getItem('theme')||(JSON.parse(localStorage.getItem('userPreferences')||'{}').darkMode?'dark':'light'),
+  theme:localStorage.getItem('theme')||(JSON.parse(localStorage.getItem('userPreferences')||'{}').darkMode?'dark':'noor'),
   arSize:parseFloat(localStorage.getItem('app_arSize'))||2.0,
   tfSize:parseFloat(localStorage.getItem('app_tfSize'))||1.0,
   lineH:parseFloat(localStorage.getItem('app_lineH'))||2.2,
