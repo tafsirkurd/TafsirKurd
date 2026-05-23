@@ -804,27 +804,23 @@ nav.scrolled-nav {
 
 .hero-logo-static {
     object-fit: contain;
-    height: 150px !important;
-    width: auto;
+    width: 220px !important;
+    height: 220px !important;
+    border-radius: 28px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    margin-bottom: 8px;
 }
 
-/* Responsive logo sizing - must use !important to override inline style */
 @media (max-width: 1024px) {
-    .hero-logo-static {
-        height: 90px !important;
-    }
+    .hero-logo-static { width: 160px !important; height: 160px !important; }
 }
 
 @media (max-width: 768px) {
-    .hero-logo-static {
-        height: 70px !important;
-    }
+    .hero-logo-static { width: 120px !important; height: 120px !important; border-radius: 18px; }
 }
 
 @media (max-width: 480px) {
-    .hero-logo-static {
-        height: 35px !important;
-    }
+    .hero-logo-static { width: 90px !important; height: 90px !important; border-radius: 14px; }
 }
 
 .hamburger-menu {
@@ -4688,7 +4684,7 @@ window.addEventListener('error', function(e) {
     <div class="header-scroll-shimmer"></div>
     <div class="header-edge-bottom"></div>
     <div class="hero-inner">
-        <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" loading="eager" fetchpriority="high" width="400" height="150" style="height: 150px; width: auto; filter: brightness(0) invert(1);">
+        <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" loading="eager" fetchpriority="high" width="220" height="220">
         <p class="hero-sub" data-t="hero_subtitle">بەردەستکرنا شرۆڤەکرنەکا ڕوون و ڕەسەن یا قورئانا پیرۆز ب زمانێ کوردی. ب شێوەیەکێ ڕوون و ب دلسۆزی و ڕێزگرتن، ئەم وانەیان ب شێوازێ ڤیدیویێن کورت و ئاسۆیی و هەروەسا تەفسیرا تەمام دروست دکەین دا کو پەیاما قورئانێ بگەهیتە هەمی ماڵان.</p>
 
         <div class="hero-cards">

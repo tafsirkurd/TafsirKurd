@@ -1757,26 +1757,20 @@
         }
 
         .hero-logo-static {
-            height: 150px;
-            width: auto;
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 24px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
             margin-bottom: 30px;
-            filter: brightness(0) invert(1);
         }
 
-        /* Tablet - Medium logo size */
         @media (max-width: 1024px) {
-            .hero-logo-static {
-                height: 90px;
-                margin-bottom: 25px;
-            }
+            .hero-logo-static { width: 150px; height: 150px; margin-bottom: 25px; }
         }
 
-        /* Small tablet/large phone */
         @media (max-width: 768px) {
-            .hero-logo-static {
-                height: 70px;
-                margin-bottom: 20px;
-            }
+            .hero-logo-static { width: 110px; height: 110px; border-radius: 16px; margin-bottom: 20px; }
         }
 
         .hero-search {
@@ -3050,7 +3044,8 @@
 
             /* Very small logo on small phones */
             .hero-logo-static {
-                height: 35px !important;
+                width: 80px !important; height: 80px !important;
+                border-radius: 12px;
                 margin-bottom: 10px;
             }
         }
@@ -3888,7 +3883,8 @@
             }
 
             .hero-logo-static {
-                height: 50px;
+                width: 90px; height: 90px;
+                border-radius: 12px;
                 margin-bottom: 12px;
             }
 
@@ -5349,7 +5345,7 @@
         <div class="home-page" id="homePage">
             <!-- Hero Section -->
             <section class="hero-section">
-                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static" width="300" height="300" loading="eager" fetchpriority="high">
+                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static" width="200" height="200" loading="eager" fetchpriority="high">
                 <div class="hero-search">
                     <input
                         type="text"
