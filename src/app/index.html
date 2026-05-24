@@ -1,6 +1,6 @@
 <!DOCTYPE html><html dir="rtl" lang="ku"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover">
 <meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -54,8 +54,8 @@
 </script>
 <script src="/utils/console-cleaner.js?v=2" defer></script>
 <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin="">
-<script src="/utils/platform.js?v=1"></script>
-<script src="/utils/app-error-reporter.js?v=1"></script>
+<script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform()}catch(e){return false}})();</script>
+<script src="/utils/app-error-reporter.js?v=1" defer></script>
 <script>
 if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
   var SB=window.Capacitor.Plugins.StatusBar;
@@ -71,7 +71,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/surah-name-v2.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
-<link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17">
+<link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17"></noscript>
 
 <style>
 
@@ -3201,14 +3201,14 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
       <div style="display:flex;gap:2px">
         <button class="hdr-btn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i></button>
         <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
-        <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
+        <button class="hdr-btn" aria-label="گەڕان" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
       </div>
     </div>
     <div class="search-bar" id="searchBar">
       <div class="search-wrap">
         <i class="fas fa-search"></i>
         <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="گەڕان..." oninput="App.onSearch(this.value)">
-        <button class="search-clear" onclick="App.toggleSearch()"><i class="fas fa-times"></i></button>
+        <button class="search-clear" aria-label="داخستنی گەڕان" onclick="App.toggleSearch()"><i class="fas fa-times"></i></button>
       </div>
       <div class="search-results" id="searchResults"></div>
     </div>
@@ -3490,7 +3490,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <!-- Qibla modal — tap outside (backdrop) to close -->
 <div id="qiblaOverlay" onclick="QiblaUI.close()">
   <div id="qiblaModal" onclick="event.stopPropagation()">
-    <button id="qiblaCloseBtn" onclick="QiblaUI.close()"><i class="fas fa-times"></i></button>
+    <button id="qiblaCloseBtn" aria-label="داخستن" onclick="QiblaUI.close()"><i class="fas fa-times"></i></button>
     <div id="qiblaWrap">
       <div id="qiblaCompass">
         <div id="qiblaGlow"></div>
