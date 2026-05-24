@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260563 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260564 */
 (function(){
 'use strict';
 
@@ -2435,7 +2435,11 @@ window.GencineUI = {
             if (_fb.cover_url){ var _fi = document.createElement('img'); _fi.alt = _fb.title_ku||''; _fi.onload = function(){ _fi.classList.add('loaded'); }; _fi.src = _fb.cover_url; _fcover.appendChild(_fi); }
             else { var _fph = document.createElement('i'); _fph.className = 'fas fa-book'; _fcover.appendChild(_fph); }
             _fc.appendChild(_fcover);
-            var _ftl = document.createElement('div'); _ftl.className = 'book-feat-title'; _ftl.textContent = _fb.title_ku||_fb.title_ar||''; _fc.appendChild(_ftl);
+            var _finfo = document.createElement('div'); _finfo.className = 'book-feat-info';
+            var _ftl = document.createElement('div'); _ftl.className = 'book-feat-title'; _ftl.textContent = _fb.title_ku||_fb.title_ar||''; _finfo.appendChild(_ftl);
+            if (_fb.author_ku||_fb.author_ar){ var _fau = document.createElement('div'); _fau.className = 'book-feat-author'; _fau.textContent = _fb.author_ku||_fb.author_ar; _finfo.appendChild(_fau); }
+            if (_fb.pages){ var _fpg = document.createElement('div'); _fpg.className = 'book-feat-pages'; _fpg.textContent = _fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _finfo.appendChild(_fpg); }
+            _fc.appendChild(_finfo);
             _fc.onclick = _makeFeatClick(_fb); _frow.appendChild(_fc);
           });
           featuredSection.appendChild(_frow);

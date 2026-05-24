@@ -2548,12 +2548,15 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-feat-banner-pages{font-size:.72rem;color:var(--accent);font-weight:700}
 .book-feat-row{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .book-feat-row::-webkit-scrollbar{display:none}
-.book-feat-card{flex-shrink:0;width:110px;cursor:pointer;direction:rtl;transition:transform .15s}
-.book-feat-card:active{transform:scale(.96)}
-.book-feat-cover{width:110px;height:146px;border-radius:12px;overflow:hidden;background:var(--bg3);position:relative;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:1.6rem}
+.book-feat-card{flex-shrink:0;width:calc(85% - 6px);cursor:pointer;direction:rtl;transition:transform .15s;background:var(--bg2);border:1.5px solid var(--accent);border-radius:14px;display:flex;align-items:center;gap:12px;padding:10px 12px;overflow:hidden}
+.book-feat-card:active{transform:scale(.97)}
+.book-feat-cover{flex-shrink:0;width:64px;height:84px;border-radius:8px;overflow:hidden;background:var(--bg3);position:relative;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:1.4rem}
 .book-feat-cover img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;position:absolute;inset:0}
 .book-feat-cover img.loaded{opacity:1}
-.book-feat-title{font-size:.72rem;font-weight:700;color:var(--text);text-align:right;margin-top:6px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book-feat-info{flex:1;direction:rtl;text-align:right;display:flex;flex-direction:column;gap:4px;min-width:0;overflow:hidden}
+.book-feat-title{font-size:.88rem;font-weight:800;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book-feat-author{font-size:.75rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.book-feat-pages{font-size:.7rem;color:var(--accent);font-weight:700}
 .iv-new-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em;flex-shrink:0;align-self:center;margin-right:6px;box-shadow:0 2px 5px rgba(229,62,62,.35)}
 .book-cover{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;position:absolute;inset:0}
 .book-cover.loaded{opacity:1}
