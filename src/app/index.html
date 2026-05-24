@@ -75,8 +75,20 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/surah-name-v2.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/app/app.css?v=20260529" as="style">
-<link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17"></noscript>
+<style>/* critical: reset + vars + splash + app shell + @font-face — inlined, zero render-blocking */
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:300;font-display:optional;src:url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2?v=17') format('woff2'),url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.ttf') format('truetype')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:400;font-display:optional;src:url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17') format('woff2'),url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.ttf') format('truetype')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:500;font-display:optional;src:url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2?v=17') format('woff2'),url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.ttf') format('truetype')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:600;font-display:optional;src:url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=17') format('woff2'),url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.ttf') format('truetype')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:700;font-display:optional;src:url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2?v=17') format('woff2'),url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.ttf') format('truetype')}
+@font-face{font-family:'KFGQPC Hafs';font-style:normal;font-weight:400;font-display:block;src:url('/assets/fonts/hafs.woff2?v=17') format('woff2'),url('/assets/fonts/hafs.ttf') format('truetype')}
+@font-face{font-family:'Amiri Quran';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/amiri-quran-v1-arabic-regular.woff2?v=17') format('woff2'),url('/assets/fonts/amiri-quran-v1-arabic-regular.ttf') format('truetype')}
+@font-face{font-family:'SurahName';font-style:normal;font-weight:400;font-display:block;src:url('/assets/fonts/surah-name-v4.woff2?v=17') format('woff2'),url('/assets/fonts/surah-name-v4.ttf') format('truetype'),url('/assets/fonts/SurahName.ttf') format('truetype')}
+@font-face{font-family:'SurahNameV2';font-style:normal;font-weight:400;font-display:block;src:url('/assets/fonts/surah-name-v2.woff2?v=1') format('woff2'),url('/assets/fonts/surah-name-v2.ttf') format('truetype')}
+@font-face{font-family:'QuranCommon';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/quran-common.woff2?v=1') format('woff2'),url('/assets/fonts/quran-common.ttf') format('truetype')}
+@font-face{font-family:'Scheherazade New';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/scheherazade-new-400.woff2?v=1') format('woff2'),url('/assets/fonts/scheherazade-new-400.ttf') format('truetype');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
+@font-face{font-family:'Scheherazade New';font-style:normal;font-weight:700;font-display:swap;src:url('/assets/fonts/scheherazade-new-700.woff2?v=1') format('woff2'),url('/assets/fonts/scheherazade-new-700.ttf') format('truetype');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}</style>
 <style>/* critical: reset + vars + splash + app shell — inlined for zero-blocking FCP */
 html.preload *,html.preload *::before,html.preload *::after{transition:none!important;animation:none!important}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -679,16 +691,14 @@ body{background:var(--bg);color:var(--text)}
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script src="/app/app-storage.js?v=20260525"></script>
 <script src="/app/app-core.js?v=20260525"></script>
-<script src="/app/app-init.js?v=20260528"></script>
+<script src="/app/app-init.js?v=20260530"></script>
 <script src="/app/app-notifications.js?v=20260525"></script>
 <script src="/app/app-search.js?v=20260525"></script>
 <script src="/app/app-quran.js?v=20260527"></script>
 <script src="/app/app-audio.js?v=20260525"></script>
 <script src="/app/app-goals.js?v=20260525"></script>
-<script src="/app/app-settings.js?v=20260525"></script>
+<script src="/app/app-settings.js?v=20260530"></script>
 <script src="/app/app-sync.js?v=20260527"></script>
-<script src="/app/app-profile.js?v=20260525"></script>
-<script src="/app/app-islamvoice.js?v=20260525"></script>
 <script src="/app/app-start.js?v=20260525"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */

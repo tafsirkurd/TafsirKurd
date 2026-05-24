@@ -491,7 +491,7 @@ function renderSettings(){
     chevRow.appendChild(document.createTextNode(t('profile.view_profile')||'پرۆفایل ببینە'));
     chevRow.appendChild(icon('fas fa-chevron-left'));
     profile.appendChild(chevRow);
-    on(profile,'click',function(){App.openProfile()});
+    on(profile,'click',function(){_loadProfileScript(function(){App.openProfile();});});
   }else{
     // Guest
     var guestAv=el('div','profile-avatar');

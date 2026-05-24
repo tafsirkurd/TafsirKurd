@@ -388,14 +388,14 @@ function init(){
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
   setTimeout(function(){_reportAppVersion();},5000);
-  // Preload Gencine scripts in background so first tab open is instant (scripts are 190KB)
+  // Preload lazy scripts in background so first tab open is instant
   setTimeout(function(){_loadGencineScripts(function(){
-    // Pre-render only if user hasn't already opened the tab
-    if(window.GencineUI&&S.tab!=='gencine'){
-      var _gh=_tabHash('gencine');
-      if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
-    }
+    if(window.GencineUI&&S.tab!=='gencine'){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}}
   });},3000);
+  setTimeout(function(){_loadIslamvoiceScript(function(){
+    if(typeof renderIslamVoice==='function'&&S.tab!=='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}}
+  });},4000);
+  setTimeout(function(){_loadProfileScript(function(){});},5000);
   // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
   setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},4000);
   // Athan voice decode is CPU-intensive — delay until after first 3s of interaction
@@ -557,7 +557,7 @@ function _rerenderCurrentTab(){
   if(tab==='bookmarks'){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}
   else if(tab==='goals'){renderGoals();_renderHash.goals=_tabHash('goals');}
   else if(tab==='settings'){renderSettings();_renderHash.settings=_tabHash('settings');}
-  else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
+  else if(tab==='islamvoice'){if(typeof renderIslamVoice==='function'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}}
   else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
   else if(tab==='gencine'&&window.GencineUI){GencineUI._homeEl=null;GencineUI._draw();}
   // quran tab uses data-i18n attributes — applyTranslations() handled by i18n.js before dispatch
@@ -600,7 +600,7 @@ function _startTabPrerender(){
     function(){renderSettings();_renderHash.settings=_tabHash('settings');},
     function(){if(window.PrayerUI){PrayerUI.render();// Pause sky animations — pre-rendered but not the active tab
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},
-    function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
+    function(){if(typeof renderIslamVoice==='function'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}},
     function(){if(window.GencineUI)GencineUI.render();}
   ];
   var _ji=0;
@@ -885,7 +885,7 @@ App.tab=function(name){
     if(name==='quran'){requestAnimationFrame(_hlRestoreAll);}
     if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}}
     if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){renderGoals();_renderHash.goals=_tabHash('goals');}}
-    if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}}
+    if(name==='islamvoice'){_loadIslamvoiceScript(function(){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv&&S.tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}});}
     if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){renderSettings();_renderHash.settings=_tabHash('settings');}_warmAboutCache();}
     if(name==='prayer'&&window.PrayerUI){PrayerUI.render();if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();}
     if(name==='gencine'){
@@ -895,6 +895,40 @@ App.tab=function(name){
     }
   });
 };
+
+/* ===== ISLAMVOICE LAZY LOADER ===== */
+var _ivScriptLoaded=false,_ivScriptCbs=[],_ivScriptLoading=false;
+function _loadIslamvoiceScript(cb){
+  if(_ivScriptLoaded){if(cb)cb();return;}
+  if(cb)_ivScriptCbs.push(cb);
+  if(_ivScriptLoading)return;
+  _ivScriptLoading=true;
+  var s=document.createElement('script');
+  s.src='/app/app-islamvoice.js?v=20260525';
+  s.onload=s.onerror=function(){
+    _ivScriptLoaded=true;_ivScriptLoading=false;
+    var cbs=_ivScriptCbs.splice(0);
+    cbs.forEach(function(fn){try{fn();}catch(e){}});
+  };
+  document.body.appendChild(s);
+}
+
+/* ===== PROFILE LAZY LOADER ===== */
+var _profileScriptLoaded=false,_profileScriptCbs=[],_profileScriptLoading=false;
+function _loadProfileScript(cb){
+  if(_profileScriptLoaded){if(cb)cb();return;}
+  if(cb)_profileScriptCbs.push(cb);
+  if(_profileScriptLoading)return;
+  _profileScriptLoading=true;
+  var s=document.createElement('script');
+  s.src='/app/app-profile.js?v=20260525';
+  s.onload=s.onerror=function(){
+    _profileScriptLoaded=true;_profileScriptLoading=false;
+    var cbs=_profileScriptCbs.splice(0);
+    cbs.forEach(function(fn){try{fn();}catch(e){}});
+  };
+  document.body.appendChild(s);
+}
 
 /* ===== GENCINE LAZY LOADER ===== */
 // dua-data.js + dhikr.js are not loaded at startup — they're pulled in on first Gencine tab visit.
