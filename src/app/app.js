@@ -8191,7 +8191,8 @@ function renderSettings(){
   var g7=el('div','settings-group');
   g7.appendChild(el('div','settings-group-title',t('settings.social')));
   var SOCIAL_DEFS=[
-    {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram'},
+    {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram — TafsirKurd'},
+    {key:'social_instagram_app',icon:'fab fa-instagram',label:'Instagram — App',fallback:'https://www.instagram.com/tafsirkurd.app/'},
     {key:'social_youtube',icon:'fab fa-youtube',label:'YouTube'},
     {key:'social_tiktok',icon:'fab fa-tiktok',label:'TikTok'},
     {key:'social_telegram',icon:'fab fa-telegram',label:'Telegram'},
@@ -8215,7 +8216,7 @@ function renderSettings(){
   // Async: load social URLs
   getSiteSettings().then(function(ss){
     SOCIAL_DEFS.forEach(function(def){
-      var url=ss[def.key]||'';
+      var url=ss[def.key]||def.fallback||'';
       var btn=_socBtns[def.key];
       if(url){btn._url=url;btn.style.display='';}
     });
