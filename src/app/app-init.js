@@ -438,7 +438,7 @@ function init(){
   // Hybrid timing: first launch / new version → 3s minimum (full animation).
   //                repeat same-version launches → immediate exit when data ready.
   var _splashStart = Date.now();
-  var _splashReady = {quran:false,tabs:false};
+  var _splashReady = {quran:false,tabs:false,fonts:false};
   var _splashDismissed = false;
   var _splashSeenKey = 'tk_splash_seen';
   var _splashMinPassed = false;
@@ -499,6 +499,7 @@ function init(){
   function _checkSplashReady(){
     if(_splashDismissed)return;
     if(!_splashReady.quran||!_splashReady.tabs)return;
+    if(!_splashReady.fonts)return; // wait for fonts to paint — avoids flash of unstyled content
     if(!_splashReady.video)return; // wait for video to finish playing
     if(!_splashMinPassed)return; // first launch / new version: wait for 3s minimum
     console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
@@ -516,9 +517,6 @@ function init(){
     _splashVid.addEventListener('ended',function(){
       if(_splashReady.video)return;
       _splashReady.video=true;
-      // Animation finished — go in right now if timing gate is already cleared.
-      // Don't wait for quran/tabs: data arrives in background, tabs render on demand.
-      if(_splashMinPassed){_doSplashTransition();return;}
       _checkSplashReady();
     });
     _splashVid.play().catch(function(){
@@ -536,6 +534,11 @@ function init(){
   window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_checkSplashReady();};
+  // Fonts gate — prevents flash of unstyled content on fast cold loads
+  // document.fonts.ready resolves once all @font-face rules have loaded or timed out
+  (document.fonts?document.fonts.ready:Promise.resolve()).then(function(){
+    _splashReady.fonts=true;_checkSplashReady();
+  }).catch(function(){_splashReady.fonts=true;_checkSplashReady();});
   // Overall failsafe — force app visible after 6s no matter what
   setTimeout(function(){_doSplashTransition();},6000);
   // Data always loads async now (no localStorage cache) — splash waits for both files
