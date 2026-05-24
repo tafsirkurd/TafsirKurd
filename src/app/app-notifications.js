@@ -1,4 +1,4 @@
-'use strict';
+'use strict'; /* v20260608 */
 
 /* ===== TAP GUARD ===== */
 // Returns true if the call should be IGNORED (too soon after last call)
@@ -746,13 +746,21 @@ function checkNewBookNotif(){
 }
 
 /* ===== OFFLINE BANNER ===== */
-function _updateOfflineBanner(){
+var _offlineDebounce=null;
+// 'offline' is debounced 2.5s — WKWebView fires spurious offline events during
+// cold start and background/foreground transitions even when the device is online.
+// 'online' clears immediately and cancels any pending debounce.
+window.addEventListener('offline',function(){
+  clearTimeout(_offlineDebounce);
+  _offlineDebounce=setTimeout(function(){
+    if(!navigator.onLine){
+      var b=document.getElementById('offlineBanner');
+      if(b)b.classList.add('on');
+    }
+  },2500);
+});
+window.addEventListener('online',function(){
+  clearTimeout(_offlineDebounce);
   var b=document.getElementById('offlineBanner');
-  if(!b)return;
-  b.classList.toggle('on',!navigator.onLine);
-}
-// Only react to real network events — never check navigator.onLine on startup.
-// On iOS Capacitor WebView, onLine can be false during cold start even when
-// the device is online, causing the banner to stick permanently.
-window.addEventListener('offline',function(){ _updateOfflineBanner(); });
-window.addEventListener('online',function(){ _updateOfflineBanner(); });
+  if(b)b.classList.remove('on');
+});

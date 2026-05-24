@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v840';
+const CACHE_NAME = 'tafsir-kurd-v841';
 
 // All files required to run the app fully offline
 // NOTE: /data/surahs/ and /data/tafsir/ JSON files are NOT precached here.
@@ -18,7 +18,7 @@ const PRECACHE = [
   '/app/app-storage.js?v=20260525',
   '/app/app-core.js?v=20260525',
   '/app/app-init.js?v=20260607',
-  '/app/app-notifications.js?v=20260606',
+  '/app/app-notifications.js?v=20260608',
   '/app/app-search.js?v=20260525',
   '/app/app-quran.js?v=20260607',
   '/app/app-audio.js?v=20260525',
@@ -35,7 +35,7 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260416',
   '/prayer/prayer.ui.js?v=20260520',
   // Gencine module
-  '/dhikr/smart-dhikr.js?v=33',
+  '/dhikr/smart-dhikr.js?v=34',
   '/dhikr/dhikr.js?v=20260569',
   '/dhikr/dua-data.js?v=20260326b',
   // i18n

@@ -1238,6 +1238,11 @@
 
     track.addEventListener('touchmove', function(e) {
       if (!_drag) return;
+      e.stopPropagation(); // belt-and-suspenders: keep PTR touchmove from running
+      // Prevent native gesture immediately — WKWebView commits to scroll within
+      // ~10-20px, making e.cancelable false before we reach our 5px INTENT threshold.
+      // Safe here because slider cards don't need vertical scrolling.
+      if (e.cancelable) e.preventDefault();
       var cx = e.touches[0].clientX, cy = e.touches[0].clientY;
       var dx = cx - _sx, dy = cy - _sy;
       if (!_decided) {
@@ -1247,8 +1252,6 @@
         if (!_horiz) { _drag = false; _resumeProg(); return; }
       }
       if (!_horiz) return;
-      /* Block page scroll while dragging horizontally */
-      e.preventDefault();
       var now = performance.now(), dt = now - _vtLast;
       if (dt > 0) { _vx = (cx - _xLast) / dt; }
       _vtLast = now; _xLast = cx;
