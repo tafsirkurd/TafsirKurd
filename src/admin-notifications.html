@@ -1509,6 +1509,9 @@
                 rateEl.style.cssText = 'font-size:11px;color:' + (rate >= 80 ? '#38a169' : rate >= 50 ? '#d69e2e' : '#e53e3e');
                 rateEl.textContent = rate + '%';
                 td6.appendChild(statsEl); td6.appendChild(rateEl);
+            } else if (n.status === 'sent' && n.tokens_targeted === 0) {
+                td6.style.color = 'var(--text-tertiary)';
+                td6.textContent = 'No devices';
             } else {
                 td6.style.color = 'var(--text-tertiary)';
                 td6.textContent = '—';
