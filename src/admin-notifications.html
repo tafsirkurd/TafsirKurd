@@ -714,18 +714,18 @@
                             <option value="unauthenticated">Anonymous Users</option>
                             <option value="android">Android Devices</option>
                             <option value="ios">iOS Devices</option>
-                            <option value="specific_user">Specific User</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="token-preview" id="token-preview">Select audience to preview token count</div>
 
-                <!-- Specific User targeting (shown only when Specific User is selected) -->
-                <div id="user-target-row" style="display:none;margin-top:8px">
+                <!-- Single-user targeting — always visible -->
+                <div id="user-target-row" style="margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2)">
+                    <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Send to one user only (optional)</div>
                     <div style="display:flex;gap:8px;align-items:center">
-                        <input type="text" id="f-user-search" class="form-input" placeholder="Search by email address" style="flex:1" oninput="clearUserSelection()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchUser();}">
-                        <button type="button" class="btn btn-secondary" id="user-search-btn" onclick="searchUser()" style="white-space:nowrap;min-width:80px">Search</button>
+                        <input type="text" id="f-user-search" class="form-input" placeholder="Search by email" style="flex:1;font-size:13px" oninput="clearUserSelection()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchUser();}">
+                        <button type="button" class="btn btn-secondary" id="user-search-btn" onclick="searchUser()" style="white-space:nowrap;padding:7px 14px;font-size:13px">Search</button>
                     </div>
                     <div id="user-search-results" style="margin-top:6px"></div>
                     <input type="hidden" id="f-target-user" value="">
@@ -1755,10 +1755,10 @@
             document.getElementById('title-count').textContent = '0/100';
             document.getElementById('body-count').textContent = '0/300';
             document.getElementById('modal-error').style.display = 'none';
-            document.getElementById('user-target-row').style.display = 'none';
             document.getElementById('f-target-user').value = '';
-            document.getElementById('user-search-results').innerHTML = '';
             document.getElementById('f-user-search').value = '';
+            var usr = document.getElementById('user-search-results');
+            while (usr.firstChild) usr.removeChild(usr.firstChild);
             onDeepLinkChange();
             updateTokenPreview();
         }
@@ -1778,45 +1778,31 @@
 
         function updateTokenPreview() {
             clearTimeout(_tokenPreviewTimer);
-            var audience = document.getElementById('f-audience').value;
-            var userTargetRow = document.getElementById('user-target-row');
-            userTargetRow.style.display = audience === 'specific_user' ? 'block' : 'none';
-            if (audience === 'specific_user') {
-                setTimeout(function(){ userTargetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 50);
-            }
-            if (audience !== 'specific_user') {
-                document.getElementById('f-target-user').value = '';
-                document.getElementById('user-search-results').innerHTML = '';
-                document.getElementById('f-user-search').value = '';
-            }
-
+            var targetUser = document.getElementById('f-target-user').value;
+            var audience = targetUser || document.getElementById('f-audience').value;
+            var platform = document.getElementById('f-platform').value;
             var preview = document.getElementById('token-preview');
-            preview.className = 'token-preview loading';
-            preview.textContent = 'Counting tokens...';
 
-            if (audience === 'specific_user') {
-                var targetUser = document.getElementById('f-target-user').value;
-                if (!targetUser) {
-                    preview.className = 'token-preview';
-                    preview.textContent = 'Search and select a user to see their device count';
-                    return;
-                }
+            if (targetUser) {
+                // A specific user is selected — show their device count
+                preview.className = 'token-preview loading';
+                preview.textContent = 'Counting devices...';
                 _tokenPreviewTimer = setTimeout(async function() {
-                    var platform = document.getElementById('f-platform').value;
                     try {
                         var d = await notifAPI('get_token_count', { audience: targetUser, platform: platform });
                         preview.className = 'token-preview';
-                        preview.textContent = d.count.toLocaleString() + ' device' + (d.count !== 1 ? 's' : '') + ' will receive this notification';
+                        preview.textContent = d.count.toLocaleString() + ' device' + (d.count !== 1 ? 's' : '') + ' (specific user)';
                     } catch(e) {
                         preview.className = 'token-preview';
-                        preview.textContent = 'Could not fetch token count';
+                        preview.textContent = 'Could not fetch device count';
                     }
-                }, 500);
+                }, 300);
                 return;
             }
 
+            preview.className = 'token-preview loading';
+            preview.textContent = 'Counting tokens...';
             _tokenPreviewTimer = setTimeout(async function() {
-                var platform = document.getElementById('f-platform').value;
                 try {
                     var d = await notifAPI('get_token_count', { audience: audience, platform: platform });
                     preview.className = 'token-preview';
@@ -1842,7 +1828,7 @@
             btn.disabled = true;
             btn.textContent = 'Searching...';
             var resultsEl = document.getElementById('user-search-results');
-            resultsEl.innerHTML = '';
+            while (resultsEl.firstChild) resultsEl.removeChild(resultsEl.firstChild);
             try {
                 var d = await notifAPI('search_users', { email: email });
                 btn.disabled = false;
@@ -1891,7 +1877,7 @@
             document.getElementById('f-target-user').value = audience;
             document.getElementById('f-user-search').value = u.email;
             var resultsEl = document.getElementById('user-search-results');
-            resultsEl.innerHTML = '';
+            while (resultsEl.firstChild) resultsEl.removeChild(resultsEl.firstChild);
             var sel = document.createElement('div');
             sel.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid var(--accent);border-radius:8px;background:var(--bg2)';
             var icon = document.createElement('span');
@@ -1925,10 +1911,8 @@
             var recurrence = rec ? rec.value : 'none';
             var recurrenceDay = recurrence === 'weekly'
                 ? parseInt(document.getElementById('f-recurrence-day').value) : null;
-            var audienceVal = document.getElementById('f-audience').value;
-            if (audienceVal === 'specific_user') {
-                audienceVal = document.getElementById('f-target-user').value || 'specific_user';
-            }
+            var targetUser = document.getElementById('f-target-user').value;
+            var audienceVal = targetUser || document.getElementById('f-audience').value;
             return {
                 title: document.getElementById('f-title').value.trim(),
                 body: document.getElementById('f-body').value.trim(),
@@ -1951,9 +1935,6 @@
             var fd = getFormData();
             if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
             if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
-            if (document.getElementById('f-audience').value === 'specific_user' && !document.getElementById('f-target-user').value) {
-                errEl.textContent = 'Select a user before saving'; errEl.style.display = 'block'; return;
-            }
             var btn = document.getElementById('save-btn');
             var draftBtn = document.querySelector('.modal-footer .btn-secondary[onclick*="saveNotification"]');
             btn.disabled = true; btn.textContent = 'Saving...';
@@ -1985,9 +1966,6 @@
             var fd = getFormData();
             if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
             if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
-            if (document.getElementById('f-audience').value === 'specific_user' && !document.getElementById('f-target-user').value) {
-                errEl.textContent = 'Select a user before sending'; errEl.style.display = 'block'; return;
-            }
             var btn = document.getElementById('save-send-btn');
             btn.disabled = true; btn.textContent = 'Sending...';
             try {
