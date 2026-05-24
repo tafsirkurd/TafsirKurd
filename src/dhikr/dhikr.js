@@ -3028,7 +3028,7 @@ window.GencineUI = {
         _resumeBanner.appendChild(document.createTextNode(' ' + T('gencine.resuming','بەردەوامبوون') + ' — ' + T('gencine.page_lbl','پ') + ' ' + _curPage));
         // Pin to actual header bottom so it never overlaps on any device
         var _hdrEl = document.querySelector('.hdr');
-        if (_hdrEl) { _resumeBanner.style.top = (_hdrEl.getBoundingClientRect().bottom + 10) + 'px'; }
+        if (_hdrEl) { _resumeBanner.style.top = (_hdrEl.getBoundingClientRect().bottom + 28) + 'px'; }
         container.appendChild(_resumeBanner);
         setTimeout(function(){ _resumeBanner.classList.add('visible'); }, 60);
         setTimeout(function(){ _resumeBanner.classList.remove('visible'); setTimeout(function(){ if(_resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner); }, 400); }, 3200);
