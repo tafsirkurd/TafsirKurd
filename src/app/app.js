@@ -7840,29 +7840,30 @@ function _showIgPicker(){
   overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;';
   overlay.style.opacity='0';overlay.style.transition='opacity .2s';
   var sheet=document.createElement('div');
-  sheet.style.cssText='width:100%;max-width:480px;background:var(--card-bg);border-radius:20px 20px 0 0;padding:12px 12px 32px;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.23,1);border-top:1px solid var(--border);';
+  sheet.style.cssText='width:100%;max-width:480px;background:var(--bg2);border-radius:20px 20px 0 0;padding:12px 12px 32px;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.23,1);border-top:1px solid var(--border);';
   var handle=document.createElement('div');
   handle.style.cssText='width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px;';
   sheet.appendChild(handle);
   var title=document.createElement('div');
   title.textContent='Instagram';
-  title.style.cssText='text-align:center;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;letter-spacing:.5px;';
+  title.style.cssText='text-align:center;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase;';
   sheet.appendChild(title);
   var OPTS=[
     {label:'TafsirKurd',sub:'@tafsirkurd',url:'https://www.instagram.com/tafsirkurd/'},
     {label:'TafsirKurd App',sub:'@tafsirkurd.app',url:'https://www.instagram.com/tafsirkurd.app/'}
   ];
-  OPTS.forEach(function(opt){
+  OPTS.forEach(function(opt,i){
+    if(i>0){var sep=document.createElement('div');sep.style.cssText='height:1px;background:var(--border);margin:0 16px;';sheet.appendChild(sep);}
     var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:background .15s;';
-    var ic=document.createElement('i');ic.className='fab fa-instagram';ic.style.cssText='font-size:22px;color:#E1306C;width:24px;text-align:center;flex-shrink:0;';
+    row.style.cssText='display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;cursor:pointer;transition:background .15s;';
+    var ic=document.createElement('i');ic.className='fab fa-instagram';ic.style.cssText='font-size:24px;color:#E1306C;width:26px;text-align:center;flex-shrink:0;';
     var txt=document.createElement('div');txt.style.cssText='flex:1;min-width:0;';
-    var lbl=document.createElement('div');lbl.textContent=opt.label;lbl.style.cssText='font-size:15px;font-weight:600;color:var(--text);';
-    var sub=document.createElement('div');sub.textContent=opt.sub;sub.style.cssText='font-size:12px;color:var(--text-muted);margin-top:2px;';
+    var lbl=document.createElement('div');lbl.textContent=opt.label;lbl.style.cssText='font-size:16px;font-weight:700;color:var(--text);';
+    var sub=document.createElement('div');sub.textContent=opt.sub;sub.style.cssText='font-size:13px;color:var(--text-muted);margin-top:3px;';
     var chev=document.createElement('i');chev.className='fas fa-chevron-left';chev.style.cssText='font-size:12px;color:var(--text-muted);flex-shrink:0;';
     txt.appendChild(lbl);txt.appendChild(sub);
     row.appendChild(ic);row.appendChild(txt);row.appendChild(chev);
-    on(row,'mouseover',function(){row.style.background='var(--bg)';});
+    on(row,'mouseover',function(){row.style.background='var(--bg3)';});
     on(row,'mouseout',function(){row.style.background='';});
     row.onclick=function(){close();_openLink(opt.url);haptic([8]);};
     sheet.appendChild(row);
