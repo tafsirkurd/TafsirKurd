@@ -3697,7 +3697,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/prayer/prayer.notifications.android.js?v=20260416"></script>
 <script src="/prayer/prayer.ui.js?v=20260520"></script>
 <!-- pdf.js loaded lazily in dhikr.js when a PDF book is first opened -->
-<!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
+<!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app-init.js) -->
 <script src="/quran/search.js?v=20260520"></script>
 <script src="/rating.js?v=20260401a"></script>
 <script src="/audio-cache.js?v=20260406a"></script>
@@ -3705,7 +3705,19 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=785"></script>
+<script src="/app/app-storage.js?v=20260524"></script>
+<script src="/app/app-core.js?v=20260524"></script>
+<script src="/app/app-init.js?v=20260524"></script>
+<script src="/app/app-notifications.js?v=20260524"></script>
+<script src="/app/app-search.js?v=20260524"></script>
+<script src="/app/app-quran.js?v=20260524"></script>
+<script src="/app/app-audio.js?v=20260524"></script>
+<script src="/app/app-goals.js?v=20260524"></script>
+<script src="/app/app-settings.js?v=20260524"></script>
+<script src="/app/app-sync.js?v=20260524"></script>
+<script src="/app/app-profile.js?v=20260524"></script>
+<script src="/app/app-islamvoice.js?v=20260524"></script>
+<script src="/app/app-start.js?v=20260524"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
@@ -3713,13 +3725,13 @@ if ('serviceWorker' in navigator) {
     .then(function(reg) { reg.update(); })
     .catch(function() {});
 }
-/* Failsafe: hide splash after 8s even if app.js fails */
+/* Failsafe: hide splash after 8s even if app scripts fail */
 setTimeout(function(){
   var sp=document.getElementById('splash');
   if(sp&&!sp.classList.contains('hide')){
     sp.classList.add('hide');
     document.getElementById('app').style.display='flex';
-    console.error('Splash failsafe triggered - app.js may have errors');
+    console.error('Splash failsafe triggered - app scripts may have errors');
   }
 },8000);
 </script>
