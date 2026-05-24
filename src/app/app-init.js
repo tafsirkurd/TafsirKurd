@@ -918,7 +918,7 @@ function _loadProfileScript(cb){
   if(_profileScriptLoading)return;
   _profileScriptLoading=true;
   var s=document.createElement('script');
-  s.src='/app/app-profile.js?v=20260525';
+  s.src='/app/app-profile.js?v=20260610';
   s.onload=s.onerror=function(){
     _profileScriptLoaded=true;_profileScriptLoading=false;
     var cbs=_profileScriptCbs.splice(0);
@@ -960,5 +960,156 @@ function _loadGencineScripts(cb) {
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260569', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=34',      function() { _p2 = true; _check(); });
+}
+
+/* ===== PULL TO REFRESH =====
+   Defined here (app-init.js) so setupPullToRefresh() is available when init()
+   calls it at startup. It was previously in app-profile.js which loads lazily
+   after 5 s — too late for the init() call. */
+var ptrSpinner;
+function ensurePtrSpinner(){
+  if(ptrSpinner)return;
+  ptrSpinner=el('div','ptr-spinner');
+  ptrSpinner.appendChild(el('div','ptr-arc'));
+  document.body.appendChild(ptrSpinner);
+}
+
+function setupPullToRefresh(panelId,refreshFn,checkFn){
+  var panel=$(panelId);
+  if(!panel)return;
+  ensurePtrSpinner();
+
+  var DEAD_ZONE=72;
+  var DIR_RATIO=0.88;
+  var MOMENTUM_LOCK_MS=600;
+
+  var startY=0,startX=0,armed=false,pulling=false,refreshing=false,_ticked=false;
+  var threshold=175,maxPull=240,panelOrigTop=0;
+  var _momentumLock=false,_momentumTimer=null;
+
+  function _setMomentumLock(){
+    _momentumLock=true;
+    clearTimeout(_momentumTimer);
+    _momentumTimer=setTimeout(function(){ _momentumLock=false; },MOMENTUM_LOCK_MS);
+  }
+
+  function _cancelPull(){
+    if(pulling){
+      pulling=false;
+      panel.style.transform='';
+      ptrSpinner.style.opacity='0';
+      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+      panel.classList.remove('ptr-pulling');
+    }
+    armed=false;
+    _ticked=false;
+  }
+
+  on(panel,'touchstart',function(e){
+    if(refreshing||_momentumLock)return;
+    if(checkFn&&!checkFn())return;
+    var ae=document.activeElement;
+    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))return;
+    if(panel.querySelector('.search-results.on'))return;
+    if(panel.scrollTop===0){
+      startY=e.touches[0].clientY;
+      startX=e.touches[0].clientX;
+      panelOrigTop=panel.getBoundingClientRect().top;
+      armed=true;
+    }
+  });
+
+  // Document-level touchmove: e.cancelable is always true here.
+  // On panel elements with -webkit-overflow-scrolling:touch, WKWebView marks
+  // touchmove as non-cancelable once UIScrollView commits (~10-20px), so
+  // e.preventDefault() on a panel-level listener never works. Document level
+  // is outside the UIScrollView chain and always cancelable before scroll commits.
+  document.addEventListener('touchmove',function(e){
+    if(!armed||refreshing)return;
+    var dy=e.touches[0].clientY-startY;
+    var dx=e.touches[0].clientX-startX;
+
+    if(dy<=0){ _cancelPull(); return; }
+
+    if(!pulling){
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>16&&dy/dist<DIR_RATIO){ _cancelPull(); return; }
+    }
+
+    if(panel.scrollTop>0){ _cancelPull(); return; }
+
+    // Prevent native scroll before the dead zone — must be here so WKWebView
+    // cannot commit to UIScrollView scroll before we block it.
+    if(e.cancelable)e.preventDefault();
+
+    if(dy<DEAD_ZONE) return;
+
+    if(!pulling){
+      pulling=true;
+      panel.classList.add('ptr-pulling');
+      panel.classList.remove('ptr-releasing');
+      ptrSpinner.classList.remove('ptr-snapping');
+      ptrSpinner.style.transition='none';
+    }
+    var pullRaw=dy-DEAD_ZONE;
+    var pull=pullRaw<threshold?pullRaw:threshold+((pullRaw-threshold)*0.3);
+    pull=Math.min(pull,maxPull);
+    panel.style.transform='translateY('+pull+'px)';
+    var gapCenter=panelOrigTop+(pull/2)-19;
+    ptrSpinner.style.opacity=Math.min(pull/90,1);
+    var sc=Math.min(pull/110,1);
+    ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+sc+')';
+    var arc=ptrSpinner.querySelector('.ptr-arc');
+    if(arc)arc.style.transform='rotate('+Math.min(pullRaw*3,720)+'deg)';
+    if(!_ticked&&pullRaw>=threshold){_ticked=true;haptic([12]);}
+  },{passive:false});
+
+  on(panel,'touchend',function(){
+    _setMomentumLock();
+    _ticked=false;
+    if(!pulling||refreshing){ armed=false; return; }
+    pulling=false;
+    armed=false;
+    panel.classList.remove('ptr-pulling');
+    panel.classList.add('ptr-releasing');
+    ptrSpinner.style.transition='';
+    ptrSpinner.classList.add('ptr-snapping');
+    var currentY=parseFloat(panel.style.transform.replace('translateY(','').replace('px)',''))||0;
+
+    if(currentY>=threshold*0.75){
+      refreshing=true;
+      panel.style.transform='translateY(55px)';
+      var holdCenter=panelOrigTop+(55/2)-19;
+      ptrSpinner.style.transform='translate(-50%,'+holdCenter+'px) scale(1)';
+      ptrSpinner.style.opacity='1';
+      ptrSpinner.classList.add('refreshing');
+      haptic([50]);
+      refreshFn();
+      setTimeout(function(){
+        panel.style.transform='';
+        ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+        ptrSpinner.style.opacity='0';
+        ptrSpinner.classList.remove('refreshing');
+        setTimeout(function(){
+          panel.classList.remove('ptr-releasing');
+          ptrSpinner.classList.remove('ptr-snapping');
+          refreshing=false;
+        },300);
+      },800);
+    }else{
+      panel.style.transform='';
+      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+      ptrSpinner.style.opacity='0';
+      setTimeout(function(){
+        panel.classList.remove('ptr-releasing');
+        ptrSpinner.classList.remove('ptr-snapping');
+      },300);
+    }
+  });
+
+  on(panel,'touchcancel',function(){
+    _setMomentumLock();
+    _cancelPull();
+  });
 }
 

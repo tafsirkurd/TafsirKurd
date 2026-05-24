@@ -1236,12 +1236,12 @@
       _pauseProg();
     }, { passive: false });
 
-    track.addEventListener('touchmove', function(e) {
+    // Document-level touchmove: e.cancelable is always true here.
+    // On elements inside -webkit-overflow-scrolling:touch panels, WKWebView marks
+    // touchmove as non-cancelable once UIScrollView commits, making track-level
+    // preventDefault() ineffective. Document level bypasses UIScrollView.
+    document.addEventListener('touchmove', function(e) {
       if (!_drag) return;
-      e.stopPropagation(); // belt-and-suspenders: keep PTR touchmove from running
-      // Prevent native gesture immediately — WKWebView commits to scroll within
-      // ~10-20px, making e.cancelable false before we reach our 5px INTENT threshold.
-      // Safe here because slider cards don't need vertical scrolling.
       if (e.cancelable) e.preventDefault();
       var cx = e.touches[0].clientX, cy = e.touches[0].clientY;
       var dx = cx - _sx, dy = cy - _sy;
