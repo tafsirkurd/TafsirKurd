@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260567 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260568 */
 (function(){
 'use strict';
 
@@ -2455,7 +2455,7 @@ window.GencineUI = {
             [].slice.call(_track.children).forEach(function(sl){ sl.style.width=_w+'px'; sl.style.minWidth=_w+'px'; });
             function _goTo(i){
               _cur=(i+_n)%_n;
-              _track.style.transform='translateX('+(_cur*-_w)+'px)';
+              _track.style.transform='translateX('+(_cur*_w)+'px)';
               _dotEls.forEach(function(d,j){ d.classList.toggle('active',j===_cur); });
             }
             function _arm(){ _tmr=setTimeout(function(){ _goTo(_cur+1); _arm(); },3500); }
