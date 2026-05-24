@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260562 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260563 */
 (function(){
 'use strict';
 
@@ -3157,8 +3157,12 @@ window.GencineUI = {
         if (_nextBtn) _nextBtn.onclick = null;
         if (_pageInd) { _pageInd.onblur = null; _pageInd.onkeydown = null; _pageInd.value = ''; }
         if (_prevCleanup) _prevCleanup();
+        // Suppress "Worker was terminated" unhandled rejections emitted by PDF.js internals
+        var _wErrH = function(ev){ if (ev.reason && ev.reason.message === 'Worker was terminated') ev.preventDefault(); };
+        window.addEventListener('unhandledrejection', _wErrH);
         // Destroy PDF document to release PDF.js GPU memory — critical on iOS
-        try { if (pdf && pdf.destroy) pdf.destroy(); } catch(e) {}
+        try { if (pdf && pdf.destroy) { var _dp = pdf.destroy(); if (_dp && _dp.catch) _dp.catch(function(){}); } } catch(e) {}
+        setTimeout(function(){ window.removeEventListener('unhandledrejection', _wErrH); }, 1000);
         self._pdfDoc = null;
       };
     };
@@ -3207,9 +3211,15 @@ window.GencineUI = {
       loadingEl.appendChild(retryBtn);
     }
 
+    /* Suppress PDF.js "Worker was terminated" unhandled rejections during this session */
+    var _pdfWorkerErrHandler = function(ev) {
+      if (ev.reason && ev.reason.message === 'Worker was terminated') ev.preventDefault();
+    };
+    window.addEventListener('unhandledrejection', _pdfWorkerErrHandler);
+
     /* Abort and show retry if stalled for 20 s with no progress */
     var _loadTimer = setTimeout(function() {
-      try { loadingTask.destroy(); } catch(e3) {}
+      try { var _ltd = loadingTask.destroy(); if (_ltd && _ltd.catch) _ltd.catch(function(){}); } catch(e3) {}
       _showPdfRetry();
     }, 20000);
 
@@ -3230,7 +3240,7 @@ window.GencineUI = {
         clearTimeout(_loadTimer);
         if (pct < 100) {
           _loadTimer = setTimeout(function() {
-            try { loadingTask.destroy(); } catch(e3) {}
+            try { var _ltd2 = loadingTask.destroy(); if (_ltd2 && _ltd2.catch) _ltd2.catch(function(){}); } catch(e3) {}
             _showPdfRetry();
           }, 20000);
         }
@@ -3240,7 +3250,8 @@ window.GencineUI = {
     var _cleanupBeforeLoad = self._pdfCleanup;
     self._pdfCleanup = function() {
       _loadCancelled = true;
-      try { loadingTask.destroy(); } catch(e3) {}
+      window.removeEventListener('unhandledrejection', _pdfWorkerErrHandler);
+      try { var _ltd3 = loadingTask.destroy(); if (_ltd3 && _ltd3.catch) _ltd3.catch(function(){}); } catch(e3) {}
       clearTimeout(_loadTimer);
       if (_cleanupBeforeLoad) _cleanupBeforeLoad();
     };
