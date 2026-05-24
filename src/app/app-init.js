@@ -631,6 +631,7 @@ function loadQuranData(){
     clearTimeout(tid);
     AndroidLog.fetch('/data/quran.json',0,'quran',false,Date.now()-_t0,e);
     console.error('Quran load error:',e);
+    if(window.AppErrors)AppErrors.report('network_error','quran.json load failed: '+e.message,e.stack,'app-init');
     toast(t('error.data_load'));
     // Unblock splash/pre-render even on failure so app doesn't freeze
     _dataReady.quran=true;
@@ -674,6 +675,7 @@ function loadTafsirData(){
   }).catch(function(e){
     clearTimeout(tid);
     console.error('Tafsir load error:',e);
+    if(window.AppErrors)AppErrors.report('network_error','kurdish_tafsir.json load failed: '+e.message,e.stack,'app-init');
     toast(t('error.tafsir_load'));
     // Retry once after 3 seconds — flag prevents concurrent retry fetches
     var _tafsirRetrying=false;
