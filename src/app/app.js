@@ -7598,28 +7598,7 @@ async function openAboutSheet(type){
     cfoQ1.appendChild(el('div','cfo-ayah-ref',_ft('founder_quote1_ref',ss.founder_quote_ref)||'سوڕەتا هود — ٨٨'));
     body.appendChild(cfoQ1);
 
-    // ── 4. Journey ───────────────────────────────
-    var cfoJrn=el('div','cfo-section');
-    cfoJrn.appendChild(el('div','cab-sec-label',_ft('founder_journey_label',ss.founder_journey_label)||'گەشت'));
-    cfoJrn.appendChild(el('div','cab-sec-title',_ft('founder_journey_title',ss.founder_journey_title)||'ڕێکا تەفسیر کورد'));
-    var _jIntro=_ft('founder_journey_desc',ss.founder_journey_intro);
-    if(_jIntro)cfoJrn.appendChild(el('div','cfo-para',_jIntro));
-    var JOURNEY=[
-      {t:_ft('founder_timeline1_title',ss.founder_j1_title)||'دەستپێکا هزرێ',d:_ft('founder_timeline1_desc',ss.founder_j1_desc)||'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
-      {t:_ft('founder_timeline2_title',ss.founder_j2_title)||'دروستکرنا ناڤەڕۆکا ڤیدیویی',d:_ft('founder_timeline2_desc',ss.founder_j2_desc)||'دەستپێکرنا دروستکرنا ڤیدیویێن ئیسلامی یێن کورت بۆ تۆڕێن جڤاکی وەک ئینستاگرام و تیکتۆک، ب شێوازەکێ بالکێش کو بگەهیتە نەوەیێ نوی یێ کوردان.'},
-      {t:_ft('founder_timeline3_title',ss.founder_j3_title)||'دامەزراندنا پلاتفۆرمێ',d:_ft('founder_timeline3_desc',ss.founder_j3_desc)||'دروستکرنا مالپەڕەکا تەمام بۆ خواندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی، ب تایبەتمەندیێن مۆدێرن وەک شوێنکەفتنا خواندنێ و نیشانەکرن.'},
-      {t:_ft('founder_timeline4_title',ss.founder_j4_title)||'گەهشتن ب ملیۆنان بینەران',d:_ft('founder_timeline4_desc',ss.founder_j4_desc)||'ب ڕێکا ئینستاگرام، تیکتۆک و یوتوب گەهشتینە زێدەتر ژ ٢٥ ملیۆن بینەر و ٦٥ هزار فۆڵۆوەران. ئەڤ ژمارە نیشانا پێدڤییا کوردانە بۆ ناڤەڕۆکەکا ئیسلامی زمانێ وان بخو.'}
-    ];
-    var tl=el('div','cfo-timeline');
-    JOURNEY.forEach(function(j){
-      var item=el('div','cfo-tl-item');
-      item.appendChild(el('div','cfo-tl-dot'));
-      var tb=document.createElement('div');
-      tb.appendChild(el('div','cfo-tl-title',j.t));
-      tb.appendChild(el('div','cfo-tl-desc',j.d));
-      item.appendChild(tb);tl.appendChild(item);
-    });
-    cfoJrn.appendChild(tl);body.appendChild(cfoJrn);
+    // Journey section moved to app sheet
 
     // ── 5. Values ────────────────────────────────
     var cfoVals=el('div','cfo-section');
@@ -7725,7 +7704,30 @@ async function openAboutSheet(type){
     });
     body.appendChild(cabDecl);
 
-    // ── 6. Tafsir source ──────────────────────────
+    // ── 6. Journey ────────────────────────────────
+    var cabJrn=el('div','cfo-section');
+    cabJrn.appendChild(el('div','cab-sec-label',_ft('founder_journey_label',ss.founder_journey_label)||'گەشت'));
+    cabJrn.appendChild(el('div','cab-sec-title',_ft('founder_journey_title',ss.founder_journey_title)||'ڕێکا تەفسیر کورد'));
+    var _jIntro=_ft('founder_journey_desc',ss.founder_journey_intro);
+    if(_jIntro)cabJrn.appendChild(el('div','cfo-para',_jIntro));
+    var APP_JOURNEY=[
+      {t:_ft('founder_timeline1_title',ss.founder_j1_title)||'دەستپێکا هزرێ',d:_ft('founder_timeline1_desc',ss.founder_j1_desc)||'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
+      {t:_ft('founder_timeline2_title',ss.founder_j2_title)||'دروستکرنا ناڤەڕۆکا ڤیدیویی',d:_ft('founder_timeline2_desc',ss.founder_j2_desc)||'دەستپێکرنا دروستکرنا ڤیدیویێن ئیسلامی یێن کورت بۆ تۆڕێن جڤاکی وەک ئینستاگرام و تیکتۆک، ب شێوازەکێ بالکێش کو بگەهیتە نەوەیێ نوی یێ کوردان.'},
+      {t:_ft('founder_timeline3_title',ss.founder_j3_title)||'دامەزراندنا پلاتفۆرمێ',d:_ft('founder_timeline3_desc',ss.founder_j3_desc)||'دروستکرنا مالپەڕەکا تەمام بۆ خواندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی، ب تایبەتمەندیێن مۆدێرن وەک شوێنکەفتنا خواندنێ و نیشانەکرن.'},
+      {t:_ft('founder_timeline4_title',ss.founder_j4_title)||'گەهشتن ب ملیۆنان بینەران',d:_ft('founder_timeline4_desc',ss.founder_j4_desc)||'ب ڕێکا ئینستاگرام، تیکتۆک و یوتوب گەهشتینە زێدەتر ژ ٢٥ ملیۆن بینەر و ٦٥ هزار فۆڵۆوەران. ئەڤ ژمارە نیشانا پێدڤییا کوردانە بۆ ناڤەڕۆکەکا ئیسلامی زمانێ وان بخو.'}
+    ];
+    var appJrnTl=el('div','cfo-timeline');
+    APP_JOURNEY.forEach(function(j){
+      var item=el('div','cfo-tl-item');
+      item.appendChild(el('div','cfo-tl-dot'));
+      var tb=document.createElement('div');
+      tb.appendChild(el('div','cfo-tl-title',j.t));
+      tb.appendChild(el('div','cfo-tl-desc',j.d));
+      item.appendChild(tb);appJrnTl.appendChild(item);
+    });
+    cabJrn.appendChild(appJrnTl);body.appendChild(cabJrn);
+
+    // ── 7. Tafsir source ──────────────────────────
     var _tafsirText=_ft('about_tafsir_text',ss.about_tafsir_text);
     if(_tafsirText){
       var cabTafsir=el('div','cab-section');
