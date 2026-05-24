@@ -438,7 +438,7 @@ function init(){
   // Hybrid timing: first launch / new version → 3s minimum (full animation).
   //                repeat same-version launches → immediate exit when data ready.
   var _splashStart = Date.now();
-  var _splashReady = {quran:false,tabs:false,fonts:false};
+  var _splashReady = {quran:false,tabs:false,fonts:true};
   var _splashDismissed = false;
   var _splashSeenKey = 'tk_splash_seen';
   var _splashMinPassed = false;
@@ -447,7 +447,9 @@ function init(){
   (function(){
     try {
       if (!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.App) {
-        _splashMinPassed=true; return; // web/dev — no minimum
+        _splashMinPassed=true;
+        _splashReady.video=true; // web: don't gate on video — native splash handles branding
+        return;
       }
       Capacitor.Plugins.App.getInfo().then(function(info){
         if (localStorage.getItem(_splashSeenKey)===(info.version||'')) {
@@ -534,16 +536,6 @@ function init(){
   window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_checkSplashReady();};
-  // Fonts gate — wait for document.fonts.ready PLUS explicit load of display fonts.
-  // SurahName (surah grid calligraphy) and KFGQPC Hafs (Quran text) are only activated
-  // by app.css which loads async — document.fonts.ready resolves before they're requested,
-  // so we force-load them here to prevent CLS when the surah grid first paints.
-  var _fReady=(document.fonts?document.fonts.ready:Promise.resolve());
-  var _fSurah=(document.fonts&&document.fonts.load)?document.fonts.load('400 1em SurahName').catch(function(){}):Promise.resolve();
-  var _fHafs=(document.fonts&&document.fonts.load)?document.fonts.load('400 1em KFGQPC Hafs').catch(function(){}):Promise.resolve();
-  Promise.all([_fReady,_fSurah,_fHafs]).then(function(){
-    _splashReady.fonts=true;_checkSplashReady();
-  }).catch(function(){_splashReady.fonts=true;_checkSplashReady();});
   // Overall failsafe — force app visible after 6s no matter what
   setTimeout(function(){_doSplashTransition();},6000);
   // Data always loads async now (no localStorage cache) — splash waits for both files
@@ -644,7 +636,7 @@ function _loadSurahData(n){
 
 function _prefetchAllSurahs(){
   var done=0,active=0,next=1;
-  var CONC=8;
+  var CONC=20;
   function _dispatch(){
     while(active<CONC&&next<=114){active++;var n=next++;_loadSurahData(n).then(_done,_done);}
   }
@@ -686,7 +678,7 @@ function _loadTafsirData(n){
 
 function _prefetchAllTafsir(){
   var done=0,active=0,next=1;
-  var CONC=6;
+  var CONC=20;
   function _dispatch(){
     while(active<CONC&&next<=114){active++;var n=next++;_loadTafsirData(n).then(_done,_done);}
   }
@@ -967,6 +959,6 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260569', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=32',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=33',      function() { _p2 = true; _check(); });
 }
 

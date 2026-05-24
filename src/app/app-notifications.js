@@ -751,8 +751,8 @@ function _updateOfflineBanner(){
   if(!b)return;
   b.classList.toggle('on',!navigator.onLine);
 }
-window.addEventListener('offline',_updateOfflineBanner);
-window.addEventListener('online',_updateOfflineBanner);
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',_updateOfflineBanner);
-}else{_updateOfflineBanner();}
+// Only react to real network events — never check navigator.onLine on startup.
+// On iOS Capacitor WebView, onLine can be false during cold start even when
+// the device is online, causing the banner to stick permanently.
+window.addEventListener('offline',function(){ _updateOfflineBanner(); });
+window.addEventListener('online',function(){ _updateOfflineBanner(); });

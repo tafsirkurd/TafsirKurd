@@ -1136,6 +1136,30 @@ function loadMushafPageQCF(pageEl,pageNum){
   });
 }
 
+/* ===== AYAH SKELETON ===== */
+function _ayahSkeleton(count){
+  var frag=document.createDocumentFragment();
+  for(var i=0;i<(count||4);i++){
+    var card=el('div','ayah-skel');
+    var head=el('div','ayah-skel-head');
+    head.appendChild(el('div','ayah-skel-badge'));
+    var acts=el('div','ayah-skel-actions');
+    acts.appendChild(el('div','ayah-skel-act'));
+    acts.appendChild(el('div','ayah-skel-act'));
+    head.appendChild(acts);
+    card.appendChild(head);
+    // Arabic text lines
+    card.appendChild(el('div','ayah-skel-ar'));
+    card.appendChild(el('div','ayah-skel-ar'));
+    // Tafsir lines
+    card.appendChild(el('div','ayah-skel-ku'));
+    card.appendChild(el('div','ayah-skel-ku'));
+    card.appendChild(el('div','ayah-skel-ku short'));
+    frag.appendChild(card);
+  }
+  return frag;
+}
+
 /* ===== RENDER AYAHS ===== */
 function renderAyahs(surahNum,scrollTo){
   var list=$('ayahList');
@@ -1148,8 +1172,7 @@ function renderAyahs(surahNum,scrollTo){
   var _needQ=!S.quranData||!S.quranData[String(surahNum)];
   var _needT=!S.tafsirData||!S.tafsirData[surahNum-1];
   if(_needQ||_needT){
-    var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
-    list.appendChild(sp);
+    list.appendChild(_ayahSkeleton(5));
     var _fetches=[];
     if(_needQ)_fetches.push(_loadSurahData(surahNum));
     if(_needT)_fetches.push(_loadTafsirData(surahNum));
@@ -1159,7 +1182,10 @@ function renderAyahs(surahNum,scrollTo){
     }).catch(function(){
       if(S.surah!==surahNum)return;
       clear(list);
-      renderAyahs(surahNum,scrollTo); // render with whatever loaded
+      var _nowQ=S.quranData&&S.quranData[String(surahNum)];
+      var _nowT=S.tafsirData&&S.tafsirData[surahNum-1];
+      if(_nowQ&&_nowT){renderAyahs(surahNum,scrollTo);}
+      else{var _e=el('div','prayer-status prayer-error');_e.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(_e);}
     });
     return;
   }
@@ -1172,8 +1198,7 @@ function renderAyahs(surahNum,scrollTo){
     var _gc=null;try{_gc=JSON.parse(localStorage.getItem(_gkey));}catch(e){}
     if(_gc){S.glyphVerses[surahNum]=_gc;}
     else{
-      var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
-      list.appendChild(sp);
+      list.appendChild(_ayahSkeleton(5));
       fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300'+(_isV4?'&mushaf=19':''))
         .then(function(r){return r.json();})
         .then(function(d){

@@ -1224,6 +1224,7 @@
 
     /* ── swipe — non-passive so we can preventDefault vertical scroll ── */
     track.addEventListener('touchstart', function(e) {
+      e.stopPropagation(); // prevent panel PTR from arming on slider touches
       _cancelTeleport();
       var actualX = _readX();
       _drag = true; _decided = false; _horiz = false;
@@ -1296,6 +1297,14 @@
       _accum  = 0;
       _tStart = performance.now();
       if (_raf) cancelAnimationFrame(_raf);
+      // Double-rAF: element is inserted into DOM after render() returns, so
+      // wrapper.clientWidth is 0 here. Wait two frames for layout to commit,
+      // then snap position to correct pixel width (fixes pre-render width mismatch).
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          if (_alive() && wrapper.clientWidth > 0) _applyX(_posX(current), false);
+        });
+      });
       _raf = requestAnimationFrame(_tick);
     };
   }

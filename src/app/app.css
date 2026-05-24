@@ -133,8 +133,7 @@ body{background:var(--bg);color:var(--text)}
 [data-theme="noor"] .about-section img{filter:brightness(0) saturate(100%) invert(25%) sepia(60%) saturate(800%) hue-rotate(118deg) brightness(85%);mix-blend-mode:normal}
 
 /* ===== SPLASH ===== */
-.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
-@keyframes splashIn{from{opacity:0}to{opacity:1}}
+.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;will-change:opacity;transform:translateZ(0)}
 .splash-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#0a0a0a);opacity:0;transition:opacity .12s ease}
 .splash.hide{opacity:0;pointer-events:none}
@@ -436,6 +435,17 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .surah-reader-name{font-family:'SurahNameV2',var(--font-su),serif;font-size:3rem;font-weight:400;line-height:1.2;color:var(--text);display:block;margin-bottom:14px;position:relative;transition:opacity .15s ease}
 .surah-reader-bismillah{font-family:var(--font-ar);font-size:1.25rem;line-height:1.9;color:var(--text3);direction:rtl;position:relative}
 .ayah-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:20px;margin-bottom:12px}
+/* ── Ayah skeleton loader ── */
+.ayah-skel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:20px;margin-bottom:12px}
+.ayah-skel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ayah-skel-badge{width:36px;height:36px;border-radius:var(--r-s)}
+.ayah-skel-actions{display:flex;gap:8px}
+.ayah-skel-act{width:34px;height:34px;border-radius:50%}
+.ayah-skel-ar{height:22px;border-radius:6px;margin-bottom:8px}
+.ayah-skel-ar:last-of-type{width:60%;margin-bottom:14px}
+.ayah-skel-ku{height:13px;border-radius:5px;margin-bottom:7px}
+.ayah-skel-ku.short{width:45%}
+.ayah-skel-badge,.ayah-skel-act,.ayah-skel-ar,.ayah-skel-ku{background:linear-gradient(270deg,var(--bg2) 25%,var(--bg3,color-mix(in srgb,var(--bg2) 60%,var(--text))) 50%,var(--bg2) 75%);background-size:200% 100%;animation:mushaf-shimmer 1.6s ease-in-out infinite}
 [data-theme="dark"] .ayah-card{border-color:rgba(255,255,255,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 4px 16px rgba(0,0,0,.4)}
 [data-theme="sakina"] .ayah-card{border-color:rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,240,180,.03),0 4px 16px rgba(0,0,0,.45)}
 .ayah-card.bookmarked{border-right:3px solid var(--accent)}
@@ -2231,11 +2241,11 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
    sd-wrapper which already provides the rectangular clip; outer only clips the progress strip. */
 .sd-card-outer{position:relative;border-radius:18px;overflow:hidden}
 /* wrapper: rectangular clip only — NO border-radius (GPU perf on Android WebView) */
-.sd-wrapper{overflow:hidden;position:relative;direction:ltr;width:100%}
+.sd-wrapper{overflow:hidden;position:relative;direction:ltr;width:100%;touch-action:none}
 .sd-track{display:flex;will-change:transform;direction:ltr;-webkit-user-select:none;user-select:none;-webkit-backface-visibility:hidden;backface-visibility:hidden;touch-action:none}
-.sd-slide{min-width:100%;width:100%;box-sizing:border-box;flex-shrink:0;flex-grow:0;display:flex;flex-direction:column}
+.sd-slide{min-width:100%;width:100%;box-sizing:border-box;flex-shrink:0;flex-grow:0;display:flex;flex-direction:column;touch-action:none}
 /* Card: flex:1 so it always fills the slide height — ensures progress bar aligns */
-.sd-card{display:flex;align-items:center;gap:12px;padding:14px 14px 20px;min-height:96px;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .15s ease;position:relative;overflow:hidden;direction:rtl;flex:1}
+.sd-card{display:flex;align-items:center;gap:12px;padding:14px 14px 20px;min-height:96px;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .15s ease;position:relative;overflow:hidden;direction:rtl;flex:1;touch-action:none}
 .sd-card:active{transform:scale(0.97);opacity:.82;transition-duration:.08s}
 .sd-card-done{opacity:.55}
 /* ── Zikr card extras (layout is identical to other cards) ── */

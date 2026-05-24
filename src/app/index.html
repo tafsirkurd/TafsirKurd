@@ -1,10 +1,11 @@
 <!DOCTYPE html><html dir="rtl" lang="ku"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/app/manifest.json">
 <title>Tafsir Kurd</title>
 <meta name="description" content="قورئانا پیرۆز ب تەفسیرا کوردی — Quran with Kurdish Tafsir, prayer times, Islamic audio and more">
 <link rel="icon" type="image/png" href="/assets/images/TafsirKurd-favicon.png">
@@ -72,9 +73,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/hafs.woff2?v=17" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/surah-name-v4.woff2?v=17" as="font" type="font/woff2" crossorigin="">
-<link rel="preload" href="/assets/fonts/surah-name-v2.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="">
-<link rel="preload" href="/app/app.css?v=20260529" as="style">
+<link rel="preload" href="/app/app.css?v=20260607" as="style">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17"></noscript>
 <style>/* critical: reset + vars + splash + app shell + @font-face — inlined, zero render-blocking */
 @font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:300;font-display:optional;src:url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2?v=17') format('woff2'),url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.ttf') format('truetype')}
@@ -84,8 +84,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 @font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:700;font-display:optional;src:url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2?v=17') format('woff2'),url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.ttf') format('truetype')}
 @font-face{font-family:'KFGQPC Hafs';font-style:normal;font-weight:400;font-display:block;src:url('/assets/fonts/hafs.woff2?v=17') format('woff2'),url('/assets/fonts/hafs.ttf') format('truetype')}
 @font-face{font-family:'Amiri Quran';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/amiri-quran-v1-arabic-regular.woff2?v=17') format('woff2'),url('/assets/fonts/amiri-quran-v1-arabic-regular.ttf') format('truetype')}
-@font-face{font-family:'SurahName';font-style:normal;font-weight:400;font-display:block;src:url('/assets/fonts/surah-name-v4.woff2?v=17') format('woff2'),url('/assets/fonts/surah-name-v4.ttf') format('truetype'),url('/assets/fonts/SurahName.ttf') format('truetype')}
-@font-face{font-family:'SurahNameV2';font-style:normal;font-weight:400;font-display:block;src:url('/assets/fonts/surah-name-v2.woff2?v=1') format('woff2'),url('/assets/fonts/surah-name-v2.ttf') format('truetype')}
+@font-face{font-family:'SurahName';font-style:normal;font-weight:400;font-display:optional;src:url('/assets/fonts/surah-name-v4.woff2?v=17') format('woff2'),url('/assets/fonts/surah-name-v4.ttf') format('truetype'),url('/assets/fonts/SurahName.ttf') format('truetype')}
+@font-face{font-family:'SurahNameV2';font-style:normal;font-weight:400;font-display:optional;src:url('/assets/fonts/surah-name-v2.woff2?v=1') format('woff2'),url('/assets/fonts/surah-name-v2.ttf') format('truetype')}
 @font-face{font-family:'QuranCommon';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/quran-common.woff2?v=1') format('woff2'),url('/assets/fonts/quran-common.ttf') format('truetype')}
 @font-face{font-family:'Scheherazade New';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/scheherazade-new-400.woff2?v=1') format('woff2'),url('/assets/fonts/scheherazade-new-400.ttf') format('truetype');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
 @font-face{font-family:'Scheherazade New';font-style:normal;font-weight:700;font-display:swap;src:url('/assets/fonts/scheherazade-new-700.woff2?v=1') format('woff2'),url('/assets/fonts/scheherazade-new-700.ttf') format('truetype');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}</style>
@@ -103,20 +103,18 @@ img{display:block;max-width:100%}
 [data-theme="sakina"]{--bg:#0c1c12;--bg2:#112318;--bg3:#081410;--surface:#162d1f;--surface-h:#1c3827;--text:#f0e6c8;--text2:#a89268;--text3:#6b5c3e;--border:#1e3828;--border2:#2c5038;--accent:#c9a84c;--accent-t:#0c1c12;--shadow-s:0 1px 4px rgba(0,0,0,.45);--shadow-m:0 4px 14px rgba(0,0,0,.55);--shadow-l:0 12px 36px rgba(0,0,0,.75);--accent-glow:rgba(201,168,76,.28);--ayah-read-opacity:.5;--ayah-current-bg:color-mix(in srgb,var(--accent) 14%,transparent);--ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,transparent),0 3px 22px color-mix(in srgb,var(--accent) 24%,transparent);--ayah-next-border:color-mix(in srgb,var(--accent) 40%,transparent);--mhl-cur-bg:color-mix(in srgb,var(--accent) 10%,transparent);--mhl-cur-line:color-mix(in srgb,var(--accent) 55%,transparent);--mhl-cur-glow:0 0 14px color-mix(in srgb,var(--accent) 9%,transparent);--mhl-read-op:.47;--mhl-next-line:color-mix(in srgb,var(--accent) 28%,transparent);--mhl-next-glow:0 0 9px color-mix(in srgb,var(--accent) 4%,transparent);--fu-glow:rgba(201,168,76,.18);--fu-ring:rgba(201,168,76,.3);--logo-filter:brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%);--logo-blend:normal;--mushaf-filter:none;--fu-logo-filter:invert(1) sepia(1) saturate(4) hue-rotate(-15deg) brightness(0.85)}
 [data-theme="noor"]{--bg:#f4e8cc;--bg2:#fdf4e3;--bg3:#eddfc0;--surface:#fdf4e3;--surface-h:#f0e2c4;--text:#1a0e04;--text2:#5c3d1a;--text3:#9b7650;--border:#d9c9a8;--border2:#c9b490;--accent:#1a5c3a;--accent-t:#fdf4e3;--shadow-s:0 1px 3px rgba(0,0,0,.07);--shadow-m:0 4px 12px rgba(0,0,0,.09);--shadow-l:0 12px 32px rgba(0,0,0,.14);--accent-glow:rgba(26,92,58,.14);--fu-glow:rgba(26,92,58,.1);--fu-ring:rgba(26,92,58,.2);--logo-filter:sepia(0.35) brightness(0.88);--logo-blend:multiply;--fu-logo-filter:sepia(0.4) brightness(0.82);--mhl-cur-bg:color-mix(in srgb,var(--accent) 7%,transparent);--mhl-cur-line:color-mix(in srgb,var(--accent) 36%,transparent);--mhl-cur-glow:0 0 10px color-mix(in srgb,var(--accent) 4%,transparent);--mhl-read-op:.52;--mhl-next-line:color-mix(in srgb,var(--accent) 20%,transparent);--mhl-next-glow:0 0 7px color-mix(in srgb,var(--accent) 3%,transparent)}
 body{background:var(--bg);color:var(--text)}
-.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
-@keyframes splashIn{from{opacity:0}to{opacity:1}}
+.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;will-change:opacity;transform:translateZ(0)}
 .splash-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#0a0a0a);opacity:0;transition:opacity .12s ease}
 .splash.hide{opacity:0;pointer-events:none}
 .app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t);opacity:0;transition:opacity .15s ease-out}
 .app.visible{opacity:1}</style>
-<link rel="stylesheet" href="/app/app.css?v=20260529" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/app/app.css?v=20260529"></noscript>
+<link rel="stylesheet" href="/app/app.css?v=20260607" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/app/app.css?v=20260607"></noscript>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 <body>
 
-<!-- Font primer: forces KFGQPC Hafs to activate at page-load so Gencine/Dua
-     tab Arabic text is instant with zero FOUT on first open -->
+<!-- Font primer: activates KFGQPC Hafs at parse time so it is ready when Gencine/Dua tab opens -->
 <div aria-hidden="true" style="position:fixed;top:-200px;left:-200px;pointer-events:none;font-family:'KFGQPC Hafs',serif;font-size:1px;opacity:0">بسم الله</div>
 
 <!-- SPLASH -->
@@ -315,7 +313,7 @@ body{background:var(--bg);color:var(--text)}
 <!-- TAB: GENCINE (Religious Treasure) -->
 <section class="panel" id="panelGencine" data-tab="gencine">
   <div class="hdr">
-    <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
+    <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="if(window.GencineUI)GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
     <div class="hdr-title" id="gencineHdrTitle"><span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
     <div id="booksHdrBtns" style="display:none;gap:2px">
       <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
@@ -691,10 +689,10 @@ body{background:var(--bg);color:var(--text)}
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script src="/app/app-storage.js?v=20260525"></script>
 <script src="/app/app-core.js?v=20260525"></script>
-<script src="/app/app-init.js?v=20260531"></script>
-<script src="/app/app-notifications.js?v=20260525"></script>
+<script src="/app/app-init.js?v=20260607"></script>
+<script src="/app/app-notifications.js?v=20260606"></script>
 <script src="/app/app-search.js?v=20260525"></script>
-<script src="/app/app-quran.js?v=20260527"></script>
+<script src="/app/app-quran.js?v=20260607"></script>
 <script src="/app/app-audio.js?v=20260525"></script>
 <script src="/app/app-goals.js?v=20260525"></script>
 <script src="/app/app-settings.js?v=20260530"></script>
