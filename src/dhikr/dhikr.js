@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260545 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260554 */
 (function(){
 'use strict';
 
@@ -2848,7 +2848,6 @@ window.GencineUI = {
     var doLoad = function(pdf) {
       if (self._currentBook !== book) return; // user switched books while loading — discard
       self._pdfDoc = pdf;
-      loadingEl.style.display = 'none';
       // Always update with confirmed numPages from loaded PDF
       if (book && book.id) {
         try {
@@ -2857,6 +2856,8 @@ window.GencineUI = {
           localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_pg,total:pdf.numPages,ts:Date.now()}));
         } catch(e2) {}
       }
+      // When resuming mid-book keep spinner visible until the scroll jump settles
+      if (!(_pg && _pg > 1)) loadingEl.style.display = 'none';
       var slots = [];
       for (var i = 1; i <= pdf.numPages; i++) {
         var slot = document.createElement('div');
@@ -2881,6 +2882,7 @@ window.GencineUI = {
 
       /* ── Page navigation ── */
       var _curPage = (_pg && _pg > 1) ? _pg : 1;
+      if (_curPage > 1) pagesWrap.style.opacity = '0';
       var _navScrollTimer = null;
       var _jumpActive = false;
       var _panelEl = document.getElementById('panelGencine');
@@ -3019,7 +3021,14 @@ window.GencineUI = {
       }
 
       _updatePageNav();
-      if (_curPage > 1) _jumpToPage(_curPage);
+      if (_curPage > 1) {
+        _jumpToPage(_curPage);
+        setTimeout(function(){
+          loadingEl.style.display = 'none';
+          pagesWrap.style.transition = 'opacity 0.2s ease';
+          pagesWrap.style.opacity = '1';
+        }, 720);
+      }
 
       // Resume banner — shown when continuing a book already in progress
       if (_curPage > 1) {
