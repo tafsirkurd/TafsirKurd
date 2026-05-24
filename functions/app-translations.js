@@ -58,18 +58,16 @@ export async function onRequest(context) {
             });
         }
 
-        // Global deadline — CF Pages Functions have a 10s wall-clock limit.
-        // We fire at 5s (not 7s) to guarantee we always send a response before
-        // CF closes the connection (ERR_CONNECTION_CLOSED). The 5s buffer absorbs
-        // env setup time + AbortController signals not propagating reliably in
-        // CF Workers (known runtime issue where the signal is ignored and the
-        // fetch runs to completion, consuming the full 10s budget).
+        // Global deadline — fire at 3s to guarantee a response is always sent
+        // before CF closes the connection. ERR_CONNECTION_CLOSED happens when
+        // the Worker is killed at the CF wall-clock limit with no response sent.
+        // 3s gives a comfortable buffer even on cold starts + slow Supabase.
         const globalDeadline = new Promise((_, reject) =>
             setTimeout(() => {
                 const e = new Error('global_timeout');
                 e.name = 'AbortError';
                 reject(e);
-            }, 5000)
+            }, 3000)
         );
 
         // Fetch ALL translations across every page/category (paginated — Supabase max 1000/batch).
@@ -89,7 +87,7 @@ export async function onRequest(context) {
                 // 5s global deadline. AbortController may be ignored in CF Workers runtime,
                 // so the global deadline is the real backstop.
                 const controller = new AbortController();
-                const tid = setTimeout(() => controller.abort(), 2000);
+                const tid = setTimeout(() => controller.abort(), 1200);
                 let res;
                 try {
                     res = await fetch(
