@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260564 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260565 */
 (function(){
 'use strict';
 
@@ -2443,6 +2443,25 @@ window.GencineUI = {
             _fc.onclick = _makeFeatClick(_fb); _frow.appendChild(_fc);
           });
           featuredSection.appendChild(_frow);
+          /* Auto-scroll carousel — pauses on touch, resumes after 1.5s */
+          (function(){
+            var _paused = false;
+            function _step() {
+              if (!_frow.isConnected) return;
+              if (!_paused) {
+                _frow.scrollLeft += 0.55;
+                if (_frow.scrollLeft + _frow.clientWidth >= _frow.scrollWidth - 2) {
+                  _frow.style.scrollBehavior = 'auto'; _frow.scrollLeft = 0; _frow.style.scrollBehavior = '';
+                }
+              }
+              requestAnimationFrame(_step);
+            }
+            _frow.addEventListener('touchstart', function(){ _paused = true; }, { passive: true });
+            _frow.addEventListener('touchend', function(){ setTimeout(function(){ _paused = false; }, 1500); }, { passive: true });
+            _frow.addEventListener('mouseenter', function(){ _paused = true; });
+            _frow.addEventListener('mouseleave', function(){ _paused = false; });
+            requestAnimationFrame(_step);
+          })();
         }
       } else { featuredSection.style.display = 'none'; }
       var _history = _getReadingHistory(); // read once per render
