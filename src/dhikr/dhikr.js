@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260568 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260569 */
 (function(){
 'use strict';
 
@@ -2425,7 +2425,9 @@ window.GencineUI = {
           var _fbt = document.createElement('div'); _fbt.className = 'book-feat-banner-title'; _fbt.textContent = _fb.title_ku||_fb.title_ar||''; _fbinfo.appendChild(_fbt);
           if (_fb.author_ku||_fb.author_ar){ var _fba = document.createElement('div'); _fba.className = 'book-feat-banner-author'; _fba.textContent = _fb.author_ku||_fb.author_ar; _fbinfo.appendChild(_fba); }
           if (_fb.pages){ var _fbp = document.createElement('div'); _fbp.className = 'book-feat-banner-pages'; _fbp.textContent = _fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _fbinfo.appendChild(_fbp); }
-          _fbanner.appendChild(_fbinfo); _fbanner.onclick = _makeFeatClick(_fb);
+          _fbanner.appendChild(_fbinfo);
+          if (_fb.badge_until && new Date(_fb.badge_until).getTime() > Date.now()) { var _fnb = document.createElement('div'); _fnb.className = 'new-badge'; _fnb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; _fbanner.appendChild(_fnb); }
+          _fbanner.onclick = _makeFeatClick(_fb);
           featuredSection.appendChild(_fbanner);
         } else {
           var _caro = document.createElement('div'); _caro.className = 'book-feat-carousel';
@@ -2440,7 +2442,9 @@ window.GencineUI = {
             var _bt = document.createElement('div'); _bt.className = 'book-feat-banner-title'; _bt.textContent = _fb.title_ku||_fb.title_ar||''; _binf.appendChild(_bt);
             if (_fb.author_ku||_fb.author_ar){ var _bau = document.createElement('div'); _bau.className = 'book-feat-banner-author'; _bau.textContent = _fb.author_ku||_fb.author_ar; _binf.appendChild(_bau); }
             if (_fb.pages){ var _bpg = document.createElement('div'); _bpg.className = 'book-feat-banner-pages'; _bpg.textContent = _fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _binf.appendChild(_bpg); }
-            _sl.appendChild(_binf); _sl.onclick = _makeFeatClick(_fb); _track.appendChild(_sl);
+            _sl.appendChild(_binf);
+            if (_fb.badge_until && new Date(_fb.badge_until).getTime() > Date.now()) { var _snb = document.createElement('div'); _snb.className = 'new-badge'; _snb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; _sl.appendChild(_snb); }
+            _sl.onclick = _makeFeatClick(_fb); _track.appendChild(_sl);
           });
           _caro.appendChild(_track);
           var _dotWrap = document.createElement('div'); _dotWrap.className = 'book-feat-dots';
