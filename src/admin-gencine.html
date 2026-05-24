@@ -1324,17 +1324,9 @@
                                 <input type="text" id="book-title-ku" class="form-input" placeholder="ناڤێ کتێبێ" dir="rtl">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Arabic Title (optional)</label>
-                                <input type="text" id="book-title-ar" class="form-input" placeholder="عنوان الكتاب" dir="rtl">
-                            </div>
-                            <div class="form-group">
                                 <label class="form-label">Author (Kurdish)</label>
                                 <input type="text" id="book-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl" list="dl-author-ku" autocomplete="off">
                                 <datalist id="dl-author-ku"></datalist>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Author (Arabic, optional)</label>
-                                <input type="text" id="book-author-ar" class="form-input" placeholder="اسم المؤلف" dir="rtl">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -2721,9 +2713,7 @@ function editBook(id) {
     var book = allBooks.find(function(b){ return b.id === id; }); if (!book) return;
     document.getElementById('book-edit-id').value = id;
     document.getElementById('book-title-ku').value = book.title_ku || '';
-    document.getElementById('book-title-ar').value = book.title_ar || '';
     document.getElementById('book-author-ku').value = book.author_ku || '';
-    document.getElementById('book-author-ar').value = book.author_ar || '';
     document.getElementById('book-category').value = book.category || '';
     document.getElementById('book-pages').value = book.pages || '';
     document.getElementById('book-pdf-url').value = book.pdf_url || '';
@@ -2751,7 +2741,7 @@ function editBook(id) {
 
 function cancelBookEdit() {
     document.getElementById('book-edit-id').value = '';
-    ['book-title-ku','book-title-ar','book-author-ku','book-author-ar','book-category',
+    ['book-title-ku','book-author-ku','book-category',
      'book-pages','book-pdf-url','book-description','book-cover-url'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
     });
@@ -2834,7 +2824,7 @@ async function uploadCover(file) {
 
 async function saveBook() {
     var titleKu = document.getElementById('book-title-ku').value.trim();
-    var titleAr = document.getElementById('book-title-ar').value.trim();
+    var titleAr = '';
     if (!titleKu && !titleAr) { showNotification('At least one title is required.', 'warning'); return; }
 
     var statusEl = document.getElementById('book-cover-upload-status');
@@ -2867,7 +2857,7 @@ async function saveBook() {
         title_ku:    titleKu || null,
         title_ar:    titleAr || null,
         author_ku:   document.getElementById('book-author-ku').value.trim() || null,
-        author_ar:   document.getElementById('book-author-ar').value.trim() || null,
+        author_ar:   null,
         category:    document.getElementById('book-category').value.trim() || null,
         pages:       parseInt(document.getElementById('book-pages').value) || null,
         pdf_url:     pdfUrl,
