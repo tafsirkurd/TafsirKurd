@@ -84,7 +84,7 @@ function initSupabase(cb){
         // Flag so health report on this session includes the purge event
         try{sessionStorage.setItem('i18n_version_purged','1');}catch(e){}
         // Rebuild search index so new translations are reflected immediately
-        if(window.QuranSearch&&S.quranData&&S.tafsirData){
+        if(window.QuranSearch&&S.quranData&&Object.keys(S.quranData).length===114&&S.tafsirData){
           setTimeout(function(){QuranSearch.init(S.quranData,S.tafsirData);},500);
         }
       }

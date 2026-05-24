@@ -1144,6 +1144,20 @@ function renderAyahs(surahNum,scrollTo){
   var s=SURAHS[surahNum-1];
   if(!s)return;
 
+  // Lazy-load surah data if not yet in cache (per-surah files, ~8KB each)
+  if(!S.quranData||!S.quranData[String(surahNum)]){
+    var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
+    list.appendChild(sp);
+    _loadSurahData(surahNum).then(function(){
+      if(S.surah!==surahNum)return;
+      renderAyahs(surahNum,scrollTo);
+    }).catch(function(){
+      clear(list);
+      var err=el('div','prayer-status prayer-error');err.textContent=t('error.data_load');list.appendChild(err);
+    });
+    return;
+  }
+
   // Glyph font mode: fetch per-page word codes from API
   var glyphMode=(S.readerFont==='qpcv2'||S.readerFont==='v4tajweed');
   if(glyphMode&&!S.glyphVerses[surahNum]){

@@ -566,19 +566,17 @@ window._i18nRerenderHook = _rerenderCurrentTab;
 document.addEventListener('i18n:updated', _rerenderCurrentTab);
 
 /* ===== DATA LOADING ===== */
-var _dataReady={quran:false,tafsir:false};
+var _dataReady={quran:false,tafsir:false,quranFull:false};
 var _tabsPrerendering=false; // guard: pre-render runs only once
 var _startupT0=Date.now();   // module load time for debug logs
 
 function _checkDataReady(){
   if(!_dataReady.quran)return;
-  // Signal splash gate as soon as quran.json is ready — tafsir (3MB) is only needed
-  // when the user opens a surah to read, so it must not block the splash or tab pre-render.
+  // surah-index ready: unblock splash and start tab pre-render immediately (no 1.55MB wait)
   if(window._splashReadyQuran){window._splashReadyQuran();window._splashReadyQuran=null;}
-  // Tab pre-render doesn't need tafsir — start immediately when quran is ready.
-  // _tabsPrerendering guard ensures this runs only once even when called twice.
   setTimeout(_startTabPrerender,50);
-  if(!_dataReady.tafsir)return;
+  // QuranSearch needs all 114 surahs + tafsir; renderAyahs needs tafsir + specific surah (lazy)
+  if(!_dataReady.tafsir||!_dataReady.quranFull)return;
   console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
   if(S.surah)renderAyahs(S.surah);
   if(window.QuranSearch){
@@ -614,29 +612,47 @@ function _startTabPrerender(){
   }
   _nextJob();
 }
-function loadQuranData(){
+/* ── Per-surah lazy loader ──────────────────────────────────────────── */
+var _surahFetching={};
+
+function _loadSurahData(n){
+  var key=String(n);
+  if(S.quranData&&S.quranData[key])return Promise.resolve(S.quranData[key]);
+  if(_surahFetching[key])return _surahFetching[key];
   var ctrl=new AbortController();
-  var _t0=Date.now();
-  var tid=setTimeout(function(){ctrl.abort();},10000);
-  fetch('/data/quran.json',{signal:ctrl.signal}).then(function(r){
-    clearTimeout(tid);
-    AndroidLog.fetch('/data/quran.json',r.status,'quran',false,Date.now()-_t0);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.json();
-  }).then(function(d){
-    S.quranData=d;
-    _dataReady.quran=true;
-    _checkDataReady();
-  }).catch(function(e){
-    clearTimeout(tid);
-    AndroidLog.fetch('/data/quran.json',0,'quran',false,Date.now()-_t0,e);
-    console.error('Quran load error:',e);
-    if(window.AppErrors)AppErrors.report('network_error','quran.json load failed: '+e.message,e.stack,'app-init');
-    toast(t('error.data_load'));
-    // Unblock splash/pre-render even on failure so app doesn't freeze
-    _dataReady.quran=true;
-    _checkDataReady();
-  });
+  var tid=setTimeout(function(){ctrl.abort();},8000);
+  var p=fetch('/data/surahs/surah-'+n+'.json',{signal:ctrl.signal})
+    .then(function(r){clearTimeout(tid);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){
+      if(!S.quranData)S.quranData={};
+      S.quranData[key]=d;
+      delete _surahFetching[key];
+      return d;
+    })
+    .catch(function(e){clearTimeout(tid);delete _surahFetching[key];throw e;});
+  _surahFetching[key]=p;
+  return p;
+}
+
+function _prefetchAllSurahs(){
+  var done=0,active=0,next=1;
+  var CONC=8;
+  function _dispatch(){
+    while(active<CONC&&next<=114){active++;var n=next++;_loadSurahData(n).then(_done,_done);}
+  }
+  function _done(){
+    active--;done++;
+    if(done===114){_dataReady.quranFull=true;_checkDataReady();}
+    _dispatch();
+  }
+  _dispatch();
+}
+
+function loadQuranData(){
+  S.quranData={};
+  _dataReady.quran=true;
+  _checkDataReady();
+  _prefetchAllSurahs();
 }
 
 function groupTafsirBySurah(data){
