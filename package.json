@@ -10,7 +10,7 @@
         "build:prod": "node scripts/bump-sw-version.js production-deploy",
         "deploy": "npx wrangler pages deploy src --project-name tafsirkurd",
         "deploy:check": "npm test && npm run deploy",
-        "test": "node scripts/smoke-test.js",
+        "test": "node scripts/smoke-test.js && node tests/prayer-logic.test.js && node tests/cloud-sync.test.js",
         "lint": "node scripts/lint-check.js",
         "format": "echo 'Formatting code...'",
         "cap:sync": "npx cap sync && node scripts/verify-assets.js",
