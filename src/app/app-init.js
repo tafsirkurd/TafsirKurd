@@ -534,9 +534,14 @@ function init(){
   window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_checkSplashReady();};
-  // Fonts gate — prevents flash of unstyled content on fast cold loads
-  // document.fonts.ready resolves once all @font-face rules have loaded or timed out
-  (document.fonts?document.fonts.ready:Promise.resolve()).then(function(){
+  // Fonts gate — wait for document.fonts.ready PLUS explicit load of display fonts.
+  // SurahName (surah grid calligraphy) and KFGQPC Hafs (Quran text) are only activated
+  // by app.css which loads async — document.fonts.ready resolves before they're requested,
+  // so we force-load them here to prevent CLS when the surah grid first paints.
+  var _fReady=(document.fonts?document.fonts.ready:Promise.resolve());
+  var _fSurah=(document.fonts&&document.fonts.load)?document.fonts.load('400 1em SurahName').catch(function(){}):Promise.resolve();
+  var _fHafs=(document.fonts&&document.fonts.load)?document.fonts.load('400 1em KFGQPC Hafs').catch(function(){}):Promise.resolve();
+  Promise.all([_fReady,_fSurah,_fHafs]).then(function(){
     _splashReady.fonts=true;_checkSplashReady();
   }).catch(function(){_splashReady.fonts=true;_checkSplashReady();});
   // Overall failsafe — force app visible after 6s no matter what
