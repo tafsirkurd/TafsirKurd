@@ -2551,7 +2551,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-feat-banner-pages{font-size:.72rem;color:var(--accent);font-weight:700}
 .book-feat-carousel{overflow:hidden;border-radius:16px;border:1.5px solid var(--accent);background:var(--bg2);margin-bottom:4px}
 .book-feat-track{display:flex;transition:transform .42s cubic-bezier(.4,0,.2,1)}
-.book-feat-slide{flex:0 0 100%;border:none !important;border-radius:0 !important;margin:0 !important;animation:none !important;box-shadow:none !important}
+.book-feat-slide{flex-shrink:0;border:none !important;border-radius:0 !important;margin:0 !important;animation:none !important;box-shadow:none !important}
 .book-feat-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 4px;background:var(--bg2)}
 .book-feat-dot{width:7px;height:7px;border-radius:10px;background:var(--text3);cursor:pointer;transition:background .2s,width .25s;flex-shrink:0;opacity:.45}
 .book-feat-dot.active{background:var(--accent);width:18px;opacity:1}
@@ -3705,7 +3705,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=782"></script>
+<script src="/app/app.js?v=783"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
