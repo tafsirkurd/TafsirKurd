@@ -306,7 +306,8 @@ export async function onRequest(context) {
 
         let q = supabase.from('push_tokens').select('id', { count: 'exact', head: true });
         if (platform !== 'all') q = q.eq('platform', platform);
-        if (audience === 'authenticated') q = q.not('user_id', 'is', null);
+        if (audience.startsWith('user:')) q = q.eq('user_id', audience.slice(5));
+        else if (audience === 'authenticated') q = q.not('user_id', 'is', null);
         else if (audience === 'unauthenticated') q = q.is('user_id', null);
         else if (audience === 'android') q = q.eq('platform', 'android');
         else if (audience === 'ios') q = q.eq('platform', 'ios');
@@ -314,6 +315,60 @@ export async function onRequest(context) {
         const { count, error } = await q;
         if (error) return json({ error: error.message }, 500);
         return json({ success: true, count: count || 0 });
+    }
+
+    // ── SEARCH USERS ──────────────────────────────────────────────
+    if (action === 'search_users') {
+        const emailQuery = (body.email || '').trim().toLowerCase();
+        if (!emailQuery) return json({ error: 'email required' }, 400);
+
+        // Search auth.users via Supabase Admin API
+        const searchUrl = `${env.SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=50`;
+        const usersRes = await fetch(searchUrl, {
+            headers: {
+                apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+        });
+        if (!usersRes.ok) return json({ error: 'Failed to fetch users' }, 500);
+        const usersData = await usersRes.json();
+        const allUsers = usersData.users || [];
+
+        // Filter by email substring
+        const matched = allUsers.filter(u =>
+            u.email && u.email.toLowerCase().includes(emailQuery)
+        ).slice(0, 10);
+
+        // Get token counts for matched users
+        const userIds = matched.map(u => u.id);
+        let tokenMap = {};
+        if (userIds.length > 0) {
+            const inList = userIds.map(id => `"${id}"`).join(',');
+            const tokRes = await fetch(
+                `${env.SUPABASE_URL}/rest/v1/push_tokens?select=user_id&user_id=in.(${inList})`,
+                {
+                    headers: {
+                        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+                        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+                    },
+                }
+            );
+            if (tokRes.ok) {
+                const toks = await tokRes.json();
+                for (const t of toks) {
+                    if (t.user_id) tokenMap[t.user_id] = (tokenMap[t.user_id] || 0) + 1;
+                }
+            }
+        }
+
+        const users = matched.map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.user_metadata?.full_name || u.user_metadata?.name || null,
+            token_count: tokenMap[u.id] || 0,
+        }));
+
+        return json({ success: true, users });
     }
 
     // ── GET ANALYTICS ─────────────────────────────────────────────
@@ -682,7 +737,8 @@ async function getTokensForAudience(env, audience, platform) {
     else if (platform === 'ios') url += '&platform=eq.ios';
 
     // Audience filter
-    if (audience === 'authenticated') url += '&user_id=not.is.null';
+    if (audience.startsWith('user:')) url += '&user_id=eq.' + audience.slice(5);
+    else if (audience === 'authenticated') url += '&user_id=not.is.null';
     else if (audience === 'unauthenticated') url += '&user_id=is.null';
     else if (audience === 'android') url += '&platform=eq.android';
     else if (audience === 'ios') url += '&platform=eq.ios';
