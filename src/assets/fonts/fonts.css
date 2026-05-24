@@ -70,7 +70,7 @@
   font-family: 'SurahName';
   font-style: normal;
   font-weight: 400;
-  font-display: block;
+  font-display: optional;
   src: url('/assets/fonts/surah-name-v4.woff2?v=17') format('woff2'),
        url('/assets/fonts/surah-name-v4.ttf') format('truetype'),
        url('/assets/fonts/SurahName.ttf') format('truetype');
@@ -82,7 +82,7 @@
   font-family: 'SurahNameV2';
   font-style: normal;
   font-weight: 400;
-  font-display: block;
+  font-display: optional;
   src: url('/assets/fonts/surah-name-v2.woff2?v=1') format('woff2'),
        url('/assets/fonts/surah-name-v2.ttf') format('truetype');
 }
