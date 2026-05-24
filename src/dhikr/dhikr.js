@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260558 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260559 */
 (function(){
 'use strict';
 
@@ -3086,10 +3086,14 @@ window.GencineUI = {
         if (_resumeBanner && _resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner);
         clearInterval(_periodicSave);
         if (_visObs) _visObs.disconnect();
-        // Free canvas GPU backing stores — prevents iOS WebView OOM crash on rapid open/close
+        // Free canvas GPU backing stores — iOS WebKit + Android Chromium both need this
+        // clearRect first (Chromium doesn't always GC from resize alone), then zero dims
         slots.forEach(function(s) {
           var cv = s.querySelector('canvas');
-          if (cv) { cv.width = 0; cv.height = 0; }
+          if (cv) {
+            try { var ctx = cv.getContext('2d'); if (ctx) ctx.clearRect(0, 0, cv.width, cv.height); } catch(e) {}
+            cv.width = 0; cv.height = 0;
+          }
           while (s.firstChild) s.removeChild(s.firstChild);
         });
         if (_prevBtn) _prevBtn.onclick = null;
