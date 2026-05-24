@@ -332,7 +332,9 @@ window.ForceUpdate = (function(){
 })();
 
 /* ===== i18n ===== */
-function t(k,v){return window.t?window.t(k,v):k}
+// i18n.js sets window.t before app-core.js runs. Capture it now so our global `t`
+// doesn't call itself (removing the IIFE means t === window.t at global scope).
+var t = window.t || function(k){return k};
 // Read from kurdish_translations first (admin-editable), fall back to site_settings or hardcoded
 function _ft(key,fb){var v=window.t&&window.t(key);return(v&&v!==key)?v:(fb||'');}
 
