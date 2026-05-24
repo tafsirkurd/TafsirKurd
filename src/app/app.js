@@ -7835,42 +7835,68 @@ function _showIgPicker(){
   haptic([8]);
   var existing=document.getElementById('_igPickerOverlay');
   if(existing){existing.remove();return;}
+  var IG_GRAD='linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)';
   var overlay=document.createElement('div');
   overlay.id='_igPickerOverlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;';
-  overlay.style.opacity='0';overlay.style.transition='opacity .2s';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .22s;';
   var sheet=document.createElement('div');
-  sheet.style.cssText='width:100%;max-width:480px;background:var(--card-bg);border-radius:20px 20px 0 0;padding:12px 12px 32px;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.23,1);border-top:1px solid var(--border);';
+  sheet.style.cssText='width:100%;max-width:480px;background:var(--card-bg);border-radius:24px 24px 0 0;padding:0 0 36px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.23,1);overflow:hidden;';
+  // ── Header band ──
+  var header=document.createElement('div');
+  header.style.cssText='background:'+IG_GRAD+';padding:20px 20px 18px;display:flex;align-items:center;gap:12px;';
+  var hIc=document.createElement('i');hIc.className='fab fa-instagram';hIc.style.cssText='font-size:26px;color:#fff;';
+  var hTxt=document.createElement('div');
+  var hTitle=document.createElement('div');hTitle.textContent='Instagram';hTitle.style.cssText='font-size:17px;font-weight:700;color:#fff;';
+  var hSub=document.createElement('div');hSub.textContent='ژێدەر هەلبژێرە';hSub.style.cssText='font-size:12px;color:rgba(255,255,255,.8);margin-top:2px;';
+  hTxt.appendChild(hTitle);hTxt.appendChild(hSub);
+  header.appendChild(hIc);header.appendChild(hTxt);
+  // handle inside header
   var handle=document.createElement('div');
-  handle.style.cssText='width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px;';
-  sheet.appendChild(handle);
-  var title=document.createElement('div');
-  title.textContent='Instagram';
-  title.style.cssText='text-align:center;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;letter-spacing:.5px;';
-  sheet.appendChild(title);
+  handle.style.cssText='width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.4);margin:0 0 0 auto;';
+  header.appendChild(handle);
+  sheet.appendChild(header);
+  // ── Options ──
+  var body=document.createElement('div');
+  body.style.cssText='padding:10px 12px;';
   var OPTS=[
-    {label:'TafsirKurd',sub:'@tafsirkurd',url:'https://www.instagram.com/tafsirkurd/'},
-    {label:'TafsirKurd App',sub:'@tafsirkurd.app',url:'https://www.instagram.com/tafsirkurd.app/'}
+    {label:'TafsirKurd',sub:'@tafsirkurd',tag:'ئاکاوتی سەرەکی',url:'https://www.instagram.com/tafsirkurd/'},
+    {label:'TafsirKurd App',sub:'@tafsirkurd.app',tag:'ئاکاوتی ئەپ',url:'https://www.instagram.com/tafsirkurd.app/'}
   ];
-  OPTS.forEach(function(opt){
+  OPTS.forEach(function(opt,i){
+    if(i>0){var sep=document.createElement('div');sep.style.cssText='height:1px;background:var(--border);margin:0 4px;';body.appendChild(sep);}
     var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:background .15s;';
-    var ic=document.createElement('i');ic.className='fab fa-instagram';ic.style.cssText='font-size:22px;color:#E1306C;width:24px;text-align:center;flex-shrink:0;';
+    row.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:16px;cursor:pointer;transition:background .15s;';
+    // avatar circle with IG gradient
+    var av=document.createElement('div');
+    av.style.cssText='width:46px;height:46px;border-radius:50%;background:'+IG_GRAD+';display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    var avIc=document.createElement('i');avIc.className='fab fa-instagram';avIc.style.cssText='font-size:20px;color:#fff;';
+    av.appendChild(avIc);
     var txt=document.createElement('div');txt.style.cssText='flex:1;min-width:0;';
-    var lbl=document.createElement('div');lbl.textContent=opt.label;lbl.style.cssText='font-size:15px;font-weight:600;color:var(--text);';
-    var sub=document.createElement('div');sub.textContent=opt.sub;sub.style.cssText='font-size:12px;color:var(--text-muted);margin-top:2px;';
-    var chev=document.createElement('i');chev.className='fas fa-chevron-left';chev.style.cssText='font-size:12px;color:var(--text-muted);flex-shrink:0;';
-    txt.appendChild(lbl);txt.appendChild(sub);
-    row.appendChild(ic);row.appendChild(txt);row.appendChild(chev);
+    var lbl=document.createElement('div');lbl.textContent=opt.label;lbl.style.cssText='font-size:15px;font-weight:700;color:var(--text);';
+    var handleTxt=document.createElement('div');handleTxt.textContent=opt.sub;handleTxt.style.cssText='font-size:12px;color:var(--text-muted);margin-top:1px;';
+    var tagEl=document.createElement('span');tagEl.textContent=opt.tag;
+    tagEl.style.cssText='display:inline-block;margin-top:5px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:'+IG_GRAD+';color:#fff;';
+    txt.appendChild(lbl);txt.appendChild(handleTxt);txt.appendChild(tagEl);
+    var chev=document.createElement('i');chev.className='fas fa-chevron-left';chev.style.cssText='font-size:13px;color:var(--text-muted);flex-shrink:0;';
+    row.appendChild(av);row.appendChild(txt);row.appendChild(chev);
     on(row,'mouseover',function(){row.style.background='var(--bg)';});
     on(row,'mouseout',function(){row.style.background='';});
     row.onclick=function(){close();_openLink(opt.url);haptic([8]);};
-    sheet.appendChild(row);
+    body.appendChild(row);
   });
+  sheet.appendChild(body);
+  // ── Cancel ──
+  var cancel=document.createElement('div');
+  cancel.style.cssText='margin:4px 12px 0;padding:14px;border-radius:14px;text-align:center;font-size:15px;font-weight:600;color:var(--text-muted);cursor:pointer;border:1px solid var(--border);transition:background .15s;';
+  cancel.textContent='داخستن';
+  on(cancel,'mouseover',function(){cancel.style.background='var(--bg)';});
+  on(cancel,'mouseout',function(){cancel.style.background='';});
+  cancel.onclick=function(){close();};
+  sheet.appendChild(cancel);
   overlay.appendChild(sheet);
   function close(){
     overlay.style.opacity='0';sheet.style.transform='translateY(100%)';
-    setTimeout(function(){overlay.remove();},280);
+    setTimeout(function(){overlay.remove();},300);
   }
   overlay.onclick=function(e){if(e.target===overlay)close();};
   document.body.appendChild(overlay);
