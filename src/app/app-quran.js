@@ -1144,16 +1144,22 @@ function renderAyahs(surahNum,scrollTo){
   var s=SURAHS[surahNum-1];
   if(!s)return;
 
-  // Lazy-load surah data if not yet in cache (per-surah files, ~8KB each)
-  if(!S.quranData||!S.quranData[String(surahNum)]){
+  // Lazy-load surah + tafsir data on demand (~8KB + ~14KB per surah)
+  var _needQ=!S.quranData||!S.quranData[String(surahNum)];
+  var _needT=!S.tafsirData||!S.tafsirData[surahNum-1];
+  if(_needQ||_needT){
     var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
     list.appendChild(sp);
-    _loadSurahData(surahNum).then(function(){
+    var _fetches=[];
+    if(_needQ)_fetches.push(_loadSurahData(surahNum));
+    if(_needT)_fetches.push(_loadTafsirData(surahNum));
+    Promise.all(_fetches).then(function(){
       if(S.surah!==surahNum)return;
       renderAyahs(surahNum,scrollTo);
     }).catch(function(){
+      if(S.surah!==surahNum)return;
       clear(list);
-      var err=el('div','prayer-status prayer-error');err.textContent=t('error.data_load');list.appendChild(err);
+      renderAyahs(surahNum,scrollTo); // render with whatever loaded
     });
     return;
   }

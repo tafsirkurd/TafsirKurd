@@ -566,18 +566,18 @@ window._i18nRerenderHook = _rerenderCurrentTab;
 document.addEventListener('i18n:updated', _rerenderCurrentTab);
 
 /* ===== DATA LOADING ===== */
-var _dataReady={quran:false,tafsir:false,quranFull:false};
+var _dataReady={quran:false,tafsir:false,quranFull:false,tafsirFull:false};
 var _tabsPrerendering=false; // guard: pre-render runs only once
 var _startupT0=Date.now();   // module load time for debug logs
 
 function _checkDataReady(){
   if(!_dataReady.quran)return;
-  // surah-index ready: unblock splash and start tab pre-render immediately (no 1.55MB wait)
+  // Unblock splash immediately — no waiting for large data files
   if(window._splashReadyQuran){window._splashReadyQuran();window._splashReadyQuran=null;}
   setTimeout(_startTabPrerender,50);
-  // QuranSearch needs all 114 surahs + tafsir; renderAyahs needs tafsir + specific surah (lazy)
-  if(!_dataReady.tafsir||!_dataReady.quranFull)return;
-  console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
+  // QuranSearch.init needs all 114 surahs + all 114 tafsir loaded
+  if(!_dataReady.quranFull||!_dataReady.tafsirFull)return;
+  console.log('[Startup] all data ready',Date.now()-_startupT0,'ms');
   if(S.surah)renderAyahs(S.surah);
   if(window.QuranSearch){
     QuranSearch.init(S.quranData,S.tafsirData);
@@ -655,60 +655,46 @@ function loadQuranData(){
   _prefetchAllSurahs();
 }
 
-function groupTafsirBySurah(data){
-  if(!Array.isArray(data)||!data.length)return data;
-  // Already grouped format (array of {verses:[...]})
-  if(data[0]&&data[0].verses)return data;
-  // Flat array with surah/ayah/kurdish_tafsir keys
-  if(data[0]&&data[0].surah!=null){
-    var grouped={};
-    data.forEach(function(item){
-      var sn=item.surah;
-      if(!grouped[sn])grouped[sn]={verses:[]};
-      var txt=item.kurdish_tafsir||item.text||item.tafsir||'';
-      grouped[sn].verses.push({verse:parseInt(item.ayah),text:txt});
-    });
-    var result=[];
-    for(var i=1;i<=114;i++){
-      result.push(grouped[i]||{verses:[]});
-    }
-    return result;
+/* ── Per-surah tafsir lazy loader ──────────────────────────────────── */
+var _tafsirFetching={};
+
+function _loadTafsirData(n){
+  if(S.tafsirData&&S.tafsirData[n-1])return Promise.resolve(S.tafsirData[n-1]);
+  if(_tafsirFetching[n])return _tafsirFetching[n];
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},8000);
+  var p=fetch('/data/tafsir/tafsir-'+n+'.json',{signal:ctrl.signal})
+    .then(function(r){clearTimeout(tid);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){
+      if(!S.tafsirData)S.tafsirData=new Array(114).fill(null);
+      S.tafsirData[n-1]=d;
+      delete _tafsirFetching[n];
+      return d;
+    })
+    .catch(function(e){clearTimeout(tid);delete _tafsirFetching[n];throw e;});
+  _tafsirFetching[n]=p;
+  return p;
+}
+
+function _prefetchAllTafsir(){
+  var done=0,active=0,next=1;
+  var CONC=6;
+  function _dispatch(){
+    while(active<CONC&&next<=114){active++;var n=next++;_loadTafsirData(n).then(_done,_done);}
   }
-  return data;
+  function _done(){
+    active--;done++;
+    if(done===114){_dataReady.tafsirFull=true;_checkDataReady();}
+    _dispatch();
+  }
+  _dispatch();
 }
 
 function loadTafsirData(){
-  var ctrl=new AbortController();
-  var tid=setTimeout(function(){ctrl.abort();},15000);
-  fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
-    clearTimeout(tid);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.json();
-  }).then(function(d){
-    S.tafsirData=groupTafsirBySurah(d);
-    _dataReady.tafsir=true;
-    _checkDataReady();
-  }).catch(function(e){
-    clearTimeout(tid);
-    console.error('Tafsir load error:',e);
-    if(window.AppErrors)AppErrors.report('network_error','kurdish_tafsir.json load failed: '+e.message,e.stack,'app-init');
-    toast(t('error.tafsir_load'));
-    // Retry once after 3 seconds — flag prevents concurrent retry fetches
-    var _tafsirRetrying=false;
-    setTimeout(function(){
-      if(S.tafsirData||_tafsirRetrying)return;
-      _tafsirRetrying=true;
-      var ctrl2=new AbortController();
-      var tid2=setTimeout(function(){ctrl2.abort();},15000);
-      fetch('/data/kurdish_tafsir.json',{signal:ctrl2.signal}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(d){
-        clearTimeout(tid2);
-        S.tafsirData=groupTafsirBySurah(d);
-        _dataReady.tafsir=true;
-        _checkDataReady();
-        toast(t('toast.tafsir_loaded'));
-      }).catch(function(){clearTimeout(tid2);}).then(function(){_tafsirRetrying=false;});
-    },3000);
-  });
+  S.tafsirData=new Array(114).fill(null);
+  _dataReady.tafsir=true;
+  _checkDataReady();
+  _prefetchAllTafsir();
 }
 
 /* ===== THEME & SIZES ===== */
