@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260559 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260560 */
 (function(){
 'use strict';
 
@@ -2660,8 +2660,11 @@ window.GencineUI = {
        through its semi-transparent backdrop when _ty moves pagesWrap upward. */
     if(hdr){ hdr.style.background = 'var(--bg)'; hdr.style.backdropFilter = 'none'; hdr.style.webkitBackdropFilter = 'none'; }
 
-    /* floating restore pill */
+    /* floating restore pill — remove any orphan from a previous session */
+    if (self._pdfRestoreBtn) { try { self._pdfRestoreBtn.remove(); } catch(e) {} self._pdfRestoreBtn = null; }
+    if (self._pdfBadge)      { try { self._pdfBadge.remove();      } catch(e) {} self._pdfBadge = null; }
     var restoreBtn = document.createElement('button');
+    self._pdfRestoreBtn = restoreBtn;
     restoreBtn.style.cssText = 'position:fixed;top:calc(var(--safe-t,12px) + 8px);left:12px;'
       +'height:32px;padding:0 14px;border-radius:16px;border:none;cursor:pointer;'
       +'background:rgba(0,0,0,.48);color:#fff;font-size:.78rem;font-weight:600;'
@@ -2704,6 +2707,7 @@ window.GencineUI = {
 
     /* ── Zoom badge ── */
     var badge = document.createElement('div');
+    self._pdfBadge = badge;
     badge.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);'
       +'background:rgba(0,0,0,.55);color:#fff;padding:5px 18px;border-radius:20px;'
       +'font-size:.95rem;font-weight:700;pointer-events:none;opacity:0;transition:opacity .2s;z-index:9999;letter-spacing:.04em;';
@@ -2713,6 +2717,7 @@ window.GencineUI = {
     self._pdfCleanup = function(){
       if(self._pdfPageObs){ self._pdfPageObs.disconnect(); self._pdfPageObs = null; }
       badge.remove(); restoreBtn.remove();
+      self._pdfBadge = null; self._pdfRestoreBtn = null;
       if(fsBtn) fsBtn.onclick = null;
       if(hdr){ hdr.style.background=''; hdr.style.backdropFilter=''; hdr.style.webkitBackdropFilter=''; }
       if(hdr && _hdrHidden){
@@ -2841,26 +2846,27 @@ window.GencineUI = {
           while (slot.firstChild) slot.removeChild(slot.firstChild);
           slot.appendChild(cv);
           slot._rendered = true; slot._rendering = false;
-        });
-      });
+        }).catch(function() { slot._rendering = false; });
+      }).catch(function() { slot._rendering = false; });
     };
 
     var doLoad = function(pdf) {
       if (self._currentBook !== book) return; // user switched books while loading — discard
       self._pdfDoc = pdf;
+      var _totalPages = pdf.numPages; // capture now — pdf.destroy() in cleanup must not affect saved values
       // Always update with confirmed numPages from loaded PDF
       var _pg = 1;
       if (book && book.id) {
         try {
           var _ep = _bookGetProgress(String(book.id));
-          _pg = (_ep && _ep.page > 1 && _ep.page <= pdf.numPages) ? _ep.page : 1;
-          localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_pg,total:pdf.numPages,ts:Date.now()}));
+          _pg = (_ep && _ep.page > 1 && _ep.page <= _totalPages) ? _ep.page : 1;
+          localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_pg,total:_totalPages,ts:Date.now()}));
         } catch(e2) {}
       }
       // When resuming mid-book keep spinner visible until the scroll jump settles
       if (_pg <= 1) loadingEl.style.display = 'none';
       var slots = [];
-      for (var i = 1; i <= pdf.numPages; i++) {
+      for (var i = 1; i <= _totalPages; i++) {
         var slot = document.createElement('div');
         slot.setAttribute('data-page', i);
         slot.style.cssText = 'width:100%;background:#fff;min-height:300px;';
@@ -2873,7 +2879,7 @@ window.GencineUI = {
           var n = parseInt(e.target.getAttribute('data-page'));
           renderPage(n, e.target, pdf);
           if (n > 1 && slots[n - 2]) renderPage(n - 1, slots[n - 2], pdf);
-          if (n < pdf.numPages && slots[n]) renderPage(n + 1, slots[n], pdf);
+          if (n < _totalPages && slots[n]) renderPage(n + 1, slots[n], pdf);
         });
       }, { rootMargin: '400px 0px', threshold: 0 });
       self._pdfPageObs = obs;
@@ -2900,9 +2906,9 @@ window.GencineUI = {
 
       function _updatePageNav() {
         if (_pageInd && document.activeElement !== _pageInd) _pageInd.value = _curPage;
-        if (_pageInd) _pageInd.max = pdf.numPages;
+        if (_pageInd) _pageInd.max = _totalPages;
         if (_prevBtn) _prevBtn.disabled = _curPage <= 1;
-        if (_nextBtn) _nextBtn.disabled = _curPage >= pdf.numPages;
+        if (_nextBtn) _nextBtn.disabled = _curPage >= _totalPages;
       }
 
       /* Return header height accounting for fullscreen hide */
@@ -2930,13 +2936,13 @@ window.GencineUI = {
         _jumpActive = true;
         renderPage(n, slot, pdf);
         if (n > 1) renderPage(n - 1, slots[n - 2], pdf);
-        if (n < pdf.numPages) renderPage(n + 1, slots[n], pdf);
+        if (n < _totalPages) renderPage(n + 1, slots[n], pdf);
 
         _scrollToSlot(slot);
 
         var _attempts = 0;
         function _retry() {
-          if (_attempts++ >= 4) { setTimeout(function(){ _jumpActive = false; }, 200); return; }
+          if (_attempts++ >= 4) { _jumpActive = false; return; }
           setTimeout(function() {
             var slotTop  = slot.getBoundingClientRect().top;
             var panelTop = _panelEl.getBoundingClientRect().top;
@@ -2995,8 +3001,8 @@ window.GencineUI = {
       function _saveProgress() {
         if (book && book.id) {
           var _ts = Date.now();
-          try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:pdf.numPages,ts:_ts})); } catch(e2) {}
-          _syncProgressToSupabase(book.id, _curPage, pdf.numPages, _ts);
+          try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:_totalPages,ts:_ts})); } catch(e2) {}
+          _syncProgressToSupabase(book.id, _curPage, _totalPages, _ts);
         }
       }
       if (_prevBtn) _prevBtn.onclick = function() {
@@ -3007,7 +3013,7 @@ window.GencineUI = {
         }
       };
       if (_nextBtn) _nextBtn.onclick = function() {
-        if (_curPage < pdf.numPages) {
+        if (_curPage < _totalPages) {
           renderPage(_curPage, slots[_curPage], pdf);
           _scrollToSlot(slots[_curPage]);
           _curPage++; _updatePageNav(); _saveProgress();
@@ -3019,7 +3025,7 @@ window.GencineUI = {
         });
         _pageInd.addEventListener('blur', function() {
           var n = parseInt(_pageInd.value);
-          if (!isNaN(n) && n >= 1 && n <= pdf.numPages) {
+          if (!isNaN(n) && n >= 1 && n <= _totalPages) {
             _jumpToPage(n);
             _curPage = n; _updatePageNav(); _saveProgress();
           } else {
@@ -3072,7 +3078,7 @@ window.GencineUI = {
           if (_bst !== _curPage) _curPage = _bst;
         }
         // Cache final state on self so _renderBooks can use it even if localStorage lags.
-        self._lastClosedBook = { id: String(book.id), page: _curPage, total: pdf.numPages };
+        self._lastClosedBook = { id: String(book.id), page: _curPage, total: _totalPages };
         _saveProgress();
         // Instantly hide visible content so the ghost doesn't flash during DOM clear
         if (pagesWrap) { pagesWrap.style.transition = 'none'; pagesWrap.style.opacity = '0'; }
