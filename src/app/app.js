@@ -7831,6 +7831,41 @@ function mkSliderRow(labelText,value,min,max,step,onInput,onChange){
   return row;
 }
 
+function _showIgPicker(anchorBtn){
+  haptic([8]);
+  var existing=document.getElementById('_igPickerOverlay');
+  if(existing){existing.remove();return;}
+  var overlay=document.createElement('div');
+  overlay.id='_igPickerOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;';
+  var card=document.createElement('div');
+  card.style.cssText='position:absolute;background:var(--card-bg,#1a1a1a);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:14px;padding:6px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.4);';
+  var rect=anchorBtn.getBoundingClientRect();
+  card.style.left=Math.max(8,rect.left-60)+'px';
+  card.style.top=(rect.top-110)+'px';
+  var OPTS=[
+    {label:'TafsirKurd',sub:'@tafsirkurd',url:'https://www.instagram.com/tafsirkurd/'},
+    {label:'TafsirKurd App',sub:'@tafsirkurd.app',url:'https://www.instagram.com/tafsirkurd.app/'}
+  ];
+  OPTS.forEach(function(opt){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;';
+    var ic=document.createElement('i');ic.className='fab fa-instagram';ic.style.cssText='font-size:18px;color:#E1306C;width:20px;text-align:center;';
+    var txt=document.createElement('div');
+    var lbl=document.createElement('div');lbl.textContent=opt.label;lbl.style.cssText='font-size:13px;font-weight:600;color:var(--text,#fff);';
+    var sub=document.createElement('div');sub.textContent=opt.sub;sub.style.cssText='font-size:11px;color:var(--text-muted,rgba(255,255,255,.5));';
+    txt.appendChild(lbl);txt.appendChild(sub);
+    row.appendChild(ic);row.appendChild(txt);
+    row.onmouseover=function(){row.style.background='var(--hover-bg,rgba(255,255,255,.06))';};
+    row.onmouseout=function(){row.style.background='';};
+    row.onclick=function(){overlay.remove();_openLink(opt.url);haptic([8]);};
+    card.appendChild(row);
+  });
+  overlay.appendChild(card);
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  document.body.appendChild(overlay);
+}
+
 function renderSettings(){
   var content=$('settingsContent');
   clear(content);
@@ -8191,8 +8226,7 @@ function renderSettings(){
   var g7=el('div','settings-group');
   g7.appendChild(el('div','settings-group-title',t('settings.social')));
   var SOCIAL_DEFS=[
-    {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram — TafsirKurd'},
-    {key:'social_instagram_app',icon:'fab fa-instagram',label:'Instagram — App',fallback:'https://www.instagram.com/tafsirkurd.app/'},
+    {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram'},
     {key:'social_youtube',icon:'fab fa-youtube',label:'YouTube'},
     {key:'social_tiktok',icon:'fab fa-tiktok',label:'TikTok'},
     {key:'social_telegram',icon:'fab fa-telegram',label:'Telegram'},
@@ -8206,14 +8240,19 @@ function renderSettings(){
     var btn=el('button','soc-btn');
     btn.title=def.label;
     btn.appendChild(icon(def.icon));
-    btn.style.display='none'; // hidden until URL loaded
-    on(btn,'click',function(){_openLink(btn._url);haptic([8]);});
+    btn.style.display='none';
+    on(btn,'click',function(){
+      if(def.key==='social_instagram'){
+        _showIgPicker(btn);
+      } else {
+        _openLink(btn._url);haptic([8]);
+      }
+    });
     _socBtns[def.key]=btn;
     socialBar.appendChild(btn);
   });
   g7.appendChild(socialBar);
   content.appendChild(g7);
-  // Async: load social URLs
   getSiteSettings().then(function(ss){
     SOCIAL_DEFS.forEach(function(def){
       var url=ss[def.key]||def.fallback||'';
