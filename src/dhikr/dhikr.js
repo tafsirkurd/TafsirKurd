@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260561 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260562 */
 (function(){
 'use strict';
 
@@ -407,7 +407,7 @@ function _initDbData(onDone) {
   var cachedDuas     = _readCache('gencine_duas_v3');
   var cachedHadiths  = _readCache('gencine_hadiths_v2');
   var cachedSections = _readCache('gencine_sections_v1');
-  var cachedBooks    = _readCache('gencine_books_v3');
+  var cachedBooks    = _readCache('gencine_books_v4');
   var cachedTasbih   = _readCache('gencine_tasbih_v1');
   var cachedAsma99   = _readCache('gencine_asma99_v1');
   var cachedAdhkar   = _readCache('gencine_adhkar_v1');
@@ -503,7 +503,7 @@ function _fetchDbData(onDone) {
     }
     if (!bookRes.error && bookRes.data) {
       _dbBooks = bookRes.data;
-      _writeCache('gencine_books_v3', _dbBooks);
+      _writeCache('gencine_books_v4', _dbBooks);
       /* Pre-cache all book cover images in the HTTP cache */
       _dbBooks.forEach(function(b){ if(b.cover_url){ var img=new Image(); img.src=b.cover_url; } });
     }
@@ -765,7 +765,7 @@ window.GencineUI = {
     localStorage.removeItem('gencine_cats_v5');
     localStorage.removeItem('gencine_duas_v3');
     localStorage.removeItem('gencine_hadiths_v2');
-    localStorage.removeItem('gencine_books_v3');
+    localStorage.removeItem('gencine_books_v4');
     localStorage.removeItem('gencine_sections_v1');
     localStorage.removeItem('gencine_tasbih_v1');
     localStorage.removeItem('gencine_adhkar_v1');
