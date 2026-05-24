@@ -7831,39 +7831,52 @@ function mkSliderRow(labelText,value,min,max,step,onInput,onChange){
   return row;
 }
 
-function _showIgPicker(anchorBtn){
+function _showIgPicker(){
   haptic([8]);
   var existing=document.getElementById('_igPickerOverlay');
   if(existing){existing.remove();return;}
   var overlay=document.createElement('div');
   overlay.id='_igPickerOverlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:9999;';
-  var card=document.createElement('div');
-  card.style.cssText='position:absolute;background:var(--card-bg,#1a1a1a);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:14px;padding:6px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.4);';
-  var rect=anchorBtn.getBoundingClientRect();
-  card.style.left=Math.max(8,rect.left-60)+'px';
-  card.style.top=(rect.top-110)+'px';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;';
+  overlay.style.opacity='0';overlay.style.transition='opacity .2s';
+  var sheet=document.createElement('div');
+  sheet.style.cssText='width:100%;max-width:480px;background:var(--card-bg,#1c1c1e);border-radius:20px 20px 0 0;padding:12px 12px 32px;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.23,1);';
+  var handle=document.createElement('div');
+  handle.style.cssText='width:36px;height:4px;border-radius:2px;background:var(--border,rgba(255,255,255,.2));margin:0 auto 16px;';
+  sheet.appendChild(handle);
+  var title=document.createElement('div');
+  title.textContent='Instagram';
+  title.style.cssText='text-align:center;font-size:13px;font-weight:600;color:var(--text-muted,rgba(255,255,255,.5));margin-bottom:10px;letter-spacing:.5px;';
+  sheet.appendChild(title);
   var OPTS=[
     {label:'TafsirKurd',sub:'@tafsirkurd',url:'https://www.instagram.com/tafsirkurd/'},
     {label:'TafsirKurd App',sub:'@tafsirkurd.app',url:'https://www.instagram.com/tafsirkurd.app/'}
   ];
   OPTS.forEach(function(opt){
     var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;';
-    var ic=document.createElement('i');ic.className='fab fa-instagram';ic.style.cssText='font-size:18px;color:#E1306C;width:20px;text-align:center;';
-    var txt=document.createElement('div');
-    var lbl=document.createElement('div');lbl.textContent=opt.label;lbl.style.cssText='font-size:13px;font-weight:600;color:var(--text,#fff);';
-    var sub=document.createElement('div');sub.textContent=opt.sub;sub.style.cssText='font-size:11px;color:var(--text-muted,rgba(255,255,255,.5));';
+    row.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:background .15s;';
+    var ic=document.createElement('i');ic.className='fab fa-instagram';ic.style.cssText='font-size:22px;color:#E1306C;width:24px;text-align:center;flex-shrink:0;';
+    var txt=document.createElement('div');txt.style.cssText='flex:1;min-width:0;';
+    var lbl=document.createElement('div');lbl.textContent=opt.label;lbl.style.cssText='font-size:15px;font-weight:600;color:var(--text,#fff);';
+    var sub=document.createElement('div');sub.textContent=opt.sub;sub.style.cssText='font-size:12px;color:var(--text-muted,rgba(255,255,255,.5));margin-top:2px;';
+    var chev=document.createElement('i');chev.className='fas fa-chevron-left';chev.style.cssText='font-size:12px;color:var(--text-muted,rgba(255,255,255,.3));flex-shrink:0;';
     txt.appendChild(lbl);txt.appendChild(sub);
-    row.appendChild(ic);row.appendChild(txt);
-    row.onmouseover=function(){row.style.background='var(--hover-bg,rgba(255,255,255,.06))';};
+    row.appendChild(ic);row.appendChild(txt);row.appendChild(chev);
+    row.onmouseover=function(){row.style.background='var(--hover-bg,rgba(255,255,255,.07))';};
     row.onmouseout=function(){row.style.background='';};
-    row.onclick=function(){overlay.remove();_openLink(opt.url);haptic([8]);};
-    card.appendChild(row);
+    row.onclick=function(){close();_openLink(opt.url);haptic([8]);};
+    sheet.appendChild(row);
   });
-  overlay.appendChild(card);
-  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+  overlay.appendChild(sheet);
+  function close(){
+    overlay.style.opacity='0';sheet.style.transform='translateY(100%)';
+    setTimeout(function(){overlay.remove();},280);
+  }
+  overlay.onclick=function(e){if(e.target===overlay)close();};
   document.body.appendChild(overlay);
+  requestAnimationFrame(function(){
+    overlay.style.opacity='1';sheet.style.transform='translateY(0)';
+  });
 }
 
 function renderSettings(){
@@ -8243,7 +8256,7 @@ function renderSettings(){
     btn.style.display='none';
     on(btn,'click',function(){
       if(def.key==='social_instagram'){
-        _showIgPicker(btn);
+        _showIgPicker();
       } else {
         _openLink(btn._url);haptic([8]);
       }
