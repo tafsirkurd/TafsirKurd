@@ -55,6 +55,9 @@
 </script>
 <script src="/utils/console-cleaner.js?v=2" defer></script>
 <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin="">
+<link rel="preconnect" href="https://accounts.google.com" crossorigin="">
+<link rel="dns-prefetch" href="https://www.googletagmanager.com">
+<link rel="dns-prefetch" href="https://static.cloudflareinsights.com">
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform()}catch(e){return false}})();window.APP_VERSION='2.3.0';</script>
 <script src="/utils/app-error-reporter.js?v=1" defer></script>
 <script>
@@ -71,10 +74,31 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/surah-name-v4.woff2?v=17" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/surah-name-v2.woff2?v=1" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="/app/app.css?v=20260529" as="style">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17"></noscript>
-
-<link rel="stylesheet" href="/app/app.css?v=20260528">
+<style>/* critical: reset + vars + splash + app shell — inlined for zero-blocking FCP */
+html.preload *,html.preload *::before,html.preload *::after{transition:none!important;animation:none!important}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+*{scrollbar-width:none}*::-webkit-scrollbar{display:none}
+a{color:inherit;text-decoration:none}
+button,input,select{font-family:inherit;border:none;outline:none;background:none;color:inherit}
+img{display:block;max-width:100%}
+:root{--bg:#fafafa;--bg2:#ffffff;--bg3:#f0f0f0;--surface:#ffffff;--surface-h:#f5f5f5;--text:#000000;--text2:#555555;--text3:#999999;--border:#e8e8e8;--border2:#d0d0d0;--accent:#000000;--accent-t:#ffffff;--success:#22c55e;--danger:#dc3545;--shadow-s:0 1px 3px rgba(0,0,0,.06);--shadow-m:0 4px 12px rgba(0,0,0,.08);--shadow-l:0 12px 32px rgba(0,0,0,.12);--font-ar:'KFGQPC Hafs','Scheherazade New','IBM Plex Sans Arabic',sans-serif;--font-su:'SurahName',serif;--ar-size:2.0rem;--tf-size:1.0rem;--line-h:2.2;--ayah-px:16px;--tab-h:60px;--hdr-h:52px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);--ease:cubic-bezier(.16,1,.3,1);--r-s:8px;--r-m:12px;--r-l:16px;--r-xl:20px;--r-full:9999px;--accent-glow:rgba(0,0,0,.1);--ayah-read-opacity:.65;--ayah-current-bg:color-mix(in srgb,var(--accent) 9%,transparent);--ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 30%,transparent),0 2px 16px color-mix(in srgb,var(--accent) 10%,transparent);--ayah-next-bg:color-mix(in srgb,var(--accent) 4%,transparent);--ayah-next-border:color-mix(in srgb,var(--accent) 28%,transparent);--audio-bar-h:0px;--mhl-cur-bg:color-mix(in srgb,var(--accent) 6%,transparent);--mhl-cur-line:color-mix(in srgb,var(--accent) 42%,transparent);--mhl-cur-glow:0 0 10px color-mix(in srgb,var(--accent) 5%,transparent);--mhl-read-op:.55;--mhl-next-line:color-mix(in srgb,var(--accent) 22%,transparent);--mhl-next-glow:0 0 7px color-mix(in srgb,var(--accent) 3%,transparent);--fu-glow:rgba(26,92,58,.12);--fu-ring:rgba(26,92,58,.22);--logo-filter:brightness(0);--logo-blend:normal;--mushaf-filter:none;--fu-logo-filter:brightness(0)}
+[data-theme="dark"]{--bg:#0a0a0a;--bg2:#161616;--bg3:#050505;--surface:#1a1a1a;--surface-h:#222222;--text:#ffffff;--text2:#b0b0b0;--text3:#666666;--border:#2a2a2a;--border2:#3a3a3a;--accent:#ffffff;--accent-t:#000000;--shadow-s:0 1px 3px rgba(0,0,0,.3);--shadow-m:0 4px 12px rgba(0,0,0,.4);--shadow-l:0 12px 32px rgba(0,0,0,.6);--accent-glow:rgba(255,255,255,.07);--ayah-read-opacity:.5;--ayah-current-glow:0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent),0 2px 18px color-mix(in srgb,var(--accent) 7%,transparent);--ayah-next-bg:color-mix(in srgb,var(--accent) 5%,transparent);--ayah-next-border:color-mix(in srgb,var(--accent) 22%,transparent);--mhl-cur-bg:color-mix(in srgb,var(--accent) 9%,transparent);--mhl-cur-line:color-mix(in srgb,var(--accent) 26%,transparent);--mhl-cur-glow:0 0 8px color-mix(in srgb,var(--accent) 4%,transparent);--mhl-read-op:.43;--mhl-next-line:color-mix(in srgb,var(--accent) 16%,transparent);--mhl-next-glow:0 0 5px color-mix(in srgb,var(--accent) 2%,transparent);--fu-glow:rgba(38,100,58,.22);--fu-ring:rgba(56,130,78,.3);--logo-filter:brightness(0) invert(1);--logo-blend:normal;--mushaf-filter:none;--fu-logo-filter:invert(1) brightness(1.1)}
+[data-theme="sakina"]{--bg:#0c1c12;--bg2:#112318;--bg3:#081410;--surface:#162d1f;--surface-h:#1c3827;--text:#f0e6c8;--text2:#a89268;--text3:#6b5c3e;--border:#1e3828;--border2:#2c5038;--accent:#c9a84c;--accent-t:#0c1c12;--shadow-s:0 1px 4px rgba(0,0,0,.45);--shadow-m:0 4px 14px rgba(0,0,0,.55);--shadow-l:0 12px 36px rgba(0,0,0,.75);--accent-glow:rgba(201,168,76,.28);--ayah-read-opacity:.5;--ayah-current-bg:color-mix(in srgb,var(--accent) 14%,transparent);--ayah-current-glow:0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,transparent),0 3px 22px color-mix(in srgb,var(--accent) 24%,transparent);--ayah-next-border:color-mix(in srgb,var(--accent) 40%,transparent);--mhl-cur-bg:color-mix(in srgb,var(--accent) 10%,transparent);--mhl-cur-line:color-mix(in srgb,var(--accent) 55%,transparent);--mhl-cur-glow:0 0 14px color-mix(in srgb,var(--accent) 9%,transparent);--mhl-read-op:.47;--mhl-next-line:color-mix(in srgb,var(--accent) 28%,transparent);--mhl-next-glow:0 0 9px color-mix(in srgb,var(--accent) 4%,transparent);--fu-glow:rgba(201,168,76,.18);--fu-ring:rgba(201,168,76,.3);--logo-filter:brightness(0) saturate(100%) invert(68%) sepia(31%) saturate(860%) hue-rotate(8deg) brightness(94%);--logo-blend:normal;--mushaf-filter:none;--fu-logo-filter:invert(1) sepia(1) saturate(4) hue-rotate(-15deg) brightness(0.85)}
+[data-theme="noor"]{--bg:#f4e8cc;--bg2:#fdf4e3;--bg3:#eddfc0;--surface:#fdf4e3;--surface-h:#f0e2c4;--text:#1a0e04;--text2:#5c3d1a;--text3:#9b7650;--border:#d9c9a8;--border2:#c9b490;--accent:#1a5c3a;--accent-t:#fdf4e3;--shadow-s:0 1px 3px rgba(0,0,0,.07);--shadow-m:0 4px 12px rgba(0,0,0,.09);--shadow-l:0 12px 32px rgba(0,0,0,.14);--accent-glow:rgba(26,92,58,.14);--fu-glow:rgba(26,92,58,.1);--fu-ring:rgba(26,92,58,.2);--logo-filter:sepia(0.35) brightness(0.88);--logo-blend:multiply;--fu-logo-filter:sepia(0.4) brightness(0.82);--mhl-cur-bg:color-mix(in srgb,var(--accent) 7%,transparent);--mhl-cur-line:color-mix(in srgb,var(--accent) 36%,transparent);--mhl-cur-glow:0 0 10px color-mix(in srgb,var(--accent) 4%,transparent);--mhl-read-op:.52;--mhl-next-line:color-mix(in srgb,var(--accent) 20%,transparent);--mhl-next-glow:0 0 7px color-mix(in srgb,var(--accent) 3%,transparent)}
+body{background:var(--bg);color:var(--text)}
+.splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
+@keyframes splashIn{from{opacity:0}to{opacity:1}}
+.splash-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#0a0a0a);opacity:0;transition:opacity .12s ease}
+.splash.hide{opacity:0;pointer-events:none}
+.app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t);opacity:0;transition:opacity .15s ease-out}
+.app.visible{opacity:1}</style>
+<link rel="stylesheet" href="/app/app.css?v=20260529" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/app/app.css?v=20260529"></noscript>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 <body>

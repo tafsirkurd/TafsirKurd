@@ -11,7 +11,7 @@ import { transform } from 'esbuild';
 // JS files to skip minification (already minified vendor files)
 const SKIP_MINIFY = new Set([
   'supabase.js',           // already minified
-  'all.min.css',           // vendor CSS — skip (not JS)
+  'all.min.css',           // vendor CSS — already minified
 ]);
 
 // Directories to exclude entirely from the dist build
@@ -41,7 +41,21 @@ async function processDir(srcDir, dstDir) {
         writeFileSync(dstPath, result.code);
         jsMinified++;
       } catch (e) {
-        // Fall back to unminified if esbuild chokes (e.g. syntax it doesn't understand)
+        console.warn(`  [warn] could not minify ${srcPath}: ${e.message} — copying as-is`);
+        copyFileSync(srcPath, dstPath);
+        jsCopied++;
+      }
+    } else if (extname(entry) === '.css' && !SKIP_MINIFY.has(entry)) {
+      const code = readFileSync(srcPath, 'utf8');
+      try {
+        const result = await transform(code, {
+          minify: true,
+          loader: 'css',
+          charset: 'utf8',
+        });
+        writeFileSync(dstPath, result.code);
+        jsMinified++;
+      } catch (e) {
         console.warn(`  [warn] could not minify ${srcPath}: ${e.message} — copying as-is`);
         copyFileSync(srcPath, dstPath);
         jsCopied++;
