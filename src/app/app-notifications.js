@@ -745,3 +745,14 @@ function checkNewBookNotif(){
     }).catch(function(){});
 }
 
+/* ===== OFFLINE BANNER ===== */
+function _updateOfflineBanner(){
+  var b=document.getElementById('offlineBanner');
+  if(!b)return;
+  b.classList.toggle('on',!navigator.onLine);
+}
+window.addEventListener('offline',_updateOfflineBanner);
+window.addEventListener('online',_updateOfflineBanner);
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',_updateOfflineBanner);
+}else{_updateOfflineBanner();}

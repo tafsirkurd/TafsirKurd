@@ -6,6 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Tafsir Kurd</title>
+<meta name="description" content="قورئانا پیرۆز ب تەفسیرا کوردی — Quran with Kurdish Tafsir, prayer times, Islamic audio and more">
 <link rel="icon" type="image/png" href="/assets/images/TafsirKurd-favicon.png">
 
 <script>
@@ -1336,6 +1337,17 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .btn-danger:active{transform:scale(.95);background:rgba(192,57,43,.06);border-color:rgba(192,57,43,.35);color:rgba(192,57,43,.8)}
 
 /* ===== TOAST ===== */
+
+/* ── Offline banner ── */
+#offlineBanner{position:fixed;top:calc(var(--safe-t,0px) + 4px);left:50%;transform:translateX(-50%) translateY(-60px);z-index:9000;background:#f59e0b;color:#fff;padding:7px 18px;border-radius:var(--r-full);font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 3px 12px rgba(0,0,0,.22);transition:transform .35s var(--ease);pointer-events:none;white-space:nowrap}
+#offlineBanner.on{transform:translateX(-50%) translateY(0)}
+/* ── Sync failure badge on settings tab ── */
+.tab-item[data-tab="settings"]{position:relative}
+#syncBadge{position:absolute;top:4px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:#e53935;border:2px solid var(--bg);display:none}
+#syncBadge.on{display:block}
+/* ── Sheet drag handles ── */
+.auth-pull,.profile-pull{width:36px;height:4px;border-radius:2px;background:var(--border);margin:10px auto 6px;flex-shrink:0}
+
 .toast{position:fixed;bottom:calc(var(--tab-h) + var(--safe-b) + 16px);left:50%;transform:translateX(-50%) translateY(100px);background:var(--accent);color:var(--accent-t);padding:10px 20px;border-radius:var(--r-full);font-size:.85rem;font-weight:600;z-index:999;opacity:0;transition:opacity .3s var(--ease),transform .3s var(--ease);pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -3517,12 +3529,13 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
     </div>
   </div>
 </div>
+<div id="offlineBanner"><i class="fas fa-wifi-slash"></i><span data-i18n="error.offline">بێ ئینتەرنێت</span></div>
 <nav class="tabbar">
   <button class="tab-item on" data-tab="quran" onclick="App.tab('quran')"><i class="fas fa-book"></i><span data-i18n="tabs.quran" data-t="android_span_12">قورئان</span></button>
   <button class="tab-item" data-tab="islamvoice" onclick="App.tab('islamvoice')"><i class="fas fa-video"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
   <button class="tab-item" data-tab="gencine" onclick="App.tab('gencine')"><i class="fas fa-gem"></i><span data-i18n="tabs.gencine">گەنجینە</span></button>
   <button class="tab-item" data-tab="prayer" onclick="App.tab('prayer')"><i class="fas fa-mosque"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
-  <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
+  <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><span id="syncBadge"></span><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
 
 <!-- COPY MODAL -->

@@ -1030,13 +1030,14 @@ function _buildRecPicker(){
 
 // Generic drag-to-close for bottom sheets.
 // scrollEl: if provided, drag is suppressed when touch starts inside it with scrollTop>0
-function _attachSheetDrag(sheet,overlay,closeFn,scrollEl){
+function _attachSheetDrag(sheet,overlay,closeFn,scrollEl,openClass){
+  var _openClass=openClass||'open';
   var startY=0,dragY=0,active=false,dragging=false,_hist=[];
   var SPRING='cubic-bezier(.22,1,.36,1)',EASE_IN='cubic-bezier(.55,0,1,1)';
   // Progressive resistance: linear up to 100px, then increasing drag beyond
   function _resist(dy){return dy<=100?dy*0.85:85+(dy-100)*0.35;}
   sheet.addEventListener('touchstart',function(e){
-    if(!sheet.classList.contains('open'))return; // ignore touches when sheet is closed
+    if(!sheet.classList.contains(_openClass))return; // ignore touches when sheet is closed
     if(scrollEl&&scrollEl.contains(e.target)&&scrollEl.scrollTop>2)return;
     startY=e.touches[0].clientY;dragY=0;active=true;dragging=false;_hist=[];
   },{passive:true});

@@ -79,6 +79,7 @@ function _ensureCfgSheet(){
   document.body.appendChild(_cfgOverlayEl);
   _cfgSheetEl=el('div','cfg-sheet');
   document.body.appendChild(_cfgSheetEl);
+  if(typeof _attachSheetDrag==='function')_attachSheetDrag(_cfgSheetEl,_cfgOverlayEl,closeCfgSheet,null);
 }
 
 function closeCfgSheet(){

@@ -161,6 +161,8 @@ function _syncStatusInfo(){
 }
 
 function _updateSyncPanelStatus(){
+  var badge=document.getElementById('syncBadge');
+  if(badge)badge.classList.toggle('on',!!S.syncFailed);
   if(!_syncPanelStatusEl)return;
   var info=_syncStatusInfo();
   if(!info)return;
@@ -495,6 +497,7 @@ var _syncRetryDelay=2000;
 var _syncRetryTimer=null;
 
 function syncToCloud(){
+  if(!navigator.onLine)return;
   if(!S.supabase||!S.user||S.isSyncing)return;
   var now=Date.now();
   if(now-S.lastSyncTime<5000)return;
@@ -738,6 +741,8 @@ window.addEventListener('online',function(){
 App.openLogin=function(){
   var panel=$('authPanel');
   clear(panel);
+  if(!panel._dragInited){panel._dragInited=true;if(typeof _attachSheetDrag==='function')_attachSheetDrag(panel,null,App.closeLogin,panel,'on');}
+  panel.appendChild(el('div','auth-pull'));
 
   // Header
   var hdr=el('div','auth-hdr');

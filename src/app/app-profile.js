@@ -7,6 +7,7 @@ App.openProfile=function(){
   clear(panel);
   renderProfile(panel);
   panel.classList.add('on');
+  if(!panel._dragInited){panel._dragInited=true;if(typeof _attachSheetDrag==='function')_attachSheetDrag(panel,null,App.closeProfile,panel,'on');}
 };
 
 App.closeProfile=function(){
@@ -23,6 +24,8 @@ function renderProfile(panel){
   function sfm(el,text,type){el.textContent=text;el.className='pp-field-msg '+type;}
   function cfm(el){el.className='pp-field-msg';el.textContent='';}
   var totalRead=calcTotalRead(log);var streak=calcStreak(log);
+
+  panel.appendChild(el('div','profile-pull'));
 
   // ── Header ────────────────────────────────────
   var hdr=el('div','pp-hdr');
