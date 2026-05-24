@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260557 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260558 */
 (function(){
 'use strict';
 
@@ -3047,18 +3047,13 @@ window.GencineUI = {
         var _rBanIco = document.createElement('i'); _rBanIco.className = 'fas fa-bookmark'; _resumeBanner.appendChild(_rBanIco);
         _resumeBanner.appendChild(document.createTextNode(' ' + T('gencine.resuming','بەردەوامبوون') + ' — ' + T('gencine.page_lbl','پ') + ' ' + _curPage));
         // Appended to body — panel overflow+transform traps position:fixed on iOS
+        // CSS handles positioning via --safe-t + --hdr-h custom properties (no JS measurement needed)
         document.body.appendChild(_resumeBanner);
-        // Show after PDF is revealed (740ms) so it appears over content, not spinner
-        _bannerTimers.push(setTimeout(function(){
-          // Measure header at show time for accurate positioning
-          var _h = hdr || document.querySelector('#panelGencine .hdr');
-          if (_h) _resumeBanner.style.top = (_h.getBoundingClientRect().bottom + 28) + 'px';
-          _resumeBanner.classList.add('visible');
-        }, 740));
+        _bannerTimers.push(setTimeout(function(){ _resumeBanner.classList.add('visible'); }, 300));
         _bannerTimers.push(setTimeout(function(){
           _resumeBanner.classList.remove('visible');
           _bannerTimers.push(setTimeout(function(){ if (_resumeBanner && _resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner); }, 400));
-        }, 3940));
+        }, 3500));
       }
 
       /* Extend existing cleanup to remove nav listeners */
@@ -3079,6 +3074,9 @@ window.GencineUI = {
         // Cache final state on self so _renderBooks can use it even if localStorage lags.
         self._lastClosedBook = { id: String(book.id), page: _curPage, total: pdf.numPages };
         _saveProgress();
+        // Instantly hide visible content so the ghost doesn't flash during DOM clear
+        if (pagesWrap) { pagesWrap.style.transition = 'none'; pagesWrap.style.opacity = '0'; }
+        if (loadingEl) { loadingEl.style.display = 'none'; }
         if (_panelEl) _panelEl.removeEventListener('scroll', _navScrollHandler);
         if (_panelEl) _panelEl.removeEventListener('touchend', _touchEndHandler);
         clearTimeout(_navScrollTimer);
@@ -3088,10 +3086,19 @@ window.GencineUI = {
         if (_resumeBanner && _resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner);
         clearInterval(_periodicSave);
         if (_visObs) _visObs.disconnect();
+        // Free canvas GPU backing stores — prevents iOS WebView OOM crash on rapid open/close
+        slots.forEach(function(s) {
+          var cv = s.querySelector('canvas');
+          if (cv) { cv.width = 0; cv.height = 0; }
+          while (s.firstChild) s.removeChild(s.firstChild);
+        });
         if (_prevBtn) _prevBtn.onclick = null;
         if (_nextBtn) _nextBtn.onclick = null;
         if (_pageInd) { _pageInd.onblur = null; _pageInd.onkeydown = null; _pageInd.value = ''; }
         if (_prevCleanup) _prevCleanup();
+        // Destroy PDF document to release PDF.js GPU memory — critical on iOS
+        try { if (pdf && pdf.destroy) pdf.destroy(); } catch(e) {}
+        self._pdfDoc = null;
       };
     };
 
