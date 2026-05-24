@@ -319,11 +319,11 @@ export async function onRequest(context) {
 
     // ── SEARCH USERS ──────────────────────────────────────────────
     if (action === 'search_users') {
-        const emailQuery = (body.email || '').trim().toLowerCase();
-        if (!emailQuery) return json({ error: 'email required' }, 400);
+        const q = (body.query || body.email || '').trim().toLowerCase();
+        if (!q) return json({ error: 'query required' }, 400);
 
         // Search auth.users via Supabase Admin API
-        const searchUrl = `${env.SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=50`;
+        const searchUrl = `${env.SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=200`;
         const usersRes = await fetch(searchUrl, {
             headers: {
                 apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -334,10 +334,12 @@ export async function onRequest(context) {
         const usersData = await usersRes.json();
         const allUsers = usersData.users || [];
 
-        // Filter by email substring
-        const matched = allUsers.filter(u =>
-            u.email && u.email.toLowerCase().includes(emailQuery)
-        ).slice(0, 10);
+        // Filter by name or email substring
+        const matched = allUsers.filter(u => {
+            const name = (u.user_metadata?.full_name || u.user_metadata?.name || '').toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            return name.includes(q) || email.includes(q);
+        }).slice(0, 10);
 
         // Get token counts for matched users
         const userIds = matched.map(u => u.id);

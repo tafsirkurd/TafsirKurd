@@ -724,7 +724,7 @@
                 <div id="user-target-row" style="margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2)">
                     <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Send to one user only (optional)</div>
                     <div style="display:flex;gap:8px;align-items:center">
-                        <input type="text" id="f-user-search" class="form-input" placeholder="Search by email" style="flex:1;font-size:13px" oninput="clearUserSelection()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchUser();}">
+                        <input type="text" id="f-user-search" class="form-input" placeholder="Search by name" style="flex:1;font-size:13px" oninput="clearUserSelection()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchUser();}">
                         <button type="button" class="btn btn-secondary" id="user-search-btn" onclick="searchUser()" style="white-space:nowrap;padding:7px 14px;font-size:13px">Search</button>
                     </div>
                     <div id="user-search-results" style="margin-top:6px"></div>
@@ -1822,15 +1822,15 @@
         }
 
         async function searchUser() {
-            var email = document.getElementById('f-user-search').value.trim();
-            if (!email) return;
+            var query = document.getElementById('f-user-search').value.trim();
+            if (!query) return;
             var btn = document.getElementById('user-search-btn');
             btn.disabled = true;
             btn.textContent = 'Searching...';
             var resultsEl = document.getElementById('user-search-results');
             while (resultsEl.firstChild) resultsEl.removeChild(resultsEl.firstChild);
             try {
-                var d = await notifAPI('search_users', { email: email });
+                var d = await notifAPI('search_users', { query: query });
                 btn.disabled = false;
                 btn.textContent = 'Search';
                 if (!d.users || d.users.length === 0) {
@@ -1842,21 +1842,32 @@
                 }
                 d.users.forEach(function(u) {
                     var row = document.createElement('div');
-                    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer;background:var(--bg2)';
+                    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--bg2);transition:background .15s';
                     row.addEventListener('mouseenter', function(){ this.style.background='var(--bg3)'; });
                     row.addEventListener('mouseleave', function(){ this.style.background='var(--bg2)'; });
+
+                    // Avatar circle with initial
+                    var avatar = document.createElement('div');
+                    var initials = (u.name || u.email || '?').charAt(0).toUpperCase();
+                    avatar.style.cssText = 'width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0';
+                    avatar.textContent = initials;
+
                     var info = document.createElement('div');
+                    info.style.cssText = 'flex:1;min-width:0';
                     var nameEl = document.createElement('div');
-                    nameEl.style.cssText = 'font-size:13px;font-weight:600;color:var(--text)';
+                    nameEl.style.cssText = 'font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
                     nameEl.textContent = u.name || u.email;
-                    var emailEl = document.createElement('div');
-                    emailEl.style.cssText = 'font-size:11px;color:var(--text-tertiary)';
-                    emailEl.textContent = u.email;
+                    var subEl = document.createElement('div');
+                    subEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:1px';
+                    subEl.textContent = u.name ? u.email : (u.token_count + ' device' + (u.token_count !== 1 ? 's' : ''));
                     info.appendChild(nameEl);
-                    info.appendChild(emailEl);
+                    info.appendChild(subEl);
+
                     var badge = document.createElement('div');
-                    badge.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-left:8px;flex-shrink:0';
+                    badge.style.cssText = 'font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0';
                     badge.textContent = u.token_count + ' device' + (u.token_count !== 1 ? 's' : '');
+
+                    row.appendChild(avatar);
                     row.appendChild(info);
                     row.appendChild(badge);
                     row.addEventListener('click', function() { selectUser(u); });
@@ -1873,25 +1884,45 @@
         }
 
         function selectUser(u) {
-            var audience = 'user:' + u.id;
-            document.getElementById('f-target-user').value = audience;
-            document.getElementById('f-user-search').value = u.email;
+            document.getElementById('f-target-user').value = 'user:' + u.id;
+            document.getElementById('f-user-search').value = u.name || u.email;
             var resultsEl = document.getElementById('user-search-results');
             while (resultsEl.firstChild) resultsEl.removeChild(resultsEl.firstChild);
+
+            // Selected card
             var sel = document.createElement('div');
-            sel.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid var(--accent);border-radius:8px;background:var(--bg2)';
-            var icon = document.createElement('span');
-            icon.style.cssText = 'font-size:13px;color:var(--accent)';
-            icon.textContent = 'Selected:';
-            var nameEl = document.createElement('span');
-            nameEl.style.cssText = 'font-size:13px;font-weight:600;color:var(--text)';
+            sel.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--accent);border-radius:10px;background:var(--bg2)';
+
+            var avatar = document.createElement('div');
+            avatar.style.cssText = 'width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0';
+            avatar.textContent = (u.name || u.email || '?').charAt(0).toUpperCase();
+
+            var info = document.createElement('div');
+            info.style.cssText = 'flex:1;min-width:0';
+            var nameEl = document.createElement('div');
+            nameEl.style.cssText = 'font-size:14px;font-weight:600;color:var(--text)';
             nameEl.textContent = u.name || u.email;
-            var emailEl = document.createElement('span');
-            emailEl.style.cssText = 'font-size:11px;color:var(--text-tertiary)';
-            emailEl.textContent = u.name ? u.email : '';
-            sel.appendChild(icon);
-            sel.appendChild(nameEl);
-            if (u.name) sel.appendChild(emailEl);
+            var emailEl = document.createElement('div');
+            emailEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:1px';
+            emailEl.textContent = u.email;
+            info.appendChild(nameEl);
+            info.appendChild(emailEl);
+
+            var clr = document.createElement('button');
+            clr.type = 'button';
+            clr.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-tertiary);padding:0 4px;flex-shrink:0';
+            clr.textContent = 'x';
+            clr.title = 'Clear';
+            clr.addEventListener('click', function() {
+                document.getElementById('f-target-user').value = '';
+                document.getElementById('f-user-search').value = '';
+                while (resultsEl.firstChild) resultsEl.removeChild(resultsEl.firstChild);
+                updateTokenPreview();
+            });
+
+            sel.appendChild(avatar);
+            sel.appendChild(info);
+            sel.appendChild(clr);
             resultsEl.appendChild(sel);
             updateTokenPreview();
         }
