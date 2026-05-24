@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260555 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260556 */
 (function(){
 'use strict';
 
@@ -2849,15 +2849,16 @@ window.GencineUI = {
       if (self._currentBook !== book) return; // user switched books while loading — discard
       self._pdfDoc = pdf;
       // Always update with confirmed numPages from loaded PDF
+      var _pg = 1;
       if (book && book.id) {
         try {
           var _ep = _bookGetProgress(String(book.id));
-          var _pg = (_ep && _ep.page > 1 && _ep.page <= pdf.numPages) ? _ep.page : 1;
+          _pg = (_ep && _ep.page > 1 && _ep.page <= pdf.numPages) ? _ep.page : 1;
           localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_pg,total:pdf.numPages,ts:Date.now()}));
         } catch(e2) {}
       }
       // When resuming mid-book keep spinner visible until the scroll jump settles
-      if (!(_pg && _pg > 1)) loadingEl.style.display = 'none';
+      if (_pg <= 1) loadingEl.style.display = 'none';
       var slots = [];
       for (var i = 1; i <= pdf.numPages; i++) {
         var slot = document.createElement('div');
@@ -2882,7 +2883,14 @@ window.GencineUI = {
 
       /* ── Page navigation ── */
       var _curPage = (_pg && _pg > 1) ? _pg : 1;
-      if (_curPage > 1) pagesWrap.style.opacity = '0';
+      var _revealTimer = null;
+      var _safetyTimer = null;
+      if (_curPage > 1) {
+        pagesWrap.style.opacity = '0';
+        _safetyTimer = setTimeout(function(){
+          pagesWrap.style.transition = 'opacity 0.2s ease'; pagesWrap.style.opacity = '1'; loadingEl.style.display = 'none';
+        }, 5000);
+      }
       var _navScrollTimer = null;
       var _jumpActive = false;
       var _panelEl = document.getElementById('panelGencine');
@@ -3023,7 +3031,8 @@ window.GencineUI = {
       _updatePageNav();
       if (_curPage > 1) {
         _jumpToPage(_curPage);
-        setTimeout(function(){
+        _revealTimer = setTimeout(function(){
+          clearTimeout(_safetyTimer);
           loadingEl.style.display = 'none';
           pagesWrap.style.transition = 'opacity 0.2s ease';
           pagesWrap.style.opacity = '1';
@@ -3031,16 +3040,21 @@ window.GencineUI = {
       }
 
       // Resume banner — shown when continuing a book already in progress
+      var _resumeBanner = null;
+      var _bannerTimers = [];
       if (_curPage > 1) {
-        var _resumeBanner = document.createElement('div'); _resumeBanner.className = 'book-resume-banner';
+        _resumeBanner = document.createElement('div'); _resumeBanner.className = 'book-resume-banner';
         var _rBanIco = document.createElement('i'); _rBanIco.className = 'fas fa-bookmark'; _resumeBanner.appendChild(_rBanIco);
         _resumeBanner.appendChild(document.createTextNode(' ' + T('gencine.resuming','بەردەوامبوون') + ' — ' + T('gencine.page_lbl','پ') + ' ' + _curPage));
         // Appended to body — panel has overflow+transform that traps position:fixed on iOS
-        var _hdrEl = document.querySelector('.hdr');
-        if (_hdrEl) { _resumeBanner.style.top = (_hdrEl.getBoundingClientRect().bottom + 28) + 'px'; }
+        // Use the hdr reference already captured for this panel
+        if (hdr) { _resumeBanner.style.top = (hdr.getBoundingClientRect().bottom + 28) + 'px'; }
         document.body.appendChild(_resumeBanner);
-        setTimeout(function(){ _resumeBanner.classList.add('visible'); }, 60);
-        setTimeout(function(){ _resumeBanner.classList.remove('visible'); setTimeout(function(){ if(_resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner); }, 400); }, 3200);
+        _bannerTimers.push(setTimeout(function(){ _resumeBanner.classList.add('visible'); }, 60));
+        _bannerTimers.push(setTimeout(function(){
+          _resumeBanner.classList.remove('visible');
+          _bannerTimers.push(setTimeout(function(){ if (_resumeBanner && _resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner); }, 400));
+        }, 3200));
       }
 
       /* Extend existing cleanup to remove nav listeners */
@@ -3064,6 +3078,10 @@ window.GencineUI = {
         if (_panelEl) _panelEl.removeEventListener('scroll', _navScrollHandler);
         if (_panelEl) _panelEl.removeEventListener('touchend', _touchEndHandler);
         clearTimeout(_navScrollTimer);
+        clearTimeout(_revealTimer);
+        clearTimeout(_safetyTimer);
+        _bannerTimers.forEach(clearTimeout);
+        if (_resumeBanner && _resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner);
         clearInterval(_periodicSave);
         if (_visObs) _visObs.disconnect();
         if (_prevBtn) _prevBtn.onclick = null;
