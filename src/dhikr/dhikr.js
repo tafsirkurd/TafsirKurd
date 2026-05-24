@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260556 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260557 */
 (function(){
 'use strict';
 
@@ -3046,15 +3046,19 @@ window.GencineUI = {
         _resumeBanner = document.createElement('div'); _resumeBanner.className = 'book-resume-banner';
         var _rBanIco = document.createElement('i'); _rBanIco.className = 'fas fa-bookmark'; _resumeBanner.appendChild(_rBanIco);
         _resumeBanner.appendChild(document.createTextNode(' ' + T('gencine.resuming','بەردەوامبوون') + ' — ' + T('gencine.page_lbl','پ') + ' ' + _curPage));
-        // Appended to body — panel has overflow+transform that traps position:fixed on iOS
-        // Use the hdr reference already captured for this panel
-        if (hdr) { _resumeBanner.style.top = (hdr.getBoundingClientRect().bottom + 28) + 'px'; }
+        // Appended to body — panel overflow+transform traps position:fixed on iOS
         document.body.appendChild(_resumeBanner);
-        _bannerTimers.push(setTimeout(function(){ _resumeBanner.classList.add('visible'); }, 60));
+        // Show after PDF is revealed (740ms) so it appears over content, not spinner
+        _bannerTimers.push(setTimeout(function(){
+          // Measure header at show time for accurate positioning
+          var _h = hdr || document.querySelector('#panelGencine .hdr');
+          if (_h) _resumeBanner.style.top = (_h.getBoundingClientRect().bottom + 28) + 'px';
+          _resumeBanner.classList.add('visible');
+        }, 740));
         _bannerTimers.push(setTimeout(function(){
           _resumeBanner.classList.remove('visible');
           _bannerTimers.push(setTimeout(function(){ if (_resumeBanner && _resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner); }, 400));
-        }, 3200));
+        }, 3940));
       }
 
       /* Extend existing cleanup to remove nav listeners */
