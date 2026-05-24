@@ -503,6 +503,10 @@
                         <i data-lucide="smartphone"></i> Devices
                         <span id="devices-count" class="tmpl-count" style="display:none"></span>
                     </button>
+                    <button class="page-tab" id="tab-history" onclick="switchPageTab('history')">
+                        <i data-lucide="history"></i> Send History
+                        <span id="history-count" class="tmpl-count" style="display:none"></span>
+                    </button>
                 </div>
 
                 <!-- Notifications Panel -->
@@ -615,6 +619,50 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- History Panel -->
+                <div id="panel-history" class="page-panel">
+                    <div class="filter-row" style="margin-bottom:12px">
+                        <select id="history-type" onchange="renderHistory()" style="padding:6px 10px;border:1px solid var(--border-medium);border-radius:7px;background:var(--bg-app);color:var(--text-primary);font-size:13px;font-family:inherit">
+                            <option value="">All Types</option>
+                            <option value="books">New Book</option>
+                            <option value="hadith">New Hadith</option>
+                            <option value="islamvoice">IslamVoice</option>
+                            <option value="general">General</option>
+                        </select>
+                        <select id="history-status" onchange="renderHistory()" style="padding:6px 10px;border:1px solid var(--border-medium);border-radius:7px;background:var(--bg-app);color:var(--text-primary);font-size:13px;font-family:inherit">
+                            <option value="">All Statuses</option>
+                            <option value="sent">Sent</option>
+                            <option value="failed">Failed</option>
+                            <option value="sending">Sending</option>
+                        </select>
+                        <div class="filter-spacer"></div>
+                        <span id="history-result-count" style="font-size:13px;color:var(--text-tertiary)"></span>
+                        <button class="btn" style="padding:5px 12px;font-size:12px" onclick="loadHistory()"><i data-lucide="refresh-cw"></i> Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:100px">Type</th>
+                                    <th>Title</th>
+                                    <th>Sent At</th>
+                                    <th>Platform</th>
+                                    <th style="text-align:center">Targeted</th>
+                                    <th style="text-align:center">Delivered</th>
+                                    <th style="text-align:center">Failed</th>
+                                    <th style="width:90px">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="font-size:12px;color:var(--text-tertiary);margin-top:10px;padding:0 2px">
+                        ⚠️ Prayer reminders are generated locally on each device and are not tracked here — only server push notifications appear in this log.
+                    </p>
                 </div>
 
             </div><!-- /content-area -->
@@ -1077,12 +1125,112 @@
         }
 
         function switchPageTab(tab) {
-            ['notifications', 'templates', 'devices'].forEach(function(t) {
+            ['notifications', 'templates', 'devices', 'history'].forEach(function(t) {
                 document.getElementById('tab-' + t).classList.toggle('active', t === tab);
                 document.getElementById('panel-' + t).classList.toggle('active', t === tab);
             });
             if (tab === 'devices') loadDevices();
+            if (tab === 'history') loadHistory();
             lucide.createIcons();
+        }
+
+        var _historyData = [];
+
+        async function loadHistory() {
+            var tbody = document.getElementById('history-tbody');
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+            var loadTr = document.createElement('tr');
+            var loadTd = document.createElement('td'); loadTd.colSpan = 8;
+            loadTd.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary)';
+            loadTd.textContent = 'Loading…'; loadTr.appendChild(loadTd); tbody.appendChild(loadTr);
+            try {
+                var d = await notifAPI('list');
+                _historyData = (d.notifications || []).filter(function(n) {
+                    return !n.is_template && ['sent','failed','sending'].indexOf(n.status) !== -1;
+                }).sort(function(a, b) {
+                    return new Date(b.sent_at || b.created_at) - new Date(a.sent_at || a.created_at);
+                });
+                var countEl = document.getElementById('history-count');
+                if (countEl) { countEl.textContent = _historyData.length || ''; countEl.style.display = _historyData.length ? '' : 'none'; }
+                renderHistory();
+            } catch(e) {
+                while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+                var errTr = document.createElement('tr'); var errTd = document.createElement('td');
+                errTd.colSpan = 8; errTd.style.cssText = 'text-align:center;padding:32px;color:#e53e3e';
+                errTd.textContent = 'Failed: ' + e.message; errTr.appendChild(errTd); tbody.appendChild(errTr);
+            }
+        }
+
+        function _historyType(n) {
+            var dl = (n.deep_link_type || '').toLowerCase();
+            if (dl === 'books')      return { label: 'Book',       color: '#6366f1', key: 'books' };
+            if (dl === 'hadith')     return { label: 'Hadith',     color: '#0ea5e9', key: 'hadith' };
+            if (dl === 'islamvoice') return { label: 'IslamVoice', color: '#f59e0b', key: 'islamvoice' };
+            return                          { label: 'General',    color: '#6b7280', key: 'general' };
+        }
+
+        function _mkTd(text, style) {
+            var td = document.createElement('td');
+            td.textContent = text;
+            if (style) td.style.cssText = style;
+            return td;
+        }
+
+        function renderHistory() {
+            var tbody = document.getElementById('history-tbody');
+            var typeFilter   = (document.getElementById('history-type')   || {}).value || '';
+            var statusFilter = (document.getElementById('history-status') || {}).value || '';
+            var list = _historyData.filter(function(n) {
+                if (typeFilter   && _historyType(n).key !== typeFilter)   return false;
+                if (statusFilter && n.status !== statusFilter)             return false;
+                return true;
+            });
+            var countEl = document.getElementById('history-result-count');
+            if (countEl) countEl.textContent = list.length + ' record' + (list.length !== 1 ? 's' : '');
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+            if (!list.length) {
+                var emTr = document.createElement('tr'); var emTd = document.createElement('td');
+                emTd.colSpan = 8; emTd.style.cssText = 'text-align:center;padding:40px;color:var(--text-tertiary)';
+                emTd.textContent = 'No records found'; emTr.appendChild(emTd); tbody.appendChild(emTr);
+                return;
+            }
+            list.forEach(function(n) {
+                var t = _historyType(n);
+                var statusColor = n.status === 'sent' ? '#38a169' : n.status === 'failed' ? '#e53e3e' : '#6b7280';
+                var sent = n.tokens_sent || 0, targeted = n.tokens_targeted || 0, failed = n.tokens_failed || 0;
+                var rate = targeted > 0 ? Math.round(sent / targeted * 100) : 0;
+                var sentAt = n.sent_at || n.created_at;
+                var dateStr = sentAt ? new Date(sentAt).toLocaleString() : '—';
+                var tr = document.createElement('tr');
+
+                var typeTd = document.createElement('td');
+                var chip = document.createElement('span');
+                chip.textContent = t.label;
+                chip.style.cssText = 'font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:' + t.color + '22;color:' + t.color + ';letter-spacing:.03em';
+                typeTd.appendChild(chip); tr.appendChild(typeTd);
+
+                var titleTd = document.createElement('td');
+                titleTd.style.cssText = 'font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+                titleTd.title = n.title || '';
+                titleTd.textContent = n.title || '—'; tr.appendChild(titleTd);
+
+                tr.appendChild(_mkTd(dateStr, 'font-size:12px;color:var(--text-secondary);white-space:nowrap'));
+                tr.appendChild(_mkTd(n.platform || 'all', 'font-size:12px;text-transform:capitalize'));
+                tr.appendChild(_mkTd(targeted ? String(targeted) : '—', 'text-align:center;font-size:13px'));
+
+                var delTd = document.createElement('td'); delTd.style.cssText = 'text-align:center;font-size:13px;color:#38a169';
+                var delSpan = document.createElement('span'); delSpan.textContent = sent ? String(sent) : '—'; delTd.appendChild(delSpan);
+                if (rate > 0) { var rSpan = document.createElement('span'); rSpan.textContent = ' ' + rate + '%'; rSpan.style.cssText = 'font-size:10px;color:var(--text-tertiary)'; delTd.appendChild(rSpan); }
+                tr.appendChild(delTd);
+
+                tr.appendChild(_mkTd(failed ? String(failed) : '—', 'text-align:center;font-size:13px;color:' + (failed > 0 ? '#e53e3e' : 'var(--text-tertiary)')));
+
+                var stTd = document.createElement('td'); var stSpan = document.createElement('span');
+                stSpan.textContent = n.status;
+                stSpan.style.cssText = 'font-size:11px;font-weight:700;color:' + statusColor + ';text-transform:uppercase;letter-spacing:.04em';
+                stTd.appendChild(stSpan); tr.appendChild(stTd);
+                tbody.appendChild(tr);
+            });
         }
 
         var _allDevices = [], _devicesPage = 0, _devicesPerPage = 50;
