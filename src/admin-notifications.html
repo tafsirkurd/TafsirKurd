@@ -1755,7 +1755,12 @@
             document.getElementById('title-count').textContent = '0/100';
             document.getElementById('body-count').textContent = '0/300';
             document.getElementById('modal-error').style.display = 'none';
+            document.getElementById('user-target-row').style.display = 'none';
+            document.getElementById('f-target-user').value = '';
+            document.getElementById('user-search-results').innerHTML = '';
+            document.getElementById('f-user-search').value = '';
             onDeepLinkChange();
+            updateTokenPreview();
         }
 
         function onDeepLinkChange() {
@@ -1775,7 +1780,10 @@
             clearTimeout(_tokenPreviewTimer);
             var audience = document.getElementById('f-audience').value;
             var userTargetRow = document.getElementById('user-target-row');
-            userTargetRow.style.display = audience === 'specific_user' ? '' : 'none';
+            userTargetRow.style.display = audience === 'specific_user' ? 'block' : 'none';
+            if (audience === 'specific_user') {
+                setTimeout(function(){ userTargetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 50);
+            }
             if (audience !== 'specific_user') {
                 document.getElementById('f-target-user').value = '';
                 document.getElementById('user-search-results').innerHTML = '';
