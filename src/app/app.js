@@ -10523,7 +10523,8 @@ function renderIvHero(){
   _ivHeroSlides.forEach(function(item,idx){
     var ser=item.series;
     var ep=item.ep;
-    var thumb=_ivThumb(ser.thumbnail_url||(ep&&ep.thumbnail_url)||'');
+    var _rawThumb=ser.thumbnail_url||(ep&&ep.thumbnail_url)||'';
+    var thumb=(_rawThumb||'').replace('mqdefault.jpg','maxresdefault.jpg').replace('hqdefault.jpg','maxresdefault.jpg').replace('sddefault.jpg','maxresdefault.jpg')||_rawThumb;
 
     var slide=document.createElement('div');
     slide.className='iv-hero-slide';
