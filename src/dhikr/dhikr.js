@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260565 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260566 */
 (function(){
 'use strict';
 
@@ -2428,39 +2428,41 @@ window.GencineUI = {
           _fbanner.appendChild(_fbinfo); _fbanner.onclick = _makeFeatClick(_fb);
           featuredSection.appendChild(_fbanner);
         } else {
-          var _frow = document.createElement('div'); _frow.className = 'book-feat-row';
+          var _caro = document.createElement('div'); _caro.className = 'book-feat-carousel';
+          var _track = document.createElement('div'); _track.className = 'book-feat-track';
           _featBooks.forEach(function(_fb){
-            var _fc = document.createElement('div'); _fc.className = 'book-feat-card';
-            var _fcover = document.createElement('div'); _fcover.className = 'book-feat-cover';
-            if (_fb.cover_url){ var _fi = document.createElement('img'); _fi.alt = _fb.title_ku||''; _fi.onload = function(){ _fi.classList.add('loaded'); }; _fi.src = _fb.cover_url; _fcover.appendChild(_fi); }
-            else { var _fph = document.createElement('i'); _fph.className = 'fas fa-book'; _fcover.appendChild(_fph); }
-            _fc.appendChild(_fcover);
-            var _finfo = document.createElement('div'); _finfo.className = 'book-feat-info';
-            var _ftl = document.createElement('div'); _ftl.className = 'book-feat-title'; _ftl.textContent = _fb.title_ku||_fb.title_ar||''; _finfo.appendChild(_ftl);
-            if (_fb.author_ku||_fb.author_ar){ var _fau = document.createElement('div'); _fau.className = 'book-feat-author'; _fau.textContent = _fb.author_ku||_fb.author_ar; _finfo.appendChild(_fau); }
-            if (_fb.pages){ var _fpg = document.createElement('div'); _fpg.className = 'book-feat-pages'; _fpg.textContent = _fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _finfo.appendChild(_fpg); }
-            _fc.appendChild(_finfo);
-            _fc.onclick = _makeFeatClick(_fb); _frow.appendChild(_fc);
+            var _sl = document.createElement('div'); _sl.className = 'book-feat-banner book-feat-slide';
+            var _bl = document.createElement('div'); _bl.className = 'book-feat-banner-l';
+            if (_fb.cover_url){ var _bi = document.createElement('img'); _bi.className = 'book-feat-banner-cover'; _bi.alt = _fb.title_ku||''; _bi.onload = function(){ _bi.classList.add('loaded'); }; _bi.src = _fb.cover_url; _bl.appendChild(_bi); }
+            else { var _bph = document.createElement('div'); _bph.className = 'book-feat-banner-ph'; var _bic = document.createElement('i'); _bic.className = 'fas fa-book'; _bph.appendChild(_bic); _bl.appendChild(_bph); }
+            _sl.appendChild(_bl);
+            var _binf = document.createElement('div'); _binf.className = 'book-feat-banner-info';
+            var _bt = document.createElement('div'); _bt.className = 'book-feat-banner-title'; _bt.textContent = _fb.title_ku||_fb.title_ar||''; _binf.appendChild(_bt);
+            if (_fb.author_ku||_fb.author_ar){ var _bau = document.createElement('div'); _bau.className = 'book-feat-banner-author'; _bau.textContent = _fb.author_ku||_fb.author_ar; _binf.appendChild(_bau); }
+            if (_fb.pages){ var _bpg = document.createElement('div'); _bpg.className = 'book-feat-banner-pages'; _bpg.textContent = _fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _binf.appendChild(_bpg); }
+            _sl.appendChild(_binf); _sl.onclick = _makeFeatClick(_fb); _track.appendChild(_sl);
           });
-          featuredSection.appendChild(_frow);
-          /* Auto-scroll carousel — pauses on touch, resumes after 1.5s */
+          _caro.appendChild(_track);
+          var _dotWrap = document.createElement('div'); _dotWrap.className = 'book-feat-dots';
+          var _dotEls = _featBooks.map(function(_,i){
+            var _d = document.createElement('div'); _d.className = 'book-feat-dot'+(i===0?' active':''); _dotWrap.appendChild(_d); return _d;
+          });
+          _caro.appendChild(_dotWrap);
+          featuredSection.appendChild(_caro);
           (function(){
-            var _paused = false;
-            function _step() {
-              if (!_frow.isConnected) return;
-              if (!_paused) {
-                _frow.scrollLeft += 0.55;
-                if (_frow.scrollLeft + _frow.clientWidth >= _frow.scrollWidth - 2) {
-                  _frow.style.scrollBehavior = 'auto'; _frow.scrollLeft = 0; _frow.style.scrollBehavior = '';
-                }
-              }
-              requestAnimationFrame(_step);
+            var _cur=0, _n=_featBooks.length, _tmr=null, _tx0=0;
+            function _goTo(i){
+              _cur=(i+_n)%_n;
+              _track.style.transform='translateX('+(_cur*-_caro.offsetWidth)+'px)';
+              _dotEls.forEach(function(d,j){ d.classList.toggle('active',j===_cur); });
             }
-            _frow.addEventListener('touchstart', function(){ _paused = true; }, { passive: true });
-            _frow.addEventListener('touchend', function(){ setTimeout(function(){ _paused = false; }, 1500); }, { passive: true });
-            _frow.addEventListener('mouseenter', function(){ _paused = true; });
-            _frow.addEventListener('mouseleave', function(){ _paused = false; });
-            requestAnimationFrame(_step);
+            function _arm(){ _tmr=setTimeout(function(){ _goTo(_cur+1); _arm(); },3500); }
+            function _rearm(){ clearTimeout(_tmr); _arm(); }
+            _caro.addEventListener('touchstart',function(e){ _tx0=e.touches[0].clientX; clearTimeout(_tmr); },{passive:true});
+            _caro.addEventListener('touchend',function(e){ var dx=e.changedTouches[0].clientX-_tx0; if(Math.abs(dx)>40) _goTo(_cur+(dx<0?1:-1)); _rearm(); },{passive:true});
+            _caro.addEventListener('mouseenter',function(){ clearTimeout(_tmr); });
+            _caro.addEventListener('mouseleave',_rearm);
+            _arm();
           })();
         }
       } else { featuredSection.style.display = 'none'; }

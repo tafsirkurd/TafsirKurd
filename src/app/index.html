@@ -2549,17 +2549,12 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-feat-banner-title{font-size:.95rem;font-weight:800;color:var(--text);line-height:1.35}
 .book-feat-banner-author{font-size:.78rem;color:var(--text2)}
 .book-feat-banner-pages{font-size:.72rem;color:var(--accent);font-weight:700}
-.book-feat-row{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.book-feat-row::-webkit-scrollbar{display:none}
-.book-feat-card{flex-shrink:0;width:calc(85% - 6px);cursor:pointer;direction:rtl;transition:transform .15s;background:var(--bg2);border:1.5px solid var(--accent);border-radius:14px;display:flex;align-items:center;gap:12px;padding:10px 12px;overflow:hidden}
-.book-feat-card:active{transform:scale(.97)}
-.book-feat-cover{flex-shrink:0;width:64px;height:84px;border-radius:8px;overflow:hidden;background:var(--bg3);position:relative;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:1.4rem}
-.book-feat-cover img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;position:absolute;inset:0}
-.book-feat-cover img.loaded{opacity:1}
-.book-feat-info{flex:1;direction:rtl;text-align:right;display:flex;flex-direction:column;gap:4px;min-width:0;overflow:hidden}
-.book-feat-title{font-size:.88rem;font-weight:800;color:var(--text);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.book-feat-author{font-size:.75rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.book-feat-pages{font-size:.7rem;color:var(--accent);font-weight:700}
+.book-feat-carousel{overflow:hidden;border-radius:16px;border:1.5px solid var(--accent);background:var(--bg2);margin-bottom:4px}
+.book-feat-track{display:flex;transition:transform .42s cubic-bezier(.4,0,.2,1)}
+.book-feat-slide{flex:0 0 100%;border:none !important;border-radius:0 !important;margin:0 !important;animation:none !important;box-shadow:none !important}
+.book-feat-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 4px;background:var(--bg2)}
+.book-feat-dot{width:7px;height:7px;border-radius:10px;background:var(--text3);cursor:pointer;transition:background .2s,width .25s;flex-shrink:0;opacity:.45}
+.book-feat-dot.active{background:var(--accent);width:18px;opacity:1}
 .iv-new-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em;flex-shrink:0;align-self:center;margin-right:6px;box-shadow:0 2px 5px rgba(229,62,62,.35)}
 .book-cover{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;position:absolute;inset:0}
 .book-cover.loaded{opacity:1}
@@ -3710,7 +3705,7 @@ html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px)
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=781"></script>
+<script src="/app/app.js?v=782"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
