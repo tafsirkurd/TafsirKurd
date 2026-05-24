@@ -1229,3 +1229,6 @@ App.forceSync=function(){
   toast(t('toast.synced'));
 };
 
+// Pure merge helpers exposed for unit testing
+window._AppSyncMerge={mergeSyncData:mergeSyncData,_mergeReadLog:_mergeReadLog,_mergeProgress:_mergeProgress};
+
