@@ -752,10 +752,13 @@ var _offlineDebounce=null;
 // We probe the network with a real HEAD fetch before showing the banner so we
 // never rely on the unreliable browser event alone.
 function _probeOnline(cb){
-  // Use cache:no-store so it truly hits the network, timeout via AbortController
+  // Timestamp in URL prevents SW cache-first from serving a stale cached copy —
+  // SW won't find the unique URL in cache, so it must go to the real network.
+  // If offline the SW catch block returns 503; if online it returns 200.
   var ctrl=typeof AbortController!=='undefined'?new AbortController():null;
   var timer=ctrl?setTimeout(function(){ctrl.abort();},4000):null;
-  fetch('/app/manifest.json',{method:'HEAD',cache:'no-store',signal:ctrl?ctrl.signal:undefined})
+  var url='/app/manifest.json?_probe='+Date.now();
+  fetch(url,{method:'HEAD',cache:'no-store',signal:ctrl?ctrl.signal:undefined})
     .then(function(r){clearTimeout(timer);cb(r.ok);})
     .catch(function(){clearTimeout(timer);cb(false);});
 }
