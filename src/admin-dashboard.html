@@ -2581,6 +2581,60 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- ══ Prayer Data Files ══ -->
+                    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border-light);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:7px;">
+                                    <span style="font-size:15px;">🕌</span> Prayer Data Files
+                                    <span id="pdStatusBadge" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(107,114,128,.12);color:var(--text-tertiary);">checking…</span>
+                                </div>
+                                <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;">
+                                    Static annual JSON — pre-fetched once a year, served from CDN
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                <select id="pdYear" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-active);color:var(--text-primary);cursor:pointer;"></select>
+                                <button id="pdFetchAllBtn" onclick="prayerDataFetchAll()" style="font-size:12px;font-weight:700;color:#fff;background:#10b981;border:none;padding:6px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .2s;">
+                                    <span>⬇</span> Fetch All Cities
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- City progress grid -->
+                        <div id="pdCityGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;margin-bottom:14px;"></div>
+
+                        <!-- Progress bar -->
+                        <div id="pdProgressWrap" style="display:none;margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-tertiary);margin-bottom:5px;">
+                                <span id="pdProgressLabel">Fetching…</span>
+                                <span id="pdProgressCount">0 / 20</span>
+                            </div>
+                            <div style="height:6px;background:var(--bg-active);border-radius:4px;overflow:hidden;">
+                                <div id="pdProgressBar" style="height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);border-radius:4px;transition:width .4s;width:0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Correction row -->
+                        <details style="margin-top:8px;">
+                            <summary style="font-size:11px;color:var(--text-tertiary);cursor:pointer;user-select:none;font-weight:600;">⚙ Correction mode — re-fetch one specific month</summary>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">
+                                <select id="pdCorrCity" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-active);color:var(--text-primary);"></select>
+                                <select id="pdCorrMonth" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-active);color:var(--text-primary);">
+                                    <option value="1">January</option><option value="2">February</option>
+                                    <option value="3">March</option><option value="4">April</option>
+                                    <option value="5">May</option><option value="6">June</option>
+                                    <option value="7">July</option><option value="8">August</option>
+                                    <option value="9">September</option><option value="10">October</option>
+                                    <option value="11">November</option><option value="12">December</option>
+                                </select>
+                                <button onclick="prayerDataCorrect()" style="font-size:12px;font-weight:700;color:#fff;background:#f59e0b;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;transition:opacity .2s;">
+                                    Re-fetch Month
+                                </button>
+                                <span id="pdCorrStatus" style="font-size:11px;color:var(--text-tertiary);"></span>
+                            </div>
+                        </details>
+                    </div>
                     </div><!-- /collapsible-body prayer -->
                 </div>
 
@@ -2928,6 +2982,8 @@
                 dashFetchReleaseWidget();
                 loadMyTasks();
                 setInterval(loadMyTasks, 3 * 60 * 1000);
+                _pdInitUI();
+                _pdLoadStatus();
             }
         })();
 
@@ -4368,6 +4424,183 @@
                 btn.textContent = 'Error';
                 btn.style.background = '#6b7280';
                 btn.disabled = false;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════
+           PRAYER DATA FILES
+           ═══════════════════════════════════════════════ */
+
+        var PD_CITIES = [
+            'Sulaymaniyah','Erbil','Duhok','Kirkuk','Halabja',
+            'Kfry','Rania','Koya','Qaladze','Zakho',
+            'Bardarash','Mosul','Darbandikhan','Kalar','Akre',
+            'Daquq','Makhmur','Mandali','Qarahanjir','DuzKhormatou'
+        ];
+
+        // State per city: 'idle' | 'loading' | 'ok' | 'error' | 'exists'
+        var _pdState = {};
+
+        function _pdInitUI() {
+            // Year selector — current year + next
+            var yearSel = document.getElementById('pdYear');
+            if (yearSel && !yearSel.options.length) {
+                var y = new Date().getFullYear();
+                [y, y+1].forEach(function(yr) {
+                    var o = document.createElement('option');
+                    o.value = yr; o.textContent = yr;
+                    if (yr === y) o.selected = true;
+                    yearSel.appendChild(o);
+                });
+            }
+            // City dropdowns
+            ['pdCorrCity'].forEach(function(id) {
+                var sel = document.getElementById(id);
+                if (!sel || sel.options.length) return;
+                PD_CITIES.forEach(function(c) {
+                    var o = document.createElement('option'); o.value = o.textContent = c;
+                    sel.appendChild(o);
+                });
+            });
+            _pdRenderGrid();
+        }
+
+        function _pdRenderGrid() {
+            var grid = document.getElementById('pdCityGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            PD_CITIES.forEach(function(city) {
+                var s = _pdState[city] || 'idle';
+                var colors = {
+                    idle:    { bg:'var(--bg-active)',       border:'var(--border-light)', text:'var(--text-tertiary)', dot:'#6b7280' },
+                    loading: { bg:'rgba(59,130,246,.08)',   border:'#3b82f6',             text:'#3b82f6',              dot:'#3b82f6' },
+                    ok:      { bg:'rgba(16,185,129,.08)',   border:'#10b981',             text:'#10b981',              dot:'#10b981' },
+                    exists:  { bg:'rgba(16,185,129,.05)',   border:'rgba(16,185,129,.3)', text:'var(--text-secondary)',dot:'#10b981' },
+                    error:   { bg:'rgba(239,68,68,.08)',    border:'#ef4444',             text:'#ef4444',              dot:'#ef4444' },
+                };
+                var c = colors[s] || colors.idle;
+                var icons = { idle:'—', loading:'⟳', ok:'✓', exists:'✓', error:'✗' };
+                var div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:9px;border:1px solid ' + c.border + ';background:' + c.bg + ';font-size:11px;font-weight:600;color:' + c.text + ';transition:all .2s;';
+                div.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:' + c.dot + ';flex-shrink:0;' + (s==='loading'?'animation:spin .8s linear infinite;':'') + '"></span>' +
+                    '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + city + '">' + city + '</span>' +
+                    '<span>' + icons[s] + '</span>';
+                grid.appendChild(div);
+            });
+        }
+
+        async function _pdLoadStatus() {
+            var year = parseInt(document.getElementById('pdYear')?.value || new Date().getFullYear());
+            var token = sessionStorage.getItem('adminToken') || '';
+            var badge = document.getElementById('pdStatusBadge');
+            if (badge) { badge.textContent = 'checking…'; badge.style.background = 'rgba(107,114,128,.12)'; badge.style.color = 'var(--text-tertiary)'; }
+            try {
+                var r = await fetch('/admin-prayer-data', {
+                    method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+                    body: JSON.stringify({ action:'get_status', year })
+                });
+                var j = await r.json();
+                if (!j.success) throw new Error(j.error || 'failed');
+                var okCount = 0;
+                j.status.forEach(function(s) {
+                    if (s.exists && !s.parseError) { _pdState[s.city] = 'exists'; okCount++; }
+                    else { _pdState[s.city] = 'idle'; }
+                });
+                _pdRenderGrid();
+                if (badge) {
+                    var allOk = okCount === 20;
+                    badge.textContent = okCount + '/20 ready';
+                    badge.style.background = allOk ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)';
+                    badge.style.color = allOk ? '#10b981' : '#f59e0b';
+                }
+            } catch(e) {
+                if (badge) { badge.textContent = 'check failed'; badge.style.color = '#ef4444'; }
+            }
+        }
+
+        async function prayerDataFetchAll() {
+            var year  = parseInt(document.getElementById('pdYear')?.value || new Date().getFullYear());
+            var btn   = document.getElementById('pdFetchAllBtn');
+            var wrap  = document.getElementById('pdProgressWrap');
+            var bar   = document.getElementById('pdProgressBar');
+            var label = document.getElementById('pdProgressLabel');
+            var count = document.getElementById('pdProgressCount');
+            var token = sessionStorage.getItem('adminToken') || '';
+
+            if (!confirm('Fetch all 20 cities × 12 months for ' + year + '?\nThis takes about 4–5 minutes.')) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>⟳</span> Running…';
+            if (wrap) wrap.style.display = 'block';
+
+            var done = 0, failed = [];
+
+            for (var i = 0; i < PD_CITIES.length; i++) {
+                var city = PD_CITIES[i];
+                _pdState[city] = 'loading';
+                _pdRenderGrid();
+                if (label) label.textContent = 'Fetching ' + city + '…';
+                if (count) count.textContent = done + ' / ' + PD_CITIES.length;
+                if (bar)   bar.style.width   = (done / PD_CITIES.length * 100) + '%';
+
+                try {
+                    var r = await fetch('/admin-prayer-data', {
+                        method: 'POST', headers: { 'Content-Type':'application/json','Authorization':'Bearer '+token },
+                        body: JSON.stringify({ action:'fetch_city', year, city })
+                    });
+                    var j = await r.json();
+                    if (!j.success) throw new Error(j.error || 'failed');
+                    _pdState[city] = 'ok';
+                    done++;
+                } catch(e) {
+                    _pdState[city] = 'error';
+                    failed.push(city + ': ' + (e.message || e));
+                }
+                _pdRenderGrid();
+            }
+
+            if (bar)   bar.style.width   = '100%';
+            if (count) count.textContent = done + ' / ' + PD_CITIES.length;
+            if (label) label.textContent = done === 20 ? '✓ All done — CF Pages deploying…' : '⚠ Done with ' + failed.length + ' error(s)';
+
+            btn.disabled = false;
+            btn.innerHTML = '<span>⬇</span> Fetch All Cities';
+
+            var badge = document.getElementById('pdStatusBadge');
+            if (badge) {
+                badge.textContent = done + '/20 ready';
+                badge.style.background = done === 20 ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)';
+                badge.style.color = done === 20 ? '#10b981' : '#f59e0b';
+            }
+
+            if (done > 0) showToast('success', 'Prayer Data Saved', done + '/20 cities committed to GitHub. CF Pages deploying now.', 6000);
+            if (failed.length) showToast('error', 'Some Cities Failed', failed.join('\n'), 8000);
+        }
+
+        async function prayerDataCorrect() {
+            var year  = parseInt(document.getElementById('pdYear')?.value || new Date().getFullYear());
+            var city  = document.getElementById('pdCorrCity')?.value;
+            var month = parseInt(document.getElementById('pdCorrMonth')?.value || 1);
+            var statusEl = document.getElementById('pdCorrStatus');
+            var token = sessionStorage.getItem('adminToken') || '';
+
+            if (!city) return;
+            if (statusEl) statusEl.textContent = 'Fetching…';
+
+            try {
+                var r = await fetch('/admin-prayer-data', {
+                    method: 'POST', headers: { 'Content-Type':'application/json','Authorization':'Bearer '+token },
+                    body: JSON.stringify({ action:'fetch_month', year, city, month })
+                });
+                var j = await r.json();
+                if (!j.success) throw new Error(j.error || 'failed');
+                if (statusEl) statusEl.textContent = '✓ ' + city + ' month ' + month + ' corrected (' + j.days + ' days)';
+                _pdState[city] = 'ok';
+                _pdRenderGrid();
+                showToast('success', 'Correction Saved', city + ' / month ' + month + ' committed to GitHub.', 5000);
+            } catch(e) {
+                if (statusEl) statusEl.textContent = '✗ ' + (e.message || e);
+                showToast('error', 'Correction Failed', String(e.message || e), 6000);
             }
         }
 
