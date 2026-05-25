@@ -20,7 +20,8 @@ export async function onRequest(context) {
             auth: { autoRefreshToken: false, persistSession: false }
         });
     } catch (e) {
-        return json({ error: 'createClient failed: ' + e.message }, 500);
+        const envKeys = Object.keys(env || {}).filter(k => env[k]);
+        return json({ error: 'createClient failed: ' + e.message, hasUrl: !!env.SUPABASE_URL, hasKey: !!env.SUPABASE_SERVICE_ROLE_KEY, envCount: envKeys.length }, 500);
     }
 
     let body;
