@@ -291,6 +291,7 @@
             }
             lucide.createIcons();
             loadPage();
+            setInterval(loadPage, 60000); // auto-refresh every 60s
         });
 
         document.getElementById('menu-toggle').addEventListener('click', function() {

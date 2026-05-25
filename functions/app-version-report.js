@@ -36,6 +36,11 @@ export async function onRequest(context) {
         if (!body.platform || !body.build_number)
             return new Response('{"error":"platform and build_number required"}', { status: 400, headers: CORS });
 
+        // Log load time for Real User Monitoring (visible in CF Workers Logs → Real-time Logs)
+        if (typeof body.load_time_ms === 'number') {
+            console.log('[RUM] load_time_ms=' + body.load_time_ms + ' platform=' + body.platform + ' build=' + body.build_number);
+        }
+
         const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
             auth: { autoRefreshToken: false, persistSession: false }
         });

@@ -3814,6 +3814,18 @@ if ('serviceWorker' in navigator) {
     .then(function(reg) { reg.update(); })
     .catch(function() {});
 
+  /* SW update: when a new service worker takes control, show a non-disruptive toast
+     instead of hard-reloading mid-session (e.g. user is reading Quran verse 50). */
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    // Never hard-reload mid-session — user may be reading Quran. Show a dismissible banner.
+    if (document.getElementById('sw-update-bar')) return;
+    var b = document.createElement('div');
+    b.id = 'sw-update-bar';
+    b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a56db;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:10px;z-index:99999;font-family:sans-serif;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.2)';
+    b.innerHTML = '🔄 App updated! <button onclick="location.reload()" style="background:#fff;color:#1a56db;border:none;padding:4px 14px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer">Refresh Now</button><button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:0 4px">×</button>';
+    document.body.appendChild(b);
+  });
+
   /* Handle NOTIF_TAP messages from the SW (web push notification taps when app is open).
      SW sends: postMessage({ type:'NOTIF_TAP', extra:{type, id} }) via clients.postMessage.
      Capacitor users get this via pushNotificationActionPerformed/localNotificationActionPerformed;
