@@ -26,16 +26,14 @@ export async function onRequest(context) {
         );
     }
 
-    const supabase = createClient(
-        env.SUPABASE_URL,
-        env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        }
-    );
+    let supabase;
+    try {
+        supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+            auth: { autoRefreshToken: false, persistSession: false }
+        });
+    } catch(e) {
+        return new Response(JSON.stringify({ _debug: 'createClient threw', msg: e.message, url: !!env.SUPABASE_URL, key: !!env.SUPABASE_SERVICE_ROLE_KEY }), { status: 500, headers: corsHeaders });
+    }
 
     try {
         const { action, email, password, token, deviceFingerprint, page_slug, permission_type, turnstileToken, trustDevice, trustToken, deviceId, currentPassword, newPassword } = await request.json();
