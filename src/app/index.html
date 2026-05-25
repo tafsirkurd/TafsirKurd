@@ -48,14 +48,29 @@
   // iPad UA fallback: force tablet class when CSS media query can't fire (e.g. TARGETED_DEVICE_FAMILY="1" compatibility mode)
   var isIPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend'in document);
   if(isIPad)document.documentElement.classList.add('is-ipad');
-  console.log('[TK] UA='+ua.substring(0,120));
-  console.log('[TK] innerWidth='+window.innerWidth+' isIPad='+isIPad);
+  // ── Low-end device safe mode ───────────────────────────────────────────────
+  // Detects weak hardware and applies low-end-device class to gate heavy CSS.
+  // Hardware-based detection is persisted (deviceMemory/cores/old Chrome).
+  // Network-slow detection is session-only (connection type can change).
+  var lowEnd=localStorage.getItem('tk_low_end')==='1';
+  if(!lowEnd){
+    if(navigator.deviceMemory&&navigator.deviceMemory<2)lowEnd=true;
+    if(!lowEnd&&navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=2)lowEnd=true;
+    var _cv=parseInt((ua.match(/Chrome\/(\d+)/)||[,0])[1]);
+    if(!lowEnd&&!isIOS&&_cv>0&&_cv<85)lowEnd=true;
+    if(lowEnd){try{localStorage.setItem('tk_low_end','1');}catch(e){}}
+  }
+  // Slow network = session-only (don't persist — connection improves)
+  var _conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(!lowEnd&&_conn&&(_conn.effectiveType==='2g'||_conn.effectiveType==='slow-2g'))lowEnd=true;
+  if(lowEnd)document.documentElement.classList.add('low-end-device');
 })();
 </script>
 <script src="/utils/console-cleaner.js?v=2" defer></script>
 <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin="">
-<script src="/utils/platform.js?v=1"></script>
-<script src="/utils/app-error-reporter.js?v=1"></script>
+<!-- platform.js inlined: eliminates one parser-blocking network request -->
+<script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
+<script src="/utils/app-error-reporter.js?v=1" defer></script>
 <script>
 if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
   var SB=window.Capacitor.Plugins.StatusBar;
@@ -741,8 +756,12 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 
 /* ===== BOTTOM TAB BAR ===== */
 .tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:300}
-[data-theme="dark"] .tabbar{background:rgba(5,5,7,.88);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:1px solid rgba(255,255,255,.06)}
-[data-theme="sakina"] .tabbar{background:rgba(8,15,10,.88);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:1px solid rgba(255,255,255,.07)}
+/* Tabbar: solid fallback for all devices (safe-render non-low-end gets blur below) */
+[data-theme="dark"] .tabbar{background:rgba(5,5,7,.97);border-top:1px solid rgba(255,255,255,.06)}
+[data-theme="sakina"] .tabbar{background:rgba(8,15,10,.97);border-top:1px solid rgba(255,255,255,.07)}
+/* Tabbar blur: only on capable non-low-end devices */
+html.safe-render:not(.low-end-device) [data-theme="dark"] .tabbar{background:rgba(5,5,7,.88);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%)}
+html.safe-render:not(.low-end-device) [data-theme="sakina"] .tabbar{background:rgba(8,15,10,.88);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%)}
 [data-theme="noor"] .tabbar{background:#fdf4e3}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);cursor:pointer;position:relative;transition:color .3s var(--ease);-webkit-tap-highlight-color:transparent;padding:4px 0;max-height:60px;overflow:visible}
 .tab-item i{font-size:18px !important;width:48px;height:32px;line-height:32px;text-align:center;border-radius:var(--r-full);transition:background-color .25s var(--ease),color .25s var(--ease),transform .32s cubic-bezier(.34,1.56,.64,1),box-shadow .25s var(--ease);background:transparent}
@@ -751,9 +770,12 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .tab-item.on{color:var(--text)}
 .tab-item.on i{background:var(--accent);color:var(--accent-t);border-radius:var(--r-full);transform:scale(1.06);box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .tab-item.on span{font-weight:700;color:var(--text)}
-/* Dark mode: translucent header + floating active tab pill */
-[data-theme="dark"] .hdr{background:rgba(5,5,5,.90);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.05)}
-[data-theme="sakina"] .hdr{background:rgba(8,15,10,.90);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.06)}
+/* Header: solid fallback for all devices */
+[data-theme="dark"] .hdr{background:rgba(5,5,5,.98);border-bottom:1px solid rgba(255,255,255,.05)}
+[data-theme="sakina"] .hdr{background:rgba(8,15,10,.98);border-bottom:1px solid rgba(255,255,255,.06)}
+/* Header blur: only on capable non-low-end devices */
+html.safe-render:not(.low-end-device) [data-theme="dark"] .hdr{background:rgba(5,5,5,.90);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba(8,15,10,.90);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
 [data-theme="dark"] .tab-item.on i{background:rgba(255,255,255,.95);box-shadow:0 0 0 7px rgba(255,255,255,.04),0 0 18px rgba(255,255,255,.08),0 2px 8px rgba(0,0,0,.6)}
 [data-theme="sakina"] .tab-item.on i{box-shadow:0 0 0 7px rgba(215,183,92,.06),0 0 18px rgba(215,183,92,.14),0 2px 8px rgba(0,0,0,.6)}
 
@@ -839,7 +861,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .heatmap-stats{display:flex;justify-content:center;gap:24px;margin-bottom:12px;font-size:.7rem;color:var(--text3)}
 .heatmap-stats span{font-weight:900;color:var(--text)}
 .year-nav{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:12px}
-.year-nav button{width:34px;height:34px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;transition:all .2s var(--ease)}
+.year-nav button{width:34px;height:34px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;transition:background .2s var(--ease),transform .2s var(--ease),opacity .2s var(--ease)}
 .year-nav button:active{transform:scale(.85);background:var(--surface-h)}
 .year-display{font-weight:900;font-size:1rem;min-width:50px;text-align:center;letter-spacing:-.5px}
 .heatmap-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
@@ -891,7 +913,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .goal-confirm-delete{flex:1;height:44px;border-radius:var(--r-l);background:rgba(192,57,43,.9);color:#fff;font-weight:600;font-size:.85rem;cursor:pointer;transition:transform .15s var(--ease),background .15s}
 .goal-confirm-delete:active{transform:scale(.95);background:rgba(192,57,43,1)}
 .goal-choice-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;width:100%}
-.goal-choice-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-l);cursor:pointer;transition:all .18s var(--ease);width:100%;text-align:right}
+.goal-choice-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-l);cursor:pointer;transition:background .18s var(--ease),transform .18s var(--ease),border-color .18s var(--ease);width:100%;text-align:right}
 .goal-choice-btn:active{transform:scale(.97)}
 .goal-choice-btn>i{font-size:1rem;color:var(--text3);flex-shrink:0;width:18px;text-align:center}
 .goal-choice-danger{background:rgba(192,57,43,.07);border-color:rgba(192,57,43,.2)}
@@ -941,7 +963,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .wizard.on{display:flex;animation:slideUp .3s var(--ease)}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .wizard-hdr{padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
-.wizard-hdr .close-btn{width:40px;height:40px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:all .2s var(--ease)}
+.wizard-hdr .close-btn{width:40px;height:40px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease)}
 .wizard-hdr .close-btn:active{background:var(--surface-h);transform:scale(.9)}
 .wizard-step-label{font-weight:600;font-size:.82rem;flex:1;color:var(--text3);letter-spacing:.2px}
 .wizard-progress{height:3px;background:var(--bg3)}
@@ -950,16 +972,16 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .wizard-title{font-size:1.5rem;font-weight:900;margin-bottom:6px;letter-spacing:-.5px;line-height:1.15}
 .wizard-desc{font-size:.76rem;color:var(--text3);margin-bottom:28px;line-height:1.6;font-weight:400;opacity:.7}
 .wizard-options{display:flex;flex-direction:column;gap:10px}
-.wizard-opt{padding:16px 18px;background:var(--surface);border:2px solid var(--border);border-radius:var(--r-xl);cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .2s var(--ease);transform:scale(1)}
+.wizard-opt{padding:16px 18px;background:var(--surface);border:2px solid var(--border);border-radius:var(--r-xl);cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .2s var(--ease),background .2s var(--ease),transform .2s var(--ease);transform:scale(1)}
 .wizard-opt:active{transform:scale(.97)}
 .wizard-opt.on{border-color:var(--accent);border-width:2px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
 [data-theme="dark"] .wizard-opt.on{box-shadow:0 4px 20px rgba(255,255,255,.04)}
-.wizard-opt-icon{width:42px;height:42px;border-radius:var(--r-m);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;transition:all .2s var(--ease)}
+.wizard-opt-icon{width:42px;height:42px;border-radius:var(--r-m);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;transition:background .2s var(--ease),color .2s var(--ease)}
 .wizard-opt.on .wizard-opt-icon{background:var(--accent);color:var(--accent-t)}
 .wizard-opt-text{flex:1}
 .wizard-opt-title{font-weight:700;font-size:.88rem;letter-spacing:-.1px}
 .wizard-opt-desc{font-size:.68rem;color:var(--text3);margin-top:2px;font-weight:400;opacity:.6}
-.wizard-opt-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.6rem;transition:all .2s var(--ease)}
+.wizard-opt-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.6rem;transition:background .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease)}
 .wizard-opt.on .wizard-opt-check{border-color:var(--accent);background:var(--accent);color:var(--accent-t)}
 .wizard-input{width:100%;height:50px;padding:0 16px;border-radius:var(--r-l);background:var(--surface);border:1.5px solid var(--border);font-size:1.1rem;font-weight:600;text-align:center;transition:border-color .2s,box-shadow .2s;margin-top:14px}
 .wizard-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,0,0,.04)}
@@ -1723,12 +1745,12 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .repeat-ctrl-item:last-child{margin-bottom:0}
 .repeat-ctrl-label{font-weight:600;font-size:.85rem}
 .repeat-counter{display:flex;align-items:center;gap:12px}
-.repeat-counter-btn{width:36px;height:36px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;font-weight:700;transition:all .15s;color:var(--text)}
+.repeat-counter-btn{width:36px;height:36px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;font-weight:700;transition:background .15s,transform .15s,border-color .15s;color:var(--text)}
 .repeat-counter-btn:active{transform:scale(.9);border-color:var(--accent)}
 .repeat-counter-val{font-size:1.2rem;font-weight:800;min-width:30px;text-align:center;color:var(--accent)}
 .repeat-counter-unit{font-size:.75rem;color:var(--text3);font-weight:600}
 .repeat-actions{display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border)}
-.repeat-actions button{flex:1;height:46px;border-radius:var(--r-l);font-weight:700;font-size:.9rem;cursor:pointer;transition:all .15s;border:none}
+.repeat-actions button{flex:1;height:46px;border-radius:var(--r-l);font-weight:700;font-size:.9rem;cursor:pointer;transition:background .15s,opacity .15s,transform .15s;border:none}
 .repeat-actions button:active{transform:scale(.97)}
 .repeat-cancel-btn{background:var(--surface);color:var(--text);border:1px solid var(--border) !important}
 .repeat-start-btn{background:var(--accent);color:var(--accent-t)}
@@ -2052,7 +2074,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .prayer-master-banner{border-radius:18px;padding:18px 18px 18px 20px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;transition:border-color .2s,background-color .2s,box-shadow .2s;border:1.5px solid transparent}
 .prayer-master-banner--on{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3)}
 .prayer-master-banner--off{background:var(--bg2);border-color:var(--border)}
-.prayer-master-banner-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;transition:all .2s}
+.prayer-master-banner-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;transition:background .2s,transform .2s}
 .prayer-master-banner--on .prayer-master-banner-icon{background:var(--accent);color:var(--accent-t)}
 .prayer-master-banner--off .prayer-master-banner-icon{background:var(--bg3);color:var(--text3)}
 .prayer-master-banner-text{flex:1;min-width:0}
@@ -2358,7 +2380,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .dua-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;direction:rtl}
 .dua-card-src{font-size:.68rem;color:var(--text3)}
 .dua-card-repeat{background:var(--bg2);color:var(--text2);border-radius:20px;padding:2px 10px;font-size:.68rem;font-weight:700;border:1px solid var(--border)}
-.dua-copy-btn{background:none;border:none;color:var(--text3);padding:4px 6px;cursor:pointer;font-size:.78rem;line-height:1;border-radius:var(--r-s);transition:all .18s;-webkit-tap-highlight-color:transparent}
+.dua-copy-btn{background:none;border:none;color:var(--text3);padding:4px 6px;cursor:pointer;font-size:.78rem;line-height:1;border-radius:var(--r-s);transition:background .18s,color .18s;-webkit-tap-highlight-color:transparent}
 .dua-copy-btn:active{transform:scale(.85)}
 .dua-copy-btn.copied{color:var(--accent)}
 /* 99 Names */
@@ -2382,7 +2404,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .tasbih-sel-card:active{opacity:.85}
 .tasbih-sel-ar{font-family:'KFGQPC Hafs',serif;font-size:1.45rem;line-height:2;color:var(--text);margin-bottom:6px}
 .tasbih-sel-ku{font-size:.78rem;color:var(--text2);line-height:1.6}
-.tasbih-sel-change{display:block;margin-top:10px;padding:6px 0;width:100%;border-radius:10px;background:var(--bg2);color:var(--text2);border:none;cursor:pointer;font-size:.8rem;font-weight:600;text-align:center;transition:all .18s}
+.tasbih-sel-change{display:block;margin-top:10px;padding:6px 0;width:100%;border-radius:10px;background:var(--bg2);color:var(--text2);border:none;cursor:pointer;font-size:.8rem;font-weight:600;text-align:center;transition:background .18s,color .18s,opacity .18s}
 .tasbih-sel-change:active{background:var(--accent);color:var(--accent-t)}
 /* Dhikr picker bottom sheet */
 .tasbih-picker-sheet{position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s}
@@ -2393,9 +2415,9 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .tasbih-picker-title{font-size:.95rem;font-weight:700;color:var(--text)}
 .tasbih-picker-close{width:32px;height:32px;border-radius:50%;background:var(--bg2);color:var(--text2);border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
 .tasbih-picker-list{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:10px 12px calc(var(--safe-b) + 56px);display:flex;flex-direction:column;gap:7px}
-.tasbih-picker-item{display:flex;align-items:flex-start;gap:10px;padding:13px 12px;border-radius:14px;background:var(--bg2);border:1.5px solid transparent;cursor:pointer;transition:all .18s;direction:rtl;text-align:right}
+.tasbih-picker-item{display:flex;align-items:flex-start;gap:10px;padding:13px 12px;border-radius:14px;background:var(--bg2);border:1.5px solid transparent;cursor:pointer;transition:border-color .18s,background .18s,transform .18s;direction:rtl;text-align:right}
 .tasbih-picker-item.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg2))}
-.tasbih-picker-num{min-width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--text3);font-size:.7rem;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;margin-top:4px;transition:all .18s}
+.tasbih-picker-num{min-width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--text3);font-size:.7rem;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;margin-top:4px;transition:background .18s,color .18s}
 .tasbih-picker-item.on .tasbih-picker-num{background:var(--accent);color:var(--accent-t)}
 .tasbih-picker-texts{flex:1;min-width:0}
 .tasbih-picker-ar{font-family:'KFGQPC Hafs',serif;font-size:1.05rem;line-height:1.9;color:var(--text)}
@@ -2415,14 +2437,14 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .tasbih-tap-hint{font-size:.65rem;color:var(--text3);margin-top:6px;opacity:.7}
 /* Target row */
 .tasbih-target-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:0 16px;margin-bottom:14px;width:100%;box-sizing:border-box}
-.tasbih-target-btn{padding:8px 14px;border-radius:var(--r-m);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-weight:700;transition:all .18s;min-width:48px;text-align:center}
+.tasbih-target-btn{padding:8px 14px;border-radius:var(--r-m);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-weight:700;transition:background .18s,color .18s,border-color .18s;min-width:48px;text-align:center}
 .tasbih-target-btn.on{background:var(--accent);color:var(--accent-t);border-color:transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 35%,transparent)}
 /* Action row: reset + voice side by side */
 .tasbih-action-row{display:flex;gap:10px;width:calc(100% - 32px);margin-bottom:10px}
-.tasbih-reset-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;border-radius:var(--r-l);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.9rem;font-weight:600;transition:all .2s}
+.tasbih-reset-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;border-radius:var(--r-l);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.9rem;font-weight:600;transition:background .2s,color .2s,transform .2s}
 .tasbih-reset-btn:active{transform:scale(.97)}
 /* Voice button */
-.tasbih-voice-btn{flex:2;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;border-radius:var(--r-l);background:var(--bg2);color:var(--text2);border:1.5px solid var(--border);cursor:pointer;font-size:.9rem;font-weight:700;transition:all .25s;position:relative;overflow:hidden}
+.tasbih-voice-btn{flex:2;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;border-radius:var(--r-l);background:var(--bg2);color:var(--text2);border:1.5px solid var(--border);cursor:pointer;font-size:.9rem;font-weight:700;transition:background .25s,border-color .25s,transform .25s;position:relative;overflow:hidden}
 .tasbih-voice-btn .mic-icon{font-size:1.1rem;transition:transform .2s}
 .tasbih-voice-btn.on{background:var(--accent);color:var(--accent-t);border-color:transparent;box-shadow:0 4px 18px color-mix(in srgb,var(--accent) 40%,transparent)}
 .tasbih-voice-btn.on .mic-icon{animation:mic-bounce .5s ease-in-out infinite alternate}
@@ -2440,7 +2462,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .tasbih-voice-bars.active .tasbih-voice-bar:nth-child(5){animation:bar-wave .75s ease-in-out .2s infinite}
 @keyframes bar-wave{0%,100%{height:3px}50%{height:17px}}
 /* Transcript */
-.tasbih-voice-transcript{font-size:.8rem;direction:rtl;min-height:20px;transition:all .3s;opacity:0;text-align:center;padding:0 16px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tasbih-voice-transcript{font-size:.8rem;direction:rtl;min-height:20px;transition:opacity .3s;opacity:0;text-align:center;padding:0 16px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tasbih-voice-transcript.visible{opacity:1;color:var(--accent);font-weight:600}
 .tasbih-voice-status{font-size:.75rem;color:var(--text3);text-align:center;padding:4px 16px 0;min-height:18px;transition:color .2s}
 .tasbih-voice-btn.disabled{opacity:.45;cursor:not-allowed}
@@ -2485,7 +2507,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-search-ico{color:var(--text3);font-size:.82rem;flex-shrink:0}
 .book-search-inp{flex:1;background:none;border:none;outline:none;padding:10px 4px;font-size:.88rem;color:var(--text);font-family:inherit}
 .book-search-inp::placeholder{color:var(--text3)}
-.book-save-btn{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:none;color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:.75rem;cursor:pointer;flex-shrink:0;transition:all .2s}
+.book-save-btn{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:none;color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:.75rem;cursor:pointer;flex-shrink:0;transition:background .2s,color .2s,transform .2s}
 .book-save-btn.saved{background:var(--accent);color:var(--accent-t)}
 .book-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px 16px 32px}
 .book-card{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;cursor:pointer;text-align:right;direction:rtl;display:flex;flex-direction:column;transition:transform .15s;padding:0;position:relative}
@@ -2567,7 +2589,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-author{font-size:.72rem;color:var(--text2);margin-bottom:2px}
 .book-pages{font-size:.68rem;color:var(--text3)}
 .book-info-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
-.book-hdr-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:.82rem;cursor:pointer;flex-shrink:0;transition:all .2s}
+.book-hdr-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:.82rem;cursor:pointer;flex-shrink:0;transition:background .2s,color .2s,border-color .2s}
 .book-hdr-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
 .book-hdr-actions{display:flex;gap:6px;align-items:center}
 .book-search-bar{overflow:hidden;max-height:0;transition:max-height .25s;margin:0 16px}
@@ -2580,7 +2602,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-overlay-pill{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0}
 .book-overlay-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;font-size:.95rem;font-weight:700;color:var(--text)}
 .book-overlay-list{display:flex;flex-direction:column;gap:4px;padding:4px 12px 8px}
-.book-author-card{display:flex;align-items:center;gap:12px;width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:11px 14px;cursor:pointer;direction:rtl;transition:all .15s}
+.book-author-card{display:flex;align-items:center;gap:12px;width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:11px 14px;cursor:pointer;direction:rtl;transition:background .15s,transform .15s,border-color .15s}
 .book-author-card.on{background:var(--accent);border-color:var(--accent)}
 .book-author-card.on .book-author-name,.book-author-card.on .book-author-count{color:var(--accent-t)}
 .book-author-card:active{transform:scale(.98)}
@@ -3130,6 +3152,72 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1060px;margin:0 auto;width:100%
 .fsc-lbl.fsc-lbl-on{opacity:1;transform:translateX(0) scale(1)}
 html.is-ipad .fsc-track{right:max(3px,env(safe-area-inset-right,0px))}
 html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px))}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOW-END DEVICE SAFE MODE
+   Applied when html.low-end-device class is added by head detection script.
+   Goal: keep scrolling smooth and UI usable on old/cheap Android & slow net.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Disable prayer-sky GPU blur animations on low-end — heaviest offender */
+html.low-end-device .sky-au1,
+html.low-end-device .sky-au2,
+html.low-end-device .sky-au3{animation:none!important;filter:none!important}
+html.low-end-device .sky-milkyway,
+html.low-end-device .sky-nebula,
+html.low-end-device .sky-fog,
+html.low-end-device .sky-rainbow{animation:none!important;filter:none!important;opacity:.4}
+
+/* Kill ripple/glow infinite animations on low-end */
+html.low-end-device .fu-ring{animation:none!important;opacity:.25}
+html.low-end-device .fu-hero-badge{animation:none!important}
+html.low-end-device .wizard-confirm-ring::before{animation:none!important}
+html.low-end-device .fp-btn-lg.playing{animation:none!important}
+html.low-end-device .audio-bar-avatar.playing::before,
+html.low-end-device .audio-bar-avatar.playing::after{animation:none!important}
+
+/* Remove backdrop-filter on all overlays/UI on low-end */
+html.low-end-device .fp-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .goal-confirm-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .rating-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .pp-hdr{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--bg)!important}
+html.low-end-device .ptr-spinner{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .iv-hero-play{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .iv-ep-num{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .iv-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .sky-bell{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .book-ring-wrap,
+html.low-end-device .book-page-pill,
+html.low-end-device .book-read-badge{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .book-feat-card-pages,html.low-end-device .book-feat-card-pages-inner{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.low-end-device .genc-card-icon{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
+/* Simplify heavy filter blurs on hero image backgrounds (keep brightness) */
+html.low-end-device .iv-hero-bg{filter:brightness(.55)!important}
+html.low-end-device .book-feat-card-bg{filter:brightness(.5) saturate(1.2)!important}
+
+/* content-visibility: skip on low-end — avoids rendering budget issues */
+html.low-end-device .surah-card,
+html.low-end-device .iv-card,
+html.low-end-device .iv-ep-item{content-visibility:visible!important}
+
+/* Disable large box-shadows on low-end — reduces compositing layers */
+html.low-end-device .tab-item.on i{box-shadow:none!important}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PREFERS-REDUCED-MOTION  (accessibility + low-power iOS battery saver)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+  /* Keep splash/app fade-in very short — don't kill it completely */
+  .splash{transition:opacity .15s ease!important}
+  .app{transition:opacity .08s ease-out!important}
+}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>

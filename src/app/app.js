@@ -1350,16 +1350,23 @@ function _startTabPrerender(){
   if(_tabsPrerendering)return;
   _tabsPrerendering=true;
   console.log('[Startup] Tab pre-render start',Date.now()-_startupT0,'ms');
+  // On low-end devices: skip non-essential pre-renders to unblock splash faster.
+  // These tabs still render on-demand when the user taps them (hash-cache check).
+  var _isLowEndDev=document.documentElement.classList.contains('low-end-device');
   var jobs=[
     function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
     function(){renderGoals();_renderHash.goals=_tabHash('goals');},
-    function(){renderSettings();_renderHash.settings=_tabHash('settings');},
+    // Settings: skip on low-end — deferred render on tap is fine
+    _isLowEndDev ? null : function(){renderSettings();_renderHash.settings=_tabHash('settings');},
     function(){if(window.PrayerUI){PrayerUI.render();// Pause sky animations — pre-rendered but not the active tab
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},
-    function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
-    function(){if(window.GencineUI)GencineUI.render();}
-  ];
+    // IslamVoice/Gencine: skip on low-end — expensive and rarely opened first
+    _isLowEndDev ? null : function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
+    _isLowEndDev ? null : function(){if(window.GencineUI)GencineUI.render();}
+  ].filter(Boolean); // remove nulls for low-end path
   var _ji=0;
+  // Low-end: slightly longer gap between jobs to reduce CPU burst at startup
+  var _jobDelay=_isLowEndDev?32:16;
   function _nextJob(){
     if(_ji>=jobs.length){
       console.log('[Startup] Tab pre-render done',Date.now()-_startupT0,'ms');
@@ -1367,7 +1374,7 @@ function _startTabPrerender(){
       return;
     }
     jobs[_ji++]();
-    setTimeout(_nextJob,16);
+    setTimeout(_nextJob,_jobDelay);
   }
   _nextJob();
 }
@@ -8160,6 +8167,30 @@ function renderSettings(){
   }));
   content.appendChild(g4);
 
+  // ── Performance ──────────────────────────────
+  var gPerf=el('div','settings-group');
+  gPerf.appendChild(el('div','settings-group-title',t('settings.performance')||'کارایی'));
+  var _isLowEnd=document.documentElement.classList.contains('low-end-device');
+  gPerf.appendChild(mkToggleRow(
+    t('settings.low_end_mode')||'دۆخی مۆبایلی کەم‌ئەنداز',
+    _isLowEnd,
+    function(){
+      var nowLow=document.documentElement.classList.contains('low-end-device');
+      if(nowLow){
+        document.documentElement.classList.remove('low-end-device');
+        try{localStorage.removeItem('tk_low_end');}catch(e){}
+        toast(t('toast.perf_full')||'کارایی تەواو چالاک کرا');
+      }else{
+        document.documentElement.classList.add('low-end-device');
+        try{localStorage.setItem('tk_low_end','1');}catch(e){}
+        toast(t('toast.perf_save')||'دۆخی زووی چالاک کرا');
+      }
+      renderSettings();
+    },
+    t('settings.low_end_mode_sub')||'ئەنیمەیشن و بەدرخشینەکان کەم دەکاتەوە بۆ مۆبایلە کەمئەندازەکان'
+  ));
+  content.appendChild(gPerf);
+
   // ── App ──────────────────────────────────────
   var g5=el('div','settings-group');
   g5.appendChild(el('div','settings-group-title',t('settings.app_group')));
@@ -11374,10 +11405,10 @@ function startApp(){
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||30)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
-  // Force-update check runs early — parallel with i18n, non-blocking
-  ForceUpdate.check();
-  // Re-check every 12s so admin changes appear within ~12s of saving
-  setInterval(function(){ ForceUpdate.check(); }, 12000);
+  // Force-update check: deferred 5s so it doesn't compete with startup fetches.
+  // Interval bumped to 60s — 12s was excessive on slow networks / low-end devices.
+  setTimeout(function(){ ForceUpdate.check(); }, 5000);
+  setInterval(function(){ ForceUpdate.check(); }, 60000);
 
   if(window.i18n){
     /* 3-second timeout — if i18n fetch hangs (slow connection), start app anyway */
