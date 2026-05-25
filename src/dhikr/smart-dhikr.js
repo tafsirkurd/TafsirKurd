@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v32
+ * Smart Daily Companion  v40
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
