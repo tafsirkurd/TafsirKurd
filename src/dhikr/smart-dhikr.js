@@ -24,6 +24,7 @@
       id: 'masjid_enter', categoryKey: 'masjid_enter', icon: 'fas fa-mosque',
       labelKey: 'adhkar.masjid_enter', labelFallback: 'چونا مزگەوت',
       subtitleKey: 'gencine.smart.masjid_hint', subtitleFallback: 'کاتا چوونا مزگەوتێ',
+      fallbackAr: 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ',
       timeTag: 'مزگەوت', basePriority: 90,
       prayerOffset: 0   /* 0–20 min after each athan */
     },
@@ -31,6 +32,7 @@
       id: 'after_prayer', categoryKey: 'after_prayer', icon: 'fas fa-hands-praying',
       labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
       subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
+      fallbackAr: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
       timeTag: 'دوای نوێژ', basePriority: 85,
       prayerOffset: 20  /* 20–40 min after each athan */
     },
@@ -39,6 +41,7 @@
       id: 'morning', categoryKey: 'morning', icon: 'fas fa-sun',
       labelKey: 'adhkar.morning', labelFallback: 'زکرێن بەیانیکردن',
       subtitleKey: 'gencine.smart.morning_hint', subtitleFallback: 'ڕۆژا خوه ب زکرێ دەستپێکە',
+      fallbackAr: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا',
       timeTag: 'بەیانیکردن', basePriority: 50,
       timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
     },
@@ -46,6 +49,7 @@
       id: 'waking', categoryKey: 'waking', icon: 'fas fa-cloud-sun',
       labelKey: 'adhkar.waking', labelFallback: 'دوای هاتنا خوو',
       subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'دوای هاتنا خووێ بخوێنە',
+      fallbackAr: 'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا',
       timeTag: 'بەیانیکردن', basePriority: 58, /* beats morning when both active (Fajr→Sunrise) */
       timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
     },
@@ -60,6 +64,7 @@
       id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
       labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێواربوون',
       subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێوارا خوە ب زکرێ بکە',
+      fallbackAr: 'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا',
       timeTag: 'ئێواربوون', basePriority: 50,
       timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
     },
@@ -67,6 +72,7 @@
       id: 'sleep', categoryKey: 'sleep', icon: 'fas fa-bed',
       labelKey: 'adhkar.sleep', labelFallback: 'دوای خەوکردن',
       subtitleKey: 'gencine.smart.sleep_hint', subtitleFallback: 'پێش خەوکردنێ بخوێنە',
+      fallbackAr: 'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا',
       timeTag: 'شەو', basePriority: 50,
       timeWindow: { start: 'Isha', end: 'Fajr', fs: 21*60, fe: 5*60, wraps: true }
     },
@@ -176,48 +182,56 @@
       id: 'forgiveness', categoryKey: 'forgiveness', icon: 'fas fa-dove',
       labelKey: 'adhkar.forgiveness', labelFallback: 'داواکاری لێبوردن',
       subtitleKey: 'gencine.smart.forgiveness_hint', subtitleFallback: 'ئیستیغفارەکە زیادە بکە',
+      fallbackAr: 'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
       timeTag: null
     },
     {
       id: 'protection', categoryKey: 'protection', icon: 'fas fa-shield-halved',
       labelKey: 'adhkar.protection', labelFallback: 'پاراستن',
       subtitleKey: 'gencine.smart.protection_hint', subtitleFallback: 'زکرێن پاراستن و حەمایەتێ',
+      fallbackAr: 'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ',
       timeTag: null
     },
     {
       id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
       labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
       subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
+      fallbackAr: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
       timeTag: null
     },
     {
       id: 'gratitude', categoryKey: 'gratitude', icon: 'fas fa-star',
       labelKey: 'adhkar.gratitude', labelFallback: 'سوپاسگوزاری',
       subtitleKey: 'gencine.smart.gratitude_hint', subtitleFallback: 'سوپاسا خواێ بکە',
+      fallbackAr: 'الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ',
       timeTag: null
     },
     {
       id: 'before_quran', categoryKey: 'before_quran', icon: 'fas fa-book-open-reader',
       labelKey: 'adhkar.before_quran', labelFallback: 'بەرا خوێندنا قورئانێ',
       subtitleKey: 'gencine.smart.before_quran_hint', subtitleFallback: 'پێش دەستپێکردنا قورئانێ',
+      fallbackAr: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
       timeTag: null
     },
     {
       id: 'distress', categoryKey: 'distress', icon: 'fas fa-hand-holding-heart',
       labelKey: 'adhkar.distress', labelFallback: 'پەریشانی',
       subtitleKey: 'gencine.smart.distress_hint', subtitleFallback: 'دوعا لە کاتی زەحمەت',
+      fallbackAr: 'لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ',
       timeTag: null
     },
     {
       id: 'istikhara', categoryKey: 'istikhara', icon: 'fas fa-compass',
       labelKey: 'adhkar.istikhara', labelFallback: 'دوعای ئیستیخارە',
       subtitleKey: 'gencine.smart.istikhara_hint', subtitleFallback: 'داواکاری ڕێنمایی',
+      fallbackAr: 'اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ وَأَسْتَقْدِرُكَ بِقُدْرَتِكَ',
       timeTag: null
     },
     {
       id: 'adhan', categoryKey: 'adhan', icon: 'fas fa-bullhorn',
       labelKey: 'adhkar.adhan', labelFallback: 'دوای ئەزان',
       subtitleKey: 'gencine.smart.adhan_hint', subtitleFallback: 'دوعای دوای ئەزان',
+      fallbackAr: 'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ',
       timeTag: null
     }
   ];
@@ -998,6 +1012,10 @@
       if (arTxt.length > 100) arTxt = arTxt.slice(0, 100) + '…';
       arEl.textContent = arTxt;
       titleZone.appendChild(arEl);
+    } else if (item.fallbackAr && !done) {
+      var arEl2 = _mk('div', 'sd-zikr-ar');
+      arEl2.textContent = item.fallbackAr;
+      titleZone.appendChild(arEl2);
     } else {
       titleZone.appendChild(_mk('div', 'sd-title', T(item.labelKey, item.labelFallback)));
     }
