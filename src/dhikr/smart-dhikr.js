@@ -778,7 +778,7 @@
         _type: 'daily', id: 'ayah_day',
         icon: 'fas fa-book-quran', tag: 'ئایەتا ڕۆژێ',
         title: SURAH_NAMES_AR[17], subtitle: 'سورەتا کەهف · ئایەت 1',
-        arText: _getAyahAr(18, 1),
+        arText: _getAyahAr(18, 1), _s: 18, _a: 1,
         nav: function() {
           if (window.App && App.tab && App.openSurah) {
             App.tab('quran');
@@ -799,7 +799,7 @@
       _type: 'daily', id: 'ayah_day',
       icon: 'fas fa-book-quran', tag: 'ئایەتا ڕۆژێ',
       title: surahName, subtitle: surahName + ' · ئایەت ' + ayah,
-      arText: _getAyahAr(s, a),
+      arText: _getAyahAr(s, a), _s: s, _a: a,
       nav: function() {
         if (window.App && App.tab && App.openSurah) {
           App.tab('quran');
@@ -1032,31 +1032,45 @@
   }
 
   function _buildDailyCard(item, gencineUI) {
-    var card    = _mk('div', 'sd-card');
-    var iWrap   = _mk('div', 'sd-icon');
-    iWrap.appendChild(_mk('i', item.icon));
-    card.appendChild(iWrap);
+    var card = _mk('div', 'sd-card');
+
+    /* Icon slot — for book_day with cover: show cover image instead of icon */
+    if (item.id === 'book_day' && item.coverUrl) {
+      var iCover = _mk('div', 'sd-book-cover-icon');
+      var iImg = document.createElement('img');
+      iImg.className = 'sd-book-cover-img';
+      iImg.src = item.coverUrl;
+      iImg.alt = '';
+      iImg.loading = 'lazy';
+      iCover.appendChild(iImg);
+      card.appendChild(iCover);
+    } else {
+      var iWrap = _mk('div', 'sd-icon');
+      iWrap.appendChild(_mk('i', item.icon));
+      card.appendChild(iWrap);
+    }
 
     var content = _mk('div', 'sd-content');
     content.appendChild(_mk('span', 'sd-tag', item.tag));
     var titleZone = _mk('div', 'sd-title-zone');
-    if (item.arText) {
+
+    /* Ayah card: show Arabic text, retry until quran data loads */
+    if (item.id === 'ayah_day') {
       var arEl = _mk('div', 'sd-zikr-ar');
-      arEl.textContent = item.arText;
+      if (item.arText) {
+        arEl.textContent = item.arText;
+      } else if (item._s) {
+        (function _fill(n) {
+          var txt = _getAyahAr(item._s, item._a);
+          if (txt) { arEl.textContent = txt; }
+          else if (n > 0) { setTimeout(function() { _fill(n - 1); }, 400); }
+        })(20);
+      }
       titleZone.appendChild(arEl);
-    } else if (item.coverUrl) {
-      var thumbRow = _mk('div', 'sd-thumb-row');
-      var thumbImg = document.createElement('img');
-      thumbImg.className = 'sd-book-thumb';
-      thumbImg.src = item.coverUrl;
-      thumbImg.alt = '';
-      thumbImg.loading = 'lazy';
-      thumbRow.appendChild(thumbImg);
-      thumbRow.appendChild(_mk('div', 'sd-title', item.title));
-      titleZone.appendChild(thumbRow);
     } else {
       titleZone.appendChild(_mk('div', 'sd-title', item.title));
     }
+
     content.appendChild(titleZone);
     content.appendChild(_mk('div', 'sd-sub', item.subtitle));
     card.appendChild(content);
