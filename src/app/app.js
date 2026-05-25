@@ -877,6 +877,12 @@ function init(){
         if(S.tab==='prayer'){
           var _skyEl=document.getElementById('prayerSkyScene');
           if(_skyEl)_skyEl.classList.remove('sky-paused');
+          // Re-render prayer panel on foreground — handles overnight stale date for web users.
+          // Capacitor users get this via appStateChange below; this covers desktop/PWA.
+          // Skipped on Capacitor (appStateChange fires there instead — avoids double render).
+          if(!window.Capacitor&&window.PrayerUI){
+            requestAnimationFrame(function(){PrayerUI.render();});
+          }
         }
         // Restore playback highlight state if Quran tab is visible (handles browser bg/fg)
         if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);

@@ -14,6 +14,7 @@
   var _currentData      = null;
   var _tomorrowTimings  = null;
   var _tomorrowDateISO  = null;
+  var _fetchingTomorrow = false; // in-flight guard — prevents duplicate fetchTomorrow() requests
   var _renderedKey      = null; // city:date:format — skip rebuild if unchanged
   var _athanSettingsKey = null; // athan settings key — skip rebuild if unchanged
   // Cached DOM refs for tickCountdown (invalidated on buildPanel)
@@ -1361,6 +1362,24 @@
     if (document.hidden) return; // backgrounded — skip, saves battery
     if (!_currentTimings || !_currentDateISO) return;
 
+    // ── Midnight rollover: Baghdad calendar day changed while the app was open ──
+    // Handles long sessions where the user never closes the app overnight.
+    // tickCountdown() is the only code that runs continuously while the panel is
+    // visible, so this is the right place to detect the day boundary.
+    var _todayCheck = window.PrayerLogic.todayBaghdad();
+    if (_currentDateISO !== _todayCheck) {
+      console.log('[PrayerUI] midnight rollover detected: ' + _currentDateISO + ' → ' + _todayCheck + ' — refreshing panel');
+      _currentTimings  = null;
+      _currentDateISO  = null;
+      _currentData     = null;
+      _tomorrowTimings = null;
+      _tomorrowDateISO = null;
+      _fetchingTomorrow = false;
+      _renderedKey     = null;
+      render();
+      return;
+    }
+
     var now  = new Date();
     var pl   = window.PrayerLogic;
     var next = pl.getNextPrayer(_currentTimings, _currentDateISO, now);
@@ -1480,7 +1499,8 @@
   }
 
   async function fetchTomorrow() {
-    if (_tomorrowTimings) return;
+    if (_tomorrowTimings || _fetchingTomorrow) return;
+    _fetchingTomorrow = true;
     var city    = getCity();
     var dateISO = window.PrayerLogic.tomorrowBaghdad();
     try {
@@ -1488,6 +1508,7 @@
       _tomorrowTimings = data.timings;
       _tomorrowDateISO = dateISO;
     } catch(e) {}
+    _fetchingTomorrow = false;
   }
 
   // ─── Render ────────────────────────────────────────────────────────────────

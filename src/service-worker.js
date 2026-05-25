@@ -1,16 +1,16 @@
-const CACHE_NAME = 'tafsir-kurd-v830';
+const CACHE_NAME = 'tafsir-kurd-v831';
 
 // All files required to run the app fully offline
 const PRECACHE = [
   // Core app shell
   '/app/index.html',
-  '/app/app.js?v=801',
-  // Prayer module
-  '/prayer/prayer.api.js',
-  '/prayer/prayer.cache.js',
-  '/prayer/prayer.logic.js',
-  '/prayer/prayer.notifications.android.js',
-  '/prayer/prayer.ui.js',
+  '/app/app.js?v=803',
+  // Prayer module (versioned — must match ?v= params in index.html)
+  '/prayer/prayer.cache.js?v=20260526',
+  '/prayer/prayer.api.js?v=20260526',
+  '/prayer/prayer.logic.js?v=20260326b',
+  '/prayer/prayer.notifications.android.js?v=20260416',
+  '/prayer/prayer.ui.js?v=20260526',
   // Gencine module
   '/dhikr/dhikr.js?v=20260573',
   '/dhikr/dua-data.js?v=20260326b',
@@ -120,6 +120,12 @@ self.addEventListener('fetch', event => {
 
   // ── External domains: pass through (Supabase, YouTube, CDNs, analytics) ──
   if (!isOwnOrigin) return;
+
+  // ── Prayer static JSON: NEVER cache in SW — let CDN handle it (max-age=3600) ──
+  // If SW cached these, corrections deployed via fetch-prayer-year.js would never
+  // reach users (SW would serve the old file indefinitely). Passing through ensures
+  // the CDN's 1-hour max-age is respected, so corrections propagate within 1 hour.
+  if (reqUrl.pathname.startsWith('/prayer-data/')) return;
 
   // ── Same-origin API calls: stale-while-revalidate ─────────────────────────
   // Returns cached response instantly, updates cache in background
