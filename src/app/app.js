@@ -1332,6 +1332,8 @@ function _checkDataReady(){
   // Tab pre-render doesn't need tafsir — start immediately when quran is ready.
   // _tabsPrerendering guard ensures this runs only once even when called twice.
   setTimeout(_startTabPrerender,50);
+  // Notify SmartDhikr that quranData is ready so the ayah card rebuilds with real text
+  if(S.quranData&&window.SmartDhikr)SmartDhikr.onQuranReady();
   if(!_dataReady.tafsir)return;
   console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
   if(S.surah)renderAyahs(S.surah);
@@ -1675,7 +1677,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260569', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=38',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=39',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */

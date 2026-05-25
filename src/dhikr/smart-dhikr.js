@@ -1431,7 +1431,7 @@
      Returning the same DOM node on pull-to-refresh
      preserves slider position + timer — no visual reset.
   ───────────────────────────────────────────── */
-  var _sectionCache = { el: null, seed: null, hasData: false, seasonalKey: null };
+  var _sectionCache = { el: null, seed: null, hasData: false, seasonalKey: null, hasQuranData: false };
 
   /* ─────────────────────────────────────────────
      RENDER
@@ -1451,6 +1451,7 @@
         return !!(Array.isArray(hArr) && hArr.length && Array.isArray(bArr) && bArr.length);
       } catch(e) { return false; }
     }());
+    var hasQuranData = !!(window.S && window.S.quranData);
     /* Seasonal key — string of active seasonal item IDs.
        Cache must miss when seasonal state changes mid-day
        (e.g. breaking_fast slide appears at Maghrib time). */
@@ -1459,10 +1460,11 @@
 
     /* Cache hit: same day, same seasonal state, AND (data was already full OR still no data).
        Only rebuild mid-day if cache was built with placeholders but real
-       data has now loaded — this is what makes hadith/book show real content. */
+       data has now loaded — this is what makes hadith/book show real content.
+       Also rebuild if quranData just became available (ayah card needs real Arabic text). */
     if (_sectionCache.el && _sectionCache.seed === seed
         && _sectionCache.seasonalKey === currentSeasonalKey) {
-      if (_sectionCache.hasData || !hasData) {
+      if ((_sectionCache.hasData || !hasData) && (_sectionCache.hasQuranData || !hasQuranData)) {
         /* Resume slider progress bar — it may have stopped while the section
            was outside the DOM during within-tab navigation. */
         var _cw = _sectionCache.el.querySelector('.sd-wrapper');
@@ -1546,10 +1548,11 @@
       }
     }
 
-    _sectionCache.el          = section;
-    _sectionCache.seed        = seed;
-    _sectionCache.hasData     = hasData;
-    _sectionCache.seasonalKey = currentSeasonalKey;
+    _sectionCache.el           = section;
+    _sectionCache.seed         = seed;
+    _sectionCache.hasData      = hasData;
+    _sectionCache.seasonalKey  = currentSeasonalKey;
+    _sectionCache.hasQuranData = hasQuranData;
     return section;
   }
 
@@ -1557,10 +1560,23 @@
      PUBLIC API
   ───────────────────────────────────────────── */
   function clearCache() {
-    _sectionCache.el          = null;
-    _sectionCache.seed        = null;
-    _sectionCache.hasData     = false;
-    _sectionCache.seasonalKey = null;
+    _sectionCache.el           = null;
+    _sectionCache.seed         = null;
+    _sectionCache.hasData      = false;
+    _sectionCache.seasonalKey  = null;
+    _sectionCache.hasQuranData = false;
+  }
+
+  /* Called by app.js when quranData becomes available.
+     If the section was pre-built before quranData loaded, clears the cache
+     so the next render() call rebuilds with real ayah text. */
+  function onQuranReady() {
+    if (_sectionCache.el && !_sectionCache.hasQuranData) {
+      clearCache();
+      if (window.GencineUI && GencineUI._view === 'home') {
+        setTimeout(function() { GencineUI._draw(); }, 50);
+      }
+    }
   }
 
   /* ─────────────────────────────────────────────
@@ -1608,6 +1624,7 @@
     getStreak:        _getStreak,
     render:           render,
     clearCache:       clearCache,
+    onQuranReady:     onQuranReady,
     buildSkelSection: _buildSkelSection
   };
 
