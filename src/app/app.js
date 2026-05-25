@@ -1059,7 +1059,7 @@ function init(){
     try{
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.addListener('appUrlOpen',function(event){
-          if(event.url&&event.url.indexOf('com.tafsirkurd.app://auth')===0){
+          if(event.url&&(event.url.indexOf('tafsirkurd://auth')===0||event.url.indexOf('com.tafsirkurd.app://auth')===0)){
             // Close browser if open
             try{if(window.Capacitor.Plugins.Browser)window.Capacitor.Plugins.Browser.close()}catch(e2){}
             // Extract tokens from URL hash/query

@@ -2500,14 +2500,21 @@ Press Ctrl+Shift+C to copy this report
             showMessage('ڤەگوهاستنا تە بۆ Google...', 'info');
 
             try {
-                // Get redirect destination and encode into OAuth return URL
-                const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
-                const oauthReturnUrl = window.location.origin + '/login.html?redirect=' + encodeURIComponent(redirectDest);
+                const isNative = window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+
+                let oauthRedirectTo;
+                if (isNative) {
+                    oauthRedirectTo = 'tafsirkurd://auth';
+                } else {
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                    oauthRedirectTo = window.location.origin + '/login.html?redirect=' + encodeURIComponent(redirectDest);
+                }
 
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: oauthReturnUrl,
+                        redirectTo: oauthRedirectTo,
+                        skipBrowserRedirect: !!isNative,
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'
@@ -2516,6 +2523,15 @@ Press Ctrl+Shift+C to copy this report
                 });
 
                 if (error) throw error;
+
+                if (isNative && data && data.url) {
+                    const BR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+                    if (BR) {
+                        await BR.open({ url: data.url });
+                    } else {
+                        window.open(data.url, '_system');
+                    }
+                }
 
             } catch (error) {
                 console.error('Google sign in error:', error);
