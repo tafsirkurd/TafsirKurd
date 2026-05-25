@@ -761,6 +761,16 @@
      CARD 2 — AYAH OF THE DAY  (salt 1)
      Always available — no network needed.
   ───────────────────────────────────────────── */
+  function _getAyahAr(s, a) {
+    try {
+      var qd = window.S && S.quranData && S.quranData[String(s)];
+      if (!qd) return '';
+      var vv = qd.verses || qd;
+      var txt = String((vv[a - 1] && (vv[a - 1].text || vv[a - 1])) || '').trim();
+      return txt.length > 100 ? txt.slice(0, 100) + '…' : txt;
+    } catch(e) { return ''; }
+  }
+
   function _buildAyahItem() {
     /* Friday (Baghdad time) → always Surah Al-Kahf, Ayah 1 */
     if (_baghdadDate().getUTCDay() === 5) {
@@ -768,6 +778,7 @@
         _type: 'daily', id: 'ayah_day',
         icon: 'fas fa-book-quran', tag: 'ئایەتا ڕۆژێ',
         title: SURAH_NAMES_AR[17], subtitle: 'سورەتا کەهف · ئایەت 1',
+        arText: _getAyahAr(18, 1),
         nav: function() {
           if (window.App && App.tab && App.openSurah) {
             App.tab('quran');
@@ -787,7 +798,8 @@
     return {
       _type: 'daily', id: 'ayah_day',
       icon: 'fas fa-book-quran', tag: 'ئایەتا ڕۆژێ',
-      title: surahName, subtitle: 'ئایەت ' + ayah,
+      title: surahName, subtitle: surahName + ' · ئایەت ' + ayah,
+      arText: _getAyahAr(s, a),
       nav: function() {
         if (window.App && App.tab && App.openSurah) {
           App.tab('quran');
@@ -862,6 +874,7 @@
         icon: 'fas fa-book-open', tag: 'کتێبا ڕۆژێ',
         title:    b.title_ku || b.title_ar || 'کتێب',
         subtitle: b.author_ku || 'بخوێنە',
+        coverUrl: b.cover_url || null,
         nav: function(ui) { if (ui) ui.openBook(bookId); }
       };
     }
@@ -1027,7 +1040,23 @@
     var content = _mk('div', 'sd-content');
     content.appendChild(_mk('span', 'sd-tag', item.tag));
     var titleZone = _mk('div', 'sd-title-zone');
-    titleZone.appendChild(_mk('div', 'sd-title', item.title));
+    if (item.arText) {
+      var arEl = _mk('div', 'sd-zikr-ar');
+      arEl.textContent = item.arText;
+      titleZone.appendChild(arEl);
+    } else if (item.coverUrl) {
+      var thumbRow = _mk('div', 'sd-thumb-row');
+      var thumbImg = document.createElement('img');
+      thumbImg.className = 'sd-book-thumb';
+      thumbImg.src = item.coverUrl;
+      thumbImg.alt = '';
+      thumbImg.loading = 'lazy';
+      thumbRow.appendChild(thumbImg);
+      thumbRow.appendChild(_mk('div', 'sd-title', item.title));
+      titleZone.appendChild(thumbRow);
+    } else {
+      titleZone.appendChild(_mk('div', 'sd-title', item.title));
+    }
     content.appendChild(titleZone);
     content.appendChild(_mk('div', 'sd-sub', item.subtitle));
     card.appendChild(content);

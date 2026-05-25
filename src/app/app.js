@@ -1675,7 +1675,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260569', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=32',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=33',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
