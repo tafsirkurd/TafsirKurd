@@ -1143,20 +1143,23 @@ function init(){
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
   setTimeout(function(){_reportAppVersion();},5000);
-  // Preload Gencine scripts in background so first tab open is instant (scripts are 190KB)
-  setTimeout(function(){_loadGencineScripts(function(){
-    // Pre-render only if user hasn't already opened the tab
-    if(window.GencineUI&&S.tab!=='gencine'){
-      var _gh=_tabHash('gencine');
-      if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
-    }
-  });},1000);
+  // Preload Gencine scripts — use requestIdleCallback so it never steals CPU from
+  // the first 3s of user interaction. Falls back to 4s setTimeout on old WebViews.
+  (window.requestIdleCallback||function(fn){setTimeout(fn,4000);})(function(){
+    _loadGencineScripts(function(){
+      // Pre-render only if user hasn't already opened the tab
+      if(window.GencineUI&&S.tab!=='gencine'){
+        var _gh=_tabHash('gencine');
+        if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
+      }
+    });
+  },{timeout:5000});
   // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
-  setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},4000);
-  // Athan voice decode is CPU-intensive — delay until after first 3s of interaction
-  setTimeout(function(){if(window.PrayerUI)PrayerUI.preloadAthanVoices();},3500);
+  setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},6000);
+  // Athan voice decode is CPU-intensive — after app fully settled
+  setTimeout(function(){if(window.PrayerUI)PrayerUI.preloadAthanVoices();},5000);
   // Audio cache warmup — verify manifest entries still exist on disk, populate _uriMap
-  setTimeout(function(){if(window.AudioCache)AudioCache.warmup();},3000);
+  setTimeout(function(){if(window.AudioCache)AudioCache.warmup();},4000);
 
   // Fetch prayer data immediately (no delay) so cache is ready for pre-render below
   if(window.PrayerAPI&&window.PrayerCache&&window.PrayerLogic){
