@@ -1054,19 +1054,26 @@
     content.appendChild(_mk('span', 'sd-tag', item.tag));
     var titleZone = _mk('div', 'sd-title-zone');
 
-    /* Ayah card: show Arabic text, retry until quran data loads */
+    /* Ayah card: Arabic text in title zone; surah name as fallback until quran loads */
     if (item.id === 'ayah_day') {
-      var arEl = _mk('div', 'sd-zikr-ar');
       if (item.arText) {
+        var arEl = _mk('div', 'sd-zikr-ar');
         arEl.textContent = item.arText;
-      } else if (item._s) {
-        (function _fill(n) {
-          var txt = _getAyahAr(item._s, item._a);
-          if (txt) { arEl.textContent = txt; }
-          else if (n > 0) { setTimeout(function() { _fill(n - 1); }, 400); }
-        })(20);
+        titleZone.appendChild(arEl);
+      } else {
+        var fallbackEl = _mk('div', 'sd-title', item.title);
+        titleZone.appendChild(fallbackEl);
+        if (item._s) {
+          (function _fill(n) {
+            var txt = _getAyahAr(item._s, item._a);
+            if (txt) {
+              var arEl2 = _mk('div', 'sd-zikr-ar');
+              arEl2.textContent = txt;
+              if (fallbackEl.parentNode) fallbackEl.parentNode.replaceChild(arEl2, fallbackEl);
+            } else if (n > 0) { setTimeout(function() { _fill(n - 1); }, 400); }
+          })(20);
+        }
       }
-      titleZone.appendChild(arEl);
     } else {
       titleZone.appendChild(_mk('div', 'sd-title', item.title));
     }
