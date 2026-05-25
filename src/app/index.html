@@ -3806,13 +3806,45 @@ html.low-end-device .tab-item.on i{box-shadow:none!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=803"></script>
+<script src="/app/app.js?v=804"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/service-worker.js', { scope: '/', updateViaCache: 'none' })
     .then(function(reg) { reg.update(); })
     .catch(function() {});
+
+  /* Handle NOTIF_TAP messages from the SW (web push notification taps when app is open).
+     SW sends: postMessage({ type:'NOTIF_TAP', extra:{type, id} }) via clients.postMessage.
+     Capacitor users get this via pushNotificationActionPerformed/localNotificationActionPerformed;
+     this handles web PWA users whose notification tap goes through the SW notificationclick handler. */
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    if (!event.data || event.data.type !== 'NOTIF_TAP') return;
+    var extra = event.data.extra || {};
+    var type = extra.type || '';
+    var id   = String(extra.id || '');
+    console.log('[SW→App] NOTIF_TAP type=' + type + ' id=' + id);
+    if (window._handlePushDeepLink) {
+      window._handlePushDeepLink(type, id);
+    }
+  });
+
+  /* Cold-start: if opened via SW notificationclick with ?notif= param, handle deep link */
+  (function() {
+    var search = window.location.search;
+    if (!search) return;
+    var params = new URLSearchParams(search);
+    var notifType = params.get('notif');
+    if (!notifType) return;
+    // Wait until app is ready, then navigate
+    var _tries = 0;
+    var _poll = setInterval(function() {
+      if ((window._handlePushDeepLink || _tries++ > 30)) {
+        clearInterval(_poll);
+        if (window._handlePushDeepLink) window._handlePushDeepLink(notifType, params.get('id') || '');
+      }
+    }, 200);
+  })();
 }
 /* Failsafe: hide splash after 8s even if app.js fails */
 setTimeout(function(){

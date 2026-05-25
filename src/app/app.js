@@ -737,7 +737,8 @@ var S={
   prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'13'),
   prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true',
   prayerToggles:(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return {}}}()),
-  theme:localStorage.getItem('theme')||(JSON.parse(localStorage.getItem('userPreferences')||'{}').darkMode?'dark':'noor'),
+  theme:localStorage.getItem('theme')||((function(){try{return JSON.parse(localStorage.getItem('userPreferences')||'{}');}catch(e){return {};}}()).darkMode?'dark':'noor'),
+  dailyVerse:localStorage.getItem('dailyVerse')!=='false', // true by default — null/absent → ON; 'false' string → OFF
   arSize:parseFloat(localStorage.getItem('app_arSize'))||2.0,
   tfSize:parseFloat(localStorage.getItem('app_tfSize'))||1.0,
   lineH:parseFloat(localStorage.getItem('app_lineH'))||2.2,
@@ -2268,6 +2269,9 @@ function _handlePushDeepLink(type,id){
   // Small initial delay so the event doesn't fire before any tab exists
   setTimeout(attempt,300);
 }
+// Expose globally so SW NOTIF_TAP message handler (in index.html) and cold-start
+// ?notif= param handler can call it after the IIFE has executed.
+window._handlePushDeepLink = _handlePushDeepLink;
 
 /* ===== REMOTE PUSH TOKEN REGISTRATION ===== */
 /* Registers device with FCM (Android) or APNs via Firebase (iOS).

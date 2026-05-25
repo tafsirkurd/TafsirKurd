@@ -1,10 +1,10 @@
-const CACHE_NAME = 'tafsir-kurd-v831';
+const CACHE_NAME = 'tafsir-kurd-v832';
 
 // All files required to run the app fully offline
 const PRECACHE = [
   // Core app shell
   '/app/index.html',
-  '/app/app.js?v=803',
+  '/app/app.js?v=804',
   // Prayer module (versioned — must match ?v= params in index.html)
   '/prayer/prayer.cache.js?v=20260526',
   '/prayer/prayer.api.js?v=20260526',
@@ -15,15 +15,17 @@ const PRECACHE = [
   '/dhikr/dhikr.js?v=20260573',
   '/dhikr/dua-data.js?v=20260326b',
   '/dhikr/smart-dhikr.js?v=43',
-  // i18n
-  '/i18n/i18n.js',
+  // i18n (versioned — must match ?v= params in index.html)
+  '/i18n/i18n.js?v=20260517',
+  '/i18n/kmr-bundled.js?v=20260518b',
   '/i18n/kmr.json',
   // Data
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   // Styles
   '/styles/mobile-optimize.css',
-  // Utils
+  // Core utils (versioned — must match index.html)
+  '/utils/supabase.js?v=20260326b',
   '/utils/fast-scroll.js',
   '/utils/console-cleaner.js?v=2',
   '/utils/kurdish-numbers.js',
@@ -34,6 +36,9 @@ const PRECACHE = [
   '/utils/footer-loader.js',
   '/utils/secure-storage.js',
   '/utils/cloud-sync.js',
+  // Audio & Qibla
+  '/audio-cache.js?v=20260406a',
+  '/qibla/qibla.js?v=20260417',
   // Fonts & icons
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
