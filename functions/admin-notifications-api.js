@@ -14,9 +14,14 @@ export async function onRequest(context) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 200, headers: CORS });
     if (request.method !== 'POST') return json({ error: 'POST only' }, 405);
 
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-        auth: { autoRefreshToken: false, persistSession: false }
-    });
+    let supabase;
+    try {
+        supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+            auth: { autoRefreshToken: false, persistSession: false }
+        });
+    } catch (e) {
+        return json({ error: 'createClient failed: ' + e.message }, 500);
+    }
 
     let body;
     try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
