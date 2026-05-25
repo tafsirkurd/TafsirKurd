@@ -753,6 +753,7 @@ var S={
   mushafLineH:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseFloat(localStorage.getItem(ip?'mushafLineH_ipad':'mushafLineH'))||0;return ip?Math.min(2.4,Math.max(1.8,raw||2.0)):Math.min(2.3,Math.max(1.8,raw||1.8));})(),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
+window.S = S; /* expose state for smart-dhikr.js and other external modules */
 
 /* ===== INIT ===== */
 function init(){
