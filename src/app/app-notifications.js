@@ -765,11 +765,15 @@ function _probeOnline(cb){
 }
 function _showOfflineBanner(){
   var b=document.getElementById('offlineBanner');
-  if(b)b.classList.add('on');
+  if(!b)return;
+  b.style.display='flex';
+  requestAnimationFrame(function(){b.classList.add('on');});
 }
 function _hideOfflineBanner(){
   var b=document.getElementById('offlineBanner');
-  if(b)b.classList.remove('on');
+  if(!b)return;
+  b.classList.remove('on');
+  setTimeout(function(){if(b&&!b.classList.contains('on'))b.style.display='none';},400);
 }
 window.addEventListener('offline',function(){
   clearTimeout(_offlineDebounce);
@@ -784,3 +788,5 @@ window.addEventListener('online',function(){
   clearTimeout(_offlineDebounce);
   _hideOfflineBanner();
 });
+// Startup probe — banner is hidden by default (inline CSS); only show if truly offline at launch
+_probeOnline(function(online){if(!online)_showOfflineBanner();});
