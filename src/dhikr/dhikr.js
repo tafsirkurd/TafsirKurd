@@ -2414,20 +2414,28 @@ window.GencineUI = {
         }
         function _buildFeatCard(fb, extraClass) {
           var _fc = document.createElement('div'); _fc.className = 'book-feat-card' + (extraClass ? ' '+extraClass : '');
-          var _fcw = document.createElement('div'); _fcw.className = 'book-feat-card-cover-wrap';
+          /* Layer 1: blurred cover as background */
+          var _fbg = document.createElement('div'); _fbg.className = 'book-feat-card-bg';
+          if (fb.cover_url) _fbg.style.backgroundImage = 'url('+fb.cover_url+')';
+          _fc.appendChild(_fbg);
+          /* Layer 2: dark gradient overlay */
+          var _fov = document.createElement('div'); _fov.className = 'book-feat-card-overlay'; _fc.appendChild(_fov);
+          /* Layer 3: sharp thumbnail (floats top-right in RTL) */
+          var _fth = document.createElement('div'); _fth.className = 'book-feat-card-thumb';
           if (fb.cover_url) {
-            var _fci = document.createElement('img'); _fci.className = 'book-feat-card-cover'; _fci.alt = fb.title_ku||'';
-            _fci.onload = function(){ _fci.classList.add('loaded'); }; _fci.src = fb.cover_url; _fcw.appendChild(_fci);
-          } else { var _fcph = document.createElement('div'); _fcph.className = 'book-feat-card-ph'; var _fcphi = document.createElement('i'); _fcphi.className = 'fas fa-book'; _fcph.appendChild(_fcphi); _fcw.appendChild(_fcph); }
-          _fc.appendChild(_fcw);
-          var _fci2 = document.createElement('div'); _fci2.className = 'book-feat-card-info';
-          var _fct = document.createElement('div'); _fct.className = 'book-feat-card-title'; _fct.textContent = fb.title_ku||fb.title_ar||''; _fci2.appendChild(_fct);
-          if (fb.author_ku||fb.author_ar){ var _fca = document.createElement('div'); _fca.className = 'book-feat-card-author'; _fca.textContent = fb.author_ku||fb.author_ar; _fci2.appendChild(_fca); }
-          var _fcm = document.createElement('div'); _fcm.className = 'book-feat-card-meta';
-          if (fb.pages){ var _fcp = document.createElement('div'); _fcp.className = 'book-feat-card-pages'; _fcp.textContent = fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _fcm.appendChild(_fcp); }
-          if (fb.badge_until && new Date(fb.badge_until).getTime() > Date.now()){ var _fcb = document.createElement('div'); _fcb.className = 'book-feat-card-badge'; _fcb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; _fcm.appendChild(_fcb); }
-          _fci2.appendChild(_fcm);
-          _fc.appendChild(_fci2);
+            var _fti = document.createElement('img'); _fti.className = 'book-feat-card-cover'; _fti.alt = fb.title_ku||'';
+            _fti.onload = function(){ _fti.classList.add('loaded'); }; _fti.src = fb.cover_url; _fth.appendChild(_fti);
+          } else { var _ftph = document.createElement('div'); _ftph.className = 'book-feat-card-ph'; var _ftphi = document.createElement('i'); _ftphi.className = 'fas fa-book'; _ftph.appendChild(_ftphi); _fth.appendChild(_ftph); }
+          _fc.appendChild(_fth);
+          /* Text overlay (bottom-left in RTL) */
+          var _finfo = document.createElement('div'); _finfo.className = 'book-feat-card-info';
+          var _ft = document.createElement('div'); _ft.className = 'book-feat-card-title'; _ft.textContent = fb.title_ku||fb.title_ar||''; _finfo.appendChild(_ft);
+          if (fb.author_ku||fb.author_ar){ var _fau = document.createElement('div'); _fau.className = 'book-feat-card-author'; _fau.textContent = fb.author_ku||fb.author_ar; _finfo.appendChild(_fau); }
+          var _fmeta = document.createElement('div'); _fmeta.className = 'book-feat-card-meta';
+          if (fb.pages){ var _fpg = document.createElement('div'); _fpg.className = 'book-feat-card-pages'; _fpg.textContent = fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _fmeta.appendChild(_fpg); }
+          if (fb.badge_until && new Date(fb.badge_until).getTime() > Date.now()){ var _fbdg = document.createElement('div'); _fbdg.className = 'book-feat-card-badge'; _fbdg.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; _fmeta.appendChild(_fbdg); }
+          _finfo.appendChild(_fmeta);
+          _fc.appendChild(_finfo);
           _fc.onclick = _makeFeatClick(fb);
           return _fc;
         }

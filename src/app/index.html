@@ -2536,26 +2536,28 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .book-resume-banner.visible{opacity:1;transform:translateX(-50%) translateY(0)}
 .new-badge{position:absolute;top:8px;right:8px;background:#e53e3e;color:#fff;font-size:.62rem;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.04em;z-index:2;box-shadow:0 2px 6px rgba(229,62,62,.4)}
 /* ── Featured books section ── */
-.book-featured-section{margin:10px 14px 0;padding:10px;direction:rtl;background:var(--bg2);border-radius:14px;border:1px solid var(--border);border-top:3px solid var(--accent)}
-.book-featured-lbl{font-size:.7rem;font-weight:800;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:10px;opacity:.8}
-.book-feat-card{display:flex;direction:rtl;align-items:center;gap:12px;background:var(--bg3);border-radius:12px;padding:10px 12px;cursor:pointer;transition:transform .15s;margin-bottom:4px;border-right:3px solid var(--accent)}
+.book-featured-section{margin:8px 14px 0;direction:rtl}
+.book-featured-lbl{font-size:.7rem;font-weight:800;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:8px;padding:0 2px;opacity:.8}
+.book-feat-card{position:relative;border-radius:16px;overflow:hidden;cursor:pointer;height:130px;transition:transform .15s;margin-bottom:4px;background:var(--bg3)}
 .book-feat-card:active{transform:scale(.97)}
-.book-feat-card-cover-wrap{flex-shrink:0;width:50px;height:66px;border-radius:8px;overflow:hidden;background:var(--bg3);position:relative;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.book-feat-card-bg{position:absolute;inset:-12px;background-color:var(--bg3);background-size:cover;background-position:center;filter:blur(18px) brightness(.5) saturate(1.4)}
+.book-feat-card-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.75) 0%,rgba(0,0,0,.2) 62%,rgba(0,0,0,.05) 100%)}
+.book-feat-card-thumb{position:absolute;top:15px;right:15px;width:66px;height:88px;border-radius:10px;overflow:hidden;background:var(--bg3);box-shadow:0 6px 24px rgba(0,0,0,.55)}
 .book-feat-card-cover{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;position:absolute;inset:0}
 .book-feat-card-cover.loaded{opacity:1}
-.book-feat-card-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:1.5rem}
-.book-feat-card-info{flex:1;display:flex;flex-direction:column;gap:3px;text-align:right}
-.book-feat-card-title{font-size:.9rem;font-weight:800;color:var(--text);line-height:1.35}
-.book-feat-card-author{font-size:.75rem;color:var(--text2)}
-.book-feat-card-meta{display:flex;align-items:center;gap:6px;margin-top:4px}
-.book-feat-card-pages{font-size:.68rem;font-weight:700;color:var(--accent);background:var(--accent-glow);padding:2px 8px;border-radius:20px}
-.book-feat-card-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em}
-.book-feat-carousel{overflow:hidden;border-radius:12px;background:var(--bg3);margin-bottom:4px}
+.book-feat-card-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:1.8rem}
+.book-feat-card-info{position:absolute;top:0;bottom:0;left:0;right:95px;padding:14px 12px 14px 14px;display:flex;flex-direction:column;justify-content:flex-end;text-align:right}
+.book-feat-card-title{font-size:.93rem;font-weight:800;color:#fff;line-height:1.35;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.book-feat-card-author{font-size:.73rem;color:rgba(255,255,255,.7);margin-top:3px}
+.book-feat-card-meta{display:flex;align-items:center;gap:6px;margin-top:7px}
+.book-feat-card-pages{font-size:.65rem;font-weight:700;color:rgba(255,255,255,.9);background:rgba(255,255,255,.16);padding:2px 9px;border-radius:20px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.book-feat-card-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:5px;letter-spacing:.04em}
+.book-feat-carousel{position:relative;overflow:hidden;border-radius:16px;margin-bottom:4px}
 .book-feat-track{display:flex;transition:transform .42s cubic-bezier(.4,0,.2,1)}
-.book-feat-slide{flex-shrink:0;border-radius:0!important;box-shadow:none!important}
-.book-feat-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 4px;background:var(--bg2)}
-.book-feat-dot{width:7px;height:7px;border-radius:10px;background:var(--text3);cursor:pointer;transition:background .2s,width .25s;flex-shrink:0;opacity:.45}
-.book-feat-dot.active{background:var(--accent);width:18px;opacity:1}
+.book-feat-slide{flex-shrink:0;border-radius:0!important}
+.book-feat-dots{position:absolute;bottom:9px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:10}
+.book-feat-dot{width:5px;height:5px;border-radius:10px;background:rgba(255,255,255,.35);cursor:pointer;transition:background .2s,width .25s;flex-shrink:0}
+.book-feat-dot.active{background:#fff;width:14px}
 .iv-new-badge{background:#e53e3e;color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.04em;flex-shrink:0;align-self:center;margin-right:6px;box-shadow:0 2px 5px rgba(229,62,62,.35)}
 .book-cover{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s;position:absolute;inset:0}
 .book-cover.loaded{opacity:1}
