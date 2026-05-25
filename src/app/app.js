@@ -1150,7 +1150,7 @@ function init(){
       var _gh=_tabHash('gencine');
       if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
     }
-  });},3000);
+  });},1000);
   // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
   setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},4000);
   // Athan voice decode is CPU-intensive — delay until after first 3s of interaction
