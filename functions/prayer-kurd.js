@@ -4,39 +4,35 @@
  * GET /prayer-kurd?city=Duhok&month=2&year=2026
  * Returns: { city, year, month, days: { "1": { Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha, hijri } } }
  *
- * HTML structure (Shadcn UI <table> with long class names per <td>):
- *   <td class="...hidden md:table-cell...<div><span>01 - شوبات - 2026</span></div></td>
- *   <td class="...hidden md:table-cell...">13ی شعبان 1447</td>
- *   <td ...>05:39</td> <td ...>07:10</td> ... (6 prayer times)
+ * HTML structure: table with rows containing Kurdish date "DD - MonthName - YYYY"
+ * followed by 6 prayer time cells in HH:MM 24h format.
  *
- * Each <td> has ~165 chars of class attributes, so window must be ≥1500.
- * Times are 12h without AM/PM; converted via sequential-order detection.
- *
- * CITY_URL values are the URL-encoded path segments used by amozhgary.tv.
- * They are inserted directly into the URL (no additional encodeURIComponent).
+ * CITY_URL values are the English path segments used by amozhgary.tv.
+ * Site switched from Kurdish-encoded paths (%D8%AF%D9%87%DB%86%DA%A9) to
+ * plain English names (/bang/Duhok) — updated May 2026.
  */
 
 const CITY_URL = {
-  Sulaymaniyah:  '%D8%B3%D9%84%DB%8E%D9%85%D8%A7%D9%86%DB%8C',
-  Erbil:         '%D9%87%DB%95%D9%88%D9%84%DB%8E%D8%B1',
-  Duhok:         '%D8%AF%D9%87%DB%86%DA%A9',
-  Kirkuk:        '%DA%A9%DB%95%D8%B1%DA%A9%D9%88%DA%A9',
-  Halabja:       '%D9%87%DB%95%DA%B5%DB%95%D8%A8%D8%AC%DB%95',
-  Kfry:          '%DA%A9%D9%81%D8%B1%DB%8C',
-  Rania:         '%DA%95%D8%A7%D9%86%DB%8C%DB%95',
-  Koya:          '%DA%A9%DB%86%DB%8C%DB%95',
-  Qaladze:       '%D9%82%DB%95%DA%B5%D8%A7%D8%AF%D8%B2%DB%8E',
-  Zakho:         '%D8%B2%D8%A7%D8%AE%DB%86',
-  Bardarash:     '%D8%A8%DB%95%D8%B1%D8%AF%DB%95%DA%95%DB%95%D8%B4',
-  Mosul:         '%D9%85%D9%88%D8%B3%D9%84%D8%B5',
-  Darbandikhan:  '%D8%AF%DB%95%D8%B1%D8%A8%DB%95%D9%86%D8%AF%DB%8C%D8%AE%D8%A7%D9%86',
-  Kalar:         '%DA%A9%DB%95%D9%84%D8%A7%D8%B1',
-  Akre:          '%D8%A6%D8%A7%DA%A9%D8%B1%DB%8C',
-  Daquq:         '%D8%AF%D8%A7%D9%82%D9%88%D9%82',
-  Makhmur:       '%D9%85%DB%95%D8%AE%D9%85%D9%88%D8%B1',
-  Mandali:       '%D9%85%DB%95%D9%86%D8%AF%DB%95%D9%84%DB%8C',
-  Qarahanjir:    '%D9%82%DB%95%D8%B1%DB%95%D9%87%DB%95%D9%86%D8%AC%DB%8C%D8%B1',
-  DuzKhormatou:  '%D8%AF%D9%88%D8%B2%20%D8%AE%D9%88%D8%B1%D9%85%D8%A7%D8%AA%D9%88%D9%88',
+  Sulaymaniyah:  'Sulaymaniyah',
+  Erbil:         'Erbil',
+  Duhok:         'Duhok',
+  Kirkuk:        'Kirkuk',
+  Halabja:       'Halabja',
+  Kfry:          'Kfry',
+  Rania:         'Rania',
+  Koya:          'Koya',
+  Qaladze:       'Qaladze',
+  Zakho:         'Zakho',
+  Bardarash:     'Bardarash',
+  Mosul:         'Mosul',
+  Darbandikhan:  'Darbandikhan',
+  Kalar:         'Kalar',
+  Akre:          'Akre',
+  Daquq:         'Daquq',
+  Makhmur:       'Makhmur',
+  Mandali:       'Mandali',
+  Qarahanjir:    'Qarahanjir',
+  DuzKhormatou:  'Duz%20Khormatou',
 };
 
 export async function onRequest(context) {
