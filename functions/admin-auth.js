@@ -26,13 +26,9 @@ export async function onRequest(context) {
         );
     }
 
-    return new Response(JSON.stringify({
-        _debug: true,
-        SUPABASE_URL: env.SUPABASE_URL || '(empty)',
-        ENVIRONMENT: env.ENVIRONMENT || '(empty)',
-        CF_ACCOUNT_ID: env.CF_ACCOUNT_ID || '(empty)',
-        keys: Object.keys(env || {}).length
-    }), { status: 200, headers: corsHeaders });
+    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+        auth: { autoRefreshToken: false, persistSession: false }
+    });
 
     try {
         const { action, email, password, token, deviceFingerprint, page_slug, permission_type, turnstileToken, trustDevice, trustToken, deviceId, currentPassword, newPassword } = await request.json();
