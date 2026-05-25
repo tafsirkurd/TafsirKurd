@@ -141,17 +141,29 @@
   // ── window.onerror ────────────────────────────────────────────
   var _prevOnError = window.onerror;
   window.onerror = function(msg, src, line, col, error) {
+    var _msg = String(msg || '');
+
     // "Script error." with no source/line is the browser's cross-origin sanitization.
     // It is always produced by errors inside cross-origin iframes (YouTube embeds,
     // browser extensions, third-party widgets) and never contains actionable info.
     // Reporting it fills the log with noise — skip it entirely.
-    if (msg === 'Script error.' || msg === 'Script error') {
+    if (_msg === 'Script error.' || _msg === 'Script error') {
+      if (_prevOnError) return _prevOnError.apply(this, arguments);
+      return false;
+    }
+
+    // Service worker script load failures are handled gracefully: both the landing page
+    // and the app already have .catch() on navigator.serviceWorker.register(). These
+    // failures are always transient (network blip, CDN moment, browser update check)
+    // and never actionable. Some browsers also fire window.onerror for them, which
+    // would otherwise flood the error log.
+    if (_msg.indexOf('service-worker') !== -1 || String(src || '').indexOf('service-worker') !== -1) {
       if (_prevOnError) return _prevOnError.apply(this, arguments);
       return false;
     }
     var stack = error && error.stack ? error.stack : (src + ':' + line + ':' + col);
-    var type  = _classify(msg, stack);
-    _send(type, msg, stack, null);
+    var type  = _classify(_msg, stack);
+    _send(type, _msg, stack, null);
     if (_prevOnError) return _prevOnError.apply(this, arguments);
     return false;
   };
