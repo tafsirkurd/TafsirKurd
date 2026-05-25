@@ -763,7 +763,7 @@
   ───────────────────────────────────────────── */
   function _getAyahAr(s, a) {
     try {
-      var qd = window.S && S.quranData && S.quranData[String(s)];
+      var qd = window.S && window.S.quranData && window.S.quranData[String(s)];
       if (!qd) return '';
       var vv = qd.verses || qd;
       var txt = String((vv[a - 1] && (vv[a - 1].text || vv[a - 1])) || '').trim();
@@ -861,7 +861,7 @@
   function _buildBookItem() {
     var books = (function() {
       try {
-        var raw = JSON.parse(localStorage.getItem('gencine_books_v3'));
+        var raw = JSON.parse(localStorage.getItem('gencine_books_v4'));
         return (raw && Array.isArray(raw.data)) ? raw.data : raw; /* unwrap {ts,data} envelope */
       } catch(e) { return null; }
     }());
@@ -1425,7 +1425,7 @@
     var hasData = (function() {
       try {
         var h = JSON.parse(localStorage.getItem('gencine_hadiths_v2') || 'null');
-        var b = JSON.parse(localStorage.getItem('gencine_books_v3')   || 'null');
+        var b = JSON.parse(localStorage.getItem('gencine_books_v4')   || 'null');
         var hArr = (h && h.data) ? h.data : h;
         var bArr = (b && b.data) ? b.data : b;
         return !!(Array.isArray(hArr) && hArr.length && Array.isArray(bArr) && bArr.length);
