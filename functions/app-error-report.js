@@ -64,30 +64,6 @@ export async function onRequest(context) {
             return new Response('{"error":"db_error"}', { status: 500, headers: CORS });
         }
 
-        // Alert via Telegram if this exact error hasn't been seen in the last 10 minutes
-        // (prevents spam while ensuring new crash types always notify immediately)
-        if (env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
-            try {
-                const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-                const { count } = await supabase
-                    .from('app_error_logs')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('error_message', row.error_message)
-                    .gte('created_at', tenMinAgo);
-                // Only alert on first occurrence in this window
-                if (!count || count <= 1) {
-                    const platform = row.platform || 'web';
-                    const version  = row.app_version || '?';
-                    const msg = `TafsirKurd Crash\n\nPlatform: ${platform} v${version}\nType: ${row.error_type}\n\n${String(row.error_message||'').slice(0,300)}\n\nadmin-errors.html`;
-                    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: msg }),
-                    }).catch(() => {});
-                }
-            } catch(e) { /* never block the response for alert failures */ }
-        }
-
         return new Response('{"ok":true}', { status: 200, headers: CORS });
     } catch(e) {
         return new Response('{"error":"bad_request"}', { status: 400, headers: CORS });
