@@ -10,6 +10,8 @@
  * CITY_URL values are the English path segments used by amozhgary.tv.
  * Site switched from Kurdish-encoded paths (%D8%AF%D9%87%DB%86%DA%A9) to
  * plain English names (/bang/Duhok) — updated May 2026.
+ * Verified city paths May 2026: Kfry→Kifri, Rania→Ranya, Koya→Koysinjaq,
+ * Qaladze→Qaladiza, Qarahanjir→Qara%20Hanjir, DuzKhormatou→Tuz%20Khurma.
  */
 
 const CITY_URL = {
@@ -18,10 +20,10 @@ const CITY_URL = {
   Duhok:         'Duhok',
   Kirkuk:        'Kirkuk',
   Halabja:       'Halabja',
-  Kfry:          'Kfry',
-  Rania:         'Rania',
-  Koya:          'Koya',
-  Qaladze:       'Qaladze',
+  Kfry:          'Kifri',          // site path: /bang/Kifri
+  Rania:         'Ranya',          // site path: /bang/Ranya
+  Koya:          'Koysinjaq',      // site path: /bang/Koysinjaq
+  Qaladze:       'Qaladiza',       // site path: /bang/Qaladiza
   Zakho:         'Zakho',
   Bardarash:     'Bardarash',
   Mosul:         'Mosul',
@@ -31,8 +33,8 @@ const CITY_URL = {
   Daquq:         'Daquq',
   Makhmur:       'Makhmur',
   Mandali:       'Mandali',
-  Qarahanjir:    'Qarahanjir',
-  DuzKhormatou:  'Duz%20Khormatou',
+  Qarahanjir:    'Qara%20Hanjir',  // site path: /bang/Qara%20Hanjir
+  DuzKhormatou:  'Tuz%20Khurma',   // site path: /bang/Tuz%20Khurma
 };
 
 export async function onRequest(context) {
