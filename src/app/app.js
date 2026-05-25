@@ -1676,7 +1676,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260570', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260571', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=40',      function() { _p2 = true; _check(); });
 }

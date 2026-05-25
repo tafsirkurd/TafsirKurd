@@ -2427,10 +2427,6 @@ window.GencineUI = {
           if (fb.pages){ var _fcp = document.createElement('div'); _fcp.className = 'book-feat-card-pages'; _fcp.textContent = fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _fcm.appendChild(_fcp); }
           if (fb.badge_until && new Date(fb.badge_until).getTime() > Date.now()){ var _fcb = document.createElement('div'); _fcb.className = 'book-feat-card-badge'; _fcb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; _fcm.appendChild(_fcb); }
           _fci2.appendChild(_fcm);
-          var _fccta = document.createElement('div'); _fccta.className = 'book-feat-card-cta';
-          var _fcctal = document.createElement('i'); _fcctal.className = 'fas fa-book-open'; _fccta.appendChild(_fcctal);
-          _fccta.appendChild(document.createTextNode(' ' + T('books.read_now','بیننەوە')));
-          _fci2.appendChild(_fccta);
           _fc.appendChild(_fci2);
           _fc.onclick = _makeFeatClick(fb);
           return _fc;
