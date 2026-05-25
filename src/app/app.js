@@ -8168,26 +8168,28 @@ function renderSettings(){
   content.appendChild(g4);
 
   // ── Performance ──────────────────────────────
+  // Note: tSafe() is used here because these keys may not exist in translations yet.
+  // tSafe() returns null for missing keys, so the Kurdish fallback text always shows.
   var gPerf=el('div','settings-group');
-  gPerf.appendChild(el('div','settings-group-title',t('settings.performance')||'کارایی'));
+  gPerf.appendChild(el('div','settings-group-title',tSafe('settings.performance')||'کارایی'));
   var _isLowEnd=document.documentElement.classList.contains('low-end-device');
   gPerf.appendChild(mkToggleRow(
-    t('settings.low_end_mode')||'دۆخی مۆبایلی کەم‌ئەنداز',
+    tSafe('settings.low_end_mode')||'دۆخی مۆبایلی کەم‌ئەنداز',
     _isLowEnd,
     function(){
       var nowLow=document.documentElement.classList.contains('low-end-device');
       if(nowLow){
         document.documentElement.classList.remove('low-end-device');
         try{localStorage.removeItem('tk_low_end');}catch(e){}
-        toast(t('toast.perf_full')||'کارایی تەواو چالاک کرا');
+        toast(tSafe('toast.perf_full')||'کارایی تەواو چالاک کرا');
       }else{
         document.documentElement.classList.add('low-end-device');
         try{localStorage.setItem('tk_low_end','1');}catch(e){}
-        toast(t('toast.perf_save')||'دۆخی زووی چالاک کرا');
+        toast(tSafe('toast.perf_save')||'دۆخی زووی چالاک کرا');
       }
       renderSettings();
     },
-    t('settings.low_end_mode_sub')||'ئەنیمەیشن و بەدرخشینەکان کەم دەکاتەوە بۆ مۆبایلە کەمئەندازەکان'
+    tSafe('settings.low_end_mode_sub')||'ئەنیمەیشن و بەدرخشینەکان کەم دەکاتەوە بۆ مۆبایلە کەمئەندازەکان'
   ));
   content.appendChild(gPerf);
 

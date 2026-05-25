@@ -56,8 +56,8 @@
   if(!lowEnd){
     if(navigator.deviceMemory&&navigator.deviceMemory<2)lowEnd=true;
     if(!lowEnd&&navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=2)lowEnd=true;
-    var _cv=parseInt((ua.match(/Chrome\/(\d+)/)||[,0])[1]);
-    if(!lowEnd&&!isIOS&&_cv>0&&_cv<85)lowEnd=true;
+    // cv already parsed above (safe-render detection) — reuse it
+    if(!lowEnd&&!isIOS&&cv>0&&cv<85)lowEnd=true;
     if(lowEnd){try{localStorage.setItem('tk_low_end','1');}catch(e){}}
   }
   // Slow network = session-only (don't persist — connection improves)
