@@ -105,6 +105,7 @@
       id: 'fasting', categoryKey: 'fasting', icon: 'fas fa-moon',
       labelKey: 'adhkar.fasting', labelFallback: 'نیەتا ڕۆژوو',
       subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕوژیدارییەکت خوا قبوڵ بکات',
+      fallbackAr: 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ',
       timeTag: 'ڕەمەزان',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= fajrMin && nowMin < maghribMin;
@@ -114,6 +115,7 @@
       id: 'breaking_fast', categoryKey: 'breaking_fast', icon: 'fas fa-utensils',
       labelKey: 'adhkar.breaking_fast', labelFallback: 'کاتا ئیفتارێ',
       subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ئیفتارا خوش',
+      fallbackAr: 'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ',
       timeTag: 'ئیفتار',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= maghribMin && nowMin < maghribMin + 45;
@@ -123,6 +125,7 @@
       id: 'lailat_qadr', categoryKey: 'lailat_qadr', icon: 'fas fa-star',
       labelKey: 'adhkar.lailat_qadr', labelFallback: 'شەوا قەدرێ',
       subtitleKey: 'gencine.smart.lailat_qadr_hint', subtitleFallback: 'شەوا هەزار مانگ',
+      fallbackAr: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
       timeTag: 'لێلەتول قەدر',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         if (h.month !== 9) return false;
@@ -137,6 +140,7 @@
       id: 'dhul_hijjah', categoryKey: 'dhul_hijjah', icon: 'fas fa-kaaba',
       labelKey: 'adhkar.dhul_hijjah', labelFallback: 'دەیا ذولحیجەیێ',
       subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دهە ڕۆژێن گەورە',
+      fallbackAr: 'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ',
       timeTag: 'ذوالحیجە',
       hijriCond: function() { var d = _getDhulHijjahDay(); return d >= 1 && d <= 8; }
     },
@@ -144,6 +148,7 @@
       id: 'arafat', categoryKey: 'arafat', icon: 'fas fa-kaaba',
       labelKey: 'adhkar.arafat', labelFallback: 'دوعای عەرەفاتێ',
       subtitleKey: 'gencine.smart.arafat_hint', subtitleFallback: 'باشترین ڕۆژی ساڵ',
+      fallbackAr: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ',
       timeTag: 'عەرەفە',
       hijriCond: function() { return _getDhulHijjahDay() === 9; }
     }
@@ -158,18 +163,21 @@
       id: 'rain', categoryKey: 'rain', icon: 'fas fa-cloud-rain',
       labelKey: 'adhkar.rain', labelFallback: 'باران',
       subtitleKey: 'gencine.smart.rain_hint', subtitleFallback: 'باران دکەت — دوعا بکە',
+      fallbackAr: 'اللَّهُمَّ صَيِّبًا نَافِعًا',
       timeTag: 'باران'
     },
     {
       id: 'thunder', categoryKey: 'thunder', icon: 'fas fa-bolt',
       labelKey: 'adhkar.thunder', labelFallback: 'کاتا برووسکێ',
       subtitleKey: 'gencine.smart.thunder_hint', subtitleFallback: 'زکرێن هەورووبرووسکە',
+      fallbackAr: 'سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ',
       timeTag: 'هەوا'
     },
     {
       id: 'wind', categoryKey: 'wind', icon: 'fas fa-wind',
       labelKey: 'adhkar.wind', labelFallback: 'کاتا هەوایی',
       subtitleKey: 'gencine.smart.wind_hint', subtitleFallback: 'زکرێن کاتی باد',
+      fallbackAr: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا وَخَيْرَ مَا فِيهَا',
       timeTag: 'هەوا'
     }
   ];
