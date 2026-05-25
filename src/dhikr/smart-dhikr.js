@@ -1067,9 +1067,8 @@
           (function _fill(n) {
             var txt = _getAyahAr(item._s, item._a);
             if (txt) {
-              var arEl2 = _mk('div', 'sd-zikr-ar');
-              arEl2.textContent = txt;
-              if (fallbackEl.parentNode) fallbackEl.parentNode.replaceChild(arEl2, fallbackEl);
+              fallbackEl.className = 'sd-zikr-ar';
+              fallbackEl.textContent = txt;
             } else if (n > 0) { setTimeout(function() { _fill(n - 1); }, 400); }
           })(20);
         }
