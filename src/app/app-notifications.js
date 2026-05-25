@@ -747,20 +747,36 @@ function checkNewBookNotif(){
 
 /* ===== OFFLINE BANNER ===== */
 var _offlineDebounce=null;
-// 'offline' is debounced 2.5s — WKWebView fires spurious offline events during
-// cold start and background/foreground transitions even when the device is online.
-// 'online' clears immediately and cancels any pending debounce.
+// WKWebView fires spurious offline events on cold start and bg/fg transitions.
+// navigator.onLine also returns false in that window even when device is online.
+// We probe the network with a real HEAD fetch before showing the banner so we
+// never rely on the unreliable browser event alone.
+function _probeOnline(cb){
+  // Use cache:no-store so it truly hits the network, timeout via AbortController
+  var ctrl=typeof AbortController!=='undefined'?new AbortController():null;
+  var timer=ctrl?setTimeout(function(){ctrl.abort();},4000):null;
+  fetch('/app/manifest.json',{method:'HEAD',cache:'no-store',signal:ctrl?ctrl.signal:undefined})
+    .then(function(r){clearTimeout(timer);cb(r.ok);})
+    .catch(function(){clearTimeout(timer);cb(false);});
+}
+function _showOfflineBanner(){
+  var b=document.getElementById('offlineBanner');
+  if(b)b.classList.add('on');
+}
+function _hideOfflineBanner(){
+  var b=document.getElementById('offlineBanner');
+  if(b)b.classList.remove('on');
+}
 window.addEventListener('offline',function(){
   clearTimeout(_offlineDebounce);
+  // Debounce 3s then probe — if probe fails we're truly offline
   _offlineDebounce=setTimeout(function(){
-    if(!navigator.onLine){
-      var b=document.getElementById('offlineBanner');
-      if(b)b.classList.add('on');
-    }
-  },2500);
+    _probeOnline(function(online){
+      if(!online)_showOfflineBanner();
+    });
+  },3000);
 });
 window.addEventListener('online',function(){
   clearTimeout(_offlineDebounce);
-  var b=document.getElementById('offlineBanner');
-  if(b)b.classList.remove('on');
+  _hideOfflineBanner();
 });
