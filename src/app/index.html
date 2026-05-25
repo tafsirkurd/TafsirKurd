@@ -2003,6 +2003,9 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .prayer-grid-card--next .prayer-grid-time{color:var(--accent)}
 /* Card tap feedback */
 .prayer-grid-card--tap{transform:scale(0.94)}
+/* City-change: shimmer on time cells while new data loads */
+.prayer-grid-card--loading .prayer-grid-time{color:transparent;background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.06) 75%);background-size:200% 100%;border-radius:6px;animation:prayer-time-shimmer .9s linear infinite}
+@keyframes prayer-time-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 /* Urgency: countdown color + light intensity as prayer approaches */
 .sky-scene.urgency-1 .sky-countdown{color:rgba(255,228,100,1)}
 .sky-scene.urgency-2 .sky-countdown{color:rgba(255,165,60,1);animation:urgency-breathe 2.2s ease-in-out infinite}

@@ -2985,27 +2985,117 @@
 
   async function onCityChange(city) {
     setCity(city);
+
+    // ── 1. Instant UI feedback — no teardown, no loading state ──────────────
+    // Update city pills and header subtitle immediately
     document.querySelectorAll('[data-city]').forEach(function(btn) {
       btn.classList.toggle('on', btn.dataset.city === city);
     });
     var hdrSub = document.getElementById('as2HdrCitySub');
     if (hdrSub) hdrSub.textContent = getCityLabel(city);
-    // Invalidate cached state so render() always fetches fresh data for the new city
-    _renderedKey = null;
-    _currentTimings = null;
-    _currentData = null;
-    _currentDateISO = null;
-    // Cancel prayer-boundary timers for the old city — new timers will be scheduled
-    // by pushWidgetData after the render() fetches and pushes data for the new city.
+
+    // Update sky city label instantly (no sky scene rebuild)
+    var skyCity = document.querySelector('.sky-city');
+    if (skyCity) skyCity.textContent = getCityLabel(city);
+
+    // Put grid card times into shimmer while we load
+    document.querySelectorAll('.prayer-grid-card').forEach(function(card) {
+      var timeEl = card.querySelector('.prayer-grid-time');
+      if (timeEl) { timeEl.dataset.prevTime = timeEl.textContent; timeEl.textContent = '—'; }
+      card.classList.add('prayer-grid-card--loading');
+    });
+
+    // ── 2. Fetch new city data (static CDN → Worker → Aladhan) ──────────────
     _clearBoundaryTimers();
+    var today = window.PrayerLogic.todayBaghdad();
+
+    var fresh;
+    try {
+      fresh = await window.PrayerAPI.fetchPrayerTimes(city, today, 13);
+    } catch(e) {
+      fresh = null;
+    }
+
+    if (fresh && fresh.timings) {
+      // ── 3. Surgical update — only numbers, no DOM teardown ──────────────
+      var pl      = window.PrayerLogic;
+      var timings = fresh.timings;
+      var use12h  = getFormat() === '12';
+      var now3    = new Date();
+      var next    = pl.getNextPrayer(timings, today);
+
+      document.querySelectorAll('.prayer-grid-card[data-prayer]').forEach(function(card) {
+        var name    = card.dataset.prayer;
+        var raw     = timings[name] || '';
+        var timeEl  = card.querySelector('.prayer-grid-time');
+        if (timeEl) timeEl.textContent = pl.formatTime(raw, use12h);
+        card.classList.remove('prayer-grid-card--loading');
+        var isNext   = next && next.name === name;
+        var isPassed = raw ? (pl.parseAsDate(raw, today) < now3 && !isNext) : false;
+        card.classList.toggle('prayer-grid-card--next',   isNext);
+        card.classList.toggle('prayer-grid-card--passed', isPassed);
+      });
+
+      // Update countdown display for new city
+      _currentTimings  = timings;
+      _currentDateISO  = today;
+      _currentData     = fresh;
+      _renderedKey     = city + ':' + today + ':' + getFormat();
+
+      // Update sky scene city data & sky phase (no rebuild)
+      if (document.getElementById('prayerSkyScene')) {
+        document.getElementById('prayerSkyScene').dataset.city = city;
+        _doUpdateSky();
+      }
+
+      // Update date display in sky
+      var datesEl = document.getElementById('skyDates');
+      if (datesEl && fresh.date) {
+        var dateInfo = fresh.date;
+        var dateLines2 = [];
+        if (dateInfo.gregorian) {
+          var _wd2 = dateInfo.gregorian.weekday && dateInfo.gregorian.weekday.en ? dateInfo.gregorian.weekday.en + ' ' : '';
+          dateLines2.push(_wd2 + dateInfo.gregorian.day + ' ' + (dateInfo.gregorian.month && dateInfo.gregorian.month.en || '') + ' ' + dateInfo.gregorian.year);
+        } else {
+          var gd2 = new Date(today + 'T12:00:00+03:00');
+          dateLines2.push(gd2.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Baghdad' }));
+        }
+        if (dateInfo.hijri) dateLines2.push(dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ');
+        else if (dateInfo.hijriStr) dateLines2.push(dateInfo.hijriStr);
+        datesEl.innerHTML = dateLines2.map(function(l) { return '<span>' + l + '</span>'; }).join('');
+      }
+
+      // Update athan settings sheet if not open
+      var _overlay2 = document.getElementById('prayerSettingsOverlay');
+      if (!_overlay2 || !_overlay2.classList.contains('open')) {
+        updateAthanSettings(timings, city, today);
+      }
+
+      // Restart countdown for new city times
+      if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
+      startCountdown();
+
+    } else {
+      // Fetch failed — restore previous times, remove shimmer
+      document.querySelectorAll('.prayer-grid-card').forEach(function(card) {
+        var timeEl = card.querySelector('.prayer-grid-time');
+        if (timeEl && timeEl.dataset.prevTime) timeEl.textContent = timeEl.dataset.prevTime;
+        card.classList.remove('prayer-grid-card--loading');
+      });
+      // Fall back to full render so the user doesn't see stale data silently
+      _renderedKey = null;
+      _currentTimings = null;
+      _currentData = null;
+      _currentDateISO = null;
+      await render();
+    }
+
     closeSettings();
-    await render();
-    // Reschedule for the new city. scheduleAthanMultiDay cancels old notifications
-    // internally before scheduling — no need to pre-cancel here (that creates a
-    // window where 0 notifications are pending if the schedule call fails).
+
+    // ── 4. Reschedule notifications for new city (background) ───────────────
     if (getAthan()) {
-      var today = window.PrayerLogic.todayBaghdad();
-      var daysData = await fetchDaysData(city, today, 28);
+      var today2 = window.PrayerLogic.todayBaghdad();
+      var daysData = await fetchDaysData(city, today2, 28);
       if (daysData.length) {
         var res = await window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
         if (res && res.count > 0) {
