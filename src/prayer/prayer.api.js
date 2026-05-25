@@ -94,18 +94,20 @@
     var nm = month === 12 ? 1 : month + 1;
     var nextKey = window.PrayerCache.monthKey(city, ny, nm);
     if (window.PrayerCache.read(nextKey)) return; // already cached
-    var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
-              '&year=' + ny + '&month=' + nm;
-    fetch(url)
-      .then(function(r) { return r.ok ? r.json() : null; })
-      .then(function(d) {
-        if (!d || d.error || !_validateMonthly(d, ny, nm)) return;
-        window.PrayerCache.writeWithMeta(nextKey, d, {
-          fetchedAt: Date.now(), source: 'kurd', city: city, year: ny, month: nm
-        });
-        console.log('[PrayerAPI] prefetched next month:', city, ny + '-' + nm);
+
+    // Try static CDN first (fast, no scraping), fall back to CF Worker
+    _fetchFromStatic(city, ny, nm, nextKey)
+      .then(function() {
+        console.log('[PrayerAPI] prefetched next month (static):', city, ny + '-' + nm);
       })
-      .catch(function() {});
+      .catch(function() {
+        // Static missing (e.g. next year not yet pre-fetched) → try Worker
+        return _fetchFromWorker(city, ny, nm, nextKey)
+          .then(function() {
+            console.log('[PrayerAPI] prefetched next month (worker):', city, ny + '-' + nm);
+          });
+      })
+      .catch(function() {}); // prefetch is best-effort — swallow all errors
   }
 
   // ── Static annual JSON ──────────────────────────────────────────────────────

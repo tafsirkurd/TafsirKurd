@@ -82,7 +82,14 @@ async function main() {
     : ALL_CITIES;
 
   const months = monthArg
-    ? [parseInt(monthArg)]
+    ? (() => {
+        const m = parseInt(monthArg);
+        if (!m || m < 1 || m > 12) {
+          console.error('Invalid month: ' + monthArg + ' — must be 1–12');
+          process.exit(1);
+        }
+        return [m];
+      })()
     : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
   const isCorrectionMode = !!(cityArg && monthArg);
