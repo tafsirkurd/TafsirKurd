@@ -25,6 +25,8 @@
       labelKey: 'adhkar.masjid_enter', labelFallback: 'چونا مزگەوت',
       subtitleKey: 'gencine.smart.masjid_hint', subtitleFallback: 'کاتا چوونا مزگەوتێ',
       fallbackAr: 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ',
+      fallbackRepeat: 3,
+      fallbackSource: 'مسلم',
       timeTag: 'مزگەوت', basePriority: 90,
       prayerOffset: 0   /* 0–20 min after each athan */
     },
@@ -33,6 +35,8 @@
       labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
       subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
       fallbackAr: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
+      fallbackRepeat: 33,
+      fallbackSource: 'البخاري ومسلم',
       timeTag: 'دوای نوێژ', basePriority: 85,
       prayerOffset: 20  /* 20–40 min after each athan */
     },
@@ -42,6 +46,8 @@
       labelKey: 'adhkar.morning', labelFallback: 'زکرێن بەیانیکردن',
       subtitleKey: 'gencine.smart.morning_hint', subtitleFallback: 'ڕۆژا خوه ب زکرێ دەستپێکە',
       fallbackAr: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا',
+      fallbackRepeat: 3,
+      fallbackSource: 'أبو داود والترمذي',
       timeTag: 'بەیانیکردن', basePriority: 50,
       timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
     },
@@ -50,6 +56,8 @@
       labelKey: 'adhkar.waking', labelFallback: 'دوای هاتنا خوو',
       subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'دوای هاتنا خووێ بخوێنە',
       fallbackAr: 'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا',
+      fallbackRepeat: 1,
+      fallbackSource: 'البخاري',
       timeTag: 'بەیانیکردن', basePriority: 58, /* beats morning when both active (Fajr→Sunrise) */
       timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
     },
@@ -65,6 +73,8 @@
       labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێواربوون',
       subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێوارا خوە ب زکرێ بکە',
       fallbackAr: 'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا',
+      fallbackRepeat: 3,
+      fallbackSource: 'أبو داود والترمذي',
       timeTag: 'ئێواربوون', basePriority: 50,
       timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
     },
@@ -73,6 +83,8 @@
       labelKey: 'adhkar.sleep', labelFallback: 'دوای خەوکردن',
       subtitleKey: 'gencine.smart.sleep_hint', subtitleFallback: 'پێش خەوکردنێ بخوێنە',
       fallbackAr: 'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا',
+      fallbackRepeat: 3,
+      fallbackSource: 'البخاري ومسلم',
       timeTag: 'شەو', basePriority: 50,
       timeWindow: { start: 'Isha', end: 'Fajr', fs: 21*60, fe: 5*60, wraps: true }
     },
@@ -80,6 +92,8 @@
       id: 'friday', categoryKey: 'friday', icon: 'fas fa-calendar-day',
       labelKey: 'adhkar.friday', labelFallback: 'ڕۆژا ئینانێ',
       subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ڕۆژا ئینانێ ئەمڕۆ یە',
+      fallbackRepeat: 1,
+      fallbackSource: 'أبو داود',
       timeTag: 'ئینانی', basePriority: 65, /* intentionally beats morning/evening on Friday */
       dayBoostDays: [5]
     },
@@ -88,6 +102,8 @@
       labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
       subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
       timeTag: null, basePriority: 60, /* beats morning/evening but loses to friday */
+      fallbackRepeat: 10,
+      fallbackSource: 'مسلم',
       dayBoostDays: [5],
       thursdayNightBoost: true
     },
@@ -106,6 +122,8 @@
       labelKey: 'adhkar.fasting', labelFallback: 'نیەتا ڕۆژوو',
       subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕوژیدارییەکت خوا قبوڵ بکات',
       fallbackAr: 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ',
+      fallbackRepeat: 1,
+      fallbackSource: 'أبو داود',
       timeTag: 'ڕەمەزان',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= fajrMin && nowMin < maghribMin;
@@ -116,6 +134,8 @@
       labelKey: 'adhkar.breaking_fast', labelFallback: 'کاتا ئیفتارێ',
       subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ئیفتارا خوش',
       fallbackAr: 'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ',
+      fallbackRepeat: 1,
+      fallbackSource: 'أبو داود والترمذي',
       timeTag: 'ئیفتار',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= maghribMin && nowMin < maghribMin + 45;
@@ -126,6 +146,8 @@
       labelKey: 'adhkar.lailat_qadr', labelFallback: 'شەوا قەدرێ',
       subtitleKey: 'gencine.smart.lailat_qadr_hint', subtitleFallback: 'شەوا هەزار مانگ',
       fallbackAr: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
+      fallbackRepeat: 1,
+      fallbackSource: 'الترمذي',
       timeTag: 'لێلەتول قەدر',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         if (h.month !== 9) return false;
@@ -141,6 +163,8 @@
       labelKey: 'adhkar.dhul_hijjah', labelFallback: 'دەیا ذولحیجەیێ',
       subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دهە ڕۆژێن گەورە',
       fallbackAr: 'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ',
+      fallbackRepeat: 100,
+      fallbackSource: 'البخاري',
       timeTag: 'ذوالحیجە',
       hijriCond: function() { var d = _getDhulHijjahDay(); return d >= 1 && d <= 8; }
     },
@@ -149,6 +173,8 @@
       labelKey: 'adhkar.arafat', labelFallback: 'دوعای عەرەفاتێ',
       subtitleKey: 'gencine.smart.arafat_hint', subtitleFallback: 'باشترین ڕۆژی ساڵ',
       fallbackAr: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ',
+      fallbackRepeat: 1,
+      fallbackSource: 'مالك والترمذي',
       timeTag: 'عەرەفە',
       hijriCond: function() { return _getDhulHijjahDay() === 9; }
     }
@@ -164,6 +190,8 @@
       labelKey: 'adhkar.rain', labelFallback: 'باران',
       subtitleKey: 'gencine.smart.rain_hint', subtitleFallback: 'باران دکەت — دوعا بکە',
       fallbackAr: 'اللَّهُمَّ صَيِّبًا نَافِعًا',
+      fallbackRepeat: 1,
+      fallbackSource: 'البخاري',
       timeTag: 'باران'
     },
     {
@@ -171,6 +199,8 @@
       labelKey: 'adhkar.thunder', labelFallback: 'کاتا برووسکێ',
       subtitleKey: 'gencine.smart.thunder_hint', subtitleFallback: 'زکرێن هەورووبرووسکە',
       fallbackAr: 'سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ',
+      fallbackRepeat: 1,
+      fallbackSource: 'الموطأ',
       timeTag: 'هەوا'
     },
     {
@@ -178,6 +208,8 @@
       labelKey: 'adhkar.wind', labelFallback: 'کاتا هەوایی',
       subtitleKey: 'gencine.smart.wind_hint', subtitleFallback: 'زکرێن کاتی باد',
       fallbackAr: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا وَخَيْرَ مَا فِيهَا',
+      fallbackRepeat: 1,
+      fallbackSource: 'أبو داود',
       timeTag: 'هەوا'
     }
   ];
@@ -191,6 +223,8 @@
       labelKey: 'adhkar.forgiveness', labelFallback: 'داواکاری لێبوردن',
       subtitleKey: 'gencine.smart.forgiveness_hint', subtitleFallback: 'ئیستیغفارەکە زیادە بکە',
       fallbackAr: 'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ',
+      fallbackRepeat: 3,
+      fallbackSource: 'البخاري ومسلم',
       timeTag: null
     },
     {
@@ -198,6 +232,8 @@
       labelKey: 'adhkar.protection', labelFallback: 'پاراستن',
       subtitleKey: 'gencine.smart.protection_hint', subtitleFallback: 'زکرێن پاراستن و حەمایەتێ',
       fallbackAr: 'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ',
+      fallbackRepeat: 3,
+      fallbackSource: 'أبو داود والترمذي',
       timeTag: null
     },
     {
@@ -205,6 +241,8 @@
       labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
       subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
       fallbackAr: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
+      fallbackRepeat: 10,
+      fallbackSource: 'مسلم',
       timeTag: null
     },
     {
@@ -212,6 +250,8 @@
       labelKey: 'adhkar.gratitude', labelFallback: 'سوپاسگوزاری',
       subtitleKey: 'gencine.smart.gratitude_hint', subtitleFallback: 'سوپاسا خواێ بکە',
       fallbackAr: 'الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ',
+      fallbackRepeat: 3,
+      fallbackSource: 'ابن ماجه',
       timeTag: null
     },
     {
@@ -219,6 +259,8 @@
       labelKey: 'adhkar.before_quran', labelFallback: 'بەرا خوێندنا قورئانێ',
       subtitleKey: 'gencine.smart.before_quran_hint', subtitleFallback: 'پێش دەستپێکردنا قورئانێ',
       fallbackAr: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
+      fallbackRepeat: 1,
+      fallbackSource: 'البخاري',
       timeTag: null
     },
     {
@@ -226,6 +268,8 @@
       labelKey: 'adhkar.distress', labelFallback: 'پەریشانی',
       subtitleKey: 'gencine.smart.distress_hint', subtitleFallback: 'دوعا لە کاتی زەحمەت',
       fallbackAr: 'لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ',
+      fallbackRepeat: 3,
+      fallbackSource: 'الترمذي',
       timeTag: null
     },
     {
@@ -233,6 +277,8 @@
       labelKey: 'adhkar.istikhara', labelFallback: 'دوعای ئیستیخارە',
       subtitleKey: 'gencine.smart.istikhara_hint', subtitleFallback: 'داواکاری ڕێنمایی',
       fallbackAr: 'اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ وَأَسْتَقْدِرُكَ بِقُدْرَتِكَ',
+      fallbackRepeat: 1,
+      fallbackSource: 'البخاري',
       timeTag: null
     },
     {
@@ -240,6 +286,8 @@
       labelKey: 'adhkar.adhan', labelFallback: 'دوای ئەزان',
       subtitleKey: 'gencine.smart.adhan_hint', subtitleFallback: 'دوعای دوای ئەزان',
       fallbackAr: 'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ',
+      fallbackRepeat: 1,
+      fallbackSource: 'البخاري',
       timeTag: null
     }
   ];
@@ -1037,8 +1085,10 @@
       subEl.textContent = streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ پەی هەم 🔥');
     } else {
       var subParts = [T(item.labelKey, item.labelFallback)];
-      if (featured && (featured.repeat || 1) > 1) subParts.push('× ' + featured.repeat);
-      if (featured && featured.source)             subParts.push(featured.source);
+      var _rep = featured ? (featured.repeat || 1) : (item.fallbackRepeat || 1);
+      var _src = featured ? featured.source : item.fallbackSource;
+      if (_rep > 1) subParts.push('× ' + _rep);
+      if (_src)     subParts.push(_src);
       subEl.textContent = subParts.join('  ·  ');
     }
     content.appendChild(subEl);
