@@ -39,7 +39,7 @@ function haptic(pattern){
       var dur=pattern&&pattern[0]||30;
       if(dur<=30){H.impact({style:'LIGHT'});}
       else{H.notification({type:'SUCCESS'});}
-    }else{navigator.vibrate(pattern||[30]);}
+    }else if(!navigator.userActivation||navigator.userActivation.hasBeenActive){navigator.vibrate(pattern||[30]);}
   }catch(e){}
 }
 

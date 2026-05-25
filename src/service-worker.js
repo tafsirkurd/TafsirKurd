@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v846';
+const CACHE_NAME = 'tafsir-kurd-v847';
 
 // All files required to run the app fully offline
 // NOTE: /data/surahs/ and /data/tafsir/ JSON files are NOT precached here.
@@ -18,7 +18,7 @@ const PRECACHE = [
   '/app/app-storage.js?v=20260525',
   '/app/app-core.js?v=20260525',
   '/app/app-init.js?v=20260614',
-  '/app/app-notifications.js?v=20260613',
+  '/app/app-notifications.js?v=20260614',
   '/app/app-search.js?v=20260525',
   '/app/app-quran.js?v=20260607',
   '/app/app-audio.js?v=20260525',
