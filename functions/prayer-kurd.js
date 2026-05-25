@@ -56,7 +56,20 @@ export async function onRequest(context) {
 
     // cityPath is already percent-encoded — do NOT wrap with encodeURIComponent
     const pageUrl = 'https://amozhgary.tv/bang/' + cityPath + '?month=' + month;
-    const res = await fetch(pageUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+
+    // 8-second timeout — fail fast so the app's Aladhan fallback kicks in quickly
+    // rather than waiting Cloudflare's default 30s per-fetch limit.
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 8000);
+    let res;
+    try {
+      res = await fetch(pageUrl, {
+        signal: ctrl.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TafsirKurd/1.0)' }
+      });
+    } finally {
+      clearTimeout(tid);
+    }
     if (!res.ok) return resp({ error: 'upstream ' + res.status }, 502);
 
     const html = await res.text();
@@ -64,7 +77,8 @@ export async function onRequest(context) {
     return resp({ city, year, month, days });
 
   } catch (e) {
-    return resp({ error: String(e) }, 500);
+    const isTimeout = e && (e.name === 'AbortError' || String(e).includes('AbortError'));
+    return resp({ error: isTimeout ? 'upstream-timeout' : String(e) }, 502);
   }
 }
 

@@ -135,7 +135,13 @@
       try {
         var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
                   '&year=' + year + '&month=' + month;
-        var res = await fetch(url);
+        // 10s client-side timeout — Worker already has an 8s upstream timeout.
+        // Belt-and-suspenders: if CF itself is slow, don't block the prayer UI.
+        var _ctrl = new AbortController();
+        var _tid  = setTimeout(function(){ _ctrl.abort(); }, 10000);
+        var res;
+        try { res = await fetch(url, { signal: _ctrl.signal }); }
+        finally { clearTimeout(_tid); }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         monthly = await res.json();
         if (monthly.error) throw new Error(monthly.error);
@@ -240,8 +246,12 @@
     var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
               '&year=' + year + '&month=' + month;
 
-    fetch(url)
-      .then(function(r) { return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
+    // 10s timeout on background refresh too — don't hold the in-flight lock forever
+    var _bgCtrl = new AbortController();
+    var _bgTid  = setTimeout(function(){ _bgCtrl.abort(); }, 10000);
+    fetch(url, { signal: _bgCtrl.signal })
+      .then(function(r) { clearTimeout(_bgTid); return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
+      .catch(function(e) { clearTimeout(_bgTid); return Promise.reject(e); })
       .then(function(fresh) {
         if (!fresh || fresh.error) throw new Error(fresh && fresh.error ? fresh.error : 'empty');
         if (!_validateMonthly(fresh, year, month)) throw new Error('validation-failed');
