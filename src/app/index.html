@@ -2478,9 +2478,9 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 @keyframes genc-fade-in{from{opacity:0}to{opacity:1}}
 .genc-fade-in{animation:genc-fade-in .22s ease forwards}
 /* ── Books ── */
-.book-cat-row{display:flex;gap:6px;padding:10px 16px 4px;overflow-x:auto;scrollbar-width:none}
-.book-cat-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600;background:var(--bg2);color:var(--text2);border:none;cursor:pointer;transition:all .2s}
-.book-cat-btn.on{background:var(--accent);color:var(--accent-t)}
+.book-cat-row{display:flex;gap:0;padding:0 12px;overflow-x:auto;scrollbar-width:none;border-bottom:1.5px solid var(--border);margin-bottom:4px}
+.book-cat-btn{flex-shrink:0;padding:9px 14px;border-radius:0;font-size:.8rem;font-weight:600;background:transparent;color:var(--text2);border:none;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;cursor:pointer;transition:color .18s,border-color .18s}
+.book-cat-btn.on{color:var(--accent);border-bottom-color:var(--accent)}
 .book-search-wrap{display:flex;align-items:center;gap:8px;margin:10px 16px 0;background:var(--bg2);border-radius:12px;padding:0 12px;border:1px solid var(--border)}
 .book-search-ico{color:var(--text3);font-size:.82rem;flex-shrink:0}
 .book-search-inp{flex:1;background:none;border:none;outline:none;padding:10px 4px;font-size:.88rem;color:var(--text);font-family:inherit}
