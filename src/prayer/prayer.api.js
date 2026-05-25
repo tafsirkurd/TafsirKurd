@@ -1,14 +1,16 @@
 /**
  * Prayer Times API
  *
- * Primary source: amozhgary.tv (official Kurdistan timetable) via
- *   TafsirKurd CF function at /prayer-kurd
- *   — fetches a full month at once, cached in localStorage per month.
+ * Source priority:
+ *   1. localStorage cache  — instant, checked first every time
+ *   2. Static annual JSON  — /prayer-data/{year}/{city}.json (CDN, no scraping)
+ *                            Generated once a year via scripts/fetch-prayer-year.js.
+ *                            Corrections: re-run the script for the affected city/month,
+ *                            push → deploy → propagates within 1 hour via backgroundRefresh.
+ *   3. CF Worker           — /prayer-kurd (scrapes amozhgary.tv on demand, fallback)
+ *   4. Aladhan API         — /v1/timings method=13 (Diyanet, last resort)
  *
- * Fallback: Aladhan API /v1/timings with method=13 (Diyanet / Turkey).
- *
- * method param in fetchPrayerTimes() is kept for API compatibility but ignored
- * — the source is now always amozhgary.tv (or Aladhan as fallback).
+ * method param in fetchPrayerTimes() is kept for API compatibility but ignored.
  */
 (function() {
   'use strict';
@@ -106,18 +108,78 @@
       .catch(function() {});
   }
 
+  // ── Static annual JSON ──────────────────────────────────────────────────────
+
+  /**
+   * Fetch a month's data from the static annual JSON file on the CDN.
+   * Files live at /prayer-data/{year}/{city}.json and are generated once a year
+   * by scripts/fetch-prayer-year.js.
+   * Returns the monthly object { city, year, month, days } or throws.
+   */
+  async function _fetchFromStatic(city, year, month, mkey) {
+    var url = '/prayer-data/' + year + '/' + city + '.json';
+    var _ctrl = new AbortController();
+    var _tid  = setTimeout(function(){ _ctrl.abort(); }, 5000);
+    var res;
+    try { res = await fetch(url, { signal: _ctrl.signal }); }
+    finally { clearTimeout(_tid); }
+    if (!res.ok) throw new Error('static-' + res.status);
+    var annual = await res.json();
+    var monthDays = annual.months && (annual.months[month] || annual.months[String(month)]);
+    if (!monthDays || typeof monthDays !== 'object') throw new Error('static-month-missing');
+    var monthly = { city: city, year: year, month: month, days: monthDays };
+    if (!_validateMonthly(monthly, year, month)) throw new Error('static-validation-failed');
+    window.PrayerCache.writeWithMeta(mkey, monthly, {
+      fetchedAt:   Date.now(),
+      source:      'static',
+      city:        city,
+      year:        year,
+      month:       month,
+      generatedAt: annual.generatedAt || 0  // used by backgroundRefresh to detect corrections
+    });
+    _storeDebugInfo('static', mkey);
+    return monthly;
+  }
+
+  /**
+   * Fetch a month's data from the CF Worker (scrapes amozhgary.tv on demand).
+   * Used as fallback when static file is missing, and as correction source in
+   * backgroundRefresh when the static file's generatedAt is newer than cached.
+   */
+  async function _fetchFromWorker(city, year, month, mkey) {
+    var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
+              '&year=' + year + '&month=' + month;
+    var _ctrl = new AbortController();
+    var _tid  = setTimeout(function(){ _ctrl.abort(); }, 10000);
+    var res;
+    try { res = await fetch(url, { signal: _ctrl.signal }); }
+    finally { clearTimeout(_tid); }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var monthly = await res.json();
+    if (monthly.error) throw new Error(monthly.error);
+    if (!_validateMonthly(monthly, year, month)) throw new Error('validation-failed');
+    window.PrayerCache.writeWithMeta(mkey, monthly, {
+      fetchedAt: Date.now(), source: 'kurd', city: city, year: year, month: month
+    });
+    _storeDebugInfo('kurd', mkey);
+    return monthly;
+  }
+
   // ── Main fetch ──────────────────────────────────────────────────────────────
 
   /**
    * Fetch prayer times for a city on a specific date.
-   * Tries amozhgary.tv monthly data first, falls back to Aladhan method=13.
    *
-   * @param {string}      city    — "Duhok" | "Erbil" | "Sulaymaniyah" | "Zakho"
+   * Source order:
+   *   1. localStorage cache (instant)
+   *   2. Static annual JSON on CDN (/prayer-data/{year}/{city}.json)
+   *   3. CF Worker (/prayer-kurd — scrapes amozhgary.tv)
+   *   4. Aladhan API method=13 (last resort)
+   *
+   * @param {string}      city    — "Duhok" | "Erbil" | "Sulaymaniyah" | etc.
    * @param {string|null} dateISO — "YYYY-MM-DD" (Baghdad date) or null for today
    * @param {number}      method  — ignored (kept for backwards compat)
    * @returns {Promise<{timings, date}>}
-   *   timings: { Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha } in HH:MM 24h Baghdad time
-   *   date:    { hijriStr? } or full Aladhan date object on fallback
    */
   async function fetchPrayerTimes(city, dateISO, method) {
     var today = dateISO ||
@@ -127,32 +189,29 @@
     var month = parts[1];
     var day   = parts[2];
 
-    // ── Primary: amozhgary.tv via CF function (monthly cache) ──
     var mkey    = window.PrayerCache.monthKey(city, year, month);
-    var monthly = window.PrayerCache.read(mkey);
+    var monthly = window.PrayerCache.read(mkey);   // ── 1. localStorage ──
 
     if (!monthly) {
+      // ── 2. Static annual JSON ──
       try {
-        var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
-                  '&year=' + year + '&month=' + month;
-        // 10s client-side timeout — Worker already has an 8s upstream timeout.
-        // Belt-and-suspenders: if CF itself is slow, don't block the prayer UI.
-        var _ctrl = new AbortController();
-        var _tid  = setTimeout(function(){ _ctrl.abort(); }, 10000);
-        var res;
-        try { res = await fetch(url, { signal: _ctrl.signal }); }
-        finally { clearTimeout(_tid); }
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        monthly = await res.json();
-        if (monthly.error) throw new Error(monthly.error);
-        if (!_validateMonthly(monthly, year, month)) throw new Error('validation-failed');
-        window.PrayerCache.writeWithMeta(mkey, monthly, {
-          fetchedAt: Date.now(), source: 'kurd', city: city, year: year, month: month
-        });
-        _storeDebugInfo('kurd', mkey);
+        monthly = await _fetchFromStatic(city, year, month, mkey);
         _prefetchNextMonthIfNearEnd(city, year, month, day);
+        console.log('[PrayerAPI] source=static city=' + city + ' ' + year + '-' + month);
       } catch(e) {
-        console.warn('[PrayerAPI] primary fetch failed:', e && e.message, '— falling back to Aladhan');
+        console.warn('[PrayerAPI] static failed:', e && e.message);
+        monthly = null;
+      }
+    }
+
+    if (!monthly) {
+      // ── 3. CF Worker ──
+      try {
+        monthly = await _fetchFromWorker(city, year, month, mkey);
+        _prefetchNextMonthIfNearEnd(city, year, month, day);
+        console.log('[PrayerAPI] source=worker city=' + city + ' ' + year + '-' + month);
+      } catch(e) {
+        console.warn('[PrayerAPI] worker failed:', e && e.message, '— trying Aladhan');
         monthly = null;
       }
     }
@@ -170,7 +229,7 @@
       }
     }
 
-    // ── Fallback: Aladhan method=13 (Diyanet) ──
+    // ── 4. Aladhan fallback ──
     var fallbackResult = await fetchFromAladhan(city, today, 13);
     _storeDebugInfo('aladhan', mkey);
     return fallbackResult;
@@ -210,13 +269,16 @@
   var _bgInFlight = {};
 
   /**
-   * Silently re-fetch the monthly cache in the background if it's older than
-   * STALE_MS. If today's timings changed, calls onFreshData(newData).
-   * Never blocks the caller — always fires and forgets.
-   * At most one fetch per mkey is in flight at any time.
+   * Silently re-fetch prayer data in the background when the cache is stale.
+   * Also detects deployed corrections: if the static annual JSON has a newer
+   * generatedAt than what's stored in localStorage, it updates immediately
+   * even if the cache isn't otherwise stale.
    *
-   * @param {string}   city      — city name
-   * @param {string}   dateISO   — "YYYY-MM-DD"
+   * Source order: static annual JSON → CF Worker → give up (non-fatal).
+   * Never blocks the caller. At most one fetch per mkey in flight at a time.
+   *
+   * @param {string}   city        — city name
+   * @param {string}   dateISO     — "YYYY-MM-DD"
    * @param {Function} onFreshData — called with {timings, date} only if today's data changed
    */
   function backgroundRefresh(city, dateISO, onFreshData) {
@@ -224,66 +286,109 @@
     var year = parts[0], month = parts[1], day = parts[2];
     var mkey = window.PrayerCache.monthKey(city, year, month);
 
-    // isStale: true if fetched on a different Baghdad calendar day OR >6h same day
-    if (!window.PrayerCache.isStale(mkey, STALE_MS)) {
-      var _meta = window.PrayerCache.readMeta(mkey);
-      var _age  = _meta ? Math.round((Date.now() - _meta.fetchedAt) / 3600000) : '?';
-      console.log('[PrayerCache] status=valid_cache city=' + city + ' date=' + dateISO + ' age=' + _age + 'h source=' + (_meta && _meta.source || 'unknown'));
-      return;
-    }
+    var _meta    = window.PrayerCache.readMeta(mkey);
+    var _isStale = window.PrayerCache.isStale(mkey, STALE_MS);
 
-    // Only one fetch per month key in flight at a time
+    if (!_isStale) {
+      var _age = _meta ? Math.round((Date.now() - _meta.fetchedAt) / 3600000) : '?';
+      console.log('[PrayerCache] status=valid_cache city=' + city + ' date=' + dateISO + ' age=' + _age + 'h source=' + (_meta && _meta.source || 'unknown'));
+    }
+    // Even if cache is not stale, still check for corrections (generatedAt mismatch).
+    // We'll fire the static fetch below in all cases; it exits early if nothing changed.
+
     if (_bgInFlight[mkey]) return;
     _bgInFlight[mkey] = true;
 
-    var _staleMeta = window.PrayerCache.readMeta(mkey);
-    var _staleAge  = _staleMeta ? Math.round((Date.now() - _staleMeta.fetchedAt) / 3600000) : 'n/a';
-    var _staleReason = !_staleMeta ? 'no_cache' :
-      (new Date(_staleMeta.fetchedAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Baghdad' }) !==
-       new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Baghdad' }) ? 'new_baghdad_day' : 'age_' + _staleAge + 'h');
-    console.log('[PrayerCache] status=stale reason=' + _staleReason + ' city=' + city + ' date=' + dateISO + ' — refreshing');
+    if (_isStale) {
+      var _staleAge    = _meta ? Math.round((Date.now() - _meta.fetchedAt) / 3600000) : 'n/a';
+      var _staleReason = !_meta ? 'no_cache' :
+        (new Date(_meta.fetchedAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Baghdad' }) !==
+         new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Baghdad' }) ? 'new_baghdad_day' : 'age_' + _staleAge + 'h');
+      console.log('[PrayerCache] status=stale reason=' + _staleReason + ' city=' + city + ' date=' + dateISO + ' — refreshing');
+    }
 
-    var url = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) +
-              '&year=' + year + '&month=' + month;
+    // Snapshot today's old data before any overwrite
+    var _oldMonthly = window.PrayerCache.read(mkey);
+    var _oldDay     = _oldMonthly && _oldMonthly.days
+      ? (_oldMonthly.days[day] || _oldMonthly.days[String(day)]) : null;
 
-    // 10s timeout on background refresh too — don't hold the in-flight lock forever
-    var _bgCtrl = new AbortController();
-    var _bgTid  = setTimeout(function(){ _bgCtrl.abort(); }, 10000);
-    fetch(url, { signal: _bgCtrl.signal })
-      .then(function(r) { clearTimeout(_bgTid); return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
-      .catch(function(e) { clearTimeout(_bgTid); return Promise.reject(e); })
-      .then(function(fresh) {
-        if (!fresh || fresh.error) throw new Error(fresh && fresh.error ? fresh.error : 'empty');
-        if (!_validateMonthly(fresh, year, month)) throw new Error('validation-failed');
+    function _notifyIfChanged(freshDay, source) {
+      if (!freshDay) return;
+      if (_oldDay && JSON.stringify(_oldDay) === JSON.stringify(freshDay)) {
+        console.log('[PrayerCache] status=refresh_no_change source=' + source + ' city=' + city + ' date=' + dateISO);
+        return;
+      }
+      var _oldFajr = _oldDay ? _oldDay.Fajr : 'none';
+      console.log('[PrayerTimes] changed source=' + source + ' old_fajr=' + _oldFajr + ' new_fajr=' + freshDay.Fajr + ' city=' + city + ' date=' + dateISO);
+      onFreshData({
+        timings: {
+          Fajr: freshDay.Fajr, Sunrise: freshDay.Sunrise, Dhuhr: freshDay.Dhuhr,
+          Asr:  freshDay.Asr,  Maghrib: freshDay.Maghrib, Isha:  freshDay.Isha
+        },
+        date: { hijriStr: freshDay.hijri || null }
+      });
+    }
 
-        // Snapshot today's old timings before overwriting
-        var oldMonthly = window.PrayerCache.read(mkey);
-        var oldDay = oldMonthly && oldMonthly.days
-          ? (oldMonthly.days[day] || oldMonthly.days[String(day)]) : null;
+    // ── Step 1: try static annual JSON ──────────────────────────────────────
+    var _staticUrl  = '/prayer-data/' + year + '/' + city + '.json';
+    var _staticCtrl = new AbortController();
+    var _staticTid  = setTimeout(function(){ _staticCtrl.abort(); }, 5000);
 
-        // Always write fresh data with updated fetchedAt
-        window.PrayerCache.writeWithMeta(mkey, fresh, {
-          fetchedAt: Date.now(), source: 'kurd-bg', city: city, year: year, month: month
-        });
-        _storeDebugInfo('kurd-bg', mkey);
-        _prefetchNextMonthIfNearEnd(city, year, month, day);
+    fetch(_staticUrl, { signal: _staticCtrl.signal })
+      .then(function(r) { clearTimeout(_staticTid); return r.ok ? r.json() : Promise.reject('static-' + r.status); })
+      .catch(function(e) { clearTimeout(_staticTid); return Promise.reject(e); })
+      .then(function(annual) {
+        var monthDays = annual.months && (annual.months[month] || annual.months[String(month)]);
+        if (!monthDays) throw new Error('static-month-missing');
 
-        // Only notify caller if today's prayer times actually changed
-        var freshDay = fresh.days[day] || fresh.days[String(day)];
-        if (!freshDay) return;
-        if (oldDay && JSON.stringify(oldDay) === JSON.stringify(freshDay)) {
-          console.log('[PrayerCache] status=stale_refresh_no_change city=' + city + ' date=' + dateISO);
+        var staticGeneratedAt = annual.generatedAt || 0;
+        var cachedGeneratedAt = _meta && _meta.generatedAt ? _meta.generatedAt : 0;
+
+        // If static file is same version and cache is not stale → nothing to do
+        if (!_isStale && staticGeneratedAt <= cachedGeneratedAt) {
+          console.log('[PrayerCache] status=static_same_version city=' + city + ' date=' + dateISO);
           return;
         }
-        var _oldFajr = oldDay ? oldDay.Fajr : 'none';
-        console.log('[PrayerTimes] changed old_fajr=' + _oldFajr + ' new_fajr=' + freshDay.Fajr + ' city=' + city + ' date=' + dateISO);
-        onFreshData({
-          timings: {
-            Fajr: freshDay.Fajr, Sunrise: freshDay.Sunrise, Dhuhr: freshDay.Dhuhr,
-            Asr:  freshDay.Asr,  Maghrib: freshDay.Maghrib, Isha:  freshDay.Isha
-          },
-          date: { hijriStr: freshDay.hijri || null }
+
+        var monthly = { city: city, year: year, month: month, days: monthDays };
+        if (!_validateMonthly(monthly, year, month)) throw new Error('static-validation-failed');
+
+        window.PrayerCache.writeWithMeta(mkey, monthly, {
+          fetchedAt:   Date.now(),
+          source:      'static-bg',
+          city:        city,
+          year:        year,
+          month:       month,
+          generatedAt: staticGeneratedAt
         });
+        _storeDebugInfo('static-bg', mkey);
+        _prefetchNextMonthIfNearEnd(city, year, month, day);
+
+        var freshDay = monthDays[day] || monthDays[String(day)];
+        _notifyIfChanged(freshDay, 'static-bg');
+      })
+      .catch(function(staticErr) {
+        // ── Step 2: static unavailable → try Worker ──────────────────────────
+        if (!_isStale) return; // static failed but cache is fresh — don't bother Worker
+        console.log('[PrayerAPI] static-bg failed (' + (staticErr && (staticErr.message || staticErr)) + ') — trying worker');
+
+        var _wUrl  = KURD_BASE + '/prayer-kurd?city=' + encodeURIComponent(city) + '&year=' + year + '&month=' + month;
+        var _wCtrl = new AbortController();
+        var _wTid  = setTimeout(function(){ _wCtrl.abort(); }, 10000);
+        return fetch(_wUrl, { signal: _wCtrl.signal })
+          .then(function(r) { clearTimeout(_wTid); return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
+          .catch(function(e) { clearTimeout(_wTid); return Promise.reject(e); })
+          .then(function(fresh) {
+            if (!fresh || fresh.error) throw new Error(fresh && fresh.error ? fresh.error : 'empty');
+            if (!_validateMonthly(fresh, year, month)) throw new Error('validation-failed');
+            window.PrayerCache.writeWithMeta(mkey, fresh, {
+              fetchedAt: Date.now(), source: 'kurd-bg', city: city, year: year, month: month
+            });
+            _storeDebugInfo('kurd-bg', mkey);
+            _prefetchNextMonthIfNearEnd(city, year, month, day);
+            var freshDay = fresh.days[day] || fresh.days[String(day)];
+            _notifyIfChanged(freshDay, 'kurd-bg');
+          });
       })
       .catch(function(e) {
         console.log('[PrayerAPI] backgroundRefresh failed (non-fatal):', e && (e.message || e));
