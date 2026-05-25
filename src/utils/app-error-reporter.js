@@ -27,7 +27,7 @@
 
   // ── cached state ──────────────────────────────────────────────
   var _platform   = 'web';
-  var _appVersion = window.APP_VERSION || null;
+  var _appVersion = null;
   var _sessionId  = null;
   var _recentMsgs = {}; // message → timestamp, for 60s dedup
 

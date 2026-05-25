@@ -1224,7 +1224,6 @@
 
     /* ── swipe — non-passive so we can preventDefault vertical scroll ── */
     track.addEventListener('touchstart', function(e) {
-      e.stopPropagation(); // prevent panel PTR from arming on slider touches
       _cancelTeleport();
       var actualX = _readX();
       _drag = true; _decided = false; _horiz = false;
@@ -1236,13 +1235,8 @@
       _pauseProg();
     }, { passive: false });
 
-    // Document-level touchmove: e.cancelable is always true here.
-    // On elements inside -webkit-overflow-scrolling:touch panels, WKWebView marks
-    // touchmove as non-cancelable once UIScrollView commits, making track-level
-    // preventDefault() ineffective. Document level bypasses UIScrollView.
-    document.addEventListener('touchmove', function(e) {
+    track.addEventListener('touchmove', function(e) {
       if (!_drag) return;
-      if (e.cancelable) e.preventDefault();
       var cx = e.touches[0].clientX, cy = e.touches[0].clientY;
       var dx = cx - _sx, dy = cy - _sy;
       if (!_decided) {
@@ -1252,6 +1246,8 @@
         if (!_horiz) { _drag = false; _resumeProg(); return; }
       }
       if (!_horiz) return;
+      /* Block page scroll while dragging horizontally */
+      e.preventDefault();
       var now = performance.now(), dt = now - _vtLast;
       if (dt > 0) { _vx = (cx - _xLast) / dt; }
       _vtLast = now; _xLast = cx;
@@ -1300,14 +1296,6 @@
       _accum  = 0;
       _tStart = performance.now();
       if (_raf) cancelAnimationFrame(_raf);
-      // Double-rAF: element is inserted into DOM after render() returns, so
-      // wrapper.clientWidth is 0 here. Wait two frames for layout to commit,
-      // then snap position to correct pixel width (fixes pre-render width mismatch).
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          if (_alive() && wrapper.clientWidth > 0) _applyX(_posX(current), false);
-        });
-      });
       _raf = requestAnimationFrame(_tick);
     };
   }

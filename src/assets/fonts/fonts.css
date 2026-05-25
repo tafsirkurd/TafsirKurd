@@ -3,7 +3,7 @@
   font-family: 'IBM Plex Sans Arabic';
   font-style: normal;
   font-weight: 300;
-  font-display: optional;
+  font-display: swap;
   src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2?v=17') format('woff2'),
        url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.ttf') format('truetype');
 }
@@ -12,7 +12,7 @@
   font-family: 'IBM Plex Sans Arabic';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17') format('woff2'),
        url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.ttf') format('truetype');
 }
@@ -21,7 +21,7 @@
   font-family: 'IBM Plex Sans Arabic';
   font-style: normal;
   font-weight: 500;
-  font-display: optional;
+  font-display: swap;
   src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2?v=17') format('woff2'),
        url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.ttf') format('truetype');
 }
@@ -30,7 +30,7 @@
   font-family: 'IBM Plex Sans Arabic';
   font-style: normal;
   font-weight: 600;
-  font-display: optional;
+  font-display: swap;
   src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=17') format('woff2'),
        url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.ttf') format('truetype');
 }
@@ -39,7 +39,7 @@
   font-family: 'IBM Plex Sans Arabic';
   font-style: normal;
   font-weight: 700;
-  font-display: optional;
+  font-display: swap;
   src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2?v=17') format('woff2'),
        url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.ttf') format('truetype');
 }
@@ -70,7 +70,7 @@
   font-family: 'SurahName';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: block;
   src: url('/assets/fonts/surah-name-v4.woff2?v=17') format('woff2'),
        url('/assets/fonts/surah-name-v4.ttf') format('truetype'),
        url('/assets/fonts/SurahName.ttf') format('truetype');
@@ -82,7 +82,7 @@
   font-family: 'SurahNameV2';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: block;
   src: url('/assets/fonts/surah-name-v2.woff2?v=1') format('woff2'),
        url('/assets/fonts/surah-name-v2.ttf') format('truetype');
 }

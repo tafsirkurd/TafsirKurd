@@ -73,9 +73,6 @@ debug-backgrounds.html
 test.html
 *.test.js
 *.spec.js
-# Exception: keep files under tests/ directory
-!tests/*.test.js
-!tests/*.spec.js
 
 # Cache
 .cache/

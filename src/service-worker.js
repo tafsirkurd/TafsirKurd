@@ -1,55 +1,30 @@
-const CACHE_NAME = 'tafsir-kurd-v847';
+const CACHE_NAME = 'tafsir-kurd-v811';
 
 // All files required to run the app fully offline
-// NOTE: /data/surahs/ and /data/tafsir/ JSON files are NOT precached here.
-// They are runtime-cached on first access via the fetch handler, and the
-// background prefetch in app-init.js (CONC=20) fills the cache within seconds.
-// Precaching all 228 JSON files at install floods the network on cold start,
-// causing severe LCP regression on first visit.
 const PRECACHE = [
   // Core app shell
   '/app/index.html',
-  '/app/manifest.json',
-  '/audio-cache.js?v=20260406a',
-  '/audio-downloads.js?v=1',
-  '/rating.js?v=20260401a',
-  '/qibla/qibla.js?v=20260417',
-  '/quran/search.js?v=20260520',
-  '/app/app-storage.js?v=20260525',
-  '/app/app-core.js?v=20260525',
-  '/app/app-init.js?v=20260614',
-  '/app/app-notifications.js?v=20260614',
-  '/app/app-search.js?v=20260525',
-  '/app/app-quran.js?v=20260607',
-  '/app/app-audio.js?v=20260525',
-  '/app/app-goals.js?v=20260525',
-  '/app/app-settings.js?v=20260530',
-  '/app/app-sync.js?v=20260527',
-  '/app/app-profile.js?v=20260610',
-  '/app/app-islamvoice.js?v=20260525',
-  '/app/app-start.js?v=20260525',
+  '/app/app.js?v=785',
   // Prayer module
-  '/prayer/prayer.api.js?v=20260501',
-  '/prayer/prayer.cache.js?v=20260501',
-  '/prayer/prayer.logic.js?v=20260326b',
-  '/prayer/prayer.notifications.android.js?v=20260416',
-  '/prayer/prayer.ui.js?v=20260520',
+  '/prayer/prayer.api.js',
+  '/prayer/prayer.cache.js',
+  '/prayer/prayer.logic.js',
+  '/prayer/prayer.notifications.android.js',
+  '/prayer/prayer.ui.js',
   // Gencine module
-  '/dhikr/smart-dhikr.js?v=34',
   '/dhikr/dhikr.js?v=20260569',
-  '/dhikr/dua-data.js?v=20260326b',
+  '/dhikr/dua-data.js',
   // i18n
-  '/i18n/i18n.js?v=20260517',
-  '/i18n/kmr-bundled.js?v=20260518b',
+  '/i18n/i18n.js',
   '/i18n/kmr.json',
+  // Data
+  '/data/quran.json',
+  '/data/kurdish_tafsir.json',
   // Styles
-  '/app/app.css?v=20260614',
   '/styles/mobile-optimize.css',
   // Utils
-  '/utils/fast-scroll.js?v=20260503',
+  '/utils/fast-scroll.js',
   '/utils/console-cleaner.js?v=2',
-  '/utils/app-error-reporter.js?v=1',
-  '/utils/supabase.js?v=20260326b',
   '/utils/kurdish-numbers.js',
   '/utils/auto-kurdish-numbers.js',
   '/utils/notification-messages.js',
@@ -60,20 +35,19 @@ const PRECACHE = [
   '/utils/cloud-sync.js',
   // Fonts & icons
   '/assets/fonts/fonts.css',
-  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=17',
-  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=17',
-  '/assets/fonts/hafs.woff2?v=17',
-  '/assets/fonts/amiri-quran-v1-arabic-regular.woff2?v=17',
+  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
+  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
+  '/assets/fonts/hafs.woff2',
+  '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
   // SurahName decorative fonts — required for Quran grid calligraphy
-  '/assets/fonts/surah-name-v4.woff2?v=17',
-  '/assets/fonts/surah-name-v2.woff2?v=1',
-  '/assets/fonts/scheherazade-new-400.woff2?v=1',
-  '/assets/fontawesome/all.min.css?v=17',
+  '/assets/fonts/surah-name-v4.woff2',
+  '/assets/fonts/surah-name-v2.woff2',
+  '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
   '/assets/fontawesome/webfonts/fa-brands-400.woff2',
   // Font manager must be offline-available
-  '/app/quran-font-manager.js?v=20260506',
+  '/app/quran-font-manager.js',
   // Images
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png?v=3',
@@ -182,7 +156,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ── Everything else (JS, CSS, fonts, images, data JSON): cache first ──────
+  // ── Everything else (JS, CSS, fonts, images): cache first ─────────────────
   event.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;

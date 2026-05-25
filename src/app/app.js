@@ -1675,7 +1675,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260569', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=34',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=32',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -10118,12 +10118,6 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     // If panel scrolled during the gesture, cancel (e.g. content rendered mid-gesture).
     if(panel.scrollTop>0){ _cancelPull(); return; }
 
-    // Prevent native scroll NOW — before the dead zone visual kicks in.
-    // WkWebView commits to its elastic-bounce gesture within ~10-20px of downward
-    // movement, making e.cancelable false by the time we cross 72px.
-    // Calling it here (direction confirmed, scrollTop still 0) beats that window.
-    if(e.cancelable)e.preventDefault();
-
     // Dead zone: consume movement silently until DEAD_ZONE px are crossed.
     if(dy<DEAD_ZONE) return;
 
@@ -10135,6 +10129,8 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       ptrSpinner.classList.remove('ptr-snapping');
       ptrSpinner.style.transition='none';
     }
+
+    if(e.cancelable)e.preventDefault();
     // Subtract dead zone so pull=0 at the exact moment pulling engages.
     var pullRaw=dy-DEAD_ZONE;
     var pull=pullRaw<threshold?pullRaw:threshold+((pullRaw-threshold)*0.3);
