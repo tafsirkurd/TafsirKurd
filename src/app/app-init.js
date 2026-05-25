@@ -288,11 +288,11 @@ function init(){
           if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return}
           if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
           if($('goalStartChoiceOverlay')&&$('goalStartChoiceOverlay').classList.contains('on')){App.closeStartChoice();return}
-          if($('repeatModal').classList.contains('on')){App.closeRepeat();return}
-          if($('audioSettingsPanel').classList.contains('on')){App.closeAudioSettings();return}
+          if($('repeatModal')&&$('repeatModal').classList.contains('on')){App.closeRepeat();return}
+          if($('audioSettingsPanel')&&$('audioSettingsPanel').classList.contains('on')){App.closeAudioSettings();return}
           if($('qsSheet')&&$('qsSheet').classList.contains('on')){App.closeReaderSettings();return}
           if(S.sidebar){App.closeSidebar();return}
-          if($('wizard').classList.contains('on')){App.closeWizard();return}
+          if($('wizard')&&$('wizard').classList.contains('on')){App.closeWizard();return}
           if(S.ivCurrentSeries){App.ivBack();return}
           if(S.surah){App.backToList();return}
           if(S.tab!=='quran'){App.tab('quran');return}

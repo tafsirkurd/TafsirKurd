@@ -266,16 +266,17 @@ function _getDayOfYear(d){
   return Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
 }
 
-function scheduleDailyVerse(enabled){
+function scheduleDailyVerse(enabled,_retries){
   if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
   var LN=Capacitor.Plugins.LocalNotifications;
   /* Cancel IDs 20-26 */
   LN.cancel({notifications:[20,21,22,23,24,25,26].map(function(id){return {id:id};})}).catch(function(){});
   if(!enabled)return;
 
-  /* Wait until Quran + tafsir data is loaded */
+  /* Wait until Quran + tafsir data is loaded — max 25 retries (~30s) */
   if(!S.quranData||!S.tafsirData){
-    setTimeout(function(){scheduleDailyVerse(S.dailyVerse);},1200);
+    if((_retries||0)>=25){console.warn('[Notif] scheduleDailyVerse gave up waiting for data');return;}
+    setTimeout(function(){scheduleDailyVerse(S.dailyVerse,(_retries||0)+1);},1200);
     return;
   }
 
