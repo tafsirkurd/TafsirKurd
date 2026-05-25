@@ -1621,8 +1621,8 @@ App.tab=function(name){
       clearMushafHighlights();
     }
     if(_prevTab==='gencine'&&name!=='gencine'&&window.GencineUI){GencineUI.closeSheet();}
-    if(_prevTab==='islamvoice'&&name!=='islamvoice'){if(_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}}
-    if(name==='islamvoice'&&_ivHeroSlides.length){_ivHeroResetTimer();}
+    if(_prevTab==='islamvoice'&&name!=='islamvoice'){if(typeof _ivHeroTimer!=='undefined'&&_ivHeroTimer){clearInterval(_ivHeroTimer);_ivHeroTimer=null;}}
+    if(name==='islamvoice'&&typeof _ivHeroSlides!=='undefined'&&_ivHeroSlides.length){_ivHeroResetTimer();}
     if(S.surah&&name!=='quran'){_endSession();}
     App.closeRecPicker();
     if(typeof closeCfgSheet==='function')closeCfgSheet();
