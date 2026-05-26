@@ -1814,30 +1814,67 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 /* offline banner */
 #offlineBanner{position:fixed;top:0;left:0;right:0;z-index:9999;background:#f09000;color:#fff;text-align:center;font-size:.78rem;font-weight:600;padding:5px 12px;transform:translateY(-100%);transition:transform .25s ease;direction:rtl}
 #offlineBanner.on{transform:translateY(0)}
-/* ── Prayer Tracker ───────────────────────────────── */
-#prayerTracker{padding:0 14px 20px;direction:rtl}
-.pt-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px}
-.pt-title{font-size:.95rem;font-weight:700;color:var(--text)}
-.pt-meta{display:flex;align-items:center;gap:8px}
-.pt-streak{font-size:.82rem;font-weight:700;color:#f09000;background:rgba(240,144,0,.12);padding:2px 8px;border-radius:20px}
-.pt-today-prog{font-size:.8rem;color:var(--muted);font-weight:600}
-.pt-prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}
-.pt-prayer-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit}
-.pt-prayer-btn i{font-size:1.1rem;color:var(--muted);transition:color .15s}
-.pt-prayer-name{font-size:.7rem;color:var(--text2);font-weight:600;white-space:nowrap}
-.pt-prayer-btn.checked{background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:var(--accent)}
-.pt-prayer-btn.checked i{color:var(--accent)}
-.pt-prayer-btn.checked .pt-prayer-name{color:var(--accent)}
-.pt-prayer-btn:active{transform:scale(.93)}
-.pt-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.pt-day{display:flex;flex-direction:column;align-items:center;gap:4px}
-.pt-day.today .pt-dot{box-shadow:0 0 0 2px var(--accent)}
-.pt-day-name{font-size:.68rem;color:var(--muted);font-weight:600}
-.pt-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;transition:background .2s}
-.pt-dot.full{background:var(--accent);color:var(--accent-t)}
-.pt-dot.partial{background:#f09000;color:#fff}
-.pt-dot.low{background:rgba(240,90,50,.7);color:#fff}
-.pt-dot{background:var(--surface);border:1.5px solid var(--border);color:var(--muted)}
+/* ── Prayer Progress Panel ────────────────────────── */
+.ppp-panel{position:fixed;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;overflow:hidden}
+.ppp-panel.on{display:flex;animation:slideUp .32s var(--ease)}
+.ppp-hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10;padding-top:calc(12px + var(--safe-t,0px))}
+.ppp-back{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:none;cursor:pointer;color:var(--text);flex-shrink:0}
+.ppp-title{font-weight:700;font-size:1.05rem;flex:1;text-align:center}
+.ppp-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--safe-b,0px) + 28px);direction:rtl;display:flex;flex-direction:column;gap:18px}
+.ppp-today-card{background:var(--bg2);border-radius:18px;padding:16px;border:1px solid var(--border)}
+.ppp-today-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ppp-today-label{font-size:.78rem;color:var(--muted);font-weight:600}
+.ppp-today-count{font-size:.84rem;font-weight:700;color:var(--accent)}
+.ppp-progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.ppp-progress-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .4s var(--ease)}
+.ppp-prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:12px}
+.ppp-prayer-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 8px;background:var(--bg);border:1.5px solid var(--border);border-radius:13px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.ppp-prayer-btn i{font-size:1.1rem;color:var(--muted);transition:color .15s}
+.ppp-prayer-name{font-size:.67rem;color:var(--text2);font-weight:600;white-space:nowrap}
+.ppp-prayer-btn.on{background:rgba(34,197,94,.12);border-color:var(--accent)}
+.ppp-prayer-btn.on i,.ppp-prayer-btn.on .ppp-prayer-name{color:var(--accent)}
+.ppp-prayer-btn:active{transform:scale(.9)}
+.ppp-motivate{font-size:.76rem;color:var(--muted);text-align:center;line-height:1.5;margin:0}
+.ppp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ppp-stat{background:var(--bg2);border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;border:1px solid var(--border);text-align:center}
+.ppp-stat-val{font-size:1.2rem;font-weight:800;color:var(--text);line-height:1}
+.ppp-stat-lbl{font-size:.64rem;color:var(--muted);font-weight:600;line-height:1.3}
+.ppp-section-title{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.05em;padding-right:2px;margin-bottom:-6px}
+.ppp-week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.ppp-wday{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ppp-wday-name{font-size:.64rem;color:var(--muted);font-weight:600}
+.ppp-wday-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;border:1.5px solid var(--border);background:var(--bg2);color:var(--muted);transition:background .2s}
+.ppp-wday-dot.full{background:var(--accent);border-color:var(--accent);color:#fff}
+.ppp-wday-dot.high{background:#27ae60;border-color:#27ae60;color:#fff}
+.ppp-wday-dot.mid{background:#f09000;border-color:#f09000;color:#fff}
+.ppp-wday-dot.low{background:rgba(220,60,40,.8);border-color:rgba(220,60,40,.8);color:#fff}
+.ppp-wday.today .ppp-wday-dot{box-shadow:0 0 0 3px rgba(34,197,94,.28)}
+.ppp-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ppp-cal-month{font-size:.9rem;font-weight:700;color:var(--text)}
+.ppp-cal-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border);cursor:pointer;color:var(--text2)}
+.ppp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.ppp-cal-dh{font-size:.63rem;color:var(--muted);font-weight:600;text-align:center;padding-bottom:5px}
+.ppp-cal-cell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.71rem;font-weight:700;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--muted)}
+.ppp-cal-cell.empty{background:transparent;border-color:transparent;pointer-events:none;color:transparent}
+.ppp-cal-cell.full{background:var(--accent);border-color:var(--accent);color:#fff}
+.ppp-cal-cell.high{background:#27ae60;border-color:#27ae60;color:#fff}
+.ppp-cal-cell.mid{background:#f09000;border-color:#f09000;color:#fff}
+.ppp-cal-cell.low{background:rgba(220,60,40,.75);border-color:rgba(220,60,40,.75);color:#fff}
+.ppp-cal-cell.today-cell{box-shadow:0 0 0 2px var(--accent),0 0 0 4px rgba(34,197,94,.18)}
+.ppp-cal-cell.future{opacity:.18;pointer-events:none}
+.ppp-cal-cell:not(.empty):not(.future):active{transform:scale(.87)}
+.ppp-insights{display:flex;flex-direction:column;gap:8px}
+.ppp-insight-row{display:flex;align-items:center;gap:12px;background:var(--bg2);border-radius:14px;padding:12px 14px;border:1px solid var(--border)}
+.ppp-insight-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.ppp-insight-text{flex:1;min-width:0}
+.ppp-insight-label{font-size:.7rem;color:var(--muted);font-weight:600;margin-bottom:2px}
+.ppp-insight-value{font-size:.88rem;font-weight:700;color:var(--text)}
+.ppp-day-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);display:none;align-items:flex-end;-webkit-tap-highlight-color:transparent}
+.ppp-day-overlay.on{display:flex;animation:fadeIn .2s ease}
+.ppp-day-sheet{background:var(--bg);border-radius:20px 20px 0 0;padding:0 16px calc(var(--safe-b,0px) + 28px);width:100%;direction:rtl;max-height:60vh;overflow-y:auto}
+.ppp-day-pull{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 14px}
+.ppp-day-title{font-size:.88rem;font-weight:700;color:var(--text);text-align:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.ppp-day-prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 /* ── Search History ───────────────────────────────── */
 .search-history{padding:8px 0}
 .sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 16px 10px;direction:rtl}
@@ -3545,7 +3582,7 @@ html{background-color:var(--bg,#0a0a0a)}
 #qsBody,.sidebar-list,.dl-sheet-body,.cfg-sheet-body,
 .iv-overlay-list,.rp-list,.pp-body,
 .rec-picker,.full-player,.auth-panel,.wizard .wizard-body,
-.profile-panel,.iv-spk-list {
+.profile-panel,.iv-spk-list,.ppp-body,.ppp-day-sheet {
   overscroll-behavior-y:contain;
 }
 
@@ -3984,12 +4021,12 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
   <div class="hdr">
     <div class="hdr-title"><span data-i18n="header.prayer">کاتا نوێژ</span></div>
     <div style="display:flex;gap:4px">
+      <button class="hdr-btn" onclick="App.openPrayerProgress()" title="Prayer Progress" aria-label="Prayer Progress"><i class="fas fa-chart-line"></i></button>
       <button class="hdr-btn" onclick="QiblaUI.open()" title="Qibla"><i class="fas fa-location-arrow"></i></button>
       <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
     </div>
   </div>
   <div id="prayerContent" class="panel-scroll"></div>
-  <div id="prayerTracker"></div>
 </section>
 
 <!-- SIDEBAR -->
@@ -4102,6 +4139,9 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 
 <!-- PROFILE PAGE -->
 <div class="profile-panel" id="profilePanel" role="dialog" aria-modal="true" aria-label="Profile"></div>
+<!-- PRAYER PROGRESS PAGE -->
+<div class="ppp-panel" id="prayerProgressPanel" role="dialog" aria-modal="true" aria-label="Prayer Progress"></div>
+<div class="ppp-day-overlay" id="pppDayOverlay" onclick="App.closePrayerDay()"><div class="ppp-day-sheet" id="pppDaySheet" onclick="event.stopPropagation()"></div></div>
 <div class="dl-overlay" id="dlOverlay"></div>
 <div class="dl-sheet" id="dlSheet">
   <div class="dl-sheet-pull"></div>
@@ -4332,7 +4372,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=822"></script>
+<script src="/app/app.js?v=823"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
