@@ -1812,6 +1812,14 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .qs-action-btn{width:calc(100% - 40px);margin:10px 20px 4px;height:42px;border-radius:var(--r-l);background:var(--bg3);border:1px solid var(--border);font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text)}
 
 /* ===== REPEAT MANAGER MODAL ===== */
+/* offline banner */
+#offlineBanner{position:fixed;top:0;left:0;right:0;z-index:9999;background:#f09000;color:#fff;text-align:center;font-size:.78rem;font-weight:600;padding:5px 12px;transform:translateY(-100%);transition:transform .25s ease;direction:rtl}
+#offlineBanner.on{transform:translateY(0)}
+/* search unavailable */
+.search-unavailable{display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 20px;color:var(--muted);text-align:center}
+.search-unavailable i{font-size:2rem;color:var(--muted)}
+.search-unavailable p{font-size:.9rem;margin:0}
+.search-retry-btn{background:var(--accent);color:var(--accent-t);border:none;border-radius:8px;padding:8px 20px;font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit}
 .copy-modal{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
 .copy-modal.on{display:flex}
 .copy-sheet{background:var(--bg);width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;animation:slideUp .3s var(--ease);padding-bottom:calc(16px + var(--safe-b))}
@@ -3992,11 +4000,11 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
     <div class="audio-info-sub" id="audioSub"></div>
   </div>
   <div class="audio-ctrl">
-    <button onclick="App.audioPrev()"><i class="fas fa-step-forward"></i></button>
-    <button class="play-btn" onclick="App.audioToggle()"><i class="fas fa-play" id="audioPlayIcon"></i></button>
-    <button onclick="App.audioNext()"><i class="fas fa-step-backward"></i></button>
-    <button onclick="App.openRepeat()"><i class="fas fa-redo-alt"></i></button>
-    <button onclick="App.audioClose()"><i class="fas fa-times"></i></button>
+    <button onclick="App.audioPrev()" aria-label="Previous ayah"><i class="fas fa-step-forward" aria-hidden="true"></i></button>
+    <button class="play-btn" onclick="App.audioToggle()" aria-label="Play / Pause"><i class="fas fa-play" id="audioPlayIcon" aria-hidden="true"></i></button>
+    <button onclick="App.audioNext()" aria-label="Next ayah"><i class="fas fa-step-backward" aria-hidden="true"></i></button>
+    <button onclick="App.openRepeat()" aria-label="Repeat settings"><i class="fas fa-redo-alt" aria-hidden="true"></i></button>
+    <button onclick="App.audioClose()" aria-label="Close player"><i class="fas fa-times" aria-hidden="true"></i></button>
   </div>
   <div class="audio-bar-progress" id="audioBarProgress"></div>
 </div>
@@ -4047,7 +4055,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 </div>
 
 <!-- AUDIO SETTINGS PANEL -->
-<div class="audio-settings-panel" id="audioSettingsPanel">
+<div class="audio-settings-panel" id="audioSettingsPanel" role="dialog" aria-modal="true" aria-label="Audio settings">
   <div class="audio-settings-hdr">
     <button class="hdr-btn" onclick="App.closeAudioSettings()"><i class="fas fa-times"></i></button>
     <div class="hdr-title" data-i18n="header.audio_settings" data-t="android_div_9">ڕێکخستنی دەنگ</div>
@@ -4070,10 +4078,10 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 </div>
 
 <!-- AUTH PANEL -->
-<div class="auth-panel" id="authPanel"></div>
+<div class="auth-panel" id="authPanel" role="dialog" aria-modal="true" aria-label="Sign in"></div>
 
 <!-- PROFILE PAGE -->
-<div class="profile-panel" id="profilePanel"></div>
+<div class="profile-panel" id="profilePanel" role="dialog" aria-modal="true" aria-label="Profile"></div>
 <div class="dl-overlay" id="dlOverlay"></div>
 <div class="dl-sheet" id="dlSheet">
   <div class="dl-sheet-pull"></div>
@@ -4116,16 +4124,16 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
     </div>
   </div>
 </div>
-<nav class="tabbar">
-  <button class="tab-item on" data-tab="quran" onclick="App.tab('quran')"><i class="fas fa-book"></i><span data-i18n="tabs.quran" data-t="android_span_12">قورئان</span></button>
-  <button class="tab-item" data-tab="islamvoice" onclick="App.tab('islamvoice')"><i class="fas fa-video"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
-  <button class="tab-item" data-tab="gencine" onclick="App.tab('gencine')"><i class="fas fa-gem"></i><span data-i18n="tabs.gencine">گەنجینە</span></button>
-  <button class="tab-item" data-tab="prayer" onclick="App.tab('prayer')"><i class="fas fa-mosque"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
-  <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
+<nav class="tabbar" role="tablist" aria-label="Navigation tabs">
+  <button class="tab-item on" data-tab="quran" onclick="App.tab('quran')" role="tab" aria-selected="true" aria-controls="panelQuran"><i class="fas fa-book" aria-hidden="true"></i><span data-i18n="tabs.quran" data-t="android_span_12">قورئان</span></button>
+  <button class="tab-item" data-tab="islamvoice" onclick="App.tab('islamvoice')" role="tab" aria-selected="false" aria-controls="panelIslamvoice"><i class="fas fa-video" aria-hidden="true"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
+  <button class="tab-item" data-tab="gencine" onclick="App.tab('gencine')" role="tab" aria-selected="false" aria-controls="panelGencine"><i class="fas fa-gem" aria-hidden="true"></i><span data-i18n="tabs.gencine">گەنجینە</span></button>
+  <button class="tab-item" data-tab="prayer" onclick="App.tab('prayer')" role="tab" aria-selected="false" aria-controls="panelPrayer"><i class="fas fa-mosque" aria-hidden="true"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
+  <button class="tab-item" data-tab="settings" onclick="App.tab('settings')" role="tab" aria-selected="false" aria-controls="panelSettings"><i class="fas fa-cog" aria-hidden="true"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
 
 <!-- COPY MODAL -->
-<div class="copy-modal" id="copyModal" onclick="if(event.target===this)App.closeCopyModal()">
+<div class="copy-modal" id="copyModal" role="dialog" aria-modal="true" aria-label="Copy ayah" onclick="if(event.target===this)App.closeCopyModal()">
   <div class="copy-sheet">
     <div class="copy-sheet-hdr">
       <span id="copyModalTitle" data-i18n="copy.title">کۆپیکرن</span>
@@ -4304,7 +4312,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=816"></script>
+<script src="/app/app.js?v=817"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

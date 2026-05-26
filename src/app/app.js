@@ -847,8 +847,19 @@ function init(){
       }
       toast(msg);
     });
-    on(S.audio.el,'waiting',function(){if(S.audio.playing)setAudioIcon('loading')});
+    var _audioWaitTimer=null;
+    on(S.audio.el,'waiting',function(){
+      if(!S.audio.playing)return;
+      setAudioIcon('loading');
+      clearTimeout(_audioWaitTimer);
+      // Prevent infinite spinner: if still buffering after 14s, reset icon so
+      // the user can tap play again rather than seeing a locked loading state.
+      _audioWaitTimer=setTimeout(function(){
+        if(S.audio.playing&&S.audio.el.paused)setAudioIcon('play');
+      },14000);
+    });
     on(S.audio.el,'playing',function(){
+      clearTimeout(_audioWaitTimer);_audioWaitTimer=null;
       setAudioIcon('pause');
       if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
       if(_playStartT){
@@ -856,7 +867,7 @@ function init(){
         _playStartT=0;
       }
     });
-    on(S.audio.el,'pause',function(){if(!S.audio.playing)setAudioIcon('play')});
+    on(S.audio.el,'pause',function(){clearTimeout(_audioWaitTimer);_audioWaitTimer=null;if(!S.audio.playing)setAudioIcon('play')});
 
     applyTheme();
     applySizes();
@@ -1085,6 +1096,7 @@ function init(){
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.addListener('backButton',function(){
           if($('fuOverlay')&&$('fuOverlay').classList.contains('on')){return} // hard block — back does nothing
+          var _nmOv=document.querySelector('.note-modal-ov.on');if(_nmOv){_nmOv.classList.remove('on');return}
           if($('profilePanel')&&$('profilePanel').classList.contains('on')){App.closeProfile();return}
           if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return}
           if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
@@ -1701,13 +1713,13 @@ App.tab=function(name){
   if(panel)panel.classList.add('on');
   requestAnimationFrame(function(){document.body.classList.remove('tk-tab-switching');});
 
-  // ── Tab bar icon ──
+  // ── Tab bar icon + ARIA ──
   var prevBtnName=(_prevTab==='goals'||_prevTab==='bookmarks')?'quran':_prevTab;
   var prevBtn=_getCachedTabBtn(prevBtnName);
-  if(prevBtn)prevBtn.classList.remove('on');
+  if(prevBtn){prevBtn.classList.remove('on');prevBtn.setAttribute('aria-selected','false');}
   var tabBtnName=(name==='goals'||name==='bookmarks')?'quran':name;
   var tabBtn=_getCachedTabBtn(tabBtnName);
-  if(tabBtn)tabBtn.classList.add('on');
+  if(tabBtn){tabBtn.classList.add('on');tabBtn.setAttribute('aria-selected','true');}
 
   // ── Prayer: unpause sky in next frame ──
   if(name==='prayer'){
@@ -2428,7 +2440,9 @@ function initPushToken(){
       }
     });
 
-    // Receive APNs/FCM token and store in DB via server endpoint (bypasses RLS)
+    // Receive APNs/FCM token and store in DB via server endpoint (bypasses RLS).
+    // Uses retry-with-backoff so a failed first attempt (common on slow networks
+    // at first launch) doesn't permanently lose the token for the session.
     PP.addListener('registration',function(tokenData){
       var platform=window.Capacitor.getPlatform()||'unknown';
       var token=tokenData.value||'';
@@ -2436,21 +2450,9 @@ function initPushToken(){
       localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
       localStorage.setItem('push_token_platform',platform);
       if(!token){_pushLog('ERROR: empty token');return;}
-      fetch('https://tafsirkurd.com/register-push-token',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({token:token,platform:platform,user_id:(S.user&&S.user.id)||null})
-      }).then(function(r){return r.json();}).then(function(res){
-        if(res.error){
-          _pushLog('register FAILED: '+res.error);
-          localStorage.setItem('push_reg_api_error',res.error);
-        } else {
-          _pushLog('token stored in DB OK via server');
-          localStorage.removeItem('push_reg_api_error');
-        }
-      }).catch(function(e){
-        _pushLog('register EXCEPTION: '+(e&&e.message));
-      });
+      // Persist for cross-session retry (cleared on success)
+      try{localStorage.setItem('push_token_pending',JSON.stringify({token:token,platform:platform}));}catch(e){}
+      _registerPushToken(token,platform,0);
     });
 
     PP.addListener('registrationError',function(err){
@@ -2463,6 +2465,37 @@ function initPushToken(){
   }).catch(function(e){
     _pushLog('requestPermissions EXCEPTION: '+(e&&e.message));
   });
+}
+
+// Retry-with-backoff push token registration.
+// attempt 0 = immediate; 1 = 4s; 2 = 8s; 3 = 16s; 4 = 32s (cap).
+// On cross-session retry (app re-opened before success), attempt starts at 1.
+function _registerPushToken(token,platform,attempt){
+  var delay=attempt===0?0:Math.min(4000*Math.pow(2,attempt-1),32000);
+  setTimeout(function(){
+    var ctrl=new AbortController();
+    var tid=setTimeout(function(){ctrl.abort();},10000);
+    fetch('https://tafsirkurd.com/register-push-token',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:token,platform:platform,user_id:(S.user&&S.user.id)||null}),
+      signal:ctrl.signal
+    }).then(function(r){clearTimeout(tid);return r.json();}).then(function(res){
+      if(res.error){
+        _pushLog('register FAILED (attempt '+attempt+'): '+res.error);
+        localStorage.setItem('push_reg_api_error',res.error);
+        if(attempt<4)_registerPushToken(token,platform,attempt+1);
+      }else{
+        _pushLog('token stored OK attempt='+attempt);
+        localStorage.removeItem('push_reg_api_error');
+        localStorage.removeItem('push_token_pending');
+      }
+    }).catch(function(e){
+      clearTimeout(tid);
+      _pushLog('register EXCEPTION (attempt '+attempt+'): '+(e&&e.message));
+      if(attempt<4)_registerPushToken(token,platform,attempt+1);
+    });
+  },delay);
 }
 
 /* ===== NEW VIDEO NOTIFICATION ===== */
@@ -2737,6 +2770,17 @@ App._execSearch=function(v){
   S.search=q;
   var res=$('searchResults');
   if(!q){App._renderSearchEmpty();return;}
+
+  // Quran data not loaded yet — show retry prompt instead of silently doing nothing
+  if(!S.quranData){
+    clear(res);res.classList.add('on');
+    var _sd=el('div','search-unavailable');
+    _sd.innerHTML='<i class="fas fa-wifi-slash"></i><p>'+t('search.unavailable','گەڕان بەردەست نییە')+'</p>';
+    var _srb=el('button','search-retry-btn',t('search.retry','دووبارە هەوڵبدە'));
+    _srb.onclick=function(){loadQuranData().then(function(){App._execSearch(v);});};
+    _sd.appendChild(_srb);res.appendChild(_sd);
+    return;
+  }
 
   // Build normalized query tokens for context highlighting
   var _qArN=q.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED\u0640]/g,'')
@@ -3075,6 +3119,13 @@ var _qcfV2FontInjected={};
 var _qcfV4FontInjected={};
 // pageNum → Promise<boolean> — deduplicates concurrent font-load waits
 var _qcfV4FontLoadP={};
+// Concurrency limiter: cap simultaneous QCF4 font fetches to 4 so fast-scroll
+// doesn't exhaust the browser's HTTP connection pool (typically 6 per origin).
+var _qcfFontActive=0,_qcfFontQueue=[];
+function _qcfFontSlot(fn){
+  if(_qcfFontActive<4){_qcfFontActive++;return fn().finally(function(){_qcfFontActive--;if(_qcfFontQueue.length)(_qcfFontQueue.shift())();});}
+  return new Promise(function(res,rej){_qcfFontQueue.push(function(){_qcfFontActive++;fn().finally(function(){_qcfFontActive--;if(_qcfFontQueue.length)(_qcfFontQueue.shift())();}).then(res,rej);});});
+}
 
 // Detect iOS Capacitor once — strip script removes local woff2, so skip local src on iOS
 var _isIOSCap=(function(){try{return window.Capacitor&&Capacitor.getPlatform()==='ios';}catch(e){return false;}}());
@@ -3157,10 +3208,12 @@ function ensureQCFV4Font(pageNum){
     _qcfV4FontLoadP[pageNum]=Promise.resolve(false);
     return _qcfV4FontLoadP[pageNum];
   }
-  var loadP=document.fonts.load('1em "'+fontName+'"').then(function(faces){
-    if(!faces||!faces.length)return false;
-    return _sentinelOk();
-  }).catch(function(){return false;});
+  var loadP=_qcfFontSlot(function(){
+    return document.fonts.load('1em "'+fontName+'"').then(function(faces){
+      if(!faces||!faces.length)return false;
+      return _sentinelOk();
+    }).catch(function(){return false;});
+  });
   var timeoutP=new Promise(function(res){setTimeout(function(){res(false);},5000);});
   _qcfV4FontLoadP[pageNum]=Promise.race([loadP,timeoutP]);
   return _qcfV4FontLoadP[pageNum];
@@ -9330,7 +9383,31 @@ window.addEventListener('online',function(){
   },800);
   // Show reconnected toast
   toast(t('toast.network_reconnected'));
+  _updateOfflineBanner(false);
 });
+
+window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
+
+// Persistent offline banner — small non-dismissible chip at top of screen.
+// Created once, toggled with .on class, never shown on Capacitor (native UI handles it).
+(function(){
+  var _b=null;
+  function _mkBanner(){
+    _b=document.createElement('div');
+    _b.id='offlineBanner';
+    _b.setAttribute('role','status');
+    _b.setAttribute('aria-live','polite');
+    _b.textContent=t('toast.offline_cached','بەبێ ئینتەرنێت — ناوەرۆکی کاشێ');
+    document.body.appendChild(_b);
+  }
+  window._updateOfflineBanner=function(isOffline){
+    if(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()!=='web')return;
+    if(!_b)_mkBanner();
+    _b.classList.toggle('on',isOffline);
+  };
+  // Check once at startup (after a tick so body exists)
+  setTimeout(function(){ _updateOfflineBanner(!navigator.onLine); },0);
+}());
 
 
 /* --- Auth Panel --- */
@@ -11847,7 +11924,7 @@ function startApp(){
   // Force-update check: deferred 5s so it doesn't compete with startup fetches.
   // Interval bumped to 60s — 12s was excessive on slow networks / low-end devices.
   setTimeout(function(){ ForceUpdate.check(); }, 5000);
-  setInterval(function(){ ForceUpdate.check(); }, 60000);
+  setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 60000);
 
   // ── Runtime jank monitoring — auto-downgrade performance tier ─────────────
   // Starts 8s after launch so startup pre-renders don't trigger false positives.
