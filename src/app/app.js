@@ -893,6 +893,10 @@ function init(){
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.addListener('appStateChange',function(state){
           if(!state.isActive){
+            // Save background timestamp — used by startApp() warm-resume detection
+            // when iOS/Android kills the WebView under memory pressure and reloads it.
+            localStorage.setItem('tk_last_bg', String(Date.now()));
+            console.log('[APP_LIFECYCLE] background');
             if(!S.bgAudio&&S.audio.playing){
               S.audio.el.pause();S.audio.playing=false;
               var ic=$('audioPlayIcon');
@@ -901,6 +905,8 @@ function init(){
             // Sync data when app goes to background
             if(S.user)syncToCloud();
           } else {
+            console.log('[APP_LIFECYCLE] warm_resume — appStateChange foreground');
+            console.log('[APP_LIFECYCLE] resume_refresh_start');
             // App came to foreground — check for forced update first
             ForceUpdate.check();
             // Refresh today's verse set so the date is correct after overnight open.
@@ -951,8 +957,16 @@ function init(){
             scheduleStreakReminder();
             checkNewVideoNotif();
             checkNewBookNotif();
-            // Re-run prefetch in case any city cache is missing (e.g. first open was offline)
-            if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
+            // Re-run prefetch — capped to once per 10 min to avoid spawning 20 city
+            // fetches on every single foreground event (rapid background/foreground cycles).
+            (function(){
+              var _now=Date.now(),_lp=parseInt(localStorage.getItem('tk_prefetch_ts')||'0');
+              if(_now-_lp>600000){
+                localStorage.setItem('tk_prefetch_ts',String(_now));
+                if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
+              }
+            })();
+            console.log('[APP_LIFECYCLE] resume_refresh_done');
             // Restore playback highlight state if Quran tab is active
             if(S.tab==='quran')requestAnimationFrame(_hlRestoreAll);
           }
@@ -1294,6 +1308,26 @@ function init(){
   } else {
     // No video element — don't block on it
     _splashReady.video=true;
+  }
+
+  // ── Warm resume fast path ─────────────────────────────────────────────────
+  // WebView was killed while app was in background (iOS/Android memory pressure).
+  // Skip ALL splash gates — user was already in the app, never show animation again.
+  // This prevents the "blank → logo animation → delay → app" sequence on resume.
+  if(window._isWarmResume){
+    if(_splashVid){ _splashVid.pause(); _splashVid.muted=true; } // silence video immediately
+    _splashMinPassed=true;
+    _splashReady.quran=true;
+    _splashReady.tabs=true;
+    _splashReady.video=true;
+    console.log('[APP_LIFECYCLE] skipped_full_loader_on_resume');
+    requestAnimationFrame(function(){
+      // Instant fade (0.1s) instead of the normal 0.35s — feels like native restore
+      var _sp=$('splash');
+      if(_sp)_sp.style.transition='opacity 0.1s';
+      _doSplashTransition();
+      console.log('[APP_LIFECYCLE] restored_last_ui_state');
+    });
   }
 
   window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_checkSplashReady();};
@@ -11405,6 +11439,18 @@ function ivTrackView(episodeId){
 
 /* ===== START ===== */
 function startApp(){
+  // ── Warm resume detection ─────────────────────────────────────────────────
+  // tk_last_bg is written by appStateChange when app goes to background.
+  // If it was < 30 min ago, WebView was killed under memory pressure — skip splash.
+  var _bgTs = parseInt(localStorage.getItem('tk_last_bg') || '0');
+  var _sinceBackground = _bgTs ? (Date.now() - _bgTs) : Infinity;
+  if (_bgTs && _sinceBackground < 30 * 60 * 1000) {
+    window._isWarmResume = true;
+    console.log('[APP_LIFECYCLE] warm_resume — backgrounded', Math.round(_sinceBackground / 1000), 's ago');
+  } else {
+    window._isWarmResume = false;
+    console.log('[APP_LIFECYCLE] cold_start');
+  }
   console.log('[Startup] startApp()',Date.now()-_startupT0,'ms');
   // Hide native splash after TWO rAFs — double rAF guarantees the browser has
   // committed at least one paint of the HTML splash before the native overlay
@@ -11429,7 +11475,8 @@ function startApp(){
     /* 3-second timeout — if i18n fetch hangs (slow connection), start app anyway */
     var _i18nDone = false;
     function _afterI18n(){
-      if(_i18nDone)return; _i18nDone=true;
+      if(_i18nDone){ console.log('[APP_LIFECYCLE] duplicate_init_prevented'); return; }
+      _i18nDone=true;
 
       // Safe render guard: if bundled didn't load, UI must not show raw keys.
       // Layer 1 (kmr-bundled.js) is synchronous — if it's missing, log the critical error
