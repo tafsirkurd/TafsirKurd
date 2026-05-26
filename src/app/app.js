@@ -7377,39 +7377,66 @@ function savePrayerLog(log){
   try{localStorage.setItem('prayer_log',JSON.stringify(log));}catch(e){}
 }
 function togglePrayerDone(prayer){
-  var log=getPrayerLog();var today=dateKey(new Date());
+  var log=getPrayerLog();var today=_getPrayerDay();
   if(!log[today])log[today]={};
   log[today][prayer]=!log[today][prayer];
   savePrayerLog(log);return log[today][prayer];
 }
+
+// ── Smart prayer engine ──────────────────────────────────────────────────────
+
+// Timings for any date key (YYYY-MM-DD) from PrayerCache
+function _getTimingsForDate(dKey){
+  try{
+    if(!window.PrayerCache)return null;
+    var city=localStorage.getItem('prayerCity')||'Duhok';
+    var pts=dKey.split('-').map(Number);
+    var monthly=PrayerCache.read(PrayerCache.monthKey(city,pts[0],pts[1]));
+    if(!monthly||!monthly.days)return null;
+    var d=monthly.days[pts[2]]||monthly.days[String(pts[2])];
+    if(!d)return null;
+    return{Fajr:d.Fajr,Sunrise:d.Sunrise,Dhuhr:d.Dhuhr,Asr:d.Asr,Maghrib:d.Maghrib,Isha:d.Isha};
+  }catch(e){return null;}
+}
+function _getTodayTimings(){return _getTimingsForDate(dateKey(new Date()));}
+
+// Islamic prayer day: before today's Fajr → still in yesterday's prayer day
+function _getPrayerDay(){
+  var now=new Date();var todayKey=dateKey(now);
+  var t=_getTimingsForDate(todayKey);
+  if(t&&t.Fajr){
+    var hm=t.Fajr.trim().split(' ')[0].split(':');
+    var fajr=new Date(now.getFullYear(),now.getMonth(),now.getDate(),+hm[0],+hm[1],0);
+    if(now<fajr){var y=new Date(now);y.setDate(y.getDate()-1);return dateKey(y);}
+  }
+  return todayKey;
+}
+
+// Can a prayer be checked? Handles prayer-day concept + time windows.
+// Past days: always. Future: never. Prayer day: only after prayer time starts.
+function _isPrayerCheckable(prayer,dKey){
+  var now=new Date();var todayKey=dateKey(now);var prayerDay=_getPrayerDay();
+  if(dKey<prayerDay)return true;
+  if(dKey>todayKey)return false;
+  if(dKey===todayKey&&prayerDay!==todayKey)return false;
+  var timings=_getTimingsForDate(dKey);
+  if(!timings||!timings[prayer])return true;
+  var p=dKey.split('-');
+  var hm=timings[prayer].trim().split(' ')[0].split(':');
+  var pt=new Date(+p[0],+p[1]-1,+p[2],+hm[0],+hm[1],0);
+  return now>=pt;
+}
+
 function calcPrayerStreak(log){
-  var streak=0;var d=new Date();
+  var streak=0;var pDay=_getPrayerDay();var pp=pDay.split('-');
+  var d=new Date(+pp[0],+pp[1]-1,+pp[2]);
   for(var i=0;i<365;i++){
     var k=dateKey(d);var day=log[k]||{};
-    var cnt=_TRACK_PRAYERS.filter(function(p){return day[p];}).length;
+    var cnt=_TRACK_PRAYERS.filter(function(pr){return day[pr];}).length;
     if(cnt>=5)streak++;else if(i>0)break;
     d.setDate(d.getDate()-1);
   }
   return streak;
-}
-function _getTodayTimings(){
-  try{
-    if(!window.PrayerCache)return null;
-    var city=localStorage.getItem('prayerCity')||'Duhok';
-    var now=new Date();var parts=[now.getFullYear(),now.getMonth()+1,now.getDate()];
-    var monthly=PrayerCache.read(PrayerCache.monthKey(city,parts[0],parts[1]));
-    if(!monthly||!monthly.days)return null;
-    var d=monthly.days[parts[2]]||monthly.days[String(parts[2])];
-    if(!d)return null;
-    return{Fajr:d.Fajr,Dhuhr:d.Dhuhr,Asr:d.Asr,Maghrib:d.Maghrib,Isha:d.Isha};
-  }catch(e){return null;}
-}
-function _hasPrayerPassed(prayer,timings){
-  if(!timings||!timings[prayer])return true; // no data → allow (graceful)
-  var now=new Date();
-  var hm=timings[prayer].trim().split(' ')[0].split(':');
-  var pt=new Date(now.getFullYear(),now.getMonth(),now.getDate(),parseInt(hm[0]),parseInt(hm[1]),0);
-  return now>=pt;
 }
 
 /* ===== PRAYER PROGRESS PAGE ===== */
@@ -7439,12 +7466,12 @@ function calcPrayerMonthStats(log,year,month){
   return{full:full,done:done,total:total};
 }
 function calcPrayerWeekData(log){
-  var now=new Date();var today=dateKey(now);var result=[];
+  var now=new Date();var pDay=_getPrayerDay();var result=[];
   for(var i=6;i>=0;i--){
     var d=new Date(now);d.setDate(d.getDate()-i);
     var k=dateKey(d);var dl=log[k]||{};
     var cnt=_TRACK_PRAYERS.filter(function(p){return dl[p];}).length;
-    result.push({key:k,dow:d.getDay(),cnt:cnt,isToday:k===today});
+    result.push({key:k,dow:d.getDay(),cnt:cnt,isToday:k===pDay});
   }
   return result;
 }
@@ -7459,6 +7486,53 @@ function calcMostMissed(log){
   if(!hasSome)return null;
   var most=_TRACK_PRAYERS.reduce(function(a,b){return missed[a]>missed[b]?a:b;});
   return{prayer:most,count:missed[most]};
+}
+
+// Consistency score 0-100 over last N days (default 30)
+function calcConsistencyScore(log,days){
+  var n=days||30;var now=new Date();var done=0;
+  for(var i=0;i<n;i++){
+    var d=new Date(now);d.setDate(d.getDate()-i);
+    var dl=log[dateKey(d)]||{};
+    done+=_TRACK_PRAYERS.filter(function(p){return dl[p];}).length;
+  }
+  return Math.round((done/(n*5))*100);
+}
+// Weakest day of week over last 90 days: {dow, avg, name}
+function calcWeakestDay(log){
+  var totals=[0,0,0,0,0,0,0],counts=[0,0,0,0,0,0,0];
+  var now=new Date();var dayNames=['یەکشەم','دووشەم','سێشەم','چوارشەم','پێنجشەم','ئینانێ','شەمبی'];
+  for(var i=1;i<=90;i++){
+    var d=new Date(now);d.setDate(d.getDate()-i);
+    var k=dateKey(d);var dow=d.getDay();
+    if(log[k]){counts[dow]++;totals[dow]+=_TRACK_PRAYERS.filter(function(p){return log[k][p];}).length;}
+  }
+  var minAvg=6,minDow=-1;
+  for(var j=0;j<7;j++){
+    if(counts[j]>=2){var avg=totals[j]/counts[j];if(avg<minAvg){minAvg=avg;minDow=j;}}
+  }
+  return minDow>=0?{dow:minDow,avg:Math.round(minAvg*10)/10,name:dayNames[minDow]}:null;
+}
+// Month projection: estimated full-prayer-days by end of month at current rate
+function calcMonthProjection(log){
+  var now=new Date();var ms=calcPrayerMonthStats(log,now.getFullYear(),now.getMonth());
+  if(ms.total<3)return null;
+  var daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  var remaining=daysInMonth-now.getDate();
+  var rate=ms.full/ms.total;
+  return{current:ms.full,projected:Math.min(Math.round(ms.full+rate*remaining),daysInMonth),rate:Math.round(rate*100),daysLeft:remaining};
+}
+// Active streak: consecutive prayer-days with >= threshold prayers (default 4)
+function calcActiveStreak(log,min){
+  var threshold=min||4;var streak=0;var pDay=_getPrayerDay();
+  var pp=pDay.split('-');var d=new Date(+pp[0],+pp[1]-1,+pp[2]);
+  for(var i=0;i<365;i++){
+    var k=dateKey(d);var day=log[k]||{};
+    var cnt=_TRACK_PRAYERS.filter(function(pr){return day[pr];}).length;
+    if(cnt>=threshold)streak++;else if(i>0)break;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
 }
 
 App.openPrayerProgress=function(){
@@ -7479,10 +7553,9 @@ App.openPrayerDay=function(dKey){
   var dayNames=['یەکشەم','دووشەم','سێشەم','چوارشەم','پێنجشەم','ئینانێ','شەمبی'];
   sheet.appendChild(el('div','ppp-day-title',dayNames[d.getDay()]+' — '+parts[2]+'/'+parts[1]));
   var btns=el('div','ppp-day-prayers');
-  var _dsTimings=(dKey===dateKey(new Date()))?_getTodayTimings():null;
   _TRACK_PRAYERS.forEach(function(prayer){
     var isDone=!!(dayLog[prayer]);
-    var passed=_hasPrayerPassed(prayer,_dsTimings);
+    var passed=_isPrayerCheckable(prayer,dKey);
     var btn=document.createElement('button');
     btn.className='ppp-prayer-btn'+(isDone?' on':'')+(passed?'':' not-yet');
     var ic=document.createElement('i');
@@ -7534,10 +7607,12 @@ function _pppMsg(n){
 
 function _buildPrayerProgressPanel(panel){
   clear(panel);
-  var log=getPrayerLog();var now=new Date();var today=dateKey(now);
+  var log=getPrayerLog();var now=new Date();var today=_getPrayerDay();
+  var isPreFajr=(today!==dateKey(now));
   var todayLog=log[today]||{};
   var doneToday=_TRACK_PRAYERS.filter(function(p){return todayLog[p];}).length;
   var streak=calcPrayerStreak(log);var best=calcBestPrayerStreak(log);
+  var consistency=calcConsistencyScore(log,30);
   var mStats=calcPrayerMonthStats(log,now.getFullYear(),now.getMonth());
   var weekData=calcPrayerWeekData(log);var missed=calcMostMissed(log);
 
@@ -7555,17 +7630,17 @@ function _buildPrayerProgressPanel(panel){
   // ─ Today card ─────────────────────────────────────────────
   var card=el('div','ppp-today-card');
   var topRow=el('div','ppp-today-hdr');
-  topRow.appendChild(el('span','ppp-today-label','ئەمڕۆ'));
+  var todayLabel=isPreFajr?'دوێنێ (هێشتا بەردەستە)':'ئەمڕۆ';
+  topRow.appendChild(el('span','ppp-today-label',todayLabel));
   var countEl=el('span','ppp-today-count',doneToday+'/5');topRow.appendChild(countEl);
   card.appendChild(topRow);
   var bar=el('div','ppp-progress-bar');
   var fill=el('div','ppp-progress-fill');fill.style.width=((doneToday/5)*100)+'%';
   bar.appendChild(fill);card.appendChild(bar);
   var pBtns=el('div','ppp-prayers');
-  var _todayTimings=_getTodayTimings();
   _TRACK_PRAYERS.forEach(function(prayer){
     var isDone=!!(todayLog[prayer]);
-    var passed=_hasPrayerPassed(prayer,_todayTimings);
+    var passed=_isPrayerCheckable(prayer,today);
     var btn=document.createElement('button');
     btn.className='ppp-prayer-btn'+(isDone?' on':'')+(passed?'':' not-yet');
     var ic=document.createElement('i');
@@ -7601,6 +7676,7 @@ function _buildPrayerProgressPanel(panel){
   stats.appendChild(mkStat(_pppStreakVal(streak),'ڕیزا ڕۆژان','ppp-stat-streak'));
   stats.appendChild(mkStat(best>0?'⭐ '+best:'0','باشترین ڕیزا','ppp-stat-best'));
   stats.appendChild(mkStat(mStats.full+'/'+mStats.total,'تەمام ئەم مانگ'));
+  stats.appendChild(mkStat(consistency+'%','ئینتیزام ٣٠ ڕۆژ'));
   body.appendChild(stats);
 
   // ─ This week ──────────────────────────────────────────────
@@ -7674,47 +7750,58 @@ function _buildPppCal(log){
 
 function _buildPppInsights(log,mStats,weekData,missed){
   var wrap=el('div','ppp-insights');
-  // Most missed prayer
-  if(missed&&missed.count>0){
-    var r1=el('div','ppp-insight-row');
-    var ic1=el('div','ppp-insight-icon');ic1.style.background='rgba(220,60,40,.12)';
-    var ii1=icon('fas fa-exclamation-circle');ii1.style.color='#dc3c28';ic1.appendChild(ii1);r1.appendChild(ic1);
-    var t1=el('div','ppp-insight-text');
-    t1.appendChild(el('div','ppp-insight-label','نوێژا زیاد نەکراو (٣٠ ڕۆژ)'));
-    t1.appendChild(el('div','ppp-insight-value',t('prayer.'+missed.prayer.toLowerCase())+' — '+missed.count+' ڕۆژ'));
-    r1.appendChild(t1);wrap.appendChild(r1);
+  function insightRow(bgColor,iColor,iClass,label,value){
+    var r=el('div','ppp-insight-row');
+    var ic=el('div','ppp-insight-icon');ic.style.background=bgColor;
+    var ii=icon(iClass);ii.style.color=iColor;ic.appendChild(ii);r.appendChild(ic);
+    var tx=el('div','ppp-insight-text');
+    tx.appendChild(el('div','ppp-insight-label',label));
+    tx.appendChild(el('div','ppp-insight-value',value));
+    r.appendChild(tx);wrap.appendChild(r);
   }
+
   // This week %
   var weekDone=weekData.reduce(function(s,d){return s+d.cnt;},0);
   var weekPct=Math.round((weekDone/35)*100);
-  var r2=el('div','ppp-insight-row');
-  var ic2=el('div','ppp-insight-icon');ic2.style.background='rgba(34,197,94,.12)';
-  var ii2=icon('fas fa-calendar-week');ii2.style.color='var(--accent)';ic2.appendChild(ii2);r2.appendChild(ic2);
-  var t2=el('div','ppp-insight-text');
-  t2.appendChild(el('div','ppp-insight-label','ئەم هەفتە'));
-  t2.appendChild(el('div','ppp-insight-value',weekPct+'% — '+weekDone+'/35 نوێژ'));
-  r2.appendChild(t2);wrap.appendChild(r2);
+  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week','ئەم هەفتە',weekPct+'% — '+weekDone+'/35 نوێژ');
+
+  // Most missed prayer (30 days)
+  if(missed&&missed.count>0){
+    insightRow('rgba(220,60,40,.12)','#dc3c28','fas fa-exclamation-circle','نوێژا زیاد نەکراو (٣٠ ڕۆژ)',t('prayer.'+missed.prayer.toLowerCase())+' — '+missed.count+' ڕۆژ');
+  }
+
+  // Weakest day of week
+  var weak=calcWeakestDay(log);
+  if(weak){
+    var weakColor=weak.avg<2?'#dc3c28':weak.avg<4?'#f09000':'var(--accent)';
+    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day','ڕۆژا هەرا قایل',weak.name+' — '+weak.avg+'/5 ناڤنج');
+  }
+
+  // Active streak (4+ prayers)
+  var active=calcActiveStreak(log,4);
+  if(active>0){
+    insightRow('rgba(59,130,246,.12)','#3b82f6','fas fa-fire-alt','ڕیزا چالاک (٤+ نوێژ)','🔥 '+active+' ڕۆژ');
+  }
+
   // Monthly avg per day
   if(mStats.total>0){
     var avg=(mStats.done/mStats.total).toFixed(1);
-    var r3=el('div','ppp-insight-row');
-    var ic3=el('div','ppp-insight-icon');ic3.style.background='rgba(240,144,0,.12)';
-    var ii3=icon('fas fa-chart-line');ii3.style.color='#f09000';ic3.appendChild(ii3);r3.appendChild(ic3);
-    var t3=el('div','ppp-insight-text');
-    t3.appendChild(el('div','ppp-insight-label','ناڤنجی ئەم مانگ ل ڕۆژ'));
-    t3.appendChild(el('div','ppp-insight-value',avg+'/5 نوێژ'));
-    r3.appendChild(t3);wrap.appendChild(r3);
+    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line','ناڤنجی ئەم مانگ ل ڕۆژ',avg+'/5 نوێژ');
   }
+
+  // Month projection
+  var proj=calcMonthProjection(log);
+  if(proj&&proj.daysLeft>0){
+    var projIcon=proj.rate>=80?'fas fa-rocket':proj.rate>=50?'fas fa-chart-line':'fas fa-seedling';
+    var projColor=proj.rate>=80?'var(--accent)':proj.rate>=50?'#f09000':'#dc3c28';
+    insightRow('rgba(34,197,94,.08)',projColor,projIcon,'ئەم مانگ ل ناو '+proj.daysLeft+' ڕۆژ',proj.projected+' ڕۆژ تەمام پێشبینی دکرێ');
+  }
+
   // Complete days this month
   if(mStats.full>0){
-    var r4=el('div','ppp-insight-row');
-    var ic4=el('div','ppp-insight-icon');ic4.style.background='rgba(34,197,94,.12)';
-    var ii4=icon('fas fa-check-double');ii4.style.color='var(--accent)';ic4.appendChild(ii4);r4.appendChild(ic4);
-    var t4=el('div','ppp-insight-text');
-    t4.appendChild(el('div','ppp-insight-label','ڕۆژێن تەمام ئەم مانگ'));
-    t4.appendChild(el('div','ppp-insight-value',mStats.full+' ڕۆژ ('+Math.round((mStats.full/mStats.total)*100)+'%)'));
-    r4.appendChild(t4);wrap.appendChild(r4);
+    insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-check-double','ڕۆژێن تەمام ئەم مانگ',mStats.full+' ڕۆژ ('+Math.round((mStats.full/mStats.total)*100)+'%)');
   }
+
   return wrap;
 }
 
