@@ -1875,6 +1875,27 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .ppp-day-pull{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 14px}
 .ppp-day-title{font-size:.88rem;font-weight:700;color:var(--text);text-align:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .ppp-day-prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.ppp-prayer-btn.not-yet{opacity:.3;pointer-events:none}
+.ppp-prayer-btn.not-yet i{color:var(--muted)!important}
+/* ── Prayer celebration ──────────────────────────────── */
+.ppp-celeb-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;overflow:hidden;animation:fadeIn .3s ease}
+.ppp-celeb-overlay.out{animation:ppp-ov-out .35s ease forwards}
+@keyframes ppp-ov-out{to{opacity:0}}
+.ppp-celeb-card{background:linear-gradient(155deg,#0e2318 0%,#071510 100%);border:1px solid rgba(34,197,94,.25);border-radius:26px;padding:34px 24px 28px;display:flex;flex-direction:column;align-items:center;gap:11px;direction:rtl;max-width:300px;width:88%;text-align:center;animation:ppp-card-in .55s cubic-bezier(.34,1.56,.64,1) both;position:relative;z-index:1;box-shadow:0 0 80px rgba(34,197,94,.18),0 24px 60px rgba(0,0,0,.6)}
+@keyframes ppp-card-in{from{transform:scale(.3) translateY(40px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.ppp-celeb-icon{font-size:3.8rem;line-height:1;animation:ppp-bob 1.4s ease-in-out infinite alternate}
+@keyframes ppp-bob{from{transform:translateY(0) scale(1)}to{transform:translateY(-10px) scale(1.06)}}
+.ppp-celeb-title{font-size:1.6rem;font-weight:800;color:#22c55e;letter-spacing:-.02em;text-shadow:0 0 24px rgba(34,197,94,.45)}
+.ppp-celeb-sub{font-size:.88rem;font-weight:600;color:rgba(255,255,255,.82);line-height:1.55;white-space:pre-line}
+.ppp-celeb-streak{font-size:.95rem;font-weight:700;color:#f09000;background:rgba(240,144,0,.1);padding:6px 18px;border-radius:20px;border:1px solid rgba(240,144,0,.22)}
+.ppp-celeb-btn{margin-top:6px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:13px 32px;font-size:.92rem;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;width:100%;transition:transform .1s}
+.ppp-celeb-btn:active{transform:scale(.96)}
+.ppp-conf{position:absolute;animation:ppp-fall linear forwards}
+@keyframes ppp-fall{0%{transform:translateY(-12px) rotate(0deg);opacity:1}85%{opacity:.9}100%{transform:translateY(110vh) rotate(1440deg);opacity:0}}
+.ppp-progress-fill.ppp-pulse{animation:ppp-fill-pulse .65s ease}
+@keyframes ppp-fill-pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7);box-shadow:0 0 20px var(--accent)}}
+.ppp-day-toast{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:12px;padding:10px 16px;font-size:.82rem;font-weight:700;color:var(--accent);text-align:center;direction:rtl;opacity:0;transform:translateY(-6px);transition:opacity .3s,transform .3s;margin-bottom:2px}
+.ppp-day-toast.show{opacity:1;transform:translateY(0)}
 /* ── Search History ───────────────────────────────── */
 .search-history{padding:8px 0}
 .sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 16px 10px;direction:rtl}
@@ -4372,7 +4393,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=823"></script>
+<script src="/app/app.js?v=824"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
