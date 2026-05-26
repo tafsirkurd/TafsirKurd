@@ -3228,6 +3228,199 @@ html.low-end-device .tab-item.on i{box-shadow:none!important}
   .splash{transition:opacity .15s ease!important}
   .app{transition:opacity .08s ease-out!important}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NATIVE-FEEL POLISH — tap response, hover hygiene, animation budget
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Eliminate 300ms tap delay on all interactive elements ─────────────
+   touch-action:manipulation prevents double-tap zoom handling, removing
+   the synthetic 300ms delay on Android WebViews (pre-Chrome 55 & some OEMs). */
+button,a,label,
+[role="button"],input[type="button"],input[type="submit"],input[type="reset"],
+.tab-item,.hdr-btn,.hdr-text-btn,
+.surah-card,.ayah-act,.reciter-card,.reciter-dl-btn,
+.iv-card,.iv-ep-item,.iv-ep-save,.iv-overlay-ep,.iv-spk-item,.iv-hero-slide,
+.iv-yt-card-thumb,.iv-yt-card-btn,.iv-overlay-close,.iv-overlay-ep-del,
+.sidebar-item,.sidebar-tab,
+.search-result,.search-clear,
+.bm-card,.bm-card-btn,
+.wizard-opt,.wizard-btn,
+.s-row,.pp-row,.pp-action-btn,.pp-devices-refresh,.pp-device-remove,.pp-device-all-out,
+.pp-save-btn,.pp-delete-confirm-yes,.pp-delete-confirm-no,
+.rp-item,.fp-btn,.fp-btn-sm,.fp-btn-lg,.fp-speed-btn,.fp-reciter-row,
+.speed-seg-btn,.ms-seg-btn,.dl-scope-btn,.dl-action-btn,.dl-verify-btn,
+.theme-card,.qs-font-card,.qs-reciter-chip,.qs-jump-btn,.qs-action-btn,
+.goal-choice-btn,.goal-confirm-cancel,.goal-confirm-delete,.goal-confirm-cancel-full,
+.year-nav button,.week-day,.heatmap-cell,.month-cal-cell,
+.back-btn,.close-btn,.mushaf-picker-btn,.mushaf-surah-nav-btn,.surah-nav-btn,
+.copy-opt-btn,.copy-fmt-btn,.copy-range-copy-btn,.copy-back-btn,
+.repeat-tab,.repeat-counter-btn,.repeat-actions button,
+.rating-btn-primary,.rating-btn-later,
+.profile-card,.profile-login-btn,.auth-tab,
+.auth-submit-btn,.auth-google-btn,.auth-apple-btn,.auth-guest-btn,
+.toggle,.stepper-btn,.soc-btn,
+.cfg-sheet-close,.iv-spk-close,.rp-close,.dl-sheet-close,.mushaf-tafsir-close,
+.mushaf-settings-close,.repeat-modal-close,.repeat-status-stop,
+.continue-card,.about-nav-row,.rate-app-row,
+.mushaf-flow-verse,.mushaf-tafsir-play,.iv-yt-play-over {
+  touch-action: manipulation;
+}
+
+/* ── 2. Hover states: real pointer devices only ───────────────────────────
+   On touch, hover states get permanently "stuck" after a tap on iOS/Android.
+   `(hover:hover) and (pointer:fine)` = mouse/trackpad only — never fires on touch. */
+.auth-google-btn:hover,
+.iv-ep-item:hover .iv-play-icon { /* reset any existing non-guarded hover */ }
+
+@media (hover:hover) and (pointer:fine) {
+  .hdr-btn:not(.on):hover{background:var(--surface-h)}
+  .surah-card:hover{transform:scale(.988)}
+  .ayah-act:hover{background:var(--bg3);color:var(--text)}
+  .iv-card:hover{transform:scale(.988);box-shadow:var(--shadow-m)}
+  .iv-ep-item:hover{transform:scale(.988)}
+  .iv-ep-item:hover .iv-play-icon{opacity:1}
+  .s-row:hover{background:var(--surface-h)}
+  .pp-row:hover{background:var(--surface-h)}
+  .sidebar-item:hover{background:var(--surface-h)}
+  .search-result:hover{background:var(--surface-h)}
+  .rp-item:hover{background:var(--bg2)}
+  .iv-overlay-ep:hover{background:var(--surface-h)}
+  .reciter-card:hover{border-color:var(--border2)}
+  .bm-card:hover{transform:scale(.995)}
+  .wizard-opt:hover{border-color:var(--border2)}
+  .theme-card:hover{border-color:var(--border2)}
+  .auth-google-btn:hover{border-color:var(--accent)}
+}
+/* Suppress old non-guarded hover rules */
+.auth-google-btn:hover{border-color:inherit}
+
+/* ── 3. Focus ring hygiene ────────────────────────────────────────────────
+   Touch users never need focus rings — they appear randomly on taps.
+   `:focus-visible` only fires for keyboard navigation in modern WebKit/Blink. */
+*:focus{outline:none}
+*:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* ── 4. Kill looping animations on low-end devices ───────────────────────
+   These run forever in the GPU compositor even when off-screen.           */
+html.low-end-device .fu-ring{animation:none!important;opacity:.16!important}
+html.low-end-device .fu-badge-glow{animation:none!important}
+html.low-end-device .fp-btn-lg.playing{animation:none!important}
+html.low-end-device .audio-bar-avatar.playing::before,
+html.low-end-device .audio-bar-avatar.playing::after{animation:none!important}
+html.low-end-device .mushaf-ayah-seg--next{animation:none!important}
+html.low-end-device .quran-ayah--next{animation:none!important}
+html.low-end-device .streak-ring.pulse{animation:none!important}
+html.low-end-device .week-day{animation:none!important;transform:scale(1)!important}
+html.low-end-device .progress-fill.complete{animation:none!important;background:var(--accent)!important}
+html.low-end-device .search-result{animation:none!important;opacity:1!important;transform:none!important}
+html.low-end-device .no-goal>*{animation:none!important;opacity:1!important;transform:none!important}
+html.low-end-device .goal-confirm-icon{animation:none!important}
+html.low-end-device .iv-hero-slide{transition:none!important}
+
+/* ── 5. html background = theme colour for overscroll reveal ─────────────
+   Overscrolling past top/bottom reveals the html background. Without this
+   it shows the WebView default (white/grey) — a dead giveaway on iOS.     */
+html{background-color:var(--bg,#0a0a0a)}
+
+/* ── 6. QS overlay: opacity transition instead of display:none jump ───────
+   display:none blocks CSS transitions — the backdrop appeared instantly.
+   opacity+pointer-events allows the fade to play on both open and close.  */
+.qs-overlay{
+  display:block!important;  /* always in layout tree — transition can fire */
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease;
+}
+.qs-overlay.on{opacity:1;pointer-events:auto}
+
+/* ── 7. Missing :active states ───────────────────────────────────────────
+   Any interactive element the user can tap should give visible press feedback. */
+.copy-opt-btn:active{background:var(--surface-h)}
+.qs-font-card:active{transform:scale(.97)}
+.qs-reciter-chip:active{transform:scale(.95)}
+.qs-jump-btn:active{opacity:.82}
+.qs-action-btn:active{background:var(--surface-h)}
+.auth-submit-btn:active{opacity:.82;transform:scale(.98)}
+.auth-google-btn:active{opacity:.82;transform:scale(.98)}
+.auth-apple-btn:active{opacity:.82;transform:scale(.98)}
+.about-nav-row:active{background:var(--surface-h)}
+.rate-app-row:active{background:var(--surface-h)}
+.cfg-sheet-close:active,.iv-spk-close:active,.rp-close:active,
+.dl-sheet-close:active,.mushaf-tafsir-close:active,
+.mushaf-settings-close:active{background:var(--bg3)!important;transform:scale(.9)}
+.iv-yt-card-thumb:active{opacity:.85}
+.copy-range-copy-btn:active{opacity:.8}
+.copy-back-btn:active{opacity:.7}
+.ms-seg-btn:active{transform:scale(.94)}
+.repeat-modal-close:active{transform:scale(.9);background:var(--border2)}
+
+/* ── 8. Scroll containment: prevent scroll chaining into body ─────────────
+   Without this iOS can pass scroll events to the body, causing a white flash
+   (body briefly visible) when the user bounces at the top of a sheet.      */
+.ayah-list,.mushaf-view,.audio-settings-body,
+#qsBody,.sidebar-list,.dl-sheet-body,.cfg-sheet-body,
+.iv-overlay-list,.rp-list,.pp-body,
+.rec-picker,.full-player,.auth-panel,.wizard .wizard-body,
+.profile-panel,.iv-spk-list {
+  overscroll-behavior-y:contain;
+}
+
+/* ── 9. Image aspect-ratio placeholders ──────────────────────────────────
+   Reserve space before images load so content doesn't jump/reflow.        */
+.iv-card-img{aspect-ratio:16/9;overflow:hidden}
+.iv-ep-thumb{aspect-ratio:16/9;overflow:hidden}
+.iv-overlay-ep-thumb{aspect-ratio:16/9}
+
+/* ── 10. Shimmer on unloaded images ──────────────────────────────────────
+   Blank/broken image src shows shimmer so layout is immediately stable.   */
+.iv-card-img:not(:has(img[src])),
+.iv-ep-thumb:not(:has(img[src])) {
+  background:linear-gradient(270deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);
+  background-size:200% 100%;
+  animation:mushaf-shimmer 1.6s ease-in-out infinite;
+}
+
+/* ── 11. Remove cursor:pointer on mobile (it's noise) ────────────────────
+   On touch devices, cursor:pointer causes a tap-delay in some older
+   WebViews and is irrelevant to the user. Only meaningful on desktop.     */
+@media (hover:none){
+  *{cursor:default!important}
+  input,textarea,select,button,a,[role="button"]{cursor:default!important}
+}
+
+/* ── 12. Smooth panel open/close on iOS (reduce GPU layer creation) ───────
+   When using will-change:transform on a fixed element, iOS creates a new
+   GPU layer immediately. Limit will-change to only when actively animating
+   to reduce the total number of GPU layers (limits memory pressure).      */
+.full-player:not(.open){will-change:auto}
+.fp-overlay:not(.open){will-change:auto}
+.rp-overlay:not(.open){will-change:auto}
+.sidebar:not(.on){will-change:auto}
+
+/* ── 13. Backdrop-filter: use simpler blur on all capable devices ─────────
+   Backdrop-filter with high sigma values (>20px) causes repaints on scroll.
+   Cap to a reasonable level. (existing low-end rules remove it entirely.) */
+html.safe-render:not(.low-end-device) .tabbar,
+html.safe-render:not(.low-end-device) .hdr {
+  /* already has blur — ensure it's using composited layer correctly */
+  transform:translateZ(0);
+}
+
+/* ── 14. Tab-switch instant: suppress transitions during panel swap ───────
+   Applied for exactly 1 frame during App.tab() — panels appear pixel-instant
+   instead of doing their .15s fade. The tab-bar icon animation (spring) is
+   intentionally kept since it runs in the tab-bar, not the panel.         */
+body.tk-tab-switching .panel{transition:none!important;animation:none!important}
+
+/* ── 15. Scrolling: pause heavy background animations ────────────────────
+   When the user is scrolling, the sky scene and audio wave animations keep
+   running and triggering compositor work. Pause them during scroll.       */
+body.tk-scrolling .sky-scene *{animation-play-state:paused!important}
+body.tk-scrolling .audio-bar-avatar.playing::before,
+body.tk-scrolling .audio-bar-avatar.playing::after{animation-play-state:paused!important}
+body.tk-scrolling .streak-ring.pulse{animation-play-state:paused!important}
+body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
@@ -3806,7 +3999,7 @@ html.low-end-device .tab-item.on i{box-shadow:none!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=808"></script>
+<script src="/app/app.js?v=809"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

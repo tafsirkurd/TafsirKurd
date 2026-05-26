@@ -1132,6 +1132,18 @@ function init(){
         setTimeout(function(){window.dispatchEvent(new Event('resize'))},100);
       }
     });
+
+    // Scroll-pause: add tk-scrolling class during active scroll so CSS can
+    // pause heavy GPU animations (sky, audio wave, etc.) — reduces compositor
+    // work that causes scroll jank on mid-range Android devices.
+    (function(){
+      var _st=null;
+      document.addEventListener('scroll',function(){
+        document.body.classList.add('tk-scrolling');
+        if(_st)clearTimeout(_st);
+        _st=setTimeout(function(){_st=null;document.body.classList.remove('tk-scrolling');},120);
+      },{passive:true,capture:true});
+    })();
   }catch(e){
     console.error('App init error:',e);
   }
@@ -1640,10 +1652,14 @@ App.tab=function(name){
   S.tab=name;
 
   // ── Show new panel instantly — only touch the previous + new panel, not ALL panels ──
+  // Suppress CSS transitions for exactly 1 frame so the panel swap is pixel-instant,
+  // not a 150ms fade. Transitions resume on the next requestAnimationFrame.
+  document.body.classList.add('tk-tab-switching');
   var prevPanel=$('panel'+_prevTab.charAt(0).toUpperCase()+_prevTab.slice(1));
   if(prevPanel)prevPanel.classList.remove('on');
   var panel=$('panel'+name.charAt(0).toUpperCase()+name.slice(1));
   if(panel)panel.classList.add('on');
+  requestAnimationFrame(function(){document.body.classList.remove('tk-tab-switching');});
 
   // ── Tab bar icon ──
   var prevBtnName=(_prevTab==='goals'||_prevTab==='bookmarks')?'quran':_prevTab;
