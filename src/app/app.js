@@ -881,11 +881,11 @@ function init(){
     // On tablet the quran panel is a flex row — quranHome is the actual scroll container.
     var _isTabletLayout=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
     setupPullToRefresh(_isTabletLayout?'quranHome':'panelQuran',function(){renderSurahGrid();renderContinue();},_isTabletLayout?null:function(){return !S.surah});
-    setupPullToRefresh('panelBookmarks',function(){_renderHash.bm=null;renderBookmarks();});
-    setupPullToRefresh('panelGoals',function(){_renderHash.goals=null;renderGoals();});
+    setupPullToRefresh('panelBookmarks',function(){_renderHash.bm=null;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');});
+    setupPullToRefresh('panelGoals',function(){_renderHash.goals=null;renderGoals();_renderHash.goals=_tabHash('goals');});
     setupPullToRefresh('panelIslamvoice',function(isRecent){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function')App.ivRefresh();else renderIslamVoice();});
-    setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();});
-    setupPullToRefresh('panelPrayer',function(isRecent){if(window.PrayerUI){if(isRecent)PrayerUI.render();else PrayerUI.refresh();}});
+    setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();_renderHash.settings=_tabHash('settings');});
+    setupPullToRefresh('panelPrayer',function(isRecent){if(window.PrayerUI){if(isRecent)PrayerUI.render();else PrayerUI.refresh();_renderHash.prayer=_tabHash('prayer');}});
     setupPullToRefresh('panelGencine',function(isRecent){if(window.GencineUI){if(isRecent)GencineUI.render();else GencineUI.refresh();}});
 
     // Fast-scroll pill for long lists
@@ -918,7 +918,7 @@ function init(){
           // Capacitor users get this via appStateChange below; this covers desktop/PWA.
           // Skipped on Capacitor (appStateChange fires there instead — avoids double render).
           if(!window.Capacitor&&window.PrayerUI){
-            requestAnimationFrame(function(){PrayerUI.render();});
+            requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
           }
         }
         // Restore playback highlight state if Quran tab is visible (handles browser bg/fg)
@@ -983,7 +983,10 @@ function init(){
             // re-rendering would cause a visible "refresh" the user didn't ask for.
             var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
             if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
-              requestAnimationFrame(function(){PrayerUI.render();});
+              requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
+            } else if(window.PrayerUI&&_fgPlatform!=='mac'){
+              // Not on prayer tab — just invalidate hash so it rebuilds fresh on next visit
+              _renderHash.prayer=null;
             }
             // Push fresh widget data if date or city changed since last push
             if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
@@ -1461,9 +1464,9 @@ function _startTabPrerender(){
   var jobs=[
     function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
     function(){renderGoals();_renderHash.goals=_tabHash('goals');},
-    // Settings: skip on low/critical — deferred render on tap is fine
-    _isLowEndDev ? null : function(){renderSettings();_renderHash.settings=_tabHash('settings');},
-    function(){if(window.PrayerUI){PrayerUI.render();// Pause sky animations — pre-rendered but not the active tab
+    // Settings: always pre-render — it's static DOM, cheap on all device tiers
+    function(){renderSettings();_renderHash.settings=_tabHash('settings');},
+    function(){if(window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},
     // IslamVoice/Gencine: skip on medium/low/critical — expensive, rarely first
     (_isLowEndDev||_isMediumPerf) ? null : function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
@@ -1624,6 +1627,9 @@ function _tabHash(name){
   if(name==='islamvoice'){
     return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'')+(S.ivSpeakerFilter||'');
   }
+  if(name==='prayer'){
+    return 'p:'+(localStorage.getItem('prayerCity')||'Duhok')+':'+(localStorage.getItem('prayerMethod')||'13')+':'+new Date().toDateString();
+  }
   if(name==='gencine'){
     // Version key + date — forces re-render on DB reload OR new day
     return 'g:'+(window._gencineDbVersion||0)+':'+new Date().toDateString();
@@ -1638,6 +1644,9 @@ function _getCachedTabItems(){if(!_cachedTabItems)_cachedTabItems=document.query
 function _getCachedTabBtn(name){if(!_cachedTabBtns[name])_cachedTabBtns[name]=document.querySelector('.tab-item[data-tab="'+name+'"]');return _cachedTabBtns[name];}
 // Track pending tab rAF renders so we can cancel them if user switches again
 var _pendingTabRaf=null;
+// Saved scroll positions per tab — panels preserve scrollTop naturally via display:none,
+// but we need to re-apply it when content is rebuilt (hash change forces re-render).
+var _tabScrollPos={};
 App.tab=function(name){
   if(tapGuard('tab',80))return; // 80ms guard — fast enough for rapid switching
   if(name===S.tab){
@@ -1726,6 +1735,14 @@ App.tab=function(name){
   _pendingTabRaf=requestAnimationFrame(function(){
     _pendingTabRaf=null;
 
+    // ── Save scroll of departing tab before any cleanup ──────────────────────
+    // display:none preserves scrollTop natively, but render rebuilds reset it.
+    // Saving now lets us restore position when user returns after a data change.
+    var _prevPanelEl=document.getElementById('panel'+_prevTab.charAt(0).toUpperCase()+_prevTab.slice(1));
+    if(_prevPanelEl)_tabScrollPos[_prevTab]=_prevPanelEl.scrollTop;
+    // For IslamVoice home view specifically, also update the named scroll var
+    if(_prevTab==='islamvoice'&&!S.ivCurrentSeries){var _piv0=$('panelIslamvoice');if(_piv0)S._ivHomeScroll=_piv0.scrollTop;}
+
     // Cleanup from previous tab
     if(_prevTab==='prayer'&&name!=='prayer'&&window.PrayerUI){
       PrayerUI.stopCountdown();
@@ -1745,16 +1762,48 @@ App.tab=function(name){
     if(typeof closeCfgSheet==='function')closeCfgSheet();
     App.closeReaderSettings();
 
-    // Renders for new tab
+    // Renders for new tab — hash checks prevent unnecessary rebuilds.
+    // Each tab renders once (at pre-render or first open) and stays in DOM.
+    // Only re-renders when the tab's data actually changes (hash mismatch).
+    var _didRebuild=false;
     if(name==='quran'){requestAnimationFrame(_hlRestoreAll);}
-    if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}}
-    if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){renderGoals();_renderHash.goals=_tabHash('goals');}}
-    if(name==='islamvoice'){var _hiv=_tabHash('islamvoice');if(_hiv!==_renderHash.iv){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}}
-    if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){renderSettings();_renderHash.settings=_tabHash('settings');}_warmAboutCache();}
-    if(name==='prayer'&&window.PrayerUI){PrayerUI.render();if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();}
+    if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){_didRebuild=true;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}}
+    if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){_didRebuild=true;renderGoals();_renderHash.goals=_tabHash('goals');}}
+    if(name==='islamvoice'){
+      var _hiv=_tabHash('islamvoice');
+      if(_hiv!==_renderHash.iv){
+        _didRebuild=true;
+        // Save scroll before rebuild so we can restore it after
+        var _ivPre=$('panelIslamvoice');var _ivPreScroll=_ivPre?_ivPre.scrollTop:0;
+        renderIslamVoice();
+        if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');
+        // Restore scroll after rebuild (rAF ensures DOM is updated)
+        if(_ivPreScroll>0){requestAnimationFrame(function(){var _ivPost=$('panelIslamvoice');if(_ivPost)_ivPost.scrollTop=_ivPreScroll;});}
+      } else if(!S.ivCurrentSeries&&S._ivHomeScroll!=null){
+        // Hash same → content preserved → restore saved scroll position
+        var _ivRestoreEl=$('panelIslamvoice');
+        if(_ivRestoreEl){requestAnimationFrame(function(){_ivRestoreEl.scrollTop=S._ivHomeScroll||0;});}
+      }
+    }
+    if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){_didRebuild=true;renderSettings();_renderHash.settings=_tabHash('settings');}_warmAboutCache();}
+    if(name==='prayer'&&window.PrayerUI){
+      var _hp=_tabHash('prayer');
+      if(_hp!==_renderHash.prayer){_didRebuild=true;PrayerUI.render();_renderHash.prayer=_hp;}
+      if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
+    }
     if(name==='gencine'){
       // Scripts already loaded at startup — this is normally a no-op, just renders if not yet done
       _loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});
+    }
+
+    // ── Restore scroll for tabs where content was NOT rebuilt ─────────────────
+    // When content is preserved (hash same), scrollTop is already correct since
+    // display:none panels keep their scrollTop. When content IS rebuilt (_didRebuild),
+    // scroll naturally starts at 0 which is correct for fresh content.
+    // Exception: explicitly restore saved positions for tabs with sub-views.
+    if(!_didRebuild&&name!=='quran'&&name!=='islamvoice'){
+      var _newPanelEl=document.getElementById('panel'+name.charAt(0).toUpperCase()+name.slice(1));
+      if(_newPanelEl&&_tabScrollPos[name]){requestAnimationFrame(function(){_newPanelEl.scrollTop=_tabScrollPos[name];});}
     }
   });
 };
@@ -9123,10 +9172,10 @@ function applySyncData(data){
 
 function renderCurrentTab(){
   renderContinue();
-  if(S.tab==='settings')renderSettings();
-  if(S.tab==='bookmarks')renderBookmarks();
-  if(S.tab==='goals')renderGoals();
-  if(S.tab==='prayer'&&window.PrayerUI)PrayerUI.render();
+  if(S.tab==='settings'){renderSettings();_renderHash.settings=_tabHash('settings');}
+  if(S.tab==='bookmarks'){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}
+  if(S.tab==='goals'){renderGoals();_renderHash.goals=_tabHash('goals');}
+  if(S.tab==='prayer'&&window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');}
 }
 
 // ── Sync to cloud ─────────────────────────────────────────────────────────────
