@@ -3403,7 +3403,8 @@ button,a,label,
 .cfg-sheet-close,.iv-spk-close,.rp-close,.dl-sheet-close,.mushaf-tafsir-close,
 .mushaf-settings-close,.repeat-modal-close,.repeat-status-stop,
 .continue-card,.about-nav-row,.rate-app-row,
-.mushaf-flow-verse,.mushaf-tafsir-play,.iv-yt-play-over {
+.mushaf-flow-verse,.mushaf-tafsir-play,.iv-yt-play-over,
+.note-modal-btn,.note-modal-inp {
   touch-action: manipulation;
 }
 
@@ -3607,6 +3608,89 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 /* Auto chip slightly more prominent when not selected */
 .perf-chip--rec:not(.on){border-style:dashed}
 .perf-info-sub{padding:4px 2px 8px;font-size:.71rem;color:var(--text3);direction:ltr;line-height:1.5;text-align:left}
+
+/* ── 16. Bookmark note modal ─────────────────────────────────────────────────
+   Replaces the native prompt() dialog — proper in-app feel with safe-area     */
+.note-modal-ov{
+  position:fixed;inset:0;z-index:9500;
+  background:rgba(0,0,0,0);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0;
+  transition:background .22s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.note-modal-ov.on{background:rgba(0,0,0,.52);}
+.note-modal-card{
+  width:100%;max-width:480px;
+  background:var(--surface,var(--bg));
+  border-radius:20px 20px 0 0;
+  padding:20px 16px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  transform:translateY(100%);
+  transition:transform .28s cubic-bezier(.32,1,.56,1);
+  box-shadow:0 -4px 32px rgba(0,0,0,.22);
+}
+.note-modal-ov.on .note-modal-card{transform:translateY(0);}
+.note-modal-title{
+  font-size:.95rem;font-weight:700;margin-bottom:12px;
+  color:var(--text);text-align:right;
+}
+.note-modal-inp{
+  width:100%;box-sizing:border-box;
+  padding:10px 12px;font-size:.9rem;
+  background:var(--bg2,var(--card));
+  border:1.5px solid var(--border);
+  border-radius:12px;color:var(--text);
+  resize:none;font-family:inherit;
+  direction:rtl;line-height:1.7;
+  -webkit-appearance:none;appearance:none;
+  transition:border-color .15s;
+}
+.note-modal-inp:focus{outline:none;border-color:var(--accent);}
+.note-modal-chars{
+  font-size:.72rem;color:var(--text3);
+  text-align:left;margin-top:4px;margin-bottom:8px;direction:ltr;
+}
+.note-modal-actions{display:flex;gap:8px;margin-top:4px;}
+.note-modal-btn{
+  flex:1;padding:13px 12px;border:none;border-radius:12px;
+  font-size:.88rem;font-weight:700;cursor:pointer;
+  font-family:inherit;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  transition:opacity .15s,transform .12s;
+}
+.note-modal-btn:active{opacity:.8;transform:scale(.97);}
+.note-modal-cancel{background:var(--bg2,var(--card));color:var(--text2);}
+.note-modal-save{background:var(--accent);color:var(--accent-t,#fff);}
+
+/* ── 17. Global focus-visible polish ────────────────────────────────────────
+   On mobile, focused elements should not show ring (keyboard nav only)       */
+*:focus:not(:focus-visible){outline:none;}
+
+/* ── 18. Scroll panels: contain paint to prevent stacking context leaks ─────
+   Without paint containment, background-color of .panel can bleed through
+   sibling panels on certain Android GPU compositors.                          */
+.panel{contain:paint;}
+
+/* ── 19. Prevent text selection in UI chrome (buttons, headers, tabs) ────────
+   Accidental text-select during long-press is a common "feels web-like" issue */
+.tab-item,.hdr,.hdr-btn,.tabbar,.surah-card,.ayah-head,.sidebar-item,
+.bm-card-hdr,.goal-stat,.prayer-time-row,.iv-card-info,
+.perf-chip,.theme-card,.s-row,.pp-row,.settings-adv-hdr{
+  user-select:none;-webkit-user-select:none;
+}
+
+/* ── 20. Empty states: ensure minimum height so they're never collapsed ──────
+   On small screens an empty state with no min-height collapses to near-zero   */
+.bm-empty,.iv-state-wrap{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+
+/* ── 21. Buttons: global active scale for missing :active states ─────────────
+   Provides uniform press feedback on any button not covered above             */
+.surah-nav-btn:active,.bm-card-btn:active,.wizard-btn:active,
+.goal-choice-btn:active{transform:scale(.96);opacity:.85}
+
+/* ── 22. Note modal scroll containment ──────────────────────────────────────*/
+.note-modal-card{overscroll-behavior:contain;}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
@@ -4220,7 +4304,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=813"></script>
+<script src="/app/app.js?v=814"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

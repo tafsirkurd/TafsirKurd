@@ -5040,6 +5040,12 @@ function updateHighlight(surah,ayah){
     _hlSet(_hl.currentEls,CC,false);
     _hlSet(_hl.currentEls,RC,true);
     if(!_hl.readMap[_hl.currentKey])_hl.readMap[_hl.currentKey]=_hl.currentEls.slice();
+    // Memory cap: during very long sessions readMap can accumulate thousands of entries
+    // (each referencing DOM elements). Prune when it exceeds 300 to prevent memory growth.
+    var _rmKeys=Object.keys(_hl.readMap);
+    if(_rmKeys.length>300){
+      _rmKeys.slice(0,150).forEach(function(k){delete _hl.readMap[k];});
+    }
   }
 
   // Retire old next if it won't become current
@@ -5138,13 +5144,11 @@ function _hlRestoreMushafPage(pageEl){
 function _hlClearDom(){
   var ALL=['mushaf-ayah-seg--current','mushaf-ayah-seg--next','mushaf-ayah-seg--read',
            'quran-ayah--current','quran-ayah--next','quran-ayah--read'];
+  // Clear only tracked elements — we maintain full ref arrays so querySelectorAll
+  // fallback scans are unnecessary and expensive on long reading sessions.
   var seen=(_hl.currentEls||[]).concat(_hl.nextEls||[]);
   Object.keys(_hl.readMap).forEach(function(k){seen=seen.concat(_hl.readMap[k]||[]);});
-  seen.forEach(function(e){ALL.forEach(function(c){e.classList.remove(c);});});
-  var view=$('mushafView');
-  if(view)ALL.forEach(function(c){view.querySelectorAll('.'+c).forEach(function(e){e.classList.remove(c);});});
-  var list=$('ayahList');
-  if(list)ALL.forEach(function(c){list.querySelectorAll('.'+c).forEach(function(e){e.classList.remove(c);});});
+  seen.forEach(function(e){if(e&&e.classList)ALL.forEach(function(c){e.classList.remove(c);});});
   _hl.currentEls=[];_hl.nextEls=[];
   Object.keys(_hl.readMap).forEach(function(k){_hl.readMap[k]=[];});
 }
@@ -6115,6 +6119,9 @@ function syncFullPlayer(){
 
 function _fpTick(ts){
   if(!_fpOpen){_fpRafId=null;return;}
+  // Skip expensive work when app is backgrounded — RAF pauses anyway but
+  // when it resumes (tab focus) avoid a burst of stale-delta updates.
+  if(document.hidden){_fpRafId=requestAnimationFrame(_fpTick);return;}
   var dt=ts-_fpLastTick;_fpLastTick=ts;
   var ae=S.audio.el;
   if(ae&&ae.duration>0&&!isNaN(ae.duration)){
@@ -6613,6 +6620,46 @@ function getAyahArabicText(surah,ayah){
   var v=vv[ayah-1];return v?(v.text||v):'';
 }
 
+// ── In-app note editor ────────────────────────────────────────────────────────
+// Replaces native prompt() for bookmark notes — proper mobile UX with safe-area support.
+function _showNoteModal(currentNote,onSave){
+  var ov=el('div','note-modal-ov');
+  var card=el('div','note-modal-card');
+  var titleEl=el('div','note-modal-title',t('bookmarks.note_prompt')||'تێبینی دەستکاری بکە');
+  var inp=document.createElement('textarea');
+  inp.className='note-modal-inp';
+  inp.maxLength=280;
+  inp.value=currentNote||'';
+  inp.rows=3;
+  inp.placeholder=t('bookmarks.note_placeholder')||'تێبینی...';
+  var charCount=el('div','note-modal-chars','');
+  function _updateCount(){charCount.textContent=(280-inp.value.length)+' '+t('bookmarks.chars_left')||'پیت ماوە';}
+  _updateCount();
+  inp.addEventListener('input',_updateCount);
+  var actions=el('div','note-modal-actions');
+  var cancelBtn=el('button','note-modal-btn note-modal-cancel',t('cancel')||'پاشگەزبوون');
+  var saveBtn=el('button','note-modal-btn note-modal-save',t('bookmarks.note')||'پاشەکەوتکرن');
+  function _close(){
+    ov.classList.remove('on');
+    setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},260);
+  }
+  cancelBtn.onclick=function(){haptic([8]);_close();};
+  saveBtn.onclick=function(){haptic([8]);_close();onSave(inp.value.trim());};
+  on(ov,'click',function(e){if(e.target===ov)_close();});
+  actions.appendChild(cancelBtn);
+  actions.appendChild(saveBtn);
+  card.appendChild(titleEl);
+  card.appendChild(inp);
+  card.appendChild(charCount);
+  card.appendChild(actions);
+  ov.appendChild(card);
+  document.body.appendChild(ov);
+  requestAnimationFrame(function(){
+    ov.classList.add('on');
+    setTimeout(function(){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);},180);
+  });
+}
+
 function renderBmList(bms){
   var list=$('bmList');
   clear(list);
@@ -6669,8 +6716,12 @@ function renderBmList(bms){
     noteBtn.appendChild(icon('fas fa-pen'));
     noteBtn.appendChild(document.createTextNode(' '+t('bookmarks.note')));
     on(noteBtn,'click',function(){
-      var note=prompt(t('bookmarks.note_prompt'),bm.note||'');
-      if(note!==null){bm.note=note;saveBookmarks(getBookmarks().map(function(b){return b.surah===bm.surah&&b.ayah===bm.ayah?bm:b}));renderBookmarks()}
+      // Use in-app modal — never native prompt() on mobile
+      _showNoteModal(bm.note,function(note){
+        bm.note=note;
+        saveBookmarks(getBookmarks().map(function(b){return b.surah===bm.surah&&b.ayah===bm.ayah?bm:b}));
+        renderBookmarks();
+      });
     });
     actions.appendChild(noteBtn);
 
@@ -6718,7 +6769,12 @@ function saveGoal(g){localStorage.setItem('readingGoal',JSON.stringify(g));debou
 function getReadLog(){
   try{return JSON.parse(localStorage.getItem('readLog'))||{}}catch(e){return{}}
 }
-function saveReadLog(l){localStorage.setItem('readLog',JSON.stringify(l))}
+function saveReadLog(l){
+  // Prune entries older than 365 days — prevents unbounded readLog growth over years of use.
+  var cutoff=dateKey(new Date(Date.now()-365*86400000));
+  Object.keys(l).forEach(function(k){if(k<cutoff)delete l[k];});
+  localStorage.setItem('readLog',JSON.stringify(l));
+}
 
 function initTodayVerses(){
   var today=dateKey(new Date());
@@ -10497,7 +10553,9 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
 
       // isRecent: re-pulled within RECENT_MS → pass flag so refreshFn can skip network
       var _isRecent=_prevRefreshTime>0&&(Date.now()-_prevRefreshTime)<RECENT_MS;
-      refreshFn(_isRecent);
+      // Wrap in try/catch — an exception in refreshFn must never leave PTR stuck in
+      // refreshing state (spinner stays visible forever, panel locked).
+      try{refreshFn(_isRecent);}catch(e){console.warn('[PTR] refreshFn error:',e);}
 
     }else{
       // ── BELOW THRESHOLD — snap back silently ──────────────────────────────
