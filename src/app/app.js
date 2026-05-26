@@ -7856,6 +7856,11 @@ App.closePrayerCelebration=function(){
   var ov=$('pppCelebOverlay');if(!ov)return;
   ov.classList.add('out');setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},360);
 };
+App.testCelebration=function(){
+  if(!$('prayerProgressPanel')||!$('prayerProgressPanel').classList.contains('on'))App.openPrayerProgress();
+  setTimeout(function(){_pppCelebrateMonth(getPrayerLog());},400);
+};
+App.testDayToast=function(){_pppCelebrateDay();};
 
 /* ===== WIDGET DATA PUSH ===== */
 
