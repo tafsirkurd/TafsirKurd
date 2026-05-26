@@ -1814,6 +1814,41 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 /* offline banner */
 #offlineBanner{position:fixed;top:0;left:0;right:0;z-index:9999;background:#f09000;color:#fff;text-align:center;font-size:.78rem;font-weight:600;padding:5px 12px;transform:translateY(-100%);transition:transform .25s ease;direction:rtl}
 #offlineBanner.on{transform:translateY(0)}
+/* ── Prayer Tracker ───────────────────────────────── */
+#prayerTracker{padding:0 14px 20px;direction:rtl}
+.pt-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px}
+.pt-title{font-size:.95rem;font-weight:700;color:var(--text)}
+.pt-meta{display:flex;align-items:center;gap:8px}
+.pt-streak{font-size:.82rem;font-weight:700;color:#f09000;background:rgba(240,144,0,.12);padding:2px 8px;border-radius:20px}
+.pt-today-prog{font-size:.8rem;color:var(--muted);font-weight:600}
+.pt-prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}
+.pt-prayer-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit}
+.pt-prayer-btn i{font-size:1.1rem;color:var(--muted);transition:color .15s}
+.pt-prayer-name{font-size:.7rem;color:var(--text2);font-weight:600;white-space:nowrap}
+.pt-prayer-btn.checked{background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:var(--accent)}
+.pt-prayer-btn.checked i{color:var(--accent)}
+.pt-prayer-btn.checked .pt-prayer-name{color:var(--accent)}
+.pt-prayer-btn:active{transform:scale(.93)}
+.pt-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.pt-day{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pt-day.today .pt-dot{box-shadow:0 0 0 2px var(--accent)}
+.pt-day-name{font-size:.68rem;color:var(--muted);font-weight:600}
+.pt-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;transition:background .2s}
+.pt-dot.full{background:var(--accent);color:var(--accent-t)}
+.pt-dot.partial{background:#f09000;color:#fff}
+.pt-dot.low{background:rgba(240,90,50,.7);color:#fff}
+.pt-dot{background:var(--surface);border:1.5px solid var(--border);color:var(--muted)}
+/* ── Search History ───────────────────────────────── */
+.search-history{padding:8px 0}
+.sh-hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 16px 10px;direction:rtl}
+.sh-title{font-size:.82rem;font-weight:700;color:var(--muted)}
+.sh-clear-all{background:none;border:none;font-size:.75rem;color:var(--accent);cursor:pointer;font-family:inherit;padding:2px 6px}
+.sh-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;direction:rtl;transition:background .12s}
+.sh-item:active{background:var(--surface)}
+.sh-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.sh-left i{color:var(--muted);font-size:.85rem;flex-shrink:0}
+.sh-text{font-size:.92rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:.8rem;flex-shrink:0}
 /* search unavailable */
 .search-unavailable{display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 20px;color:var(--muted);text-align:center}
 .search-unavailable i{font-size:2rem;color:var(--muted)}
@@ -3954,6 +3989,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
     </div>
   </div>
   <div id="prayerContent" class="panel-scroll"></div>
+  <div id="prayerTracker"></div>
 </section>
 
 <!-- SIDEBAR -->
@@ -4296,7 +4332,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=820"></script>
+<script src="/app/app.js?v=821"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

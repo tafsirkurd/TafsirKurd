@@ -983,7 +983,7 @@ function init(){
             // re-rendering would cause a visible "refresh" the user didn't ask for.
             var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
             if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
-              requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
+              requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');renderPrayerTracker();});
             } else if(window.PrayerUI&&_fgPlatform!=='mac'){
               // Not on prayer tab — just invalidate hash so it rebuilds fresh on next visit
               _renderHash.prayer=null;
@@ -1466,7 +1466,7 @@ function _startTabPrerender(){
     function(){renderGoals();_renderHash.goals=_tabHash('goals');},
     // Settings: always pre-render — it's static DOM, cheap on all device tiers
     function(){renderSettings();_renderHash.settings=_tabHash('settings');},
-    function(){if(window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');
+    function(){if(window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');renderPrayerTracker();
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},
     // IslamVoice/Gencine: skip on medium/low/critical — expensive, rarely first
     (_isLowEndDev||_isMediumPerf) ? null : function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
@@ -1791,6 +1791,7 @@ App.tab=function(name){
       if(_hp!==_renderHash.prayer){_didRebuild=true;PrayerUI.render();_renderHash.prayer=_hp;}
       if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
     }
+    if(name==='prayer'){renderPrayerTracker();}
     if(name==='gencine'){
       // Scripts already loaded at startup — this is normally a no-op, just renders if not yet done
       _loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});
@@ -2747,8 +2748,8 @@ App.toggleSearch=function(){
     if(lastQ&&!inp.value){
       inp.value=lastQ;
       App.onSearch(lastQ);
-    } else {
-      App._renderSearchEmpty();
+    } else if(!inp.value){
+      App._renderSearchHistory();
     }
     // Close when tapping outside the search bar
     setTimeout(function(){
@@ -2792,10 +2793,52 @@ App._renderSuggestions=function(){
   if(old)old.remove();
 };
 
+/* ===== SEARCH HISTORY ===== */
+var _SH_KEY='search_history',_SH_MAX=10;
+function _getSearchHistory(){try{return JSON.parse(localStorage.getItem(_SH_KEY))||[];}catch(e){return[];}}
+function _saveSearchQuery(q){
+  q=q.trim();if(!q||q.length<2)return;
+  var h=_getSearchHistory().filter(function(x){return x!==q;});
+  h.unshift(q);if(h.length>_SH_MAX)h=h.slice(0,_SH_MAX);
+  try{localStorage.setItem(_SH_KEY,JSON.stringify(h));}catch(e){}
+}
+function _deleteSearchHistoryItem(q){
+  var h=_getSearchHistory().filter(function(x){return x!==q;});
+  try{localStorage.setItem(_SH_KEY,JSON.stringify(h));}catch(e){}
+}
+App._renderSearchHistory=function(){
+  var h=_getSearchHistory();
+  if(!h.length){App._renderSearchEmpty();return;}
+  var res=$('searchResults');
+  clear(res);
+  var wrap=el('div','search-history');
+  var hdr=el('div','sh-hdr');
+  hdr.appendChild(el('span','sh-title',t('search.history_title')));
+  var ca=el('button','sh-clear-all',t('search.history_clear'));
+  ca.onclick=function(){try{localStorage.removeItem(_SH_KEY);}catch(e){}App._renderSearchEmpty();};
+  hdr.appendChild(ca);
+  wrap.appendChild(hdr);
+  h.forEach(function(q){
+    var item=el('div','sh-item');
+    var left=el('div','sh-left');
+    var ic=document.createElement('i');ic.className='fas fa-clock-rotate-left';ic.setAttribute('aria-hidden','true');
+    left.appendChild(ic);
+    left.appendChild(el('span','sh-text',q));
+    left.onclick=function(){$('searchInput').value=q;App.onSearch(q);};
+    item.appendChild(left);
+    var del=document.createElement('button');del.className='sh-del';del.setAttribute('aria-label','Remove');
+    var di=document.createElement('i');di.className='fas fa-times';del.appendChild(di);
+    del.onclick=function(e){e.stopPropagation();_deleteSearchHistoryItem(q);item.remove();if(!$('searchResults').querySelector('.sh-item'))App._renderSearchEmpty();};
+    item.appendChild(del);
+    wrap.appendChild(item);
+  });
+  res.appendChild(wrap);res.classList.add('on');
+};
+
 /* Debounced entry point — called on every keystroke */
 App.onSearch=function(v){
   clearTimeout(_searchTimer);
-  if(!v.trim()){App._renderSearchEmpty();return;}
+  if(!v.trim()){App._renderSearchHistory();return;}
   // Show live phrase suggestions immediately (no debounce)
   App._renderSuggestions(v);
   // Instant render for cached queries (no debounce needed)
@@ -2845,8 +2888,9 @@ App._execSearch=function(v){
     return;
   }
 
-  // Persist last successful query for session continuity
+  // Persist last successful query for session continuity + history
   try{sessionStorage.setItem('qs_last',q);}catch(e){}
+  _saveSearchQuery(q);
 
   if(window.QuranSearch&&QuranSearch.isReady()){
     // queryAsync: cb fires immediately with keyword results, then again with
@@ -7318,6 +7362,102 @@ function calcStreak(log){
   return streak;
 }
 function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+/* ===== PRAYER TRACKER ===== */
+var _TRACK_PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+// Kurdish day abbreviations (Sun–Sat)
+var _KU_DAYS=['ی','د','س','چ','پ','هـ','ش'];
+
+function getPrayerLog(){try{return JSON.parse(localStorage.getItem('prayer_log'))||{};}catch(e){return {};}}
+function savePrayerLog(log){
+  var cutoff=dateKey(new Date(Date.now()-90*86400000));
+  Object.keys(log).forEach(function(k){if(k<cutoff)delete log[k];});
+  try{localStorage.setItem('prayer_log',JSON.stringify(log));}catch(e){}
+}
+function togglePrayerDone(prayer){
+  var log=getPrayerLog();var today=dateKey(new Date());
+  if(!log[today])log[today]={};
+  log[today][prayer]=!log[today][prayer];
+  savePrayerLog(log);return log[today][prayer];
+}
+function calcPrayerStreak(log){
+  var streak=0;var d=new Date();
+  for(var i=0;i<365;i++){
+    var k=dateKey(d);var day=log[k]||{};
+    var cnt=_TRACK_PRAYERS.filter(function(p){return day[p];}).length;
+    if(cnt>=5)streak++;else if(i>0)break;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+function renderPrayerTracker(){
+  var wrap=document.getElementById('prayerTracker');if(!wrap)return;
+  var log=getPrayerLog();var today=dateKey(new Date());
+  var todayLog=log[today]||{};
+  var doneToday=_TRACK_PRAYERS.filter(function(p){return todayLog[p];}).length;
+  var streak=calcPrayerStreak(log);
+  var frag=document.createDocumentFragment();
+
+  // Header
+  var hdr=el('div','pt-hdr');
+  hdr.appendChild(el('span','pt-title',t('prayer.tracker_title')));
+  var meta=el('div','pt-meta');
+  if(streak>0)meta.appendChild(el('span','pt-streak','🔥 '+streak));
+  meta.appendChild(el('span','pt-today-prog',doneToday+'/5'));
+  hdr.appendChild(meta);frag.appendChild(hdr);
+
+  // Prayer toggle buttons
+  var btns=el('div','pt-prayers');
+  _TRACK_PRAYERS.forEach(function(prayer){
+    var btn=document.createElement('button');
+    btn.className='pt-prayer-btn'+(todayLog[prayer]?' checked':'');
+    btn.setAttribute('aria-label',t('prayer.'+prayer.toLowerCase()));
+    var ic=document.createElement('i');
+    ic.className=todayLog[prayer]?'fas fa-check-circle':'far fa-circle';
+    ic.setAttribute('aria-hidden','true');
+    btn.appendChild(ic);
+    btn.appendChild(el('span','pt-prayer-name',t('prayer.'+prayer.toLowerCase())));
+    btn.onclick=function(){
+      var ns=togglePrayerDone(prayer);
+      btn.classList.toggle('checked',ns);
+      ic.className=ns?'fas fa-check-circle':'far fa-circle';
+      haptic([8]);
+      // Update header counts without full re-render
+      var newLog=getPrayerLog();var nd=_TRACK_PRAYERS.filter(function(p){return(newLog[today]||{})[p];}).length;
+      var prog=wrap.querySelector('.pt-today-prog');if(prog)prog.textContent=nd+'/5';
+      var ns2=calcPrayerStreak(newLog);
+      var sEl=wrap.querySelector('.pt-streak');
+      if(ns2>0){if(sEl)sEl.textContent='🔥 '+ns2;else{var nb=el('span','pt-streak','🔥 '+ns2);var mt=wrap.querySelector('.pt-meta');if(mt){var pg=mt.querySelector('.pt-today-prog');mt.insertBefore(nb,pg);}}}
+      else{if(sEl)sEl.remove();}
+      // Update today's dot in the week row
+      var todayDot=wrap.querySelector('.pt-day.today .pt-dot');
+      if(todayDot){
+        todayDot.className='pt-dot'+(nd>=5?' full':nd>=3?' partial':nd>=1?' low':'');
+        todayDot.textContent=nd>0?nd:'';
+      }
+    };
+    btns.appendChild(btn);
+  });
+  frag.appendChild(btns);
+
+  // 7-day mini calendar
+  var week=el('div','pt-week');
+  for(var i=6;i>=0;i--){
+    var dw=new Date();dw.setDate(dw.getDate()-i);
+    var kw=dateKey(dw);var dl=log[kw]||{};
+    var c=_TRACK_PRAYERS.filter(function(p){return dl[p];}).length;
+    var dayEl=el('div','pt-day'+(i===0?' today':''));
+    dayEl.appendChild(el('span','pt-day-name',_KU_DAYS[dw.getDay()]));
+    var dot=el('div','pt-dot'+(c>=5?' full':c>=3?' partial':c>=1?' low':''));
+    if(c>0)dot.textContent=c;
+    dayEl.appendChild(dot);
+    week.appendChild(dayEl);
+  }
+  frag.appendChild(week);
+
+  while(wrap.firstChild)wrap.removeChild(wrap.firstChild);
+  wrap.appendChild(frag);
+}
 
 /* ===== WIDGET DATA PUSH ===== */
 
