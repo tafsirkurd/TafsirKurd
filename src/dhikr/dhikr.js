@@ -628,6 +628,11 @@ function _getAdhkar(catKey) {
   }
   return [];
 }
+/* Return ALL adhkar — used by smart-dhikr.js to get in-memory data on iOS
+   where localStorage may not be written yet on first session open */
+function _getAllAdhkar() {
+  return _dbAdhkar || [];
+}
 /* Return unique adhkar category keys from DB */
 function _getAdhkarCatKeys() {
   if (!_dbAdhkar || !_dbAdhkar.length) return ADHKAR_CAT_KEYS;
@@ -711,6 +716,10 @@ window.GencineUI = {
   _pdfDoc:          null,
   _pdfPage:         1,
   _pdfRendering:    false,
+
+  /* Expose in-memory adhkar so smart-dhikr.js can get counts on iOS where
+     localStorage may not be written yet on the first session open */
+  getAllAdhkar: function() { return _getAllAdhkar(); },
 
   /* ── state persistence ── */
   _loadState: function(){

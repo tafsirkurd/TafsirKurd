@@ -1023,8 +1023,15 @@
   /* Read adhkar for a category from the localStorage cache */
   function _getAdhkarFromCache(catKey) {
     try {
+      var list = [];
+      // Primary: localStorage (populated after first DB fetch, persists across sessions)
       var raw = JSON.parse(localStorage.getItem('gencine_adhkar_v1'));
-      var list = (raw && Array.isArray(raw.data)) ? raw.data : (Array.isArray(raw) ? raw : []);
+      list = (raw && Array.isArray(raw.data)) ? raw.data : (Array.isArray(raw) ? raw : []);
+      // Fallback: in-memory data from dhikr.js — covers iOS/Android first session open
+      // where localStorage hasn't been written yet but _dbAdhkar is already in memory
+      if (!list.length && window.GencineUI && window.GencineUI.getAllAdhkar) {
+        list = window.GencineUI.getAllAdhkar();
+      }
       return list.filter(function(a) { return a.category_key === catKey && a.active !== false; });
     } catch(e) { return []; }
   }
@@ -1054,9 +1061,14 @@
     /* content — same class as other cards */
     var content = _mk('div', 'sd-content');
 
-    /* tag row: time tag + count badge inline */
+    /* tag row: time tag (or hint subtitle when no timeTag) + count badge inline */
     var tagWrap = document.createElement('div');
-    if (item.timeTag) tagWrap.appendChild(_mk('span', 'sd-tag', item.timeTag));
+    if (item.timeTag) {
+      tagWrap.appendChild(_mk('span', 'sd-tag', item.timeTag));
+    } else if (item.subtitleKey || item.subtitleFallback) {
+      // Show hint as tag when item has no timeTag (e.g. adhan dua card)
+      tagWrap.appendChild(_mk('span', 'sd-tag', T(item.subtitleKey, item.subtitleFallback)));
+    }
     if (totalCount > 0) tagWrap.appendChild(_mk('span', 'sd-zikr-count', totalCount + ' ' + T('gencine.smart.zikr_count_label', 'زکر')));
     content.appendChild(tagWrap);
 
