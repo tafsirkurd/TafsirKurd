@@ -1213,19 +1213,14 @@ function init(){
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
   setTimeout(function(){_reportAppVersion();},5000);
-  // Preload Gencine scripts early — scripts are SW-cached so load is near-instant.
-  // 1s delay lets the Quran/prayer tabs render first without competing for the main thread.
-  // Pre-render happens after scripts resolve so the SmartDhikr section + badge are ready
-  // before the user ever taps the tab (no 1-2s build delay on first open).
-  setTimeout(function(){
-    _loadGencineScripts(function(){
-      // Pre-render only if user hasn't already opened the tab
-      if(window.GencineUI&&S.tab!=='gencine'){
-        var _gh=_tabHash('gencine');
-        if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
-      }
-    });
-  },1000);
+  // Load Gencine scripts immediately — all three are SW-precached so this is near-instant.
+  // Pre-render runs as soon as scripts are ready so buttons are always there on first tap.
+  _loadGencineScripts(function(){
+    if(window.GencineUI&&S.tab!=='gencine'){
+      var _gh=_tabHash('gencine');
+      if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
+    }
+  });
   // Heavy: fetches prayer data for all 20 cities — skip on slow networks (user's city is already cached)
   setTimeout(function(){if(!_sn.skip()&&window.PrayerUI)PrayerUI.prefetchAllCities();},6000);
   // Athan voice decode is CPU-intensive — skip on slow networks
@@ -1758,16 +1753,15 @@ App.tab=function(name){
     if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){renderSettings();_renderHash.settings=_tabHash('settings');}_warmAboutCache();}
     if(name==='prayer'&&window.PrayerUI){PrayerUI.render();if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();}
     if(name==='gencine'){
-      // Show loading skeleton immediately while scripts fetch (panel is blank until GencineUI loads)
-      if(!window.GencineUI){var _gcEl=document.getElementById('gencineContent');if(_gcEl&&!_gcEl.firstChild){var _gcSk=document.createElement('div');_gcSk.className='genc-scripts-loading';for(var _gi=0;_gi<3;_gi++){var _gc=document.createElement('div');_gc.className='genc-scripts-loading-card';_gcSk.appendChild(_gc);}_gcEl.appendChild(_gcSk);}}
+      // Scripts already loaded at startup — this is normally a no-op, just renders if not yet done
       _loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});
     }
   });
 };
 
-/* ===== GENCINE LAZY LOADER ===== */
-// dua-data.js + dhikr.js are not loaded at startup — they're pulled in on first Gencine tab visit.
-// All callers in App.tab guard with window.GencineUI so they're safe until this resolves.
+/* ===== GENCINE SCRIPT LOADER ===== */
+// Scripts are loaded immediately at startup (SW-precached, near-instant).
+// Loader deduplicates: safe to call multiple times.
 var _gencineScriptsLoaded = false;
 var _gencineScriptsCbs = [];
 var _gencineScriptsLoading = false;
