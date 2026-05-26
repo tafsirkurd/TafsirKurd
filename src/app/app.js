@@ -109,6 +109,31 @@ function tSafe(key) {
   return (v && v !== key) ? v : null;
 }
 
+// ── Slow-network detection ────────────────────────────────────────────────────
+// Adapts timeouts, defers non-critical fetches, and prevents hung spinners on
+// 2G / weak WiFi. Updated automatically when the connection changes.
+var _sn = (function(){
+  var _slow = false;
+  function _check(){
+    var nc = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if(!nc){ _slow = false; return; }
+    _slow = nc.saveData === true
+      || nc.effectiveType === 'slow-2g'
+      || nc.effectiveType === '2g'
+      || (typeof nc.downlink === 'number' && nc.downlink > 0 && nc.downlink < 0.8)
+      || (typeof nc.rtt    === 'number' && nc.rtt > 1200);
+  }
+  _check();
+  try{ if(navigator.connection) navigator.connection.addEventListener('change', _check); }catch(e){}
+  return {
+    get: function(){ return _slow; },
+    // Adaptive timeout — longer on slow connections
+    ms:  function(fast, slow){ return _slow ? (slow || fast * 2) : fast; },
+    // True when heavy background work should be skipped / deferred
+    skip: function(){ return _slow; }
+  };
+})();
+
 /* ===== FORCE UPDATE ===== */
 window.ForceUpdate = (function(){
   var CFG_CACHE_KEY      = 'tk_update_cfg_v2';
@@ -1166,7 +1191,7 @@ function init(){
   if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
   pushGoalDataToWidget();
   // Sync widget translations from Supabase (once per day, requires network)
-  setTimeout(function(){syncWidgetTranslations();},3000);
+  setTimeout(function(){if(!_sn.skip())syncWidgetTranslations();},3000);
   initDailyVerse();
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);
@@ -1189,10 +1214,10 @@ function init(){
       }
     });
   },1000);
-  // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
-  setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},6000);
-  // Athan voice decode is CPU-intensive — after app fully settled
-  setTimeout(function(){if(window.PrayerUI)PrayerUI.preloadAthanVoices();},5000);
+  // Heavy: fetches prayer data for all 20 cities — skip on slow networks (user's city is already cached)
+  setTimeout(function(){if(!_sn.skip()&&window.PrayerUI)PrayerUI.prefetchAllCities();},6000);
+  // Athan voice decode is CPU-intensive — skip on slow networks
+  setTimeout(function(){if(!_sn.skip()&&window.PrayerUI)PrayerUI.preloadAthanVoices();},5000);
   // Audio cache warmup — verify manifest entries still exist on disk, populate _uriMap
   setTimeout(function(){if(window.AudioCache)AudioCache.warmup();},4000);
 
@@ -1456,7 +1481,7 @@ function _startTabPrerender(){
 function loadQuranData(){
   var ctrl=new AbortController();
   var _t0=Date.now();
-  var tid=setTimeout(function(){ctrl.abort();},10000);
+  var tid=setTimeout(function(){ctrl.abort();},_sn.ms(12000,25000));
   fetch('/data/quran.json',{signal:ctrl.signal}).then(function(r){
     clearTimeout(tid);
     AndroidLog.fetch('/data/quran.json',r.status,'quran',false,Date.now()-_t0);
@@ -1500,36 +1525,34 @@ function groupTafsirBySurah(data){
 }
 
 function loadTafsirData(){
-  var ctrl=new AbortController();
-  var tid=setTimeout(function(){ctrl.abort();},15000);
-  fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
-    clearTimeout(tid);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.json();
-  }).then(function(d){
-    S.tafsirData=groupTafsirBySurah(d);
-    _dataReady.tafsir=true;
-    _checkDataReady();
-  }).catch(function(e){
-    clearTimeout(tid);
-    console.error('Tafsir load error:',e);
-    toast(t('error.tafsir_load'));
-    // Retry once after 3 seconds — flag prevents concurrent retry fetches
-    var _tafsirRetrying=false;
-    setTimeout(function(){
-      if(S.tafsirData||_tafsirRetrying)return;
-      _tafsirRetrying=true;
-      var ctrl2=new AbortController();
-      var tid2=setTimeout(function(){ctrl2.abort();},15000);
-      fetch('/data/kurdish_tafsir.json',{signal:ctrl2.signal}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(d){
-        clearTimeout(tid2);
-        S.tafsirData=groupTafsirBySurah(d);
+  // 3-attempt exponential backoff: 4s → 8s → give up.
+  // Adaptive timeout: 18s fast / 32s slow (tafsir.json is ~3MB).
+  function _attempt(n, delayMs){
+    var ctrl=new AbortController();
+    var tid=setTimeout(function(){ctrl.abort();},_sn.ms(18000,32000));
+    fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
+      clearTimeout(tid);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    }).then(function(d){
+      S.tafsirData=groupTafsirBySurah(d);
+      _dataReady.tafsir=true;
+      _checkDataReady();
+      if(n>0)toast(t('toast.tafsir_loaded'));
+    }).catch(function(e){
+      clearTimeout(tid);
+      console.error('Tafsir load error (attempt '+(n+1)+'):',e);
+      if(n===0)toast(t('error.tafsir_load'));
+      if(n>=2){
+        // All retries exhausted — unblock app; tafsir unavailable this session
         _dataReady.tafsir=true;
         _checkDataReady();
-        toast(t('toast.tafsir_loaded'));
-      }).catch(function(){clearTimeout(tid2);}).then(function(){_tafsirRetrying=false;});
-    },3000);
-  });
+        return;
+      }
+      setTimeout(function(){if(!S.tafsirData)_attempt(n+1,delayMs*2);},delayMs);
+    });
+  }
+  _attempt(0,_sn.ms(4000,6000));
 }
 
 /* ===== THEME & SIZES ===== */
@@ -3186,13 +3209,15 @@ var _mushafV4DataP=null;
 function _loadMushafBundledData(){
   if(window._mushafV4Pages)return Promise.resolve(window._mushafV4Pages);
   if(_mushafV4DataP)return _mushafV4DataP;
-  _mushafV4DataP=fetch('/data/mushaf-v4-pages.json')
-    .then(function(r){return r.ok?r.json():null;})
+  var _mctrl=new AbortController();
+  var _mtid=setTimeout(function(){_mctrl.abort();},_sn.ms(30000,55000));
+  _mushafV4DataP=fetch('/data/mushaf-v4-pages.json',{signal:_mctrl.signal})
+    .then(function(r){clearTimeout(_mtid);return r.ok?r.json():null;})
     .then(function(data){
       if(data&&Array.isArray(data))window._mushafV4Pages=data;
       return window._mushafV4Pages||null;
     })
-    .catch(function(){return null;});
+    .catch(function(){clearTimeout(_mtid);return null;});
   return _mushafV4DataP;
 }
 
@@ -3215,10 +3240,12 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
       }
       // 3. Network fallback — never reject; offline returns noData sentinel so caller
       //    can show Hafs fallback instead of an × error card.
-      return fetch('https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields=code_v2&per_page=300&mushaf=19')
-        .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+      var _mc4=new AbortController();
+      var _mt4=setTimeout(function(){_mc4.abort();},_sn.ms(12000,22000));
+      return fetch('https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields=code_v2&per_page=300&mushaf=19',{signal:_mc4.signal})
+        .then(function(r){clearTimeout(_mt4);if(!r.ok)throw new Error(r.status);return r.json();})
         .then(function(json){try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}return json;})
-        .catch(function(){return{verses:[],_noData:true};});
+        .catch(function(){clearTimeout(_mt4);return{verses:[],_noData:true};});
     }).catch(function(){return{verses:[],_noData:true};});
   }
   // Other font modes: direct network
@@ -3785,7 +3812,12 @@ function loadMushafPageQCF(pageEl,pageNum){
     fontP=Promise.resolve(true);
   }
   var _dataT=Date.now();
-  var dataP=getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId);
+  // Race page data against a max-wait timeout. On slow networks the timeout is
+  // longer, but if it expires we immediately render the Hafs fallback so the
+  // user sees Quran text instead of a perpetual shimmer skeleton.
+  var _pageMaxWait=_sn.ms(14000,26000);
+  var _pageTimeoutP=new Promise(function(_,rej){setTimeout(function(){rej(new Error('page_timeout'));},_pageMaxWait);});
+  var dataP=Promise.race([getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId),_pageTimeoutP]);
 
   return dataP.then(function(json){
     var _dataMs=Date.now()-_dataT;
@@ -4040,11 +4072,26 @@ function loadMushafPageQCF(pageEl,pageNum){
   }).catch(function(err){
     console.warn('[Mushaf] page='+pageNum+' render error:',err&&err.message||err);
     clear(pageEl);
-    // Never show ×: attempt Hafs fallback using quranData for surahs on this page
+    // Never show ×: attempt Hafs fallback so users on slow networks see
+    // readable text immediately instead of a perpetual shimmer skeleton.
+    // Mark the page so tapping it re-queues the proper font load.
     try{
       var _ef=_buildHafsFallbackFrag([],pageNum);
       pageEl.classList.add('mushaf-page-hafs-fallback');
       pageEl.appendChild(_ef);
+      if(err&&err.message==='page_timeout'){
+        // Tapping any timed-out page re-queues it for proper font load
+        pageEl.dataset.retryOnTap='1';
+        var _retryOnce=function(){
+          if(!pageEl.dataset.retryOnTap)return;
+          delete pageEl.dataset.retryOnTap;
+          delete pageEl.dataset.loaded;
+          clear(pageEl);
+          pageEl.appendChild(_mushafSkeleton());
+          loadMushafPageQCF(pageEl,pageNum).catch(function(){});
+        };
+        pageEl.addEventListener('click',_retryOnce,{once:true});
+      }
     }catch(e2){pageEl.appendChild(el('div','mushaf-page-ph','—'));}
   });
 }
@@ -4052,8 +4099,6 @@ function loadMushafPageQCF(pageEl,pageNum){
 /* ===== RENDER AYAHS ===== */
 function renderAyahs(surahNum,scrollTo){
   var list=$('ayahList');
-  clear(list);
-  list.scrollTop=0; // always reset — prevents stale offset from prior view
   var s=SURAHS[surahNum-1];
   if(!s)return;
 
@@ -4065,24 +4110,40 @@ function renderAyahs(surahNum,scrollTo){
     var _gc=null;try{_gc=JSON.parse(localStorage.getItem(_gkey));}catch(e){}
     if(_gc){S.glyphVerses[surahNum]=_gc;}
     else{
-      var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
-      list.appendChild(sp);
-      fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300'+(_isV4?'&mushaf=19':''))
-        .then(function(r){return r.json();})
+      // Keep existing list content visible while loading — don't clear.
+      // Only show spinner when list is actually empty.
+      var _hadContent=list.hasChildNodes();
+      if(!_hadContent){
+        var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
+        list.appendChild(sp);
+      }
+      var _gctrl=new AbortController();
+      var _gtid=setTimeout(function(){_gctrl.abort();},_sn.ms(12000,22000));
+      fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300'+(_isV4?'&mushaf=19':''),{signal:_gctrl.signal})
+        .then(function(r){clearTimeout(_gtid);return r.json();})
         .then(function(d){
           var vs=d.verses||[];
           S.glyphVerses[surahNum]=vs;
           try{localStorage.setItem(_gkey,JSON.stringify(vs));}catch(e){}
-          if(S.surah!==surahNum)return; // user navigated away while fetching — discard
+          if(S.surah!==surahNum)return; // user navigated away — discard
           renderAyahs(surahNum,scrollTo);
         })
         .catch(function(){
-          clear(list);
-          var e2=el('div','prayer-status prayer-error');e2.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(e2);
+          clearTimeout(_gtid);
+          if(S.surah!==surahNum)return;
+          if(!_hadContent){
+            clear(list);
+            var e2=el('div','prayer-status prayer-error');e2.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(e2);
+          }
+          // If list already had content, keep it — silent fail is better than blank screen
         });
       return;
     }
   }
+
+  // Data is ready — clear and render
+  clear(list);
+  list.scrollTop=0; // reset scroll after clear, not before
 
   // Inject per-page fonts upfront when in glyph mode
   if(glyphMode&&S.glyphVerses[surahNum]){
@@ -9036,11 +9097,15 @@ function syncToCloud(){
   _updateSyncPanelStatus(); // show "syncing…" immediately
   var payload=gatherSyncData();
   payload._syncTime=new Date().toISOString();
-  S.supabase.from('user_data').upsert({
-    user_id:S.user.id,
-    app_data:payload,
-    updated_at:new Date().toISOString()
-  },{onConflict:'user_id',ignoreDuplicates:false}).then(function(resp){
+  var _syncTO=new Promise(function(_,rej){setTimeout(function(){rej(new Error('sync_timeout'));},_sn.ms(18000,30000));});
+  Promise.race([
+    S.supabase.from('user_data').upsert({
+      user_id:S.user.id,
+      app_data:payload,
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id',ignoreDuplicates:false}),
+    _syncTO
+  ]).then(function(resp){
     if(resp.error){
       console.error('Sync error:',resp.error);
       S.syncErrorDetail=(resp.error.code||'')+' '+(resp.error.message||'');
@@ -10747,10 +10812,16 @@ function preloadIvThumbnails(){
   if(!S.ivSeries||!S.ivSeries.length)return;
   _preloadedIvImages=[];
   var sorted=S.ivSeries.slice().sort(function(a,b){return(a.display_order||999)-(b.display_order||999);});
+  // On slow networks skip thumbnail preloading — let them load on-demand when the panel opens
+  if(_sn.skip()){return;}
   sorted.slice(0,6).forEach(function(series){
     if(!series.thumbnail_url)return;
     var src=series.thumbnail_url.replace('maxresdefault.jpg','mqdefault.jpg');
     var img=new Image();
+    img.onerror=function(){
+      var idx=_preloadedIvImages.indexOf(img);
+      if(idx!==-1)_preloadedIvImages.splice(idx,1);
+    };
     img.src=src;
     _preloadedIvImages.push(img);
   });
