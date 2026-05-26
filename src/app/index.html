@@ -305,8 +305,7 @@ body{background:var(--bg);color:var(--text)}
 /* ===== SPLASH ===== */
 .splash{position:fixed;inset:0;z-index:9999;background:var(--splash-bg,#0a0a0a);display:flex;align-items:center;justify-content:center;transition:opacity .35s ease-in-out;animation:splashIn .15s ease-out;will-change:opacity;transform:translateZ(0)}
 @keyframes splashIn{from{opacity:0}to{opacity:1}}
-.splash-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#0a0a0a);opacity:0;transition:opacity .12s ease}
+.splash-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--splash-bg,#0a0a0a)}
 .splash.hide{opacity:0;pointer-events:none}
 
 /* ===== APP CONTAINER ===== */
@@ -3742,20 +3741,14 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 </div>
 
 <div class="splash" id="splash">
-  <!-- Static logo poster: shown immediately (no waiting for video decode).
-       Provides visual feedback the instant the splash div is painted.
-       Intentionally on iOS too — no native poster attribute, so this fills the gap. -->
-  <img class="splash-poster" id="splashPoster"
-       src="/assets/images/TafsirKurd.png?v=3" alt=""
-       style="object-fit:contain;pointer-events:none;opacity:1">
-  <video id="splashVideo" class="splash-video" muted playsinline preload="auto" disablepictureinpicture style="opacity:0"></video>
+  <!-- Video plays immediately from the start. The video's own poster attribute
+       shows the themed first-frame until the browser decodes the first video frame. -->
+  <video id="splashVideo" class="splash-video" muted playsinline preload="auto" disablepictureinpicture style="opacity:1"></video>
   <script>
   (function(){
     var v=document.getElementById('splashVideo');
     if(!v)return;
     var n=window._splashName||'light';
-    var isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
-    // Always set poster on the video element too (redundant on iOS, belt+suspenders)
     v.poster='/assets/images/splash-'+n+'.png';
     v.src='/assets/videos/splash-'+n+'.mp4';
 
@@ -3764,13 +3757,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
     window._splashVideoEndedEarly=false;
 
     function _doPlay(){
-      v.play().then(function(){
-        // Video playing — fade it in, fade out static poster
-        v.style.transition='opacity .1s ease';
-        v.style.opacity='1';
-        var poster=document.getElementById('splashPoster');
-        if(poster){poster.style.transition='opacity .1s ease';poster.style.opacity='0';}
-      }).catch(function(){
+      v.play().catch(function(){
         // Autoplay blocked — mark video as done so app.js doesn't wait for it
         window._splashVideoEndedEarly=true;
       });
@@ -3783,15 +3770,12 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
     v.onerror=function(){
       v.onerror=null;
       v.src='/assets/videos/logo-animation.mp4';
+      v.poster='/assets/images/TafsirKurd.png?v=3';
       v.load();
       _doPlay();
     };
 
     v.load();
-    // ── Play immediately ──────────────────────────────────────────────────────
-    // Do NOT wait for app.js to call play(). app.js takes 1–2s to parse+execute
-    // while i18n loads. By that time the video would be 30–50% done if started here.
-    // The poster image above covers the 0–300ms before first video frame is decoded.
     _doPlay();
   })();
   </script>
@@ -4312,7 +4296,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=817"></script>
+<script src="/app/app.js?v=818"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

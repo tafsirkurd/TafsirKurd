@@ -1377,10 +1377,8 @@ function init(){
   // Skip ALL splash gates — user was already in the app, never show animation again.
   // This prevents the "blank → logo animation → delay → app" sequence on resume.
   if(window._isWarmResume){
-    // Stop video + hide poster immediately — user resumed, never replay animation
+    // Stop video immediately — user resumed, never replay animation
     if(_splashVid){ _splashVid.pause(); _splashVid.muted=true; _splashVid.style.opacity='0'; }
-    var _rsp=document.getElementById('splashPoster');
-    if(_rsp)_rsp.style.opacity='0';
     _splashMinPassed=true;
     _splashReady.quran=true;
     _splashReady.tabs=true;
