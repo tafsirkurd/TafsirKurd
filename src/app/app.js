@@ -7375,6 +7375,7 @@ function savePrayerLog(log){
   var cutoff=dateKey(new Date(Date.now()-90*86400000));
   Object.keys(log).forEach(function(k){if(k<cutoff)delete log[k];});
   try{localStorage.setItem('prayer_log',JSON.stringify(log));}catch(e){}
+  if(S.user)debouncedSync();
 }
 function togglePrayerDone(prayer){
   var log=getPrayerLog();var today=_getPrayerDay();
@@ -9576,6 +9577,22 @@ function _mergeProgress(aStr,bStr){
   }catch(e){return aStr||bStr||'[]'}
 }
 
+// prayer_log: additive union — per-day, per-prayer OR (done on either device = done)
+function _mergePrayerLog(aStr,bStr){
+  try{
+    var a=JSON.parse(aStr||'{}');var b=JSON.parse(bStr||'{}');
+    var result={};var allDays={};
+    Object.keys(a).forEach(function(d){allDays[d]=true;});
+    Object.keys(b).forEach(function(d){allDays[d]=true;});
+    Object.keys(allDays).forEach(function(day){
+      var da=a[day]||{};var db=b[day]||{};var merged={};
+      ['Fajr','Dhuhr','Asr','Maghrib','Isha'].forEach(function(p){if(da[p]||db[p])merged[p]=true;});
+      if(Object.keys(merged).length>0)result[day]=merged;
+    });
+    return JSON.stringify(result);
+  }catch(e){return aStr||bStr||'{}';}
+}
+
 // Master merge — called on both login-load and realtime push
 function mergeSyncData(local,cloud){
   if(!local)return cloud;
@@ -9657,6 +9674,9 @@ function mergeSyncData(local,cloud){
     else result[k]=(cv.ts||0)>(lv.ts||0)?cloud[k]:local[k];
   });
 
+  // prayer_log: additive union (pray on any device, all devices know)
+  result.prayer_log=_mergePrayerLog(local.prayer_log,cloud.prayer_log);
+
   result._syncTime=new Date().toISOString();
   return result;
 }
@@ -9669,6 +9689,7 @@ function gatherSyncData(){
     var v=localStorage.getItem(k);
     if(v!==null)data[k]=v;
   });
+  var pl=localStorage.getItem('prayer_log');if(pl!==null)data.prayer_log=pl;
   for(var i=1;i<=114;i++){
     var pk='surah_progress_'+i;var sk='surah_scroll_'+i;var rk='surah_read_v3_'+i;
     var pv=localStorage.getItem(pk);var sv=localStorage.getItem(sk);var rv=localStorage.getItem(rk);
@@ -9863,7 +9884,7 @@ function _clearUserLocalData(){
     localStorage.removeItem('surah_scroll_'+i);
     localStorage.removeItem('surah_read_v3_'+i);  // list-mode read progress
   }
-  ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions'].forEach(function(k){localStorage.removeItem(k);});
+  ['_lastSyncTime','readingGoal','readLog','readAyahsToday','bestStreak','readSessions','prayer_log'].forEach(function(k){localStorage.removeItem(k);});
   var _clearBpKeys=[];
   for(var _ci=0;_ci<localStorage.length;_ci++){var _ck=localStorage.key(_ci);if(_ck&&_ck.indexOf('pdfProg_')===0)_clearBpKeys.push(_ck);}
   _clearBpKeys.forEach(function(k){localStorage.removeItem(k);});
