@@ -7559,17 +7559,18 @@ App.openPrayerDay=function(dKey){
   _TRACK_PRAYERS.forEach(function(prayer){
     var isDone=!!(dayLog[prayer]);
     var passed=_isPrayerCheckable(prayer,dKey);
+    var canInteract=isDone||passed; // always allow unchecking already-done prayers
     var btn=document.createElement('button');
-    btn.className='ppp-prayer-btn'+(isDone?' on':'')+(passed?'':' not-yet');
+    btn.className='ppp-prayer-btn'+(isDone?' on':'')+(canInteract?'':' not-yet');
     var ic=document.createElement('i');
     ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');
     btn.appendChild(ic);btn.appendChild(el('span','ppp-prayer-name',t('prayer.'+prayer.toLowerCase())));
-    if(!passed){btn.disabled=true;btns.appendChild(btn);return;}
+    if(!canInteract){btn.disabled=true;btns.appendChild(btn);return;}
     btn.onclick=function(){
       var fl=getPrayerLog();if(!fl[dKey])fl[dKey]={};
       var prevCnt=_TRACK_PRAYERS.filter(function(p){return fl[dKey][p];}).length;
       fl[dKey][prayer]=!fl[dKey][prayer];savePrayerLog(fl);isDone=fl[dKey][prayer];
-      btn.classList.toggle('on',isDone);ic.className=isDone?'fas fa-check-circle':'far fa-circle';haptic([8]);
+      btn.classList.toggle('on',isDone);ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');haptic([8]);
       // Refresh calendar cell
       var cell=document.querySelector('[data-ppp-key="'+dKey+'"]');
       if(cell){
@@ -7644,17 +7645,18 @@ function _buildPrayerProgressPanel(panel){
   _TRACK_PRAYERS.forEach(function(prayer){
     var isDone=!!(todayLog[prayer]);
     var passed=_isPrayerCheckable(prayer,today);
+    var canInteract=isDone||passed; // always allow unchecking already-done prayers
     var btn=document.createElement('button');
-    btn.className='ppp-prayer-btn'+(isDone?' on':'')+(passed?'':' not-yet');
+    btn.className='ppp-prayer-btn'+(isDone?' on':'')+(canInteract?'':' not-yet');
     var ic=document.createElement('i');
     ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');
     btn.appendChild(ic);btn.appendChild(el('span','ppp-prayer-name',t('prayer.'+prayer.toLowerCase())));
-    if(!passed){btn.disabled=true;}
+    if(!canInteract){btn.disabled=true;}
     else{
       btn.onclick=function(){
         var prevDone=_TRACK_PRAYERS.filter(function(p){return(getPrayerLog()[today]||{})[p];}).length;
         var ns=togglePrayerDone(prayer);
-        btn.classList.toggle('on',ns);ic.className=ns?'fas fa-check-circle':'far fa-circle';haptic([8]);
+        btn.classList.toggle('on',ns);ic.className=ns?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');haptic([8]);
         var nl=getPrayerLog();var nd=_TRACK_PRAYERS.filter(function(p){return(nl[today]||{})[p];}).length;
         countEl.textContent=nd+'/5';fill.style.width=((nd/5)*100)+'%';
         var mv=card.querySelector('.ppp-motivate');if(mv)mv.textContent=_pppMsg(nd);
