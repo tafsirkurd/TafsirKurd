@@ -7384,6 +7384,18 @@ function togglePrayerDone(prayer){
   savePrayerLog(log);return log[today][prayer];
 }
 
+// ── Prayer tracking start date ───────────────────────────────────────────────
+// Days before this date are locked — user can't check them.
+// Set once on first panel open: uses earliest existing log entry, or today.
+function _prayerTrackingStart(){return localStorage.getItem('prayerTrackingStart')||null;}
+function _initPrayerTrackingStart(){
+  if(localStorage.getItem('prayerTrackingStart'))return;
+  var log=getPrayerLog();var keys=Object.keys(log).sort();
+  var start=keys.length>0?keys[0]:_getPrayerDay();
+  localStorage.setItem('prayerTrackingStart',start);
+  if(window.S&&S.user)debouncedSync();
+}
+
 // ── Smart prayer engine ──────────────────────────────────────────────────────
 
 // Timings for any date key (YYYY-MM-DD) — reads directly from localStorage
@@ -7417,9 +7429,10 @@ function _getPrayerDay(){
 }
 
 // Can a prayer be checked? Handles prayer-day concept + time windows.
-// Past days: always. Future: never. Prayer day: only after prayer time starts.
+// Past days: always (if >= tracking start). Future: never. Prayer day: only after prayer time starts.
 function _isPrayerCheckable(prayer,dKey){
   var now=new Date();var todayKey=dateKey(now);var prayerDay=_getPrayerDay();
+  var ts=_prayerTrackingStart();if(ts&&dKey<ts)return false;
   if(dKey<prayerDay)return true;
   if(dKey>todayKey)return false;
   if(dKey===todayKey&&prayerDay!==todayKey)return false;
@@ -7433,9 +7446,10 @@ function _isPrayerCheckable(prayer,dKey){
 
 function calcPrayerStreak(log){
   var streak=0;var pDay=_getPrayerDay();var pp=pDay.split('-');
-  var d=new Date(+pp[0],+pp[1]-1,+pp[2]);
+  var d=new Date(+pp[0],+pp[1]-1,+pp[2]);var ts=_prayerTrackingStart();
   for(var i=0;i<365;i++){
-    var k=dateKey(d);var day=log[k]||{};
+    var k=dateKey(d);if(ts&&k<ts)break;
+    var day=log[k]||{};
     var cnt=_TRACK_PRAYERS.filter(function(pr){return day[pr];}).length;
     if(cnt>=5)streak++;else if(i>0)break;
     d.setDate(d.getDate()-1);
@@ -7455,12 +7469,12 @@ function calcBestPrayerStreak(log){
   return best;
 }
 function calcPrayerMonthStats(log,year,month){
-  var now=new Date();var today=dateKey(now);
+  var now=new Date();var today=dateKey(now);var ts=_prayerTrackingStart();
   var full=0,done=0,total=0;
   var d=new Date(year,month,1);
   while(d.getMonth()===month){
     var k=dateKey(d);
-    if(k<=today){
+    if(k<=today&&(!ts||k>=ts)){
       total++;var dl=log[k]||{};
       var cnt=_TRACK_PRAYERS.filter(function(p){return dl[p];}).length;
       done+=cnt;if(cnt>=5)full++;
@@ -7530,8 +7544,10 @@ function calcMonthProjection(log){
 function calcActiveStreak(log,min){
   var threshold=min||4;var streak=0;var pDay=_getPrayerDay();
   var pp=pDay.split('-');var d=new Date(+pp[0],+pp[1]-1,+pp[2]);
+  var ts=_prayerTrackingStart();
   for(var i=0;i<365;i++){
-    var k=dateKey(d);var day=log[k]||{};
+    var k=dateKey(d);if(ts&&k<ts)break;
+    var day=log[k]||{};
     var cnt=_TRACK_PRAYERS.filter(function(pr){return day[pr];}).length;
     if(cnt>=threshold)streak++;else if(i>0)break;
     d.setDate(d.getDate()-1);
@@ -7540,6 +7556,7 @@ function calcActiveStreak(log,min){
 }
 
 App.openPrayerProgress=function(){
+  _initPrayerTrackingStart();
   var panel=$('prayerProgressPanel');
   _pppMonthOffset=0;
   _buildPrayerProgressPanel(panel);
@@ -7737,18 +7754,21 @@ function _buildPppCal(log){
   wrap.appendChild(dhr);
   // Cells
   var firstDow=tgt.getDay();var daysInMonth=new Date(year,month+1,0).getDate();
+  var trackStart=_prayerTrackingStart();
   var grid=el('div','ppp-cal-grid');
   for(var e=0;e<firstDow;e++)grid.appendChild(el('div','ppp-cal-cell empty',''));
   for(var d=1;d<=daysInMonth;d++){
     var cellDate=new Date(year,month,d);var ck=dateKey(cellDate);
     var cl=log[ck]||{};var cnt=_TRACK_PRAYERS.filter(function(p){return cl[p];}).length;
-    var isFuture=ck>today;var isToday=ck===today;
+    var isFuture=ck>today;var isBeforeStart=!!(trackStart&&ck<trackStart);
+    var isToday=ck===today;
     var cls='ppp-cal-cell';
-    if(isFuture)cls+=' future';
+    if(isBeforeStart)cls+=' before-start';
+    else if(isFuture)cls+=' future';
     else if(cnt>=5)cls+=' full';else if(cnt>=4)cls+=' high';else if(cnt>=2)cls+=' mid';else if(cnt>=1)cls+=' low';
     if(isToday)cls+=' today-cell';
     var cell=el('div',cls,String(d));cell.setAttribute('data-ppp-key',ck);
-    if(!isFuture)(function(key){on(cell,'click',function(){App.openPrayerDay(key);});})(ck);
+    if(!isFuture&&!isBeforeStart)(function(key){on(cell,'click',function(){App.openPrayerDay(key);});})(ck);
     grid.appendChild(cell);
   }
   wrap.appendChild(grid);return wrap;
@@ -9541,7 +9561,8 @@ var SYNC_SIMPLE_KEYS=[
   'book_saved','book_read_ids',
   'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
   'prayerAthanVoice','prayerTimeFormat',
-  'tasbihDhikr','tasbihTarget'
+  'tasbihDhikr','tasbihTarget',
+  'prayerTrackingStart'
 ];
 
 // ── Merge helpers ─────────────────────────────────────────────────────────────
