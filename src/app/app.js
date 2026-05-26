@@ -1303,22 +1303,33 @@ function init(){
   }
 
   // Video plays once — when it ends, enter app immediately if timing gate is cleared.
-  // Data loading / tab pre-render finish in background; each tab renders on first visit.
+  // The video starts playing from the inline splash script (not here) so it begins
+  // as soon as the DOM element is rendered, ~1-2s before app.js finishes loading.
   var _splashVid=document.getElementById('splashVideo');
   if(_splashVid){
-    _splashVid.addEventListener('ended',function(){
-      if(_splashReady.video)return;
+    if(window._splashVideoEndedEarly){
+      // Video already finished while app.js was loading. Mark gate immediately.
+      // _checkSplashReady() will be triggered when the other gates (quran/tabs/min) pass.
+      console.log('[Startup] splash video ended before app.js listener — marking gate');
       _splashReady.video=true;
-      // Animation finished — go in right now if timing gate is already cleared.
-      // Don't wait for quran/tabs: data arrives in background, tabs render on demand.
-      if(_splashMinPassed){_doSplashTransition();return;}
-      _checkSplashReady();
-    });
-    _splashVid.play().catch(function(){
-      // Autoplay blocked — mark video gate as passed so app can still load
-      _splashReady.video=true;
-      _checkSplashReady();
-    });
+    } else {
+      _splashVid.addEventListener('ended',function(){
+        if(_splashReady.video)return;
+        _splashReady.video=true;
+        console.log('[Startup] splash video ended at',Date.now()-_splashStart,'ms');
+        // Animation finished — go in right now if timing gate is already cleared.
+        if(_splashMinPassed){_doSplashTransition();return;}
+        _checkSplashReady();
+      });
+      // Ensure video is actually playing (it should be from inline script,
+      // but if autoplay was blocked or the element was replaced, restart it).
+      if(_splashVid.paused && _splashVid.readyState < 3){
+        _splashVid.play().catch(function(){
+          _splashReady.video=true;
+          _checkSplashReady();
+        });
+      }
+    }
   } else {
     // No video element — don't block on it
     _splashReady.video=true;
@@ -1329,7 +1340,10 @@ function init(){
   // Skip ALL splash gates — user was already in the app, never show animation again.
   // This prevents the "blank → logo animation → delay → app" sequence on resume.
   if(window._isWarmResume){
-    if(_splashVid){ _splashVid.pause(); _splashVid.muted=true; } // silence video immediately
+    // Stop video + hide poster immediately — user resumed, never replay animation
+    if(_splashVid){ _splashVid.pause(); _splashVid.muted=true; _splashVid.style.opacity='0'; }
+    var _rsp=document.getElementById('splashPoster');
+    if(_rsp)_rsp.style.opacity='0';
     _splashMinPassed=true;
     _splashReady.quran=true;
     _splashReady.tabs=true;
