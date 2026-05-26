@@ -7385,13 +7385,16 @@ function togglePrayerDone(prayer){
 
 // ── Smart prayer engine ──────────────────────────────────────────────────────
 
-// Timings for any date key (YYYY-MM-DD) from PrayerCache
+// Timings for any date key (YYYY-MM-DD) — reads directly from localStorage
+// so it works even if prayer.cache.js module failed to load
 function _getTimingsForDate(dKey){
   try{
-    if(!window.PrayerCache)return null;
     var city=localStorage.getItem('prayerCity')||'Duhok';
     var pts=dKey.split('-').map(Number);
-    var monthly=PrayerCache.read(PrayerCache.monthKey(city,pts[0],pts[1]));
+    var mkey='prayer-kurd3:'+city+':'+pts[0]+':'+pts[1];
+    var raw=localStorage.getItem(mkey);
+    if(!raw)return null;
+    var monthly=JSON.parse(raw);
     if(!monthly||!monthly.days)return null;
     var d=monthly.days[pts[2]]||monthly.days[String(pts[2])];
     if(!d)return null;
@@ -7420,9 +7423,7 @@ function _isPrayerCheckable(prayer,dKey){
   if(dKey>todayKey)return false;
   if(dKey===todayKey&&prayerDay!==todayKey)return false;
   var timings=_getTimingsForDate(dKey);
-  // If PrayerCache module isn't loaded at all, allow (graceful — module missing)
-  // If module IS loaded but no data for this day, block (safe default — data should exist)
-  if(!timings||!timings[prayer])return !window.PrayerCache;
+  if(!timings||!timings[prayer])return false; // no data → block (safe default)
   var p=dKey.split('-');
   var hm=timings[prayer].trim().split(' ')[0].split(':');
   var pt=new Date(+p[0],+p[1]-1,+p[2],+hm[0],+hm[1],0);
