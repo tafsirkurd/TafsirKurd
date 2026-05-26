@@ -7855,7 +7855,6 @@ function _pppCelebrateMonth(log){
   on(ov,'click',function(e){if(e.target===ov)App.closePrayerCelebration();});
   ov.appendChild(card);
   document.body.appendChild(ov);
-  setTimeout(function(){App.closePrayerCelebration();},7000);
 }
 App.closePrayerCelebration=function(){
   var ov=$('pppCelebOverlay');if(!ov)return;
