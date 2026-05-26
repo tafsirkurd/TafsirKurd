@@ -847,10 +847,10 @@ function init(){
     setupPullToRefresh(_isTabletLayout?'quranHome':'panelQuran',function(){renderSurahGrid();renderContinue();},_isTabletLayout?null:function(){return !S.surah});
     setupPullToRefresh('panelBookmarks',function(){_renderHash.bm=null;renderBookmarks();});
     setupPullToRefresh('panelGoals',function(){_renderHash.goals=null;renderGoals();});
-    setupPullToRefresh('panelIslamvoice',function(){_renderHash.iv=null;if(typeof App.ivRefresh==='function')App.ivRefresh();});
+    setupPullToRefresh('panelIslamvoice',function(isRecent){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function')App.ivRefresh();else renderIslamVoice();});
     setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();});
-    setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
-    setupPullToRefresh('panelGencine',function(){if(window.GencineUI)GencineUI.refresh();});
+    setupPullToRefresh('panelPrayer',function(isRecent){if(window.PrayerUI){if(isRecent)PrayerUI.render();else PrayerUI.refresh();}});
+    setupPullToRefresh('panelGencine',function(isRecent){if(window.GencineUI){if(isRecent)GencineUI.render();else GencineUI.refresh();}});
 
     // Fast-scroll pill for long lists
     if(window._initFastScroll) _initFastScroll();
@@ -10204,221 +10204,251 @@ function renderProfile(panel){
 }
 
 /* ===== PULL TO REFRESH ===== */
+// Shared spinner DOM element — only one can be on screen at a time.
 var ptrSpinner;
-// Global guard: only one panel can be in the "refreshing / loading" state at a time.
-// This prevents two panels from both showing the spinner if user rapidly switches tabs.
-var _ptrGlobalRefreshing=false;
+var _ptrArc=null;          // cached arc child — avoid querySelector every touchmove frame
+var _ptrGlobalRefreshing=false; // one panel refreshing at a time
+
+// Per-panel reset callbacks registered so the global visibilitychange handler
+// can recover ALL panels if the app is backgrounded mid-gesture.
+var _ptrResets=[];
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden)return; // only on background/lock
+  _ptrGlobalRefreshing=false;
+  _ptrResets.forEach(function(fn){try{fn();}catch(e){}});
+});
 
 function ensurePtrSpinner(){
   if(ptrSpinner)return;
   ptrSpinner=el('div','ptr-spinner');
-  ptrSpinner.appendChild(el('div','ptr-arc'));
+  _ptrArc=el('div','ptr-arc');
+  ptrSpinner.appendChild(_ptrArc);
   document.body.appendChild(ptrSpinner);
 }
 
-// ── Horizontal scroll container detection ────────────────────────────────────
-// Walks the touch target's ancestor chain to check if the finger started inside
-// any horizontal scroll area (carousels, category pills, sliders, mushaf horizontal).
-// PTR must NOT fire through these — they own the horizontal gesture.
+// ── Horizontal container detection ───────────────────────────────────────────
+// Walks up the touch-target ancestor chain.  Returns true when the finger
+// started inside any horizontal scroll area — PTR must not fire through these.
+// perf-critical: skip getComputedStyle (expensive) and rely on class names only.
 function _ptrInHorizScroll(node){
+  var skipCS=document.documentElement.classList.contains('perf-critical');
   var limit=0;
   while(node&&node!==document.body&&limit++<15){
     var cn=(typeof node.className==='string')?node.className:'';
-    // Fast class-name check for known horizontal containers
-    if(cn.indexOf('iv-hero')>=0        || // IslamVoice hero carousel
-       cn.indexOf('heatmap-scroll')>=0 || // Streak heatmap
-       cn.indexOf('qs-reciter-list')>=0|| // Quick-settings reciter scroll
-       cn.indexOf('as2-city-scroll')>=0|| // City pill strip
-       cn.indexOf('as2-reciter-scroll')>=0||
-       cn.indexOf('dua-tabs')>=0       || // Dhikr category tabs
-       cn.indexOf('book-cat-row')>=0   || // Books category row
-       cn.indexOf('mushaf-view')>=0    || // iPad mushaf (may be horizontal)
-       cn.indexOf('perf-chips-row')>=0 || // Settings performance chips
-       cn.indexOf('theme-grid')>=0     || // Theme selector grid
-       cn.indexOf('sync-chips')>=0        // Sync chips row
-    )return true;
-    // Computed-style fallback: catches any scrollable-x container not in the list above.
-    // Only flag if the element actually has overflow content (scrollWidth check).
-    try{
-      var ox=window.getComputedStyle(node).overflowX;
-      if((ox==='auto'||ox==='scroll')&&node.scrollWidth>node.clientWidth+8)return true;
-    }catch(e){}
+    if(cn.indexOf('iv-hero')>=0||cn.indexOf('heatmap-scroll')>=0||
+       cn.indexOf('qs-reciter-list')>=0||cn.indexOf('as2-city-scroll')>=0||
+       cn.indexOf('as2-reciter-scroll')>=0||cn.indexOf('dua-tabs')>=0||
+       cn.indexOf('book-cat-row')>=0||cn.indexOf('mushaf-view')>=0||
+       cn.indexOf('perf-chips-row')>=0||cn.indexOf('theme-grid')>=0||
+       cn.indexOf('sync-chips')>=0)return true;
+    if(!skipCS){
+      try{
+        var ox=window.getComputedStyle(node).overflowX;
+        if((ox==='auto'||ox==='scroll')&&node.scrollWidth>node.clientWidth+8)return true;
+      }catch(e){}
+    }
     node=node.parentElement;
   }
   return false;
 }
 
 // ── Active overlay / sheet detection ─────────────────────────────────────────
-// Returns true if any full-screen modal, bottom sheet, or overlay is currently
-// open. PTR should not fire through these layers — the user may be interacting
-// with the sheet, and the background panel is not the target.
 function _ptrAnyOverlayOpen(){
-  if(document.querySelector('.fu-overlay.on'))return true;   // force-update screen
-  if(document.querySelector('.dl-overlay.on'))return true;   // download sheet
-  if(document.querySelector('.sidebar-overlay.on'))return true; // sidebar
-  // Goal confirm / rating overlays: use inline opacity — check visibility
-  var _goConfirm=document.querySelector('.goal-confirm-overlay');
-  if(_goConfirm&&_goConfirm.style.display!=='none'&&parseFloat(_goConfirm.style.opacity||'0')>0)return true;
-  var _ratingOv=document.querySelector('.rating-overlay');
-  if(_ratingOv&&_ratingOv.style.display!=='none'&&parseFloat(_ratingOv.style.opacity||'0')>0)return true;
-  // Quick-settings overlay: uses opacity/pointer-events pattern
+  if(document.querySelector('.fu-overlay.on'))return true;
+  if(document.querySelector('.dl-overlay.on'))return true;
+  if(document.querySelector('.sidebar-overlay.on'))return true;
+  var _gc=document.querySelector('.goal-confirm-overlay');
+  if(_gc&&_gc.style.display!=='none'&&parseFloat(_gc.style.opacity||'0')>0)return true;
+  var _ro=document.querySelector('.rating-overlay');
+  if(_ro&&_ro.style.display!=='none'&&parseFloat(_ro.style.opacity||'0')>0)return true;
   var _qs=document.getElementById('quickSettings');
   if(_qs&&parseFloat(_qs.style.opacity||'0')>0&&_qs.style.pointerEvents!=='none')return true;
   return false;
 }
 
+// ── setupPullToRefresh ────────────────────────────────────────────────────────
+// refreshFn(isRecent:bool) — receives true when re-pulled within RECENT_MS of
+// last refresh.  Network-heavy panels use this to do a lightweight DOM-only
+// re-render instead of hitting the network again.
 function setupPullToRefresh(panelId,refreshFn,checkFn){
   var panel=$(panelId);
   if(!panel)return;
   ensurePtrSpinner();
 
-  // ── Tuning constants ──────────────────────────────────────────────────────
-  var DEAD_ZONE     = 80;   // px of pull before any visual or state engages
-  var THRESHOLD     = 165;  // px pull required to trigger refresh on release
-  var MAX_PULL      = 215;  // absolute maximum visual displacement
-  var DIR_CHECK_PX  = 8;    // px moved before direction is decided
-  var DIR_RATIO     = 0.88; // dy/dist must be ≥ this to confirm "vertical intent"
-  var MOMENTUM_LOCK = 700;  // ms to block re-arm after touchend (fast-scroll guard)
-  var COOLDOWN_MS   = 3000; // ms minimum between refreshes per panel
+  // ── Tuning ─────────────────────────────────────────────────────────────────
+  var DEAD_ZONE    = 80;    // px before any visual or state engages
+  var THRESHOLD    = 165;   // px pull to trigger refresh on release
+  var MAX_PULL     = 215;   // absolute max visual displacement
+  var DIR_CHECK_PX = 8;     // px before direction is decided (fast lock)
+  var DIR_RATIO    = 0.88;  // dy/dist ≥ this = vertical intent confirmed
+  var LOCK_BASE    = 700;   // base momentum-lock ms after touchend
+  var COOLDOWN_MS  = 2500;  // min ms between full refreshes (per panel)
+  var RECENT_MS    = 30000; // pulls within this window → lightweight refresh
 
-  // ── Per-panel state ───────────────────────────────────────────────────────
+  // ── Per-panel state ─────────────────────────────────────────────────────────
   var startY=0,startX=0;
-  var armed=false,pulling=false,refreshing=false;
+  var armed=false,pulling=false,refreshing=false,_snapDone=false;
   var _ticked=false,_dirDecided=false;
   var _momentumLock=false,_momentumTimer=null;
   var _lastRefreshTime=0;
   var _panelOrigTop=0;
+  // rAF batching — prevents style thrashing at 120fps on ProMotion / fast Android
+  var _latestDy=0,_rafPending=false;
+  // Velocity ring buffer for fast-fling detection (5 samples, ~83ms at 60fps)
+  var _vBuf=[],_VN=5;
 
-  // ── Physics: logarithmic rubber-band ─────────────────────────────────────
-  // Mimics iOS elastic scroll — pulls freely below threshold, then exponentially
-  // resists further movement so it never feels hard-capped or springy-cheap.
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
   function _rubberBand(raw){
     if(raw<=THRESHOLD)return raw;
     var excess=raw-THRESHOLD;
-    // exponential decay: asymptotes at MAX_PULL with increasing resistance
-    var band=(MAX_PULL-THRESHOLD)*(1-Math.exp(-excess/75));
-    return Math.min(THRESHOLD+band,MAX_PULL);
+    return Math.min(THRESHOLD+(MAX_PULL-THRESHOLD)*(1-Math.exp(-excess/75)),MAX_PULL);
+  }
+
+  function _endVelocity(){
+    // Returns y-velocity in px/ms over the ring buffer window. Negative = upward.
+    if(_vBuf.length<2)return 0;
+    var a=_vBuf[0],b=_vBuf[_vBuf.length-1],dt=b.t-a.t;
+    return dt>10?(b.y-a.y)/dt:0;
   }
 
   function _setMomentumLock(){
+    // Fast upward fling → extend lock so OS momentum scroll can fully settle
+    var v=_endVelocity();
+    var ms=v<-1.5?1400:v<-0.7?950:LOCK_BASE;
     _momentumLock=true;
     clearTimeout(_momentumTimer);
-    _momentumTimer=setTimeout(function(){_momentumLock=false;},MOMENTUM_LOCK);
+    _momentumTimer=setTimeout(function(){_momentumLock=false;},ms);
+    _vBuf=[];
   }
 
-  // Cancel & animate pull indicators back to resting state
+  // Hard reset — called on background, tab-switch, or interrupted gesture
+  function _forceReset(){
+    if(ptrSpinner){
+      ptrSpinner.style.transition='none';
+      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+      ptrSpinner.style.opacity='0';
+      ptrSpinner.classList.remove('refreshing','ptr-snapping');
+    }
+    panel.style.transform='';
+    panel.classList.remove('ptr-pulling','ptr-releasing');
+    if(refreshing)_ptrGlobalRefreshing=false;
+    armed=false;pulling=false;refreshing=false;_snapDone=true;
+    _ticked=false;_dirDecided=false;_rafPending=false;_vBuf=[];
+  }
+  _ptrResets.push(_forceReset); // register for global visibilitychange cleanup
+
+  // Smooth cancel — removes ptr-pulling in current frame, adds transition in next rAF
+  // so the browser captures the current translateY as the "from" value before animating.
   function _cancelPull(){
+    _rafPending=false;
     if(pulling){
       pulling=false;
-      panel.classList.add('ptr-releasing');
-      panel.classList.remove('ptr-pulling');
-      panel.style.transform='';
-      ptrSpinner.style.transition='transform .26s cubic-bezier(0,0,.2,1),opacity .2s';
-      ptrSpinner.style.opacity='0';
-      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
-      setTimeout(function(){
-        panel.classList.remove('ptr-releasing');
-        ptrSpinner.style.transition='';
-      },280);
+      panel.classList.remove('ptr-pulling'); // clear transition:none FIRST
+      requestAnimationFrame(function(){
+        if(refreshing)return; // guard: refresh may have committed between now and rAF
+        panel.classList.add('ptr-releasing');
+        panel.style.transform='';
+        ptrSpinner.style.transition='transform .26s cubic-bezier(0,0,.2,1),opacity .2s';
+        ptrSpinner.style.opacity='0';
+        ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+        setTimeout(function(){
+          panel.classList.remove('ptr-releasing');
+          ptrSpinner.style.transition='';
+        },280);
+      });
     }
     armed=false;_ticked=false;_dirDecided=false;
   }
 
-  // ── touchstart: arm only if all guards pass ───────────────────────────────
+  // rAF visual update — all style writes happen here, not directly in touchmove
+  function _updateVisuals(){
+    _rafPending=false;
+    if(!pulling)return;
+    var pullRaw=_latestDy-DEAD_ZONE;
+    if(pullRaw<0)return;
+    var pull=_rubberBand(pullRaw);
+    panel.style.transform='translateY('+pull+'px)';
+    var gapCenter=_panelOrigTop+(pull/2)-19;
+    ptrSpinner.style.opacity=String(Math.min(pullRaw/65,1));
+    ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+Math.min(pullRaw/85,1)+')';
+    if(_ptrArc)_ptrArc.style.transform='rotate('+Math.min(pullRaw*2.8,720)+'deg)';
+    // Single haptic exactly at threshold: "you can release now"
+    if(!_ticked&&pullRaw>=THRESHOLD){_ticked=true;haptic([10]);}
+  }
+
+  // ── touchstart ────────────────────────────────────────────────────────────
   on(panel,'touchstart',function(e){
-    // Already refreshing or inside momentum lock window
-    if(refreshing||_momentumLock)return;
-    // Global guard: another panel is already showing the refresh indicator
-    if(_ptrGlobalRefreshing)return;
-    // Caller-supplied check (e.g. "only when no surah is open")
+    _vBuf=[];
+    if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
     if(checkFn&&!checkFn())return;
-    // Tab is mid-transition — don't arm during the switch animation
     if(document.body.classList.contains('tk-tab-switching'))return;
-    // Active text input: keyboard is up, any swipe goes to the OS
     var ae=document.activeElement;
     if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.isContentEditable))return;
-    // Search results or search bar is open inside this panel
     if(panel.querySelector('.search-results.on')||panel.querySelector('.search-bar-wrap.open'))return;
-    // A modal / bottom sheet / overlay is currently on screen
     if(_ptrAnyOverlayOpen())return;
-    // Touch originated inside a horizontal scroll container — that gesture owns the touch
     if(e.target&&_ptrInHorizScroll(e.target))return;
-    // Per-panel cooldown: prevent spam refreshes
     if(Date.now()-_lastRefreshTime<COOLDOWN_MS)return;
-    // Panel must be exactly at the top (1px tolerance for iOS bounce scrollTop rounding)
-    if(panel.scrollTop>1)return;
+    // 2px tolerance: iOS bounce-back can briefly read scrollTop as 0.01–0.5
+    if(panel.scrollTop>2)return;
 
     startY=e.touches[0].clientY;
     startX=e.touches[0].clientX;
     _panelOrigTop=panel.getBoundingClientRect().top;
-    armed=true;
-    _dirDecided=false;
-    pulling=false;
+    armed=true;_dirDecided=false;pulling=false;_snapDone=false;
   },{passive:true});
 
-  // Must be {passive:false} so we can preventDefault once vertical pull is confirmed.
-  // Until that point we stay passive — no native-scroll blocking during direction decision.
+  // ── touchmove ─────────────────────────────────────────────────────────────
+  // {passive:false} required so we can preventDefault once vertical pull is confirmed.
+  // We stay passive during direction decision (no blocking until intent is clear).
   panel.addEventListener('touchmove',function(e){
+    // Always record velocity samples — even when not armed (for fast-fling lock)
+    var _now=Date.now();
+    _vBuf.push({y:e.touches[0].clientY,t:_now});
+    if(_vBuf.length>_VN)_vBuf.shift();
+
     if(!armed||refreshing)return;
     var t=e.touches[0];
     var dy=t.clientY-startY;
     var dx=t.clientX-startX;
 
-    // Any upward movement: cancel immediately — user is scrolling down the list
     if(dy<=0){_cancelPull();return;}
+    // Panel scrolled during gesture (content re-rendered, or dragged from mid-scroll)
+    if(panel.scrollTop>2){_cancelPull();return;}
 
-    // If the panel accumulated scroll during this gesture (content re-rendered mid-pull
-    // or touch dragged down to top from mid-scroll), cancel immediately
-    if(panel.scrollTop>1){_cancelPull();return;}
-
-    // ── Direction decision (one-shot, after DIR_CHECK_PX of movement) ───────
-    // Once decided, we never re-decide for this gesture.
-    // This prevents hesitant diagonals from flip-flopping between H and V.
+    // Direction lock — one-shot, no re-checking (prevents diagonal flip-flopping)
     if(!_dirDecided){
       var dist=Math.sqrt(dx*dx+dy*dy);
       if(dist>=DIR_CHECK_PX){
         _dirDecided=true;
-        // If gesture is too horizontal (e.g. carousel swipe): bail out
         if(dy/dist<DIR_RATIO){_cancelPull();return;}
       }
     }
 
-    // Still in dead zone: consume silently, don't block native scroll yet
     if(dy<DEAD_ZONE)return;
 
-    // ── Engage pull visuals (first frame past dead zone) ─────────────────
+    // First frame past dead zone: engage pull visuals + subtle arm haptic
     if(!pulling){
       pulling=true;
       panel.classList.add('ptr-pulling');
       panel.classList.remove('ptr-releasing');
       ptrSpinner.classList.remove('ptr-snapping');
       ptrSpinner.style.transition='none';
+      haptic([4]); // very subtle — "PTR engaged"
     }
 
-    // Now block native scroll — the user is genuinely pulling to refresh
+    // preventDefault must be synchronous — can't defer to rAF
     if(e.cancelable)e.preventDefault();
 
-    var pullRaw=dy-DEAD_ZONE;
-    var pull=_rubberBand(pullRaw);
-    panel.style.transform='translateY('+pull+'px)';
-
-    // Spinner appears in the gap that opens between panel top and safe area
-    var gapCenter=_panelOrigTop+(pull/2)-19;
-    // Opacity and scale ramp up smoothly over the first ~70px of pull
-    var opacity=Math.min(pullRaw/65,1);
-    var scale=Math.min(pullRaw/85,1);
-    ptrSpinner.style.opacity=String(opacity);
-    ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+scale+')';
-    // Arc rotates as the user pulls — visual cue of drag progress
-    var arc=ptrSpinner.querySelector('.ptr-arc');
-    if(arc)arc.style.transform='rotate('+Math.min(pullRaw*2.8,720)+'deg)';
-    // Haptic bump exactly when threshold is crossed ("you can let go")
-    if(!_ticked&&pullRaw>=THRESHOLD){_ticked=true;haptic([12]);}
+    // Store latest dy; schedule a single rAF for all DOM writes
+    _latestDy=dy;
+    if(!_rafPending){_rafPending=true;requestAnimationFrame(_updateVisuals);}
   },{passive:false});
 
+  // ── touchend ──────────────────────────────────────────────────────────────
   function _doTouchEnd(){
     _setMomentumLock();
-    _ticked=false;_dirDecided=false;
+    _ticked=false;_dirDecided=false;_rafPending=false;
     if(!pulling||refreshing){armed=false;return;}
 
     pulling=false;armed=false;
@@ -10430,22 +10460,21 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     var currentY=parseFloat((panel.style.transform.match(/translateY\(([^p]+)px\)/)||[,'0'])[1])||0;
 
     if(currentY>=THRESHOLD*0.7){
-      // ── Triggered: commit to refresh state ────────────────────────────
+      // ── TRIGGERED ─────────────────────────────────────────────────────────
       refreshing=true;
       _ptrGlobalRefreshing=true;
+      var _prevRefreshTime=_lastRefreshTime; // capture BEFORE updating
       _lastRefreshTime=Date.now();
 
-      // Settle spinner into "loading" held position
+      // Settle into held loading state
       var holdY=50;
       panel.style.transform='translateY('+holdY+'px)';
       var holdCenter=_panelOrigTop+(holdY/2)-19;
       ptrSpinner.style.transform='translate(-50%,'+holdCenter+'px) scale(1)';
       ptrSpinner.style.opacity='1';
       ptrSpinner.classList.add('refreshing');
-      haptic([50]);
+      haptic([30]); // medium clean pulse — "refresh committed"
 
-      // Run the actual refresh (synchronous render, network call, etc.)
-      var _snapDone=false;
       function _snapBack(){
         if(_snapDone)return;
         _snapDone=true;
@@ -10462,14 +10491,16 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
           _ptrGlobalRefreshing=false;
         },280);
       }
-      // Hold the loading indicator for at least 600ms so it doesn't flash
-      var _minT=setTimeout(_snapBack,600);
-      // Hard timeout: snap back after 2.5s even if refreshFn hangs
-      var _maxT=setTimeout(function(){_snapBack();clearTimeout(_minT);},2500);
-      refreshFn();
+      _snapDone=false;
+      var _minT=setTimeout(_snapBack,600);  // hold at least 600ms (no flash)
+      var _maxT=setTimeout(function(){clearTimeout(_minT);_snapBack();},2500); // hard timeout
+
+      // isRecent: re-pulled within RECENT_MS → pass flag so refreshFn can skip network
+      var _isRecent=_prevRefreshTime>0&&(Date.now()-_prevRefreshTime)<RECENT_MS;
+      refreshFn(_isRecent);
 
     }else{
-      // ── Below threshold: snap back without refreshing ────────────────
+      // ── BELOW THRESHOLD — snap back silently ──────────────────────────────
       panel.style.transform='';
       ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
       ptrSpinner.style.opacity='0';
@@ -10482,10 +10513,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   }
 
   on(panel,'touchend',_doTouchEnd);
-  on(panel,'touchcancel',function(){
-    _setMomentumLock();
-    _cancelPull();
-  });
+  on(panel,'touchcancel',function(){_setMomentumLock();_cancelPull();});
 }
 
 /* ===== ISLAMVOICE ===== */
