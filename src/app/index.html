@@ -87,8 +87,15 @@
     // cv + isIOS already parsed above (safe-render block) — reuse them
     if(!isIOS&&cv>0&&cv<85){_sc-=25;_rs.push('Chrome<85');}
     else if(!isIOS&&cv>=85&&cv<100){_sc-=10;_rs.push('Chrome<100');}
+    // iOS: no deviceMemory API, so version is the main proxy for device age.
+    // Older iOS = older hardware that Apple dropped. Gradual scale matters here.
     var _iosM=ua.match(/OS (\d+)_/);
-    if(isIOS&&_iosM){var _iv=parseInt(_iosM[1]);if(_iv<14){_sc-=20;_rs.push('iOS<14');}else if(_iv<16){_sc-=5;_rs.push('iOS<16');}}
+    if(isIOS&&_iosM){
+      var _iv=parseInt(_iosM[1]);
+      if(_iv<13){_sc-=28;_rs.push('iOS<13');} // iPhone 5s/6 era — genuinely old
+      else if(_iv<15){_sc-=14;_rs.push('iOS<15');} // iPhone 7 era (A10), capped at iOS 14
+      else if(_iv<16){_sc-=5;_rs.push('iOS<16');} // minor penalty for not being on latest
+    }
     if(window.devicePixelRatio>3){_sc-=5;_rs.push('DPR>3');}
     // Network: session-only (connection improves — don't persist)
     var _cn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
@@ -3555,16 +3562,51 @@ body.tk-scrolling .audio-bar-avatar.playing::after{animation-play-state:paused!i
 body.tk-scrolling .streak-ring.pulse{animation-play-state:paused!important}
 body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 
+/* ── Advanced collapsible section (Settings) ────────────────────────────── */
+.settings-adv-group{margin-bottom:28px}
+.settings-adv-hdr{cursor:pointer;justify-content:space-between}
+.settings-adv-hdr-left{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:.82rem;font-weight:600}
+.settings-adv-hdr-left i{color:var(--text3);font-size:.8rem}
+.settings-adv-chevron{color:var(--text3);font-size:.72rem;transition:transform .22s var(--ease);line-height:1}
+.settings-adv-chevron.open{transform:rotate(180deg)}
+.settings-adv-body{
+  overflow:hidden;max-height:0;opacity:0;
+  transition:max-height .28s ease,opacity .2s ease;
+  pointer-events:none
+}
+.settings-adv-body.open{max-height:400px;opacity:1;pointer-events:auto}
+.settings-adv-section-label{
+  font-size:.68rem;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.7px;
+  padding:12px 4px 6px;
+}
+
 /* ── Performance Mode Chips (Settings panel) ─────────────────────────────── */
-.perf-chips-row{display:flex;gap:7px;padding:10px 16px 4px;flex-wrap:nowrap}
-.perf-chip{flex:1;min-width:0;text-align:center;padding:7px 4px;border-radius:var(--r-m);border:1.5px solid var(--border);font-size:.78rem;font-weight:600;color:var(--text2);cursor:pointer;transition:border-color .15s,color .15s,background .15s;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.perf-chips-row{display:flex;gap:7px;padding:4px 0 4px;flex-wrap:nowrap}
+.perf-chip{
+  flex:1;min-width:0;text-align:center;
+  padding:8px 4px 6px;border-radius:var(--r-m);
+  border:1.5px solid var(--border);
+  font-size:.78rem;font-weight:600;color:var(--text2);
+  cursor:pointer;
+  transition:border-color .15s,color .15s,background .15s;
+  white-space:nowrap;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  display:flex;flex-direction:column;align-items:center;gap:0
+}
 .perf-chip.on{border-color:var(--accent);color:var(--accent)}
 [data-theme="dark"] .perf-chip.on{background:rgba(255,255,255,.06)}
 [data-theme="sakina"] .perf-chip.on{background:rgba(201,168,76,.08)}
 [data-theme="noor"] .perf-chip.on{background:rgba(26,92,58,.08)}
 [data-theme="light"] .perf-chip.on{background:rgba(0,0,0,.05)}
 .perf-chip:active{transform:scale(.94)}
-.perf-info-sub{padding:2px 16px 12px;font-size:.72rem;color:var(--text3);direction:ltr;line-height:1.5;text-align:left}
+/* Auto chip: recommended badge */
+.perf-chip-label{display:block;font-size:.78rem;font-weight:600}
+.perf-chip-rec{display:block;font-size:.58rem;color:var(--text3);margin-top:2px;font-weight:500;letter-spacing:.02em}
+.perf-chip.on .perf-chip-rec{color:var(--accent);opacity:.7}
+/* Auto chip slightly more prominent when not selected */
+.perf-chip--rec:not(.on){border-style:dashed}
+.perf-info-sub{padding:4px 2px 8px;font-size:.71rem;color:var(--text3);direction:ltr;line-height:1.5;text-align:left}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
@@ -4178,7 +4220,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=811"></script>
+<script src="/app/app.js?v=812"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

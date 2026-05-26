@@ -8249,14 +8249,42 @@ function renderSettings(){
   }));
   content.appendChild(g4);
 
-  // ── Performance Mode ─────────────────────────
-  // Auto-detection default. User can override but most people should never need to.
-  // tSafe() used — keys may not exist in translations yet; Kurdish fallback always shows.
-  var gPerf=el('div','settings-group');
-  gPerf.appendChild(el('div','settings-group-title',tSafe('settings.performance')||'کارایی'));
+  // ── Advanced (collapsible) ───────────────────
+  // Hidden from normal users by default. Contains performance override and future
+  // power-user settings. Most users should never need to open this.
+  var _advOpen=(function(){try{return localStorage.getItem('tk_settings_adv')==='1';}catch(e){return false;}})();
+  var gAdv=el('div','settings-group settings-adv-group');
+
+  // Header row — tappable to expand / collapse
+  var _advHdr=el('div','settings-adv-hdr s-row');
+  var _advLeft=el('div','settings-adv-hdr-left');
+  _advLeft.appendChild(icon('fas fa-sliders'));
+  _advLeft.appendChild(el('span','',tSafe('settings.advanced')||'ئاڵۆزی'));
+  var _advChev=el('div','settings-adv-chevron'+(_advOpen?' open':''));
+  _advChev.appendChild(icon('fas fa-chevron-down'));
+  _advHdr.appendChild(_advLeft);
+  _advHdr.appendChild(_advChev);
+  on(_advHdr,'click',function(){
+    var nowOpen=_advBody.classList.contains('open');
+    _advBody.classList.toggle('open',!nowOpen);
+    _advChev.classList.toggle('open',!nowOpen);
+    try{localStorage.setItem('tk_settings_adv',nowOpen?'0':'1');}catch(e){}
+    haptic([8]);
+    // In-place toggle — no re-render needed
+  });
+  gAdv.appendChild(_advHdr);
+
+  // Collapsible body
+  var _advBody=el('div','settings-adv-body'+(_advOpen?' open':''));
+
+  // ── Performance mode inside Advanced ────────────────────────────────────
+  // tSafe() used — keys may not exist in translations yet
+  var _advPerfLabel=el('div','settings-adv-section-label',tSafe('settings.performance')||'کارایی');
+  _advBody.appendChild(_advPerfLabel);
+
   var _tkp=window.TKPerf||{level:'high',detected:'high',override:null,score:100,reasons:[]};
   var _perfOpts=[
-    {val:'auto',   label:tSafe('settings.perf_auto')||'ئۆتۆماتیکی'},
+    {val:'auto',   label:tSafe('settings.perf_auto')||'ئۆتۆماتیکی', rec:true},
     {val:'high',   label:tSafe('settings.perf_high')||'بەرز'},
     {val:'medium', label:tSafe('settings.perf_medium')||'ناوەند'},
     {val:'low',    label:tSafe('settings.perf_low')||'کەم'}
@@ -8264,8 +8292,15 @@ function renderSettings(){
   var _curPerfSel=_tkp.override||'auto';
   var _perfChips=el('div','perf-chips-row');
   _perfOpts.forEach(function(o){
-    var chip=el('div','perf-chip'+(_curPerfSel===o.val?' on':''));
-    chip.textContent=o.label;
+    var chip=el('div','perf-chip'+(_curPerfSel===o.val?' on':'')+(o.rec?' perf-chip--rec':''));
+    // Auto chip: show recommended badge inside the chip
+    if(o.rec){
+      var _cl=el('span','perf-chip-label',o.label);
+      var _rb=el('span','perf-chip-rec',tSafe('settings.recommended')||'پێشنیار');
+      chip.appendChild(_cl);chip.appendChild(_rb);
+    }else{
+      chip.textContent=o.label;
+    }
     on(chip,'click',function(){
       if(window.TKPerf)TKPerf.setOverride(o.val==='auto'?null:o.val);
       haptic([10]);
@@ -8279,18 +8314,22 @@ function renderSettings(){
     });
     _perfChips.appendChild(chip);
   });
-  // Info line: shows current detected level + score, or active override
+
+  // Info line: what level is active and why
   var _perfNote;
   if(_tkp.override){
-    _perfNote='Override: '+_tkp.override+' • Auto-detected: '+_tkp.detected+' (score='+_tkp.score+')';
+    _perfNote='Manual: '+_tkp.override+' · Auto-detected: '+_tkp.detected+' (score='+_tkp.score+')';
   }else{
-    _perfNote='Auto: '+_tkp.detected+((_tkp.score<100)?' (score='+_tkp.score+(_tkp.reasons.length?', '+_tkp.reasons.slice(0,3).join(', '):'')+')'  :'');
+    var _pnReasons=_tkp.reasons.length?' · '+_tkp.reasons.slice(0,3).join(', '):'';
+    _perfNote='Auto: '+_tkp.detected+(_tkp.score<100?' (score='+_tkp.score+_pnReasons+')':'');
   }
   var _perfRow=el('div','');
   _perfRow.appendChild(_perfChips);
   _perfRow.appendChild(el('div','perf-info-sub',_perfNote));
-  gPerf.appendChild(_perfRow);
-  content.appendChild(gPerf);
+  _advBody.appendChild(_perfRow);
+
+  gAdv.appendChild(_advBody);
+  content.appendChild(gAdv);
 
   // ── App ──────────────────────────────────────
   var g5=el('div','settings-group');
