@@ -1422,23 +1422,26 @@ function _startTabPrerender(){
   if(_tabsPrerendering)return;
   _tabsPrerendering=true;
   console.log('[Startup] Tab pre-render start',Date.now()-_startupT0,'ms');
-  // On low-end devices: skip non-essential pre-renders to unblock splash faster.
-  // These tabs still render on-demand when the user taps them (hash-cache check).
-  var _isLowEndDev=document.documentElement.classList.contains('low-end-device');
+  // Performance-tier gating: skip expensive pre-renders on weaker devices.
+  // Skipped tabs still render on-demand when the user taps them (hash-cache check).
+  var _perfLevel=window.TKPerf?window.TKPerf.level:'high';
+  var _isLowEndDev=_perfLevel==='low'||_perfLevel==='critical';
+  var _isMediumPerf=_perfLevel==='medium';
+  console.log('[PERFORMANCE] pre-render tier: '+_perfLevel);
   var jobs=[
     function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
     function(){renderGoals();_renderHash.goals=_tabHash('goals');},
-    // Settings: skip on low-end — deferred render on tap is fine
+    // Settings: skip on low/critical — deferred render on tap is fine
     _isLowEndDev ? null : function(){renderSettings();_renderHash.settings=_tabHash('settings');},
     function(){if(window.PrayerUI){PrayerUI.render();// Pause sky animations — pre-rendered but not the active tab
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},
-    // IslamVoice/Gencine: skip on low-end — expensive and rarely opened first
-    _isLowEndDev ? null : function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
-    _isLowEndDev ? null : function(){if(window.GencineUI)GencineUI.render();}
-  ].filter(Boolean); // remove nulls for low-end path
+    // IslamVoice/Gencine: skip on medium/low/critical — expensive, rarely first
+    (_isLowEndDev||_isMediumPerf) ? null : function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
+    (_isLowEndDev||_isMediumPerf) ? null : function(){if(window.GencineUI)GencineUI.render();}
+  ].filter(Boolean); // remove nulls for lower perf tiers
   var _ji=0;
-  // Low-end: slightly longer gap between jobs to reduce CPU burst at startup
-  var _jobDelay=_isLowEndDev?32:16;
+  // Low/critical: longer gap between jobs to reduce CPU burst at startup
+  var _jobDelay=_isLowEndDev?32:_isMediumPerf?24:16;
   function _nextJob(){
     if(_ji>=jobs.length){
       console.log('[Startup] Tab pre-render done',Date.now()-_startupT0,'ms');
@@ -8246,30 +8249,47 @@ function renderSettings(){
   }));
   content.appendChild(g4);
 
-  // ── Performance ──────────────────────────────
-  // Note: tSafe() is used here because these keys may not exist in translations yet.
-  // tSafe() returns null for missing keys, so the Kurdish fallback text always shows.
+  // ── Performance Mode ─────────────────────────
+  // Auto-detection default. User can override but most people should never need to.
+  // tSafe() used — keys may not exist in translations yet; Kurdish fallback always shows.
   var gPerf=el('div','settings-group');
   gPerf.appendChild(el('div','settings-group-title',tSafe('settings.performance')||'کارایی'));
-  var _isLowEnd=document.documentElement.classList.contains('low-end-device');
-  gPerf.appendChild(mkToggleRow(
-    tSafe('settings.low_end_mode')||'دۆخی مۆبایلی کەم‌ئەنداز',
-    _isLowEnd,
-    function(){
-      var nowLow=document.documentElement.classList.contains('low-end-device');
-      if(nowLow){
-        document.documentElement.classList.remove('low-end-device');
-        try{localStorage.removeItem('tk_low_end');}catch(e){}
-        toast(tSafe('toast.perf_full')||'کارایی تەواو چالاک کرا');
-      }else{
-        document.documentElement.classList.add('low-end-device');
-        try{localStorage.setItem('tk_low_end','1');}catch(e){}
-        toast(tSafe('toast.perf_save')||'دۆخی زووی چالاک کرا');
-      }
+  var _tkp=window.TKPerf||{level:'high',detected:'high',override:null,score:100,reasons:[]};
+  var _perfOpts=[
+    {val:'auto',   label:tSafe('settings.perf_auto')||'ئۆتۆماتیکی'},
+    {val:'high',   label:tSafe('settings.perf_high')||'بەرز'},
+    {val:'medium', label:tSafe('settings.perf_medium')||'ناوەند'},
+    {val:'low',    label:tSafe('settings.perf_low')||'کەم'}
+  ];
+  var _curPerfSel=_tkp.override||'auto';
+  var _perfChips=el('div','perf-chips-row');
+  _perfOpts.forEach(function(o){
+    var chip=el('div','perf-chip'+(_curPerfSel===o.val?' on':''));
+    chip.textContent=o.label;
+    on(chip,'click',function(){
+      if(window.TKPerf)TKPerf.setOverride(o.val==='auto'?null:o.val);
+      haptic([10]);
+      var _tm;
+      if(o.val==='auto')_tm=tSafe('toast.perf_auto')||'ئۆتۆماتیکی چالاک کرا';
+      else if(o.val==='high')_tm=tSafe('toast.perf_full')||'کارایی تەواو چالاک کرا';
+      else if(o.val==='medium')_tm=tSafe('toast.perf_medium')||'کارایی ناوەند چالاک کرا';
+      else _tm=tSafe('toast.perf_save')||'دۆخی زووی چالاک کرا';
+      toast(_tm);
       renderSettings();
-    },
-    tSafe('settings.low_end_mode_sub')||'ئەنیمەیشن و بەدرخشینەکان کەم دەکاتەوە بۆ مۆبایلە کەمئەندازەکان'
-  ));
+    });
+    _perfChips.appendChild(chip);
+  });
+  // Info line: shows current detected level + score, or active override
+  var _perfNote;
+  if(_tkp.override){
+    _perfNote='Override: '+_tkp.override+' • Auto-detected: '+_tkp.detected+' (score='+_tkp.score+')';
+  }else{
+    _perfNote='Auto: '+_tkp.detected+((_tkp.score<100)?' (score='+_tkp.score+(_tkp.reasons.length?', '+_tkp.reasons.slice(0,3).join(', '):'')+')'  :'');
+  }
+  var _perfRow=el('div','');
+  _perfRow.appendChild(_perfChips);
+  _perfRow.appendChild(el('div','perf-info-sub',_perfNote));
+  gPerf.appendChild(_perfRow);
   content.appendChild(gPerf);
 
   // ── App ──────────────────────────────────────
@@ -11502,6 +11522,52 @@ function startApp(){
   // Interval bumped to 60s — 12s was excessive on slow networks / low-end devices.
   setTimeout(function(){ ForceUpdate.check(); }, 5000);
   setInterval(function(){ ForceUpdate.check(); }, 60000);
+
+  // ── Runtime jank monitoring — auto-downgrade performance tier ─────────────
+  // Starts 8s after launch so startup pre-renders don't trigger false positives.
+  // Uses PerformanceObserver longtask (Chrome/Android only — silently skipped on iOS).
+  // Stops after 20s — we only care about real-use jank, not background tasks.
+  setTimeout(function(){
+    if(!window.TKPerf)return;
+    if(window.TKPerf.override){
+      console.log('[PERFORMANCE] jank monitor skipped — user has manual override: '+window.TKPerf.override);
+      return;
+    }
+    try{
+      if(!window.PerformanceObserver)return;
+      var _jt=0,_jStop=false;
+      var _jObs=new PerformanceObserver(function(list){
+        if(_jStop)return;
+        list.getEntries().forEach(function(e){
+          if(e.duration>100){
+            _jt++;
+            console.log('[PERFORMANCE] long task '+Math.round(e.duration)+'ms (count='+_jt+')');
+          }
+        });
+        if(_jt>=3){
+          _jStop=true;_jObs.disconnect();
+          var _lvls=['high','medium','low','critical'];
+          var _idx=_lvls.indexOf(window.TKPerf.level);
+          if(_idx>=0&&_idx<_lvls.length-1){
+            var _nl=_lvls[_idx+1];
+            console.log('[PERFORMANCE] downgraded due to jank: '+window.TKPerf.level+' → '+_nl);
+            window.TKPerf.detected=_nl;
+            try{localStorage.setItem('tk_perf_detected',_nl);}catch(e){}
+            window.TKPerf.applyLevel(_nl);
+          }
+        }
+      });
+      _jObs.observe({entryTypes:['longtask']});
+      // Stop after 20s — sufficient window to catch real-use jank
+      setTimeout(function(){
+        if(!_jStop){
+          _jStop=true;
+          try{_jObs.disconnect();}catch(e){}
+          console.log('[PERFORMANCE] jank check done: '+_jt+' long tasks in 20s');
+        }
+      },20000);
+    }catch(e){}
+  },8000);
 
   if(window.i18n){
     /* 3-second timeout — if i18n fetch hangs (slow connection), start app anyway */

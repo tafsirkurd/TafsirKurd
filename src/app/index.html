@@ -59,22 +59,78 @@
   // iPad UA fallback: force tablet class when CSS media query can't fire (e.g. TARGETED_DEVICE_FAMILY="1" compatibility mode)
   var isIPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend'in document);
   if(isIPad)document.documentElement.classList.add('is-ipad');
-  // ── Low-end device safe mode ───────────────────────────────────────────────
-  // Detects weak hardware and applies low-end-device class to gate heavy CSS.
-  // Hardware-based detection is persisted (deviceMemory/cores/old Chrome).
-  // Network-slow detection is session-only (connection type can change).
-  var lowEnd=localStorage.getItem('tk_low_end')==='1';
-  if(!lowEnd){
-    if(navigator.deviceMemory&&navigator.deviceMemory<2)lowEnd=true;
-    if(!lowEnd&&navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=2)lowEnd=true;
-    // cv already parsed above (safe-render detection) — reuse it
-    if(!lowEnd&&!isIOS&&cv>0&&cv<85)lowEnd=true;
-    if(lowEnd){try{localStorage.setItem('tk_low_end','1');}catch(e){}}
-  }
-  // Slow network = session-only (don't persist — connection improves)
-  var _conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-  if(!lowEnd&&_conn&&(_conn.effectiveType==='2g'||_conn.effectiveType==='slow-2g'))lowEnd=true;
-  if(lowEnd)document.documentElement.classList.add('low-end-device');
+  // ── Automatic 4-tier Performance Detection ──────────────────────────────
+  // Score-based: high(80-100) / medium(55-79) / low(30-54) / critical(0-29)
+  // Runs synchronously in <head> so perf-* classes are ready before first paint.
+  // User can override via Settings: tk_perf_override = 'high'|'medium'|'low'
+  // Migration: old tk_low_end='1' → tk_perf_override='low' automatically.
+  (function(){
+    var _DE=document.documentElement;
+    // ── Migrate from old binary system ────────────────────────────────────
+    try{
+      if(localStorage.getItem('tk_low_end')==='1'){
+        localStorage.setItem('tk_perf_override','low');
+        localStorage.removeItem('tk_low_end');
+      }
+    }catch(e){}
+    // ── Read user override (settings) ────────────────────────────────────
+    var _ov=null;
+    try{_ov=localStorage.getItem('tk_perf_override');}catch(e){}
+    // ── Hardware score ─────────────────────────────────────────────────────
+    var _sc=100,_rs=[];
+    var _mem=navigator.deviceMemory||0;
+    if(_mem>0&&_mem<2){_sc-=35;_rs.push('RAM<2GB');}
+    else if(_mem>=2&&_mem<4){_sc-=15;_rs.push('RAM<4GB');}
+    var _co=navigator.hardwareConcurrency||0;
+    if(_co>0&&_co<=2){_sc-=25;_rs.push('cores≤2');}
+    else if(_co>2&&_co<=4){_sc-=10;_rs.push('cores≤4');}
+    // cv + isIOS already parsed above (safe-render block) — reuse them
+    if(!isIOS&&cv>0&&cv<85){_sc-=25;_rs.push('Chrome<85');}
+    else if(!isIOS&&cv>=85&&cv<100){_sc-=10;_rs.push('Chrome<100');}
+    var _iosM=ua.match(/OS (\d+)_/);
+    if(isIOS&&_iosM){var _iv=parseInt(_iosM[1]);if(_iv<14){_sc-=20;_rs.push('iOS<14');}else if(_iv<16){_sc-=5;_rs.push('iOS<16');}}
+    if(window.devicePixelRatio>3){_sc-=5;_rs.push('DPR>3');}
+    // Network: session-only (connection improves — don't persist)
+    var _cn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+    if(_cn&&(_cn.effectiveType==='2g'||_cn.effectiveType==='slow-2g')){_sc-=15;_rs.push('2G');}
+    // ── Score → detected level ─────────────────────────────────────────────
+    var _det=_sc>=80?'high':_sc>=55?'medium':_sc>=30?'low':'critical';
+    // prefers-reduced-motion: floor at medium (accessibility + battery saver)
+    var _prm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)');
+    if(_prm&&_prm.matches&&_det==='high'){_det='medium';_rs.push('reduced-motion');}
+    // ── Active level = override || detected ───────────────────────────────
+    var _lvls=['high','medium','low','critical'];
+    var _act=(_ov&&_lvls.indexOf(_ov)>=0)?_ov:_det;
+    // ── Apply classes to <html> ────────────────────────────────────────────
+    _DE.classList.add('perf-'+_act);
+    // Backward-compat alias: low-end-device is still used in CSS below
+    if(_act==='low'||_act==='critical')_DE.classList.add('low-end-device');
+    // ── Expose TKPerf API — used by settings + runtime jank monitor ───────
+    window.TKPerf={
+      level:_act,detected:_det,override:_ov,score:_sc,reasons:_rs,
+      applyLevel:function(l){
+        _lvls.forEach(function(x){_DE.classList.remove('perf-'+x);});
+        _DE.classList.remove('low-end-device');
+        _DE.classList.add('perf-'+l);
+        if(l==='low'||l==='critical')_DE.classList.add('low-end-device');
+        window.TKPerf.level=l;
+        console.log('[PERFORMANCE] applied classes: perf-'+l+(l==='low'||l==='critical'?' low-end-device':''));
+      },
+      setOverride:function(v){
+        if(!v||v==='auto'){
+          try{localStorage.removeItem('tk_perf_override');}catch(e){}
+          window.TKPerf.override=null;window.TKPerf.applyLevel(_det);
+        }else{
+          try{localStorage.setItem('tk_perf_override',v);}catch(e){}
+          window.TKPerf.override=v;window.TKPerf.applyLevel(v);
+        }
+      }
+    };
+    // ── Console logs ──────────────────────────────────────────────────────
+    console.log('[PERFORMANCE] detected: '+_det+' score='+_sc+(_rs.length?' reasons='+_rs.join(','):''));
+    if(_ov)console.log('[PERFORMANCE] override mode: '+_ov);
+    console.log('[PERFORMANCE] applied: perf-'+_act+((_act==='low'||_act==='critical')?' low-end-device':''));
+  })();
 })();
 </script>
 <script src="/utils/console-cleaner.js?v=2" defer></script>
@@ -3175,12 +3231,34 @@ html.is-ipad .fsc-track{right:max(3px,env(safe-area-inset-right,0px))}
 html.is-ipad .fsc-lbl{right:max(14px,calc(env(safe-area-inset-right,0px) + 12px))}
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LOW-END DEVICE SAFE MODE
-   Applied when html.low-end-device class is added by head detection script.
-   Goal: keep scrolling smooth and UI usable on old/cheap Android & slow net.
+   AUTOMATIC PERFORMANCE TIERS
+   html.perf-high     — full effects (strong devices)
+   html.perf-medium   — lighter effects, less GPU pressure
+   html.perf-low      — heavy reduction (weak/old devices)
+   html.perf-critical — near-zero effects, maximum stability
+   html.low-end-device = backward-compat alias for perf-low + perf-critical
+   Set by TKPerf head script — auto-detected, user can override in Settings.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Disable prayer-sky GPU blur animations on low-end — heaviest offender */
+/* ── perf-medium: reduce GPU load while keeping app visually rich ──────── */
+/* Sky: keep animated but slow down 3× — cheaper compositing */
+html.perf-medium .sky-au1,
+html.perf-medium .sky-au2,
+html.perf-medium .sky-au3{animation-duration:12s!important}
+/* Remove backdrop-filter on heavy modal overlays only */
+html.perf-medium .fp-overlay,
+html.perf-medium .rating-overlay,
+html.perf-medium .goal-confirm-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+/* Simplify hero image blur (brightness filter stays) */
+html.perf-medium .iv-hero-bg{filter:brightness(.55)!important}
+html.perf-medium .book-feat-card-bg{filter:brightness(.5) saturate(1.2)!important}
+/* Reduce glow ring — visible but cheaper */
+html.perf-medium .fu-ring{animation-duration:3.5s!important;opacity:.4}
+
+/* ── perf-low + perf-critical: heavy reduction ─────────────────────────── */
+/* (applied via html.low-end-device backward-compat alias) */
+
+/* Disable prayer-sky GPU blur animations — heaviest offender */
 html.low-end-device .sky-au1,
 html.low-end-device .sky-au2,
 html.low-end-device .sky-au3{animation:none!important;filter:none!important}
@@ -3189,7 +3267,7 @@ html.low-end-device .sky-nebula,
 html.low-end-device .sky-fog,
 html.low-end-device .sky-rainbow{animation:none!important;filter:none!important;opacity:.4}
 
-/* Kill ripple/glow infinite animations on low-end */
+/* Kill ripple/glow infinite animations */
 html.low-end-device .fu-ring{animation:none!important;opacity:.25}
 html.low-end-device .fu-hero-badge{animation:none!important}
 html.low-end-device .wizard-confirm-ring::before{animation:none!important}
@@ -3197,7 +3275,7 @@ html.low-end-device .fp-btn-lg.playing{animation:none!important}
 html.low-end-device .audio-bar-avatar.playing::before,
 html.low-end-device .audio-bar-avatar.playing::after{animation:none!important}
 
-/* Remove backdrop-filter on all overlays/UI on low-end */
+/* Remove backdrop-filter on all overlays/UI */
 html.low-end-device .fp-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.low-end-device .goal-confirm-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.low-end-device .rating-overlay{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
@@ -3217,13 +3295,32 @@ html.low-end-device .genc-card-icon{backdrop-filter:none!important;-webkit-backd
 html.low-end-device .iv-hero-bg{filter:brightness(.55)!important}
 html.low-end-device .book-feat-card-bg{filter:brightness(.5) saturate(1.2)!important}
 
-/* content-visibility: skip on low-end — avoids rendering budget issues */
+/* content-visibility: skip — avoids rendering budget issues */
 html.low-end-device .surah-card,
 html.low-end-device .iv-card,
 html.low-end-device .iv-ep-item{content-visibility:visible!important}
 
-/* Disable large box-shadows on low-end — reduces compositing layers */
+/* Disable large box-shadows — reduces compositing layers */
 html.low-end-device .tab-item.on i{box-shadow:none!important}
+
+/* ── perf-critical: extra reduction beyond low — near-zero effects ──────── */
+html.perf-critical *,
+html.perf-critical *::before,
+html.perf-critical *::after{
+  transition-duration:.05ms!important;
+  animation-duration:.05ms!important;
+  animation-iteration-count:1!important;
+}
+/* Preserve minimal splash/app fade so it doesn't feel broken */
+html.perf-critical .splash{transition:opacity .1s ease!important}
+html.perf-critical .app{transition:opacity .05s ease-out!important}
+/* Remove all decorative box-shadows */
+html.perf-critical .hdr,
+html.perf-critical .tabbar,
+html.perf-critical .panel{box-shadow:none!important}
+/* Tabbar/hdr fully solid — no blur at any tier */
+html.perf-critical .tabbar,
+html.perf-critical .hdr{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PREFERS-REDUCED-MOTION  (accessibility + low-power iOS battery saver)
@@ -3432,6 +3529,17 @@ body.tk-scrolling .audio-bar-avatar.playing::before,
 body.tk-scrolling .audio-bar-avatar.playing::after{animation-play-state:paused!important}
 body.tk-scrolling .streak-ring.pulse{animation-play-state:paused!important}
 body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
+
+/* ── Performance Mode Chips (Settings panel) ─────────────────────────────── */
+.perf-chips-row{display:flex;gap:7px;padding:10px 16px 4px;flex-wrap:nowrap}
+.perf-chip{flex:1;min-width:0;text-align:center;padding:7px 4px;border-radius:var(--r-m);border:1.5px solid var(--border);font-size:.78rem;font-weight:600;color:var(--text2);cursor:pointer;transition:border-color .15s,color .15s,background .15s;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.perf-chip.on{border-color:var(--accent);color:var(--accent)}
+[data-theme="dark"] .perf-chip.on{background:rgba(255,255,255,.06)}
+[data-theme="sakina"] .perf-chip.on{background:rgba(201,168,76,.08)}
+[data-theme="noor"] .perf-chip.on{background:rgba(26,92,58,.08)}
+[data-theme="light"] .perf-chip.on{background:rgba(0,0,0,.05)}
+.perf-chip:active{transform:scale(.94)}
+.perf-info-sub{padding:2px 16px 12px;font-size:.72rem;color:var(--text3);direction:ltr;line-height:1.5;text-align:left}
 </style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
@@ -4045,7 +4153,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=810"></script>
+<script src="/app/app.js?v=811"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
