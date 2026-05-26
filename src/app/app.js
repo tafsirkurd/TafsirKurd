@@ -7803,12 +7803,6 @@ function _buildPppInsights(log,mStats,weekData,missed){
     insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day','ڕۆژا هەرا قایل',weak.name+' — '+weak.avg+'/5 ناڤنج');
   }
 
-  // Active streak (4+ prayers)
-  var active=calcActiveStreak(log,4);
-  if(active>0){
-    insightRow('rgba(59,130,246,.12)','#3b82f6','fas fa-fire-alt','ڕیزا چالاک (٤+ نوێژ)','🔥 '+active+' ڕۆژ');
-  }
-
   // Monthly avg per day
   if(mStats.total>0){
     var avg=(mStats.done/mStats.total).toFixed(1);
