@@ -496,7 +496,7 @@ body{background:var(--bg);color:var(--text)}
 .sticky-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#27ae60);border-radius:var(--r-full);transition:width .3s ease;width:0}
 .sticky-progress-info{display:flex;justify-content:space-between;align-items:center}
 /* Mushaf QCF V1 (Madinah) */
-.mushaf-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:8px clamp(8px,3vw,24px) calc(var(--tab-h) + var(--safe-b) + var(--audio-bar-h) + 48px);position:relative;display:flex;flex-direction:column;align-items:center}
+.mushaf-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overflow-anchor:none;background:var(--bg);padding:8px clamp(8px,3vw,24px) calc(var(--tab-h) + var(--safe-b) + var(--audio-bar-h) + 48px);position:relative;display:flex;flex-direction:column;align-items:center}
 .mushaf-text-page{background:var(--surface);border-radius:18px;padding:clamp(40px,8vw,52px) clamp(16px,4.5vw,40px) 28px;margin-bottom:16px;width:100%;max-width:540px;box-shadow:0 2px 24px rgba(0,0,0,.11);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s ease;overflow:visible;display:flex;flex-direction:column}
 .mushaf-text-page:active{opacity:.75}
 /* Warm manuscript paper feel — dark + sakina modes */
@@ -4304,7 +4304,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=814"></script>
+<script src="/app/app.js?v=815"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

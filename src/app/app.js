@@ -3589,26 +3589,10 @@ function renderMushafView(){
       pageEl.appendChild(ph);
     }
 
-    // Scroll to surah banner — retry loop corrects for layout shifts as nearby
-    // pages render (their height grows from min-height CSS, pushing the banner down).
-    function _scrollToSurah(){
-      var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-      if(!b)return;
-      view.scrollTop=b.offsetTop;
-      var _a=0;
-      (function _fix(){
-        if(_a++>=8)return;
-        setTimeout(function(){
-          var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
-          if(!b2)return;
-          var delta=b2.getBoundingClientRect().top-view.getBoundingClientRect().top;
-          if(Math.abs(delta)>6){view.scrollTop+=delta;_fix();}
-        },200);
-      })();
-    }
-
-    // Lazy-load: 3000px lookahead in BOTH directions so scrolling up (back to
-    // Al-Fatiha) also pre-loads pages ahead of the scroll position.
+    // Lazy-load: 3000px lookahead below, 1200px above. Large downward margin
+    // pre-renders pages as the user reads forward; smaller upward margin limits
+    // how many pages above the initial scroll position fire simultaneously,
+    // reducing the cascade that caused the wrong-ayah landing.
     if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
     _mushafLazyObs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
@@ -3618,26 +3602,54 @@ function renderMushafView(){
         pe.dataset.loaded='1';
         _mushafLazyObs&&_mushafLazyObs.unobserve(pe);
         if(S.surah!==capturedSurah)return;
-        // Add skeleton shimmer now so the page isn't blank while data loads
         if(!pe.firstChild)pe.appendChild(_mushafSkeleton());
         loadMushafPageQCF(pe,parseInt(pe.dataset.page)).catch(function(){_mushafPageErr(pe);});
       });
-    },{root:view,rootMargin:'3000px 0px 3000px 0px'});
+    },{root:view,rootMargin:'1200px 0px 3000px 0px'});
     view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(pe){
       _mushafLazyObs.observe(pe);
     });
 
-    // Eagerly load the target surah's first page for immediate display, then
-    // scroll precisely to the surah banner once the page content is rendered.
-    if(targetPageEl){
-      targetPageEl.dataset.loaded='1';
-      _mushafLazyObs&&_mushafLazyObs.unobserve(targetPageEl);
-      targetPageEl.appendChild(_mushafSkeleton());
-      loadMushafPageQCF(targetPageEl,pages.start).then(function(){
-        setTimeout(function(){_scrollToSurah();},0);
-      }).catch(function(){_mushafPageErr(targetPageEl);});
+    // Preload target page + up to 8 pages above it, THEN scroll once.
+    //
+    // Old approach: load only the target page, then run a setTimeout retry loop
+    // (×8, 200ms apart) to chase layout shifts. Each correction scrolled further
+    // down because IO-triggered pages above were still growing from min-height
+    // (560px) to real height (~900px). The cascade landed ~70 ayahs past ayah 1.
+    //
+    // Fix: mark all pages that affect b.offsetTop as loaded BEFORE calling any
+    // scroll. Once Promise.all resolves every page above is at its final height,
+    // so one scrollTop assignment lands exactly on ayah 1 with no jitter.
+    var _preStart=Math.max(1,pages.start-8);
+    var _prePromises=[];
+    for(var _pi=_preStart;_pi<=pages.start;_pi++){
+      (function(_pn){
+        var _pe=view.querySelector('.mushaf-text-page[data-page="'+_pn+'"]');
+        if(!_pe||_pe.dataset.loaded)return;
+        _pe.dataset.loaded='1';
+        _mushafLazyObs&&_mushafLazyObs.unobserve(_pe);
+        if(!_pe.firstChild)_pe.appendChild(_mushafSkeleton());
+        _prePromises.push(loadMushafPageQCF(_pe,_pn).catch(function(){_mushafPageErr(_pe);}));
+      })(_pi);
     }
-    updateMushafProgress(view);
+    Promise.all(_prePromises).then(function(){
+      if(S.surah!==capturedSurah||!S.mushafMode)return;
+      var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+      if(b)view.scrollTop=b.offsetTop;
+      updateMushafProgress(view);
+      // One residual check: any IO pages just outside the preload range may still
+      // be settling. A single correction 500ms later is enough — no cascade.
+      setTimeout(function(){
+        if(S.surah!==capturedSurah||!S.mushafMode)return;
+        var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+        if(!b2)return;
+        var delta=b2.getBoundingClientRect().top-view.getBoundingClientRect().top;
+        if(Math.abs(delta)>4)view.scrollTop+=delta;
+      },500);
+    }).catch(function(){
+      var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+      if(b)view.scrollTop=b.offsetTop;
+    });
 
     // Header: update as user scrolls through pages — reflect topmost visible surah
     (function(){
