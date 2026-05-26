@@ -1519,7 +1519,7 @@
      Returning the same DOM node on pull-to-refresh
      preserves slider position + timer — no visual reset.
   ───────────────────────────────────────────── */
-  var _sectionCache = { el: null, seed: null, hasData: false, seasonalKey: null, hasQuranData: false };
+  var _sectionCache = { el: null, seed: null, hasData: false, hasAdhkarData: false, seasonalKey: null, hasQuranData: false };
 
   /* ─────────────────────────────────────────────
      RENDER
@@ -1539,6 +1539,16 @@
         return !!(Array.isArray(hArr) && hArr.length && Array.isArray(bArr) && bArr.length);
       } catch(e) { return false; }
     }());
+    // Track adhkar data separately — hadiths/books being cached doesn't mean adhkar is ready
+    var hasAdhkarData = (function() {
+      try {
+        var a = JSON.parse(localStorage.getItem('gencine_adhkar_v1') || 'null');
+        var aArr = (a && Array.isArray(a.data)) ? a.data : (Array.isArray(a) ? a : []);
+        if (aArr.length) return true;
+        // Also check in-memory (covers first session on iOS before localStorage write)
+        return !!(window.GencineUI && window.GencineUI.getAllAdhkar && window.GencineUI.getAllAdhkar().length);
+      } catch(e) { return false; }
+    }());
     var hasQuranData = !!(window.S && window.S.quranData);
     /* Seasonal key — string of active seasonal item IDs.
        Cache must miss when seasonal state changes mid-day
@@ -1552,7 +1562,7 @@
        Also rebuild if quranData just became available (ayah card needs real Arabic text). */
     if (_sectionCache.el && _sectionCache.seed === seed
         && _sectionCache.seasonalKey === currentSeasonalKey) {
-      if ((_sectionCache.hasData || !hasData) && (_sectionCache.hasQuranData || !hasQuranData)) {
+      if ((_sectionCache.hasData || !hasData) && (_sectionCache.hasAdhkarData || !hasAdhkarData) && (_sectionCache.hasQuranData || !hasQuranData)) {
         /* Resume slider progress bar — it may have stopped while the section
            was outside the DOM during within-tab navigation. */
         var _cw = _sectionCache.el.querySelector('.sd-wrapper');
@@ -1636,11 +1646,12 @@
       }
     }
 
-    _sectionCache.el           = section;
-    _sectionCache.seed         = seed;
-    _sectionCache.hasData      = hasData;
-    _sectionCache.seasonalKey  = currentSeasonalKey;
-    _sectionCache.hasQuranData = hasQuranData;
+    _sectionCache.el            = section;
+    _sectionCache.seed          = seed;
+    _sectionCache.hasData       = hasData;
+    _sectionCache.hasAdhkarData = hasAdhkarData;
+    _sectionCache.seasonalKey   = currentSeasonalKey;
+    _sectionCache.hasQuranData  = hasQuranData;
     return section;
   }
 
@@ -1648,11 +1659,12 @@
      PUBLIC API
   ───────────────────────────────────────────── */
   function clearCache() {
-    _sectionCache.el           = null;
-    _sectionCache.seed         = null;
-    _sectionCache.hasData      = false;
-    _sectionCache.seasonalKey  = null;
-    _sectionCache.hasQuranData = false;
+    _sectionCache.el            = null;
+    _sectionCache.seed          = null;
+    _sectionCache.hasData       = false;
+    _sectionCache.hasAdhkarData = false;
+    _sectionCache.seasonalKey   = null;
+    _sectionCache.hasQuranData  = false;
   }
 
   /* Called by app.js when quranData becomes available.
