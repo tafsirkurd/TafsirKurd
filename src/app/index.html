@@ -2134,7 +2134,9 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 @keyframes qibla-perm-breathe{0%,100%{box-shadow:0 0 0 0 rgba(var(--qibla-glow-rgb),.3)}50%{box-shadow:0 0 0 10px rgba(var(--qibla-glow-rgb),0)}}
 .qibla-spinner{width:30px;height:30px;border:1.5px solid var(--border);border-top-color:var(--text3);border-radius:50%;animation:qibla-spin 1s linear infinite}
 @keyframes qibla-spin{to{transform:rotateZ(360deg)}}
-#prayerContent{display:flex;flex-direction:column;min-height:0}
+/* Prayer panel — no scroll, exact fit */
+#panelPrayer{overflow:hidden;padding-bottom:0}
+#prayerContent{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 /* Prayer 2-col grid */
 .prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px calc(var(--tab-h) + var(--safe-b) + 10px);flex:1;align-content:stretch}
 .prayer-grid-card{background:linear-gradient(135deg,rgba(var(--sky-tint-rgb,15,20,40),.07) 0%,rgba(var(--sky-tint-rgb,15,20,40),.02) 100%),var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:border-color .2s,background .2s,box-shadow .2s,transform .1s ease}
