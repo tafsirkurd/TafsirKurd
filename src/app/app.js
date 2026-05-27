@@ -7892,10 +7892,10 @@ function _buildPrayerProgressPanel(panel){
     s.appendChild(el('span','ppp-stat-val'+(extraCls?' '+extraCls:''),val));
     s.appendChild(el('span','ppp-stat-lbl',lbl));return s;
   }
-  stats.appendChild(mkStat(_pppStreakVal(streak),'ڕیزا ڕۆژان','ppp-stat-streak'));
-  stats.appendChild(mkStat(best>0?'⭐ '+best:'0','باشترین ڕیزا','ppp-stat-best'));
-  stats.appendChild(mkStat(mStats.full+'/'+mStats.total,'تەمام ئەم مانگ','ppp-stat-month'));
-  stats.appendChild(mkStat(consistency+'%','ئینتیزام ٣٠ ڕۆژ','ppp-stat-consistency'));
+  stats.appendChild(mkStat(_pppStreakVal(streak),'بەردەوامیا ڕۆژانە','ppp-stat-streak'));
+  stats.appendChild(mkStat(best>0?'⭐ '+best:'0','باشترین بەردەوامی','ppp-stat-best'));
+  stats.appendChild(mkStat(mStats.full+'/'+mStats.total,'ئەڤ هەیڤە تەمام بوو','ppp-stat-month'));
+  stats.appendChild(mkStat(consistency+'%','پێگیری د ٣٠ ڕۆژان دا','ppp-stat-consistency'));
   body.appendChild(stats);
 
   // ─ This week ──────────────────────────────────────────────
