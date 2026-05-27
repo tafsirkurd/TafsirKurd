@@ -8100,7 +8100,7 @@ function _pppCelebrateYear(log,streak,yearNum){
   // Arabic verse
   card.appendChild(el('div','year-celeb-ayah','﴿ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا ﴾'));
   var totalPrayers=yearNum*1825;
-  card.appendChild(el('div','year-celeb-sub',yearNum>1?'ساڵێ '+yearNum+'ەم تەمام کر!\nخوا قبوول بکا 🤲':totalPrayers+' نوێژ تەمام!\nخوا قبوول بکا 🤲'));
+  card.appendChild(el('div','year-celeb-sub',yearNum>1?'ساڵێ '+yearNum+'ەم تەمام کر!\nخودێ قەبیل بکەت 🤲':totalPrayers+' نڤێژ تەمام بوون!\nخودێ قەبیل بکەت 🤲'));
   // Stats badges
   var badges=el('div','year-celeb-badges');
   badges.appendChild(el('div','year-celeb-badge gold','🔥 '+streak+' ڕۆژ ل ڕیزا'));
