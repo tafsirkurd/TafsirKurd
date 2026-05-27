@@ -7398,9 +7398,15 @@ function _initPrayerTrackingStart(){
 
 // ── Smart prayer engine ──────────────────────────────────────────────────────
 
-// Timings for any date key (YYYY-MM-DD) — reads directly from localStorage
-// so it works even if prayer.cache.js module failed to load
+// Timings for any date key (YYYY-MM-DD).
+// Primary: window._prayerUITimings exposed by prayer.ui.js buildPanel() — reliable on iOS WKWebView
+// where the localStorage prayer-kurd3: cache may not be populated yet.
+// Fallback: localStorage cache populated by prayer.cache.js.
 function _getTimingsForDate(dKey){
+  if(window._prayerUITimings&&window._prayerUIDate===dKey){
+    var lt=window._prayerUITimings;
+    return{Fajr:lt.Fajr,Sunrise:lt.Sunrise,Dhuhr:lt.Dhuhr,Asr:lt.Asr,Maghrib:lt.Maghrib,Isha:lt.Isha};
+  }
   try{
     var city=localStorage.getItem('prayerCity')||'Duhok';
     var pts=dKey.split('-').map(Number);
@@ -7459,6 +7465,55 @@ function calcPrayerStreak(log){
 
 /* ===== PRAYER PROGRESS PAGE ===== */
 var _pppMonthOffset=0;
+var _pppTickId=null;
+var _pppCdTickId=null;
+
+// ms remaining until prayer timeStr (UTC+3 arithmetic, same as prayer.ui.js)
+function _pppMsUntil(timeStr){
+  var hm=timeStr.trim().split(' ')[0].split(':');
+  var h=parseInt(hm[0],10);var m=parseInt(hm[1],10);
+  if(isNaN(h)||isNaN(m))return -1;
+  var nowBgd=Date.now()+3*3600000;
+  var dayStart=nowBgd-(nowBgd%86400000);
+  return dayStart+h*3600000+m*60000-nowBgd;
+}
+// Format ms → "٢س ٥خ" / "٤٧خ" / "٣٨چ"
+function _pppFmtMs(ms){
+  var s=Math.max(0,Math.floor(ms/1000));
+  var h=Math.floor(s/3600);s-=h*3600;
+  var m=Math.floor(s/60);s-=m*60;
+  if(h>0)return h+'س'+(m>0?' '+m+'خ':'');
+  if(m>0)return m+'خ'+(s>0?' '+s+'چ':'');
+  return s+'چ';
+}
+
+function _startPppTick(){
+  if(_pppTickId)return;
+  _pppTickId=setInterval(function(){
+    var panel=$('prayerProgressPanel');
+    if(!panel||!panel.classList.contains('on')){_stopPppTick();return;}
+    _pppSyncPanel(getPrayerLog(),_getPrayerDay());
+  },20000);
+}
+function _stopPppTick(){if(_pppTickId){clearInterval(_pppTickId);_pppTickId=null;}}
+
+// Lightweight 1-second tick — only updates countdown text on locked buttons
+function _startPppCdTick(){
+  if(_pppCdTickId)return;
+  _pppCdTickId=setInterval(function(){
+    var panel=$('prayerProgressPanel');
+    if(!panel||!panel.classList.contains('on')){_stopPppCdTick();return;}
+    var pDay=_getPrayerDay();
+    var timings=_getTimingsForDate(pDay);
+    panel.querySelectorAll('.ppp-today-card .ppp-prayer-btn.not-yet .ppp-cd').forEach(function(cdSpan){
+      var p=cdSpan.closest('.ppp-prayer-btn').dataset.prayer;
+      if(!timings||!timings[p]){cdSpan.textContent='';return;}
+      var rem=_pppMsUntil(timings[p]);
+      cdSpan.textContent=rem>0?_pppFmtMs(rem):'';
+    });
+  },1000);
+}
+function _stopPppCdTick(){if(_pppCdTickId){clearInterval(_pppCdTickId);_pppCdTickId=null;}}
 
 function calcBestPrayerStreak(log){
   var keys=Object.keys(log).sort();var best=0,cur=0;
@@ -7561,8 +7616,10 @@ App.openPrayerProgress=function(){
   _pppMonthOffset=0;
   _buildPrayerProgressPanel(panel);
   panel.classList.add('on');
+  _startPppTick();_startPppCdTick();
 };
 App.closePrayerProgress=function(){
+  _stopPppTick();_stopPppCdTick();
   var p=$('prayerProgressPanel');if(p)p.classList.remove('on');
 };
 App.openPrayerDay=function(dKey){
@@ -7580,6 +7637,7 @@ App.openPrayerDay=function(dKey){
     var canInteract=isDone||passed; // always allow unchecking already-done prayers
     var btn=document.createElement('button');
     btn.className='ppp-prayer-btn'+(isDone?' on':'')+(canInteract?'':' not-yet');
+    btn.dataset.prayer=prayer;
     var ic=document.createElement('i');
     ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');
     btn.appendChild(ic);btn.appendChild(el('span','ppp-prayer-name',t('prayer.'+prayer.toLowerCase())));
@@ -7602,6 +7660,8 @@ App.openPrayerDay=function(dKey){
       var wd=document.querySelector('.ppp-wday[data-ppp-wkey="'+dKey+'"] .ppp-wday-dot');
       if(wd){var nl2=getPrayerLog();var nc2=_TRACK_PRAYERS.filter(function(p){return(nl2[dKey]||{})[p];}).length;
         wd.className='ppp-wday-dot'+(nc2>=5?' full':nc2>=4?' high':nc2>=3?' mid':nc2>=1?' low':'');wd.textContent=nc2>0?nc2:'';}
+      // Sync all panel stats + insights immediately
+      _pppSyncPanel(getPrayerLog(),dKey);
     };
     btns.appendChild(btn);
   });
@@ -7610,15 +7670,107 @@ App.openPrayerDay=function(dKey){
 };
 App.closePrayerDay=function(){
   $('pppDayOverlay').classList.remove('on');
-  var panel=$('prayerProgressPanel');
-  if(panel&&panel.classList.contains('on')){
-    var nl=getPrayerLog();
-    var sv=panel.querySelector('.ppp-stat-streak');if(sv)sv.textContent=_pppStreakVal(calcPrayerStreak(nl));
-    var bv=panel.querySelector('.ppp-stat-best');if(bv)bv.textContent=_pppStreakVal(calcBestPrayerStreak(nl));
-  }
 };
 
 function _pppStreakVal(n){return n>0?'🔥 '+n:'0';}
+
+// Live-update all panel stats + insights immediately after any prayer toggle
+function _pppSyncPanel(log,changedDKey){
+  var panel=$('prayerProgressPanel');if(!panel)return;
+  var now=new Date();var pDay=_getPrayerDay();
+  var streak=calcPrayerStreak(log);var best=calcBestPrayerStreak(log);
+  var mStats=calcPrayerMonthStats(log,now.getFullYear(),now.getMonth());
+  var consistency=calcConsistencyScore(log,30);
+  var sv=panel.querySelector('.ppp-stat-streak');if(sv)sv.textContent=_pppStreakVal(streak);
+  var bv=panel.querySelector('.ppp-stat-best');if(bv)bv.textContent=best>0?'⭐ '+best:'0';
+  var mv=panel.querySelector('.ppp-stat-month');if(mv)mv.textContent=mStats.full+'/'+mStats.total;
+  var cv=panel.querySelector('.ppp-stat-consistency');if(cv)cv.textContent=consistency+'%';
+  // Today card — update count, bar, motivate AND individual button states
+  if(changedDKey===pDay){
+    var nd=_TRACK_PRAYERS.filter(function(p){return(log[pDay]||{})[p];}).length;
+    var tc=panel.querySelector('.ppp-today-count');if(tc)tc.textContent=nd+'/5';
+    var pf=panel.querySelector('.ppp-progress-fill');if(pf)pf.style.width=((nd/5)*100)+'%';
+    var mot=panel.querySelector('.ppp-motivate');if(mot)mot.textContent=_pppMsg(nd);
+    // Sync individual prayer button states in today card — including unlocking when time arrives
+    _TRACK_PRAYERS.forEach(function(p){
+      var isDone2=!!(log[pDay]&&log[pDay][p]);
+      var passed2=_isPrayerCheckable(p,pDay);
+      var canCheck2=isDone2||passed2;
+      var btn2=panel.querySelector('.ppp-today-card .ppp-prayer-btn[data-prayer="'+p+'"]');
+      if(!btn2)return;
+      btn2.classList.toggle('on',isDone2);
+      btn2.classList.toggle('not-yet',!canCheck2);
+      btn2.disabled=!canCheck2;
+      // Remove countdown span when button unlocks
+      if(canCheck2){var oldCd=btn2.querySelector('.ppp-cd');if(oldCd)oldCd.parentNode.removeChild(oldCd);}
+      // Attach onclick the first time a button becomes checkable (was locked at build time)
+      if(canCheck2&&!btn2._pppClickAttached){
+        btn2._pppClickAttached=true;
+        btn2.onclick=(function(pr){return function(){
+          var pd=_getPrayerDay();
+          var prev=_TRACK_PRAYERS.filter(function(q){return(getPrayerLog()[pd]||{})[q];}).length;
+          var ns=togglePrayerDone(pr);haptic([8]);
+          var nl=getPrayerLog();var nd=_TRACK_PRAYERS.filter(function(q){return(nl[pd]||{})[q];}).length;
+          if(ns&&nd===5&&prev<5)_pppCheckCelebrate(nl,pd);
+          _pppSyncPanel(nl,pd);
+        };})(p);
+      }
+      var ic2=btn2.querySelector('i');
+      if(ic2)ic2.className=isDone2?'fas fa-check-circle':(canCheck2?'far fa-circle':'fas fa-clock');
+    });
+  }
+  // Day sheet — sync button states if the sheet is open for the same day
+  var dayOverlay=$('pppDayOverlay');
+  if(dayOverlay&&dayOverlay.classList.contains('on')){
+    _TRACK_PRAYERS.forEach(function(p){
+      var isDoneD=!!(log[changedDKey]&&log[changedDKey][p]);
+      var passedD=_isPrayerCheckable(p,changedDKey);
+      var btnD=document.querySelector('#pppDaySheet .ppp-prayer-btn[data-prayer="'+p+'"]');
+      if(!btnD)return;
+      btnD.classList.toggle('on',isDoneD);
+      var icD=btnD.querySelector('i');
+      if(icD)icD.className=isDoneD?'fas fa-check-circle':(passedD?'far fa-circle':'fas fa-clock');
+    });
+  }
+  // Prayer grid card done-dot (prayer.ui.js panel) — keep in sync
+  if(changedDKey===pDay){
+    _TRACK_PRAYERS.forEach(function(p){
+      var isDoneG=!!(log[pDay]&&log[pDay][p]);
+      var gridCard=document.querySelector('.prayer-grid-card[data-prayer="'+p+'"]');
+      if(!gridCard)return;
+      var dot=gridCard.querySelector('.pcso-done-dot');
+      if(isDoneG){if(!dot){dot=document.createElement('div');dot.className='pcso-done-dot';gridCard.appendChild(dot);}}
+      else{if(dot)dot.parentNode.removeChild(dot);}
+    });
+  }
+  // Calendar cell — live color update for the changed day
+  var calCell=document.querySelector('.ppp-cal-cell[data-ppp-key="'+changedDKey+'"]');
+  if(calCell){
+    var cc=(log[changedDKey]||{});
+    var nc=_TRACK_PRAYERS.filter(function(p){return cc[p];}).length;
+    var trackStart=_prayerTrackingStart();
+    var isBeforeStart=!!(trackStart&&changedDKey<trackStart);
+    var ccls='ppp-cal-cell';
+    if(isBeforeStart)ccls+=' before-start';
+    else ccls+=nc>=5?' full':nc>=4?' high':nc>=2?' mid':nc>=1?' low':'';
+    if(changedDKey===dateKey(new Date()))ccls+=' today-cell';
+    calCell.className=ccls;
+  }
+  // Week dot — live color update for the changed day
+  var wdotEl=document.querySelector('.ppp-wday[data-ppp-wkey="'+changedDKey+'"] .ppp-wday-dot');
+  if(wdotEl){
+    var wc=(log[changedDKey]||{});
+    var wn=_TRACK_PRAYERS.filter(function(p){return wc[p];}).length;
+    wdotEl.className='ppp-wday-dot'+(wn>=5?' full':wn>=4?' high':wn>=3?' mid':wn>=1?' low':'');
+    wdotEl.textContent=wn>0?wn:'';
+  }
+  // Insights — rebuild in-place
+  var oldIns=panel.querySelector('.ppp-insights');
+  if(oldIns){
+    var newIns=_buildPppInsights(log,mStats,calcPrayerWeekData(log),calcMostMissed(log));
+    oldIns.parentNode.replaceChild(newIns,oldIns);
+  }
+}
 function _pppMsg(n){
   if(n>=5)return'ماشاللا! ئەمڕۆ هەمی نوێژت تەمام کر 🌟';
   if(n>=4)return'باشترینن — نوێژا کۆتایی بزووره ⭐';
@@ -7666,11 +7818,18 @@ function _buildPrayerProgressPanel(panel){
     var canInteract=isDone||passed; // always allow unchecking already-done prayers
     var btn=document.createElement('button');
     btn.className='ppp-prayer-btn'+(isDone?' on':'')+(canInteract?'':' not-yet');
+    btn.dataset.prayer=prayer;
     var ic=document.createElement('i');
     ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');
     btn.appendChild(ic);btn.appendChild(el('span','ppp-prayer-name',t('prayer.'+prayer.toLowerCase())));
-    if(!canInteract){btn.disabled=true;}
-    else{
+    if(!canInteract){
+      btn.disabled=true;
+      var cdSpan=el('span','ppp-cd','');
+      // Seed initial countdown text so it shows immediately (tick fills in at t+1s)
+      var initTimings=_getTimingsForDate(today);
+      if(initTimings&&initTimings[prayer]){var initRem=_pppMsUntil(initTimings[prayer]);if(initRem>0)cdSpan.textContent=_pppFmtMs(initRem);}
+      btn.appendChild(cdSpan);
+    }else{
       btn.onclick=function(){
         var prevDone=_TRACK_PRAYERS.filter(function(p){return(getPrayerLog()[today]||{})[p];}).length;
         var ns=togglePrayerDone(prayer);
@@ -7682,6 +7841,7 @@ function _buildPrayerProgressPanel(panel){
         var wdot=body.querySelector('.ppp-wday.today .ppp-wday-dot');
         if(wdot){wdot.className='ppp-wday-dot'+(nd>=5?' full':nd>=4?' high':nd>=3?' mid':nd>=1?' low':'');wdot.textContent=nd>0?nd:'';}
         if(ns&&nd===5&&prevDone<5)_pppCheckCelebrate(nl,today);
+        _pppSyncPanel(nl,today);
       };
     }
     pBtns.appendChild(btn);
@@ -7698,8 +7858,8 @@ function _buildPrayerProgressPanel(panel){
   }
   stats.appendChild(mkStat(_pppStreakVal(streak),'ڕیزا ڕۆژان','ppp-stat-streak'));
   stats.appendChild(mkStat(best>0?'⭐ '+best:'0','باشترین ڕیزا','ppp-stat-best'));
-  stats.appendChild(mkStat(mStats.full+'/'+mStats.total,'تەمام ئەم مانگ'));
-  stats.appendChild(mkStat(consistency+'%','ئینتیزام ٣٠ ڕۆژ'));
+  stats.appendChild(mkStat(mStats.full+'/'+mStats.total,'تەمام ئەم مانگ','ppp-stat-month'));
+  stats.appendChild(mkStat(consistency+'%','ئینتیزام ٣٠ ڕۆژ','ppp-stat-consistency'));
   body.appendChild(stats);
 
   // ─ This week ──────────────────────────────────────────────
@@ -7830,7 +7990,11 @@ function _pppCheckCelebrate(log,dKey){
   var now=new Date();var d=new Date(dKey.replace(/-/g,'/'));
   if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())return;
   var ms=calcPrayerMonthStats(log,now.getFullYear(),now.getMonth());
-  if(ms.full>0&&ms.full===ms.total){setTimeout(function(){_pppCelebrateMonth(log);},350);}
+  var daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  var isLastDay=now.getDate()===daysInMonth;
+  // Month confetti: only on the last day of the month when every tracked day is full
+  if(isLastDay&&ms.full>0&&ms.full===ms.total){setTimeout(function(){_pppCelebrateMonth(log);},350);}
+  // Any other day — small toast only
   else{_pppCelebrateDay();}
 }
 function _pppCelebrateDay(){
@@ -7880,6 +8044,24 @@ App.testCelebration=function(){
   setTimeout(function(){_pppCelebrateMonth(getPrayerLog());},400);
 };
 App.testDayToast=function(){_pppCelebrateDay();};
+
+// Public bridge for prayer.ui.js — allows the grid-card sheet to read/toggle logs
+App.prayerLog={
+  get:function(){return getPrayerLog();},
+  toggle:function(prayer,dKey){
+    // toggle the specific prayer on a specific date key; returns new done state
+    var log=getPrayerLog();
+    var dayLog=log[dKey]||{};
+    var ns=!dayLog[prayer];
+    if(ns){dayLog[prayer]=true;}else{delete dayLog[prayer];}
+    if(Object.keys(dayLog).length>0)log[dKey]=dayLog; else delete log[dKey];
+    savePrayerLog(log);
+    _pppSyncPanel(log,dKey);
+    return ns;
+  },
+  isCheckable:function(prayer,dKey){return _isPrayerCheckable(prayer,dKey);},
+  prayerDay:function(){return _getPrayerDay();}
+};
 
 /* ===== WIDGET DATA PUSH ===== */
 
@@ -9036,86 +9218,6 @@ function renderSettings(){
 
   // ── Advanced (collapsible) ───────────────────
   // Hidden from normal users by default. Contains performance override and future
-  // power-user settings. Most users should never need to open this.
-  var _advOpen=(function(){try{return localStorage.getItem('tk_settings_adv')==='1';}catch(e){return false;}})();
-  var gAdv=el('div','settings-group settings-adv-group');
-
-  // Header row — tappable to expand / collapse
-  var _advHdr=el('div','settings-adv-hdr s-row');
-  var _advLeft=el('div','settings-adv-hdr-left');
-  _advLeft.appendChild(icon('fas fa-sliders'));
-  _advLeft.appendChild(el('span','',tSafe('settings.advanced')||'ئاڵۆزی'));
-  var _advChev=el('div','settings-adv-chevron'+(_advOpen?' open':''));
-  _advChev.appendChild(icon('fas fa-chevron-down'));
-  _advHdr.appendChild(_advLeft);
-  _advHdr.appendChild(_advChev);
-  on(_advHdr,'click',function(){
-    var nowOpen=_advBody.classList.contains('open');
-    _advBody.classList.toggle('open',!nowOpen);
-    _advChev.classList.toggle('open',!nowOpen);
-    try{localStorage.setItem('tk_settings_adv',nowOpen?'0':'1');}catch(e){}
-    haptic([8]);
-    // In-place toggle — no re-render needed
-  });
-  gAdv.appendChild(_advHdr);
-
-  // Collapsible body
-  var _advBody=el('div','settings-adv-body'+(_advOpen?' open':''));
-
-  // ── Performance mode inside Advanced ────────────────────────────────────
-  // tSafe() used — keys may not exist in translations yet
-  var _advPerfLabel=el('div','settings-adv-section-label',tSafe('settings.performance')||'کارایی');
-  _advBody.appendChild(_advPerfLabel);
-
-  var _tkp=window.TKPerf||{level:'high',detected:'high',override:null,score:100,reasons:[]};
-  var _perfOpts=[
-    {val:'auto',   label:tSafe('settings.perf_auto')||'ئۆتۆماتیکی', rec:true},
-    {val:'high',   label:tSafe('settings.perf_high')||'بەرز'},
-    {val:'medium', label:tSafe('settings.perf_medium')||'ناوەند'},
-    {val:'low',    label:tSafe('settings.perf_low')||'کەم'}
-  ];
-  var _curPerfSel=_tkp.override||'auto';
-  var _perfChips=el('div','perf-chips-row');
-  _perfOpts.forEach(function(o){
-    var chip=el('div','perf-chip'+(_curPerfSel===o.val?' on':'')+(o.rec?' perf-chip--rec':''));
-    // Auto chip: show recommended badge inside the chip
-    if(o.rec){
-      var _cl=el('span','perf-chip-label',o.label);
-      var _rb=el('span','perf-chip-rec',tSafe('settings.recommended')||'پێشنیار');
-      chip.appendChild(_cl);chip.appendChild(_rb);
-    }else{
-      chip.textContent=o.label;
-    }
-    on(chip,'click',function(){
-      if(window.TKPerf)TKPerf.setOverride(o.val==='auto'?null:o.val);
-      haptic([10]);
-      var _tm;
-      if(o.val==='auto')_tm=tSafe('toast.perf_auto')||'ئۆتۆماتیکی چالاک کرا';
-      else if(o.val==='high')_tm=tSafe('toast.perf_full')||'کارایی تەواو چالاک کرا';
-      else if(o.val==='medium')_tm=tSafe('toast.perf_medium')||'کارایی ناوەند چالاک کرا';
-      else _tm=tSafe('toast.perf_save')||'دۆخی زووی چالاک کرا';
-      toast(_tm);
-      renderSettings();
-    });
-    _perfChips.appendChild(chip);
-  });
-
-  // Info line: what level is active and why
-  var _perfNote;
-  if(_tkp.override){
-    _perfNote='Manual: '+_tkp.override+' · Auto-detected: '+_tkp.detected+' (score='+_tkp.score+')';
-  }else{
-    var _pnReasons=_tkp.reasons.length?' · '+_tkp.reasons.slice(0,3).join(', '):'';
-    _perfNote='Auto: '+_tkp.detected+(_tkp.score<100?' (score='+_tkp.score+_pnReasons+')':'');
-  }
-  var _perfRow=el('div','');
-  _perfRow.appendChild(_perfChips);
-  _perfRow.appendChild(el('div','perf-info-sub',_perfNote));
-  _advBody.appendChild(_perfRow);
-
-  gAdv.appendChild(_advBody);
-  content.appendChild(gAdv);
-
   // ── App ──────────────────────────────────────
   var g5=el('div','settings-group');
   g5.appendChild(el('div','settings-group-title',t('settings.app_group')));

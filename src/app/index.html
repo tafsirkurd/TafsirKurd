@@ -7,6 +7,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Tafsir Kurd</title>
 <link rel="icon" type="image/png" href="/assets/images/TafsirKurd-favicon.png">
+<script>
+// iOS WKWebView ignores Cache-Control: no-store for previously cached pages.
+// On every cold-start (sessionStorage cleared), add a timestamp param so WKWebView
+// treats the URL as new and fetches fresh HTML + versioned JS from the network.
+(function(){
+  if(window.webkit&&!sessionStorage.getItem('_tksr')){
+    sessionStorage.setItem('_tksr','1');
+    if(location.search.indexOf('_cb=')===-1){
+      location.replace(location.pathname+'?_cb='+Math.floor(Date.now()/60000));
+    }
+  }
+})();
+</script>
 
 <script>
 (function(){
@@ -1876,8 +1889,9 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .ppp-day-pull{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 14px}
 .ppp-day-title{font-size:.88rem;font-weight:700;color:var(--text);text-align:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .ppp-day-prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.ppp-prayer-btn.not-yet{opacity:.3;pointer-events:none}
+.ppp-prayer-btn.not-yet{opacity:.55;pointer-events:none}
 .ppp-prayer-btn.not-yet i{color:var(--muted)!important}
+.ppp-cd{font-size:.58rem;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.01em;line-height:1;min-height:.7rem}
 /* ── Prayer celebration ──────────────────────────────── */
 .ppp-celeb-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;overflow:hidden;animation:fadeIn .3s ease}
 .ppp-celeb-overlay.out{animation:ppp-ov-out .35s ease forwards}
@@ -2198,7 +2212,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 #prayerContent{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 /* Prayer 2-col grid */
 .prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px calc(var(--tab-h) + var(--safe-b) + 10px);flex:1;align-content:stretch}
-.prayer-grid-card{background:linear-gradient(135deg,rgba(var(--sky-tint-rgb,15,20,40),.07) 0%,rgba(var(--sky-tint-rgb,15,20,40),.02) 100%),var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:border-color .2s,background .2s,box-shadow .2s,transform .1s ease}
+.prayer-grid-card{background:linear-gradient(135deg,rgba(var(--sky-tint-rgb,15,20,40),.07) 0%,rgba(var(--sky-tint-rgb,15,20,40),.02) 100%),var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:border-color .2s,background .2s,box-shadow .2s,transform .1s ease;position:relative;overflow:hidden}
 [data-theme="dark"] .prayer-grid-card{border-color:rgba(255,255,255,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 4px 16px rgba(0,0,0,.45)}
 [data-theme="sakina"] .prayer-grid-card{border-color:rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,240,180,.03),0 4px 16px rgba(0,0,0,.5)}
 .prayer-grid-card--next{background:linear-gradient(145deg,rgba(34,197,94,.12) 0%,rgba(34,197,94,.04) 100%);border-color:var(--accent);box-shadow:0 0 0 1px rgba(34,197,94,.18),0 6px 24px rgba(0,0,0,.2),0 0 20px rgba(34,197,94,.1);animation:prayer-next-pulse 3.5s ease-in-out infinite}
@@ -2210,6 +2224,33 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .prayer-grid-card--next .prayer-grid-time{color:var(--accent)}
 /* Card tap feedback */
 .prayer-grid-card--tap{transform:scale(0.94)}
+/* Done dot on prayer grid card */
+.pcso-done-dot{position:absolute;top:10px;left:10px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px rgba(34,197,94,.6);pointer-events:none}
+[dir="rtl"] .pcso-done-dot{right:10px;left:auto}
+/* Prayer card tap sheet */
+.pcso{display:flex;visibility:hidden;opacity:0;pointer-events:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10100;align-items:flex-end;transition:opacity .22s,visibility .22s}
+.pcso.open{visibility:visible;opacity:1;pointer-events:auto}
+.pcso-sheet{width:100%;background:var(--bg);border-radius:28px 28px 0 0;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);box-shadow:0 -4px 40px rgba(0,0,0,.3);transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.56,1);position:relative;overflow:hidden}
+.pcso.open .pcso-sheet{transform:translateY(0)}
+.pcso-bar{height:4px;width:100%;position:absolute;top:0;left:0;right:0;opacity:.8}
+.pcso-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:16px auto 0}
+.pcso-top{display:flex;align-items:baseline;justify-content:space-between;padding:20px 24px 0;direction:rtl}
+.pcso-name{font-size:1.5rem;font-weight:800;letter-spacing:.02em}
+.pcso-time{font-size:2rem;font-weight:300;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--text)}
+.pcso-check-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:calc(100% - 48px);margin:18px 24px 0;padding:16px;border-radius:18px;border:none;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s,transform .12s,box-shadow .2s;background:var(--bg3);color:var(--text2);direction:rtl}
+.pcso-check-btn i{font-size:1.15rem}
+.pcso-check-btn.done{background:rgba(34,197,94,.15);color:var(--accent);box-shadow:0 0 0 1.5px rgba(34,197,94,.35)}
+.pcso-check-btn.locked{opacity:.45;cursor:default}
+.pcso-check-btn:not(.locked):active{transform:scale(.96)}
+.pcso-info-row{display:flex;align-items:center;gap:10px;padding:12px 26px 0;font-size:.85rem;color:var(--text3);direction:rtl}
+.pcso-info-row i{font-size:.85rem;width:16px;text-align:center}
+.pcso-athan-row{justify-content:space-between}
+.pcso-athan-row span{flex:1}
+.pcso-toggle{transform:scale(.85);transform-origin:right center}
+[dir="rtl"] .pcso-toggle{transform-origin:right center}
+.pcso-close{position:absolute;top:14px;right:16px;background:var(--bg3);border:none;color:var(--text3);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;transition:background .15s}
+[dir="rtl"] .pcso-close{right:auto;left:16px}
+.pcso-close:active{background:var(--border2)}
 /* City-change: shimmer on time cells while new data loads */
 .prayer-grid-card--loading .prayer-grid-time{color:transparent;background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.13) 50%,rgba(255,255,255,.06) 75%);background-size:200% 100%;border-radius:6px;animation:prayer-time-shimmer .9s linear infinite}
 @keyframes prayer-time-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -3664,51 +3705,6 @@ body.tk-scrolling .audio-bar-avatar.playing::after{animation-play-state:paused!i
 body.tk-scrolling .streak-ring.pulse{animation-play-state:paused!important}
 body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 
-/* ── Advanced collapsible section (Settings) ────────────────────────────── */
-.settings-adv-group{margin-bottom:28px}
-.settings-adv-hdr{cursor:pointer;justify-content:space-between}
-.settings-adv-hdr-left{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:.82rem;font-weight:600}
-.settings-adv-hdr-left i{color:var(--text3);font-size:.8rem}
-.settings-adv-chevron{color:var(--text3);font-size:.72rem;transition:transform .22s var(--ease);line-height:1}
-.settings-adv-chevron.open{transform:rotate(180deg)}
-.settings-adv-body{
-  overflow:hidden;max-height:0;opacity:0;
-  transition:max-height .28s ease,opacity .2s ease;
-  pointer-events:none
-}
-.settings-adv-body.open{max-height:400px;opacity:1;pointer-events:auto}
-.settings-adv-section-label{
-  font-size:.68rem;font-weight:700;color:var(--text3);
-  text-transform:uppercase;letter-spacing:.7px;
-  padding:12px 4px 6px;
-}
-
-/* ── Performance Mode Chips (Settings panel) ─────────────────────────────── */
-.perf-chips-row{display:flex;gap:7px;padding:4px 0 4px;flex-wrap:nowrap}
-.perf-chip{
-  flex:1;min-width:0;text-align:center;
-  padding:8px 4px 6px;border-radius:var(--r-m);
-  border:1.5px solid var(--border);
-  font-size:.78rem;font-weight:600;color:var(--text2);
-  cursor:pointer;
-  transition:border-color .15s,color .15s,background .15s;
-  white-space:nowrap;
-  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  display:flex;flex-direction:column;align-items:center;gap:0
-}
-.perf-chip.on{border-color:var(--accent);color:var(--accent)}
-[data-theme="dark"] .perf-chip.on{background:rgba(255,255,255,.06)}
-[data-theme="sakina"] .perf-chip.on{background:rgba(201,168,76,.08)}
-[data-theme="noor"] .perf-chip.on{background:rgba(26,92,58,.08)}
-[data-theme="light"] .perf-chip.on{background:rgba(0,0,0,.05)}
-.perf-chip:active{transform:scale(.94)}
-/* Auto chip: recommended badge */
-.perf-chip-label{display:block;font-size:.78rem;font-weight:600}
-.perf-chip-rec{display:block;font-size:.58rem;color:var(--text3);margin-top:2px;font-weight:500;letter-spacing:.02em}
-.perf-chip.on .perf-chip-rec{color:var(--accent);opacity:.7}
-/* Auto chip slightly more prominent when not selected */
-.perf-chip--rec:not(.on){border-style:dashed}
-.perf-info-sub{padding:4px 2px 8px;font-size:.71rem;color:var(--text3);direction:ltr;line-height:1.5;text-align:left}
 
 /* ── 16. Bookmark note modal ─────────────────────────────────────────────────
    Replaces the native prompt() dialog — proper in-app feel with safe-area     */
@@ -3777,7 +3773,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
    Accidental text-select during long-press is a common "feels web-like" issue */
 .tab-item,.hdr,.hdr-btn,.tabbar,.surah-card,.ayah-head,.sidebar-item,
 .bm-card-hdr,.goal-stat,.prayer-time-row,.iv-card-info,
-.perf-chip,.theme-card,.s-row,.pp-row,.settings-adv-hdr{
+.theme-card,.s-row,.pp-row{
   user-select:none;-webkit-user-select:none;
 }
 
@@ -4378,13 +4374,13 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <audio id="audioEl" preload="auto"></audio>
 
 <script src="/utils/supabase.js?v=20260326b"></script>
-<script src="/i18n/kmr-bundled.js?v=20260526"></script>
+<script src="/i18n/kmr-bundled.js?v=20260527"></script>
 <script src="/i18n/i18n.js?v=20260517"></script>
 <script src="/prayer/prayer.cache.js?v=20260526"></script>
 <script src="/prayer/prayer.api.js?v=20260526"></script>
 <script src="/prayer/prayer.logic.js?v=20260326b"></script>
 <script src="/prayer/prayer.notifications.android.js?v=20260416"></script>
-<script src="/prayer/prayer.ui.js?v=20260526"></script>
+<script src="/prayer/prayer.ui.js?v=20260527h"></script>
 <!-- pdf.js loaded lazily in dhikr.js when a PDF book is first opened -->
 <!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
 <script src="/quran/search.js?v=20260520"></script>
@@ -4394,7 +4390,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=833"></script>
+<script src="/app/app.js?v=843"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

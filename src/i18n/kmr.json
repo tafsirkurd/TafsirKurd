@@ -903,5 +903,12 @@
   "common.save": "پاشەکەڤتکرن",
   "footer.profile_link": "پرۆفایل",
   "index.daily_content": "ناڤەڕۆکا ڕۆژانە",
-  "adhkar.sunrise": "نوێژا ئیشراق"
+  "adhkar.sunrise": "نوێژا ئیشراق",
+  "prayer.mark_done": "وەک تەمام نیشانە بکە",
+  "prayer.marked_done": "تەمام کراوە ✓",
+  "prayer.not_yet": "کاتی هێشتا نەهاتووە",
+  "prayer.rakaat": "رکعەت",
+  "prayer.athan_for": "ئەزان",
+  "prayer.countdown_now": "ئێستا",
+  "prayer.passed": "تێپەرا"
 }

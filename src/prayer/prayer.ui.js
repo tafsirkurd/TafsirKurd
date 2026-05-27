@@ -8,7 +8,8 @@
 (function() {
   'use strict';
 
-  var _countdownInterval = null;
+  var _countdownInterval    = null;
+  var _cardSheetCountdownId = null;
   var _currentTimings   = null;
   var _currentDateISO   = null;
   var _currentData      = null;
@@ -2251,6 +2252,11 @@
     var timings  = data.timings;
     var pl       = window.PrayerLogic;
 
+    // Expose live timings to app.js — iOS WKWebView may not have localStorage cache populated,
+    // so app.js reads these globals as the primary source for _isPrayerCheckable.
+    window._prayerUITimings = timings;
+    window._prayerUIDate    = today;
+
     // Record last-synced time (only when data came from network, not cache)
     if (!data._fromCache) {
       try { localStorage.setItem('prayerLastSynced', Date.now().toString()); } catch(e) {}
@@ -2335,6 +2341,25 @@
       card.addEventListener('touchend',    function() { card.classList.remove('prayer-grid-card--tap'); });
       card.addEventListener('touchcancel', function() { card.classList.remove('prayer-grid-card--tap'); });
 
+      // Tap → open mini prayer card sheet (skip Sunrise — not a trackable prayer)
+      if (name !== 'Sunrise') {
+        card.addEventListener('click', (function(n, t) {
+          return function() { openPrayerCardSheet(n, t); };
+        })(name, timings));
+        card.style.cursor = 'pointer';
+
+        // Show done dot if already marked today
+        var appPL2 = window.App && window.App.prayerLog;
+        if (appPL2) {
+          var pDay2 = appPL2.prayerDay();
+          var log2  = appPL2.get();
+          if (pDay2 && log2[pDay2] && log2[pDay2][name]) {
+            var dot2 = cel('div', 'pcso-done-dot');
+            card.appendChild(dot2);
+          }
+        }
+      }
+
       grid.appendChild(card);
     });
     container.appendChild(grid);
@@ -2370,6 +2395,229 @@
     }).then(function(data) {
       if (data && data.days) window.PrayerCache.write(mkey, data);
     }).catch(function() {});
+  }
+
+  // ─── Prayer card tap sheet ─────────────────────────────────────────────────
+
+  var PRAYER_RAKAAT = { Fajr: 2, Dhuhr: 4, Asr: 4, Maghrib: 3, Isha: 4 };
+
+  function closePrayerCardSheet() {
+    var ov = document.getElementById('prayerCardSheetOverlay');
+    if (ov) ov.classList.remove('open');
+  }
+
+  // Returns ms until prayer time (negative = already passed).
+  // Uses raw UTC+3 arithmetic — no browser timezone parsing, works on all WebViews.
+  function _msToPrayer(timeStr) {
+    if (!timeStr) return null;
+    var hm = timeStr.trim().split(' ')[0].split(':');
+    var h = parseInt(hm[0], 10); var m = parseInt(hm[1], 10);
+    if (isNaN(h) || isNaN(m)) return null;
+    var nowBaghdad = Date.now() + 3 * 3600000; // shift to Baghdad (UTC+3)
+    var dayStart   = nowBaghdad - (nowBaghdad % 86400000); // midnight Baghdad
+    var prayerMs   = dayStart + h * 3600000 + m * 60000;
+    return prayerMs - nowBaghdad; // positive = future, negative = past
+  }
+
+  function _fmtCountdownDiff(diff) {
+    if (diff <= 0) return null; // already passed
+    var h = Math.floor(diff / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+    if (h > 0) return h + ' کاتژمێر ' + m + ' خولەک';
+    if (m > 0) return m + ' خولەک ' + (s > 0 ? s + ' چرکە' : '');
+    return s + ' چرکە';
+  }
+
+  function openPrayerCardSheet(name, timings) {
+    var pl = window.PrayerLogic;
+    var use12h = getFormat() === '12';
+    var dateISO = _currentDateISO;
+    var raw = timings ? (timings[name] || '') : '';
+    var timeDisplay = raw ? pl.formatTime(raw, use12h) : '--:--';
+    var rakaat = PRAYER_RAKAAT[name];
+
+    // ── Overlay ──
+    var existing = document.getElementById('prayerCardSheetOverlay');
+    if (existing) existing.parentNode.removeChild(existing);
+    if (_cardSheetCountdownId) { clearInterval(_cardSheetCountdownId); _cardSheetCountdownId = null; }
+
+    var overlay = cel('div', 'pcso');
+    overlay.id = 'prayerCardSheetOverlay';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) closePrayerCardSheet(); });
+
+    var sheet = cel('div', 'pcso-sheet');
+
+    // Handle
+    sheet.appendChild(cel('div', 'pcso-handle'));
+
+    // ── Prayer name + time ──
+    var top = cel('div', 'pcso-top');
+    var nameEl2 = cel('div', 'pcso-name');
+    nameEl2.textContent = tStr(PRAYER_I18N[name] || name);
+    var timeEl2 = cel('div', 'pcso-time');
+    timeEl2.textContent = timeDisplay;
+    top.appendChild(nameEl2);
+    top.appendChild(timeEl2);
+    sheet.appendChild(top);
+
+    // ── Mark done button ──
+    var appPL = window.App && window.App.prayerLog;
+    var todayKey = appPL ? appPL.prayerDay() : dateISO;
+    var log = appPL ? appPL.get() : {};
+    var isDone = !!(log[todayKey] && log[todayKey][name]);
+
+    // ms until this prayer — pure UTC+3 arithmetic, no browser timezone parsing
+    var rawTime = timings ? (timings[name] || '') : '';
+    var msUntil = rawTime ? _msToPrayer(rawTime) : null;
+
+    // Checkable if: already done, prayer time passed, or app bridge confirms
+    var canCheck = isDone
+      || (msUntil !== null && msUntil <= 0)
+      || (appPL ? appPL.isCheckable(name, todayKey) : false);
+
+    var notYetWithTime = !canCheck && msUntil !== null && msUntil > 0;
+
+    var checkBtn = cel('button', 'pcso-check-btn' + (isDone ? ' done' : '') + (canCheck ? '' : ' locked'));
+    var checkIc = document.createElement('i');
+    checkIc.className = isDone ? 'fas fa-check-circle' : (canCheck ? 'far fa-circle' : 'fas fa-clock');
+    var checkLbl = document.createElement('span');
+
+    function _checkLblText() {
+      if (isDone) return tStr('prayer.marked_done') || 'تەمام کراوە ✓';
+      if (canCheck) return tStr('prayer.mark_done') || 'وەک تەمام نیشانە بکە';
+      if (notYetWithTime) {
+        var rem = rawTime ? _msToPrayer(rawTime) : 0;
+        if (rem <= 0) return tStr('prayer.countdown_now') || 'ئێستا';
+        var txt = _fmtCountdownDiff(rem);
+        return txt ? txt + ' باقی' : (tStr('prayer.countdown_now') || 'ئێستا');
+      }
+      return tStr('prayer.not_yet') || 'کاتی هێشتا نەهاتووە';
+    }
+
+    checkLbl.textContent = _checkLblText();
+    checkBtn.appendChild(checkIc);
+    checkBtn.appendChild(checkLbl);
+
+    function _attachClickHandler() {
+      checkBtn.addEventListener('click', function() {
+        var ns = appPL.toggle(name, todayKey);
+        isDone = ns;
+        canCheck = true;
+        checkBtn.classList.toggle('done', ns);
+        checkBtn.classList.remove('locked');
+        checkIc.className = ns ? 'fas fa-check-circle' : 'far fa-circle';
+        checkLbl.textContent = ns
+          ? (tStr('prayer.marked_done') || 'تەمام کراوە ✓')
+          : (tStr('prayer.mark_done') || 'وەک تەمام نیشانە بکە');
+        var gridCard = document.querySelector('.prayer-grid-card[data-prayer="' + name + '"]');
+        if (gridCard) {
+          var dot = gridCard.querySelector('.pcso-done-dot');
+          if (ns) {
+            if (!dot) { dot = cel('div', 'pcso-done-dot'); gridCard.appendChild(dot); }
+          } else {
+            if (dot) dot.parentNode.removeChild(dot);
+          }
+        }
+      }, { once: true });
+    }
+
+    if (canCheck) {
+      checkBtn.disabled = false;
+      _attachClickHandler();
+    } else {
+      checkBtn.disabled = true;
+
+      // Live countdown in button + auto-unlock when time arrives
+      if (notYetWithTime) {
+        var _btnCdId = setInterval(function() {
+          if (!document.getElementById('prayerCardSheetOverlay')) {
+            clearInterval(_btnCdId); return;
+          }
+          var rem = rawTime ? _msToPrayer(rawTime) : 0;
+          if (rem <= 5000) {
+            // Time has arrived — unlock the button
+            clearInterval(_btnCdId);
+            canCheck = true;
+            notYetWithTime = false;
+            checkBtn.disabled = false;
+            checkBtn.classList.remove('locked');
+            checkIc.className = 'far fa-circle';
+            checkLbl.textContent = tStr('prayer.mark_done') || 'وەک تەمام نیشانە بکە';
+            _attachClickHandler();
+          } else {
+            checkLbl.textContent = _checkLblText();
+          }
+        }, 1000);
+      }
+    }
+    sheet.appendChild(checkBtn);
+
+    // ── Rakaat info row ──
+    if (rakaat) {
+      var rakaatRow = cel('div', 'pcso-info-row');
+      var rakaatIc = document.createElement('i');
+      rakaatIc.className = 'fas fa-pray';
+      rakaatRow.appendChild(rakaatIc);
+      rakaatRow.appendChild(document.createTextNode(' ' + rakaat + ' ' + (tStr('prayer.rakaat') || 'ركعەت')));
+      sheet.appendChild(rakaatRow);
+    }
+
+    // ── Per-prayer athan toggle ──
+    var toggles = getToggles();
+    var athanOn = getAthan();
+    var prayerOn = toggles[name] !== false;
+    var athanRow = cel('div', 'pcso-info-row pcso-athan-row');
+    var athanIcEl = document.createElement('i');
+    athanIcEl.className = 'fas fa-' + (athanOn && prayerOn ? 'bell' : 'bell-slash');
+    athanRow.appendChild(athanIcEl);
+    var athanLbl2 = document.createElement('span');
+    athanLbl2.textContent = tStr('prayer.athan_for') || 'ئەزان';
+    athanRow.appendChild(athanLbl2);
+    var athanTog = cel('div', 'toggle pcso-toggle' + (athanOn && prayerOn ? ' on' : ''));
+    athanTog.appendChild(cel('div', 'toggle-knob'));
+    athanTog.addEventListener('click', function() {
+      if (!athanOn) return; // master off — ignore
+      var newVal = !athanTog.classList.contains('on');
+      athanTog.classList.toggle('on', newVal);
+      athanIcEl.className = 'fas fa-' + (newVal ? 'bell' : 'bell-slash');
+      var t2 = getToggles();
+      t2[name] = newVal;
+      setToggles(t2);
+      // Mirror into athan settings if sheet is open
+      var perCard = document.querySelector('#prayerPrayersGrid .as2-prayer-card[data-prayer="' + name + '"] .toggle');
+      if (perCard) { perCard.classList.toggle('on', newVal); }
+    });
+    athanRow.appendChild(athanTog);
+    sheet.appendChild(athanRow);
+
+    // Close button
+    var closeBtn2 = cel('button', 'pcso-close');
+    var ci2 = document.createElement('i');
+    ci2.className = 'fas fa-times';
+    closeBtn2.appendChild(ci2);
+    closeBtn2.addEventListener('click', closePrayerCardSheet);
+    sheet.appendChild(closeBtn2);
+
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+
+    // Add done dot to grid card if already done
+    var gridCard2 = document.querySelector('.prayer-grid-card[data-prayer="' + name + '"]');
+    if (gridCard2) {
+      if (!gridCard2.querySelector('.pcso-done-dot')) {
+        var logNow = appPL ? appPL.get() : {};
+        var todayNow = appPL ? appPL.prayerDay() : '';
+        if (todayNow && logNow[todayNow] && logNow[todayNow][name]) {
+          var d2 = cel('div', 'pcso-done-dot');
+          gridCard2.appendChild(d2);
+        }
+      }
+    }
+
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() { overlay.classList.add('open'); });
+    });
   }
 
   // ─── Settings sheet ────────────────────────────────────────────────────────
