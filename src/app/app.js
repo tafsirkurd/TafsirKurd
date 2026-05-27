@@ -8033,7 +8033,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
   // Monthly avg per day
   if(mStats.total>0){
     var avg=(mStats.done/mStats.total).toFixed(1);
-    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line','ناڤنجی ئەم مانگ ل ڕۆژ',avg+'/5 نوێژ');
+    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line','تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ',avg+'/5 نوێژ');
   }
 
   // Month projection
