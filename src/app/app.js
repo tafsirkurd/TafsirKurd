@@ -7811,7 +7811,7 @@ function _pppMsg(n){
   if(n>=5)return'ماشاللا! ئەمڕۆ هەمی نوێژت تەمام کر 🌟';
   if(n>=4)return'باشترینن — نوێژا کۆتایی بزووره ⭐';
   if(n>=3)return'نزیک دکەویتی — بەردەوام بە 💚';
-  if(n>=1)return'دەستت پێ کرا — ئەمڕۆ زیاد بکە 🤲';
+  if(n>=1)return'تە دەست پێ کر — ئەڤڕۆ زێدە بکە 🤲';
   return'ئەڤڕۆ هێشتا تە نڤێژ نەکریە — دەست پێ بکە 🌅';
 }
 
@@ -7931,7 +7931,7 @@ function _buildPrayerProgressPanel(panel){
     var title=el('div','ppp-ns-title','دەستپێکرنەکا نوی');
     var sub=el('div','ppp-ns-sub','هەموو تۆمارێن نڤێژان دێ هێنە ژێبرن و تو دێ ژ ئەڤڕۆ پێ ڤە دەست پێ کەی.');
     var btns=el('div','ppp-ns-btns');
-    var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent='بەلێ، سڕەوە';
+    var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent='بەلێ، ژێ ببە';
     var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent='نەخێر';
     function closeOv(){document.body.removeChild(ov);}
     on(yesBtn,'click',function(){
