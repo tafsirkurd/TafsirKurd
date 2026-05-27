@@ -1914,14 +1914,14 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .ppp-newstart-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 22px;border-radius:20px;border:1.5px solid rgba(239,68,68,.35);background:rgba(239,68,68,.07);color:rgba(239,68,68,.75);font-size:.8rem;font-weight:600;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
 .ppp-newstart-btn:active{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.6);color:#ef4444}
 /* ── New-start modal ─────────────────────────────────── */
-.ppp-ns-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s ease}
-.ppp-ns-card{background:var(--card,#1a1a2e);border:1px solid rgba(239,68,68,.25);border-radius:22px;padding:32px 24px 24px;max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 8px 48px rgba(0,0,0,.6);animation:nsCardPop .28s cubic-bezier(.34,1.56,.64,1)}
+.ppp-ns-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s ease}
+.ppp-ns-card{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:32px 24px 24px;max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 8px 48px rgba(0,0,0,.25);animation:nsCardPop .28s cubic-bezier(.34,1.56,.64,1)}
 @keyframes nsCardPop{0%{transform:scale(.82);opacity:0}100%{transform:scale(1);opacity:1}}
-.ppp-ns-icon{font-size:2.4rem;color:rgba(239,68,68,.8);line-height:1}
+.ppp-ns-icon{font-size:2.4rem;color:#ef4444;line-height:1}
 .ppp-ns-title{font-size:1.1rem;font-weight:800;color:var(--text);letter-spacing:-.02em}
-.ppp-ns-sub{font-size:.82rem;color:var(--muted);text-align:center;line-height:1.5}
+.ppp-ns-sub{font-size:.82rem;color:var(--text2);text-align:center;line-height:1.5}
 .ppp-ns-btns{display:flex;gap:10px;margin-top:6px;width:100%}
-.ppp-ns-no{flex:1;padding:11px 0;border-radius:14px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:var(--muted);font-size:.88rem;font-weight:600;cursor:pointer}
+.ppp-ns-no{flex:1;padding:11px 0;border-radius:14px;border:1.5px solid var(--border);background:var(--surface-h);color:var(--text2);font-size:.88rem;font-weight:600;cursor:pointer}
 .ppp-ns-yes{flex:1;padding:11px 0;border-radius:14px;border:none;background:#ef4444;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 2px 16px rgba(239,68,68,.35)}
 /* ── Prayer celebration ──────────────────────────────── */
 .ppp-celeb-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;overflow:hidden;animation:fadeIn .3s ease}
@@ -4435,7 +4435,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=848"></script>
+<script src="/app/app.js?v=849"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
