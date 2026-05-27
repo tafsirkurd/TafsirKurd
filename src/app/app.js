@@ -7925,24 +7925,28 @@ function _buildPrayerProgressPanel(panel){
   var nsBtn=document.createElement('button');nsBtn.className='ppp-newstart-btn';
   nsBtn.appendChild(icon('fas fa-redo-alt'));nsBtn.appendChild(document.createTextNode(' دەستپێکرنێ نوو'));
   on(nsBtn,'click',function(){
-    nsBtn.style.display='none';
-    var cfRow=el('div','ppp-newstart-confirm');
-    cfRow.appendChild(el('span','ppp-newstart-q','دڵنیا یت؟'));
-    var yesBtn=document.createElement('button');yesBtn.className='ppp-newstart-yes';yesBtn.textContent='بەلێ';
-    var noBtn=document.createElement('button');noBtn.className='ppp-newstart-no';noBtn.textContent='نەخێر';
+    var ov=el('div','ppp-ns-overlay');
+    var card=el('div','ppp-ns-card');
+    var iconEl=el('div','ppp-ns-icon');iconEl.appendChild(icon('fas fa-redo-alt'));
+    var title=el('div','ppp-ns-title','دەستپێکرنێ نوو');
+    var sub=el('div','ppp-ns-sub','هەموو تۆمارێن نوێژان دێن ژێبرن و تۆ دەستپێ دکى لە ئەمڕۆ.');
+    var btns=el('div','ppp-ns-btns');
+    var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent='بەلێ، سڕەوە';
+    var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent='نەخێر';
+    function closeOv(){document.body.removeChild(ov);}
     on(yesBtn,'click',function(){
+      closeOv();
       savePrayerLog({});
       localStorage.setItem('prayerTrackingStart',_getPrayerDay());
       _pppMonthOffset=0;
       _buildPrayerProgressPanel(panel);
       _updatePrayerBadge();
     });
-    on(noBtn,'click',function(){
-      nsWrap.removeChild(cfRow);
-      nsBtn.style.display='';
-    });
-    cfRow.appendChild(yesBtn);cfRow.appendChild(noBtn);
-    nsWrap.appendChild(cfRow);
+    on(noBtn,'click',closeOv);
+    on(ov,'click',function(e){if(e.target===ov)closeOv();});
+    btns.appendChild(noBtn);btns.appendChild(yesBtn);
+    card.appendChild(iconEl);card.appendChild(title);card.appendChild(sub);card.appendChild(btns);
+    ov.appendChild(card);document.body.appendChild(ov);
   });
   nsWrap.appendChild(nsBtn);
   body.appendChild(nsWrap);
