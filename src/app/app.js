@@ -7929,7 +7929,7 @@ function _buildPrayerProgressPanel(panel){
     var card=el('div','ppp-ns-card');
     var iconEl=el('div','ppp-ns-icon');iconEl.appendChild(icon('fas fa-redo-alt'));
     var title=el('div','ppp-ns-title','دەستپێکرنەکا نوی');
-    var sub=el('div','ppp-ns-sub','هەموو تۆمارێن نڤێژان دێ هێنە ژێبرن و تو دێ ژ ئەڤڕۆ پێ ڤە دەست پێ کەی.');
+    var sub=el('div','ppp-ns-sub','هەمی تۆمارێن نڤێژان دێ هێنە ژێبرن و تو دێ ژ ئەڤڕۆ پێ ڤە دەست پێ کەی.');
     var btns=el('div','ppp-ns-btns');
     var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent='بەلێ، ژێ ببە';
     var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent='نەخێر';
