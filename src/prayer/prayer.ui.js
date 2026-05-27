@@ -2348,12 +2348,14 @@
         })(name, timings));
         card.style.cursor = 'pointer';
 
-        // Show done dot if already marked today
+        // Show done dot only if the prayer day matches the grid's calendar date.
+        // Before Fajr, prayerDay() returns yesterday — don't bleed yesterday's done
+        // state onto today's fresh grid.
         var appPL2 = window.App && window.App.prayerLog;
         if (appPL2) {
           var pDay2 = appPL2.prayerDay();
           var log2  = appPL2.get();
-          if (pDay2 && log2[pDay2] && log2[pDay2][name]) {
+          if (pDay2 && pDay2 === today && log2[pDay2] && log2[pDay2][name]) {
             var dot2 = cel('div', 'pcso-done-dot');
             card.appendChild(dot2);
           }
@@ -2463,7 +2465,11 @@
 
     // ── Mark done button ──
     var appPL = window.App && window.App.prayerLog;
-    var todayKey = appPL ? appPL.prayerDay() : dateISO;
+    // Before Fajr: prayerDay() returns yesterday but the grid is already showing
+    // today's timings (midnight rollover). Use the later of the two dates so
+    // pre-Fajr prayers are stored under the new calendar date, not yesterday.
+    var _pDay = appPL ? appPL.prayerDay() : dateISO;
+    var todayKey = (_pDay < dateISO) ? dateISO : _pDay;
     var log = appPL ? appPL.get() : {};
     var isDone = !!(log[todayKey] && log[todayKey][name]);
 
