@@ -1100,6 +1100,7 @@ function init(){
         window.Capacitor.Plugins.App.addListener('backButton',function(){
           if($('fuOverlay')&&$('fuOverlay').classList.contains('on')){return} // hard block — back does nothing
           var _nmOv=document.querySelector('.note-modal-ov.on');if(_nmOv){_nmOv.classList.remove('on');return}
+          if($('khatmCelebOverlay')){App.closeGoalCelebration();return}
           if($('pppCelebOverlay')){App.closePrayerCelebration();return}
           if($('pppDayOverlay')&&$('pppDayOverlay').classList.contains('on')){App.closePrayerDay();return}
           if($('prayerProgressPanel')&&$('prayerProgressPanel').classList.contains('on')){App.closePrayerProgress();return}
@@ -7019,9 +7020,18 @@ function trackVerse(surah,ayah){
   var l=getReadLog();
   l[today]=(l[today]||0)+1;
   saveReadLog(l);
-  // Haptic exactly once on goal completion
+  // Haptic exactly once on daily goal completion
   var g=getGoal();
   if(g&&l[today]===g.pages){haptic([50]);}
+  // Khatm celebration — fires each time total crosses a new multiple of 6236
+  var totalAfter=calcTotalRead(l);
+  var khatmAt=parseInt(localStorage.getItem('khatmCelebAt')||'0');
+  var nextKhatm=(Math.floor(khatmAt/6236)+1)*6236;
+  if(totalAfter>=nextKhatm){
+    localStorage.setItem('khatmCelebAt',String(totalAfter));
+    setTimeout(function(){_goalCelebrateKhatm(totalAfter,calcStreak(l),calcBestStreak(l));},900);
+  }
+  _updateGoalsBadge();
   // Keep goal widget current — lightweight, no network
   pushGoalDataToWidget();
 }
@@ -7096,6 +7106,13 @@ function renderGoals(){
   var streak=calcStreak(log);
   var bestStreak=calcBestStreak(log);
   var totalRead=calcTotalRead(log);
+  // Fire khatm celebration immediately when goals panel opens and journey is newly complete
+  var _khatmAt=parseInt(localStorage.getItem('khatmCelebAt')||'0');
+  var _nextKhatm=(Math.floor(_khatmAt/6236)+1)*6236;
+  if(totalRead>=_nextKhatm){
+    localStorage.setItem('khatmCelebAt',String(totalRead));
+    setTimeout(function(){_goalCelebrateKhatm(totalRead,streak,bestStreak);},700);
+  }
   var today=new Date();
   var todayKey=dateKey(today);
   var todayRead=log[todayKey]||0;
@@ -7195,8 +7212,13 @@ function renderGoals(){
 
   // Today's progress card with encouragement
   var prgSec=el('div','progress-section');
+  // Header: prominent "X/100 بۆ ختم" counter
   var prgHdr=el('div','progress-hdr');
-  prgHdr.appendChild(el('span','',t('reader.ayah_count',{count:todayRead,total:target})));
+  var prgLeft=el('div','progress-left');
+  var prgCount=el('div','progress-count',todayRead+'/'+target);
+  var prgKhatmLbl=el('div','progress-khatm-lbl','بۆ ختم قورئان');
+  prgLeft.appendChild(prgCount);prgLeft.appendChild(prgKhatmLbl);
+  prgHdr.appendChild(prgLeft);
   prgHdr.appendChild(el('span','progress-pct',pct+'%'));
   prgSec.appendChild(prgHdr);
   var bar=el('div','progress-bar');
@@ -7218,6 +7240,20 @@ function renderGoals(){
     msgEl.textContent=t('goals.progress.start_today');
   }
   prgSec.appendChild(msgEl);
+  // Journey progress: X/6236 overall
+  var journeyPct=Math.min(100,Math.round(totalRead/6236*100));
+  var journeyEl=el('div','progress-journey');
+  var journeyBar=el('div','progress-journey-bar');
+  var journeyFill=el('div','progress-journey-fill');
+  journeyBar.appendChild(journeyFill);
+  var jLabel=el('div','progress-journey-lbl');
+  jLabel.appendChild(document.createTextNode('ختم — '+totalRead+'/٦٢٣٦'));
+  var jPct=el('span','progress-journey-pct',journeyPct+'%');
+  jLabel.appendChild(jPct);
+  journeyEl.appendChild(jLabel);
+  journeyEl.appendChild(journeyBar);
+  prgSec.appendChild(journeyEl);
+  setTimeout(function(){journeyFill.style.width=journeyPct+'%';},80);
   // Auto-track note (first 7 days only)
   var daysSinceCreated=goal.created?Math.floor((Date.now()-goal.created)/86400000):99;
   if(daysSinceCreated<=7){
@@ -7661,7 +7697,7 @@ App.openPrayerDay=function(dKey){
       if(wd){var nl2=getPrayerLog();var nc2=_TRACK_PRAYERS.filter(function(p){return(nl2[dKey]||{})[p];}).length;
         wd.className='ppp-wday-dot'+(nc2>=5?' full':nc2>=4?' high':nc2>=3?' mid':nc2>=1?' low':'');wd.textContent=nc2>0?nc2:'';}
       // Sync all panel stats + insights immediately
-      _pppSyncPanel(getPrayerLog(),dKey);
+      _pppSyncPanel(getPrayerLog(),dKey);_updatePrayerBadge();
     };
     btns.appendChild(btn);
   });
@@ -7841,7 +7877,7 @@ function _buildPrayerProgressPanel(panel){
         var wdot=body.querySelector('.ppp-wday.today .ppp-wday-dot');
         if(wdot){wdot.className='ppp-wday-dot'+(nd>=5?' full':nd>=4?' high':nd>=3?' mid':nd>=1?' low':'');wdot.textContent=nd>0?nd:'';}
         if(ns&&nd===5&&prevDone<5)_pppCheckCelebrate(nl,today);
-        _pppSyncPanel(nl,today);
+        _pppSyncPanel(nl,today);_updatePrayerBadge();
       };
     }
     pBtns.appendChild(btn);
@@ -7883,6 +7919,33 @@ function _buildPrayerProgressPanel(panel){
   // ─ Insights ───────────────────────────────────────────────
   body.appendChild(el('div','ppp-section-title','ئاگاهیی'));
   body.appendChild(_buildPppInsights(log,mStats,weekData,missed));
+
+  // ─ New Start ──────────────────────────────────────────────
+  var nsWrap=el('div','ppp-newstart-wrap');
+  var nsBtn=document.createElement('button');nsBtn.className='ppp-newstart-btn';
+  nsBtn.appendChild(icon('fas fa-redo-alt'));nsBtn.appendChild(document.createTextNode(' دەستپێکرنێ نوو'));
+  on(nsBtn,'click',function(){
+    nsBtn.style.display='none';
+    var cfRow=el('div','ppp-newstart-confirm');
+    cfRow.appendChild(el('span','ppp-newstart-q','دڵنیا یت؟'));
+    var yesBtn=document.createElement('button');yesBtn.className='ppp-newstart-yes';yesBtn.textContent='بەلێ';
+    var noBtn=document.createElement('button');noBtn.className='ppp-newstart-no';noBtn.textContent='نەخێر';
+    on(yesBtn,'click',function(){
+      savePrayerLog({});
+      localStorage.setItem('prayerTrackingStart',_getPrayerDay());
+      _pppMonthOffset=0;
+      _buildPrayerProgressPanel(panel);
+      _updatePrayerBadge();
+    });
+    on(noBtn,'click',function(){
+      nsWrap.removeChild(cfRow);
+      nsBtn.style.display='';
+    });
+    cfRow.appendChild(yesBtn);cfRow.appendChild(noBtn);
+    nsWrap.appendChild(cfRow);
+  });
+  nsWrap.appendChild(nsBtn);
+  body.appendChild(nsWrap);
 
   panel.appendChild(body);
 }
@@ -8045,6 +8108,57 @@ App.testCelebration=function(){
 };
 App.testDayToast=function(){_pppCelebrateDay();};
 
+/* ── Khatm / Quran Journey Celebration ─────────────────────────────────── */
+function _goalCelebrateKhatm(totalRead,streak,bestStreak){
+  haptic([15,8,15,8,30,8,50]);
+  var khatmNum=Math.floor(totalRead/6236); // which khatm (1st, 2nd, ...)
+  var ov=document.createElement('div');ov.className='ppp-celeb-overlay khatm-celeb-overlay';ov.id='khatmCelebOverlay';
+  // Confetti — gold/green/white palette, more particles than prayer
+  var colors=['#fbbf24','#f59e0b','#22c55e','#86efac','#ffffff','#fde68a','#6ee7b7','#fcd34d'];
+  var frag=document.createDocumentFragment();
+  for(var i=0;i<160;i++){
+    var p=document.createElement('div');p.className='ppp-conf';
+    var sz=3+Math.random()*9;
+    var isStr=Math.random()>.65; // some star shapes via border-radius 0
+    p.style.cssText='left:'+Math.random()*100+'%;top:-14px;width:'+sz+'px;height:'+sz+'px;background:'+colors[Math.floor(Math.random()*colors.length)]+';border-radius:'+(isStr?'0':'50%')+';animation-delay:'+Math.random()*1.6+'s;animation-duration:'+(2.4+Math.random()*2.4)+'s';
+    frag.appendChild(p);
+  }
+  ov.appendChild(frag);
+  // Card
+  var card=el('div','khatm-celeb-card');
+  // Icon with glow
+  var iconWrap=el('div','khatm-celeb-icon','📖');
+  card.appendChild(iconWrap);
+  // Title
+  card.appendChild(el('div','khatm-celeb-title','ختم قورئانێ! 🌟'));
+  // Quran verse reference
+  card.appendChild(el('div','khatm-celeb-ayah','﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾'));
+  // Message
+  var msg=khatmNum>1?('ختمێ ژمارە '+khatmNum+'!\nئەلحەمدولله ڕابوو 🤲'):'ڕێکاا قورئانێ تەمام کر!\nخوا قبوول بکا 🤲';
+  card.appendChild(el('div','khatm-celeb-sub',msg));
+  // Badges row
+  var badges=el('div','khatm-celeb-badges');
+  if(streak>0)badges.appendChild(el('div','khatm-celeb-badge gold','🔥 '+streak+' ڕۆژ ل ڕیزا'));
+  if(bestStreak>0)badges.appendChild(el('div','khatm-celeb-badge green','⭐ باشترین: '+bestStreak+' ڕۆژ'));
+  if(khatmNum>1)badges.appendChild(el('div','khatm-celeb-badge gold','📖 ختم ×'+khatmNum));
+  if(badges.children.length)card.appendChild(badges);
+  // Button
+  var btn=document.createElement('button');btn.className='khatm-celeb-btn';btn.textContent='تەشکرکرن 🙏';
+  on(btn,'click',function(){App.closeGoalCelebration();});
+  card.appendChild(btn);
+  on(ov,'click',function(e){if(e.target===ov)App.closeGoalCelebration();});
+  ov.appendChild(card);
+  document.body.appendChild(ov);
+}
+App.closeGoalCelebration=function(){
+  var ov=$('khatmCelebOverlay');if(!ov)return;
+  ov.classList.add('out');setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},360);
+};
+App.testKhatmCelebration=function(){
+  var l=getReadLog();var str=calcStreak(l);var best=calcBestStreak(l);
+  _goalCelebrateKhatm(6236,str,best);
+};
+
 // Public bridge for prayer.ui.js — allows the grid-card sheet to read/toggle logs
 App.prayerLog={
   get:function(){return getPrayerLog();},
@@ -8057,11 +8171,47 @@ App.prayerLog={
     if(Object.keys(dayLog).length>0)log[dKey]=dayLog; else delete log[dKey];
     savePrayerLog(log);
     _pppSyncPanel(log,dKey);
+    _updatePrayerBadge();
     return ns;
   },
   isCheckable:function(prayer,dKey){return _isPrayerCheckable(prayer,dKey);},
   prayerDay:function(){return _getPrayerDay();}
 };
+
+/* ── Header button badges ─────────────────────────────────────────────────── */
+function _setBadge(id,cls){
+  var b=$(id);if(!b)return;
+  b.className='hdr-badge'+(cls?' show '+cls:'');
+}
+function _updateGoalsBadge(){
+  var goal=getGoal();
+  if(!goal){_setBadge('goalsBadge','');return;}
+  var log=getReadLog();
+  var todayRead=log[dateKey(new Date())]||0;
+  var pct=Math.min(100,Math.round(todayRead/(goal.pages||5)*100));
+  _setBadge('goalsBadge',pct>=100?'done':pct>0?'progress':'pending');
+}
+function _updatePrayerBadge(){
+  var log=getPrayerLog();var pDay=_getPrayerDay();
+  var done=_TRACK_PRAYERS.filter(function(p){return(log[pDay]||{})[p];}).length;
+  _setBadge('prayerBadge',done>=5?'done':done>0?'progress':'pending');
+}
+function _hdrPop(btnId){
+  var btn=$(btnId);if(!btn)return;
+  btn.classList.remove('hdr-pop');
+  void btn.offsetWidth;
+  btn.classList.add('hdr-pop');
+  btn.addEventListener('animationend',function(){btn.classList.remove('hdr-pop');},{once:true,capture:true});
+}
+// Wire up pop on click and init badges after DOM is ready
+setTimeout(function(){
+  var gb=$('hdrGoalsBtn');
+  if(gb)gb.addEventListener('click',function(){_hdrPop('hdrGoalsBtn');},true);
+  var pb=$('hdrPrayerBtn');
+  if(pb)pb.addEventListener('click',function(){_hdrPop('hdrPrayerBtn');},true);
+  _updateGoalsBadge();
+  _updatePrayerBadge();
+},500);
 
 /* ===== WIDGET DATA PUSH ===== */
 
