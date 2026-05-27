@@ -1875,7 +1875,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .ppp-section-title{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.05em;padding-right:2px;margin-bottom:-6px}
 .ppp-week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .ppp-wday{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ppp-wday-name{font-size:.64rem;color:var(--muted);font-weight:600}
+.ppp-wday-name{font-size:.52rem;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .ppp-wday-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;border:1.5px solid var(--border);background:var(--bg2);color:var(--muted);transition:background .2s}
 .ppp-wday-dot.full{background:var(--accent);border-color:var(--accent);color:#fff}
 .ppp-wday-dot.high{background:#27ae60;border-color:#27ae60;color:#fff}
@@ -4456,7 +4456,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=871"></script>
+<script src="/app/app.js?v=872"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

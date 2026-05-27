@@ -7405,6 +7405,7 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 var _TRACK_PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
 // Kurdish day abbreviations (Sun–Sat)
 var _KU_DAYS=['ی','د','س','چ','پ','هـ','ش'];
+var _KU_DAYS_FULL=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئینـی','شەمبی'];
 
 function getPrayerLog(){try{return JSON.parse(localStorage.getItem('prayer_log'))||{};}catch(e){return {};}}
 function savePrayerLog(log){
@@ -7904,7 +7905,7 @@ function _buildPrayerProgressPanel(panel){
   weekData.forEach(function(d){
     var div=el('div','ppp-wday'+(d.isToday?' today':''));
     div.setAttribute('data-ppp-wkey',d.key);
-    div.appendChild(el('span','ppp-wday-name',_KU_DAYS[d.dow]));
+    div.appendChild(el('span','ppp-wday-name',_KU_DAYS_FULL[d.dow]));
     var dotCls='ppp-wday-dot'+(d.cnt>=5?' full':d.cnt>=4?' high':d.cnt>=3?' mid':d.cnt>=1?' low':'');
     div.appendChild(el('div',dotCls,d.cnt>0?String(d.cnt):''));
     on(div,'click',function(key){return function(){App.openPrayerDay(key);};}(d.key));
