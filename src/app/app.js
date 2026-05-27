@@ -7810,7 +7810,7 @@ function _pppSyncPanel(log,changedDKey){
 function _pppMsg(n){
   if(n>=5)return'ماشاللا! ئەمڕۆ هەمی نوێژت تەمام کر 🌟';
   if(n>=4)return'باشترینن — نوێژا کۆتایی بزووره ⭐';
-  if(n>=3)return'نزیک دکەویتی — بەردەوام بە 💚';
+  if(n>=3)return'نێزیک بووی — بەردەوام بە 💚';
   if(n>=1)return'تە دەست پێ کر — ئەڤڕۆ زێدە بکە 🤲';
   return'ئەڤڕۆ هێشتا تە نڤێژ نەکریە — دەست پێ بکە 🌅';
 }
