@@ -1944,6 +1944,25 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 @keyframes ppp-fill-pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7);box-shadow:0 0 20px var(--accent)}}
 .ppp-day-toast{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:12px;padding:10px 16px;font-size:.82rem;font-weight:700;color:var(--accent);text-align:center;direction:rtl;opacity:0;transform:translateY(-6px);transition:opacity .3s,transform .3s;margin-bottom:2px}
 .ppp-day-toast.show{opacity:1;transform:translateY(0)}
+/* ── Year Prayer Celebration ─────────────────────── */
+.year-celeb-overlay{background:rgba(0,0,0,.92)}
+.year-celeb-card{background:linear-gradient(160deg,#09112b 0%,#0d0a1f 50%,#0a1800 100%);border:1px solid rgba(212,175,55,.4);border-radius:28px;padding:36px 24px 30px;display:flex;flex-direction:column;align-items:center;gap:12px;direction:rtl;max-width:330px;width:92%;text-align:center;animation:ppp-card-in .6s cubic-bezier(.34,1.56,.64,1) both;position:relative;z-index:1;box-shadow:0 0 140px rgba(212,175,55,.22),0 0 60px rgba(251,191,36,.1),0 32px 80px rgba(0,0,0,.85)}
+.year-celeb-ring{position:relative;display:flex;align-items:center;justify-content:center;width:96px;height:96px}
+.year-celeb-ring::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.18) 0%,transparent 70%);animation:year-ring-pulse 2.2s ease-in-out infinite}
+@keyframes year-ring-pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.18);opacity:1}}
+.year-celeb-icon{font-size:5.2rem;line-height:1;animation:year-trophy 2s ease-in-out infinite alternate;filter:drop-shadow(0 0 28px rgba(212,175,55,.7)) drop-shadow(0 0 56px rgba(251,191,36,.35))}
+@keyframes year-trophy{from{transform:translateY(0) scale(1) rotate(-4deg)}to{transform:translateY(-16px) scale(1.12) rotate(4deg)}}
+.year-celeb-ybadge{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#d4af37;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.32);padding:4px 16px;border-radius:20px}
+.year-celeb-title{font-size:2rem;font-weight:900;background:linear-gradient(135deg,#fbbf24 0%,#d4af37 40%,#ffffff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.03em;line-height:1.1;text-shadow:none}
+.year-celeb-ayah{font-size:.82rem;color:rgba(212,175,55,.75);font-style:italic;line-height:1.75;padding:10px 14px;border-top:1px solid rgba(212,175,55,.16);border-bottom:1px solid rgba(212,175,55,.16);width:100%}
+.year-celeb-sub{font-size:.9rem;font-weight:600;color:rgba(255,255,255,.88);line-height:1.65;white-space:pre-line}
+.year-celeb-badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.year-celeb-badge{font-size:.8rem;font-weight:700;padding:5px 14px;border-radius:20px}
+.year-celeb-badge.gold{color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3)}
+.year-celeb-badge.silver{color:#e2e8f0;background:rgba(226,232,240,.08);border:1px solid rgba(226,232,240,.2)}
+.year-celeb-badge.teal{color:#2dd4bf;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.22)}
+.year-celeb-btn{margin-top:6px;background:linear-gradient(135deg,#d4af37,#fbbf24,#f59e0b);border:none;border-radius:14px;padding:15px 32px;font-size:.95rem;font-weight:800;color:#09112b;cursor:pointer;font-family:inherit;width:100%;transition:transform .1s;box-shadow:0 4px 28px rgba(212,175,55,.45)}
+.year-celeb-btn:active{transform:scale(.96)}
 /* ── Khatm / Quran Journey Celebration ───────────── */
 .khatm-celeb-overlay{background:rgba(0,0,0,.88)}
 .khatm-celeb-card{background:linear-gradient(155deg,#1a1000 0%,#0a1200 60%,#001008 100%);border:1px solid rgba(251,191,36,.35);border-radius:26px;padding:36px 24px 30px;display:flex;flex-direction:column;align-items:center;gap:13px;direction:rtl;max-width:320px;width:90%;text-align:center;animation:ppp-card-in .55s cubic-bezier(.34,1.56,.64,1) both;position:relative;z-index:1;box-shadow:0 0 120px rgba(251,191,36,.18),0 0 50px rgba(34,197,94,.1),0 28px 70px rgba(0,0,0,.75)}
@@ -4437,7 +4456,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=850"></script>
+<script src="/app/app.js?v=851"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

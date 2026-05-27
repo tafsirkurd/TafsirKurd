@@ -8056,14 +8056,70 @@ function _buildPppInsights(log,mStats,weekData,missed){
 function _pppCheckCelebrate(log,dKey){
   var now=new Date();var d=new Date(dKey.replace(/-/g,'/'));
   if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())return;
+  // Year celebration takes full priority — check first
+  var streak=calcPrayerStreak(log);
+  var yearNum=Math.floor(streak/365);
+  var yearCelebAt=parseInt(localStorage.getItem('prayerYearCelebAt')||'0');
+  if(yearNum>=1&&yearNum>yearCelebAt){
+    localStorage.setItem('prayerYearCelebAt',String(yearNum));
+    setTimeout(function(){_pppCelebrateYear(log,streak,yearNum);},350);
+    return;
+  }
+  // Month celebration: last day of month with every tracked day perfect
   var ms=calcPrayerMonthStats(log,now.getFullYear(),now.getMonth());
   var daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
   var isLastDay=now.getDate()===daysInMonth;
-  // Month confetti: only on the last day of the month when every tracked day is full
   if(isLastDay&&ms.full>0&&ms.full===ms.total){setTimeout(function(){_pppCelebrateMonth(log);},350);}
-  // Any other day — small toast only
   else{_pppCelebrateDay();}
 }
+function _pppCelebrateYear(log,streak,yearNum){
+  haptic([30,12,30,12,50,12,80,12,100]);
+  var best=calcBestPrayerStreak(log);
+  var ov=document.createElement('div');ov.className='ppp-celeb-overlay year-celeb-overlay';ov.id='yearCelebOverlay';
+  // 250 confetti — gold/silver/white/teal/green palette with star + circle + square shapes
+  var colors=['#fbbf24','#f59e0b','#fde68a','#d4af37','#ffffff','#e2e8f0','#22c55e','#2dd4bf','#a78bfa','#fb923c'];
+  var frag=document.createDocumentFragment();
+  for(var i=0;i<250;i++){
+    var p=document.createElement('div');p.className='ppp-conf';
+    var sz=3+Math.random()*10;
+    var shape=Math.random();
+    var br=shape>.7?'0':shape>.4?'50%':'3px';
+    p.style.cssText='left:'+Math.random()*100+'%;top:'+(Math.random()*-20)+'px;width:'+sz+'px;height:'+sz+'px;background:'+colors[Math.floor(Math.random()*colors.length)]+';border-radius:'+br+';animation-delay:'+Math.random()*2+'s;animation-duration:'+(2.5+Math.random()*2.5)+'s';
+    frag.appendChild(p);
+  }
+  ov.appendChild(frag);
+  var card=el('div','year-celeb-card');
+  // Shimmer ring behind trophy
+  var ring=el('div','year-celeb-ring');
+  var iconEl=el('div','year-celeb-icon','🏆');
+  ring.appendChild(iconEl);card.appendChild(ring);
+  // Year number badge
+  var yBadge=el('div','year-celeb-ybadge',yearNum>1?'ساڵی ژمارە '+yearNum:'ساڵێ یەکەم');
+  card.appendChild(yBadge);
+  card.appendChild(el('div','year-celeb-title','ساڵێ تەمام کر! 🌟'));
+  // Arabic verse
+  card.appendChild(el('div','year-celeb-ayah','﴿ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا ﴾'));
+  card.appendChild(el('div','year-celeb-sub',yearNum>1?'ساڵێ '+yearNum+'ەم تەمام کر!\nخوا قبوول بکا 🤲':'١٨٢٥ نوێژ تەمام!\nخوا قبوول بکا 🤲'));
+  // Stats badges
+  var badges=el('div','year-celeb-badges');
+  badges.appendChild(el('div','year-celeb-badge gold','🏆 '+streak+' ڕۆژ ل ڕیزا'));
+  if(best>streak)badges.appendChild(el('div','year-celeb-badge silver','⭐ باشترین: '+best+' ڕۆژ'));
+  badges.appendChild(el('div','year-celeb-badge teal','🕌 ١٨٢٥ نوێژ'));
+  card.appendChild(badges);
+  var btn=document.createElement('button');btn.className='year-celeb-btn';btn.textContent='تەشکرکرن 🙏';
+  on(btn,'click',function(){App.closeYearCelebration();});
+  card.appendChild(btn);
+  on(ov,'click',function(e){if(e.target===ov)App.closeYearCelebration();});
+  ov.appendChild(card);document.body.appendChild(ov);
+}
+App.closeYearCelebration=function(){
+  var ov=$('yearCelebOverlay');if(!ov)return;
+  ov.classList.add('out');setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},360);
+};
+App.testYearCelebration=function(){
+  var l=getPrayerLog();var str=calcPrayerStreak(l);
+  _pppCelebrateYear(l,str||365,1);
+};
 function _pppCelebrateDay(){
   haptic([8,5,12]);
   var fill=document.querySelector('.ppp-progress-fill');
