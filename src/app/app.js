@@ -8020,7 +8020,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
 
   // Most missed prayer (30 days)
   if(missed&&missed.count>0){
-    insightRow('rgba(220,60,40,.12)','#dc3c28','fas fa-exclamation-circle','نوێژا زیاد نەکراو (٣٠ ڕۆژ)',t('prayer.'+missed.prayer.toLowerCase())+' — '+missed.count+' ڕۆژ');
+    insightRow('rgba(220,60,40,.12)','#dc3c28','fas fa-exclamation-circle','نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)',t('prayer.'+missed.prayer.toLowerCase())+' — '+missed.count+' ڕۆژ');
   }
 
   // Weakest day of week
