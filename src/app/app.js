@@ -8027,7 +8027,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
   var weak=calcWeakestDay(log);
   if(weak){
     var weakColor=weak.avg<2?'#dc3c28':weak.avg<4?'#f09000':'var(--accent)';
-    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day','ڕۆژا هەرا قایل',weak.name+' — '+weak.avg+'/5 ناڤنج');
+    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day','کەیفخۆشترین ڕۆژ',weak.name+' — '+weak.avg+'/5 ناڤنج');
   }
 
   // Monthly avg per day
@@ -8041,12 +8041,12 @@ function _buildPppInsights(log,mStats,weekData,missed){
   if(proj&&proj.daysLeft>0){
     var projIcon=proj.rate>=80?'fas fa-rocket':proj.rate>=50?'fas fa-chart-line':'fas fa-seedling';
     var projColor=proj.rate>=80?'var(--accent)':proj.rate>=50?'#f09000':'#dc3c28';
-    insightRow('rgba(34,197,94,.08)',projColor,projIcon,'ئەم مانگ ل ناو '+proj.daysLeft+' ڕۆژ',proj.projected+' ڕۆژ تەمام پێشبینی دکرێ');
+    insightRow('rgba(34,197,94,.08)',projColor,projIcon,'ئەڤ هەیڤە د ناڤ '+proj.daysLeft+' ڕۆژان دا','پێشبینی دهێتە کرن '+proj.projected+' ڕۆژ تەمام ببن');
   }
 
   // Complete days this month
   if(mStats.full>0){
-    insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-check-double','ڕۆژێن تەمام ئەم مانگ',mStats.full+' ڕۆژ ('+Math.round((mStats.full/mStats.total)*100)+'%)');
+    insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-check-double','ڕۆژێن تەمام د ڤێ هەیڤێ دا',mStats.full+' ڕۆژ ('+Math.round((mStats.full/mStats.total)*100)+'%)');
   }
 
   return wrap;
