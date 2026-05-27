@@ -7812,7 +7812,7 @@ function _pppMsg(n){
   if(n>=4)return'باشترینن — نوێژا کۆتایی بزووره ⭐';
   if(n>=3)return'نزیک دکەویتی — بەردەوام بە 💚';
   if(n>=1)return'دەستت پێ کرا — ئەمڕۆ زیاد بکە 🤲';
-  return'ئەمڕۆ هێشتا نوێژت نەکراوە — دەستت پێ بکە 🌅';
+  return'ئەڤڕۆ هێشتا تە نڤێژ نەکریە — دەست پێ بکە 🌅';
 }
 
 function _buildPrayerProgressPanel(panel){
@@ -7831,7 +7831,7 @@ function _buildPrayerProgressPanel(panel){
   var back=document.createElement('button');back.className='ppp-back';
   back.setAttribute('aria-label','دادخستن');
   back.appendChild(icon('fas fa-chevron-right'));on(back,'click',App.closePrayerProgress);
-  hdr.appendChild(back);hdr.appendChild(el('span','ppp-title','نوێژکرن'));
+  hdr.appendChild(back);hdr.appendChild(el('span','ppp-title','نڤێژکرن'));
   var sp=el('div');sp.style.width='36px';hdr.appendChild(sp);
   panel.appendChild(hdr);
 
@@ -7840,7 +7840,7 @@ function _buildPrayerProgressPanel(panel){
   // ─ Today card ─────────────────────────────────────────────
   var card=el('div','ppp-today-card');
   var topRow=el('div','ppp-today-hdr');
-  var todayLabel=isPreFajr?'دوێنێ (هێشتا بەردەستە)':'ئەمڕۆ';
+  var todayLabel=isPreFajr?'دوێنێ (هێشتا بەردەستە)':'ئەڤڕۆ';
   topRow.appendChild(el('span','ppp-today-label',todayLabel));
   var countEl=el('span','ppp-today-count',doneToday+'/5');topRow.appendChild(countEl);
   card.appendChild(topRow);
