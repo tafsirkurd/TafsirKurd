@@ -7923,13 +7923,13 @@ function _buildPrayerProgressPanel(panel){
   // ─ New Start ──────────────────────────────────────────────
   var nsWrap=el('div','ppp-newstart-wrap');
   var nsBtn=document.createElement('button');nsBtn.className='ppp-newstart-btn';
-  nsBtn.appendChild(icon('fas fa-redo-alt'));nsBtn.appendChild(document.createTextNode(' دەستپێکرنێ نوو'));
+  nsBtn.appendChild(icon('fas fa-redo-alt'));nsBtn.appendChild(document.createTextNode(' دەستپێکرنەکا نوی'));
   on(nsBtn,'click',function(){
     var ov=el('div','ppp-ns-overlay');
     var card=el('div','ppp-ns-card');
     var iconEl=el('div','ppp-ns-icon');iconEl.appendChild(icon('fas fa-redo-alt'));
-    var title=el('div','ppp-ns-title','دەستپێکرنێ نوو');
-    var sub=el('div','ppp-ns-sub','هەموو تۆمارێن نوێژان دێن ژێبرن و تۆ دەستپێ دکى لە ئەمڕۆ.');
+    var title=el('div','ppp-ns-title','دەستپێکرنەکا نوی');
+    var sub=el('div','ppp-ns-sub','هەموو تۆمارێن نڤێژان دێ هێنە ژێبرن و تو دێ ژ ئەڤڕۆ پێ ڤە دەست پێ کەی.');
     var btns=el('div','ppp-ns-btns');
     var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent='بەلێ، سڕەوە';
     var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent='نەخێر';
@@ -8033,7 +8033,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
   // Monthly avg per day
   if(mStats.total>0){
     var avg=(mStats.done/mStats.total).toFixed(1);
-    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line','تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ',avg+'/5 نوێژ');
+    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line','تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ',avg+'/5 نڤێژ');
   }
 
   // Month projection
