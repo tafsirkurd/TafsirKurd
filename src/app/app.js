@@ -8096,7 +8096,7 @@ function _pppCelebrateYear(log,streak,yearNum){
   // Year number badge
   var yBadge=el('div','year-celeb-ybadge',yearNum>1?'ساڵی ژمارە '+yearNum:'ساڵا ئێکێ');
   card.appendChild(yBadge);
-  card.appendChild(el('div','year-celeb-title','ساڵێ تەمام کر! 🌟'));
+  card.appendChild(el('div','year-celeb-title','سالەک تەمام بوو! 🌟'));
   // Arabic verse
   card.appendChild(el('div','year-celeb-ayah','﴿ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا ﴾'));
   var totalPrayers=yearNum*1825;
