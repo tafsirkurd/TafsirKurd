@@ -8103,9 +8103,9 @@ function _pppCelebrateYear(log,streak,yearNum){
   card.appendChild(el('div','year-celeb-sub',yearNum>1?'ساڵێ '+yearNum+'ەم تەمام کر!\nخودێ قەبیل بکەت 🤲':totalPrayers+' نڤێژ تەمام بوون!\nخودێ قەبیل بکەت 🤲'));
   // Stats badges
   var badges=el('div','year-celeb-badges');
-  badges.appendChild(el('div','year-celeb-badge gold','🔥 '+streak+' ڕۆژ ل ڕیزا'));
+  badges.appendChild(el('div','year-celeb-badge gold','🔥 '+streak+' ڕۆژ ل دیف ئێک'));
   if(best>0&&best!==streak)badges.appendChild(el('div','year-celeb-badge silver','⭐ باشترین: '+best+' ڕۆژ'));
-  badges.appendChild(el('div','year-celeb-badge teal','🕌 '+totalPrayers+' نوێژ'));
+  badges.appendChild(el('div','year-celeb-badge teal','🕌 '+totalPrayers+' نڤێژ'));
   card.appendChild(badges);
   var btn=document.createElement('button');btn.className='year-celeb-btn';btn.textContent='تەشکرکرن 🙏';
   on(btn,'click',function(){App.closeYearCelebration();});
