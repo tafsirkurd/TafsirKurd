@@ -7917,7 +7917,7 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(_buildPppCal(log));
 
   // ─ Insights ───────────────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title','ئاگاهیی'));
+  body.appendChild(el('div','ppp-section-title','ئاگەهدار'));
   body.appendChild(_buildPppInsights(log,mStats,weekData,missed));
 
   // ─ New Start ──────────────────────────────────────────────
@@ -8016,7 +8016,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
   // This week %
   var weekDone=weekData.reduce(function(s,d){return s+d.cnt;},0);
   var weekPct=Math.round((weekDone/35)*100);
-  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week','ئەم هەفتە',weekPct+'% — '+weekDone+'/35 نوێژ');
+  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week','ئەڤ حەفتیە',weekPct+'% — '+weekDone+'/35 نوێژ');
 
   // Most missed prayer (30 days)
   if(missed&&missed.count>0){
