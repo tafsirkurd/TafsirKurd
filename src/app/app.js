@@ -8099,12 +8099,13 @@ function _pppCelebrateYear(log,streak,yearNum){
   card.appendChild(el('div','year-celeb-title','ساڵێ تەمام کر! 🌟'));
   // Arabic verse
   card.appendChild(el('div','year-celeb-ayah','﴿ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا ﴾'));
-  card.appendChild(el('div','year-celeb-sub',yearNum>1?'ساڵێ '+yearNum+'ەم تەمام کر!\nخوا قبوول بکا 🤲':'١٨٢٥ نوێژ تەمام!\nخوا قبوول بکا 🤲'));
+  var totalPrayers=yearNum*1825;
+  card.appendChild(el('div','year-celeb-sub',yearNum>1?'ساڵێ '+yearNum+'ەم تەمام کر!\nخوا قبوول بکا 🤲':totalPrayers+' نوێژ تەمام!\nخوا قبوول بکا 🤲'));
   // Stats badges
   var badges=el('div','year-celeb-badges');
-  badges.appendChild(el('div','year-celeb-badge gold','🏆 '+streak+' ڕۆژ ل ڕیزا'));
-  if(best>streak)badges.appendChild(el('div','year-celeb-badge silver','⭐ باشترین: '+best+' ڕۆژ'));
-  badges.appendChild(el('div','year-celeb-badge teal','🕌 ١٨٢٥ نوێژ'));
+  badges.appendChild(el('div','year-celeb-badge gold','🔥 '+streak+' ڕۆژ ل ڕیزا'));
+  if(best>0&&best!==streak)badges.appendChild(el('div','year-celeb-badge silver','⭐ باشترین: '+best+' ڕۆژ'));
+  badges.appendChild(el('div','year-celeb-badge teal','🕌 '+totalPrayers+' نوێژ'));
   card.appendChild(badges);
   var btn=document.createElement('button');btn.className='year-celeb-btn';btn.textContent='تەشکرکرن 🙏';
   on(btn,'click',function(){App.closeYearCelebration();});
