@@ -7899,7 +7899,7 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(stats);
 
   // ─ This week ──────────────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title','هەفتەیا دوا'));
+  body.appendChild(el('div','ppp-section-title','حەفتیا دوماهییێ'));
   var week=el('div','ppp-week');
   weekData.forEach(function(d){
     var div=el('div','ppp-wday'+(d.isToday?' today':''));
@@ -7913,7 +7913,7 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(week);
 
   // ─ Monthly calendar ───────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title','مانگ'));
+  body.appendChild(el('div','ppp-section-title','هەیڤ'));
   body.appendChild(_buildPppCal(log));
 
   // ─ Insights ───────────────────────────────────────────────
