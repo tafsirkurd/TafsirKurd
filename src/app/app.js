@@ -7808,7 +7808,7 @@ function _pppSyncPanel(log,changedDKey){
   }
 }
 function _pppMsg(n){
-  if(n>=5)return'ماشاللا! ئەمڕۆ هەمی نوێژت تەمام کر 🌟';
+  if(n>=5)return'ماشاءالله‌! تە ئەڤڕۆ هەموو نڤێژێن خۆ تەمام کرن 🌟';
   if(n>=4)return'باشترینن — نڤێژا دوماهییێ تەمام بکە ⭐';
   if(n>=3)return'نێزیک بووی — بەردەوام بە 💚';
   if(n>=1)return'تە دەست پێ کر — ئەڤڕۆ زێدە بکە 🤲';
@@ -8127,7 +8127,7 @@ function _pppCelebrateDay(){
   if(fill){fill.classList.add('ppp-pulse');setTimeout(function(){fill.classList.remove('ppp-pulse');},700);}
   var body=document.querySelector('#prayerProgressPanel .ppp-body');if(!body)return;
   var old=body.querySelector('.ppp-day-toast');if(old&&old.parentNode)old.parentNode.removeChild(old);
-  var toast=el('div','ppp-day-toast','ماشاللا! ئەمڕۆ تەمام کر 🌟');
+  var toast=el('div','ppp-day-toast','ماشاءالله‌! تە ئەڤڕۆ تەمام کر 🌟');
   body.insertBefore(toast,body.firstChild);
   setTimeout(function(){toast.classList.add('show');},20);
   setTimeout(function(){toast.classList.remove('show');setTimeout(function(){if(toast.parentNode)toast.parentNode.removeChild(toast);},400);},2800);
