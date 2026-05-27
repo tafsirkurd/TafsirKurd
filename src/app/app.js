@@ -8094,7 +8094,7 @@ function _pppCelebrateYear(log,streak,yearNum){
   var iconEl=el('div','year-celeb-icon','🏆');
   ring.appendChild(iconEl);card.appendChild(ring);
   // Year number badge
-  var yBadge=el('div','year-celeb-ybadge',yearNum>1?'ساڵی ژمارە '+yearNum:'ساڵێ یەکەم');
+  var yBadge=el('div','year-celeb-ybadge',yearNum>1?'ساڵی ژمارە '+yearNum:'ساڵا ئێکێ');
   card.appendChild(yBadge);
   card.appendChild(el('div','year-celeb-title','ساڵێ تەمام کر! 🌟'));
   // Arabic verse
