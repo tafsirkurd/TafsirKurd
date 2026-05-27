@@ -404,6 +404,8 @@ body{background:var(--bg);color:var(--text)}
 .hdr-badge.progress{background:#f09000;animation:badge-pulse 2.2s ease-in-out infinite}
 .hdr-badge.pending{background:#e53e3e;animation:badge-pulse 1.4s ease-in-out infinite}
 @keyframes badge-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 currentColor}55%{transform:scale(1.25);box-shadow:0 0 0 4px rgba(0,0,0,0)}}
+/* Mushaf badge: accent-coloured pulse when mode is off, green when on */
+#mushafToggleBtn .hdr-badge.pending{background:var(--accent);animation:badge-pulse 2.4s ease-in-out infinite}
 /* Icon pop on tap */
 .hdr-btn.hdr-pop i{animation:hdr-icon-pop .38s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes hdr-icon-pop{0%{transform:scale(1) rotate(0)}40%{transform:scale(1.55) rotate(-12deg)}70%{transform:scale(.9) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
@@ -3951,7 +3953,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
       <div class="reader-title"><span class="surah-label" id="readerName"></span></div>
       <div style="display:flex;gap:2px;align-items:center">
         <button class="hdr-btn" id="mushafPlayBtn" onclick="App.mushafPlayToggle()" style="display:none" title="Play"><i class="fas fa-play"></i></button>
-        <button class="hdr-btn" id="mushafToggleBtn" onclick="App.toggleMushafMode()" title="Mushaf"><i class="fas fa-book-open"></i></button>
+        <button class="hdr-btn" id="mushafToggleBtn" onclick="App.toggleMushafMode()" title="Mushaf"><i class="fas fa-book-open"></i><span class="hdr-badge" id="mushafBadge"></span></button>
         <button class="hdr-btn" onclick="App.openReaderSettings()"><i class="fas fa-cog"></i></button>
       </div>
     </div>
@@ -4435,7 +4437,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=849"></script>
+<script src="/app/app.js?v=850"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {

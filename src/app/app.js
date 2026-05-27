@@ -8200,6 +8200,9 @@ function _updatePrayerBadge(){
   var done=_TRACK_PRAYERS.filter(function(p){return(log[pDay]||{})[p];}).length;
   _setBadge('prayerBadge',done>=5?'done':done>0?'progress':'pending');
 }
+function _updateMushafBadge(){
+  _setBadge('mushafBadge',S.mushafMode?'done':'pending');
+}
 function _hdrPop(btnId){
   var btn=$(btnId);if(!btn)return;
   btn.classList.remove('hdr-pop');
@@ -8213,8 +8216,11 @@ setTimeout(function(){
   if(gb)gb.addEventListener('click',function(){_hdrPop('hdrGoalsBtn');},true);
   var pb=$('hdrPrayerBtn');
   if(pb)pb.addEventListener('click',function(){_hdrPop('hdrPrayerBtn');},true);
+  var mb=$('mushafToggleBtn');
+  if(mb)mb.addEventListener('click',function(){_hdrPop('mushafToggleBtn');_updateMushafBadge();},true);
   _updateGoalsBadge();
   _updatePrayerBadge();
+  _updateMushafBadge();
 },500);
 
 /* ===== WIDGET DATA PUSH ===== */
