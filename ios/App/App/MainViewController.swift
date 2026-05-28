@@ -15,6 +15,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         webView?.backgroundColor = bgColor
         webView?.scrollView.backgroundColor = bgColor
         webView?.isOpaque = false
+        // Belt-and-suspenders: also paint the window itself so any gap between the
+        // static LaunchScreen and our overlay shows the theme color, not black.
+        view.window?.backgroundColor = bgColor
 
         // Full-screen overlay — constraint-based so it fills the view regardless of
         // when viewDidLoad fires relative to the first layout pass.

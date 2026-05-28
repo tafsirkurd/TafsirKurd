@@ -31,7 +31,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         case "sakina", "emerald": themeColor = UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1)
         default:                  themeColor = UIColor(red:   0,      green:   0,      blue:   0,     alpha: 1)
         }
-        UIWindow.appearance().backgroundColor = themeColor
+        // Set window background directly — UIWindow.appearance() only affects future windows,
+        // not the one already created by UIKit. This fills any gap between LaunchScreen and
+        // the native overlay in MainViewController with the correct theme color.
+        window?.backgroundColor = themeColor
         return true
     }
 
