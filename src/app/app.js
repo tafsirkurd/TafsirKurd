@@ -3809,14 +3809,17 @@ function renderMushafView(){
   // Disconnect previous lazy-load observer to prevent accumulation
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   window._mushafVerseElements={};
+  // Single clear + skeleton — never clear twice. When page range resolves we remove
+  // only the skeleton node, so the view is never in a blank state between clears.
   clear(view);
   view.scrollTop=0;view.scrollLeft=0;
-  view.appendChild(_mushafSkeleton());
+  var _skel=_mushafSkeleton();
+  view.appendChild(_skel);
 
   var _renderSurah=S.surah; // capture at render time — abort if surah changes during async
   getMushafPageRange(S.surah).then(function(pages){
     if(!S.mushafMode||S.surah!==_renderSurah)return;
-    clear(view);
+    if(_skel.parentNode===view)view.removeChild(_skel); // remove skeleton, not entire view
     view.scrollTop=0;view.scrollLeft=0;
 
     // Pre-inject QCF fonts for first 3 pages so they're downloading in parallel
@@ -5285,15 +5288,14 @@ App.sidebarTab=function(mode){
 
 function renderSidebarList(){
   var list=$('sidebarList');
-  clear(list);
+  var frag=document.createDocumentFragment();
   if(S.sidebarMode==='surah'){
     SURAHS.forEach(function(s){
       var item=el('div','sidebar-item'+(S.surah===s.n?' on':''));
       item.appendChild(el('div','sidebar-item-num',String(s.n)));
-      var txt=el('span','',s.en+' - '+s.ar);
-      item.appendChild(txt);
+      item.appendChild(el('span','',s.en+' - '+s.ar));
       on(item,'click',function(){App.closeSidebar();App.openSurah(s.n)});
-      list.appendChild(item);
+      frag.appendChild(item);
     });
   } else {
     Object.keys(JUZS).forEach(function(j){
@@ -5302,9 +5304,10 @@ function renderSidebarList(){
       var sn=SURAHS[JUZS[j]-1];
       item.appendChild(el('span','',t('sidebar.juz_num',{num:j})+(sn?' - '+sn.en:'')));
       on(item,'click',function(){App.closeSidebar();App.openSurah(JUZS[j])});
-      list.appendChild(item);
+      frag.appendChild(item);
     });
   }
+  clear(list); list.appendChild(frag);
 }
 
 /* ===== MUSHAF PLAY BUTTON ===== */
@@ -5312,7 +5315,7 @@ function updateMushafPlayBtn(){
   var btn=$('mushafPlayBtn');
   if(!btn)return;
   var isPlaying=S.audio.playing&&S.audio.surah===S.surah;
-  btn.innerHTML='';
+  clear(btn);
   btn.appendChild(icon(isPlaying?'fas fa-pause':'fas fa-play'));
 }
 App.mushafPlayToggle=function(){
@@ -12466,9 +12469,9 @@ App.ivShowSeries=function(seriesId){
 
 function renderIvEpisodes(seriesId){
   var list=$('ivEpList');
-  clear(list);
+  var frag=document.createDocumentFragment();
 
-  if(!S.ivEpisodes)return;
+  if(!S.ivEpisodes){clear(list);return;}
 
   var eps=S.ivEpisodes.filter(function(ep){return ep.series_id===seriesId});
   eps.sort(function(a,b){return(a.episode_number||0)-(b.episode_number||0)});
@@ -12477,7 +12480,8 @@ function renderIvEpisodes(seriesId){
     var empty=el('div','iv-empty');
     empty.appendChild(icon('fas fa-film'));
     empty.appendChild(el('p','',t('iv.no_episodes')));
-    list.appendChild(empty);
+    frag.appendChild(empty);
+    clear(list); list.appendChild(frag);
     return;
   }
 
@@ -12488,7 +12492,7 @@ function renderIvEpisodes(seriesId){
     var item=el('div','iv-ep-item');
     item.setAttribute('data-ep-id',ep.id);
 
-    // Thumbnail (full-width 16:9, episode number badge overlaid inside)
+    // Thumbnail — fade in after decode to avoid image pop
     var thumb=el('div','iv-ep-thumb');
     var thumbUrl=ep.thumbnail_url;
     if(!thumbUrl&&ep.video_url&&ep.video_type!=='s3'){
@@ -12496,8 +12500,12 @@ function renderIvEpisodes(seriesId){
     }
     if(thumbUrl){
       var tImg=document.createElement('img');
-      tImg.src=thumbUrl;tImg.alt='';tImg.loading='lazy';
-      tImg.onerror=function(){AndroidLog.img(this.src);this.style.display='none'};
+      tImg.alt='';
+      tImg.loading=idx<3?'eager':'lazy'; // first 3 eager, rest lazy
+      tImg.style.cssText='width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s';
+      tImg.onload=function(){this.style.opacity='1';};
+      tImg.onerror=function(){AndroidLog.img(this.src);this.style.display='none';};
+      tImg.src=thumbUrl; // set src last so attributes are ready before decode starts
       thumb.appendChild(tImg);
     }
     var playIcon=el('div','iv-play-icon');
@@ -12556,8 +12564,9 @@ function renderIvEpisodes(seriesId){
     item.appendChild(saveBtn);
 
     on(item,'click',function(){App.ivPlay(ep.id)});
-    list.appendChild(item);
+    frag.appendChild(item);
   });
+  clear(list); list.appendChild(frag); // atomic replace — old list stays until all cards built
 }
 
 function ivGetSaved(){try{return JSON.parse(localStorage.getItem('iv_saved_eps')||'[]')}catch(e){return[]}}
@@ -12797,20 +12806,28 @@ App.ivRefresh=function(){
 function ivRenderSavedList(){
   var overlay=$('ivSavedOverlay');
   var list=$('ivSavedList');
-  clear(list);
+  var frag=document.createDocumentFragment();
   var saved=ivGetSaved();
   if(!saved.length){
     var emp=el('div','iv-overlay-empty');
     var eico=el('div','iv-overlay-empty-icon');eico.appendChild(icon('fas fa-bookmark'));emp.appendChild(eico);
     emp.appendChild(el('div','iv-overlay-empty-title',t('iv.no_saved_episodes')));
     emp.appendChild(el('div','iv-overlay-empty-sub',t('iv.bookmark_to_save')));
-    list.appendChild(emp);
+    frag.appendChild(emp);
   }else{
-    saved.forEach(function(ep){
+    saved.forEach(function(ep,idx){
       var item=el('div','iv-overlay-ep');
       var thumb=el('div','iv-overlay-ep-thumb');
       var thumbUrl=ep.thumbnail_url||(ep.video_url&&ep.video_type!=='s3'?'https://img.youtube.com/vi/'+ep.video_url+'/mqdefault.jpg':null);
-      if(thumbUrl){var img=document.createElement('img');img.src=thumbUrl;img.alt='';thumb.appendChild(img)}
+      if(thumbUrl){
+        var img=document.createElement('img');
+        img.alt='';img.loading=idx<4?'eager':'lazy';
+        img.style.cssText='width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s';
+        img.onload=function(){this.style.opacity='1';};
+        img.onerror=function(){this.style.display='none';};
+        img.src=thumbUrl;
+        thumb.appendChild(img);
+      }
       item.appendChild(thumb);
       var info=el('div','iv-overlay-ep-info');
       if(ep.series_title)info.appendChild(el('div','iv-overlay-ep-series',ep.series_title));
@@ -12818,14 +12835,14 @@ function ivRenderSavedList(){
       item.appendChild(info);
       var del=el('button','iv-overlay-ep-del');del.appendChild(icon('fas fa-xmark'));
       on(del,'click',function(e){e.stopPropagation();ivToggleSave(ep.id,ep);haptic([8]);ivRenderSavedList();
-        // also update bookmark button in episode list if visible
         document.querySelectorAll('.iv-ep-save').forEach(function(b){var row=b.closest('[data-ep-id]');if(row&&row.dataset.epId==ep.id)b.classList.toggle('saved',ivIsSaved(ep.id))});
       });
       item.appendChild(del);
       on(item,'click',function(){overlay.classList.remove('open');App.ivShowSeries(ep.series_id);App.ivPlay(ep.id)});
-      list.appendChild(item);
+      frag.appendChild(item);
     });
   }
+  clear(list); list.appendChild(frag);
 }
 App.ivShowSaved=function(){$('ivSavedOverlay').classList.add('open');ivRenderSavedList();haptic([8])};
 App.ivCloseSaved=function(){$('ivSavedOverlay').classList.remove('open')};
@@ -12833,7 +12850,7 @@ App.ivCloseSaved=function(){$('ivSavedOverlay').classList.remove('open')};
 function ivRenderHistoryList(){
   var overlay=$('ivHistoryOverlay');
   var list=$('ivHistoryList');
-  clear(list);
+  var frag=document.createDocumentFragment();
   var progress={};try{progress=JSON.parse(localStorage.getItem('iv_watch_progress')||'{}')}catch(e){}
   var keys=Object.keys(progress).filter(function(k){return progress[k]&&progress[k].percent>0});
   keys.sort(function(a,b){return(progress[b].ts||0)-(progress[a].ts||0)});
@@ -12842,9 +12859,9 @@ function ivRenderHistoryList(){
     var eico2=el('div','iv-overlay-empty-icon');eico2.appendChild(icon('fas fa-clock-rotate-left'));emp2.appendChild(eico2);
     emp2.appendChild(el('div','iv-overlay-empty-title',t('iv.no_history')));
     emp2.appendChild(el('div','iv-overlay-empty-sub',t('iv.history_hint')));
-    list.appendChild(emp2);
+    frag.appendChild(emp2);
   }else{
-    keys.forEach(function(epId){
+    keys.forEach(function(epId,idx){
       var wp=progress[epId];
       var ep=S.ivEpisodes?S.ivEpisodes.find(function(e){return String(e.id)===String(epId)}):null;
       if(!ep)return;
@@ -12852,7 +12869,15 @@ function ivRenderHistoryList(){
       var item=el('div','iv-overlay-ep');
       var thumb=el('div','iv-overlay-ep-thumb');
       var thumbUrl=ep.thumbnail_url||(ep.video_url&&ep.video_type!=='s3'?'https://img.youtube.com/vi/'+ep.video_url+'/mqdefault.jpg':null);
-      if(thumbUrl){var img=document.createElement('img');img.src=thumbUrl;img.alt='';thumb.appendChild(img)}
+      if(thumbUrl){
+        var img=document.createElement('img');
+        img.alt='';img.loading=idx<4?'eager':'lazy';
+        img.style.cssText='width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s';
+        img.onload=function(){this.style.opacity='1';};
+        img.onerror=function(){this.style.display='none';};
+        img.src=thumbUrl;
+        thumb.appendChild(img);
+      }
       item.appendChild(thumb);
       var info=el('div','iv-overlay-ep-info');
       if(series)info.appendChild(el('div','iv-overlay-ep-series',series.title));
@@ -12863,9 +12888,10 @@ function ivRenderHistoryList(){
       on(del,'click',function(e){e.stopPropagation();delete progress[epId];try{localStorage.setItem('iv_watch_progress',JSON.stringify(progress))}catch(ex){}haptic([8]);ivRenderHistoryList()});
       item.appendChild(del);
       on(item,'click',function(){overlay.classList.remove('open');App.ivShowSeries(ep.series_id);App.ivPlay(ep.id)});
-      list.appendChild(item);
+      frag.appendChild(item);
     });
   }
+  clear(list); list.appendChild(frag);
 }
 App.ivShowHistory=function(){$('ivHistoryOverlay').classList.add('open');ivRenderHistoryList();haptic([8])};
 App.ivCloseHistory=function(){$('ivHistoryOverlay').classList.remove('open')};
