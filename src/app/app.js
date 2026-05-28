@@ -1844,7 +1844,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260526b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=48',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=51',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -7831,7 +7831,7 @@ function _buildPrayerProgressPanel(panel){
   // Header
   var hdr=el('div','ppp-hdr');
   var back=document.createElement('button');back.className='ppp-back';
-  back.setAttribute('aria-label','دادخستن');
+  back.setAttribute('aria-label','داخستن');
   back.appendChild(icon('fas fa-chevron-right'));on(back,'click',App.closePrayerProgress);
   hdr.appendChild(back);hdr.appendChild(el('span','ppp-title','نڤێژکرن'));
   var sp=el('div');sp.style.width='36px';hdr.appendChild(sp);
@@ -7842,7 +7842,7 @@ function _buildPrayerProgressPanel(panel){
   // ─ Today card ─────────────────────────────────────────────
   var card=el('div','ppp-today-card');
   var topRow=el('div','ppp-today-hdr');
-  var todayLabel=isPreFajr?'دوێنێ (هێشتا بەردەستە)':'ئەڤڕۆ';
+  var todayLabel=isPreFajr?'دووهی (هێشتا بەردەستە)':'ئەڤڕۆ';
   topRow.appendChild(el('span','ppp-today-label',todayLabel));
   var countEl=el('span','ppp-today-count',doneToday+'/5');topRow.appendChild(countEl);
   card.appendChild(topRow);
@@ -8029,7 +8029,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
   var weak=calcWeakestDay(log);
   if(weak){
     var weakColor=weak.avg<2?'#dc3c28':weak.avg<4?'#f09000':'var(--accent)';
-    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day','کەیفخۆشترین ڕۆژ',weak.name+' — '+weak.avg+'/5 ناڤنج');
+    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day','کەیفخۆشترین ڕۆژ',weak.name+' — '+weak.avg+'/5 ناڤنجی');
   }
 
   // Monthly avg per day
@@ -8109,7 +8109,7 @@ function _pppCelebrateYear(log,streak,yearNum){
   if(best>0&&best!==streak)badges.appendChild(el('div','year-celeb-badge silver','⭐ باشترین: '+best+' ڕۆژ'));
   badges.appendChild(el('div','year-celeb-badge teal','🕌 '+totalPrayers+' نڤێژ'));
   card.appendChild(badges);
-  var btn=document.createElement('button');btn.className='year-celeb-btn';btn.textContent='تەشکرکرن 🙏';
+  var btn=document.createElement('button');btn.className='year-celeb-btn';btn.textContent='داخستن';
   on(btn,'click',function(){App.closeYearCelebration();});
   card.appendChild(btn);
   on(ov,'click',function(e){if(e.target===ov)App.closeYearCelebration();});
@@ -8151,10 +8151,10 @@ function _pppCelebrateMonth(log){
   // Achievement card
   var card=el('div','ppp-celeb-card');
   card.appendChild(el('div','ppp-celeb-icon','🕌'));
-  card.appendChild(el('div','ppp-celeb-title','ماشاللا! 🌟'));
-  card.appendChild(el('div','ppp-celeb-sub','هەمی نوێژێن مانگت تەمام کرن!\nخوا قبوول بکا 🤲'));
-  if(streak>0)card.appendChild(el('div','ppp-celeb-streak','🔥 '+streak+' ڕۆژ ل ڕیزا'));
-  var btn=document.createElement('button');btn.className='ppp-celeb-btn';btn.textContent='تەشکرکرن 🙏';
+  card.appendChild(el('div','ppp-celeb-title','ما شاء الله! 🌟'));
+  card.appendChild(el('div','ppp-celeb-sub','تە هەمی نڤێژێن مەهێ تەمام کرن!\nخودێ قبوول بکەت 🤲'));
+  if(streak>0)card.appendChild(el('div','ppp-celeb-streak','🔥 '+streak+' ڕۆژ ل سەر ئێک'));
+  var btn=document.createElement('button');btn.className='ppp-celeb-btn';btn.textContent='داخستن';
   on(btn,'click',function(){App.closePrayerCelebration();});
   card.appendChild(btn);
   on(ov,'click',function(e){if(e.target===ov)App.closePrayerCelebration();});
@@ -8201,12 +8201,12 @@ function _goalCelebrateKhatm(totalRead,streak,bestStreak){
   card.appendChild(el('div','khatm-celeb-sub',msg));
   // Badges row
   var badges=el('div','khatm-celeb-badges');
-  if(streak>0)badges.appendChild(el('div','khatm-celeb-badge gold','🔥 '+streak+' ڕۆژ ل ڕیزا'));
+  if(streak>0)badges.appendChild(el('div','khatm-celeb-badge gold','🔥 '+streak+' ڕۆژ ل سەر ئێک'));
   if(bestStreak>0)badges.appendChild(el('div','khatm-celeb-badge green','⭐ باشترین: '+bestStreak+' ڕۆژ'));
   if(khatmNum>1)badges.appendChild(el('div','khatm-celeb-badge gold','📖 ختم ×'+khatmNum));
   if(badges.children.length)card.appendChild(badges);
   // Button
-  var btn=document.createElement('button');btn.className='khatm-celeb-btn';btn.textContent='تەشکرکرن 🙏';
+  var btn=document.createElement('button');btn.className='khatm-celeb-btn';btn.textContent='داخستن';
   on(btn,'click',function(){App.closeGoalCelebration();});
   card.appendChild(btn);
   on(ov,'click',function(e){if(e.target===ov)App.closeGoalCelebration();});
