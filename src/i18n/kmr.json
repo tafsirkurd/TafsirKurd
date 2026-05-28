@@ -492,7 +492,7 @@
   "profile.device_online": "چالاک",
   "profile.device_active_now": "ئێستا چالاکە",
   "profile.time_now": "نوکە",
-  "profile.device_stale": "(نچالاک)",
+  "profile.device_stale": "ئامێرێ ناچالاک",
   "profile.device_remove": "دەرکرن",
   "profile.logout_all_others": "دەرکرنا هەمی ئامێرێن دین",
   "profile.logout_all_confirm": "دووبارەکرن، دەرکرن؟",
