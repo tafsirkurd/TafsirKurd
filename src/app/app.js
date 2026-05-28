@@ -443,6 +443,33 @@ function icon(name){var i=document.createElement('i');i.className=name;return i}
 function on(e,ev,fn){if(e)e.addEventListener(ev,fn)}
 function clear(e){if(e)while(e.firstChild)e.removeChild(e.firstChild)}
 
+// ── Retry with exponential backoff + jitter ───────────────────────────────────
+// _tkRetry(fn, opts) — fn() must return a Promise.
+// Calls fn() fresh on each attempt so AbortControllers can be recreated.
+// opts: { maxRetries:2, base:600 }
+// Skips retries when: AbortError thrown | document backgrounded | offline
+// Delay schedule (base=600, 2 retries): ~500ms → ~1000ms (with ±30% jitter)
+function _tkRetry(fn, opts){
+  var n=(opts&&opts.maxRetries)!==undefined?(opts&&opts.maxRetries):2;
+  var base=(opts&&opts.base)||600;
+  var attempt=0;
+  function go(){
+    return fn().catch(function(e){
+      if(e&&e.name==='AbortError')throw e;       // explicit abort — don't retry
+      if(document.hidden&&attempt>0)throw e;     // backgrounded — stop retrying
+      if(!navigator.onLine)throw e;              // offline — no point retrying
+      if(attempt<n){
+        attempt++;
+        var delay=Math.min(base*Math.pow(2,attempt-1),8000);
+        delay=Math.round(delay*(0.7+Math.random()*0.6)); // ±30% jitter
+        return new Promise(function(res){setTimeout(res,delay);}).then(go);
+      }
+      throw e;
+    });
+  }
+  return go();
+}
+
 /* ===== SURAH DATA ===== */
 var SURAHS=[
 {n:1,en:'Al-Fatiha',ar:'الفاتحة',a:7,t:'Meccan'},{n:2,en:'Al-Baqarah',ar:'البقرة',a:286,t:'Medinan'},{n:3,en:'Ali Imran',ar:'آل عمران',a:200,t:'Medinan'},
@@ -1530,25 +1557,30 @@ function _idbPut(key,val){
 
 var _QURAN_IDB_KEY='quran_v1';
 function _fetchQuranData(){
-  var ctrl=new AbortController();
   var _t0=Date.now();
-  var tid=setTimeout(function(){ctrl.abort();},_sn.ms(12000,25000));
-  fetch('/data/quran.json',{signal:ctrl.signal}).then(function(r){
-    clearTimeout(tid);
-    AndroidLog.fetch('/data/quran.json',r.status,'quran',false,Date.now()-_t0);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.json();
-  }).then(function(d){
+  // Retry up to 2 times with exponential backoff before giving up.
+  // Each attempt creates a fresh AbortController so the timeout resets.
+  _tkRetry(function(){
+    var ctrl=new AbortController();
+    var tid=setTimeout(function(){ctrl.abort();},_sn.ms(12000,25000));
+    return fetch('/data/quran.json',{signal:ctrl.signal}).then(function(r){
+      clearTimeout(tid);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    }).catch(function(e){clearTimeout(tid);throw e;});
+  },{maxRetries:2,base:600})
+  .then(function(d){
+    AndroidLog.fetch('/data/quran.json',200,'quran',false,Date.now()-_t0);
     S.quranData=d;
     _idbPut(_QURAN_IDB_KEY,d);
     _dataReady.quran=true;
     _checkDataReady();
-  }).catch(function(e){
-    clearTimeout(tid);
+  })
+  .catch(function(e){
     AndroidLog.fetch('/data/quran.json',0,'quran',false,Date.now()-_t0,e);
-    console.error('Quran load error:',e);
+    console.error('[quran] failed after retries:',e);
     toast(t('error.data_load'));
-    _dataReady.quran=true;
+    _dataReady.quran=true; // unblock splash even on final failure
     _checkDataReady();
   });
 }
@@ -1605,30 +1637,30 @@ function loadTafsirData(){
   // both the 3 MB fetch and groupTafsirBySurah() on every repeat launch.
   _idbGet(_TAFSIR_IDB_KEY,function(cached){
     if(cached){S.tafsirData=cached;_dataReady.tafsir=true;_checkDataReady();return;}
-    _attempt(0,_sn.ms(4000,6000));
-  });
-  function _attempt(n,delayMs){
-    var ctrl=new AbortController();
-    var tid=setTimeout(function(){ctrl.abort();},_sn.ms(18000,32000));
-    fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
-      clearTimeout(tid);
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      return r.json();
-    }).then(function(d){
+    var _t0=Date.now();
+    _tkRetry(function(){
+      var ctrl=new AbortController();
+      var tid=setTimeout(function(){ctrl.abort();},_sn.ms(18000,32000));
+      return fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
+        clearTimeout(tid);
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        return r.json();
+      }).catch(function(e){clearTimeout(tid);throw e;});
+    },{maxRetries:2,base:800})
+    .then(function(d){
       var grouped=groupTafsirBySurah(d);
       S.tafsirData=grouped;
       _idbPut(_TAFSIR_IDB_KEY,grouped);
       _dataReady.tafsir=true;
       _checkDataReady();
-      if(n>0)toast(t('toast.tafsir_loaded'));
-    }).catch(function(e){
-      clearTimeout(tid);
-      console.error('Tafsir load error (attempt '+(n+1)+'):',e);
-      if(n===0)toast(t('error.tafsir_load'));
-      if(n>=2){_dataReady.tafsir=true;_checkDataReady();return;}
-      setTimeout(function(){if(!S.tafsirData)_attempt(n+1,delayMs*2);},delayMs);
+    })
+    .catch(function(e){
+      console.error('[tafsir] failed after retries:',e);
+      toast(t('error.tafsir_load'));
+      _dataReady.tafsir=true; // unblock splash on final failure
+      _checkDataReady();
     });
-  }
+  });
 }
 
 /* ===== THEME & SIZES ===== */
@@ -9280,8 +9312,13 @@ function renderSettings(){
     if(S.user.avatar){
       avatarEl=document.createElement('img');
       avatarEl.className='profile-avatar-img';
-      avatarEl.src=S.user.avatar;avatarEl.alt='';
+      avatarEl.alt='';
       avatarEl.referrerPolicy='no-referrer';avatarEl.crossOrigin='anonymous';
+      avatarEl.onerror=function(){
+        var fb=el('div','profile-avatar');fb.appendChild(icon('fas fa-user'));
+        if(this.parentNode)this.parentNode.replaceChild(fb,this);
+      };
+      avatarEl.src=S.user.avatar; // set src last so error handler is wired first
     }else{
       avatarEl=el('div','profile-avatar');
       avatarEl.appendChild(icon('fas fa-user'));
@@ -11001,12 +11038,17 @@ function renderProfile(panel){
   var avatar=el('div','pp-avatar');
   if(S.user.avatar){
     var img=document.createElement('img');
-    img.src=S.user.avatar;img.alt='';img.referrerPolicy='no-referrer';img.crossOrigin='anonymous';
+    img.alt='';img.referrerPolicy='no-referrer';img.crossOrigin='anonymous';
+    img.onerror=function(){
+      // Auth avatar failed — degrade gracefully to initials
+      this.style.display='none';
+      avatar.textContent=(S.user.name||'?').charAt(0).toUpperCase();
+    };
+    img.src=S.user.avatar; // src last so error handler is wired first
     avatar.appendChild(img);
   }else{
     // Initials fallback
-    var initials=(S.user.name||'?').charAt(0).toUpperCase();
-    avatar.textContent=initials;
+    avatar.textContent=(S.user.name||'?').charAt(0).toUpperCase();
   }
   hero.appendChild(avatar);
   hero.appendChild(el('div','pp-name-display',S.user.name||''));
