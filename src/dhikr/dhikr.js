@@ -561,7 +561,7 @@ function _timeAgo(ts) {
   var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
   var diff = Math.floor((Date.now() - ts) / 86400000);
   if (diff < 1) return T('gencine.today','ئەمڕۆ');
-  if (diff === 1) return T('gencine.yesterday','دوێنێ');
+  if (diff === 1) return T('gencine.yesterday','دووهی');
   if (diff < 7) return diff + ' ' + T('gencine.days_ago','ڕۆژ');
   if (diff < 30) return Math.floor(diff/7) + ' ' + T('gencine.weeks_ago','هەفتە');
   return Math.floor(diff/30) + ' ' + T('gencine.months_ago','مانگ');
@@ -2410,7 +2410,7 @@ window.GencineUI = {
         featuredSection.style.display = '';
         var _flbl = document.createElement('div'); _flbl.className = 'book-featured-lbl';
         var _flbIco = document.createElement('i'); _flbIco.className = 'fas fa-star'; _flbl.appendChild(_flbIco);
-        _flbl.appendChild(document.createTextNode(' ' + T('gencine.featured','تایبەتمەندکراو')));
+        _flbl.appendChild(document.createTextNode(' ' + T('gencine.featured','تایبەتمەندکری')));
         featuredSection.appendChild(_flbl);
         function _makeFeatClick(fb) {
           return function(){
