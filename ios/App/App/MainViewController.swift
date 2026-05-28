@@ -55,6 +55,14 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // view.window is guaranteed non-nil here — last chance to paint the window
+        // before the first composited frame after LaunchScreen dismissal.
+        let (bgColor, _) = themeAssets()
+        view.window?.backgroundColor = bgColor
+    }
+
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(TafsirAppleSignIn())
         bridge?.registerPluginInstance(SharedPrefsPlugin())

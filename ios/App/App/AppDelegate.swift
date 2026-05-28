@@ -6,7 +6,11 @@ import WidgetKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    var window: UIWindow?
+    // didSet fires whenever Capacitor (or UIKit) assigns self.window,
+    // guaranteeing the theme background is set before any frame is composited.
+    var window: UIWindow? {
+        didSet { window?.backgroundColor = themeBackground() }
+    }
     private let kBGTaskID  = "com.tafsirkurd.app.prayerCacheRefresh"
     private let kAppGroup  = "group.com.tafsirkurd.app"
     private let kPrayerKey = "widgetPrayerData"
@@ -19,23 +23,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: kBGTaskID, using: nil) { [weak self] task in
             self?.handlePrayerCacheRefresh(task: task as! BGAppRefreshTask)
         }
-        let themeKey = "appTheme"
-        let savedTheme: String =
-            UserDefaults(suiteName: kAppGroup)?.string(forKey: themeKey)
-            ?? UserDefaults.standard.string(forKey: "CapacitorStorage." + themeKey)
-            ?? "dark"
-        let themeColor: UIColor
-        switch savedTheme {
-        case "light":             themeColor = UIColor(red: 248/255, green: 248/255, blue: 248/255, alpha: 1)
-        case "parchment", "noor": themeColor = UIColor(red: 243/255, green: 232/255, blue: 204/255, alpha: 1)
-        case "sakina", "emerald": themeColor = UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1)
-        default:                  themeColor = UIColor(red:   0,      green:   0,      blue:   0,     alpha: 1)
-        }
-        // Set window background directly — UIWindow.appearance() only affects future windows,
-        // not the one already created by UIKit. This fills any gap between LaunchScreen and
-        // the native overlay in MainViewController with the correct theme color.
-        window?.backgroundColor = themeColor
+        // Belt-and-suspenders: also set explicitly in case window was already assigned
+        // before didSet fired (e.g. set synchronously during Storyboard load).
+        window?.backgroundColor = themeBackground()
         return true
+    }
+
+    // Reads the saved theme and returns the matching background color.
+    // Called from the window didSet and didFinishLaunching so the theme is
+    // applied to whatever UIWindow exists at that moment.
+    private func themeBackground() -> UIColor {
+        let theme = UserDefaults(suiteName: kAppGroup)?.string(forKey: "appTheme")
+            ?? UserDefaults.standard.string(forKey: "CapacitorStorage.appTheme")
+            ?? "dark"
+        switch theme {
+        case "light":             return UIColor(red: 248/255, green: 248/255, blue: 248/255, alpha: 1)
+        case "parchment", "noor": return UIColor(red: 243/255, green: 232/255, blue: 204/255, alpha: 1)
+        case "sakina", "emerald": return UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1)
+        default:                  return UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {}
