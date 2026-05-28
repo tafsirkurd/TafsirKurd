@@ -1833,34 +1833,70 @@ App.tab=function(name){
     // Renders for new tab — hash checks prevent unnecessary rebuilds.
     // Each tab renders once (at pre-render or first open) and stays in DOM.
     // Only re-renders when the tab's data actually changes (hash mismatch).
+    // Rebuilds are deferred by one rAF so the panel shows old content for
+    // exactly one frame (16ms) before the new content replaces it atomically.
+    // This eliminates all "blank container" flashes during tab switching.
     var _didRebuild=false;
     if(name==='quran'){requestAnimationFrame(_hlRestoreAll);}
-    if(name==='bookmarks'){var _hbm=_tabHash('bookmarks');if(_hbm!==_renderHash.bm){_didRebuild=true;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}}
-    if(name==='goals'){var _hg=_tabHash('goals');if(_hg!==_renderHash.goals){_didRebuild=true;renderGoals();_renderHash.goals=_tabHash('goals');}}
+    if(name==='bookmarks'){
+      var _hbm=_tabHash('bookmarks');
+      if(_hbm!==_renderHash.bm){
+        _didRebuild=true;
+        requestAnimationFrame(function(){
+          if(S.tab!=='bookmarks')return;
+          renderBookmarks();_renderHash.bm=_tabHash('bookmarks');
+        });
+      }
+    }
+    if(name==='goals'){
+      var _hg=_tabHash('goals');
+      if(_hg!==_renderHash.goals){
+        _didRebuild=true;
+        requestAnimationFrame(function(){
+          if(S.tab!=='goals')return;
+          renderGoals();_renderHash.goals=_tabHash('goals');
+        });
+      }
+    }
     if(name==='islamvoice'){
       var _hiv=_tabHash('islamvoice');
       if(_hiv!==_renderHash.iv){
         _didRebuild=true;
-        // Save scroll before rebuild so we can restore it after
         var _ivPre=$('panelIslamvoice');var _ivPreScroll=_ivPre?_ivPre.scrollTop:0;
-        renderIslamVoice();
-        if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');
-        // Restore scroll after rebuild (rAF ensures DOM is updated)
-        if(_ivPreScroll>0){requestAnimationFrame(function(){var _ivPost=$('panelIslamvoice');if(_ivPost)_ivPost.scrollTop=_ivPreScroll;});}
+        requestAnimationFrame(function(){
+          if(S.tab!=='islamvoice')return;
+          renderIslamVoice();
+          if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');
+          if(_ivPreScroll>0){requestAnimationFrame(function(){var _ivPost=$('panelIslamvoice');if(_ivPost)_ivPost.scrollTop=_ivPreScroll;});}
+        });
       } else if(!S.ivCurrentSeries&&S._ivHomeScroll!=null){
-        // Hash same → content preserved → restore saved scroll position
         var _ivRestoreEl=$('panelIslamvoice');
         if(_ivRestoreEl){requestAnimationFrame(function(){_ivRestoreEl.scrollTop=S._ivHomeScroll||0;});}
       }
     }
-    if(name==='settings'){var _hs=_tabHash('settings');if(_hs!==_renderHash.settings){_didRebuild=true;renderSettings();_renderHash.settings=_tabHash('settings');}_warmAboutCache();}
+    if(name==='settings'){
+      var _hs=_tabHash('settings');
+      if(_hs!==_renderHash.settings){
+        _didRebuild=true;
+        requestAnimationFrame(function(){
+          if(S.tab!=='settings')return;
+          renderSettings();_renderHash.settings=_tabHash('settings');
+        });
+      }
+      _warmAboutCache();
+    }
     if(name==='prayer'&&window.PrayerUI){
       var _hp=_tabHash('prayer');
-      if(_hp!==_renderHash.prayer){_didRebuild=true;PrayerUI.render();_renderHash.prayer=_hp;}
+      if(_hp!==_renderHash.prayer){
+        _didRebuild=true;
+        requestAnimationFrame(function(){
+          if(S.tab!=='prayer'||!window.PrayerUI)return;
+          PrayerUI.render();_renderHash.prayer=_hp;
+        });
+      }
       if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
     }
     if(name==='gencine'){
-      // Scripts already loaded at startup — this is normally a no-op, just renders if not yet done
       _loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});
     }
 
@@ -6855,9 +6891,8 @@ function toggleBookmark(surah,ayah){
 function renderBookmarks(){
   var bms=getBookmarks();
 
-  // Stats
-  var stats=$('bmStats');
-  clear(stats);
+  // ── Stats — build into fragment, then atomic replace ─────────────────────
+  var statsFrag=document.createDocumentFragment();
   var row=el('div','stats-row');
   [{v:bms.length,l:t('bookmarks.total')},{v:new Set(bms.map(function(b){return b.surah})).size,l:t('bookmarks.surahs')},{v:bms.filter(function(b){return b.note}).length,l:t('bookmarks.notes')}].forEach(function(s){
     var card=el('div','stat-card');
@@ -6865,11 +6900,10 @@ function renderBookmarks(){
     card.appendChild(el('div','stat-lbl',s.l));
     row.appendChild(card);
   });
-  stats.appendChild(row);
+  statsFrag.appendChild(row);
 
-  // Controls
-  var ctrls=$('bmControls');
-  clear(ctrls);
+  // ── Controls ─────────────────────────────────────────────────────────────
+  var ctrlFrag=document.createDocumentFragment();
   if(bms.length){
     var ctrlDiv=el('div','bm-controls');
     var inp=el('input','');
@@ -6886,9 +6920,12 @@ function renderBookmarks(){
     });
     on(sel,'change',function(){S.bmSort=this.value;renderBmList(bms)});
     ctrlDiv.appendChild(sel);
-    ctrls.appendChild(ctrlDiv);
+    ctrlFrag.appendChild(ctrlDiv);
   }
 
+  // Atomic replace — old content stays visible until both sections are ready
+  var stats=$('bmStats'); clear(stats); stats.appendChild(statsFrag);
+  var ctrls=$('bmControls'); clear(ctrls); ctrls.appendChild(ctrlFrag);
   renderBmList(bms);
 }
 
@@ -6941,7 +6978,7 @@ function _showNoteModal(currentNote,onSave){
 
 function renderBmList(bms){
   var list=$('bmList');
-  clear(list);
+  var frag=document.createDocumentFragment();
 
   var filtered=bms;
   if(S.bmSearch){
@@ -6959,7 +6996,8 @@ function renderBmList(bms){
     var empty=el('div','bm-empty');
     empty.appendChild(icon('fas fa-bookmark'));
     empty.appendChild(el('p','',t('bookmarks.empty')));
-    list.appendChild(empty);
+    frag.appendChild(empty);
+    clear(list); list.appendChild(frag);
     return;
   }
 
@@ -7014,8 +7052,9 @@ function renderBmList(bms){
     actions.appendChild(delBtn);
 
     card.appendChild(actions);
-    list.appendChild(card);
+    frag.appendChild(card);
   });
+  clear(list); list.appendChild(frag);
 }
 
 /* ===== GOALS ===== */
@@ -7147,7 +7186,7 @@ function getRecentSessions(){
 
 function renderGoals(){
   var content=$('goalsContent');
-  clear(content);
+  var frag=document.createDocumentFragment();
   var goal=getGoal();
 
   if(!goal){
@@ -7163,7 +7202,8 @@ function renderGoals(){
     btn.appendChild(document.createTextNode(' '+t('goals.empty.start')));
     on(btn,'click',function(){App.openWizard()});
     ng.appendChild(btn);
-    content.appendChild(ng);
+    frag.appendChild(ng);
+    clear(content); content.appendChild(frag);
     return;
   }
 
@@ -7273,7 +7313,7 @@ function renderGoals(){
     bestEl.appendChild(bestVal);
     hero.appendChild(bestEl);
   }
-  content.appendChild(hero);
+  frag.appendChild(hero);
 
   // Today's progress card with encouragement
   var prgSec=el('div','progress-section');
@@ -7327,7 +7367,7 @@ function renderGoals(){
     autoNote.appendChild(document.createTextNode(t('goals.progress.auto_track')));
     prgSec.appendChild(autoNote);
   }
-  content.appendChild(prgSec);
+  frag.appendChild(prgSec);
   setTimeout(function(){fill.style.width=pct+'%'},50);
 
   // Stats card — total read, days to khatm, best streak
@@ -7343,7 +7383,7 @@ function renderGoals(){
     details.appendChild(det);
   });
   gc.appendChild(details);
-  content.appendChild(gc);
+  frag.appendChild(gc);
 
   // Last session card
   var sessions=getRecentSessions();
@@ -7362,13 +7402,13 @@ function renderGoals(){
       sessDetails.appendChild(det);
     });
     sessCard.appendChild(sessDetails);
-    content.appendChild(sessCard);
+    frag.appendChild(sessCard);
   }
 
   // Month calendar section
   var calTitle=el('div','section-title');
   calTitle.appendChild(document.createTextNode(t('goals.heatmap.title')));
-  content.appendChild(calTitle);
+  frag.appendChild(calTitle);
 
   var calSec=el('div','month-cal-section');
   var monthNames=[t('goals.months.1'),t('goals.months.2'),t('goals.months.3'),t('goals.months.4'),t('goals.months.5'),t('goals.months.6'),t('goals.months.7'),t('goals.months.8'),t('goals.months.9'),t('goals.months.10'),t('goals.months.11'),t('goals.months.12')];
@@ -7436,7 +7476,7 @@ function renderGoals(){
   }
   legend.appendChild(document.createTextNode(' '+t('goals.heatmap.more')));
   calSec.appendChild(legend);
-  content.appendChild(calSec);
+  frag.appendChild(calSec);
 
   // Delete goal with warning
   var delWrap=el('div','goal-delete-section');
@@ -7449,7 +7489,8 @@ function renderGoals(){
     haptic([20]);
   });
   delWrap.appendChild(delGoal);
-  content.appendChild(delWrap);
+  frag.appendChild(delWrap);
+  clear(content); content.appendChild(frag);
 }
 
 function calcStreak(log){
@@ -9224,7 +9265,7 @@ function _showIgPicker(){
 
 function renderSettings(){
   var content=$('settingsContent');
-  clear(content);
+  var frag=document.createDocumentFragment();
 
   // ── Profile hero card ────────────────────────
   var profile=el('div','profile-card');
@@ -9270,7 +9311,7 @@ function renderSettings(){
     profile.appendChild(loginBtn);
     profile.style.cursor='default';
   }
-  content.appendChild(profile);
+  frag.appendChild(profile);
 
   // ── (1) Reading Stats Card ────────────────────
   var log=getReadLog();
@@ -9289,7 +9330,7 @@ function renderSettings(){
     col.appendChild(el('div','stats-lbl',item[2]));
     statsCard.appendChild(col);
   });
-  content.appendChild(statsCard);
+  frag.appendChild(statsCard);
 
   // ── Appearance ───────────────────────────────
   var g1=el('div','settings-group');
@@ -9334,7 +9375,7 @@ function renderSettings(){
     localStorage.setItem('keepAwake',String(S.keepAwake));
     applyKeepAwake();renderSettings();
   }));
-  content.appendChild(g1);
+  frag.appendChild(g1);
 
   // ── Reading ──────────────────────────────────
   var g2=el('div','settings-group');
@@ -9366,7 +9407,7 @@ function renderSettings(){
     function(v){S.lineH=v;applySizes();},
     function(v){localStorage.setItem('app_lineH',String(v));}
   ));
-  content.appendChild(g2);
+  frag.appendChild(g2);
 
   // ── Audio ────────────────────────────────────
   var gAudio=el('div','settings-group');
@@ -9403,7 +9444,7 @@ function renderSettings(){
     localStorage.setItem('bgAudio',String(S.bgAudio));
     renderSettings();
   }));
-  content.appendChild(gAudio);
+  frag.appendChild(gAudio);
 
   // ── Notifications & Haptics ──────────────────
   var g3=el('div','settings-group');
@@ -9415,7 +9456,7 @@ function renderSettings(){
     haptic([20,30,20]);
     renderSettings();
   },t('settings.haptic_sub')));
-  content.appendChild(g3);
+  frag.appendChild(g3);
 
   // ── Data & Sync ──────────────────────────────
   var g4=el('div','settings-group');
@@ -9497,7 +9538,7 @@ function renderSettings(){
       toast(t('toast.cache_cleared'));
     }
   }));
-  content.appendChild(g4);
+  frag.appendChild(g4);
 
   // ── Advanced (collapsible) ───────────────────
   // Hidden from normal users by default. Contains performance override and future
@@ -9539,7 +9580,7 @@ function renderSettings(){
     }
   });
   g5.appendChild(_rateRow);
-  content.appendChild(g5);
+  frag.appendChild(g5);
 
   // ── About Us ─────────────────────────────────
   var g6=el('div','settings-group');
@@ -9578,7 +9619,7 @@ function renderSettings(){
   g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژە',function(){openAboutSheet('app');}));
   g6.appendChild(mkAboutNavRow(_founderEl,'سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
   g6.appendChild(mkAboutNavRow('fas fa-heart','سوپاسنامە',_ft('thanks_nav_sub','بۆ هەر کەسێک یارمەتیدا'),function(){openAboutSheet('thanks');}));
-  content.appendChild(g6);
+  frag.appendChild(g6);
 
   // ── Social Links ─────────────────────────────
   var g7=el('div','settings-group');
@@ -9610,7 +9651,7 @@ function renderSettings(){
     socialBar.appendChild(btn);
   });
   g7.appendChild(socialBar);
-  content.appendChild(g7);
+  frag.appendChild(g7);
   getSiteSettings().then(function(ss){
     SOCIAL_DEFS.forEach(function(def){
       var url=ss[def.key]||def.fallback||'';
@@ -9633,7 +9674,8 @@ function renderSettings(){
     }).catch(function(){});
   }
   about.appendChild(el('div','about-desc',t('settings.about_desc')));
-  content.appendChild(about);
+  frag.appendChild(about);
+  clear(content); content.appendChild(frag);
 }
 
 /* ===== SUPABASE AUTH & CLOUD SYNC ===== */
