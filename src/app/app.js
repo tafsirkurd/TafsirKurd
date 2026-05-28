@@ -2008,19 +2008,72 @@ function toast(msg){
 }
 App.toast=toast; // iOS: window.toast is the DOM element — use App.toast in other modules
 
-/* ===== HAPTIC ===== */
+/* ===== HAPTICS ===== */
+// Centralized haptic system. Use H.xxx() for all new code.
+//
+// iOS native mapping (Capacitor Haptics plugin):
+//   selection → UISelectionFeedbackGenerator.selectionChanged() — tightest/subtlest
+//   light     → UIImpactFeedbackGenerator(.light)
+//   medium    → UIImpactFeedbackGenerator(.medium)
+//   heavy     → UIImpactFeedbackGenerator(.heavy)
+//   success   → UINotificationFeedbackGenerator(.success)
+//   warning   → UINotificationFeedbackGenerator(.warning)
+//
+// Android web fallback (navigator.vibrate):
+//   selection → 8ms  | light → 18ms | medium → 35ms | heavy → 55ms
+//   success   → [40,20,40] | warning → [60,30,60]
+//
+// Spam guard: standard haptics have a 50ms minimum gap.
+// Notification haptics (success/warning) always fire but block for 200ms after.
+var H=(function(){
+  var _last=0;
+  var _MIN=50; // ms minimum between standard haptics — prevents spam
+
+  function _std(cap,webMs){
+    if(!S.hapticFeedback)return;
+    var now=Date.now();
+    if(now-_last<_MIN)return;
+    _last=now;
+    try{
+      var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+      if(Hp)cap(Hp);
+      else if(navigator.vibrate)navigator.vibrate([webMs]);
+    }catch(e){}
+  }
+  function _note(type,webPat){
+    if(!S.hapticFeedback)return;
+    _last=Date.now()+200; // block standard haptics for 200ms after notification
+    try{
+      var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+      if(Hp)Hp.notification({type:type});
+      else if(navigator.vibrate)navigator.vibrate(webPat);
+    }catch(e){}
+  }
+
+  return {
+    // selection: subtlest tick — stepper adjustments, picker scrubbing, PTR arm
+    selection:function(){_std(function(Hp){Hp.selectionChanged();},8);},
+    // light: gentle tap — tabs, toggles, back navigation, most UI interactions
+    light:    function(){_std(function(Hp){Hp.impact({style:'LIGHT'});},18);},
+    // medium: clear feedback — play/pause, bookmark add, PTR commit, opening players
+    medium:   function(){_std(function(Hp){Hp.impact({style:'MEDIUM'});},35);},
+    // heavy: strong — use sparingly, only for the most intentional gestures
+    heavy:    function(){_std(function(Hp){Hp.impact({style:'HEAVY'});},55);},
+    // success: achievement/confirmation — goal complete, login, sync success
+    success:  function(){_note('SUCCESS',[40,20,40]);},
+    // warning: destructive/alert — confirm delete, dangerous actions
+    warning:  function(){_note('WARNING',[60,30,60]);}
+  };
+})();
+
+// Legacy shim — maps old numeric patterns to named semantics.
+// All new code should call H.xxx() directly.
 function haptic(pattern){
-  if(!S.hapticFeedback)return;
-  try{
-    var H=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
-    if(H){
-      // impact() is the correct Capacitor API for UI tap feedback.
-      // vibrate() with very short durations (<20ms) is silently ignored by Android.
-      var dur=pattern&&pattern[0]||30;
-      if(dur<=30){H.impact({style:'LIGHT'});}
-      else{H.notification({type:'SUCCESS'});}
-    }else{navigator.vibrate(pattern||[30]);}
-  }catch(e){}
+  var dur=pattern&&pattern[0]||20;
+  if(dur<=8)H.selection();
+  else if(dur<=25)H.light();
+  else if(dur<=45)H.medium();
+  else H.success();
 }
 
 /* ===== DAILY REMINDER ===== */
@@ -3106,7 +3159,7 @@ App._mkSearchItem=function(r,isPrimary){
       item.appendChild(kuDiv);
     }
     on(item,'click',(function(sn,an,q){return function(){
-      if(navigator.vibrate)navigator.vibrate(8);
+      H.selection();
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
@@ -3143,7 +3196,7 @@ App._mkSearchItem=function(r,isPrimary){
       item.appendChild(kuDiv2);
     }
     on(item,'click',(function(sn,an,q){return function(){
-      if(navigator.vibrate)navigator.vibrate(8);
+      H.selection();
       if(window.QuranSearch&&QuranSearch.trackTap)QuranSearch.trackTap(sn,an);
       _shAdd(q);
       App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
@@ -6919,7 +6972,7 @@ function toggleBookmark(surah,ayah){
   }else{
     _bmMap[key]={surah:surah,ayah:ayah,date:Date.now(),note:''};
     _scheduleBmSave();
-    haptic([20]);
+    H.medium(); // clear confirmation: something meaningful was saved
     toast(t('toast.bookmark_added'));
     return true;
   }
@@ -7161,9 +7214,9 @@ function trackVerse(surah,ayah){
   var l=getReadLog();
   l[today]=(l[today]||0)+1;
   saveReadLog(l);
-  // Haptic exactly once on daily goal completion
+  // Haptic exactly once on daily goal completion — success pattern
   var g=getGoal();
-  if(g&&l[today]===g.pages){haptic([50]);}
+  if(g&&l[today]===g.pages){H.success();}
   // Khatm celebration — fires each time total crosses a new multiple of 6236
   var totalAfter=calcTotalRead(l);
   var khatmAt=parseInt(localStorage.getItem('khatmCelebAt')||'0');
@@ -7523,7 +7576,7 @@ function renderGoals(){
   delGoal.appendChild(document.createTextNode(' '+t('goals.delete.button')));
   on(delGoal,'click',function(){
     $('goalConfirmOverlay').classList.add('on');
-    haptic([20]);
+    H.warning(); // destructive action confirmation
   });
   delWrap.appendChild(delGoal);
   frag.appendChild(delWrap);
@@ -9408,7 +9461,7 @@ function renderSettings(){
     card.appendChild(el('div','theme-card-name',th.name));
     card.appendChild(el('div','theme-card-sub',th.sub));
     var chk=el('div','theme-card-check');chk.appendChild(icon('fas fa-check'));card.appendChild(chk);
-    on(card,'click',function(){S.theme=th.id;applyTheme();try{localStorage.setItem('themeUserChosen','1');}catch(e){}haptic([10]);renderSettings()});
+    on(card,'click',function(){S.theme=th.id;applyTheme();try{localStorage.setItem('themeUserChosen','1');}catch(e){}H.light();renderSettings();});
     tGrid.appendChild(card);
   });
   g1.appendChild(tGrid);
@@ -9495,7 +9548,7 @@ function renderSettings(){
   g3.appendChild(mkToggleRow(t('settings.haptic'),S.hapticFeedback,function(){
     S.hapticFeedback=!S.hapticFeedback;
     localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
-    haptic([20,30,20]);
+    H.success(); // celebrate turning haptics on (fires even if just enabled)
     renderSettings();
   },t('settings.haptic_sub')));
   frag.appendChild(g3);
@@ -11681,8 +11734,8 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     ptrSpinner.style.opacity=String(Math.min(pullRaw/65,1));
     ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+Math.min(pullRaw/85,1)+')';
     if(_ptrArc)_ptrArc.style.transform='rotate('+Math.min(pullRaw*2.8,720)+'deg)';
-    // Single haptic exactly at threshold: "you can release now"
-    if(!_ticked&&pullRaw>=THRESHOLD){_ticked=true;haptic([10]);}
+    // Single haptic exactly at threshold: "you can release now" — selection tick, not a tap
+    if(!_ticked&&pullRaw>=THRESHOLD){_ticked=true;H.selection();}
   }
 
   // ── touchstart ────────────────────────────────────────────────────────────
