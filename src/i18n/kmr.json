@@ -246,7 +246,7 @@
   "toast.repeat_stopped": "دووبارەکرن راوەستیا",
   "toast.no_verse": "ئایەت دیار نەکریە",
   "error.audio_load": "خەلەتی ل دەنگی دا هەیە",
-  "error.audio_unavailable": "ئەم قاری بۆ ئەم سورەتێ بەردەست نییە",
+  "error.audio_unavailable": "ئەڤ خواندەڤانە بۆ ڤێ سوورەتێ بەردەست نینە",
   "error.data_load": " خەلەتی ل بارکرنا داتایێ دا یە",
   "error.tafsir_load": "خەلەتی ل بارکرنا تەفسیرێ دا یە",
   "error.generic": "خەلەتت",
