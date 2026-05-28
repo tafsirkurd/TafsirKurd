@@ -485,7 +485,7 @@
   "profile.devices_title": "ئامێرێن تە",
   "profile.devices_refresh": "نوکردن",
   "profile.devices_note": "ئامێر دکەڤنە لیستێ کاتێک نوترین وەشانا ئەپێ هێتە کردنەوە",
-  "profile.devices_loading": "بارکردن...",
+  "profile.devices_loading": "بارکرنا ئامێران...",
   "profile.devices_none": "هیچ ئامێرێک نەهاتیە دیتن",
   "profile.devices_error": "هەڵەیەک هەیە، دووبارە هەوڵ بدە",
   "profile.this_device": "ئەڤ ئامێرە",
