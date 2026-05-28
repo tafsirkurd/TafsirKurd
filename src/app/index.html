@@ -11,8 +11,10 @@
 // iOS WKWebView ignores Cache-Control: no-store for previously cached pages.
 // On every cold-start (sessionStorage cleared), add a timestamp param so WKWebView
 // treats the URL as new and fetches fresh HTML + versioned JS from the network.
+// Skip for capacitor: scheme — local bundle has no stale-cache issue and the
+// redirect would cause a redundant full page reload on every cold native start.
 (function(){
-  if(window.webkit&&!sessionStorage.getItem('_tksr')){
+  if(window.webkit&&location.protocol!=='capacitor:'&&!sessionStorage.getItem('_tksr')){
     sessionStorage.setItem('_tksr','1');
     if(location.search.indexOf('_cb=')===-1){
       location.replace(location.pathname+'?_cb='+Math.floor(Date.now()/60000));
@@ -4423,7 +4425,12 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=892"></script>
+<script>
+// Pre-open IndexedDB during page parse so _openIDB() in app.js finds the
+// connection already established — eliminates the IDB open latency (~5 ms).
+try{indexedDB.open('tk-data-v1',1).onsuccess=function(e){window._tkIDBConn=e.target.result;};}catch(e){}
+</script>
+<script src="/app/app.js?v=893"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {

@@ -1492,10 +1492,12 @@ function _startTabPrerender(){
 var _tkIDB=null;
 function _openIDB(cb){
   if(_tkIDB){cb(_tkIDB);return;}
+  // Reuse connection pre-opened by inline script in index.html (zero latency)
+  if(window._tkIDBConn){_tkIDB=window._tkIDBConn;cb(_tkIDB);return;}
   try{
     var req=indexedDB.open('tk-data-v1',1);
     req.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};
-    req.onsuccess=function(e){_tkIDB=e.target.result;cb(_tkIDB);};
+    req.onsuccess=function(e){_tkIDB=e.target.result;cb(_tkIDB);return;};
     req.onerror=function(){cb(null);};
   }catch(e){cb(null);}
 }
