@@ -1844,7 +1844,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260526b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=45',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=48',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -1874,6 +1874,7 @@ function toast(msg){
   el.classList.add('on');
   _toastTimer=setTimeout(function(){el.classList.remove('on');_toastTimer=null;_toastMsg=null;},2500);
 }
+App.toast=toast; // iOS: window.toast is the DOM element — use App.toast in other modules
 
 /* ===== HAPTIC ===== */
 function haptic(pattern){
@@ -7215,8 +7216,8 @@ function renderGoals(){
   // Header: prominent "X/100 بۆ ختم" counter
   var prgHdr=el('div','progress-hdr');
   var prgLeft=el('div','progress-left');
-  var prgCount=el('div','progress-count',todayRead+'/'+target);
-  var prgKhatmLbl=el('div','progress-khatm-lbl','بۆ ختم قورئان');
+  var prgCount=el('div','progress-count no-kurdish-convert',todayRead+'/'+target);
+  var prgKhatmLbl=el('div','progress-khatm-lbl','ختمکرنا قورئانێ');
   prgLeft.appendChild(prgCount);prgLeft.appendChild(prgKhatmLbl);
   prgHdr.appendChild(prgLeft);
   prgHdr.appendChild(el('span','progress-pct',pct+'%'));
@@ -7246,9 +7247,9 @@ function renderGoals(){
   var journeyBar=el('div','progress-journey-bar');
   var journeyFill=el('div','progress-journey-fill');
   journeyBar.appendChild(journeyFill);
-  var jLabel=el('div','progress-journey-lbl');
-  jLabel.appendChild(document.createTextNode('ختم — '+totalRead+'/٦٢٣٦'));
-  var jPct=el('span','progress-journey-pct',journeyPct+'%');
+  var jLabel=el('div','progress-journey-lbl no-kurdish-convert');
+  jLabel.appendChild(document.createTextNode('ختمکرنا قورئانێ — '+totalRead+'/6236'));
+  var jPct=el('span','progress-journey-pct no-kurdish-convert',journeyPct+'%');
   jLabel.appendChild(jPct);
   journeyEl.appendChild(jLabel);
   journeyEl.appendChild(journeyBar);
@@ -7329,7 +7330,7 @@ function renderGoals(){
   calSec.appendChild(monthNav);
 
   // Day-of-week headers (Sun→Sat)
-  var dayHdrs=['ی','د','س','چ','پ','ئ','ش'];
+  var dayHdrs=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
   var hdrsRow=el('div','month-cal-grid');
   for(var dh=0;dh<7;dh++){
     hdrsRow.appendChild(el('div','month-cal-dh',dayHdrs[dh]));
@@ -7404,8 +7405,8 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 /* ===== PRAYER TRACKER ===== */
 var _TRACK_PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
 // Kurdish day abbreviations (Sun–Sat)
-var _KU_DAYS=['ی','د','س','چ','پ','هـ','ش'];
-var _KU_DAYS_FULL=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئینـی','شەمبی'];
+var _KU_DAYS=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
+var _KU_DAYS_FULL=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
 
 function getPrayerLog(){try{return JSON.parse(localStorage.getItem('prayer_log'))||{};}catch(e){return {};}}
 function savePrayerLog(log){
@@ -7611,7 +7612,7 @@ function calcConsistencyScore(log,days){
 // Weakest day of week over last 90 days: {dow, avg, name}
 function calcWeakestDay(log){
   var totals=[0,0,0,0,0,0,0],counts=[0,0,0,0,0,0,0];
-  var now=new Date();var dayNames=['یەکشەم','دووشەم','سێشەم','چوارشەم','پێنجشەم','ئینانێ','شەمبی'];
+  var now=new Date();var dayNames=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
   for(var i=1;i<=90;i++){
     var d=new Date(now);d.setDate(d.getDate()-i);
     var k=dateKey(d);var dow=d.getDay();
@@ -7665,7 +7666,7 @@ App.openPrayerDay=function(dKey){
   sheet.appendChild(el('div','ppp-day-pull'));
   var parts=dKey.split('-');
   var d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
-  var dayNames=['یەکشەم','دووشەم','سێشەم','چوارشەم','پێنجشەم','ئینانێ','شەمبی'];
+  var dayNames=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
   sheet.appendChild(el('div','ppp-day-title',dayNames[d.getDay()]+' — '+parts[2]+'/'+parts[1]));
   var btns=el('div','ppp-day-prayers');
   _TRACK_PRAYERS.forEach(function(prayer){

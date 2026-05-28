@@ -1446,10 +1446,16 @@
       if (skyName) skyName.textContent = name;
       if (cdEl)    cdEl.textContent    = cd;
       if (nameEl)  nameEl.textContent  = name;
+      var _appPLtick = window.App && window.App.prayerLog;
+      var _tickLog   = _appPLtick ? _appPLtick.get() : {};
+      var _tickDay   = _appPLtick ? _appPLtick.prayerDay() : '';
       _gridCards.forEach(function(el) {
         var pName = el.dataset.prayer;
         var isNext2 = pName === next.name;
+        // Sunrise is never logged — always show at full opacity
+        var isDone2 = pName === 'Sunrise' || !!(_tickLog[_tickDay] && _tickLog[_tickDay][pName]);
         el.classList.toggle('prayer-grid-card--next', isNext2);
+        el.classList.toggle('prayer-grid-card--done', isDone2);
         if (_currentTimings && _currentDateISO) {
           var raw3 = _currentTimings[pName] || '';
           if (raw3) {
@@ -1480,9 +1486,15 @@
       if (skyName) skyName.textContent = name2;
       if (cdEl)    cdEl.textContent    = cd2;
       if (nameEl)  nameEl.textContent  = name2;
+      var _appPLtick2 = window.App && window.App.prayerLog;
+      var _tickLog2   = _appPLtick2 ? _appPLtick2.get() : {};
+      var _tickDay2   = _appPLtick2 ? _appPLtick2.prayerDay() : '';
       _gridCards.forEach(function(el) {
+        var pName2 = el.dataset.prayer;
+        var isDone2b = pName2 === 'Sunrise' || !!(_tickLog2[_tickDay2] && _tickLog2[_tickDay2][pName2]);
         el.classList.remove('prayer-grid-card--next');
         el.classList.add('prayer-grid-card--passed');
+        el.classList.toggle('prayer-grid-card--done', isDone2b);
       });
     }
 
@@ -2325,7 +2337,7 @@
         isPassed = pTime2 < now2 && !isNext;
       }
 
-      var card = cel('div', 'prayer-grid-card' + (isNext ? ' prayer-grid-card--next' : '') + (isPassed ? ' prayer-grid-card--passed' : ''));
+      var card = cel('div', 'prayer-grid-card' + (isNext ? ' prayer-grid-card--next' : '') + (isPassed ? ' prayer-grid-card--passed' : '') + (name === 'Sunrise' ? ' prayer-grid-card--done' : ''));
       card.dataset.prayer = name;
 
       var nameEl = cel('div', 'prayer-grid-name');
@@ -2358,6 +2370,7 @@
           if (pDay2 && pDay2 === today && log2[pDay2] && log2[pDay2][name]) {
             var dot2 = cel('div', 'pcso-done-dot');
             card.appendChild(dot2);
+            card.classList.add('prayer-grid-card--done');
           }
         }
       }
@@ -2427,7 +2440,7 @@
     var m = Math.floor((diff % 3600000) / 60000);
     var s = Math.floor((diff % 60000) / 1000);
     if (h > 0) return h + ' کاتژمێر ' + m + ' خولەک';
-    if (m > 0) return m + ' خولەک ' + (s > 0 ? s + ' چرکە' : '');
+    if (m > 0) return m + ' خولەک' + (s > 0 ? ' و ' + s + ' چرکە' : '');
     return s + ' چرکە';
   }
 
@@ -2496,7 +2509,7 @@
         var rem = rawTime ? _msToPrayer(rawTime) : 0;
         if (rem <= 0) return tStr('prayer.countdown_now') || 'ئێستا';
         var txt = _fmtCountdownDiff(rem);
-        return txt ? txt + ' باقی' : (tStr('prayer.countdown_now') || 'ئێستا');
+        return txt ? txt + ' ماینە' : (tStr('prayer.countdown_now') || 'ئێستا');
       }
       return tStr('prayer.not_yet') || 'کاتی هێشتا نەهاتووە';
     }
@@ -2521,8 +2534,10 @@
           var dot = gridCard.querySelector('.pcso-done-dot');
           if (ns) {
             if (!dot) { dot = cel('div', 'pcso-done-dot'); gridCard.appendChild(dot); }
+            gridCard.classList.add('prayer-grid-card--done');
           } else {
             if (dot) dot.parentNode.removeChild(dot);
+            gridCard.classList.remove('prayer-grid-card--done');
           }
         }
       }, { once: true });
@@ -2578,7 +2593,7 @@
     athanIcEl.className = 'fas fa-' + (athanOn && prayerOn ? 'bell' : 'bell-slash');
     athanRow.appendChild(athanIcEl);
     var athanLbl2 = document.createElement('span');
-    athanLbl2.textContent = tStr('prayer.athan_for') || 'ئەزان';
+    athanLbl2.textContent = tStr('prayer.athan_for') || 'دەنگێ بانگی';
     athanRow.appendChild(athanLbl2);
     var athanTog = cel('div', 'toggle pcso-toggle' + (athanOn && prayerOn ? ' on' : ''));
     athanTog.appendChild(cel('div', 'toggle-knob'));
@@ -2608,16 +2623,14 @@
     overlay.appendChild(sheet);
     document.body.appendChild(overlay);
 
-    // Add done dot to grid card if already done
+    // Add done dot to grid card if already done (use corrected todayKey, not raw prayerDay)
     var gridCard2 = document.querySelector('.prayer-grid-card[data-prayer="' + name + '"]');
-    if (gridCard2) {
-      if (!gridCard2.querySelector('.pcso-done-dot')) {
-        var logNow = appPL ? appPL.get() : {};
-        var todayNow = appPL ? appPL.prayerDay() : '';
-        if (todayNow && logNow[todayNow] && logNow[todayNow][name]) {
-          var d2 = cel('div', 'pcso-done-dot');
-          gridCard2.appendChild(d2);
-        }
+    if (gridCard2 && !gridCard2.querySelector('.pcso-done-dot')) {
+      var logNow = appPL ? appPL.get() : {};
+      if (logNow[todayKey] && logNow[todayKey][name]) {
+        var d2 = cel('div', 'pcso-done-dot');
+        gridCard2.appendChild(d2);
+        gridCard2.classList.add('prayer-grid-card--done');
       }
     }
 
@@ -2729,7 +2742,7 @@
         }
       });
       closeSettings();
-      if (window.toast) toast(tStr('prayer.settings_saved') || 'ڕێکخستنەکان پارایستران');
+      if (window.App && window.App.toast) window.App.toast(tStr('prayer.settings_saved') || 'ڕێکخستنەکان پارایستران');
     };
     actions.appendChild(saveBtn);
     var resetBtn = cel('button', 'as2-reset-btn');
@@ -2743,7 +2756,7 @@
         _athanSettingsKey = null; // force rebuild after reset
         updateAthanSettings(_currentTimings, getCity(), _currentDateISO);
       }
-      if (window.toast) toast(tStr('prayer.settings_reset') || 'ڕێکخستنەکان ڕێکخرانەوە');
+      if (window.App && window.App.toast) window.App.toast(tStr('prayer.settings_reset') || 'ڕێکخستنەکان ڕێکخرانەوە');
     };
     actions.appendChild(resetBtn);
     sheet.appendChild(actions);
@@ -3299,6 +3312,9 @@
       var now3    = new Date();
       var next    = pl.getNextPrayer(timings, today);
 
+      var _appPLcc = window.App && window.App.prayerLog;
+      var _ccLog   = _appPLcc ? _appPLcc.get() : {};
+      var _ccDay   = _appPLcc ? _appPLcc.prayerDay() : '';
       document.querySelectorAll('.prayer-grid-card[data-prayer]').forEach(function(card) {
         var name    = card.dataset.prayer;
         var raw     = timings[name] || '';
@@ -3307,8 +3323,10 @@
         card.classList.remove('prayer-grid-card--loading');
         var isNext   = next && next.name === name;
         var isPassed = raw ? (pl.parseAsDate(raw, today) < now3 && !isNext) : false;
+        var isDoneCC = name === 'Sunrise' || !!(_ccLog[_ccDay] && _ccLog[_ccDay][name]);
         card.classList.toggle('prayer-grid-card--next',   isNext);
         card.classList.toggle('prayer-grid-card--passed', isPassed);
+        card.classList.toggle('prayer-grid-card--done',   isDoneCC);
       });
 
       // Update countdown display for new city
@@ -3408,7 +3426,7 @@
       await window.PrayerNotifications.cancelAllAthanNotifications();
       window.PrayerNotifications.cancelAllReminderNotifications &&
         window.PrayerNotifications.cancelAllReminderNotifications();
-      if (window.toast) toast(tStr('prayer.athan_off'));
+      if (window.App && window.App.toast) window.App.toast(tStr('prayer.athan_off'));
       return;
     }
 
@@ -3421,7 +3439,7 @@
         setAthan(false);
         var masterTog = document.querySelector('.prayer-master-toggle .toggle');
         if (masterTog) masterTog.classList.remove('on');
-        if (window.toast) toast(tStr('prayer.perm_denied'));
+        if (window.App && window.App.toast) window.App.toast(tStr('prayer.perm_denied'));
         return;
       }
     }
@@ -3439,7 +3457,7 @@
       var count = res && res.count != null ? res.count : 0;
       if (count > 0) {
         localStorage.setItem('prayerLastScheduleTs', String(Date.now()));
-        if (window.toast) toast(tStr('prayer.scheduled_ok', { count: count }));
+        if (window.App && window.App.toast) window.App.toast(tStr('prayer.scheduled_ok', { count: count }));
         if (window._showNotifSetupHint) window._showNotifSetupHint();
         // Check battery optimization — most common cause of delayed athan on Samsung
         var _AA = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.AthanAlarm;
@@ -3451,10 +3469,10 @@
           }).catch(function() {});
         }
       } else {
-        if (window.toast) toast(tStr('prayer.scheduled_zero'));
+        if (window.App && window.App.toast) window.App.toast(tStr('prayer.scheduled_zero'));
       }
     } else {
-      if (window.toast) toast(tStr('prayer.no_data'));
+      if (window.App && window.App.toast) window.App.toast(tStr('prayer.no_data'));
     }
   }
 

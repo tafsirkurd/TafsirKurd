@@ -33,7 +33,7 @@
     {
       id: 'after_prayer', categoryKey: 'after_prayer', icon: 'fas fa-hands-praying',
       labelKey: 'adhkar.after_prayer', labelFallback: 'دوای نوێژ',
-      subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن دوای نوێژکردن',
+      subtitleKey: 'gencine.smart.after_prayer_hint', subtitleFallback: 'زکرێن پشتی نڤێژێ',
       fallbackAr: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
       fallbackRepeat: 33,
       fallbackSource: 'البخاري ومسلم',
@@ -54,7 +54,7 @@
     {
       id: 'waking', categoryKey: 'waking', icon: 'fas fa-cloud-sun',
       labelKey: 'adhkar.waking', labelFallback: 'دوای هاتنا خوو',
-      subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'دوای هاتنا خووێ بخوێنە',
+      subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'پشتی ژ خەو ڕابوونێ بخوێنە',
       fallbackAr: 'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا',
       fallbackRepeat: 1,
       fallbackSource: 'البخاري',
@@ -64,7 +64,7 @@
     {
       id: 'sunrise', categoryKey: 'morning', icon: 'fas fa-sun',
       labelKey: 'adhkar.sunrise', labelFallback: 'نوێژا ئیشراق',
-      subtitleKey: 'gencine.smart.sunrise_hint', subtitleFallback: 'کاتا نوێژا هەتاوهاتن',
+      subtitleKey: 'gencine.smart.sunrise_hint', subtitleFallback: 'دەمێ نڤێژا ڕۆژهەلاتنێ',
       timeTag: 'ئیشراق', basePriority: 62, /* beats morning+waking in its window */
       sunriseWindow: { before: 30, after: 30 } /* 30 min before and after Sunrise */
     },
@@ -91,7 +91,7 @@
     {
       id: 'friday', categoryKey: 'friday', icon: 'fas fa-calendar-day',
       labelKey: 'adhkar.friday', labelFallback: 'ڕۆژا ئینانێ',
-      subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ڕۆژا ئینانێ ئەمڕۆ یە',
+      subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ئەڤڕۆ ڕۆژا ئینیێ یە',
       fallbackRepeat: 1,
       fallbackSource: 'أبو داود',
       timeTag: 'ئینانی', basePriority: 65, /* intentionally beats morning/evening on Friday */
@@ -120,7 +120,7 @@
     {
       id: 'fasting', categoryKey: 'fasting', icon: 'fas fa-moon',
       labelKey: 'adhkar.fasting', labelFallback: 'نیەتا ڕۆژوو',
-      subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕوژیدارییەکت خوا قبوڵ بکات',
+      subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕۆژیبوونا تە خودێ قەبیل بکەت',
       fallbackAr: 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ',
       fallbackRepeat: 1,
       fallbackSource: 'أبو داود',
@@ -132,7 +132,7 @@
     {
       id: 'breaking_fast', categoryKey: 'breaking_fast', icon: 'fas fa-utensils',
       labelKey: 'adhkar.breaking_fast', labelFallback: 'کاتا ئیفتارێ',
-      subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ئیفتارا خوش',
+      subtitleKey: 'gencine.smart.breaking_fast_hint', subtitleFallback: 'ڕۆژیا تە یا ب تام بیت',
       fallbackAr: 'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ',
       fallbackRepeat: 1,
       fallbackSource: 'أبو داود والترمذي',
@@ -161,7 +161,7 @@
     {
       id: 'dhul_hijjah', categoryKey: 'dhul_hijjah', icon: 'fas fa-kaaba',
       labelKey: 'adhkar.dhul_hijjah', labelFallback: 'دەیا ذولحیجەیێ',
-      subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دهە ڕۆژێن گەورە',
+      subtitleKey: 'gencine.smart.dhul_hijjah_hint', subtitleFallback: 'دەهـ ڕۆژێن مەزن',
       fallbackAr: 'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ',
       fallbackRepeat: 100,
       fallbackSource: 'البخاري',
@@ -284,7 +284,7 @@
     {
       id: 'adhan', categoryKey: 'adhan', icon: 'fas fa-bullhorn',
       labelKey: 'adhkar.adhan', labelFallback: 'دوای ئەزان',
-      subtitleKey: 'gencine.smart.adhan_hint', subtitleFallback: 'دوعای دوای ئەزان',
+      subtitleKey: 'gencine.smart.adhan_hint', subtitleFallback: 'دوعایا پشتی بانگی',
       fallbackAr: 'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ',
       fallbackRepeat: 1,
       fallbackSource: 'البخاري',

@@ -996,7 +996,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 /* Month calendar */
 .month-cal-section{padding:0 16px 14px}
 .month-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
-.month-cal-dh{text-align:center;font-size:.6rem;font-weight:700;color:var(--text3);padding:4px 0;opacity:.6}
+.month-cal-dh{text-align:center;font-size:.48rem;font-weight:700;color:var(--text3);padding:4px 0;opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .month-cal-cell{aspect-ratio:1;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--text2);font-variant-numeric:tabular-nums;transition:transform .15s}
 .month-cal-cell:active{transform:scale(.9)}
 .month-cal-empty{background:transparent;pointer-events:none}
@@ -1886,7 +1886,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .ppp-cal-month{font-size:.9rem;font-weight:700;color:var(--text)}
 .ppp-cal-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border);cursor:pointer;color:var(--text2)}
 .ppp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
-.ppp-cal-dh{font-size:.63rem;color:var(--muted);font-weight:600;text-align:center;padding-bottom:5px}
+.ppp-cal-dh{font-size:.48rem;color:var(--muted);font-weight:600;text-align:center;padding-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ppp-cal-cell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.71rem;font-weight:700;cursor:pointer;background:var(--bg2);border:1px solid var(--border);color:var(--muted)}
 .ppp-cal-cell.empty{background:transparent;border-color:transparent;pointer-events:none;color:transparent}
 .ppp-cal-cell.before-start{opacity:.18;pointer-events:none;cursor:default}
@@ -2283,7 +2283,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 [data-theme="sakina"] .prayer-grid-card{border-color:rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,240,180,.03),0 4px 16px rgba(0,0,0,.5)}
 .prayer-grid-card--next{background:linear-gradient(145deg,rgba(34,197,94,.12) 0%,rgba(34,197,94,.04) 100%);border-color:var(--accent);box-shadow:0 0 0 1px rgba(34,197,94,.18),0 6px 24px rgba(0,0,0,.2),0 0 20px rgba(34,197,94,.1);animation:prayer-next-pulse 3.5s ease-in-out infinite}
 @keyframes prayer-next-pulse{0%,100%{box-shadow:0 0 0 1px rgba(34,197,94,.18),0 6px 24px rgba(0,0,0,.2),0 0 20px rgba(34,197,94,.1)}50%{box-shadow:0 0 0 1px rgba(34,197,94,.3),0 6px 24px rgba(0,0,0,.2),0 0 30px rgba(34,197,94,.2)}}
-.prayer-grid-card--passed{opacity:.36;filter:saturate(.2)}
+.prayer-grid-card--passed:not(.prayer-grid-card--done){opacity:.36;filter:saturate(.2)}
 .prayer-grid-name{font-size:.95rem;font-weight:700;color:var(--text2);text-align:right}
 .prayer-grid-card--next .prayer-grid-name{color:var(--accent)}
 .prayer-grid-time{font-size:1.75rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;direction:ltr;line-height:1;letter-spacing:-.01em}
@@ -4440,13 +4440,13 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <audio id="audioEl" preload="auto"></audio>
 
 <script src="/utils/supabase.js?v=20260326b"></script>
-<script src="/i18n/kmr-bundled.js?v=20260527"></script>
+<script src="/i18n/kmr-bundled.js?v=20260541"></script>
 <script src="/i18n/i18n.js?v=20260517"></script>
 <script src="/prayer/prayer.cache.js?v=20260526"></script>
 <script src="/prayer/prayer.api.js?v=20260526"></script>
 <script src="/prayer/prayer.logic.js?v=20260326b"></script>
 <script src="/prayer/prayer.notifications.android.js?v=20260416"></script>
-<script src="/prayer/prayer.ui.js?v=20260528"></script>
+<script src="/prayer/prayer.ui.js?v=20260534"></script>
 <!-- pdf.js loaded lazily in dhikr.js when a PDF book is first opened -->
 <!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
 <script src="/quran/search.js?v=20260520"></script>
@@ -4456,7 +4456,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=873"></script>
+<script src="/app/app.js?v=882"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
