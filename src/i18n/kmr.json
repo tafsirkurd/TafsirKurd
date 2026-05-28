@@ -255,7 +255,7 @@
   "error.delete": "خەلەتی ل ژێبرنێ",
   "error.apple_try_again": "نەهاتە کرن Sign in with Apple. دووبارە هەوڵ بدە",
   "error.apple_failed": "چووناژوور ب Apple سەرنەکەفت. دووبارە هەوڵ بدە",
-  "error.apple_unavailable": "چوونا دژوورڤە بە Apple ل ئەڤ ئامێرێ بەردەست نینە",
+  "error.apple_unavailable": "چوونا ژوور ب ڕێیا Apple ل سەر ڤی ئامێری بەردەست نینە",
   "delete_page_subtitle": "سڕینەوەی ئەکاونتێ تەفسیرکورد",
   "auth.err_wrong_credentials": "ئیمەیل یان ژمارا نهێنی هەڵەیە",
   "auth.err_email_not_confirmed": "ئیمەیلا تە نەهاتیە پشتراستکرن. تکایە ئیمەیلەکەت بپشکنە",
