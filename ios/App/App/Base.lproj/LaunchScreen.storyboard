@@ -12,11 +12,21 @@
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                    <imageView key="view" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
+                    <view key="view" userInteractionEnabled="NO" contentMode="scaleToFill" id="snD-IY-ifK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                    </imageView>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="SplashDark" translatesAutoresizingMaskIntoConstraints="NO" id="logo-iv">
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0" colorSpace="custom" customColorSpace="sRGB"/>
+                            </imageView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="logo-iv" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="cx"/>
+                            <constraint firstItem="logo-iv" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" id="cy"/>
+                            <constraint firstItem="logo-iv" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" multiplier="0.65" id="pw"/>
+                        </constraints>
+                    </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -24,6 +34,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Splash" width="1366" height="1366"/>
+        <image name="SplashDark"/>
     </resources>
 </document>
