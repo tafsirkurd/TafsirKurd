@@ -7675,12 +7675,20 @@ function _isPrayerCheckable(prayer,dKey){
   if(dKey<prayerDay)return true;
   if(dKey>todayKey)return false;
   if(dKey===todayKey&&prayerDay!==todayKey)return false;
+  // Primary: localStorage cache keyed by city+month. Fallback: live panel timings
+  // (window._prayerUITimings) — covers the case where the date-key format differs
+  // between PrayerLogic.todayBaghdad() (Asia/Baghdad locale) and dateKey(new Date())
+  // (device local), causing _getTimingsForDate to miss the cache and return null.
   var timings=_getTimingsForDate(dKey);
-  if(!timings||!timings[prayer])return false; // no data → block (safe default)
-  var p=dKey.split('-');
-  var hm=timings[prayer].trim().split(' ')[0].split(':');
-  var pt=new Date(+p[0],+p[1]-1,+p[2],+hm[0],+hm[1],0);
-  return now>=pt;
+  if(!timings&&window._prayerUITimings){
+    timings={Fajr:window._prayerUITimings.Fajr,Dhuhr:window._prayerUITimings.Dhuhr,
+      Asr:window._prayerUITimings.Asr,Maghrib:window._prayerUITimings.Maghrib,
+      Isha:window._prayerUITimings.Isha};
+  }
+  if(!timings||!timings[prayer])return false;
+  // Use UTC+3 arithmetic (same as _pppMsUntil / _msToPrayer) — consistent with
+  // countdown display and avoids device-timezone vs Baghdad-timezone mismatch.
+  return _pppMsUntil(timings[prayer])<=0;
 }
 
 function calcPrayerStreak(log){
@@ -7737,13 +7745,23 @@ function _startPppCdTick(){
     var panel=$('prayerProgressPanel');
     if(!panel||!panel.classList.contains('on')){_stopPppCdTick();return;}
     var pDay=_getPrayerDay();
-    var timings=_getTimingsForDate(pDay);
+    var timings=_getTimingsForDate(pDay)||
+      (window._prayerUITimings&&{Fajr:window._prayerUITimings.Fajr,Dhuhr:window._prayerUITimings.Dhuhr,
+        Asr:window._prayerUITimings.Asr,Maghrib:window._prayerUITimings.Maghrib,Isha:window._prayerUITimings.Isha});
+    var needsSync=false;
     panel.querySelectorAll('.ppp-today-card .ppp-prayer-btn.not-yet .ppp-cd').forEach(function(cdSpan){
       var p=cdSpan.closest('.ppp-prayer-btn').dataset.prayer;
       if(!timings||!timings[p]){cdSpan.textContent='';return;}
       var rem=_pppMsUntil(timings[p]);
-      cdSpan.textContent=rem>0?_pppFmtMs(rem):'';
+      if(rem<=0){
+        needsSync=true; // prayer time just passed — unlock immediately on next sync
+      }else{
+        cdSpan.textContent=_pppFmtMs(rem);
+      }
     });
+    // Immediately sync panel when any countdown reaches zero — don't wait for the
+    // 20-second tick. Prayer time passed = button should unlock right now.
+    if(needsSync)_pppSyncPanel(getPrayerLog(),pDay);
   },1000);
 }
 function _stopPppCdTick(){if(_pppCdTickId){clearInterval(_pppCdTickId);_pppCdTickId=null;}}
