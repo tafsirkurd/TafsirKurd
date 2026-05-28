@@ -5,8 +5,6 @@ const config: CapacitorConfig = {
   appName: 'Tafsir Kurd',
   webDir: 'src',
   server: {
-    url: 'https://tafsirkurd.com/app/',
-    cleartext: false,
     allowNavigation: [
       'tafsirkurd.com',
       'gijupzejtbpifjzwadee.supabase.co',
@@ -21,10 +19,10 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'never',
     scheme: 'capacitor',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#000000',
   },
   android: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#000000',
   },
   plugins: {
     SplashScreen: {
@@ -34,8 +32,8 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       splashImmersive: true,
-      backgroundColor: '#0a0a0a',
-      fadeOutDuration: 200,
+      backgroundColor: '#00000000',
+      fadeOutDuration: 0,
     },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert'],

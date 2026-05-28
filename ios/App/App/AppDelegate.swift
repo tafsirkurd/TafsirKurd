@@ -26,10 +26,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             ?? "dark"
         let themeColor: UIColor
         switch savedTheme {
-        case "light":  themeColor = UIColor(red: 250/255, green: 250/255, blue: 250/255, alpha: 1)
-        case "sakina": themeColor = UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1)
-        case "noor":   themeColor = UIColor(red: 244/255, green: 232/255, blue: 204/255, alpha: 1)
-        default:       themeColor = UIColor(red:  10/255, green:  10/255, blue:  10/255, alpha: 1)
+        case "light":             themeColor = UIColor(red: 248/255, green: 248/255, blue: 248/255, alpha: 1)
+        case "parchment", "noor": themeColor = UIColor(red: 243/255, green: 232/255, blue: 204/255, alpha: 1)
+        case "sakina", "emerald": themeColor = UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1)
+        default:                  themeColor = UIColor(red:   0,      green:   0,      blue:   0,     alpha: 1)
         }
         UIWindow.appearance().backgroundColor = themeColor
         return true

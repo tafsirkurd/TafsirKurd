@@ -1267,7 +1267,7 @@ function init(){
   setTimeout(function(){_startTabPrerender();},1500);
 
   // Smart splash — 2 gates: quran data loaded + all tabs pre-rendered.
-  // Hybrid timing: first launch / new version → 3s minimum (full animation).
+  // Hybrid timing: first launch / new version → 800ms minimum (logo animation).
   //                repeat same-version launches → immediate exit when data ready.
   var _splashStart = Date.now();
   var _splashReady = {quran:false,tabs:false};
@@ -1292,8 +1292,8 @@ function init(){
     } catch(e){ _splashMinPassed=true; }
   })();
 
-  // 3s minimum — only active for first launch / new version.
-  // Writes the "seen" flag so next launch is instant.
+  // 800ms minimum — only active for first launch / new version (logo animation duration).
+  // Writes the "seen" flag so next launch exits as soon as data is ready.
   setTimeout(function(){
     if(_splashMinPassed)return; // already cleared (repeat launch)
     try {
@@ -1302,7 +1302,7 @@ function init(){
     }catch(e){}
     _splashMinPassed=true;
     _checkSplashReady();
-  },3000);
+  },800);
 
   function _doSplashTransition(){
     if(_splashDismissed)return;
@@ -1310,19 +1310,26 @@ function init(){
     var sp=$('splash');
     var app=$('app');
     if(app)app.style.display='flex';
-    // Double rAF: first triggers layout, second ensures browser has painted app content
-    // before splash starts fading — prevents white blank frame.
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
         console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
-        if(sp)sp.classList.add('hide');
+        // Dismiss themed native overlay (iOS MainViewController) — runs in parallel with HTML exit
+        try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.splashDismiss)
+          window.webkit.messageHandlers.splashDismiss.postMessage(null);}catch(e){}
+        // Logo exit animation — skipped on warm resume (instant restore)
+        var logo=document.getElementById('splashLogo');
+        if(logo&&!window._splashFastExit)logo.classList.add('exit');
+        // App fades in at the same time as logo exits
         if(app)app.classList.add('visible');
-        // Execute any pending push deep link now that app is fully visible
         if(_pendingPushDeepLink){
           var _pl=_pendingPushDeepLink;_pendingPushDeepLink=null;
           setTimeout(function(){_handlePushDeepLink(_pl.type,_pl.id);},300);
         }
-        setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},400);
+        // Splash bg fades out after logo animation finishes (~260ms)
+        setTimeout(function(){
+          if(sp){sp.style.transition='opacity .15s ease';sp.classList.add('hide');}
+          setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},200);
+        },220);
         console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
       });
     });
@@ -1331,7 +1338,7 @@ function init(){
   function _checkSplashReady(){
     if(_splashDismissed)return;
     if(!_splashReady.quran||!_splashReady.tabs)return;
-    if(!_splashReady.video)return; // wait for video to finish playing
+    if(!_splashReady.video)return; // video gate (auto-passes — no video element)
     if(!_splashMinPassed)return; // first launch / new version: wait for 3s minimum
     console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
     // Pre-warm app layout one frame before transition starts — gives browser a head start
@@ -1341,36 +1348,13 @@ function init(){
     requestAnimationFrame(function(){_doSplashTransition();});
   }
 
-  // Video plays once — when it ends, enter app immediately if timing gate is cleared.
-  // The video starts playing from the inline splash script (not here) so it begins
-  // as soon as the DOM element is rendered, ~1-2s before app.js finishes loading.
+  // Image-only splash — no video element, gate passes immediately
   var _splashVid=document.getElementById('splashVideo');
   if(_splashVid){
-    if(window._splashVideoEndedEarly){
-      // Video already finished while app.js was loading. Mark gate immediately.
-      // _checkSplashReady() will be triggered when the other gates (quran/tabs/min) pass.
-      console.log('[Startup] splash video ended before app.js listener — marking gate');
-      _splashReady.video=true;
-    } else {
-      _splashVid.addEventListener('ended',function(){
-        if(_splashReady.video)return;
-        _splashReady.video=true;
-        console.log('[Startup] splash video ended at',Date.now()-_splashStart,'ms');
-        // Animation finished — go in right now if timing gate is already cleared.
-        if(_splashMinPassed){_doSplashTransition();return;}
-        _checkSplashReady();
-      });
-      // Ensure video is actually playing (it should be from inline script,
-      // but if autoplay was blocked or the element was replaced, restart it).
-      if(_splashVid.paused && _splashVid.readyState < 3){
-        _splashVid.play().catch(function(){
-          _splashReady.video=true;
-          _checkSplashReady();
-        });
-      }
-    }
+    // Legacy fallback if someone has a cached HTML with the old video element
+    _splashVid.pause();
+    _splashReady.video=true;
   } else {
-    // No video element — don't block on it
     _splashReady.video=true;
   }
 
@@ -1379,15 +1363,14 @@ function init(){
   // Skip ALL splash gates — user was already in the app, never show animation again.
   // This prevents the "blank → logo animation → delay → app" sequence on resume.
   if(window._isWarmResume){
-    // Stop video immediately — user resumed, never replay animation
-    if(_splashVid){ _splashVid.pause(); _splashVid.muted=true; _splashVid.style.opacity='0'; }
+    window._splashFastExit=true; // skip logo exit animation on resume
     _splashMinPassed=true;
     _splashReady.quran=true;
     _splashReady.tabs=true;
     _splashReady.video=true;
     console.log('[APP_LIFECYCLE] skipped_full_loader_on_resume');
     requestAnimationFrame(function(){
-      // Instant fade (0.1s) instead of the normal 0.35s — feels like native restore
+      // Instant fade (0.1s) instead of the normal exit animation — feels like native restore
       var _sp=$('splash');
       if(_sp)_sp.style.transition='opacity 0.1s';
       _doSplashTransition();

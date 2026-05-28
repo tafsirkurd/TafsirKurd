@@ -1,33 +1,96 @@
 import UIKit
 import Capacitor
+import WebKit
 
-class MainViewController: CAPBridgeViewController {
+class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
+
+    private var themeOverlay: UIView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Override Capacitor's static backgroundColor with the user's saved theme.
-        // Reads same sources as AppDelegate so they are always in sync.
-        let themeKey = "appTheme"
-        let savedTheme: String =
-            UserDefaults(suiteName: "group.com.tafsirkurd.app")?.string(forKey: themeKey)
-            ?? UserDefaults.standard.string(forKey: "CapacitorStorage." + themeKey)
-            ?? "dark"
-        let themeColor: UIColor
-        switch savedTheme {
-        case "light":  themeColor = UIColor(red: 250/255, green: 250/255, blue: 250/255, alpha: 1)
-        case "sakina": themeColor = UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1)
-        case "noor":   themeColor = UIColor(red: 244/255, green: 232/255, blue: 204/255, alpha: 1)
-        default:       themeColor = UIColor(red:  10/255, green:  10/255, blue:  10/255, alpha: 1) // dark
-        }
-        view.backgroundColor = themeColor
-        webView?.backgroundColor = themeColor
-        webView?.scrollView.backgroundColor = themeColor
+
+        let (bgColor, logoName) = themeAssets()
+
+        view.backgroundColor = bgColor
+        webView?.backgroundColor = bgColor
+        webView?.scrollView.backgroundColor = bgColor
         webView?.isOpaque = false
+
+        // Full-screen overlay — constraint-based so it fills the view regardless of
+        // when viewDidLoad fires relative to the first layout pass.
+        let overlay = UIView()
+        overlay.backgroundColor = bgColor
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(overlay)
+        NSLayoutConstraint.activate([
+            overlay.topAnchor.constraint(equalTo: view.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+
+        let logoView = UIImageView(image: UIImage(named: logoName))
+        logoView.contentMode = .scaleAspectFit
+        logoView.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(logoView)
+
+        // Width = 65% of screen, capped at 300pt — height follows the image aspect ratio
+        let pctWidth = logoView.widthAnchor.constraint(equalTo: overlay.widthAnchor, multiplier: 0.65)
+        pctWidth.priority = .defaultHigh
+        NSLayoutConstraint.activate([
+            logoView.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            logoView.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
+            pctWidth,
+            logoView.widthAnchor.constraint(lessThanOrEqualToConstant: 300)
+        ])
+
+        themeOverlay = overlay
+
+        // Failsafe: dismiss after 6s in case JS bridge never fires (e.g. old cached HTML)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in
+            self?.dismissOverlay(duration: 0.15)
+        }
     }
 
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(TafsirAppleSignIn())
         bridge?.registerPluginInstance(SharedPrefsPlugin())
         bridge?.registerPluginInstance(CompassPlugin())
+
+        // JS calls: window.webkit.messageHandlers.splashDismiss.postMessage(null)
+        bridge?.webView?.configuration.userContentController.add(self, name: "splashDismiss")
+    }
+
+    // Invoked from app.js _doSplashTransition when the app is ready to show
+    func userContentController(_ userContentController: WKUserContentController,
+                                didReceive message: WKScriptMessage) {
+        guard message.name == "splashDismiss" else { return }
+        dismissOverlay()
+    }
+
+    private func dismissOverlay(duration: TimeInterval = 0.25) {
+        guard let overlay = themeOverlay else { return }
+        themeOverlay = nil
+        UIView.animate(withDuration: duration, delay: 0, options: [.curveEaseIn], animations: {
+            overlay.alpha = 0
+        }) { _ in overlay.removeFromSuperview() }
+    }
+
+    // Returns (background color, asset catalog image name) for the saved theme
+    private func themeAssets() -> (UIColor, String) {
+        let key = "appTheme"
+        let theme = UserDefaults(suiteName: "group.com.tafsirkurd.app")?.string(forKey: key)
+            ?? UserDefaults.standard.string(forKey: "CapacitorStorage." + key)
+            ?? "dark"
+        switch theme {
+        case "light":
+            return (UIColor(red: 248/255, green: 248/255, blue: 248/255, alpha: 1), "SplashLight")
+        case "parchment", "noor":
+            return (UIColor(red: 243/255, green: 232/255, blue: 204/255, alpha: 1), "SplashParchment")
+        case "sakina", "emerald":
+            return (UIColor(red:  12/255, green:  28/255, blue:  18/255, alpha: 1), "SplashEmerald")
+        default: // dark
+            return (UIColor(red: 0, green: 0, blue: 0, alpha: 1), "SplashDark")
+        }
     }
 }

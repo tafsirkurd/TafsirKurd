@@ -1,10 +1,10 @@
-const CACHE_NAME = 'tafsir-kurd-v947';
+const CACHE_NAME = 'tafsir-kurd-v950';
 
 // All files required to run the app fully offline
 const PRECACHE = [
   // Core app shell
   '/app/index.html',
-  '/app/app.js?v=888',
+  '/app/app.js?v=890',
   // Prayer module (versioned — must match ?v= params in index.html)
   '/prayer/prayer.cache.js?v=20260526',
   '/prayer/prayer.api.js?v=20260526',
@@ -58,6 +58,10 @@ const PRECACHE = [
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png?v=3',
   '/assets/images/TafsirKurd-green.png',
+  '/assets/images/splash-light.png',
+  '/assets/images/splash-dark.png',
+  '/assets/images/splash-parchment.png',
+  '/assets/images/splash-emerald.png',
   '/assets/icons/genc-asma-bg.webp',
   '/manifest.json'
 ];
@@ -153,16 +157,19 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ── HTML pages: network first, fall back to cache ─────────────────────────
+  // ── HTML pages: stale-while-revalidate ───────────────────────────────────
+  // Serve cached HTML instantly (no network wait on app open), refresh cache in background.
+  // Hard-update overlay in app.js handles forced version upgrades when needed.
   if (req.mode === 'navigate' || req.destination === 'document' || url.endsWith('.html')) {
     event.respondWith(
-      fetch(req).then(res => {
-        if (res && res.status === 200) {
-          caches.open(CACHE_NAME).then(c => c.put(req, res.clone())).catch(() => {});
-        }
-        return res;
-      }).catch(() =>
-        caches.match(req).then(cached => cached || caches.match('/app/index.html'))
+      caches.open(CACHE_NAME).then(cache =>
+        cache.match(req).then(cached => {
+          const fetchPromise = fetch(req).then(res => {
+            if (res && res.status === 200) cache.put(req, res.clone()).catch(() => {});
+            return res;
+          }).catch(() => null);
+          return cached || fetchPromise;
+        })
       )
     );
     return;
