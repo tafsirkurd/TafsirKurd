@@ -910,6 +910,16 @@ function init(){
     // Init shared Supabase client and check auth
     initSupabase(function(){ loadReciterPhotos(); });
 
+    // Belt-and-suspenders: write tk_last_bg on visibilitychange too.
+    // appStateChange is the primary writer but may not fire under extreme memory pressure
+    // before the OS kills the process. visibilitychange + pagehide are more reliable.
+    document.addEventListener('visibilitychange',function(){
+      if(document.hidden) localStorage.setItem('tk_last_bg',String(Date.now()));
+    });
+    window.addEventListener('pagehide',function(){
+      localStorage.setItem('tk_last_bg',String(Date.now()));
+    });
+
     // Pause audio and sky animations when app goes to background
     document.addEventListener('visibilitychange',function(){
       if(document.hidden){
@@ -955,8 +965,8 @@ function init(){
           } else {
             console.log('[APP_LIFECYCLE] warm_resume — appStateChange foreground');
             console.log('[APP_LIFECYCLE] resume_refresh_start');
-            // App came to foreground — check for forced update first
-            ForceUpdate.check();
+            // Defer ForceUpdate network check — don't compete with UI settle on resume
+            setTimeout(function(){ ForceUpdate.check(); }, 2000);
             // Refresh today's verse set so the date is correct after overnight open.
             // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
             // are skipped for today's goal count.
@@ -12894,11 +12904,12 @@ function ivTrackView(episodeId){
 /* ===== START ===== */
 function startApp(){
   // ── Warm resume detection ─────────────────────────────────────────────────
-  // tk_last_bg is written by appStateChange when app goes to background.
-  // If it was < 30 min ago, WebView was killed under memory pressure — skip splash.
+  // tk_last_bg is written by appStateChange + visibilitychange when app goes to background.
+  // If it was < 3 h ago, WebView was killed under memory pressure — skip splash.
+  // 3 h covers realistic backgrounding patterns (30 min was too short).
   var _bgTs = parseInt(localStorage.getItem('tk_last_bg') || '0');
   var _sinceBackground = _bgTs ? (Date.now() - _bgTs) : Infinity;
-  if (_bgTs && _sinceBackground < 30 * 60 * 1000) {
+  if (_bgTs && _sinceBackground < 3 * 60 * 60 * 1000) {
     window._isWarmResume = true;
     console.log('[APP_LIFECYCLE] warm_resume — backgrounded', Math.round(_sinceBackground / 1000), 's ago');
   } else {
