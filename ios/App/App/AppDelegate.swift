@@ -19,12 +19,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // Invalidated on background, rescheduled on foreground.
     private var prayerBoundaryTimer: Timer?
 
+    // willFinishLaunching fires BEFORE UIKit creates the UIWindow from Main.storyboard.
+    // Setting UIWindow.appearance() here applies the theme color to the window before
+    // it is ever composited — eliminates every black frame between LaunchScreen and overlay.
+    func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        UIWindow.appearance().backgroundColor = themeBackground()
+        return true
+    }
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: kBGTaskID, using: nil) { [weak self] task in
             self?.handlePrayerCacheRefresh(task: task as! BGAppRefreshTask)
         }
-        // Belt-and-suspenders: also set explicitly in case window was already assigned
-        // before didSet fired (e.g. set synchronously during Storyboard load).
+        // Belt-and-suspenders: direct set in case Capacitor swapped the window after willFinish.
         window?.backgroundColor = themeBackground()
         return true
     }

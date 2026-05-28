@@ -37,14 +37,14 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         logoView.translatesAutoresizingMaskIntoConstraints = false
         overlay.addSubview(logoView)
 
-        // Width = 65% of screen, capped at 300pt — height follows the image aspect ratio
-        let pctWidth = logoView.widthAnchor.constraint(equalTo: overlay.widthAnchor, multiplier: 0.65)
+        // Width = 75% of screen, capped at 340pt — height follows the image aspect ratio
+        let pctWidth = logoView.widthAnchor.constraint(equalTo: overlay.widthAnchor, multiplier: 0.75)
         pctWidth.priority = .defaultHigh
         NSLayoutConstraint.activate([
             logoView.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
             logoView.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
             pctWidth,
-            logoView.widthAnchor.constraint(lessThanOrEqualToConstant: 300)
+            logoView.widthAnchor.constraint(lessThanOrEqualToConstant: 340)
         ])
 
         themeOverlay = overlay

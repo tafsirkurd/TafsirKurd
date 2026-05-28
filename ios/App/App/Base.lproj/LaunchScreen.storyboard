@@ -24,7 +24,7 @@
                         <constraints>
                             <constraint firstItem="logo-iv" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="cx"/>
                             <constraint firstItem="logo-iv" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" id="cy"/>
-                            <constraint firstItem="logo-iv" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" multiplier="0.65" id="pw"/>
+                            <constraint firstItem="logo-iv" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" multiplier="0.75" id="pw"/>
                         </constraints>
                     </view>
                 </viewController>
