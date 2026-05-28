@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v40
+ * Smart Daily Companion  v41
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -27,7 +27,7 @@
       fallbackAr: 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ',
       fallbackRepeat: 3,
       fallbackSource: 'مسلم',
-      timeTag: 'مزگەوت', basePriority: 90,
+      timeTag: 'مزگەفت', basePriority: 90,
       prayerOffset: 0   /* 0–20 min after each athan */
     },
     {
@@ -37,7 +37,7 @@
       fallbackAr: 'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
       fallbackRepeat: 33,
       fallbackSource: 'البخاري ومسلم',
-      timeTag: 'دوای نوێژ', basePriority: 85,
+      timeTag: 'پشتی نڤێژێ', basePriority: 85,
       prayerOffset: 20  /* 20–40 min after each athan */
     },
 
@@ -48,7 +48,7 @@
       fallbackAr: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا',
       fallbackRepeat: 3,
       fallbackSource: 'أبو داود والترمذي',
-      timeTag: 'بەیانیکردن', basePriority: 50,
+      timeTag: 'سپێدەهی', basePriority: 50,
       timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
     },
     {
@@ -58,7 +58,7 @@
       fallbackAr: 'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا',
       fallbackRepeat: 1,
       fallbackSource: 'البخاري',
-      timeTag: 'بەیانیکردن', basePriority: 58, /* beats morning when both active (Fajr→Sunrise) */
+      timeTag: 'سپێدەهی', basePriority: 58, /* beats morning when both active (Fajr→Sunrise) */
       timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
     },
     {
@@ -75,7 +75,7 @@
       fallbackAr: 'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا',
       fallbackRepeat: 3,
       fallbackSource: 'أبو داود والترمذي',
-      timeTag: 'ئێواربوون', basePriority: 50,
+      timeTag: 'ئێڤاری', basePriority: 50,
       timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
     },
     {
@@ -85,7 +85,7 @@
       fallbackAr: 'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا',
       fallbackRepeat: 3,
       fallbackSource: 'البخاري ومسلم',
-      timeTag: 'شەو', basePriority: 50,
+      timeTag: 'شەڤ', basePriority: 50,
       timeWindow: { start: 'Isha', end: 'Fajr', fs: 21*60, fe: 5*60, wraps: true }
     },
     {
@@ -94,7 +94,7 @@
       subtitleKey: 'gencine.smart.friday_hint', subtitleFallback: 'ئەڤڕۆ ڕۆژا ئینیێ یە',
       fallbackRepeat: 1,
       fallbackSource: 'أبو داود',
-      timeTag: 'ئینانی', basePriority: 65, /* intentionally beats morning/evening on Friday */
+      timeTag: 'ئەینی', basePriority: 65, /* intentionally beats morning/evening on Friday */
       dayBoostDays: [5]
     },
     {
@@ -136,7 +136,7 @@
       fallbackAr: 'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ',
       fallbackRepeat: 1,
       fallbackSource: 'أبو داود والترمذي',
-      timeTag: 'ئیفتار',
+      timeTag: 'فتارە',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         return h.month === 9 && nowMin >= maghribMin && nowMin < maghribMin + 45;
       }
@@ -148,7 +148,7 @@
       fallbackAr: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
       fallbackRepeat: 1,
       fallbackSource: 'الترمذي',
-      timeTag: 'لێلەتول قەدر',
+      timeTag: 'شەڤا قەدرێ',
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         if (h.month !== 9) return false;
         var isNight = nowMin >= maghribMin || nowMin < fajrMin;
@@ -1445,7 +1445,7 @@
   ───────────────────────────────────────────── */
   function _buildCountdown() {
     var chip    = _mk('span', 'sd-chip');
-    var lbl     = _mk('span', 'sd-chip-lbl', 'تا نوێکردنەوە:');
+    var lbl     = _mk('span', 'sd-chip-lbl', 'نویکرن:');
     var timeEl  = _mk('span', 'sd-chip-time');
     chip.appendChild(lbl);
     chip.appendChild(timeEl);

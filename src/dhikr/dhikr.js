@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260570 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260571 */
 (function(){
 'use strict';
 
@@ -1103,13 +1103,11 @@ window.GencineUI = {
     adhkarInput.placeholder = T('gencine.adhkar_search_ph', 'گەڕان...');
     adhkarPill.appendChild(adhkarInput);
     adhkarSearchWrap.appendChild(adhkarPill);
-    adhkarSearchWrap.style.display = 'none';
     container.appendChild(adhkarSearchWrap);
 
     var _gsbAdhkar = document.getElementById('gencSearchBtn');
     if(_gsbAdhkar){ _gsbAdhkar.onclick = function(){
-      var open = adhkarSearchWrap.style.display === 'none';
-      adhkarSearchWrap.style.display = open ? '' : 'none';
+      var open = adhkarSearchWrap.classList.toggle('open');
       _gsbAdhkar.classList.toggle('on', open);
       if(open) setTimeout(function(){ adhkarInput.focus(); }, 50);
       else { adhkarInput.value = ''; buildAdhkarGrid(''); }
@@ -1286,13 +1284,11 @@ window.GencineUI = {
     duaInput.placeholder = T('gencine.dua_search_ph', 'گەڕان...');
     duaSearchWrap.appendChild(duaPill);
     duaPill.appendChild(duaInput);
-    duaSearchWrap.style.display = 'none';
     container.appendChild(duaSearchWrap);
 
     var _gsbDua = document.getElementById('gencSearchBtn');
     if(_gsbDua){ _gsbDua.onclick = function(){
-      var open = duaSearchWrap.style.display === 'none';
-      duaSearchWrap.style.display = open ? '' : 'none';
+      var open = duaSearchWrap.classList.toggle('open');
       _gsbDua.classList.toggle('on', open);
       if(open) setTimeout(function(){ duaInput.focus(); }, 50);
       else { duaInput.value = ''; buildDuaList(''); }
@@ -1825,13 +1821,11 @@ window.GencineUI = {
     sortIco.className = 'fas fa-arrow-down-9-1';
     sortBtn.appendChild(sortIco);
     searchWrap.appendChild(sortBtn);
-    searchWrap.style.display = 'none';
     container.appendChild(searchWrap);
 
     var _gsbHadith = document.getElementById('gencSearchBtn');
     if(_gsbHadith){ _gsbHadith.onclick = function(){
-      var open = searchWrap.style.display === 'none';
-      searchWrap.style.display = open ? '' : 'none';
+      var open = searchWrap.classList.toggle('open');
       _gsbHadith.classList.toggle('on', open);
       if(open) setTimeout(function(){ searchInput.focus(); }, 50);
       else { self._hadithSearch = ''; searchInput.value = ''; buildList(''); }
@@ -1963,13 +1957,11 @@ window.GencineUI = {
     input.type = 'search';
     input.placeholder = T('gencine.asma_search_ph','گەڕان...');
     searchWrap.appendChild(input);
-    searchWrap.style.display = 'none';
     container.appendChild(searchWrap);
 
     var _gsbAsma = document.getElementById('gencSearchBtn');
     if(_gsbAsma){ _gsbAsma.onclick = function(){
-      var open = searchWrap.style.display === 'none';
-      searchWrap.style.display = open ? '' : 'none';
+      var open = searchWrap.classList.toggle('open');
       _gsbAsma.classList.toggle('on', open);
       if(open) setTimeout(function(){ input.focus(); }, 50);
       else { input.value = ''; buildCards(''); }
