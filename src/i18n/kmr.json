@@ -223,7 +223,7 @@
   "reader.ayah_count": "${count}/${total} ئایەت",
   "reader.prev_surah": "سورەتا پێشیێ",
   "reader.next_surah": "سورەتا دی",
-  "reader.tafsir_empty": "تفسیر بردەست نیە",
+  "reader.tafsir_empty": "تەفسیر بەردەست نینە",
   "reader.pick_ayah": "کیش ئایەت؟",
   "reader.juz_label": "جزء",
   "reader.continue": "بەردەوامکرن ل خواندنێ",
