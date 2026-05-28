@@ -1452,8 +1452,13 @@
       _gridCards.forEach(function(el) {
         var pName = el.dataset.prayer;
         var isNext2 = pName === next.name;
-        // Sunrise is never logged — always show at full opacity
-        var isDone2 = pName === 'Sunrise' || !!(_tickLog[_tickDay] && _tickLog[_tickDay][pName]);
+        // Only show done dot when prayer day matches grid date — prevents yesterday's
+        // done state bleeding onto today's grid in the pre-Fajr window (00:00–Fajr)
+        // where prayerDay() still returns yesterday but the grid shows today's times.
+        var isDone2 = pName === 'Sunrise' || (
+          _tickDay === _currentDateISO &&
+          !!(_tickLog[_tickDay] && _tickLog[_tickDay][pName])
+        );
         el.classList.toggle('prayer-grid-card--next', isNext2);
         el.classList.toggle('prayer-grid-card--done', isDone2);
         if (_currentTimings && _currentDateISO) {
@@ -1491,7 +1496,11 @@
       var _tickDay2   = _appPLtick2 ? _appPLtick2.prayerDay() : '';
       _gridCards.forEach(function(el) {
         var pName2 = el.dataset.prayer;
-        var isDone2b = pName2 === 'Sunrise' || !!(_tickLog2[_tickDay2] && _tickLog2[_tickDay2][pName2]);
+        // Same guard as active-prayer branch — no cross-day done bleed
+        var isDone2b = pName2 === 'Sunrise' || (
+          _tickDay2 === _currentDateISO &&
+          !!(_tickLog2[_tickDay2] && _tickLog2[_tickDay2][pName2])
+        );
         el.classList.remove('prayer-grid-card--next');
         el.classList.add('prayer-grid-card--passed');
         el.classList.toggle('prayer-grid-card--done', isDone2b);

@@ -7658,11 +7658,21 @@ function _getTodayTimings(){return _getTimingsForDate(dateKey(new Date()));}
 // Islamic prayer day: before today's Fajr → still in yesterday's prayer day
 function _getPrayerDay(){
   var now=new Date();var todayKey=dateKey(now);
-  var t=_getTimingsForDate(todayKey);
+  // Use live panel timings as fallback — covers the case where localStorage cache
+  // hasn't populated yet (common on iOS WKWebView before prayer tab loads)
+  var t=_getTimingsForDate(todayKey)||
+    (window._prayerUITimings&&{Fajr:window._prayerUITimings.Fajr});
   if(t&&t.Fajr){
     var hm=t.Fajr.trim().split(' ')[0].split(':');
-    var fajr=new Date(now.getFullYear(),now.getMonth(),now.getDate(),+hm[0],+hm[1],0);
-    if(now<fajr){var y=new Date(now);y.setDate(y.getDate()-1);return dateKey(y);}
+    var h=+hm[0],m=+hm[1];
+    if(!isNaN(h)&&!isNaN(m)){
+      // UTC+3 arithmetic — identical to _pppMsUntil — avoids device-timezone vs
+      // Baghdad-timezone mismatch that caused wrong pre-Fajr detection
+      var nowBgd=Date.now()+3*3600000;
+      var dayStart=nowBgd-(nowBgd%86400000);
+      var fajrMs=dayStart+h*3600000+m*60000;
+      if(nowBgd<fajrMs){var y=new Date(now);y.setDate(y.getDate()-1);return dateKey(y);}
+    }
   }
   return todayKey;
 }
@@ -8081,6 +8091,7 @@ function _buildPrayerProgressPanel(panel){
       if(initTimings&&initTimings[prayer]){var initRem=_pppMsUntil(initTimings[prayer]);if(initRem>0)cdSpan.textContent=_pppFmtMs(initRem);}
       btn.appendChild(cdSpan);
     }else{
+      btn._pppClickAttached=true; // prevents _pppSyncPanel from overwriting this handler
       btn.onclick=function(){
         var prevDone=_TRACK_PRAYERS.filter(function(p){return(getPrayerLog()[today]||{})[p];}).length;
         var ns=togglePrayerDone(prayer);
