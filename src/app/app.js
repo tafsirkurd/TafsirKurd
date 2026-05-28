@@ -3015,10 +3015,8 @@ App._execSearch=function(v){
 
 App._renderSearchResults=function(q,results,isExactMode){
   var res=$('searchResults');
-  clear(res);
   if(!results||!results.length){App._renderSearchNoResults(q);return;}
-  res.classList.add('on');
-
+  // Build fragment before clearing — old results stay visible until new ones are ready
   var frag=document.createDocumentFragment();
   // Exact-mode banner
   if(isExactMode){
@@ -3034,7 +3032,7 @@ App._renderSearchResults=function(q,results,isExactMode){
     var r=_ord[i];
     frag.appendChild(App._mkSearchItem(r,i===0&&r.type==='verse'));
   }
-  res.appendChild(frag);
+  clear(res); res.classList.add('on'); res.appendChild(frag); // atomic replace
 };
 
 /* No-results state — clean message only */
@@ -3045,9 +3043,7 @@ App._renderSearchNoResults=function(q){
   wrap.appendChild(el('div','search-noresult-icon','◌'));
   wrap.appendChild(el('div','search-noresult-msg',t('search.no_results')));
   wrap.appendChild(el('div','search-noresult-sub',t('search.no_results_sub')));
-  clear(res);
-  res.appendChild(wrap);
-  res.classList.add('on');
+  clear(res); res.appendChild(wrap); res.classList.add('on'); // atomic replace
 };
 
 /* Build a single result card — clean minimal layout */
@@ -4352,6 +4348,10 @@ function renderAyahs(surahNum,scrollTo){
     var _gc=null;try{_gc=JSON.parse(localStorage.getItem(_gkey));}catch(e){}
     if(_gc){S.glyphVerses[surahNum]=_gc;}
     else{
+      // In-flight dedup: if already fetching for this surah+font, wait for it
+      S.glyphFetching=S.glyphFetching||{};
+      if(S.glyphFetching[_gkey])return;
+      S.glyphFetching[_gkey]=true;
       // Keep existing list content visible while loading — don't clear.
       // Only show spinner when list is actually empty.
       var _hadContent=list.hasChildNodes();
@@ -4364,6 +4364,7 @@ function renderAyahs(surahNum,scrollTo){
       fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300'+(_isV4?'&mushaf=19':''),{signal:_gctrl.signal})
         .then(function(r){clearTimeout(_gtid);return r.json();})
         .then(function(d){
+          delete S.glyphFetching[_gkey];
           var vs=d.verses||[];
           S.glyphVerses[surahNum]=vs;
           try{localStorage.setItem(_gkey,JSON.stringify(vs));}catch(e){}
@@ -4371,6 +4372,7 @@ function renderAyahs(surahNum,scrollTo){
           renderAyahs(surahNum,scrollTo);
         })
         .catch(function(){
+          delete S.glyphFetching[_gkey];
           clearTimeout(_gtid);
           if(S.surah!==surahNum)return;
           if(!_hadContent){
@@ -11998,6 +12000,7 @@ function ivFetchFresh(force){
   if(S.ivLoading&&!force)return; // in-flight guard — prevent duplicate fetches
   S.ivLoading=true;
   _ivEpsBySeriesId=null; // invalidate cache — fresh data incoming
+  if(force)_ivGridHash=null; // force pull-to-refresh always rebuilds grid
   var _ivFetchT0=Date.now();
 
   var _ivTimeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('iv_timeout'));},15000);});
@@ -12094,6 +12097,7 @@ var _ivHeroTimer=null;
 var _ivHeroIdx=0;
 var _ivHeroSlides=[];
 var _ivHeroBuilt=false;
+var _ivGridHash=null; // last-rendered content hash — skip rebuild when data unchanged
 var _ivHeroTrackEl=null;
 var _ivHeroDotsEls=null;
 var _ivHeroTouchListened=false;
@@ -12303,10 +12307,23 @@ function _ivHeroResetTimer(){
 
 function renderIvGrid(){
   $('ivLoading').classList.remove('on');
-  renderIvHero();
   var grid=$('ivGrid');
-  clear(grid);
   grid.style.display='';
+
+  // Content hash: series IDs + counts + active filters.
+  // If identical to last render AND grid has content, skip full rebuild — prevents
+  // the double-render flash when cached data is shown then fresh (identical) data arrives.
+  var _h=(S.ivSeries||[]).map(function(s){
+    return s.id+':'+((_ivEpsBySeriesId&&_ivEpsBySeriesId[s.id])||[]).length;
+  }).join('|')+'|'+(S.ivSearchQuery||'')+'|'+(S.ivSpeakerFilter||'');
+  if(_h===_ivGridHash&&grid.children.length>0){
+    renderIvHero();
+    return;
+  }
+  _ivGridHash=_h;
+  renderIvHero();
+
+  var frag=document.createDocumentFragment();
 
   if(!S.ivSeries||!S.ivSeries.length){
     var empty=el('div','iv-empty');
@@ -12317,7 +12334,8 @@ function renderIvGrid(){
     refreshBtn.appendChild(document.createTextNode(' '+t('iv.refresh')));
     on(refreshBtn,'click',function(){loadIslamVoiceData(true)});
     empty.appendChild(refreshBtn);
-    grid.appendChild(empty);
+    frag.appendChild(empty);
+    clear(grid); grid.appendChild(frag);
     return;
   }
 
@@ -12405,17 +12423,20 @@ function renderIvGrid(){
     card.appendChild(body);
 
     on(card,'click',function(){App.ivShowSeries(series.id)});
-    grid.appendChild(card);
+    frag.appendChild(card);
     _ivCardIdx++;
   });
 
   // No results for search
-  if(q&&!grid.children.length){
+  if(q&&!frag.children.length){
     var noRes=el('div','iv-empty');
     noRes.appendChild(icon('fas fa-search'));
     noRes.appendChild(el('p','',t('iv.no_results')+' "'+q+'"'));
-    grid.appendChild(noRes);
+    frag.appendChild(noRes);
   }
+
+  // Atomic replace — old grid stays visible until all new cards are ready
+  clear(grid); grid.appendChild(frag);
 }
 
 App.ivShowSeries=function(seriesId){
