@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260569 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260570 */
 (function(){
 'use strict';
 
@@ -828,19 +828,23 @@ window.GencineUI = {
   },
 
   _updateHeader: function(){
-    var backBtn   = document.getElementById('gencineBackBtn');
-    var title     = document.getElementById('gencineHdrTitle');
-    var booksBtns = document.getElementById('booksHdrBtns');
-    var fsBtn     = document.getElementById('pdfFsBtn');
-    var isHome    = (this._view === 'home');
-    var isBooks   = (this._view === 'books');
-    var isReader  = (this._view === 'book-reader');
-    var navBtns   = document.getElementById('pdfNavBtns');
-    if(backBtn)   backBtn.style.display   = isHome ? 'none' : 'flex';
-    if(title)     title.style.visibility  = isHome ? '' : 'hidden';
-    if(booksBtns) booksBtns.style.display = isBooks ? 'flex' : 'none';
-    if(navBtns)   navBtns.style.display   = isReader ? 'flex' : 'none';
-    if(fsBtn)     fsBtn.style.display     = isReader ? 'flex' : 'none';
+    var backBtn        = document.getElementById('gencineBackBtn');
+    var title          = document.getElementById('gencineHdrTitle');
+    var booksBtns      = document.getElementById('booksHdrBtns');
+    var fsBtn          = document.getElementById('pdfFsBtn');
+    var gencSearchBtns = document.getElementById('gencSearchBtns');
+    var isHome         = (this._view === 'home');
+    var isBooks        = (this._view === 'books');
+    var isReader       = (this._view === 'book-reader');
+    var isSearchable   = (this._view === 'adhkar' || this._view === 'dua' || this._view === 'hadith' || this._view === 'asma');
+    var navBtns        = document.getElementById('pdfNavBtns');
+    if(backBtn)        backBtn.style.display        = isHome ? 'none' : 'flex';
+    if(title)          title.style.visibility       = isHome ? '' : 'hidden';
+    if(booksBtns)      booksBtns.style.display      = isBooks ? 'flex' : 'none';
+    if(navBtns)        navBtns.style.display        = isReader ? 'flex' : 'none';
+    if(fsBtn)          fsBtn.style.display          = isReader ? 'flex' : 'none';
+    if(gencSearchBtns) gencSearchBtns.style.display = isSearchable ? 'flex' : 'none';
+    if(!isSearchable){ var gsb = document.getElementById('gencSearchBtn'); if(gsb) gsb.classList.remove('on'); }
   },
 
   /* ── main dispatcher ── */
@@ -1099,7 +1103,17 @@ window.GencineUI = {
     adhkarInput.placeholder = T('gencine.adhkar_search_ph', 'گەڕان...');
     adhkarPill.appendChild(adhkarInput);
     adhkarSearchWrap.appendChild(adhkarPill);
+    adhkarSearchWrap.style.display = 'none';
     container.appendChild(adhkarSearchWrap);
+
+    var _gsbAdhkar = document.getElementById('gencSearchBtn');
+    if(_gsbAdhkar){ _gsbAdhkar.onclick = function(){
+      var open = adhkarSearchWrap.style.display === 'none';
+      adhkarSearchWrap.style.display = open ? '' : 'none';
+      _gsbAdhkar.classList.toggle('on', open);
+      if(open) setTimeout(function(){ adhkarInput.focus(); }, 50);
+      else { adhkarInput.value = ''; buildAdhkarGrid(''); }
+    }; }
 
     var wrap = document.createElement('div');
     wrap.className = 'adhkar-list-wrap';
@@ -1272,7 +1286,17 @@ window.GencineUI = {
     duaInput.placeholder = T('gencine.dua_search_ph', 'گەڕان...');
     duaSearchWrap.appendChild(duaPill);
     duaPill.appendChild(duaInput);
+    duaSearchWrap.style.display = 'none';
     container.appendChild(duaSearchWrap);
+
+    var _gsbDua = document.getElementById('gencSearchBtn');
+    if(_gsbDua){ _gsbDua.onclick = function(){
+      var open = duaSearchWrap.style.display === 'none';
+      duaSearchWrap.style.display = open ? '' : 'none';
+      _gsbDua.classList.toggle('on', open);
+      if(open) setTimeout(function(){ duaInput.focus(); }, 50);
+      else { duaInput.value = ''; buildDuaList(''); }
+    }; }
 
     /* Count label */
     var duaCount = document.createElement('div');
@@ -1801,7 +1825,17 @@ window.GencineUI = {
     sortIco.className = 'fas fa-arrow-down-9-1';
     sortBtn.appendChild(sortIco);
     searchWrap.appendChild(sortBtn);
+    searchWrap.style.display = 'none';
     container.appendChild(searchWrap);
+
+    var _gsbHadith = document.getElementById('gencSearchBtn');
+    if(_gsbHadith){ _gsbHadith.onclick = function(){
+      var open = searchWrap.style.display === 'none';
+      searchWrap.style.display = open ? '' : 'none';
+      _gsbHadith.classList.toggle('on', open);
+      if(open) setTimeout(function(){ searchInput.focus(); }, 50);
+      else { self._hadithSearch = ''; searchInput.value = ''; buildList(''); }
+    }; }
 
     /* Count label */
     var countEl = document.createElement('div');
@@ -1921,7 +1955,7 @@ window.GencineUI = {
     var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     
 
-    /* sticky search bar */
+    /* search bar — hidden by default, toggled via header button */
     var searchWrap = document.createElement('div');
     searchWrap.className = 'asma-search-wrap';
     var input = document.createElement('input');
@@ -1929,7 +1963,17 @@ window.GencineUI = {
     input.type = 'search';
     input.placeholder = T('gencine.asma_search_ph','گەڕان...');
     searchWrap.appendChild(input);
+    searchWrap.style.display = 'none';
     container.appendChild(searchWrap);
+
+    var _gsbAsma = document.getElementById('gencSearchBtn');
+    if(_gsbAsma){ _gsbAsma.onclick = function(){
+      var open = searchWrap.style.display === 'none';
+      searchWrap.style.display = open ? '' : 'none';
+      _gsbAsma.classList.toggle('on', open);
+      if(open) setTimeout(function(){ input.focus(); }, 50);
+      else { input.value = ''; buildCards(''); }
+    }; }
 
     /* count label */
     var countEl = document.createElement('div');

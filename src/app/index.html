@@ -4087,6 +4087,9 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
       <button class="hdr-btn" id="bookReadBtn" title="خوێندراو" data-i18n-title="iv.read_title"><i class="fas fa-check-circle"></i></button>
       <button class="hdr-btn" id="bookSearchBtn" title="گەڕان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
     </div>
+    <div id="gencSearchBtns" style="display:none;gap:2px">
+      <button class="hdr-btn" id="gencSearchBtn" title="لێگەڕیان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
+    </div>
     <div id="pdfNavBtns" style="display:none;align-items:center;gap:2px">
       <button class="hdr-btn" id="pdfPrevBtn" title="پەڕەی پێشوو"><i class="fas fa-chevron-up"></i></button>
       <input id="pdfPageInd" type="number" min="1" inputmode="numeric" pattern="[0-9]*"
@@ -4440,7 +4443,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <audio id="audioEl" preload="auto"></audio>
 
 <script src="/utils/supabase.js?v=20260326b"></script>
-<script src="/i18n/kmr-bundled.js?v=20260541"></script>
+<script src="/i18n/kmr-bundled.js?v=20260542"></script>
 <script src="/i18n/i18n.js?v=20260517"></script>
 <script src="/prayer/prayer.cache.js?v=20260526"></script>
 <script src="/prayer/prayer.api.js?v=20260526"></script>
@@ -4456,7 +4459,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/qibla/qibla.js?v=20260417"></script>
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
-<script src="/app/app.js?v=882"></script>
+<script src="/app/app.js?v=886"></script>
 <script>
 /* Register service worker — updateViaCache:'none' so browser always checks for a new SW version */
 if ('serviceWorker' in navigator) {
