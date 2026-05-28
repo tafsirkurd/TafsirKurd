@@ -179,7 +179,7 @@
   "prayer.notif_body_maghrib": "نوکە دەمێ بانگێ مەغرەبە",
   "prayer.notif_body_isha": "نوکە دەمێ بانگێ عەیشا یە",
   "prayer.channel_desc": "ئاگاداریێن کاتا نوێژ",
-  "prayer.resched_btn": "دابینکرنا نوی",
+  "prayer.resched_btn": "ڕێکخستنا نوی",
   "prayer.scheduled_ok": "دابین کرا: ${count} بانگ",
   "prayer.scheduled_zero": "هیچ بانگ نەدابینکرا — ڕۆژا نوی تازەبیت",
   "prayer.no_data": "داتا نیه — ئینتەرنێت پشکنی",
