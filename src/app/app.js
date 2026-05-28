@@ -891,6 +891,18 @@ function init(){
     // Fast-scroll pill for long lists
     if(window._initFastScroll) _initFastScroll();
 
+    // Pre-render static tabs immediately — they don't need quran data.
+    // By the time quran.json loads, these are already built.
+    setTimeout(function(){
+      renderSettings(); _renderHash.settings=_tabHash('settings');
+      setTimeout(function(){
+        renderBookmarks(); _renderHash.bm=_tabHash('bookmarks');
+        setTimeout(function(){
+          renderGoals(); _renderHash.goals=_tabHash('goals');
+        },16);
+      },16);
+    },0);
+
     // Load data
     loadQuranData();
     loadTafsirData();
@@ -1270,7 +1282,7 @@ function init(){
   // Hybrid timing: first launch / new version → 800ms minimum (logo animation).
   //                repeat same-version launches → immediate exit when data ready.
   var _splashStart = Date.now();
-  var _splashReady = {quran:false,tabs:false};
+  var _splashReady = {quran:false}; // tabs removed as gate — pre-render runs in background
   var _splashDismissed = false;
   var _splashSeenKey = 'tk_splash_seen';
   var _splashMinPassed = false;
@@ -1337,9 +1349,9 @@ function init(){
 
   function _checkSplashReady(){
     if(_splashDismissed)return;
-    if(!_splashReady.quran||!_splashReady.tabs)return;
+    if(!_splashReady.quran)return;
     if(!_splashReady.video)return; // video gate (auto-passes — no video element)
-    if(!_splashMinPassed)return; // first launch / new version: wait for 3s minimum
+    if(!_splashMinPassed)return; // first launch / new version: wait for 800ms minimum
     console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
     // Pre-warm app layout one frame before transition starts — gives browser a head start
     // painting the app before the splash fade begins (3 rAFs total on normal path).
@@ -1382,7 +1394,7 @@ function init(){
   window._splashReadyI18n       =function(){}; // not a gate — always fires before tabs anyway
   window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
-  window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_checkSplashReady();};
+  window._splashReadyTabs       =function(){}; // no longer a gate — pre-render runs in background
   // Overall failsafe — force app visible after 6s no matter what
   setTimeout(function(){_doSplashTransition();},6000);
   // Data always loads async now (no localStorage cache) — splash waits for both files
