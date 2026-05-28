@@ -10001,7 +10001,7 @@ function _timeAgo(date){
   var m=Math.floor(s/60);
   if(m<60)return m+' '+(t('profile.time_min')||'خولەک');
   var h=Math.floor(m/60);
-  if(h<24)return h+' '+(t('profile.time_hour')||'کاتژمێر');
+  if(h<24)return h+' '+(t('profile.time_hour')||'دەمژمێر');
   var d=Math.floor(h/24);
   if(d<8)return d+' '+(t('profile.time_day')||'ڕۆژ');
   return date.toLocaleDateString();

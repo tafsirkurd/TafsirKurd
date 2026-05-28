@@ -2439,7 +2439,7 @@
     var h = Math.floor(diff / 3600000);
     var m = Math.floor((diff % 3600000) / 60000);
     var s = Math.floor((diff % 60000) / 1000);
-    if (h > 0) return h + ' کاتژمێر ' + m + ' خولەک';
+    if (h > 0) return h + ' دەمژمێر ' + m + ' خولەک';
     if (m > 0) return m + ' خولەک' + (s > 0 ? ' و ' + s + ' چرکە' : '');
     return s + ' چرکە';
   }
