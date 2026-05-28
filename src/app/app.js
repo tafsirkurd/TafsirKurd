@@ -1304,7 +1304,7 @@ function init(){
     } catch(e){ _splashMinPassed=true; }
   })();
 
-  // 800ms minimum — only active for first launch / new version (logo animation duration).
+  // 600ms minimum — only active for first launch / new version (logo animation duration).
   // Writes the "seen" flag so next launch exits as soon as data is ready.
   setTimeout(function(){
     if(_splashMinPassed)return; // already cleared (repeat launch)
@@ -1314,7 +1314,7 @@ function init(){
     }catch(e){}
     _splashMinPassed=true;
     _checkSplashReady();
-  },800);
+  },600);
 
   function _doSplashTransition(){
     if(_splashDismissed)return;
@@ -1519,7 +1519,43 @@ function _idbPut(key,val){
 }
 
 var _QURAN_IDB_KEY='quran_v1';
+function _fetchQuranData(){
+  var ctrl=new AbortController();
+  var _t0=Date.now();
+  var tid=setTimeout(function(){ctrl.abort();},_sn.ms(12000,25000));
+  fetch('/data/quran.json',{signal:ctrl.signal}).then(function(r){
+    clearTimeout(tid);
+    AndroidLog.fetch('/data/quran.json',r.status,'quran',false,Date.now()-_t0);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(d){
+    S.quranData=d;
+    _idbPut(_QURAN_IDB_KEY,d);
+    _dataReady.quran=true;
+    _checkDataReady();
+  }).catch(function(e){
+    clearTimeout(tid);
+    AndroidLog.fetch('/data/quran.json',0,'quran',false,Date.now()-_t0,e);
+    console.error('Quran load error:',e);
+    toast(t('error.data_load'));
+    _dataReady.quran=true;
+    _checkDataReady();
+  });
+}
 function loadQuranData(){
+  // Fast path A: HTML preload script already read IDB during page parse — zero async wait.
+  if(window._tkQuranPreload){
+    S.quranData=window._tkQuranPreload;
+    _dataReady.quran=true;
+    _checkDataReady();
+    return;
+  }
+  // Fast path B: IDB open succeeded but key absent (first launch) — skip IDB round-trip.
+  if(window._tkQuranPreload===false){
+    _fetchQuranData();
+    return;
+  }
+  // Fallback: preload script not yet done (or IDB unavailable) — check IDB ourselves.
   _idbGet(_QURAN_IDB_KEY,function(cached){
     if(cached){
       S.quranData=cached;
@@ -1527,27 +1563,7 @@ function loadQuranData(){
       _checkDataReady();
       return;
     }
-    var ctrl=new AbortController();
-    var _t0=Date.now();
-    var tid=setTimeout(function(){ctrl.abort();},_sn.ms(12000,25000));
-    fetch('/data/quran.json',{signal:ctrl.signal}).then(function(r){
-      clearTimeout(tid);
-      AndroidLog.fetch('/data/quran.json',r.status,'quran',false,Date.now()-_t0);
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      return r.json();
-    }).then(function(d){
-      S.quranData=d;
-      _idbPut(_QURAN_IDB_KEY,d);
-      _dataReady.quran=true;
-      _checkDataReady();
-    }).catch(function(e){
-      clearTimeout(tid);
-      AndroidLog.fetch('/data/quran.json',0,'quran',false,Date.now()-_t0,e);
-      console.error('Quran load error:',e);
-      toast(t('error.data_load'));
-      _dataReady.quran=true;
-      _checkDataReady();
-    });
+    _fetchQuranData();
   });
 }
 
