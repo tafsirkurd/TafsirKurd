@@ -181,7 +181,7 @@
   "prayer.channel_desc": "ئاگاداریێن کاتا نوێژ",
   "prayer.resched_btn": "ڕێکخستنا نوی",
   "prayer.scheduled_ok": "دابین کرا: ${count} بانگ",
-  "prayer.scheduled_zero": "هیچ بانگ نەدابینکرا — ڕۆژا نوی تازەبیت",
+  "prayer.scheduled_zero": "چ بانگ نەهاتینە ڕێکخستن — دێ د ڕۆژا نوی دا هێنە نویکرن",
   "prayer.no_data": "داتا نیه — ئینتەرنێت پشکنی",
   "prayer.perm_denied": "ئازن نەدرا — ئیجازەت پێدە",
   "prayer.athan_off": "بانگ هاتنە",
