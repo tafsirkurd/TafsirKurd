@@ -211,9 +211,9 @@
         .token-mono { font-family:var(--n-mono); font-size:11px; color:var(--n-text2); word-break:break-all; }
 
         /* ─── Modal ──────────────────────────────────────────────── */
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:1000; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:1000; align-items:flex-start; justify-content:center; padding:24px 16px; backdrop-filter:blur(4px); overflow-y:auto; }
         .modal.active { display:flex; }
-        .modal-content { background:var(--n-surface); border:1px solid var(--n-border2); border-radius:16px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 80px rgba(0,0,0,.6); }
+        .modal-content { background:var(--n-surface); border:1px solid var(--n-border2); border-radius:16px; width:90%; margin:auto; box-shadow:0 24px 80px rgba(0,0,0,.6); flex-shrink:0; }
         .modal-header { padding:20px 24px; border-bottom:1px solid var(--n-border); display:flex; align-items:center; justify-content:space-between; }
         .modal-title { font-size:17px; font-weight:700; color:var(--n-text); font-family:var(--n-font); }
         .modal-close { background:transparent; border:none; color:var(--n-text2); cursor:pointer; padding:4px; display:flex; align-items:center; border-radius:6px; transition:all .13s; }
@@ -269,8 +269,20 @@
         .sched-chip { padding:4px 12px; font-size:12px; font-weight:600; border:1px solid var(--n-border2); border-radius:20px; background:var(--n-surface); color:var(--n-text2); cursor:pointer; transition:all .13s; white-space:nowrap; display:inline-flex; align-items:center; gap:4px; font-family:var(--n-font); line-height:1.4; }
         .sched-chip:hover { border-color:var(--n-blue); color:var(--n-blue); background:var(--n-blue-bg); }
         .sched-chip.active { background:var(--n-blue); color:#fff !important; border-color:var(--n-blue); }
-        .sched-pick-wrap { position:relative; display:inline-flex; }
-        .sched-pick-wrap input[type="date"], .sched-pick-wrap input[type="time"] { position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; z-index:2; box-sizing:border-box; }
+        /* Visible date/time chip inputs — reliable across all browsers & inside modals */
+        input.sched-chip-input {
+            padding:4px 12px; font-size:12px; font-weight:600;
+            border:1px solid var(--n-border2); border-radius:20px;
+            background:var(--n-surface2); color:var(--n-text2);
+            cursor:pointer; font-family:var(--n-font); line-height:1.4;
+            transition:all .13s; -webkit-appearance:none; appearance:none;
+            min-width:90px; height:30px; box-sizing:border-box;
+            display:inline-flex; align-items:center;
+        }
+        input.sched-chip-input:hover { border-color:var(--n-blue); color:var(--n-blue); }
+        input.sched-chip-input::-webkit-calendar-picker-indicator { opacity:.5; cursor:pointer; margin-left:2px; filter:invert(1); }
+        input.sched-chip-input.active { background:var(--n-blue); color:#fff; border-color:var(--n-blue); }
+        input.sched-chip-input.active::-webkit-calendar-picker-indicator { filter:invert(1) brightness(2); }
         .sched-foot { display:flex; align-items:center; justify-content:space-between; padding:9px 14px; background:var(--n-surface2); gap:8px; font-size:12px; border-top:1px solid var(--n-border); }
         .sched-foot-clear { background:none; border:none; cursor:pointer; color:var(--n-text3); display:inline-flex; align-items:center; gap:3px; font-size:11px; padding:2px 8px; border-radius:5px; transition:all .13s; font-family:var(--n-font); }
         .sched-foot-clear:hover { color:var(--n-red); background:var(--n-red-bg); }
@@ -857,10 +869,7 @@
                                     <button type="button" class="sched-chip" id="sched-d0" onclick="schedPickDay(0)">Today</button>
                                     <button type="button" class="sched-chip" id="sched-d1" onclick="schedPickDay(1)">Tomorrow</button>
                                     <button type="button" class="sched-chip" id="sched-d2" onclick="schedPickDay(2)">—</button>
-                                    <span class="sched-pick-wrap">
-                                        <button type="button" class="sched-chip" id="sched-d-custom" style="pointer-events:none"><i data-lucide="calendar" style="width:12px;height:12px"></i> Pick</button>
-                                        <input type="date" id="sched-date-hidden" onchange="schedPickCustomDate(this.value)">
-                                    </span>
+                                    <input type="date" id="sched-date-hidden" class="sched-chip-input" title="Pick a date" onchange="schedPickCustomDate(this.value)" placeholder="Pick date">
                                 </div>
                             </div>
                             <div class="sched-row" id="sched-time-row">
@@ -873,10 +882,7 @@
                                     <button type="button" class="sched-chip" id="sched-t15" onclick="schedPickTime(15,0)">3 PM</button>
                                     <button type="button" class="sched-chip" id="sched-t18" onclick="schedPickTime(18,0)">6 PM</button>
                                     <button type="button" class="sched-chip" id="sched-t20" onclick="schedPickTime(20,0)">8 PM</button>
-                                    <span class="sched-pick-wrap">
-                                        <button type="button" class="sched-chip" style="pointer-events:none"><i data-lucide="clock" style="width:12px;height:12px"></i> Other</button>
-                                        <input type="time" id="sched-time-hidden" onchange="schedPickCustomTime(this.value)">
-                                    </span>
+                                    <input type="time" id="sched-time-hidden" class="sched-chip-input" title="Pick exact time" onchange="schedPickCustomTime(this.value)">
                                 </div>
                             </div>
                             <!-- Recurrence row -->
@@ -1769,17 +1775,27 @@
                 var x = new Date(now2); x.setDate(x.getDate() + offset);
                 return x.getFullYear() + '-' + _sp(x.getMonth()+1) + '-' + _sp(x.getDate());
             };
-            if (_sd === makeDS(0)) document.getElementById('sched-d0').classList.add('active');
-            else if (_sd === makeDS(1)) document.getElementById('sched-d1').classList.add('active');
-            else if (_sd === makeDS(2)) document.getElementById('sched-d2').classList.add('active');
-            // Highlight matching time chip
+            var di = document.getElementById('sched-date-hidden');
+            var ti = document.getElementById('sched-time-hidden');
+            if (di) { di.value = _sd || ''; di.classList.remove('active'); }
+            if (ti) { ti.value = (_sh !== null) ? (_sp(_sh) + ':' + _sp(_sm || 0)) : ''; ti.classList.remove('active'); }
+            // Highlight matching date chip or the date input for custom dates
+            var matchedDate = false;
+            if (_sd === makeDS(0)) { document.getElementById('sched-d0').classList.add('active'); matchedDate = true; }
+            else if (_sd === makeDS(1)) { document.getElementById('sched-d1').classList.add('active'); matchedDate = true; }
+            else if (_sd === makeDS(2)) { document.getElementById('sched-d2').classList.add('active'); matchedDate = true; }
+            if (_sd && !matchedDate && di) di.classList.add('active');
+            // Highlight matching time chip or the time input for custom times
             var tBtn = document.getElementById('sched-t' + _sh);
             if (tBtn && _sm === 0) tBtn.classList.add('active');
+            else if (_sh !== null && ti) { var preset = [6,8,9,12,15,18,20].indexOf(_sh) !== -1 && _sm === 0; if (!preset) ti.classList.add('active'); }
             schedSync();
         }
 
         function schedPickDay(offset) {
             document.querySelectorAll('#sched-date-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            var di = document.getElementById('sched-date-hidden');
+            if (di) { di.classList.remove('active'); di.value = ''; }
             if (typeof offset === 'number') {
                 var d = new Date(); d.setDate(d.getDate() + offset);
                 _sd = d.getFullYear() + '-' + _sp(d.getMonth()+1) + '-' + _sp(d.getDate());
@@ -1793,13 +1809,16 @@
             if (!val) return;
             document.querySelectorAll('#sched-date-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
             _sd = val;
-            // Highlight if it matches a standard offset
+            var di = document.getElementById('sched-date-hidden');
+            // If matches a standard chip, highlight that; otherwise highlight the date input itself
+            var matched = false;
             var now2 = new Date();
             for (var i = 0; i <= 2; i++) {
                 var x = new Date(now2); x.setDate(x.getDate() + i);
                 var ds = x.getFullYear() + '-' + _sp(x.getMonth()+1) + '-' + _sp(x.getDate());
-                if (ds === val) { document.getElementById('sched-d' + i).classList.add('active'); break; }
+                if (ds === val) { document.getElementById('sched-d' + i).classList.add('active'); matched = true; break; }
             }
+            if (!matched && di) di.classList.add('active');
             schedSync();
         }
 
@@ -1818,6 +1837,8 @@
             var btn = document.getElementById('sched-t' + h);
             var alreadyActive = btn && btn.classList.contains('active');
             document.querySelectorAll('#sched-time-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+            var ti = document.getElementById('sched-time-hidden');
+            if (ti) { ti.classList.remove('active'); ti.value = ''; }
             if (alreadyActive) { _sh = null; _sm = null; } else { _sh = h; _sm = m; _autoSetToday(); if (btn) btn.classList.add('active'); }
             schedSync();
         }
@@ -1828,6 +1849,16 @@
             var parts = val.split(':');
             _sh = parseInt(parts[0]); _sm = parseInt(parts[1] || 0);
             _autoSetToday();
+            // Highlight the time input if it doesn't match a preset chip
+            var ti = document.getElementById('sched-time-hidden');
+            var preset = [6,8,9,12,15,18,20].indexOf(_sh) !== -1 && _sm === 0;
+            if (preset) {
+                var tb = document.getElementById('sched-t' + _sh);
+                if (tb) tb.classList.add('active');
+                if (ti) ti.classList.remove('active');
+            } else {
+                if (ti) ti.classList.add('active');
+            }
             schedSync();
         }
 
@@ -1873,10 +1904,18 @@
             _sd = null; _sh = null; _sm = null;
             document.getElementById('f-scheduled-at').value = '';
             document.querySelectorAll('.sched-chip').forEach(function(c) { c.classList.remove('active'); });
-            document.getElementById('sched-summary').innerHTML = '<span style="color:var(--text-tertiary)">Not scheduled — will save as draft</span>';
+            var di = document.getElementById('sched-date-hidden');
+            var ti = document.getElementById('sched-time-hidden');
+            if (di) { di.value = ''; di.classList.remove('active'); }
+            if (ti) { ti.value = ''; ti.classList.remove('active'); }
+            document.getElementById('sched-summary').innerHTML = '<span style="color:var(--n-text3)">No schedule — will save as draft</span>';
             document.getElementById('sched-clear-btn').style.display = 'none';
             document.getElementById('rec-none').checked = true;
             document.getElementById('f-recurrence-day').style.display = 'none';
+            document.querySelectorAll('#recurrence-group .sched-chip').forEach(function(chip) {
+                var r = chip.querySelector('input[type="radio"]');
+                if (r) chip.classList.toggle('active', r.checked);
+            });
         }
 
         function openCreateModal() {
