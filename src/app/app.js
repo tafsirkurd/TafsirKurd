@@ -1665,6 +1665,11 @@ function loadTafsirData(){
 
 /* ===== THEME & SIZES ===== */
 function applyTheme(){
+  // Pause sky CSS animations during theme cascade to prevent compositor jank.
+  var _skyEl=document.getElementById('prayerSkyScene');
+  var _skyWasRunning=_skyEl&&!_skyEl.classList.contains('sky-paused');
+  if(_skyWasRunning)_skyEl.classList.add('sky-paused');
+
   var bgMap={light:'#fafafa',dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc'};
   var bg=bgMap[S.theme]||'#fafafa';
   document.documentElement.setAttribute('data-theme',S.theme);
@@ -1679,6 +1684,9 @@ function applyTheme(){
     try{window.Capacitor.Plugins.StatusBar.setStyle({style:isDark?'DARK':'LIGHT'})}catch(e){}
     try{window.Capacitor.Plugins.StatusBar.setBackgroundColor({color:bg})}catch(e){}
   }
+
+  // Resume sky one frame later so the new theme paints before animations restart.
+  if(_skyWasRunning){requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s)_s.classList.remove('sky-paused');});}
 }
 function applySizes(){
   document.documentElement.style.setProperty('--ar-size',S.arSize+'rem');
@@ -4062,6 +4070,31 @@ function renderMushafView(){
     view.appendChild(errWrap);
   });
 }
+
+// Preserve mushaf scroll position across orientation change / viewport resize.
+// iOS WebKit can reset overflow-y scroll containers to 0 on rotation.
+// Save on orientationchange (fires before resize/reflow), restore after layout settles.
+(function(){
+  var _saved=-1,_restoreTimer=null;
+  function _saveMushaf(){
+    if(!window.S||!S.mushafMode)return;
+    var mv=document.getElementById('mushafView');
+    if(mv&&mv.style.display!=='none'&&mv.scrollTop>0)_saved=mv.scrollTop;
+  }
+  function _restoreMushaf(){
+    if(_saved<0)return;
+    var pos=_saved;_saved=-1;
+    if(!window.S||!S.mushafMode)return;
+    var mv=document.getElementById('mushafView');
+    // Only restore if browser actually reset the scroll (within 5px of 0)
+    if(mv&&mv.style.display!=='none'&&mv.scrollTop<5)mv.scrollTop=pos;
+  }
+  window.addEventListener('orientationchange',_saveMushaf,{passive:true});
+  window.addEventListener('resize',function(){
+    clearTimeout(_restoreTimer);
+    _restoreTimer=setTimeout(_restoreMushaf,120);
+  },{passive:true});
+})();
 
 // Shrink QCF lines that overflow their container so no characters are clipped.
 // Separates DOM reads from writes to avoid layout thrashing.
