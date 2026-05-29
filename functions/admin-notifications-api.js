@@ -245,7 +245,7 @@ export async function onRequest(context) {
                         deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
                         status: 'scheduled', scheduled_at: iso,
                         recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
-                        notes: notif.notes || null, is_template: false, created_by: adminEmail,
+                        notes: notif.notes || null, is_template: false, created_by: 'system',
                     });
                 }
             }
