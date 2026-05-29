@@ -1682,14 +1682,27 @@
                 pop.style.cssText = 'bottom:calc(100% + 8px);right:0;left:auto';
                 pop.onclick = function(ev) { ev.stopPropagation(); };
 
-                var qsd = null, qsh = null, qsm = 0; // selected date offset, hour, minute
+                var isRecurring = n.recurrence && n.recurrence !== 'none';
+                var qsd = null, qsh = null, qsm = 0;
 
                 function _sp2(v) { return String(v).padStart(2,'0'); }
                 function _qsDateLabel(off) { var d=new Date(); d.setDate(d.getDate()+off); return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]; }
 
-                // qsdISO stores a custom ISO date string (YYYY-MM-DD) for dates beyond +3 days
+                // For recurring templates: auto-calculate next occurrence date ISO
+                function _qsRecurringDateISO() {
+                    var dayOfWeek = n.recurrence_day; // 0=Sun..6=Sat
+                    var now = new Date();
+                    var today = now.getDay();
+                    var daysUntil = (dayOfWeek - today + 7) % 7;
+                    if (daysUntil === 0) daysUntil = 7; // always next week, never today
+                    var d = new Date(now);
+                    d.setDate(d.getDate() + daysUntil);
+                    return d.getFullYear() + '-' + _sp2(d.getMonth()+1) + '-' + _sp2(d.getDate());
+                }
+
                 var qsdISO = null;
                 function _qsDateStr() {
+                    if (isRecurring) return _qsRecurringDateISO();
                     if (qsdISO) return qsdISO;
                     if (qsd === null) return null;
                     var d = new Date(); d.setDate(d.getDate() + qsd);
@@ -1699,36 +1712,49 @@
                     var btn = pop.querySelector('.qs-confirm');
                     if (!btn) return;
                     var dateStr = _qsDateStr();
-                    btn.disabled = (!dateStr || qsh === null);
-                    if (dateStr && qsh !== null) {
-                        var dObj = new Date(dateStr + 'T12:00:00');
+                    btn.disabled = ((!dateStr && !isRecurring) || qsh === null);
+                    if ((dateStr || isRecurring) && qsh !== null) {
+                        var dObj = new Date((dateStr || _qsRecurringDateISO()) + 'T12:00:00');
                         var dLabel = dObj.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
                         var tStr = qsh >= 12 ? (qsh === 12 ? '12' : (qsh-12)) + ':' + _sp2(qsm) + ' PM' : (qsh === 0 ? '12' : qsh) + ':' + _sp2(qsm) + ' AM';
                         btn.textContent = 'Schedule for ' + dLabel + ' at ' + tStr;
-                    } else { btn.textContent = 'Pick date & time above'; }
+                    } else { btn.textContent = 'Pick a time above'; }
                 }
                 function _qsRender() {
                     pop.innerHTML = '';
-                    // Date chips
-                    var dhdr = document.createElement('div'); dhdr.className = 'qs-pop-hdr'; dhdr.textContent = 'Date'; pop.appendChild(dhdr);
-                    var dchips = document.createElement('div'); dchips.className = 'qs-chips';
-                    [['Today',0],['Tomorrow',1],[_qsDateLabel(2),2],[_qsDateLabel(3),3]].forEach(function(pair) {
-                        var c = document.createElement('button'); c.className = 'qs-chip' + (qsd === pair[1] && !qsdISO ? ' on' : '');
-                        c.textContent = pair[0];
-                        c.onclick = function() { qsd = (qsd === pair[1] && !qsdISO) ? null : pair[1]; qsdISO = null; _qsRender(); };
-                        dchips.appendChild(c);
-                    });
-                    // Custom date input
-                    var dateInp = document.createElement('input');
-                    dateInp.type = 'date'; dateInp.className = 'qs-chip' + (qsdISO ? ' on' : '');
-                    dateInp.style.cssText = 'cursor:pointer;min-width:110px;color-scheme:dark';
-                    dateInp.title = 'Pick any date';
-                    if (qsdISO) dateInp.value = qsdISO;
-                    dateInp.onchange = function() {
-                        if (this.value) { qsdISO = this.value; qsd = null; _qsRender(); }
-                    };
-                    dchips.appendChild(dateInp);
-                    pop.appendChild(dchips);
+
+                    if (isRecurring) {
+                        // Show auto-date label instead of date chips
+                        var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                        var autoDateISO = _qsRecurringDateISO();
+                        var autoDateObj = new Date(autoDateISO + 'T12:00:00');
+                        var autoDateLabel = autoDateObj.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+                        var dlabel = document.createElement('div');
+                        dlabel.className = 'qs-pop-hdr';
+                        dlabel.innerHTML = 'Next ' + DAYS[n.recurrence_day] + ' · <span style="color:var(--text-secondary)">' + autoDateLabel + '</span>';
+                        pop.appendChild(dlabel);
+                    } else {
+                        // Date chips for one-time templates
+                        var dhdr = document.createElement('div'); dhdr.className = 'qs-pop-hdr'; dhdr.textContent = 'Date'; pop.appendChild(dhdr);
+                        var dchips = document.createElement('div'); dchips.className = 'qs-chips';
+                        [['Today',0],['Tomorrow',1],[_qsDateLabel(2),2],[_qsDateLabel(3),3]].forEach(function(pair) {
+                            var c = document.createElement('button'); c.className = 'qs-chip' + (qsd === pair[1] && !qsdISO ? ' on' : '');
+                            c.textContent = pair[0];
+                            c.onclick = function() { qsd = (qsd === pair[1] && !qsdISO) ? null : pair[1]; qsdISO = null; _qsRender(); };
+                            dchips.appendChild(c);
+                        });
+                        var dateInp = document.createElement('input');
+                        dateInp.type = 'date'; dateInp.className = 'qs-chip' + (qsdISO ? ' on' : '');
+                        dateInp.style.cssText = 'cursor:pointer;min-width:110px;color-scheme:dark';
+                        dateInp.title = 'Pick any date';
+                        if (qsdISO) dateInp.value = qsdISO;
+                        dateInp.onchange = function() {
+                            if (this.value) { qsdISO = this.value; qsd = null; _qsRender(); }
+                        };
+                        dchips.appendChild(dateInp);
+                        pop.appendChild(dchips);
+                    }
+
                     // Time chips
                     var thdr = document.createElement('div'); thdr.className = 'qs-pop-hdr'; thdr.textContent = 'Time'; pop.appendChild(thdr);
                     var tchips = document.createElement('div'); tchips.className = 'qs-chips';
@@ -1737,12 +1763,11 @@
                         var c = document.createElement('button'); c.className = 'qs-chip' + (isOn ? ' on' : '');
                         c.textContent = t[2];
                         c.onclick = function() {
-                            if (isOn) { qsh = null; qsm = 0; } else { qsh = t[0]; qsm = t[1]; if (!_qsDateStr()) qsd = 0; }
+                            if (isOn) { qsh = null; qsm = 0; } else { qsh = t[0]; qsm = t[1]; if (!isRecurring && !_qsDateStr()) qsd = 0; }
                             _qsRender();
                         };
                         tchips.appendChild(c);
                     });
-                    // Custom time input — does NOT re-render (keeps focus)
                     var timeInp = document.createElement('input');
                     var presetTimes = [[6,0],[8,0],[9,0],[12,0],[15,0],[18,0],[20,0]];
                     var isCustomTime = qsh !== null && !presetTimes.some(function(t){ return t[0]===qsh && t[1]===qsm; });
@@ -1754,33 +1779,31 @@
                         if (!this.value) return;
                         var p = this.value.split(':');
                         qsh = parseInt(p[0]); qsm = parseInt(p[1] || 0);
-                        if (!_qsDateStr()) qsd = 0;
-                        // Highlight this input, unhighlight preset chips
+                        if (!isRecurring && !_qsDateStr()) qsd = 0;
                         tchips.querySelectorAll('.qs-chip').forEach(function(c){ c.classList.remove('on'); });
                         timeInp.classList.add('on');
                         _qsUpdateConfirm();
                     };
                     tchips.appendChild(timeInp);
                     pop.appendChild(tchips);
+
                     // Confirm button
                     var div = document.createElement('div'); div.className = 'qs-divider'; pop.appendChild(div);
                     var confirm = document.createElement('button');
                     confirm.className = 'qs-confirm';
                     var dateStr2 = _qsDateStr();
-                    confirm.disabled = (!dateStr2 || qsh === null);
-                    if (dateStr2 && qsh !== null) {
-                        var dObj2 = new Date(dateStr2 + 'T12:00:00');
-                        var dLabel2 = dObj2.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+                    confirm.disabled = qsh === null;
+                    if (qsh !== null) {
+                        var dLabel2 = new Date((dateStr2 || _qsRecurringDateISO()) + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
                         var tStr2 = qsh >= 12 ? (qsh === 12 ? '12' : (qsh-12)) + ':' + _sp2(qsm) + ' PM' : (qsh === 0 ? '12' : qsh) + ':' + _sp2(qsm) + ' AM';
                         confirm.textContent = 'Schedule for ' + dLabel2 + ' at ' + tStr2;
-                    } else { confirm.textContent = 'Pick date & time above'; }
+                    } else { confirm.textContent = 'Pick a time above'; }
                     confirm.onclick = async function() {
                         var dateStr3 = _qsDateStr();
                         if (!dateStr3 || qsh === null) return;
                         var iso = dateStr3 + 'T' + _sp2(qsh) + ':' + _sp2(qsm);
                         confirm.disabled = true; confirm.textContent = 'Scheduling…';
                         try {
-                            // Duplicate the template and set scheduled_at, unpin it
                             var payload = {
                                 title: n.title, body: n.body, image_url: n.image_url || null,
                                 platform: n.platform || 'all', audience: n.audience || 'all',
