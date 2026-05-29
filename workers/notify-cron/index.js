@@ -25,7 +25,14 @@ export default {
       body:    '{}',
     }).catch(e => ({ ok: false, _err: e.message }));
 
-    // 2. Auto-notify new content (videos + books + hadiths added in last 2 h)
+    // 2. Dispatch any scheduled notifications whose time has arrived
+    const schedRes = await fetch(`${site}/admin-notifications-api`, {
+      method:  'POST',
+      headers,
+      body:    JSON.stringify({ action: 'process_scheduled' }),
+    }).catch(e => ({ ok: false, _err: e.message }));
+
+    // 3. Auto-notify new content (videos + books + hadiths added in last 2 h)
     const notifRes = await fetch(`${site}/admin-notifications-api`, {
       method:  'POST',
       headers,
@@ -34,6 +41,7 @@ export default {
 
     console.log('[notify-cron]', new Date().toISOString(),
       'sync:', syncRes.ok ? 'ok' : 'fail',
+      'scheduled:', schedRes.ok ? 'ok' : 'fail',
       'notify:', notifRes.ok ? 'ok' : 'fail');
   },
 

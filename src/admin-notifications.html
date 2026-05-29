@@ -1654,6 +1654,8 @@
             var inp = document.getElementById('f-scheduled-at');
             var summary = document.getElementById('sched-summary');
             var clearBtn = document.getElementById('sched-clear-btn');
+            var saveBtn = document.getElementById('save-btn');
+            var draftBtn = document.querySelector('.modal-footer .btn-secondary[onclick*="saveNotification"]');
             if (_sd && _sh !== null) {
                 var val = _sd + 'T' + _sp(_sh) + ':' + _sp(_sm || 0);
                 inp.value = val;
@@ -1665,16 +1667,24 @@
                 var isPast = !isRecurring && d < new Date();
                 summary.innerHTML = '<span style="color:' + (isPast ? '#e53e3e' : '#3b82f6') + ';font-weight:600">'
                     + dateStr + ' at ' + timeStr + '</span>'
-                    + (isPast ? '<span style="color:#e53e3e;font-size:0.82em;margin-left:8px">⚠️ This time is in the past</span>' : '');
+                    + (isPast ? '<span style="color:#e53e3e;font-size:0.82em;margin-left:8px">⚠️ This time is in the past</span>'
+                              : '<span style="color:var(--text-secondary);font-size:0.82em;margin-left:8px">— will auto-send at this time</span>');
                 clearBtn.style.display = 'inline-flex';
+                // Update Save button to make it clear it will schedule, not send now
+                if (saveBtn) { saveBtn.innerHTML = '<i data-lucide="calendar-clock"></i> Schedule'; lucide.createIcons(); }
+                if (draftBtn) draftBtn.style.display = 'none'; // hide Save Draft when schedule is set
             } else if (_sd) {
                 inp.value = '';
                 summary.innerHTML = '<span style="color:var(--text-secondary)">Date set — pick a time above</span>';
                 clearBtn.style.display = 'inline-flex';
+                if (saveBtn) { saveBtn.innerHTML = '<i data-lucide="save"></i> Save'; lucide.createIcons(); }
+                if (draftBtn) draftBtn.style.display = '';
             } else {
                 inp.value = '';
                 summary.innerHTML = '<span style="color:var(--text-tertiary)">Not scheduled — will save as draft</span>';
                 clearBtn.style.display = 'none';
+                if (saveBtn) { saveBtn.innerHTML = '<i data-lucide="save"></i> Save'; lucide.createIcons(); }
+                if (draftBtn) draftBtn.style.display = '';
             }
         }
 
@@ -1971,11 +1981,12 @@
             if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
             var btn = document.getElementById('save-btn');
             var draftBtn = document.querySelector('.modal-footer .btn-secondary[onclick*="saveNotification"]');
-            btn.disabled = true; btn.textContent = 'Saving...';
+            btn.disabled = true; btn.textContent = forceDraft ? 'Saving...' : (fd.scheduled_at ? 'Scheduling...' : 'Saving...');
             if (draftBtn) draftBtn.disabled = true;
             var success = false;
             try {
                 var payload = Object.assign({}, fd);
+                if (forceDraft) payload.scheduled_at = null; // "Save Draft" always strips the schedule
                 if (_currentEditId) payload.id = _currentEditId;
                 await notifAPI(_currentEditId ? 'update' : 'create', payload);
                 success = true;
@@ -1987,7 +1998,10 @@
             } finally {
                 if (!success) {
                     btn.disabled = false;
-                    btn.innerHTML = '<i data-lucide="save"></i> Save';
+                    var _hasSchedule = !!document.getElementById('f-scheduled-at').value;
+                    btn.innerHTML = _hasSchedule && !forceDraft
+                        ? '<i data-lucide="calendar-clock"></i> Schedule'
+                        : '<i data-lucide="save"></i> Save';
                     if (draftBtn) draftBtn.disabled = false;
                     lucide.createIcons();
                 }
