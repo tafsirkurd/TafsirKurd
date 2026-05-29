@@ -1055,6 +1055,19 @@
             try {
                 var d = await notifAPI('list');
                 _notifications = d.notifications || [];
+                // Sort: scheduled first (soonest at top), then drafts, then sent/rest by date desc
+                var _statusOrder = { scheduled: 0, sending: 1, draft: 2, failed: 3, sent: 4, cancelled: 5 };
+                _notifications.sort(function(a, b) {
+                    var oa = _statusOrder[a.status] !== undefined ? _statusOrder[a.status] : 9;
+                    var ob = _statusOrder[b.status] !== undefined ? _statusOrder[b.status] : 9;
+                    if (oa !== ob) return oa - ob;
+                    // Within scheduled: soonest first
+                    if (a.status === 'scheduled' && b.status === 'scheduled') {
+                        return new Date(a.scheduled_at || 0) - new Date(b.scheduled_at || 0);
+                    }
+                    // Within sent: newest first
+                    return new Date(b.sent_at || b.created_at || 0) - new Date(a.sent_at || a.created_at || 0);
+                });
                 renderTable(_notifications);
             } catch(e) {
                 if (loadRow) loadRow.querySelector('td').textContent = 'Failed: ' + e.message;
