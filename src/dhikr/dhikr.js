@@ -798,6 +798,14 @@ window.GencineUI = {
     this._draw();
   },
 
+  openAdhkar: function(catKey) {
+    this._view = 'adhkar';
+    this._adhkarView = 'list';
+    this._adhkarCat = catKey || 'morning';
+    this._draw();
+    return true;
+  },
+
   openBook: function(bookId){
     var book = null;
     for (var i = 0; i < _dbBooks.length; i++) {

@@ -1118,6 +1118,15 @@ function init(){
           };
           setTimeout(_hdOpen,400);
         }
+        if(extra.type==='adhkar'&&extra.id){
+          App.tab('gencine');
+          var _adhTries=0;
+          var _adhOpen=function(){
+            if(window.GencineUI){GencineUI.openAdhkar(extra.id);return;}
+            if(_adhTries++<20)setTimeout(_adhOpen,300);
+          };
+          setTimeout(_adhOpen,400);
+        }
         if(extra.type==='streak'){
           App.tab('quran');
         }
@@ -1982,7 +1991,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260530', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260529b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=52',      function() { _p2 = true; _check(); });
 }
