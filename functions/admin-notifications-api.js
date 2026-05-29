@@ -28,9 +28,10 @@ async function _handleRequest(context) {
 
     // ── PROCESS SCHEDULED (cron secret OR valid admin session) ──
     if (body.action === 'process_scheduled') {
-        const cronSecret = env.CRON_SECRET || env.NOTIF_CRON_SECRET;
         const authHeader = request.headers.get('Authorization') || '';
-        const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+        const isCron = [env.CRON_SECRET, env.NOTIF_CRON_SECRET]
+            .filter(Boolean)
+            .some(s => authHeader === `Bearer ${s}`);
         // Also allow admin sessions to trigger manually from the dashboard
         if (!isCron) {
             const adminToken = authHeader.replace('Bearer ', '').trim();
