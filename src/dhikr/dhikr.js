@@ -2280,6 +2280,124 @@ window.GencineUI = {
     }, 2500);
   },
 
+  /* Storage manager — shows downloaded books + delete option */
+  _showDlManager: function() {
+    var self = this;
+    var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
+    var existing = document.getElementById('pdfDlManagerOverlay');
+    if (existing) { existing.remove(); return; }
+
+    var overlay = document.createElement('div'); overlay.id = 'pdfDlManagerOverlay'; overlay.className = 'book-overlay open';
+    var panel = document.createElement('div'); panel.className = 'book-overlay-panel';
+    var pill = document.createElement('div'); pill.className = 'book-overlay-pill'; panel.appendChild(pill);
+    var hdr = document.createElement('div'); hdr.className = 'book-overlay-hdr';
+    var titleEl = document.createElement('span'); titleEl.textContent = T('dl.manage','بەرپرسایەتیکردنی داونلۆدەکان');
+    var closeBtn = document.createElement('button'); closeBtn.className = 'book-hdr-btn';
+    var cIco = document.createElement('i'); cIco.className = 'fas fa-times'; closeBtn.appendChild(cIco);
+    closeBtn.onclick = function() { overlay.remove(); };
+    hdr.appendChild(closeBtn); hdr.appendChild(titleEl); panel.appendChild(hdr);
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+    var list = document.createElement('div'); list.className = 'book-overlay-list';
+    list.style.padding = '12px 16px';
+
+    var loadingRow = document.createElement('div'); loadingRow.textContent = T('gencine.books_loading','بارکرن...');
+    loadingRow.style.cssText = 'color:var(--text-secondary);padding:24px;text-align:center';
+    list.appendChild(loadingRow);
+    panel.appendChild(list);
+    overlay.appendChild(panel);
+    document.getElementById('panelGencine').appendChild(overlay);
+
+    PdfStore.listAll().then(function(cached) {
+      list.removeChild(loadingRow);
+
+      if (!cached.length) {
+        var emptyEl = document.createElement('div');
+        emptyEl.textContent = T('dl.no_reciters','هیچ کتێبێک نەهاتیە داونلۆد کرن');
+        emptyEl.style.cssText = 'color:var(--text-secondary);padding:24px;text-align:center';
+        list.appendChild(emptyEl);
+        return;
+      }
+
+      // Calculate total size
+      var totalBytes = cached.reduce(function(s, c) { return s + c.bytes; }, 0);
+      var storageRow = document.createElement('div');
+      storageRow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 4px 16px;border-bottom:1px solid var(--border);margin-bottom:12px;color:var(--text-secondary);font-size:13px';
+      var sIco = document.createElement('i'); sIco.className = 'fas fa-hdd'; sIco.style.color = 'var(--accent)';
+      storageRow.appendChild(sIco);
+      storageRow.appendChild(document.createTextNode(T('dl.storage_used','جێی بەکارهاتوو') + ': ' + PdfStore.fmtSize(totalBytes)));
+      list.appendChild(storageRow);
+
+      // Match cached entries to book records
+      cached.forEach(function(entry) {
+        var book = null;
+        for (var i = 0; i < _dbBooks.length; i++) {
+          if (_dbBooks[i].pdf_url && _dbBooks[i].pdf_url === entry.pdfUrl) { book = _dbBooks[i]; break; }
+        }
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border-subtle,rgba(255,255,255,.06))';
+
+        // Cover thumb
+        var thumb = document.createElement('div');
+        thumb.style.cssText = 'width:36px;height:50px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--surface2)';
+        if (book && book.cover_url) {
+          var tImg = document.createElement('img'); tImg.src = book.cover_url; tImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
+          thumb.appendChild(tImg);
+        } else {
+          var tIco = document.createElement('i'); tIco.className = 'fas fa-book'; tIco.style.cssText = 'margin:14px auto;display:block;text-align:center;color:var(--text-tertiary)';
+          thumb.appendChild(tIco);
+        }
+        row.appendChild(thumb);
+
+        // Title + size
+        var info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0';
+        var tnEl = document.createElement('div'); tnEl.style.cssText = 'font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl';
+        tnEl.textContent = book ? (book.title_ku || book.title_ar || '—') : entry.pdfUrl.split('/').pop();
+        var szEl = document.createElement('div'); szEl.style.cssText = 'font-size:12px;color:var(--text-secondary);margin-top:2px';
+        szEl.textContent = PdfStore.fmtSize(entry.bytes);
+        info.appendChild(tnEl); info.appendChild(szEl);
+        row.appendChild(info);
+
+        // Delete button
+        var delBtn = document.createElement('button'); delBtn.className = 'book-hdr-btn';
+        delBtn.style.cssText = 'color:var(--danger,#e55);flex-shrink:0';
+        var dIco = document.createElement('i'); dIco.className = 'fas fa-trash-alt'; delBtn.appendChild(dIco);
+        delBtn.onclick = function() {
+          var bk = book || { pdf_url: entry.pdfUrl };
+          PdfStore.remove(bk).then(function() {
+            row.remove();
+            self._refreshBookDlBadges();
+            // Update storage total
+            var remaining = list.querySelectorAll('[data-dl-row]');
+            if (!remaining.length) { overlay.remove(); self._showDlManager(); } // re-open to show empty state
+          });
+        };
+        delBtn.setAttribute('data-dl-row','1');
+        row.setAttribute('data-dl-row','1');
+        row.appendChild(delBtn);
+        list.appendChild(row);
+      });
+    });
+  },
+
+  /* Refresh download badges after a PDF is cached */
+  _refreshBookDlBadges: function() {
+    if (!window.PdfStore) return;
+    var badges = document.querySelectorAll('.book-dl-badge');
+    var self = this;
+    badges.forEach(function(badge) {
+      var bookId = badge.getAttribute('data-book-id');
+      var book = null;
+      for (var i = 0; i < _dbBooks.length; i++) { if (String(_dbBooks[i].id) === bookId) { book = _dbBooks[i]; break; } }
+      if (!book || !book.pdf_url) return;
+      PdfStore.has(book).then(function(cached) {
+        badge.classList.toggle('cached', cached);
+        var ico = badge.querySelector('i');
+        if (ico) ico.className = cached ? 'fas fa-check' : 'fas fa-arrow-down';
+      });
+    });
+  },
+
   /* =========== BOOKS =========== */
   _renderBooks: function(container){
     var self = this;
@@ -2292,12 +2410,17 @@ window.GencineUI = {
     var sheikhBtn = document.getElementById('bookSheikhBtn');
     var savedBtn  = document.getElementById('bookSavedBtn');
     var readBtn   = document.getElementById('bookReadBtn');
+    var dlBtn     = document.getElementById('bookDlBtn');
     var searchTogBtn = document.getElementById('bookSearchBtn');
     var hdrBtnsWrap = document.getElementById('booksHdrBtns');
     if (hdrBtnsWrap) hdrBtnsWrap.style.display = 'flex';
     if (sheikhBtn) sheikhBtn.classList.toggle('on', !!self._bookAuthor);
     if (savedBtn)  savedBtn.classList.toggle('on', self._bookCat === 'saved');
     if (readBtn)   readBtn.classList.toggle('on', self._bookCat === 'reading');
+    if (dlBtn && window.PdfStore) {
+      dlBtn.style.display = '';
+      dlBtn.onclick = function(e) { e.stopPropagation(); self._showDlManager(); };
+    } else if (dlBtn) { dlBtn.style.display = 'none'; }
 
     /* ── Collapsible search bar ── */
     var searchBar = document.createElement('div');
@@ -2656,6 +2779,18 @@ window.GencineUI = {
         /* NEW badge */
         if (book.badge_until && new Date(book.badge_until).getTime() > Date.now()) {
           var nb = document.createElement('div'); nb.className = 'new-badge'; nb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; card.appendChild(nb);
+        }
+
+        /* Download badge — shown if PDF is cached offline */
+        if (window.PdfStore && book.pdf_url) {
+          var dlBadge = document.createElement('div');
+          dlBadge.className = 'book-dl-badge'; dlBadge.setAttribute('data-book-id', String(book.id));
+          var dlIco = document.createElement('i'); dlIco.className = 'fas fa-arrow-down';
+          dlBadge.appendChild(dlIco);
+          PdfStore.has(book).then(function(cached) {
+            if (cached) { dlBadge.classList.add('cached'); dlIco.className = 'fas fa-check'; }
+          });
+          card.appendChild(dlBadge);
         }
 
         /* Bookmark — bottom-right of info area */
@@ -3266,14 +3401,62 @@ window.GencineUI = {
       return;
     }
     pdfjsLib.GlobalWorkerOptions.workerSrc = _PDF_CDN + 'pdf.worker.min.js';
+
+    var _pdfCmapUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/';
+    var _pdfBaseOpts = { cMapUrl: _pdfCmapUrl, cMapPacked: true, useSystemFonts: true, disableFontFace: true };
+    var _loadCancelled = false;
+    var _cleanupBeforeLoad = self._pdfCleanup;
+
+    function _startLoadingTask(lt) {
+      lt.promise.then(function(pdf) {
+        if (!_loadCancelled) doLoad(pdf);
+      }).catch(function(e) {
+        if (!_loadCancelled) { _showPdfRetry(); console.error('PDF load error:', e); }
+      });
+      self._pdfCleanup = function() {
+        _loadCancelled = true;
+        try { var _d = lt.destroy(); if (_d && _d.catch) _d.catch(function(){}); } catch(e) {}
+        if (_cleanupBeforeLoad) _cleanupBeforeLoad();
+      };
+    }
+
+    // Try cache first — works offline. On cache miss, download+cache, then open.
+    if (window.PdfStore && book.pdf_url) {
+      self._pdfCleanup = function() { _loadCancelled = true; if (_cleanupBeforeLoad) _cleanupBeforeLoad(); };
+      PdfStore.load(book).then(function(cachedBuf) {
+        if (_loadCancelled) return;
+        if (cachedBuf) {
+          _startLoadingTask(pdfjsLib.getDocument(Object.assign({ data: cachedBuf }, _pdfBaseOpts)));
+        } else {
+          // Download and cache, showing progress ring
+          PdfStore.download(book, function(pct) {
+            if (ringWrap && ringWrap.classList.contains('pdf-ring-idle')) {
+              ringWrap.classList.remove('pdf-ring-idle');
+              arc.classList.add('pdf-ring-progress');
+              arc.style.setProperty('stroke-dashoffset', String(CIRC));
+              ringIcon.style.display = 'none';
+              progressPct.style.display = 'block';
+            }
+            if (progressPct) progressPct.textContent = pct + '%';
+            if (arc) arc.style.setProperty('stroke-dashoffset', (CIRC * (1 - pct / 100)).toFixed(2));
+            if (pct >= 100 && arc) arc.classList.add('pdf-ring-done');
+          }).then(function(buf) {
+            if (_loadCancelled) return;
+            _startLoadingTask(pdfjsLib.getDocument(Object.assign({ data: buf }, _pdfBaseOpts)));
+            self._refreshBookDlBadges();
+          }).catch(function() {
+            if (!_loadCancelled) _showPdfRetry();
+          });
+        }
+      }).catch(function() {
+        if (!_loadCancelled) _showPdfRetry();
+      });
+      return; // async path
+    }
+
+    // Fallback: no PdfStore, load directly from network
     var pdfSrc = 'https://tafsirkurd.com/pdf-proxy?url=' + encodeURIComponent(book.pdf_url);
-    var loadingTask = pdfjsLib.getDocument({
-      url: pdfSrc,
-      cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
-      cMapPacked: true,
-      useSystemFonts: true,
-      disableFontFace: true
-    });
+    var loadingTask = pdfjsLib.getDocument(Object.assign({ url: pdfSrc }, _pdfBaseOpts));
     function _showPdfRetry() {
       while (loadingEl.firstChild) loadingEl.removeChild(loadingEl.firstChild);
       var errMsg = document.createElement('div');
@@ -3323,8 +3506,7 @@ window.GencineUI = {
         }
       }
     };
-    var _loadCancelled = false;
-    var _cleanupBeforeLoad = self._pdfCleanup;
+    // Wire up timeout cleanup and promise for the direct-URL fallback path
     self._pdfCleanup = function() {
       _loadCancelled = true;
       window.removeEventListener('unhandledrejection', _pdfWorkerErrHandler);
@@ -3334,7 +3516,11 @@ window.GencineUI = {
     };
     loadingTask.promise.then(function(pdf) {
       clearTimeout(_loadTimer);
-      if (!_loadCancelled) doLoad(pdf);
+      if (!_loadCancelled) {
+        doLoad(pdf);
+        // Cache in background for next time
+        if (window.PdfStore && book.pdf_url) PdfStore.download(book, null).then(function(){ self._refreshBookDlBadges(); }).catch(function(){});
+      }
     }).catch(function(e) {
       clearTimeout(_loadTimer);
       if (!_loadCancelled) { _showPdfRetry(); console.error('PDF load error:', e); }

@@ -2843,6 +2843,8 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .book-cover-bar{position:absolute;bottom:0;left:0;right:0;height:3px;z-index:4;background:rgba(255,255,255,.1)}
 .book-cover-bar-fill{height:100%;background:var(--accent);border-radius:0 1.5px 1.5px 0}
 /* ── "Read" badge ──────────────────────────────────────────── */
+.book-dl-badge{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:rgba(255,255,255,.7);z-index:3;pointer-events:none;transition:background .25s,color .25s}
+.book-dl-badge.cached{background:rgba(30,180,80,.82);color:#fff;border-color:rgba(100,255,150,.35)}
 .book-read-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-size:.58rem;font-weight:700;padding:4px 9px 4px 8px;border-radius:20px;display:flex;align-items:center;gap:4px;pointer-events:none;z-index:3;border:1px solid rgba(255,255,255,.15)}
 .book-read-badge i{font-size:.58rem;color:var(--accent)}
 .book-read-badge.removable{pointer-events:auto;cursor:pointer;background:rgba(200,30,30,.78);border-color:rgba(255,120,120,.3)}
@@ -4051,6 +4053,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
       <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
       <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
       <button class="hdr-btn" id="bookReadBtn" title="خوێندراو" data-i18n-title="iv.read_title"><i class="fas fa-check-circle"></i></button>
+      <button class="hdr-btn" id="bookDlBtn" title="داونلۆدکراو" data-i18n-title="dl.manage"><i class="fas fa-cloud-download-alt"></i></button>
       <button class="hdr-btn" id="bookSearchBtn" title="گەڕان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
     </div>
     <div id="gencSearchBtns" style="display:none;gap:2px">
@@ -4409,6 +4412,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <audio id="audioEl" preload="auto"></audio>
 
 <script src="/utils/supabase.js?v=20260326b"></script>
+<script src="/dhikr/pdf-store.js?v=20260529"></script>
 <script src="/i18n/kmr-bundled.js?v=20260529c"></script>
 <script src="/i18n/i18n.js?v=20260529c"></script>
 <script src="/prayer/prayer.cache.js?v=20260526"></script>
