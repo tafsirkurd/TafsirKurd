@@ -173,6 +173,19 @@
         .tmpl-btn-send:hover { background:#3b82f6; }
         .tmpl-btn-edit { background:var(--n-surface2); color:var(--n-text2); border:1px solid var(--n-border2); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--n-font); transition:all .13s; }
         .tmpl-btn-edit:hover { color:var(--n-text); }
+        .tmpl-btn-sched { background:var(--n-amber-bg); color:var(--n-amber); border:1px solid rgba(245,158,11,.25); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--n-font); transition:all .13s; }
+        .tmpl-btn-sched:hover { background:rgba(245,158,11,.22); }
+
+        /* Quick-schedule popover */
+        .qs-pop { position:absolute; z-index:9000; background:var(--n-surface); border:1px solid var(--n-border2); border-radius:14px; padding:16px; box-shadow:0 16px 48px rgba(0,0,0,.55); width:280px; }
+        .qs-pop-hdr { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--n-text2); margin-bottom:10px; }
+        .qs-chips { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+        .qs-chip { padding:5px 12px; font-size:12px; font-weight:600; border:1px solid var(--n-border2); border-radius:20px; background:var(--n-surface2); color:var(--n-text2); cursor:pointer; font-family:var(--n-font); transition:all .13s; }
+        .qs-chip:hover { border-color:var(--n-amber); color:var(--n-amber); }
+        .qs-chip.on { background:var(--n-amber); color:#000; border-color:var(--n-amber); font-weight:700; }
+        .qs-divider { height:1px; background:var(--n-border); margin:10px 0; }
+        .qs-confirm { width:100%; padding:9px; background:var(--n-amber); color:#000; font-weight:700; font-size:13px; border:none; border-radius:9px; cursor:pointer; font-family:var(--n-font); transition:opacity .15s; }
+        .qs-confirm:disabled { opacity:.4; cursor:not-allowed; }
 
         /* ─── History table ──────────────────────────────────────── */
         .hist-table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -1066,6 +1079,9 @@
             });
         });
 
+        // Close quick-schedule popovers on outside click
+        document.addEventListener('click', function() { _closeAllQsPop(null); });
+
         // ── Live preview ─────────────────────────────────────────
         function updatePreview() {
             var t = document.getElementById('f-title').value || 'Notification title';
@@ -1447,9 +1463,17 @@
             document.getElementById('f-is-template').checked = true;
         }
 
+        // Close all quick-schedule popovers except the one passed in
+        function _closeAllQsPop(except) {
+            document.querySelectorAll('.qs-pop').forEach(function(p) {
+                if (p !== except) p.remove();
+            });
+        }
+
         function buildTemplateCard(n) {
             var card = document.createElement('div');
             card.className = 'tmpl-card';
+            card.style.position = 'relative';
 
             var titleEl = document.createElement('div');
             titleEl.className = 'tmpl-card-title';
@@ -1466,6 +1490,7 @@
             meta.className = 'tmpl-card-meta';
             meta.textContent = labelPlatform(n.platform) + ' · ' + labelAudience(n.audience);
 
+            // ── Send Now ──
             var sendBtn = document.createElement('button');
             sendBtn.className = 'tmpl-btn-send';
             sendBtn.textContent = 'Send Now';
@@ -1487,9 +1512,99 @@
             editBtn.textContent = 'Edit';
             editBtn.onclick = function() { openEditModal(n); };
 
+            // ── Quick Schedule button + popover ──
+            var schedBtn = document.createElement('button');
+            schedBtn.className = 'tmpl-btn-sched';
+            schedBtn.textContent = '🗓 Schedule';
+            schedBtn.onclick = function(e) {
+                e.stopPropagation();
+                var existing = card.querySelector('.qs-pop');
+                _closeAllQsPop(null);
+                if (existing) return; // toggle off
+
+                var pop = document.createElement('div');
+                pop.className = 'qs-pop';
+                pop.style.cssText = 'bottom:calc(100% + 8px);right:0;left:auto';
+                pop.onclick = function(ev) { ev.stopPropagation(); };
+
+                var qsd = null, qsh = null, qsm = 0; // selected date offset, hour, minute
+
+                function _sp2(v) { return String(v).padStart(2,'0'); }
+                function _qsDateLabel(off) { var d=new Date(); d.setDate(d.getDate()+off); return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]; }
+
+                function _qsRender() {
+                    pop.innerHTML = '';
+                    // Date chips
+                    var dhdr = document.createElement('div'); dhdr.className = 'qs-pop-hdr'; dhdr.textContent = 'Date'; pop.appendChild(dhdr);
+                    var dchips = document.createElement('div'); dchips.className = 'qs-chips';
+                    [['Today',0],['Tomorrow',1],[_qsDateLabel(2),2],[_qsDateLabel(3),3]].forEach(function(pair) {
+                        var c = document.createElement('button'); c.className = 'qs-chip' + (qsd === pair[1] ? ' on' : '');
+                        c.textContent = pair[0];
+                        c.onclick = function() { qsd = (qsd === pair[1]) ? null : pair[1]; _qsRender(); };
+                        dchips.appendChild(c);
+                    });
+                    pop.appendChild(dchips);
+                    // Time chips
+                    var thdr = document.createElement('div'); thdr.className = 'qs-pop-hdr'; thdr.textContent = 'Time'; pop.appendChild(thdr);
+                    var tchips = document.createElement('div'); tchips.className = 'qs-chips';
+                    [[6,0,'6 AM'],[8,0,'8 AM'],[9,0,'9 AM'],[12,0,'12 PM'],[15,0,'3 PM'],[18,0,'6 PM'],[20,0,'8 PM']].forEach(function(t) {
+                        var c = document.createElement('button'); c.className = 'qs-chip' + (qsh === t[0] && qsm === t[1] ? ' on' : '');
+                        c.textContent = t[2];
+                        c.onclick = function() {
+                            if (qsh === t[0] && qsm === t[1]) { qsh = null; } else { qsh = t[0]; qsm = t[1]; if (qsd === null) qsd = 0; }
+                            _qsRender();
+                        };
+                        tchips.appendChild(c);
+                    });
+                    pop.appendChild(tchips);
+                    // Confirm button
+                    var div = document.createElement('div'); div.className = 'qs-divider'; pop.appendChild(div);
+                    var confirm = document.createElement('button');
+                    confirm.className = 'qs-confirm';
+                    confirm.disabled = (qsd === null || qsh === null);
+                    if (qsd !== null && qsh !== null) {
+                        var dObj = new Date(); dObj.setDate(dObj.getDate() + qsd);
+                        var dStr = dObj.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+                        var tStr = qsh >= 12 ? (qsh === 12 ? '12' : (qsh-12)) + ':' + _sp2(qsm) + ' PM' : qsh + ':' + _sp2(qsm) + ' AM';
+                        confirm.textContent = 'Schedule for ' + dStr + ' at ' + tStr;
+                    } else { confirm.textContent = 'Pick date & time above'; }
+                    confirm.onclick = async function() {
+                        if (qsd === null || qsh === null) return;
+                        var d = new Date(); d.setDate(d.getDate() + qsd);
+                        var iso = d.getFullYear() + '-' + _sp2(d.getMonth()+1) + '-' + _sp2(d.getDate()) + 'T' + _sp2(qsh) + ':' + _sp2(qsm);
+                        confirm.disabled = true; confirm.textContent = 'Scheduling…';
+                        try {
+                            // Duplicate the template and set scheduled_at, unpin it
+                            var payload = {
+                                title: n.title, body: n.body, image_url: n.image_url || null,
+                                platform: n.platform || 'all', audience: n.audience || 'all',
+                                deep_link_type: n.deep_link_type || 'none', deep_link_id: n.deep_link_id || null,
+                                recurrence: n.recurrence || 'none', recurrence_day: n.recurrence_day || null,
+                                notes: n.notes || null, is_template: false,
+                                scheduled_at: new Date(iso).toISOString(),
+                            };
+                            await notifAPI('create', payload);
+                            pop.remove();
+                            loadPage();
+                            var ds = new Date(iso).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+                            showToast('Scheduled for ' + ds + ' ✓');
+                        } catch(e) {
+                            showToast('Failed: ' + e.message, true);
+                            confirm.disabled = false; confirm.textContent = 'Try again';
+                        }
+                    };
+                    pop.appendChild(confirm);
+                }
+                _qsRender();
+                card.appendChild(pop);
+            };
+
             foot.appendChild(meta);
-            if (_role !== 'analyst') foot.appendChild(editBtn);
-            if (_role !== 'analyst') foot.appendChild(sendBtn);
+            if (_role !== 'analyst') {
+                foot.appendChild(editBtn);
+                foot.appendChild(schedBtn);
+                foot.appendChild(sendBtn);
+            }
 
             card.appendChild(titleEl);
             card.appendChild(bodyEl);
@@ -1688,11 +1803,22 @@
             schedSync();
         }
 
+        function _autoSetToday() {
+            // If no date is chosen yet, default to today so picking a time is enough
+            if (_sd === null) {
+                var now = new Date();
+                _sd = now.getFullYear() + '-' + _sp(now.getMonth() + 1) + '-' + _sp(now.getDate());
+                document.querySelectorAll('#sched-date-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
+                var d0 = document.getElementById('sched-d0');
+                if (d0) d0.classList.add('active');
+            }
+        }
+
         function schedPickTime(h, m) {
             var btn = document.getElementById('sched-t' + h);
             var alreadyActive = btn && btn.classList.contains('active');
             document.querySelectorAll('#sched-time-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
-            if (alreadyActive) { _sh = null; _sm = null; } else { _sh = h; _sm = m; if (btn) btn.classList.add('active'); }
+            if (alreadyActive) { _sh = null; _sm = null; } else { _sh = h; _sm = m; _autoSetToday(); if (btn) btn.classList.add('active'); }
             schedSync();
         }
 
@@ -1701,6 +1827,7 @@
             document.querySelectorAll('#sched-time-row .sched-chip').forEach(function(c) { c.classList.remove('active'); });
             var parts = val.split(':');
             _sh = parseInt(parts[0]); _sm = parseInt(parts[1] || 0);
+            _autoSetToday();
             schedSync();
         }
 
