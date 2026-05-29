@@ -7755,7 +7755,7 @@ function _startPppTick(){
   _pppTickId=setInterval(function(){
     var panel=$('prayerProgressPanel');
     if(!panel||!panel.classList.contains('on')){_stopPppTick();return;}
-    _pppSyncPanel(getPrayerLog(),_getPrayerDay());
+    _pppSyncPanel(getPrayerLog(),dateKey(new Date()));
   },20000);
 }
 function _stopPppTick(){if(_pppTickId){clearInterval(_pppTickId);_pppTickId=null;}}
@@ -7766,7 +7766,7 @@ function _startPppCdTick(){
   _pppCdTickId=setInterval(function(){
     var panel=$('prayerProgressPanel');
     if(!panel||!panel.classList.contains('on')){_stopPppCdTick();return;}
-    var pDay=_getPrayerDay();
+    var pDay=dateKey(new Date()); // calendar date — matches panel display
     var timings=_getTimingsForDate(pDay)||
       (window._prayerUITimings&&{Fajr:window._prayerUITimings.Fajr,Dhuhr:window._prayerUITimings.Dhuhr,
         Asr:window._prayerUITimings.Asr,Maghrib:window._prayerUITimings.Maghrib,Isha:window._prayerUITimings.Isha});
@@ -7950,7 +7950,7 @@ function _pppStreakVal(n){return n>0?'🔥 '+n:'0';}
 // Live-update all panel stats + insights immediately after any prayer toggle
 function _pppSyncPanel(log,changedDKey){
   var panel=$('prayerProgressPanel');if(!panel)return;
-  var now=new Date();var pDay=_getPrayerDay();
+  var now=new Date();var pDay=dateKey(now); // calendar date — consistent with _buildPrayerProgressPanel
   var streak=calcPrayerStreak(log);var best=calcBestPrayerStreak(log);
   var mStats=calcPrayerMonthStats(log,now.getFullYear(),now.getMonth());
   var consistency=calcConsistencyScore(log,30);
@@ -8054,8 +8054,11 @@ function _pppMsg(n){
 
 function _buildPrayerProgressPanel(panel){
   clear(panel);
-  var log=getPrayerLog();var now=new Date();var today=_getPrayerDay();
-  var isPreFajr=(today!==dateKey(now));
+  var log=getPrayerLog();var now=new Date();
+  // Always use the calendar date (midnight-based) for the today card.
+  // Before Fajr: shows today's prayers as locked with countdown — user sees
+  // today's fresh grid, not yesterday's completed state.
+  var today=dateKey(now);
   var todayLog=log[today]||{};
   var doneToday=_TRACK_PRAYERS.filter(function(p){return todayLog[p];}).length;
   var streak=calcPrayerStreak(log);var best=calcBestPrayerStreak(log);
@@ -8077,7 +8080,7 @@ function _buildPrayerProgressPanel(panel){
   // ─ Today card ─────────────────────────────────────────────
   var card=el('div','ppp-today-card');
   var topRow=el('div','ppp-today-hdr');
-  var todayLabel=isPreFajr?'دووهی (هێشتا بەردەستە)':'ئەڤڕۆ';
+  var todayLabel='ئەڤڕۆ';
   topRow.appendChild(el('span','ppp-today-label',todayLabel));
   var countEl=el('span','ppp-today-count',doneToday+'/5');topRow.appendChild(countEl);
   card.appendChild(topRow);
