@@ -605,6 +605,41 @@ export async function onRequest(context) {
             .single();
 
         if (error) return json({ error: error.message }, 500);
+
+        // Pre-create future occurrences on update too (same logic as create).
+        if (data && scheduled_at && recurrence && recurrence !== 'none' && !is_template) {
+            const extra = recurrence === 'daily' ? 29 : 7;
+            const stepDays = recurrence === 'daily' ? 1 : 7;
+            const ref = new Date(scheduled_at);
+            const h = ref.getUTCHours(), mn = ref.getUTCMinutes();
+            const { data: existing2 } = await supabase
+                .from('admin_notifications')
+                .select('scheduled_at')
+                .eq('title', title)
+                .eq('recurrence', recurrence)
+                .in('status', ['scheduled', 'sending', 'sent']);
+            const existingTimes = new Set((existing2 || []).map(r => r.scheduled_at ? new Date(r.scheduled_at).toISOString() : null).filter(Boolean));
+            const futureRows = [];
+            for (let i = 1; i <= extra; i++) {
+                const d = new Date(ref);
+                d.setUTCDate(d.getUTCDate() + i * stepDays);
+                d.setUTCHours(h, mn, 0, 0);
+                const iso = d.toISOString();
+                if (!existingTimes.has(iso) && d > new Date()) {
+                    futureRows.push({
+                        title, body: msgBody, image_url: image_url || null,
+                        platform: platform || 'all', audience: audience || 'all',
+                        deep_link_type: deep_link_type || 'none', deep_link_id: deep_link_id || null,
+                        status: 'scheduled', scheduled_at: iso,
+                        recurrence: recurrence || 'none',
+                        recurrence_day: recurrence_day != null ? recurrence_day : null,
+                        notes: notes || null, is_template: false, created_by: adminEmail,
+                    });
+                }
+            }
+            if (futureRows.length) await supabase.from('admin_notifications').insert(futureRows).catch(() => {});
+        }
+
         return json({ success: true, notification: data });
     }
 
