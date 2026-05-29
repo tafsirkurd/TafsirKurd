@@ -483,6 +483,32 @@ export async function onRequest(context) {
             .single();
 
         if (error) return json({ error: error.message }, 500);
+
+        // Pre-create all future occurrences so they appear in the table immediately.
+        // weekly → 7 extra weeks (8 total); daily → 29 extra days (30 total).
+        if (data && scheduled_at && recurrence && recurrence !== 'none' && !is_template) {
+            const extra = recurrence === 'daily' ? 29 : 7;
+            const stepDays = recurrence === 'daily' ? 1 : 7;
+            const ref = new Date(scheduled_at);
+            const h = ref.getUTCHours(), mn = ref.getUTCMinutes();
+            const futureRows = [];
+            for (let i = 1; i <= extra; i++) {
+                const d = new Date(ref);
+                d.setUTCDate(d.getUTCDate() + i * stepDays);
+                d.setUTCHours(h, mn, 0, 0);
+                futureRows.push({
+                    title, body: msgBody, image_url: image_url || null,
+                    platform: platform || 'all', audience: audience || 'all',
+                    deep_link_type: deep_link_type || 'none', deep_link_id: deep_link_id || null,
+                    status: 'scheduled', scheduled_at: d.toISOString(),
+                    recurrence: recurrence || 'none',
+                    recurrence_day: recurrence_day != null ? recurrence_day : null,
+                    notes: notes || null, is_template: false, created_by: adminEmail,
+                });
+            }
+            if (futureRows.length) await supabase.from('admin_notifications').insert(futureRows).catch(() => {});
+        }
+
         return json({ success: true, notification: data });
     }
 
@@ -710,20 +736,30 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
         error_message: apnsErrors.length ? apnsErrors[0] : (fcmErrors.length ? fcmErrors[0] : null),
     }).eq('id', trackingId);
 
-    // Auto-schedule next occurrence for recurring notifications
+    // Auto-schedule next occurrence — only if it wasn't already pre-created on save.
     if (notif.recurrence && notif.recurrence !== 'none') {
         try {
             const nextAt = nextOccurrence(notif.recurrence, notif.recurrence_day, notif.scheduled_at);
             if (nextAt) {
-                const { error: insErr } = await supabase.from('admin_notifications').insert({
-                    title: notif.title, body: notif.body, image_url: notif.image_url || null,
-                    platform: notif.platform || 'all', audience: notif.audience || 'all',
-                    deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
-                    recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
-                    notes: notif.notes || null, created_by: sentBy || 'cron',
-                    status: 'scheduled', scheduled_at: nextAt, is_template: false,
-                });
-                if (insErr) console.error('Next occurrence insert failed:', insErr.message);
+                // Skip if a scheduled occurrence already exists at this exact time (pre-created on save)
+                const { count: dupCount } = await supabase
+                    .from('admin_notifications')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('title', notif.title)
+                    .eq('recurrence', notif.recurrence)
+                    .eq('scheduled_at', nextAt)
+                    .in('status', ['scheduled', 'sending']);
+                if (!dupCount) {
+                    const { error: insErr } = await supabase.from('admin_notifications').insert({
+                        title: notif.title, body: notif.body, image_url: notif.image_url || null,
+                        platform: notif.platform || 'all', audience: notif.audience || 'all',
+                        deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
+                        recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
+                        notes: notif.notes || null, created_by: sentBy || 'cron',
+                        status: 'scheduled', scheduled_at: nextAt, is_template: false,
+                    });
+                    if (insErr) console.error('Next occurrence insert failed:', insErr.message);
+                }
             }
         } catch (e) { console.error('nextOccurrence error:', e.message); }
     }
