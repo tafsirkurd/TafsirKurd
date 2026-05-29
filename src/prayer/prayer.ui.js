@@ -10,6 +10,7 @@
 
   var _countdownInterval    = null;
   var _cardSheetCountdownId = null;
+  var _i18nBound = false; // prevents duplicate i18n:updated listener from multiple initScheduleOnStart() calls
   var _currentTimings   = null;
   var _currentDateISO   = null;
   var _currentData      = null;
@@ -3594,7 +3595,7 @@
    */
   async function initScheduleOnStart() {
     fetchReminderConfig();
-    document.addEventListener('i18n:updated', fetchReminderConfig);
+    if (!_i18nBound) { _i18nBound = true; document.addEventListener('i18n:updated', fetchReminderConfig); }
     if (!getAthan()) {
       // Still reschedule reminders even if athan is off (reminders are independent)
       var _today2 = window.PrayerLogic.todayBaghdad();
