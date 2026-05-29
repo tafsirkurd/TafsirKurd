@@ -80,20 +80,15 @@ export async function onRequest(context) {
         // Log to console for Cloudflare logs
         console.log(`[CRON SYNC] ${new Date().toISOString()} - Synced ${seriesList.length} series, ${totalNew} new episodes`);
 
-        // Always trigger scheduled-notification dispatch + auto-notifications
+        // Fire scheduled notifications whose time has arrived
+        // (auto_notify_content is handled exclusively by the notify-cron Worker to avoid races)
         const _notifSecret = env.NOTIF_CRON_SECRET || env.CRON_SECRET;
         if (_notifSecret) {
             const baseUrl = new URL(request.url).origin;
             const _hdr = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_notifSecret}` };
-            // Fire scheduled notifications whose time has arrived
             waitUntil(fetch(`${baseUrl}/admin-notifications-api`, {
                 method: 'POST', headers: _hdr,
                 body: JSON.stringify({ action: 'process_scheduled' }),
-            }).catch(() => {}));
-            // Auto-notify new content (videos, books, hadiths added in last 2h)
-            waitUntil(fetch(`${baseUrl}/admin-notifications-api`, {
-                method: 'POST', headers: _hdr,
-                body: JSON.stringify({ action: 'auto_notify_content' }),
             }).catch(() => {}));
         }
 
