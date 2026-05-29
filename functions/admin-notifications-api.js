@@ -26,12 +26,23 @@ async function _handleRequest(context) {
     let body;
     try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
-    // ── PROCESS SCHEDULED (cron — no admin auth, CRON_SECRET only) ──
+    // ── PROCESS SCHEDULED (cron secret OR valid admin session) ──
     if (body.action === 'process_scheduled') {
         const cronSecret = env.CRON_SECRET || env.NOTIF_CRON_SECRET;
         const authHeader = request.headers.get('Authorization') || '';
-        if (!cronSecret || authHeader !== `Bearer ${cronSecret}`)
-            return json({ error: 'Unauthorized' }, 401);
+        const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+        // Also allow admin sessions to trigger manually from the dashboard
+        if (!isCron) {
+            const adminToken = authHeader.replace('Bearer ', '').trim();
+            if (adminToken) {
+                const { data: adminSess } = await supabase
+                    .from('admin_sessions').select('user_id')
+                    .eq('token', adminToken).gt('expires_at', new Date().toISOString()).single();
+                if (!adminSess) return json({ error: 'Unauthorized' }, 401);
+            } else {
+                return json({ error: 'Unauthorized' }, 401);
+            }
+        }
 
         const { data: due } = await supabase
             .from('admin_notifications')

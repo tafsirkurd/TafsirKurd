@@ -114,6 +114,7 @@
         .nc-badge--sending   { background:var(--n-blue-bg); color:var(--n-blue); animation:nc-pulse .9s ease infinite; }
         .nc-badge--cancelled { background:rgba(126,127,154,.08); color:var(--n-text3); }
         @keyframes nc-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+        @keyframes spin { to { transform:rotate(360deg); } }
 
         .nc-rec-badge {
             font-size:11px; font-weight:600; color:var(--n-blue); background:var(--n-blue-bg);
@@ -529,6 +530,10 @@
                         <button class="btn btn-secondary" onclick="loadPage()">
                             <i data-lucide="refresh-cw"></i>
                             Refresh
+                        </button>
+                        <button class="btn btn-secondary" id="send-due-btn" onclick="sendDueNow(this)" title="Send all notifications whose scheduled time has passed">
+                            <i data-lucide="clock-alert"></i>
+                            Send Due
                         </button>
                         <button class="btn btn-primary" id="new-notif-btn" onclick="openCreateModal()">
                             <i data-lucide="plus"></i>
@@ -1084,6 +1089,24 @@
                 applyFilters();
             });
         });
+
+        // ── Send Due Now ─────────────────────────────────────────
+        async function sendDueNow(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> Sending…';
+            lucide.createIcons();
+            try {
+                var d = await notifAPI('process_scheduled');
+                loadPage();
+                if (d.processed > 0) showToast('Sent ' + d.processed + ' due notification' + (d.processed !== 1 ? 's' : '') + ' ✓');
+                else showToast('No notifications due right now');
+            } catch(e) { showToast('Error: ' + e.message, true); }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="clock-alert"></i> Send Due';
+                lucide.createIcons();
+            }
+        }
 
         // Close quick-schedule popovers on outside click
         document.addEventListener('click', function() { _closeAllQsPop(null); });
