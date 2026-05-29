@@ -11656,14 +11656,12 @@ function renderProfile(panel){
 /* ===== PULL TO REFRESH ===== */
 // Shared spinner DOM element — only one can be on screen at a time.
 var ptrSpinner;
-var _ptrArc=null;          // cached arc child — avoid querySelector every touchmove frame
-var _ptrGlobalRefreshing=false; // one panel refreshing at a time
+var _ptrArc=null;
+var _ptrGlobalRefreshing=false;
 
-// Per-panel reset callbacks registered so the global visibilitychange handler
-// can recover ALL panels if the app is backgrounded mid-gesture.
 var _ptrResets=[];
 document.addEventListener('visibilitychange',function(){
-  if(!document.hidden)return; // only on background/lock
+  if(!document.hidden)return;
   _ptrGlobalRefreshing=false;
   _ptrResets.forEach(function(fn){try{fn();}catch(e){}});
 });
@@ -11677,9 +11675,8 @@ function ensurePtrSpinner(){
 }
 
 // ── Horizontal container detection ───────────────────────────────────────────
-// Walks up the touch-target ancestor chain.  Returns true when the finger
-// started inside any horizontal scroll area — PTR must not fire through these.
-// perf-critical: skip getComputedStyle (expensive) and rely on class names only.
+// Runs only on touchstart — not in the move hot-path.
+// perf-critical mode: skip getComputedStyle, class-name only.
 function _ptrInHorizScroll(node){
   var skipCS=document.documentElement.classList.contains('perf-critical');
   var limit=0;
@@ -11702,7 +11699,7 @@ function _ptrInHorizScroll(node){
   return false;
 }
 
-// ── Active overlay / sheet detection ─────────────────────────────────────────
+// ── Active overlay / sheet detection — touchstart only ───────────────────────
 function _ptrAnyOverlayOpen(){
   if(document.querySelector('.fu-overlay.on'))return true;
   if(document.querySelector('.dl-overlay.on'))return true;
@@ -11717,23 +11714,28 @@ function _ptrAnyOverlayOpen(){
 }
 
 // ── setupPullToRefresh ────────────────────────────────────────────────────────
-// refreshFn(isRecent:bool) — receives true when re-pulled within RECENT_MS of
-// last refresh.  Network-heavy panels use this to do a lightweight DOM-only
-// re-render instead of hitting the network again.
+// Design goals:
+//   touchstart  — validate gates, cache everything, zero work in move path
+//   touchmove   — calculate delta only, schedule rAF; no DOM reads, no layout
+//   rAF         — apply transform + opacity only; single pending rAF at a time
+//   touchend    — commit or snap; refresh runs async after animation settles
 function setupPullToRefresh(panelId,refreshFn,checkFn){
   var panel=$(panelId);
   if(!panel)return;
   ensurePtrSpinner();
 
   // ── Tuning ─────────────────────────────────────────────────────────────────
-  var DEAD_ZONE    = 80;    // px before any visual or state engages
-  var THRESHOLD    = 165;   // px pull to trigger refresh on release
-  var MAX_PULL     = 215;   // absolute max visual displacement
-  var DIR_CHECK_PX = 8;     // px before direction is decided (fast lock)
-  var DIR_RATIO    = 0.88;  // dy/dist ≥ this = vertical intent confirmed
-  var LOCK_BASE    = 700;   // base momentum-lock ms after touchend
-  var COOLDOWN_MS  = 2500;  // min ms between full refreshes (per panel)
-  var RECENT_MS    = 30000; // pulls within this window → lightweight refresh
+  // DEAD_ZONE is minimal — just filters sensor jitter, not a UX pause.
+  // Resistance (0.45) makes the panel feel light and native from the first pixel.
+  // THRESHOLD is in visual px (after resistance), not raw finger travel.
+  var DEAD_ZONE    = 8;     // px raw — jitter filter only
+  var THRESHOLD    = 80;    // px visual to arm trigger (raw ≈ 185px at 0.45 resistance)
+  var MAX_PULL     = 108;   // px visual ceiling
+  var RESISTANCE   = 0.45;  // panel visual travel / raw finger travel
+  var DIR_CHECK_PX = 6;     // Manhattan px before direction locks (no sqrt needed)
+  var LOCK_BASE    = 700;
+  var COOLDOWN_MS  = 2500;
+  var RECENT_MS    = 30000;
 
   // ── Per-panel state ─────────────────────────────────────────────────────────
   var startY=0,startX=0;
@@ -11741,29 +11743,39 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   var _ticked=false,_dirDecided=false;
   var _momentumLock=false,_momentumTimer=null;
   var _lastRefreshTime=0;
-  var _panelOrigTop=0;
-  // rAF batching — prevents style thrashing at 120fps on ProMotion / fast Android
+  // _spinnerY: fixed viewport Y for spinner, captured once on touchstart.
+  // Constant during the gesture — no recalculation per frame.
+  var _spinnerY=-60;
+  // _panelScrolled: updated by scroll listener — avoids scrollTop DOM read in touchmove.
+  var _panelScrolled=false;
   var _latestDy=0,_rafPending=false;
-  // Velocity ring buffer for fast-fling detection (5 samples, ~83ms at 60fps)
   var _vBuf=[],_VN=5;
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── Debug metrics (gated: window._ptrDebugMode = true to enable) ────────────
+  var _dbg={moves:0,rafs:0,prevs:0,t0:0,dtSum:0,dtN:0,lastT:0};
 
+  // ── Scroll tracker — replaces scrollTop read in touchmove ──────────────────
+  // passive: true — never blocks scroll pipeline
+  panel.addEventListener('scroll',function(){
+    _panelScrolled=panel.scrollTop>2;
+  },{passive:true});
+
+  // ── Rubber band — resistance from pixel zero, steeper above threshold ───────
+  // Below threshold: linear at RESISTANCE factor (light, native feel)
+  // Above threshold: extra resistance so pull "stalls" near MAX_PULL
   function _rubberBand(raw){
-    if(raw<=THRESHOLD)return raw;
-    var excess=raw-THRESHOLD;
-    return Math.min(THRESHOLD+(MAX_PULL-THRESHOLD)*(1-Math.exp(-excess/75)),MAX_PULL);
+    var v=raw*RESISTANCE;
+    if(v<=THRESHOLD)return v;
+    return Math.min(THRESHOLD+(v-THRESHOLD)*0.28,MAX_PULL);
   }
 
   function _endVelocity(){
-    // Returns y-velocity in px/ms over the ring buffer window. Negative = upward.
     if(_vBuf.length<2)return 0;
     var a=_vBuf[0],b=_vBuf[_vBuf.length-1],dt=b.t-a.t;
     return dt>10?(b.y-a.y)/dt:0;
   }
 
   function _setMomentumLock(){
-    // Fast upward fling → extend lock so OS momentum scroll can fully settle
     var v=_endVelocity();
     var ms=v<-1.5?1400:v<-0.7?950:LOCK_BASE;
     _momentumLock=true;
@@ -11772,62 +11784,74 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     _vBuf=[];
   }
 
-  // Hard reset — called on background, tab-switch, or interrupted gesture
+  function _clearWillChange(){
+    panel.style.willChange='';
+    if(ptrSpinner)ptrSpinner.style.willChange='';
+  }
+
+  // Hard reset — visibilitychange / tab-switch / interrupted gesture
   function _forceReset(){
     if(ptrSpinner){
       ptrSpinner.style.transition='none';
-      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
       ptrSpinner.style.opacity='0';
       ptrSpinner.classList.remove('refreshing','ptr-snapping');
     }
     panel.style.transform='';
+    _clearWillChange();
     panel.classList.remove('ptr-pulling','ptr-releasing');
     if(refreshing)_ptrGlobalRefreshing=false;
     armed=false;pulling=false;refreshing=false;_snapDone=true;
     _ticked=false;_dirDecided=false;_rafPending=false;_vBuf=[];
   }
-  _ptrResets.push(_forceReset); // register for global visibilitychange cleanup
+  _ptrResets.push(_forceReset);
 
-  // Smooth cancel — removes ptr-pulling in current frame, adds transition in next rAF
-  // so the browser captures the current translateY as the "from" value before animating.
+  // Smooth cancel — two-phase: remove ptr-pulling this frame, add transition in next rAF
+  // so the browser captures the current translateY as the animation "from" value.
   function _cancelPull(){
     _rafPending=false;
     if(pulling){
       pulling=false;
-      panel.classList.remove('ptr-pulling'); // clear transition:none FIRST
+      panel.classList.remove('ptr-pulling');
       requestAnimationFrame(function(){
-        if(refreshing)return; // guard: refresh may have committed between now and rAF
+        if(refreshing)return;
+        _clearWillChange();
         panel.classList.add('ptr-releasing');
         panel.style.transform='';
-        ptrSpinner.style.transition='transform .26s cubic-bezier(0,0,.2,1),opacity .2s';
+        ptrSpinner.style.transition='transform .22s cubic-bezier(0,0,.2,1),opacity .18s';
         ptrSpinner.style.opacity='0';
-        ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
         setTimeout(function(){
           panel.classList.remove('ptr-releasing');
           ptrSpinner.style.transition='';
-        },280);
+        },240);
       });
     }
     armed=false;_ticked=false;_dirDecided=false;
   }
 
-  // rAF visual update — all style writes happen here, not directly in touchmove
+  // ── rAF visual update — ALL style writes live here ─────────────────────────
+  // Called at most once per display frame. No DOM reads. Only transform + opacity.
   function _updateVisuals(){
     _rafPending=false;
     if(!pulling)return;
+    if(window._ptrDebugMode)_dbg.rafs++;
     var pullRaw=_latestDy-DEAD_ZONE;
     if(pullRaw<0)return;
     var pull=_rubberBand(pullRaw);
     panel.style.transform='translateY('+pull+'px)';
-    var gapCenter=_panelOrigTop+(pull/2)-19;
-    ptrSpinner.style.opacity=String(Math.min(pullRaw/65,1));
-    ptrSpinner.style.transform='translate(-50%,'+gapCenter+'px) scale('+Math.min(pullRaw/85,1)+')';
-    if(_ptrArc)_ptrArc.style.transform='rotate('+Math.min(pullRaw*2.8,720)+'deg)';
-    // Single haptic exactly at threshold: "you can release now" — selection tick, not a tap
-    if(!_ticked&&pullRaw>=THRESHOLD){_ticked=true;H.selection();}
+    // Spinner: fixed position captured on touchstart — no recalculation per frame.
+    // Opacity and scale grow independently for a smooth emerge effect.
+    ptrSpinner.style.opacity=String(Math.min(pullRaw/50,1));
+    ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale('+Math.min(pullRaw/55,1)+')';
+    // Arc rotates up to 360° at threshold — one full turn signals "ready to release"
+    if(_ptrArc)_ptrArc.style.transform='rotate('+Math.min(pullRaw*2.0,360)+'deg)';
+    if(!_ticked&&pull>=THRESHOLD){_ticked=true;H.selection();}
   }
 
   // ── touchstart ────────────────────────────────────────────────────────────
+  // All expensive work (DOM queries, getBoundingClientRect) happens here only.
+  // Nothing computed here is repeated in touchmove.
   on(panel,'touchstart',function(e){
     _vBuf=[];
     if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
@@ -11839,58 +11863,76 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(_ptrAnyOverlayOpen())return;
     if(e.target&&_ptrInHorizScroll(e.target))return;
     if(Date.now()-_lastRefreshTime<COOLDOWN_MS)return;
-    // 2px tolerance: iOS bounce-back can briefly read scrollTop as 0.01–0.5
-    if(panel.scrollTop>2)return;
+    if(panel.scrollTop>2)return; // only synchronous scrollTop read — on touchstart, not touchmove
 
     startY=e.touches[0].clientY;
     startX=e.touches[0].clientX;
-    _panelOrigTop=panel.getBoundingClientRect().top;
+    _panelScrolled=false; // scroll listener will flip this if panel scrolls mid-gesture
+    // Spinner Y: fixed position just inside the gap that opens above the panel.
+    // Captured once — no per-frame getBoundingClientRect.
+    _spinnerY=Math.max((panel.getBoundingClientRect().top||0)+18,46);
     armed=true;_dirDecided=false;pulling=false;_snapDone=false;
+    if(window._ptrDebugMode){_dbg.moves=0;_dbg.rafs=0;_dbg.prevs=0;_dbg.t0=Date.now();_dbg.dtSum=0;_dbg.dtN=0;_dbg.lastT=Date.now();}
   },{passive:true});
 
   // ── touchmove ─────────────────────────────────────────────────────────────
-  // {passive:false} required so we can preventDefault once vertical pull is confirmed.
-  // We stay passive during direction decision (no blocking until intent is clear).
+  // Hot path — must do almost no work:
+  //   1. push velocity sample
+  //   2. compute dy/dx (arithmetic only)
+  //   3. direction lock once — no sqrt, Manhattan distance
+  //   4. store dy, schedule one rAF
+  // NO DOM reads (scrollTop replaced by _panelScrolled cache).
+  // NO class or style writes (deferred to rAF and the pulling-start block).
   panel.addEventListener('touchmove',function(e){
-    // Always record velocity samples — even when not armed (for fast-fling lock)
     var _now=Date.now();
     _vBuf.push({y:e.touches[0].clientY,t:_now});
     if(_vBuf.length>_VN)_vBuf.shift();
 
     if(!armed||refreshing)return;
-    var t=e.touches[0];
-    var dy=t.clientY-startY;
-    var dx=t.clientX-startX;
+
+    if(window._ptrDebugMode){
+      var _dt=_now-_dbg.lastT;_dbg.lastT=_now;
+      _dbg.dtSum+=_dt;_dbg.dtN++;_dbg.moves++;
+    }
+
+    var dy=e.touches[0].clientY-startY;
+    var dx=e.touches[0].clientX-startX;
 
     if(dy<=0){_cancelPull();return;}
-    // Panel scrolled during gesture (content re-rendered, or dragged from mid-scroll)
-    if(panel.scrollTop>2){_cancelPull();return;}
+    // Use cached flag — avoids forced synchronous layout from scrollTop read
+    if(_panelScrolled){_cancelPull();return;}
 
-    // Direction lock — one-shot, no re-checking (prevents diagonal flip-flopping)
+    // Direction lock: Manhattan distance, no sqrt.
+    // Cancel if |dx| > 55% of dy — gesture has significant horizontal component.
     if(!_dirDecided){
-      var dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist>=DIR_CHECK_PX){
+      var absDx=dx<0?-dx:dx;
+      if(absDx+dy>=DIR_CHECK_PX){
         _dirDecided=true;
-        if(dy/dist<DIR_RATIO){_cancelPull();return;}
+        if(absDx>dy*0.55){_cancelPull();return;}
       }
     }
 
     if(dy<DEAD_ZONE)return;
 
-    // First frame past dead zone: engage pull visuals + subtle arm haptic
+    // First frame past dead zone: promote layers, arm visuals, subtle haptic.
+    // Only class + willChange writes here — actual style deferred to rAF.
     if(!pulling){
       pulling=true;
+      panel.style.willChange='transform';
+      ptrSpinner.style.willChange='transform,opacity';
       panel.classList.add('ptr-pulling');
       panel.classList.remove('ptr-releasing');
       ptrSpinner.classList.remove('ptr-snapping');
       ptrSpinner.style.transition='none';
-      haptic([4]); // very subtle — "PTR engaged"
+      haptic([4]);
     }
 
-    // preventDefault must be synchronous — can't defer to rAF
-    if(e.cancelable)e.preventDefault();
+    // preventDefault must be synchronous — cannot defer to rAF
+    if(e.cancelable){
+      e.preventDefault();
+      if(window._ptrDebugMode)_dbg.prevs++;
+    }
 
-    // Store latest dy; schedule a single rAF for all DOM writes
     _latestDy=dy;
     if(!_rafPending){_rafPending=true;requestAnimationFrame(_updateVisuals);}
   },{passive:false});
@@ -11904,33 +11946,41 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     pulling=false;armed=false;
     panel.classList.remove('ptr-pulling');
     panel.classList.add('ptr-releasing');
-    ptrSpinner.style.transition='transform .28s cubic-bezier(0,0,.2,1),opacity .22s';
+    ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
     ptrSpinner.classList.add('ptr-snapping');
 
     var currentY=parseFloat((panel.style.transform.match(/translateY\(([^p]+)px\)/)||[,'0'])[1])||0;
 
-    if(currentY>=THRESHOLD*0.7){
+    if(window._ptrDebugMode){
+      var _elapsed=Date.now()-_dbg.t0;
+      var _avgMs=_dbg.dtN>0?(_dbg.dtSum/_dbg.dtN).toFixed(1):'?';
+      console.log('[PTR] moves='+_dbg.moves+' rafs='+_dbg.rafs+' prevs='+_dbg.prevs
+        +' avg-interval='+_avgMs+'ms total='+_elapsed+'ms currentY='+currentY.toFixed(1)+'px');
+      window._ptrLastDebug={moves:_dbg.moves,rafs:_dbg.rafs,prevs:_dbg.prevs,avgIntervalMs:+_avgMs,totalMs:_elapsed,currentY:currentY};
+    }
+
+    if(currentY>=THRESHOLD*0.75){
       // ── TRIGGERED ─────────────────────────────────────────────────────────
       refreshing=true;
       _ptrGlobalRefreshing=true;
-      var _prevRefreshTime=_lastRefreshTime; // capture BEFORE updating
+      var _prevRefreshTime=_lastRefreshTime;
       _lastRefreshTime=Date.now();
 
-      // Settle into held loading state
-      var holdY=50;
+      // Settle panel and spinner into held loading position
+      var holdY=44;
       panel.style.transform='translateY('+holdY+'px)';
-      var holdCenter=_panelOrigTop+(holdY/2)-19;
-      ptrSpinner.style.transform='translate(-50%,'+holdCenter+'px) scale(1)';
+      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
       ptrSpinner.style.opacity='1';
       ptrSpinner.classList.add('refreshing');
-      haptic([30]); // medium clean pulse — "refresh committed"
+      haptic([30]);
 
       function _snapBack(){
         if(_snapDone)return;
         _snapDone=true;
+        _clearWillChange();
         panel.style.transform='';
-        ptrSpinner.style.transition='transform .28s cubic-bezier(0,0,.2,1),opacity .22s';
-        ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+        ptrSpinner.style.transition='transform .24s cubic-bezier(0,0,.2,1),opacity .2s';
+        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
         ptrSpinner.style.opacity='0';
         ptrSpinner.classList.remove('refreshing');
         setTimeout(function(){
@@ -11939,28 +11989,26 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
           ptrSpinner.style.transition='';
           refreshing=false;
           _ptrGlobalRefreshing=false;
-        },280);
+        },260);
       }
       _snapDone=false;
-      var _minT=setTimeout(_snapBack,600);  // hold at least 600ms (no flash)
-      var _maxT=setTimeout(function(){clearTimeout(_minT);_snapBack();},2500); // hard timeout
+      var _minT=setTimeout(_snapBack,600);
+      setTimeout(function(){clearTimeout(_minT);_snapBack();},2500);
 
-      // isRecent: re-pulled within RECENT_MS → pass flag so refreshFn can skip network
       var _isRecent=_prevRefreshTime>0&&(Date.now()-_prevRefreshTime)<RECENT_MS;
-      // Wrap in try/catch — an exception in refreshFn must never leave PTR stuck in
-      // refreshing state (spinner stays visible forever, panel locked).
       try{refreshFn(_isRecent);}catch(e){console.warn('[PTR] refreshFn error:',e);}
 
     }else{
       // ── BELOW THRESHOLD — snap back silently ──────────────────────────────
+      _clearWillChange();
       panel.style.transform='';
-      ptrSpinner.style.transform='translate(-50%,-60px) scale(0)';
+      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
       ptrSpinner.style.opacity='0';
       setTimeout(function(){
         panel.classList.remove('ptr-releasing');
         ptrSpinner.classList.remove('ptr-snapping');
         ptrSpinner.style.transition='';
-      },300);
+      },260);
     }
   }
 
