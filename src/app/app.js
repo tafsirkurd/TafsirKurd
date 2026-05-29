@@ -7737,6 +7737,9 @@ function _isPrayerCheckable(prayer,dKey){
   var now=new Date();var todayKey=dateKey(now);var prayerDay=_getPrayerDay();
   var ts=_prayerTrackingStart();if(ts&&dKey<ts)return false;
   if(dKey<prayerDay)return true;
+  // Past calendar days are always editable even in the pre-Fajr window where
+  // prayerDay still equals yesterday (dKey===prayerDay), so the check above misses them.
+  if(dKey<todayKey)return true;
   if(dKey>todayKey)return false;
   if(dKey===todayKey&&prayerDay!==todayKey)return false;
   // Primary: localStorage cache keyed by city+month. Fallback: live panel timings
