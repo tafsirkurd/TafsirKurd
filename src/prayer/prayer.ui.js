@@ -2561,14 +2561,15 @@
 
       // Live countdown in button + auto-unlock when time arrives
       if (notYetWithTime) {
-        var _btnCdId = setInterval(function() {
-          if (!document.getElementById('prayerCardSheetOverlay')) {
-            clearInterval(_btnCdId); return;
+        _cardSheetCountdownId = setInterval(function() {
+          var _co = document.getElementById('prayerCardSheetOverlay');
+          if (!_co || !_co.classList.contains('open')) {
+            clearInterval(_cardSheetCountdownId); _cardSheetCountdownId = null; return;
           }
           var rem = rawTime ? _msToPrayer(rawTime) : 0;
           if (rem <= 5000) {
             // Time has arrived — unlock the button
-            clearInterval(_btnCdId);
+            clearInterval(_cardSheetCountdownId); _cardSheetCountdownId = null;
             canCheck = true;
             notYetWithTime = false;
             checkBtn.disabled = false;
