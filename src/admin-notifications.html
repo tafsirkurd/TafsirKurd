@@ -1238,9 +1238,109 @@
                 empty.textContent = 'No notifications found';
                 container.appendChild(empty);
             } else {
-                regular.forEach(function(n) { container.appendChild(buildRow(n)); });
+                // Group recurring scheduled series — show first + collapsed expander
+                var seen = {}; // seriesKey → count of hidden extras
+                var grouped = [];
+                regular.forEach(function(n) {
+                    if (n.status === 'scheduled' && n.recurrence && n.recurrence !== 'none') {
+                        var key = n.title + '::' + n.recurrence + '::' + (n.recurrence_day != null ? n.recurrence_day : '');
+                        if (!seen[key]) { seen[key] = 0; grouped.push({ type: 'item', n: n, key: key }); }
+                        else { grouped.push({ type: 'hidden', key: key }); }
+                        seen[key]++;
+                    } else {
+                        grouped.push({ type: 'item', n: n, key: null });
+                    }
+                });
+                // Build expanders map
+                var expanders = {};
+                grouped.forEach(function(g) {
+                    if (g.type === 'hidden') {
+                        if (!expanders[g.key]) expanders[g.key] = { hidden: [] };
+                    }
+                });
+                grouped.forEach(function(g) {
+                    if (g.type === 'item' && g.key && seen[g.key] > 1) {
+                        expanders[g.key] = expanders[g.key] || { hidden: [] };
+                        expanders[g.key].headerEl = null; // will be set below
+                    }
+                });
+                // Collect hidden items
+                grouped.forEach(function(g) {
+                    if (g.type === 'hidden' && expanders[g.key]) {
+                        // find the n from _notifications that matches
+                        // (already in order, so these are subsequent ones)
+                    }
+                });
+
+                // Simpler approach: first pass collects per-key arrays
+                var seriesItems = {};
+                regular.forEach(function(n) {
+                    if (n.status === 'scheduled' && n.recurrence && n.recurrence !== 'none') {
+                        var key = n.title + '::' + n.recurrence + '::' + (n.recurrence_day != null ? n.recurrence_day : '');
+                        if (!seriesItems[key]) seriesItems[key] = [];
+                        seriesItems[key].push(n);
+                    }
+                });
+
+                var rendered = {};
+                regular.forEach(function(n) {
+                    var key = null;
+                    if (n.status === 'scheduled' && n.recurrence && n.recurrence !== 'none') {
+                        key = n.title + '::' + n.recurrence + '::' + (n.recurrence_day != null ? n.recurrence_day : '');
+                    }
+                    if (key && rendered[key]) return; // skip duplicates — expander shows them
+                    if (key) rendered[key] = true;
+                    container.appendChild(buildRow(n));
+                    // If this is a series with more entries, append expander
+                    if (key && seriesItems[key] && seriesItems[key].length > 1) {
+                        var rest = seriesItems[key].slice(1);
+                        var exp = _buildSeriesExpander(n.id, rest);
+                        container.appendChild(exp);
+                    }
+                });
             }
             lucide.createIcons();
+        }
+
+        function _buildSeriesExpander(seriesId, restItems) {
+            var wrap = document.createElement('div');
+            wrap.id = 'exp-' + seriesId;
+            wrap.style.cssText = 'margin-top:-4px;margin-bottom:4px;padding:0 4px';
+            var expanded = false;
+            var toggle = document.createElement('button');
+            toggle.style.cssText = 'background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--n-blue);padding:6px 14px;width:100%;text-align:left;font-family:var(--n-font);display:flex;align-items:center;gap:6px;border-radius:0 0 10px 10px;border:1px solid var(--n-border);border-top:none;background:var(--n-surface2);transition:background .13s';
+            toggle.innerHTML = '<i data-lucide="chevron-down" style="width:13px;height:13px"></i> Show ' + restItems.length + ' more upcoming occurrence' + (restItems.length > 1 ? 's' : '');
+            var innerWrap = document.createElement('div');
+            innerWrap.style.cssText = 'display:none;flex-direction:column;gap:8px;margin-top:4px';
+            toggle.onclick = function() {
+                expanded = !expanded;
+                innerWrap.style.display = expanded ? 'flex' : 'none';
+                toggle.innerHTML = (expanded
+                    ? '<i data-lucide="chevron-up" style="width:13px;height:13px"></i> Hide upcoming occurrences'
+                    : '<i data-lucide="chevron-down" style="width:13px;height:13px"></i> Show ' + restItems.length + ' more upcoming occurrence' + (restItems.length > 1 ? 's' : ''));
+                lucide.createIcons();
+                if (expanded && !innerWrap.firstChild) {
+                    restItems.forEach(function(n) { innerWrap.appendChild(buildRow(n)); });
+                    lucide.createIcons();
+                }
+            };
+            // Cancel Series button
+            var cancelAll = document.createElement('button');
+            cancelAll.style.cssText = 'background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--n-red);padding:6px 14px;font-family:var(--n-font);margin-left:auto;display:flex;align-items:center;gap:4px';
+            cancelAll.innerHTML = '<i data-lucide="trash-2" style="width:12px;height:12px"></i> Cancel all future';
+            cancelAll.onclick = async function(e) {
+                e.stopPropagation();
+                if (!confirm('Cancel ALL future scheduled occurrences of this recurring notification? This cannot be undone.')) return;
+                try {
+                    var d = await notifAPI('cancel_series', { id: seriesId });
+                    loadPage();
+                    showToast('Cancelled ' + d.cancelled + ' future occurrence' + (d.cancelled !== 1 ? 's' : ''));
+                } catch(e) { showToast('Failed: ' + e.message, true); }
+            };
+            toggle.appendChild(cancelAll);
+            wrap.appendChild(toggle);
+            wrap.appendChild(innerWrap);
+            return wrap;
         }
 
         function renderTemplateCards(templates) {

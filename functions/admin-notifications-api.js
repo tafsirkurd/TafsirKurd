@@ -703,6 +703,25 @@ async function _handleRequest(context) {
         return json({ success: true });
     }
 
+    // ── CANCEL SERIES — cancel all future scheduled occurrences with same title ──
+    if (action === 'cancel_series') {
+        if (!body.id) return json({ error: 'id required' }, 400);
+        const { data: ref } = await supabase
+            .from('admin_notifications').select('title, recurrence').eq('id', body.id).single();
+        if (!ref) return json({ error: 'Not found' }, 404);
+        const { data: cancelled, error } = await supabase
+            .from('admin_notifications')
+            .update({ status: 'cancelled' })
+            .eq('title', ref.title)
+            .eq('recurrence', ref.recurrence)
+            .eq('is_template', false)
+            .in('status', ['scheduled'])
+            .gt('scheduled_at', new Date().toISOString())
+            .select('id');
+        if (error) return json({ error: error.message }, 500);
+        return json({ success: true, cancelled: (cancelled || []).length });
+    }
+
     // ── DELETE ────────────────────────────────────────────────────
     if (action === 'delete') {
         if (!isSuperAdmin) return json({ error: 'Super Admin only' }, 403);
