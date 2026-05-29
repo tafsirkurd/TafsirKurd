@@ -1996,6 +1996,17 @@
                 success = true;
                 closeCreateModal();
                 loadPage();
+                // Clear success toast so user knows it worked
+                if (forceDraft) {
+                    showToast('Saved as draft ✓');
+                } else if (payload.scheduled_at) {
+                    var _sd = new Date(payload.scheduled_at);
+                    var _sdStr = _sd.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+                        + ' at ' + _sd.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+                    showToast('Scheduled for ' + _sdStr + ' ✓');
+                } else {
+                    showToast('Saved ✓');
+                }
             } catch(e) {
                 errEl.textContent = e.message;
                 errEl.style.display = 'block';
