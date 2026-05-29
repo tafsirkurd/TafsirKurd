@@ -70,9 +70,9 @@ async function _handleRequest(context) {
                 const r = await doSend(supabase, env, notif, notif.id, 'cron');
                 results.push({ id: notif.id, ...r });
             } catch (e) {
-                await supabase.from('admin_notifications')
+                try { await supabase.from('admin_notifications')
                     .update({ status: 'failed', error_message: 'Cron error: ' + e.message })
-                    .eq('id', notif.id).catch(() => {});
+                    .eq('id', notif.id); } catch (_) {}
                 results.push({ id: notif.id, error: e.message });
             }
         }
@@ -266,7 +266,7 @@ async function _handleRequest(context) {
                 }
             }
             if (toInsert.length) {
-                await supabase.from('admin_notifications').insert(toInsert).catch(() => {});
+                try { await supabase.from('admin_notifications').insert(toInsert); } catch (_) {}
                 totalCreated += toInsert.length;
             }
         }
@@ -577,7 +577,7 @@ async function _handleRequest(context) {
                     notes: notes || null, is_template: false, created_by: adminEmail,
                 });
             }
-            if (futureRows.length) await supabase.from('admin_notifications').insert(futureRows).catch(() => {});
+            if (futureRows.length) { try { await supabase.from('admin_notifications').insert(futureRows); } catch (_) {} }
         }
 
         return json({ success: true, notification: data });
@@ -653,7 +653,7 @@ async function _handleRequest(context) {
                     });
                 }
             }
-            if (futureRows.length) await supabase.from('admin_notifications').insert(futureRows).catch(() => {});
+            if (futureRows.length) { try { await supabase.from('admin_notifications').insert(futureRows); } catch (_) {} }
         }
 
         return json({ success: true, notification: data });
