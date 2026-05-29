@@ -1065,11 +1065,15 @@
         }
 
         // ── Load ─────────────────────────────────────────────────
+        var _lastBackfill = 0;
         async function loadPage() {
             loadStats();
-            // Backfill any missing future occurrences for recurring notifications,
-            // then load so the table shows all scheduled rows immediately.
-            try { await notifAPI('backfill_recurring'); } catch(e) {}
+            // Backfill missing recurring occurrences — rate-limited to once per 5 min
+            var now = Date.now();
+            if (now - _lastBackfill > 5 * 60 * 1000) {
+                _lastBackfill = now;
+                try { await notifAPI('backfill_recurring'); } catch(e) {}
+            }
             loadNotifications();
         }
 
@@ -2072,17 +2076,13 @@
                 btn._armed = true;
                 var _prevText = btn.textContent;
                 btn.textContent = 'Sure?';
-                btn.style.background = '#e53e3e';
-                btn.style.color = '#fff';
-                btn.style.borderColor = '#e53e3e';
+                btn.style.cssText = 'background:var(--n-red)!important;color:#fff!important;border-color:var(--n-red)!important';
                 clearTimeout(_confirmTimers[id]);
                 _confirmTimers[id] = setTimeout(function() {
                     if (btn._armed) {
                         btn._armed = false;
                         btn.textContent = _prevText;
-                        btn.style.background = '';
-                        btn.style.color = '';
-                        btn.style.borderColor = '';
+                        btn.style.cssText = '';
                     }
                     delete _confirmTimers[id];
                 }, 3000);
@@ -2093,7 +2093,7 @@
             clearTimeout(_confirmTimers[id]);
             delete _confirmTimers[id];
             _sending[id] = true;
-            if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = ''; }
+            if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; btn.style.cssText = ''; }
             try {
                 var result = await notifAPI('send', { id: id });
                 loadPage();
