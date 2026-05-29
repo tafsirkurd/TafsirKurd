@@ -2004,6 +2004,8 @@
             try {
                 var payload = Object.assign({}, fd);
                 if (forceDraft) payload.scheduled_at = null; // "Save Draft" always strips the schedule
+                // A scheduled notification is never a template — unpin it so it appears in the main list
+                if (!forceDraft && payload.scheduled_at) payload.is_template = false;
                 if (_currentEditId) payload.id = _currentEditId;
                 await notifAPI(_currentEditId ? 'update' : 'create', payload);
                 success = true;
