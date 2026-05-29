@@ -212,7 +212,7 @@
         .token-mono { font-family:var(--n-mono); font-size:11px; color:var(--n-text2); word-break:break-all; }
 
         /* ─── Modal ──────────────────────────────────────────────── */
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:1000; align-items:flex-start; justify-content:center; padding:24px 16px; backdrop-filter:blur(4px); overflow-y:auto; }
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:10000; align-items:flex-start; justify-content:center; padding:24px 16px; backdrop-filter:blur(4px); overflow-y:auto; }
         .modal.active { display:flex; }
         .modal-content { background:var(--n-surface); border:1px solid var(--n-border2); border-radius:16px; width:90%; margin:auto; box-shadow:0 24px 80px rgba(0,0,0,.6); flex-shrink:0; }
         .modal-header { padding:20px 24px; border-bottom:1px solid var(--n-border); display:flex; align-items:center; justify-content:space-between; }
@@ -2042,6 +2042,7 @@
         }
 
         function openCreateModal() {
+            _closeAllQsPop(null);
             _currentEditId = null;
             document.getElementById('modal-title').textContent = 'New Notification';
             clearForm();
@@ -2053,6 +2054,7 @@
         }
 
         function openEditModal(n) {
+            _closeAllQsPop(null);
             var editable = n.status === 'draft' || n.status === 'scheduled';
             _currentEditId = editable ? n.id : null;
             document.getElementById('modal-title').textContent = editable ? 'Edit Notification' : 'New Notification (copy)';
