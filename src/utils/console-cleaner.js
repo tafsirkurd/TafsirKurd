@@ -2,7 +2,11 @@
     'use strict';
 
     var h = window.location.hostname;
-    var isProd = h === 'tafsirkurd.com' || h === 'www.tafsirkurd.com';
+    // Silence in production web AND in Capacitor native app (hostname = localhost,
+    // but Capacitor.isNativePlatform() is not yet available this early).
+    // We check both the domain AND the capacitor:// protocol.
+    var isProd = h === 'tafsirkurd.com' || h === 'www.tafsirkurd.com'
+      || window.location.protocol === 'capacitor:';
 
     if (!isProd) return;
 

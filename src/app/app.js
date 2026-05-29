@@ -2394,9 +2394,13 @@ window._showNotifSetupHint=function _showNotifSetupHint(force){
   btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
   btn.textContent=t('notif.setup_ok')||'تێگەیشتم';
   btn.onclick=function(){overlay.remove();};
+  card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
+  card.setAttribute('aria-label',title.textContent);
+  overlay.addEventListener('keydown',function(e){if(e.key==='Escape')overlay.remove();});
   card.appendChild(title);card.appendChild(msg);card.appendChild(btn);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
+  setTimeout(function(){btn.focus();},50); // move focus into dialog
 };
 
 /* Show battery-optimization guidance — triggered when isIgnoringBatteryOpts() returns false */
@@ -2433,10 +2437,14 @@ window._showBatteryOptWarning=function(){
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
   dismissBtn.textContent='دواتر';
   dismissBtn.onclick=function(){overlay.remove();};
+  card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
+  card.setAttribute('aria-label',title.textContent);
+  overlay.addEventListener('keydown',function(e){if(e.key==='Escape')overlay.remove();});
   card.appendChild(icon);card.appendChild(title);card.appendChild(msg);
   card.appendChild(btn);card.appendChild(dismissBtn);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
+  setTimeout(function(){btn.focus();},50);
 };
 
 /* Show exact-alarm-revoked warning — triggered when OS verification finds 0 pending after schedule */
@@ -2475,10 +2483,14 @@ window._showAthanAlarmPermWarning=function(){
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
   dismissBtn.textContent='دواتر';
   dismissBtn.onclick=function(){overlay.remove();};
+  card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
+  card.setAttribute('aria-label',title.textContent);
+  overlay.addEventListener('keydown',function(e){if(e.key==='Escape')overlay.remove();});
   card.appendChild(icon);card.appendChild(title);card.appendChild(msg);
   card.appendChild(btn);card.appendChild(dismissBtn);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
+  setTimeout(function(){btn.focus();},50);
 };
 
 function initDailyVerse(){
@@ -13147,7 +13159,9 @@ function startApp(){
   // Force-update check: deferred 5s so it doesn't compete with startup fetches.
   // Interval bumped to 60s — 12s was excessive on slow networks / low-end devices.
   setTimeout(function(){ ForceUpdate.check(); }, 5000);
-  setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 60000);
+  // Store the interval so it can theoretically be cleared — prevents accumulation
+  // if startApp() is ever called more than once (e.g. during hot reload in dev).
+  window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 60000);
 
   // ── Runtime jank monitoring — auto-downgrade performance tier ─────────────
   // Starts 8s after launch so startup pre-renders don't trigger false positives.
