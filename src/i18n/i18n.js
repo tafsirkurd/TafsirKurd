@@ -182,7 +182,8 @@ function _applyCriticalKeyGuard(temp){
 
 // ── Layer 1: bundled translations ─────────────────────────────────────────────
 function loadBundled(){
-  var data = window.KMR_TRANSLATIONS;
+  // Also check __kmrBundle for backwards compat with older iOS builds that used that name
+  var data = window.KMR_TRANSLATIONS || window.__kmrBundle;
   if(data && typeof data === 'object' && Object.keys(data).length > 0){
     _bundledSnapshot = Object.assign({}, data); // immutable copy
     console.log('[i18n] Layer 1: bundled ('+Object.keys(data).length+' keys)');
