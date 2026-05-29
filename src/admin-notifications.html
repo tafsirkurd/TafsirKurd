@@ -531,6 +531,10 @@
                             <i data-lucide="refresh-cw"></i>
                             Refresh
                         </button>
+                        <button class="btn btn-secondary" id="delete-cancelled-btn" onclick="deleteAllCancelled(this)" style="display:none;color:var(--n-red)">
+                            <i data-lucide="trash-2"></i>
+                            Delete Cancelled
+                        </button>
                         <button class="btn btn-primary" id="new-notif-btn" onclick="openCreateModal()">
                             <i data-lucide="plus"></i>
                             New Notification
@@ -1086,6 +1090,17 @@
             });
         });
 
+        // ── Delete All Cancelled ─────────────────────────────────
+        async function deleteAllCancelled(btn) {
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> Deleting…'; lucide.createIcons();
+            try {
+                var d = await notifAPI('delete_cancelled');
+                loadPage();
+                showToast('Deleted ' + d.deleted + ' cancelled notification' + (d.deleted !== 1 ? 's' : '') + ' ✓');
+            } catch(e) { showToast('Error: ' + e.message, true); }
+            finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="trash-2"></i> Delete Cancelled'; lucide.createIcons(); }
+        }
+
         // ── Clean Duplicate Series ───────────────────────────────
         async function cleanSeriesNow(btn) {
             btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> Cleaning…'; lucide.createIcons();
@@ -1238,6 +1253,10 @@
             var count = document.getElementById('result-count');
             while (container.firstChild) container.removeChild(container.firstChild);
             if (count) count.textContent = regular.length + ' result' + (regular.length !== 1 ? 's' : '');
+            // Show/hide Delete Cancelled button
+            var hasCancelled = regular.some(function(n) { return n.status === 'cancelled'; });
+            var dcBtn = document.getElementById('delete-cancelled-btn');
+            if (dcBtn) dcBtn.style.display = hasCancelled ? '' : 'none';
 
             if (!regular.length) {
                 var empty = document.createElement('div');

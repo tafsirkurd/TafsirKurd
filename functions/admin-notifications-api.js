@@ -658,6 +658,18 @@ async function _handleRequest(context) {
         return json({ success: true });
     }
 
+    // ── DELETE ALL CANCELLED ───────────────────────────────────────
+    if (action === 'delete_cancelled') {
+        if (!isWriter) return json({ error: 'Editor or Super Admin only' }, 403);
+        const { data: deleted, error } = await supabase
+            .from('admin_notifications')
+            .delete()
+            .eq('status', 'cancelled')
+            .select('id');
+        if (error) return json({ error: error.message }, 500);
+        return json({ success: true, deleted: (deleted || []).length });
+    }
+
     // ── DUPLICATE ─────────────────────────────────────────────────
     if (action === 'duplicate') {
         if (!body.id) return json({ error: 'id required' }, 400);
