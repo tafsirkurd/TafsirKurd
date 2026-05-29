@@ -531,6 +531,10 @@
                             <i data-lucide="refresh-cw"></i>
                             Refresh
                         </button>
+                        <button class="btn btn-secondary" onclick="cleanSeriesNow(this)" title="Keep only the soonest occurrence per recurring series, cancel the rest" style="color:var(--n-amber)">
+                            <i data-lucide="sparkles"></i>
+                            Clean Duplicates
+                        </button>
                         <button class="btn btn-secondary" id="send-due-btn" onclick="sendDueNow(this)" title="Send all notifications whose scheduled time has passed">
                             <i data-lucide="clock-alert"></i>
                             Send Due
@@ -1089,6 +1093,17 @@
                 applyFilters();
             });
         });
+
+        // ── Clean Duplicate Series ───────────────────────────────
+        async function cleanSeriesNow(btn) {
+            btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> Cleaning…'; lucide.createIcons();
+            try {
+                var d = await notifAPI('clean_series');
+                loadPage();
+                showToast(d.cancelled > 0 ? 'Removed ' + d.cancelled + ' duplicate' + (d.cancelled !== 1 ? 's' : '') + ' ✓' : 'No duplicates found');
+            } catch(e) { showToast('Error: ' + e.message, true); }
+            finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles"></i> Clean Duplicates'; lucide.createIcons(); }
+        }
 
         // ── Send Due Now ─────────────────────────────────────────
         async function sendDueNow(btn) {

@@ -218,59 +218,47 @@ async function _handleRequest(context) {
 
     const { action } = body;
 
-    // ── BACKFILL RECURRING ────────────────────────────────────────
-    // Finds all scheduled recurring notifications and pre-creates any missing
-    // future occurrences (weekly → 8 total, daily → 30 total).
-    if (action === 'backfill_recurring') {
-        const { data: recurring } = await supabase
+    // ── CLEAN SERIES — keep only the soonest, cancel the rest ────
+    // Fixes duplicates created by old pre-create logic.
+    if (action === 'clean_series') {
+        const { data: allSched } = await supabase
             .from('admin_notifications')
-            .select('*')
+            .select('id, title, recurrence, recurrence_day, scheduled_at')
             .eq('status', 'scheduled')
             .neq('recurrence', 'none')
-            .eq('is_template', false);
+            .eq('is_template', false)
+            .order('scheduled_at', { ascending: true });
 
-        if (!recurring?.length) return json({ success: true, created: 0 });
+        if (!allSched?.length) return json({ success: true, cancelled: 0 });
 
-        let totalCreated = 0;
-        for (const notif of recurring) {
-            if (!notif.scheduled_at) continue;
-            const extra = notif.recurrence === 'daily' ? 29 : 7;
-            const stepDays = notif.recurrence === 'daily' ? 1 : 7;
-            const ref = new Date(notif.scheduled_at);
-            const h = ref.getUTCHours(), mn = ref.getUTCMinutes();
-
-            // Fetch all already-existing scheduled occurrences for this series
-            const { data: existing } = await supabase
-                .from('admin_notifications')
-                .select('scheduled_at')
-                .eq('title', notif.title)
-                .eq('recurrence', notif.recurrence)
-                .in('status', ['scheduled', 'sending', 'sent']);
-            const existingTimes = new Set((existing || []).map(r => { try { return r.scheduled_at ? new Date(r.scheduled_at).toISOString() : null; } catch { return null; } }).filter(Boolean));
-
-            const toInsert = [];
-            for (let i = 1; i <= extra; i++) {
-                const d = new Date(ref);
-                d.setUTCDate(d.getUTCDate() + i * stepDays);
-                d.setUTCHours(h, mn, 0, 0);
-                const iso = d.toISOString();
-                if (!existingTimes.has(iso) && d > new Date()) {
-                    toInsert.push({
-                        title: notif.title, body: notif.body, image_url: notif.image_url || null,
-                        platform: notif.platform || 'all', audience: notif.audience || 'all',
-                        deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
-                        status: 'scheduled', scheduled_at: iso,
-                        recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
-                        notes: notif.notes || null, is_template: false, created_by: 'system',
-                    });
-                }
-            }
-            if (toInsert.length) {
-                try { await supabase.from('admin_notifications').insert(toInsert); } catch (_) {}
-                totalCreated += toInsert.length;
-            }
+        // Group by series key
+        const groups = {};
+        for (const n of allSched) {
+            const key = n.title + '::' + n.recurrence + '::' + (n.recurrence_day ?? '');
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(n);
         }
-        return json({ success: true, created: totalCreated });
+
+        let totalCancelled = 0;
+        for (const items of Object.values(groups)) {
+            if (items.length <= 1) continue;
+            // Keep the soonest (first after sort), cancel the rest
+            const toCancel = items.slice(1).map(x => x.id);
+            try {
+                await supabase.from('admin_notifications')
+                    .update({ status: 'cancelled' })
+                    .in('id', toCancel);
+                totalCancelled += toCancel.length;
+            } catch (_) {}
+        }
+        return json({ success: true, cancelled: totalCancelled });
+    }
+
+    // ── BACKFILL RECURRING — now a no-op ─────────────────────────
+    // Pre-creating multiple future entries caused spam. doSend() chains
+    // the next occurrence. This action is kept so old frontend calls don't 404.
+    if (action === 'backfill_recurring') {
+        return json({ success: true, created: 0 });
     }
 
     // ── LIST ──────────────────────────────────────────────────────
@@ -554,32 +542,6 @@ async function _handleRequest(context) {
             .single();
 
         if (error) return json({ error: error.message }, 500);
-
-        // Pre-create all future occurrences so they appear in the table immediately.
-        // weekly → 7 extra weeks (8 total); daily → 29 extra days (30 total).
-        if (data && scheduled_at && recurrence && recurrence !== 'none' && !is_template) {
-            const extra = recurrence === 'daily' ? 29 : 7;
-            const stepDays = recurrence === 'daily' ? 1 : 7;
-            const ref = new Date(scheduled_at);
-            const h = ref.getUTCHours(), mn = ref.getUTCMinutes();
-            const futureRows = [];
-            for (let i = 1; i <= extra; i++) {
-                const d = new Date(ref);
-                d.setUTCDate(d.getUTCDate() + i * stepDays);
-                d.setUTCHours(h, mn, 0, 0);
-                futureRows.push({
-                    title, body: msgBody, image_url: image_url || null,
-                    platform: platform || 'all', audience: audience || 'all',
-                    deep_link_type: deep_link_type || 'none', deep_link_id: deep_link_id || null,
-                    status: 'scheduled', scheduled_at: d.toISOString(),
-                    recurrence: recurrence || 'none',
-                    recurrence_day: recurrence_day != null ? recurrence_day : null,
-                    notes: notes || null, is_template: false, created_by: adminEmail,
-                });
-            }
-            if (futureRows.length) { try { await supabase.from('admin_notifications').insert(futureRows); } catch (_) {} }
-        }
-
         return json({ success: true, notification: data });
     }
 
@@ -621,41 +583,6 @@ async function _handleRequest(context) {
             .single();
 
         if (error) return json({ error: error.message }, 500);
-
-        // Pre-create future occurrences on update too (same logic as create).
-        if (data && scheduled_at && recurrence && recurrence !== 'none' && !is_template) {
-            const extra = recurrence === 'daily' ? 29 : 7;
-            const stepDays = recurrence === 'daily' ? 1 : 7;
-            const ref = new Date(scheduled_at);
-            const h = ref.getUTCHours(), mn = ref.getUTCMinutes();
-            const { data: existing2 } = await supabase
-                .from('admin_notifications')
-                .select('scheduled_at')
-                .eq('title', title)
-                .eq('recurrence', recurrence)
-                .in('status', ['scheduled', 'sending', 'sent']);
-            const existingTimes = new Set((existing2 || []).map(r => r.scheduled_at ? new Date(r.scheduled_at).toISOString() : null).filter(Boolean));
-            const futureRows = [];
-            for (let i = 1; i <= extra; i++) {
-                const d = new Date(ref);
-                d.setUTCDate(d.getUTCDate() + i * stepDays);
-                d.setUTCHours(h, mn, 0, 0);
-                const iso = d.toISOString();
-                if (!existingTimes.has(iso) && d > new Date()) {
-                    futureRows.push({
-                        title, body: msgBody, image_url: image_url || null,
-                        platform: platform || 'all', audience: audience || 'all',
-                        deep_link_type: deep_link_type || 'none', deep_link_id: deep_link_id || null,
-                        status: 'scheduled', scheduled_at: iso,
-                        recurrence: recurrence || 'none',
-                        recurrence_day: recurrence_day != null ? recurrence_day : null,
-                        notes: notes || null, is_template: false, created_by: adminEmail,
-                    });
-                }
-            }
-            if (futureRows.length) { try { await supabase.from('admin_notifications').insert(futureRows); } catch (_) {} }
-        }
-
         return json({ success: true, notification: data });
     }
 
