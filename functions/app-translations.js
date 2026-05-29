@@ -41,7 +41,7 @@ export async function onRequest(context) {
         // the edge cache serves the last-known-good response instead of propagating
         // the error to the browser. Eliminates "Failed to load resource: 503" console
         // errors during transient Supabase downtime or CF cold-start race conditions.
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600, stale-if-error=86400'
+        'Cache-Control': 'public, max-age=30, stale-while-revalidate=60, stale-if-error=86400'
     };
 
     if (request.method === 'OPTIONS') {
