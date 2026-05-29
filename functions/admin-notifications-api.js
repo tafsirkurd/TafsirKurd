@@ -82,10 +82,11 @@ async function _handleRequest(context) {
 
     // ── AUTO-NOTIFY NEW CONTENT (cron — no admin auth) ────────────
     if (body.action === 'auto_notify_content') {
-        const cronSecret = env.CRON_SECRET || env.NOTIF_CRON_SECRET;
         const authHeader = request.headers.get('Authorization') || '';
-        if (!cronSecret || authHeader !== `Bearer ${cronSecret}`)
-            return json({ error: 'Unauthorized' }, 401);
+        const isCron = [env.CRON_SECRET, env.NOTIF_CRON_SECRET]
+            .filter(Boolean)
+            .some(s => authHeader === `Bearer ${s}`);
+        if (!isCron) return json({ error: 'Unauthorized' }, 401);
 
         if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID)
             return json({ error: 'FCM not configured' }, 503);
@@ -102,19 +103,9 @@ async function _handleRequest(context) {
         const autoHadithBody         = tx['notif.auto_hadith_body']          || 'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
         const autoHadithTitleFallback= tx['notif.auto_hadith_title_fallback']|| 'حەدیس';
 
-        // Helper: check if we already sent a notification for this content
-        async function alreadyNotified(dlType, dlId) {
-            const { data } = await supabase
-                .from('admin_notifications')
-                .select('id')
-                .eq('deep_link_type', dlType)
-                .eq('deep_link_id', String(dlId))
-                .not('status', 'in', '("draft","cancelled")')
-                .maybeSingle();
-            return !!data;
-        }
-
-        // Helper: create + send one notification
+        // Atomic insert — the unique index (idx_admin_notif_deep_link_auto) makes this
+        // the dedup claim itself. No separate SELECT needed; concurrent runs get 23505
+        // on the second insert and skip silently. No race window.
         async function sendAutoNotif(title, body, image_url, dlType, dlId) {
             const { data: notif, error } = await supabase
                 .from('admin_notifications')
@@ -131,6 +122,7 @@ async function _handleRequest(context) {
                 })
                 .select()
                 .single();
+            if (error?.code === '23505') return { skipped: true }; // already notified
             if (error || !notif) return { error: error?.message || 'insert failed' };
             return await doSend(supabase, env, notif, notif.id, 'auto');
         }
@@ -144,7 +136,6 @@ async function _handleRequest(context) {
             .order('created_at', { ascending: false });
 
         for (const ep of (episodes || [])) {
-            if (await alreadyNotified('video', ep.id)) continue;
             const seriesName = ep.islamvoice_series?.name_ku || ep.title;
             const r = await sendAutoNotif(
                 seriesName,
@@ -165,7 +156,6 @@ async function _handleRequest(context) {
             .order('created_at', { ascending: false });
 
         for (const book of (books || [])) {
-            if (await alreadyNotified('book', book.id)) continue;
             const bookTitle = book.title_ku || book.title_ar || autoBookTitleFallback;
             const r = await sendAutoNotif(
                 bookTitle,
@@ -186,7 +176,6 @@ async function _handleRequest(context) {
             .order('created_at', { ascending: false });
 
         for (const h of (hadiths || [])) {
-            if (await alreadyNotified('hadith', h.id)) continue;
             const r = await sendAutoNotif(
                 h.title || autoHadithTitleFallback,
                 autoHadithBody,
