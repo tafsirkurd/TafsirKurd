@@ -237,6 +237,17 @@
         .progress-bar-wrap { background:var(--n-surface2); border-radius:6px; height:6px; overflow:hidden; margin:8px 0; }
         .progress-bar-fill { height:100%; background:var(--n-green); border-radius:6px; transition:width .4s; }
 
+        /* ─── Modal sections ────────────────────────────────────── */
+        .mf-section { border-bottom:1px solid var(--n-border); }
+        .mf-section-hdr {
+            display:flex; align-items:center; gap:8px; padding:14px 24px 12px;
+            font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+            color:var(--n-text2);
+        }
+        .mf-section-hdr i { width:13px; height:13px; opacity:.6; }
+        /* Recurrence radio chips */
+        .sched-chip:has(input[type="radio"]:checked) { background:var(--n-blue); color:#fff!important; border-color:var(--n-blue); }
+
         /* ─── Sched picker ───────────────────────────────────────── */
         .sched-picker { background:var(--n-bg); border:1px solid var(--n-border2); border-radius:10px; overflow:hidden; }
         .sched-row { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--n-border); }
@@ -689,215 +700,234 @@
 
     <!-- ── Create / Edit Modal ────────────────────────────────── -->
     <div id="create-modal" class="modal" onclick="if(event.target===this)closeCreateModal()">
-        <div class="modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto">
+        <div class="modal-content" style="max-width:660px">
+            <!-- Header -->
             <div class="modal-header">
-                <h2 id="modal-title" class="modal-title">New Notification</h2>
-                <button class="modal-close" onclick="closeCreateModal()">
-                    <i data-lucide="x"></i>
-                </button>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:32px;height:32px;background:var(--n-blue-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i data-lucide="bell" style="width:15px;height:15px;color:var(--n-blue)"></i>
+                    </div>
+                    <h2 id="modal-title" class="modal-title">New Notification</h2>
+                </div>
+                <button class="modal-close" onclick="closeCreateModal()"><i data-lucide="x"></i></button>
             </div>
-            <div class="modal-body">
 
-                <div class="form-group">
-                    <label class="form-label">Title <span style="color:#e53e3e">*</span></label>
-                    <input type="text" id="f-title" class="form-input" placeholder="Notification title" maxlength="100">
-                    <span style="font-size:11px;color:var(--text-tertiary)" id="title-count">0/100</span>
-                </div>
+            <div class="modal-body" style="padding:0">
 
-                <div class="form-group">
-                    <label class="form-label">Body <span style="color:#e53e3e">*</span></label>
-                    <textarea id="f-body" class="form-input" rows="3" placeholder="Notification message" maxlength="300" style="resize:vertical"></textarea>
-                    <span style="font-size:11px;color:var(--text-tertiary)" id="body-count">0/300</span>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Image URL <span style="font-size:11px;color:var(--text-tertiary)">(optional)</span></label>
-                    <input type="url" id="f-image" class="form-input" placeholder="https://...">
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label class="form-label">Platform</label>
-                        <select id="f-platform" class="form-input" onchange="updateTokenPreview()">
-                            <option value="all">All Platforms</option>
-                            <option value="android">Android Only</option>
-                            <option value="ios">iOS Only</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Audience</label>
-                        <select id="f-audience" class="form-input" onchange="updateTokenPreview()">
-                            <option value="all">All Devices</option>
-                            <option value="authenticated">Logged-in Users</option>
-                            <option value="unauthenticated">Anonymous Users</option>
-                            <option value="android">Android Devices</option>
-                            <option value="ios">iOS Devices</option>
-                        </select>
+                <!-- ── Live Preview ── -->
+                <div style="padding:16px 24px 0">
+                    <div id="notif-live-preview" style="background:linear-gradient(135deg,#0e0f1e,#161728);border:1px solid var(--n-border2);border-radius:14px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px">
+                        <div style="width:36px;height:36px;background:linear-gradient(135deg,#1a5c3a,#0d3320);border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">📿</div>
+                        <div style="flex:1;min-width:0">
+                            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                                <div id="prev-title" style="font-size:13px;font-weight:700;color:var(--n-text);font-family:var(--n-font);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Notification title</div>
+                                <div style="font-size:11px;color:var(--n-text3);flex-shrink:0">now</div>
+                            </div>
+                            <div id="prev-body" style="font-size:12px;color:var(--n-text2);margin-top:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Your message will appear here…</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="token-preview" id="token-preview">Select audience to preview token count</div>
-
-                <!-- Single-user targeting — always visible -->
-                <div id="user-target-row" style="margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg2)">
-                    <div style="font-size:12px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Send to one user only (optional)</div>
-                    <div style="display:flex;gap:8px;align-items:center">
-                        <input type="text" id="f-user-search" class="form-input" placeholder="Search by name" style="flex:1;font-size:13px" oninput="clearUserSelection()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchUser();}">
-                        <button type="button" class="btn btn-secondary" id="user-search-btn" onclick="searchUser()" style="white-space:nowrap;padding:7px 14px;font-size:13px">Search</button>
-                    </div>
-                    <div id="user-search-results" style="margin-top:6px"></div>
-                    <input type="hidden" id="f-target-user" value="">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Deep Link</label>
-                    <select id="f-dl-type" class="form-input" onchange="onDeepLinkChange()">
-                        <option value="none">None — Open app home</option>
-                        <option value="verse">Quran Verse</option>
-                        <option value="islamvoice">IslamVoice Episode</option>
-                        <option value="gencine">Gencine Item</option>
-                        <option value="adhkar">Adhkar / Dhikr Category</option>
-                        <option value="video">Video</option>
-                        <option value="streak">Streak Page</option>
-                        <option value="prayer">Prayer Times</option>
-                        <option value="update">Update Prompt</option>
-                    </select>
-                </div>
-
-                <div class="form-row-2" id="dl-surah-group">
-                    <div class="form-group">
-                        <label class="form-label">Surah Number</label>
-                        <input type="number" id="f-dl-surah" class="form-input" min="1" max="114" placeholder="1–114">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Ayah Number</label>
-                        <input type="number" id="f-dl-ayah" class="form-input" min="1" placeholder="Ayah #">
+                <!-- ── Section: Message ── -->
+                <div class="mf-section">
+                    <div class="mf-section-hdr"><i data-lucide="type"></i> Message</div>
+                    <div style="padding:0 24px 16px">
+                        <div class="form-group">
+                            <div style="display:flex;align-items:center;justify-content:space-between">
+                                <label class="form-label">Title <span style="color:var(--n-red)">*</span></label>
+                                <span style="font-size:11px;color:var(--n-text3)" id="title-count">0/100</span>
+                            </div>
+                            <input type="text" id="f-title" class="form-input" placeholder="Short, clear headline" maxlength="100" oninput="updatePreview()">
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px">
+                            <div style="display:flex;align-items:center;justify-content:space-between">
+                                <label class="form-label">Body <span style="color:var(--n-red)">*</span></label>
+                                <span style="font-size:11px;color:var(--n-text3)" id="body-count">0/300</span>
+                            </div>
+                            <textarea id="f-body" class="form-input" rows="3" placeholder="The message users will read" maxlength="300" style="resize:vertical" oninput="updatePreview()"></textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label">Image URL <span style="font-size:10px;color:var(--n-text3);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+                            <input type="url" id="f-image" class="form-input" placeholder="https://...">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group" id="dl-id-group">
-                    <label class="form-label" id="dl-id-label">ID</label>
-                    <input type="text" id="f-dl-id" class="form-input" placeholder="Enter ID">
-                </div>
-
-                <div class="form-group" id="dl-adhkar-group">
-                    <label class="form-label">Adhkar Category</label>
-                    <select id="f-dl-adhkar-cat" class="form-input">
-                        <option value="salawat">سەلاوات (Salawat)</option>
-                        <option value="morning">زکرێن بەیانی (Morning)</option>
-                        <option value="evening">زکرێن ئێvarê (Evening)</option>
-                        <option value="sleep">دema خەwê (Sleep)</option>
-                        <option value="waking">dema şiyarbûnê (Waking)</option>
-                        <option value="after_prayer">piştî nimêjê (After Prayer)</option>
-                        <option value="friday">ئەینیا هeyfa (Friday)</option>
-                        <option value="qunut">Qunut</option>
-                        <option value="lailat_qadr">Lailat al-Qadr</option>
-                        <option value="forgiveness">Forgiveness</option>
-                        <option value="protection">Protection</option>
-                    </select>
-                </div>
-
-                <!-- Scheduling -->
-                <div class="form-group">
-                    <label class="form-label">Schedule For</label>
-                    <div class="sched-picker">
-                        <!-- Date row -->
-                        <div class="sched-row" id="sched-date-row">
-                            <span class="sched-row-lbl">Date</span>
-                            <div class="sched-chips">
-                                <button type="button" class="sched-chip" id="sched-d0" onclick="schedPickDay(0)">Today</button>
-                                <button type="button" class="sched-chip" id="sched-d1" onclick="schedPickDay(1)">Tomorrow</button>
-                                <button type="button" class="sched-chip" id="sched-d2" onclick="schedPickDay(2)">—</button>
-                                <span class="sched-pick-wrap">
-                                    <button type="button" class="sched-chip" id="sched-d-custom" style="pointer-events:none">
-                                        <i data-lucide="calendar" style="width:12px;height:12px"></i> Pick
-                                    </button>
-                                    <input type="date" id="sched-date-hidden" onchange="schedPickCustomDate(this.value)">
-                                </span>
+                <!-- ── Section: Audience ── -->
+                <div class="mf-section">
+                    <div class="mf-section-hdr"><i data-lucide="users"></i> Audience</div>
+                    <div style="padding:0 24px 16px">
+                        <div class="form-row-2" style="margin-bottom:10px">
+                            <div class="form-group" style="margin-bottom:0">
+                                <label class="form-label">Platform</label>
+                                <select id="f-platform" class="form-input" onchange="updateTokenPreview()">
+                                    <option value="all">All Platforms</option>
+                                    <option value="android">Android Only</option>
+                                    <option value="ios">iOS Only</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0">
+                                <label class="form-label">Audience</label>
+                                <select id="f-audience" class="form-input" onchange="updateTokenPreview()">
+                                    <option value="all">All Devices</option>
+                                    <option value="authenticated">Logged-in Users</option>
+                                    <option value="unauthenticated">Anonymous Users</option>
+                                    <option value="android">Android Devices</option>
+                                    <option value="ios">iOS Devices</option>
+                                </select>
                             </div>
                         </div>
-                        <!-- Time row -->
-                        <div class="sched-row" id="sched-time-row">
-                            <span class="sched-row-lbl">Time</span>
-                            <div class="sched-chips">
-                                <button type="button" class="sched-chip" id="sched-t6"  onclick="schedPickTime(6,0)">6 AM</button>
-                                <button type="button" class="sched-chip" id="sched-t8"  onclick="schedPickTime(8,0)">8 AM</button>
-                                <button type="button" class="sched-chip" id="sched-t9"  onclick="schedPickTime(9,0)">9 AM</button>
-                                <button type="button" class="sched-chip" id="sched-t12" onclick="schedPickTime(12,0)">12 PM</button>
-                                <button type="button" class="sched-chip" id="sched-t15" onclick="schedPickTime(15,0)">3 PM</button>
-                                <button type="button" class="sched-chip" id="sched-t18" onclick="schedPickTime(18,0)">6 PM</button>
-                                <button type="button" class="sched-chip" id="sched-t20" onclick="schedPickTime(20,0)">8 PM</button>
-                                <span class="sched-pick-wrap">
-                                    <button type="button" class="sched-chip" style="pointer-events:none">
-                                        <i data-lucide="clock" style="width:12px;height:12px"></i> Other
-                                    </button>
-                                    <input type="time" id="sched-time-hidden" onchange="schedPickCustomTime(this.value)">
-                                </span>
+                        <div class="token-preview" id="token-preview" style="margin-bottom:10px">Select audience to see device count</div>
+                        <!-- Single-user targeting -->
+                        <div id="user-target-row" style="background:var(--n-surface2);border:1px solid var(--n-border);border-radius:10px;padding:12px">
+                            <div style="font-size:10px;font-weight:700;color:var(--n-text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Target one user (optional)</div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input type="text" id="f-user-search" class="form-input" placeholder="Search by name or email" style="flex:1;font-size:13px" oninput="clearUserSelection()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchUser();}">
+                                <button type="button" class="btn btn-secondary" id="user-search-btn" onclick="searchUser()" style="white-space:nowrap;padding:7px 14px;font-size:13px;flex-shrink:0">Search</button>
+                            </div>
+                            <div id="user-search-results" style="margin-top:6px"></div>
+                            <input type="hidden" id="f-target-user" value="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Section: Deep Link ── -->
+                <div class="mf-section">
+                    <div class="mf-section-hdr"><i data-lucide="link-2"></i> Deep Link <span style="font-size:10px;color:var(--n-text3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px">Where to go when tapped</span></div>
+                    <div style="padding:0 24px 16px">
+                        <select id="f-dl-type" class="form-input" onchange="onDeepLinkChange()" style="margin-bottom:8px">
+                            <option value="none">🏠 Open App Home</option>
+                            <option value="verse">📖 Quran Verse</option>
+                            <option value="adhkar">📿 Adhkar / Dhikr Category</option>
+                            <option value="prayer">🕌 Prayer Times</option>
+                            <option value="islamvoice">🎙 IslamVoice Episode</option>
+                            <option value="gencine">💎 Gencine Item</option>
+                            <option value="streak">🔥 Streak Page</option>
+                            <option value="update">⬆️ Update Prompt</option>
+                            <option value="video">🎬 Video</option>
+                        </select>
+                        <div class="form-row-2" id="dl-surah-group">
+                            <div class="form-group" style="margin-bottom:0"><label class="form-label">Surah</label><input type="number" id="f-dl-surah" class="form-input" min="1" max="114" placeholder="1–114"></div>
+                            <div class="form-group" style="margin-bottom:0"><label class="form-label">Ayah</label><input type="number" id="f-dl-ayah" class="form-input" min="1" placeholder="Ayah #"></div>
+                        </div>
+                        <div class="form-group" id="dl-id-group" style="margin-bottom:0">
+                            <label class="form-label" id="dl-id-label">ID</label>
+                            <input type="text" id="f-dl-id" class="form-input" placeholder="Enter ID">
+                        </div>
+                        <div class="form-group" id="dl-adhkar-group" style="margin-bottom:0">
+                            <label class="form-label">Category</label>
+                            <select id="f-dl-adhkar-cat" class="form-input">
+                                <option value="salawat">📿 سەلاوات — Salawat</option>
+                                <option value="morning">🌅 زکرێن بەیانی — Morning</option>
+                                <option value="evening">🌆 Evening</option>
+                                <option value="sleep">🌙 Sleep</option>
+                                <option value="waking">☀️ Waking</option>
+                                <option value="after_prayer">🕌 After Prayer</option>
+                                <option value="friday">⭐ Friday</option>
+                                <option value="qunut">🤲 Qunut</option>
+                                <option value="lailat_qadr">✨ Lailat al-Qadr</option>
+                                <option value="forgiveness">💙 Forgiveness</option>
+                                <option value="protection">🛡 Protection</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Section: Schedule ── -->
+                <div class="mf-section">
+                    <div class="mf-section-hdr"><i data-lucide="calendar-clock"></i> Schedule</div>
+                    <div style="padding:0 24px 16px">
+                        <div class="sched-picker">
+                            <div class="sched-row" id="sched-date-row">
+                                <span class="sched-row-lbl">Date</span>
+                                <div class="sched-chips">
+                                    <button type="button" class="sched-chip" id="sched-d0" onclick="schedPickDay(0)">Today</button>
+                                    <button type="button" class="sched-chip" id="sched-d1" onclick="schedPickDay(1)">Tomorrow</button>
+                                    <button type="button" class="sched-chip" id="sched-d2" onclick="schedPickDay(2)">—</button>
+                                    <span class="sched-pick-wrap">
+                                        <button type="button" class="sched-chip" id="sched-d-custom" style="pointer-events:none"><i data-lucide="calendar" style="width:12px;height:12px"></i> Pick</button>
+                                        <input type="date" id="sched-date-hidden" onchange="schedPickCustomDate(this.value)">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="sched-row" id="sched-time-row">
+                                <span class="sched-row-lbl">Time</span>
+                                <div class="sched-chips">
+                                    <button type="button" class="sched-chip" id="sched-t6"  onclick="schedPickTime(6,0)">6 AM</button>
+                                    <button type="button" class="sched-chip" id="sched-t8"  onclick="schedPickTime(8,0)">8 AM</button>
+                                    <button type="button" class="sched-chip" id="sched-t9"  onclick="schedPickTime(9,0)">9 AM</button>
+                                    <button type="button" class="sched-chip" id="sched-t12" onclick="schedPickTime(12,0)">12 PM</button>
+                                    <button type="button" class="sched-chip" id="sched-t15" onclick="schedPickTime(15,0)">3 PM</button>
+                                    <button type="button" class="sched-chip" id="sched-t18" onclick="schedPickTime(18,0)">6 PM</button>
+                                    <button type="button" class="sched-chip" id="sched-t20" onclick="schedPickTime(20,0)">8 PM</button>
+                                    <span class="sched-pick-wrap">
+                                        <button type="button" class="sched-chip" style="pointer-events:none"><i data-lucide="clock" style="width:12px;height:12px"></i> Other</button>
+                                        <input type="time" id="sched-time-hidden" onchange="schedPickCustomTime(this.value)">
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- Recurrence row -->
+                            <div class="sched-row" style="border-bottom:none" id="recurrence-group">
+                                <span class="sched-row-lbl">Repeat</span>
+                                <div class="sched-chips">
+                                    <label class="sched-chip" style="cursor:pointer;user-select:none">
+                                        <input type="radio" name="recurrence" id="rec-none" value="none" checked style="display:none"> Once
+                                    </label>
+                                    <label class="sched-chip" style="cursor:pointer;user-select:none">
+                                        <input type="radio" name="recurrence" id="rec-daily" value="daily" style="display:none"> Daily
+                                    </label>
+                                    <label class="sched-chip" style="cursor:pointer;user-select:none">
+                                        <input type="radio" name="recurrence" id="rec-weekly" value="weekly" style="display:none"> Weekly
+                                    </label>
+                                    <select id="f-recurrence-day" class="form-input" style="width:auto;padding:4px 10px;font-size:12px;display:none;border-radius:20px;height:auto">
+                                        <option value="0">Sunday</option>
+                                        <option value="1">Monday</option>
+                                        <option value="2">Tuesday</option>
+                                        <option value="3">Wednesday</option>
+                                        <option value="4">Thursday</option>
+                                        <option value="5">Friday</option>
+                                        <option value="6">Saturday</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="sched-foot">
+                                <div id="sched-summary"><span style="color:var(--n-text3)">No schedule — will save as draft</span></div>
+                                <button type="button" class="sched-foot-clear" id="sched-clear-btn" onclick="clearSchedule()" style="display:none"><i data-lucide="x" style="width:12px;height:12px"></i> Clear</button>
                             </div>
                         </div>
-                        <!-- Footer summary -->
-                        <div class="sched-foot">
-                            <div id="sched-summary"><span style="color:var(--text-tertiary)">Not scheduled — will save as draft</span></div>
-                            <button type="button" class="sched-foot-clear" id="sched-clear-btn" onclick="clearSchedule()" style="display:none">
-                                <i data-lucide="x" style="width:12px;height:12px"></i> Clear
-                            </button>
-                        </div>
+                        <input type="datetime-local" id="f-scheduled-at" style="display:none">
                     </div>
-                    <!-- Hidden value read by getFormData() -->
-                    <input type="datetime-local" id="f-scheduled-at" style="display:none">
                 </div>
 
-                <!-- Recurrence -->
-                <div class="form-group" id="recurrence-group">
-                    <label class="form-label">Repeat</label>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-primary)">
-                            <input type="radio" name="recurrence" id="rec-none" value="none" checked> Once
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-primary)">
-                            <input type="radio" name="recurrence" id="rec-daily" value="daily"> Every day
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-primary)">
-                            <input type="radio" name="recurrence" id="rec-weekly" value="weekly"> Weekly on
-                        </label>
-                        <select id="f-recurrence-day" class="form-input" style="width:auto;padding:5px 10px;display:none">
-                            <option value="0">Sunday</option>
-                            <option value="1">Monday</option>
-                            <option value="2">Tuesday</option>
-                            <option value="3">Wednesday</option>
-                            <option value="4">Thursday</option>
-                            <option value="5">Friday</option>
-                            <option value="6">Saturday</option>
-                        </select>
-                    </div>
-                    <span style="font-size:11px;color:var(--text-tertiary);margin-top:2px">Recurring notifications auto-schedule the next occurrence after each send.</span>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Internal Notes <span style="font-size:11px;color:var(--text-tertiary)">(not sent)</span></label>
-                    <textarea id="f-notes" class="form-input" rows="2" placeholder="Campaign notes, target info, etc."></textarea>
-                </div>
-
-                <div class="form-group" style="margin-bottom:0">
-                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:var(--bg-active);border:1px solid var(--border-medium);border-radius:8px">
-                        <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer">
-                        <div>
-                            <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Pin as Template</div>
-                            <div style="font-size:11px;color:var(--text-secondary);margin-top:1px">Stays pinned at the top. Clicking Send always keeps this template intact.</div>
+                <!-- ── Section: Options ── -->
+                <div class="mf-section" style="border-bottom:none">
+                    <div class="mf-section-hdr"><i data-lucide="settings-2"></i> Options</div>
+                    <div style="padding:0 24px 16px;display:flex;flex-direction:column;gap:10px">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label">Internal Notes <span style="font-size:10px;color:var(--n-text3);font-weight:400;text-transform:none;letter-spacing:0">(not sent to users)</span></label>
+                            <textarea id="f-notes" class="form-input" rows="2" placeholder="Campaign notes, target audience, goals…"></textarea>
                         </div>
-                    </label>
+                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:var(--n-surface2);border:1px solid var(--n-border);border-radius:10px;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--n-purple)'" onmouseleave="this.style.borderColor='var(--n-border)'">
+                            <input type="checkbox" id="f-is-template" style="width:16px;height:16px;accent-color:var(--n-purple);cursor:pointer;flex-shrink:0">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--n-text)">📌 Pin as Template</div>
+                                <div style="font-size:11px;color:var(--n-text2);margin-top:2px">Stays in Templates tab. Sending from Templates always keeps the original intact.</div>
+                            </div>
+                        </label>
+                        <div id="modal-error" style="color:var(--n-red);font-size:13px;background:var(--n-red-bg);border:1px solid rgba(244,63,94,.2);border-radius:8px;padding:10px 14px;display:none"></div>
+                    </div>
                 </div>
-
-                <div id="modal-error" style="color:#e53e3e;font-size:13px;margin-top:8px;display:none"></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
-                <button class="btn btn-secondary" onclick="saveNotification('draft')">Save Draft</button>
-                <button class="btn btn-primary" id="save-btn" onclick="saveNotification()">
+
+            <!-- Footer -->
+            <div class="modal-footer" style="gap:8px">
+                <button class="btn btn-secondary" onclick="closeCreateModal()" style="margin-right:auto">Cancel</button>
+                <button class="btn btn-secondary" onclick="saveNotification('draft')" style="font-size:13px">Save Draft</button>
+                <button class="btn btn-primary" id="save-btn" onclick="saveNotification()" style="font-size:13px">
                     <i data-lucide="save"></i> Save
                 </button>
-                <button class="btn btn-primary btn-send-green" id="save-send-btn" onclick="saveAndSend()">
-                    <i data-lucide="send"></i> Save &amp; Send Now
+                <button class="btn btn-primary btn-send-green" id="save-send-btn" onclick="saveAndSend()" style="font-size:13px">
+                    <i data-lucide="send"></i> Send Now
                 </button>
             </div>
         </div>
@@ -1004,11 +1034,16 @@
                 document.getElementById('sched-d2').textContent = days[d.getDay()];
             })();
 
-            // Weekly day picker visibility + re-sync summary (clears/adds past warning)
+            // Weekly day picker visibility + re-sync summary + chip highlight
             document.querySelectorAll('input[name="recurrence"]').forEach(function(radio) {
                 radio.addEventListener('change', function() {
                     document.getElementById('f-recurrence-day').style.display =
                         this.value === 'weekly' ? 'inline-block' : 'none';
+                    // Highlight selected recurrence chip (JS fallback for :has() CSS)
+                    document.querySelectorAll('#recurrence-group .sched-chip').forEach(function(chip) {
+                        var r = chip.querySelector('input[type="radio"]');
+                        if (r) chip.classList.toggle('active', r.checked);
+                    });
                     schedSync();
                 });
             });
@@ -1030,6 +1065,16 @@
                 applyFilters();
             });
         });
+
+        // ── Live preview ─────────────────────────────────────────
+        function updatePreview() {
+            var t = document.getElementById('f-title').value || 'Notification title';
+            var b = document.getElementById('f-body').value || 'Your message will appear here…';
+            var pt = document.getElementById('prev-title');
+            var pb = document.getElementById('prev-body');
+            if (pt) pt.textContent = t;
+            if (pb) pb.textContent = b;
+        }
 
         // ── API ──────────────────────────────────────────────────
         async function notifAPI(action, payload) {
@@ -1714,6 +1759,7 @@
             document.getElementById('create-modal').classList.add('active');
             document.getElementById('f-title').focus();
             updateTokenPreview();
+            updatePreview();
             lucide.createIcons();
         }
 
@@ -1751,6 +1797,7 @@
             document.getElementById('f-is-template').checked = !!n.is_template;
             onDeepLinkChange();
             updateTokenPreview();
+            updatePreview();
             document.getElementById('create-modal').classList.add('active');
             lucide.createIcons();
         }
@@ -1775,6 +1822,10 @@
             schedInitPicker(null);
             document.getElementById('rec-none').checked = true;
             document.getElementById('f-recurrence-day').style.display = 'none';
+            document.querySelectorAll('#recurrence-group .sched-chip').forEach(function(chip) {
+                var r = chip.querySelector('input[type="radio"]');
+                if (r) chip.classList.toggle('active', r.checked);
+            });
             document.getElementById('f-is-template').checked = false;
             document.getElementById('title-count').textContent = '0/100';
             document.getElementById('body-count').textContent = '0/300';
