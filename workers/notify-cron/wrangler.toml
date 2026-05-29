@@ -1,0 +1,9 @@
+name            = "notify-cron"
+main            = "index.js"
+compatibility_date = "2024-09-23"
+
+[vars]
+SITE_URL = "https://tafsirkurd.com"
+
+[triggers]
+crons = ["*/5 * * * *"]
