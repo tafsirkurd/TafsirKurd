@@ -10,6 +10,11 @@ const CORS = {
 };
 
 export async function onRequest(context) {
+    try { return await _handleRequest(context); }
+    catch (e) { return new Response(JSON.stringify({ success: false, error: 'Internal error: ' + (e?.message || e) }), { status: 500, headers: CORS }); }
+}
+
+async function _handleRequest(context) {
     const { request, env } = context;
     if (request.method === 'OPTIONS') return new Response(null, { status: 200, headers: CORS });
     if (request.method !== 'POST') return json({ error: 'POST only' }, 405);
@@ -230,7 +235,7 @@ export async function onRequest(context) {
                 .eq('title', notif.title)
                 .eq('recurrence', notif.recurrence)
                 .in('status', ['scheduled', 'sending', 'sent']);
-            const existingTimes = new Set((existing || []).map(r => r.scheduled_at ? new Date(r.scheduled_at).toISOString() : null).filter(Boolean));
+            const existingTimes = new Set((existing || []).map(r => { try { return r.scheduled_at ? new Date(r.scheduled_at).toISOString() : null; } catch { return null; } }).filter(Boolean));
 
             const toInsert = [];
             for (let i = 1; i <= extra; i++) {
