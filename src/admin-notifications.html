@@ -1032,6 +1032,9 @@
         // ── Load ─────────────────────────────────────────────────
         async function loadPage() {
             loadStats();
+            // Backfill any missing future occurrences for recurring notifications,
+            // then load so the table shows all scheduled rows immediately.
+            try { await notifAPI('backfill_recurring'); } catch(e) {}
             loadNotifications();
         }
 

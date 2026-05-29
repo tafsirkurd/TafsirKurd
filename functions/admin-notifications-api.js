@@ -202,6 +202,61 @@ export async function onRequest(context) {
 
     const { action } = body;
 
+    // ── BACKFILL RECURRING ────────────────────────────────────────
+    // Finds all scheduled recurring notifications and pre-creates any missing
+    // future occurrences (weekly → 8 total, daily → 30 total).
+    if (action === 'backfill_recurring') {
+        const { data: recurring } = await supabase
+            .from('admin_notifications')
+            .select('*')
+            .eq('status', 'scheduled')
+            .neq('recurrence', 'none')
+            .eq('is_template', false);
+
+        if (!recurring?.length) return json({ success: true, created: 0 });
+
+        let totalCreated = 0;
+        for (const notif of recurring) {
+            if (!notif.scheduled_at) continue;
+            const extra = notif.recurrence === 'daily' ? 29 : 7;
+            const stepDays = notif.recurrence === 'daily' ? 1 : 7;
+            const ref = new Date(notif.scheduled_at);
+            const h = ref.getUTCHours(), mn = ref.getUTCMinutes();
+
+            // Fetch all already-existing scheduled occurrences for this series
+            const { data: existing } = await supabase
+                .from('admin_notifications')
+                .select('scheduled_at')
+                .eq('title', notif.title)
+                .eq('recurrence', notif.recurrence)
+                .in('status', ['scheduled', 'sending', 'sent']);
+            const existingTimes = new Set((existing || []).map(r => r.scheduled_at ? new Date(r.scheduled_at).toISOString() : null).filter(Boolean));
+
+            const toInsert = [];
+            for (let i = 1; i <= extra; i++) {
+                const d = new Date(ref);
+                d.setUTCDate(d.getUTCDate() + i * stepDays);
+                d.setUTCHours(h, mn, 0, 0);
+                const iso = d.toISOString();
+                if (!existingTimes.has(iso) && d > new Date()) {
+                    toInsert.push({
+                        title: notif.title, body: notif.body, image_url: notif.image_url || null,
+                        platform: notif.platform || 'all', audience: notif.audience || 'all',
+                        deep_link_type: notif.deep_link_type || 'none', deep_link_id: notif.deep_link_id || null,
+                        status: 'scheduled', scheduled_at: iso,
+                        recurrence: notif.recurrence, recurrence_day: notif.recurrence_day || null,
+                        notes: notif.notes || null, is_template: false, created_by: adminEmail,
+                    });
+                }
+            }
+            if (toInsert.length) {
+                await supabase.from('admin_notifications').insert(toInsert).catch(() => {});
+                totalCreated += toInsert.length;
+            }
+        }
+        return json({ success: true, created: totalCreated });
+    }
+
     // ── LIST ──────────────────────────────────────────────────────
     if (action === 'list') {
         let q = supabase
