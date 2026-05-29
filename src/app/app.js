@@ -12053,7 +12053,7 @@ function renderIvError(msg,type){
   card.appendChild(icoWrap);
 
   // Title
-  var titleText=isOffline?(tSafe('iv.error.offline_title')||'ئینتەرنێت نیە'):(isTimeout?(tSafe('iv.error.timeout_title')||'وەخت تەواو بوو'):(tSafe('iv.error.title')||'کێشەیەک هەیە'));
+  var titleText=isOffline?(tSafe('iv.error.offline_title')||'ئینتەرنێت نینە'):(isTimeout?(tSafe('iv.error.timeout_title')||'وەخت تەواو بوو'):(tSafe('iv.error.title')||'کێشەیەک هەیە'));
   card.appendChild(el('div','iv-state-title',titleText));
 
   // Subtitle — show the technical message only if no i18n title was resolved
