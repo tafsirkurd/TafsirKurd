@@ -2504,7 +2504,7 @@ Press Ctrl+Shift+C to copy this report
 
                 let oauthRedirectTo;
                 if (isNative) {
-                    oauthRedirectTo = 'tafsirkurd://auth';
+                    oauthRedirectTo = 'https://tafsirkurd.com/auth/callback';
                 } else {
                     const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
                     oauthRedirectTo = window.location.origin + '/login.html?redirect=' + encodeURIComponent(redirectDest);

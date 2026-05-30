@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signing in…</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0d0d0d;color:#e0e0e0;font-family:-apple-system,sans-serif;
+       display:flex;flex-direction:column;align-items:center;justify-content:center;
+       height:100vh;gap:20px;padding:24px;text-align:center}
+  .spinner{width:36px;height:36px;border:3px solid #222;border-top-color:#4caf50;
+           border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  p{color:#888;font-size:15px;line-height:1.5}
+  a{color:#4caf50;font-size:15px;text-decoration:none;padding:12px 24px;
+    border:1px solid #4caf50;border-radius:8px;display:none;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="spinner"></div>
+<p>Signing in…</p>
+<a id="btn" href="#">Tap here if the app did not open</a>
+
+<script>
+// OAuth relay page — bridges SFSafariViewController to the Capacitor app.
+//
+// iOS 17+ SFSafariViewController does not forward HTTP 302 redirects to custom
+// URL schemes. Supabase redirects here (https://tafsirkurd.com/auth/callback)
+// instead of directly to tafsirkurd://. This page then does a JavaScript
+// window.location.href navigation to the custom scheme, which iOS handles
+// correctly regardless of version.
+//
+// Supabase sends all params as query string (?code=... or ?error=...).
+// Hash params (?#access_token=...) are forwarded too for the implicit grant fallback.
+
+var search = window.location.search;   // e.g. ?code=abc123
+var hash   = window.location.hash;    // e.g. #access_token=...  (implicit grant fallback)
+var target = 'tafsirkurd://auth/callback' + search + hash;
+
+document.getElementById('btn').href = target;
+
+// Immediate JavaScript redirect — works on all iOS versions in SFSafariViewController
+window.location.href = target;
+
+// Fallback: show manual link if iOS did not open the app within 2 seconds
+setTimeout(function() {
+  document.getElementById('btn').style.display = 'block';
+}, 2000);
+</script>
+</body>
+</html>
