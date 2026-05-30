@@ -11316,7 +11316,10 @@ App.openLogin=function(){
     if(btn){btn.disabled=true;btn.style.opacity='0.6';}
 
     var _isNative=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
-    var redirectUrl=_isNative?'com.tafsirkurd.app://auth/callback':(window.location.origin+'/app/index.html');
+    // Use 'tafsirkurd://' — this scheme IS registered in Info.plist CFBundleURLSchemes.
+    // 'com.tafsirkurd.app://' was NOT registered, so SFSafariViewController couldn't
+    // intercept it and Safari showed "address is invalid".
+    var redirectUrl=_isNative?'tafsirkurd://auth/callback':(window.location.origin+'/app/index.html');
 
     S.supabase.auth.signInWithOAuth({
       provider:'google',

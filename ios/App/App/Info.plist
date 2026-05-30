@@ -53,6 +53,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>tafsirkurd</string>
+				<string>com.tafsirkurd.app</string>
 			</array>
 		</dict>
 	</array>
