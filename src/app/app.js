@@ -11325,7 +11325,11 @@ App.openLogin=function(){
         return;
       }
       if(resp.data&&resp.data.url){
-        if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
+        // Only use Capacitor Browser plugin on actual native platforms.
+        // On web, Capacitor.Plugins.Browser exists but calls window.open() which
+        // gets blocked by popup blockers and breaks the OAuth redirect flow.
+        var _isNativePlatform=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+        if(_isNativePlatform&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
           window.Capacitor.Plugins.Browser.open({url:resp.data.url});
         }else{
           window.location.href=resp.data.url;
