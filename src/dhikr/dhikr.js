@@ -3093,26 +3093,6 @@ window.GencineUI = {
       }
     });
 
-    var renderPage = function(pageNum, slot, pdf) {
-      if (slot._rendered || slot._rendering) return;
-      slot._rendering = true;
-      pdf.getPage(pageNum).then(function(page) {
-        var dpr = window.devicePixelRatio || 1;
-        var w = (pagesWrap.offsetWidth || window.innerWidth) - 4;
-        var uv = page.getViewport({ scale: 1 });
-        var vp = page.getViewport({ scale: (w / uv.width) * dpr });
-        var cv = document.createElement('canvas');
-        cv.width = vp.width; cv.height = vp.height;
-        cv.style.cssText = 'display:block;width:' + w + 'px;height:' + Math.floor(vp.height / dpr) + 'px;';
-        page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise.then(function() {
-          slot.style.minHeight = '';
-          while (slot.firstChild) slot.removeChild(slot.firstChild);
-          slot.appendChild(cv);
-          slot._rendered = true; slot._rendering = false;
-        }).catch(function() { slot._rendering = false; });
-      }).catch(function() { slot._rendering = false; });
-    };
-
     var doLoad = function(pdf) {
       if (self._currentBook !== book) return; // user switched books while loading — discard
       self._pdfDoc = pdf;
@@ -3136,19 +3116,101 @@ window.GencineUI = {
         pagesWrap.appendChild(slot);
         slots.push(slot);
       }
+
+      // ── Virtualized render queue ────────────────────────────────────────────
+      // Root cause of blank-screen crash: IntersectionObserver fires for every
+      // page entering the extended viewport during fast scroll. With no concurrency
+      // limit, 20+ simultaneous canvas allocations exhaust iOS GPU memory
+      // (~12 MB/page × 3× DPR × 20 pages = OOM → WKWebView process killed).
+      //
+      // Fix:
+      //   MAX_RQ=2   — max concurrent PDF.js renders at any time
+      //   MAX_KEPT=6 — max canvas elements alive in DOM; farthest evicted first
+      //   _scrollingPdf — rendering pauses during active scroll so fast swipes
+      //                   don't flood the queue with stale pages
+      //   DPR cap at 2  — 3× retina across 200+ pages = instant OOM; 2× is sharp
+      var _rq = [], _rqActive = 0, _renderedNums = [];
+      var _scrollingPdf = false, _scrollPdfTimer = null;
+      var MAX_RQ = 2, MAX_KEPT = 6;
+      var _dpr = Math.min(window.devicePixelRatio || 1,
+        document.documentElement.classList.contains('perf-critical') ? 1 : 2);
+
+      function _evictFarPages(anchor) {
+        while (_renderedNums.length > MAX_KEPT) {
+          var fIdx = 0;
+          for (var ei = 1; ei < _renderedNums.length; ei++) {
+            if (Math.abs(_renderedNums[ei]-anchor) > Math.abs(_renderedNums[fIdx]-anchor)) fIdx = ei;
+          }
+          var evP = _renderedNums.splice(fIdx, 1)[0];
+          var evS = slots[evP - 1];
+          if (evS) {
+            var evC = evS.querySelector('canvas');
+            if (evC) {
+              try { var evCtx = evC.getContext('2d'); if(evCtx) evCtx.clearRect(0,0,evC.width,evC.height); } catch(e){}
+              evC.width = 0; evC.height = 0;
+              if (evC.parentNode) evC.parentNode.removeChild(evC);
+            }
+            evS._rendered = false; evS._rendering = false;
+            evS.style.minHeight = '300px';
+          }
+        }
+      }
+
+      function _drainRQ() {
+        if (_scrollingPdf) return;
+        while (_rqActive < MAX_RQ && _rq.length > 0) {
+          var task = _rq.shift();
+          if (!task || task.slot._rendered || task.slot._rendering) continue;
+          task.slot._rendering = true;
+          _rqActive++;
+          (function(tk) {
+            try {
+              tk.pdf.getPage(tk.n).then(function(page) {
+                if (!tk.slot._rendering) { _rqActive = Math.max(0,_rqActive-1); _drainRQ(); return null; }
+                var w = (pagesWrap.offsetWidth || window.innerWidth) - 4;
+                var uv = page.getViewport({scale:1});
+                var vp = page.getViewport({scale:(w/uv.width)*_dpr});
+                var cv = document.createElement('canvas');
+                cv.width = vp.width; cv.height = vp.height;
+                cv.style.cssText = 'display:block;width:'+w+'px;height:'+Math.floor(vp.height/_dpr)+'px;';
+                return page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise
+                  .then(function() {
+                    if (!tk.slot._rendering) { cv.width=0; cv.height=0; return; }
+                    tk.slot.style.minHeight = '';
+                    while (tk.slot.firstChild) tk.slot.removeChild(tk.slot.firstChild);
+                    tk.slot.appendChild(cv);
+                    tk.slot._rendered = true; tk.slot._rendering = false;
+                    if (_renderedNums.indexOf(tk.n) < 0) _renderedNums.push(tk.n);
+                    _evictFarPages(tk.n);
+                  }).catch(function(){ tk.slot._rendering = false; });
+              }).catch(function(){ tk.slot._rendering = false; })
+              .then(function(){ _rqActive = Math.max(0,_rqActive-1); _drainRQ(); });
+            } catch(e) { tk.slot._rendering = false; _rqActive = Math.max(0,_rqActive-1); _drainRQ(); }
+          })(task);
+        }
+      }
+
+      function _enqueueRender(n, sl, pd) {
+        if (!sl || sl._rendered || sl._rendering) return;
+        for (var qi = _rq.length-1; qi >= 0; qi--) { if (_rq[qi].slot === sl) _rq.splice(qi,1); }
+        _rq.push({n:n, slot:sl, pdf:pd});
+        if (_rq.length > 12) _rq.splice(0, _rq.length - 12); // cap queue during fast scroll
+        _drainRQ();
+      }
+
       var obs = new IntersectionObserver(function(entries) {
         entries.forEach(function(e) {
           if (!e.isIntersecting) return;
           var n = parseInt(e.target.getAttribute('data-page'));
-          renderPage(n, e.target, pdf);
-          if (n > 1 && slots[n - 2]) renderPage(n - 1, slots[n - 2], pdf);
-          if (n < _totalPages && slots[n]) renderPage(n + 1, slots[n], pdf);
+          _enqueueRender(n, e.target, pdf);
+          if (n > 1 && slots[n-2]) _enqueueRender(n-1, slots[n-2], pdf);
+          if (n < _totalPages && slots[n]) _enqueueRender(n+1, slots[n], pdf);
         });
-      }, { rootMargin: '400px 0px', threshold: 0 });
+      }, {rootMargin: '200px 0px', threshold: 0});
       self._pdfPageObs = obs;
       slots.forEach(function(s) { obs.observe(s); });
-      renderPage(1, slots[0], pdf);
-      if (slots[1]) renderPage(2, slots[1], pdf);
+      _enqueueRender(1, slots[0], pdf);
+      if (slots[1]) _enqueueRender(2, slots[1], pdf);
 
       /* ── Page navigation ── */
       var _curPage = (_pg && _pg > 1) ? _pg : 1;
@@ -3197,9 +3259,9 @@ window.GencineUI = {
         var slot = slots[n - 1];
         if (!slot) return;
         _jumpActive = true;
-        renderPage(n, slot, pdf);
-        if (n > 1) renderPage(n - 1, slots[n - 2], pdf);
-        if (n < _totalPages) renderPage(n + 1, slots[n], pdf);
+        _enqueueRender(n, slot, pdf);
+        if (n > 1) _enqueueRender(n - 1, slots[n - 2], pdf);
+        if (n < _totalPages) _enqueueRender(n + 1, slots[n], pdf);
 
         _scrollToSlot(slot);
 
@@ -3245,6 +3307,10 @@ window.GencineUI = {
       var _navScrollHandler = function() {
         clearTimeout(_navScrollTimer);
         _navScrollTimer = setTimeout(_syncPage, 80);
+        // Pause PDF rendering during scroll — prevents stale canvas allocations
+        _scrollingPdf = true;
+        clearTimeout(_scrollPdfTimer);
+        _scrollPdfTimer = setTimeout(function() { _scrollingPdf = false; _drainRQ(); }, 200);
       };
       if (_panelEl) _panelEl.addEventListener('scroll', _navScrollHandler, {passive:true});
 
@@ -3270,14 +3336,14 @@ window.GencineUI = {
       }
       if (_prevBtn) _prevBtn.onclick = function() {
         if (_curPage > 1) {
-          renderPage(_curPage - 1, slots[_curPage - 2], pdf);
+          _enqueueRender(_curPage - 1, slots[_curPage - 2], pdf);
           _scrollToSlot(slots[_curPage - 2]);
           _curPage--; _updatePageNav(); _saveProgress();
         }
       };
       if (_nextBtn) _nextBtn.onclick = function() {
         if (_curPage < _totalPages) {
-          renderPage(_curPage, slots[_curPage], pdf);
+          _enqueueRender(_curPage, slots[_curPage], pdf);
           _scrollToSlot(slots[_curPage]);
           _curPage++; _updatePageNav(); _saveProgress();
         }
@@ -3355,6 +3421,9 @@ window.GencineUI = {
         if (_resumeBanner && _resumeBanner.parentNode) _resumeBanner.parentNode.removeChild(_resumeBanner);
         clearInterval(_periodicSave);
         if (_visObs) _visObs.disconnect();
+        // Stop render queue — prevents in-flight renders completing into freed slots
+        _rq = []; _rqActive = 0; _renderedNums = [];
+        clearTimeout(_scrollPdfTimer); _scrollingPdf = false;
         // Free canvas GPU backing stores — iOS WebKit + Android Chromium both need this
         // clearRect first (Chromium doesn't always GC from resize alone), then zero dims
         slots.forEach(function(s) {
