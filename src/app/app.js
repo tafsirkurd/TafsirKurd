@@ -6432,17 +6432,22 @@ function _dlMgrSec(label,icoClass){
   return s;
 }
 
-function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete){
+// opts: {circular:true} for reciter avatars
+function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete,opts){
+  var circular=!!(opts&&opts.circular);
   var row=el('div','');
   row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-subtle,rgba(128,128,128,.07))';
 
   // Thumbnail / icon
+  var thSize=circular?'44px':'40px';
+  var thH=circular?'44px':'52px';
+  var thRadius=circular?'50%':'6px';
   var th=el('div','');
-  th.style.cssText='width:40px;height:52px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.25rem';
+  th.style.cssText='width:'+thSize+';height:'+thH+';border-radius:'+thRadius+';overflow:hidden;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.25rem';
   if(coverUrl){
     var cImg=document.createElement('img');cImg.src=coverUrl;cImg.style.cssText='width:100%;height:100%;object-fit:cover';
-    cImg.onerror=function(){this.style.display='none';};th.appendChild(cImg);
-  }else if(flag){th.textContent=flag;}
+    cImg.onerror=function(){this.parentNode.textContent=flag||'';};th.appendChild(cImg);
+  }else if(flag){th.textContent=flag;th.style.fontSize='1.4rem';}
   else{var thIco=icon('fas fa-headphones');thIco.style.cssText='color:var(--text-tertiary);font-size:.9rem';th.appendChild(thIco);}
   row.appendChild(th);
 
@@ -6564,9 +6569,14 @@ function _renderDlMgrBody(){
         noA.textContent=t('dl.no_audio')||'هیچ دەنگێک نەهاتیە داونلۆد کرن';content.appendChild(noA);
       } else {
         audioAll.forEach(function(r){
+          // Real name + photo from app.js module data — avoids showing raw IDs
+          var rInfo=RECITERS.filter(function(x){return x.id===r.id;})[0]||null;
+          var realName=rInfo?rInfo.name:r.name;
+          var flag=rInfo?(rInfo.flag||''):(r.flag||'');
+          var photo=RECITER_PHOTOS[r.id]||null;
           var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
           content.appendChild(_dlMgrItem(
-            null, r.flag||'', r.name, _fmtDlBytes(r.bytes), sub,
+            photo, flag, realName, _fmtDlBytes(r.bytes), sub,
             function(){closeDlManager();openDlSheet(r.id);},
             function(){
               AudioDownloads.deleteReciter(r.id).then(function(){
@@ -6574,7 +6584,8 @@ function _renderDlMgrBody(){
                 renderAudioSettings();
                 toast(t('toast.dl_removed')||'سڕایەوە');
               });
-            }
+            },
+            {circular:true}
           ));
         });
       }
