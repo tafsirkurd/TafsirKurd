@@ -1,32 +1,35 @@
-const CACHE_NAME = 'tafsir-kurd-v968';
+const CACHE_NAME = 'tafsir-kurd-v970';
 
-// All files required to run the app fully offline
+// All files required to run the app fully offline.
+// IMPORTANT: version strings here must match the ?v= params in index.html exactly.
+// Mismatches cause cache misses — browser fetches from network instead of SW cache.
 const PRECACHE = [
   // Core app shell
   '/app/index.html',
-  '/app/app.js?v=904',
-  // Prayer module (versioned — must match ?v= params in index.html)
+  '/app/app.js?v=907',
+  // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
   '/prayer/prayer.api.js?v=20260526',
   '/prayer/prayer.logic.js?v=20260326b',
   '/prayer/prayer.notifications.android.js?v=20260416',
-  '/prayer/prayer.ui.js?v=20260530',
-  // Gencine module
-  '/dhikr/dhikr.js?v=20260530',
+  '/prayer/prayer.ui.js?v=20260529b',
+  // Gencine / books module (lazily loaded but pre-cached for offline)
+  '/dhikr/dhikr.js?v=20260529b',
+  '/dhikr/pdf-store.js?v=20260529',
   '/dhikr/dua-data.js?v=20260326b',
   '/dhikr/smart-dhikr.js?v=52',
-  // i18n (versioned — must match ?v= params in index.html)
-  '/i18n/i18n.js?v=20260517',
-  '/i18n/kmr-bundled.js?v=20260542',
+  // i18n
+  '/i18n/i18n.js?v=20260530a',
+  '/i18n/kmr-bundled.js?v=20260530a',
   '/i18n/kmr.json',
   // Data
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   // Styles
   '/styles/mobile-optimize.css',
-  // Core utils (versioned — must match index.html)
+  // Core utils
   '/utils/supabase.js?v=20260326b',
-  '/utils/fast-scroll.js',
+  '/utils/fast-scroll.js?v=20260503',
   '/utils/console-cleaner.js?v=2',
   '/utils/kurdish-numbers.js',
   '/utils/auto-kurdish-numbers.js',
@@ -40,20 +43,19 @@ const PRECACHE = [
   '/audio-cache.js?v=20260406a',
   '/qibla/qibla.js?v=20260417',
   // Fonts & icons
-  '/assets/fonts/fonts.css',
+  '/assets/fonts/fonts.css?v=17',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
   '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
-  // SurahName decorative fonts — required for Quran grid calligraphy
   '/assets/fonts/surah-name-v4.woff2',
   '/assets/fonts/surah-name-v2.woff2',
   '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
   '/assets/fontawesome/webfonts/fa-brands-400.woff2',
-  // Font manager must be offline-available
-  '/app/quran-font-manager.js',
+  // Font manager
+  '/app/quran-font-manager.js?v=20260506',
   // Images
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png?v=3',
