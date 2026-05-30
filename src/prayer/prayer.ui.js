@@ -100,7 +100,10 @@
   };
 
   function tStr(key, replacements) {
-    return window.t ? window.t(key, replacements) : key;
+    if (!window.t) return '';
+    var v = window.t(key, replacements);
+    // t() returns the key itself when not found — return '' so || fallbacks fire correctly
+    return v === key ? '' : v;
   }
 
   function getCity()    { return (window.S && S.prayerCity) || localStorage.getItem('prayerCity') || 'Duhok'; }
