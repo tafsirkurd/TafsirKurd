@@ -10216,7 +10216,10 @@ function _registerSession(){
 }
 
 function _startSessionHeartbeat(){
-  if(_sessionHeartbeatInterval)clearInterval(_sessionHeartbeatInterval);
+  // Stop previous instance first — removes both the interval AND the visibilitychange
+  // listener. Without this, the old listener is orphaned when _sessionFgHandler ref
+  // is overwritten below, causing duplicate touches on re-login.
+  _stopSessionHeartbeat();
   _sessionHeartbeatInterval=setInterval(_sessionTouchActive,5*60*1000);
   _sessionFgHandler=function(){if(!document.hidden)_sessionTouchActive();};
   document.addEventListener('visibilitychange',_sessionFgHandler);
@@ -13360,8 +13363,9 @@ function startApp(){
   // Force-update check: deferred 5s so it doesn't compete with startup fetches.
   // Interval bumped to 60s — 12s was excessive on slow networks / low-end devices.
   setTimeout(function(){ ForceUpdate.check(); }, 5000);
-  // Store the interval so it can theoretically be cleared — prevents accumulation
-  // if startApp() is ever called more than once (e.g. during hot reload in dev).
+  // Clear any existing interval before creating — prevents duplicate polls if
+  // startApp() is called more than once (hot reload, re-init paths).
+  if(window._forceUpdateInterval)clearInterval(window._forceUpdateInterval);
   window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 60000);
 
   // ── Runtime jank monitoring — auto-downgrade performance tier ─────────────
