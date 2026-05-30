@@ -1185,39 +1185,53 @@ function init(){
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.addListener('appUrlOpen',function(event){
           if(event.url&&(event.url.indexOf('tafsirkurd://auth')===0||event.url.indexOf('com.tafsirkurd.app://auth')===0)){
-            // Close browser if open
+            // Close the in-app browser
             try{if(window.Capacitor.Plugins.Browser)window.Capacitor.Plugins.Browser.close()}catch(e2){}
-            // Extract tokens from URL hash/query
+
             var url=event.url;
+
+            // Common session handler — upserts profile and signs the user in
+            function _applySession(session){
+              setUserFromSession(session);
+              var u=session.user;var meta=u.user_metadata||{};
+              S.supabase.from('profiles').upsert({
+                id:u.id,email:u.email,
+                full_name:meta.full_name||meta.name||(u.email?u.email.split('@')[0]:''),
+                display_name:meta.full_name||meta.name||(u.email?u.email.split('@')[0]:''),
+                avatar_url:meta.avatar_url||null,
+                registration_source:'google',
+                has_completed_signup:true,
+                first_login_at:new Date().toISOString()
+              },{onConflict:'id'}).then(function(){});
+              App.closeLogin();
+              toast(t('toast.logged_in'));
+              if(S.tab==='settings')renderSettings();
+            }
+
+            if(!S.supabase)return;
+
+            // ── PKCE flow (Supabase v2 default): code in query params ──────
+            // Supabase returns ?code=... which must be exchanged for a session.
+            var qStr=(url.split('?')[1]||'').split('#')[0];
+            var code=new URLSearchParams(qStr).get('code');
+            if(code){
+              S.supabase.auth.exchangeCodeForSession(code).then(function(resp){
+                if(resp.error){console.error('[OAuth] PKCE exchange error:',resp.error);return;}
+                if(resp.data&&resp.data.session)_applySession(resp.data.session);
+              }).catch(function(e3){console.error('[OAuth] PKCE catch:',e3);});
+              return;
+            }
+
+            // ── Implicit grant (fallback): tokens in hash fragment ───────────
             var hashPart=url.split('#')[1]||'';
-            if(hashPart&&S.supabase){
-              var params=new URLSearchParams(hashPart);
-              var accessToken=params.get('access_token');
-              var refreshToken=params.get('refresh_token');
-              if(accessToken&&refreshToken){
-                S.supabase.auth.setSession({access_token:accessToken,refresh_token:refreshToken}).then(function(resp){
-                  if(resp.error){console.error('OAuth session error:',resp.error);return}
-                  if(resp.data&&resp.data.session){
-                    setUserFromSession(resp.data.session);
-                    // Create profile if needed
-                    var u=resp.data.session.user;
-                    var meta=u.user_metadata||{};
-                    S.supabase.from('profiles').upsert({
-                      id:u.id,email:u.email,
-                      full_name:meta.full_name||meta.name||(u.email?u.email.split('@')[0]:''),
-                      display_name:meta.full_name||meta.name||(u.email?u.email.split('@')[0]:''),
-                      avatar_url:meta.avatar_url||null,
-                      registration_source:'google',
-                      has_completed_signup:true,
-                      first_login_at:new Date().toISOString()
-                    },{onConflict:'id'}).then(function(){});
-                    // startCloudSync() fires via onAuthStateChange(SIGNED_IN) from setSession
-                    App.closeLogin();
-                    toast(t('toast.logged_in'));
-                    if(S.tab==='settings')renderSettings();
-                  }
-                }).catch(function(e3){console.error('OAuth set session error:',e3)});
-              }
+            var hParams=new URLSearchParams(hashPart);
+            var accessToken=hParams.get('access_token');
+            var refreshToken=hParams.get('refresh_token');
+            if(accessToken&&refreshToken){
+              S.supabase.auth.setSession({access_token:accessToken,refresh_token:refreshToken}).then(function(resp){
+                if(resp.error){console.error('[OAuth] setSession error:',resp.error);return;}
+                if(resp.data&&resp.data.session)_applySession(resp.data.session);
+              }).catch(function(e3){console.error('[OAuth] setSession catch:',e3);});
             }
           }
         });
