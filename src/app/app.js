@@ -3394,6 +3394,7 @@ App.backToList=function(){
   }
   // Clean up mushaf DOM + observer — keep mode preference so next surah reopens in mushaf
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
+  _mqReset();
   clearMushafHighlights();
   var mv=$('mushafView');if(mv){mv.style.display='none';clear(mv);}
   var al=$('ayahList');if(al)al.style.display='';
@@ -3904,12 +3905,14 @@ function _mushafWrapSpreads(view){
         if(!entry.isIntersecting)return;
         var pageEl=entry.target;
         if(pageEl.dataset.loaded)return;
-        pageEl.dataset.loaded='1';
-        _mushafLazyObs&&_mushafLazyObs.unobserve(pageEl);
-        loadMushafPageQCF(pageEl,parseInt(pageEl.dataset.page)).catch(function(){});
+        _mqEnqueue(pageEl,parseInt(pageEl.dataset.page),null);
       });
-    },{root:view,rootMargin:'0px 1200px'});
+    },{root:view,rootMargin:'0px 600px'});
     view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(p){_mushafLazyObs.observe(p);});
+    if(_mqScrollEl&&_mqScrollFn)_mqScrollEl.removeEventListener('scroll',_mqScrollFn);
+    _mqScrollEl=view;
+    _mqScrollFn=function(){_mqScrolling=true;clearTimeout(_mqScrollTimer);_mqScrollTimer=setTimeout(function(){_mqScrolling=false;_drainMQ();},200);};
+    _mqScrollEl.addEventListener('scroll',_mqScrollFn,{passive:true});
   }
   view.scrollLeft=0;
 }
@@ -3922,6 +3925,7 @@ function renderMushafView(){
   clearMushafHighlights();
   // Disconnect previous lazy-load observer to prevent accumulation
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
+  _mqReset();
   window._mushafVerseElements={};
   // Single clear + skeleton — never clear twice. When page range resolves we remove
   // only the skeleton node, so the view is never in a blank state between clears.
@@ -3981,16 +3985,18 @@ function renderMushafView(){
         if(!entry.isIntersecting)return;
         var pe=entry.target;
         if(pe.dataset.loaded)return;
-        pe.dataset.loaded='1';
-        _mushafLazyObs&&_mushafLazyObs.unobserve(pe);
         if(S.surah!==capturedSurah)return;
-        if(!pe.firstChild)pe.appendChild(_mushafSkeleton());
-        loadMushafPageQCF(pe,parseInt(pe.dataset.page)).catch(function(){_mushafPageErr(pe);});
+        _mqEnqueue(pe,parseInt(pe.dataset.page),_mushafPageErr);
       });
-    },{root:view,rootMargin:'1200px 0px 3000px 0px'});
+    },{root:view,rootMargin:'600px 0px 1200px 0px'});
     view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(pe){
       _mushafLazyObs.observe(pe);
     });
+    // Scroll gate — same pattern as PDF reader: pause queue during scroll, drain after settle
+    if(_mqScrollEl&&_mqScrollFn)_mqScrollEl.removeEventListener('scroll',_mqScrollFn);
+    _mqScrollEl=view;
+    _mqScrollFn=function(){_mqScrolling=true;clearTimeout(_mqScrollTimer);_mqScrollTimer=setTimeout(function(){_mqScrolling=false;_drainMQ();},200);};
+    _mqScrollEl.addEventListener('scroll',_mqScrollFn,{passive:true});
 
     // Preload target page + up to 8 pages above it, THEN scroll once.
     //
@@ -4015,6 +4021,8 @@ function renderMushafView(){
       })(_pi);
     }
     Promise.all(_prePromises).then(function(){
+      // Register preloaded pages in eviction tracker now that their heights are final
+      for(var _tri=_preStart;_tri<=pages.start;_tri++){if(_mqLoadedPages.indexOf(_tri)<0)_mqLoadedPages.push(_tri);}
       if(S.surah!==capturedSurah||!S.mushafMode)return;
       var b=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
       if(b)view.scrollTop=b.offsetTop;
@@ -4859,6 +4867,103 @@ function renderAyahs(surahNum,scrollTo){
 var _progressCleanup=null;
 // Track mushaf lazy-load observer so we can disconnect on re-render
 var _mushafLazyObs=null;
+
+// ── Mushaf render queue — same memory-safe architecture as PDF reader ─────────
+// Without this, IntersectionObserver fires loadMushafPageQCF for every page
+// entering the extended viewport during fast scroll with no concurrency cap,
+// and all loaded pages stay in DOM forever (font resources + many DOM nodes
+// per page accumulate until the WKWebView process is killed on low-end devices).
+var _mqRQ=[];          // pending: [{pe, n, errFn}]
+var _mqActive=0;       // currently loading count
+var _mqLoadedPages=[]; // page numbers in DOM — used for eviction targeting
+var _mqInFlight=[];    // page numbers mid-load — eviction skips these
+var _mqScrolling=false,_mqScrollTimer=null;
+var _mqScrollEl=null,_mqScrollFn=null;
+var MAX_MQ=2,MAX_MQ_KEPT=10; // 10 pages × ~300 DOM nodes × ~50KB font each
+
+// Evict pages farthest from anchor, preserving slot heights to avoid scroll jump
+function _mqEvictFar(anchor){
+  var max=document.documentElement.classList.contains('perf-critical')?6:MAX_MQ_KEPT;
+  if(_mqLoadedPages.length<=max)return;
+  var view=$('mushafView');
+  while(_mqLoadedPages.length>max){
+    var fIdx=0;
+    for(var ei=1;ei<_mqLoadedPages.length;ei++){
+      if(Math.abs(_mqLoadedPages[ei]-anchor)>Math.abs(_mqLoadedPages[fIdx]-anchor))fIdx=ei;
+    }
+    var evP=_mqLoadedPages.splice(fIdx,1)[0];
+    if(_mqInFlight.indexOf(evP)>=0)continue; // in-flight: load already paid for, keep
+    var evEl=view&&view.querySelector('.mushaf-text-page[data-page="'+evP+'"]');
+    if(!evEl)continue;
+    // Capture rendered height BEFORE clearing — prevents scroll jump when slot empties
+    var h=evEl.offsetHeight;
+    if(h>0)evEl.style.minHeight=h+'px';
+    // Remove segment references belonging to this page from the global verse index
+    try{
+      var vksRaw=evEl.dataset.verseKeys;
+      if(vksRaw){
+        JSON.parse(vksRaw).forEach(function(k){
+          if(window._mushafVerseElements&&window._mushafVerseElements[k]){
+            var kept=window._mushafVerseElements[k].filter(function(s){return !evEl.contains(s);});
+            if(kept.length)window._mushafVerseElements[k]=kept;
+            else delete window._mushafVerseElements[k];
+          }
+        });
+      }
+    }catch(e){}
+    clear(evEl);
+    evEl.classList.remove('mushaf-page-hafs-fallback');
+    delete evEl.dataset.loaded;
+    delete evEl.dataset.verses;
+    delete evEl.dataset.verseKeys;
+    delete evEl.dataset.retryOnTap;
+    // Re-observe so page re-renders when user scrolls back to it
+    if(_mushafLazyObs)_mushafLazyObs.observe(evEl);
+  }
+}
+
+function _drainMQ(){
+  if(_mqScrolling)return;
+  while(_mqActive<MAX_MQ&&_mqRQ.length>0){
+    var task=_mqRQ.shift();
+    if(!task||task.pe.dataset.loaded)continue;
+    task.pe.dataset.loaded='1';
+    if(_mushafLazyObs)_mushafLazyObs.unobserve(task.pe);
+    if(!task.pe.firstChild)task.pe.appendChild(_mushafSkeleton());
+    _mqActive++;
+    _mqInFlight.push(task.n);
+    (function(tk){
+      loadMushafPageQCF(tk.pe,tk.n)
+        .then(function(){
+          var fi=_mqInFlight.indexOf(tk.n);if(fi>=0)_mqInFlight.splice(fi,1);
+          if(_mqLoadedPages.indexOf(tk.n)<0)_mqLoadedPages.push(tk.n);
+          _mqEvictFar(tk.n);
+        })
+        .catch(function(){
+          var fi=_mqInFlight.indexOf(tk.n);if(fi>=0)_mqInFlight.splice(fi,1);
+          if(tk.errFn)try{tk.errFn(tk.pe);}catch(e){}
+        })
+        .then(function(){_mqActive=Math.max(0,_mqActive-1);_drainMQ();});
+    })(task);
+  }
+}
+
+function _mqEnqueue(pe,n,errFn){
+  if(!pe||pe.dataset.loaded)return;
+  for(var qi=_mqRQ.length-1;qi>=0;qi--){if(_mqRQ[qi].pe===pe)_mqRQ.splice(qi,1);}
+  _mqRQ.push({pe:pe,n:n,errFn:errFn||null});
+  if(_mqRQ.length>12)_mqRQ.splice(0,_mqRQ.length-12); // cap: fast scroll can't build unbounded backlog
+  _drainMQ();
+}
+
+function _mqReset(){
+  _mqRQ=[];_mqActive=0;_mqLoadedPages=[];_mqInFlight=[];
+  clearTimeout(_mqScrollTimer);_mqScrolling=false;
+  if(_mqScrollEl&&_mqScrollFn){
+    try{_mqScrollEl.removeEventListener('scroll',_mqScrollFn);}catch(e){}
+    _mqScrollEl=null;_mqScrollFn=null;
+  }
+}
 
 // RAF-based smooth scroll for mushaf — ease-out-cubic, self-cancelling.
 // Avoids browser smooth-scroll which jank on iOS WebView (300-800ms lag).
