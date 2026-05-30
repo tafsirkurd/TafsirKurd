@@ -11830,51 +11830,19 @@ function renderProfile(panel){
   on(logoutBtn,'click',function(){App.logout();});
   actWrap.appendChild(logoutBtn);
 
-  // ── Downloads / Storage ─────────────────────────────────
-  if(window.AudioDownloads){
-    var dlStats=AudioDownloads.getAllStats();
-    var dlSec=el('div','pp-section');
-    dlSec.appendChild(el('div','pp-section-title',t('dl.section')));
-    var dlCard=el('div','pp-card');
-    if(!dlStats.length){
-      var emptyRow=el('div','pp-row');
-      emptyRow.appendChild(el('div','pp-row-label',t('dl.no_reciters')));
-      dlCard.appendChild(emptyRow);
-    } else {
-      var totalBytes=dlStats.reduce(function(s,r){return s+r.bytes;},0);
-      var totalRow=el('div','pp-row');
-      totalRow.appendChild(el('div','pp-row-label',t('dl.storage_used')));
-      totalRow.appendChild(el('div','pp-row-value',AudioDownloads.fmtBytes(totalBytes)));
-      dlCard.appendChild(totalRow);
-      dlStats.forEach(function(r){
-        var row=el('div','pp-dl-row');
-        var info=el('div','pp-dl-info');
-        info.appendChild(el('div','pp-dl-name',(r.flag?r.flag+' ':'')+r.name));
-        info.appendChild(el('div','pp-dl-size',AudioDownloads.fmtBytes(r.bytes)+(r.full?' · '+t('dl.full_quran'):' · '+r.surahs+' '+t('dl.surahs'))));
-        row.appendChild(info);
-        var ppDlMgr=el('button','pp-dl-mgr');
-        ppDlMgr.appendChild(icon('fas fa-sliders'));
-        ppDlMgr.title=t('dl.manage');
-        (function(rid){on(ppDlMgr,'click',function(){App.closeProfile();openDlSheet(rid);});})(r.id);
-        row.appendChild(ppDlMgr);
-        var delBtn=el('button','pp-dl-del');
-        delBtn.appendChild(icon('fas fa-trash'));
-        delBtn.title=t('dl.remove');
-        (function(rid){
-          on(delBtn,'click',function(){
-            AudioDownloads.deleteReciter(rid).then(function(){
-              renderProfile(panel);
-              toast(t('toast.dl_removed'));
-            });
-          });
-        })(r.id);
-        row.appendChild(delBtn);
-        dlCard.appendChild(row);
-      });
-    }
-    dlSec.appendChild(dlCard);
-    body.appendChild(dlSec);
-  }
+  // ── Downloads — nav row to unified manager ──────────────
+  var dlNavSec=el('div','pp-section');
+  var dlNavCard=el('div','pp-card');
+  var dlNavRow=el('div','pp-row');dlNavRow.style.cursor='pointer';
+  var dlNavL=el('div','pp-row-label');
+  dlNavL.appendChild(icon('fas fa-download'));
+  dlNavL.appendChild(document.createTextNode(' '+(t('dl.manage')||'داونلۆدەکان')));
+  dlNavRow.appendChild(dlNavL);
+  dlNavRow.appendChild(icon('fas fa-chevron-left'));
+  on(dlNavRow,'click',function(){App.closeProfile();openDlManager();});
+  dlNavCard.appendChild(dlNavRow);
+  dlNavSec.appendChild(dlNavCard);
+  body.appendChild(dlNavSec);
 
   // Separator before destructive action
   actWrap.appendChild(el('div','pp-actions-sep'));
