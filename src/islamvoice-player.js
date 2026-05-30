@@ -23,7 +23,10 @@
     }
 
     // ===== THUMBNAIL CACHE =====
+    // Capped at 30 entries (FIFO eviction) — each entry is a ~5-10 KB dataURL.
+    // Without a limit the cache grows unbounded across a heavy session.
     const thumbnailCache = {};
+    const _TC_MAX = 30;
 
     // Generate thumbnail from video URL
     async function generateVideoThumbnail(videoUrl, seekTime = 2) {
@@ -52,6 +55,9 @@
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const thumbnail = canvas.toDataURL('image/jpeg', 0.7);
                     thumbnailCache[videoUrl] = thumbnail;
+                    // Evict oldest entry when cap exceeded
+                    const keys = Object.keys(thumbnailCache);
+                    if (keys.length > _TC_MAX) delete thumbnailCache[keys[0]];
                     resolve(thumbnail);
                 } catch (e) {
                     console.warn('Could not generate thumbnail:', e);
