@@ -6401,6 +6401,7 @@ var _dlMgrOpen=false;
 function openDlManager(){
   var sheet=$('dlMgrSheet'),overlay=$('dlMgrOverlay');
   if(!sheet||!overlay)return;
+  _dlMgrTab='books'; // always start on books tab
   _dlMgrOpen=true;
   overlay.onclick=closeDlManager;
   $('dlMgrClose').onclick=closeDlManager;
@@ -6472,12 +6473,13 @@ function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete){
   return row;
 }
 
+var _dlMgrTab='books'; // active tab: 'books' | 'audio'
+
 function _renderDlMgrBody(){
   var body=$('dlMgrBody');
   if(!body)return;
   clear(body);
 
-  // Loading spinner
   var sp=el('div','');sp.style.cssText='text-align:center;padding:40px;color:var(--text-tertiary)';
   sp.appendChild(icon('fas fa-circle-notch fa-spin'));body.appendChild(sp);
 
@@ -6501,54 +6503,83 @@ function _renderDlMgrBody(){
       return;
     }
 
-    // Total storage bar
+    // Auto-select the tab that has content if current tab is empty
+    if(_dlMgrTab==='books'&&!pdfCached.length&&audioAll.length) _dlMgrTab='audio';
+    if(_dlMgrTab==='audio'&&!audioAll.length&&pdfCached.length) _dlMgrTab='books';
+
+    // ── Tab bar (book-cat-row pattern) ─────────────────
+    var tabRow=el('div','book-cat-row');
+    tabRow.style.cssText='margin:0 0 0;padding:0 4px';
+
+    function _makeTab(key,label,count){
+      var btn=el('button','book-cat-btn'+(_dlMgrTab===key?' on':''));
+      btn.textContent=label+(count?' ('+count+')':'');
+      on(btn,'click',function(){
+        _dlMgrTab=key;
+        _renderDlMgrBody();
+      });
+      tabRow.appendChild(btn);
+    }
+    if(pdfCached.length||true) _makeTab('books',t('dl.books_section')||'کتێبەکان',pdfCached.length);
+    if(audioAll.length||true)  _makeTab('audio',t('dl.audio_section')||'دەنگ',audioAll.length);
+    body.appendChild(tabRow);
+
+    // ── Storage line (compact, below tabs) ─────────────
     var totalB=pdfCached.reduce(function(s,c){return s+c.bytes;},0)+audioAll.reduce(function(s,r){return s+r.bytes;},0);
     if(totalB>0){
       var stBar=el('div','');
-      stBar.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:12px;margin-bottom:14px;font-size:.83rem;color:var(--text-secondary)';
-      var stIc=icon('fas fa-hdd');stIc.style.color='var(--accent)';stBar.appendChild(stIc);
+      stBar.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 16px 4px;font-size:.76rem;color:var(--text-tertiary)';
+      var stIc=icon('fas fa-hdd');stIc.style.cssText='color:var(--accent);font-size:.7rem';stBar.appendChild(stIc);
       stBar.appendChild(document.createTextNode((t('dl.storage_used')||'جێی بەکارهاتوو')+': '+_fmtDlBytes(totalB)));
       body.appendChild(stBar);
     }
 
-    // ── PDF Books ──────────────────────────────────────
-    if(pdfCached.length){
-      body.appendChild(_dlMgrSec(t('dl.books_section')||'کتێبەکان','fas fa-book'));
-      pdfCached.forEach(function(entry){
-        var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;
-        var title=book?(book.title_ku||book.title_ar||entry.pdfUrl.split('/').pop()):entry.pdfUrl.split('/').pop();
-        body.appendChild(_dlMgrItem(
-          book?book.cover_url:null, null, title, _fmtDlBytes(entry.bytes), null, null,
-          function(){
-            if(!window.PdfStore)return;
-            PdfStore.remove(book||{pdf_url:entry.pdfUrl}).then(function(){
-              if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
-              if(_dlMgrOpen)_renderDlMgrBody();
-              toast(t('toast.dl_removed')||'سڕایەوە');
-            });
-          }
-        ));
-      });
-    }
+    // ── Tab content ─────────────────────────────────────
+    var content=el('div','');content.style.cssText='padding:4px 16px 8px';
 
-    // ── Audio ──────────────────────────────────────────
-    if(audioAll.length){
-      body.appendChild(_dlMgrSec(t('dl.audio_section')||'دەنگ','fas fa-headphones'));
-      audioAll.forEach(function(r){
-        var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
-        body.appendChild(_dlMgrItem(
-          null, r.flag||'', r.name, _fmtDlBytes(r.bytes), sub,
-          function(){closeDlManager();openDlSheet(r.id);},
-          function(){
-            AudioDownloads.deleteReciter(r.id).then(function(){
-              if(_dlMgrOpen)_renderDlMgrBody();
-              renderAudioSettings();
-              toast(t('toast.dl_removed')||'سڕایەوە');
-            });
-          }
-        ));
-      });
+    if(_dlMgrTab==='books'){
+      if(!pdfCached.length){
+        var noB=el('div','');noB.style.cssText='padding:32px;text-align:center;color:var(--text-tertiary);font-size:.85rem;direction:rtl';
+        noB.textContent=t('dl.no_books')||'هیچ کتێبێک نەهاتیە داونلۆد کرن';content.appendChild(noB);
+      } else {
+        pdfCached.forEach(function(entry){
+          var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;
+          var title=book?(book.title_ku||book.title_ar||entry.pdfUrl.split('/').pop()):entry.pdfUrl.split('/').pop();
+          content.appendChild(_dlMgrItem(
+            book?book.cover_url:null, null, title, _fmtDlBytes(entry.bytes), null, null,
+            function(){
+              if(!window.PdfStore)return;
+              PdfStore.remove(book||{pdf_url:entry.pdfUrl}).then(function(){
+                if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
+                if(_dlMgrOpen)_renderDlMgrBody();
+                toast(t('toast.dl_removed')||'سڕایەوە');
+              });
+            }
+          ));
+        });
+      }
+    } else {
+      if(!audioAll.length){
+        var noA=el('div','');noA.style.cssText='padding:32px;text-align:center;color:var(--text-tertiary);font-size:.85rem;direction:rtl';
+        noA.textContent=t('dl.no_audio')||'هیچ دەنگێک نەهاتیە داونلۆد کرن';content.appendChild(noA);
+      } else {
+        audioAll.forEach(function(r){
+          var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
+          content.appendChild(_dlMgrItem(
+            null, r.flag||'', r.name, _fmtDlBytes(r.bytes), sub,
+            function(){closeDlManager();openDlSheet(r.id);},
+            function(){
+              AudioDownloads.deleteReciter(r.id).then(function(){
+                if(_dlMgrOpen)_renderDlMgrBody();
+                renderAudioSettings();
+                toast(t('toast.dl_removed')||'سڕایەوە');
+              });
+            }
+          ));
+        });
+      }
     }
+    body.appendChild(content);
   }).catch(function(){
     if(!_dlMgrOpen)return;
     clear(body);
