@@ -1162,6 +1162,7 @@ function init(){
           if($('pppCelebOverlay')){App.closePrayerCelebration();return}
           if($('pppDayOverlay')&&$('pppDayOverlay').classList.contains('on')){App.closePrayerDay();return}
           if($('prayerProgressPanel')&&$('prayerProgressPanel').classList.contains('on')){App.closePrayerProgress();return}
+          if($('dlMgrSheet')&&$('dlMgrSheet').classList.contains('open')){closeDlManager();return}
           if($('profilePanel')&&$('profilePanel').classList.contains('on')){App.closeProfile();return}
           if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return}
           if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
@@ -6392,6 +6393,170 @@ function closeDlSheet(){
   _dlSheetReciter=null;
 }
 
+/* ===== UNIFIED DOWNLOAD MANAGER ===== */
+// Shows downloaded PDF books + audio reciters in one bottom sheet.
+// Accessible from: Settings → Audio section, and Books header button.
+var _dlMgrOpen=false;
+
+function openDlManager(){
+  var sheet=$('dlMgrSheet'),overlay=$('dlMgrOverlay');
+  if(!sheet||!overlay)return;
+  _dlMgrOpen=true;
+  overlay.onclick=closeDlManager;
+  $('dlMgrClose').onclick=closeDlManager;
+  _renderDlMgrBody();
+  sheet.classList.add('open');
+  overlay.classList.add('on');
+}
+
+function closeDlManager(){
+  var sheet=$('dlMgrSheet'),overlay=$('dlMgrOverlay');
+  if(sheet)sheet.classList.remove('open');
+  if(overlay)overlay.classList.remove('on');
+  _dlMgrOpen=false;
+}
+
+function _fmtDlBytes(b){
+  if(!b||b<=0)return '—';
+  if(window.PdfStore&&PdfStore.fmtSize)return PdfStore.fmtSize(b);
+  if(b<1024*1024)return(b/1024).toFixed(0)+' KB';
+  return(b/(1024*1024)).toFixed(1)+' MB';
+}
+
+function _dlMgrSec(label,icoClass){
+  var s=el('div','');
+  s.style.cssText='display:flex;align-items:center;gap:6px;padding:10px 0 6px;font-size:.7rem;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-top:6px';
+  if(icoClass){var ic=icon(icoClass);ic.style.fontSize='.65rem';s.appendChild(ic);}
+  s.appendChild(document.createTextNode(label));
+  return s;
+}
+
+function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete){
+  var row=el('div','');
+  row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-subtle,rgba(128,128,128,.07))';
+
+  // Thumbnail / icon
+  var th=el('div','');
+  th.style.cssText='width:40px;height:52px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.25rem';
+  if(coverUrl){
+    var cImg=document.createElement('img');cImg.src=coverUrl;cImg.style.cssText='width:100%;height:100%;object-fit:cover';
+    cImg.onerror=function(){this.style.display='none';};th.appendChild(cImg);
+  }else if(flag){th.textContent=flag;}
+  else{var thIco=icon('fas fa-headphones');thIco.style.cssText='color:var(--text-tertiary);font-size:.9rem';th.appendChild(thIco);}
+  row.appendChild(th);
+
+  // Info
+  var info=el('div','');info.style.cssText='flex:1;min-width:0;direction:rtl';
+  var tEl=el('div','');tEl.style.cssText='font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)';tEl.textContent=title;
+  var szEl=el('div','');szEl.style.cssText='font-size:.76rem;color:var(--accent);margin-top:3px;font-variant-numeric:tabular-nums';szEl.textContent=size;
+  info.appendChild(tEl);info.appendChild(szEl);
+  if(sub){var subEl=el('div','');subEl.style.cssText='font-size:.74rem;color:var(--text-tertiary);margin-top:1px';subEl.textContent=sub;info.appendChild(subEl);}
+  row.appendChild(info);
+
+  // Tap chevron (for items with a detail view)
+  if(onTap){
+    var chv=icon('fas fa-chevron-left');chv.style.cssText='color:var(--text-tertiary);font-size:.72rem;flex-shrink:0;margin-right:4px';
+    row.appendChild(chv);
+    on(row,'click',function(e){if(!e.target.closest('[data-dlmgr-del]'))onTap();});
+    row.style.cursor='pointer';
+  }
+
+  // Delete button
+  if(onDelete){
+    var delBtn=el('button','');delBtn.setAttribute('data-dlmgr-del','1');
+    delBtn.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(220,50,50,.1);display:flex;align-items:center;justify-content:center;color:var(--danger,#e05);flex-shrink:0;border:none;cursor:pointer;transition:background .15s';
+    var delIco=icon('fas fa-trash-alt');delIco.style.fontSize='.8rem';delBtn.appendChild(delIco);
+    on(delBtn,'click',function(e){e.stopPropagation();haptic([30]);onDelete();});
+    row.appendChild(delBtn);
+  }
+  return row;
+}
+
+function _renderDlMgrBody(){
+  var body=$('dlMgrBody');
+  if(!body)return;
+  clear(body);
+
+  // Loading spinner
+  var sp=el('div','');sp.style.cssText='text-align:center;padding:40px;color:var(--text-tertiary)';
+  sp.appendChild(icon('fas fa-circle-notch fa-spin'));body.appendChild(sp);
+
+  var pdfP=(window.PdfStore&&PdfStore.supported())?PdfStore.listAll():Promise.resolve([]);
+  pdfP.then(function(pdfCached){
+    if(!_dlMgrOpen)return;
+    clear(body);
+
+    var audioAll=(window.AudioDownloads&&AudioDownloads.getAllStats)
+      ?AudioDownloads.getAllStats().filter(function(r){return r.bytes>0||r.surahs>0;})
+      :[];
+
+    if(!pdfCached.length&&!audioAll.length){
+      var emp=el('div','');
+      emp.style.cssText='display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 24px;color:var(--text-tertiary)';
+      var empIc=icon('fas fa-cloud-download-alt');empIc.style.cssText='font-size:2.4rem;opacity:.3';emp.appendChild(empIc);
+      var empT=el('div','');empT.style.cssText='font-size:.92rem;font-weight:600';empT.textContent=t('dl.nothing_downloaded')||'هیچ داونلۆدێک نییە';emp.appendChild(empT);
+      var empS=el('div','');empS.style.cssText='font-size:.78rem;opacity:.5;text-align:center;line-height:1.7;direction:rtl;max-width:220px';
+      empS.textContent=t('dl.nothing_hint')||'کتێبەکان و دەنگ دابنێ بۆ خوێندنی بێ ئینتەرنێت';emp.appendChild(empS);
+      body.appendChild(emp);
+      return;
+    }
+
+    // Total storage bar
+    var totalB=pdfCached.reduce(function(s,c){return s+c.bytes;},0)+audioAll.reduce(function(s,r){return s+r.bytes;},0);
+    if(totalB>0){
+      var stBar=el('div','');
+      stBar.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:12px;margin-bottom:14px;font-size:.83rem;color:var(--text-secondary)';
+      var stIc=icon('fas fa-hdd');stIc.style.color='var(--accent)';stBar.appendChild(stIc);
+      stBar.appendChild(document.createTextNode((t('dl.storage_used')||'جێی بەکارهاتوو')+': '+_fmtDlBytes(totalB)));
+      body.appendChild(stBar);
+    }
+
+    // ── PDF Books ──────────────────────────────────────
+    if(pdfCached.length){
+      body.appendChild(_dlMgrSec(t('dl.books_section')||'کتێبەکان','fas fa-book'));
+      pdfCached.forEach(function(entry){
+        var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;
+        var title=book?(book.title_ku||book.title_ar||entry.pdfUrl.split('/').pop()):entry.pdfUrl.split('/').pop();
+        body.appendChild(_dlMgrItem(
+          book?book.cover_url:null, null, title, _fmtDlBytes(entry.bytes), null, null,
+          function(){
+            if(!window.PdfStore)return;
+            PdfStore.remove(book||{pdf_url:entry.pdfUrl}).then(function(){
+              if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
+              if(_dlMgrOpen)_renderDlMgrBody();
+              toast(t('toast.dl_removed')||'سڕایەوە');
+            });
+          }
+        ));
+      });
+    }
+
+    // ── Audio ──────────────────────────────────────────
+    if(audioAll.length){
+      body.appendChild(_dlMgrSec(t('dl.audio_section')||'دەنگ','fas fa-headphones'));
+      audioAll.forEach(function(r){
+        var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
+        body.appendChild(_dlMgrItem(
+          null, r.flag||'', r.name, _fmtDlBytes(r.bytes), sub,
+          function(){closeDlManager();openDlSheet(r.id);},
+          function(){
+            AudioDownloads.deleteReciter(r.id).then(function(){
+              if(_dlMgrOpen)_renderDlMgrBody();
+              renderAudioSettings();
+              toast(t('toast.dl_removed')||'سڕایەوە');
+            });
+          }
+        ));
+      });
+    }
+  }).catch(function(){
+    if(!_dlMgrOpen)return;
+    clear(body);
+    var errEl=el('div','');errEl.style.cssText='padding:32px;text-align:center;color:var(--text-tertiary);font-size:.85rem';
+    errEl.textContent=t('common.error')||'هەڵە ڕوویدا';body.appendChild(errEl);
+  });
+}
+
 function _fmtVerifyDate(ts){
   if(!ts)return'Never';
   var d=new Date(ts);
@@ -8033,6 +8198,9 @@ function calcActiveStreak(log,min){
   }
   return streak;
 }
+
+App.openDlManager=openDlManager;
+App.closeDlManager=closeDlManager;
 
 App.openPrayerProgress=function(){
   _initPrayerTrackingStart();
@@ -9734,6 +9902,17 @@ function renderSettings(){
     localStorage.setItem('bgAudio',String(S.bgAudio));
     renderSettings();
   }));
+  // Downloads row — unified manager for offline books + audio
+  var _dlRow=el('div','setting-row s-row');_dlRow.style.cursor='pointer';
+  var _dlRowL=el('div','setting-label-wrap');
+  var _dlRowLbl=el('div','setting-label');
+  var _dlRowIco=icon('fas fa-download');_dlRowIco.style.cssText='margin-left:6px;color:var(--accent);font-size:.85em';
+  _dlRowLbl.appendChild(_dlRowIco);_dlRowLbl.appendChild(document.createTextNode(' '+(t('dl.manage')||'داونلۆدەکان')));
+  _dlRowL.appendChild(_dlRowLbl);_dlRow.appendChild(_dlRowL);
+  var _dlRowChev=icon('fas fa-chevron-left');_dlRowChev.style.cssText='color:var(--text-tertiary);font-size:.8rem;flex-shrink:0';
+  _dlRow.appendChild(_dlRowChev);
+  on(_dlRow,'click',function(){haptic([8]);openDlManager();});
+  gAudio.appendChild(_dlRow);
   frag.appendChild(gAudio);
 
   // ── Notifications & Haptics ──────────────────

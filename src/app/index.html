@@ -726,7 +726,7 @@ body.mushaf-audio-playing .mushaf-ayah-seg--read{transition:none!important}
 .dl-sheet-hdr{display:flex;align-items:center;gap:10px;padding:8px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
 .dl-sheet-name{flex:1;font-size:.95rem;font-weight:700;color:var(--text);direction:rtl}
 .dl-sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.78rem;color:var(--text2);cursor:pointer;border:none}
-.dl-sheet-body{flex:1;overflow-y:auto;padding:16px 16px 40px}
+.dl-sheet-body{flex:1;overflow-y:auto;overscroll-behavior-y:contain;padding:16px 16px 40px}
 .dl-status-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .dl-status-lbl{font-size:.78rem;color:var(--text3)}
 .dl-status-val{font-size:.78rem;font-weight:700;color:var(--text2)}
@@ -2910,7 +2910,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .book-search-bar .book-search-inp{display:block;width:100%;background:var(--bg2);border-radius:12px;padding:10px 12px;border:1px solid var(--border);font-size:.88rem;color:var(--text);font-family:inherit}
 .book-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s}
 .book-overlay.open{opacity:1;pointer-events:all}
-.book-overlay-panel{position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:24px 24px 0 0;padding:0 0 calc(var(--tab-h) + var(--safe-b));max-height:75vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.book-overlay-panel{position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:24px 24px 0 0;padding:0 0 calc(var(--tab-h) + var(--safe-b));max-height:75vh;overflow-y:auto;overscroll-behavior-y:contain;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
 .book-overlay.open .book-overlay-panel{transform:translateY(0)}
 .book-overlay-pill{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0}
 .book-overlay-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;font-size:.95rem;font-weight:700;color:var(--text)}
@@ -4206,6 +4206,16 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
     <button class="dl-sheet-close" id="dlSheetClose"><i class="fas fa-times"></i></button>
   </div>
   <div class="dl-sheet-body" id="dlSheetBody"></div>
+</div>
+<!-- Unified Download Manager — PDF books + audio, accessible from Settings and Books header -->
+<div class="dl-overlay" id="dlMgrOverlay"></div>
+<div class="dl-sheet" id="dlMgrSheet" style="max-height:88vh">
+  <div class="dl-sheet-pull"></div>
+  <div class="dl-sheet-hdr">
+    <button class="dl-sheet-close" id="dlMgrClose"><i class="fas fa-times"></i></button>
+    <span class="dl-sheet-name" data-i18n="dl.manage">داونلۆدەکان</span>
+  </div>
+  <div class="dl-sheet-body" id="dlMgrBody"></div>
 </div>
 
 

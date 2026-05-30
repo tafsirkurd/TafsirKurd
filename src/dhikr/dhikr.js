@@ -721,6 +721,14 @@ window.GencineUI = {
      localStorage may not be written yet on the first session open */
   getAllAdhkar: function() { return _getAllAdhkar(); },
 
+  /* Look up a book record by pdf_url — used by the unified download manager in app.js */
+  getBook: function(pdfUrl) {
+    for (var i = 0; i < _dbBooks.length; i++) {
+      if (_dbBooks[i].pdf_url === pdfUrl) return _dbBooks[i];
+    }
+    return null;
+  },
+
   /* ── state persistence ── */
   _loadState: function(){
     var c = parseInt(localStorage.getItem('tasbihCount'))  || 0;
@@ -2419,7 +2427,13 @@ window.GencineUI = {
     if (readBtn)   readBtn.classList.toggle('on', self._bookCat === 'reading');
     if (dlBtn && window.PdfStore) {
       dlBtn.style.display = '';
-      dlBtn.onclick = function(e) { e.stopPropagation(); self._showDlManager(); };
+      // Prefer the unified app-level manager (accessible from Settings too);
+      // fall back to the inline manager if app.js hasn't loaded it yet.
+      dlBtn.onclick = function(e) {
+        e.stopPropagation();
+        if (window.App && App.openDlManager) App.openDlManager();
+        else self._showDlManager();
+      };
     } else if (dlBtn) { dlBtn.style.display = 'none'; }
 
     /* ── Collapsible search bar ── */
