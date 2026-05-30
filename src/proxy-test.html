@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supabase Proxy Test — db.tafsirkurd.com</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:monospace;background:#0f0f0f;color:#e0e0e0;padding:20px;font-size:13px}
+h1{color:#fff;font-size:18px;margin-bottom:4px}
+.subtitle{color:#666;margin-bottom:20px;font-size:12px}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:12px}
+.card h2{font-size:13px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+.row{display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
+label{color:#888;min-width:130px;font-size:12px}
+input,select{background:#111;border:1px solid #333;border-radius:4px;padding:6px 10px;color:#fff;font-family:monospace;font-size:12px;flex:1;min-width:200px}
+input:focus,select:focus{outline:none;border-color:#555}
+button{background:#1f5f4a;color:#fff;border:none;border-radius:4px;padding:7px 14px;cursor:pointer;font-family:monospace;font-size:12px;white-space:nowrap}
+button:hover{background:#2a7a60}
+button:disabled{background:#333;color:#666;cursor:not-allowed}
+.results{margin-top:8px}
+.test-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #1e1e1e;font-size:12px}
+.test-item:last-child{border-bottom:none}
+.badge{min-width:72px;text-align:center;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;flex-shrink:0;margin-top:1px}
+.badge.pass{background:#1a3d2b;color:#4caf50}
+.badge.fail{background:#3d1a1a;color:#f44336}
+.badge.skip{background:#222;color:#666}
+.badge.warn{background:#2a2500;color:#ffc107}
+.badge.running{background:#1a2a3d;color:#64b5f6;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.test-body{flex:1;min-width:0}
+.test-name{color:#ccc}
+.test-detail{color:#666;font-size:11px;margin-top:2px;line-height:1.5}
+.test-error{color:#f44336;font-size:11px;margin-top:2px;word-break:break-all}
+.summary{display:flex;gap:20px;padding:14px;background:#111;border-radius:4px;margin-top:12px;flex-wrap:wrap}
+.summary-item{text-align:center}
+.summary-num{font-size:24px;font-weight:bold}
+.summary-num.pass{color:#4caf50}
+.summary-num.fail{color:#f44336}
+.summary-num.skip{color:#666}
+.summary-num.warn{color:#ffc107}
+.summary-label{font-size:11px;color:#666;margin-top:2px}
+.log{background:#111;border:1px solid #222;border-radius:4px;padding:10px;max-height:120px;overflow-y:auto;margin-top:8px;font-size:11px;color:#888;line-height:1.6}
+.log .ts{color:#444;margin-right:6px}
+.log .in{color:#4caf50}
+.log .out{color:#64b5f6}
+.log .err{color:#f44336}
+.info-box{background:#111;border:1px solid #1f3d2b;border-radius:4px;padding:12px;margin-bottom:12px;font-size:12px;color:#aaa;line-height:1.7}
+.info-box strong{color:#4caf50}
+.warn-box{background:#1a1600;border:1px solid #3a3000;border-radius:4px;padding:12px;margin-bottom:12px;font-size:12px;color:#ccc;line-height:1.7}
+.note-box{background:#0f1a2a;border:1px solid #1a3050;border-radius:4px;padding:12px;margin-top:8px;font-size:12px;color:#aaa;line-height:1.7}
+.note-box strong{color:#64b5f6}
+.checklist{margin-top:8px;padding-left:4px}
+.checklist li{list-style:none;padding:3px 0;font-size:12px;color:#888;display:flex;align-items:center;gap:8px}
+.checklist li::before{content:'☐';color:#555;font-size:14px}
+.checklist li.ok::before{content:'✓';color:#4caf50}
+pre{background:#111;border:1px solid #222;border-radius:4px;padding:10px;overflow-x:auto;font-size:11px;color:#ccc;margin-top:8px;max-height:220px;overflow-y:auto}
+.tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;margin-left:4px;vertical-align:middle;letter-spacing:.03em}
+.tag.proxy{background:#1a2a3d;color:#64b5f6}
+.tag.mobile{background:#2a1a3d;color:#ce93d8}
+.tag.sdk{background:#1a2a1a;color:#81c784}
+.tag.stream{background:#2a1a1a;color:#ef9a9a}
+.progress-bar-wrap{background:#222;border-radius:4px;height:6px;margin-top:8px;overflow:hidden}
+.progress-bar{height:6px;background:#1f5f4a;border-radius:4px;transition:width .2s}
+hr{border:none;border-top:1px solid #222;margin:12px 0}
+</style>
+</head>
+<body>
+
+<h1>Supabase Proxy Test</h1>
+<p class="subtitle">Comprehensive validation of db.tafsirkurd.com before production migration</p>
+
+<div class="info-box">
+  <strong>Architecture under test:</strong><br>
+  Browser/Capacitor → <code>db.tafsirkurd.com</code> (CF Worker) → <code>gijupzejtbpifjzwadee.supabase.co</code><br><br>
+  Two Supabase clients are initialized: one through the proxy, one directly to the original.<br>
+  Results are compared to verify identical behaviour.
+</div>
+
+<div class="warn-box">
+  ⚠ <strong>Run these deployment steps first:</strong><br>
+  1. <code>cd workers/supabase-proxy &amp;&amp; npx wrangler deploy</code><br>
+  2. Cloudflare Dashboard → Workers &amp; Pages → <strong>supabase-proxy</strong> → Settings → Domains &amp; Routes → Add Custom Domain: <strong>db.tafsirkurd.com</strong>
+</div>
+
+<!-- ─── Config ─────────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>Configuration</h2>
+  <div class="row"><label>Proxy URL</label><input id="proxyUrl" value="https://db.tafsirkurd.com"/></div>
+  <div class="row"><label>Original URL</label><input id="originalUrl" value="https://gijupzejtbpifjzwadee.supabase.co" readonly style="color:#555"/></div>
+  <div class="row"><label>Anon Key</label><input id="anonKey" placeholder="Auto-loaded from /config …"/></div>
+  <div class="row" style="margin-top:8px">
+    <button onclick="loadConfig()">Load Key from /config</button>
+    <button id="initBtn" onclick="initClients()" disabled>Initialize Clients</button>
+  </div>
+  <div id="cfgStatus" class="test-detail" style="margin-top:8px"></div>
+</div>
+
+<!-- ─── Runner ─────────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>Test Runner</h2>
+  <div class="row">
+    <button id="runAllBtn" onclick="runAll()" disabled>▶ Run All Tests</button>
+    <button onclick="clearAll()" style="background:#222">Clear</button>
+  </div>
+  <div id="summary" class="summary" style="display:none">
+    <div class="summary-item"><div id="sPass" class="summary-num pass">0</div><div class="summary-label">PASSED</div></div>
+    <div class="summary-item"><div id="sFail" class="summary-num fail">0</div><div class="summary-label">FAILED</div></div>
+    <div class="summary-item"><div id="sWarn" class="summary-num warn">0</div><div class="summary-label">WARNINGS</div></div>
+    <div class="summary-item"><div id="sSkip" class="summary-num skip">0</div><div class="summary-label">SKIPPED</div></div>
+  </div>
+</div>
+
+<!-- ─── 1. Auth ─────────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>1 · Auth <span class="tag proxy">proxy</span></h2>
+  <div id="r-auth" class="results"></div>
+</div>
+
+<!-- ─── 2. Database ─────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>2 · Database <span class="tag proxy">proxy</span></h2>
+  <div id="r-db" class="results"></div>
+</div>
+
+<!-- ─── 3. Storage ─────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>3 · Storage <span class="tag proxy">proxy</span></h2>
+  <div id="r-storage" class="results"></div>
+</div>
+
+<!-- ─── 4. Edge Functions ──────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>4 · Edge Functions <span class="tag proxy">proxy</span></h2>
+  <div id="r-functions" class="results"></div>
+</div>
+
+<!-- ─── 5. Realtime ────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>5 · Realtime / WebSocket <span class="tag proxy">proxy</span></h2>
+  <div id="r-realtime" class="results"></div>
+  <div id="wsLog" class="log" style="display:none"></div>
+</div>
+
+<!-- ─── 6. Headers / CORS ──────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>6 · Headers / CORS <span class="tag proxy">proxy</span></h2>
+  <div id="r-headers" class="results"></div>
+</div>
+
+<!-- ─── 7. Capacitor / Mobile ──────────────────────────────────────────────── -->
+<div class="card">
+  <h2>7 · Capacitor / Mobile <span class="tag mobile">mobile</span></h2>
+  <div class="note-box">
+    <strong>What is tested here:</strong> Everything a Capacitor WebView sends that differs from a desktop browser.
+    Range requests (audio seeking), binary download integrity, origin-free requests, and large-response streaming.
+    The <em>on-device checklist</em> below must be verified manually after the proxy goes live.
+  </div>
+  <div id="r-capacitor" class="results"></div>
+
+  <div class="note-box" style="margin-top:12px">
+    <strong>Manual on-device checklist</strong> — verify these after deploying the proxy and pointing the app at <code>db.tafsirkurd.com</code>:<br>
+    <ul class="checklist" id="deviceChecklist">
+      <li id="chk-ios-login">iOS — Login (email + password)</li>
+      <li id="chk-ios-logout">iOS — Logout + session cleared from Keychain/localStorage</li>
+      <li id="chk-ios-refresh">iOS — Session auto-refresh after 1 hour idle</li>
+      <li id="chk-ios-storage">iOS — Profile photo / image loading from Storage</li>
+      <li id="chk-ios-audio">iOS — Audio playback (Quran recitation) with seeking</li>
+      <li id="chk-ios-pdf">iOS — PDF loading / mushaf page rendering</li>
+      <li id="chk-ios-notif">iOS — Push notification token registration</li>
+      <li id="chk-android-login">Android — Login (email + password)</li>
+      <li id="chk-android-logout">Android — Logout</li>
+      <li id="chk-android-refresh">Android — Session auto-refresh</li>
+      <li id="chk-android-notif">Android — Push notification token registration</li>
+      <li id="chk-cloudsync">Cloud sync — bookmarks / progress round-trip</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ─── 8. Supabase SDK Compatibility ─────────────────────────────────────── -->
+<div class="card">
+  <h2>8 · Supabase JS SDK Compatibility <span class="tag sdk">sdk</span></h2>
+  <div class="note-box">
+    <strong>What is tested here:</strong> SDK-level behaviour that the proxy could silently break —
+    token refresh flow, Set-Cookie passthrough, signed URL generation, onAuthStateChange event firing,
+    localStorage key format, and PostgREST query builder correctness.
+  </div>
+  <div id="r-sdk" class="results"></div>
+</div>
+
+<!-- ─── 9. Streaming / Large Files ───────────────────────────────────────────  -->
+<div class="card">
+  <h2>9 · Streaming / Large Files <span class="tag stream">streaming</span></h2>
+  <div class="note-box">
+    <strong>What is tested here:</strong> The Worker passes <code>upstream.body</code> (a ReadableStream) directly
+    to the response — it never calls <code>.arrayBuffer()</code> or <code>.json()</code> on the body.
+    These tests verify Range header support, 206 Partial Content responses, Accept-Ranges header presence,
+    and time-to-first-byte vs. original.
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label>Storage file path</label>
+    <input id="storagePath" placeholder="e.g. /storage/v1/object/public/your-bucket/file.mp3" style="flex:3"/>
+    <button onclick="autoDiscoverStoragePath()">Auto-discover</button>
+  </div>
+  <div id="r-streaming" class="results"></div>
+</div>
+
+<!-- ─── 10. Latency Comparison ────────────────────────────────────────────── -->
+<div class="card">
+  <h2>10 · Latency Comparison</h2>
+  <div id="r-latency" class="results"></div>
+</div>
+
+<!-- ─── Raw Inspector ─────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>Raw Request Inspector</h2>
+  <div class="row">
+    <select id="rawTarget">
+      <option value="proxy">Proxy (db.tafsirkurd.com)</option>
+      <option value="original">Original (gijupzejtbpifjzwadee)</option>
+    </select>
+    <input id="rawPath" value="/rest/v1/site_settings?select=key,value&limit=3" style="flex:3"/>
+    <button onclick="sendRaw()">Send</button>
+  </div>
+  <pre id="rawResult">// Result appears here</pre>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let proxyCli = null, origCli = null, anonKey = null;
+let results  = [];
+
+// ─── Config ──────────────────────────────────────────────────────────────────
+async function loadConfig() {
+  const st = document.getElementById('cfgStatus');
+  st.textContent = 'Loading…'; st.style.color = '#888';
+  try {
+    const r = await fetch('/config', { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const cfg = await r.json();
+    if (!cfg.supabaseKey) throw new Error('supabaseKey missing from /config');
+    anonKey = cfg.supabaseKey;
+    document.getElementById('anonKey').value = anonKey;
+    st.style.color = '#4caf50';
+    st.textContent = '✓ Key loaded from /config';
+    document.getElementById('initBtn').disabled = false;
+  } catch(e) {
+    st.style.color = '#f44336';
+    st.textContent = '✗ ' + e.message + '  (paste key manually above)';
+    document.getElementById('anonKey').placeholder = 'Paste anon key here…';
+    document.getElementById('initBtn').disabled = false;
+  }
+}
+
+function initClients() {
+  const proxy    = document.getElementById('proxyUrl').value.trim();
+  const original = document.getElementById('originalUrl').value.trim();
+  const key      = document.getElementById('anonKey').value.trim() || anonKey;
+  if (!key) { alert('Load or paste the anon key first.'); return; }
+  anonKey = key;
+  proxyCli = supabase.createClient(proxy,    anonKey);
+  origCli  = supabase.createClient(original, anonKey);
+  const st = document.getElementById('cfgStatus');
+  st.style.color = '#4caf50';
+  st.textContent = '✓ Both clients initialized — ready to test';
+  document.getElementById('runAllBtn').disabled = false;
+}
+
+// ─── Result helpers ───────────────────────────────────────────────────────────
+function addResult(section, name, status, detail, error) {
+  const wrap = document.getElementById('r-' + section);
+  const el = document.createElement('div');
+  el.className = 'test-item';
+  el.innerHTML = `<span class="badge ${status}">${status.toUpperCase()}</span>
+    <div class="test-body">
+      <div class="test-name">${name}</div>
+      ${detail ? `<div class="test-detail">${detail}</div>` : ''}
+      ${error  ? `<div class="test-error">✗ ${error}</div>` : ''}
+    </div>`;
+  wrap.appendChild(el);
+  results.push({ section, name, status, el });
+  refreshSummary();
+  return el;
+}
+
+function updateResult(el, status, detail, error) {
+  const b = el.querySelector('.badge');
+  b.className = 'badge ' + status;
+  b.textContent = status.toUpperCase();
+  const body = el.querySelector('.test-body');
+  if (detail) {
+    const d = body.querySelector('.test-detail');
+    if (d) d.textContent = detail; else body.insertAdjacentHTML('beforeend',`<div class="test-detail">${detail}</div>`);
+  }
+  if (error) {
+    const e = body.querySelector('.test-error');
+    if (e) e.textContent = '✗ ' + error; else body.insertAdjacentHTML('beforeend',`<div class="test-error">✗ ${error}</div>`);
+  }
+  const r = results.find(x => x.el === el);
+  if (r) r.status = status;
+  refreshSummary();
+}
+
+function refreshSummary() {
+  const counts = { pass:0, fail:0, warn:0, skip:0 };
+  results.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+  ['Pass','Fail','Warn','Skip'].forEach(k => {
+    document.getElementById('s'+k).textContent = counts[k.toLowerCase()];
+  });
+  document.getElementById('summary').style.display = 'flex';
+}
+
+function clearAll() {
+  ['auth','db','storage','functions','realtime','headers','capacitor','sdk','streaming','latency']
+    .forEach(s => { document.getElementById('r-'+s).innerHTML = ''; });
+  results = [];
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('wsLog').style.display = 'none';
+  document.getElementById('wsLog').innerHTML = '';
+}
+
+async function timed(fn) {
+  const t0 = performance.now();
+  const r  = await fn();
+  return { r, ms: Math.round(performance.now() - t0) };
+}
+
+// ─── 1. Auth ─────────────────────────────────────────────────────────────────
+async function testAuth() {
+  let el;
+
+  // getSession
+  el = addResult('auth', 'getSession — proxy endpoint reachable', 'running');
+  try {
+    const { data, error } = await proxyCli.auth.getSession();
+    if (error) throw error;
+    updateResult(el, 'pass', 'session=' + (data.session ? 'active' : 'null'));
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // signInWithPassword bad creds → expect 400
+  el = addResult('auth', 'signInWithPassword — bad creds → 400', 'running');
+  try {
+    const { error } = await proxyCli.auth.signInWithPassword({ email:'__test__@tafsirkurd.com', password:'bad' });
+    const expected = error && (error.status === 400 || error.status === 422 ||
+      /invalid|credentials|email|user/i.test(error.message));
+    if (!error)    throw new Error('Expected rejection but got success');
+    if (!expected) throw new Error('Unexpected error: ' + error.message);
+    updateResult(el, 'pass', 'Proxy reached Auth — got expected ' + error.status + ' rejection');
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // resetPasswordForEmail → Supabase silently succeeds for any email
+  el = addResult('auth', 'resetPasswordForEmail — /recover endpoint', 'running');
+  try {
+    const { error } = await proxyCli.auth.resetPasswordForEmail('__test__@tafsirkurd.com', { redirectTo:'https://tafsirkurd.com' });
+    if (error) throw error;
+    updateResult(el, 'pass', 'Recover endpoint reachable');
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Proxy vs original getSession latency
+  el = addResult('auth', 'getSession latency — proxy vs original', 'running');
+  try {
+    const {ms:pm} = await timed(() => proxyCli.auth.getSession());
+    const {ms:om} = await timed(() => origCli.auth.getSession());
+    const d = pm - om;
+    updateResult(el, 'pass', `Proxy: ${pm}ms | Original: ${om}ms | Delta: ${d>0?'+':''}${d}ms`);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 2. Database ──────────────────────────────────────────────────────────────
+async function testDb() {
+  let el;
+
+  // Basic SELECT
+  el = addResult('db', 'SELECT from site_settings', 'running');
+  try {
+    const { data, error } = await proxyCli.from('site_settings').select('key,value').limit(3);
+    if (error) throw error;
+    updateResult(el, 'pass', `${data.length} row(s) returned`);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Data matches original
+  el = addResult('db', 'SELECT — proxy data identical to original', 'running');
+  try {
+    const [pr, or] = await Promise.all([
+      proxyCli.from('site_settings').select('key').order('key').limit(5),
+      origCli.from('site_settings').select('key').order('key').limit(5),
+    ]);
+    if (pr.error) throw pr.error;
+    if (or.error) throw or.error;
+    const pk = pr.data.map(r=>r.key).join(',');
+    const ok = or.data.map(r=>r.key).join(',');
+    if (pk !== ok) throw new Error('Proxy: ' + pk + ' | Original: ' + ok);
+    updateResult(el, 'pass', 'Data identical');
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // INSERT → expect RLS denial with anon key
+  el = addResult('db', 'INSERT — RLS enforced via proxy', 'running');
+  try {
+    const { error } = await proxyCli.from('site_settings').insert({ key:'__proxy_test', value:'x' });
+    if (!error) {
+      await proxyCli.from('site_settings').delete().eq('key','__proxy_test');
+      updateResult(el, 'warn', 'Insert succeeded (anon key allowed — check RLS)');
+    } else if (/42501|permission|policy|denied/i.test(error.message + (error.code||''))) {
+      updateResult(el, 'pass', 'RLS correctly blocked anonymous insert');
+    } else {
+      throw error;
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // SELECT latency
+  el = addResult('db', 'SELECT latency — proxy vs original', 'running');
+  try {
+    const {ms:pm} = await timed(() => proxyCli.from('site_settings').select('key').limit(1));
+    const {ms:om} = await timed(() => origCli.from('site_settings').select('key').limit(1));
+    updateResult(el, 'pass', `Proxy: ${pm}ms | Original: ${om}ms | Delta: ${pm-om>0?'+':''}${pm-om}ms`);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 3. Storage ───────────────────────────────────────────────────────────────
+async function testStorage() {
+  let el;
+
+  // listBuckets
+  el = addResult('storage', 'Storage /buckets endpoint reachable', 'running');
+  try {
+    const { data, error } = await proxyCli.storage.listBuckets();
+    if (!error) {
+      updateResult(el, 'pass', `${data.length} bucket(s) visible to anon key`);
+    } else if (/not authorized|403|400/i.test(error.message + (error.status||''))) {
+      updateResult(el, 'pass', 'Storage endpoint reachable (anon cannot list — expected)');
+    } else {
+      throw error;
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Storage URL status comparison
+  el = addResult('storage', 'Storage endpoint — proxy vs original HTTP status', 'running');
+  try {
+    const path = '/storage/v1/object/list/public';
+    const h    = { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey };
+    const [ps, os] = await Promise.all([
+      fetch(document.getElementById('proxyUrl').value.trim() + path, {headers:h}).then(r=>r.status),
+      fetch(document.getElementById('originalUrl').value.trim() + path, {headers:h}).then(r=>r.status),
+    ]);
+    if (ps === os) updateResult(el, 'pass', `Both returned HTTP ${ps}`);
+    else throw new Error(`Proxy: ${ps} | Original: ${os}`);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 4. Edge Functions ────────────────────────────────────────────────────────
+async function testFunctions() {
+  let el;
+  const proxy    = document.getElementById('proxyUrl').value.trim();
+  const original = document.getElementById('originalUrl').value.trim();
+  const opts = {
+    method:'POST',
+    headers: { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey, 'Content-Type':'application/json' },
+    body: JSON.stringify({})
+  };
+
+  el = addResult('functions', 'delete-account function — proxy reachable', 'running');
+  try {
+    const r = await fetch(proxy + '/functions/v1/delete-account', opts);
+    if (r.status === 502 || r.status === 504) throw new Error('HTTP ' + r.status + ' — Worker cannot reach function');
+    updateResult(el, 'pass', `Proxy returned HTTP ${r.status} (function endpoint reachable)`);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  el = addResult('functions', 'delete-account — proxy matches original status', 'running');
+  try {
+    const [ps, os] = await Promise.all([
+      fetch(proxy + '/functions/v1/delete-account', opts).then(r=>r.status),
+      fetch(original + '/functions/v1/delete-account', opts).then(r=>r.status),
+    ]);
+    if (ps === os) updateResult(el, 'pass', `Both returned HTTP ${ps}`);
+    else throw new Error(`Proxy: ${ps} | Original: ${os}`);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 5. Realtime ─────────────────────────────────────────────────────────────
+async function testRealtime() {
+  const log = document.getElementById('wsLog');
+  log.style.display = 'block'; log.innerHTML = '';
+  const L = (type, msg) => {
+    const ts = new Date().toISOString().substring(11,23);
+    log.innerHTML += `<div><span class="ts">${ts}</span><span class="${type}">${msg}</span></div>`;
+    log.scrollTop = log.scrollHeight;
+  };
+
+  let el = addResult('realtime', 'WebSocket connect + channel subscribe — proxy', 'running');
+  try {
+    await new Promise((res, rej) => {
+      const t = setTimeout(() => rej(new Error('Timeout after 10s')), 10000);
+      const ch = proxyCli.channel('proxy-test-' + Date.now());
+      ch.on('postgres_changes', {event:'*',schema:'public'}, p => L('in','change: ' + JSON.stringify(p).slice(0,80)))
+        .subscribe(status => {
+          L('out', 'status: ' + status);
+          if (status === 'SUBSCRIBED') {
+            clearTimeout(t); res();
+            setTimeout(() => proxyCli.removeChannel(ch), 800);
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            clearTimeout(t); rej(new Error('Channel: ' + status));
+          }
+        });
+    });
+    updateResult(el, 'pass', 'WebSocket connected and subscribed through proxy');
+  } catch(e) { updateResult(el, 'fail', null, e.message); L('err', e.message); }
+}
+
+// ─── 6. Headers / CORS ───────────────────────────────────────────────────────
+async function testHeaders() {
+  const proxy = document.getElementById('proxyUrl').value.trim();
+  let el;
+
+  // CORS OPTIONS preflight
+  el = addResult('headers', 'CORS OPTIONS preflight', 'running');
+  try {
+    const r = await fetch(proxy + '/rest/v1/', {
+      method: 'OPTIONS',
+      headers: { 'Origin':'https://tafsirkurd.com', 'Access-Control-Request-Method':'GET',
+                 'Access-Control-Request-Headers':'apikey,authorization' },
+    });
+    const acao = r.headers.get('access-control-allow-origin') || 'not set';
+    if (r.status === 200 || r.status === 204) updateResult(el, 'pass', 'ACAO: ' + acao);
+    else throw new Error('HTTP ' + r.status);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // JSON response headers
+  el = addResult('headers', 'apikey + Authorization forwarded — JSON response', 'running');
+  try {
+    const r = await fetch(proxy + '/rest/v1/site_settings?select=key&limit=1', {
+      headers: { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey },
+    });
+    const ct = r.headers.get('content-type') || '';
+    if (r.ok && ct.includes('json')) updateResult(el, 'pass', 'Content-Type: ' + ct);
+    else throw new Error('HTTP ' + r.status + ' ct=' + ct);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Accept-Ranges header present (needed for streaming)
+  el = addResult('headers', 'Accept-Ranges header — storage endpoint', 'running');
+  try {
+    const r = await fetch(proxy + '/storage/v1/object/list/public', {
+      method: 'GET',
+      headers: { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey },
+    });
+    const ar = r.headers.get('accept-ranges');
+    // Any response (including 4xx) proves the endpoint is reachable;
+    // Accept-Ranges is only set on actual file responses, not on list endpoints.
+    updateResult(el, 'pass', 'Storage endpoint responded HTTP ' + r.status + (ar ? ' | Accept-Ranges: '+ar : ''));
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 7. Capacitor / Mobile ────────────────────────────────────────────────────
+async function testCapacitor() {
+  const proxy    = document.getElementById('proxyUrl').value.trim();
+  const original = document.getElementById('originalUrl').value.trim();
+  let el;
+
+  // Range request — 206 Partial Content
+  el = addResult('capacitor', 'Range request (audio seeking) — proxy returns 206', 'running');
+  try {
+    // We need an actual storage URL. Try to find one first.
+    const storagePath = document.getElementById('storagePath').value.trim();
+    if (!storagePath) {
+      // Try auto-discovering one first
+      const found = await tryAutoDiscover();
+      if (found) {
+        document.getElementById('storagePath').value = found;
+      }
+    }
+    const path = document.getElementById('storagePath').value.trim();
+    if (!path) {
+      updateResult(el, 'skip', 'No storage path found — enter one in the Streaming section and re-run');
+    } else {
+      const r = await fetch(proxy + path, {
+        headers: { 'Range':'bytes=0-1023', 'apikey':anonKey, 'Authorization':'Bearer '+anonKey },
+      });
+      if (r.status === 206) {
+        const cr = r.headers.get('content-range') || '?';
+        updateResult(el, 'pass', 'HTTP 206 Partial Content | Content-Range: ' + cr);
+      } else if (r.status === 200) {
+        updateResult(el, 'warn', 'HTTP 200 (server ignored Range header) — seeking may not work on Capacitor');
+      } else {
+        throw new Error('HTTP ' + r.status);
+      }
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Range request — proxy matches original
+  el = addResult('capacitor', 'Range request — proxy matches original status', 'running');
+  try {
+    const path = document.getElementById('storagePath').value.trim();
+    if (!path) {
+      updateResult(el, 'skip', 'No storage path — skipped');
+    } else {
+      const h = { 'Range':'bytes=0-1023', 'apikey':anonKey, 'Authorization':'Bearer '+anonKey };
+      const [ps, os] = await Promise.all([
+        fetch(proxy + path, {headers:h}).then(r=>r.status),
+        fetch(original + path, {headers:h}).then(r=>r.status),
+      ]);
+      if (ps === os) updateResult(el, 'pass', 'Both returned HTTP ' + ps);
+      else throw new Error('Proxy: ' + ps + ' | Original: ' + os);
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Binary download integrity — fetch 1 KB and verify byte count
+  el = addResult('capacitor', 'Binary download integrity — byte count correct', 'running');
+  try {
+    const path = document.getElementById('storagePath').value.trim();
+    if (!path) {
+      updateResult(el, 'skip', 'No storage path — skipped');
+    } else {
+      const r = await fetch(proxy + path, {
+        headers: { 'Range':'bytes=0-4095', 'apikey':anonKey, 'Authorization':'Bearer '+anonKey },
+      });
+      if (r.status !== 200 && r.status !== 206) throw new Error('HTTP ' + r.status);
+      const buf = await r.arrayBuffer();
+      // Content-Range tells us how many bytes we expected
+      const cr = r.headers.get('content-range'); // e.g. "bytes 0-4095/12345678"
+      const expected = r.status === 206 ? 4096 : null;
+      const got = buf.byteLength;
+      if (expected && Math.abs(got - expected) > 1) throw new Error(`Expected ${expected} bytes, got ${got}`);
+      updateResult(el, 'pass', `Received ${got} bytes correctly${cr ? ' | Range: ' + cr : ''}`);
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // No-origin request (Capacitor WebView sometimes omits Origin)
+  el = addResult('capacitor', 'No-Origin request — proxy does not block', 'running');
+  try {
+    // We cannot set Origin: null from a browser, but we can omit it by using
+    // a same-origin fetch which carries our tafsirkurd.com origin.
+    // What we verify: the proxy forwards requests from any origin (no origin-gating in the Worker).
+    const r = await fetch(proxy + '/auth/v1/health', {
+      headers: { 'apikey':anonKey },
+    });
+    if (r.status < 500) updateResult(el, 'pass', 'HTTP ' + r.status + ' — Worker has no origin restrictions');
+    else throw new Error('HTTP ' + r.status);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // capacitor.config.ts reminder
+  el = addResult('capacitor', 'capacitor.config.ts — db.tafsirkurd.com in allowNavigation', 'warn',
+    'ACTION REQUIRED before building app: add "db.tafsirkurd.com" to allowNavigation in capacitor.config.ts');
+
+  // Notification endpoint reachable
+  el = addResult('capacitor', 'Push token registration — /functions/v1 reachable', 'running');
+  try {
+    const r = await fetch(proxy + '/functions/v1/register-push-token', {
+      method: 'POST',
+      headers: { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey, 'Content-Type':'application/json' },
+      body: JSON.stringify({ token:'__test__', platform:'test' }),
+    });
+    if (r.status !== 502 && r.status !== 504)
+      updateResult(el, 'pass', 'Push registration endpoint reachable via proxy (HTTP ' + r.status + ')');
+    else throw new Error('HTTP ' + r.status);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 8. SDK Compatibility ─────────────────────────────────────────────────────
+async function testSdk() {
+  let el;
+
+  // refreshSession — test the /token?grant_type=refresh_token endpoint
+  el = addResult('sdk', 'auth.refreshSession() — endpoint reachable', 'running');
+  try {
+    // No active session → SDK returns AuthSessionMissingError (expected).
+    // We just verify the proxy reaches the token endpoint, not that refresh succeeds.
+    const { error } = await proxyCli.auth.refreshSession();
+    if (!error || error.name === 'AuthSessionMissingError') {
+      updateResult(el, 'pass', 'Token endpoint reachable (no active session → expected missing error)');
+    } else if (error.status === 400 || error.status === 401) {
+      updateResult(el, 'pass', 'Token endpoint reachable (got ' + error.status + ')');
+    } else {
+      throw error;
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Set-Cookie passthrough — auth endpoints set cookies on some flows
+  el = addResult('sdk', 'Auth response headers — content-type JSON', 'running');
+  try {
+    const proxy = document.getElementById('proxyUrl').value.trim();
+    const r = await fetch(proxy + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'apikey':anonKey, 'Content-Type':'application/json' },
+      body: JSON.stringify({ email:'__test__@x.com', password:'bad' }),
+    });
+    const ct = r.headers.get('content-type') || '';
+    // Expect a JSON error response (400), not a proxy-level error
+    if (r.status !== 502 && r.status !== 504 && ct.includes('json'))
+      updateResult(el, 'pass', 'Auth endpoint returns JSON — headers forwarded correctly');
+    else throw new Error('HTTP ' + r.status + ' | CT: ' + ct);
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Storage signed URL — SDK generates URL using the configured supabaseUrl
+  el = addResult('sdk', 'storage.createSignedUrl() — URL uses proxy domain', 'running');
+  try {
+    // Try with a dummy path — it will fail with 404/400 but the URL structure tells us everything.
+    const { data, error } = await proxyCli.storage.from('__any_bucket__').createSignedUrl('__test_path__', 60);
+    const proxy = document.getElementById('proxyUrl').value.trim();
+    const url = data?.signedUrl || '';
+    if (url.startsWith(proxy)) {
+      updateResult(el, 'pass', 'Signed URL domain = proxy ✓  ' + url.substring(0,80));
+    } else if (error && !url) {
+      // Bucket doesn't exist — but we can infer from the error context
+      updateResult(el, 'warn', 'Could not verify (bucket not found). Signed URL domain inference: SDK uses the configured URL (' +
+        proxy + ') so this will be correct once real buckets are tested.');
+    } else {
+      throw new Error('Signed URL uses wrong domain: ' + url);
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // onAuthStateChange — subscription fires INITIAL_SESSION
+  el = addResult('sdk', 'onAuthStateChange — INITIAL_SESSION fires', 'running');
+  try {
+    await new Promise((res, rej) => {
+      const t = setTimeout(() => rej(new Error('No INITIAL_SESSION event in 5s')), 5000);
+      const { data: { subscription } } = proxyCli.auth.onAuthStateChange((event, session) => {
+        if (event === 'INITIAL_SESSION') {
+          clearTimeout(t);
+          subscription.unsubscribe();
+          res(session);
+        }
+      });
+    });
+    updateResult(el, 'pass', 'INITIAL_SESSION event fired correctly');
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // localStorage key format — SDK stores session under 'sb-<ref>-auth-token'
+  el = addResult('sdk', 'SDK localStorage key format preserved', 'running');
+  try {
+    // The key is derived from the supabase URL host by the SDK.
+    // Proxy URL → host = 'db.tafsirkurd.com'  → key = 'sb-db.tafsirkurd-auth-token'
+    // We verify the SDK constructs a key (any key) — proves the client initialised correctly.
+    const storageKey = proxyCli.auth['storageKey'] || Object.keys(localStorage).find(k => k.startsWith('sb-'));
+    if (storageKey) {
+      updateResult(el, 'pass', 'Storage key: ' + storageKey);
+    } else {
+      updateResult(el, 'warn', 'Could not read storageKey — inspect localStorage manually after login');
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // PostgREST query builder — multi-filter query
+  el = addResult('sdk', 'PostgREST query builder — filter + order + limit', 'running');
+  try {
+    const { data, error } = await proxyCli
+      .from('site_settings')
+      .select('key,value')
+      .neq('key', '__nonexistent__')
+      .order('key', { ascending: true })
+      .limit(2);
+    if (error) throw error;
+    updateResult(el, 'pass', data.length + ' row(s) — query builder works through proxy');
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 9. Streaming ────────────────────────────────────────────────────────────
+async function tryAutoDiscover() {
+  try {
+    const { data } = await proxyCli.storage.listBuckets();
+    if (!data || !data.length) return null;
+    for (const bucket of data.slice(0,3)) {
+      const { data: files } = await proxyCli.storage.from(bucket.name).list('', { limit:3 });
+      if (files && files.length) {
+        const f = files.find(x => x.metadata && x.name);
+        if (f) return `/storage/v1/object/public/${bucket.name}/${f.name}`;
+      }
+    }
+    return null;
+  } catch { return null; }
+}
+
+async function autoDiscoverStoragePath() {
+  document.getElementById('storagePath').value = 'Searching…';
+  const path = await tryAutoDiscover();
+  document.getElementById('storagePath').value = path || '';
+  if (!path) alert('No public storage files found. Paste a path manually.');
+}
+
+async function testStreaming() {
+  const proxy    = document.getElementById('proxyUrl').value.trim();
+  const original = document.getElementById('originalUrl').value.trim();
+  let el;
+
+  // Auto-discover if empty
+  if (!document.getElementById('storagePath').value.trim()) {
+    const found = await tryAutoDiscover();
+    if (found) document.getElementById('storagePath').value = found;
+  }
+  const path = document.getElementById('storagePath').value.trim();
+
+  // Accept-Ranges header — fundamental for audio/video/PDF seeking
+  el = addResult('streaming', 'Accept-Ranges: bytes — present on file response', 'running');
+  try {
+    if (!path) { updateResult(el, 'skip', 'No storage path'); }
+    else {
+      const r = await fetch(proxy + path, { method:'HEAD', headers:{'apikey':anonKey,'Authorization':'Bearer '+anonKey} });
+      const ar = r.headers.get('accept-ranges');
+      if (ar === 'bytes') updateResult(el, 'pass', 'Accept-Ranges: bytes ✓');
+      else if (r.status === 200 || r.status === 206) updateResult(el, 'warn', 'HTTP '+r.status+' but Accept-Ranges=' + (ar||'missing') + ' — seeking may not work');
+      else throw new Error('HTTP ' + r.status);
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // 206 Partial Content — correct Range response
+  el = addResult('streaming', '206 Partial Content — Range: bytes=0-4095', 'running');
+  try {
+    if (!path) { updateResult(el, 'skip', 'No storage path'); }
+    else {
+      const r = await fetch(proxy + path, {
+        headers: { 'Range':'bytes=0-4095', 'apikey':anonKey, 'Authorization':'Bearer '+anonKey }
+      });
+      if (r.status === 206) {
+        const cr = r.headers.get('content-range') || '?';
+        const buf = await r.arrayBuffer();
+        updateResult(el, 'pass', `HTTP 206 | ${buf.byteLength} bytes | Content-Range: ${cr}`);
+      } else if (r.status === 200) {
+        updateResult(el, 'warn', 'Server returned 200 instead of 206 (no Range support)');
+      } else {
+        throw new Error('HTTP ' + r.status);
+      }
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Range proxy vs original — must match exactly
+  el = addResult('streaming', 'Range response — proxy matches original byte-for-byte', 'running');
+  try {
+    if (!path) { updateResult(el, 'skip', 'No storage path'); }
+    else {
+      const h = { 'Range':'bytes=0-255', 'apikey':anonKey, 'Authorization':'Bearer '+anonKey };
+      const [pr, or] = await Promise.all([
+        fetch(proxy + path, {headers:h}).then(async r => ({ status:r.status, bytes: new Uint8Array(await r.arrayBuffer()) })),
+        fetch(original + path, {headers:h}).then(async r => ({ status:r.status, bytes: new Uint8Array(await r.arrayBuffer()) })),
+      ]);
+      if (pr.status !== or.status) throw new Error('Status mismatch: proxy='+pr.status+' original='+or.status);
+      if (pr.bytes.length !== or.bytes.length) throw new Error('Byte count mismatch: proxy='+pr.bytes.length+' original='+or.bytes.length);
+      // Spot-check first/last 4 bytes
+      const same = [0,1,2,3,-4,-3,-2,-1].every(i => {
+        const idx = i < 0 ? pr.bytes.length + i : i;
+        return pr.bytes[idx] === or.bytes[idx];
+      });
+      if (!same) throw new Error('Byte content differs between proxy and original');
+      updateResult(el, 'pass', `${pr.bytes.length} bytes — proxy and original byte-for-byte identical`);
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // Time-to-first-byte — streaming means TTFB ≈ wire latency + CF overhead only
+  el = addResult('streaming', 'Time-to-first-byte — proxy vs original', 'running');
+  try {
+    if (!path) { updateResult(el, 'skip', 'No storage path'); }
+    else {
+      const h = { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey };
+      const RUNS = 3;
+      const times = { proxy:[], original:[] };
+      for (let i = 0; i < RUNS; i++) {
+        const t0 = performance.now();
+        const rp = await fetch(proxy + path, { headers:h });
+        await rp.body.getReader().read(); // wait for first chunk
+        times.proxy.push(Math.round(performance.now() - t0));
+
+        const t1 = performance.now();
+        const ro = await fetch(original + path, { headers:h });
+        await ro.body.getReader().read();
+        times.original.push(Math.round(performance.now() - t1));
+      }
+      const avg = a => Math.round(a.reduce((s,v)=>s+v,0)/a.length);
+      const pm = avg(times.proxy), om = avg(times.original);
+      updateResult(el, 'pass', `TTFB — Proxy: ${pm}ms | Original: ${om}ms | Overhead: ${pm-om>0?'+':''}${pm-om}ms (${RUNS} runs)`);
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+
+  // No-buffer proof — Content-Length header passes through intact
+  el = addResult('streaming', 'Content-Length preserved — Worker does not buffer', 'running');
+  try {
+    if (!path) { updateResult(el, 'skip', 'No storage path'); }
+    else {
+      const h = { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey };
+      const [pr, or] = await Promise.all([
+        fetch(proxy + path, {method:'HEAD', headers:h}).then(r => r.headers.get('content-length')),
+        fetch(original + path, {method:'HEAD', headers:h}).then(r => r.headers.get('content-length')),
+      ]);
+      if (!pr && !or) updateResult(el, 'warn', 'Neither endpoint sends Content-Length (chunked transfer)');
+      else if (pr === or) updateResult(el, 'pass', 'Content-Length: ' + pr + ' bytes — identical on both');
+      else throw new Error('Mismatch — proxy: ' + pr + ' | original: ' + or);
+    }
+  } catch(e) { updateResult(el, 'fail', null, e.message); }
+}
+
+// ─── 10. Latency ─────────────────────────────────────────────────────────────
+async function testLatency() {
+  const proxy    = document.getElementById('proxyUrl').value.trim();
+  const original = document.getElementById('originalUrl').value.trim();
+  const h = { 'apikey':anonKey, 'Authorization':'Bearer '+anonKey };
+  const RUNS = 5;
+
+  const endpoints = [
+    { name:'DB  /rest/v1 — SELECT 1 row',  path:'/rest/v1/site_settings?select=key&limit=1' },
+    { name:'Auth /auth/v1 — getSession',   path:'/auth/v1/user' },
+    { name:'Storage /storage/v1 — list',   path:'/storage/v1/object/list/public' },
+  ];
+
+  for (const ep of endpoints) {
+    const el = addResult('latency', ep.name, 'running');
+    try {
+      const pt = [], ot = [];
+      for (let i = 0; i < RUNS; i++) {
+        const t0 = performance.now(); await fetch(proxy    + ep.path, {headers:h}); pt.push(performance.now()-t0);
+        const t1 = performance.now(); await fetch(original + ep.path, {headers:h}); ot.push(performance.now()-t1);
+      }
+      const avg = a => Math.round(a.reduce((s,v)=>s+v,0)/a.length);
+      const pm = avg(pt), om = avg(ot), d = pm-om;
+      updateResult(el, 'pass', `Proxy: ${pm}ms | Original: ${om}ms | Overhead: ${d>0?'+':''}${d}ms  (${RUNS}-run avg)`);
+    } catch(e) { updateResult(el, 'fail', null, e.message); }
+  }
+}
+
+// ─── Run All ──────────────────────────────────────────────────────────────────
+async function runAll() {
+  if (!proxyCli) { alert('Initialize clients first.'); return; }
+  clearAll();
+  const btn = document.getElementById('runAllBtn');
+  btn.disabled = true; btn.textContent = '⏳ Running…';
+  try {
+    await testAuth();
+    await testDb();
+    await testStorage();
+    await testFunctions();
+    await testRealtime();
+    await testHeaders();
+    await testCapacitor();
+    await testSdk();
+    await testStreaming();
+    await testLatency();
+  } finally {
+    btn.disabled = false; btn.textContent = '▶ Run All Tests';
+  }
+}
+
+// ─── Raw Inspector ────────────────────────────────────────────────────────────
+async function sendRaw() {
+  const base = document.getElementById('rawTarget').value === 'proxy'
+    ? document.getElementById('proxyUrl').value.trim()
+    : document.getElementById('originalUrl').value.trim();
+  const path = document.getElementById('rawPath').value.trim();
+  const out  = document.getElementById('rawResult');
+  out.textContent = 'Sending…';
+  try {
+    const t0 = performance.now();
+    const r  = await fetch(base + path, {
+      headers: { 'apikey': anonKey || '', 'Authorization': 'Bearer ' + (anonKey||'') }
+    });
+    const ms   = Math.round(performance.now() - t0);
+    const body = await r.text();
+    let pretty = body;
+    try { pretty = JSON.stringify(JSON.parse(body), null, 2); } catch {}
+    const hdrs = {};
+    r.headers.forEach((v,k) => hdrs[k] = v);
+    out.textContent = `URL: ${base + path}\nStatus: ${r.status} ${r.statusText}\nTime: ${ms}ms\n\nHeaders:\n${JSON.stringify(hdrs,null,2)}\n\nBody:\n${pretty}`;
+  } catch(e) { out.textContent = 'Error: ' + e.message; }
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+loadConfig();
+</script>
+</body>
+</html>

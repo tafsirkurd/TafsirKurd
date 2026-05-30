@@ -1,0 +1,10 @@
+name               = "supabase-proxy"
+main               = "index.js"
+compatibility_date = "2024-09-23"
+
+# After deploying, add the custom domain in Cloudflare dashboard:
+#   Workers & Pages → supabase-proxy → Settings → Domains & Routes → Add Custom Domain
+#   Domain: db.tafsirkurd.com
+#
+# Cloudflare will automatically create the DNS record.
+# No manual DNS setup needed.

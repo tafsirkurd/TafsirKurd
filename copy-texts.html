@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head><meta charset="UTF-8"><title>Untouched Texts</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:sans-serif;padding:24px;background:#0f0f0f;color:#e5e5e5;direction:rtl;max-width:680px;margin:0 auto}
+  h1{font-size:.85rem;color:#666;margin-bottom:16px;direction:ltr;text-align:left}
+  .copy-all-btn{display:block;width:100%;margin-bottom:28px;padding:14px;background:#22c55e;color:#000;font-size:1rem;font-weight:800;border:none;border-radius:12px;cursor:pointer}
+  .copy-all-btn:active{opacity:.8}
+  .section{margin-bottom:28px}
+  .section-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#555;text-transform:uppercase;direction:ltr;text-align:left;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #222}
+  .row{margin:6px 0;padding:10px 14px;background:#1a1a1a;border-radius:8px;font-size:1rem;border:1px solid #2a2a2a;line-height:1.6}
+  .lbl{font-size:.62rem;color:#555;margin-bottom:2px;margin-top:10px;direction:ltr;text-align:left}
+  pre{display:none}
+</style>
+</head>
+<body>
+<h1>Strings not yet changed to Kurmanji</h1>
+<button class="copy-all-btn" onclick="copyAll()">📋 کۆپی کە هەمیان</button>
+
+<pre id="allText">
+=== SMART-DHIKR TAGS (sd-tag) ===
+مزگەفت
+پشتی نڤێژێ
+سپێدەهی
+ئیشراق
+ئێواربوون
+شەو
+ئینانی
+ڕەمەزان
+ئیفتار
+لێلەتول قەدر
+ذوالحیجە
+عەرەفە
+باران
+هەوا
+
+=== PRE-FAJR LABEL ===
+دووهی (هێشتا بەردەستە)
+
+=== BACK BUTTON ===
+داخستن
+
+=== INSIGHT ROW 3 value suffix ===
+ناڤنجی
+
+=== MONTH CELEBRATION CARD ===
+Title: ما شاء الله! 🌟
+Subtitle line 1: تە هەمی نڤێژێن مەهێ تەمام کرن!
+Subtitle line 2: خودێ قبوول بکەت 🤲
+Streak badge (X = days): 🔥 X ڕۆژ ل سەر ئێک
+Close button: داخستن
+</pre>
+
+<!-- SMART-DHIKR TAGS -->
+<div class="section">
+  <div class="section-title">Smart-Dhikr Tags (sd-tag) — hardcoded in smart-dhikr.js</div>
+  <div class="row">مزگەفت</div>
+  <div class="row">پشتی نڤێژێ</div>
+  <div class="row">سپێدەهی</div>
+  <div class="row">ئیشراق</div>
+  <div class="row">ئێڤاری</div>
+  <div class="row">شەڤ</div>
+  <div class="row">ئەینی</div>
+  <div class="row">ڕەمەزان</div>
+  <div class="row">فتارە</div>
+  <div class="row">شەڤا قەدرێ</div>
+  <div class="row">ذوالحیجە</div>
+  <div class="row">عەرەفە</div>
+  <div class="row">باران</div>
+  <div class="row">هەوا</div>
+</div>
+
+<!-- PRE-FAJR -->
+<div class="section">
+  <div class="section-title">Pre-fajr label (shows when yesterday still open)</div>
+  <div class="row">دووهی (هێشتا بەردەستە)</div>
+</div>
+
+<!-- BACK BUTTON -->
+<div class="section">
+  <div class="section-title">Back button aria-label</div>
+  <div class="row">داخستن</div>
+</div>
+
+<!-- INSIGHT ROW 3 -->
+<div class="section">
+  <div class="section-title">Insight Row 3 — value suffix (weakest day average)</div>
+  <div class="row">ناڤنجی</div>
+</div>
+
+<!-- MONTH CELEBRATION -->
+<div class="section">
+  <div class="section-title">Month Celebration Card — never updated</div>
+  <div class="lbl">Title</div><div class="row">ما شاء الله! 🌟</div>
+  <div class="lbl">Subtitle</div><div class="row">تە هەمی نڤێژێن مەهێ تەمام کرن!<br>خودێ قبوول بکەت 🤲</div>
+  <div class="lbl">Streak badge (X = days)</div><div class="row">🔥 X ڕۆژ ل سەر ئێک</div>
+  <div class="lbl">Close button</div><div class="row">داخستن</div>
+</div>
+
+<script>
+function copyAll(){
+  var text=document.getElementById('allText').textContent.trim();
+  navigator.clipboard.writeText(text).then(function(){
+    var btn=document.querySelector('.copy-all-btn');
+    var orig=btn.textContent;
+    btn.textContent='✅ کۆپی کرا!';
+    btn.style.background='#16a34a';
+    setTimeout(function(){btn.textContent=orig;btn.style.background='#22c55e';},2200);
+  });
+}
+</script>
+</body>
+</html>
