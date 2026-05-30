@@ -11315,17 +11315,17 @@ App.openLogin=function(){
     _googleBusy=true;
     if(btn){btn.disabled=true;btn.style.opacity='0.6';}
 
-    var redirectUrl='com.tafsirkurd.app://auth/callback';
-    if(!window.Capacitor||!window.Capacitor.isNativePlatform()){
-      redirectUrl=window.location.origin+'/app/index.html';
-    }
+    var _isNative=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+    var redirectUrl=_isNative?'com.tafsirkurd.app://auth/callback':(window.location.origin+'/app/index.html');
 
     S.supabase.auth.signInWithOAuth({
       provider:'google',
       options:{
         redirectTo:redirectUrl,
         queryParams:{access_type:'offline',prompt:'consent'},
-        skipBrowserRedirect:true
+        // On native: skip auto-redirect so we can open the URL in the Capacitor browser.
+        // On web: let Supabase handle the redirect directly — no manual navigation needed.
+        skipBrowserRedirect:_isNative
       }
     }).then(function(resp){
       if(resp.error){
@@ -11335,18 +11335,16 @@ App.openLogin=function(){
         if(btn){btn.disabled=false;btn.style.opacity='';}
         return;
       }
-      if(resp.data&&resp.data.url){
-        // Only use Capacitor Browser plugin on actual native platforms.
-        // On web, Capacitor.Plugins.Browser exists but calls window.open() which
-        // gets blocked by popup blockers and breaks the OAuth redirect flow.
-        var _isNativePlatform=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
-        if(_isNativePlatform&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
+      // On native, Supabase returned the URL without redirecting — open it in the native browser
+      if(_isNative&&resp.data&&resp.data.url){
+        if(window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
           window.Capacitor.Plugins.Browser.open({url:resp.data.url});
         }else{
           window.location.href=resp.data.url;
         }
       }
-      // Browser opened — restore button after 3s so user can retry if browser dismissed
+      // On web, Supabase already redirected the page — nothing to do here
+      // Restore button after 3s so user can retry if something went wrong
       setTimeout(function(){
         _googleBusy=false;
         if(btn){btn.disabled=false;btn.style.opacity='';}
