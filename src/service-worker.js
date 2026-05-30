@@ -20,7 +20,7 @@ const PRECACHE = [
   '/dhikr/smart-dhikr.js?v=52',
   // i18n
   '/i18n/i18n.js?v=20260530a',
-  '/i18n/kmr-bundled.js?v=20260530a',
+  '/i18n/kmr-bundled.js?v=20260530b',
   '/i18n/kmr.json',
   // Data
   '/data/quran.json',
