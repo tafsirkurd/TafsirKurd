@@ -9933,17 +9933,6 @@ function renderSettings(){
     localStorage.setItem('bgAudio',String(S.bgAudio));
     renderSettings();
   }));
-  // Downloads row — unified manager for offline books + audio
-  var _dlRow=el('div','setting-row s-row');_dlRow.style.cursor='pointer';
-  var _dlRowL=el('div','setting-label-wrap');
-  var _dlRowLbl=el('div','setting-label');
-  var _dlRowIco=icon('fas fa-download');_dlRowIco.style.cssText='margin-left:6px;color:var(--accent);font-size:.85em';
-  _dlRowLbl.appendChild(_dlRowIco);_dlRowLbl.appendChild(document.createTextNode(' '+(t('dl.manage')||'داونلۆدەکان')));
-  _dlRowL.appendChild(_dlRowLbl);_dlRow.appendChild(_dlRowL);
-  var _dlRowChev=icon('fas fa-chevron-left');_dlRowChev.style.cssText='color:var(--text-tertiary);font-size:.8rem;flex-shrink:0';
-  _dlRow.appendChild(_dlRowChev);
-  on(_dlRow,'click',function(){haptic([8]);openDlManager();});
-  gAudio.appendChild(_dlRow);
   frag.appendChild(gAudio);
 
   // ── Notifications & Haptics ──────────────────
@@ -9961,6 +9950,14 @@ function renderSettings(){
   // ── Data & Sync ──────────────────────────────
   var g4=el('div','settings-group');
   g4.appendChild(el('div','settings-group-title',t('settings.data')));
+  // Downloads manager
+  var _dlRow=el('div','setting-row s-row');_dlRow.style.cursor='pointer';
+  var _dlRowL=el('div','setting-label-wrap');_dlRowL.appendChild(el('div','setting-label',t('dl.manage')||'داونلۆدەکان'));
+  _dlRow.appendChild(_dlRowL);
+  var _dlRowChev=icon('fas fa-chevron-left');_dlRowChev.style.cssText='color:var(--text-tertiary);font-size:.8rem;flex-shrink:0';
+  _dlRow.appendChild(_dlRowChev);
+  on(_dlRow,'click',function(){haptic([8]);openDlManager();});
+  g4.appendChild(_dlRow);
   // (6) Sync status panel
   if(S.user){
     var syncCard=el('div','sync-card');
