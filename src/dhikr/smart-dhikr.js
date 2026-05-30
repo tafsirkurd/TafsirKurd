@@ -1469,6 +1469,12 @@
     }
 
     function _update() {
+      // Self-clean if chip was removed from DOM (tab switch, panel hide, clearCache)
+      if (!document.body.contains(chip)) {
+        clearInterval(chip._countdownTid);
+        chip._countdownTid = null;
+        return;
+      }
       timeEl.textContent = _fmt(_msUntilBaghdadMidnight());
     }
 
@@ -1659,6 +1665,11 @@
      PUBLIC API
   ───────────────────────────────────────────── */
   function clearCache() {
+    // Clear countdown interval before nulling el — prevents orphaned 1Hz timer
+    if (_sectionCache.el) {
+      var _chip = _sectionCache.el.querySelector('.sd-chip');
+      if (_chip && _chip._countdownTid) { clearInterval(_chip._countdownTid); _chip._countdownTid = null; }
+    }
     _sectionCache.el            = null;
     _sectionCache.seed          = null;
     _sectionCache.hasData       = false;
