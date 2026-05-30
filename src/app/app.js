@@ -10224,7 +10224,7 @@ function initSupabase(cb){
   var cachedCfg=null;
   try{cachedCfg=JSON.parse(localStorage.getItem('supa_cfg'))}catch(e){}
   if(cachedCfg&&cachedCfg.supabaseUrl&&cachedCfg.supabaseKey){
-    S.supabase=window.supabase.createClient(cachedCfg.supabaseUrl,cachedCfg.supabaseKey);
+    S.supabase=window.supabase.createClient(cachedCfg.supabaseUrl,cachedCfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
     window._appSupabase=S.supabase;
     _notifySupabaseReady();
     checkAuthSession();
@@ -10244,7 +10244,7 @@ function initSupabase(cb){
     if(cfg.supabaseUrl&&cfg.supabaseKey){
       try{localStorage.setItem('supa_cfg',JSON.stringify(cfg))}catch(e){}
       if(!S.supabase){
-        S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
+        S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
         window._appSupabase=S.supabase;
         _notifySupabaseReady();
         checkAuthSession();
@@ -12373,7 +12373,7 @@ function initIslamVoice(cb){
     return r.json();
   }).then(function(cfg){
     if(cfg.supabaseUrl&&cfg.supabaseKey){
-      S.ivSupabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
+      S.ivSupabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
       if(!S.supabase){S.supabase=S.ivSupabase;window._appSupabase=S.ivSupabase;_notifySupabaseReady();}
       // Fire all queued callbacks — they will each call ivFetchFresh
       var _q=_ivInitCbs.splice(0);_q.forEach(function(fn){try{fn();}catch(e){}});

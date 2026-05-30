@@ -8,6 +8,7 @@ const config: CapacitorConfig = {
     allowNavigation: [
       'tafsirkurd.com',
       'gijupzejtbpifjzwadee.supabase.co',
+      'db.tafsirkurd.com',
       'everyayah.com',
       'api.quran.com',
       'api.aladhan.com',
