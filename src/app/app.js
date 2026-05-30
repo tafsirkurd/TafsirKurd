@@ -3927,6 +3927,7 @@ function renderMushafView(){
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   _mqReset();
   window._mushafVerseElements={};
+  _mushafRenderMetrics={}; // reset per-surah — prevents unbounded growth across long sessions
   // Single clear + skeleton — never clear twice. When page range resolves we remove
   // only the skeleton node, so the view is never in a blank state between clears.
   clear(view);
