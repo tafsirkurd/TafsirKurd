@@ -1621,7 +1621,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "toast.network_reconnected", kurdish_text: "ئینتەرنێت گەڕایەوە ✓",           category: "toast",     page: "android" },
     { key_id: "settings.quran_reading_intention", kurdish_text: "ب ناڤێ خودێ ئه‌ز خواندنا قورئانێ ده‌ست پێ دكه‌م", category: "settings", page: "android" },
     { key_id: "auth.email_conflict_email",  kurdish_text: "ئیمێڵێ تە یێ گرێداییە ب هەژمارەکا دی ڤە.", category: "auth", page: "android" },
-    { key_id: "auth.email_conflict_google":"ئیمێڵێ تە یێ گرێداییە ب Google ڤە، ب گووگڵ هەرە ژوورڤە.", category: "auth", page: "android" },
+    { key_id: "auth.email_conflict_google", kurdish_text: "ئیمێڵێ تە یێ گرێداییە ب Google ڤە، ب گووگڵ هەرە ژوورڤە.", category: "auth", page: "android" },
     { key_id: "security.session_changed",   kurdish_text: "⚠️ گۆڕانکارییەک د سیشنا تە دا هاتە دیتن. تکایە دووبارە بچە ژوورڤە.", category: "security", page: "android" },
     { key_id: "bookmarks.empty_description", kurdish_text: "دەما تو ئایەتەکێ نیشانە دکەی، ل ڤێرێ دێ بینی. تو دشێی تێبینی و بیرهاتنێن خۆ ژی تۆمار بکەی.", category: "bookmarks", page: "android" },
     { key_id: "prayer.format_24h",           kurdish_text: "24h",                        category: "prayer",        page: "android" },
