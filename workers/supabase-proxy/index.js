@@ -75,14 +75,27 @@ async function proxyHttp(request) {
     headers.set('accept-encoding', 'identity');
   }
 
+  // Storage signed-URL requests redirect to S3/R2 CDN. Follow those server-side
+  // so the Worker returns the file content directly (mobile WebViews may not have
+  // CORS access to the CDN origin).
+  //
+  // Auth and all other paths use 'manual': Supabase /auth/v1/authorize returns a
+  // 302 to accounts.google.com. With 'follow' the Worker fetches Google's HTML
+  // server-side and serves it under db.tafsirkurd.com, breaking Google's CSP and
+  // CORS checks. With 'manual' the 302 is forwarded to the browser unchanged so
+  // the browser navigates to accounts.google.com with the correct origin.
+  const redirectMode = url.pathname.startsWith('/storage/') ? 'follow' : 'manual';
+
   const upstream = await fetch(target, {
     method:   request.method,
     headers,
     body:     request.body,
-    redirect: 'follow',   // follow storage redirects to S3/R2 CDN
+    redirect: redirectMode,
   });
 
   // upstream.body is a ReadableStream — piped directly, never buffered.
+  // For redirect responses (status 3xx) upstream.body is null; that is correct —
+  // the browser receives the empty-body 302 with Location header and follows it.
   return new Response(upstream.body, {
     status:     upstream.status,
     statusText: upstream.statusText,
