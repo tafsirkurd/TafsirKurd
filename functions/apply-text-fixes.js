@@ -48,7 +48,8 @@ const CORRECTIONS = [
     { key_id: 'auth.email_conflict_google',  kurdish_text: 'ئیمێڵێ تە یێ گرێداییە ب Google ڤە، ب گووگڵ هەرە ژوورڤە.' },
     { key_id: 'toast.widget_no_data',        kurdish_text: 'چ داتا نینن' },
     { key_id: 'toast.widget_error',           kurdish_text: 'خەلەتی د ووجێتی دا' },
-    { key_id: 'toast.sync_started',          kurdish_text: 'هەلگرتن دەستپێکر…' },
+    { key_id: 'toast.sync_started',           kurdish_text: 'هەلگرتن دەستپێکر…' },
+    { key_id: 'toast.rating_thanks',          kurdish_text: 'سوپاس بۆ هەڵسەنگاندنا تە!' },
 ];
 
 const CORS = {

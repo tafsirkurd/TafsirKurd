@@ -1826,7 +1826,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "settings.rate_sub", kurdish_text: "لەسەر Google Play هەڵسەنگاندن بکە", category: "settings", page: "android" },
     { key_id: "settings.social", kurdish_text: "ئێمە ل ڤێرە بدۆزە", category: "settings", page: "android" },
     { key_id: "toast.rating_opening", kurdish_text: "بازارگەی ئەپ کرایەوە…", category: "rating", page: "android" },
-    { key_id: "toast.rating_thanks", kurdish_text: "شکرگوزارین! 🙏", category: "rating", page: "android" },
+    { key_id: "toast.rating_thanks", kurdish_text: "سوپاس بۆ هەڵسەنگاندنا تە!", category: "rating", page: "android" },
     { key_id: "toast.widget_error", kurdish_text: "خەلەتی د ووجێتی دا", category: "widgets", page: "android" },
     { key_id: "toast.widget_no_data", kurdish_text: "چ داتا نینن", category: "widgets", page: "android" },
     { key_id: "toast.widget_saved", kurdish_text: "ئایەت بۆ ویجیت زیاد کرا", category: "widgets", page: "android" },
