@@ -263,7 +263,7 @@
   "auth.err_token_expired": "کاتی کۆدەکە تەواوبوو. کۆدێکی نوی داواکە",
   "auth.err_token_invalid": "کۆدێ خەلەتە. پشتڕاست بە و دووبارە تاقی بکەڤە",
   "auth.resend_code": "کۆد دووبارە بنێرە",
-  "auth.code_resent": "کۆد دووبارە نێردرا",
+  "auth.code_resent": "کۆد دووبارە هاتە فرێکرن ✓",
   "goals.empty.title": "ئارمانجەکێ ژبۆ خۆ دابنێ",
   "goals.empty.subtitle": "ڕۆژانە چەند ئایەتەک بخوینە",
   "goals.empty.motivate": "پێنگاڤێت بچویک، گوھۆڕینەکا مەزن",

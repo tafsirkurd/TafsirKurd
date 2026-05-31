@@ -1722,7 +1722,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "settings.sync_status_failed",  kurdish_text: "هاوکارکرن سەرنەکەوت",       category: "settings", page: "android" },
     { key_id: "settings.sync_retry_btn",      kurdish_text: "دووبارە هەوڵبدە",           category: "settings", page: "android" },
     { key_id: "adhkar.sunrise", kurdish_text: "نوێژا ئیشراق", category: "adhkar", page: "android" },
-    { key_id: "auth.code_resent", kurdish_text: "کۆد دووبارە نێردرا", category: "auth", page: "android" },
+    { key_id: "auth.code_resent", kurdish_text: "کۆد دووبارە هاتە فرێکرن ✓", category: "auth", page: "android" },
     { key_id: "auth.err_already_registered", kurdish_text: "ئەم ئیمەیلە پێشتر تۆمارکراوە. بچۆ ژوورا ئەکاونتەکەت", category: "auth", page: "android" },
     { key_id: "auth.err_email_not_confirmed", kurdish_text: "ئیمەیلا تە نەهاتیە پشتراستکرن. تکایە ئیمەیلەکەت بپشکنە", category: "auth", page: "android" },
     { key_id: "auth.err_network", kurdish_text: "کێشەی تۆڕ ڕوویدا. ئینترنەتت بپشکنە", category: "auth", page: "android" },
