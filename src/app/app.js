@@ -7749,17 +7749,23 @@ function renderGoals(){
     requestAnimationFrame(countUp);
   },80);
 
-  // Week dots with today's live progress
+  // Week dots — fixed Kurdish week (شەمبی→ئەینی), RTL order
   var week=el('div','week-grid');
+  week.setAttribute('dir','rtl');
   var dayNames=[t('goals.days.0'),t('goals.days.1'),t('goals.days.2'),t('goals.days.3'),t('goals.days.4'),t('goals.days.5'),t('goals.days.6')];
+  // Kurdish week starts Saturday; (getDay()+1)%7 gives 0=Sat…6=Fri
+  var todayWeekIdx=(today.getDay()+1)%7;
+  var satStart=new Date(today);
+  satStart.setDate(today.getDate()-todayWeekIdx);
   for(var d=0;d<7;d++){
-    var dt=new Date(today);
-    dt.setDate(today.getDate()-(6-d));
+    var dt=new Date(satStart);
+    dt.setDate(satStart.getDate()+d);
     var dkey=dateKey(dt);
+    var isToday=(d===todayWeekIdx);
     var day=el('div','week-day');
     day.style.animationDelay=(d*30)+'ms';
     var dot=el('div','week-dot');
-    if(d===6){
+    if(isToday){
       dot.classList.add('today');
       day.classList.add('today');
       if(pct>=100){
@@ -7772,7 +7778,7 @@ function renderGoals(){
       if(log[dkey])dot.classList.add('done');
     }
     day.appendChild(dot);
-    day.appendChild(el('div','week-day-label',dayNames[(dt.getDay()+1)%7]));
+    day.appendChild(el('div','week-day-label',dayNames[d]));
     week.appendChild(day);
   }
   hero.appendChild(week);
