@@ -10185,10 +10185,8 @@ function renderSettings(){
   g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژەی',function(){openAboutSheet('app');}));
   g6.appendChild(mkAboutNavRow(_founderEl,'سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
   g6.appendChild(mkAboutNavRow('fas fa-heart','سوپاسنامە',_ft('thanks_nav_sub','بۆ هەر کەسێک یارمەتیدا'),function(){openAboutSheet('thanks');}));
-  frag.appendChild(g6);
-
-  // ── Social Links ─────────────────────────────
-  var g7=el('div','settings-group');
+  // ── Social Links (appended to دەربارەی مە group) ──
+  var g7=g6;
   var socialCard=el('div','settings-social-card');
   var socialLbl=el('div','settings-social-label');
   socialLbl.textContent=t('settings.social')||'مە ل ڤێرە ببینە';
@@ -10222,8 +10220,8 @@ function renderSettings(){
   });
   socialBar.appendChild(socGroup);
   socialCard.appendChild(socialBar);
-  g7.appendChild(socialCard);
-  frag.appendChild(g7);
+  g6.appendChild(socialCard);
+  frag.appendChild(g6);
   getSiteSettings().then(function(ss){
     SOCIAL_DEFS.forEach(function(def){
       var url=ss[def.key]||def.fallback||'';
