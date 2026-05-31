@@ -75,7 +75,7 @@
       fallbackAr: 'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا',
       fallbackRepeat: 3,
       fallbackSource: 'أبو داود والترمذي',
-      timeTag: 'ئێڤاری', basePriority: 50,
+      timeTag: 'ئێڤار', basePriority: 50,
       timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
     },
     {
