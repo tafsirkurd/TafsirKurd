@@ -2781,8 +2781,8 @@ window.GencineUI = {
           // Inline confirm box
           var _confirmBox = document.createElement('div'); _confirmBox.className = 'book-confirm-remove'; _confirmBox.style.display = 'none';
           var _confirmMsg = document.createElement('span'); _confirmMsg.className = 'book-confirm-msg'; _confirmMsg.textContent = T('iv.confirm_remove_read','دڵنیایت؟');
-          var _confirmYes = document.createElement('button'); _confirmYes.className = 'book-confirm-yes'; _confirmYes.textContent = T('iv.delete','سڕینەوە');
-          var _confirmNo = document.createElement('button'); _confirmNo.className = 'book-confirm-no'; _confirmNo.textContent = T('iv.cancel','نە');
+          var _confirmYes = document.createElement('button'); _confirmYes.className = 'book-confirm-yes'; _confirmYes.textContent = T('iv.delete','بەلێ');
+          var _confirmNo = document.createElement('button'); _confirmNo.className = 'book-confirm-no'; _confirmNo.textContent = T('iv.cancel','نەخێر');
           _confirmBox.appendChild(_confirmMsg); _confirmBox.appendChild(_confirmYes); _confirmBox.appendChild(_confirmNo);
           _confirmYes.onclick = function(e) { e.stopPropagation(); _bookClearProgress(book.id); _removeFromReadingHistory(book.id); renderGrid(); };
           _confirmNo.onclick = function(e) { e.stopPropagation(); coverWrap.classList.remove('confirm-remove'); _confirmBox.style.display = 'none'; };

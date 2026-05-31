@@ -4518,7 +4518,7 @@
 
                 // Auto-correct text values that changed in code but already exist in DB.
                 // Versioned by _TEXT_UPDATE_VERSION — runs once per browser session per version.
-                var _TEXT_UPDATE_VERSION = '20260531c';
+                var _TEXT_UPDATE_VERSION = '20260531f';
                 if (sessionStorage.getItem('tk_text_upd') !== _TEXT_UPDATE_VERSION) {
                     var _dbMap = {};
                     allData.forEach(function(r){ _dbMap[r.key_id] = r.kurdish_text; });
@@ -4530,6 +4530,29 @@
                         { key_id: 'schedule_thursday_topic', expected: 'صەڵەوات و سورەتا (الکهف)' },
                         { key_id: 'schedule_thursday_desc',  expected: 'ناڤەڕۆکەکا تایبەت یا صەڵەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت) نەریتێن پیرۆز یێن پێنجشەمبێ.' },
                         { key_id: 'adhkar.salawat',          expected: 'صەڵەوات' },
+                        { key_id: 'iv.delete',               expected: 'بەلێ' },
+                        { key_id: 'iv.cancel',               expected: 'نەخێر' },
+                        { key_id: 'iv.add_to_list',          expected: 'زێدە بکە سەر لیستێ' },
+                        { key_id: 'iv.add_to_list_btn',      expected: 'زێدە بکە سەر لیستێ' },
+                        { key_id: 'iv.added_bookmark',       expected: 'هاتە نیشانکرن' },
+                        { key_id: 'iv.added_to_list',        expected: 'زێدە بوو بۆ لیستا تە!' },
+                        { key_id: 'iv.apple_unavailable',    expected: 'چووناژوور ب ئەپڵ بەردەست نینە ⚠️' },
+                        { key_id: 'iv.audio_mode_on',        expected: 'حالەتێ دەنگی هاتە چالاكکرن 🎧' },
+                        { key_id: 'iv.auto',                 expected: 'ئۆتۆماتیکی' },
+                        { key_id: 'iv.bookmark_save_success', expected: 'هاتە نیشانکرن ✓' },
+                        { key_id: 'iv.clear_filter',         expected: 'لادانا فلتەری' },
+                        { key_id: 'iv.deleted',              expected: 'هاتە ژێبرن' },
+                        { key_id: 'iv.done',                 expected: 'تەمام بوو ✓' },
+                        { key_id: 'iv.email_unavailable',    expected: 'تۆمارکرن ب ئیمێڵی بەردەست نینە ⚠️' },
+                        { key_id: 'iv.empty',                expected: 'چ ڤیدیۆ نەهاتنە دیتن' },
+                        { key_id: 'iv.mark_watched',         expected: 'تەمام بوو ✓' },
+                        { key_id: 'iv_added_msg',            expected: 'زێدە بوو بۆ لیستا تە!' },
+                        { key_id: 'iv_quality_auto',         expected: 'ئۆتۆماتیکی' },
+                        { key_id: 'islamvoice_button_2',     expected: 'زێدە بکە سەر لیستێ' },
+                        { key_id: 'iv.enter_email',          expected: 'ئیمێڵێ خۆ بنڤێسه ❌' },
+                        { key_id: 'iv.error_generic',        expected: 'خەلەتیەک چێبوو' },
+                        { key_id: 'iv.error_network',        expected: 'خەلەتی: پەیوەندی دگەل هێڵێ نینە' },
+                        { key_id: 'iv.error_prefix',         expected: 'خەلەتی' },
                     ];
                     var _staleKeys = _TEXT_UPDATES.filter(function(u){
                         return (u.key_id in _dbMap) && _dbMap[u.key_id] !== u.expected;

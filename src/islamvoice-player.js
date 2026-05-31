@@ -344,7 +344,7 @@
             filterIndicator = `
                 <div class="active-filter-indicator">
                     <span><i class="fas fa-user-tie"></i> ${escapeHtml(state.activeFilter.value)}</span>
-                    <button onclick="filterBySheikh(null);" title="${_t('iv.clear_filter','لابردنی فلتەر')}"><i class="fas fa-times"></i></button>
+                    <button onclick="filterBySheikh(null);" title="${_t('iv.clear_filter','لادانا فلتەری')}"><i class="fas fa-times"></i></button>
                 </div>
             `;
         }
@@ -383,7 +383,7 @@
                     <i class="fas ${isFiltered ? 'fa-filter' : 'fa-folder-open'}"></i>
                     <h3>${isFiltered ? 'هیچ زنجیرەیەک نەدۆزرایەوە' : 'هیچ بابەتەکێ نینە'}</h3>
                     <p>${isFiltered ? 'هیچ زنجیرەیەک لەم فلتەرەدا نینە' : 'ھێجا ھیچ بابەتەکێ نەھاتییە زێدەکرن'}</p>
-                    ${isFiltered ? '<button class="btn btn-secondary" onclick="filterBySheikh(null);" style="margin-top:1rem;"><i class="fas fa-times"></i> لابردنی فلتەر</button>' : ''}
+                    ${isFiltered ? '<button class="btn btn-secondary" onclick="filterBySheikh(null);" style="margin-top:1rem;"><i class="fas fa-times"></i> لادانا فلتەری</button>' : ''}
                 </div>
             `;
         }
@@ -521,7 +521,7 @@
                         ${containerId === 'continueListContainer' ? `
                             <button class="episode-action-btn"
                                     onclick="window.tvApp.markAsWatched('${episode.id}')"
-                                    title="${_t('iv.mark_watched','تەواو بووە')}">
+                                    title="${_t('iv.mark_watched','تەمام بوو ✓')}">
                                 <i class="fas fa-check-circle"></i>
                             </button>
                             <button class="episode-action-btn"
@@ -682,7 +682,7 @@
             localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
             renderContinueWatching();
             updateBadgeCounts();
-            showNotification(_t('iv.deleted','سڕایەوە'));
+            showNotification(_t('iv.deleted','هاتە ژێبرن'));
         },
         markAsWatched: function(episodeId) {
             // Mark as fully watched
@@ -698,7 +698,7 @@
             localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
             renderContinueWatching();
             updateBadgeCounts();
-            showNotification(_t('iv.done','تەواو بووە'));
+            showNotification(_t('iv.done','تەمام بوو ✓'));
         },
         clearAllHistory: function() {
             state.watchHistory = [];
@@ -1583,7 +1583,7 @@
         });
 
         closeAllDropdowns();
-        showNotification(`${_t('iv.quality_label','کواڵتی')}: ${quality === 'auto' ? _t('iv.auto','خودکار') : quality + 'p'}`);
+        showNotification(`${_t('iv.quality_label','کواڵتی')}: ${quality === 'auto' ? _t('iv.auto','ئۆتۆماتیکی') : quality + 'p'}`);
 
         // In real implementation, switch video source
         // const currentTime = elements.video.currentTime;
@@ -1864,7 +1864,7 @@
             state.watchlist.push(state.currentEpisode);
             elements.addToListBtn.classList.add('active');
             elements.addToListBtn.innerHTML = '<i class="fas fa-check"></i> ' + _t('iv.in_list','ل لیستێ دایە');
-            showNotification(_t('iv.added_to_list','زێدەکری بۆ لیستا تە!'));
+            showNotification(_t('iv.added_to_list','زێدە بوو بۆ لیستا تە!'));
         } else {
             state.watchlist.splice(index, 1);
             elements.addToListBtn.classList.remove('active');
@@ -1907,7 +1907,7 @@
             }
             elements.audioOnlyBtn.classList.add('active');
             elements.audioOnlyBtn.innerHTML = '<i class="fas fa-video"></i> ' + _t('iv.show_video','پیشاندانا ڤیدیۆ');
-            showNotification(_t('iv.audio_mode_on','🎧 حالەتا دەنگ تەنێ چالاککری'));
+            showNotification(_t('iv.audio_mode_on','حالەتێ دەنگی هاتە چالاککرن 🎧'));
             console.log('🎧 Audio-only mode enabled');
         } else {
             // Disable audio-only mode
@@ -2315,7 +2315,7 @@
                         <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                     </div>
                     <div class="quick-actions">
-                        <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist('${video.id}')" title="${_t('iv.add_to_list','زێدەبکە لیستێ')}">
+                        <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist('${video.id}')" title="${_t('iv.add_to_list','زێدە بکە سەر لیستێ')}">
                             <i class="fas fa-plus"></i>
                         </button>
                         <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode('${video.id}')" title="${_t('iv.share_quick','پارڤەبکە')}">
@@ -3254,7 +3254,7 @@
 
         } catch (error) {
             console.error('❌ Delete error:', error);
-            showNotification(_t('iv.error_prefix','❌ هەڵە') + ': ' + error.message, 'error');
+            showNotification(_t('iv.error_prefix','خەلەتی') + ': ' + error.message, 'error');
         }
     };
 
@@ -3660,7 +3660,7 @@
                 showNotification(_t('iv.try_later','❌ تکایە دواتر هەوڵ بدەرەوە'), 5000);
             }
         } else {
-            showNotification(_t('iv.apple_unavailable','⚠️ Apple sign-in بەردەست نییە'), 3000);
+            showNotification(_t('iv.apple_unavailable','چووناژوور ب ئەپڵ بەردەست نینە ⚠️'), 3000);
         }
     };
 
@@ -3672,7 +3672,7 @@
         console.log('📧 Email sign-up initiated:', email);
 
         if (!email) {
-            showNotification(_t('iv.enter_email','❌ تکایە ئیمەیڵەکەت بنووسە'), 3000);
+            showNotification(_t('iv.enter_email','ئیمێڵێ خۆ بنڤێسه ❌'), 3000);
             return;
         }
 
@@ -3697,7 +3697,7 @@
                 showNotification(_t('iv.try_later','❌ تکایە دواتر هەوڵ بدەرەوە'), 5000);
             }
         } else {
-            showNotification(_t('iv.email_unavailable','⚠️ Email sign-up بەردەست نییە'), 3000);
+            showNotification(_t('iv.email_unavailable','تۆمارکرن ب ئیمێڵی بەردەست نینە ⚠️'), 3000);
         }
     };
 
@@ -4095,7 +4095,7 @@
                 seriesId: episode.series || null,
                 bookmarkedAt: Date.now()
             });
-            showNotification(_t('iv.added_bookmark','زێدەکری بۆ خەزنکراوان'));
+            showNotification(_t('iv.added_bookmark','هاتە نیشانکرن'));
         }
 
         localStorage.setItem('bookmarks', JSON.stringify(state.bookmarks));

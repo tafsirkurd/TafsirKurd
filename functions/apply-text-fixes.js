@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260531c';
+const FIXES_VERSION = '20260531f';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
@@ -16,6 +16,29 @@ const CORRECTIONS = [
     { key_id: 'schedule_thursday_topic', kurdish_text: 'صەڵەوات و سورەتا (الکهف)' },
     { key_id: 'schedule_thursday_desc',  kurdish_text: 'ناڤەڕۆکەکا تایبەت یا صەڵەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت) نەریتێن پیرۆز یێن پێنجشەمبێ.' },
     { key_id: 'adhkar.salawat',          kurdish_text: 'صەڵەوات' },
+    { key_id: 'iv.delete',              kurdish_text: 'بەلێ' },
+    { key_id: 'iv.cancel',             kurdish_text: 'نەخێر' },
+    { key_id: 'iv.add_to_list',        kurdish_text: 'زێدە بکە سەر لیستێ' },
+    { key_id: 'iv.add_to_list_btn',    kurdish_text: 'زێدە بکە سەر لیستێ' },
+    { key_id: 'iv.added_bookmark',     kurdish_text: 'هاتە نیشانکرن' },
+    { key_id: 'iv.added_to_list',      kurdish_text: 'زێدە بوو بۆ لیستا تە!' },
+    { key_id: 'iv.apple_unavailable',  kurdish_text: 'چووناژوور ب ئەپڵ بەردەست نینە ⚠️' },
+    { key_id: 'iv.audio_mode_on',      kurdish_text: 'حالەتێ دەنگی هاتە چالاكکرن 🎧' },
+    { key_id: 'iv.auto',              kurdish_text: 'ئۆتۆماتیکی' },
+    { key_id: 'iv.bookmark_save_success', kurdish_text: 'هاتە نیشانکرن ✓' },
+    { key_id: 'iv.clear_filter',       kurdish_text: 'لادانا فلتەری' },
+    { key_id: 'iv.deleted',           kurdish_text: 'هاتە ژێبرن' },
+    { key_id: 'iv.done',              kurdish_text: 'تەمام بوو ✓' },
+    { key_id: 'iv.email_unavailable', kurdish_text: 'تۆمارکرن ب ئیمێڵی بەردەست نینە ⚠️' },
+    { key_id: 'iv.empty',            kurdish_text: 'چ ڤیدیۆ نەهاتنە دیتن' },
+    { key_id: 'iv.mark_watched',      kurdish_text: 'تەمام بوو ✓' },
+    { key_id: 'iv_added_msg',         kurdish_text: 'زێدە بوو بۆ لیستا تە!' },
+    { key_id: 'iv_quality_auto',      kurdish_text: 'ئۆتۆماتیکی' },
+    { key_id: 'islamvoice_button_2',  kurdish_text: 'زێدە بکە سەر لیستێ' },
+    { key_id: 'iv.enter_email',      kurdish_text: 'ئیمێڵێ خۆ بنڤێسه ❌' },
+    { key_id: 'iv.error_generic',   kurdish_text: 'خەلەتیەک چێبوو' },
+    { key_id: 'iv.error_network',   kurdish_text: 'خەلەتی: پەیوەندی دگەل هێڵێ نینە' },
+    { key_id: 'iv.error_prefix',    kurdish_text: 'خەلەتی' },
 ];
 
 const CORS = {

@@ -4448,7 +4448,7 @@
                     <div class="video-actions">
                         <button class="action-btn" id="addToListBtn">
                             <i class="fas fa-plus"></i>
-                            زێدەبکە لیستێ
+                            زێدە بکە سەر لیستێ
                         </button>
 <button class="action-btn" id="shareBtn">
                             <i class="fas fa-share-alt"></i>
@@ -4525,7 +4525,7 @@
                                 <div class="dropdown-item" data-quality="720">720p HD</div>
                                 <div class="dropdown-item active" data-quality="1080">1080p Full HD</div>
                                 <div class="dropdown-item" data-quality="2160">4K Ultra HD</div>
-                                <div class="dropdown-item" data-quality="auto" data-t="iv_quality_auto">خودکار</div>
+                                <div class="dropdown-item" data-quality="auto" data-t="iv_quality_auto">ئۆتۆماتیکی</div>
                             </div>
                         </div>
 
@@ -4754,7 +4754,7 @@
     <!-- Notification Toast -->
     <div class="notification" id="notification">
         <i class="fas fa-check-circle notification-icon" style="color: #2ecc71;"></i>
-        <span id="notificationText" data-t="iv_added_msg">زێدەکری بۆ لیستا تە!</span>
+        <span id="notificationText" data-t="iv_added_msg">زێدە بوو بۆ لیستا تە!</span>
     </div>
 
     <!-- Footer -->
@@ -5198,7 +5198,7 @@
                 console.error('Error loading notifications:', error);
                 lists.forEach(list => {
                     list.textContent = '';
-                    list.appendChild(createEmptyNotification('exclamation-circle', 'هەڵەیەک ڕوویدا'));
+                    list.appendChild(createEmptyNotification('exclamation-circle', 'خەلەتیەک چێبوو'));
                 });
             }
         }
