@@ -4578,13 +4578,6 @@ window.addEventListener('error', function(e) {
         if (!response.ok) throw new Error('Failed to fetch config');
         const config = await response.json();
 
-        // Clear old Supabase auth data to prevent fetch errors
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('sb-') || key.includes('supabase')) {
-            localStorage.removeItem(key);
-          }
-        });
-
         // Validate config before creating client
         if (!config.supabaseUrl || !config.supabaseKey) {
           console.error('Invalid Supabase config:', config);
