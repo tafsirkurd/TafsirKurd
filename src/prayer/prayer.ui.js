@@ -2516,7 +2516,7 @@
     var checkLbl = document.createElement('span');
 
     function _checkLblText() {
-      if (isDone) return tStr('prayer.marked_done') || 'تەمام کراوە ✓';
+      if (isDone) return tStr('prayer.marked_done') || 'تەمام بوو ✓';
       if (canCheck) return tStr('prayer.mark_done') || 'وەک تەمام نیشانە بکە';
       if (notYetWithTime) {
         var rem = rawTime ? _msToPrayer(rawTime) : 0;
@@ -2540,7 +2540,7 @@
         checkBtn.classList.remove('locked');
         checkIc.className = ns ? 'fas fa-check-circle' : 'far fa-circle';
         checkLbl.textContent = ns
-          ? (tStr('prayer.marked_done') || 'تەمام کراوە ✓')
+          ? (tStr('prayer.marked_done') || 'تەمام بوو ✓')
           : (tStr('prayer.mark_done') || 'وەک تەمام نیشانە بکە');
         var gridCard = document.querySelector('.prayer-grid-card[data-prayer="' + name + '"]');
         if (gridCard) {
