@@ -1239,11 +1239,12 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .rate-app-text{display:flex;flex-direction:column;gap:2px}
 .rate-app-label{font-size:.95rem;font-weight:700;color:var(--text);direction:rtl}
 .rate-app-sub{font-size:.75rem;color:var(--text3);direction:rtl}
-/* Social bar */
-.settings-social{display:flex;justify-content:center;padding:6px 0 4px}
-.soc-group{display:inline-flex;background:var(--bg2);border:1px solid var(--border);border-radius:40px;overflow:hidden}
-.soc-btn{width:50px;height:50px;border:none;border-left:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .15s}
-.soc-group .soc-btn:first-child{border-left:none}
+/* Social card */
+.settings-social-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:16px 16px 14px;text-align:center}
+.settings-social-label{font-size:.75rem;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:14px;direction:rtl}
+.settings-social{display:flex;justify-content:center}
+.soc-group{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.soc-btn{width:48px;height:48px;border-radius:50%;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .15s}
 .soc-btn:active{background:var(--surface-h)}
 /* About bottom sheet */
 .cfg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:300}
@@ -4450,7 +4451,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
-<script src="/app/app.js?v=921"></script>
+<script src="/app/app.js?v=922"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {

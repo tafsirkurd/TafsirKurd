@@ -10189,7 +10189,10 @@ function renderSettings(){
 
   // ── Social Links ─────────────────────────────
   var g7=el('div','settings-group');
-  g7.appendChild(el('div','settings-group-title',t('settings.social')));
+  var socialCard=el('div','settings-social-card');
+  var socialLbl=el('div','settings-social-label');
+  socialLbl.textContent=t('settings.social')||'مە ل ڤێرە ببینە';
+  socialCard.appendChild(socialLbl);
   var SOCIAL_DEFS=[
     {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram'},
     {key:'social_youtube',icon:'fab fa-youtube',label:'YouTube'},
@@ -10218,7 +10221,8 @@ function renderSettings(){
     socGroup.appendChild(btn);
   });
   socialBar.appendChild(socGroup);
-  g7.appendChild(socialBar);
+  socialCard.appendChild(socialBar);
+  g7.appendChild(socialCard);
   frag.appendChild(g7);
   getSiteSettings().then(function(ss){
     SOCIAL_DEFS.forEach(function(def){
