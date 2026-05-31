@@ -96,29 +96,35 @@ async function proxyWebSocket(request) {
   const url    = new URL(request.url);
   const target = SUPABASE_WSS + url.pathname + url.search;
 
-  const headers = forwardHeaders(request.headers);
-
-  let backendResp;
-  try {
-    backendResp = await fetch(target, { headers });
-  } catch {
-    return new Response('Upstream WebSocket connection failed', { status: 502 });
-  }
-
-  const backend = backendResp.webSocket;
-  if (!backend) {
-    return new Response('Upstream did not accept WebSocket upgrade', { status: 502 });
-  }
+  // CF Workers requires new WebSocket() for OUTBOUND connections.
+  // fetch() with Upgrade:websocket only works for INBOUND (client→Worker).
+  // new WebSocket() is the correct CF Workers client WebSocket API.
+  const clientProto = request.headers.get('sec-websocket-protocol');
+  const subprotocols = clientProto ? clientProto.split(',').map(s => s.trim()) : [];
+  const backend = subprotocols.length
+    ? new WebSocket(target, subprotocols)
+    : new WebSocket(target);
 
   const pair = new WebSocketPair();
   const [client, server] = Object.values(pair);
-
   server.accept();
-  backend.accept();
+
+  // Queue messages that arrive before the backend is open
+  const pendingToBackend = [];
 
   // Pipe: client → backend
   server.addEventListener('message', ({ data }) => {
-    try { backend.send(data); } catch {}
+    if (backend.readyState === WebSocket.OPEN) {
+      try { backend.send(data); } catch {}
+    } else {
+      pendingToBackend.push(data);
+    }
+  });
+
+  backend.addEventListener('open', () => {
+    while (pendingToBackend.length) {
+      try { backend.send(pendingToBackend.shift()); } catch {}
+    }
   });
 
   // Pipe: backend → client
@@ -131,13 +137,10 @@ async function proxyWebSocket(request) {
   server.addEventListener('error',  () => { try { backend.close(1011); } catch {} });
   backend.addEventListener('error', () => { try { server.close(1011);  } catch {} });
 
-  // Forward the negotiated WebSocket subprotocol from the backend 101 response.
-  // Safari on iOS enforces the WebSocket spec strictly: if the client sent
-  // Sec-WebSocket-Protocol (Supabase Realtime sends "phoenix") and the 101
-  // response does not echo the agreed protocol, the browser closes immediately.
+  // Echo the first requested subprotocol so Safari iOS does not drop the connection.
+  // (Supabase Realtime uses "phoenix"; Safari closes if the 101 does not echo it.)
   const upgradeHeaders = new Headers();
-  const proto = backendResp.headers.get('sec-websocket-protocol');
-  if (proto) upgradeHeaders.set('sec-websocket-protocol', proto);
+  if (clientProto) upgradeHeaders.set('sec-websocket-protocol', subprotocols[0]);
 
   return new Response(null, { status: 101, webSocket: client, headers: upgradeHeaders });
 }
