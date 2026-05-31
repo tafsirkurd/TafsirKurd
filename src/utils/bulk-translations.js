@@ -922,7 +922,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "toast.bookmark_removed", kurdish_text: "ژێبرنا نیشانێ", category: "toast", page: "android" },
     { key_id: "toast.goal_deleted", kurdish_text: "ئارمانج هاتە ژێبرن", category: "toast", page: "android" },
     { key_id: "toast.cache_cleared", kurdish_text: "کاش هاتە ژێبرن", category: "toast", page: "android" },
-    { key_id: "toast.logged_in", kurdish_text: "تو چوییە ژوورڤە", category: "toast", page: "android" },
+    { key_id: "toast.logged_in", kurdish_text: "چووناژوور سەرکەفتیبوو", category: "toast", page: "android" },
     { key_id: "toast.logged_out", kurdish_text: "تو دەرکەتی", category: "toast", page: "android" },
     { key_id: "toast.synced", kurdish_text: "ھاتیە هەلگرتن", category: "toast", page: "android" },
     { key_id: "toast.account_created", kurdish_text: "ھەژمارا تە هاتە دروستکرن", category: "toast", page: "android" },
