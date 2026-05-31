@@ -8644,10 +8644,33 @@ function _buildPppInsights(log,mStats,weekData,missed){
   var weekPct=Math.round((weekDone/35)*100);
   insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week','ئەڤ حەفتیە',weekPct+'% — '+weekDone+'/35 نڤێژ');
 
-  // Most missed prayer (30 days)
-  if(missed&&missed.count>0){
-    insightRow('rgba(220,60,40,.12)','#dc3c28','fas fa-exclamation-circle','نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)',t('prayer.'+missed.prayer.toLowerCase())+' — '+missed.count+' ڕۆژ');
-  }
+  // All missed prayers (30 days) — show each prayer with its miss count
+  (function(){
+    var now=new Date();var hasSome=false;
+    var counts={};
+    _TRACK_PRAYERS.forEach(function(p){counts[p]=0;});
+    for(var i=0;i<30;i++){
+      var d=new Date(now);d.setDate(d.getDate()-i);
+      var k=dateKey(d);
+      if(log[k]){hasSome=true;_TRACK_PRAYERS.forEach(function(p){if(!log[k][p])counts[p]++;});}
+    }
+    if(!hasSome)return;
+    var sorted=_TRACK_PRAYERS.slice().sort(function(a,b){return counts[b]-counts[a];});
+    var r=el('div','ppp-insight-row');
+    var ic=el('div','ppp-insight-icon');ic.style.background='rgba(220,60,40,.12)';
+    var ii=icon('fas fa-exclamation-circle');ii.style.color='#dc3c28';ic.appendChild(ii);r.appendChild(ic);
+    var tx=el('div','ppp-insight-text');
+    tx.appendChild(el('div','ppp-insight-label','نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)'));
+    var grid=el('div','ppp-missed-grid');
+    sorted.forEach(function(p){
+      var cell=el('div','ppp-missed-cell');
+      var nameEl=el('span','ppp-missed-name',t('prayer.'+p.toLowerCase())||p);
+      var cntEl=el('span','ppp-missed-cnt'+(counts[p]===0?' zero':''),counts[p]+' ڕۆژ');
+      cell.appendChild(nameEl);cell.appendChild(cntEl);
+      grid.appendChild(cell);
+    });
+    tx.appendChild(grid);r.appendChild(tx);wrap.appendChild(r);
+  })();
 
   // Weakest day of week
   var weak=calcWeakestDay(log);
