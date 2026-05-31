@@ -8524,7 +8524,7 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(stats);
 
   // ─ This week ──────────────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title','حەفتیا دوماهییێ'));
+  body.appendChild(el('div','ppp-section-title',t('ppp.section_week')||'حەفتیا دوماهییێ'));
   var week=el('div','ppp-week');
   week.setAttribute('dir','rtl');
   weekData.forEach(function(d){
@@ -8543,7 +8543,7 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(_buildPppCal(log));
 
   // ─ Insights ───────────────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title','ئاگەهدار'));
+  body.appendChild(el('div','ppp-section-title',t('ppp.section_insights')||'ئاگەهدار'));
   body.appendChild(_buildPppInsights(log,mStats,weekData,missed));
 
   // ─ New Start ──────────────────────────────────────────────
@@ -8642,7 +8642,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
   // This week %
   var weekDone=weekData.reduce(function(s,d){return s+d.cnt;},0);
   var weekPct=Math.round((weekDone/35)*100);
-  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week','ئەڤ حەفتیە',weekPct+'% — '+weekDone+'/35 نڤێژ');
+  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week',t('ppp.this_week')||'ئەڤ حەفتیە',weekPct+'% — '+weekDone+'/35 نڤێژ');
 
   // All missed prayers (30 days) — show each prayer with its miss count
   (function(){
@@ -8660,7 +8660,7 @@ function _buildPppInsights(log,mStats,weekData,missed){
     var ic=el('div','ppp-insight-icon');ic.style.background='rgba(220,60,40,.12)';
     var ii=icon('fas fa-exclamation-circle');ii.style.color='#dc3c28';ic.appendChild(ii);r.appendChild(ic);
     var tx=el('div','ppp-insight-text');
-    tx.appendChild(el('div','ppp-insight-label','نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)'));
+    tx.appendChild(el('div','ppp-insight-label',t('ppp.missed_label')||'نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)'));
     var grid=el('div','ppp-missed-grid');
     sorted.forEach(function(p){
       var cell=el('div','ppp-missed-cell');
@@ -8676,13 +8676,13 @@ function _buildPppInsights(log,mStats,weekData,missed){
   var weak=calcWeakestDay(log);
   if(weak){
     var weakColor=weak.avg<2?'#dc3c28':weak.avg<4?'#f09000':'var(--accent)';
-    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day','کەیفخۆشترین ڕۆژ',weak.name+' — '+weak.avg+'/5 ناڤنجی');
+    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day',t('ppp.weakest_day')||'کەیفخۆشترین ڕۆژ',weak.name+' — '+weak.avg+'/5 ناڤنجی');
   }
 
   // Monthly avg per day
   if(mStats.total>0){
     var avg=(mStats.done/mStats.total).toFixed(1);
-    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line','تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ',avg+'/5 نڤێژ');
+    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line',t('ppp.monthly_avg')||'تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ',avg+'/5 نڤێژ');
   }
 
   // Month projection

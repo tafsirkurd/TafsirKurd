@@ -4143,6 +4143,13 @@
             {key_id:'pdf.offline_sub',          kurdish_text:'ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە',page:'android',category:'gencine',context:'PDF viewer: subtitle when offline and PDF not cached'},
             // Haptic settings
             {key_id:'settings.haptic_native',   kurdish_text:'تەنها لە ئاپی ڕەسمی کار دەکات',page:'android',category:'ui',context:'Settings: haptic not supported on web — native app only note'},
+            // Prayer progress panel insights
+            {key_id:'ppp.section_week',     kurdish_text:'حەفتیا دوماهییێ',                            page:'android',category:'prayer',context:'Prayer progress panel: section header for week grid'},
+            {key_id:'ppp.section_insights', kurdish_text:'ئاگەهدار',                                   page:'android',category:'prayer',context:'Prayer progress panel: section header for insights'},
+            {key_id:'ppp.this_week',        kurdish_text:'ئەڤ حەفتیە',                                 page:'android',category:'prayer',context:'Prayer progress panel insight: this week label'},
+            {key_id:'ppp.missed_label',     kurdish_text:'نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)',         page:'android',category:'prayer',context:'Prayer progress panel insight: missed prayers label'},
+            {key_id:'ppp.weakest_day',      kurdish_text:'کەیفخۆشترین ڕۆژ',                           page:'android',category:'prayer',context:'Prayer progress panel insight: weakest day label'},
+            {key_id:'ppp.monthly_avg',      kurdish_text:'تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ',        page:'android',category:'prayer',context:'Prayer progress panel insight: monthly average label'},
         ];
 
         async function seedMobileAppKeys() {
@@ -4491,9 +4498,15 @@
                 // Auto-seed any bootstrap keys that are missing from the DB.
                 // Uses ignoreDuplicates:true so existing manual edits are never overwritten.
                 var _BOOTSTRAP_KEYS = [
-                    { key_id: 'pdf.offline_title', kurdish_text: 'ئینتەرنێت نینە',           category: 'gencine', page: 'android' },
-                    { key_id: 'pdf.offline_sub',   kurdish_text: 'ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە', category: 'gencine', page: 'android' },
+                    { key_id: 'pdf.offline_title',    kurdish_text: 'ئینتەرنێت نینە',           category: 'gencine', page: 'android' },
+                    { key_id: 'pdf.offline_sub',      kurdish_text: 'ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە', category: 'gencine', page: 'android' },
                     { key_id: 'settings.haptic_native', kurdish_text: 'تەنها لە ئاپی ڕەسمی کار دەکات', category: 'ui', page: 'android' },
+                    { key_id: 'ppp.section_week',     kurdish_text: 'حەفتیا دوماهییێ',                    category: 'prayer', page: 'android' },
+                    { key_id: 'ppp.section_insights', kurdish_text: 'ئاگەهدار',                           category: 'prayer', page: 'android' },
+                    { key_id: 'ppp.this_week',        kurdish_text: 'ئەڤ حەفتیە',                         category: 'prayer', page: 'android' },
+                    { key_id: 'ppp.missed_label',     kurdish_text: 'نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)', category: 'prayer', page: 'android' },
+                    { key_id: 'ppp.weakest_day',      kurdish_text: 'کەیفخۆشترین ڕۆژ',                   category: 'prayer', page: 'android' },
+                    { key_id: 'ppp.monthly_avg',      kurdish_text: 'تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ', category: 'prayer', page: 'android' },
                 ];
                 var _existingKeys = new Set(allData.map(function(r){ return r.key_id; }));
                 var _missingKeys = _BOOTSTRAP_KEYS.filter(function(k){ return !_existingKeys.has(k.key_id); });

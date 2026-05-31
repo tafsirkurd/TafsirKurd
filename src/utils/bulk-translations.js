@@ -1678,6 +1678,16 @@ window.BULK_TRANSLATIONS = [
     { key_id: "toast.dl_stopped",     kurdish_text: "داخستن هاتە وەستاندن",                                                                                category: "download", page: "android" },
 
     // ==========================================
+    // PRAYER PROGRESS PANEL (2026-05-31)
+    // ==========================================
+    { key_id: "ppp.section_week",     kurdish_text: "حەفتیا دوماهییێ",                               category: "prayer", page: "android" },
+    { key_id: "ppp.section_insights", kurdish_text: "ئاگەهدار",                                       category: "prayer", page: "android" },
+    { key_id: "ppp.this_week",        kurdish_text: "ئەڤ حەفتیە",                                     category: "prayer", page: "android" },
+    { key_id: "ppp.missed_label",     kurdish_text: "نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)",             category: "prayer", page: "android" },
+    { key_id: "ppp.weakest_day",      kurdish_text: "کەیفخۆشترین ڕۆژ",                               category: "prayer", page: "android" },
+    { key_id: "ppp.monthly_avg",      kurdish_text: "تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ",            category: "prayer", page: "android" },
+
+    // ==========================================
     // MUSHAF MODE (2026-04-18)
     // ==========================================
     { key_id: "mushaf.font_offline",      kurdish_text: "ستایلا پەڕینێ نەکەتە دەست بی ئینتەرنەت.", category: "mushaf", page: "android" },
