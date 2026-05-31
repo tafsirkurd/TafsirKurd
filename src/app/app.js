@@ -11900,20 +11900,6 @@ function renderProfile(panel){
   on(logoutBtn,'click',function(){App.logout();});
   actWrap.appendChild(logoutBtn);
 
-  // ── Downloads — nav row to unified manager ──────────────
-  var dlNavSec=el('div','pp-section');
-  var dlNavCard=el('div','pp-card');
-  var dlNavRow=el('div','pp-row');dlNavRow.style.cursor='pointer';
-  var dlNavL=el('div','pp-row-label');
-  dlNavL.appendChild(icon('fas fa-download'));
-  dlNavL.appendChild(document.createTextNode(' '+(t('dl.manage')||'دابەزاندن')));
-  dlNavRow.appendChild(dlNavL);
-  dlNavRow.appendChild(icon('fas fa-chevron-left'));
-  on(dlNavRow,'click',function(){App.closeProfile();openDlManager();});
-  dlNavCard.appendChild(dlNavRow);
-  dlNavSec.appendChild(dlNavCard);
-  body.appendChild(dlNavSec);
-
   // Separator before destructive action
   actWrap.appendChild(el('div','pp-actions-sep'));
 
