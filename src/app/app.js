@@ -10297,6 +10297,17 @@ function initSupabase(cb){
         _notifySupabaseReady();
         checkAuthSession();
         if(cb)cb();
+      }else{
+        // Silently replace client when URL changed (e.g. after proxy migration).
+        // supa_cfg was just updated to the new URL; the cache-created client still
+        // holds the old URL. storageKey 'sb-tafsirkurd-v1' is stable so the existing
+        // session survives the swap — no logout occurs.
+        var _nc=(cfg.supabaseUrl||'').replace(/\/$/,'');
+        var _oc='';try{_oc=(S.supabase.supabaseUrl||'').replace(/\/$/,'');}catch(e){}
+        if(_oc&&_nc&&_oc!==_nc){
+          S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+          window._appSupabase=S.supabase;
+        }
       }
     }
     // Remote prayer cache version — if admin bumped it, purge all local prayer caches
