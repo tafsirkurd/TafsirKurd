@@ -445,4 +445,26 @@ window.i18n = {
 };
 window.t = t;
 
+// ── One-time text-fix: update stale DB values from any client ─────────────────
+// Calls /apply-text-fixes once per FIXES_VERSION. The server applies
+// hardcoded corrections and marks the version in site_settings so the DB
+// update runs exactly once globally. Client tracks locally to skip the call.
+(function(){
+  var _FIX_VER = '20260531a';
+  var _LS_KEY  = 'tk_tf';
+  try{ if(localStorage.getItem(_LS_KEY) === _FIX_VER) return; } catch(e){ return; }
+  var _base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'https://tafsirkurd.com' : '';
+  fetch(_base + '/apply-text-fixes', { method: 'POST' })
+    .then(function(r){
+      if(!r.ok) return;
+      try{ localStorage.setItem(_LS_KEY, _FIX_VER); }catch(e){}
+      // Re-fetch translations so the corrected values load immediately
+      if(typeof window.i18n !== 'undefined' && typeof window.i18n.purgeCache === 'function'){
+        window.i18n.purgeCache();
+      }
+    })
+    .catch(function(){});
+})();
+
 })();
