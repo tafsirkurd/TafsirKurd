@@ -3814,7 +3814,7 @@
 
         // Validate
         if (!videoId || !title || !series || !category) {
-            showNotification(_t('iv.fill_required','تکایە هەمی خانەیێن پێدڤی پڕبکە!'));
+            showNotification(_t('iv.fill_required','هەمی خانەیێن پێدڤی پڕبکە!'));
             return;
         }
 
