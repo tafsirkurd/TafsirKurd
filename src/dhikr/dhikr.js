@@ -3541,16 +3541,45 @@ window.GencineUI = {
     var pdfSrc = 'https://tafsirkurd.com/pdf-proxy?url=' + encodeURIComponent(book.pdf_url);
     var loadingTask = pdfjsLib.getDocument(Object.assign({ url: pdfSrc }, _pdfBaseOpts));
     function _showPdfRetry() {
+      var isOffline = !navigator.onLine;
       while (loadingEl.firstChild) loadingEl.removeChild(loadingEl.firstChild);
-      var errMsg = document.createElement('div');
-      errMsg.textContent = T('gencine.books_error', 'هەلەیەک هەیە');
-      errMsg.style.marginBottom = '12px';
+
+      // Icon circle
+      var errCircle = document.createElement('div');
+      errCircle.style.cssText = 'position:relative;width:110px;height:110px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0';
+      var errIco = document.createElement('i');
+      errIco.className = isOffline ? 'fas fa-wifi' : 'fas fa-exclamation-triangle';
+      errIco.style.cssText = 'font-size:2.4rem;color:' + (isOffline ? 'var(--text-tertiary)' : 'var(--accent)');
+      errCircle.appendChild(errIco);
+      if (isOffline) {
+        var xBadge = document.createElement('div');
+        xBadge.style.cssText = 'position:absolute;bottom:8px;right:6px;width:26px;height:26px;border-radius:50%;background:#e74c3c;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)';
+        var xIco = document.createElement('i'); xIco.className = 'fas fa-times'; xIco.style.cssText = 'font-size:.65rem;color:#fff';
+        xBadge.appendChild(xIco); errCircle.appendChild(xBadge);
+      }
+      loadingEl.appendChild(errCircle);
+
+      // Text block
+      var txtWrap = document.createElement('div');
+      txtWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;max-width:230px';
+      var mainTxt = document.createElement('div');
+      mainTxt.style.cssText = 'font-size:1rem;font-weight:700;color:var(--text)';
+      mainTxt.textContent = isOffline ? (T('pdf.offline_title','ئینتەرنێت نینە')) : (T('gencine.books_error','کێشەیەک چێبوو'));
+      txtWrap.appendChild(mainTxt);
+      if (isOffline) {
+        var subTxt = document.createElement('div');
+        subTxt.style.cssText = 'font-size:.82rem;color:var(--text-tertiary);line-height:1.55';
+        subTxt.textContent = T('pdf.offline_sub','ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە');
+        txtWrap.appendChild(subTxt);
+      }
+      loadingEl.appendChild(txtWrap);
+
+      // Retry button
       var retryBtn = document.createElement('button');
-      retryBtn.textContent = T('gencine.retry', 'دووبارە هەوڵ بدە');
+      retryBtn.textContent = T('gencine.retry','دووبارە هەوڵ بدە');
       retryBtn.className = 'btn-primary';
-      retryBtn.style.cssText = 'padding:10px 24px;font-size:1rem;border-radius:12px';
+      retryBtn.style.cssText = 'padding:10px 28px;font-size:.95rem;border-radius:14px';
       retryBtn.onclick = function() { self._draw(); };
-      loadingEl.appendChild(errMsg);
       loadingEl.appendChild(retryBtn);
     }
 

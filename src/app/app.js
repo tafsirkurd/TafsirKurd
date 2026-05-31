@@ -9964,12 +9964,23 @@ function renderSettings(){
   var g3=el('div','settings-group');
   g3.appendChild(el('div','settings-group-title',t('settings.notif_group')));
   // (10) Haptic feedback
-  g3.appendChild(mkToggleRow(t('settings.haptic'),S.hapticFeedback,function(){
+  var _hapticRow=mkToggleRow(t('settings.haptic'),S.hapticFeedback,function(){
     S.hapticFeedback=!S.hapticFeedback;
     localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
-    H.success(); // celebrate turning haptics on (fires even if just enabled)
+    H.success();
     renderSettings();
-  },t('settings.haptic_sub')));
+  },t('settings.haptic_sub'));
+  var _hapticSupported=!!(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics)||!!navigator.vibrate;
+  if(!_hapticSupported){
+    var _hapticNote=el('div','setting-sub');
+    _hapticNote.style.cssText='color:var(--text-tertiary);font-size:.75rem;margin-top:2px;';
+    _hapticNote.textContent=t('settings.haptic_native')||'تەنها لە ئاپی ڕەسمی کار دەکات';
+    var _hapticLabelWrap=_hapticRow.querySelector('.setting-label-wrap');
+    if(_hapticLabelWrap)_hapticLabelWrap.appendChild(_hapticNote);
+    var _hapticToggle=_hapticRow.querySelector('.toggle');
+    if(_hapticToggle){_hapticToggle.style.opacity='0.4';_hapticToggle.style.pointerEvents='none';}
+  }
+  g3.appendChild(_hapticRow);
   frag.appendChild(g3);
 
   // ── Data & Sync ──────────────────────────────
@@ -10138,7 +10149,7 @@ function renderSettings(){
   var _founderEl;
   if(_founderImgSrc){_founderEl=document.createElement('img');_founderEl.src=_founderImgSrc;_founderEl.alt='';_founderEl._iconMod='about-nav-icon--img about-nav-icon--person';}
   else{_founderEl=icon('fas fa-user');}
-  g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژە',function(){openAboutSheet('app');}));
+  g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژەی',function(){openAboutSheet('app');}));
   g6.appendChild(mkAboutNavRow(_founderEl,'سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
   g6.appendChild(mkAboutNavRow('fas fa-heart','سوپاسنامە',_ft('thanks_nav_sub','بۆ هەر کەسێک یارمەتیدا'),function(){openAboutSheet('thanks');}));
   frag.appendChild(g6);

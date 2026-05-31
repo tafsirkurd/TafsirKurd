@@ -173,6 +173,8 @@
     var reason = ev.reason;
     var msg    = reason instanceof Error ? reason.message : String(reason || 'Unhandled rejection');
     var stack  = reason instanceof Error ? reason.stack   : null;
+    // SW load failures are transient network blips — same logic as in window.onerror
+    if (msg.indexOf('service-worker') !== -1 || msg.indexOf('ServiceWorker') !== -1) return;
     _send(_classify(msg, stack), msg, stack, null);
   });
 

@@ -95,6 +95,7 @@ export async function onRequest(context) {
                 // Whitelist allowed fields to prevent arbitrary column updates
                 const allowedUpdateFields = {};
                 if (data.is_read !== undefined) allowedUpdateFields.is_read = !!data.is_read;
+                if (data.is_featured !== undefined) allowedUpdateFields.is_featured = !!data.is_featured;
                 if (data.notes !== undefined) allowedUpdateFields.notes = String(data.notes).slice(0, 2000);
                 const VALID_STATUSES = ['new', 'read', 'replied', 'archived', 'spam'];
                 if (data.status !== undefined && VALID_STATUSES.includes(data.status)) allowedUpdateFields.status = data.status;

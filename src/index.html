@@ -4695,7 +4695,7 @@ window.addEventListener('error', function(e) {
                         </div>
                         <div class="nav-dropdown-info">
                             <span class="nav-dropdown-name" data-t="nav_dropdown_project">تەفسیر کورد</span>
-                            <span class="nav-dropdown-role" data-t="nav_dropdown_about_project">دەربارەی پڕۆژە</span>
+                            <span class="nav-dropdown-role" data-t="nav_dropdown_about_project">دەربارەی پڕۆژەی</span>
                         </div>
                     </a>
                     <a href="/founder" class="nav-dropdown-item">
@@ -7025,11 +7025,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' })
             .then(registration => {
-                registration.update();
+                registration.update().catch(function() {});
             })
-            .catch(error => {
-                console.log('❌ Service Worker registration failed:', error);
-            });
+            .catch(function() {});
     }
 });
 
