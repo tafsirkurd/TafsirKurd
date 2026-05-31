@@ -8524,7 +8524,7 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(stats);
 
   // ─ This week ──────────────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title','ئەڤ حەفتە'));
+  body.appendChild(el('div','ppp-section-title','حەفتیا دوماهییێ'));
   var week=el('div','ppp-week');
   week.setAttribute('dir','rtl');
   weekData.forEach(function(d){
