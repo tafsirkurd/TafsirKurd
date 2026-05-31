@@ -5,14 +5,16 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260531a';
+const FIXES_VERSION = '20260531b';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
-    { key_id: 'dl.manage',             kurdish_text: 'دابەزاندن' },
-    { key_id: 'dl.nothing_downloaded', kurdish_text: 'چ دابەزاندن نینن' },
-    { key_id: 'dl.nothing_hint',       kurdish_text: 'پەرتووک و دەنگان دابەزینە بۆ خواندنا بێ ئینتەرنێت' },
-    { key_id: 'prayer.marked_done',    kurdish_text: 'تەمام بوو ✓' },
+    { key_id: 'dl.manage',              kurdish_text: 'دابەزاندن' },
+    { key_id: 'dl.nothing_downloaded',  kurdish_text: 'چ دابەزاندن نینن' },
+    { key_id: 'dl.nothing_hint',        kurdish_text: 'پەرتووک و دەنگان دابەزینە بۆ خواندنا بێ ئینتەرنێت' },
+    { key_id: 'prayer.marked_done',     kurdish_text: 'تەمام بوو ✓' },
+    { key_id: 'schedule_thursday_topic', kurdish_text: 'صەڵەوات و سورەتا (الکهف)' },
+    { key_id: 'schedule_thursday_desc',  kurdish_text: 'ناڤەڕۆکەکا تایبەت یا صەڵەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت) نەریتێن پیرۆز یێن پێنجشەمبێ.' },
 ];
 
 const CORS = {
