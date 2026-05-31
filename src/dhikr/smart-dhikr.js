@@ -1092,7 +1092,7 @@
     /* sub line — Kurdish label + badge + source, same as sd-sub on other cards */
     var subEl = _mk('div', 'sd-sub' + (done ? ' sd-sub-done' : ''));
     if (done) {
-      subEl.textContent = T('gencine.smart.done_today', 'ئەمڕۆ تەواو بوو');
+      subEl.textContent = T('gencine.smart.done_today', 'ئەڤڕۆ تەمام بوو ✓');
     } else if (streak.count >= 2) {
       subEl.textContent = streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ پەی هەم 🔥');
     } else {

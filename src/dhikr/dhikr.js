@@ -1227,7 +1227,7 @@ window.GencineUI = {
     if (!items.length) {
       var emptyEl = document.createElement('div');
       emptyEl.style.cssText = 'text-align:center;padding:40px 16px;color:var(--text3);direction:rtl;font-size:.88rem';
-      emptyEl.textContent = T('gencine.adhkar_empty', 'هیچ زکرێک نییە');
+      emptyEl.textContent = T('gencine.adhkar_empty', 'چو زکر نینن.');
       container.appendChild(emptyEl);
       return;
     }
@@ -1282,7 +1282,7 @@ window.GencineUI = {
     if (!duas.length) {
       var empty = document.createElement('div');
       empty.style.cssText = 'text-align:center;padding:60px 24px;color:var(--text3);font-size:.9rem;direction:rtl';
-      empty.textContent = T('gencine.dua_empty', 'هیچ دوعایەک نییە');
+      empty.textContent = T('gencine.dua_empty', 'چو دوعا نینن');
       container.appendChild(empty);
       return;
     }
@@ -2155,7 +2155,7 @@ window.GencineUI = {
     self._voiceActive    = true;
     self._voiceLastMatch = 0;
     self._updateVoiceBtn();
-    self._setVoiceStatus(T('gencine.voice_requesting','...destûr dixwaze'));
+    self._setVoiceStatus(T('gencine.voice_requesting','داخوازییا مۆڵەتێ دهێتەکرن...'));
 
     /* Step 1: Request RECORD_AUDIO at native level (Android only).
        Capacitor's WebView only grants audio to getUserMedia if the
@@ -2172,7 +2172,7 @@ window.GencineUI = {
       if(!self._voiceActive) return;
       if(res && res.granted === false){
         self._stopVoice();
-        self._setVoiceStatus(T('gencine.voice_permission','مایکرۆفۆن destûr bide'));
+        self._setVoiceStatus(T('gencine.voice_permission','مۆڵەتدان ب مایکرۆفۆنی.'));
         return;
       }
       /* Native permission confirmed — launch recognizer directly.
@@ -2235,7 +2235,7 @@ window.GencineUI = {
       if(event.error === 'not-allowed' || event.error === 'permission-denied'){
         self._stopVoice();
         var T2 = window.t || function(k,d){ return d||k; };
-        self._setVoiceStatus(T2('gencine.voice_permission','تکایە مۆڵەتا مایکرۆفۆنێ بدە'));
+        self._setVoiceStatus(T2('gencine.voice_permission','مۆڵەتدان ب مایکرۆفۆنی.'));
       }
       /* no-speech, aborted, network — onend handles restart */
     };
@@ -3564,7 +3564,7 @@ window.GencineUI = {
       txtWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;max-width:230px';
       var mainTxt = document.createElement('div');
       mainTxt.style.cssText = 'font-size:1rem;font-weight:700;color:var(--text)';
-      mainTxt.textContent = isOffline ? (T('pdf.offline_title','ئینتەرنێت نینە')) : (T('gencine.books_error','کێشەیەک چێبوو'));
+      mainTxt.textContent = isOffline ? (T('pdf.offline_title','ئینتەرنێت نینە')) : (T('gencine.books_error','خەلەتیەک ڕوویدا'));
       txtWrap.appendChild(mainTxt);
       if (isOffline) {
         var subTxt = document.createElement('div');

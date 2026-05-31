@@ -4522,7 +4522,7 @@ function renderAyahs(surahNum,scrollTo){
       // Only show spinner when list is actually empty.
       var _hadContent=list.hasChildNodes();
       if(!_hadContent){
-        var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
+        var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'تەماشەکرن...';
         list.appendChild(sp);
       }
       var _gctrl=new AbortController();
@@ -10396,7 +10396,7 @@ function _syncStatusInfo(){
   if(!S.user)return null;
   if(!navigator.onLine)return{dot:'⚠',txt:t('settings.sync_status_offline'),col:'#f09000'};
   if(S.isSyncing)return{dot:'⟳',txt:t('settings.sync_status_syncing'),col:'var(--text3)'};
-  if(S.syncFailed)return{dot:'✕',txt:(t('settings.sync_status_failed')||'Sync failed')+(S.syncErrorDetail?' ['+S.syncErrorDetail.slice(0,60)+']':''),col:'#e53935'};
+  if(S.syncFailed)return{dot:'✕',txt:(t('settings.sync_status_failed')||'هەلگرتن سەرنەکەفت')+(S.syncErrorDetail?' ['+S.syncErrorDetail.slice(0,60)+']':''),col:'#e53935'};
   if(S.lastSyncTime){
     var ts=new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     return{dot:'✓',txt:(t('settings.sync_last')||'')+' '+ts,col:'#43a047'};
@@ -10515,7 +10515,7 @@ function _subscribeSessionRevocation(){
     .on('postgres_changes',{event:'DELETE',schema:'public',table:'user_sessions',
       filter:'user_id=eq.'+S.user.id},function(payload){
       if(payload.old&&payload.old.device_id===myDeviceId){
-        toast(t('profile.session_revoked')||'چوونا دەرەوەکراوی ل ئامێرا دی');
+        toast(t('profile.session_revoked')||'هاتە دەرئێخستن ژ لایێ ئامیرەکێ دی ڤە');
         setTimeout(function(){S.supabase.auth.signOut();},1500);
       }
     }).subscribe();
@@ -11082,17 +11082,17 @@ App.openLogin=function(){
     if(!msg)return t('error.generic');
     var m=msg.toLowerCase();
     if(m.indexOf('invalid login')!==-1||m.indexOf('invalid credentials')!==-1||m.indexOf('wrong password')!==-1)
-      return t('auth.err_wrong_credentials')||'Email an jî şîfre şaş e.';
+      return t('auth.err_wrong_credentials')||'ئیمەیل یان ژمارا نهێنی یا خەلەتە';
     if(m.indexOf('email not confirmed')!==-1||m.indexOf('not confirmed')!==-1)
-      return t('auth.err_email_not_confirmed')||'E-name pejirandî nîn e. Sanduqa xwe kontrol bike.';
+      return t('auth.err_email_not_confirmed')||'ئیمەیلا تە نەهاتییە پشتڕاستکرن، هیڤییە پشکنینا ئیمەیلێ خۆ بکە.';
     if(m.indexOf('too many requests')!==-1||m.indexOf('rate limit')!==-1||m.indexOf('over_email_send_rate_limit')!==-1)
-      return t('auth.err_rate_limit')||'Gelek caran hewl daye. Hinekî bisekine û dûbaré biceribîne.';
+      return t('auth.err_rate_limit')||'هەوڵدانێن زێدە چێبوون. پشتی چەند خۆلەکان دووبارە هەوڵ بدە.';
     if(m.indexOf('user already registered')!==-1||m.indexOf('already been registered')!==-1||m.indexOf('already exists')!==-1)
-      return t('auth.err_already_registered')||'Ev e-name berê hatiye tomarkirin. Têkeve hesabê xwe.';
+      return t('auth.err_already_registered')||'ئەڤ ئیمەیلە پێشتر هاتییە تۆمارکرن. چوونەژوور بۆ ناڤ ئەکاونتێ خۆ بکە.';
     if(m.indexOf('network')!==-1||m.indexOf('fetch')!==-1)
-      return t('auth.err_network')||'Yek pirsgirêka torê derket. Girêdana xwe kontrol bike.';
+      return t('auth.err_network')||'ئاریشەک د تۆڕێ دا چێبوو. پشکنینێ بۆ هێلا ئینتەرنێتا خۆ بکە';
     if(m.indexOf('token')!==-1&&m.indexOf('expired')!==-1)
-      return t('auth.err_token_expired')||'Koda xwe ya pejirandinê derbasbûye. Koda nû bixwaze.';
+      return t('auth.err_token_expired')||'دەمێ کۆدی ب دوماهی هات. داخوازا کۆدەکێ نوی بکە';
     if(m.indexOf('token')!==-1&&(m.indexOf('invalid')!==-1||m.indexOf('wrong')!==-1))
       return t('auth.err_token_invalid')||'Koda te şaş e. Kontrol bike û dûbaré biceribîne.';
     return t('error.generic');
@@ -11304,16 +11304,16 @@ App.openLogin=function(){
     on(submitBtn,'click',doVerify);
     f.appendChild(submitBtn);
 
-    var resendBtn=el('button','auth-guest-btn',t('auth.resend_code')||'Koda nû bişîne');
+    var resendBtn=el('button','auth-guest-btn',t('auth.resend_code')||'کودی دووبارە ب هنێرە');
     on(resendBtn,'click',function(){
       resendBtn.disabled=true;resendBtn.textContent='...';
       S.supabase.auth.resend({type:'signup',email:email}).then(function(){
         showMsg(t('auth.code_resent')||'Koda nû hat şandin.','info');
-        setTimeout(function(){resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'Koda nû bişîne';},30000);
+        setTimeout(function(){resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'کودی دووبارە ب هنێرە';},30000);
       }).catch(function(e){
         console.warn('[Auth] resend error:',e);
         showMsg(_mapAuthError(e.message),'error');
-        resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'Koda nû bişîne';
+        resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'کودی دووبارە ب هنێرە';
       });
     });
     f.appendChild(resendBtn);

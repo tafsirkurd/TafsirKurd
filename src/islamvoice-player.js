@@ -644,7 +644,7 @@
     // Require login for action - returns true if logged in, redirects otherwise
     function requireLogin(actionName) {
         if (!isUserAuthenticated()) {
-            showNotification(`${_t('iv.login_required_for','تکایە بۆ')} ${actionName} ${_t('iv.login_first_suffix','پێشتر بچۆ ژوورەوە')}`);
+            showNotification(`${_t('iv.login_required_for','کەرەمکە بۆ..')} ${actionName} ${_t('iv.login_first_suffix','تۆ پێشتر چوویە د ناڤ ئەپی دا.')}`);
             setTimeout(() => {
                 redirectToLogin();
             }, 1500);
@@ -675,7 +675,7 @@
             localStorage.setItem('watchHistory', JSON.stringify(state.watchHistory));
             renderHistory();
             updateBadgeCounts();
-            showNotification(_t('iv.removed_history','سڕایەوە لە مێژوو'));
+            showNotification(_t('iv.removed_history','ژ مێژوویێ هاتە ژێبرن.'));
         },
         removeFromContinue: function(episodeId) {
             state.continueWatching = state.continueWatching.filter(c => c.episodeId !== episodeId);
@@ -705,14 +705,14 @@
             localStorage.setItem('watchHistory', JSON.stringify(state.watchHistory));
             renderHistory();
             updateBadgeCounts();
-            showNotification(_t('iv.history_cleared','مێژوو پاک کرایەوە'));
+            showNotification(_t('iv.history_cleared','تۆمارا گەڕیانێ هاتە پاقژکرن.'));
         },
         clearAllContinue: function() {
             state.continueWatching = [];
             localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
             renderContinueWatching();
             updateBadgeCounts();
-            showNotification(_t('iv.list_cleared','لیست پاک کرایەوە'));
+            showNotification(_t('iv.list_cleared','لیست هاتە پاقژکرن.'));
         },
         toggleBookmark: function(episodeId) {
             const isNowBookmarked = toggleBookmark(episodeId);
@@ -1583,7 +1583,7 @@
         });
 
         closeAllDropdowns();
-        showNotification(`${_t('iv.quality_label','کواڵتی')}: ${quality === 'auto' ? _t('iv.auto','ئۆتۆماتیکی') : quality + 'p'}`);
+        showNotification(`${_t('iv.quality_label','کواڵێتی')}: ${quality === 'auto' ? _t('iv.auto','ئۆتۆماتیکی') : quality + 'p'}`);
 
         // In real implementation, switch video source
         // const currentTime = elements.video.currentTime;
@@ -1863,7 +1863,7 @@
         if (index === -1) {
             state.watchlist.push(state.currentEpisode);
             elements.addToListBtn.classList.add('active');
-            elements.addToListBtn.innerHTML = '<i class="fas fa-check"></i> ' + _t('iv.in_list','ل لیستێ دایە');
+            elements.addToListBtn.innerHTML = '<i class="fas fa-check"></i> ' + _t('iv.in_list','د لیستێ دایە');
             showNotification(_t('iv.added_to_list','زێدە بوو بۆ لیستا تە!'));
         } else {
             state.watchlist.splice(index, 1);
@@ -1966,7 +1966,7 @@
     window.copyLink = function() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            showNotification(_t('iv.link_copied','لینک کۆپیکری!'));
+            showNotification(_t('iv.link_copied','لینک هاتە کۆپیکرن!'));
             closeShareModal();
         });
     };
@@ -3588,7 +3588,7 @@
 
                 if (error) {
                     console.error('Google sign-in error:', error);
-                    showNotification(_t('iv.error_occurred','❌ هەڵەیەک ڕووی دا') + ': ' + error.message, 5000);
+                    showNotification(_t('iv.error_occurred','خەلەتیەک چێبوو') + ': ' + error.message, 5000);
                 } else {
                     showNotification(_t('iv.subscribe_success','✅ دەستنیشانبوون سەرکەوتوو بوو!'));
                 }
@@ -3627,7 +3627,7 @@
 
                 if (error) {
                     console.error('Facebook sign-in error:', error);
-                    showNotification(_t('iv.error_occurred','❌ هەڵەیەک ڕووی دا'), 5000);
+                    showNotification(_t('iv.error_occurred','خەلەتیەک چێبوو'), 5000);
                 }
             } catch (err) {
                 console.error('Facebook sign-in exception:', err);
@@ -3653,7 +3653,7 @@
 
                 if (error) {
                     console.error('Apple sign-in error:', error);
-                    showNotification(_t('iv.error_occurred','❌ هەڵەیەک ڕووی دا'), 5000);
+                    showNotification(_t('iv.error_occurred','خەلەتیەک چێبوو'), 5000);
                 }
             } catch (err) {
                 console.error('Apple sign-in exception:', err);
@@ -3687,9 +3687,9 @@
 
                 if (error) {
                     console.error('Email sign-up error:', error);
-                    showNotification(_t('iv.error_occurred','❌ هەڵەیەک ڕووی دا'), 5000);
+                    showNotification(_t('iv.error_occurred','خەلەتیەک چێبوو'), 5000);
                 } else {
-                    showNotification(_t('iv.magic_link_sent','✅ لینکێک بۆ ئیمەیلەکەت نێردرا!'), 5000);
+                    showNotification(_t('iv.magic_link_sent','✅ لینکەک بۆ ئیمەیلا تە هاتە هنارتن!'), 5000);
                     closeAuthModal();
                 }
             } catch (err) {

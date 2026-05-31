@@ -4518,7 +4518,7 @@
 
                 // Auto-correct text values that changed in code but already exist in DB.
                 // Versioned by _TEXT_UPDATE_VERSION — runs once per browser session per version.
-                var _TEXT_UPDATE_VERSION = '20260531f';
+                var _TEXT_UPDATE_VERSION = '20260531g';
                 if (sessionStorage.getItem('tk_text_upd') !== _TEXT_UPDATE_VERSION) {
                     var _dbMap = {};
                     allData.forEach(function(r){ _dbMap[r.key_id] = r.kurdish_text; });
@@ -4564,6 +4564,57 @@
                         { key_id: 'toast.widget_error',          expected: 'خەلەتی د ووجێتی دا' },
                         { key_id: 'toast.sync_started',          expected: 'هەلگرتن دەستپێکر…' },
                         { key_id: 'toast.rating_thanks',         expected: 'سوپاس بۆ هەڵسەنگاندنا تە!' },
+                        // v20260531g — kolilk admin changes
+                        { key_id: 'dl.redownload_btn',           expected: 'دووبارە هاتە داخستن' },
+                        { key_id: 'dl.partial',                  expected: 'بەشێت دابەزی' },
+                        { key_id: 'dl.partial_surahs',           expected: 'پشکەک دابەزی ({n}/114 سوورەت)' },
+                        { key_id: 'dl.surah_downloaded',         expected: 'سوورەت هاتە داگرتن ✓' },
+                        { key_id: 'dl.partial_issues',           expected: 'پشکەک دابەزین — کێشەیەک یا هەی' },
+                        { key_id: 'dl.tip_partial',              expected: 'ب کێماتی هاتە دابەزین — کلیک بکە بۆ ڕێڤەبرنێ' },
+                        { key_id: 'qs.jump_to',                  expected: 'دەربازببە بۆ ئایەتێ.' },
+                        { key_id: 'prayer.loading',              expected: 'تەماشەکرن...' },
+                        { key_id: 'qs.jump_audio',               expected: 'دەربازببە بۆ ئایەتا دەنگی.' },
+                        { key_id: 'search.exact_mode',           expected: 'لێگەڕیانا هوویر — تنێ دروستترین ئایەت' },
+                        // batch 2 — kolilk/tafsirkurd admin changes
+                        { key_id: 'iv.link_copied',               expected: 'لینک هاتە کۆپیکرن!' },
+                        { key_id: 'gencine.voice_permission',     expected: 'مۆڵەتدان ب مایکرۆفۆنی.' },
+                        { key_id: 'iv.in_list',                   expected: 'د لیستێ دایە' },
+                        { key_id: 'iv.history_cleared',           expected: 'تۆمارا گەڕیانێ هاتە پاقژکرن.' },
+                        { key_id: 'gencine.voice_requesting',     expected: 'داخوازییا مۆڵەتێ دهێتەکرن...' },
+                        { key_id: 'gencine.smart.done_today',     expected: 'ئەڤڕۆ تەمام بوو ✓' },
+                        { key_id: 'dl.wifi_blocked',              expected: 'تایبەتمەندیا "تنێ Wi-Fi" یا چالاکە. ب ڕێیا Wi-Fi گرێبدە یان ئەڤی مۆدی نەهێڵە' },
+                        { key_id: 'dl.wifi_only',                 expected: 'کارکرن تنێ ب Wi-Fi' },
+                        { key_id: 'dl.tip_downloaded',            expected: 'دابەزاندن تەمام بوو — کلیک بکە بۆ ڕێڤەبرنێ' },
+                        { key_id: 'gencine.dua_empty',            expected: 'چو دوعا نینن' },
+                        { key_id: 'gencine.cat_quran',            expected: 'ژ قورئانا پیرۆز.' },
+                        { key_id: 'gencine.adhkar_empty',         expected: 'چو زکر نینن.' },
+                        { key_id: 'dl.tip_downloaded_s',          expected: 'دابەزاندن' },
+                        { key_id: 'gencine.books_error',          expected: 'خەلەتیەک ڕوویدا' },
+                        { key_id: 'dl.verifying',                 expected: 'تاقیکرن...' },
+                        { key_id: 'dl.tip_offline',               expected: 'دابەزاندن بۆ گوهدارییکرنێ بێ ئینتەرنێت.' },
+                        { key_id: 'auth.err_wrong_credentials',   expected: 'ئیمەیل یان ژمارا نهێنی یا خەلەتە' },
+                        { key_id: 'auth.err_token_expired',       expected: 'دەمێ کۆدی ب دوماهی هات. داخوازا کۆدەکێ نوی بکە' },
+                        { key_id: 'auth.err_rate_limit',          expected: 'هەوڵدانێن زێدە چێبوون. پشتی چەند خۆلەکان دووبارە هەوڵ بدە.' },
+                        { key_id: 'auth.err_already_registered',  expected: 'ئەڤ ئیمەیلە پێشتر هاتییە تۆمارکرن. چوونەژوور بۆ ناڤ ئەکاونتێ خۆ بکە.' },
+                        { key_id: 'auth.err_email_not_confirmed', expected: 'ئیمەیلا تە نەهاتییە پشتڕاستکرن، هیڤییە پشکنینا ئیمەیلێ خۆ بکە.' },
+                        { key_id: 'auth.err_network',             expected: 'ئاریشەک د تۆڕێ دا چێبوو. پشکنینێ بۆ هێلا ئینتەرنێتا خۆ بکە' },
+                        { key_id: 'auth.resend_code',             expected: 'کودی دووبارە ب هنێرە' },
+                        { key_id: 'profile.session_revoked',      expected: 'هاتە دەرئێخستن ژ لایێ ئامیرەکێ دی ڤە' },
+                        { key_id: 'qs.mushaf_settings_title',     expected: 'ڕێکخستنا مووشەف' },
+                        { key_id: 'iv.error_occurred',            expected: 'خەلەتیەک چێبوو' },
+                        { key_id: 'iv.no_history',               expected: 'چو مێژوو نینن.' },
+                        { key_id: 'iv.login_required_for',        expected: 'کەرەمکە بۆ..' },
+                        { key_id: 'iv.login_first_suffix',        expected: 'تۆ پێشتر چوویە د ناڤ ئەپی دا.' },
+                        { key_id: 'iv.list_cleared',              expected: 'لیست هاتە پاقژکرن.' },
+                        { key_id: 'iv.quality_label',             expected: 'کواڵێتی' },
+                        { key_id: 'iv.percent_watched',           expected: '% هاتییە تەماشاکرن' },
+                        { key_id: 'iv.removed_history',           expected: 'ژ مێژوویێ هاتە ژێبرن.' },
+                        { key_id: 'iv.magic_link_sent',           expected: '✅ لینکەک بۆ ئیمەیلا تە هاتە هنارتن!' },
+                        { key_id: 'settings.sync_what_syncs',     expected: 'چ دهێتە هەلگرتن' },
+                        { key_id: 'settings.sync_status_failed',  expected: 'هەلگرتن سەرنەکەفت' },
+                        { key_id: 'settings.sync_status_ok',      expected: 'هاتیە هەلگرتن' },
+                        { key_id: 'settings.sync_btn',            expected: 'هەلگرتن' },
+                        { key_id: 'settings.sync_status_syncing', expected: 'هەلگرتن...' },
                     ];
                     var _staleKeys = _TEXT_UPDATES.filter(function(u){
                         return (u.key_id in _dbMap) && _dbMap[u.key_id] !== u.expected;

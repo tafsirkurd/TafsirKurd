@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260531f';
+const FIXES_VERSION = '20260531g';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
@@ -50,6 +50,57 @@ const CORRECTIONS = [
     { key_id: 'toast.widget_error',           kurdish_text: 'خەلەتی د ووجێتی دا' },
     { key_id: 'toast.sync_started',           kurdish_text: 'هەلگرتن دەستپێکر…' },
     { key_id: 'toast.rating_thanks',          kurdish_text: 'سوپاس بۆ هەڵسەنگاندنا تە!' },
+    // v20260531g — kolilk admin changes
+    { key_id: 'dl.redownload_btn',            kurdish_text: 'دووبارە هاتە داخستن' },
+    { key_id: 'dl.partial',                   kurdish_text: 'بەشێت دابەزی' },
+    { key_id: 'dl.partial_surahs',            kurdish_text: 'پشکەک دابەزی ({n}/114 سوورەت)' },
+    { key_id: 'dl.surah_downloaded',          kurdish_text: 'سوورەت هاتە داگرتن ✓' },
+    { key_id: 'dl.partial_issues',            kurdish_text: 'پشکەک دابەزین — کێشەیەک یا هەی' },
+    { key_id: 'dl.tip_partial',               kurdish_text: 'ب کێماتی هاتە دابەزین — کلیک بکە بۆ ڕێڤەبرنێ' },
+    { key_id: 'qs.jump_to',                   kurdish_text: 'دەربازببە بۆ ئایەتێ.' },
+    { key_id: 'prayer.loading',               kurdish_text: 'تەماشەکرن...' },
+    { key_id: 'qs.jump_audio',                kurdish_text: 'دەربازببە بۆ ئایەتا دەنگی.' },
+    { key_id: 'search.exact_mode',            kurdish_text: 'لێگەڕیانا هوویر — تنێ دروستترین ئایەت' },
+    // kolilk/tafsirkurd admin changes batch 2
+    { key_id: 'iv.link_copied',               kurdish_text: 'لینک هاتە کۆپیکرن!' },
+    { key_id: 'gencine.voice_permission',     kurdish_text: 'مۆڵەتدان ب مایکرۆفۆنی.' },
+    { key_id: 'iv.in_list',                   kurdish_text: 'د لیستێ دایە' },
+    { key_id: 'iv.history_cleared',           kurdish_text: 'تۆمارا گەڕیانێ هاتە پاقژکرن.' },
+    { key_id: 'gencine.voice_requesting',     kurdish_text: 'داخوازییا مۆڵەتێ دهێتەکرن...' },
+    { key_id: 'gencine.smart.done_today',     kurdish_text: 'ئەڤڕۆ تەمام بوو ✓' },
+    { key_id: 'dl.wifi_blocked',              kurdish_text: 'تایبەتمەندیا "تنێ Wi-Fi" یا چالاکە. ب ڕێیا Wi-Fi گرێبدە یان ئەڤی مۆدی نەهێڵە' },
+    { key_id: 'dl.wifi_only',                 kurdish_text: 'کارکرن تنێ ب Wi-Fi' },
+    { key_id: 'dl.tip_downloaded',            kurdish_text: 'دابەزاندن تەمام بوو — کلیک بکە بۆ ڕێڤەبرنێ' },
+    { key_id: 'gencine.dua_empty',            kurdish_text: 'چو دوعا نینن' },
+    { key_id: 'gencine.cat_quran',            kurdish_text: 'ژ قورئانا پیرۆز.' },
+    { key_id: 'gencine.adhkar_empty',         kurdish_text: 'چو زکر نینن.' },
+    { key_id: 'dl.tip_downloaded_s',          kurdish_text: 'دابەزاندن' },
+    { key_id: 'gencine.books_error',          kurdish_text: 'خەلەتیەک ڕوویدا' },
+    { key_id: 'dl.verifying',                 kurdish_text: 'تاقیکرن...' },
+    { key_id: 'dl.tip_offline',               kurdish_text: 'دابەزاندن بۆ گوهدارییکرنێ بێ ئینتەرنێت.' },
+    { key_id: 'auth.err_wrong_credentials',   kurdish_text: 'ئیمەیل یان ژمارا نهێنی یا خەلەتە' },
+    { key_id: 'auth.err_token_expired',       kurdish_text: 'دەمێ کۆدی ب دوماهی هات. داخوازا کۆدەکێ نوی بکە' },
+    { key_id: 'auth.err_rate_limit',          kurdish_text: 'هەوڵدانێن زێدە چێبوون. پشتی چەند خۆلەکان دووبارە هەوڵ بدە.' },
+    { key_id: 'auth.err_already_registered',  kurdish_text: 'ئەڤ ئیمەیلە پێشتر هاتییە تۆمارکرن. چوونەژوور بۆ ناڤ ئەکاونتێ خۆ بکە.' },
+    { key_id: 'auth.err_email_not_confirmed', kurdish_text: 'ئیمەیلا تە نەهاتییە پشتڕاستکرن، هیڤییە پشکنینا ئیمەیلێ خۆ بکە.' },
+    { key_id: 'auth.err_network',             kurdish_text: 'ئاریشەک د تۆڕێ دا چێبوو. پشکنینێ بۆ هێلا ئینتەرنێتا خۆ بکە' },
+    { key_id: 'auth.resend_code',             kurdish_text: 'کودی دووبارە ب هنێرە' },
+    { key_id: 'profile.session_revoked',      kurdish_text: 'هاتە دەرئێخستن ژ لایێ ئامیرەکێ دی ڤە' },
+    { key_id: 'qs.mushaf_settings_title',     kurdish_text: 'ڕێکخستنا مووشەف' },
+    { key_id: 'iv.error_occurred',            kurdish_text: 'خەلەتیەک چێبوو' },
+    { key_id: 'iv.no_history',               kurdish_text: 'چو مێژوو نینن.' },
+    { key_id: 'iv.login_required_for',        kurdish_text: 'کەرەمکە بۆ..' },
+    { key_id: 'iv.login_first_suffix',        kurdish_text: 'تۆ پێشتر چوویە د ناڤ ئەپی دا.' },
+    { key_id: 'iv.list_cleared',              kurdish_text: 'لیست هاتە پاقژکرن.' },
+    { key_id: 'iv.quality_label',             kurdish_text: 'کواڵێتی' },
+    { key_id: 'iv.percent_watched',           kurdish_text: '% هاتییە تەماشاکرن' },
+    { key_id: 'iv.removed_history',           kurdish_text: 'ژ مێژوویێ هاتە ژێبرن.' },
+    { key_id: 'iv.magic_link_sent',           kurdish_text: '✅ لینکەک بۆ ئیمەیلا تە هاتە هنارتن!' },
+    { key_id: 'settings.sync_what_syncs',     kurdish_text: 'چ دهێتە هەلگرتن' },
+    { key_id: 'settings.sync_status_failed',  kurdish_text: 'هەلگرتن سەرنەکەفت' },
+    { key_id: 'settings.sync_status_ok',      kurdish_text: 'هاتیە هەلگرتن' },
+    { key_id: 'settings.sync_btn',            kurdish_text: 'هەلگرتن' },
+    { key_id: 'settings.sync_status_syncing', kurdish_text: 'هەلگرتن...' },
 ];
 
 const CORS = {
