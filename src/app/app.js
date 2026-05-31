@@ -8191,8 +8191,11 @@ function calcPrayerMonthStats(log,year,month){
 }
 function calcPrayerWeekData(log){
   var now=new Date();var pDay=_getPrayerDay();var result=[];
-  for(var i=6;i>=0;i--){
-    var d=new Date(now);d.setDate(d.getDate()-i);
+  // Fixed Kurdish week: Saturday→Friday; (getDay()+1)%7 gives 0=Sat…6=Fri
+  var weekOffset=(now.getDay()+1)%7;
+  var satStart=new Date(now);satStart.setDate(now.getDate()-weekOffset);
+  for(var i=0;i<7;i++){
+    var d=new Date(satStart);d.setDate(satStart.getDate()+i);
     var k=dateKey(d);var dl=log[k]||{};
     var cnt=_TRACK_PRAYERS.filter(function(p){return dl[p];}).length;
     result.push({key:k,dow:d.getDay(),cnt:cnt,isToday:k===pDay});
@@ -8521,8 +8524,9 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(stats);
 
   // ─ This week ──────────────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title','حەفتیا دوماهییێ'));
+  body.appendChild(el('div','ppp-section-title','ئەڤ حەفتە'));
   var week=el('div','ppp-week');
+  week.setAttribute('dir','rtl');
   weekData.forEach(function(d){
     var div=el('div','ppp-wday'+(d.isToday?' today':''));
     div.setAttribute('data-ppp-wkey',d.key);
