@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Smart Daily Companion  v41
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
@@ -99,8 +99,8 @@
     },
     {
       id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
-      labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
-      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
+      labelKey: 'adhkar.salawat', labelFallback: 'صەڵەوات',
+      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'صەڵەواتێ بکە سەر پێغەمبەر \uFDFA',
       timeTag: null, basePriority: 60, /* beats morning/evening but loses to friday */
       fallbackRepeat: 10,
       fallbackSource: 'مسلم',
@@ -238,8 +238,8 @@
     },
     {
       id: 'salawat', categoryKey: 'salawat', icon: 'fas fa-star-and-crescent',
-      labelKey: 'adhkar.salawat', labelFallback: 'سەلاوات',
-      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'سەلاواتێ بکە سەر پێغەمبەر \uFDFA',
+      labelKey: 'adhkar.salawat', labelFallback: 'صەڵەوات',
+      subtitleKey: 'gencine.smart.salawat_hint', subtitleFallback: 'صەڵەواتێ بکە سەر پێغەمبەر \uFDFA',
       fallbackAr: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ',
       fallbackRepeat: 10,
       fallbackSource: 'مسلم',

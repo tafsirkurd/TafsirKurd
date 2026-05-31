@@ -208,7 +208,7 @@ var ADHKAR_CAT_LABELS = {
   wind:           'کاتا هەوایی',
   after_prayer:   'دوای نوێژ',
   adhan:          'دوای ئەزان',
-  salawat:        'سەلاوات',
+  salawat:        'صەڵەوات',
   qunut:          'دوعای قونووت',
   lailat_qadr:    'شەوا قەدرێ',
   dhul_hijjah:    'دەیا ذولحیجەیێ',
