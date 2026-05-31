@@ -1461,7 +1461,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "iv.no_sheikh_found",      kurdish_text: "هیچ ماموستایەک نەدۆزرایەوە",        category: "islamvoice", page: "android" },
     { key_id: "iv.comments_load_error",  kurdish_text: "هەڵەیەک ڕوویدا لە بارکردنی شیرۆڤەکان", category: "islamvoice", page: "android" },
     { key_id: "iv.no_comments",          kurdish_text: "هیچ شیرۆڤەیەک نییە. یەکەم کەس بە کە شیرۆڤە دەکات!", category: "islamvoice", page: "android" },
-    { key_id: "iv.error_save",           kurdish_text: "هەڵەیەک هاتە دەستڤە",               category: "islamvoice", page: "android" },
+    { key_id: "iv.error_save",           kurdish_text: "نەهاتە هەلگرتن",               category: "islamvoice", page: "android" },
     { key_id: "iv.topic",               kurdish_text: "بابەت",                              category: "islamvoice", page: "android" },
     { key_id: "iv.comments_title",       kurdish_text: "شیرۆڤەکان",                         category: "islamvoice", page: "android" },
     { key_id: "iv.like_success",         kurdish_text: "❤️ حەزکرا!",                        category: "islamvoice", page: "android" },

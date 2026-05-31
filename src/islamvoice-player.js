@@ -3891,7 +3891,7 @@
 
         } catch (error) {
             console.error('Save error:', error);
-            showNotification(_t('iv.error_save','هەڵەیەک هاتە دەستڤە') + ': ' + error.message);
+            showNotification(_t('iv.error_save','نەهاتە هەلگرتن') + ': ' + error.message);
         }
     };
 
