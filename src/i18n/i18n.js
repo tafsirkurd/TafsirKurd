@@ -450,7 +450,7 @@ window.t = t;
 // hardcoded corrections and marks the version in site_settings so the DB
 // update runs exactly once globally. Client tracks locally to skip the call.
 (function(){
-  var _FIX_VER = '20260531g';
+  var _FIX_VER = '20260531h';
   var _LS_KEY  = 'tk_tf';
   try{ if(localStorage.getItem(_LS_KEY) === _FIX_VER) return; } catch(e){ return; }
   var _base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')

@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260531g';
+const FIXES_VERSION = '20260531h';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
@@ -105,7 +105,7 @@ const CORRECTIONS = [
     { key_id: 'profile.login',               kurdish_text: 'چووناژوور' },
     { key_id: 'profile.login_method',        kurdish_text: 'شێوازێ چووناژوور' },
     { key_id: 'profile.login_first',         kurdish_text: 'هیڤیە دەستپێکێ هەرە چووناژوور' },
-    { key_id: 'profile.login_prompt',        kurdish_text: 'ژبۆ هەلگرتنا داتایی، هەرە چووناژوور' },
+    { key_id: 'profile.login_prompt',        kurdish_text: 'ژبۆ هەلگرتنا داتایان، چووناژوور ئەنجام بده' },
     { key_id: 'auth.login',                  kurdish_text: 'چووناژوور' },
     { key_id: 'auth.google_login',           kurdish_text: 'چووناژوور ب Google' },
     { key_id: 'auth.apple_login',            kurdish_text: 'چووناژوور ب Apple' },
