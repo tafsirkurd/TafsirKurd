@@ -1641,7 +1641,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "dl.no_reciters",       kurdish_text: "هیچ دەنگخوێنێک نەهاتیە داخسترن. ژبۆ گوهداری بێ ئینترنەتێ، بشکوڵکا \u2193 ئەفشار بکە",             category: "download", page: "android" },
     { key_id: "dl.full_quran",        kurdish_text: "تەواوی قورئانێ",                                                                                       category: "download", page: "android" },
     { key_id: "dl.surahs",            kurdish_text: "سورە",                                                                                                  category: "download", page: "android" },
-    { key_id: "dl.manage",            kurdish_text: "رێڤەبرن",                                                                                              category: "download", page: "android" },
+    { key_id: "dl.manage",            kurdish_text: "دابەزاندن",                                                                                            category: "download", page: "android" },
     { key_id: "dl.remove",            kurdish_text: "ژێبرن",                                                                                                category: "download", page: "android" },
     { key_id: "dl.not_downloaded",    kurdish_text: "نەهاتیە داخسترن",                                                                                     category: "download", page: "android" },
     { key_id: "dl.measuring",         kurdish_text: "پێوانەکرن...",                                                                                        category: "download", page: "android" },

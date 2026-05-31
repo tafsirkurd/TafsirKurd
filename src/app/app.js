@@ -6515,9 +6515,9 @@ function _renderDlMgrBody(){
       var emp=el('div','');
       emp.style.cssText='display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 24px;color:var(--text-tertiary)';
       var empIc=icon('fas fa-cloud-download-alt');empIc.style.cssText='font-size:2.4rem;opacity:.3';emp.appendChild(empIc);
-      var empT=el('div','');empT.style.cssText='font-size:.92rem;font-weight:600';empT.textContent=t('dl.nothing_downloaded')||'هیچ داونلۆدێک نییە';emp.appendChild(empT);
+      var empT=el('div','');empT.style.cssText='font-size:.92rem;font-weight:600';empT.textContent=t('dl.nothing_downloaded')||'چ دابەزاندن نینن';emp.appendChild(empT);
       var empS=el('div','');empS.style.cssText='font-size:.78rem;opacity:.5;text-align:center;line-height:1.7;direction:rtl;max-width:220px';
-      empS.textContent=t('dl.nothing_hint')||'کتێبەکان و دەنگ دابنێ بۆ خوێندنی بێ ئینتەرنێت';emp.appendChild(empS);
+      empS.textContent=t('dl.nothing_hint')||'پەرتووک و دەنگان دابەزینە بۆ خواندنا بێ ئینتەرنێت';emp.appendChild(empS);
       body.appendChild(emp);
       return;
     }
@@ -9998,7 +9998,7 @@ function renderSettings(){
   g4.appendChild(el('div','settings-group-title',t('settings.data')));
   // Downloads manager
   var _dlRow=el('div','setting-row s-row');_dlRow.style.cursor='pointer';
-  var _dlRowL=el('div','setting-label-wrap');_dlRowL.appendChild(el('div','setting-label',t('dl.manage')||'داونلۆدەکان'));
+  var _dlRowL=el('div','setting-label-wrap');_dlRowL.appendChild(el('div','setting-label',t('dl.manage')||'دابەزاندن'));
   _dlRow.appendChild(_dlRowL);
   var _dlRowChev=icon('fas fa-chevron-left');_dlRowChev.style.cssText='color:var(--text-tertiary);font-size:.8rem;flex-shrink:0';
   _dlRow.appendChild(_dlRowChev);
@@ -11883,7 +11883,7 @@ function renderProfile(panel){
   var dlNavRow=el('div','pp-row');dlNavRow.style.cursor='pointer';
   var dlNavL=el('div','pp-row-label');
   dlNavL.appendChild(icon('fas fa-download'));
-  dlNavL.appendChild(document.createTextNode(' '+(t('dl.manage')||'داونلۆدەکان')));
+  dlNavL.appendChild(document.createTextNode(' '+(t('dl.manage')||'دابەزاندن')));
   dlNavRow.appendChild(dlNavL);
   dlNavRow.appendChild(icon('fas fa-chevron-left'));
   on(dlNavRow,'click',function(){App.closeProfile();openDlManager();});
