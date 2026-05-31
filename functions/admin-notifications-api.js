@@ -91,7 +91,7 @@ async function _handleRequest(context) {
         if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID)
             return json({ error: 'FCM not configured' }, 503);
 
-        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const twoHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
         const notified = [];
 
         // Load editable auto-notification texts from translations DB
