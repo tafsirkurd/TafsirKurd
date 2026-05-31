@@ -10200,6 +10200,7 @@ function renderSettings(){
     {key:'social_website',icon:'fas fa-globe',label:'Website'}
   ];
   var socialBar=el('div','settings-social');
+  var socGroup=el('div','soc-group');
   var _socBtns={};
   SOCIAL_DEFS.forEach(function(def){
     var btn=el('button','soc-btn');
@@ -10214,8 +10215,9 @@ function renderSettings(){
       }
     });
     _socBtns[def.key]=btn;
-    socialBar.appendChild(btn);
+    socGroup.appendChild(btn);
   });
+  socialBar.appendChild(socGroup);
   g7.appendChild(socialBar);
   frag.appendChild(g7);
   getSiteSettings().then(function(ss){

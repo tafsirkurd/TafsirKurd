@@ -1240,8 +1240,10 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .rate-app-label{font-size:.95rem;font-weight:700;color:var(--text);direction:rtl}
 .rate-app-sub{font-size:.75rem;color:var(--text3);direction:rtl}
 /* Social bar */
-.settings-social{display:flex;justify-content:center;gap:10px;padding:18px 0 4px}
-.soc-btn{width:46px;height:46px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.05rem;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .15s}
+.settings-social{display:flex;justify-content:center;padding:18px 0 4px}
+.soc-group{display:inline-flex;background:var(--bg2);border:1px solid var(--border);border-radius:40px;overflow:hidden}
+.soc-btn{width:44px;height:44px;border:none;border-left:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .15s}
+.soc-group .soc-btn:first-child{border-left:none}
 .soc-btn:active{background:var(--surface-h)}
 /* About bottom sheet */
 .cfg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:300}
@@ -4448,7 +4450,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
-<script src="/app/app.js?v=919"></script>
+<script src="/app/app.js?v=920"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
