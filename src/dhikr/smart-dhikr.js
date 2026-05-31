@@ -941,8 +941,8 @@
       var bookId = b.id;
       return {
         _type: 'daily', id: 'book_day',
-        icon: 'fas fa-book-open', tag: 'کتێبا ڕۆژێ',
-        title:    b.title_ku || b.title_ar || 'کتێب',
+        icon: 'fas fa-book-open', tag: 'پەرتوکا ڕۆژێ',
+        title:    b.title_ku || b.title_ar || 'پەرتوک',
         subtitle: b.author_ku || 'بخوێنە',
         coverUrl: b.cover_url || null,
         nav: function(ui) { if (ui) ui.openBook(bookId); }
@@ -952,8 +952,8 @@
     /* Cache empty — placeholder until data loads */
     return {
       _type: 'daily', id: 'book_day',
-      icon: 'fas fa-book-open', tag: 'کتێبا ڕۆژێ',
-      title:    'کتێبا ڕۆژێ',
+      icon: 'fas fa-book-open', tag: 'پەرتوکا ڕۆژێ',
+      title:    'پەرتوکا ڕۆژێ',
       subtitle: 'دابەزێنا داتا...',
       nav: function(ui) { if (ui) { ui._view = 'books'; ui._draw(); } }
     };

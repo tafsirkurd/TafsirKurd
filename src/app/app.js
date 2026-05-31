@@ -2006,9 +2006,9 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260529b', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260531a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=53',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=54',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -6539,7 +6539,7 @@ function _renderDlMgrBody(){
       });
       tabRow.appendChild(btn);
     }
-    if(pdfCached.length||true) _makeTab('books',t('dl.books_section')||'کتێبەکان',pdfCached.length);
+    if(pdfCached.length||true) _makeTab('books',t('dl.books_section')||'پەرتوکەکان',pdfCached.length);
     if(audioAll.length||true)  _makeTab('audio',t('dl.audio_section')||'دەنگ',audioAll.length);
     body.appendChild(tabRow);
 
@@ -6559,7 +6559,7 @@ function _renderDlMgrBody(){
     if(_dlMgrTab==='books'){
       if(!pdfCached.length){
         var noB=el('div','');noB.style.cssText='padding:32px;text-align:center;color:var(--text-tertiary);font-size:.85rem;direction:rtl';
-        noB.textContent=t('dl.no_books')||'هیچ کتێبێک نەهاتیە داونلۆد کرن';content.appendChild(noB);
+        noB.textContent=t('dl.no_books')||'هیچ پەرتوکێک نەهاتیە داونلۆد کرن';content.appendChild(noB);
       } else {
         pdfCached.forEach(function(entry){
           var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;

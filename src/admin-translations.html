@@ -4518,7 +4518,7 @@
 
                 // Auto-correct text values that changed in code but already exist in DB.
                 // Versioned by _TEXT_UPDATE_VERSION — runs once per browser session per version.
-                var _TEXT_UPDATE_VERSION = '20260531g';
+                var _TEXT_UPDATE_VERSION = '20260531j';
                 if (sessionStorage.getItem('tk_text_upd') !== _TEXT_UPDATE_VERSION) {
                     var _dbMap = {};
                     allData.forEach(function(r){ _dbMap[r.key_id] = r.kurdish_text; });
@@ -4625,6 +4625,19 @@
                         { key_id: 'auth.apple_failed',          expected: 'چووناژوور ب Apple سەرنەکەت' },
                         { key_id: 'error.apple_failed',         expected: 'چووناژوور ب Apple شکست خوارد. دووبارە هەوڵ بدە' },
                         { key_id: 'error.apple_unavailable',    expected: 'چووناژوور ب Apple ل ئەڤ ئامێرێ بەردەست نینە' },
+                        { key_id: 'gencine.books',              expected: 'پەرتوک' },
+                        { key_id: 'gencine.books_sub',          expected: 'پەرتوکێن ئیسلامی' },
+                        { key_id: 'gencine.books_empty',        expected: 'پەرتوک نەهاتنە دیتن' },
+                        { key_id: 'gencine.books_unit',         expected: 'پەرتوک' },
+                        { key_id: 'gencine.books_read',         expected: 'پەرتوک' },
+                        { key_id: 'gencine.search_books',       expected: 'لێگەڕیان بە پەرتوکان...' },
+                        { key_id: 'pdf.offline_sub',            expected: 'ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە' },
+                        { key_id: 'dl.books_section',           expected: 'پەرتوک' },
+                        { key_id: 'dl.no_books',                expected: 'هیچ پەرتوکێک نەهاتیە داونلود کرن' },
+                        { key_id: 'notif.new_book_title',       expected: 'پەرتوکێکی نوێ 📖' },
+                        { key_id: 'notif.new_book_body',        expected: 'پەرتوکێکی نوێ زیاد بوو لە پەرتوکخانە' },
+                        { key_id: 'notif.reminder_msg_6',       expected: 'ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟' },
+                        { key_id: 'goals.last_session',         expected: 'دوا پەرتوکخوێندن' },
                     ];
                     var _staleKeys = _TEXT_UPDATES.filter(function(u){
                         return (u.key_id in _dbMap) && _dbMap[u.key_id] !== u.expected;

@@ -10,7 +10,7 @@ function _sections(){
     { name:'dua',    label:T('gencine.dua','دوعا'),          sub:T('gencine.dua_sub','دعاهای قورئانی'),                         icon:'fa-solid fa-person-praying' },
     { name:'tasbih', label:T('gencine.tasbih','تەسبیح'),    sub:T('gencine.tasbih_sub','ژمارتنا دیکرێن ئیسلامی'),              icon:'fas fa-rotate'             },
     { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' },
-    { name:'books',  label:T('gencine.books','کتێب'),        sub:T('gencine.books_sub','کتێبێن ئیسلامی'),                       icon:'fas fa-book-open' }
+    { name:'books',  label:T('gencine.books','پەرتوک'),        sub:T('gencine.books_sub','پەرتوکێن ئیسلامی'),                       icon:'fas fa-book-open' }
   ];
   if (!_dbSections || !_dbSections.length) return all;
   var now = new Date();
@@ -2321,7 +2321,7 @@ window.GencineUI = {
 
       if (!cached.length) {
         var emptyEl = document.createElement('div');
-        emptyEl.textContent = T('dl.no_reciters','هیچ کتێبێک نەهاتیە داونلۆد کرن');
+        emptyEl.textContent = T('dl.no_reciters','هیچ پەرتوکێک نەهاتیە داونلۆد کرن');
         emptyEl.style.cssText = 'color:var(--text-secondary);padding:24px;text-align:center';
         list.appendChild(emptyEl);
         return;
@@ -2495,7 +2495,7 @@ window.GencineUI = {
       var nameEl = document.createElement('span'); nameEl.className = 'book-author-name';
       nameEl.textContent = name; nameEl.dir = 'rtl'; card.appendChild(nameEl);
       var countEl = document.createElement('span'); countEl.className = 'book-author-count';
-      countEl.textContent = count + ' ' + T('gencine.books_unit','کتێب'); card.appendChild(countEl);
+      countEl.textContent = count + ' ' + T('gencine.books_unit','پەرتوک'); card.appendChild(countEl);
       card.onclick = function(){
         if (isAll) { self._bookAuthor = ''; if(sheikhBtn)sheikhBtn.classList.remove('on'); }
         else        { self._bookAuthor = name; if(sheikhBtn)sheikhBtn.classList.add('on'); }
@@ -2669,7 +2669,7 @@ window.GencineUI = {
           var l=document.createElement('div'); l.className='book-stats-lbl'; l.textContent=lbl; item.appendChild(l);
           return item;
         }
-        statsBar.appendChild(_mkStatItem('fas fa-book-open', _rCount, T('gencine.books_read','کتێب')));
+        statsBar.appendChild(_mkStatItem('fas fa-book-open', _rCount, T('gencine.books_read','پەرتوک')));
         var sep1=document.createElement('div'); sep1.className='book-stats-sep'; statsBar.appendChild(sep1);
         statsBar.appendChild(_mkStatItem('fas fa-file-alt', _pCount, T('gencine.pages_unit','ڕۆپەل')));
         var sep2=document.createElement('div'); sep2.className='book-stats-sep'; statsBar.appendChild(sep2);
@@ -2696,7 +2696,7 @@ window.GencineUI = {
       })() : pool;
 
       if (!filtered.length) {
-        et.textContent = T('gencine.books_empty','کتێبەکە نیە');
+        et.textContent = T('gencine.books_empty','پەرتوکەکە نیە');
         emptyState.style.display = 'flex'; return;
       }
 
@@ -3569,7 +3569,7 @@ window.GencineUI = {
       if (isOffline) {
         var subTxt = document.createElement('div');
         subTxt.style.cssText = 'font-size:.82rem;color:var(--text-tertiary);line-height:1.55';
-        subTxt.textContent = T('pdf.offline_sub','ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە');
+        subTxt.textContent = T('pdf.offline_sub','ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە');
         txtWrap.appendChild(subTxt);
       }
       loadingEl.appendChild(txtWrap);

@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260531i';
+const FIXES_VERSION = '20260531j';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
@@ -112,6 +112,19 @@ const CORRECTIONS = [
     { key_id: 'auth.apple_failed',           kurdish_text: 'چووناژوور ب Apple سەرنەکەت' },
     { key_id: 'error.apple_failed',          kurdish_text: 'چووناژوور ب Apple شکست خوارد. دووبارە هەوڵ بدە' },
     { key_id: 'error.apple_unavailable',     kurdish_text: 'چووناژوور ب Apple ل ئەڤ ئامێرێ بەردەست نینە' },
+    { key_id: 'gencine.books',               kurdish_text: 'پەرتوک' },
+    { key_id: 'gencine.books_sub',           kurdish_text: 'پەرتوکێن ئیسلامی' },
+    { key_id: 'gencine.books_empty',         kurdish_text: 'پەرتوک نەهاتنە دیتن' },
+    { key_id: 'gencine.books_unit',          kurdish_text: 'پەرتوک' },
+    { key_id: 'gencine.books_read',          kurdish_text: 'پەرتوک' },
+    { key_id: 'gencine.search_books',        kurdish_text: 'لێگەڕیان بە پەرتوکان...' },
+    { key_id: 'pdf.offline_sub',             kurdish_text: 'ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە' },
+    { key_id: 'dl.books_section',            kurdish_text: 'پەرتوک' },
+    { key_id: 'dl.no_books',                 kurdish_text: 'هیچ پەرتوکێک نەهاتیە داونلود کرن' },
+    { key_id: 'notif.new_book_title',        kurdish_text: 'پەرتوکێکی نوێ 📖' },
+    { key_id: 'notif.new_book_body',         kurdish_text: 'پەرتوکێکی نوێ زیاد بوو لە پەرتوکخانە' },
+    { key_id: 'notif.reminder_msg_6',        kurdish_text: 'ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟' },
+    { key_id: 'goals.last_session',          kurdish_text: 'دوا پەرتوکخوێندن' },
 ];
 
 const CORS = {
