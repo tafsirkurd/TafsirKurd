@@ -4615,6 +4615,16 @@
                         { key_id: 'settings.sync_status_ok',      expected: 'هاتیە هەلگرتن' },
                         { key_id: 'settings.sync_btn',            expected: 'هەلگرتن' },
                         { key_id: 'settings.sync_status_syncing', expected: 'هەلگرتن...' },
+                        { key_id: 'profile.login',              expected: 'چووناژوور' },
+                        { key_id: 'profile.login_method',       expected: 'شێوازێ چووناژوور' },
+                        { key_id: 'profile.login_first',        expected: 'هیڤیە دەستپێکێ هەرە چووناژوور' },
+                        { key_id: 'profile.login_prompt',       expected: 'ژبۆ هەلگرتنا داتایی، هەرە چووناژوور' },
+                        { key_id: 'auth.login',                 expected: 'چووناژوور' },
+                        { key_id: 'auth.google_login',          expected: 'چووناژوور ب Google' },
+                        { key_id: 'auth.apple_login',           expected: 'چووناژوور ب Apple' },
+                        { key_id: 'auth.apple_failed',          expected: 'چووناژوور ب Apple سەرنەکەت' },
+                        { key_id: 'error.apple_failed',         expected: 'چووناژوور ب Apple شکست خوارد. دووبارە هەوڵ بدە' },
+                        { key_id: 'error.apple_unavailable',    expected: 'چووناژوور ب Apple ل ئەڤ ئامێرێ بەردەست نینە' },
                     ];
                     var _staleKeys = _TEXT_UPDATES.filter(function(u){
                         return (u.key_id in _dbMap) && _dbMap[u.key_id] !== u.expected;

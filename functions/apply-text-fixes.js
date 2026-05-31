@@ -101,6 +101,17 @@ const CORRECTIONS = [
     { key_id: 'settings.sync_status_ok',      kurdish_text: 'هاتیە هەلگرتن' },
     { key_id: 'settings.sync_btn',            kurdish_text: 'هەلگرتن' },
     { key_id: 'settings.sync_status_syncing', kurdish_text: 'هەلگرتن...' },
+    // login label → چووناژوور
+    { key_id: 'profile.login',               kurdish_text: 'چووناژوور' },
+    { key_id: 'profile.login_method',        kurdish_text: 'شێوازێ چووناژوور' },
+    { key_id: 'profile.login_first',         kurdish_text: 'هیڤیە دەستپێکێ هەرە چووناژوور' },
+    { key_id: 'profile.login_prompt',        kurdish_text: 'ژبۆ هەلگرتنا داتایی، هەرە چووناژوور' },
+    { key_id: 'auth.login',                  kurdish_text: 'چووناژوور' },
+    { key_id: 'auth.google_login',           kurdish_text: 'چووناژوور ب Google' },
+    { key_id: 'auth.apple_login',            kurdish_text: 'چووناژوور ب Apple' },
+    { key_id: 'auth.apple_failed',           kurdish_text: 'چووناژوور ب Apple سەرنەکەت' },
+    { key_id: 'error.apple_failed',          kurdish_text: 'چووناژوور ب Apple شکست خوارد. دووبارە هەوڵ بدە' },
+    { key_id: 'error.apple_unavailable',     kurdish_text: 'چووناژوور ب Apple ل ئەڤ ئامێرێ بەردەست نینە' },
 ];
 
 const CORS = {
