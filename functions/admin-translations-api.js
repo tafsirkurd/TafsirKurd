@@ -75,16 +75,6 @@ export async function onRequest(context) {
             return json({ success: true });
         }
 
-        // ── UPSERT BATCH — inserts missing keys, skips existing ones ─────
-        if (action === 'upsert_batch') {
-            const { keys } = body;
-            if (!Array.isArray(keys) || !keys.length) return json({ error: 'keys required' }, 400, corsHeaders);
-            const rows = keys.map(k => ({ key_id: k.key_id, kurdish_text: k.kurdish_text, category: k.category || 'ui', page: k.page || 'all', manually_edited: false }));
-            const { error } = await supabase.from('kurdish_translations').upsert(rows, { onConflict: 'key_id', ignoreDuplicates: true });
-            if (error) return json({ error: error.message }, 500, corsHeaders);
-            return json({ success: true });
-        }
-
         // ── INSERT one row — returns inserted row ─────────────────────────
         if (action === 'insert') {
             const { fields } = body;

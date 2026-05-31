@@ -4493,7 +4493,7 @@
                 var _existingKeys = new Set(allData.map(function(r){ return r.key_id; }));
                 var _missingKeys = _BOOTSTRAP_KEYS.filter(function(k){ return !_existingKeys.has(k.key_id); });
                 if (_missingKeys.length > 0) {
-                    adminTranslationsAPI('upsert_batch', { keys: _missingKeys }).then(function() {
+                    adminTranslationsAPI('bulk_insert', { rows: _missingKeys }).then(function() {
                         return loadTranslations();
                     }).catch(function() {});
                 }
