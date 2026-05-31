@@ -3634,7 +3634,7 @@
                 showNotification(_t('iv.try_later','❌ تکایە دواتر هەوڵ بدەرەوە'), 5000);
             }
         } else {
-            showNotification(_t('iv.fb_unavailable','⚠️ Facebook sign-in بەردەست نییە'), 3000);
+            showNotification(_t('iv.fb_unavailable','چوونەژوور ب فەیسبووکی بەردەست نینە ⚠️'), 3000);
         }
     };
 

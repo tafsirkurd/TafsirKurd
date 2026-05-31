@@ -1477,7 +1477,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "iv.video_deleted",        kurdish_text: "✅ ڤیدیۆ هاتە سڕینەڤە!",           category: "islamvoice", page: "android" },
     { key_id: "iv.subscribe_success",    kurdish_text: "✅ دەستنیشانبوون سەرکەوتوو بوو!",  category: "islamvoice", page: "android" },
     { key_id: "iv.try_later",            kurdish_text: "❌ تکایە دواتر هەوڵ بدەرەوە",       category: "islamvoice", page: "android" },
-    { key_id: "iv.fb_unavailable",       kurdish_text: "⚠️ Facebook sign-in بەردەست نییە", category: "islamvoice", page: "android" },
+    { key_id: "iv.fb_unavailable",       kurdish_text: "چوونەژوور ب فەیسبووکی بەردەست نینە ⚠️", category: "islamvoice", page: "android" },
     { key_id: "iv.apple_unavailable",    kurdish_text: "چووناژوور ب ئەپڵ بەردەست نینە ⚠️",    category: "islamvoice", page: "android" },
     { key_id: "iv.enter_email",          kurdish_text: "ئیمێڵێ خۆ بنڤێسه ❌",        category: "islamvoice", page: "android" },
     { key_id: "iv.email_unavailable",    kurdish_text: "تۆمارکرن ب ئیمێڵی بەردەست نینە ⚠️",    category: "islamvoice", page: "android" },
