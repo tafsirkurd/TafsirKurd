@@ -526,7 +526,7 @@
                             </button>
                             <button class="episode-action-btn"
                                     onclick="window.tvApp.removeFromContinue('${episode.id}')"
-                                    title="${_t('iv.delete','سڕینەوە')}">
+                                    title="${_t('iv.delete','ژێبرن')}">
                                 <i class="fas fa-times"></i>
                             </button>
                         ` : ''}

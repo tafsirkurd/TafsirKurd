@@ -560,10 +560,10 @@ function _timeAgo(ts) {
   if (!ts) return '';
   var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
   var diff = Math.floor((Date.now() - ts) / 86400000);
-  if (diff < 1) return T('gencine.today','ئەمڕۆ');
+  if (diff < 1) return T('gencine.today','ئەڤڕۆ');
   if (diff === 1) return T('gencine.yesterday','دووهی');
   if (diff < 7) return diff + ' ' + T('gencine.days_ago','ڕۆژ');
-  if (diff < 30) return Math.floor(diff/7) + ' ' + T('gencine.weeks_ago','هەفتە');
+  if (diff < 30) return Math.floor(diff/7) + ' ' + T('gencine.weeks_ago','حەفتی');
   return Math.floor(diff/30) + ' ' + T('gencine.months_ago','مانگ');
 }
 
@@ -2732,7 +2732,7 @@ window.GencineUI = {
           var _rb = document.createElement('div');
           _rb.className = 'book-read-badge' + (_inReadingMode ? ' removable' : '');
           var _rbi = document.createElement('i'); _rbi.className = _inReadingMode ? 'fas fa-trash-alt' : 'fas fa-check-circle'; _rb.appendChild(_rbi);
-          var _rbt = document.createElement('span'); _rbt.textContent = _inReadingMode ? T('iv.delete','سڕینەوە') : T('iv.read_title','خوێندراو'); _rb.appendChild(_rbt);
+          var _rbt = document.createElement('span'); _rbt.textContent = _inReadingMode ? T('iv.delete','ژێبرن') : T('iv.read_title','هاتییە خویندن'); _rb.appendChild(_rbt);
           if (_inReadingMode) {
             _rb.onclick = function(e) {
               e.stopPropagation();
@@ -2781,7 +2781,7 @@ window.GencineUI = {
           // Inline confirm box
           var _confirmBox = document.createElement('div'); _confirmBox.className = 'book-confirm-remove'; _confirmBox.style.display = 'none';
           var _confirmMsg = document.createElement('span'); _confirmMsg.className = 'book-confirm-msg'; _confirmMsg.textContent = T('iv.confirm_remove_read','دڵنیایت؟');
-          var _confirmYes = document.createElement('button'); _confirmYes.className = 'book-confirm-yes'; _confirmYes.textContent = T('iv.delete','بەلێ');
+          var _confirmYes = document.createElement('button'); _confirmYes.className = 'book-confirm-yes'; _confirmYes.textContent = T('iv.delete','ژێبرن');
           var _confirmNo = document.createElement('button'); _confirmNo.className = 'book-confirm-no'; _confirmNo.textContent = T('iv.cancel','نەخێر');
           _confirmBox.appendChild(_confirmMsg); _confirmBox.appendChild(_confirmYes); _confirmBox.appendChild(_confirmNo);
           _confirmYes.onclick = function(e) { e.stopPropagation(); _bookClearProgress(book.id); _removeFromReadingHistory(book.id); renderGrid(); };
