@@ -4483,6 +4483,20 @@
                     from += PAGE_SIZE;
                 }
                 allTranslations = allData;
+                // Auto-seed any bootstrap keys that are missing from the DB.
+                // Uses ignoreDuplicates:true so existing manual edits are never overwritten.
+                var _BOOTSTRAP_KEYS = [
+                    { key_id: 'pdf.offline_title', kurdish_text: 'ئینتەرنێت نینە',           category: 'gencine', page: 'android' },
+                    { key_id: 'pdf.offline_sub',   kurdish_text: 'ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە', category: 'gencine', page: 'android' },
+                    { key_id: 'settings.haptic_native', kurdish_text: 'تەنها لە ئاپی ڕەسمی کار دەکات', category: 'ui', page: 'android' },
+                ];
+                var _existingKeys = new Set(allData.map(function(r){ return r.key_id; }));
+                var _missingKeys = _BOOTSTRAP_KEYS.filter(function(k){ return !_existingKeys.has(k.key_id); });
+                if (_missingKeys.length > 0) {
+                    adminTranslationsAPI('upsert_batch', { keys: _missingKeys }).then(function() {
+                        return loadTranslations();
+                    }).catch(function() {});
+                }
                 await _cleanupRemovedNotifKeys();
                 // Restore saved platform tab
                 var savedPlatform = activePlatform;
