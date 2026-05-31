@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260531k';
+const FIXES_VERSION = '20260531l';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
@@ -71,9 +71,9 @@ const CORRECTIONS = [
     { key_id: 'dl.wifi_blocked',              kurdish_text: 'تایبەتمەندیا "تنێ Wi-Fi" یا چالاکە. ب ڕێیا Wi-Fi گرێبدە یان ئەڤی مۆدی نەهێڵە' },
     { key_id: 'dl.wifi_only',                 kurdish_text: 'کارکرن تنێ ب Wi-Fi' },
     { key_id: 'dl.tip_downloaded',            kurdish_text: 'دابەزاندن تەمام بوو — کلیک بکە بۆ ڕێڤەبرنێ' },
-    { key_id: 'gencine.dua_empty',            kurdish_text: 'چو دوعا نینن' },
+    { key_id: 'gencine.dua_empty',            kurdish_text: 'چ دوعا نینن' },
     { key_id: 'gencine.cat_quran',            kurdish_text: 'ژ قورئانا پیرۆز.' },
-    { key_id: 'gencine.adhkar_empty',         kurdish_text: 'چو زکر نینن.' },
+    { key_id: 'gencine.adhkar_empty',         kurdish_text: 'چ زکر نینن.' },
     { key_id: 'dl.tip_downloaded_s',          kurdish_text: 'دابەزاندن' },
     { key_id: 'gencine.books_error',          kurdish_text: 'خەلەتیەک ڕوویدا' },
     { key_id: 'dl.verifying',                 kurdish_text: 'تاقیکرن...' },
@@ -88,7 +88,7 @@ const CORRECTIONS = [
     { key_id: 'profile.session_revoked',      kurdish_text: 'هاتە دەرئێخستن ژ لایێ ئامیرەکێ دی ڤە' },
     { key_id: 'qs.mushaf_settings_title',     kurdish_text: 'ڕێکخستنا مووشەف' },
     { key_id: 'iv.error_occurred',            kurdish_text: 'خەلەتیەک چێبوو' },
-    { key_id: 'iv.no_history',               kurdish_text: 'چو مێژوو نینن.' },
+    { key_id: 'iv.no_history',               kurdish_text: 'چ مێژوو نینن.' },
     { key_id: 'iv.login_required_for',        kurdish_text: 'کەرەمکە بۆ..' },
     { key_id: 'iv.login_first_suffix',        kurdish_text: 'تۆ پێشتر چوویە د ناڤ ئەپی دا.' },
     { key_id: 'iv.list_cleared',              kurdish_text: 'لیست هاتە پاقژکرن.' },

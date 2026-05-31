@@ -1227,7 +1227,7 @@ window.GencineUI = {
     if (!items.length) {
       var emptyEl = document.createElement('div');
       emptyEl.style.cssText = 'text-align:center;padding:40px 16px;color:var(--text3);direction:rtl;font-size:.88rem';
-      emptyEl.textContent = T('gencine.adhkar_empty', 'چو زکر نینن.');
+      emptyEl.textContent = T('gencine.adhkar_empty', 'چ زکر نینن.');
       container.appendChild(emptyEl);
       return;
     }
@@ -1282,7 +1282,7 @@ window.GencineUI = {
     if (!duas.length) {
       var empty = document.createElement('div');
       empty.style.cssText = 'text-align:center;padding:60px 24px;color:var(--text3);font-size:.9rem;direction:rtl';
-      empty.textContent = T('gencine.dua_empty', 'چو دوعا نینن');
+      empty.textContent = T('gencine.dua_empty', 'چ دوعا نینن');
       container.appendChild(empty);
       return;
     }

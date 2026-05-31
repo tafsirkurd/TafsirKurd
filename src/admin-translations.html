@@ -4518,7 +4518,7 @@
 
                 // Auto-correct text values that changed in code but already exist in DB.
                 // Versioned by _TEXT_UPDATE_VERSION — runs once per browser session per version.
-                var _TEXT_UPDATE_VERSION = '20260531k';
+                var _TEXT_UPDATE_VERSION = '20260531l';
                 if (sessionStorage.getItem('tk_text_upd') !== _TEXT_UPDATE_VERSION) {
                     var _dbMap = {};
                     allData.forEach(function(r){ _dbMap[r.key_id] = r.kurdish_text; });
@@ -4585,9 +4585,9 @@
                         { key_id: 'dl.wifi_blocked',              expected: 'تایبەتمەندیا "تنێ Wi-Fi" یا چالاکە. ب ڕێیا Wi-Fi گرێبدە یان ئەڤی مۆدی نەهێڵە' },
                         { key_id: 'dl.wifi_only',                 expected: 'کارکرن تنێ ب Wi-Fi' },
                         { key_id: 'dl.tip_downloaded',            expected: 'دابەزاندن تەمام بوو — کلیک بکە بۆ ڕێڤەبرنێ' },
-                        { key_id: 'gencine.dua_empty',            expected: 'چو دوعا نینن' },
+                        { key_id: 'gencine.dua_empty',            expected: 'چ دوعا نینن' },
                         { key_id: 'gencine.cat_quran',            expected: 'ژ قورئانا پیرۆز.' },
-                        { key_id: 'gencine.adhkar_empty',         expected: 'چو زکر نینن.' },
+                        { key_id: 'gencine.adhkar_empty',         expected: 'چ زکر نینن.' },
                         { key_id: 'dl.tip_downloaded_s',          expected: 'دابەزاندن' },
                         { key_id: 'gencine.books_error',          expected: 'خەلەتیەک ڕوویدا' },
                         { key_id: 'dl.verifying',                 expected: 'تاقیکرن...' },
@@ -4602,7 +4602,7 @@
                         { key_id: 'profile.session_revoked',      expected: 'هاتە دەرئێخستن ژ لایێ ئامیرەکێ دی ڤە' },
                         { key_id: 'qs.mushaf_settings_title',     expected: 'ڕێکخستنا مووشەف' },
                         { key_id: 'iv.error_occurred',            expected: 'خەلەتیەک چێبوو' },
-                        { key_id: 'iv.no_history',               expected: 'چو مێژوو نینن.' },
+                        { key_id: 'iv.no_history',               expected: 'چ مێژوو نینن.' },
                         { key_id: 'iv.login_required_for',        expected: 'کەرەمکە بۆ..' },
                         { key_id: 'iv.login_first_suffix',        expected: 'تۆ پێشتر چوویە د ناڤ ئەپی دا.' },
                         { key_id: 'iv.list_cleared',              expected: 'لیست هاتە پاقژکرن.' },
