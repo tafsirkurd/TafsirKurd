@@ -1390,7 +1390,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "settings.daily_verse_sub", kurdish_text: "هەر ڕۆژ یەک ئایەتێ هەزانديار", category: "settings", page: "android" },
 
     // Profile extra
-    { key_id: "profile.view_profile", kurdish_text: "پرۆفایل ببینە", category: "profile", page: "android" },
+    { key_id: "profile.view_profile", kurdish_text: "پرۆفایلی ببینە", category: "profile", page: "android" },
 
     // Notifications - setup, streak, new content, rotating messages
     { key_id: "notif.setup_title",        kurdish_text: "بۆ ئاگادارکرنا باش ✓",             category: "notifications", page: "android" },

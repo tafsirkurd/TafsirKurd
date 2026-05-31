@@ -9840,7 +9840,7 @@ function renderSettings(){
     profile.appendChild(pInfo);
     // "View profile" hint row
     var chevRow=el('div','profile-chevron-row');
-    chevRow.appendChild(document.createTextNode(t('profile.view_profile')||'پرۆفایل ببینە'));
+    chevRow.appendChild(document.createTextNode(t('profile.view_profile')||'پرۆفایلی ببینە'));
     chevRow.appendChild(icon('fas fa-chevron-left'));
     profile.appendChild(chevRow);
     on(profile,'click',function(){App.openProfile()});
