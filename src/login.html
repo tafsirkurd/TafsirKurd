@@ -2418,19 +2418,11 @@ Press Ctrl+Shift+C to copy this report
                         const registrationMethod = existingProfile.registration_source;
 
                         if (registrationMethod === 'google') {
-                            showMessage(
-                                '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!<br><br>' +
-                                'ئیمەیلا تە پەیوەستە ب ئەژمارەکا Google. تکایە ب Google بچۆ ژوورەوە.',
-                                'error'
-                            );
+                            showMessage('ئیمێڵێ تە یێ گرێداییە ب Google ڤە، ب گووگڵ هەرە ژوورڤە.', 'error');
                             setLoading('signUpBtn', false);
                             return false;
                         } else if (registrationMethod === 'email') {
-                            showMessage(
-                                '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!<br><br>' +
-                                'ئیمەیلا تە پەیوەستە ب ئەژمارەکا ئیمەیل. تکایە بچۆ ژوورەوە.',
-                                'error'
-                            );
+                            showMessage('ئیمێڵێ تە یێ گرێداییە ب هەژمارەکا دی ڤە.', 'error');
                             setLoading('signUpBtn', false);
                             return false;
                         }

@@ -107,7 +107,7 @@
                     // Sign out the Google user
                     await supabase.auth.signOut();
                     // Redirect to login with error
-                    alert(window.t ? window.t('auth.email_conflict_email') : '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا ئیمەیل. تکایە ب ئیمەیل بچۆ ژوورەوە.');
+                    alert(window.t ? window.t('auth.email_conflict_email') : 'ئیمێڵێ تە یێ گرێداییە ب هەژمارەکا دی ڤە.');
                     window.location.href = '/login.html';
                     return;
                 }
@@ -116,7 +116,7 @@
                 if (registrationSource === 'email' && existingMethod === 'google') {
                     console.error('Email already registered with Google');
                     await supabase.auth.signOut();
-                    alert(window.t ? window.t('auth.email_conflict_google') : '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا Google. تکایە ب Google بچۆ ژوورەوە.');
+                    alert(window.t ? window.t('auth.email_conflict_google') : 'ئیمێڵێ تە یێ گرێداییە ب Google ڤە، ب گووگڵ هەرە ژوورڤە.');
                     window.location.href = '/login.html';
                     return;
                 }
