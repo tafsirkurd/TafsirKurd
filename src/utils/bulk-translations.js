@@ -1350,7 +1350,7 @@ window.BULK_TRANSLATIONS = [
 
     // Auth extras
     { key_id: "auth.apple_failed",      kurdish_text: "چوونا دژوورڤە ب Apple سەرنەکەت", category: "auth", page: "android" },
-    { key_id: "auth.apple_unavailable", kurdish_text: "Sign in with Apple ل ئەم ئامێرە نابێ", category: "auth", page: "android" },
+    { key_id: "auth.apple_unavailable", kurdish_text: "چووناژوور ب ئەپڵوێ ل سەر ڤی ئامێری بەردەست نینە", category: "auth", page: "android" },
 
     // Audio styles
     { key_id: "audio.style_murattal",  kurdish_text: "مورتل",  category: "audio", page: "android" },

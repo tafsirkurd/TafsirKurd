@@ -41,7 +41,8 @@ const CORRECTIONS = [
     { key_id: 'iv.error_prefix',    kurdish_text: 'خەلەتی' },
     { key_id: 'iv.error_save',      kurdish_text: 'نەهاتە هەلگرتن' },
     { key_id: 'iv.fb_unavailable',  kurdish_text: 'چوونەژوور ب فەیسبووکی بەردەست نینە ⚠️' },
-    { key_id: 'iv.fill_required',   kurdish_text: 'هەمی خانەیێن پێدڤی پڕبکە!' },
+    { key_id: 'iv.fill_required',        kurdish_text: 'هەمی خانەیێن پێدڤی پڕبکە!' },
+    { key_id: 'auth.apple_unavailable', kurdish_text: 'چووناژوور ب ئەپڵوێ ل سەر ڤی ئامێری بەردەست نینە' },
 ];
 
 const CORS = {
