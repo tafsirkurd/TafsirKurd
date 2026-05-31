@@ -1376,7 +1376,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "gencine.voice_unsupported",kurdish_text: "دەنگ li vê cîhazê nayê piştgirîkirin.", category: "gencine", page: "android" },
 
     // Goals - session tracking
-    { key_id: "goals.last_session",   kurdish_text: "دوا پەرتوکخوێندن",  category: "goals", page: "android" },
+    { key_id: "goals.last_session",   kurdish_text: "دوماهیک خواندن",  category: "goals", page: "android" },
     { key_id: "goals.session.surah",  kurdish_text: "سوور",             category: "goals", page: "android" },
     { key_id: "goals.session.ayahs",  kurdish_text: "ئایەت",            category: "goals", page: "android" },
     { key_id: "goals.session.time",   kurdish_text: "کات",              category: "goals", page: "android" },
