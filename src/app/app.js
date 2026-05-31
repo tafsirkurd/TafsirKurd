@@ -11966,7 +11966,7 @@ function renderProfile(panel){
         return;
       }
       console.log('[deleteAccount] sending request to Edge Function');
-      return fetch('https://gijupzejtbpifjzwadee.supabase.co/functions/v1/delete-account',{
+      return fetch('https://db.tafsirkurd.com/functions/v1/delete-account',{
         method:'POST',
         headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
       }).then(function(r){
