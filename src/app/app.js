@@ -2776,6 +2776,7 @@ function _registerPushToken(token,platform,attempt){
 /* ===== NEW VIDEO NOTIFICATION ===== */
 /* Check on app open if new IslamVoice video was added since last check. ID 31 */
 function checkNewVideoNotif(){
+  if(localStorage.getItem('appNotifEnabled')==='false')return;
   if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
   if(!S.supabase)return;
   var now=new Date().toISOString();
@@ -2812,6 +2813,7 @@ function checkNewVideoNotif(){
 /* ===== NEW BOOK NOTIFICATION ===== */
 /* Check on app open if new book added since last check. ID 32 */
 function checkNewBookNotif(){
+  if(localStorage.getItem('appNotifEnabled')==='false')return;
   if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
   if(!S.supabase)return;
   var now=new Date().toISOString();
@@ -10054,6 +10056,42 @@ function renderSettings(){
       toast(t('toast.cache_cleared'));
     }
   }));
+  // App notifications toggle (new video, new book — NOT prayer)
+  var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
+  g4.appendChild(mkToggleRow(
+    t('settings.app_notif')||'ئاگەهدارکرنێن ئاپ (ڤیدیۆ، پەرتوک…)',
+    _appNotifOn,
+    function(){
+      _appNotifOn=!_appNotifOn;
+      localStorage.setItem('appNotifEnabled',String(_appNotifOn));
+      renderSettings();
+    },
+    t('settings.app_notif_sub')||'ئاگەهدارکرنێن نمازê ji vir tê birêvebirin'
+  ));
+  // Reset settings to defaults
+  g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'ڕێکخستنێن xwerû','ڕێکخستن','fas fa-undo',function(){
+    if(!confirm(t('settings.reset_defaults_confirm')||'ئایا ڕێکخستنان vegerînin xwerû?'))return;
+    var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
+    _sk.forEach(function(k){localStorage.removeItem(k);});
+    S.showTafsir=true;S.bgAudio=false;S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;S.hapticFeedback=true;
+    S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;
+    if(S.theme!=='noor'){S.theme='noor';applyTheme();}
+    applySizes();
+    toast(t('toast.settings_reset')||'ڕێکخستن گەرانەوە بۆ xwerû');
+    renderSettings();
+  },false));
+  // Logout (only when logged in)
+  if(S.user){
+    g4.appendChild(mkBtnRow(t('profile.logout')||'دەرچوون',t('profile.logout')||'دەرچوون','fas fa-sign-out-alt',function(){
+      App.logout();
+    },true));
+  }
+  // Delete account (only when logged in)
+  if(S.user){
+    g4.appendChild(mkBtnRow(t('profile.delete_account')||'ژێبرنا هەژمارێ',t('profile.delete_account')||'ژێبرن','fas fa-user-slash',function(){
+      App.openProfile();
+    },true));
+  }
   frag.appendChild(g4);
 
   // ── Advanced (collapsible) ───────────────────
