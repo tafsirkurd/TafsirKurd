@@ -10188,9 +10188,6 @@ function renderSettings(){
   // ── Social Links (appended to دەربارەی مە group) ──
   var g7=g6;
   var socialCard=el('div','settings-social-card');
-  var socialLbl=el('div','settings-social-label');
-  socialLbl.textContent=t('settings.social')||'مە ل ڤێرە ببینە';
-  socialCard.appendChild(socialLbl);
   var SOCIAL_DEFS=[
     {key:'social_instagram',icon:'fab fa-instagram',label:'Instagram'},
     {key:'social_youtube',icon:'fab fa-youtube',label:'YouTube'},
