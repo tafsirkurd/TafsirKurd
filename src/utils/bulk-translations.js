@@ -1064,6 +1064,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "settings.import_bookmarks", kurdish_text: "بینینا ئایەتێن هەلگرتی", category: "settings", page: "android" },
     { key_id: "settings.import_bookmarks_sub", kurdish_text: "دووبارە بینینا ئەو ئایەتێن تە هەلگرتین", category: "settings", page: "android" },
     { key_id: "settings.import_btn", kurdish_text: "هەڵبژاردن", category: "settings", page: "android" },
+    { key_id: "settings.reset_defaults", kurdish_text: "زڤڕاندن بۆ بارێ دەستپێکێ", category: "settings", page: "android" },
     { key_id: "settings.reset_progress", kurdish_text: "سڕینەوەی پێشکەوتنی خوێندن", category: "settings", page: "android" },
     { key_id: "settings.reset_btn", kurdish_text: "سڕینەوە", category: "settings", page: "android" },
     { key_id: "settings.reset_confirm", kurdish_text: "دڵنیای؟ هەموو تۆمارەکانی خوێندن سڕاوە دەبن.", category: "settings", page: "android" },

@@ -405,6 +405,7 @@
   "settings.import_bookmarks": "بینینا ئایەتێن هەلگرتی",
   "settings.import_bookmarks_sub": "دووبارە بینینا ئەو ئایەتێن تە هەلگرتین",
   "settings.import_btn": "هەڵبژاردن",
+  "settings.reset_defaults": "زڤڕاندن بۆ بارێ دەستپێکێ",
   "settings.reset_progress": "سڕینەوەی پێشکەوتنی خوێندن",
   "settings.reset_btn": "سڕینەوە",
   "settings.reset_confirm": "دڵنیای؟ هەموو تۆمارەکانی خوێندن سڕاوە دەبن.",

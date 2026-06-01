@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260601c';
+const FIXES_VERSION = '20260601d';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
@@ -138,6 +138,7 @@ const CORRECTIONS = [
     { key_id: 'settings.export_bookmarks_sub', kurdish_text: 'ئەو ئایەتێن تە هەلبژارتین بهەلگری' },
     { key_id: 'settings.import_bookmarks_sub', kurdish_text: 'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین' },
     { key_id: 'settings.share_app',            kurdish_text: 'بەڵاڤکرنا ئەپی' },
+    { key_id: 'settings.reset_defaults',       kurdish_text: 'زڤڕاندن بۆ بارێ دەستپێکێ' },
 ];
 
 const CORS = {

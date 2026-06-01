@@ -10083,7 +10083,7 @@ function renderSettings(){
     renderSettings();
   },true));
   // Clear cache
-  g4.appendChild(mkBtnRow(t('settings.clear_cache'),t('settings.clear_btn'),'fas fa-trash',function(){
+  g4.appendChild(mkBtnRow(t('settings.clear_cache'),'','fas fa-trash',function(){
     if(confirm(t('settings.clear_confirm'))){
       S.quranData=null;S.tafsirData=null;
       _dataReady.quran=false;_dataReady.tafsir=false;
@@ -10104,7 +10104,7 @@ function renderSettings(){
     t('settings.app_notif_sub')||'ئاگەهدارکرنێن نمازê ji vir tê birêvebirin'
   ));
   // Reset settings to defaults
-  g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'ڕێکخستنێن xwerû','ڕێکخستن','fas fa-undo',function(){
+  g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
     if(!confirm(t('settings.reset_defaults_confirm')||'ئایا ڕێکخستنان vegerînin xwerû?'))return;
     var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
     _sk.forEach(function(k){localStorage.removeItem(k);});
