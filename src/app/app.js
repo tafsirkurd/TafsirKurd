@@ -10085,15 +10085,6 @@ function renderSettings(){
     };
     inp.click();
   },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
-  // Reset reading progress
-  g4.appendChild(mkBtnRow(t('settings.reset_progress'),'','fas fa-rotate-left',function(){
-    if(!confirm(t('settings.reset_confirm')))return;
-    _clearTrackingState();
-    for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
-    debouncedSync(); // push reset to cloud
-    toast(t('toast.progress_reset'));
-    renderSettings();
-  },true));
   // Reset settings to defaults
   g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
     if(!confirm(t('settings.reset_defaults_confirm')||'ئایا ڕێکخستنان vegerînin xwerû?'))return;
@@ -10106,6 +10097,15 @@ function renderSettings(){
     toast(t('toast.settings_reset')||'ڕێکخستن گەرانەوە بۆ xwerû');
     renderSettings();
   },false));
+  // Reset reading progress
+  g4.appendChild(mkBtnRow(t('settings.reset_progress'),'','fas fa-rotate-left',function(){
+    if(!confirm(t('settings.reset_confirm')))return;
+    _clearTrackingState();
+    for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
+    debouncedSync(); // push reset to cloud
+    toast(t('toast.progress_reset'));
+    renderSettings();
+  },true));
   // Clear cache
   g4.appendChild(mkBtnRow(t('settings.clear_cache'),'','fas fa-trash',function(){
     if(confirm(t('settings.clear_confirm'))){
