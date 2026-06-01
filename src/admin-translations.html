@@ -4518,7 +4518,7 @@
 
                 // Auto-correct text values that changed in code but already exist in DB.
                 // Versioned by _TEXT_UPDATE_VERSION — runs once per browser session per version.
-                var _TEXT_UPDATE_VERSION = '20260601g';
+                var _TEXT_UPDATE_VERSION = '20260601h';
                 if (sessionStorage.getItem('tk_text_upd') !== _TEXT_UPDATE_VERSION) {
                     var _dbMap = {};
                     allData.forEach(function(r){ _dbMap[r.key_id] = r.kurdish_text; });
@@ -4655,6 +4655,7 @@
                         { key_id: 'settings.app_notif_off',        expected: 'چاڵاككرنا بیرئینانان' },
                         { key_id: 'settings.app_notif_sub',        expected: 'ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)' },
                         { key_id: 'settings.clear_cache',          expected: 'ژێبرنا داتایێن ب شێوەیەکێ دەمکی هاتینە هەلگرتن' },
+                        { key_id: 'toast.cache_cleared',           expected: 'هاتنە ژێبرن' },
                     ];
                     var _staleKeys = _TEXT_UPDATES.filter(function(u){
                         return (u.key_id in _dbMap) && _dbMap[u.key_id] !== u.expected;
