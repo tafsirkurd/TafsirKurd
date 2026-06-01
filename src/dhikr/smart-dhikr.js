@@ -475,12 +475,15 @@
   var _OM = 'https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1';
 
   var _fetchRainInProgress = false;
+  var _fetchRainFailTs = 0;
+  var _RAIN_FAIL_COOLDOWN = 5 * 60 * 1000; /* 5 min backoff after all sources fail */
   function _fetchRain() {
     try {
       var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
       if (c && (Date.now() - c.ts) < _RAIN_TTL) return; /* cache fresh */
     } catch(e) {}
     if (_fetchRainInProgress) return;
+    if (_fetchRainFailTs && (Date.now() - _fetchRainFailTs) < _RAIN_FAIL_COOLDOWN) return;
     _fetchRainInProgress = true;
 
     /* 4 independent sources — 1 Open-Meteo (auto model), wttr.in ×2,
@@ -518,7 +521,7 @@
       _fetchRainInProgress = false;
       /* Filter out nulls (failed sources) */
       var valid = results.filter(function(r) { return r !== null; });
-      if (!valid.length) return; /* all failed — keep stale cache */
+      if (!valid.length) { _fetchRainFailTs = Date.now(); return; } /* all failed — back off */
 
       /* Majority vote across 4 sources (Open-Meteo auto, wttr.in ×2, Norwegian Met).
          Any condition reported by ≥2 sources wins.
