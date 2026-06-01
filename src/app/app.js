@@ -9917,11 +9917,6 @@ function renderSettings(){
     tGrid.appendChild(card);
   });
   g1.appendChild(tGrid);
-  g1.appendChild(mkToggleRow(t('qs.screen_lock'),S.keepAwake,function(){
-    S.keepAwake=!S.keepAwake;
-    localStorage.setItem('keepAwake',String(S.keepAwake));
-    applyKeepAwake();renderSettings();
-  }));
   frag.appendChild(g1);
 
   // ── Reading ──────────────────────────────────
@@ -9954,6 +9949,11 @@ function renderSettings(){
     function(v){S.lineH=v;applySizes();},
     function(v){localStorage.setItem('app_lineH',String(v));}
   ));
+  g2.appendChild(mkToggleRow(t('qs.screen_lock'),S.keepAwake,function(){
+    S.keepAwake=!S.keepAwake;
+    localStorage.setItem('keepAwake',String(S.keepAwake));
+    applyKeepAwake();renderSettings();
+  }));
   frag.appendChild(g2);
 
   // ── Audio ────────────────────────────────────
