@@ -10039,7 +10039,7 @@ function renderSettings(){
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url2)},500);
   }));
   // Import bookmarks
-  g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'هاردەکرنا نیشانەکراوەکان',t('settings.import_btn')||'هارکرن','fas fa-upload',function(){
+  g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'بینینا ئایەتێن هەلگرتی',t('settings.import_btn')||'هەڵبژاردن','fas fa-upload',function(){
     var inp=document.createElement('input');
     inp.type='file';inp.accept='.json,application/json';
     inp.onchange=function(){
