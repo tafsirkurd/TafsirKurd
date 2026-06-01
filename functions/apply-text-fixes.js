@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260601i';
+const FIXES_VERSION = '20260601j';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [

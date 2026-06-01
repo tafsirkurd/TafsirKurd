@@ -423,6 +423,7 @@ window.i18n = {
   initLang:         initLang,
   applyTranslations:applyTranslations,
   purgeCache:       purgeCache,
+  refresh:          mergeRemote,
   ready:            false,       // set true after Layer 1 loads in initLang()
   bundledLoaded:    false,       // set true if KMR_TRANSLATIONS was present
   isHealthy:        function(){
@@ -450,7 +451,7 @@ window.t = t;
 // hardcoded corrections and marks the version in site_settings so the DB
 // update runs exactly once globally. Client tracks locally to skip the call.
 (function(){
-  var _FIX_VER = '20260601i';
+  var _FIX_VER = '20260601j';
   var _LS_KEY  = 'tk_tf';
   try{ if(localStorage.getItem(_LS_KEY) === _FIX_VER) return; } catch(e){ return; }
   var _base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
@@ -459,9 +460,10 @@ window.t = t;
     .then(function(r){
       if(!r.ok) return;
       try{ localStorage.setItem(_LS_KEY, _FIX_VER); }catch(e){}
-      // Re-fetch translations so the corrected values load immediately
-      if(typeof window.i18n !== 'undefined' && typeof window.i18n.purgeCache === 'function'){
-        window.i18n.purgeCache();
+      // Purge stale cache then immediately re-fetch so corrected DB values load now
+      if(typeof window.i18n !== 'undefined'){
+        if(typeof window.i18n.purgeCache === 'function') window.i18n.purgeCache();
+        if(typeof window.i18n.refresh === 'function') window.i18n.refresh();
       }
     })
     .catch(function(){});
