@@ -10086,7 +10086,7 @@ function renderSettings(){
     inp.click();
   },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
   // Reset reading progress
-  g4.appendChild(mkBtnRow(t('settings.reset_progress'),t('settings.reset_btn'),'fas fa-rotate-left',function(){
+  g4.appendChild(mkBtnRow(t('settings.reset_progress'),'','fas fa-rotate-left',function(){
     if(!confirm(t('settings.reset_confirm')))return;
     _clearTrackingState();
     for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
@@ -10117,13 +10117,13 @@ function renderSettings(){
   }));
   // Logout (only when logged in)
   if(S.user){
-    g4.appendChild(mkBtnRow(t('profile.logout')||'دەرچوون',t('profile.logout')||'دەرچوون','fas fa-sign-out-alt',function(){
+    g4.appendChild(mkBtnRow(t('profile.logout')||'دەرچوون','','fas fa-sign-out-alt',function(){
       App.logout();
     },true));
   }
   // Delete account (only when logged in)
   if(S.user){
-    g4.appendChild(mkBtnRow(t('profile.delete_account')||'ژێبرنا هەژمارێ',t('profile.delete_account')||'ژێبرن','fas fa-user-slash',function(){
+    g4.appendChild(mkBtnRow(t('profile.delete_account')||'ژێبرنا هەژمارێ','','fas fa-user-slash',function(){
       App.openProfile();
     },true));
   }
