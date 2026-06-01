@@ -10135,7 +10135,7 @@ function renderSettings(){
   var g5=el('div','settings-group');
   g5.appendChild(el('div','settings-group-title',t('settings.app_group')));
   // (4) Share app
-  g5.appendChild(mkBtnRow(t('settings.share_app'),t('settings.share_btn'),'fas fa-share-nodes',function(){
+  g5.appendChild(mkBtnRow(t('settings.share_app'),'','fas fa-share-nodes',function(){
     var url3='https://tafsirkurd.com';
     if(navigator.share){
       navigator.share({title:'Tafsir Kurd',text:t('settings.about_desc'),url:url3}).catch(function(){});
