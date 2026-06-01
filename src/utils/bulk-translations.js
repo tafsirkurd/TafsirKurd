@@ -1068,7 +1068,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "settings.reset_btn", kurdish_text: "سڕینەوە", category: "settings", page: "android" },
     { key_id: "settings.reset_confirm", kurdish_text: "دڵنیای؟ هەموو تۆمارەکانی خوێندن سڕاوە دەبن.", category: "settings", page: "android" },
     { key_id: "settings.app_group", kurdish_text: "ئەپ", category: "settings", page: "android" },
-    { key_id: "settings.share_app", kurdish_text: "بەشکردنی ئەپ", category: "settings", page: "android" },
+    { key_id: "settings.share_app", kurdish_text: "بەڵاڤکرنا ئەپی", category: "settings", page: "android" },
     { key_id: "settings.share_btn", kurdish_text: "بەشکردن", category: "settings", page: "android" },
     { key_id: "settings.rate_app", kurdish_text: "هەڵسەنگاندنی ئەپ", category: "settings", page: "android" },
     { key_id: "settings.rate_btn", kurdish_text: "هەڵسەنگاندن", category: "settings", page: "android" },
