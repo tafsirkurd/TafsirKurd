@@ -255,6 +255,8 @@ function mergeRemote(){
 
       writeCache(translations);
       applyTranslations(); // rewrite all data-i18n attributes
+      // Unblock splash: live translations are ready for first paint
+      try{ if(typeof window._splashReadyI18n==='function') window._splashReadyI18n(); }catch(e){}
       console.log('[i18n] Layer 3: atomic swap ('+Object.keys(remote).length+' remote keys, '+fetchMs+'ms)');
 
       // Notify app.js — triggers re-render of currently visible tab/screen
@@ -372,6 +374,12 @@ function initLang(){
 
   // Apply layers 1+2 immediately — UI renders with correct text before network
   applyTranslations();
+
+  // Repeat-launch fast path: cached translations are good enough for first paint.
+  // Unblock the splash gate now — Layer 3 will swap silently in the background.
+  if(_cachedSnapshot){
+    try{ if(typeof window._splashReadyI18n==='function') window._splashReadyI18n(); }catch(e){}
+  }
 
   // Layer 3 — race against 3s timeout so splash is never blocked.
   // No AbortController: we let the fetch run to completion in the background.

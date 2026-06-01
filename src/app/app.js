@@ -1353,7 +1353,7 @@ function init(){
   // Hybrid timing: first launch / new version → 800ms minimum (logo animation).
   //                repeat same-version launches → immediate exit when data ready.
   var _splashStart = Date.now();
-  var _splashReady = {quran:false}; // tabs removed as gate — pre-render runs in background
+  var _splashReady = {quran:false, i18n:false}; // i18n gate: holds splash until live translations ready
   var _splashDismissed = false;
   var _splashSeenKey = 'tk_splash_seen';
   var _splashMinPassed = false;
@@ -1402,6 +1402,9 @@ function init(){
         // Logo exit animation — skipped on warm resume (instant restore)
         var logo=document.getElementById('splashLogo');
         if(logo&&!window._splashFastExit)logo.classList.add('exit');
+        // Refresh current tab with latest translations just before fade-in.
+        // Ensures user always sees live text, never stale bundled fallback.
+        try{_rerenderCurrentTab();}catch(e){}
         // App fades in at the same time as logo exits
         if(app)app.classList.add('visible');
         if(_pendingPushDeepLink){
@@ -1421,6 +1424,7 @@ function init(){
   function _checkSplashReady(){
     if(_splashDismissed)return;
     if(!_splashReady.quran)return;
+    if(!_splashReady.i18n)return;  // wait for live translations (or 1500ms fallback)
     if(!_splashReady.video)return; // video gate (auto-passes — no video element)
     if(!_splashMinPassed)return; // first launch / new version: wait for 800ms minimum
     console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
@@ -1449,6 +1453,7 @@ function init(){
     window._splashFastExit=true; // skip logo exit animation on resume
     _splashMinPassed=true;
     _splashReady.quran=true;
+    _splashReady.i18n=true;  // translations already in memory from before resume
     _splashReady.tabs=true;
     _splashReady.video=true;
     console.log('[APP_LIFECYCLE] skipped_full_loader_on_resume');
@@ -1462,7 +1467,7 @@ function init(){
   }
 
   window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_checkSplashReady();};
-  window._splashReadyI18n       =function(){}; // not a gate — always fires before tabs anyway
+  window._splashReadyI18n       =function(){if(_splashReady.i18n)return;_splashReady.i18n=true;_checkSplashReady();};
   window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyTabs       =function(){}; // no longer a gate — pre-render runs in background
