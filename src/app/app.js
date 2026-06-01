@@ -9937,18 +9937,6 @@ function renderSettings(){
     localStorage.setItem('scrollFollowsAudio',String(S.scrollFollowsAudio));
     renderSettings();
   },t('settings.scroll_follows_sub')));
-  g2.appendChild(mkSliderRow(t('settings.arabic_size'),S.arSize,1.0,3.5,0.1,
-    function(v){S.arSize=v;applySizes();},
-    function(v){localStorage.setItem('app_arSize',String(v));}
-  ));
-  g2.appendChild(mkSliderRow(t('settings.tafsir_size'),S.tfSize,0.5,2.0,0.1,
-    function(v){S.tfSize=v;applySizes();},
-    function(v){localStorage.setItem('app_tfSize',String(v));}
-  ));
-  g2.appendChild(mkSliderRow(t('qs.line_spacing'),S.lineH,1.4,3.5,0.1,
-    function(v){S.lineH=v;applySizes();},
-    function(v){localStorage.setItem('app_lineH',String(v));}
-  ));
   g2.appendChild(mkToggleRow(t('qs.screen_lock'),S.keepAwake,function(){
     S.keepAwake=!S.keepAwake;
     localStorage.setItem('keepAwake',String(S.keepAwake));
