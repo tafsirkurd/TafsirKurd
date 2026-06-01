@@ -9725,9 +9725,16 @@ async function openAboutSheet(type){
   }
 }
 
-function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger){
+function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger,sub){
   var row=el('div','setting-row s-row');
-  row.appendChild(el('div','setting-label',labelText));
+  if(sub){
+    var wrap=el('div','setting-label-wrap');
+    wrap.appendChild(el('div','setting-label',labelText));
+    wrap.appendChild(el('div','setting-sub',sub));
+    row.appendChild(wrap);
+  }else{
+    row.appendChild(el('div','setting-label',labelText));
+  }
   var btn=el('button','hdr-text-btn'+(danger?' danger-btn':''));
   if(btnIcon){btn.appendChild(icon(btnIcon));btn.appendChild(document.createTextNode(' '));}
   btn.appendChild(document.createTextNode(btnLabel));
@@ -10037,7 +10044,7 @@ function renderSettings(){
     a.href=url2;a.download='tafsirkurd-bookmarks.json';
     document.body.appendChild(a);a.click();
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url2)},500);
-  }));
+  },false,t('settings.export_bookmarks_sub')||'ئەو ئایەتێن تە هەلبژارتین بهەلگری'));
   // Import bookmarks
   g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'بینینا ئایەتێن هەلگرتی',t('settings.import_btn')||'هەڵبژاردن','fas fa-upload',function(){
     var inp=document.createElement('input');
@@ -10065,7 +10072,7 @@ function renderSettings(){
       reader.readAsText(file);
     };
     inp.click();
-  }));
+  },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
   // (7) Reset reading progress
   g4.appendChild(mkBtnRow(t('settings.reset_progress'),t('settings.reset_btn'),'fas fa-rotate-left',function(){
     if(!confirm(t('settings.reset_confirm')))return;
