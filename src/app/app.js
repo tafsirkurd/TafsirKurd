@@ -7930,7 +7930,7 @@ function renderGoals(){
   calSec.appendChild(monthNav);
 
   // Day-of-week headers (Sun→Sat)
-  var dayHdrs=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
+  var dayHdrs=_KU_DAYS;
   var hdrsRow=el('div','month-cal-grid');
   for(var dh=0;dh<7;dh++){
     hdrsRow.appendChild(el('div','month-cal-dh',dayHdrs[dh]));
@@ -8005,9 +8005,9 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 
 /* ===== PRAYER TRACKER ===== */
 var _TRACK_PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
-// Kurdish day abbreviations (Sun–Sat)
+// Kurdish day names Sun–Sat — single source of truth used everywhere in the prayer tracker
 var _KU_DAYS=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
-var _KU_DAYS_FULL=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
+var _KU_DAYS_FULL=_KU_DAYS; // alias kept for call-site clarity, same array
 
 function getPrayerLog(){try{return JSON.parse(localStorage.getItem('prayer_log'))||{};}catch(e){return {};}}
 function savePrayerLog(log){
@@ -8261,7 +8261,7 @@ function calcConsistencyScore(log,days){
 // Weakest day of week over last 90 days: {dow, avg, name}
 function calcWeakestDay(log){
   var totals=[0,0,0,0,0,0,0],counts=[0,0,0,0,0,0,0];
-  var now=new Date();var dayNames=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
+  var now=new Date();var dayNames=_KU_DAYS;
   for(var i=1;i<=90;i++){
     var d=new Date(now);d.setDate(d.getDate()-i);
     var k=dateKey(d);var dow=d.getDay();
@@ -8318,7 +8318,7 @@ App.openPrayerDay=function(dKey){
   sheet.appendChild(el('div','ppp-day-pull'));
   var parts=dKey.split('-');
   var d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
-  var dayNames=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
+  var dayNames=_KU_DAYS;
   sheet.appendChild(el('div','ppp-day-title',dayNames[d.getDay()]+' — '+parts[2]+'/'+parts[1]));
   var btns=el('div','ppp-day-prayers');
   _TRACK_PRAYERS.forEach(function(prayer){

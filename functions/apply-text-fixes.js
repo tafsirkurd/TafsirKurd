@@ -169,28 +169,60 @@ export async function onRequest(context) {
         auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Skip if this version was already applied
+    // Check current version — used for reporting, NOT for skipping.
+    // Value verification always runs so admin mistakes auto-recover.
     const { data: setting } = await supabase
         .from('site_settings').select('value')
         .eq('key', 'text_fixes_applied_v').maybeSingle();
 
-    if (setting?.value === FIXES_VERSION)
-        return json({ success: true, skipped: 'already_applied', version: FIXES_VERSION });
+    const versionCurrent = setting?.value === FIXES_VERSION;
 
-    // Apply each correction (only touches rows that exist)
-    const results = await Promise.all(
-        CORRECTIONS.map(fix =>
-            supabase.from('kurdish_translations')
-                .update({ kurdish_text: fix.kurdish_text })
-                .eq('key_id', fix.key_id)
-        )
+    // Fetch all correction keys from DB in one query
+    const correctionKeyIds = CORRECTIONS.map(c => c.key_id);
+    const { data: existing, error: fetchErr } = await supabase
+        .from('kurdish_translations')
+        .select('key_id, kurdish_text')
+        .in('key_id', correctionKeyIds);
+
+    if (fetchErr) return json({ error: 'fetch_failed: ' + fetchErr.message }, 500);
+
+    // Build a map of what the DB currently has
+    const dbMap = {};
+    (existing || []).forEach(row => { dbMap[row.key_id] = row.kurdish_text; });
+
+    // Find only corrections that exist in DB but have the wrong value
+    const mismatches = CORRECTIONS.filter(c =>
+        c.key_id in dbMap && dbMap[c.key_id] !== c.kurdish_text
     );
 
-    const errors = results.filter(r => r.error).length;
+    // Update only the mismatched rows (not all corrections)
+    let repaired = 0, errors = 0;
+    if (mismatches.length > 0) {
+        const results = await Promise.all(
+            mismatches.map(fix =>
+                supabase.from('kurdish_translations')
+                    .update({ kurdish_text: fix.kurdish_text })
+                    .eq('key_id', fix.key_id)
+            )
+        );
+        errors   = results.filter(r => r.error).length;
+        repaired = mismatches.length - errors;
+    }
 
-    // Mark version as applied so subsequent calls are instant no-ops
-    await supabase.from('site_settings')
-        .upsert({ key: 'text_fixes_applied_v', value: FIXES_VERSION }, { onConflict: 'key' });
+    // Mark version as applied if not already current
+    if (!versionCurrent) {
+        await supabase.from('site_settings')
+            .upsert({ key: 'text_fixes_applied_v', value: FIXES_VERSION }, { onConflict: 'key' });
+    }
 
-    return json({ success: true, applied: CORRECTIONS.length - errors, errors, version: FIXES_VERSION });
+    return json({
+        success:          true,
+        version:          FIXES_VERSION,
+        versionWasCurrent: versionCurrent,
+        checked:          CORRECTIONS.length,
+        mismatches:       mismatches.length,
+        repaired,
+        errors,
+        repairedKeys:     mismatches.map(c => c.key_id),
+    });
 }
