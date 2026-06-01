@@ -9947,12 +9947,6 @@ function renderSettings(){
     localStorage.setItem('bgAudio',String(S.bgAudio));
     renderSettings();
   }));
-  frag.appendChild(g2);
-
-  // ── Notifications & Haptics ──────────────────
-  var g3=el('div','settings-group');
-  g3.appendChild(el('div','settings-group-title',t('settings.notif_group')));
-  // (10) Haptic feedback
   var _hapticRow=mkToggleRow(t('settings.haptic'),S.hapticFeedback,function(){
     S.hapticFeedback=!S.hapticFeedback;
     localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
@@ -9969,8 +9963,8 @@ function renderSettings(){
     var _hapticToggle=_hapticRow.querySelector('.toggle');
     if(_hapticToggle){_hapticToggle.style.opacity='0.4';_hapticToggle.style.pointerEvents='none';}
   }
-  g3.appendChild(_hapticRow);
-  frag.appendChild(g3);
+  g2.appendChild(_hapticRow);
+  frag.appendChild(g2);
 
   // ── Data & Sync ──────────────────────────────
   var g4=el('div','settings-group');
