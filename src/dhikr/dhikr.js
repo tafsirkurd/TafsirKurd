@@ -336,6 +336,38 @@ var _loadingDb  = false;
 var _dbLoaded   = false;
 var _skeletonShown = false; /* true while skeleton is visible — triggers fade-in on first real render */
 
+/* Pre-warm: read all caches into memory immediately at script load so _dbLoaded=true
+   before the user ever opens the Gencine tab — eliminates skeleton flash on 2nd+ open. */
+(function _prewarmGencineCache() {
+  try {
+    function _rc(k) {
+      var raw = localStorage.getItem(k);
+      if (!raw) return null;
+      var p = JSON.parse(raw);
+      return p.data || p;
+    }
+    var cats     = _rc('gencine_cats_v5');
+    var duas     = _rc('gencine_duas_v3');
+    var hadiths  = _rc('gencine_hadiths_v2');
+    var sections = _rc('gencine_sections_v1');
+    var books    = _rc('gencine_books_v4');
+    var tasbih   = _rc('gencine_tasbih_v1');
+    var asma99   = _rc('gencine_asma99_v1');
+    var adhkar   = _rc('gencine_adhkar_v1');
+    if (sections) _dbSections = sections;
+    if (books)    _dbBooks    = books;
+    if (tasbih)   _dbTasbih   = tasbih;
+    if (asma99)   _dbAsma99   = asma99;
+    if (adhkar)   _dbAdhkar   = adhkar;
+    if (cats && duas && hadiths) {
+      _dbCats    = cats;
+      _dbDuas    = duas;
+      _dbHadiths = hadiths;
+      _dbLoaded  = true;
+    }
+  } catch(e) {}
+})();
+
 function _buildSkeleton() {
   function _sk(tag, cls) { var e = document.createElement(tag); e.className = cls; return e; }
   var wrap = _sk('div', 'genc-skel');

@@ -1329,6 +1329,16 @@ function init(){
     }).catch(function(){});
   },500);
 
+  // IV pre-warm: read series/episodes from localStorage into S at startup so the
+  // IslamVoice tab opens with zero spinner even on medium devices (pre-render skipped there).
+  (function(){
+    try{
+      var _ics=localStorage.getItem('iv_series_cache');
+      var _ice=localStorage.getItem('iv_episodes_cache');
+      if(_ics&&_ice&&!S.ivSeries){S.ivSeries=JSON.parse(_ics);S.ivEpisodes=JSON.parse(_ice);}
+    }catch(e){}
+  })();
+
   // Early data prefetch — warm all API/DB caches before user taps any tab.
   // No DOM work here — just fires network requests so cache is hot when tab opens.
   setTimeout(function(){
@@ -2006,7 +2016,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260531a', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260601a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=55',      function() { _p2 = true; _check(); });
 }

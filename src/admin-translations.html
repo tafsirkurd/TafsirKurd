@@ -4047,7 +4047,7 @@
             {key_id:'iv.sheikh_title',          kurdish_text:'ماموستا',                  page:'android',category:'general',context:'IV/Books header: speaker/sheikh filter button tooltip'},
             {key_id:'iv.history_title',         kurdish_text:'مێژوو',                    page:'android',category:'general',context:'IV header: watch history button tooltip'},
             // Books — reading history actions
-            {key_id:'iv.delete',                kurdish_text:'سڕینەوە',                  page:'android',category:'general',context:'Books reading history: remove book button label'},
+            {key_id:'iv.delete',                kurdish_text:'ژێبرن',                    page:'android',category:'general',context:'Books reading history: remove book button label'},
             {key_id:'iv.confirm_remove_read',   kurdish_text:'دڵنیایت؟',                 page:'android',category:'general',context:'Books: confirm remove from reading history dialog'},
             {key_id:'iv.cancel',                kurdish_text:'نە',                       page:'android',category:'general',context:'Cancel button'},
             // IslamVoice
@@ -4518,7 +4518,7 @@
 
                 // Auto-correct text values that changed in code but already exist in DB.
                 // Versioned by _TEXT_UPDATE_VERSION — runs once per browser session per version.
-                var _TEXT_UPDATE_VERSION = '20260601j';
+                var _TEXT_UPDATE_VERSION = '20260602a';
                 if (sessionStorage.getItem('tk_text_upd') !== _TEXT_UPDATE_VERSION) {
                     var _dbMap = {};
                     allData.forEach(function(r){ _dbMap[r.key_id] = r.kurdish_text; });
@@ -4530,7 +4530,7 @@
                         { key_id: 'schedule_thursday_topic', expected: 'صەڵەوات و سورەتا (الکهف)' },
                         { key_id: 'schedule_thursday_desc',  expected: 'ناڤەڕۆکەکا تایبەت یا صەڵەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت) نەریتێن پیرۆز یێن پێنجشەمبێ.' },
                         { key_id: 'adhkar.salawat',          expected: 'صەڵەوات' },
-                        { key_id: 'iv.delete',               expected: 'بەلێ' },
+                        { key_id: 'iv.delete',               expected: 'ژێبرن' },
                         { key_id: 'iv.cancel',               expected: 'نەخێر' },
                         { key_id: 'iv.add_to_list',          expected: 'زێدە بکە سەر لیستێ' },
                         { key_id: 'iv.add_to_list_btn',      expected: 'زێدە بکە سەر لیستێ' },

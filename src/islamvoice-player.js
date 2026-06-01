@@ -2178,40 +2178,31 @@
         const latestEpisodesGrid = document.getElementById('latestEpisodes');
         const continueWatchingGrid = document.getElementById('continueWatching');
         const trendingGrid = document.querySelector('#categories .episodes-grid');
-        const topRatedGrid = document.querySelector('.section:has(.fa-crown) .episodes-grid');
 
-        // Clear all grids
-        if (latestEpisodesGrid) latestEpisodesGrid.innerHTML = '';
-        if (continueWatchingGrid) continueWatchingGrid.innerHTML = '';
+        // Build all section HTML first — never touch the DOM until content is ready.
+        // Old content stays visible the entire time we're building.
+        const htmlLatest = [];
+        const htmlContinue = [];
+        const htmlTrending = [];
 
-        // Group videos by section
-        videos.forEach((video, index) => {
-            const section = video.section || 'Latest Episodes'; // Default section
+        videos.forEach((video) => {
+            const section = video.section || 'Latest Episodes';
             const episodeCard = createEpisodeCard(video);
+            console.log(`  ✅ Added "${video.title}" to ${section}`);
 
-            // Render to specific section based on video.section field
-            switch(section) {
-                case 'Continue Watching':
-                    if (continueWatchingGrid) {
-                        continueWatchingGrid.innerHTML += episodeCard;
-                    }
-                    break;
-                case 'Trending':
-                    if (trendingGrid) {
-                        trendingGrid.innerHTML += episodeCard;
-                    }
-                    break;
+            switch (section) {
+                case 'Continue Watching': htmlContinue.push(episodeCard); break;
+                case 'Trending':          htmlTrending.push(episodeCard);  break;
                 case 'Featured':
                 case 'Latest Episodes':
-                default:
-                    if (latestEpisodesGrid) {
-                        latestEpisodesGrid.innerHTML += episodeCard;
-                    }
-                    break;
+                default:                  htmlLatest.push(episodeCard);    break;
             }
-
-            console.log(`  ✅ Added "${video.title}" to ${section}`);
         });
+
+        // Atomic replace — one innerHTML write per grid, old content gone only now
+        if (latestEpisodesGrid)   latestEpisodesGrid.innerHTML   = htmlLatest.join('');
+        if (continueWatchingGrid) continueWatchingGrid.innerHTML = htmlContinue.join('');
+        if (trendingGrid)         trendingGrid.innerHTML         = htmlTrending.join('');
 
         console.log(`📺 Rendered ${videos.length} videos total`);
 
