@@ -8053,6 +8053,19 @@ function _getTimingsForDate(dKey){
   }catch(e){return null;}
 }
 function _getTodayTimings(){return _getTimingsForDate(dateKey(new Date()));}
+// Returns subset of _TRACK_PRAYERS whose scheduled time has already passed today.
+// Used so stats never penalise prayers that haven't come yet.
+function _todayPassedPrayers(){
+  var now=new Date();var timings=_getTodayTimings();
+  if(!timings)return _TRACK_PRAYERS.slice();
+  var nowMs=now.getTime();
+  return _TRACK_PRAYERS.filter(function(p){
+    var raw=timings[p];if(!raw)return true;
+    var parts=raw.split(':');
+    var pt=new Date(now.getFullYear(),now.getMonth(),now.getDate(),+parts[0],+parts[1],0,0);
+    return pt.getTime()<=nowMs;
+  });
+}
 
 // Islamic prayer day: before today's Fajr → still in yesterday's prayer day
 function _getPrayerDay(){
@@ -8217,10 +8230,11 @@ function calcPrayerWeekData(log){
 function calcMostMissed(log){
   var now=new Date();var missed={};var hasSome=false;
   _TRACK_PRAYERS.forEach(function(p){missed[p]=0;});
+  var todayKey=dateKey(now);var todayPassed=_todayPassedPrayers();
   for(var i=0;i<30;i++){
     var d=new Date(now);d.setDate(d.getDate()-i);
     var k=dateKey(d);
-    if(log[k]){hasSome=true;_TRACK_PRAYERS.forEach(function(p){if(!log[k][p])missed[p]++;});}
+    if(log[k]){hasSome=true;var check=(k===todayKey?todayPassed:_TRACK_PRAYERS);check.forEach(function(p){if(!log[k][p])missed[p]++;});}
   }
   if(!hasSome)return null;
   var most=_TRACK_PRAYERS.reduce(function(a,b){return missed[a]>missed[b]?a:b;});
@@ -8652,19 +8666,25 @@ function _buildPppInsights(log,mStats,weekData,missed){
   }
 
   // This week %
+  var _twNow=new Date();var _twToday=dateKey(_twNow);var _twPassed=_todayPassedPrayers();
   var weekDone=weekData.reduce(function(s,d){return s+d.cnt;},0);
-  var weekPct=Math.round((weekDone/35)*100);
-  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week',t('ppp.this_week')||'ئەڤ حەفتیە',weekPct+'% — '+weekDone+'/35 نڤێژ');
+  var weekExpected=weekData.reduce(function(s,d){
+    if(d.key>_twToday)return s;
+    return s+(d.key===_twToday?_twPassed.length:5);
+  },0);
+  var weekPct=weekExpected>0?Math.round((weekDone/weekExpected)*100):0;
+  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week',t('ppp.this_week')||'ئەڤ حەفتیە',weekPct+'% — '+weekDone+'/'+weekExpected+' نڤێژ');
 
   // All missed prayers (30 days) — show each prayer with its miss count
   (function(){
     var now=new Date();var hasSome=false;
     var counts={};
     _TRACK_PRAYERS.forEach(function(p){counts[p]=0;});
+    var todayKey=dateKey(now);var todayPassed=_todayPassedPrayers();
     for(var i=0;i<30;i++){
       var d=new Date(now);d.setDate(d.getDate()-i);
       var k=dateKey(d);
-      if(log[k]){hasSome=true;_TRACK_PRAYERS.forEach(function(p){if(!log[k][p])counts[p]++;});}
+      if(log[k]){hasSome=true;var check=(k===todayKey?todayPassed:_TRACK_PRAYERS);check.forEach(function(p){if(!log[k][p])counts[p]++;});}
     }
     if(!hasSome)return;
     var sorted=_TRACK_PRAYERS.slice().sort(function(a,b){return counts[b]-counts[a];});
