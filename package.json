@@ -11,6 +11,7 @@
         "deploy": "npx wrangler pages deploy src --project-name tafsirkurd",
         "deploy:check": "npm test && npm run deploy",
         "test": "node scripts/smoke-test.js",
+        "check-translations": "node scripts/check-translations.cjs",
         "lint": "node scripts/lint-check.js",
         "format": "echo 'Formatting code...'",
         "cap:sync": "npx cap sync && node scripts/verify-assets.js",

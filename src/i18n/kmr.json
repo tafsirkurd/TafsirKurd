@@ -935,5 +935,12 @@
   "prayer.rakaat": "رکعەت",
   "prayer.athan_for": "دەنگێ بانگی",
   "prayer.countdown_now": "نوکە",
-  "prayer.passed": "تێپەرا"
+  "prayer.passed": "تێپەرا",
+  "schedule_thursday_topic": "صەڵەوات و سورەتا (الکهف)",
+  "schedule_thursday_desc": "ناڤەڕۆکەکا تایبەت یا صەڵەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت) نەریتێن پیرۆز یێن پێنجشەمبێ.",
+  "iv.bookmark_save_success": "هاتە نیشانکرن ✓",
+  "iv_added_msg": "زێدە بوو بۆ لیستا تە!",
+  "iv_quality_auto": "ئۆتۆماتیکی",
+  "islamvoice_button_2": "زێدە بکە سەر لیستێ",
+  "gencine.books_read": "پەرتوک"
 }
