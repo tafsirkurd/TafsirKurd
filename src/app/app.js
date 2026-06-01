@@ -10036,7 +10036,7 @@ function renderSettings(){
   // App notifications toggle (new video, new book — NOT prayer)
   var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
   g4.appendChild(mkToggleRow(
-    _appNotifOn ? (t('settings.app_notif_on')||'نەچاڵاككرنا بیرئینانان') : (t('settings.app_notif_off')||'چاڵاككرنا بیرئینانان'),
+    _appNotifOn ? (t('settings.app_notif_off')||'چاڵاككرنا بیرئینانان') : (t('settings.app_notif_on')||'نەچاڵاككرنا بیرئینانان'),
     _appNotifOn,
     function(){
       _appNotifOn=!_appNotifOn;
