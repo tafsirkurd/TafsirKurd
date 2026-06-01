@@ -2353,13 +2353,18 @@
       var card = cel('div', 'prayer-grid-card' + (isNext ? ' prayer-grid-card--next' : '') + (isPassed ? ' prayer-grid-card--passed' : '') + (name === 'Sunrise' ? ' prayer-grid-card--done' : ''));
       card.dataset.prayer = name;
 
+      // Content wrapper — receives the dim opacity when card is --passed.
+      // Done dot lives outside this wrapper so it stays fully opaque.
+      var pgcContent = cel('div', 'pgc-content');
+
       var nameEl = cel('div', 'prayer-grid-name');
       nameEl.textContent = tStr(PRAYER_I18N[name] || name);
-      card.appendChild(nameEl);
+      pgcContent.appendChild(nameEl);
 
       var timeEl = cel('div', 'prayer-grid-time');
       timeEl.textContent = timeDisplay;
-      card.appendChild(timeEl);
+      pgcContent.appendChild(timeEl);
+      card.appendChild(pgcContent);
 
       // Tap feedback — scale-down on press, release on lift/cancel
       card.addEventListener('touchstart', function() { card.classList.add('prayer-grid-card--tap'); }, { passive: true });
@@ -2381,6 +2386,7 @@
         // Show done dot only if the prayer day matches the grid's calendar date.
         // Before Fajr, prayerDay() returns yesterday — don't bleed yesterday's done
         // state onto today's fresh grid.
+        // Dot is appended to card (not pgcContent) so it stays fully opaque on dimmed cards.
         var appPL2 = window.App && window.App.prayerLog;
         if (appPL2) {
           var pDay2 = appPL2.prayerDay();
