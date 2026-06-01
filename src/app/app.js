@@ -907,13 +907,15 @@ function init(){
     // Pull-to-refresh on all tabs
     // On tablet the quran panel is a flex row — quranHome is the actual scroll container.
     var _isTabletLayout=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
-    setupPullToRefresh(_isTabletLayout?'quranHome':'panelQuran',function(){renderSurahGrid();renderContinue();},_isTabletLayout?null:function(){return !S.surah});
-    setupPullToRefresh('panelBookmarks',function(){_renderHash.bm=null;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');});
-    setupPullToRefresh('panelGoals',function(){_renderHash.goals=null;renderGoals();_renderHash.goals=_tabHash('goals');});
-    setupPullToRefresh('panelIslamvoice',function(isRecent){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function')App.ivRefresh();else renderIslamVoice();});
-    setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();_renderHash.settings=_tabHash('settings');});
-    setupPullToRefresh('panelPrayer',function(isRecent){if(window.PrayerUI){if(isRecent)PrayerUI.render();else PrayerUI.refresh();_renderHash.prayer=_tabHash('prayer');}});
-    setupPullToRefresh('panelGencine',function(isRecent){if(window.GencineUI){if(isRecent)GencineUI.render();else GencineUI.refresh();}});
+    setupPullToRefresh(_isTabletLayout?'quranHome':'panelQuran',function(_,done){renderSurahGrid();renderContinue();done();},_isTabletLayout?null:function(){return !S.surah});
+    setupPullToRefresh('panelBookmarks',function(_,done){_renderHash.bm=null;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');done();});
+    setupPullToRefresh('panelGoals',function(_,done){_renderHash.goals=null;renderGoals();_renderHash.goals=_tabHash('goals');done();});
+    // IslamVoice: sync branch (isRecent/local render) calls done(); async fetch lets hard cap handle it
+    setupPullToRefresh('panelIslamvoice',function(isRecent,done){_renderHash.iv=null;if(!isRecent&&typeof App.ivRefresh==='function'){App.ivRefresh();}else{renderIslamVoice();done();}});
+    setupPullToRefresh('panelSettings',function(_,done){_renderHash.settings=null;renderSettings();_renderHash.settings=_tabHash('settings');done();});
+    // Prayer/Gencine: sync render paths call done(); async refresh() lets hard cap handle it
+    setupPullToRefresh('panelPrayer',function(isRecent,done){if(window.PrayerUI){if(isRecent){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');done();}else{PrayerUI.refresh();}}});
+    setupPullToRefresh('panelGencine',function(isRecent,done){if(window.GencineUI){if(isRecent){GencineUI.render();done();}else{GencineUI.refresh();}}});
 
     // Fast-scroll pill for long lists
     if(window._initFastScroll) _initFastScroll();
@@ -7149,10 +7151,15 @@ App.closeFP=function(){
   _fpLastSurah=0;_fpLastAyah=0;_fpAnimating=false;_fpGen=0;
   var ov=$('fpOverlay'),pl=$('fullPlayer');
   if(ov)ov.classList.remove('open');
-  if(pl)pl.classList.remove('open');
   if(_fpRafId){cancelAnimationFrame(_fpRafId);_fpRafId=null;}
-  // Rec-picker is a child of the full-player flow — close it when the player closes
   App.closeRecPicker();
+  if(!pl||!pl.classList.contains('open'))return;
+  // Slide player back down before hiding — mirrors the slideUp entry animation
+  pl.style.animation='slideDown .28s cubic-bezier(.4,0,1,1) both';
+  setTimeout(function(){
+    pl.style.animation='';
+    pl.classList.remove('open');
+  },260);
 };
 
 /* ===== REPEAT MANAGER ===== */
@@ -12438,11 +12445,21 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
         },260);
       }
       _snapDone=false;
-      var _minT=setTimeout(_snapBack,600);
-      setTimeout(function(){clearTimeout(_minT);_snapBack();},2500);
+      // Hard cap — fires if refreshFn never calls done() (async paths, network timeout)
+      var _hardCap=setTimeout(_snapBack,1500);
+      // done() is passed to refreshFn so sync renders snap back as soon as content is ready,
+      // rather than waiting a fixed 600ms minimum.
+      var _doneCalled=false;
+      function _ptrDone(){
+        if(_doneCalled)return;
+        _doneCalled=true;
+        clearTimeout(_hardCap);
+        // Brief 200ms hold lets the user see the refreshed content before spinner hides
+        setTimeout(_snapBack,200);
+      }
 
       var _isRecent=_prevRefreshTime>0&&(Date.now()-_prevRefreshTime)<RECENT_MS;
-      try{refreshFn(_isRecent);}catch(e){console.warn('[PTR] refreshFn error:',e);}
+      try{refreshFn(_isRecent,_ptrDone);}catch(e){console.warn('[PTR] refreshFn error:',e);_ptrDone();}
 
     }else{
       // ── BELOW THRESHOLD — snap back silently ──────────────────────────────
