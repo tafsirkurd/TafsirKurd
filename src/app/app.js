@@ -10098,7 +10098,7 @@ function renderSettings(){
     renderSettings();
   },false));
   // Reset reading progress
-  g4.appendChild(mkBtnRow(t('settings.reset_progress'),'','fas fa-eraser',function(){
+  g4.appendChild(mkBtnRow(t('settings.reset_progress'),'','far fa-broom',function(){
     if(!confirm(t('settings.reset_confirm')))return;
     _clearTrackingState();
     for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
