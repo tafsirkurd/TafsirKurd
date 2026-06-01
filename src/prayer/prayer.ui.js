@@ -2372,6 +2372,11 @@
           return function() { openPrayerCardSheet(n, t); };
         })(name, timings));
         card.style.cursor = 'pointer';
+        card.classList.add('prayer-grid-card--interactive');
+        var _hint = cel('div', 'prayer-card-hint');
+        var _hico = document.createElement('i'); _hico.className = 'fas fa-chevron-left'; _hico.setAttribute('aria-hidden','true');
+        _hint.appendChild(_hico);
+        card.appendChild(_hint);
 
         // Show done dot only if the prayer day matches the grid's calendar date.
         // Before Fajr, prayerDay() returns yesterday — don't bleed yesterday's done
