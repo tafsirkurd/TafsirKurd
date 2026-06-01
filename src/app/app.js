@@ -10033,7 +10033,19 @@ function renderSettings(){
 
     g4.appendChild(syncCard);
   }
-  // (8) Export bookmarks
+  // App notifications toggle (new video, new book — NOT prayer)
+  var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
+  g4.appendChild(mkToggleRow(
+    t('settings.app_notif')||'ئاگەهدارکرنێن ئاپ (ڤیدیۆ، پەرتوک…)',
+    _appNotifOn,
+    function(){
+      _appNotifOn=!_appNotifOn;
+      localStorage.setItem('appNotifEnabled',String(_appNotifOn));
+      renderSettings();
+    },
+    t('settings.app_notif_sub')||'ئاگەهدارکرنێن نمازê ji vir tê birêvebirin'
+  ));
+  // Export bookmarks
   g4.appendChild(mkBtnRow(t('settings.export_bookmarks'),'','fas fa-download',function(){
     var bms2=getBookmarks();
     if(!bms2.length){toast(t('toast.no_bookmarks'));return;}
@@ -10073,7 +10085,7 @@ function renderSettings(){
     };
     inp.click();
   },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
-  // (7) Reset reading progress
+  // Reset reading progress
   g4.appendChild(mkBtnRow(t('settings.reset_progress'),t('settings.reset_btn'),'fas fa-rotate-left',function(){
     if(!confirm(t('settings.reset_confirm')))return;
     _clearTrackingState();
@@ -10082,27 +10094,6 @@ function renderSettings(){
     toast(t('toast.progress_reset'));
     renderSettings();
   },true));
-  // Clear cache
-  g4.appendChild(mkBtnRow(t('settings.clear_cache'),'','fas fa-trash',function(){
-    if(confirm(t('settings.clear_confirm'))){
-      S.quranData=null;S.tafsirData=null;
-      _dataReady.quran=false;_dataReady.tafsir=false;
-      loadQuranData();loadTafsirData();
-      toast(t('toast.cache_cleared'));
-    }
-  }));
-  // App notifications toggle (new video, new book — NOT prayer)
-  var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
-  g4.appendChild(mkToggleRow(
-    t('settings.app_notif')||'ئاگەهدارکرنێن ئاپ (ڤیدیۆ، پەرتوک…)',
-    _appNotifOn,
-    function(){
-      _appNotifOn=!_appNotifOn;
-      localStorage.setItem('appNotifEnabled',String(_appNotifOn));
-      renderSettings();
-    },
-    t('settings.app_notif_sub')||'ئاگەهدارکرنێن نمازê ji vir tê birêvebirin'
-  ));
   // Reset settings to defaults
   g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
     if(!confirm(t('settings.reset_defaults_confirm')||'ئایا ڕێکخستنان vegerînin xwerû?'))return;
@@ -10115,6 +10106,15 @@ function renderSettings(){
     toast(t('toast.settings_reset')||'ڕێکخستن گەرانەوە بۆ xwerû');
     renderSettings();
   },false));
+  // Clear cache
+  g4.appendChild(mkBtnRow(t('settings.clear_cache'),'','fas fa-trash',function(){
+    if(confirm(t('settings.clear_confirm'))){
+      S.quranData=null;S.tafsirData=null;
+      _dataReady.quran=false;_dataReady.tafsir=false;
+      loadQuranData();loadTafsirData();
+      toast(t('toast.cache_cleared'));
+    }
+  }));
   // Logout (only when logged in)
   if(S.user){
     g4.appendChild(mkBtnRow(t('profile.logout')||'دەرچوون',t('profile.logout')||'دەرچوون','fas fa-sign-out-alt',function(){
