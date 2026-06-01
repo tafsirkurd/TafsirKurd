@@ -10380,27 +10380,56 @@ function initSupabase(cb){
   });
 }
 
+function _readProfileCache(){
+  try{
+    var _pc=JSON.parse(localStorage.getItem('tk_profile_cache')||'null');
+    if(_pc&&_pc.id&&_pc.email){S.user=_pc;return true;}
+  }catch(e){}
+  return false;
+}
+function _clearProfileCache(){
+  try{localStorage.removeItem('tk_profile_cache');}catch(e){}
+}
+
 function checkAuthSession(){
   if(!S.supabase)return;
+  // Restore cached profile synchronously — Settings renders correctly on first paint,
+  // never flashes guest state for a user who is already logged in.
+  if(!S.user) _readProfileCache();
+
   S.supabase.auth.getSession().then(function(resp){
     var session=resp.data.session;
     if(session){
+      var prevAvatar=S.user&&S.user.avatar;
       setUserFromSession(session);
-      _renderHash.settings=null; // auth changed — force settings re-render
+      _renderHash.settings=null;
       startCloudSync();
-      if(S.tab==='settings')renderSettings();
+      if(S.tab==='settings'){
+        // If only avatar URL changed, preload new image before re-rendering
+        // so old avatar stays visible with no flash to the default icon.
+        var newAvatar=S.user&&S.user.avatar;
+        if(newAvatar&&newAvatar!==prevAvatar){
+          var _pre=new Image();_pre.referrerPolicy='no-referrer';
+          _pre.onload=_pre.onerror=function(){renderSettings();};
+          _pre.src=newAvatar;
+        }else{
+          renderSettings();
+        }
+      }
+    }else{
+      // No session — clear stale cache so we don't show a ghost logged-in card
+      if(S.user){_clearProfileCache();S.user=null;_renderHash.settings=null;if(S.tab==='settings')renderSettings();}
     }
   }).catch(function(e){console.error('Auth session check error:',e)});
 
   S.supabase.auth.onAuthStateChange(function(event,session){
-    // Auth state changed (session details not logged for security)
     if(event==='SIGNED_IN'&&session){
       setUserFromSession(session);
       _renderHash.settings=null;
       startCloudSync();
       if(S.tab==='settings')renderSettings();
     }else if(event==='SIGNED_OUT'){
-      S.user=null;
+      S.user=null;_clearProfileCache();
       _renderHash.settings=null;
       stopCloudSync();
       if(S.tab==='settings')renderSettings();
@@ -10418,6 +10447,7 @@ function setUserFromSession(session){
     avatar:meta.avatar_url||null,
     provider:(u.app_metadata&&u.app_metadata.provider)||'email'
   };
+  try{localStorage.setItem('tk_profile_cache',JSON.stringify(S.user));}catch(e){}
 }
 
 /* --- Cloud Sync --- */
@@ -11551,7 +11581,7 @@ App.logout=function(){
   if(!_isNative&&!confirm(t('profile.confirm_logout')))return;
   _removeCurrentDeviceSession(); // clean up before sign-out
   S.supabase.auth.signOut().then(function(){
-    S.user=null;
+    S.user=null;_clearProfileCache();
     stopCloudSync();
     App.closeProfile(); // close only after successful logout
     toast(t('toast.logged_out'));
@@ -12009,7 +12039,7 @@ function renderProfile(panel){
         return S.supabase.auth.signOut().catch(function(){});
       }).then(function(){
         console.log('[deleteAccount] success — closing profile');
-        S.user=null;stopCloudSync();App.closeProfile();
+        S.user=null;_clearProfileCache();stopCloudSync();App.closeProfile();
         toast(t('toast.account_deleted'));renderSettings();
       });
     }).catch(function(e){
