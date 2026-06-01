@@ -10232,8 +10232,8 @@ function renderSettings(){
   });
   socialBar.appendChild(socGroup);
   socialCard.appendChild(socialBar);
-  g6.appendChild(socialCard);
   frag.appendChild(g6);
+  g5.appendChild(socialCard);
   frag.appendChild(g5);
   getSiteSettings().then(function(ss){
     SOCIAL_DEFS.forEach(function(def){
