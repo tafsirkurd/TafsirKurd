@@ -9942,44 +9942,12 @@ function renderSettings(){
     localStorage.setItem('keepAwake',String(S.keepAwake));
     applyKeepAwake();renderSettings();
   }));
-  frag.appendChild(g2);
-
-  // ── Audio ────────────────────────────────────
-  var gAudio=el('div','settings-group');
-  gAudio.appendChild(el('div','settings-group-title',t('audio.reciter')));
-  // Reciter chips row
-  var recRow=el('div','setting-row s-row setting-row--reciter');
-  var recList=el('div','qs-reciter-list');
-  recList.style.cssText='padding:4px 0 0;margin:0;';
-  RECITERS.forEach(function(r){
-    var chip=el('div','qs-reciter-chip'+(RECITER===r.id?' on':''));
-    chip.dataset.reciterId=r.id;
-    var chipAvatar=el('div','qs-reciter-chip-avatar');
-    var photo=RECITER_PHOTOS[r.id];
-    if(photo){var img=document.createElement('img');img.src=photo;img.alt='';chipAvatar.appendChild(img);}
-    else{var initials=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');chipAvatar.appendChild(el('span','qs-reciter-chip-avatar-initials',initials));}
-    chip.appendChild(chipAvatar);
-    chip.appendChild(document.createTextNode(r.name));
-    on(chip,'click',function(){
-      RECITER=r.id;
-      localStorage.setItem('app_reciter',r.id);
-      clearPrefetch();
-      updateAudioBarAvatar();
-      if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
-      // Update active chip in-place — no full re-render, user stays in position
-      recList.querySelectorAll('.qs-reciter-chip').forEach(function(c){c.classList.remove('on');});
-      chip.classList.add('on');
-    });
-    recList.appendChild(chip);
-  });
-  recRow.appendChild(recList);
-  gAudio.appendChild(recRow);
-  gAudio.appendChild(mkToggleRow(t('settings.bg_audio'),S.bgAudio,function(){
+  g2.appendChild(mkToggleRow(t('settings.bg_audio'),S.bgAudio,function(){
     S.bgAudio=!S.bgAudio;
     localStorage.setItem('bgAudio',String(S.bgAudio));
     renderSettings();
   }));
-  frag.appendChild(gAudio);
+  frag.appendChild(g2);
 
   // ── Notifications & Haptics ──────────────────
   var g3=el('div','settings-group');
