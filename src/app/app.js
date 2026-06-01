@@ -10036,14 +10036,14 @@ function renderSettings(){
   // App notifications toggle (new video, new book — NOT prayer)
   var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
   g4.appendChild(mkToggleRow(
-    t('settings.app_notif')||'ئاگەهدارکرنێن ئاپ (ڤیدیۆ، پەرتوک…)',
+    _appNotifOn ? (t('settings.app_notif_on')||'نەچاڵاككرنا بیرئینانان') : (t('settings.app_notif_off')||'چاڵاككرنا بیرئینانان'),
     _appNotifOn,
     function(){
       _appNotifOn=!_appNotifOn;
       localStorage.setItem('appNotifEnabled',String(_appNotifOn));
       renderSettings();
     },
-    t('settings.app_notif_sub')||'ئاگەهدارکرنێن نمازê ji vir tê birêvebirin'
+    t('settings.app_notif_sub')||'ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)'
   ));
   // Export bookmarks
   g4.appendChild(mkBtnRow(t('settings.export_bookmarks'),'','fas fa-download',function(){
