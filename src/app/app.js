@@ -10034,7 +10034,7 @@ function renderSettings(){
     g4.appendChild(syncCard);
   }
   // (8) Export bookmarks
-  g4.appendChild(mkBtnRow(t('settings.export_bookmarks'),t('settings.export_btn'),'fas fa-download',function(){
+  g4.appendChild(mkBtnRow(t('settings.export_bookmarks'),'','fas fa-download',function(){
     var bms2=getBookmarks();
     if(!bms2.length){toast(t('toast.no_bookmarks'));return;}
     var json=JSON.stringify(bms2,null,2);
@@ -10046,7 +10046,7 @@ function renderSettings(){
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url2)},500);
   },false,t('settings.export_bookmarks_sub')||'ئەو ئایەتێن تە هەلبژارتین بهەلگری'));
   // Import bookmarks
-  g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'بینینا ئایەتێن هەلگرتی',t('settings.import_btn')||'هەڵبژاردن','fas fa-upload',function(){
+  g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'بینینا ئایەتێن هەلگرتی','','fas fa-upload',function(){
     var inp=document.createElement('input');
     inp.type='file';inp.accept='.json,application/json';
     inp.onchange=function(){
