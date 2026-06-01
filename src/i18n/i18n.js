@@ -32,7 +32,7 @@
 'use strict';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-var CACHE_KEY        = 'tafsirkurd_i18n_v3';
+var CACHE_KEY        = 'tafsirkurd_i18n_v4'; // v4: bundled wins over cache (v3 evicted below)
 var HEALTH_SENT_KEY  = 'i18n_health_sent_session'; // sessionStorage — one report/session
 var _platform        = (function(){ try{ return (window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'web'; }catch(e){ return 'web'; } })();
 var REMOTE_URL       = (_platform==='web'?'':'https://tafsirkurd.com')+'/app-translations?platform='+_platform;
@@ -64,7 +64,8 @@ var CRITICAL_KEYS = [
 
 // ── Wipe legacy cache keys ────────────────────────────────────────────────────
 ['tafsirkurd_i18n_cache','tafsirkurd_i18n_cache_v2',
- 'tafsirkurd_i18n_etag','tafsirkurd_i18n_etag_v2'].forEach(function(k){
+ 'tafsirkurd_i18n_etag','tafsirkurd_i18n_etag_v2',
+ 'tafsirkurd_i18n_v3'].forEach(function(k){  // v3 evicted — v4 uses bundled-wins merge
   try{ localStorage.removeItem(k); }catch(e){}
 });
 
@@ -362,14 +363,16 @@ function initLang(){
   window.i18n.bundledLoaded = window.i18n.ready;
 
   // Layer 2 — cached remote values from last session
+  // Merge order: cache first, bundled second → bundled always wins.
+  // This ensures corrected bundled values are never overridden by a stale cache.
+  // Layer 3 (remote fetch) will still override bundled for intentional admin edits.
   _cachedSnapshot = readCache();
   if(_cachedSnapshot){
-    // Build atomically: bundled + cache
-    var merged = Object.assign({}, _bundledSnapshot, _cachedSnapshot);
+    var merged = Object.assign({}, _cachedSnapshot, _bundledSnapshot);
     _applyCriticalKeyGuard(merged);
     translations = merged;
     _initLayer = 'cache';
-    console.log('[i18n] Layer 2: cache overlaid ('+Object.keys(_cachedSnapshot).length+' keys)');
+    console.log('[i18n] Layer 2: cache overlaid ('+Object.keys(_cachedSnapshot).length+' keys, bundled wins)');
   }
 
   // Apply layers 1+2 immediately — UI renders with correct text before network

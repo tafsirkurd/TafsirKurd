@@ -1468,6 +1468,8 @@ function init(){
 
   window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_checkSplashReady();};
   window._splashReadyI18n       =function(){if(_splashReady.i18n)return;_splashReady.i18n=true;_checkSplashReady();};
+  // Drain any early signal from i18n.js that fired before init() ran (fast-network path)
+  if(window._splashI18nEarlyFire) window._splashReadyI18n();
   window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
   window._splashReadyTabs       =function(){}; // no longer a gate — pre-render runs in background
@@ -13751,7 +13753,13 @@ function startApp(){
   },8000);
 
   if(window.i18n){
-    /* 3-second timeout — if i18n fetch hangs (slow connection), start app anyway */
+    // Pre-wire _splashReadyI18n BEFORE initLang() so i18n.js notifications are not lost.
+    // init() (called from _afterI18n) will replace this with the real gate function and
+    // drain the early-fire flag immediately so fast-network Layer-3 releases without delay.
+    window._splashI18nEarlyFire = false;
+    window._splashReadyI18n = function(){ window._splashI18nEarlyFire = true; };
+
+    /* 1.5s timeout — if i18n fetch hangs (slow connection), start app anyway */
     var _i18nDone = false;
     function _afterI18n(){
       if(_i18nDone){ console.log('[APP_LIFECYCLE] duplicate_init_prevented'); return; }
