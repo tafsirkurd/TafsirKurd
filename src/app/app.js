@@ -10038,6 +10038,34 @@ function renderSettings(){
     document.body.appendChild(a);a.click();
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url2)},500);
   }));
+  // Import bookmarks
+  g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'هاردەکرنا نیشانەکراوەکان',t('settings.import_btn')||'هارکرن','fas fa-upload',function(){
+    var inp=document.createElement('input');
+    inp.type='file';inp.accept='.json,application/json';
+    inp.onchange=function(){
+      var file=inp.files&&inp.files[0];
+      if(!file)return;
+      var reader=new FileReader();
+      reader.onload=function(e){
+        try{
+          var imported=JSON.parse(e.target.result);
+          if(!Array.isArray(imported))throw new Error('not array');
+          var valid=imported.filter(function(b){return b&&typeof b.surah==='number'&&typeof b.ayah==='number';});
+          if(!valid.length){toast(t('toast.import_invalid')||'فایل دروست نینە');return;}
+          // Merge with existing — imported wins on conflict
+          var existing=getBookmarks();
+          var merged={};
+          existing.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
+          valid.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
+          saveBookmarks(Object.values(merged));
+          toast((t('toast.import_done')||'نیشانەکراو هاتن')+' ('+valid.length+')');
+          renderSettings();
+        }catch(err){toast(t('toast.import_invalid')||'فایل دروست نینە');}
+      };
+      reader.readAsText(file);
+    };
+    inp.click();
+  }));
   // (7) Reset reading progress
   g4.appendChild(mkBtnRow(t('settings.reset_progress'),t('settings.reset_btn'),'fas fa-rotate-left',function(){
     if(!confirm(t('settings.reset_confirm')))return;
