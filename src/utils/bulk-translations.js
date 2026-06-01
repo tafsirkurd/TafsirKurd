@@ -1037,7 +1037,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "settings.tafsir_size", kurdish_text: "قەبارێ فونتێ تەفسیرێ", category: "settings", page: "android" },
     { key_id: "settings.show_tafsir", kurdish_text: "نیشادانا تەفسیرێ", category: "settings", page: "android" },
     { key_id: "settings.bg_audio", kurdish_text: "دەنگ ل پاشبنەمایێ", category: "settings", page: "android" },
-    { key_id: "settings.clear_cache", kurdish_text: "ژێبرنا کاشی", category: "settings", page: "android" },
+    { key_id: "settings.clear_cache", kurdish_text: "ژێبرنا داتایێن ب شێوەیەکێ دەمکی هاتینە هەلگرتن", category: "settings", page: "android" },
     { key_id: "settings.clear_btn", kurdish_text: "ژ ناڤ ببە", category: "settings", page: "android" },
     { key_id: "settings.clear_confirm", kurdish_text: "تو پشتڕاستی؟ داتایا کاشی ژ ناڤ ببەی.", category: "settings", page: "android" },
     { key_id: "settings.about_desc", kurdish_text: "قورئانا پیرۆز ب تەفسیرا کوردی", category: "settings", page: "android" },
