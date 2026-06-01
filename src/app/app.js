@@ -10114,7 +10114,7 @@ function renderSettings(){
       loadQuranData();loadTafsirData();
       toast(t('toast.cache_cleared'));
     }
-  }));
+  },true));
   // Logout (only when logged in)
   if(S.user){
     g4.appendChild(mkBtnRow(t('profile.logout')||'دەرچوون','','fas fa-sign-out-alt',function(){
