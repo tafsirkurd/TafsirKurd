@@ -1173,8 +1173,8 @@ function init(){
       if($('qsSheet')&&$('qsSheet').classList.contains('on'))return true;
       if(S.sidebar)return true;
       if($('wizard')&&$('wizard').classList.contains('on'))return true;
-      if(S.ivCurrentSeries)return true;
-      if(S.surah)return true;
+      if(S.ivCurrentSeries&&S.tab==='islamvoice')return true;
+      if(S.surah&&S.tab==='quran')return true;
       if(S.tab==='gencine'&&window.GencineUI&&GencineUI._view!=='home')return true;
       return false; // root tabs are coordinate peers — no back between them
     };
@@ -1197,8 +1197,8 @@ function init(){
       if($('qsSheet')&&$('qsSheet').classList.contains('on')){App.closeReaderSettings();return;}
       if(S.sidebar){App.closeSidebar();return;}
       if($('wizard')&&$('wizard').classList.contains('on')){App.closeWizard();return;}
-      if(S.ivCurrentSeries){App.ivBack();return;}
-      if(S.surah){App.backToList();return;}
+      if(S.ivCurrentSeries&&S.tab==='islamvoice'){App.ivBack();return;}
+      if(S.surah&&S.tab==='quran'){App.backToList();return;}
       if(S.tab==='gencine'&&window.GencineUI&&GencineUI._view!=='home'){GencineUI.goHome();return;}
       if(allowExit&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.exitApp();

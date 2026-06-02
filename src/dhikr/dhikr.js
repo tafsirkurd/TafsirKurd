@@ -3026,6 +3026,7 @@ window.GencineUI = {
 
     /* cleanup when navigating away */
     self._pdfCleanup = function(){
+      window._sbPdfZoomed = false;
       if(self._pdfPageObs){ self._pdfPageObs.disconnect(); self._pdfPageObs = null; }
       badge.remove(); restoreBtn.remove();
       self._pdfBadge = null; self._pdfRestoreBtn = null;
