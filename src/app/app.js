@@ -8060,7 +8060,7 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 /* ===== PRAYER TRACKER ===== */
 var _TRACK_PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
 // Kurdish day names Sun–Sat — single source of truth used everywhere in the prayer tracker
-var _KU_DAYS=['ئێکشەمبی','دووشەمبی','سێشەمبی','چارشەمبی','پێنجشەمبی','ئەینی','شەمبی'];
+var _KU_DAYS=['ئێکشەمب','دووشەمب','سێشەمب','چارشەمب','پێنجشەمب','ئەینی','شەمبی'];
 var _KU_DAYS_FULL=_KU_DAYS; // alias kept for call-site clarity, same array
 
 function getPrayerLog(){try{return JSON.parse(localStorage.getItem('prayer_log'))||{};}catch(e){return {};}}
