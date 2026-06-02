@@ -11761,18 +11761,6 @@ function renderProfile(panel){
   if(_hsi){heroSync.style.color=_hsi.col;heroSync.textContent=_hsi.dot+' '+_hsi.txt;}
   else{heroSync.appendChild(icon('fas fa-cloud-upload-alt'));heroSync.appendChild(document.createTextNode(' '+t('profile.synced')));}
   hero.appendChild(heroSync);
-  // Stats row
-  var statsRow=el('div','pp-stats');
-  [[totalRead,t('settings.stats_ayahs'),'fas fa-quran'],
-   [streak,t('settings.stats_streak'),'fas fa-fire'],
-   [bms.length,t('settings.stats_bookmarks'),'fas fa-bookmark']
-  ].forEach(function(s){
-    var col=el('div','pp-stat');
-    col.appendChild(el('div','pp-stat-num',String(s[0])));
-    col.appendChild(el('div','pp-stat-lbl',s[1]));
-    statsRow.appendChild(col);
-  });
-  hero.appendChild(statsRow);
   body.appendChild(hero);
 
   // Shared message area
