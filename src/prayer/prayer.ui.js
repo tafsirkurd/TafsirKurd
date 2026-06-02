@@ -969,13 +969,14 @@
     var dateInfo = data.date;
     var dateLines = [];
     if (dateInfo && dateInfo.hijri) {
-      dateLines.push(dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ');
+      var _hMonth = (dateInfo.hijri.month && (dateInfo.hijri.month.ar || dateInfo.hijri.month.en)) || '';
+      dateLines.push(dateInfo.hijri.day + ' ' + _hMonth + ' ' + dateInfo.hijri.year + ' هـ');
     } else if (dateInfo && dateInfo.hijriStr) {
       dateLines.push(dateInfo.hijriStr);
     } else {
       try {
-        var _hd = new Intl.DateTimeFormat('en-u-ca-islamic', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Baghdad' }).format(new Date(today + 'T12:00:00+03:00'));
-        dateLines.push(_hd + ' هـ');
+        var _hd = new Intl.DateTimeFormat('ar-u-ca-islamic', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Baghdad' }).format(new Date(today + 'T12:00:00+03:00'));
+        dateLines.push(_hd);
       } catch(_e) {}
     }
     var datesEl = document.getElementById('skyDates');
@@ -3357,9 +3358,9 @@
       if (datesEl && fresh.date) {
         var dateInfo = fresh.date;
         var dateLines2 = [];
-        if (dateInfo.hijri) dateLines2.push(dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ');
+        if (dateInfo.hijri) { var _hm2=(dateInfo.hijri.month&&(dateInfo.hijri.month.ar||dateInfo.hijri.month.en))||''; dateLines2.push(dateInfo.hijri.day+' '+_hm2+' '+dateInfo.hijri.year+' هـ'); }
         else if (dateInfo.hijriStr) dateLines2.push(dateInfo.hijriStr);
-        else { try { var _hd2 = new Intl.DateTimeFormat('en-u-ca-islamic',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Baghdad'}).format(new Date(today+'T12:00:00+03:00')); dateLines2.push(_hd2+' هـ'); } catch(_e2){} }
+        else { try { var _hd2 = new Intl.DateTimeFormat('ar-u-ca-islamic',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Baghdad'}).format(new Date(today+'T12:00:00+03:00')); dateLines2.push(_hd2); } catch(_e2){} }
         datesEl.innerHTML = dateLines2.map(function(l) { return '<span>' + l + '</span>'; }).join('');
       }
 
