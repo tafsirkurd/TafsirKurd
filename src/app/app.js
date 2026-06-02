@@ -6679,7 +6679,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
   var curItems=_dlMgrTab==='books'?pdfCached:audioAll;
   if(_dlMgrSelectMode&&curItems.length){
     var selBar=el('div','dl-sel-bar');
-    var selAll=el('button','dl-sel-all',t('dl.select_all')||'هەمییان هەڵبژێرە');
+    var selAll=el('button','dl-sel-all',t('dl.select_all')||'هەڵبژارتنا هەمیا');
     var selCount=Object.keys(_dlMgrSelected).length;
     on(selAll,'click',function(){
       curItems.forEach(function(item){
@@ -6689,7 +6689,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
       _renderDlMgrBodyWith(pdfCached,audioAll);
     });
     var selDel=el('button','dl-sel-del');
-    selDel.textContent=(t('dl.delete_selected')||'سڕینەوە')+(selCount?' ('+selCount+')':'');
+    selDel.textContent=(t('dl.delete_selected')||'ژێبرنا یێن هاتیینە هەڵبژارتن')+(selCount?' ('+selCount+')':'');
     if(!selCount)selDel.disabled=true;
     on(selDel,'click',function(){
       var keys=Object.keys(_dlMgrSelected);
