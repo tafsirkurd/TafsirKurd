@@ -76,7 +76,7 @@
       fallbackRepeat: 3,
       fallbackSource: 'أبو داود والترمذي',
       timeTag: 'ئێڤار', basePriority: 50,
-      timeWindow: { start: 'Asr', end: 'Isha', fs: 15*60+30, fe: 21*60, wraps: false }
+      timeWindow: { start: 'Asr', end: 'Maghrib', fs: 15*60+30, fe: 19*60, wraps: false }
     },
     {
       id: 'sleep', categoryKey: 'sleep', icon: 'fas fa-bed',
