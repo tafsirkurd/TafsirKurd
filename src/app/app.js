@@ -10396,7 +10396,7 @@ function renderSettings(){
   // Delete account (only when logged in)
   if(S.user){
     g4.appendChild(mkBtnRow(t('profile.delete_account')||'ژێبرنا هەژمارێ','','fas fa-user-slash',function(){
-      App.openProfile();
+      App.deleteAccount();
     },true));
   }
   frag.appendChild(g4);
@@ -11865,6 +11865,44 @@ App.logout=function(){
   });
 };
 
+App.deleteAccount=function(){
+  if(!S.supabase||!S.user)return;
+  _tkConfirm({
+    icon:'⚠️',
+    title:(t('profile.confirm_delete1')||'تو پشتڕاستی ژ ژێبرنا ھەژمارێ؟')+'\n'+(t('profile.confirm_delete1_sub')||'زڤڕین بۆ ڤی کاری نینە'),
+    yes:t('profile.confirm_delete1_yes')||'بەردەوام بە',
+    no:t('profile.confirm_no')||'نەخێر',
+    onYes:function(){
+      _tkConfirm({
+        icon:'🗑️',
+        title:t('profile.confirm_delete2')||'دوای سڕینەوە ناتوانی بگەڕێیتەوە',
+        yes:t('profile.confirm_delete_yes')||'سڕینەوەی ئەکاونت',
+        no:t('profile.confirm_no')||'نەخێر',
+        danger:true,
+        onYes:function(){
+          toast(t('profile.deleting')||'...');
+          S.supabase.auth.getSession().then(function(resp){
+            var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
+            if(!accessToken){toast(t('error.generic'));return;}
+            return fetch('https://db.tafsirkurd.com/functions/v1/delete-account',{
+              method:'POST',headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
+            }).then(function(r){
+              if(!r.ok)return r.json().then(function(d){throw new Error(d.error||('HTTP '+r.status));});
+              return r.json();
+            }).then(function(result){
+              if(!result.success)throw new Error(result.error||t('error.generic'));
+              return S.supabase.auth.signOut().catch(function(){});
+            }).then(function(){
+              S.user=null;_clearProfileCache();stopCloudSync();App.closeProfile();
+              toast(t('toast.account_deleted'));renderSettings();
+            });
+          }).catch(function(e){toast(e.message||t('error.generic'));});
+        }
+      });
+    }
+  });
+};
+
 App.forceSync=function(){
   if(!S.user){toast(t('profile.login_first'));return}
   syncToCloud();
@@ -12254,49 +12292,7 @@ function renderProfile(panel){
   var deleteBtn=el('button','pp-action-btn pp-delete');
   deleteBtn.appendChild(icon('fas fa-trash-alt'));
   deleteBtn.appendChild(document.createTextNode(' '+t('profile.delete_account')));
-  on(deleteBtn,'click',function(){
-    _tkConfirm({
-      icon:'⚠️',
-      title:(t('profile.confirm_delete1')||'تو پشتڕاستی ژ ژێبرنا ھەژمارێ؟')+'\n'+(t('profile.confirm_delete1_sub')||'زڤڕین بۆ ڤی کاری نینە'),
-      yes:t('profile.confirm_delete1_yes')||'بەردەوام بە',
-      no:t('profile.confirm_no')||'نەخێر',
-      danger:false,
-      onYes:function(){
-        _tkConfirm({
-          icon:'🗑️',
-          title:t('profile.confirm_delete2')||'دوای سڕینەوە ناتوانی بگەڕێیتەوە',
-          yes:t('profile.confirm_delete_yes')||'سڕینەوەی ئەکاونت',
-          no:t('profile.confirm_no')||'نەخێر',
-          danger:true,
-          onYes:function(){
-    confirmStep2.style.display='none';
-    step2Yes.disabled=true;
-    msg.className='pp-msg';
-            msg.textContent=t('profile.deleting')||'...';
-            S.supabase.auth.getSession().then(function(resp){
-              var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
-              if(!accessToken){deleteBtn.style.display='';msg.textContent=t('error.generic');msg.className='pp-msg error';return;}
-              return fetch('https://db.tafsirkurd.com/functions/v1/delete-account',{
-                method:'POST',headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
-              }).then(function(r){
-                if(!r.ok)return r.json().then(function(d){throw new Error(d.error||('HTTP '+r.status));});
-                return r.json();
-              }).then(function(result){
-                if(!result.success)throw new Error(result.error||t('error.generic'));
-                return S.supabase.auth.signOut().catch(function(){});
-              }).then(function(){
-                S.user=null;_clearProfileCache();stopCloudSync();App.closeProfile();
-                toast(t('toast.account_deleted'));renderSettings();
-              });
-            }).catch(function(e){
-              deleteBtn.style.display='';
-              msg.textContent=e.message||t('error.generic');msg.className='pp-msg error';
-            });
-          }
-        });
-      }
-    });
-  });
+  on(deleteBtn,'click',function(){App.deleteAccount();});
 
   deleteWrap.appendChild(deleteBtn);
   actWrap.appendChild(deleteWrap);
