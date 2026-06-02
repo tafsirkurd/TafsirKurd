@@ -7981,10 +7981,10 @@ function renderGoals(){
   monthNav.appendChild(nextMo);
   calSec.appendChild(monthNav);
 
-  // Day-of-week headers (Sun→Sat)
+  // Day-of-week headers (Sat→Sun, RTL: شەمبی rightmost)
   var dayHdrs=_KU_DAYS;
   var hdrsRow=el('div','month-cal-grid');
-  for(var dh=0;dh<7;dh++){
+  for(var dh=6;dh>=0;dh--){
     hdrsRow.appendChild(el('div','month-cal-dh',dayHdrs[dh]));
   }
   calSec.appendChild(hdrsRow);
@@ -7994,8 +7994,9 @@ function renderGoals(){
   var firstDay=new Date(calYear,calMo,1).getDay();
   var daysInMonth=new Date(calYear,calMo+1,0).getDate();
 
-  // Blank cells before 1st
-  for(var bb=0;bb<firstDay;bb++){calGrid.appendChild(el('div','month-cal-cell month-cal-empty',''))}
+  // Blank cells before 1st (RTL week starts Saturday: Sat=0 blanks, Sun=1, …, Fri=6)
+  var blanks=(firstDay+1)%7;
+  for(var bb=0;bb<blanks;bb++){calGrid.appendChild(el('div','month-cal-cell month-cal-empty',''))}
 
   for(var dd=1;dd<=daysInMonth;dd++){
     var dStr=calYear+'-'+String(calMo+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
@@ -8686,15 +8687,16 @@ function _buildPppCal(log){
   nav.appendChild(el('span','ppp-cal-month',t('goals.months.'+(month+1))+' '+year));
   nav.appendChild(nextBtn);
   wrap.appendChild(nav);
-  // Day headers
+  // Day headers (Sat→Sun, RTL: شەمبی rightmost)
   var dhr=el('div','ppp-cal-grid');
-  _KU_DAYS.forEach(function(d){dhr.appendChild(el('div','ppp-cal-dh',d));});
+  for(var _dhi=6;_dhi>=0;_dhi--)dhr.appendChild(el('div','ppp-cal-dh',_KU_DAYS[_dhi]));
   wrap.appendChild(dhr);
   // Cells
   var firstDow=tgt.getDay();var daysInMonth=new Date(year,month+1,0).getDate();
   var trackStart=_prayerTrackingStart();
   var grid=el('div','ppp-cal-grid');
-  for(var e=0;e<firstDow;e++)grid.appendChild(el('div','ppp-cal-cell empty',''));
+  var _pppBlanks=(firstDow+1)%7;
+  for(var e=0;e<_pppBlanks;e++)grid.appendChild(el('div','ppp-cal-cell empty',''));
   for(var d=1;d<=daysInMonth;d++){
     var cellDate=new Date(year,month,d);var ck=dateKey(cellDate);
     var cl=log[ck]||{};var cnt=_TRACK_PRAYERS.filter(function(p){return cl[p];}).length;
