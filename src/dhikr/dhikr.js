@@ -3055,6 +3055,7 @@ window.GencineUI = {
       pagesWrap.style.transition = animate ? 'transform .22s cubic-bezier(.25,.46,.45,.94)' : 'none';
       pagesWrap.style.transform  = 'translate('+_tx+'px,'+_ty+'px) scale('+_pdfZoom+')';
       pagesWrap.style.touchAction = _pdfZoom>1.01 ? 'none' : 'pan-y';
+      window._sbPdfZoomed = _pdfZoom > 1.05; // swipe-back guard
     }
 
     function _pinchDist(t){ var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY; return Math.sqrt(dx*dx+dy*dy); }

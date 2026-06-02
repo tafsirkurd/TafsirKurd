@@ -1154,31 +1154,61 @@ function init(){
       _updateMacInteraction(); // stamp once on launch so first open never auto-minimizes
     }
 
+    // ── Centralised back logic — used by hardware back button AND swipe-back gesture ──
+    // hasBack: returns true when there is a layer that can be dismissed
+    App.hasBack=function(){
+      if($('fuOverlay')&&$('fuOverlay').classList.contains('on'))return false; // hard block
+      if(document.querySelector('.note-modal-ov.on'))return true;
+      if($('khatmCelebOverlay'))return true;
+      if($('pppCelebOverlay'))return true;
+      if($('pppDayOverlay')&&$('pppDayOverlay').classList.contains('on'))return true;
+      if($('prayerProgressPanel')&&$('prayerProgressPanel').classList.contains('on'))return true;
+      if($('dlMgrSheet')&&$('dlMgrSheet').classList.contains('open'))return true;
+      if($('profilePanel')&&$('profilePanel').classList.contains('on'))return true;
+      if($('authPanel')&&$('authPanel').classList.contains('on'))return true;
+      if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on'))return true;
+      if($('goalStartChoiceOverlay')&&$('goalStartChoiceOverlay').classList.contains('on'))return true;
+      if($('repeatModal')&&$('repeatModal').classList.contains('on'))return true;
+      if($('audioSettingsPanel')&&$('audioSettingsPanel').classList.contains('on'))return true;
+      if($('qsSheet')&&$('qsSheet').classList.contains('on'))return true;
+      if(S.sidebar)return true;
+      if($('wizard')&&$('wizard').classList.contains('on'))return true;
+      if(S.ivCurrentSeries)return true;
+      if(S.surah)return true;
+      if(S.tab!=='quran')return true;
+      return false; // nothing to dismiss (next action would be exit — not allowed for swipe)
+    };
+    // doBack: performs the back action. opts.allowExit controls whether to exit the app.
+    App.doBack=function(opts){
+      var allowExit=opts&&opts.allowExit;
+      if($('fuOverlay')&&$('fuOverlay').classList.contains('on'))return; // hard block
+      var _nmOv=document.querySelector('.note-modal-ov.on');if(_nmOv){_nmOv.classList.remove('on');return;}
+      if($('khatmCelebOverlay')){App.closeGoalCelebration();return;}
+      if($('pppCelebOverlay')){App.closePrayerCelebration();return;}
+      if($('pppDayOverlay')&&$('pppDayOverlay').classList.contains('on')){App.closePrayerDay();return;}
+      if($('prayerProgressPanel')&&$('prayerProgressPanel').classList.contains('on')){App.closePrayerProgress();return;}
+      if($('dlMgrSheet')&&$('dlMgrSheet').classList.contains('open')){closeDlManager();return;}
+      if($('profilePanel')&&$('profilePanel').classList.contains('on')){App.closeProfile();return;}
+      if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return;}
+      if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return;}
+      if($('goalStartChoiceOverlay')&&$('goalStartChoiceOverlay').classList.contains('on')){App.closeStartChoice();return;}
+      if($('repeatModal')&&$('repeatModal').classList.contains('on')){App.closeRepeat();return;}
+      if($('audioSettingsPanel')&&$('audioSettingsPanel').classList.contains('on')){App.closeAudioSettings();return;}
+      if($('qsSheet')&&$('qsSheet').classList.contains('on')){App.closeReaderSettings();return;}
+      if(S.sidebar){App.closeSidebar();return;}
+      if($('wizard')&&$('wizard').classList.contains('on')){App.closeWizard();return;}
+      if(S.ivCurrentSeries){App.ivBack();return;}
+      if(S.surah){App.backToList();return;}
+      if(S.tab!=='quran'){App.tab('quran');return;}
+      if(allowExit&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
+        window.Capacitor.Plugins.App.exitApp();
+      }
+    };
+
     // Android back button
     try{
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
-        window.Capacitor.Plugins.App.addListener('backButton',function(){
-          if($('fuOverlay')&&$('fuOverlay').classList.contains('on')){return} // hard block — back does nothing
-          var _nmOv=document.querySelector('.note-modal-ov.on');if(_nmOv){_nmOv.classList.remove('on');return}
-          if($('khatmCelebOverlay')){App.closeGoalCelebration();return}
-          if($('pppCelebOverlay')){App.closePrayerCelebration();return}
-          if($('pppDayOverlay')&&$('pppDayOverlay').classList.contains('on')){App.closePrayerDay();return}
-          if($('prayerProgressPanel')&&$('prayerProgressPanel').classList.contains('on')){App.closePrayerProgress();return}
-          if($('dlMgrSheet')&&$('dlMgrSheet').classList.contains('open')){closeDlManager();return}
-          if($('profilePanel')&&$('profilePanel').classList.contains('on')){App.closeProfile();return}
-          if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return}
-          if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
-          if($('goalStartChoiceOverlay')&&$('goalStartChoiceOverlay').classList.contains('on')){App.closeStartChoice();return}
-          if($('repeatModal').classList.contains('on')){App.closeRepeat();return}
-          if($('audioSettingsPanel').classList.contains('on')){App.closeAudioSettings();return}
-          if($('qsSheet')&&$('qsSheet').classList.contains('on')){App.closeReaderSettings();return}
-          if(S.sidebar){App.closeSidebar();return}
-          if($('wizard').classList.contains('on')){App.closeWizard();return}
-          if(S.ivCurrentSeries){App.ivBack();return}
-          if(S.surah){App.backToList();return}
-          if(S.tab!=='quran'){App.tab('quran');return}
-          window.Capacitor.Plugins.App.exitApp();
-        });
+        window.Capacitor.Plugins.App.addListener('backButton',function(){App.doBack({allowExit:true});});
       }
     }catch(e){console.warn('Back button handler not available',e)}
 
@@ -2025,7 +2055,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260601a', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260602a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=55',      function() { _p2 = true; _check(); });
 }
