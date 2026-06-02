@@ -11775,19 +11775,23 @@ function renderProfile(panel){
   provRow.appendChild(el('div','pp-row-label',t('profile.login_method')));
   provRow.appendChild(el('div','pp-row-value',providerLabel));
   infoCard.appendChild(provRow);
-  // Member since — use cached session (no network call)
+  // Member since + last sign-in — use cached session (no network call)
   if(S.supabase){
     var sinceRow=el('div','pp-row');
     sinceRow.appendChild(el('div','pp-row-label',t('profile.member_since')));
     var sinceVal=el('div','pp-row-value','…');
     sinceRow.appendChild(sinceVal);
     infoCard.appendChild(sinceRow);
+    var lastRow=el('div','pp-row');
+    lastRow.appendChild(el('div','pp-row-label',t('profile.last_signin')||'دوا کردنەوە'));
+    var lastVal=el('div','pp-row-value','…');
+    lastRow.appendChild(lastVal);
+    infoCard.appendChild(lastRow);
     S.supabase.auth.getSession().then(function(resp){
       var u=resp.data&&resp.data.session&&resp.data.session.user;
-      if(u&&u.created_at){
-        var d=new Date(u.created_at);
-        sinceVal.textContent=d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
-      }else{sinceRow.remove();}
+      function _fmt(iso){var d=new Date(iso);return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');}
+      if(u&&u.created_at){sinceVal.textContent=_fmt(u.created_at);}else{sinceRow.remove();}
+      if(u&&u.last_sign_in_at){lastVal.textContent=_fmt(u.last_sign_in_at)+' · '+_timeAgo(new Date(u.last_sign_in_at));}else{lastRow.remove();}
     });
   }
   infoSec.appendChild(infoCard);
