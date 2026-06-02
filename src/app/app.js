@@ -1175,8 +1175,8 @@ function init(){
       if($('wizard')&&$('wizard').classList.contains('on'))return true;
       if(S.ivCurrentSeries)return true;
       if(S.surah)return true;
-      if(S.tab!=='quran')return true;
-      return false; // nothing to dismiss (next action would be exit — not allowed for swipe)
+      if(S.tab==='gencine'&&window.GencineUI&&GencineUI._view!=='home')return true;
+      return false; // root tabs are coordinate peers — no back between them
     };
     // doBack: performs the back action. opts.allowExit controls whether to exit the app.
     App.doBack=function(opts){
@@ -1200,7 +1200,6 @@ function init(){
       if(S.ivCurrentSeries){App.ivBack();return;}
       if(S.surah){App.backToList();return;}
       if(S.tab==='gencine'&&window.GencineUI&&GencineUI._view!=='home'){GencineUI.goHome();return;}
-      if(S.tab!=='quran'){App.tab('quran');return;}
       if(allowExit&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.exitApp();
       }
@@ -1878,7 +1877,7 @@ App.tab=function(name){
     }
     return;
   }
-  haptic([8]);
+  H.light(); // different-tab switch — clear selection feel
 
   // Cancel any pending rAF render from a previous fast tab switch
   if(_pendingTabRaf){cancelAnimationFrame(_pendingTabRaf);_pendingTabRaf=null;}
@@ -2096,6 +2095,8 @@ function _tkConfirm(opts){
   ov.innerHTML='';
   var isCinematic=!!opts.cinematic;
   if(isCinematic)ov.classList.add('danger-mode');else ov.classList.remove('danger-mode');
+  if(isCinematic)H.warning();
+  else if(opts.danger)H.medium();
   var card=el('div','tk-confirm-card'+(isCinematic?' cinematic':''));
   if(opts.icon){var ico=el('div','tk-confirm-icon');ico.textContent=opts.icon;card.appendChild(ico);}
   if(opts.title){card.appendChild(el('div','tk-confirm-title',opts.title));}
@@ -2152,7 +2153,7 @@ App.toast=toast; // iOS: window.toast is the DOM element — use App.toast in ot
 // Notification haptics (success/warning) always fire but block for 200ms after.
 var H=(function(){
   var _last=0;
-  var _MIN=50; // ms minimum between standard haptics — prevents spam
+  var _MIN=25; // ms minimum between standard haptics — prevents spam
 
   function _hp(){return window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;}
 
@@ -2174,7 +2175,7 @@ var H=(function(){
   }
   function _note(type,webPat){
     if(!S.hapticFeedback)return;
-    _last=Date.now()+200;
+    _last=Date.now()+80; // short blackout after notification haptic to prevent overlap
     var Hp=_hp();
     if(Hp){
       try{Hp.notification({type:type});}catch(e){
@@ -2203,6 +2204,21 @@ var H=(function(){
     // warning: destructive/alert — confirm delete, dangerous actions
     warning:  function(){_note('WARNING',[60,30,60]);}
   };
+})();
+
+// ── Startup haptic availability check ───────────────────────────────────────
+// Runs once. On native (iOS/Android) we MUST have the Capacitor plugin.
+// If it's missing, all haptics will silently fall through to navigator.vibrate()
+// which does nothing on iOS. Log clearly so the issue is obvious in the console.
+(function(){
+  try{
+    if(!window.Capacitor||!Capacitor.isNativePlatform||!Capacitor.isNativePlatform())return;
+    if(!window.Capacitor.Plugins||!window.Capacitor.Plugins.Haptics){
+      console.warn('[Haptics] PLUGIN UNAVAILABLE on native platform. All haptic calls will be silent. Fix: npx cap sync');
+    }else{
+      console.log('[Haptics] plugin ready');
+    }
+  }catch(e){}
 })();
 
 // Legacy shim — maps old numeric patterns to named semantics.
@@ -6527,6 +6543,7 @@ var _dlMgrCache={pdfs:null,audio:null}; // last fetched data — avoids spinner 
 function openDlManager(){
   var sheet=$('dlMgrSheet'),overlay=$('dlMgrOverlay');
   if(!sheet||!overlay)return;
+  H.medium();
   _dlMgrTab='books';
   _dlMgrSelectMode=false;
   _dlMgrSelected={};
@@ -7591,7 +7608,7 @@ function toggleBookmark(surah,ayah){
   if(_bmMap[key]){
     delete _bmMap[key];
     _scheduleBmSave();
-    haptic([8]);
+    H.light();
     toast(t('toast.bookmark_removed'));
     return false;
   }else{
@@ -8528,6 +8545,7 @@ App.openDlManager=openDlManager;
 App.closeDlManager=closeDlManager;
 
 App.openPrayerProgress=function(){
+  H.medium();
   _initPrayerTrackingStart();
   var panel=$('prayerProgressPanel');
   _pppMonthOffset=0;
@@ -11915,6 +11933,7 @@ App.forceSync=function(){
 var _profileDevicesCache=null;
 App.openProfile=function(){
   if(!S.user)return;
+  H.light();
   var panel=$('profilePanel');
   clear(panel);
   renderProfile(panel);
