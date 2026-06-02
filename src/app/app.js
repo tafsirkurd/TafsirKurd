@@ -6506,11 +6506,11 @@ function openDlManager(){
   $('dlMgrClose').onclick=closeDlManager;
   var editBtn=$('dlMgrEditBtn');
   var editLbl=$('dlMgrEditLbl');
-  var editIco=editBtn?editBtn.querySelector('i'):null;
+  var editIco=$('dlMgrEditIco');
   function _syncEditBtn(){
     if(!editBtn)return;
-    if(editLbl)editLbl.textContent=_dlMgrSelectMode?'پاشگەزبوون':'هەڵبژارتن';
-    if(editIco)editIco.className=_dlMgrSelectMode?'fas fa-xmark':'fas fa-check-square';
+    if(editLbl)editLbl.textContent=_dlMgrSelectMode?'لێزڤڕین':'هەڵبژارتن';
+    if(editIco)editIco.className=_dlMgrSelectMode?'fas fa-times':'fas fa-check-double';
     editBtn.style.color=_dlMgrSelectMode?'var(--danger,#e05)':'var(--accent)';
   }
   if(editBtn){
@@ -6665,24 +6665,30 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
   }
   if(editBtn)editBtn.style.display='';
 
-  // Auto-select the tab with content
-  if(_dlMgrTab==='books'&&!pdfCached.length&&audioAll.length)_dlMgrTab='audio';
-  if(_dlMgrTab==='audio'&&!audioAll.length&&pdfCached.length)_dlMgrTab='books';
-
-  // ── Tab bar (custom — avoids overflow-x:auto iOS tap bug) ──
-  var tabRow=el('div','');
-  tabRow.style.cssText='display:flex;border-bottom:1.5px solid var(--border);margin-bottom:4px;touch-action:manipulation';
-  function _makeTab(key,label,count){
-    var btn=el('button','');
-    var isOn=_dlMgrTab===key;
-    btn.style.cssText='flex:1;padding:10px 8px;font-size:.82rem;font-weight:600;background:transparent;border:none;border-bottom:2.5px solid '+(isOn?'var(--accent)':'transparent')+';margin-bottom:-1.5px;color:'+(isOn?'var(--accent)':'var(--text2)')+';cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
-    btn.textContent=label+(count?' ('+count+')':'');
-    on(btn,'click',function(){_dlMgrTab=key;_dlMgrSelected={};_renderDlMgrBodyWith(pdfCached,audioAll);});
-    tabRow.appendChild(btn);
+  var hasBoth=pdfCached.length>0&&audioAll.length>0;
+  // If only one type exists, force that tab — no tab bar needed
+  if(!hasBoth){_dlMgrTab=pdfCached.length?'books':'audio';}
+  else{
+    if(_dlMgrTab==='books'&&!pdfCached.length)_dlMgrTab='audio';
+    if(_dlMgrTab==='audio'&&!audioAll.length)_dlMgrTab='books';
   }
-  _makeTab('books',t('dl.books_section')||'پەرتوکەکان',pdfCached.length);
-  _makeTab('audio',t('dl.audio_section')||'دەنگ',audioAll.length);
-  body.appendChild(tabRow);
+
+  // ── Tab bar — only shown when both types exist ──────────
+  if(hasBoth){
+    var tabRow=el('div','');
+    tabRow.style.cssText='display:flex;border-bottom:1.5px solid var(--border);margin-bottom:4px;touch-action:manipulation';
+    function _makeTab(key,label,count){
+      var btn=el('button','');
+      var isOn=_dlMgrTab===key;
+      btn.style.cssText='flex:1;padding:10px 8px;font-size:.82rem;font-weight:600;background:transparent;border:none;border-bottom:2.5px solid '+(isOn?'var(--accent)':'transparent')+';margin-bottom:-1.5px;color:'+(isOn?'var(--accent)':'var(--text2)')+';cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
+      btn.textContent=label+(count?' ('+count+')':'');
+      on(btn,'click',function(){_dlMgrTab=key;_dlMgrSelected={};_renderDlMgrBodyWith(pdfCached,audioAll);});
+      tabRow.appendChild(btn);
+    }
+    _makeTab('books',t('dl.books_section')||'پەرتوکەکان',pdfCached.length);
+    _makeTab('audio',t('dl.audio_section')||'دەنگ',audioAll.length);
+    body.appendChild(tabRow);
+  }
 
   // ── Storage line ─────────────────────────────────────
   var totalB=pdfCached.reduce(function(s,c){return s+c.bytes;},0)+audioAll.reduce(function(s,r){return s+r.bytes;},0);
