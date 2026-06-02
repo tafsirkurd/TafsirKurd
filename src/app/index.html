@@ -1031,6 +1031,16 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .tk-confirm-yes.danger{background:var(--danger,#e74c3c);color:#fff}
 .tk-confirm-no{height:42px;border-radius:14px;font-size:.86rem;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:opacity .15s,transform .12s;-webkit-tap-highlight-color:transparent}
 .tk-confirm-no:active{transform:scale(.97)}
+/* ── Cinematic danger variant ── */
+.tk-confirm-overlay.danger-mode{background:rgba(0,0,0,.75)}
+.tk-confirm-card.cinematic{background:linear-gradient(160deg,#1a0505 0%,#0d0202 100%);border:1px solid rgba(220,50,50,.35);box-shadow:0 0 0 1px rgba(220,50,50,.15),0 20px 80px rgba(180,0,0,.45),0 0 60px rgba(220,50,50,.15);animation:dangerCardPop .32s cubic-bezier(.34,1.2,.64,1)}
+@keyframes dangerCardPop{0%{transform:scale(.82);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+.tk-confirm-card.cinematic .tk-confirm-icon{font-size:2.4rem;animation:dangerPulse 1.8s ease-in-out infinite}
+@keyframes dangerPulse{0%,100%{filter:drop-shadow(0 0 0px rgba(220,50,50,0))}50%{filter:drop-shadow(0 0 12px rgba(220,50,50,.8))}}
+.tk-confirm-card.cinematic .tk-confirm-title{font-size:1.05rem;color:#fff;letter-spacing:.01em}
+.tk-confirm-card.cinematic .tk-confirm-yes{background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);box-shadow:0 4px 24px rgba(220,50,50,.5),0 0 0 1px rgba(220,50,50,.3);font-size:.95rem;letter-spacing:.02em;transition:box-shadow .2s,transform .12s}
+.tk-confirm-card.cinematic .tk-confirm-yes:active{box-shadow:0 2px 12px rgba(220,50,50,.4);transform:scale(.97)}
+.tk-confirm-card.cinematic .tk-confirm-no{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.5)}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .goal-confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px 24px 22px;max-width:320px;width:100%;text-align:center;animation:nsCardPop .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 12px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;gap:12px}
 @keyframes confirmBoxIn{from{transform:scale(.88);opacity:0}to{transform:scale(1);opacity:1}}
@@ -4478,7 +4488,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
-<script src="/app/app.js?v=1007"></script>
+<script src="/app/app.js?v=1008"></script>
 <script src="/utils/swipe-back.js?v=2"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */

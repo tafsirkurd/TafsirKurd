@@ -2094,12 +2094,14 @@ function _tkConfirm(opts){
   var ov=$('tkConfirmOverlay');
   if(!ov)return;
   ov.innerHTML='';
-  var card=el('div','tk-confirm-card');
+  var isCinematic=!!opts.cinematic;
+  if(isCinematic)ov.classList.add('danger-mode');else ov.classList.remove('danger-mode');
+  var card=el('div','tk-confirm-card'+(isCinematic?' cinematic':''));
   if(opts.icon){var ico=el('div','tk-confirm-icon');ico.textContent=opts.icon;card.appendChild(ico);}
   if(opts.title){card.appendChild(el('div','tk-confirm-title',opts.title));}
   if(opts.msg&&opts.msg.indexOf(' ')!==-1){card.appendChild(el('div','tk-confirm-msg',opts.msg));}
   var btns=el('div','tk-confirm-btns');
-  var yesBtn=el('button','tk-confirm-yes'+(opts.danger?' danger':''),opts.yes||t('common.yes')||'بەلێ');
+  var yesBtn=el('button','tk-confirm-yes'+(opts.danger||isCinematic?' danger':''),opts.yes||t('common.yes')||'بەلێ');
   var noBtn=el('button','tk-confirm-no',opts.no||t('common.no')||'نەخێر');
   on(yesBtn,'click',function(){_tkConfirmClose();if(opts.onYes)opts.onYes();});
   on(noBtn,'click',function(){_tkConfirmClose();if(opts.onNo)opts.onNo();});
@@ -11869,16 +11871,16 @@ App.deleteAccount=function(){
   if(!S.supabase||!S.user)return;
   _tkConfirm({
     icon:'⚠️',
-    title:(t('profile.confirm_delete1')||'تو پشتڕاستی ژ ژێبرنا ھەژمارێ؟')+'\n'+(t('profile.confirm_delete1_sub')||'زڤڕین بۆ ڤی کاری نینە'),
-    yes:t('profile.confirm_delete1_yes')||'بەردەوام بە',
+    title:t('profile.confirm_delete1')||'تو پشتڕاستی ژ ژێبرنا ھەژمارێ؟',
+    yes:t('profile.confirm_delete1_yes')||'بەلێ، بەردەوام بە',
     no:t('profile.confirm_no')||'نەخێر',
     onYes:function(){
       _tkConfirm({
         icon:'🗑️',
-        title:t('profile.confirm_delete2')||'دوای سڕینەوە ناتوانی بگەڕێیتەوە',
+        title:(t('profile.confirm_delete2')||'دوای سڕینەوە ناتوانی بگەڕێیتەوە')+'\n'+(t('profile.confirm_delete1_sub')||'زڤڕین بۆ ڤی کاری نینە!'),
         yes:t('profile.confirm_delete_yes')||'سڕینەوەی ئەکاونت',
         no:t('profile.confirm_no')||'نەخێر',
-        danger:true,
+        cinematic:true,
         onYes:function(){
           toast(t('profile.deleting')||'...');
           S.supabase.auth.getSession().then(function(resp){
