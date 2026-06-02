@@ -9980,10 +9980,17 @@ function renderSettings(){
   var bms=getBookmarks();
   var totalRead=calcTotalRead(log);
   var streak=calcStreak(log);
+  var bestStreak=calcBestStreak(log);
+  var khatmCount=Math.floor(totalRead/6236);
+  var pLog=getPrayerLog();
+  var totalPrayers=Object.keys(pLog).reduce(function(acc,d){return acc+_TRACK_PRAYERS.filter(function(p){return pLog[d]&&pLog[d][p];}).length;},0);
   var statsCard=el('div','stats-card');
   [[icon('fas fa-quran'),totalRead,t('settings.stats_ayahs')],
    [icon('fas fa-fire'),streak,t('settings.stats_streak')],
-   [icon('fas fa-bookmark'),bms.length,t('settings.stats_bookmarks')]
+   [icon('fas fa-bookmark'),bms.length,t('settings.stats_bookmarks')],
+   [icon('fas fa-trophy'),bestStreak,t('settings.stats_best_streak')||'باشترین زنجیرە'],
+   [icon('fas fa-star'),khatmCount,t('settings.stats_khatm')||'خاتم'],
+   [icon('fas fa-mosque'),totalPrayers,t('settings.stats_prayers')||'نوێژ']
   ].forEach(function(item){
     var col=el('div','stats-col');
     var ic=item[0];ic.className+=' stats-icon';
