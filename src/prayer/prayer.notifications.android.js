@@ -47,8 +47,8 @@
     { id: 'nasser',   nameAr: 'ناصر القطامي',         nameKey: 'prayer.voice_nasser',  previewUrl: '/audio/athan_nasser.mp3'  },
     { id: 'mishary',  nameAr: 'مشاری راشد العفاسی', nameKey: 'prayer.voice_mishary', previewUrl: '/audio/athan_mishary.mp3' },
     { id: 'omar',     nameAr: 'عمر هشام العربي',      nameKey: 'prayer.voice_omar',    previewUrl: '/audio/athan_omar.mp3'    },
-    { id: 'peshawa',  nameAr: 'پیشەوا',               nameKey: 'prayer.voice_peshawa', previewUrl: '/audio/athan_peshawa.mp3' },
-    { id: 'raad',     nameAr: 'راعد محمد الكردي',     nameKey: 'prayer.voice_raad',    previewUrl: '/audio/athan_raad.mp3'    }
+    { id: 'peshawa',  nameAr: 'پێشەوا قادر الکوردی',  nameKey: 'prayer.voice_peshawa', previewUrl: '/audio/athan_peshawa.mp3' },
+    { id: 'raad',     nameAr: 'راعد محمد الکوردی',    nameKey: 'prayer.voice_raad',    previewUrl: '/audio/athan_raad.mp3'    }
   ];
 
   function getLN() {

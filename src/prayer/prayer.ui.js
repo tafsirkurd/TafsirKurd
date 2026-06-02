@@ -968,13 +968,6 @@
     // Populate dates
     var dateInfo = data.date;
     var dateLines = [];
-    if (dateInfo && dateInfo.gregorian) {
-      var _wd = dateInfo.gregorian.weekday && dateInfo.gregorian.weekday.en ? dateInfo.gregorian.weekday.en + ' ' : '';
-      dateLines.push(_wd + dateInfo.gregorian.day + ' ' + (dateInfo.gregorian.month && dateInfo.gregorian.month.en || '') + ' ' + dateInfo.gregorian.year);
-    } else {
-      var gd = new Date(today + 'T12:00:00+03:00');
-      dateLines.push(gd.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Baghdad' }));
-    }
     if (dateInfo && dateInfo.hijri) {
       dateLines.push(dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ');
     } else if (dateInfo && dateInfo.hijriStr) {
@@ -2941,12 +2934,7 @@
     var remLeft = cel('div', 'as2-reminder-left');
     var remTitle = cel('div', 'as2-reminder-title');
     remTitle.textContent = tStr('prayer.reminder_title') || 'پێش نوێژ بیرت بخاتەوە';
-    var remDesc = cel('div', 'as2-reminder-desc');
-    remDesc.textContent = remEnabled
-      ? (tStr('prayer.reminder_on_hint') || 'یادەوەری چالاکە')
-      : (tStr('prayer.reminder_off_hint') || 'ببەستە بۆ چالاکبوون');
     remLeft.appendChild(remTitle);
-    remLeft.appendChild(remDesc);
     var remTog = cel('div', 'toggle toggle--sm' + (remEnabled ? ' on' : ''));
     remTog.appendChild(cel('div', 'toggle-knob'));
     remTop.appendChild(remLeft);
@@ -2976,9 +2964,6 @@
     remTog.addEventListener('click', function() {
       var nowOn = !remTog.classList.contains('on');
       remTog.classList.toggle('on', nowOn);
-      remDesc.textContent = nowOn
-        ? (tStr('prayer.reminder_on_hint') || 'یادەوەری چالاکە')
-        : (tStr('prayer.reminder_off_hint') || 'ببەستە بۆ چالاکبوون');
       setReminderEnabled(nowOn);
       offsetRow.classList.toggle('as2-hidden', !nowOn);
       rescheduleReminders(city);
@@ -3367,13 +3352,6 @@
       if (datesEl && fresh.date) {
         var dateInfo = fresh.date;
         var dateLines2 = [];
-        if (dateInfo.gregorian) {
-          var _wd2 = dateInfo.gregorian.weekday && dateInfo.gregorian.weekday.en ? dateInfo.gregorian.weekday.en + ' ' : '';
-          dateLines2.push(_wd2 + dateInfo.gregorian.day + ' ' + (dateInfo.gregorian.month && dateInfo.gregorian.month.en || '') + ' ' + dateInfo.gregorian.year);
-        } else {
-          var gd2 = new Date(today + 'T12:00:00+03:00');
-          dateLines2.push(gd2.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Baghdad' }));
-        }
         if (dateInfo.hijri) dateLines2.push(dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ');
         else if (dateInfo.hijriStr) dateLines2.push(dateInfo.hijriStr);
         datesEl.innerHTML = dateLines2.map(function(l) { return '<span>' + l + '</span>'; }).join('');

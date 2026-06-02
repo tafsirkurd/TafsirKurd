@@ -48,7 +48,7 @@
       fallbackAr: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا',
       fallbackRepeat: 3,
       fallbackSource: 'أبو داود والترمذي',
-      timeTag: 'سپێدەهی', basePriority: 50,
+      timeTag: 'سپێدە', basePriority: 50,
       timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
     },
     {
@@ -58,7 +58,7 @@
       fallbackAr: 'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا',
       fallbackRepeat: 1,
       fallbackSource: 'البخاري',
-      timeTag: 'سپێدەهی', basePriority: 58, /* beats morning when both active (Fajr→Sunrise) */
+      timeTag: 'سپێدە', basePriority: 58, /* beats morning when both active (Fajr→Sunrise) */
       timeWindow: { start: 'Fajr', end: 'Sunrise', fs: 5*60, fe: 8*60, wraps: false }
     },
     {

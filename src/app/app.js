@@ -1199,6 +1199,7 @@ function init(){
       if($('wizard')&&$('wizard').classList.contains('on')){App.closeWizard();return;}
       if(S.ivCurrentSeries){App.ivBack();return;}
       if(S.surah){App.backToList();return;}
+      if(S.tab==='gencine'&&window.GencineUI&&GencineUI._view!=='home'){GencineUI.goHome();return;}
       if(S.tab!=='quran'){App.tab('quran');return;}
       if(allowExit&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.exitApp();
@@ -2057,7 +2058,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260602a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=55',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=56',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -8516,8 +8517,8 @@ function _pppMsg(n){
   if(n>=5)return'ماشاءالله‌! تە ئەڤڕۆ هەمی نڤێژێن خۆ تەمام کرن 🌟';
   if(n>=4)return'باشترینن — نڤێژا دوماهییێ تەمام بکە ⭐';
   if(n>=3)return'نێزیک بووی — بەردەوام بە 💚';
-  if(n>=1)return'تە دەست پێ کر — ئەڤڕۆ زێدە بکە 🤲';
-  return'ئەڤڕۆ هێشتا تە نڤێژ نەکریە — دەست پێ بکە 🌅';
+  if(n>=1)return'تە دەستپێکر — ئەڤڕۆ زێدە بکە 🤲';
+  return'ئەڤڕۆ هێشتا تە نڤێژ نەکریە — دەستپێبکە 🌅';
 }
 
 function _buildPrayerProgressPanel(panel){
@@ -8627,7 +8628,7 @@ function _buildPrayerProgressPanel(panel){
   body.appendChild(_buildPppCal(log));
 
   // ─ Insights ───────────────────────────────────────────────
-  body.appendChild(el('div','ppp-section-title',t('ppp.section_insights')||'ئاگەهدار'));
+  body.appendChild(el('div','ppp-section-title',t('ppp.section_insights')||'ئاگەهداری'));
   body.appendChild(_buildPppInsights(log,mStats,weekData,missed));
 
   // ─ New Start ──────────────────────────────────────────────
@@ -8639,7 +8640,7 @@ function _buildPrayerProgressPanel(panel){
     var card=el('div','ppp-ns-card');
     var iconEl=el('div','ppp-ns-icon');iconEl.appendChild(icon('fas fa-redo-alt'));
     var title=el('div','ppp-ns-title','دەستپێکرنەکا نوی');
-    var sub=el('div','ppp-ns-sub','هەمی تۆمارێن نڤێژان دێ هێنە ژێبرن و تو دێ ژ ئەڤڕۆ پێ ڤە دەست پێ کەی.');
+    var sub=el('div','ppp-ns-sub','هەمی تۆمارێن نڤێژان دێ هێنە ژێبرن، تۆ دێ ژ ئەڤرۆ پێڤە دەستپێکەی.');
     var btns=el('div','ppp-ns-btns');
     var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent='بەلێ، ژێ ببە';
     var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent='نەخێر';
@@ -9599,7 +9600,6 @@ async function openAboutSheet(type){
 
     // ── 2. Story ─────────────────────────────────
     var cfoStory=el('div','cfo-section');
-    cfoStory.appendChild(el('div','cab-sec-label',_ft('founder_story_label',ss.founder_story_label)||'چیرۆک'));
     cfoStory.appendChild(el('div','cfo-bio-name',fname));
     // Admin saves bio as 3 separate paragraphs: founder_story_desc1/2/3
     [_ft('founder_story_desc1',ss.founder_story_desc1),_ft('founder_story_desc2',ss.founder_story_desc2),_ft('founder_story_desc3',ss.founder_story_desc3)].filter(Boolean).forEach(function(p){cfoStory.appendChild(el('div','cfo-para',p));});
@@ -9622,7 +9622,7 @@ async function openAboutSheet(type){
       {t:_ft('founder_value1_title',ss.founder_v1_title)||'ڕازەمەندییا خودای',d:_ft('founder_value1_desc',ss.founder_v1_desc)||'ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن دونیاییدا ناگەڕین، هیڤییا مە بتنێ قەبویلبوونا ژلایێ خوداییە.'},
       {t:_ft('founder_value2_title',ss.founder_v2_title)||'خزمەتا قورئانێ',d:_ft('founder_value2_desc',ss.founder_v2_desc)||'خزمەتکرنا پەرتوکا خودای و گەهاندنا مانایێن قورئانێ بۆ هەمی کوردان ب شێوازەکێ ڕوون و سادە و بێ ئاڵۆزی.'},
       {t:_ft('founder_value3_title',ss.founder_v3_title)||'گەهاندن بۆ هەمییان',d:_ft('founder_value3_desc',ss.founder_v3_desc)||'دروستکرنا پلاتفۆرمەکا دیجیتاڵ کو بەردەستە بۆ هەمی کوردان ل هەر جهەکی، بێ سنوور و بێ جیاوازی.'},
-      {t:_ft('founder_value4_title',ss.founder_v4_title)||'خۆگەشەکرن',d:_ft('founder_value4_desc',ss.founder_v4_desc)||'فێربوون و گەشەکرنا پێزانینێن ئایینی، و پارڤەکرنا وان دگەل گەلێ خۆ ب شێوازەکێ ڕەوان.'}
+      {t:_ft('founder_value4_title',ss.founder_v4_title)||'گەشەکرن',d:_ft('founder_value4_desc',ss.founder_v4_desc)||'فێربوون و گەشەکرنا پێزانینێن ئایینی، و پارڤەکرنا وان دگەل گەلێ خۆ ب شێوازەکێ ڕەوان.'}
     ];
     var valList=el('div','cfo-values');
     VALUES.forEach(function(v){
@@ -9680,7 +9680,7 @@ async function openAboutSheet(type){
     var FEATS=[
       {num:_ft('about_feat1_num',ss.about_feat1_num)||'٠١',title:_ft('about_feat1_title',ss.about_feat1_title)||'خواندنا قورئانێ',desc:_ft('about_feat1_desc',ss.about_feat1_desc)||'خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.'},
       {num:_ft('about_feat2_num',ss.about_feat2_num)||'٠٢',title:_ft('about_feat2_title',ss.about_feat2_title)||'دەنگێ ئیسلامێ',desc:_ft('about_feat2_desc',ss.about_feat2_desc)||'ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.'},
-      {num:_ft('about_feat3_num',ss.about_feat3_num)||'٠٣',title:_ft('about_feat3_title',ss.about_feat3_title)||'نیشانەکرن و پاشەکەفتن',desc:_ft('about_feat3_desc',ss.about_feat3_desc)||'شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.'}
+      {num:_ft('about_feat3_num',ss.about_feat3_num)||'٠٣',title:_ft('about_feat3_title',ss.about_feat3_title)||'نیشانەکرن و پێشکەفتن',desc:_ft('about_feat3_desc',ss.about_feat3_desc)||'شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.'}
     ];
     FEATS.forEach(function(f){
       var card=el('div','cab-feat');

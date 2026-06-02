@@ -188,7 +188,7 @@ var ADHKAR_CAT_LABELS = {
   rising_ruku:    'ڕاستبوونا ڕکووعێ',
   sujood:         'زکرێن سەجدەیێ',
   between_sujood: 'نێو دووسەجدەیێ',
-  tashahhud:      'تەشەهود',
+  tashahhud:      'شەهدەدان',
   eating_before:  'بەرا خواردن',
   eating_after:   'دوای خواردن',
   breaking_fast:  'کاتا ئیفتارێ',
@@ -884,7 +884,9 @@ window.GencineUI = {
     var isHome         = (this._view === 'home');
     var isBooks        = (this._view === 'books');
     var isReader       = (this._view === 'book-reader');
-    var isSearchable   = (this._view === 'adhkar' || this._view === 'dua' || this._view === 'hadith' || this._view === 'asma');
+    var isSearchable   = (this._view === 'adhkar' || this._view === 'dua' || this._view === 'hadith' || this._view === 'asma')
+                         && !(this._view === 'adhkar' && this._adhkarView === 'list')
+                         && !(this._view === 'hadith' && this._hadithDetailIdx !== null);
     var navBtns        = document.getElementById('pdfNavBtns');
     if(backBtn)        backBtn.style.display        = isHome ? 'none' : 'flex';
     if(title)          title.style.visibility       = isHome ? '' : 'hidden';

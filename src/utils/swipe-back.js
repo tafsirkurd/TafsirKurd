@@ -96,6 +96,38 @@
 
   // ── Touch handlers ───────────────────────────────────────────────────────────
 
+  // Named touchmove handler — registered only while a gesture is active so the
+  // passive:false cost (browser must call JS before compositing each scroll frame)
+  // is paid only during edge swipes, not on every scroll in the app.
+  function _onTouchMove(e) {
+    if (!g) return;
+
+    var t  = e.touches[0];
+    var dx = t.clientX - g.x0;
+    var dy = t.clientY - g.y0;
+
+    // Direction lock: wait for LOCK_PX of movement, then decide once.
+    if (!g.locked) {
+      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return; // not enough yet
+
+      if (Math.abs(dx) >= Math.abs(dy) && dx > 0) {
+        g.locked = 'h'; // confirmed right-swipe — take it as back gesture
+      } else {
+        g = null; // vertical move or leftward — cancel, let scroll/PTR handle it
+        document.removeEventListener('touchmove', _onTouchMove);
+        return;
+      }
+    }
+
+    // After lock: track distance and apply visual feedback.
+    g.dx = dx > 0 ? dx : 0;
+    _applyDrag(g.el, g.dx);
+
+    // Only prevent default after we have confirmed horizontal intent.
+    // This keeps vertical scroll / PTR fully functional before lock.
+    e.preventDefault();
+  }
+
   document.addEventListener('touchstart', function (e) {
     g = null;
     if (e.touches.length !== 1) return;
@@ -114,37 +146,13 @@
       locked: null, // null = undecided | 'h' = horizontal | cancelled → g=null
       el:     _feedbackEl(),
     };
+    // Register non-passive touchmove only now — avoids scroll jank on every
+    // other touch in the app where no edge gesture is in progress.
+    document.addEventListener('touchmove', _onTouchMove, { passive: false });
   }, { passive: true });
 
-  document.addEventListener('touchmove', function (e) {
-    if (!g) return;
-
-    var t  = e.touches[0];
-    var dx = t.clientX - g.x0;
-    var dy = t.clientY - g.y0;
-
-    // Direction lock: wait for LOCK_PX of movement, then decide once.
-    if (!g.locked) {
-      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return; // not enough yet
-
-      if (Math.abs(dx) >= Math.abs(dy) && dx > 0) {
-        g.locked = 'h'; // confirmed right-swipe — take it as back gesture
-      } else {
-        g = null; // vertical move or leftward — cancel, let scroll/PTR handle it
-        return;
-      }
-    }
-
-    // After lock: track distance and apply visual feedback.
-    g.dx = dx > 0 ? dx : 0;
-    _applyDrag(g.el, g.dx);
-
-    // Only prevent default after we have confirmed horizontal intent.
-    // This keeps vertical scroll / PTR fully functional before lock.
-    e.preventDefault();
-  }, { passive: false }); // must be non-passive so preventDefault works
-
   document.addEventListener('touchend', function () {
+    document.removeEventListener('touchmove', _onTouchMove);
     if (!g || g.locked !== 'h') { g = null; return; }
 
     var elapsed = Date.now() - g.t0;
@@ -161,6 +169,7 @@
   }, { passive: true });
 
   document.addEventListener('touchcancel', function () {
+    document.removeEventListener('touchmove', _onTouchMove);
     if (g) { _snap(g.el, false); g = null; }
   }, { passive: true });
 
