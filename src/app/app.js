@@ -10357,33 +10357,35 @@ function renderSettings(){
   },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
   // Reset settings to defaults
   g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
-    if(!confirm(t('settings.reset_defaults_confirm')||'ئایا ڕێکخستنان vegerînin xwerû?'))return;
-    var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
-    _sk.forEach(function(k){localStorage.removeItem(k);});
-    S.showTafsir=true;S.bgAudio=false;S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;S.hapticFeedback=true;
-    S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;
-    if(S.theme!=='noor'){S.theme='noor';applyTheme();}
-    applySizes();
-    toast(t('toast.settings_reset')||'ڕێکخستن گەرانەوە بۆ xwerû');
-    renderSettings();
+    _tkConfirm({icon:'↩️',title:t('settings.reset_defaults_confirm')||'ڕێکخستنەکان زڤرانەوە بۆ بارێ دەستپێکێ؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
+      var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
+      _sk.forEach(function(k){localStorage.removeItem(k);});
+      S.showTafsir=true;S.bgAudio=false;S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;S.hapticFeedback=true;
+      S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;
+      if(S.theme!=='noor'){S.theme='noor';applyTheme();}
+      applySizes();
+      toast(t('toast.settings_reset')||'ڕێکخستن گەرانەوە');
+      renderSettings();
+    }});
   },false));
   // Reset reading progress
   g4.appendChild(mkBtnRow(t('settings.reset_progress'),'','fas fa-broom',function(){
-    if(!confirm(t('settings.reset_confirm')))return;
-    _clearTrackingState();
-    for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
-    debouncedSync(); // push reset to cloud
-    toast(t('toast.progress_reset'));
-    renderSettings();
+    _tkConfirm({icon:'🧹',title:t('settings.reset_confirm')||'پێشکەوتنا خواندنێ سڕینەوە؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',danger:true,onYes:function(){
+      _clearTrackingState();
+      for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
+      debouncedSync();
+      toast(t('toast.progress_reset'));
+      renderSettings();
+    }});
   },true));
   // Clear cache
   g4.appendChild(mkBtnRow(t('settings.clear_cache'),'','fas fa-trash',function(){
-    if(confirm(t('settings.clear_confirm'))){
+    _tkConfirm({icon:'🗑️',title:t('settings.clear_confirm')||'کاشێکرنەکان پاک بکرن؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
       S.quranData=null;S.tafsirData=null;
       _dataReady.quran=false;_dataReady.tafsir=false;
       loadQuranData();loadTafsirData();
       toast(t('toast.cache_cleared'));
-    }
+    }});
   },true));
   // Logout (only when logged in)
   if(S.user){
@@ -11845,18 +11847,22 @@ App.closeLogin=function(){
 
 App.logout=function(){
   if(!S.supabase)return;
-  // confirm() is blocked in iOS WKWebView — skip it on native; the explicit tap is confirmation
-  var _plat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
-  var _isNative=(_plat==='ios'||_plat==='android');
-  if(!_isNative&&!confirm(t('profile.confirm_logout')))return;
-  _removeCurrentDeviceSession(); // clean up before sign-out
-  S.supabase.auth.signOut().then(function(){
-    S.user=null;_clearProfileCache();
-    stopCloudSync();
-    App.closeProfile(); // close only after successful logout
-    toast(t('toast.logged_out'));
-    renderSettings();
-  }).catch(function(e){console.error('Logout error:',e)});
+  _tkConfirm({
+    icon:'👋',
+    title:t('profile.confirm_logout')||'دەرچوون لە ئەپێ؟',
+    yes:t('profile.logout')||'دەرچوون',
+    no:t('profile.confirm_no')||'نەخێر',
+    onYes:function(){
+      _removeCurrentDeviceSession();
+      S.supabase.auth.signOut().then(function(){
+        S.user=null;_clearProfileCache();
+        stopCloudSync();
+        App.closeProfile();
+        toast(t('toast.logged_out'));
+        renderSettings();
+      }).catch(function(e){console.error('Logout error:',e)});
+    }
+  });
 };
 
 App.forceSync=function(){
