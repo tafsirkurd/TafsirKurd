@@ -6491,17 +6491,30 @@ function closeDlSheet(){
 // Shows downloaded PDF books + audio reciters in one bottom sheet.
 // Accessible from: Settings → Audio section, and Books header button.
 var _dlMgrOpen=false;
+var _dlMgrSelectMode=false;
+var _dlMgrSelected={};   // key: 'book:pdfUrl' or 'audio:id'
+var _dlMgrCache={pdfs:null,audio:null}; // last fetched data — avoids spinner on reopen
 
 function openDlManager(){
   var sheet=$('dlMgrSheet'),overlay=$('dlMgrOverlay');
   if(!sheet||!overlay)return;
-  _dlMgrTab='books'; // always start on books tab
+  _dlMgrTab='books';
+  _dlMgrSelectMode=false;
+  _dlMgrSelected={};
   _dlMgrOpen=true;
   overlay.onclick=closeDlManager;
   $('dlMgrClose').onclick=closeDlManager;
-  _renderDlMgrBody();
-  sheet.classList.add('open');
-  overlay.classList.add('on');
+  var editBtn=$('dlMgrEditBtn');
+  if(editBtn)editBtn.onclick=function(){_dlMgrSelectMode=!_dlMgrSelectMode;_dlMgrSelected={};_renderDlMgrBody();};
+  // Show cached content instantly, then refresh in background
+  if(_dlMgrCache.pdfs!==null){_renderDlMgrBodyWith(_dlMgrCache.pdfs,_dlMgrCache.audio||[]);}
+  else{_renderDlMgrBody();}
+  requestAnimationFrame(function(){
+    sheet.classList.add('open');
+    overlay.classList.add('on');
+  });
+  // Always refresh data silently in background
+  _dlMgrFetchAndRefresh();
 }
 
 function closeDlManager(){
@@ -6509,6 +6522,21 @@ function closeDlManager(){
   if(sheet)sheet.classList.remove('open');
   if(overlay)overlay.classList.remove('on');
   _dlMgrOpen=false;
+  _dlMgrSelectMode=false;
+  _dlMgrSelected={};
+}
+
+function _dlMgrFetchAndRefresh(){
+  var pdfP=(window.PdfStore&&PdfStore.supported())?PdfStore.listAll():Promise.resolve([]);
+  pdfP.then(function(pdfs){
+    if(!_dlMgrOpen)return;
+    var audio=(window.AudioDownloads&&AudioDownloads.getAllStats)
+      ?AudioDownloads.getAllStats().filter(function(r){return r.bytes>0||r.surahs>0;})
+      :[];
+    _dlMgrCache.pdfs=pdfs;
+    _dlMgrCache.audio=audio;
+    _renderDlMgrBodyWith(pdfs,audio);
+  });
 }
 
 function _fmtDlBytes(b){
@@ -6526,11 +6554,24 @@ function _dlMgrSec(label,icoClass){
   return s;
 }
 
-// opts: {circular:true} for reciter avatars
+// opts: {circular, select, selected, onSelect}
 function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete,opts){
   var circular=!!(opts&&opts.circular);
+  var selectMode=!!(opts&&opts.select);
+  var isSelected=!!(opts&&opts.selected);
+  var onSelect=opts&&opts.onSelect;
   var row=el('div','');
   row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-subtle,rgba(128,128,128,.07))';
+  if(isSelected)row.style.background='rgba(var(--accent-rgb,34,197,94),.06)';
+
+  // Checkbox (select mode) or thumbnail
+  if(selectMode){
+    var chk=el('div','dl-item-check'+(isSelected?' on':''));
+    if(isSelected){var chkIco=icon('fas fa-check');chkIco.style.fontSize='.65rem';chk.appendChild(chkIco);}
+    row.appendChild(chk);
+    on(row,'click',function(){if(onSelect)onSelect();});
+    row.style.cursor='pointer';
+  }
 
   // Thumbnail / icon
   var thSize=circular?'44px':'40px';
@@ -6542,7 +6583,7 @@ function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete,opts){
     var cImg=document.createElement('img');cImg.src=coverUrl;cImg.style.cssText='width:100%;height:100%;object-fit:cover';
     cImg.onerror=function(){this.parentNode.textContent=flag||'';};th.appendChild(cImg);
   }else if(flag){th.textContent=flag;th.style.fontSize='1.4rem';}
-  else{var thIco=icon('fas fa-headphones');thIco.style.cssText='color:var(--text-tertiary);font-size:.9rem';th.appendChild(thIco);}
+  else{var thIco=icon('fas fa-headphones');thIco.style.cssText='color:var(--text3);font-size:.9rem';th.appendChild(thIco);}
   row.appendChild(th);
 
   // Info
@@ -6550,24 +6591,25 @@ function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete,opts){
   var tEl=el('div','');tEl.style.cssText='font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)';tEl.textContent=title;
   var szEl=el('div','');szEl.style.cssText='font-size:.76rem;color:var(--accent);margin-top:3px;font-variant-numeric:tabular-nums';szEl.textContent=size;
   info.appendChild(tEl);info.appendChild(szEl);
-  if(sub){var subEl=el('div','');subEl.style.cssText='font-size:.74rem;color:var(--text-tertiary);margin-top:1px';subEl.textContent=sub;info.appendChild(subEl);}
+  if(sub){var subEl=el('div','');subEl.style.cssText='font-size:.74rem;color:var(--text3);margin-top:1px';subEl.textContent=sub;info.appendChild(subEl);}
   row.appendChild(info);
 
-  // Tap chevron (for items with a detail view)
-  if(onTap){
-    var chv=icon('fas fa-chevron-left');chv.style.cssText='color:var(--text-tertiary);font-size:.72rem;flex-shrink:0;margin-right:4px';
-    row.appendChild(chv);
-    on(row,'click',function(e){if(!e.target.closest('[data-dlmgr-del]'))onTap();});
-    row.style.cursor='pointer';
-  }
-
-  // Delete button
-  if(onDelete){
-    var delBtn=el('button','');delBtn.setAttribute('data-dlmgr-del','1');
-    delBtn.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(220,50,50,.1);display:flex;align-items:center;justify-content:center;color:var(--danger,#e05);flex-shrink:0;border:none;cursor:pointer;transition:background .15s';
-    var delIco=icon('fas fa-trash-alt');delIco.style.fontSize='.8rem';delBtn.appendChild(delIco);
-    on(delBtn,'click',function(e){e.stopPropagation();haptic([30]);onDelete();});
-    row.appendChild(delBtn);
+  if(!selectMode){
+    // Tap chevron
+    if(onTap){
+      var chv=icon('fas fa-chevron-left');chv.style.cssText='color:var(--text3);font-size:.72rem;flex-shrink:0;margin-right:4px';
+      row.appendChild(chv);
+      on(row,'click',function(e){if(!e.target.closest('[data-dlmgr-del]'))onTap();});
+      row.style.cursor='pointer';
+    }
+    // Delete button
+    if(onDelete){
+      var delBtn=el('button','');delBtn.setAttribute('data-dlmgr-del','1');
+      delBtn.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(220,50,50,.1);display:flex;align-items:center;justify-content:center;color:var(--danger,#e05);flex-shrink:0;border:none;cursor:pointer;transition:background .15s';
+      var delIco=icon('fas fa-trash-alt');delIco.style.fontSize='.8rem';delBtn.appendChild(delIco);
+      on(delBtn,'click',function(e){e.stopPropagation();haptic([30]);onDelete();});
+      row.appendChild(delBtn);
+    }
   }
   return row;
 }
@@ -6577,120 +6619,178 @@ var _dlMgrTab='books'; // active tab: 'books' | 'audio'
 function _renderDlMgrBody(){
   var body=$('dlMgrBody');
   if(!body)return;
+  // Show spinner only if no cache available
+  if(_dlMgrCache.pdfs===null){
+    clear(body);
+    var sp=el('div','');sp.style.cssText='text-align:center;padding:40px;color:var(--text-tertiary)';
+    sp.appendChild(icon('fas fa-circle-notch fa-spin'));body.appendChild(sp);
+  }
+  _dlMgrFetchAndRefresh();
+}
+
+function _renderDlMgrBodyWith(pdfCached,audioAll){
+  var body=$('dlMgrBody');
+  if(!body||!_dlMgrOpen)return;
   clear(body);
 
-  var sp=el('div','');sp.style.cssText='text-align:center;padding:40px;color:var(--text-tertiary)';
-  sp.appendChild(icon('fas fa-circle-notch fa-spin'));body.appendChild(sp);
+  var editBtn=$('dlMgrEditBtn');
 
-  var pdfP=(window.PdfStore&&PdfStore.supported())?PdfStore.listAll():Promise.resolve([]);
-  pdfP.then(function(pdfCached){
-    if(!_dlMgrOpen)return;
-    clear(body);
+  if(!pdfCached.length&&!audioAll.length){
+    if(editBtn)editBtn.style.display='none';
+    var emp=el('div','');
+    emp.style.cssText='display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 24px;color:var(--text-tertiary)';
+    var empIc=icon('fas fa-cloud-download-alt');empIc.style.cssText='font-size:2.4rem;opacity:.3';emp.appendChild(empIc);
+    var empT=el('div','');empT.style.cssText='font-size:.92rem;font-weight:600';empT.textContent=t('dl.nothing_downloaded')||'چ دابەزاندن نینن';emp.appendChild(empT);
+    var empS=el('div','');empS.style.cssText='font-size:.78rem;opacity:.5;text-align:center;line-height:1.7;direction:rtl;max-width:220px';
+    empS.textContent=t('dl.nothing_hint')||'پەرتووک و دەنگان دابەزینە بۆ خواندنا بێ ئینتەرنێت';emp.appendChild(empS);
+    body.appendChild(emp);
+    return;
+  }
+  if(editBtn)editBtn.style.display='';
 
-    var audioAll=(window.AudioDownloads&&AudioDownloads.getAllStats)
-      ?AudioDownloads.getAllStats().filter(function(r){return r.bytes>0||r.surahs>0;})
-      :[];
+  // Auto-select the tab with content
+  if(_dlMgrTab==='books'&&!pdfCached.length&&audioAll.length)_dlMgrTab='audio';
+  if(_dlMgrTab==='audio'&&!audioAll.length&&pdfCached.length)_dlMgrTab='books';
 
-    if(!pdfCached.length&&!audioAll.length){
-      var emp=el('div','');
-      emp.style.cssText='display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 24px;color:var(--text-tertiary)';
-      var empIc=icon('fas fa-cloud-download-alt');empIc.style.cssText='font-size:2.4rem;opacity:.3';emp.appendChild(empIc);
-      var empT=el('div','');empT.style.cssText='font-size:.92rem;font-weight:600';empT.textContent=t('dl.nothing_downloaded')||'چ دابەزاندن نینن';emp.appendChild(empT);
-      var empS=el('div','');empS.style.cssText='font-size:.78rem;opacity:.5;text-align:center;line-height:1.7;direction:rtl;max-width:220px';
-      empS.textContent=t('dl.nothing_hint')||'پەرتووک و دەنگان دابەزینە بۆ خواندنا بێ ئینتەرنێت';emp.appendChild(empS);
-      body.appendChild(emp);
-      return;
-    }
+  // ── Tab bar ─────────────────────────────────────────
+  var tabRow=el('div','book-cat-row');
+  tabRow.style.cssText='margin:0;padding:0 4px';
+  function _makeTab(key,label,count){
+    var btn=el('button','book-cat-btn'+(_dlMgrTab===key?' on':''));
+    btn.textContent=label+(count?' ('+count+')':'');
+    on(btn,'click',function(){_dlMgrTab=key;_dlMgrSelected={};_renderDlMgrBodyWith(pdfCached,audioAll);});
+    tabRow.appendChild(btn);
+  }
+  _makeTab('books',t('dl.books_section')||'پەرتوکەکان',pdfCached.length);
+  _makeTab('audio',t('dl.audio_section')||'دەنگ',audioAll.length);
+  body.appendChild(tabRow);
 
-    // Auto-select the tab that has content if current tab is empty
-    if(_dlMgrTab==='books'&&!pdfCached.length&&audioAll.length) _dlMgrTab='audio';
-    if(_dlMgrTab==='audio'&&!audioAll.length&&pdfCached.length) _dlMgrTab='books';
+  // ── Storage line ─────────────────────────────────────
+  var totalB=pdfCached.reduce(function(s,c){return s+c.bytes;},0)+audioAll.reduce(function(s,r){return s+r.bytes;},0);
+  if(totalB>0){
+    var stBar=el('div','');
+    stBar.style.cssText='display:flex;align-items:center;gap:6px;padding:8px 16px 4px;font-size:.74rem;color:var(--text3)';
+    var stIc=icon('fas fa-hdd');stIc.style.cssText='color:var(--accent);font-size:.68rem';stBar.appendChild(stIc);
+    stBar.appendChild(document.createTextNode(_fmtDlBytes(totalB)));
+    body.appendChild(stBar);
+  }
 
-    // ── Tab bar (book-cat-row pattern) ─────────────────
-    var tabRow=el('div','book-cat-row');
-    tabRow.style.cssText='margin:0 0 0;padding:0 4px';
-
-    function _makeTab(key,label,count){
-      var btn=el('button','book-cat-btn'+(_dlMgrTab===key?' on':''));
-      btn.textContent=label+(count?' ('+count+')':'');
-      on(btn,'click',function(){
-        _dlMgrTab=key;
-        _renderDlMgrBody();
+  // ── Select bar (visible in select mode) ─────────────
+  var curItems=_dlMgrTab==='books'?pdfCached:audioAll;
+  if(_dlMgrSelectMode&&curItems.length){
+    var selBar=el('div','dl-sel-bar');
+    var selAll=el('button','dl-sel-all',t('dl.select_all')||'هەمییان هەڵبژێرە');
+    var selCount=Object.keys(_dlMgrSelected).length;
+    on(selAll,'click',function(){
+      curItems.forEach(function(item){
+        var k=_dlMgrTab==='books'?'book:'+item.pdfUrl:'audio:'+item.id;
+        _dlMgrSelected[k]=true;
       });
-      tabRow.appendChild(btn);
-    }
-    if(pdfCached.length||true) _makeTab('books',t('dl.books_section')||'پەرتوکەکان',pdfCached.length);
-    if(audioAll.length||true)  _makeTab('audio',t('dl.audio_section')||'دەنگ',audioAll.length);
-    body.appendChild(tabRow);
+      _renderDlMgrBodyWith(pdfCached,audioAll);
+    });
+    var selDel=el('button','dl-sel-del');
+    selDel.textContent=(t('dl.delete_selected')||'سڕینەوە')+(selCount?' ('+selCount+')':'');
+    if(!selCount)selDel.disabled=true;
+    on(selDel,'click',function(){
+      var keys=Object.keys(_dlMgrSelected);
+      if(!keys.length)return;
+      var bookKeys=keys.filter(function(k){return k.indexOf('book:')=== 0;});
+      var audioKeys=keys.filter(function(k){return k.indexOf('audio:')===0;});
+      var tasks=[];
+      bookKeys.forEach(function(k){
+        var url=k.slice(5);
+        var entry=pdfCached.filter(function(e){return e.pdfUrl===url;})[0];
+        if(entry&&window.PdfStore){
+          var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(url):null;
+          tasks.push(PdfStore.remove(book||{pdf_url:url}));
+        }
+      });
+      audioKeys.forEach(function(k){
+        var id=k.slice(6);
+        if(window.AudioDownloads)tasks.push(AudioDownloads.deleteReciter(id));
+      });
+      Promise.all(tasks).then(function(){
+        _dlMgrSelected={};
+        _dlMgrSelectMode=false;
+        _dlMgrCache.pdfs=null;
+        if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
+        renderAudioSettings();
+        _renderDlMgrBody();
+        toast(t('toast.dl_removed')||'سڕایەوە');
+      });
+    });
+    selBar.appendChild(selDel);
+    var spacer=el('div','');spacer.style.flex='1';selBar.appendChild(spacer);
+    selBar.appendChild(selAll);
+    body.appendChild(selBar);
+  }
 
-    // ── Storage line (compact, below tabs) ─────────────
-    var totalB=pdfCached.reduce(function(s,c){return s+c.bytes;},0)+audioAll.reduce(function(s,r){return s+r.bytes;},0);
-    if(totalB>0){
-      var stBar=el('div','');
-      stBar.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 16px 4px;font-size:.76rem;color:var(--text-tertiary)';
-      var stIc=icon('fas fa-hdd');stIc.style.cssText='color:var(--accent);font-size:.7rem';stBar.appendChild(stIc);
-      stBar.appendChild(document.createTextNode((t('dl.storage_used')||'جێی بەکارهاتوو')+': '+_fmtDlBytes(totalB)));
-      body.appendChild(stBar);
-    }
+  // ── Tab content ─────────────────────────────────────
+  var content=el('div','');content.style.cssText='padding:4px 16px 8px';
 
-    // ── Tab content ─────────────────────────────────────
-    var content=el('div','');content.style.cssText='padding:4px 16px 8px';
-
-    if(_dlMgrTab==='books'){
-      if(!pdfCached.length){
-        var noB=el('div','');noB.style.cssText='padding:32px;text-align:center;color:var(--text-tertiary);font-size:.85rem;direction:rtl';
-        noB.textContent=t('dl.no_books')||'هیچ پەرتوکێک نەهاتیە داونلۆد کرن';content.appendChild(noB);
-      } else {
-        pdfCached.forEach(function(entry){
-          var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;
-          var title=book?(book.title_ku||book.title_ar||entry.pdfUrl.split('/').pop()):entry.pdfUrl.split('/').pop();
-          content.appendChild(_dlMgrItem(
-            book?book.cover_url:null, null, title, _fmtDlBytes(entry.bytes), null, null,
-            function(){
-              if(!window.PdfStore)return;
-              PdfStore.remove(book||{pdf_url:entry.pdfUrl}).then(function(){
-                if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
-                if(_dlMgrOpen)_renderDlMgrBody();
-                toast(t('toast.dl_removed')||'سڕایەوە');
-              });
-            }
-          ));
-        });
-      }
-    } else {
-      if(!audioAll.length){
-        var noA=el('div','');noA.style.cssText='padding:32px;text-align:center;color:var(--text-tertiary);font-size:.85rem;direction:rtl';
-        noA.textContent=t('dl.no_audio')||'هیچ دەنگێک نەهاتیە داونلۆد کرن';content.appendChild(noA);
-      } else {
-        audioAll.forEach(function(r){
-          // Real name + photo from app.js module data — avoids showing raw IDs
-          var rInfo=RECITERS.filter(function(x){return x.id===r.id;})[0]||null;
-          var realName=rInfo?rInfo.name:r.name;
-          var flag=rInfo?(rInfo.flag||''):(r.flag||'');
-          var photo=RECITER_PHOTOS[r.id]||null;
-          var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
-          content.appendChild(_dlMgrItem(
-            photo, flag, realName, _fmtDlBytes(r.bytes), sub,
-            function(){closeDlManager();openDlSheet(r.id);},
-            function(){
-              AudioDownloads.deleteReciter(r.id).then(function(){
-                if(_dlMgrOpen)_renderDlMgrBody();
-                renderAudioSettings();
-                toast(t('toast.dl_removed')||'سڕایەوە');
-              });
-            },
-            {circular:true}
-          ));
-        });
-      }
+  if(_dlMgrTab==='books'){
+    if(!pdfCached.length){
+      var noB=el('div','');noB.style.cssText='padding:32px;text-align:center;color:var(--text3);font-size:.85rem;direction:rtl';
+      noB.textContent=t('dl.no_books')||'هیچ پەرتوکێک نەهاتیە داونلۆد کرن';content.appendChild(noB);
+    }else{
+      pdfCached.forEach(function(entry){
+        var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;
+        var title=book?(book.title_ku||book.title_ar||entry.pdfUrl.split('/').pop()):entry.pdfUrl.split('/').pop();
+        var selKey='book:'+entry.pdfUrl;
+        var isSel=!!_dlMgrSelected[selKey];
+        content.appendChild(_dlMgrItem(
+          book?book.cover_url:null,null,title,_fmtDlBytes(entry.bytes),null,null,
+          _dlMgrSelectMode?null:function(){
+            if(!window.PdfStore)return;
+            PdfStore.remove(book||{pdf_url:entry.pdfUrl}).then(function(){
+              if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
+              _dlMgrCache.pdfs=null;
+              if(_dlMgrOpen)_renderDlMgrBody();
+              toast(t('toast.dl_removed')||'سڕایەوە');
+            });
+          },
+          _dlMgrSelectMode?{select:true,selected:isSel,onSelect:function(){
+            if(_dlMgrSelected[selKey])delete _dlMgrSelected[selKey];
+            else _dlMgrSelected[selKey]=true;
+            _renderDlMgrBodyWith(pdfCached,audioAll);
+          }}:null
+        ));
+      });
     }
-    body.appendChild(content);
-  }).catch(function(){
-    if(!_dlMgrOpen)return;
-    clear(body);
-    var errEl=el('div','');errEl.style.cssText='padding:32px;text-align:center;color:var(--text-tertiary);font-size:.85rem';
-    errEl.textContent=t('common.error')||'هەڵە ڕوویدا';body.appendChild(errEl);
-  });
+  }else{
+    if(!audioAll.length){
+      var noA=el('div','');noA.style.cssText='padding:32px;text-align:center;color:var(--text3);font-size:.85rem;direction:rtl';
+      noA.textContent=t('dl.no_audio')||'هیچ دەنگێک نەهاتیە داونلۆد کرن';content.appendChild(noA);
+    }else{
+      audioAll.forEach(function(r){
+        var rInfo=RECITERS.filter(function(x){return x.id===r.id;})[0]||null;
+        var realName=rInfo?rInfo.name:r.name;
+        var flag=rInfo?(rInfo.flag||''):(r.flag||'');
+        var photo=RECITER_PHOTOS[r.id]||null;
+        var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
+        var selKey='audio:'+r.id;
+        var isSel=!!_dlMgrSelected[selKey];
+        content.appendChild(_dlMgrItem(
+          photo,flag,realName,_fmtDlBytes(r.bytes),sub,
+          _dlMgrSelectMode?null:function(){closeDlManager();openDlSheet(r.id);},
+          _dlMgrSelectMode?null:function(){
+            AudioDownloads.deleteReciter(r.id).then(function(){
+              _dlMgrCache.pdfs=null;
+              if(_dlMgrOpen)_renderDlMgrBody();
+              renderAudioSettings();
+              toast(t('toast.dl_removed')||'سڕایەوە');
+            });
+          },
+          _dlMgrSelectMode?{circular:true,select:true,selected:isSel,onSelect:function(){
+            if(_dlMgrSelected[selKey])delete _dlMgrSelected[selKey];
+            else _dlMgrSelected[selKey]=true;
+            _renderDlMgrBodyWith(pdfCached,audioAll);
+          }}:{circular:true}
+        ));
+      });
+    }
+  }
+  body.appendChild(content);
 }
 
 function _fmtVerifyDate(ts){
