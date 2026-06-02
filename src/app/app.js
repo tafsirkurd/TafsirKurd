@@ -6505,7 +6505,17 @@ function openDlManager(){
   overlay.onclick=closeDlManager;
   $('dlMgrClose').onclick=closeDlManager;
   var editBtn=$('dlMgrEditBtn');
-  if(editBtn)editBtn.onclick=function(){_dlMgrSelectMode=!_dlMgrSelectMode;_dlMgrSelected={};_renderDlMgrBody();};
+  if(editBtn){
+    editBtn.textContent=_dlMgrSelectMode?'پاشگەزبوون':'هەڵبژارتن';
+    editBtn.onclick=function(){
+      _dlMgrSelectMode=!_dlMgrSelectMode;
+      _dlMgrSelected={};
+      editBtn.textContent=_dlMgrSelectMode?'پاشگەزبوون':'هەڵبژارتن';
+      editBtn.style.color=_dlMgrSelectMode?'var(--danger,#e05)':'var(--accent)';
+      if(_dlMgrCache.pdfs!==null)_renderDlMgrBodyWith(_dlMgrCache.pdfs,_dlMgrCache.audio||[]);
+      else _renderDlMgrBody();
+    };
+  }
   // Show cached content instantly, then refresh in background
   if(_dlMgrCache.pdfs!==null){_renderDlMgrBodyWith(_dlMgrCache.pdfs,_dlMgrCache.audio||[]);}
   else{_renderDlMgrBody();}
@@ -6652,11 +6662,13 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
   if(_dlMgrTab==='books'&&!pdfCached.length&&audioAll.length)_dlMgrTab='audio';
   if(_dlMgrTab==='audio'&&!audioAll.length&&pdfCached.length)_dlMgrTab='books';
 
-  // ── Tab bar ─────────────────────────────────────────
-  var tabRow=el('div','book-cat-row');
-  tabRow.style.cssText='margin:0;padding:0 4px';
+  // ── Tab bar (custom — avoids overflow-x:auto iOS tap bug) ──
+  var tabRow=el('div','');
+  tabRow.style.cssText='display:flex;border-bottom:1.5px solid var(--border);margin-bottom:4px;touch-action:manipulation';
   function _makeTab(key,label,count){
-    var btn=el('button','book-cat-btn'+(_dlMgrTab===key?' on':''));
+    var btn=el('button','');
+    var isOn=_dlMgrTab===key;
+    btn.style.cssText='flex:1;padding:10px 8px;font-size:.82rem;font-weight:600;background:transparent;border:none;border-bottom:2.5px solid '+(isOn?'var(--accent)':'transparent')+';margin-bottom:-1.5px;color:'+(isOn?'var(--accent)':'var(--text2)')+';cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent';
     btn.textContent=label+(count?' ('+count+')':'');
     on(btn,'click',function(){_dlMgrTab=key;_dlMgrSelected={};_renderDlMgrBodyWith(pdfCached,audioAll);});
     tabRow.appendChild(btn);

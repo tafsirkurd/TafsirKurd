@@ -4234,7 +4234,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
   <div class="dl-sheet-hdr">
     <button class="dl-sheet-close" id="dlMgrClose"><i class="fas fa-times"></i></button>
     <span class="dl-sheet-name" data-i18n="dl.manage">داونلۆدەکان</span>
-    <button class="dl-sheet-close" id="dlMgrEditBtn" style="background:none;color:var(--accent);font-size:.75rem;font-weight:700;width:auto;padding:0 4px"><i class="fas fa-check-square"></i></button>
+    <button class="dl-sheet-close" id="dlMgrEditBtn" style="background:var(--bg2);width:72px;font-size:.75rem;font-weight:700;color:var(--accent);border-radius:20px;padding:0 10px">هەڵبژارتن</button>
   </div>
   <div class="dl-sheet-body" id="dlMgrBody"></div>
 </div>
@@ -4464,7 +4464,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
-<script src="/app/app.js?v=994"></script>
+<script src="/app/app.js?v=995"></script>
 <script src="/utils/swipe-back.js?v=2"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
