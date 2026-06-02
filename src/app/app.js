@@ -10725,6 +10725,16 @@ function checkAuthSession(){
       _renderHash.settings=null;
       stopCloudSync();
       if(S.tab==='settings')renderSettings();
+      // Clear stale auth callback URL params so a failed/expired OAuth token
+      // doesn't cause a 403 loop on every subsequent page load.
+      // Normal sign-outs never have auth params in the URL — this only fires
+      // when _getSessionFromURL failed and Supabase left the hash uncleaned.
+      try{
+        var _ah=window.location.hash||'';
+        if(_ah&&(_ah.indexOf('access_token=')>=0||_ah.indexOf('error=')>=0)){window.location.hash='';}
+        var _as=window.location.search||'';
+        if(_as&&_as.indexOf('code=')>=0){var _au=new URL(window.location.href);_au.searchParams.delete('code');window.history.replaceState(window.history.state,'',_au.toString());}
+      }catch(_ae){}
     }
   });
 }
