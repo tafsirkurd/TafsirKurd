@@ -2080,25 +2080,39 @@ var H=(function(){
   var _last=0;
   var _MIN=50; // ms minimum between standard haptics — prevents spam
 
+  function _hp(){return window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;}
+
   function _std(cap,webMs){
     if(!S.hapticFeedback)return;
     var now=Date.now();
     if(now-_last<_MIN)return;
     _last=now;
-    try{
-      var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
-      if(Hp)cap(Hp);
-      else if(navigator.vibrate)navigator.vibrate([webMs]);
-    }catch(e){}
+    var Hp=_hp();
+    if(Hp){
+      try{cap(Hp);}catch(e){
+        try{Hp.vibrate({duration:webMs});}catch(e2){
+          if(navigator.vibrate)navigator.vibrate([webMs]);
+        }
+      }
+    } else if(navigator.vibrate){
+      navigator.vibrate([webMs]);
+    }
   }
   function _note(type,webPat){
     if(!S.hapticFeedback)return;
-    _last=Date.now()+200; // block standard haptics for 200ms after notification
-    try{
-      var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
-      if(Hp)Hp.notification({type:type});
-      else if(navigator.vibrate)navigator.vibrate(webPat);
-    }catch(e){}
+    _last=Date.now()+200;
+    var Hp=_hp();
+    if(Hp){
+      try{Hp.notification({type:type});}catch(e){
+        try{Hp.impact({style:'MEDIUM'});}catch(e2){
+          try{Hp.vibrate({duration:webPat[0]||40});}catch(e3){
+            if(navigator.vibrate)navigator.vibrate(webPat);
+          }
+        }
+      }
+    } else if(navigator.vibrate){
+      navigator.vibrate(webPat);
+    }
   }
 
   return {
@@ -10013,8 +10027,7 @@ function renderSettings(){
     _hapticNote.textContent=t('settings.haptic_native')||'تەنها لە ئاپی ڕەسمی کار دەکات';
     var _hapticLabelWrap=_hapticRow.querySelector('.setting-label-wrap');
     if(_hapticLabelWrap)_hapticLabelWrap.appendChild(_hapticNote);
-    var _hapticToggle=_hapticRow.querySelector('.toggle');
-    if(_hapticToggle){_hapticToggle.style.opacity='0.4';_hapticToggle.style.pointerEvents='none';}
+    // Keep toggle clickable — Capacitor bridge may not be ready at render time
   }
   g2.appendChild(_hapticRow);
   frag.appendChild(g2);
