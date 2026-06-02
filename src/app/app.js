@@ -12257,8 +12257,7 @@ function renderProfile(panel){
   on(deleteBtn,'click',function(){
     _tkConfirm({
       icon:'⚠️',
-      title:t('profile.confirm_delete1')||'تو پشتڕاستی ژ ژێبرنا ھەژمارێ؟',
-      msg:t('profile.confirm_delete1_sub')||'زڤڕین بۆ ڤی کاری نینە',
+      title:(t('profile.confirm_delete1')||'تو پشتڕاستی ژ ژێبرنا ھەژمارێ؟')+'\n'+(t('profile.confirm_delete1_sub')||'زڤڕین بۆ ڤی کاری نینە'),
       yes:t('profile.confirm_delete1_yes')||'بەردەوام بە',
       no:t('profile.confirm_no')||'نەخێر',
       danger:false,

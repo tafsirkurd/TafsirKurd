@@ -929,6 +929,8 @@
   "ppp.missed_label": "نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)",
   "ppp.weakest_day": "کەیفخۆشترین ڕۆژ",
   "ppp.monthly_avg": "تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ",
+  "common.yes": "بەلێ",
+  "common.no": "نەخێر",
   "common.loading": "بارکرن...",
   "common.error": "خەلەتیەک چێبوو",
   "common.retry": "دووبارە هەوڵ بدە",
