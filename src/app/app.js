@@ -7981,11 +7981,12 @@ function renderGoals(){
   monthNav.appendChild(nextMo);
   calSec.appendChild(monthNav);
 
-  // Day-of-week headers (Sat→Sun, RTL: شەمبی rightmost)
+  // Day-of-week headers: Sat,Sun,Mon,Tue,Wed,Thu,Fri (RTL: شەمبی rightmost)
   var dayHdrs=_KU_DAYS;
+  var _dhOrder=[6,0,1,2,3,4,5];
   var hdrsRow=el('div','month-cal-grid');
-  for(var dh=6;dh>=0;dh--){
-    hdrsRow.appendChild(el('div','month-cal-dh',dayHdrs[dh]));
+  for(var dh=0;dh<7;dh++){
+    hdrsRow.appendChild(el('div','month-cal-dh',dayHdrs[_dhOrder[dh]]));
   }
   calSec.appendChild(hdrsRow);
 
@@ -8687,9 +8688,10 @@ function _buildPppCal(log){
   nav.appendChild(el('span','ppp-cal-month',t('goals.months.'+(month+1))+' '+year));
   nav.appendChild(nextBtn);
   wrap.appendChild(nav);
-  // Day headers (Sat→Sun, RTL: شەمبی rightmost)
+  // Day headers: Sat,Sun,Mon,Tue,Wed,Thu,Fri (RTL: شەمبی rightmost)
   var dhr=el('div','ppp-cal-grid');
-  for(var _dhi=6;_dhi>=0;_dhi--)dhr.appendChild(el('div','ppp-cal-dh',_KU_DAYS[_dhi]));
+  var _pppDhOrder=[6,0,1,2,3,4,5];
+  for(var _dhi=0;_dhi<7;_dhi++)dhr.appendChild(el('div','ppp-cal-dh',_KU_DAYS[_pppDhOrder[_dhi]]));
   wrap.appendChild(dhr);
   // Cells
   var firstDow=tgt.getDay();var daysInMonth=new Date(year,month+1,0).getDate();
