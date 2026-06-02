@@ -11687,6 +11687,7 @@ App.forceSync=function(){
 };
 
 /* ===== PROFILE PAGE ===== */
+var _profileDevicesCache=null;
 App.openProfile=function(){
   if(!S.user)return;
   var panel=$('profilePanel');
@@ -11774,16 +11775,17 @@ function renderProfile(panel){
   provRow.appendChild(el('div','pp-row-label',t('profile.login_method')));
   provRow.appendChild(el('div','pp-row-value',providerLabel));
   infoCard.appendChild(provRow);
-  // Member since (async)
+  // Member since — use cached session (no network call)
   if(S.supabase){
     var sinceRow=el('div','pp-row');
     sinceRow.appendChild(el('div','pp-row-label',t('profile.member_since')));
     var sinceVal=el('div','pp-row-value','…');
     sinceRow.appendChild(sinceVal);
     infoCard.appendChild(sinceRow);
-    S.supabase.auth.getUser().then(function(resp){
-      if(resp.data&&resp.data.user&&resp.data.user.created_at){
-        var d=new Date(resp.data.user.created_at);
+    S.supabase.auth.getSession().then(function(resp){
+      var u=resp.data&&resp.data.session&&resp.data.session.user;
+      if(u&&u.created_at){
+        var d=new Date(u.created_at);
         sinceVal.textContent=d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
       }else{sinceRow.remove();}
     });
@@ -11898,11 +11900,16 @@ function renderProfile(panel){
   var ONLINE_MS=10*60*1000;       // 10 min = "active now"
 
   function _loadDevices(){
-    clear(devList);
-    var devLoading=el('div','pp-devices-loading');
-    devLoading.appendChild(icon('fas fa-circle-notch fa-spin'));
-    devLoading.appendChild(document.createTextNode(' '+t('profile.devices_loading')));
-    devList.appendChild(devLoading);
+    // Show cached list instantly; always fetch fresh in background
+    if(_profileDevicesCache){
+      _applyDevices(_profileDevicesCache);
+    }else{
+      clear(devList);
+      var devLoading=el('div','pp-devices-loading');
+      devLoading.appendChild(icon('fas fa-circle-notch fa-spin'));
+      devLoading.appendChild(document.createTextNode(' '+t('profile.devices_loading')));
+      devList.appendChild(devLoading);
+    }
     devRefreshBtn.disabled=true;
 
     S.supabase.from('user_sessions')
@@ -11911,12 +11918,22 @@ function renderProfile(panel){
       .order('last_active_at',{ascending:false})
       .then(function(resp){
         devRefreshBtn.disabled=false;
+        if(!resp.error&&resp.data){_profileDevicesCache=resp.data;}
+        _applyDevices(resp.error?null:resp.data);
+      }).catch(function(){
+        devRefreshBtn.disabled=false;
         clear(devList);
-        clear(_devAllOutHolder);
-        if(resp.error||!resp.data||!resp.data.length){
-          devList.appendChild(el('div','pp-devices-empty',t('profile.devices_none')));
-          return;
-        }
+        devList.appendChild(el('div','pp-devices-empty',t('profile.devices_error')));
+      });
+  }
+
+  function _applyDevices(data){
+    clear(devList);
+    clear(_devAllOutHolder);
+    if(!data||!data.length){
+      devList.appendChild(el('div','pp-devices-empty',t('profile.devices_none')));
+      return;
+    }
         var myId=_getDeviceId();
         resp.data.forEach(function(sess){
           var isThis=sess.device_id===myId;
@@ -12029,11 +12046,6 @@ function renderProfile(panel){
           })(allOutBtn);
           _devAllOutHolder.appendChild(allOutBtn);
         }
-      }).catch(function(){
-        devRefreshBtn.disabled=false;
-        clear(devList);
-        devList.appendChild(el('div','pp-devices-empty',t('profile.devices_error')));
-      });
   }
 
   on(devRefreshBtn,'click',_loadDevices);
