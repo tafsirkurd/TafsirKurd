@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1081';
+const CACHE_NAME = 'tafsir-kurd-v1082';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
