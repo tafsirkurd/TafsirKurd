@@ -2379,7 +2379,7 @@
         card.classList.add('prayer-grid-card--interactive');
         var tapHint = cel('div', 'pgc-tap-hint');
         var tapHintI = document.createElement('i');
-        tapHintI.className = 'fas fa-chevron-up';
+        tapHintI.className = 'fas fa-angle-left';
         tapHint.appendChild(tapHintI);
         card.appendChild(tapHint);
 
