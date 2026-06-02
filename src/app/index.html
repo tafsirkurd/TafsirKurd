@@ -3458,13 +3458,14 @@ html.is-ipad #panelIslamvoice .iv-home{max-width:1060px;margin:0 auto;width:100%
   html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100%;max-width:720px;display:flex;align-items:center;justify-content:center;gap:32px}
   html.is-ipad .mushaf-qcf-line,html.is-ipad .mushaf-flow-verse{font-size:var(--mushaf-size,28px)!important;line-height:var(--mushaf-lh,2.0)!important}
 }
-/* ── Page-by-page mushaf (portrait iPad 768–1023px): one page per swipe ── */
+/* ── Mushaf vertical scroll (portrait iPad 768–1023px) ── */
 @media (min-width:768px) and (max-width:1023px){
-  html.is-ipad .mushaf-view{display:flex;flex-direction:row;align-items:stretch;overflow-x:scroll;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0!important;position:relative}
-  html.is-ipad .mushaf-spread{width:100%;min-width:100%;height:100%;display:flex;flex-direction:row;justify-content:center;scroll-snap-align:start;scroll-snap-stop:always;position:relative;overflow:hidden;flex-shrink:0}
+  html.is-ipad .mushaf-view{display:flex;flex-direction:column;align-items:center;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:20px 16px calc(var(--safe-b,0px)+40px)!important}
+  html.is-ipad .mushaf-spread{display:block!important;width:100%;max-width:600px}
   html.is-ipad .mushaf-spread::before,html.is-ipad .mushaf-view::before{display:none!important}
-  html.is-ipad .mushaf-spread .mushaf-text-page{width:100%!important;max-width:100%!important;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0!important;border-radius:0!important;padding:32px 28px!important;direction:rtl;box-sizing:border-box;box-shadow:none!important}
-  html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100%;min-width:100%;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;gap:24px;flex-shrink:0}
+  html.is-ipad .mushaf-spread .mushaf-text-page{width:100%!important;max-width:600px!important;flex:unset!important;min-width:unset!important;height:auto!important;overflow-x:hidden;margin:0 0 24px!important;border-radius:18px!important;padding:36px 32px 28px!important;direction:rtl;box-sizing:border-box;box-shadow:0 4px 32px rgba(0,0,0,.12)!important}
+  html.is-ipad .mushaf-spread.spread-single{display:block!important}
+  html.is-ipad .mushaf-view>.mushaf-surah-nav{width:100%;max-width:600px;display:flex;align-items:center;justify-content:center;gap:24px}
 }
 
 /* ─── FastScrollController — right-side scroll grabber ─────────────────── */
