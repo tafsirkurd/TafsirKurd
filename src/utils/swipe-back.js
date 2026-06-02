@@ -13,7 +13,7 @@
   'use strict';
 
   // ── Tuning ──────────────────────────────────────────────────────────────────
-  var EDGE_PX   = 28;    // touch must start within this many px of left edge
+  var EDGE_PX   = 32;    // touch must start within this many px of left edge
   var LOCK_PX   = 10;    // movement before direction is decided
   var DIST_OK   = 80;    // px rightward travel → commit
   var VEL_OK    = 0.35;  // px/ms fast-flick threshold
