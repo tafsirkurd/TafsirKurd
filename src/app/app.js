@@ -11935,7 +11935,7 @@ function renderProfile(panel){
       return;
     }
         var myId=_getDeviceId();
-        resp.data.forEach(function(sess){
+        data.forEach(function(sess){
           var isThis=sess.device_id===myId;
           var lastActive=new Date(sess.last_active_at);
           var age=Date.now()-lastActive.getTime();
@@ -12007,7 +12007,7 @@ function renderProfile(panel){
           }
           devList.appendChild(row);
         });
-        var otherCount=resp.data.filter(function(s){return s.device_id!==myId;}).length;
+        var otherCount=data.filter(function(s){return s.device_id!==myId;}).length;
         if(otherCount>0){
           var allOutBtn=el('button','pp-device-all-out');
           allOutBtn.appendChild(icon('fas fa-circle-xmark'));
