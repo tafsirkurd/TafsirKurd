@@ -2379,8 +2379,10 @@
         card.classList.add('prayer-grid-card--interactive');
         var tapHint = cel('div', 'pgc-tap-hint');
         var tapHintI = document.createElement('i');
-        tapHintI.className = 'fas fa-angle-left';
+        tapHintI.className = 'fas fa-hand-point-up';
         tapHint.appendChild(tapHintI);
+        var tapHintTxt = document.createTextNode(' کرتە');
+        tapHint.appendChild(tapHintTxt);
         card.appendChild(tapHint);
 
         // Show done dot only if the prayer day matches the grid's calendar date.
