@@ -2377,6 +2377,9 @@
         })(name, timings));
         card.style.cursor = 'pointer';
         card.classList.add('prayer-grid-card--interactive');
+        var tapHint = cel('div', 'pgc-tap-hint');
+        tapHint.appendChild(icon('fas fa-angle-left'));
+        card.appendChild(tapHint);
 
         // Show done dot only if the prayer day matches the grid's calendar date.
         // Before Fajr, prayerDay() returns yesterday — don't bleed yesterday's done
