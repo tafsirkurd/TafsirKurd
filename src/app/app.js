@@ -9988,7 +9988,7 @@ function renderSettings(){
   [[icon('fas fa-quran'),totalRead,t('settings.stats_ayahs')],
    [icon('fas fa-fire'),streak,t('settings.stats_streak')],
    [icon('fas fa-bookmark'),bms.length,t('settings.stats_bookmarks')],
-   [icon('fas fa-trophy'),bestStreak,t('settings.stats_best_streak')||'باشترین زنجیرە'],
+   [icon('fas fa-trophy'),bestStreak,t('settings.stats_best_streak')||'بلندترین بەردەوامییا خواندنێ'],
    [icon('fas fa-star'),khatmCount,t('settings.stats_khatm')||'ختم'],
    [icon('fas fa-mosque'),totalPrayers,t('settings.stats_prayers')||'نڤێژ']
   ].forEach(function(item){
