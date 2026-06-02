@@ -9984,13 +9984,14 @@ function renderSettings(){
   var khatmCount=Math.floor(totalRead/6236);
   var pLog=getPrayerLog();
   var totalPrayers=Object.keys(pLog).reduce(function(acc,d){return acc+_TRACK_PRAYERS.filter(function(p){return pLog[d]&&pLog[d][p];}).length;},0);
+  function _tl(key,fb){var v=t(key);return(v&&v!==key)?v:fb;}
   var statsCard=el('div','stats-card');
-  [[icon('fas fa-quran'),totalRead,t('settings.stats_ayahs')],
-   [icon('fas fa-fire'),streak,t('settings.stats_streak')],
-   [icon('fas fa-bookmark'),bms.length,t('settings.stats_bookmarks')],
-   [icon('fas fa-trophy'),bestStreak,t('settings.stats_best_streak')||'بلندترین بەردەوامییا خواندنێ'],
-   [icon('fas fa-star'),khatmCount,t('settings.stats_khatm')||'ختم'],
-   [icon('fas fa-mosque'),totalPrayers,t('settings.stats_prayers')||'نڤێژ']
+  [[icon('fas fa-quran'),totalRead,_tl('settings.stats_ayahs','ئایەتێن خواندی')],
+   [icon('fas fa-fire'),streak,_tl('settings.stats_streak','بەردەوامیا ڕۆژان')],
+   [icon('fas fa-bookmark'),bms.length,_tl('settings.stats_bookmarks','نیشانکری')],
+   [icon('fas fa-trophy'),bestStreak,_tl('settings.stats_best_streak','بلندترین بەردەوامییا خواندنێ')],
+   [icon('fas fa-star'),khatmCount,_tl('settings.stats_khatm','ختم')],
+   [icon('fas fa-mosque'),totalPrayers,_tl('settings.stats_prayers','نڤێژ')]
   ].forEach(function(item){
     var col=el('div','stats-col');
     var ic=item[0];ic.className+=' stats-icon';
