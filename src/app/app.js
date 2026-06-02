@@ -2011,6 +2011,20 @@ App.tab=function(name){
       if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
     }
     if(name==='gencine'){
+      // Show instant skeleton if scripts aren't ready yet — prevents blank panel
+      if(!_gencineScriptsLoaded){
+        var _gc=$('gencineContent');
+        if(_gc&&!_gc.firstChild){
+          var _gsk=document.createElement('div');_gsk.className='genc-skel';
+          var _gss=document.createElement('div');_gss.className='genc-skel-smart';
+          var _gsh=document.createElement('div');_gsh.className='genc-skel-smart-hdr';
+          var _gsl=document.createElement('div');_gsl.className='genc-skel-smart-label skel-block';
+          var _gsc=document.createElement('div');_gsc.className='genc-skel-smart-chip skel-block';
+          _gsh.appendChild(_gsl);_gsh.appendChild(_gsc);_gss.appendChild(_gsh);
+          var _gscard=document.createElement('div');_gscard.className='genc-skel-card skel-block';
+          _gss.appendChild(_gscard);_gsk.appendChild(_gss);_gc.appendChild(_gsk);
+        }
+      }
       _loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});
     }
 
