@@ -8682,9 +8682,9 @@ function _buildPppCal(log){
   if(isCur){nextBtn.disabled=true;nextBtn.style.opacity='.3';}
   nextBtn.appendChild(icon('fas fa-chevron-left'));
   on(nextBtn,'click',function(){if(_pppMonthOffset>=0)return;_pppMonthOffset++;var o=$('pppCalWrap');if(o){var n=_buildPppCal(getPrayerLog());o.parentNode.replaceChild(n,o);}});
-  nav.appendChild(nextBtn);
-  nav.appendChild(el('span','ppp-cal-month',t('goals.months.'+(month+1))+' '+year));
   nav.appendChild(prevBtn);
+  nav.appendChild(el('span','ppp-cal-month',t('goals.months.'+(month+1))+' '+year));
+  nav.appendChild(nextBtn);
   wrap.appendChild(nav);
   // Day headers
   var dhr=el('div','ppp-cal-grid');
