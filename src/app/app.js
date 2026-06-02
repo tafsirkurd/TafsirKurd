@@ -6706,7 +6706,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
     var selBar=el('div','dl-sel-bar');
     var selCount=Object.keys(_dlMgrSelected).length;
     var allSelected=selCount===curItems.length&&curItems.length>0;
-    var selAll=el('button','dl-sel-all',allSelected?(t('dl.deselect_all')||'لابردنا هەمیا'):(t('dl.select_all')||'هەڵبژارتنا هەمیا'));
+    var selAll=el('button','dl-sel-all',allSelected?(t('dl.deselect_all')||'ڕەتکرنا هەمیا'):(t('dl.select_all')||'هەڵبژارتنا هەمیا'));
     on(selAll,'click',function(){
       if(allSelected){
         _dlMgrSelected={};
