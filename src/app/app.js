@@ -2097,7 +2097,7 @@ function _tkConfirm(opts){
   var card=el('div','tk-confirm-card');
   if(opts.icon){var ico=el('div','tk-confirm-icon');ico.textContent=opts.icon;card.appendChild(ico);}
   if(opts.title){card.appendChild(el('div','tk-confirm-title',opts.title));}
-  if(opts.msg){card.appendChild(el('div','tk-confirm-msg',opts.msg));}
+  if(opts.msg&&opts.msg.indexOf(' ')!==-1){card.appendChild(el('div','tk-confirm-msg',opts.msg));}
   var btns=el('div','tk-confirm-btns');
   var yesBtn=el('button','tk-confirm-yes'+(opts.danger?' danger':''),opts.yes||t('common.yes')||'بەلێ');
   var noBtn=el('button','tk-confirm-no',opts.no||t('common.no')||'نەخێر');
@@ -12252,7 +12252,6 @@ function renderProfile(panel){
     _tkConfirm({
       icon:'⚠️',
       title:t('profile.confirm_delete1')||'ئەکاونتی خۆ بسڕەوە؟',
-      msg:t('profile.confirm_delete1_msg')||'',
       yes:t('profile.confirm_delete1_yes')||'بەردەوام بە',
       no:t('profile.confirm_no')||'نەخێر',
       danger:false,

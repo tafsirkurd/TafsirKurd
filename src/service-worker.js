@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1109';
+const CACHE_NAME = 'tafsir-kurd-v1110';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -6,7 +6,7 @@ const CACHE_NAME = 'tafsir-kurd-v1109';
 const PRECACHE = [
   // Core app shell
   '/app/index.html',
-  '/app/app.js?v=1001',
+  '/app/app.js?v=1002',
   '/utils/swipe-back.js?v=2',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
