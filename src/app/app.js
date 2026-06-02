@@ -11783,7 +11783,7 @@ function renderProfile(panel){
     sinceRow.appendChild(sinceVal);
     infoCard.appendChild(sinceRow);
     var lastRow=el('div','pp-row');
-    lastRow.appendChild(el('div','pp-row-label',t('profile.last_signin')||'دوا کردنەوە'));
+    lastRow.appendChild(el('div','pp-row-label',t('profile.last_signin')||'دوماهیک ڤەکرن'));
     var lastVal=el('div','pp-row-value','…');
     lastRow.appendChild(lastVal);
     infoCard.appendChild(lastRow);
