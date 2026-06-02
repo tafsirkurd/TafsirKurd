@@ -6505,13 +6505,20 @@ function openDlManager(){
   overlay.onclick=closeDlManager;
   $('dlMgrClose').onclick=closeDlManager;
   var editBtn=$('dlMgrEditBtn');
+  var editLbl=$('dlMgrEditLbl');
+  var editIco=editBtn?editBtn.querySelector('i'):null;
+  function _syncEditBtn(){
+    if(!editBtn)return;
+    if(editLbl)editLbl.textContent=_dlMgrSelectMode?'پاشگەزبوون':'هەڵبژارتن';
+    if(editIco)editIco.className=_dlMgrSelectMode?'fas fa-xmark':'fas fa-check-square';
+    editBtn.style.color=_dlMgrSelectMode?'var(--danger,#e05)':'var(--accent)';
+  }
   if(editBtn){
-    editBtn.textContent=_dlMgrSelectMode?'پاشگەزبوون':'هەڵبژارتن';
+    _syncEditBtn();
     editBtn.onclick=function(){
       _dlMgrSelectMode=!_dlMgrSelectMode;
       _dlMgrSelected={};
-      editBtn.textContent=_dlMgrSelectMode?'پاشگەزبوون':'هەڵبژارتن';
-      editBtn.style.color=_dlMgrSelectMode?'var(--danger,#e05)':'var(--accent)';
+      _syncEditBtn();
       if(_dlMgrCache.pdfs!==null)_renderDlMgrBodyWith(_dlMgrCache.pdfs,_dlMgrCache.audio||[]);
       else _renderDlMgrBody();
     };
