@@ -2087,6 +2087,33 @@ function tapGuard(key,ms){
 }
 
 /* ===== TOAST ===== */
+/* ===== UNIFIED CONFIRM POPUP ===== */
+// _tkConfirm({icon, title, msg, yes, no, danger, onYes, onNo})
+// Shows a centered card overlay — works on iOS (no window.confirm needed).
+function _tkConfirm(opts){
+  var ov=$('tkConfirmOverlay');
+  if(!ov)return;
+  ov.innerHTML='';
+  var card=el('div','tk-confirm-card');
+  if(opts.icon){var ico=el('div','tk-confirm-icon');ico.textContent=opts.icon;card.appendChild(ico);}
+  if(opts.title){card.appendChild(el('div','tk-confirm-title',opts.title));}
+  if(opts.msg){card.appendChild(el('div','tk-confirm-msg',opts.msg));}
+  var btns=el('div','tk-confirm-btns');
+  var yesBtn=el('button','tk-confirm-yes'+(opts.danger?' danger':''),opts.yes||t('common.yes')||'بەلێ');
+  var noBtn=el('button','tk-confirm-no',opts.no||t('common.no')||'نەخێر');
+  on(yesBtn,'click',function(){_tkConfirmClose();if(opts.onYes)opts.onYes();});
+  on(noBtn,'click',function(){_tkConfirmClose();if(opts.onNo)opts.onNo();});
+  btns.appendChild(yesBtn);btns.appendChild(noBtn);
+  card.appendChild(btns);
+  ov.appendChild(card);
+  ov.classList.add('on');
+}
+function _tkConfirmClose(){
+  var ov=$('tkConfirmOverlay');
+  if(ov)ov.classList.remove('on');
+}
+window._tkConfirmClose=_tkConfirmClose;
+
 var _toastTimer=null;
 var _toastMsg=null;
 function toast(msg){
@@ -12215,93 +12242,58 @@ function renderProfile(panel){
   // Separator before destructive action
   actWrap.appendChild(el('div','pp-actions-sep'));
 
-  // ── Delete account — custom inline confirm (iOS WKWebView blocks confirm()) ──
+  // ── Delete account — two-step popup confirm ──────────────
   var deleteWrap=el('div','pp-delete-wrap');
 
   var deleteBtn=el('button','pp-action-btn pp-delete');
-  deleteBtn.addEventListener('click',function(){
-    console.log('[deleteAccount] button clicked — showing confirm step 1');
-    deleteBtn.style.display='none';
-    confirmStep1.style.display='';
-  });
   deleteBtn.appendChild(icon('fas fa-trash-alt'));
   deleteBtn.appendChild(document.createTextNode(' '+t('profile.delete_account')));
-
-  // Step 1 — first confirmation
-  var confirmStep1=el('div','pp-delete-confirm');
-  confirmStep1.style.display='none';
-  var step1Txt=el('p','pp-delete-confirm-txt',t('profile.confirm_delete1'));
-  var step1Yes=el('button','pp-delete-confirm-yes',t('profile.confirm_delete1_yes')||t('profile.confirm_delete_yes')||'بەلێ، بەردەوام بە');
-  var step1No =el('button','pp-delete-confirm-no', t('profile.confirm_no')||'نەخێر');
-  step1Yes.addEventListener('click',function(){
-    console.log('[deleteAccount] step 1 confirmed — showing step 2');
-    confirmStep1.style.display='none';
-    confirmStep2.style.display='';
-  });
-  step1No.addEventListener('click',function(){
-    console.log('[deleteAccount] step 1 cancelled');
-    confirmStep1.style.display='none';
-    deleteBtn.style.display='';
-  });
-  confirmStep1.appendChild(step1Txt);
-  confirmStep1.appendChild(step1Yes);
-  confirmStep1.appendChild(step1No);
-
-  // Step 2 — final confirmation before irreversible action
-  var confirmStep2=el('div','pp-delete-confirm');
-  confirmStep2.style.display='none';
-  var step2Txt=el('p','pp-delete-confirm-txt',t('profile.confirm_delete2'));
-  var step2Yes=el('button','pp-delete-confirm-yes pp-delete-confirm-final',t('profile.confirm_delete_yes')||'سڕینەوەی ئەکاونت');
-  var step2No =el('button','pp-delete-confirm-no', t('profile.confirm_no')||'نەخێر');
-  step2No.addEventListener('click',function(){
-    console.log('[deleteAccount] step 2 cancelled');
-    confirmStep2.style.display='none';
-    deleteBtn.style.display='';
-  });
-  step2Yes.addEventListener('click',function(){
-    console.log('[deleteAccount] step 2 confirmed — sending delete request');
+  on(deleteBtn,'click',function(){
+    _tkConfirm({
+      icon:'⚠️',
+      title:t('profile.confirm_delete1')||'ئەکاونتی خۆ بسڕەوە؟',
+      msg:t('profile.confirm_delete1_msg')||'',
+      yes:t('profile.confirm_delete1_yes')||'بەردەوام بە',
+      no:t('profile.confirm_no')||'نەخێر',
+      danger:false,
+      onYes:function(){
+        _tkConfirm({
+          icon:'🗑️',
+          title:t('profile.confirm_delete2')||'دوای سڕینەوە ناتوانی بگەڕێیتەوە',
+          yes:t('profile.confirm_delete_yes')||'سڕینەوەی ئەکاونت',
+          no:t('profile.confirm_no')||'نەخێر',
+          danger:true,
+          onYes:function(){
     confirmStep2.style.display='none';
     step2Yes.disabled=true;
     msg.className='pp-msg';
-    msg.textContent=t('profile.deleting')||'...';
-
-    S.supabase.auth.getSession().then(function(resp){
-      var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
-      if(!accessToken){
-        console.error('[deleteAccount] no access token');
-        deleteBtn.style.display='';
-        msg.textContent=t('error.generic');msg.className='pp-msg error';
-        return;
+            msg.textContent=t('profile.deleting')||'...';
+            S.supabase.auth.getSession().then(function(resp){
+              var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
+              if(!accessToken){deleteBtn.style.display='';msg.textContent=t('error.generic');msg.className='pp-msg error';return;}
+              return fetch('https://db.tafsirkurd.com/functions/v1/delete-account',{
+                method:'POST',headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
+              }).then(function(r){
+                if(!r.ok)return r.json().then(function(d){throw new Error(d.error||('HTTP '+r.status));});
+                return r.json();
+              }).then(function(result){
+                if(!result.success)throw new Error(result.error||t('error.generic'));
+                return S.supabase.auth.signOut().catch(function(){});
+              }).then(function(){
+                S.user=null;_clearProfileCache();stopCloudSync();App.closeProfile();
+                toast(t('toast.account_deleted'));renderSettings();
+              });
+            }).catch(function(e){
+              deleteBtn.style.display='';
+              msg.textContent=e.message||t('error.generic');msg.className='pp-msg error';
+            });
+          }
+        });
       }
-      console.log('[deleteAccount] sending request to Edge Function');
-      return fetch('https://db.tafsirkurd.com/functions/v1/delete-account',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
-      }).then(function(r){
-        console.log('[deleteAccount] response received, status:',r.status);
-        if(!r.ok)return r.json().then(function(d){throw new Error(d.error||('HTTP '+r.status));});
-        return r.json();
-      }).then(function(result){
-        if(!result.success)throw new Error(result.error||t('error.generic'));
-        return S.supabase.auth.signOut().catch(function(){});
-      }).then(function(){
-        console.log('[deleteAccount] success — closing profile');
-        S.user=null;_clearProfileCache();stopCloudSync();App.closeProfile();
-        toast(t('toast.account_deleted'));renderSettings();
-      });
-    }).catch(function(e){
-      console.error('[deleteAccount] error:',e);
-      deleteBtn.style.display='';
-      msg.textContent=e.message||t('error.generic');msg.className='pp-msg error';
     });
   });
-  confirmStep2.appendChild(step2Txt);
-  confirmStep2.appendChild(step2Yes);
-  confirmStep2.appendChild(step2No);
 
   deleteWrap.appendChild(deleteBtn);
-  deleteWrap.appendChild(confirmStep1);
-  deleteWrap.appendChild(confirmStep2);
   actWrap.appendChild(deleteWrap);
   actSec.appendChild(actWrap);
   body.appendChild(actSec);

@@ -1018,8 +1018,21 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 /* Delete confirmation modal */
 .goal-confirm-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .goal-confirm-overlay.on{display:flex;animation:fadeIn .25s var(--ease)}
+/* ── Unified confirm/alert popup ── */
+.tk-confirm-overlay{position:fixed;inset:0;z-index:810;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.tk-confirm-overlay.on{display:flex;animation:fadeIn .22s var(--ease)}
+.tk-confirm-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px 24px 22px;max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 12px 60px rgba(0,0,0,.35);animation:nsCardPop .28s cubic-bezier(.34,1.56,.64,1);text-align:center;direction:rtl}
+.tk-confirm-icon{font-size:2rem;line-height:1;margin-bottom:2px}
+.tk-confirm-title{font-size:1rem;font-weight:700;color:var(--text);line-height:1.4}
+.tk-confirm-msg{font-size:.84rem;color:var(--text2);line-height:1.65;max-width:260px}
+.tk-confirm-btns{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:4px}
+.tk-confirm-yes{height:46px;border-radius:14px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer;border:none;background:var(--accent);color:var(--accent-t);transition:opacity .15s,transform .12s;-webkit-tap-highlight-color:transparent}
+.tk-confirm-yes:active{opacity:.85;transform:scale(.97)}
+.tk-confirm-yes.danger{background:var(--danger,#e74c3c);color:#fff}
+.tk-confirm-no{height:42px;border-radius:14px;font-size:.86rem;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);transition:opacity .15s,transform .12s;-webkit-tap-highlight-color:transparent}
+.tk-confirm-no:active{transform:scale(.97)}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.goal-confirm-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 24px 24px;max-width:300px;width:100%;text-align:center;animation:confirmBoxIn .3s var(--ease);box-shadow:var(--shadow-l)}
+.goal-confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px 24px 22px;max-width:320px;width:100%;text-align:center;animation:nsCardPop .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 12px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;gap:12px}
 @keyframes confirmBoxIn{from{transform:scale(.88);opacity:0}to{transform:scale(1);opacity:1}}
 .goal-confirm-icon{font-size:1.8rem;margin-bottom:14px;display:block;width:56px;height:56px;margin-left:auto;margin-right:auto;border-radius:50%;background:rgba(192,57,43,.08);display:flex;align-items:center;justify-content:center;color:rgba(192,57,43,.6);animation:iconShake .4s var(--ease) .2s}
 @keyframes iconShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
@@ -4215,6 +4228,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 
 <!-- PROFILE PAGE -->
 <div class="profile-panel" id="profilePanel" role="dialog" aria-modal="true" aria-label="Profile"></div>
+<div class="tk-confirm-overlay" id="tkConfirmOverlay" onclick="if(event.target===this)_tkConfirmClose()"></div>
 <!-- PRAYER PROGRESS PAGE -->
 <div class="ppp-panel" id="prayerProgressPanel" role="dialog" aria-modal="true" aria-label="Prayer Progress"></div>
 <div class="ppp-day-overlay" id="pppDayOverlay" onclick="App.closePrayerDay()"><div class="ppp-day-sheet" id="pppDaySheet" onclick="event.stopPropagation()"></div></div>
@@ -4464,7 +4478,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/utils/fast-scroll.js?v=20260503"></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
-<script src="/app/app.js?v=999"></script>
+<script src="/app/app.js?v=1000"></script>
 <script src="/utils/swipe-back.js?v=2"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
