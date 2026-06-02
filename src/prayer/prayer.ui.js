@@ -965,13 +965,18 @@
     var horizEl = scene.querySelector('.sky-horizon');
     if (horizEl) { horizEl.style.left = '-3.5%'; horizEl.style.width = '107%'; }
 
-    // Populate dates
+    // Populate dates — Hijri only, with Intl fallback if API has no hijri field
     var dateInfo = data.date;
     var dateLines = [];
     if (dateInfo && dateInfo.hijri) {
       dateLines.push(dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ');
     } else if (dateInfo && dateInfo.hijriStr) {
       dateLines.push(dateInfo.hijriStr);
+    } else {
+      try {
+        var _hd = new Intl.DateTimeFormat('en-u-ca-islamic', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Baghdad' }).format(new Date(today + 'T12:00:00+03:00'));
+        dateLines.push(_hd + ' هـ');
+      } catch(_e) {}
     }
     var datesEl = document.getElementById('skyDates');
     if (datesEl) datesEl.innerHTML = dateLines.map(function(l) { return '<span>' + l + '</span>'; }).join('');
@@ -3354,6 +3359,7 @@
         var dateLines2 = [];
         if (dateInfo.hijri) dateLines2.push(dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ');
         else if (dateInfo.hijriStr) dateLines2.push(dateInfo.hijriStr);
+        else { try { var _hd2 = new Intl.DateTimeFormat('en-u-ca-islamic',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Baghdad'}).format(new Date(today+'T12:00:00+03:00')); dateLines2.push(_hd2+' هـ'); } catch(_e2){} }
         datesEl.innerHTML = dateLines2.map(function(l) { return '<span>' + l + '</span>'; }).join('');
       }
 
