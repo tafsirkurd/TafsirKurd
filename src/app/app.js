@@ -10580,6 +10580,28 @@ function initSupabase(cb){
   if(S.supabase){if(cb)cb();return}
   if(!window.supabase){console.warn('Supabase JS library not loaded');if(cb)cb();return}
 
+  // Pre-clear expired OAuth callback tokens before any Supabase client is created.
+  // If the JWT in the URL hash is already expired, sending it to the server causes a
+  // 403 loop: Supabase's _initialize retries the dead token on every page load because
+  // it never clears the hash on failure. We decode the JWT payload (no crypto needed —
+  // just base64) and wipe the hash when exp < now, so Supabase never fires the request.
+  try{
+    var _pch=window.location.hash||'';
+    if(_pch&&_pch.indexOf('access_token=')>=0){
+      var _pcps=new URLSearchParams(_pch.charAt(0)==='#'?_pch.substring(1):_pch);
+      var _pctok=_pcps.get('access_token')||'';
+      var _pcparts=_pctok.split('.');
+      var _expired=_pcparts.length!==3; // malformed JWT → treat as expired
+      if(!_expired){
+        var _pcb64=_pcparts[1].replace(/-/g,'+').replace(/_/g,'/');
+        while(_pcb64.length%4)_pcb64+='=';
+        var _pcpay=JSON.parse(atob(_pcb64));
+        _expired=!!(_pcpay.exp&&_pcpay.exp<Math.floor(Date.now()/1000));
+      }
+      if(_expired)window.history.replaceState(null,'',window.location.pathname+window.location.search);
+    }
+  }catch(_pce){}
+
   // Use cached config immediately (enables offline auth session recovery)
   var cachedCfg=null;
   try{cachedCfg=JSON.parse(localStorage.getItem('supa_cfg'))}catch(e){}
@@ -10617,7 +10639,10 @@ function initSupabase(cb){
         var _nc=(cfg.supabaseUrl||'').replace(/\/$/,'');
         var _oc='';try{_oc=(S.supabase.supabaseUrl||'').replace(/\/$/,'');}catch(e){}
         if(_oc&&_nc&&_oc!==_nc){
-          S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+          // detectSessionInUrl:false — Client A already processed (or attempted) the URL.
+          // Re-enabling it here would trigger a second _getSessionFromURL with the same
+          // token, causing a 403 and a hash that never gets cleared.
+          S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
           window._appSupabase=S.supabase;
         }
       }
@@ -10731,9 +10756,15 @@ function checkAuthSession(){
       // when _getSessionFromURL failed and Supabase left the hash uncleaned.
       try{
         var _ah=window.location.hash||'';
-        if(_ah&&(_ah.indexOf('access_token=')>=0||_ah.indexOf('error=')>=0)){window.location.hash='';}
         var _as=window.location.search||'';
-        if(_as&&_as.indexOf('code=')>=0){var _au=new URL(window.location.href);_au.searchParams.delete('code');window.history.replaceState(window.history.state,'',_au.toString());}
+        var _ahasAuth=(_ah&&(_ah.indexOf('access_token=')>=0||_ah.indexOf('error=')>=0));
+        var _ahasCode=(_as&&_as.indexOf('code=')>=0);
+        if(_ahasAuth||_ahasCode){
+          var _au=new URL(window.location.href);
+          if(_ahasAuth){_au.hash='';}
+          if(_ahasCode){_au.searchParams.delete('code');}
+          window.history.replaceState(null,'',_au.toString());
+        }
       }catch(_ae){}
     }
   });
