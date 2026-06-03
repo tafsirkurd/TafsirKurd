@@ -133,7 +133,7 @@
     // contentVisibility:visible overrides .safe-render content-visibility:hidden.
     var ts = t.tgt.style;
     ts.position         = 'fixed';
-    ts.top              = '0';
+    ts.top              = 'var(--safe-t)';
     ts.left             = '0';
     ts.right            = '0';
     ts.bottom           = '0';
