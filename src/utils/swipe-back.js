@@ -24,7 +24,8 @@
   var ANIM_MS   = 320;
   var CANCEL_MS = 290;
 
-  var _busy = false;
+  var _busy        = false;
+  var _cancelTimer = null;
 
   // ── Gate checks ──────────────────────────────────────────────────────────────
 
@@ -127,6 +128,9 @@
 
   function _dragStart(t) {
     t.started = true;
+    // Clear any pending cancel-cleanup from a previous cancelled gesture so
+    // its setTimeout cannot clear this new gesture's styles mid-drag.
+    if (_cancelTimer) { clearTimeout(_cancelTimer); _cancelTimer = null; }
     _lockScroll(t);
     t.fg.style.willChange = 'transform';
     t.fg.style.transition = 'none';
@@ -160,7 +164,9 @@
 
     setTimeout(function () {
       _unlockScroll(t);
-      if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      try {
+        if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      } catch (_e) {}
       requestAnimationFrame(function () {
         _clearFg(t);
         _busy = false;
@@ -172,11 +178,11 @@
 
   function _cancel(t) {
     if (!t.started) return;
-    // Restore scroll immediately so content is scrollable right after snap-back
     _unlockScroll(t);
     t.fg.style.transition = 'transform ' + CANCEL_MS + 'ms cubic-bezier(.22,1,.36,1)';
     t.fg.style.transform  = 'translateX(0)';
-    setTimeout(function () { _clearFg(t); }, CANCEL_MS + 16);
+    // Store timer ID so _dragStart can cancel it if user re-swipes before cleanup fires.
+    _cancelTimer = setTimeout(function () { _cancelTimer = null; _clearFg(t); }, CANCEL_MS + 16);
   }
 
   // ── Style cleanup ────────────────────────────────────────────────────────────
