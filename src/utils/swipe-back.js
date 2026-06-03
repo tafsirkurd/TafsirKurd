@@ -2,7 +2,7 @@
  * swipe-back.js — native-style left-edge swipe to go back
  *
  * Visual types:
- *   A (phone):   fg lifts to fixed, bg revealed with counter-parallax underneath
+ *   A (phone):   fg lifts to fixed, bg revealed clean (display only), no effects
  *   B (overlays + tablet inline): fg translates 1:1, destination already visible
  *   G (Gencine): gencineContent translates within overflow-x:hidden panel
  *
@@ -17,8 +17,8 @@
   var LOCK_PX   = 10;    // movement before direction is decided
   var DIST_OK   = 80;    // px rightward travel → commit
   var VEL_OK    = 0.35;  // px/ms fast-flick threshold
-  var ANIM_MS   = 270;   // commit animation duration
-  var CANCEL_MS = 260;   // cancel snap-back duration
+  var ANIM_MS   = 320;   // commit animation duration
+  var CANCEL_MS = 290;   // cancel snap-back duration
 
   // ── Animation lock — blocks new gesture during commit ────────────────────────
   var _busy = false;
@@ -114,11 +114,8 @@
       } else {
         // Read fg rect BEFORE showing bg so layout is still stable
         var r = t.fg.getBoundingClientRect();
-        // Show bg, set initial parallax position
-        t.bg.style.display    = '';
-        t.bg.style.transition = 'none';
-        t.bg.style.willChange = 'transform';
-        t.bg.style.transform  = 'scale(0.96) translateX(-20%)';
+        // Reveal bg clean — no transforms, no effects, just make it visible
+        t.bg.style.display = '';
         // Lift fg to fixed at its current visual position
         t.fg.style.position   = 'fixed';
         t.fg.style.top        = r.top    + 'px';
@@ -143,13 +140,7 @@
     if (!t.started) return;
     t.fg.style.transition = 'none';
     t.fg.style.transform  = 'translateX(' + dx + 'px)';
-    if (t.type === 'A' && t.bg) {
-      var progress = Math.min(dx / t.W, 1);
-      var sc = 0.96 + 0.04 * progress;
-      var tx = -20  * (1 - progress);
-      t.bg.style.transition = 'none';
-      t.bg.style.transform  = 'scale(' + sc + ') translateX(' + tx + '%)';
-    }
+    // bg is never transformed — it stays clean and static behind the sliding fg
   }
 
   // ── Commit ───────────────────────────────────────────────────────────────────
@@ -176,27 +167,17 @@
     }
 
     // Animate fg off-screen to the right
-    var ease = 'cubic-bezier(.4,0,.2,1)';
+    var ease = 'cubic-bezier(.2,0,.2,1)';
     var dur  = ANIM_MS + 'ms ' + ease;
     t.fg.style.transition = 'transform ' + dur;
     t.fg.style.transform  = 'translateX(' + t.W + 'px)';
 
-    if (t.type === 'A' && t.bg) {
-      t.bg.style.transition = 'transform ' + dur;
-      t.bg.style.transform  = 'scale(1) translateX(0)';
-    }
-
     // Fire doBack after animation completes, then clean up inline styles
+    // doBack() restores bg visibility (e.g. quranHome.style.display='') naturally
     setTimeout(function () {
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       requestAnimationFrame(function () {
         _clearFg(t);
-        if (t.type === 'A' && t.bg) {
-          // App.doBack already restored bg.style.display — clear transforms only
-          t.bg.style.transition = '';
-          t.bg.style.transform  = '';
-          t.bg.style.willChange = '';
-        }
         _busy = false;
       });
     }, ANIM_MS + 16);
@@ -212,18 +193,11 @@
     t.fg.style.transition = 'transform ' + dur;
     t.fg.style.transform  = 'translateX(0)';
 
-    if (t.type === 'A' && t.bg) {
-      t.bg.style.transition = 'transform ' + dur;
-      t.bg.style.transform  = 'scale(0.96) translateX(-20%)';
-    }
-
     setTimeout(function () {
       _clearFg(t);
+      // Re-hide bg — reader is still active after cancel, bg was display:none before gesture
       if (t.type === 'A' && t.bg) {
-        t.bg.style.transition = '';
-        t.bg.style.transform  = '';
-        t.bg.style.willChange = '';
-        t.bg.style.display    = 'none';  // restore hidden state (was hidden before gesture)
+        t.bg.style.display = 'none';
       }
     }, CANCEL_MS + 16);
   }
