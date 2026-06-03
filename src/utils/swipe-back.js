@@ -37,8 +37,13 @@
     var node = el, steps = 0;
     while (node && node !== document.body && steps++ < 15) {
       var cn = typeof node.className === 'string' ? node.className : '';
-      if (cn.indexOf('iv-hero') >= 0 || cn.indexOf('book-cat-row') >= 0 ||
-          cn.indexOf('mushaf-view') >= 0 || cn.indexOf('heatmap-scroll') >= 0) return true;
+      if (cn.indexOf('iv-hero')        >= 0 ||
+          cn.indexOf('book-cat-row')   >= 0 ||
+          cn.indexOf('mushaf-view')    >= 0 ||
+          cn.indexOf('heatmap-scroll') >= 0 ||
+          cn.indexOf('carousel')       >= 0 ||
+          cn.indexOf('slider')         >= 0 ||
+          cn.indexOf('swiper')         >= 0) return true;
       try {
         var ox = window.getComputedStyle(node).overflowX;
         if ((ox === 'auto' || ox === 'scroll') && node.scrollWidth > node.clientWidth + 8) return true;

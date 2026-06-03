@@ -21,12 +21,14 @@
   };
 
   var EDGE_EXCLUDE     = 40;    // px — must be > swipe-back EDGE_PX (32)
-  var LOCK_PX          = 10;    // px before direction is decided
-  var DIST_OK          = 65;    // px travel → commit
-  var VEL_OK           = 0.30;  // px/ms fast-flick threshold
+  var LOCK_PX          = 16;    // px before direction is decided (raised: needs clearer travel)
+  var HORIZ_RATIO      = 1.4;   // horizontal must be this much stronger than vertical at lock
+  var DIST_OK          = 50;    // px travel → commit (lowered: easier to complete)
+  var VEL_OK           = 0.35;  // px/ms fast-flick threshold
   var ANIM_MS          = 320;   // commit slide animation
   var CANCEL_MS        = 250;   // cancel snap-back animation
   var SCROLL_SETTLE_MS = 150;   // ms after last scroll event before gestures re-enable
+  var SWIPE_ZONE_FRAC  = 0.55;  // touch must start below this fraction of screen height
 
   // RTL: html[dir=rtl] → flex row is right-to-left, so index 0 (quran) is rightmost.
   // In RTL, swiping RIGHT reveals the tab to the LEFT (higher index).
@@ -55,7 +57,10 @@
       if (cn.indexOf('iv-hero')        >= 0 ||
           cn.indexOf('book-cat-row')   >= 0 ||
           cn.indexOf('mushaf-view')    >= 0 ||
-          cn.indexOf('heatmap-scroll') >= 0) return true;
+          cn.indexOf('heatmap-scroll') >= 0 ||
+          cn.indexOf('carousel')       >= 0 ||
+          cn.indexOf('slider')         >= 0 ||
+          cn.indexOf('swiper')         >= 0) return true;
       try {
         var ox = window.getComputedStyle(node).overflowX;
         if ((ox === 'auto' || ox === 'scroll') && node.scrollWidth > node.clientWidth + 8) return true;
@@ -250,65 +255,66 @@
   // ── Gesture state ────────────────────────────────────────────────────────────
   var g = null;
 
-  function _onTouchMove(e) {
+  // Phase 1 — passive detection: never blocks scroll.
+  // Waits for LOCK_PX travel, then checks direction ratio. Only if clearly
+  // horizontal does it claim the gesture; otherwise drops g and lets scroll win.
+  function _onDetect(e) {
     if (!g) return;
     var touch = e.touches[0];
     var dx = touch.clientX - g.x0;
     var dy = touch.clientY - g.y0;
 
-    if (!g.locked) {
-      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
+    if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
 
-      if (Math.abs(dy) >= Math.abs(dx)) {
-        g = null;
-        document.removeEventListener('touchmove', _onTouchMove);
-        return;
-      }
+    // Direction decided — stop passive detection regardless of outcome
+    document.removeEventListener('touchmove', _onDetect);
 
-      // Horizontal wins — lock direction
-      var dir = (dx < 0) ? 'left' : 'right';
-      var idx = _currentIdx();
-      if (idx === -1) {
-        g = null;
-        document.removeEventListener('touchmove', _onTouchMove);
-        return;
-      }
+    // Require HORIZ_RATIO dominance: diagonal or vertical gestures abort here.
+    // This is the key guard against accidentally stealing scroll or slider drags.
+    if (Math.abs(dx) < Math.abs(dy) * HORIZ_RATIO) { g = null; return; }
 
-      // RTL: swipe right → higher index (next tab to the left in tab bar)
-      //      swipe left  → lower index (prev tab to the right in tab bar)
-      // LTR: swipe left  → higher index (next tab to the right in tab bar)
-      //      swipe right → lower index (prev tab to the left in tab bar)
-      var targetIdx = _isRTL
-        ? ((dir === 'left') ? idx - 1 : idx + 1)
-        : ((dir === 'left') ? idx + 1 : idx - 1);
+    // Horizontal confirmed — resolve target tab
+    var dir = (dx < 0) ? 'left' : 'right';
+    var idx = _currentIdx();
+    if (idx === -1) { g = null; return; }
 
-      if (targetIdx < 0 || targetIdx >= TAB_ORDER.length) {
-        g = null;
-        document.removeEventListener('touchmove', _onTouchMove);
-        return;
-      }
+    // RTL: swipe right → higher index (next tab to the left in tab bar)
+    //      swipe left  → lower index (prev tab to the right in tab bar)
+    // LTR: swipe left  → higher index (next tab to the right in tab bar)
+    //      swipe right → lower index (prev tab to the left in tab bar)
+    var targetIdx = _isRTL
+      ? ((dir === 'left') ? idx - 1 : idx + 1)
+      : ((dir === 'left') ? idx + 1 : idx - 1);
 
-      var targetTabName = TAB_ORDER[targetIdx];
-      var curPanel = document.getElementById(PANEL_IDS[TAB_ORDER[idx]]);
-      var tgtPanel = document.getElementById(PANEL_IDS[targetTabName]);
-      if (!curPanel || !tgtPanel) {
-        g = null;
-        document.removeEventListener('touchmove', _onTouchMove);
-        return;
-      }
+    if (targetIdx < 0 || targetIdx >= TAB_ORDER.length) { g = null; return; }
 
-      g.locked = 'h';
-      g.dir    = dir;
-      g.target = {
-        cur:     curPanel,
-        tgt:     tgtPanel,
-        tabName: targetTabName,
-        dir:     dir,
-        started: false,
-        dx:      dx
-      };
-      _gestureStart(g.target);
-    }
+    var targetTabName = TAB_ORDER[targetIdx];
+    var curPanel = document.getElementById(PANEL_IDS[TAB_ORDER[idx]]);
+    var tgtPanel = document.getElementById(PANEL_IDS[targetTabName]);
+    if (!curPanel || !tgtPanel) { g = null; return; }
+
+    g.locked = 'h';
+    g.dir    = dir;
+    g.dx     = dx;
+    g.target = {
+      cur:     curPanel,
+      tgt:     tgtPanel,
+      tabName: targetTabName,
+      dir:     dir,
+      started: false,
+      dx:      dx
+    };
+    _gestureStart(g.target);
+
+    // Switch to active (non-passive) handler — we now own the gesture
+    document.addEventListener('touchmove', _onActive, { passive: false });
+  }
+
+  // Phase 2 — active tracking: blocks scroll via preventDefault.
+  // Only reached after clear horizontal lock — safe to own the touch.
+  function _onActive(e) {
+    if (!g || g.locked !== 'h') return;
+    var dx = e.touches[0].clientX - g.x0;
 
     // Clamp: only move in the locked direction, never reverse
     if (g.dir === 'left') g.dx = Math.min(dx, 0);
@@ -325,6 +331,9 @@
     if (_busy) return;
     var t = e.touches[0];
     if (t.clientX <= EDGE_EXCLUDE) return;
+    // Safe zone: only allow from the lower portion of the screen.
+    // Protects hero sections, carousels, and video lists near the top.
+    if (t.clientY < window.innerHeight * SWIPE_ZONE_FRAC) return;
     if (_shouldBlock(e.target)) return;
     if (_currentIdx() === -1) return;
 
@@ -337,11 +346,13 @@
       dir:    null,
       target: null
     };
-    document.addEventListener('touchmove', _onTouchMove, { passive: false });
+    // Passive: does not block scroll during direction detection
+    document.addEventListener('touchmove', _onDetect, { passive: true });
   }, { passive: true });
 
   document.addEventListener('touchend', function () {
-    document.removeEventListener('touchmove', _onTouchMove);
+    document.removeEventListener('touchmove', _onDetect);
+    document.removeEventListener('touchmove', _onActive);
     if (!g) return;
     if (g.locked !== 'h') { g = null; return; }
 
@@ -358,7 +369,8 @@
   }, { passive: true });
 
   document.addEventListener('touchcancel', function () {
-    document.removeEventListener('touchmove', _onTouchMove);
+    document.removeEventListener('touchmove', _onDetect);
+    document.removeEventListener('touchmove', _onActive);
     var tgt = g && g.target;
     g = null;
     if (tgt) _cancel(tgt);
