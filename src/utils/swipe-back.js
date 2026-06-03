@@ -3,15 +3,15 @@
  *
  * All types are simple foreground-only translateX. No background manipulation.
  *
- * Navigation: App.doBack({allowExit:false}) fires after animation.
- * Guards: _sbPdfZoomed, mushaf-mode, PTR, horiz-scroll, input — all preserved.
+ * Multi-touch safety:
+ *   _abortGesture() is called at every touchstart (cleans up any active gesture
+ *   before starting a new one) and when touches.length > 1 appears in touchmove.
+ *   It restores all inline styles and scroll state instantly, without animation
+ *   or navigation. Stale timeout/rAF callbacks are invalidated via _gid counter.
  *
  * Scroll lock:
- *   At horizontal lock, overflowY is set to 'hidden' on the scroll host
- *   (panel ancestor or the fg itself for fixed overlays). This prevents
- *   iOS WKScrollView from scrolling the content while the gesture is active.
- *   e.preventDefault() is also called on every tracked touchmove so that
- *   the browser native scroll cannot start during the pre-lock ambiguous phase.
+ *   At horizontal lock, overflowY is set to 'hidden' on the scroll host.
+ *   Restored immediately in cancel/abort, and before doBack() in commit.
  */
 (function () {
   'use strict';
@@ -24,8 +24,10 @@
   var ANIM_MS   = 300;
   var CANCEL_MS = 290;
 
+  // ── State ────────────────────────────────────────────────────────────────────
   var _busy        = false;
   var _cancelTimer = null;
+  var _gid         = 0;   // gesture generation — incremented on each abort/new gesture
 
   // ── Gate checks ──────────────────────────────────────────────────────────────
 
@@ -67,10 +69,7 @@
     return window.innerWidth >= 768 || document.documentElement.classList.contains('is-ipad');
   }
 
-  // ── Scroll host: the element whose overflowY we lock during the gesture ──────
-  // For in-flow fg (reader, iv-series): walk up to the .panel ancestor.
-  // For fg that IS a .panel (panelGencine): use it directly.
-  // For fixed overlays (no .panel ancestor): fall back to the fg itself.
+  // ── Scroll host ──────────────────────────────────────────────────────────────
 
   function _scrollHost(fg) {
     if (fg.classList && fg.classList.contains('panel')) return fg;
@@ -124,12 +123,39 @@
     }
   }
 
-  // ── Drag start (called at direction lock) ────────────────────────────────────
+  // ── Safe abort ───────────────────────────────────────────────────────────────
+  // Instantly cancels any active gesture without animation or navigation.
+  // Called: (a) at every touchstart before creating a new gesture, and
+  //         (b) in touchmove when a second finger appears (touches.length > 1).
+  // After this, the DOM is fully restored and g is null.
+
+  function _abortGesture() {
+    if (!g) return;
+    var t       = g.target;
+    var wasLock = g.locked === 'h';
+    g = null;
+    if (!wasLock || !t) return;
+
+    // Invalidate stale commit/cancel timeout callbacks
+    _gid++;
+
+    // Cancel pending cleanup timer
+    if (_cancelTimer) { clearTimeout(_cancelTimer); _cancelTimer = null; }
+
+    // Restore scroll immediately
+    _unlockScroll(t);
+
+    // Remove all inline styles instantly (no animation — second touch is present)
+    var s = t.fg.style;
+    s.transition = '';
+    s.transform  = '';
+    s.willChange = '';
+  }
+
+  // ── Drag start ───────────────────────────────────────────────────────────────
 
   function _dragStart(t) {
     t.started = true;
-    // Clear any pending cancel-cleanup from a previous cancelled gesture so
-    // its setTimeout cannot clear this new gesture's styles mid-drag.
     if (_cancelTimer) { clearTimeout(_cancelTimer); _cancelTimer = null; }
     _lockScroll(t);
     t.fg.style.willChange = 'transform';
@@ -148,6 +174,7 @@
 
   function _commit(t) {
     _busy = true;
+    var capturedId = _gid;   // snapshot — if _gid changes before timeout, skip
 
     var id = t.fg.id;
     if (_isTablet() && (id === 'quranReader' || id === 'ivSeriesView')) {
@@ -163,11 +190,13 @@
     t.fg.style.transform  = 'translateX(' + t.W + 'px)';
 
     setTimeout(function () {
+      if (_gid !== capturedId) { _busy = false; return; }  // gesture was aborted
       _unlockScroll(t);
       try {
         if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       } catch (_e) {}
       requestAnimationFrame(function () {
+        if (_gid !== capturedId) { _busy = false; return; }
         _clearFg(t);
         _busy = false;
       });
@@ -181,8 +210,12 @@
     _unlockScroll(t);
     t.fg.style.transition = 'transform ' + CANCEL_MS + 'ms cubic-bezier(.22,1,.36,1)';
     t.fg.style.transform  = 'translateX(0)';
-    // Store timer ID so _dragStart can cancel it if user re-swipes before cleanup fires.
-    _cancelTimer = setTimeout(function () { _cancelTimer = null; _clearFg(t); }, CANCEL_MS + 16);
+    var capturedId = _gid;
+    _cancelTimer = setTimeout(function () {
+      _cancelTimer = null;
+      if (_gid !== capturedId) return;  // gesture was aborted or superseded
+      _clearFg(t);
+    }, CANCEL_MS + 16);
   }
 
   // ── Style cleanup ────────────────────────────────────────────────────────────
@@ -199,22 +232,27 @@
 
   function _onTouchMove(e) {
     if (!g) return;
+
+    // Multi-touch: second finger appeared during drag — abort immediately
+    if (e.touches.length > 1) {
+      document.removeEventListener('touchmove', _onTouchMove);
+      _abortGesture();
+      return;
+    }
+
     var t  = e.touches[0];
     var dx = t.clientX - g.x0;
     var dy = t.clientY - g.y0;
 
     if (!g.locked) {
       if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) {
-        // Ambiguous — prevent default to stop native scroll pipeline from starting
         e.preventDefault();
         return;
       }
       if (Math.abs(dx) >= Math.abs(dy) && dx > 0) {
         g.locked = 'h';
         if (g.target) _dragStart(g.target);
-        // fall through to preventDefault + drag below
       } else {
-        // Clearly vertical — release the gesture, let scroll proceed normally
         g = null;
         document.removeEventListener('touchmove', _onTouchMove);
         return;
@@ -227,8 +265,12 @@
   }
 
   document.addEventListener('touchstart', function (e) {
-    g = null;
-    if (e.touches.length !== 1) return;
+    // Always abort any active gesture before deciding what to do next.
+    // This is the single safe cleanup point — covers new touch, second finger,
+    // and any other scenario where a previous gesture was left open.
+    _abortGesture();
+
+    if (e.touches.length !== 1) return;   // multi-touch: don't start new gesture
     if (_busy) return;
     var t = e.touches[0];
     if (t.clientX > EDGE_PX) return;
