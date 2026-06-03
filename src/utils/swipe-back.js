@@ -3,27 +3,27 @@
  *
  * All types are simple foreground-only translateX. No background manipulation.
  *
- *   B (overlays): position:fixed panels slide right, app shows naturally behind
- *   B (readers):  quranReader / ivSeriesView translate in-flow; bg stays hidden
- *                 (display:none throughout — panel background shows, no header clash)
- *   B (gencine):  panelGencine (header + content) translates as one unit
- *   B (tablet):   quranReader / ivSeriesView clear instantly, doBack handles state
- *
  * Navigation: App.doBack({allowExit:false}) fires after animation.
  * Guards: _sbPdfZoomed, mushaf-mode, PTR, horiz-scroll, input — all preserved.
+ *
+ * Scroll lock:
+ *   At horizontal lock, overflowY is set to 'hidden' on the scroll host
+ *   (panel ancestor or the fg itself for fixed overlays). This prevents
+ *   iOS WKScrollView from scrolling the content while the gesture is active.
+ *   e.preventDefault() is also called on every tracked touchmove so that
+ *   the browser native scroll cannot start during the pre-lock ambiguous phase.
  */
 (function () {
   'use strict';
 
   // ── Tuning ──────────────────────────────────────────────────────────────────
-  var EDGE_PX   = 32;    // touch must start within this many px of left edge
-  var LOCK_PX   = 10;    // movement before direction is decided
-  var DIST_OK   = 80;    // px rightward travel → commit
-  var VEL_OK    = 0.35;  // px/ms fast-flick threshold
-  var ANIM_MS   = 320;   // commit animation duration
-  var CANCEL_MS = 290;   // cancel snap-back duration
+  var EDGE_PX   = 32;
+  var LOCK_PX   = 10;
+  var DIST_OK   = 80;
+  var VEL_OK    = 0.35;
+  var ANIM_MS   = 320;
+  var CANCEL_MS = 290;
 
-  // ── Animation lock ───────────────────────────────────────────────────────────
   var _busy = false;
 
   // ── Gate checks ──────────────────────────────────────────────────────────────
@@ -66,27 +66,38 @@
     return window.innerWidth >= 768 || document.documentElement.classList.contains('is-ipad');
   }
 
+  // ── Scroll host: the element whose overflowY we lock during the gesture ──────
+  // For in-flow fg (reader, iv-series): walk up to the .panel ancestor.
+  // For fg that IS a .panel (panelGencine): use it directly.
+  // For fixed overlays (no .panel ancestor): fall back to the fg itself.
+
+  function _scrollHost(fg) {
+    if (fg.classList && fg.classList.contains('panel')) return fg;
+    var n = fg.parentElement;
+    while (n && n !== document.body) {
+      if (n.classList && n.classList.contains('panel')) return n;
+      n = n.parentElement;
+    }
+    return fg;
+  }
+
   // ── Target resolution ────────────────────────────────────────────────────────
 
   function _getTarget() {
     var W = window.innerWidth;
 
-    // Fixed overlays — app content visible naturally underneath
     var overlayIds = ['profilePanel', 'prayerProgressPanel', 'authPanel'];
     for (var i = 0; i < overlayIds.length; i++) {
       var ov = document.getElementById(overlayIds[i]);
       if (ov && ov.classList.contains('on')) return { fg: ov, W: W };
     }
 
-    // IslamVoice series — translate in-flow; ivHome stays hidden behind
     var iv = document.getElementById('ivSeriesView');
     if (iv && iv.classList.contains('on')) return { fg: iv, W: W };
 
-    // Quran reader — translate in-flow; quranHome stays hidden behind
     var qr = document.getElementById('quranReader');
     if (qr && qr.classList.contains('on')) return { fg: qr, W: W };
 
-    // Gencine sub-views — translate whole panel so header moves with content
     if (window.GencineUI && window.S && S.tab === 'gencine' && GencineUI._view !== 'home') {
       var gp = document.getElementById('panelGencine');
       if (gp) return { fg: gp, W: W };
@@ -95,10 +106,28 @@
     return null;
   }
 
-  // ── Drag start ───────────────────────────────────────────────────────────────
+  // ── Scroll lock / unlock ─────────────────────────────────────────────────────
+
+  function _lockScroll(t) {
+    var sh = _scrollHost(t.fg);
+    t._sbSH    = sh;
+    t._sbSHOvY = sh.style.overflowY;
+    sh.style.overflowY = 'hidden';
+  }
+
+  function _unlockScroll(t) {
+    if (t._sbSH) {
+      t._sbSH.style.overflowY = t._sbSHOvY || '';
+      t._sbSH    = null;
+      t._sbSHOvY = undefined;
+    }
+  }
+
+  // ── Drag start (called at direction lock) ────────────────────────────────────
 
   function _dragStart(t) {
     t.started = true;
+    _lockScroll(t);
     t.fg.style.willChange = 'transform';
     t.fg.style.transition = 'none';
   }
@@ -116,10 +145,9 @@
   function _commit(t) {
     _busy = true;
 
-    // Tablet inline readers have display:flex!important — slide-off causes a snap.
-    // Clear immediately and let App.doBack handle the state change.
     var id = t.fg.id;
     if (_isTablet() && (id === 'quranReader' || id === 'ivSeriesView')) {
+      _unlockScroll(t);
       _clearFg(t);
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       _busy = false;
@@ -131,6 +159,7 @@
     t.fg.style.transform  = 'translateX(' + t.W + 'px)';
 
     setTimeout(function () {
+      _unlockScroll(t);
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       requestAnimationFrame(function () {
         _clearFg(t);
@@ -143,6 +172,8 @@
 
   function _cancel(t) {
     if (!t.started) return;
+    // Restore scroll immediately so content is scrollable right after snap-back
+    _unlockScroll(t);
     t.fg.style.transition = 'transform ' + CANCEL_MS + 'ms cubic-bezier(.22,1,.36,1)';
     t.fg.style.transform  = 'translateX(0)';
     setTimeout(function () { _clearFg(t); }, CANCEL_MS + 16);
@@ -167,11 +198,17 @@
     var dy = t.clientY - g.y0;
 
     if (!g.locked) {
-      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
+      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) {
+        // Ambiguous — prevent default to stop native scroll pipeline from starting
+        e.preventDefault();
+        return;
+      }
       if (Math.abs(dx) >= Math.abs(dy) && dx > 0) {
         g.locked = 'h';
         if (g.target) _dragStart(g.target);
+        // fall through to preventDefault + drag below
       } else {
+        // Clearly vertical — release the gesture, let scroll proceed normally
         g = null;
         document.removeEventListener('touchmove', _onTouchMove);
         return;
