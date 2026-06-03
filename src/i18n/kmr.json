@@ -412,6 +412,7 @@
   "settings.app_notif_off": "چاڵاككرنا بیرئینانان",
   "settings.app_notif_sub": "ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)",
   "settings.reset_defaults": "زڤڕاندن بۆ بارێ دەستپێکێ",
+  "settings.reset_defaults_confirm": "تۆ پشتڕاستی ژ زڤڕاندنا ڕێکخستنان بۆ بارێ دەستپێکێ؟",
   "settings.reset_progress": "سڕینەوەی پێشکەوتنی خوێندن",
   "settings.reset_btn": "سڕینەوە",
   "settings.reset_confirm": "دڵنیای؟ هەموو تۆمارەکانی خوێندن سڕاوە دەبن.",

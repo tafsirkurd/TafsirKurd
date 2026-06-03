@@ -10377,7 +10377,7 @@ function renderSettings(){
   },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
   // Reset settings to defaults
   g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
-    _tkConfirm({icon:'↩️',title:t('settings.reset_defaults_confirm')||'ڕێکخستنەکان زڤرانەوە بۆ بارێ دەستپێکێ؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
+    _tkConfirm({icon:'↩️',title:t('settings.reset_defaults_confirm')||'تۆ پشتڕاستی ژ زڤڕاندنا ڕێکخستنان بۆ بارێ دەستپێکێ؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
       var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
       _sk.forEach(function(k){localStorage.removeItem(k);});
       S.showTafsir=true;S.bgAudio=false;S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;S.hapticFeedback=true;
