@@ -387,7 +387,7 @@ body{background:var(--bg);color:var(--text)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ===== APP HEADER ===== */
-.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px}
+.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;height:var(--hdr-h);box-sizing:border-box;display:flex;align-items:center;gap:12px}
 .hdr-logo{display:flex;align-items:center;gap:8px;flex:1}
 .hdr-logo img{width:38px;height:38px;object-fit:contain}
 .hdr-logo span{font-size:1.15rem;font-weight:800;letter-spacing:-.3px;color:var(--text)}
@@ -3065,8 +3065,8 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
   .tab-item i{font-size:20px!important;width:52px;height:34px}
   .tab-item span{font-size:11px!important;font-weight:500}
 
-  /* HEADER: more breathing room on iPad */
-  .hdr{padding:14px 28px 12px}
+  /* HEADER: wider horizontal padding on tablet — height still from --hdr-h */
+  .hdr{padding:0 28px}
 
   /* QURAN: app-like reading split */
   #panelQuran.on{flex-direction:row!important}
@@ -3086,7 +3086,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
   #quranHome .hdr,
   #quranHome .search-bar{flex-shrink:0}
   /* Sidebar hdr: 300px → override generic 28px padding to prevent logo text wrapping */
-  #quranHome .hdr{padding:10px 14px}
+  #quranHome .hdr{padding:0 14px}
   #quranHome .hdr .hdr-logo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #quranHome .search-bar.on{padding:8px 14px 10px}
   #quranHome .search-wrap{height:40px}
@@ -3372,7 +3372,7 @@ html.is-ipad{
 /* Tab bar stays at bottom — same as mobile */
 html.is-ipad .tab-item i{font-size:20px!important;width:52px;height:34px}
 html.is-ipad .tab-item span{font-size:11px!important;font-weight:500}
-html.is-ipad .hdr{padding:14px 28px 12px}
+html.is-ipad .hdr{padding:0 28px}
 html.is-ipad #panelQuran.on{flex-direction:row!important}
 html.is-ipad #quranHome{
   display:flex!important;flex-direction:column;
@@ -3442,7 +3442,7 @@ html.is-ipad .rating-overlay,
 html.is-ipad .iv-overlay{right:var(--nav-rail-w)}
 html.is-ipad .repeat-status{right:calc(var(--nav-rail-w) + 16px)}
 html.is-ipad .toast{left:calc(50% - var(--nav-rail-w) / 2)}
-html.is-ipad #quranHome .hdr{background:var(--bg2);padding:10px 14px}
+html.is-ipad #quranHome .hdr{background:var(--bg2);padding:0 14px}
 html.is-ipad #quranHome .hdr .hdr-logo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html.is-ipad #quranHome .search-bar{background:var(--bg2)}
 html.is-ipad #quranHome .search-bar.on{padding:8px 14px 10px}
