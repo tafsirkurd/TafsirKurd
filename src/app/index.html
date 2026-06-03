@@ -202,7 +202,7 @@ img{display:block;max-width:100%}
   --font-ar:'KFGQPC Hafs','Scheherazade New','IBM Plex Sans Arabic',sans-serif;
   --font-su:'SurahName',serif;
   --ar-size:2.0rem;--tf-size:1.0rem;--line-h:2.2;--ayah-px:16px;
-  --tab-h:60px;--hdr-h:52px;
+  --tab-h:60px;--hdr-h:58px;
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
   --ease:cubic-bezier(.16,1,.3,1);
@@ -387,7 +387,7 @@ body{background:var(--bg);color:var(--text)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ===== APP HEADER ===== */
-.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px}
+.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 20px;min-height:var(--hdr-h);display:flex;align-items:center;gap:12px}
 .hdr-logo{display:flex;align-items:center;gap:8px;flex:1}
 .hdr-logo img{width:38px;height:38px;object-fit:contain}
 .hdr-logo span{font-size:1.15rem;font-weight:800;letter-spacing:-.3px;color:var(--text)}
@@ -3058,7 +3058,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
     --tab-h:60px;
     --nav-rail-w:0px;
     --reading-max-w:720px;
-    --hdr-h:56px;
+    --hdr-h:64px;
   }
 
   /* Keep bottom tab bar — same as mobile */
@@ -3367,7 +3367,7 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
    compat mode reports ~375px viewport). */
 html.is-ipad{
   --ar-size:2.4rem;--tf-size:1.05rem;--line-h:2.6;--ayah-px:52px;
-  --tab-h:60px;--nav-rail-w:0px;--reading-max-w:720px;--hdr-h:56px;
+  --tab-h:60px;--nav-rail-w:0px;--reading-max-w:720px;--hdr-h:64px;
 }
 /* Tab bar stays at bottom — same as mobile */
 html.is-ipad .tab-item i{font-size:20px!important;width:52px;height:34px}
