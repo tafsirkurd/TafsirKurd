@@ -1,28 +1,25 @@
 /**
- * swipe-back.js v4 — native-style left-edge swipe to go back
+ * swipe-back.js v5 — native-style left-edge swipe to go back
  *
  * Visual types:
  *   A (quranReader, ivSeriesView): iOS-style card — foreground slides right as a
  *     fixed overlay while the background page is revealed beneath it.
- *     Background is un-hidden before the first animation frame (layout flush) so
- *     there is no blank beige area or delayed header pop-in.
- *   B (overlays, profiles): fg translates 1:1, no bg reveal.
- *     Subtle left-edge shadow gives depth.
+ *     The fg element is temporarily moved to <body> during the gesture to escape
+ *     the contain:paint clipping on .panel, then reinserted on cleanup.
+ *   B (overlays, profiles): fg translates 1:1, no bg reveal. Subtle shadow.
  *   G (Gencine sub-views): gencineContent translates within overflow-x:hidden panel.
  *
  * Navigation logic: unchanged — App.doBack({allowExit:false}) fires after animation.
- * All guards preserved: _sbPdfZoomed, mushaf-mode, PTR, horiz-scroll, input.
  */
 (function () {
   'use strict';
 
-  // ── Tuning ──────────────────────────────────────────────────────────────────
-  var EDGE_PX   = 32;    // touch must start within this many px of left edge
-  var LOCK_PX   = 10;    // movement before direction is decided
-  var DIST_OK   = 80;    // px rightward travel → commit
-  var VEL_OK    = 0.35;  // px/ms fast-flick threshold
-  var ANIM_MS   = 270;   // commit animation duration
-  var CANCEL_MS = 260;   // cancel snap-back duration
+  var EDGE_PX   = 32;
+  var LOCK_PX   = 10;
+  var DIST_OK   = 80;
+  var VEL_OK    = 0.35;
+  var ANIM_MS   = 270;
+  var CANCEL_MS = 260;
 
   var _busy = false;
 
@@ -61,8 +58,6 @@
     return false;
   }
 
-  // ── Layout detection ─────────────────────────────────────────────────────────
-
   function _isTablet() {
     return window.innerWidth >= 768 || document.documentElement.classList.contains('is-ipad');
   }
@@ -72,7 +67,6 @@
   function _getTarget() {
     var W = window.innerWidth;
 
-    // Type B: full-screen fixed overlays
     var overlayIds = ['profilePanel', 'prayerProgressPanel', 'authPanel'];
     for (var i = 0; i < overlayIds.length; i++) {
       var ov = document.getElementById(overlayIds[i]);
@@ -106,24 +100,31 @@
     t.started = true;
 
     if (t.type === 'A') {
-      // Reveal the background page before the first animation frame.
+      // Show the background page.
       // bg has display:none (set by openSurah/openSeries) — remove it so it renders.
-      if (t.bg) {
-        t.bg.style.display = '';
-      }
-      // Float reader as a fixed full-screen card on top of background.
-      // position:fixed takes it out of flex flow → no height/layout conflict.
-      t.fg.style.position = 'fixed';
-      t.fg.style.top      = '0';
-      t.fg.style.left     = '0';
-      t.fg.style.right    = '0';
-      t.fg.style.bottom   = '0';
-      t.fg.style.zIndex   = '10';
+      if (t.bg) t.bg.style.display = '';
+
+      // Move fg to <body> — .panel has contain:paint which (a) clips position:fixed
+      // children to the panel border-box and (b) makes them viewport-relative within
+      // the panel. Moving fg to body escapes this so position:fixed covers the real
+      // viewport and the element is free to translate off-screen without clipping.
+      t._fgParent  = t.fg.parentElement;
+      t._fgSibling = t.fg.nextSibling;
+      if (t._fgParent) document.body.appendChild(t.fg);
+
+      // Position as fixed full-screen card on top of everything (above tab bar z:300)
+      t.fg.style.position  = 'fixed';
+      t.fg.style.top       = '0';
+      t.fg.style.left      = '0';
+      t.fg.style.right     = '0';
+      t.fg.style.bottom    = '0';
+      t.fg.style.zIndex    = '400';
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
-      // Shadow on the left/leading edge — depth cue as card separates from bg
-      t.fg.style.boxShadow = '-8px 0 32px rgba(0,0,0,.28)';
-      // Force layout flush — ensures bg is fully rendered (header, content)
+      // Shadow on the left/leading edge — depth cue as card separates from background
+      t.fg.style.boxShadow = '-8px 0 32px rgba(0,0,0,.26)';
+
+      // Force layout flush — ensures bg is fully rendered (header, content visible)
       // before the first animation frame. Prevents blank background flash.
       void t.fg.clientWidth;
     } else {
@@ -168,12 +169,11 @@
     t.fg.style.transform  = 'translateX(' + t.W + 'px)';
 
     setTimeout(function () {
-      // App.doBack() will: remove .on from fg, restore bg visibility (display:'')
-      // For Type A this is fine — bg is already visible, doBack just confirms it.
+      // App.doBack(): removes .on from fg, restores bg display:'' (no-op since already shown)
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       requestAnimationFrame(function () {
-        // Clean up inline styles. For Type A: doBack already handles .on removal,
-        // so fg is display:none via CSS. We just clear the position/transform/shadow.
+        // fg is now display:none via CSS (.reader without .on).
+        // Reinsert to original position and clear all inline styles.
         _clearFg(t, false);
         _busy = false;
       });
@@ -191,7 +191,7 @@
     t.fg.style.transform  = 'translateX(0)';
 
     setTimeout(function () {
-      // On cancel, restore bg to hidden (App.doBack was NOT called)
+      // Reinsert fg, restore bg to hidden (App.doBack was NOT called on cancel)
       _clearFg(t, true);
     }, CANCEL_MS + 16);
   }
@@ -206,12 +206,20 @@
     s.willChange  = '';
     s.boxShadow   = '';
     if (t.type === 'A') {
-      s.position = '';
-      s.top      = '';
-      s.left     = '';
-      s.right    = '';
-      s.bottom   = '';
-      s.zIndex   = '';
+      s.position   = '';
+      s.top        = '';
+      s.left       = '';
+      s.right      = '';
+      s.bottom     = '';
+      s.zIndex     = '';
+      // Reinsert fg back to original DOM position (before its original next sibling)
+      if (t._fgParent) {
+        if (t._fgSibling && t._fgSibling.parentElement === t._fgParent) {
+          t._fgParent.insertBefore(t.fg, t._fgSibling);
+        } else {
+          t._fgParent.appendChild(t.fg);
+        }
+      }
       if (restoreBg && t.bg) {
         t.bg.style.display = 'none';
       }
