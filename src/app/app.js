@@ -10367,7 +10367,7 @@ function renderSettings(){
           existing.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
           valid.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
           saveBookmarks(Object.values(merged));
-          toast((t('toast.import_done')||'نیشانەکراو هاتن')+' ('+valid.length+')');
+          toast((t('toast.import_done')||'ئایەتێن هەلگرتی هاتن ✓')+' ('+valid.length+')');
           renderSettings();
         }catch(err){toast(t('toast.import_invalid')||'فایل دروست نینە');}
       };
