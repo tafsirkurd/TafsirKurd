@@ -871,6 +871,31 @@ window.GencineUI = {
     this._draw();
   },
 
+  // Renders the swipe-back destination into an arbitrary container without mutating any state.
+  // Called by swipe-back.js at drag-lock time to pre-populate the bg layer for Type AG.
+  _renderDestInto: function(container) {
+    var sv = this._view, si = this._hadithDetailIdx, sa = this._adhkarView;
+    // Mirror goHome() logic — read-only destination determination
+    if (this._view === 'hadith' && this._hadithDetailIdx !== null) {
+      this._hadithDetailIdx = null;           // hadith detail → hadith list
+    } else if (this._view === 'adhkar' && this._adhkarView === 'list') {
+      this._adhkarView = 'grid';              // adhkar list → adhkar grid
+    } else {
+      this._view = 'home';                    // everything else → gencine home
+    }
+    try {
+      if      (this._view === 'home')   this._renderHome(container);
+      else if (this._view === 'hadith') this._renderHadith(container);
+      else if (this._view === 'adhkar') this._renderAdhkar(container);
+    } finally {
+      // Always restore — even if a render method throws
+      this._view = sv; this._hadithDetailIdx = si; this._adhkarView = sa;
+    }
+    // _renderHome may add genc-fade-in for its own entry animation — strip it here
+    // so the destination appears immediately as the swipe gesture reveals it.
+    container.classList.remove('genc-fade-in');
+  },
+
   closeSheet: function(){
     if(this._activeSheet){ this._activeSheet.classList.remove('on'); }
   },

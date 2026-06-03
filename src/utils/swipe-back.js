@@ -1,13 +1,15 @@
 /**
- * swipe-back.js v9 — native-style left-edge swipe to go back
+ * swipe-back.js v10 — native-style left-edge swipe to go back
  *
  * Visual types:
- *   A (quranReader, ivSeriesView): iOS-style card — foreground slides right as a
- *     fixed overlay while the background page is revealed beneath it.
- *     The fg element is temporarily moved to <body> during the gesture to escape
- *     the contain:paint clipping on .panel, then reinserted on cleanup.
- *   B (overlays, profiles): fg translates 1:1, no bg reveal. Subtle shadow.
- *   G (Gencine sub-views): gencineContent translates within overflow-x:hidden panel.
+ *   A  (quranReader, ivSeriesView): iOS-style card — fg slides right as fixed overlay,
+ *      bg revealed beneath. fg moved to <body> to escape contain:paint clipping.
+ *   AG (Gencine sub-views except book-reader): same iOS-style card as A, but bg is a
+ *      temporary pre-rendered destination element inside panelGencine. Built at
+ *      drag-lock time via GencineUI._renderDestInto(), removed after commit/cancel.
+ *   G+ (Gencine book-reader): fg moved to <body> like A/AG, scrim + shadow, but no
+ *      pre-render — destination (books list) requires async load. Clean themed bg.
+ *   B  (overlays, profiles): fg translates 1:1, no bg reveal. Subtle shadow.
  *
  * Navigation logic: unchanged — App.doBack({allowExit:false}) fires after animation.
  *
@@ -123,10 +125,18 @@
       return { type: 'A', fg: qr, bg: document.getElementById('quranHome'), W: W };
     }
 
-    // Gencine sub-views — Type G (panel-contained translate)
+    // Gencine sub-views
     if (window.GencineUI && window.S && S.tab === 'gencine' && GencineUI._view !== 'home') {
       var gc = document.getElementById('gencineContent');
-      if (gc) return { type: 'G', fg: gc, W: W };
+      var pg = document.getElementById('panelGencine');
+      if (gc && pg) {
+        // book-reader: destination requires async load — use G+ (no pre-render)
+        if (GencineUI._view === 'book-reader') {
+          return { type: 'G+', fg: gc, panel: pg, W: W };
+        }
+        // all other sub-views: full destination reveal via pre-render (Type AG)
+        return { type: 'AG', fg: gc, panel: pg, W: W };
+      }
     }
 
     return null;
@@ -156,17 +166,15 @@
         void t.bg.offsetHeight;
       }
 
-      // Move fg to <body> — .panel has contain:paint which (a) clips position:fixed
-      // children to the panel border-box and (b) makes them viewport-relative within
-      // the panel. Moving fg to body escapes this so position:fixed covers the real
-      // viewport and the element is free to translate off-screen without clipping.
+      // Move fg to <body> — .panel has contain:paint which clips position:fixed children
+      // to the panel border-box. Moving fg to body escapes this so position:fixed covers
+      // the real viewport and the element can translate off-screen without clipping.
       t._fgParent  = t.fg.parentElement;
       t._fgSibling = t.fg.nextSibling;
       if (t._fgParent) document.body.appendChild(t.fg);
 
       // Position as fixed full-screen card on top of everything (above tab bar z:300).
-      // top:'var(--safe-t)' matches the panel's normal rendered position on notched
-      // devices — prevents the reader from jumping up by the safe-area inset at drag start.
+      // top:'var(--safe-t)' prevents the ~50px safe-area jump on notched devices.
       t.fg.style.position   = 'fixed';
       t.fg.style.top        = 'var(--safe-t)';
       t.fg.style.left       = '0';
@@ -177,15 +185,60 @@
       t.fg.style.transition = 'none';
       t.fg.style.boxShadow  = '-12px 0 40px rgba(0,0,0,.38)';
 
-      // Dim scrim over the background — makes bg read as "previous screen in stack"
-      // not "another page sitting underneath". Sits between bg (z<400) and fg (z:400).
+      // Dim scrim — makes bg read as "previous screen in stack".
       var scrim = document.createElement('div');
       scrim.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0.30;z-index:399;pointer-events:none;transition:none;will-change:opacity;';
       document.body.appendChild(scrim);
       t._scrim = scrim;
 
-      // Force layout of fg in body — ensures fixed positioning is computed correctly.
       void t.fg.clientWidth;
+
+    } else if (t.type === 'AG' || t.type === 'G+') {
+      // Both AG and G+ escape panelGencine's contain:paint by moving fg to body.
+      // AG additionally pre-renders the destination into panelGencine as a bg layer.
+
+      if (t.type === 'AG' && window.GencineUI && typeof GencineUI._renderDestInto === 'function') {
+        // Build destination bg BEFORE saving _fgSibling so sibling points to destEl,
+        // ensuring fg reinserts in front of destEl on cleanup (preserving original order).
+        var destEl = document.createElement('div');
+        destEl.className = 'gencine-dest-layer';
+        t.panel.appendChild(destEl);
+        GencineUI._renderDestInto(destEl);
+        t._destEl = destEl;
+        // Force panelGencine's paint chunk — same as void t.bg.offsetHeight in Type A.
+        // panelGencine has contain:paint (global .panel rule), so we force layout inside it.
+        void destEl.offsetHeight;
+      }
+
+      // Save fg's DOM position (after destEl append so sibling = destEl for AG, null for G+)
+      t._fgParent  = t.fg.parentElement;
+      t._fgSibling = t.fg.nextSibling;
+
+      // Save panelGencine scroll; reset to 0 so destination shows from top during drag.
+      // Restored on cancel; _draw() handles scroll on commit.
+      t._savedScroll = t.panel.scrollTop;
+      t.panel.scrollTop = 0;
+
+      // Move fg to body — same contain:paint escape as Type A
+      if (t._fgParent) document.body.appendChild(t.fg);
+
+      t.fg.style.position   = 'fixed';
+      t.fg.style.top        = 'var(--safe-t)';
+      t.fg.style.left       = '0';
+      t.fg.style.right      = '0';
+      t.fg.style.bottom     = '0';
+      t.fg.style.zIndex     = '400';
+      t.fg.style.willChange = 'transform';
+      t.fg.style.transition = 'none';
+      t.fg.style.boxShadow  = '-12px 0 40px rgba(0,0,0,.38)';
+
+      var scrim2 = document.createElement('div');
+      scrim2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0.30;z-index:399;pointer-events:none;transition:none;will-change:opacity;';
+      document.body.appendChild(scrim2);
+      t._scrim = scrim2;
+
+      void t.fg.clientWidth;
+
     } else {
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
@@ -223,8 +276,8 @@
       return;
     }
 
-    // Tablet inline readers: CSS forces display:flex!important — skip animation
-    if (_isTablet() && (t.fg.id === 'quranReader' || t.fg.id === 'ivSeriesView')) {
+    // Tablet inline readers and Gencine: panels are non-overlaying — skip animation
+    if (_isTablet() && (t.fg.id === 'quranReader' || t.fg.id === 'ivSeriesView' || t.fg.id === 'gencineContent')) {
       _clearFg(t, false);
       try {
         if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
@@ -292,24 +345,17 @@
   }
 
   // ── Style cleanup ────────────────────────────────────────────────────────────
-  // restoreBg: true on cancel (re-hide bg), false on commit (App.doBack handles it)
-
+  // restoreBg: true on cancel (undo visual state), false on commit (App.doBack handles it)
   function _clearFg(t, restoreBg) {
-    // Remove sb-reveal class so content-visibility:auto resumes normal behaviour.
-    document.body.classList.remove('sb-reveal');
     var s = t.fg.style;
-    s.transition  = '';
-    s.transform   = '';
-    s.willChange  = '';
-    s.boxShadow   = '';
+    s.transition = '';
+    s.transform  = '';
+    s.willChange = '';
+    s.boxShadow  = '';
+
     if (t.type === 'A') {
-      s.position   = '';
-      s.top        = '';
-      s.left       = '';
-      s.right      = '';
-      s.bottom     = '';
-      s.zIndex     = '';
-      // Reinsert fg back to original DOM position (before its original next sibling)
+      document.body.classList.remove('sb-reveal');
+      s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = ''; s.zIndex = '';
       if (t._fgParent) {
         if (t._fgSibling && t._fgSibling.parentElement === t._fgParent) {
           t._fgParent.insertBefore(t.fg, t._fgSibling);
@@ -317,8 +363,32 @@
           t._fgParent.appendChild(t.fg);
         }
       }
-      if (restoreBg && t.bg) {
-        t.bg.style.display = 'none';
+      if (restoreBg && t.bg) t.bg.style.display = 'none';
+      if (t._scrim) {
+        if (t._scrim.parentNode) t._scrim.parentNode.removeChild(t._scrim);
+        t._scrim = null;
+      }
+
+    } else if (t.type === 'AG' || t.type === 'G+') {
+      s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = ''; s.zIndex = '';
+      // Reinsert fg before its original next sibling (= destEl for AG, null/end for G+).
+      // For AG this places fg at its original position, then we remove destEl, leaving
+      // panelGencine with only gencineContent — identical content, no visible flash.
+      if (t._fgParent) {
+        if (t._fgSibling && t._fgSibling.parentElement === t._fgParent) {
+          t._fgParent.insertBefore(t.fg, t._fgSibling);
+        } else {
+          t._fgParent.appendChild(t.fg);
+        }
+      }
+      // Remove the pre-rendered destination overlay (AG only)
+      if (t._destEl) {
+        if (t._destEl.parentNode) t._destEl.parentNode.removeChild(t._destEl);
+        t._destEl = null;
+      }
+      // On cancel: restore the panel's original scroll position
+      if (restoreBg && t._savedScroll != null && t.panel) {
+        t.panel.scrollTop = t._savedScroll;
       }
       if (t._scrim) {
         if (t._scrim.parentNode) t._scrim.parentNode.removeChild(t._scrim);

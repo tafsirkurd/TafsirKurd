@@ -1,5 +1,5 @@
 /**
- * tab-swipe.js v10 — Instagram-style root tab swipe navigation
+ * tab-swipe.js v11 — Instagram-style root tab swipe navigation
  *
  * Two-phase gesture detection:
  *   Phase 1 (_onDetect, passive:true): observes movement without ever blocking
@@ -61,6 +61,7 @@
   // ── Horizontal scroll / carousel detection ───────────────────────────────────
   function _inHorizScroll(el) {
     if (typeof _ptrInHorizScroll === 'function') return _ptrInHorizScroll(el);
+    // Pass 1: class-name check — no style flush; covers all known horizontal scrollers
     var node = el, steps = 0;
     while (node && node !== document.body && steps++ < 15) {
       var cn = typeof node.className === 'string' ? node.className : '';
@@ -71,6 +72,11 @@
           cn.indexOf('carousel')       >= 0 ||
           cn.indexOf('slider')         >= 0 ||
           cn.indexOf('swiper')         >= 0) return true;
+      node = node.parentElement;
+    }
+    // Pass 2: computed-style fallback — forces style flush; runs only if pass 1 found nothing
+    node = el; steps = 0;
+    while (node && node !== document.body && steps++ < 15) {
       try {
         var ox = window.getComputedStyle(node).overflowX;
         if ((ox === 'auto' || ox === 'scroll') && node.scrollWidth > node.clientWidth + 8) return true;
@@ -156,12 +162,11 @@
     ts.display          = 'flex';
     ts.flexDirection    = 'column';
     ts.zIndex           = '99';
-    ts.willChange       = 'transform, opacity';
-    ts.transition       = 'none';
-    ts.transform        = 'translate3d(' + targetStart + 'px,0,0)';
-    ts.opacity          = '0.97';
+    ts.willChange        = 'transform';
+    ts.transition        = 'none';
+    ts.transform         = 'translate3d(' + targetStart + 'px,0,0)';
     ts.contentVisibility = 'visible';
-    ts.visibility       = 'visible';
+    ts.visibility        = 'visible';
 
     // Force layout flush so tgt is fully rendered before first animation frame
     void t.tgt.clientWidth;
@@ -200,12 +205,10 @@
   // ── 1:1 finger tracking ─────────────────────────────────────────────────────
   function _dragMove(t, dx) {
     if (!t.started) return;
-    t.cur.style.transition = 'none';
-    t.cur.style.transform  = 'translate3d(' + dx + 'px,0,0)';
+    t.cur.style.transform = 'translate3d(' + dx + 'px,0,0)';
     if (t.tgt) {
       var W = window.innerWidth;
-      t.tgt.style.transition = 'none';
-      t.tgt.style.transform  = 'translate3d(' + (_targetStart(t.dir, W) + dx) + 'px,0,0)';
+      t.tgt.style.transform = 'translate3d(' + (_targetStart(t.dir, W) + dx) + 'px,0,0)';
     }
   }
 
@@ -227,9 +230,8 @@
 
     t.cur.style.transition = 'transform ' + dur;
     t.cur.style.transform  = 'translate3d(' + curFinal + 'px,0,0)';
-    t.tgt.style.transition = 'transform ' + dur + ', opacity ' + dur;
+    t.tgt.style.transition = 'transform ' + dur;
     t.tgt.style.transform  = 'translate3d(0,0,0)';
-    t.tgt.style.opacity    = '1';
 
     setTimeout(function () {
       // try/catch guarantees the rAF cleanup always runs even if App.tab() throws,
@@ -283,9 +285,8 @@
 
     t.cur.style.transition = 'transform ' + dur;
     t.cur.style.transform  = 'translate3d(0,0,0)';
-    t.tgt.style.transition = 'transform ' + dur + ', opacity ' + dur;
+    t.tgt.style.transition = 'transform ' + dur;
     t.tgt.style.transform  = 'translate3d(' + tgtFinal + 'px,0,0)';
-    t.tgt.style.opacity    = '0.97';
 
     _cancelTid = setTimeout(function () {
       _cancelTid = null;
@@ -309,7 +310,7 @@
     var s = t.tgt.style;
     s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = '';
     s.display = ''; s.flexDirection = ''; s.zIndex = '';
-    s.willChange = ''; s.transition = ''; s.transform = ''; s.opacity = '';
+    s.willChange = ''; s.transition = ''; s.transform = '';
     s.contentVisibility = ''; s.visibility = '';
   }
 
