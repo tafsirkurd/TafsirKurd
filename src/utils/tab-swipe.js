@@ -1,5 +1,5 @@
 /**
- * tab-swipe.js v7 — Instagram-style root tab swipe navigation
+ * tab-swipe.js v9 — Instagram-style root tab swipe navigation
  *
  * Two-phase gesture detection:
  *   Phase 1 (_onDetect, passive:true): observes movement without ever blocking
@@ -55,7 +55,8 @@
   };
 
   // ── Animation lock ───────────────────────────────────────────────────────────
-  var _busy = false;
+  var _busy      = false;
+  var _cancelTid = null;  // pending cancel timeout — cleared on each new _cancel call
 
   // ── Horizontal scroll / carousel detection ───────────────────────────────────
   function _inHorizScroll(el) {
@@ -231,7 +232,11 @@
     t.tgt.style.opacity    = '1';
 
     setTimeout(function () {
-      if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
+      // try/catch guarantees the rAF cleanup always runs even if App.tab() throws,
+      // so _busy can never remain stuck true after a commit (fix #7).
+      try {
+        if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
+      } catch (_e) {}
       requestAnimationFrame(function () {
         _clearCur(t);
         _clearTgt(t);
@@ -243,6 +248,11 @@
 
   // ── Cancel (snap back) ───────────────────────────────────────────────────────
   function _cancel(t) {
+    // Lock _busy immediately — prevents a new gesture starting during snap-back
+    // and having its inline styles wiped by this cancel's cleanup timeout (fix #6).
+    _busy = true;
+    // Clear any prior cancel timeout so stale closures never reach panel elements.
+    if (_cancelTid) { clearTimeout(_cancelTid); _cancelTid = null; }
     _cancelRaf();
 
     if (!t || !t.started) {
@@ -257,7 +267,8 @@
     if (!t.tgt) {
       t.cur.style.transition = 'transform 220ms ' + ease;
       t.cur.style.transform  = 'translate3d(0,0,0)';
-      setTimeout(function () {
+      _cancelTid = setTimeout(function () {
+        _cancelTid = null;
         var s = t.cur.style;
         s.willChange = ''; s.transition = ''; s.transform = '';
         document.body.classList.remove('ts-dragging');
@@ -276,7 +287,8 @@
     t.tgt.style.transform  = 'translate3d(' + tgtFinal + 'px,0,0)';
     t.tgt.style.opacity    = '0.97';
 
-    setTimeout(function () {
+    _cancelTid = setTimeout(function () {
+      _cancelTid = null;
       _clearCur(t);
       _clearTgt(t);
       document.body.classList.remove('ts-dragging');
