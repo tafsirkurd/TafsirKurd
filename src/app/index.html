@@ -874,7 +874,7 @@ html.safe-render:not(.low-end-device) [data-theme="dark"] .tabbar{background:rgb
 html.safe-render:not(.low-end-device) [data-theme="sakina"] .tabbar{background:rgba(8,15,10,.88);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%)}
 [data-theme="noor"] .tabbar{background:#fdf4e3}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);cursor:pointer;position:relative;transition:color .3s var(--ease);-webkit-tap-highlight-color:transparent;padding:4px 0;max-height:60px;overflow:visible}
-.tab-item i{font-size:18px !important;width:48px;height:32px;line-height:32px;text-align:center;border-radius:var(--r-full);transition:background-color .25s var(--ease),color .25s var(--ease),transform .32s cubic-bezier(.34,1.56,.64,1),box-shadow .25s var(--ease);background:transparent}
+.tab-item i{font-size:18px !important;width:48px;height:32px;line-height:32px;text-align:center;border-radius:var(--r-full);transition:background-color .18s var(--ease),color .18s var(--ease),transform .2s cubic-bezier(.4,0,.2,1),box-shadow .18s var(--ease);background:transparent}
 .tab-item span{font-size:10px !important;line-height:1;white-space:nowrap;transition:color .25s var(--ease),font-weight .25s;font-weight:500}
 .tab-item:active i{transform:scale(.80)}
 .tab-item.on{color:var(--text)}
@@ -3800,11 +3800,12 @@ html.safe-render:not(.low-end-device) .hdr {
   transform:translateZ(0);
 }
 
-/* ── 14. Tab-switch instant: suppress transitions during panel swap ───────
-   Applied for exactly 1 frame during App.tab() — panels appear pixel-instant
-   instead of doing their .15s fade. The tab-bar icon animation (spring) is
-   intentionally kept since it runs in the tab-bar, not the panel.         */
-body.tk-tab-switching .panel{transition:none!important;animation:none!important}
+/* ── 14. Tab-switch: suppress departing panel, allow arriving panel to animate ─
+   Applied for exactly 1 frame during App.tab(). Targets only the departing
+   panel (:not(.on)) so the arriving panel's tabPanelIn animation fires freely. */
+@keyframes tabPanelIn{from{transform:translateY(2px)}to{transform:none}}
+.panel.on{animation:tabPanelIn .2s cubic-bezier(.4,0,.2,1)}
+body.tk-tab-switching .panel:not(.on){transition:none!important;animation:none!important}
 
 /* ── 15. Scrolling: pause heavy background animations ────────────────────
    When the user is scrolling, the sky scene and audio wave animations keep
