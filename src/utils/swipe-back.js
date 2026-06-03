@@ -1,5 +1,5 @@
 /**
- * swipe-back.js v5 — native-style left-edge swipe to go back
+ * swipe-back.js v8 — native-style left-edge swipe to go back
  *
  * Visual types:
  *   A (quranReader, ivSeriesView): iOS-style card — foreground slides right as a
@@ -10,18 +10,51 @@
  *   G (Gencine sub-views): gencineContent translates within overflow-x:hidden panel.
  *
  * Navigation logic: unchanged — App.doBack({allowExit:false}) fires after animation.
+ *
+ * Two-phase gesture detection (matching tab-swipe v9 lifecycle):
+ *   Phase 1 (_onDetect, passive:true): never blocks scroll. Vertical lock releases
+ *     immediately. Horizontal lock requires dx>LOCK_PX && dx>|dy|*HORIZ_RATIO.
+ *   Phase 2 (_onActive, passive:false): rAF-batched translate3d tracking.
+ *     preventDefault only here — scroll is never touched until gesture is owned.
+ *
+ * Lifecycle matches tab-swipe v9:
+ *   _cancel sets _busy=true immediately; _cancelTid saved and cleared on each
+ *   new _cancel call; App.doBack wrapped in try/catch so _busy can't stay stuck.
  */
 (function () {
   'use strict';
 
-  var EDGE_PX   = 32;
-  var LOCK_PX   = 10;
-  var DIST_OK   = 80;
-  var VEL_OK    = 0.35;
-  var ANIM_MS   = 270;
-  var CANCEL_MS = 260;
+  var EDGE_PX      = 32;     // px — left-edge trigger zone
+  var DEAD_PX      = 6;      // px — no decision until one axis exceeds this
+  var LOCK_PX      = 10;     // px horizontal travel needed to claim gesture
+  var VERT_LOCK_PX = 8;      // px vertical travel that immediately releases to scroll
+  var HORIZ_RATIO  = 1.4;    // horizontal must be this much stronger than vertical
+  var DIST_OK      = 80;     // px — commit if drag ≥ this
+  var VEL_OK       = 0.35;   // px/ms fast-flick commit threshold
+  var ANIM_MS      = 270;    // max commit animation (adaptive: shorter if mostly dragged)
+  var CANCEL_MS    = 220;    // cancel snap-back duration
 
-  var _busy = false;
+  // ── Animation lock ──────────────────────────────────────────────────────────
+  var _busy      = false;
+  var _cancelTid = null;  // pending cancel timeout — cleared on each new _cancel call
+
+  // ── rAF render scheduling ────────────────────────────────────────────────────
+  var _rafId     = null;
+  var _rafDx     = 0;
+  var _rafTarget = null;
+
+  function _scheduleRender() {
+    if (_rafId) return;
+    _rafId = requestAnimationFrame(function () {
+      _rafId = null;
+      if (_rafTarget && _rafTarget.started) _dragMove(_rafTarget, _rafDx);
+    });
+  }
+
+  function _cancelRaf() {
+    if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
+    _rafTarget = null;
+  }
 
   // ── Gate checks ──────────────────────────────────────────────────────────────
 
@@ -57,9 +90,9 @@
     if (window._tkIsScrolling && window._tkIsScrolling()) return true;
     if (_inputFocused()) return true;
     if (document.body.classList.contains('mushaf-mode')) return true;
-    if (window._sbPdfZoomed) return true;
+    if (window._sbPdfZoomed)         return true;
     if (window._ptrGlobalRefreshing) return true;
-    if (_inHorizScroll(target)) return true;
+    if (_inHorizScroll(target))      return true;
     return false;
   }
 
@@ -117,17 +150,18 @@
       t._fgSibling = t.fg.nextSibling;
       if (t._fgParent) document.body.appendChild(t.fg);
 
-      // Position as fixed full-screen card on top of everything (above tab bar z:300)
-      t.fg.style.position  = 'fixed';
-      t.fg.style.top       = '0';
-      t.fg.style.left      = '0';
-      t.fg.style.right     = '0';
-      t.fg.style.bottom    = '0';
-      t.fg.style.zIndex    = '400';
+      // Position as fixed full-screen card on top of everything (above tab bar z:300).
+      // top:'var(--safe-t)' matches the panel's normal rendered position on notched
+      // devices — prevents the reader from jumping up by the safe-area inset at drag start.
+      t.fg.style.position   = 'fixed';
+      t.fg.style.top        = 'var(--safe-t)';
+      t.fg.style.left       = '0';
+      t.fg.style.right      = '0';
+      t.fg.style.bottom     = '0';
+      t.fg.style.zIndex     = '400';
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
-      // Stronger shadow — separates fg card from bg and signals depth
-      t.fg.style.boxShadow = '-12px 0 40px rgba(0,0,0,.38)';
+      t.fg.style.boxShadow  = '-12px 0 40px rgba(0,0,0,.38)';
 
       // Dim scrim over the background — makes bg read as "previous screen in stack"
       // not "another page sitting underneath". Sits between bg (z<400) and fg (z:400).
@@ -148,13 +182,12 @@
     }
   }
 
-  // ── Apply drag ───────────────────────────────────────────────────────────────
+  // ── Apply drag (called via rAF) ──────────────────────────────────────────────
 
   function _dragMove(t, dx) {
     if (!t.started) return;
     t.fg.style.transition = 'none';
     t.fg.style.transform  = 'translate3d(' + dx + 'px,0,0)';
-    // Scrim fades as fg slides away — bg brightens proportionally to reveal depth
     if (t._scrim) {
       var p = Math.min(1, Math.max(0, dx / t.W));
       t._scrim.style.opacity = (0.30 * (1 - p)).toFixed(3);
@@ -165,23 +198,35 @@
 
   function _commit(t) {
     _busy = true;
+    _cancelRaf();
 
     if (!t.started) {
+      // Gesture was claimed (horizontal lock) but drag never started visually.
+      // Still need to navigate back — no animation needed.
+      try {
+        if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      } catch (_e) {}
       _busy = false;
-      if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       return;
     }
 
     // Tablet inline readers: CSS forces display:flex!important — skip animation
     if (_isTablet() && (t.fg.id === 'quranReader' || t.fg.id === 'ivSeriesView')) {
       _clearFg(t, false);
-      if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      try {
+        if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      } catch (_e) {}
       _busy = false;
       return;
     }
 
-    var ease = 'cubic-bezier(0.22,1,0.36,1)';
-    var dur  = ANIM_MS + 'ms ' + ease;
+    var ease     = 'cubic-bezier(0.22,1,0.36,1)';
+    // Adaptive duration: shorter when user already dragged most of the way across.
+    // Matches tab-swipe v9 formula — fast flicks snap instantly, slow drags accelerate.
+    var progress = Math.min(1, t.dx / t.W);
+    var durMs    = Math.round(Math.max(180, ANIM_MS * (1 - progress * 0.50)));
+    var dur      = durMs + 'ms ' + ease;
+
     t.fg.style.transition = 'transform ' + dur;
     t.fg.style.transform  = 'translate3d(' + t.W + 'px,0,0)';
     if (t._scrim) {
@@ -190,21 +235,32 @@
     }
 
     setTimeout(function () {
-      // App.doBack(): removes .on from fg, restores bg display:'' (no-op since already shown)
-      if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      // try/catch guarantees the rAF cleanup always runs even if App.doBack() throws,
+      // so _busy can never remain stuck true after a commit.
+      try {
+        if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      } catch (_e) {}
       requestAnimationFrame(function () {
-        // fg is now display:none via CSS (.reader without .on).
-        // Reinsert to original position and clear all inline styles.
         _clearFg(t, false);
         _busy = false;
       });
-    }, ANIM_MS + 16);
+    }, durMs + 16);
   }
 
   // ── Cancel (snap back) ───────────────────────────────────────────────────────
 
   function _cancel(t) {
-    if (!t.started) return;
+    // Lock _busy immediately — prevents a new gesture from starting during snap-back
+    // and having its inline styles/DOM position wiped by this cancel's cleanup timeout.
+    _busy = true;
+    // Clear any prior cancel timeout so stale closures can't reach fg elements.
+    if (_cancelTid) { clearTimeout(_cancelTid); _cancelTid = null; }
+    _cancelRaf();
+
+    if (!t.started) {
+      _busy = false;
+      return;
+    }
 
     var ease = 'cubic-bezier(0.22,1,0.36,1)';
     var dur  = CANCEL_MS + 'ms ' + ease;
@@ -215,9 +271,10 @@
       t._scrim.style.opacity    = '0.30';
     }
 
-    setTimeout(function () {
-      // Reinsert fg, restore bg to hidden (App.doBack was NOT called on cancel)
+    _cancelTid = setTimeout(function () {
+      _cancelTid = null;
       _clearFg(t, true);
+      _busy = false;
     }, CANCEL_MS + 16);
   }
 
@@ -258,26 +315,59 @@
   // ── Gesture state ────────────────────────────────────────────────────────────
   var g = null;
 
-  function _onTouchMove(e) {
-    if (!g) return;
-    var t  = e.touches[0];
-    var dx = t.clientX - g.x0;
-    var dy = t.clientY - g.y0;
+  // Called once horizontal intent is confirmed — starts visual and upgrades listener
+  function _lockHorizontal() {
+    g.locked = 'h';
+    if (g.target) _dragStart(g.target);
+    document.addEventListener('touchmove', _onActive, { passive: false });
+  }
 
-    if (!g.locked) {
-      if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
-      if (Math.abs(dx) >= Math.abs(dy) && dx > 0) {
-        g.locked = 'h';
-        if (g.target) _dragStart(g.target);
-      } else {
-        g = null;
-        document.removeEventListener('touchmove', _onTouchMove);
-        return;
-      }
+  // Phase 1 — passive detection: never blocks scroll
+  function _onDetect(e) {
+    if (!g) return;
+    var touch = e.touches[0];
+    var dx  = touch.clientX - g.x0;
+    var dy  = touch.clientY - g.y0;
+    var adx = Math.abs(dx);
+    var ady = Math.abs(dy);
+
+    // Dead zone: no decision yet
+    if (adx < DEAD_PX && ady < DEAD_PX) return;
+
+    // Moving away from left edge — not a swipe-back, release immediately
+    if (dx < -DEAD_PX) {
+      document.removeEventListener('touchmove', _onDetect);
+      g = null;
+      return;
     }
 
+    // Vertical lock: clearly scrolling — immediately release, no interference
+    if (ady > VERT_LOCK_PX && ady > adx) {
+      document.removeEventListener('touchmove', _onDetect);
+      g = null;
+      return;
+    }
+
+    // Horizontal lock: clearly a rightward swipe from the edge
+    if (dx > LOCK_PX && dx > ady * HORIZ_RATIO) {
+      document.removeEventListener('touchmove', _onDetect);
+      _lockHorizontal();
+      return;
+    }
+
+    // Ambiguous diagonal: keep observing without blocking anything
+  }
+
+  // Phase 2 — active tracking: rAF-batched, calls preventDefault
+  function _onActive(e) {
+    if (!g || g.locked !== 'h') return;
+    var dx = e.touches[0].clientX - g.x0;
     g.dx = dx > 0 ? dx : 0;
-    if (g.target) _dragMove(g.target, g.dx);
+    if (g.target) {
+      _rafDx     = g.dx;
+      _rafTarget = g.target;
+      _scheduleRender();
+    }
     e.preventDefault();
   }
 
@@ -299,11 +389,13 @@
       locked: null,
       target: _getTarget(),
     };
-    document.addEventListener('touchmove', _onTouchMove, { passive: false });
+    // Passive: pure observation — does not interfere with scroll in any way
+    document.addEventListener('touchmove', _onDetect, { passive: true });
   }, { passive: true });
 
   document.addEventListener('touchend', function () {
-    document.removeEventListener('touchmove', _onTouchMove);
+    document.removeEventListener('touchmove', _onDetect);
+    document.removeEventListener('touchmove', _onActive);
     if (!g || g.locked !== 'h') { g = null; return; }
 
     var elapsed = Date.now() - g.t0;
@@ -321,9 +413,13 @@
   }, { passive: true });
 
   document.addEventListener('touchcancel', function () {
-    document.removeEventListener('touchmove', _onTouchMove);
-    if (g && g.locked === 'h' && g.target) _cancel(g.target);
+    document.removeEventListener('touchmove', _onDetect);
+    document.removeEventListener('touchmove', _onActive);
+    _cancelRaf();
+    var tgt = g && g.target;
     g = null;
+    if (tgt) _cancel(tgt);
+    // No else: _busy is false during Phase 1 detection (only set by _commit/_cancel)
   }, { passive: true });
 
 })();
