@@ -1,5 +1,5 @@
 /**
- * swipe-back.js v8 — native-style left-edge swipe to go back
+ * swipe-back.js v9 — native-style left-edge swipe to go back
  *
  * Visual types:
  *   A (quranReader, ivSeriesView): iOS-style card — foreground slides right as a
@@ -138,9 +138,23 @@
     t.started = true;
 
     if (t.type === 'A') {
+      // Override content-visibility:auto on bg cards BEFORE revealing the panel.
+      // .surah-card/.iv-card/.iv-ep-item use content-visibility:auto on safe-render devices —
+      // when quranHome/ivHome was display:none those cards were outside the rendering tree,
+      // so the browser treats them as off-screen placeholders when display is restored.
+      // sb-reveal forces content-visibility:visible so cards paint synchronously in
+      // the first frame instead of showing beige placeholder boxes.
+      document.body.classList.add('sb-reveal');
+
       // Show the background page.
       // bg has display:none (set by openSurah/openSeries) — remove it so it renders.
-      if (t.bg) t.bg.style.display = '';
+      if (t.bg) {
+        t.bg.style.display = '';
+        // Force layout specifically on bg's paint container — panelQuran has contain:paint,
+        // so accessing clientWidth on fg (which moved to body) does NOT trigger panelQuran's
+        // paint chunk scheduling. offsetHeight on bg does.
+        void t.bg.offsetHeight;
+      }
 
       // Move fg to <body> — .panel has contain:paint which (a) clips position:fixed
       // children to the panel border-box and (b) makes them viewport-relative within
@@ -170,8 +184,7 @@
       document.body.appendChild(scrim);
       t._scrim = scrim;
 
-      // Force layout flush — ensures bg is fully rendered (header, content visible)
-      // before the first animation frame. Prevents blank background flash.
+      // Force layout of fg in body — ensures fixed positioning is computed correctly.
       void t.fg.clientWidth;
     } else {
       t.fg.style.willChange = 'transform';
@@ -282,6 +295,8 @@
   // restoreBg: true on cancel (re-hide bg), false on commit (App.doBack handles it)
 
   function _clearFg(t, restoreBg) {
+    // Remove sb-reveal class so content-visibility:auto resumes normal behaviour.
+    document.body.classList.remove('sb-reveal');
     var s = t.fg.style;
     s.transition  = '';
     s.transform   = '';
