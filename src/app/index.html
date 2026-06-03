@@ -3805,6 +3805,8 @@ html.safe-render:not(.low-end-device) .hdr {
    instead of doing their .15s fade. The tab-bar icon animation (spring) is
    intentionally kept since it runs in the tab-bar, not the panel.         */
 body.tk-tab-switching .panel{transition:none!important;animation:none!important}
+body.ts-dragging .panel{transition:none!important;animation:none!important}
+body.ts-dragging .prayer-grid-card,body.ts-dragging .prayer-grid-card::after,body.ts-dragging .pgc-tap-hint{animation:none!important}
 
 /* ── 15. Scrolling: pause heavy background animations ────────────────────
    When the user is scrolling, the sky scene and audio wave animations keep
@@ -4494,6 +4496,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/app/app.js?v=1009"></script>
 <script src="/utils/swipe-back.js?v=3"></script>
+<script src="/utils/tab-swipe.js?v=1"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {

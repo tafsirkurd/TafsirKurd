@@ -52,6 +52,7 @@
   }
 
   function _shouldBlock(target) {
+    if (window._tkIsScrolling && window._tkIsScrolling()) return true;
     if (_inputFocused()) return true;
     if (document.body.classList.contains('mushaf-mode')) return true;
     if (window._sbPdfZoomed) return true;
