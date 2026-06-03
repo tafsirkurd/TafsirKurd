@@ -1,18 +1,12 @@
 /**
- * tab-swipe.js — Instagram-style root tab swipe navigation
+ * tab-swipe.js v2 — Instagram-style root tab swipe navigation
  *
- * Swipe left (next tab) or right (prev tab) between root tabs.
- * Tab order matches the bottom tab bar: quran → islamvoice → gencine → prayer → settings
- *
- * Both panels translate together at 1:1 finger speed — no resistance, no ratio.
- * Target panel is position:fixed off-screen; slides in from the correct side.
- * Current panel translates in-flow. Gap between them is always exactly screen width.
+ * Swipe to adjacent tab with 1:1 finger tracking. RTL-aware:
+ *   RTL (Kurdish): swipe RIGHT = higher index (tab to the left in tab bar)
+ *   LTR:           swipe LEFT  = higher index (tab to the right in tab bar)
  *
  * Scroll settle window (150ms) prevents activation after momentum scrolling.
  * Strong direction lock (10px) — vertical wins, never switches to horizontal.
- *
- * Does NOT touch: App.doBack(), swipe-back.js, navigation stack, tabHistory logic.
- * Conflict with swipe-back: mutually exclusive touch zones (tab-swipe > 40px from edge).
  */
 (function () {
   'use strict';
@@ -26,17 +20,20 @@
     settings:   'panelSettings'
   };
 
-  var EDGE_EXCLUDE     = 40;    // px — must be > swipe-back EDGE_PX (32), gives clear separation
+  var EDGE_EXCLUDE     = 40;    // px — must be > swipe-back EDGE_PX (32)
   var LOCK_PX          = 10;    // px before direction is decided
-  var DIST_OK          = 65;    // px rightward/leftward travel → commit
+  var DIST_OK          = 65;    // px travel → commit
   var VEL_OK           = 0.30;  // px/ms fast-flick threshold
   var ANIM_MS          = 280;   // commit slide animation
   var CANCEL_MS        = 260;   // cancel snap-back animation
   var SCROLL_SETTLE_MS = 150;   // ms after last scroll event before gestures re-enable
 
+  // RTL: html[dir=rtl] → flex row is right-to-left, so index 0 (quran) is rightmost.
+  // In RTL, swiping RIGHT reveals the tab to the LEFT (higher index).
+  // In LTR, swiping LEFT  reveals the tab to the RIGHT (higher index).
+  var _isRTL = document.documentElement.dir === 'rtl';
+
   // ── Scroll activity tracking ─────────────────────────────────────────────────
-  // Single capture listener catches all panel scrolls.
-  // Exported as window._tkIsScrolling so swipe-back.js can share the same state.
   var _lastScrollMs = 0;
   document.addEventListener('scroll', function () {
     _lastScrollMs = Date.now();
@@ -49,7 +46,7 @@
   // ── Animation lock ───────────────────────────────────────────────────────────
   var _busy = false;
 
-  // ── Horizontal scroll detection (mirrors swipe-back.js) ─────────────────────
+  // ── Horizontal scroll detection ─────────────────────────────────────────────
   function _inHorizScroll(el) {
     if (typeof _ptrInHorizScroll === 'function') return _ptrInHorizScroll(el);
     var node = el, steps = 0;
@@ -69,48 +66,38 @@
   }
 
   // ── Block conditions ─────────────────────────────────────────────────────────
-  function _on(id)      { var el = document.getElementById(id); return !!(el && el.classList.contains('on')); }
-  function _open(id)    { var el = document.getElementById(id); return !!(el && el.classList.contains('open')); }
+  function _on(id)   { var el = document.getElementById(id); return !!(el && el.classList.contains('on')); }
+  function _open(id) { var el = document.getElementById(id); return !!(el && el.classList.contains('open')); }
 
   function _shouldBlock(touchTarget) {
-    // Scroll still settling (momentum or active)
     if (window._tkIsScrolling()) return true;
-
-    // Input / keyboard
     var ae = document.activeElement;
     if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.contentEditable === 'true')) return true;
-
-    // Special app modes
     if (document.body.classList.contains('mushaf-mode')) return true;
-    if (window._sbPdfZoomed)        return true;
+    if (window._sbPdfZoomed)         return true;
     if (window._ptrGlobalRefreshing) return true;
     if (_inHorizScroll(touchTarget)) return true;
-
-    // Full-screen overlays
-    if (_on('fuOverlay'))             return true;  // audio full player
-    if (_on('profilePanel'))          return true;
-    if (_on('prayerProgressPanel'))   return true;
-    if (_on('authPanel'))             return true;
-    if (_on('audioSettingsPanel'))    return true;
-    if (_on('qsSheet'))               return true;  // reader settings
-    if (_open('dlMgrSheet'))          return true;
-    if (_on('wizard'))                return true;
-    if (_on('goalConfirmOverlay'))    return true;
+    if (_on('fuOverlay'))              return true;
+    if (_on('profilePanel'))           return true;
+    if (_on('prayerProgressPanel'))    return true;
+    if (_on('authPanel'))              return true;
+    if (_on('audioSettingsPanel'))     return true;
+    if (_on('qsSheet'))                return true;
+    if (_open('dlMgrSheet'))           return true;
+    if (_on('wizard'))                 return true;
+    if (_on('goalConfirmOverlay'))     return true;
     if (_on('goalStartChoiceOverlay')) return true;
-    if (_on('repeatModal'))           return true;
-    if (_on('khatmCelebOverlay'))     return true;
-    if (_on('pppCelebOverlay'))       return true;
-    if (_on('pppDayOverlay'))         return true;
+    if (_on('repeatModal'))            return true;
+    if (_on('khatmCelebOverlay'))      return true;
+    if (_on('pppCelebOverlay'))        return true;
+    if (_on('pppDayOverlay'))          return true;
     if (document.querySelector('.note-modal-ov.on')) return true;
-    if (window.S && S.sidebar)        return true;
-
-    // Deep navigation screens
-    if (_on('quranReader'))           return true;
-    if (_on('ivSeriesView'))          return true;
+    if (window.S && S.sidebar)         return true;
+    if (_on('quranReader'))            return true;
+    if (_on('ivSeriesView'))           return true;
     if (window.S && S.ivCurrentSeries && S.tab === 'islamvoice') return true;
-    if (window.S && S.surah          && S.tab === 'quran')       return true;
+    if (window.S && S.surah           && S.tab === 'quran')      return true;
     if (window.GencineUI && window.S && S.tab === 'gencine' && GencineUI._view !== 'home') return true;
-
     return false;
   }
 
@@ -119,12 +106,22 @@
     return (window.S && S.tab) ? TAB_ORDER.indexOf(S.tab) : -1;
   }
 
+  // ── Target panel start position (which side it enters from) ─────────────────
+  // dir is the PHYSICAL swipe direction ('left' = finger moves left, 'right' = right).
+  // Both panels always translate in the direction of the finger, so the target
+  // must start on the OPPOSITE side (e.g. finger goes left → target starts at +W on right).
+  function _targetStart(dir, W) {
+    return (dir === 'left') ? W : -W;
+  }
+
   // ── Gesture start — called exactly once at direction lock ────────────────────
-  // Sets up target panel as position:fixed off-screen, then applies current dx.
   function _gestureStart(t) {
     t.started = true;
     var W           = window.innerWidth;
-    var targetStart = (t.dir === 'left') ? W : -W;
+    var targetStart = _targetStart(t.dir, W);
+
+    // Suppress CSS transitions/animations FIRST to avoid any flash
+    document.body.classList.add('ts-dragging');
 
     // Current panel: GPU hint only — stays in flex flow
     t.cur.style.willChange = 'transform';
@@ -132,8 +129,8 @@
 
     // Target panel: fixed full-screen, translated off-screen
     // position:fixed takes it out of the flex flow — no height splitting.
-    // visibility:visible overrides #panelPrayer's visibility:hidden when not .on.
-    // contentVisibility:visible overrides .safe-render's content-visibility:hidden.
+    // visibility:visible overrides #panelPrayer visibility:hidden.
+    // contentVisibility:visible overrides .safe-render content-visibility:hidden.
     var ts = t.tgt.style;
     ts.position         = 'fixed';
     ts.top              = '0';
@@ -149,19 +146,19 @@
     ts.contentVisibility = 'visible';
     ts.visibility       = 'visible';
 
-    // Suppress all panel CSS transitions/animations during drag
-    document.body.classList.add('ts-dragging');
+    // Force layout flush — panel was display:none; this forces the browser to
+    // compute layout for it so the header and content are rendered before the
+    // first animation frame, preventing the blank/header-pop-in flash.
+    void t.tgt.clientWidth;
 
-    // Apply current dx immediately — no lag at the lock point
     _dragMove(t, t.dx);
   }
 
-  // ── 1:1 finger tracking — no resistance, no ratio ───────────────────────────
-  // Current and target panels always stay exactly W apart.
+  // ── 1:1 finger tracking ─────────────────────────────────────────────────────
   function _dragMove(t, dx) {
     if (!t.started) return;
     var W           = window.innerWidth;
-    var targetStart = (t.dir === 'left') ? W : -W;
+    var targetStart = _targetStart(t.dir, W);
 
     t.cur.style.transition = 'none';
     t.cur.style.transform  = 'translateX(' + dx + 'px)';
@@ -184,8 +181,6 @@
     t.tgt.style.transform  = 'translateX(0)';
 
     setTimeout(function () {
-      // App.tab() handles: S.tab update, .on class swap, tab bar, H.light() haptic,
-      // deferred renders (prayer sky, gencine, settings), tabHistory push.
       if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
       requestAnimationFrame(function () {
         _clearCur(t);
@@ -206,7 +201,7 @@
     var W        = window.innerWidth;
     var ease     = 'cubic-bezier(.22,1,.36,1)';
     var dur      = CANCEL_MS + 'ms ' + ease;
-    var tgtFinal = (t.dir === 'left') ? W : -W;
+    var tgtFinal = _targetStart(t.dir, W);
 
     t.cur.style.transition = 'transform ' + dur;
     t.cur.style.transform  = 'translateX(0)';
@@ -224,26 +219,15 @@
   // ── Style cleanup ────────────────────────────────────────────────────────────
   function _clearCur(t) {
     var s = t.cur.style;
-    s.transition = '';
-    s.transform  = '';
-    s.willChange = '';
+    s.transition = ''; s.transform = ''; s.willChange = '';
   }
 
   function _clearTgt(t) {
     var s = t.tgt.style;
-    s.position          = '';
-    s.top               = '';
-    s.left              = '';
-    s.right             = '';
-    s.bottom            = '';
-    s.display           = '';
-    s.flexDirection     = '';
-    s.zIndex            = '';
-    s.willChange        = '';
-    s.transition        = '';
-    s.transform         = '';
-    s.contentVisibility = '';
-    s.visibility        = '';
+    s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = '';
+    s.display = ''; s.flexDirection = ''; s.zIndex = '';
+    s.willChange = ''; s.transition = ''; s.transform = '';
+    s.contentVisibility = ''; s.visibility = '';
   }
 
   // ── Gesture state ────────────────────────────────────────────────────────────
@@ -256,28 +240,32 @@
     var dy = touch.clientY - g.y0;
 
     if (!g.locked) {
-      // Wait for enough movement to decide direction
       if (Math.abs(dx) < LOCK_PX && Math.abs(dy) < LOCK_PX) return;
 
       if (Math.abs(dy) >= Math.abs(dx)) {
-        // Vertical wins — hand control back to scroll
         g = null;
         document.removeEventListener('touchmove', _onTouchMove);
         return;
       }
 
       // Horizontal wins — lock direction
-      var dir   = (dx < 0) ? 'left' : 'right';
-      var idx   = _currentIdx();
+      var dir = (dx < 0) ? 'left' : 'right';
+      var idx = _currentIdx();
       if (idx === -1) {
         g = null;
         document.removeEventListener('touchmove', _onTouchMove);
         return;
       }
 
-      var targetIdx = (dir === 'left') ? idx + 1 : idx - 1;
+      // RTL: swipe right → higher index (next tab to the left in tab bar)
+      //      swipe left  → lower index (prev tab to the right in tab bar)
+      // LTR: swipe left  → higher index (next tab to the right in tab bar)
+      //      swipe right → lower index (prev tab to the left in tab bar)
+      var targetIdx = _isRTL
+        ? ((dir === 'left') ? idx - 1 : idx + 1)
+        : ((dir === 'left') ? idx + 1 : idx - 1);
+
       if (targetIdx < 0 || targetIdx >= TAB_ORDER.length) {
-        // At boundary — no adjacent tab, snap back immediately
         g = null;
         document.removeEventListener('touchmove', _onTouchMove);
         return;
@@ -300,14 +288,14 @@
         tabName: targetTabName,
         dir:     dir,
         started: false,
-        dx:      dx   // pass current dx so gestureStart has no lag at lock point
+        dx:      dx
       };
       _gestureStart(g.target);
     }
 
     // Clamp: only move in the locked direction, never reverse
-    if (g.dir === 'left')  g.dx = Math.min(dx, 0);
-    else                   g.dx = Math.max(dx, 0);
+    if (g.dir === 'left') g.dx = Math.min(dx, 0);
+    else                  g.dx = Math.max(dx, 0);
 
     g.target.dx = g.dx;
     _dragMove(g.target, g.dx);
@@ -319,10 +307,8 @@
     if (e.touches.length !== 1) return;
     if (_busy) return;
     var t = e.touches[0];
-    // Stay clear of swipe-back zone (≤32px from left edge)
     if (t.clientX <= EDGE_EXCLUDE) return;
     if (_shouldBlock(e.target)) return;
-    // Only on root tabs — not bookmarks/goals sub-views
     if (_currentIdx() === -1) return;
 
     g = {
