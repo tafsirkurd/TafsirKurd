@@ -1,13 +1,16 @@
 /**
  * swipe-back.js — native-style left-edge swipe to go back
  *
- * Visual types:
- *   A (phone):   fg lifts to fixed, bg revealed clean (display only), no effects
- *   B (overlays + tablet inline): fg translates 1:1, destination already visible
- *   G (Gencine): gencineContent translates within overflow-x:hidden panel
+ * All types are simple foreground-only translateX. No background manipulation.
  *
- * Navigation logic: unchanged — App.doBack({allowExit:false}) fires after animation.
- * All guards preserved: _sbPdfZoomed, mushaf-mode, PTR, horiz-scroll, input.
+ *   B (overlays): position:fixed panels slide right, app shows naturally behind
+ *   B (readers):  quranReader / ivSeriesView translate in-flow; bg stays hidden
+ *                 (display:none throughout — panel background shows, no header clash)
+ *   B (gencine):  panelGencine (header + content) translates as one unit
+ *   B (tablet):   quranReader / ivSeriesView clear instantly, doBack handles state
+ *
+ * Navigation: App.doBack({allowExit:false}) fires after animation.
+ * Guards: _sbPdfZoomed, mushaf-mode, PTR, horiz-scroll, input — all preserved.
  */
 (function () {
   'use strict';
@@ -20,10 +23,10 @@
   var ANIM_MS   = 320;   // commit animation duration
   var CANCEL_MS = 290;   // cancel snap-back duration
 
-  // ── Animation lock — blocks new gesture during commit ────────────────────────
+  // ── Animation lock ───────────────────────────────────────────────────────────
   var _busy = false;
 
-  // ── Gate checks (all original guards preserved) ──────────────────────────────
+  // ── Gate checks ──────────────────────────────────────────────────────────────
 
   function _inputFocused() {
     var ae = document.activeElement;
@@ -50,10 +53,10 @@
 
   function _shouldBlock(target) {
     if (_inputFocused()) return true;
-    if (document.body.classList.contains('mushaf-mode')) return true;  // mushaf owns horizontal
-    if (window._sbPdfZoomed) return true;                              // PDF zoomed, pan owns touch
-    if (window._ptrGlobalRefreshing) return true;                      // PTR refresh in flight
-    if (_inHorizScroll(target)) return true;                           // inside carousel / horiz list
+    if (document.body.classList.contains('mushaf-mode')) return true;
+    if (window._sbPdfZoomed) return true;
+    if (window._ptrGlobalRefreshing) return true;
+    if (_inHorizScroll(target)) return true;
     return false;
   }
 
@@ -64,72 +67,38 @@
   }
 
   // ── Target resolution ────────────────────────────────────────────────────────
-  // Priority follows App.doBack() order so the correct element receives feedback.
 
   function _getTarget() {
     var W = window.innerWidth;
-    var tablet = _isTablet();
 
-    // Type B: full-screen fixed overlays — destination always visible underneath
+    // Fixed overlays — app content visible naturally underneath
     var overlayIds = ['profilePanel', 'prayerProgressPanel', 'authPanel'];
     for (var i = 0; i < overlayIds.length; i++) {
       var ov = document.getElementById(overlayIds[i]);
-      if (ov && ov.classList.contains('on')) return { type: 'B', fg: ov, bg: null, W: W };
+      if (ov && ov.classList.contains('on')) return { fg: ov, W: W };
     }
 
-    // IslamVoice series
+    // IslamVoice series — translate in-flow; ivHome stays hidden behind
     var iv = document.getElementById('ivSeriesView');
-    if (iv && iv.classList.contains('on')) {
-      if (tablet) return { type: 'B', fg: iv, bg: null, W: W };
-      var ivBg = document.getElementById('ivHome');
-      return { type: 'A', fg: iv, bg: ivBg || null, W: W };
-    }
+    if (iv && iv.classList.contains('on')) return { fg: iv, W: W };
 
-    // Quran reader
+    // Quran reader — translate in-flow; quranHome stays hidden behind
     var qr = document.getElementById('quranReader');
-    if (qr && qr.classList.contains('on')) {
-      if (tablet) return { type: 'B', fg: qr, bg: null, W: W };
-      var qh = document.getElementById('quranHome');
-      return { type: 'A', fg: qr, bg: qh || null, W: W };
-    }
+    if (qr && qr.classList.contains('on')) return { fg: qr, W: W };
 
-    // Gencine sub-views
+    // Gencine sub-views — translate whole panel so header moves with content
     if (window.GencineUI && window.S && S.tab === 'gencine' && GencineUI._view !== 'home') {
-      var gc = document.getElementById('gencineContent');
-      if (gc) return { type: 'G', fg: gc, bg: null, W: W };
+      var gp = document.getElementById('panelGencine');
+      if (gp) return { fg: gp, W: W };
     }
 
     return null;
   }
 
-  // ── Drag start (at direction lock — bg never shown for vertical scrolls) ──────
+  // ── Drag start ───────────────────────────────────────────────────────────────
 
   function _dragStart(t) {
     t.started = true;
-
-    if (t.type === 'A') {
-      if (!t.bg) {
-        // bg unavailable — degrade to simple translate
-        t.type = 'B';
-      } else {
-        // Read fg rect BEFORE showing bg so layout is still stable
-        var r = t.fg.getBoundingClientRect();
-        // Reveal bg clean — no transforms, no effects, just make it visible
-        t.bg.style.display = '';
-        // Lift fg to fixed at its current visual position
-        t.fg.style.position   = 'fixed';
-        t.fg.style.top        = r.top    + 'px';
-        t.fg.style.left       = r.left   + 'px';
-        t.fg.style.width      = r.width  + 'px';
-        t.fg.style.height     = r.height + 'px';
-        t.fg.style.zIndex     = '200';
-        t.fg.style.willChange = 'transform';
-        t.fg.style.transition = 'none';
-        return;
-      }
-    }
-
-    // Type B and G (also A degraded to B)
     t.fg.style.willChange = 'transform';
     t.fg.style.transition = 'none';
   }
@@ -140,7 +109,6 @@
     if (!t.started) return;
     t.fg.style.transition = 'none';
     t.fg.style.transform  = 'translateX(' + dx + 'px)';
-    // bg is never transformed — it stays clean and static behind the sliding fg
   }
 
   // ── Commit ───────────────────────────────────────────────────────────────────
@@ -148,32 +116,20 @@
   function _commit(t) {
     _busy = true;
 
-    if (!t.started) {
-      // Fast flick committed before direction lock — fire directly
-      _busy = false;
-      if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
-      return;
-    }
-
-    // Tablet inline readers: CSS forces display:flex!important so slide-off creates
-    // a snap on cleanup. Clear immediately and let App.doBack handle the state change.
-    var isTabletReader = t.type === 'B' &&
-      (t.fg.id === 'quranReader' || t.fg.id === 'ivSeriesView');
-    if (isTabletReader) {
+    // Tablet inline readers have display:flex!important — slide-off causes a snap.
+    // Clear immediately and let App.doBack handle the state change.
+    var id = t.fg.id;
+    if (_isTablet() && (id === 'quranReader' || id === 'ivSeriesView')) {
       _clearFg(t);
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       _busy = false;
       return;
     }
 
-    // Animate fg off-screen to the right
     var ease = 'cubic-bezier(.2,0,.2,1)';
-    var dur  = ANIM_MS + 'ms ' + ease;
-    t.fg.style.transition = 'transform ' + dur;
+    t.fg.style.transition = 'transform ' + ANIM_MS + 'ms ' + ease;
     t.fg.style.transform  = 'translateX(' + t.W + 'px)';
 
-    // Fire doBack after animation completes, then clean up inline styles
-    // doBack() restores bg visibility (e.g. quranHome.style.display='') naturally
     setTimeout(function () {
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       requestAnimationFrame(function () {
@@ -183,23 +139,13 @@
     }, ANIM_MS + 16);
   }
 
-  // ── Cancel (snap back) ───────────────────────────────────────────────────────
+  // ── Cancel ───────────────────────────────────────────────────────────────────
 
   function _cancel(t) {
     if (!t.started) return;
-
-    var ease = 'cubic-bezier(.22,1,.36,1)';
-    var dur  = CANCEL_MS + 'ms ' + ease;
-    t.fg.style.transition = 'transform ' + dur;
+    t.fg.style.transition = 'transform ' + CANCEL_MS + 'ms cubic-bezier(.22,1,.36,1)';
     t.fg.style.transform  = 'translateX(0)';
-
-    setTimeout(function () {
-      _clearFg(t);
-      // Re-hide bg — reader is still active after cancel, bg was display:none before gesture
-      if (t.type === 'A' && t.bg) {
-        t.bg.style.display = 'none';
-      }
-    }, CANCEL_MS + 16);
+    setTimeout(function () { _clearFg(t); }, CANCEL_MS + 16);
   }
 
   // ── Style cleanup ────────────────────────────────────────────────────────────
@@ -209,14 +155,6 @@
     s.transition = '';
     s.transform  = '';
     s.willChange = '';
-    if (t.type === 'A') {
-      s.position = '';
-      s.top      = '';
-      s.left     = '';
-      s.width    = '';
-      s.height   = '';
-      s.zIndex   = '';
-    }
   }
 
   // ── Gesture state ────────────────────────────────────────────────────────────
@@ -234,7 +172,6 @@
         g.locked = 'h';
         if (g.target) _dragStart(g.target);
       } else {
-        // Vertical or leftward — cancel, let scroll/PTR take over
         g = null;
         document.removeEventListener('touchmove', _onTouchMove);
         return;
@@ -281,7 +218,6 @@
       if (commit) _commit(tgt);
       else        _cancel(tgt);
     } else if (commit) {
-      // No visual target (e.g. modal state with no feedback element) — fire directly
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
     }
   }, { passive: true });
