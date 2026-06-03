@@ -36,8 +36,8 @@
   var HORIZ_RATIO      = 1.25;  // horizontal must be this much stronger than vertical
   var DIST_COMMIT_FRAC = 0.28;  // complete if |dx| > this fraction of screen width
   var VEL_OK           = 0.45;  // px/ms fast-flick commit threshold
-  var ANIM_MS          = 340;   // max commit duration (shorter if mostly dragged already)
-  var CANCEL_MS        = 240;   // cancel snap-back duration
+  var ANIM_MS          = 290;   // max commit duration (shorter if mostly dragged already)
+  var CANCEL_MS        = 220;   // cancel snap-back duration
   var SCROLL_SETTLE_MS = 150;   // ms after last scroll event before gestures re-enable
   var SWIPE_ZONE_FRAC  = 0.55;  // touch must start below this fraction of screen height
   var EDGE_RESISTANCE  = 0.25;  // rubber-band factor at first/last tab
@@ -212,12 +212,15 @@
   function _commit(t) {
     _busy = true;
     _cancelRaf();
+    // Haptic fires exactly on commit — not on cancel, not during drag.
+    // Respects user's haptic setting via the app's global helper.
+    if (window.H && typeof H.light === 'function') H.light();
 
     var W        = window.innerWidth;
     var ease     = 'cubic-bezier(0.22,1,0.36,1)';
     // Shorter animation when user already dragged most of the way
     var progress = Math.min(1, Math.abs(t.dx) / W);
-    var durMs    = Math.round(Math.max(180, ANIM_MS * (1 - progress * 0.45)));
+    var durMs    = Math.round(Math.max(180, ANIM_MS * (1 - progress * 0.50)));
     var dur      = durMs + 'ms ' + ease;
     var curFinal = (t.dir === 'left') ? -W : W;
 
@@ -417,7 +420,7 @@
     var vel     = elapsed > 0 ? absDx / elapsed : 0;
     var W       = window.innerWidth;
     // Only commit if there is a real target tab (edge bounce never commits)
-    var commit  = !!(g.target && g.target.tgt) && (absDx >= W * DIST_COMMIT_FRAC || vel >= VEL_OK);
+    var commit  = !!(g.target && g.target.tgt) && (absDx >= Math.min(W * DIST_COMMIT_FRAC, 120) || vel >= VEL_OK);
     var tgt     = g.target;
     g = null;
 
