@@ -21,7 +21,7 @@
   var LOCK_PX   = 10;
   var DIST_OK   = 80;
   var VEL_OK    = 0.35;
-  var ANIM_MS   = 320;
+  var ANIM_MS   = 300;
   var CANCEL_MS = 290;
 
   var _busy        = false;
