@@ -1,26 +1,29 @@
 /**
- * swipe-back.js v10 — native-style left-edge swipe to go back
+ * swipe-back.js v11 — native-style left-edge swipe to go back
  *
  * Visual types:
  *   A  (quranReader, ivSeriesView): iOS-style card — fg slides right as fixed overlay,
  *      bg revealed beneath. fg moved to <body> to escape contain:paint clipping.
- *   AG (Gencine sub-views except book-reader): same iOS-style card as A, but bg is a
- *      temporary pre-rendered destination element inside panelGencine. Built at
- *      drag-lock time via GencineUI._renderDestInto(), removed after commit/cancel.
- *   G+ (Gencine book-reader): fg moved to <body> like A/AG, scrim + shadow, but no
- *      pre-render — destination (books list) requires async load. Clean themed bg.
+ *      bg starts at scale(0.94) / opacity(0.75) / blur(2px), animates to full on commit.
+ *   AG (Gencine sub-views except book-reader): same as A, but bg is a temporary
+ *      pre-rendered destination element built at drag-lock time via _renderDestInto().
+ *   G+ (Gencine book-reader): same as AG but bg is a shimmer skeleton (destination
+ *      requires async load). Same depth treatment as A/AG.
  *   B  (overlays, profiles): fg translates 1:1, no bg reveal. Subtle shadow.
  *
- * Navigation logic: unchanged — App.doBack({allowExit:false}) fires after animation.
+ * Depth system (A / AG / G+):
+ *   bg starts : scale(0.94)  opacity(0.75)  filter:blur(2px)  scrim:0.45
+ *   during drag: scales to 1.0, fades to 1.0 proportional to progress; blur stays 2px
+ *   on commit  : CSS transition → scale(1) opacity(1) blur(0px)
+ *   on cancel  : CSS transition → scale(0.94) opacity(0.75)  blur stays
  *
- * Two-phase gesture detection (matching tab-swipe v9 lifecycle):
+ * Two-phase gesture detection (matching tab-swipe lifecycle):
  *   Phase 1 (_onDetect, passive:true): never blocks scroll. Vertical lock releases
  *     immediately. Horizontal lock requires dx>LOCK_PX && dx>|dy|*HORIZ_RATIO.
  *   Phase 2 (_onActive, passive:false): rAF-batched translate3d tracking.
  *     preventDefault only here — scroll is never touched until gesture is owned.
  *
- * Lifecycle matches tab-swipe v9:
- *   _cancel sets _busy=true immediately; _cancelTid saved and cleared on each
+ * Lifecycle: _cancel sets _busy=true immediately; _cancelTid saved and cleared on each
  *   new _cancel call; App.doBack wrapped in try/catch so _busy can't stay stuck.
  */
 (function () {
@@ -36,9 +39,12 @@
   var ANIM_MS      = 270;    // max commit animation (adaptive: shorter if mostly dragged)
   var CANCEL_MS    = 220;    // cancel snap-back duration
 
+  // Scrim strength — higher than old 0.30 so bg reads clearly as "previous screen"
+  var SCRIM_MAX    = 0.45;
+
   // ── Animation lock ──────────────────────────────────────────────────────────
   var _busy      = false;
-  var _cancelTid = null;  // pending cancel timeout — cleared on each new _cancel call
+  var _cancelTid = null;
 
   // ── rAF render scheduling ────────────────────────────────────────────────────
   var _rafId     = null;
@@ -119,7 +125,7 @@
       return { type: 'A', fg: iv, bg: document.getElementById('ivHome'), W: W };
     }
 
-    // Quran reader — Type A: reveal quranHome behind sliding card (iOS navigation feel)
+    // Quran reader — Type A: reveal quranHome behind sliding card
     var qr = document.getElementById('quranReader');
     if (qr && qr.classList.contains('on')) {
       return { type: 'A', fg: qr, bg: document.getElementById('quranHome'), W: W };
@@ -130,16 +136,29 @@
       var gc = document.getElementById('gencineContent');
       var pg = document.getElementById('panelGencine');
       if (gc && pg) {
-        // book-reader: destination requires async load — use G+ (no pre-render)
+        // book-reader: destination requires async load — G+ (shimmer backdrop, same depth treatment)
         if (GencineUI._view === 'book-reader') {
           return { type: 'G+', fg: gc, panel: pg, W: W };
         }
-        // all other sub-views: full destination reveal via pre-render (Type AG)
+        // all other sub-views: full destination reveal (Type AG)
         return { type: 'AG', fg: gc, panel: pg, W: W };
       }
     }
 
     return null;
+  }
+
+  // ── Apply initial bg depth styling (shared by A, AG, G+) ─────────────────────
+  // bg element starts receded: scaled down, dimmed, slightly blurred.
+  // Signals "this is the previous screen in a navigation stack."
+
+  function _applyBgDepth(el) {
+    el.style.willChange      = 'transform, opacity, filter';
+    el.style.transformOrigin = 'center center';
+    el.style.transform       = 'scale(0.94) translateZ(0)';
+    el.style.opacity         = '0.75';
+    el.style.filter          = 'blur(2px)';
+    el.style.transition      = 'none';
   }
 
   // ── Drag start ───────────────────────────────────────────────────────────────
@@ -148,33 +167,18 @@
     t.started = true;
 
     if (t.type === 'A') {
-      // Override content-visibility:auto on bg cards BEFORE revealing the panel.
-      // .surah-card/.iv-card/.iv-ep-item use content-visibility:auto on safe-render devices —
-      // when quranHome/ivHome was display:none those cards were outside the rendering tree,
-      // so the browser treats them as off-screen placeholders when display is restored.
-      // sb-reveal forces content-visibility:visible so cards paint synchronously in
-      // the first frame instead of showing beige placeholder boxes.
       document.body.classList.add('sb-reveal');
 
-      // Show the background page.
-      // bg has display:none (set by openSurah/openSeries) — remove it so it renders.
       if (t.bg) {
         t.bg.style.display = '';
-        // Force layout specifically on bg's paint container — panelQuran has contain:paint,
-        // so accessing clientWidth on fg (which moved to body) does NOT trigger panelQuran's
-        // paint chunk scheduling. offsetHeight on bg does.
-        void t.bg.offsetHeight;
+        void t.bg.offsetHeight;  // force bg panel's paint chunk before any transform
+        _applyBgDepth(t.bg);
       }
 
-      // Move fg to <body> — .panel has contain:paint which clips position:fixed children
-      // to the panel border-box. Moving fg to body escapes this so position:fixed covers
-      // the real viewport and the element can translate off-screen without clipping.
       t._fgParent  = t.fg.parentElement;
       t._fgSibling = t.fg.nextSibling;
       if (t._fgParent) document.body.appendChild(t.fg);
 
-      // Position as fixed full-screen card on top of everything (above tab bar z:300).
-      // top:'var(--safe-t)' prevents the ~50px safe-area jump on notched devices.
       t.fg.style.position   = 'fixed';
       t.fg.style.top        = 'var(--safe-t)';
       t.fg.style.left       = '0';
@@ -183,43 +187,49 @@
       t.fg.style.zIndex     = '400';
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
-      t.fg.style.boxShadow  = '-12px 0 40px rgba(0,0,0,.38)';
+      t.fg.style.boxShadow  = '-16px 0 48px rgba(0,0,0,.55)';
 
-      // Dim scrim — makes bg read as "previous screen in stack".
-      var scrim = document.createElement('div');
-      scrim.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0.30;z-index:399;pointer-events:none;transition:none;will-change:opacity;';
-      document.body.appendChild(scrim);
-      t._scrim = scrim;
+      var scrimA = document.createElement('div');
+      scrimA.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0.45;z-index:399;pointer-events:none;transition:none;will-change:opacity;';
+      document.body.appendChild(scrimA);
+      t._scrim = scrimA;
 
       void t.fg.clientWidth;
 
     } else if (t.type === 'AG' || t.type === 'G+') {
-      // Both AG and G+ escape panelGencine's contain:paint by moving fg to body.
-      // AG additionally pre-renders the destination into panelGencine as a bg layer.
+      // Build bg destination layer — AG pre-renders real destination content,
+      // G+ uses a shimmer skeleton (books list requires async data).
+      var destEl = document.createElement('div');
+      destEl.className = 'gencine-dest-layer';
 
       if (t.type === 'AG' && window.GencineUI && typeof GencineUI._renderDestInto === 'function') {
-        // Build destination bg BEFORE saving _fgSibling so sibling points to destEl,
-        // ensuring fg reinserts in front of destEl on cleanup (preserving original order).
-        var destEl = document.createElement('div');
-        destEl.className = 'gencine-dest-layer';
-        t.panel.appendChild(destEl);
         GencineUI._renderDestInto(destEl);
-        t._destEl = destEl;
-        // Force panelGencine's paint chunk — same as void t.bg.offsetHeight in Type A.
-        // panelGencine has contain:paint (global .panel rule), so we force layout inside it.
-        void destEl.offsetHeight;
+      } else {
+        // Shimmer skeleton — visually suggests the books destination while data loads
+        destEl.style.cssText = 'display:flex;flex-direction:column;gap:12px;padding:16px;';
+        for (var k = 0; k < 5; k++) {
+          var sh = document.createElement('div');
+          sh.className = 'genc-scripts-loading-card';
+          sh.style.cssText = 'height:80px;border-radius:16px;flex-shrink:0;';
+          destEl.appendChild(sh);
+        }
       }
 
-      // Save fg's DOM position (after destEl append so sibling = destEl for AG, null for G+)
-      t._fgParent  = t.fg.parentElement;
-      t._fgSibling = t.fg.nextSibling;
+      // Append BEFORE saving _fgSibling: sibling → destEl, so reinsert puts fg in front
+      t.panel.appendChild(destEl);
+      t._destEl = destEl;
 
-      // Save panelGencine scroll; reset to 0 so destination shows from top during drag.
-      // Restored on cancel; _draw() handles scroll on commit.
-      t._savedScroll = t.panel.scrollTop;
+      // Force panelGencine's paint chunk (contain:paint) so destination renders before drag
+      void destEl.offsetHeight;
+
+      _applyBgDepth(destEl);
+
+      // Save fg position + panel scroll
+      t._fgParent       = t.fg.parentElement;
+      t._fgSibling      = t.fg.nextSibling;  // = destEl
+      t._savedScroll    = t.panel.scrollTop;
       t.panel.scrollTop = 0;
 
-      // Move fg to body — same contain:paint escape as Type A
       if (t._fgParent) document.body.appendChild(t.fg);
 
       t.fg.style.position   = 'fixed';
@@ -230,21 +240,19 @@
       t.fg.style.zIndex     = '400';
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
-      t.fg.style.boxShadow  = '-12px 0 40px rgba(0,0,0,.38)';
+      t.fg.style.boxShadow  = '-16px 0 48px rgba(0,0,0,.55)';
 
-      var scrim2 = document.createElement('div');
-      scrim2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0.30;z-index:399;pointer-events:none;transition:none;will-change:opacity;';
-      document.body.appendChild(scrim2);
-      t._scrim = scrim2;
+      var scrimG = document.createElement('div');
+      scrimG.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0.45;z-index:399;pointer-events:none;transition:none;will-change:opacity;';
+      document.body.appendChild(scrimG);
+      t._scrim = scrimG;
 
       void t.fg.clientWidth;
 
     } else {
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
-      if (t.type === 'B') {
-        t.fg.style.boxShadow = '-6px 0 24px rgba(0,0,0,.32)';
-      }
+      if (t.type === 'B') t.fg.style.boxShadow = '-6px 0 24px rgba(0,0,0,.32)';
     }
   }
 
@@ -252,11 +260,21 @@
 
   function _dragMove(t, dx) {
     if (!t.started) return;
-    t.fg.style.transition = 'none';
-    t.fg.style.transform  = 'translate3d(' + dx + 'px,0,0)';
+    // No redundant transition='none' write — already set at drag start, never reset
+    t.fg.style.transform = 'translate3d(' + dx + 'px,0,0)';
+
+    var p = Math.min(1, Math.max(0, dx / t.W));
+
     if (t._scrim) {
-      var p = Math.min(1, Math.max(0, dx / t.W));
-      t._scrim.style.opacity = (0.30 * (1 - p)).toFixed(3);
+      t._scrim.style.opacity = (SCRIM_MAX * (1 - p)).toFixed(3);
+    }
+
+    // Drive bg depth: scales from 0.94→1.0, fades 0.75→1.0 proportional to drag
+    // Blur stays at 2px during drag — only transitions on commit/cancel
+    var bgEl = t.bg || t._destEl;
+    if (bgEl) {
+      bgEl.style.transform = 'scale(' + (0.94 + p * 0.06).toFixed(4) + ') translateZ(0)';
+      bgEl.style.opacity   = (0.75 + p * 0.25).toFixed(3);
     }
   }
 
@@ -267,8 +285,6 @@
     _cancelRaf();
 
     if (!t.started) {
-      // Gesture was claimed (horizontal lock) but drag never started visually.
-      // Still need to navigate back — no animation needed.
       try {
         if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       } catch (_e) {}
@@ -276,7 +292,7 @@
       return;
     }
 
-    // Tablet inline readers and Gencine: panels are non-overlaying — skip animation
+    // Tablet: panels are non-overlaying — skip animation
     if (_isTablet() && (t.fg.id === 'quranReader' || t.fg.id === 'ivSeriesView' || t.fg.id === 'gencineContent')) {
       _clearFg(t, false);
       try {
@@ -287,22 +303,28 @@
     }
 
     var ease     = 'cubic-bezier(0.22,1,0.36,1)';
-    // Adaptive duration: shorter when user already dragged most of the way across.
-    // Matches tab-swipe v9 formula — fast flicks snap instantly, slow drags accelerate.
     var progress = Math.min(1, t.dx / t.W);
     var durMs    = Math.round(Math.max(180, ANIM_MS * (1 - progress * 0.50)));
     var dur      = durMs + 'ms ' + ease;
 
     t.fg.style.transition = 'transform ' + dur;
     t.fg.style.transform  = 'translate3d(' + t.W + 'px,0,0)';
+
     if (t._scrim) {
       t._scrim.style.transition = 'opacity ' + dur;
       t._scrim.style.opacity    = '0';
     }
 
+    // bg comes forward: scale to 1.0, full opacity, blur dissolves to 0
+    var bgEl = t.bg || t._destEl;
+    if (bgEl) {
+      bgEl.style.transition = 'transform ' + dur + ', opacity ' + dur + ', filter ' + dur;
+      bgEl.style.transform  = 'scale(1) translateZ(0)';
+      bgEl.style.opacity    = '1';
+      bgEl.style.filter     = 'blur(0px)';
+    }
+
     setTimeout(function () {
-      // try/catch guarantees the rAF cleanup always runs even if App.doBack() throws,
-      // so _busy can never remain stuck true after a commit.
       try {
         if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       } catch (_e) {}
@@ -316,10 +338,7 @@
   // ── Cancel (snap back) ───────────────────────────────────────────────────────
 
   function _cancel(t) {
-    // Lock _busy immediately — prevents a new gesture from starting during snap-back
-    // and having its inline styles/DOM position wiped by this cancel's cleanup timeout.
     _busy = true;
-    // Clear any prior cancel timeout so stale closures can't reach fg elements.
     if (_cancelTid) { clearTimeout(_cancelTid); _cancelTid = null; }
     _cancelRaf();
 
@@ -330,11 +349,21 @@
 
     var ease = 'cubic-bezier(0.22,1,0.36,1)';
     var dur  = CANCEL_MS + 'ms ' + ease;
+
     t.fg.style.transition = 'transform ' + dur;
     t.fg.style.transform  = 'translate3d(0,0,0)';
+
     if (t._scrim) {
       t._scrim.style.transition = 'opacity ' + dur;
-      t._scrim.style.opacity    = '0.30';
+      t._scrim.style.opacity    = String(SCRIM_MAX);
+    }
+
+    // bg recedes back: scale + opacity return to start; blur stays at 2px
+    var bgEl = t.bg || t._destEl;
+    if (bgEl) {
+      bgEl.style.transition = 'transform ' + dur + ', opacity ' + dur;
+      bgEl.style.transform  = 'scale(0.94) translateZ(0)';
+      bgEl.style.opacity    = '0.75';
     }
 
     _cancelTid = setTimeout(function () {
@@ -345,7 +374,8 @@
   }
 
   // ── Style cleanup ────────────────────────────────────────────────────────────
-  // restoreBg: true on cancel (undo visual state), false on commit (App.doBack handles it)
+  // restoreBg: true on cancel (undo reveal), false on commit (App.doBack handles state)
+
   function _clearFg(t, restoreBg) {
     var s = t.fg.style;
     s.transition = '';
@@ -356,6 +386,7 @@
     if (t.type === 'A') {
       document.body.classList.remove('sb-reveal');
       s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = ''; s.zIndex = '';
+
       if (t._fgParent) {
         if (t._fgSibling && t._fgSibling.parentElement === t._fgParent) {
           t._fgParent.insertBefore(t.fg, t._fgSibling);
@@ -363,7 +394,15 @@
           t._fgParent.appendChild(t.fg);
         }
       }
-      if (restoreBg && t.bg) t.bg.style.display = 'none';
+
+      // Clear bg depth styles; on cancel, also re-hide it
+      if (t.bg) {
+        var bs = t.bg.style;
+        bs.willChange = ''; bs.transformOrigin = ''; bs.transform = '';
+        bs.opacity = ''; bs.filter = ''; bs.transition = '';
+        if (restoreBg) bs.display = 'none';
+      }
+
       if (t._scrim) {
         if (t._scrim.parentNode) t._scrim.parentNode.removeChild(t._scrim);
         t._scrim = null;
@@ -371,9 +410,8 @@
 
     } else if (t.type === 'AG' || t.type === 'G+') {
       s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = ''; s.zIndex = '';
-      // Reinsert fg before its original next sibling (= destEl for AG, null/end for G+).
-      // For AG this places fg at its original position, then we remove destEl, leaving
-      // panelGencine with only gencineContent — identical content, no visible flash.
+
+      // Reinsert fg before destEl (its saved sibling) — puts fg back at original position
       if (t._fgParent) {
         if (t._fgSibling && t._fgSibling.parentElement === t._fgParent) {
           t._fgParent.insertBefore(t.fg, t._fgSibling);
@@ -381,15 +419,18 @@
           t._fgParent.appendChild(t.fg);
         }
       }
-      // Remove the pre-rendered destination overlay (AG only)
+
+      // Remove the destination layer — DOM removal clears it, no need to clear styles
       if (t._destEl) {
         if (t._destEl.parentNode) t._destEl.parentNode.removeChild(t._destEl);
         t._destEl = null;
       }
-      // On cancel: restore the panel's original scroll position
+
+      // On cancel: restore scroll position the user was at before the gesture
       if (restoreBg && t._savedScroll != null && t.panel) {
         t.panel.scrollTop = t._savedScroll;
       }
+
       if (t._scrim) {
         if (t._scrim.parentNode) t._scrim.parentNode.removeChild(t._scrim);
         t._scrim = null;
@@ -400,7 +441,6 @@
   // ── Gesture state ────────────────────────────────────────────────────────────
   var g = null;
 
-  // Called once horizontal intent is confirmed — starts visual and upgrades listener
   function _lockHorizontal() {
     g.locked = 'h';
     if (g.target) _dragStart(g.target);
@@ -416,31 +456,25 @@
     var adx = Math.abs(dx);
     var ady = Math.abs(dy);
 
-    // Dead zone: no decision yet
     if (adx < DEAD_PX && ady < DEAD_PX) return;
 
-    // Moving away from left edge — not a swipe-back, release immediately
     if (dx < -DEAD_PX) {
       document.removeEventListener('touchmove', _onDetect);
       g = null;
       return;
     }
 
-    // Vertical lock: clearly scrolling — immediately release, no interference
     if (ady > VERT_LOCK_PX && ady > adx) {
       document.removeEventListener('touchmove', _onDetect);
       g = null;
       return;
     }
 
-    // Horizontal lock: clearly a rightward swipe from the edge
     if (dx > LOCK_PX && dx > ady * HORIZ_RATIO) {
       document.removeEventListener('touchmove', _onDetect);
       _lockHorizontal();
       return;
     }
-
-    // Ambiguous diagonal: keep observing without blocking anything
   }
 
   // Phase 2 — active tracking: rAF-batched, calls preventDefault
@@ -474,7 +508,6 @@
       locked: null,
       target: _getTarget(),
     };
-    // Passive: pure observation — does not interfere with scroll in any way
     document.addEventListener('touchmove', _onDetect, { passive: true });
   }, { passive: true });
 
@@ -504,7 +537,6 @@
     var tgt = g && g.target;
     g = null;
     if (tgt) _cancel(tgt);
-    // No else: _busy is false during Phase 1 detection (only set by _commit/_cancel)
   }, { passive: true });
 
 })();
