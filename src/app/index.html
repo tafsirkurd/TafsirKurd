@@ -171,7 +171,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="" fetchpriority="low">
 <link rel="preload" href="/dhikr/dua-data.js?v=20260326b" as="script" fetchpriority="low">
 <link rel="preload" href="/dhikr/smart-dhikr.js?v=57" as="script" fetchpriority="low">
-<link rel="preload" href="/dhikr/dhikr.js?v=20260603a" as="script" fetchpriority="low">
+<link rel="preload" href="/dhikr/dhikr.js?v=20260603b" as="script" fetchpriority="low">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17">
 
@@ -4501,7 +4501,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/app/app.js?v=1009"></script>
-<script src="/utils/swipe-back.js?v=11"></script>
+<script src="/utils/swipe-back.js?v=12"></script>
 <script src="/utils/tab-swipe.js?v=11"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */

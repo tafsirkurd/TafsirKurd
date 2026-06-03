@@ -876,7 +876,9 @@ window.GencineUI = {
   _renderDestInto: function(container) {
     var sv = this._view, si = this._hadithDetailIdx, sa = this._adhkarView;
     // Mirror goHome() logic — read-only destination determination
-    if (this._view === 'hadith' && this._hadithDetailIdx !== null) {
+    if (this._view === 'book-reader') {
+      this._view = 'books';                   // book-reader → books list
+    } else if (this._view === 'hadith' && this._hadithDetailIdx !== null) {
       this._hadithDetailIdx = null;           // hadith detail → hadith list
     } else if (this._view === 'adhkar' && this._adhkarView === 'list') {
       this._adhkarView = 'grid';              // adhkar list → adhkar grid
@@ -887,6 +889,7 @@ window.GencineUI = {
       if      (this._view === 'home')   this._renderHome(container);
       else if (this._view === 'hadith') this._renderHadith(container);
       else if (this._view === 'adhkar') this._renderAdhkar(container);
+      else if (this._view === 'books')  this._renderBooks(container);
     } finally {
       // Always restore — even if a render method throws
       this._view = sv; this._hadithDetailIdx = si; this._adhkarView = sa;

@@ -1,17 +1,16 @@
 /**
- * swipe-back.js v11 — native-style left-edge swipe to go back
+ * swipe-back.js v12 — native-style left-edge swipe to go back
  *
  * Visual types:
  *   A  (quranReader, ivSeriesView): iOS-style card — fg slides right as fixed overlay,
  *      bg revealed beneath. fg moved to <body> to escape contain:paint clipping.
  *      bg starts at scale(0.94) / opacity(0.75) / blur(2px), animates to full on commit.
- *   AG (Gencine sub-views except book-reader): same as A, but bg is a temporary
+ *   AG (all Gencine sub-views including book-reader): same as A, but bg is a temporary
  *      pre-rendered destination element built at drag-lock time via _renderDestInto().
- *   G+ (Gencine book-reader): same as AG but bg is a shimmer skeleton (destination
- *      requires async load). Same depth treatment as A/AG.
+ *      book-reader → books list; hadith detail → hadith list; etc.
  *   B  (overlays, profiles): fg translates 1:1, no bg reveal. Subtle shadow.
  *
- * Depth system (A / AG / G+):
+ * Depth system (A / AG):
  *   bg starts : scale(0.94)  opacity(0.75)  filter:blur(2px)  scrim:0.45
  *   during drag: scales to 1.0, fades to 1.0 proportional to progress; blur stays 2px
  *   on commit  : CSS transition → scale(1) opacity(1) blur(0px)
@@ -131,16 +130,11 @@
       return { type: 'A', fg: qr, bg: document.getElementById('quranHome'), W: W };
     }
 
-    // Gencine sub-views
+    // Gencine sub-views — all use Type AG: real destination pre-rendered by _renderDestInto()
     if (window.GencineUI && window.S && S.tab === 'gencine' && GencineUI._view !== 'home') {
       var gc = document.getElementById('gencineContent');
       var pg = document.getElementById('panelGencine');
       if (gc && pg) {
-        // book-reader: destination requires async load — G+ (shimmer backdrop, same depth treatment)
-        if (GencineUI._view === 'book-reader') {
-          return { type: 'G+', fg: gc, panel: pg, W: W };
-        }
-        // all other sub-views: full destination reveal (Type AG)
         return { type: 'AG', fg: gc, panel: pg, W: W };
       }
     }
@@ -196,16 +190,15 @@
 
       void t.fg.clientWidth;
 
-    } else if (t.type === 'AG' || t.type === 'G+') {
-      // Build bg destination layer — AG pre-renders real destination content,
-      // G+ uses a shimmer skeleton (books list requires async data).
+    } else if (t.type === 'AG') {
+      // Build bg destination layer — pre-renders the real destination via _renderDestInto()
       var destEl = document.createElement('div');
       destEl.className = 'gencine-dest-layer';
 
-      if (t.type === 'AG' && window.GencineUI && typeof GencineUI._renderDestInto === 'function') {
+      if (window.GencineUI && typeof GencineUI._renderDestInto === 'function') {
         GencineUI._renderDestInto(destEl);
       } else {
-        // Shimmer skeleton — visually suggests the books destination while data loads
+        // Fallback shimmer if _renderDestInto is unavailable
         destEl.style.cssText = 'display:flex;flex-direction:column;gap:12px;padding:16px;';
         for (var k = 0; k < 5; k++) {
           var sh = document.createElement('div');
@@ -408,7 +401,7 @@
         t._scrim = null;
       }
 
-    } else if (t.type === 'AG' || t.type === 'G+') {
+    } else if (t.type === 'AG') {
       s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = ''; s.zIndex = '';
 
       // Reinsert fg before destEl (its saved sibling) — puts fg back at original position
@@ -426,9 +419,10 @@
         t._destEl = null;
       }
 
-      // On cancel: restore scroll position the user was at before the gesture
-      if (restoreBg && t._savedScroll != null && t.panel) {
-        t.panel.scrollTop = t._savedScroll;
+      // On cancel: restore scroll position + fix header elements that _renderBooks modifies directly
+      if (restoreBg) {
+        if (t._savedScroll != null && t.panel) t.panel.scrollTop = t._savedScroll;
+        if (window.GencineUI && typeof GencineUI._updateHeader === 'function') GencineUI._updateHeader();
       }
 
       if (t._scrim) {
