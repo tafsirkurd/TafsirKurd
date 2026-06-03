@@ -10166,7 +10166,7 @@ function renderSettings(){
   [[icon('fas fa-book-open'),totalRead,_tl('settings.stats_ayahs','ئایەتێن خواندی')],
    [icon('fas fa-fire'),streak,_tl('settings.stats_streak','بەردەوامیا ڕۆژان')],
    [icon('fas fa-bookmark'),bms.length,_tl('settings.stats_bookmarks','نیشانکری')],
-   [icon('fas fa-ranking-star'),bestStreak,_tl('settings.stats_best_streak','بلندترین بەردەوامییا خواندنێ')],
+   [icon('fas fa-ranking-star'),bestStreak,_tl('settings.stats_best_streak','بلندترین بەردەوامی')],
    [icon('fas fa-star'),khatmCount,_tl('settings.stats_khatm','ختم')],
    [icon('fas fa-mosque'),totalPrayers,_tl('settings.stats_prayers','نڤێژ')]
   ].forEach(function(item){
