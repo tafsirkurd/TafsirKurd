@@ -24,8 +24,8 @@
   var LOCK_PX          = 10;    // px before direction is decided
   var DIST_OK          = 65;    // px travel → commit
   var VEL_OK           = 0.30;  // px/ms fast-flick threshold
-  var ANIM_MS          = 280;   // commit slide animation
-  var CANCEL_MS        = 260;   // cancel snap-back animation
+  var ANIM_MS          = 320;   // commit slide animation
+  var CANCEL_MS        = 250;   // cancel snap-back animation
   var SCROLL_SETTLE_MS = 150;   // ms after last scroll event before gestures re-enable
 
   // RTL: html[dir=rtl] → flex row is right-to-left, so index 0 (quran) is rightmost.
@@ -140,9 +140,10 @@
     ts.display          = 'flex';
     ts.flexDirection    = 'column';
     ts.zIndex           = '99';
-    ts.willChange       = 'transform';
+    ts.willChange       = 'transform, opacity';
     ts.transition       = 'none';
-    ts.transform        = 'translateX(' + targetStart + 'px)';
+    ts.transform        = 'translate3d(' + targetStart + 'px,0,0)';
+    ts.opacity          = '0.96';
     ts.contentVisibility = 'visible';
     ts.visibility       = 'visible';
 
@@ -161,24 +162,25 @@
     var targetStart = _targetStart(t.dir, W);
 
     t.cur.style.transition = 'none';
-    t.cur.style.transform  = 'translateX(' + dx + 'px)';
+    t.cur.style.transform  = 'translate3d(' + dx + 'px,0,0)';
 
     t.tgt.style.transition = 'none';
-    t.tgt.style.transform  = 'translateX(' + (targetStart + dx) + 'px)';
+    t.tgt.style.transform  = 'translate3d(' + (targetStart + dx) + 'px,0,0)';
   }
 
   // ── Commit ───────────────────────────────────────────────────────────────────
   function _commit(t) {
     _busy = true;
     var W        = window.innerWidth;
-    var ease     = 'cubic-bezier(.4,0,.2,1)';
+    var ease     = 'cubic-bezier(0.22,1,0.36,1)';
     var dur      = ANIM_MS + 'ms ' + ease;
     var curFinal = (t.dir === 'left') ? -W : W;
 
     t.cur.style.transition = 'transform ' + dur;
-    t.cur.style.transform  = 'translateX(' + curFinal + 'px)';
-    t.tgt.style.transition = 'transform ' + dur;
-    t.tgt.style.transform  = 'translateX(0)';
+    t.cur.style.transform  = 'translate3d(' + curFinal + 'px,0,0)';
+    t.tgt.style.transition = 'transform ' + dur + ', opacity ' + dur;
+    t.tgt.style.transform  = 'translate3d(0,0,0)';
+    t.tgt.style.opacity    = '1';
 
     setTimeout(function () {
       if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
@@ -199,14 +201,15 @@
       return;
     }
     var W        = window.innerWidth;
-    var ease     = 'cubic-bezier(.22,1,.36,1)';
+    var ease     = 'cubic-bezier(0.22,1,0.36,1)';
     var dur      = CANCEL_MS + 'ms ' + ease;
     var tgtFinal = _targetStart(t.dir, W);
 
     t.cur.style.transition = 'transform ' + dur;
-    t.cur.style.transform  = 'translateX(0)';
-    t.tgt.style.transition = 'transform ' + dur;
-    t.tgt.style.transform  = 'translateX(' + tgtFinal + 'px)';
+    t.cur.style.transform  = 'translate3d(0,0,0)';
+    t.tgt.style.transition = 'transform ' + dur + ', opacity ' + dur;
+    t.tgt.style.transform  = 'translate3d(' + tgtFinal + 'px,0,0)';
+    t.tgt.style.opacity    = '0.96';
 
     setTimeout(function () {
       _clearCur(t);
@@ -219,14 +222,14 @@
   // ── Style cleanup ────────────────────────────────────────────────────────────
   function _clearCur(t) {
     var s = t.cur.style;
-    s.transition = ''; s.transform = ''; s.willChange = '';
+    s.transition = ''; s.transform = ''; s.willChange = ''; s.opacity = '';
   }
 
   function _clearTgt(t) {
     var s = t.tgt.style;
     s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = '';
     s.display = ''; s.flexDirection = ''; s.zIndex = '';
-    s.willChange = ''; s.transition = ''; s.transform = '';
+    s.willChange = ''; s.transition = ''; s.transform = ''; s.opacity = '';
     s.contentVisibility = ''; s.visibility = '';
   }
 
