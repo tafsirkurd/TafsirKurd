@@ -121,8 +121,15 @@
       t.fg.style.zIndex    = '400';
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
-      // Shadow on the left/leading edge — depth cue as card separates from background
-      t.fg.style.boxShadow = '-8px 0 32px rgba(0,0,0,.26)';
+      // Stronger shadow — separates fg card from bg and signals depth
+      t.fg.style.boxShadow = '-12px 0 40px rgba(0,0,0,.38)';
+
+      // Dim scrim over the background — makes bg read as "previous screen in stack"
+      // not "another page sitting underneath". Sits between bg (z<400) and fg (z:400).
+      var scrim = document.createElement('div');
+      scrim.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;opacity:0.30;z-index:399;pointer-events:none;transition:none;will-change:opacity;';
+      document.body.appendChild(scrim);
+      t._scrim = scrim;
 
       // Force layout flush — ensures bg is fully rendered (header, content visible)
       // before the first animation frame. Prevents blank background flash.
@@ -141,7 +148,12 @@
   function _dragMove(t, dx) {
     if (!t.started) return;
     t.fg.style.transition = 'none';
-    t.fg.style.transform  = 'translateX(' + dx + 'px)';
+    t.fg.style.transform  = 'translate3d(' + dx + 'px,0,0)';
+    // Scrim fades as fg slides away — bg brightens proportionally to reveal depth
+    if (t._scrim) {
+      var p = Math.min(1, Math.max(0, dx / t.W));
+      t._scrim.style.opacity = (0.30 * (1 - p)).toFixed(3);
+    }
   }
 
   // ── Commit ───────────────────────────────────────────────────────────────────
@@ -163,10 +175,14 @@
       return;
     }
 
-    var ease = 'cubic-bezier(.4,0,.2,1)';
+    var ease = 'cubic-bezier(0.22,1,0.36,1)';
     var dur  = ANIM_MS + 'ms ' + ease;
     t.fg.style.transition = 'transform ' + dur;
-    t.fg.style.transform  = 'translateX(' + t.W + 'px)';
+    t.fg.style.transform  = 'translate3d(' + t.W + 'px,0,0)';
+    if (t._scrim) {
+      t._scrim.style.transition = 'opacity ' + dur;
+      t._scrim.style.opacity    = '0';
+    }
 
     setTimeout(function () {
       // App.doBack(): removes .on from fg, restores bg display:'' (no-op since already shown)
@@ -185,10 +201,14 @@
   function _cancel(t) {
     if (!t.started) return;
 
-    var ease = 'cubic-bezier(.22,1,.36,1)';
+    var ease = 'cubic-bezier(0.22,1,0.36,1)';
     var dur  = CANCEL_MS + 'ms ' + ease;
     t.fg.style.transition = 'transform ' + dur;
-    t.fg.style.transform  = 'translateX(0)';
+    t.fg.style.transform  = 'translate3d(0,0,0)';
+    if (t._scrim) {
+      t._scrim.style.transition = 'opacity ' + dur;
+      t._scrim.style.opacity    = '0.30';
+    }
 
     setTimeout(function () {
       // Reinsert fg, restore bg to hidden (App.doBack was NOT called on cancel)
@@ -222,6 +242,10 @@
       }
       if (restoreBg && t.bg) {
         t.bg.style.display = 'none';
+      }
+      if (t._scrim) {
+        if (t._scrim.parentNode) t._scrim.parentNode.removeChild(t._scrim);
+        t._scrim = null;
       }
     }
   }

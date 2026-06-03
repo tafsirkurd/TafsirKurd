@@ -123,12 +123,24 @@
     // Suppress CSS transitions/animations FIRST to avoid any flash
     document.body.classList.add('ts-dragging');
 
-    // Current panel: GPU hint only — stays in flex flow
-    t.cur.style.willChange = 'transform';
-    t.cur.style.transition = 'none';
+    // Both panels go fixed and slide side-by-side in sync.
+    // Keeping cur in flex-flow while tgt is fixed causes their headers to
+    // share the same vertical band — two headers visible at once. Making cur
+    // fixed too lets them tile flush so only one header is ever on-screen.
+    var cs = t.cur.style;
+    cs.position      = 'fixed';
+    cs.top           = 'var(--safe-t)';
+    cs.left          = '0';
+    cs.right         = '0';
+    cs.bottom        = '0';
+    cs.display       = 'flex';
+    cs.flexDirection = 'column';
+    cs.zIndex        = '98';
+    cs.willChange    = 'transform';
+    cs.transition    = 'none';
+    cs.transform     = 'translate3d(0,0,0)';
 
-    // Target panel: fixed full-screen, translated off-screen
-    // position:fixed takes it out of the flex flow — no height splitting.
+    // Target panel: fixed full-screen, translated off-screen.
     // visibility:visible overrides #panelPrayer visibility:hidden.
     // contentVisibility:visible overrides .safe-render content-visibility:hidden.
     var ts = t.tgt.style;
@@ -143,12 +155,12 @@
     ts.willChange       = 'transform, opacity';
     ts.transition       = 'none';
     ts.transform        = 'translate3d(' + targetStart + 'px,0,0)';
-    ts.opacity          = '0.96';
+    ts.opacity          = '0.97';
     ts.contentVisibility = 'visible';
     ts.visibility       = 'visible';
 
-    // Force layout flush — panel was display:none; this forces the browser to
-    // compute layout for it so the header and content are rendered before the
+    // Force layout flush — panel was display:none; forces the browser to
+    // compute layout so the header and content are rendered before the
     // first animation frame, preventing the blank/header-pop-in flash.
     void t.tgt.clientWidth;
 
@@ -222,6 +234,8 @@
   // ── Style cleanup ────────────────────────────────────────────────────────────
   function _clearCur(t) {
     var s = t.cur.style;
+    s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = '';
+    s.display = ''; s.flexDirection = ''; s.zIndex = '';
     s.transition = ''; s.transform = ''; s.willChange = ''; s.opacity = '';
   }
 
