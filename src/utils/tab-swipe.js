@@ -1,5 +1,5 @@
 /**
- * tab-swipe.js v9 — Instagram-style root tab swipe navigation
+ * tab-swipe.js v10 — Instagram-style root tab swipe navigation
  *
  * Two-phase gesture detection:
  *   Phase 1 (_onDetect, passive:true): observes movement without ever blocking
@@ -36,7 +36,7 @@
   var HORIZ_RATIO      = 1.25;  // horizontal must be this much stronger than vertical
   var DIST_COMMIT_FRAC = 0.28;  // complete if |dx| > this fraction of screen width
   var VEL_OK           = 0.45;  // px/ms fast-flick commit threshold
-  var ANIM_MS          = 290;   // max commit duration (shorter if mostly dragged already)
+  var ANIM_MS          = 320;   // max commit duration (shorter if mostly dragged already)
   var CANCEL_MS        = 220;   // cancel snap-back duration
   var SCROLL_SETTLE_MS = 150;   // ms after last scroll event before gestures re-enable
   var SWIPE_ZONE_FRAC  = 0.55;  // touch must start below this fraction of screen height
@@ -221,7 +221,7 @@
     var ease     = 'cubic-bezier(0.22,1,0.36,1)';
     // Shorter animation when user already dragged most of the way
     var progress = Math.min(1, Math.abs(t.dx) / W);
-    var durMs    = Math.round(Math.max(180, ANIM_MS * (1 - progress * 0.50)));
+    var durMs    = Math.round(Math.max(180, ANIM_MS * (1 - progress * 0.45)));
     var dur      = durMs + 'ms ' + ease;
     var curFinal = (t.dir === 'left') ? -W : W;
 
