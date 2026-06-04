@@ -1540,13 +1540,28 @@
 
   // Read today's data directly from localStorage cache — no Promise, no await.
   // Returns a data object ready for buildPanel(), or null if not cached yet.
+  // Returns true if a day object has all 6 valid prayer time strings
+  function _isDayValid(d) {
+    if (!d) return false;
+    var fields = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    for (var fi = 0; fi < fields.length; fi++) {
+      var v = d[fields[fi]];
+      if (!v || typeof v !== 'string' || !v.match(/^\d{1,2}:\d{2}/)) return false;
+    }
+    return true;
+  }
+
   function readCacheNow(city, today) {
     var parts   = today.split('-').map(Number);
     var mkey    = window.PrayerCache.monthKey(city, parts[0], parts[1]);
     var monthly = window.PrayerCache.read(mkey);
     if (!monthly || !monthly.days) return null;
     var d = monthly.days[parts[2]] || monthly.days[String(parts[2])];
-    if (!d) return null;
+    if (!_isDayValid(d)) {
+      if (d) console.warn('[PrayerCache] readCacheNow REJECTED: invalid fields city=' + city + ' date=' + today);
+      return null;
+    }
+    console.log('[PrayerUI] source=today-cache city=' + city + ' date=' + today + ' fajr=' + d.Fajr);
     return {
       timings: { Fajr: d.Fajr, Sunrise: d.Sunrise, Dhuhr: d.Dhuhr,
                  Asr:  d.Asr,  Maghrib: d.Maghrib,  Isha:  d.Isha },
@@ -1554,7 +1569,7 @@
     };
   }
 
-  // Find ANY cached day across current + previous month — used as offline fallback
+  // Find ANY valid day across current + previous month — used as offline/fail fallback
   function readAnyCacheNow(city) {
     var today = window.PrayerLogic.todayBaghdad();
     var parts = today.split('-').map(Number);
@@ -1566,7 +1581,8 @@
         var days = Object.keys(monthly.days).map(Number).sort(function(a, b) { return b - a; });
         for (var i = 0; i < days.length; i++) {
           var day = monthly.days[days[i]] || monthly.days[String(days[i])];
-          if (day && day.Fajr) {
+          if (_isDayValid(day)) {
+            console.log('[PrayerUI] source=any-cache city=' + city + ' month=' + (d.getMonth()+1) + ' day=' + days[i] + ' fajr=' + day.Fajr);
             return {
               timings: { Fajr: day.Fajr, Sunrise: day.Sunrise, Dhuhr: day.Dhuhr,
                          Asr: day.Asr, Maghrib: day.Maghrib, Isha: day.Isha },
@@ -2047,6 +2063,7 @@
     // ── Fast path: render immediately from cache, no network call ──
     var cached = readCacheNow(city, today);
     if (cached) {
+      window._prayerDataSource = 'today-cache';
       _currentTimings = cached.timings;
       _currentDateISO = today;
       _currentData    = cached;
@@ -2089,10 +2106,11 @@
     _tomorrowTimings = null;
     _tomorrowDateISO = null;
 
-    // If offline: localStorage → bundled static JSON → error
+    // If offline: localStorage any-cache → bundled static JSON → error
     if (!navigator.onLine) {
       var anyCache = readAnyCacheNow(city);
       if (anyCache) {
+        window._prayerDataSource = 'any-cache (offline)';
         _currentTimings = anyCache.timings;
         _currentDateISO = today;
         _currentData    = anyCache;
@@ -2101,17 +2119,21 @@
         _showCachedBadge(container);
         return;
       }
-      // No localStorage — try bundled static JSON (always available in Capacitor)
+      // No localStorage — try bundled static JSON (always available in Capacitor local bundle)
+      console.log('[PrayerUI] offline, no cache — trying bundled static JSON city=' + city);
       buildLoading(container);
       try {
-        var bundled = await window.PrayerAPI.fetchFromBundled(city, today);
-        _currentTimings = bundled.timings;
+        var bundledOffline = await window.PrayerAPI.fetchFromBundled(city, today);
+        window._prayerDataSource = 'bundled (offline)';
+        console.log('[PrayerUI] source=bundled (offline) city=' + city + ' date=' + today + ' fajr=' + bundledOffline.timings.Fajr);
+        _currentTimings = bundledOffline.timings;
         _currentDateISO = today;
-        _currentData    = bundled;
-        buildPanel(container, bundled, city, today);
+        _currentData    = bundledOffline;
+        buildPanel(container, bundledOffline, city, today);
         startCountdown();
         _showCachedBadge(container);
       } catch(e) {
+        console.warn('[PrayerUI] bundled fetch also failed offline city=' + city + ':', e && e.message);
         buildOfflineError(container);
       }
       return;
@@ -2130,6 +2152,7 @@
     try {
       var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
       clearInterval(_pollTimer);
+      window._prayerDataSource = 'network';
       _currentTimings = data.timings;
       _currentDateISO = today;
       _currentData    = data;
@@ -2137,13 +2160,15 @@
       buildPanel(container, data, city, today);
       startCountdown();
       pushWidgetData(data, city, today);
-      console.log('[PrayerCache] status=fresh_fetch city=' + city + ' date=' + today + ' fajr=' + (data.timings && data.timings.Fajr));
+      console.log('[PrayerUI] source=network city=' + city + ' date=' + today + ' fajr=' + (data.timings && data.timings.Fajr));
       _reportPrayerHealth({ city: city, date: today, status: 'fresh_fetch', timings: data.timings });
     } catch(e) {
       clearInterval(_pollTimer);
-      // Network error — try any cached data as fallback
+      console.warn('[PrayerUI] network fetch failed city=' + city + ':', e && e.message);
+      // Fallback order: any-cache → bundled static JSON → error
       var fallback = readAnyCacheNow(city);
       if (fallback) {
+        window._prayerDataSource = 'any-cache (network-fail)';
         _currentTimings = fallback.timings;
         _currentDateISO = today;
         _currentData    = fallback;
@@ -2153,10 +2178,28 @@
         _reportPrayerHealth({ city: city, date: today, status: 'fetch_failed_using_cache',
           timings: fallback.timings, error: e && e.message });
       } else {
-        markCityBad(city);
-        buildError(container);
-        _reportPrayerHealth({ city: city, date: today, status: 'fetch_failed_no_cache',
-          error: e && e.message });
+        // No cache — try bundled static JSON (works in Capacitor, works in web if SW cached it)
+        var bundledFallback = null;
+        try { bundledFallback = await window.PrayerAPI.fetchFromBundled(city, today); } catch(e2) {
+          console.warn('[PrayerUI] bundled also failed city=' + city + ':', e2 && e2.message);
+        }
+        if (bundledFallback) {
+          window._prayerDataSource = 'bundled (network-fail)';
+          console.log('[PrayerUI] source=bundled (network-fail) city=' + city + ' date=' + today);
+          _currentTimings = bundledFallback.timings;
+          _currentDateISO = today;
+          _currentData    = bundledFallback;
+          buildPanel(container, bundledFallback, city, today);
+          startCountdown();
+          _showCachedBadge(container);
+          _reportPrayerHealth({ city: city, date: today, status: 'fetch_failed_using_bundled',
+            timings: bundledFallback.timings, error: e && e.message });
+        } else {
+          markCityBad(city);
+          buildError(container);
+          _reportPrayerHealth({ city: city, date: today, status: 'fetch_failed_no_cache',
+            error: e && e.message });
+        }
       }
     }
   }

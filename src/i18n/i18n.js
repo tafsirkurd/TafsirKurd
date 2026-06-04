@@ -120,17 +120,42 @@ function readCache(){
     var raw = localStorage.getItem(CACHE_KEY);
     if(!raw) return null;
     var data = JSON.parse(raw);
-    // Sanity check: must contain at least one dotted key (e.g. "tabs.quran")
-    if(data && typeof data === 'object' &&
-       Object.keys(data).some(function(k){ return k.indexOf('.')>0; })){
-      return data;
+    if(!data || typeof data !== 'object' || Array.isArray(data)){
+      console.log('[i18n] Cache rejected: not an object — using bundled');
+      return null;
     }
-  }catch(e){}
-  return null;
+    // Must contain dotted keys (e.g. "tabs.quran")
+    if(!Object.keys(data).some(function(k){ return k.indexOf('.')>0; })){
+      console.log('[i18n] Cache rejected: malformed (no dotted keys) — using bundled');
+      return null;
+    }
+    // Bundle-version fingerprint: __bver stores the key-count of the bundled snapshot
+    // that was current when this cache was written. If the bundle has since changed
+    // (app update added/renamed strings), reject the cache — bundled text wins instead.
+    var bundledCount = Object.keys(
+      window.KMR_TRANSLATIONS || window.__kmrBundle || {}
+    ).length;
+    if(bundledCount > 0 && data.__bver !== bundledCount){
+      console.log('[i18n] Cache rejected: bundle changed' +
+        ' (cache.__bver=' + (data.__bver || 'none') +
+        ' current_bundled_keys=' + bundledCount +
+        ') — clean start with newest bundled text');
+      try{ localStorage.removeItem(CACHE_KEY); }catch(e2){}
+      return null;
+    }
+    return data;
+  }catch(e){
+    console.log('[i18n] Cache rejected: parse error (' + (e && e.message) + ') — using bundled');
+    return null;
+  }
 }
 
 function writeCache(data){
-  try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch(e){}
+  try{
+    // Stamp __bver so future reads can detect bundle upgrades and reject stale cache
+    var toStore = Object.assign({}, data, { __bver: Object.keys(_bundledSnapshot).length });
+    localStorage.setItem(CACHE_KEY, JSON.stringify(toStore));
+  }catch(e){}
 }
 
 function purgeCache(){
@@ -376,7 +401,12 @@ function initLang(){
     _applyCriticalKeyGuard(merged);
     translations = merged;
     _initLayer = 'cache';
-    console.log('[i18n] Layer 2: cache overlaid ('+Object.keys(_cachedSnapshot).length+' keys, bundled wins)');
+    console.log('[i18n] Layer 2: v6 cache applied + bundled wins (' +
+      Object.keys(_cachedSnapshot).length + ' cached, ' +
+      Object.keys(_bundledSnapshot).length + ' bundled) — source=cache+bundled');
+  } else {
+    console.log('[i18n] Layer 2: no valid cache — source=bundled only (' +
+      Object.keys(_bundledSnapshot).length + ' keys)');
   }
 
   // Apply layers 1+2 immediately — UI renders with correct text before network
@@ -457,7 +487,9 @@ window.i18n = {
       swapCount:      _swapCount,
       avgFetchMs:     _avgFetchMs()
     };
-  }
+  },
+  // Debug: which source provided text on this startup (bundled | cache | remote)
+  get dataSource(){ return _initLayer; }
 };
 window.t = t;
 
