@@ -335,22 +335,24 @@
     t.tgt.style.transition = 'transform ' + dur;
     t.tgt.style.transform  = 'translate3d(0,0,0)';
 
-    // Release drag overrides so CSS transitions settle the icon/label state.
-    // App.tab() fires immediately — S.tab is correct, .on class is set — so the
-    // spring can fire right away and CSS transitions settle to the correct values.
+    // Release drag overrides immediately so icon/label settle via CSS transition
     _clearDragOverrides(t);
-    try {
-      if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
-    } catch (_e) {}
-    _springTabIcon(t.tabName);
 
+    // App.tab() fires AFTER the animation — calling it mid-animation removes the
+    // .on class from the current panel which makes it disappear (display:none).
     _commitTid = setTimeout(function () {
       _commitTid      = null;
       _inFlightCommit = null;
-      _clearCur(t);
-      _clearTgt(t);
-      document.body.classList.remove('ts-dragging');
-      _busy = false;
+      _springTabIcon(t.tabName);
+      try {
+        if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
+      } catch (_e) {}
+      requestAnimationFrame(function () {
+        _clearCur(t);
+        _clearTgt(t);
+        document.body.classList.remove('ts-dragging');
+        _busy = false;
+      });
     }, durMs + 16);
   }
 
@@ -426,6 +428,7 @@
   var g = null;
 
   function _lockHorizontal(dx) {
+    var W   = window.innerWidth;
     var dir = (dx < 0) ? 'left' : 'right';
     var idx = _currentIdx();
     if (idx === -1) { g = null; return; }
@@ -548,11 +551,14 @@
       var ifc = _inFlightCommit;
       _inFlightCommit = null;
       if (_commitTid) { clearTimeout(_commitTid); _commitTid = null; }
-      // Snap to final without transition so there's no visible flash
+      // Snap to final position, call App.tab() so panel classes update, then clear
       ifc.cur.style.transition = 'none';
       ifc.cur.style.transform  = 'translate3d(' + ifc._curFinal + 'px,0,0)';
       ifc.tgt.style.transition = 'none';
       ifc.tgt.style.transform  = 'translate3d(0,0,0)';
+      try {
+        if (window.App && typeof App.tab === 'function') App.tab(ifc.tabName);
+      } catch (_e) {}
       void ifc.cur.clientWidth;  // force layout before clearing inline styles
       _clearCur(ifc);
       _clearTgt(ifc);
