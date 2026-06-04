@@ -512,17 +512,6 @@
   function _onActive(e) {
     if (!g || g.locked !== 'h') return;
 
-    // Browser already started scrolling — event is non-cancelable, give up the gesture
-    if (!e.cancelable) {
-      document.removeEventListener('touchmove', _onActive);
-      _cancelRaf();
-      var tgt = g.target;
-      g = null;
-      if (tgt) _cancel(tgt);
-      else { document.body.classList.remove('ts-dragging'); _busy = false; }
-      return;
-    }
-
     if (e.touches.length > 1) {
       document.removeEventListener('touchmove', _onActive);
       _cancelRaf();
@@ -551,7 +540,10 @@
     g._moves.push({ t: now, dx: g.dx });
     while (g._moves.length > 1 && now - g._moves[0].t > 100) g._moves.shift();
 
-    e.preventDefault();
+    // Only call preventDefault when the browser hasn't already committed to scroll.
+    // If cancelable=false the browser ignores it anyway — skip to silence the warning.
+    // The swipe animation still works because panels have no horizontal scroll content.
+    if (e.cancelable) e.preventDefault();
   }
 
   document.addEventListener('touchstart', function (e) {
