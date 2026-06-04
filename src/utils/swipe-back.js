@@ -255,6 +255,7 @@
       t.fg.style.willChange = 'transform';
       t.fg.style.transition = 'none';
       t.fg.style.transform  = 'translate3d(0,0,0)';
+      _createBlocker();
 
     } else if (t.type === 'overlay') {
       t.fg.style.willChange = 'transform';
@@ -353,6 +354,7 @@
         if (t._destEl.parentNode) t._destEl.parentNode.removeChild(t._destEl);
         t._destEl = null;
       }
+      _removeBlocker();
       // _renderBooks (called by _renderDestInto) writes inline styles to the real header
       // buttons as a side effect. On cancel, re-sync header to current GencineUI state.
       if (isCancelled && window.GencineUI && typeof GencineUI._updateHeader === 'function') {
