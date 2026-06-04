@@ -1,5 +1,5 @@
 /**
- * tab-swipe.js v13 — native-feel root tab swipe navigation
+ * tab-swipe.js v14 — native-feel root tab swipe navigation
  *
  * Two-phase gesture detection:
  *   Phase 1 (_onDetect, passive:true): pure observation — never blocks scroll.
@@ -207,8 +207,12 @@
     if (!t.started) return;
     t.cur.style.transform = 'translate3d(' + dx + 'px,0,0)';
     if (t.tgt) {
-      var W = window.innerWidth;
-      t.tgt.style.transform = 'translate3d(' + (_targetStart(t.dir, W) + dx) + 'px,0,0)';
+      t.tgt.style.transform = 'translate3d(' + (_targetStart(t.dir, t.W) + dx) + 'px,0,0)';
+
+      // Tab bar live icon animation: cur dims, tgt brightens proportional to progress
+      var p = Math.min(1, Math.abs(dx) / t.W);
+      if (t._curTabItem) t._curTabItem.style.opacity = (1 - p * 0.42).toFixed(3);
+      if (t._tgtTabItem) t._tgtTabItem.style.opacity = (0.4 + p * 0.6).toFixed(3);
     }
   }
 
@@ -220,10 +224,12 @@
     // Respects user's haptic setting via the app's global helper.
     if (window.H && typeof H.light === 'function') H.light();
 
-    var W        = window.innerWidth;
+    var W        = t.W || window.innerWidth;
+    var vel      = t._vel || 0;
     var ease     = 'cubic-bezier(0.22,1,0.36,1)';
     var progress = Math.min(1, Math.abs(t.dx) / W);
-    var durMs    = Math.max(160, Math.round(ANIM_MS * (1 - progress * 0.5)));
+    // Fast-flick shortcut: very high velocity → near-instant animation (110ms floor)
+    var durMs    = Math.max(vel > 1.2 ? 110 : 150, Math.round(ANIM_MS * (1 - progress * 0.5)));
     var dur      = durMs + 'ms ' + ease;
     var curFinal = (t.dir === 'left') ? -W : W;
 
@@ -233,8 +239,10 @@
     t.tgt.style.transform  = 'translate3d(0,0,0)';
 
     setTimeout(function () {
-      // try/catch guarantees the rAF cleanup always runs even if App.tab() throws,
-      // so _busy can never remain stuck true after a commit (fix #7).
+      // Clear tab icon opacity overrides before App.tab so CSS .on transition
+      // handles the color change naturally without the inline style fighting it.
+      if (t._curTabItem) t._curTabItem.style.opacity = '';
+      if (t._tgtTabItem) t._tgtTabItem.style.opacity = '';
       try {
         if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
       } catch (_e) {}
@@ -264,7 +272,7 @@
 
     var ease = 'cubic-bezier(0.22,1,0.36,1)';
 
-    var W        = window.innerWidth;
+    var W        = t.W || window.innerWidth;
     // Adaptive cancel: barely moved → fast snap; dragged far → proportionally longer
     var cancelProgress = Math.min(1, Math.abs(t.dx) / W);
     var cancelMs       = Math.round(100 + (CANCEL_MS - 100) * cancelProgress);
@@ -293,6 +301,8 @@
 
     _cancelTid = setTimeout(function () {
       _cancelTid = null;
+      if (t._curTabItem) t._curTabItem.style.opacity = '';
+      if (t._tgtTabItem) t._tgtTabItem.style.opacity = '';
       _clearCur(t);
       _clearTgt(t);
       document.body.classList.remove('ts-dragging');
@@ -339,12 +349,24 @@
 
     if (targetIdx < 0 || targetIdx >= TAB_ORDER.length) {
       // Edge: rubber-band — no target tab, just damped resistance on cur
-      g.target = { cur: curPanel, tgt: null, tabName: null, dir: dir, started: false, dx: dx * EDGE_RESISTANCE };
+      g.target = { cur: curPanel, tgt: null, tabName: null, dir: dir, started: false, dx: dx * EDGE_RESISTANCE, W: W };
       _edgeStart(g.target);
     } else {
       var tgtPanel = document.getElementById(PANEL_IDS[TAB_ORDER[targetIdx]]);
       if (!tgtPanel) { g = null; return; }
-      g.target = { cur: curPanel, tgt: tgtPanel, tabName: TAB_ORDER[targetIdx], dir: dir, started: false, dx: dx };
+      var tabName = TAB_ORDER[targetIdx];
+      g.target = {
+        cur:          curPanel,
+        tgt:          tgtPanel,
+        tabName:      tabName,
+        dir:          dir,
+        started:      false,
+        dx:           dx,
+        W:            W,
+        // Tab bar items for live icon animation during drag
+        _curTabItem:  document.querySelector('.tab-item[data-tab="' + TAB_ORDER[idx] + '"]'),
+        _tgtTabItem:  document.querySelector('.tab-item[data-tab="' + tabName + '"]'),
+      };
       _gestureStart(g.target);
     }
 
@@ -411,6 +433,12 @@
     _rafDx      = g.dx;
     _rafTarget  = g.target;
     _scheduleRender();
+
+    // Record this sample for end-velocity calculation (keep last 100ms only)
+    var now = Date.now();
+    g._moves.push({ t: now, dx: g.dx });
+    while (g._moves.length > 1 && now - g._moves[0].t > 100) g._moves.shift();
+
     e.preventDefault();
   }
 
@@ -443,7 +471,8 @@
       dx:     0,
       locked: null,
       dir:    null,
-      target: null
+      target: null,
+      _moves: [],   // ring buffer: last 100ms of {t, dx} for accurate end-velocity
     };
     // Passive: pure observation — does not interfere with scroll in any way
     document.addEventListener('touchmove', _onDetect, { passive: true });
@@ -455,17 +484,27 @@
     if (!g) return;
     if (g.locked !== 'h') { g = null; return; }
 
-    var elapsed = Date.now() - g.t0;
-    var absDx   = Math.abs(g.dx);
-    var vel     = elapsed > 0 ? absDx / elapsed : 0;
-    var W       = window.innerWidth;
+    var absDx  = Math.abs(g.dx);
+    var W      = (g.target && g.target.W) || window.innerWidth;
+    // Accurate end-velocity: use last 100ms of moves rather than full-gesture average.
+    // Prevents slow-drag-then-fast-flick from being diluted by the slow portion.
+    var vel = 0;
+    var moves = g._moves;
+    if (moves.length >= 2) {
+      var mFirst = moves[0], mLast = moves[moves.length - 1];
+      var mDt = mLast.t - mFirst.t;
+      if (mDt > 0) vel = Math.abs(mLast.dx - mFirst.dx) / mDt;
+    } else {
+      var elapsed = Date.now() - g.t0;
+      if (elapsed > 0) vel = absDx / elapsed;
+    }
     // Only commit if there is a real target tab (edge bounce never commits)
     var commit  = !!(g.target && g.target.tgt) && (absDx >= Math.min(W * DIST_COMMIT_FRAC, 120) || vel >= VEL_OK);
     var tgt     = g.target;
     g = null;
 
     if (!tgt) return;
-    if (commit) _commit(tgt);
+    if (commit) { tgt._vel = vel; _commit(tgt); }
     else        _cancel(tgt);
   }, { passive: true });
 
