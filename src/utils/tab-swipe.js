@@ -569,15 +569,19 @@
       var ifc = _inFlightCommit;
       _inFlightCommit = null;
       if (_commitTid) { clearTimeout(_commitTid); _commitTid = null; }
-      // Snap to final position, call App.tab() so panel classes update, then clear
+      // Snap panels to final positions
       ifc.cur.style.transition = 'none';
       ifc.cur.style.transform  = 'translate3d(' + ifc._curFinal + 'px,0,0)';
       ifc.tgt.style.transition = 'none';
       ifc.tgt.style.transform  = 'translate3d(0,0,0)';
+      // Fix icon/label state before App.tab() moves .on — same as normal commit path
+      _snapIconsToFinal(ifc);
       try {
         if (window.App && typeof App.tab === 'function') App.tab(ifc.tabName);
       } catch (_e) {}
-      void ifc.cur.clientWidth;  // force layout before clearing inline styles
+      // Restore CSS transitions now .on is on the correct tab item
+      _clearDragOverrides(ifc);
+      void ifc.cur.clientWidth;  // force layout before clearing inline panel styles
       _clearCur(ifc);
       _clearTgt(ifc);
       document.body.classList.remove('ts-dragging');
