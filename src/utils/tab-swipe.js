@@ -1,18 +1,19 @@
 /**
- * tab-swipe.js v12 — Instagram-style root tab swipe navigation
+ * tab-swipe.js v13 — native-feel root tab swipe navigation
  *
  * Two-phase gesture detection:
- *   Phase 1 (_onDetect, passive:true): observes movement without ever blocking
- *     scroll. Vertical lock (|dy|>10 && dy>dx) releases immediately. Horizontal
- *     lock requires |dx|>14 && |dx|>|dy|*1.25. Ambiguous diagonal → keep watching.
- *   Phase 2 (_onActive, passive:false): rAF-batched translate3d tracking.
- *     preventDefault only here — scroll is never touched until gesture is owned.
+ *   Phase 1 (_onDetect, passive:true): pure observation — never blocks scroll.
+ *     Vertical dominance (|dy|>VERT_LOCK_PX && dy>dx) releases immediately.
+ *     Horizontal lock requires |dx|>LOCK_PX && |dx|>|dy|*HORIZ_RATIO.
+ *   Phase 2 (_onActive, passive:false): rAF-batched translate3d, preventDefault.
  *
- * Edge rubber-band: swiping past first/last tab moves at EDGE_RESISTANCE (0.25×)
- *   instead of hard-blocking, snaps back on release.
+ * Both panels tile exactly side-by-side during drag (no overlap, no gap).
+ * Swipe accessible from any vertical position on screen — no zone restriction.
+ * Multi-touch during drag cancels safely (no stuck panels).
  *
- * Adaptive commit duration: short distance dragged → longer animation to travel
- *   the remaining distance. Nearly complete drag → short snap. Clamp 180–340ms.
+ * Adaptive durations:
+ *   Commit: 160–270ms depending on how far user dragged (shorter = more dragged).
+ *   Cancel: 100–190ms depending on how far user dragged (shorter = barely moved).
  *
  * RTL-aware: html[dir=rtl] → swipe right = higher index.
  */
@@ -29,18 +30,17 @@
   };
 
   // Gesture thresholds
-  var EDGE_EXCLUDE     = 40;    // px — left edge reserved for swipe-back (> swipe-back's 32)
+  var EDGE_EXCLUDE     = 20;    // px — small exclusion so stray left-edge taps don't trigger
   var DEAD_PX          = 6;     // px — no decision below this in either axis
-  var LOCK_PX          = 14;    // px horizontal travel needed to claim the gesture
+  var LOCK_PX          = 12;    // px horizontal travel needed to claim the gesture
   var VERT_LOCK_PX     = 10;    // px vertical travel that immediately releases control to scroll
-  var HORIZ_RATIO      = 1.25;  // horizontal must be this much stronger than vertical
-  var DIST_COMMIT_FRAC = 0.28;  // complete if |dx| > this fraction of screen width
+  var HORIZ_RATIO      = 1.35;  // horizontal must be this much stronger than vertical
+  var DIST_COMMIT_FRAC = 0.25;  // complete if |dx| > this fraction of screen width
   var VEL_OK           = 0.55;  // px/ms fast-flick commit threshold
-  var ANIM_MS          = 320;   // max commit duration (shorter if mostly dragged already)
-  var CANCEL_MS        = 220;   // cancel snap-back duration
+  var ANIM_MS          = 270;   // max commit duration (adaptive: shorter if mostly dragged)
+  var CANCEL_MS        = 190;   // max cancel snap-back duration (adaptive: shorter if barely moved)
   var SCROLL_SETTLE_MS = 150;   // ms after last scroll event before gestures re-enable
-  var SWIPE_ZONE_FRAC  = 0.55;  // touch must start below this fraction of screen height
-  var EDGE_RESISTANCE  = 0.25;  // rubber-band factor at first/last tab
+  var EDGE_RESISTANCE  = 0.18;  // rubber-band damping at first/last tab
 
   var _isRTL = document.documentElement.dir === 'rtl';
 
@@ -222,9 +222,8 @@
 
     var W        = window.innerWidth;
     var ease     = 'cubic-bezier(0.22,1,0.36,1)';
-    // Shorter animation when user already dragged most of the way
     var progress = Math.min(1, Math.abs(t.dx) / W);
-    var durMs    = Math.round(Math.max(180, ANIM_MS * (1 - progress * 0.45)));
+    var durMs    = Math.max(160, Math.round(ANIM_MS * (1 - progress * 0.5)));
     var dur      = durMs + 'ms ' + ease;
     var curFinal = (t.dir === 'left') ? -W : W;
 
@@ -265,9 +264,14 @@
 
     var ease = 'cubic-bezier(0.22,1,0.36,1)';
 
+    var W        = window.innerWidth;
+    // Adaptive cancel: barely moved → fast snap; dragged far → proportionally longer
+    var cancelProgress = Math.min(1, Math.abs(t.dx) / W);
+    var cancelMs       = Math.round(100 + (CANCEL_MS - 100) * cancelProgress);
+
     // Edge rubber-band: just snap cur back, no tgt involved
     if (!t.tgt) {
-      t.cur.style.transition = 'transform 220ms ' + ease;
+      t.cur.style.transition = 'transform ' + cancelMs + 'ms ' + ease;
       t.cur.style.transform  = 'translate3d(0,0,0)';
       _cancelTid = setTimeout(function () {
         _cancelTid = null;
@@ -275,13 +279,12 @@
         s.willChange = ''; s.transition = ''; s.transform = '';
         document.body.classList.remove('ts-dragging');
         _busy = false;
-      }, 236);
+      }, cancelMs + 16);
       return;
     }
 
-    var W        = window.innerWidth;
-    var dur      = CANCEL_MS + 'ms ' + ease;
     var tgtFinal = _targetStart(t.dir, W);
+    var dur      = cancelMs + 'ms ' + ease;
 
     t.cur.style.transition = 'transform ' + dur;
     t.cur.style.transform  = 'translate3d(0,0,0)';
@@ -294,7 +297,7 @@
       _clearTgt(t);
       document.body.classList.remove('ts-dragging');
       _busy = false;
-    }, CANCEL_MS + 16);
+    }, cancelMs + 16);
   }
 
   // ── Style cleanup ────────────────────────────────────────────────────────────
@@ -430,7 +433,6 @@
     if (_busy) return;
     var t = e.touches[0];
     if (t.clientX <= EDGE_EXCLUDE) return;
-    if (t.clientY < window.innerHeight * SWIPE_ZONE_FRAC) return;
     if (_shouldBlock(e.target)) return;
     if (_currentIdx() === -1) return;
 
