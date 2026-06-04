@@ -1911,6 +1911,7 @@ App.tab=function(name){
   var tabBtnName=(name==='goals'||name==='bookmarks')?'quran':name;
   var tabBtn=_getCachedTabBtn(tabBtnName);
   if(tabBtn){tabBtn.classList.add('on');tabBtn.setAttribute('aria-selected','true');}
+  if(window._tsSpringTabIcon)_tsSpringTabIcon(tabBtnName);
 
   // ── Prayer: unpause sky in next frame ──
   if(name==='prayer'){

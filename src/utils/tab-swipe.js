@@ -1,5 +1,5 @@
 /**
- * tab-swipe.js v14 — native-feel root tab swipe navigation
+ * tab-swipe.js v15 — native-feel root tab swipe navigation
  *
  * Two-phase gesture detection:
  *   Phase 1 (_onDetect, passive:true): pure observation — never blocks scroll.
@@ -43,6 +43,26 @@
   var EDGE_RESISTANCE  = 0.18;  // rubber-band damping at first/last tab
 
   var _isRTL = document.documentElement.dir === 'rtl';
+
+  // ── Icon spring bounce ────────────────────────────────────────────────────────
+  // Called on both swipe-commit and direct tap. Pre-sets icon to scale(1.25) then
+  // spring-animates it back to scale(1.06) (.on CSS value) with overshoot, matching
+  // native iOS tab bar behaviour. Exposed globally so App.tab() can call it on tap.
+  function _springTabIcon(tabName) {
+    var item = document.querySelector('.tab-item[data-tab="' + tabName + '"]');
+    if (!item) return;
+    var ico = item.querySelector('i');
+    if (!ico) return;
+    ico.style.transition = 'none';
+    ico.style.transform  = 'scale(1.25)';
+    requestAnimationFrame(function () {
+      // cubic-bezier(0.34, 1.56, 0.64, 1) = spring with slight overshoot
+      ico.style.transition = 'transform 320ms cubic-bezier(0.34,1.56,0.64,1)';
+      ico.style.transform  = '';  // → let .tab-item.on i {transform:scale(1.06)} take over
+      setTimeout(function () { ico.style.transition = ''; }, 320);
+    });
+  }
+  window._tsSpringTabIcon = _springTabIcon;
 
   // ── Scroll activity tracking ─────────────────────────────────────────────────
   var _lastScrollMs = 0;
@@ -152,6 +172,8 @@
     cs.willChange    = 'transform';
     cs.transition    = 'none';
     cs.transform     = 'translate3d(0,0,0)';
+    // Directional shadow on trailing edge — creates physical depth between tiled panels
+    cs.boxShadow     = (t.dir === 'left') ? '8px 0 28px rgba(0,0,0,0.13)' : '-8px 0 28px rgba(0,0,0,0.13)';
 
     var ts = t.tgt.style;
     ts.position         = 'fixed';
@@ -239,10 +261,13 @@
     t.tgt.style.transform  = 'translate3d(0,0,0)';
 
     setTimeout(function () {
-      // Clear tab icon opacity overrides before App.tab so CSS .on transition
-      // handles the color change naturally without the inline style fighting it.
+      // Clear tab icon opacity overrides then spring-bounce the destination icon.
+      // The spring runs in the rAF that follows App.tab adding .on — at that point
+      // .tab-item.on i css target (scale(1.06)) is active, and the spring curve
+      // bounces back to it from scale(1.25) with a natural overshoot.
       if (t._curTabItem) t._curTabItem.style.opacity = '';
       if (t._tgtTabItem) t._tgtTabItem.style.opacity = '';
+      _springTabIcon(t.tabName);
       try {
         if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
       } catch (_e) {}
@@ -316,6 +341,7 @@
     s.position = ''; s.top = ''; s.left = ''; s.right = ''; s.bottom = '';
     s.display = ''; s.flexDirection = ''; s.zIndex = '';
     s.transition = ''; s.transform = ''; s.willChange = ''; s.opacity = '';
+    s.boxShadow = '';
   }
 
   function _clearTgt(t) {
