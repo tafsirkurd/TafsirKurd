@@ -1,5 +1,5 @@
 /**
- * tab-swipe.js v11 — Instagram-style root tab swipe navigation
+ * tab-swipe.js v12 — Instagram-style root tab swipe navigation
  *
  * Two-phase gesture detection:
  *   Phase 1 (_onDetect, passive:true): observes movement without ever blocking
@@ -35,7 +35,7 @@
   var VERT_LOCK_PX     = 10;    // px vertical travel that immediately releases control to scroll
   var HORIZ_RATIO      = 1.25;  // horizontal must be this much stronger than vertical
   var DIST_COMMIT_FRAC = 0.28;  // complete if |dx| > this fraction of screen width
-  var VEL_OK           = 0.45;  // px/ms fast-flick commit threshold
+  var VEL_OK           = 0.55;  // px/ms fast-flick commit threshold
   var ANIM_MS          = 320;   // max commit duration (shorter if mostly dragged already)
   var CANCEL_MS        = 220;   // cancel snap-back duration
   var SCROLL_SETTLE_MS = 150;   // ms after last scroll event before gestures re-enable
@@ -381,6 +381,18 @@
   // Phase 2 — active tracking: rAF-batched, calls preventDefault
   function _onActive(e) {
     if (!g || g.locked !== 'h') return;
+
+    // Second finger during drag: abort cleanly so panels are never left stuck
+    if (e.touches.length > 1) {
+      document.removeEventListener('touchmove', _onActive);
+      _cancelRaf();
+      var tgt = g.target;
+      g = null;
+      if (tgt) _cancel(tgt);
+      else { document.body.classList.remove('ts-dragging'); _busy = false; }
+      return;
+    }
+
     var dx = e.touches[0].clientX - g.x0;
 
     if (!g.target.tgt) {
@@ -400,6 +412,19 @@
   }
 
   document.addEventListener('touchstart', function (e) {
+    // Second finger while gesture is locked: cancel before clearing g so panels
+    // are not left stuck in mid-animation fixed positioning.
+    if (e.touches.length > 1 && g && g.locked === 'h') {
+      document.removeEventListener('touchmove', _onDetect);
+      document.removeEventListener('touchmove', _onActive);
+      _cancelRaf();
+      var tgt = g.target;
+      g = null;
+      if (tgt) _cancel(tgt);
+      else { document.body.classList.remove('ts-dragging'); _busy = false; }
+      return;
+    }
+
     g = null;
     if (e.touches.length !== 1) return;
     if (_busy) return;
