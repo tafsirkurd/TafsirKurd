@@ -300,18 +300,26 @@
     }
   }
 
-  // ── Snap icons/labels to their final committed state, no transition ─────────
-  // Called at commit start so the tab bar LEADS the panel animation direction
-  // instead of reversing (which happens when CSS transitions settle back to the
-  // still-.on source tab while the panel is sliding out).
+  // ── Snap tab bar to final committed state ────────────────────────────────────
+  // Swaps .on on the tab bar BUTTONS (not panel elements) so CSS drives the pill
+  // reliably — no rgba parsing, no null-color risk. Clears all drag inline overrides.
+  // Called at commit start so the tab bar leads the panel animation.
   function _snapIconsToFinal(t) {
-    var rgb = t._accentRgbStr;
-    if (t._curTabItem) t._curTabItem.style.opacity = '';
-    if (t._tgtTabItem) t._tgtTabItem.style.opacity = '';
-    if (t._curTabIcon) { t._curTabIcon.style.transition = 'none'; t._curTabIcon.style.background = rgb ? 'rgba(' + rgb + ',0)' : 'transparent'; }
-    if (t._tgtTabIcon) { t._tgtTabIcon.style.transition = 'none'; t._tgtTabIcon.style.background = rgb ? 'rgba(' + rgb + ',1)' : ''; }
-    if (t._curTabSpan) { t._curTabSpan.style.transition = 'none'; t._curTabSpan.style.fontWeight = '500'; }
-    if (t._tgtTabSpan) { t._tgtTabSpan.style.transition = 'none'; t._tgtTabSpan.style.fontWeight = '700'; }
+    if (t._curTabItem) {
+      t._curTabItem.classList.remove('on');
+      t._curTabItem.setAttribute('aria-selected', 'false');
+      t._curTabItem.style.opacity = '';
+    }
+    if (t._tgtTabItem) {
+      t._tgtTabItem.classList.add('on');
+      t._tgtTabItem.setAttribute('aria-selected', 'true');
+      t._tgtTabItem.style.opacity = '';
+    }
+    // Clear inline icon/span overrides — CSS (.on state) takes over immediately
+    if (t._curTabIcon) { t._curTabIcon.style.transition = ''; t._curTabIcon.style.background = ''; }
+    if (t._tgtTabIcon) { t._tgtTabIcon.style.transition = ''; t._tgtTabIcon.style.background = ''; }
+    if (t._curTabSpan) { t._curTabSpan.style.transition = ''; t._curTabSpan.style.fontWeight  = ''; }
+    if (t._tgtTabSpan) { t._tgtTabSpan.style.transition = ''; t._tgtTabSpan.style.fontWeight  = ''; }
   }
 
   // ── Restore CSS transitions after App.tab() has set the correct .on class ───
