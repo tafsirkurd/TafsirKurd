@@ -512,6 +512,17 @@
   function _onActive(e) {
     if (!g || g.locked !== 'h') return;
 
+    // Browser already started scrolling — event is non-cancelable, give up the gesture
+    if (!e.cancelable) {
+      document.removeEventListener('touchmove', _onActive);
+      _cancelRaf();
+      var tgt = g.target;
+      g = null;
+      if (tgt) _cancel(tgt);
+      else { document.body.classList.remove('ts-dragging'); _busy = false; }
+      return;
+    }
+
     if (e.touches.length > 1) {
       document.removeEventListener('touchmove', _onActive);
       _cancelRaf();
