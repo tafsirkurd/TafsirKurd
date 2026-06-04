@@ -228,11 +228,14 @@ function mergeRemote(){
       }
 
       // ── Build new state in a temp object — never touch translations directly ──
+      // Order: cache → bundled → remote.
+      // Bundled wins over cache so newly shipped text always replaces stale cached values.
+      // Remote (admin edits) wins over both — intentional edits are never lost.
       var temp = Object.assign(
         {},
-        _bundledSnapshot,                          // base: bundled (every key)
-        _cachedSnapshot  ? _cachedSnapshot  : {},  // overlay: last cached
-        remote                                     // top: fresh remote
+        _cachedSnapshot  ? _cachedSnapshot  : {},  // base: last cached
+        _bundledSnapshot,                          // overlay: bundled wins over stale cache
+        remote                                     // top: fresh remote wins over all
       );
 
       // ── Critical key guard: patch any remote-blanked critical keys ───────
