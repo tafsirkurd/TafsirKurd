@@ -237,6 +237,28 @@
     return fallbackResult;
   }
 
+  /**
+   * Try the bundled static annual JSON only — no network-only fallbacks.
+   * Used in the offline path so Worker/Aladhan fetches (which fail offline)
+   * are never attempted. In Capacitor the static fetch hits the local bundle,
+   * so this works even with no internet connection.
+   * Also writes the month to localStorage so subsequent calls hit readCacheNow.
+   */
+  async function fetchFromBundled(city, dateISO) {
+    var parts = dateISO.split('-').map(Number);
+    var year  = parts[0], month = parts[1], day = parts[2];
+    var mkey  = window.PrayerCache.monthKey(city, year, month);
+    var monthly = await _fetchFromStatic(city, year, month, mkey);
+    var d = monthly.days[day] || monthly.days[String(day)];
+    if (!d || !d.Fajr) throw new Error('bundled-day-missing');
+    return {
+      timings: { Fajr: d.Fajr, Sunrise: d.Sunrise, Dhuhr: d.Dhuhr,
+                 Asr: d.Asr, Maghrib: d.Maghrib, Isha: d.Isha },
+      date: { hijriStr: d.hijri || null },
+      _fromCache: true
+    };
+  }
+
   async function fetchFromAladhan(city, dateISO, aladhanMethod) {
     var coords = CITY_COORDS[city];
     if (!coords) throw new Error('Unknown city: ' + city);
@@ -406,6 +428,7 @@
   window.PrayerAPI = {
     fetchPrayerTimes:  fetchPrayerTimes,
     backgroundRefresh: backgroundRefresh,
+    fetchFromBundled:  fetchFromBundled,
     CITY_COORDS:       CITY_COORDS
   };
 

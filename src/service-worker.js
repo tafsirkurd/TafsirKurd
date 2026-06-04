@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1159';
+const CACHE_NAME = 'tafsir-kurd-v1160';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -10,10 +10,10 @@ const PRECACHE = [
   '/utils/tab-swipe.js?v=16i',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
-  '/prayer/prayer.api.js?v=20260526',
+  '/prayer/prayer.api.js?v=20260604',
   '/prayer/prayer.logic.js?v=20260326b',
   '/prayer/prayer.notifications.android.js?v=20260602b',
-  '/prayer/prayer.ui.js?v=20260602o',
+  '/prayer/prayer.ui.js?v=20260604',
   // Gencine / books module (lazily loaded but pre-cached for offline)
   '/dhikr/dhikr.js?v=20260602c',
   '/dhikr/pdf-store.js?v=20260529',
@@ -133,11 +133,25 @@ self.addEventListener('fetch', event => {
   // ── External domains: pass through (Supabase, YouTube, CDNs, analytics) ──
   if (!isOwnOrigin) return;
 
-  // ── Prayer static JSON: NEVER cache in SW — let CDN handle it (max-age=3600) ──
-  // If SW cached these, corrections deployed via fetch-prayer-year.js would never
-  // reach users (SW would serve the old file indefinitely). Passing through ensures
-  // the CDN's 1-hour max-age is respected, so corrections propagate within 1 hour.
-  if (reqUrl.pathname.startsWith('/prayer-data/')) return;
+  // ── Prayer static JSON: stale-while-revalidate ──────────────────────────────
+  // Serve cached copy instantly when available so Prayer tab works offline.
+  // Always revalidate in background — corrections deployed via fetch-prayer-year.js
+  // propagate on the very next online visit (same session), not only after a cache
+  // expiry. First visit (online) populates the cache; subsequent offline visits use it.
+  if (reqUrl.pathname.startsWith('/prayer-data/')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache =>
+        cache.match(req).then(cached => {
+          const fetchPromise = fetch(req).then(res => {
+            if (res && res.status === 200) cache.put(req, res.clone()).catch(() => {});
+            return res;
+          }).catch(() => null);
+          return cached || fetchPromise;
+        })
+      )
+    );
+    return;
+  }
 
   // ── Same-origin API calls: stale-while-revalidate ─────────────────────────
   // Returns cached response instantly, updates cache in background

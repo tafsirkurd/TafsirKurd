@@ -2089,7 +2089,7 @@
     _tomorrowTimings = null;
     _tomorrowDateISO = null;
 
-    // If offline, use any cached data before showing spinner/error
+    // If offline: localStorage → bundled static JSON → error
     if (!navigator.onLine) {
       var anyCache = readAnyCacheNow(city);
       if (anyCache) {
@@ -2101,7 +2101,19 @@
         _showCachedBadge(container);
         return;
       }
-      buildOfflineError(container);
+      // No localStorage — try bundled static JSON (always available in Capacitor)
+      buildLoading(container);
+      try {
+        var bundled = await window.PrayerAPI.fetchFromBundled(city, today);
+        _currentTimings = bundled.timings;
+        _currentDateISO = today;
+        _currentData    = bundled;
+        buildPanel(container, bundled, city, today);
+        startCountdown();
+        _showCachedBadge(container);
+      } catch(e) {
+        buildOfflineError(container);
+      }
       return;
     }
 
