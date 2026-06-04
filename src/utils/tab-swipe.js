@@ -364,12 +364,14 @@
     _commitTid = setTimeout(function () {
       _commitTid      = null;
       _inFlightCommit = null;
+      // Clear any ongoing CSS icon/span transitions BEFORE spring fires —
+      // otherwise _clearDragOverrides would override spring's transition:'none'
+      // and a competing CSS scale transition would corrupt the bounce.
+      _clearDragOverrides(t);
       _springTabIcon(t.tabName);
       try {
         if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
       } catch (_e) {}
-      // Restore CSS transitions now that .on class is on the correct tab item
-      _clearDragOverrides(t);
       requestAnimationFrame(function () {
         _clearCur(t);
         _clearTgt(t);
