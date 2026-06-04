@@ -2078,7 +2078,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260602a', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260603b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=57',      function() { _p2 = true; _check(); });
 }
@@ -10376,7 +10376,7 @@ function renderSettings(){
           existing.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
           valid.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
           saveBookmarks(Object.values(merged));
-          toast((t('toast.import_done')||'نیشانەکراو هاتن')+' ('+valid.length+')');
+          toast((t('toast.import_done')||'ئایەتێن هەلگرتی هاتن ✓')+' ('+valid.length+')');
           renderSettings();
         }catch(err){toast(t('toast.import_invalid')||'فایل دروست نینە');}
       };
@@ -10386,7 +10386,7 @@ function renderSettings(){
   },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
   // Reset settings to defaults
   g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
-    _tkConfirm({icon:'↩️',title:t('settings.reset_defaults_confirm')||'ڕێکخستنەکان زڤرانەوە بۆ بارێ دەستپێکێ؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
+    _tkConfirm({icon:'↩️',title:t('settings.reset_defaults_confirm')||'تۆ پشتڕاستی ژ زڤڕاندنا ڕێکخستنان بۆ بارێ دەستپێکێ؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
       var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
       _sk.forEach(function(k){localStorage.removeItem(k);});
       S.showTafsir=true;S.bgAudio=false;S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;S.hapticFeedback=true;
