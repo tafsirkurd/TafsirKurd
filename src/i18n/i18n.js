@@ -32,7 +32,7 @@
 'use strict';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-var CACHE_KEY        = 'tafsirkurd_i18n_v5'; // v5: force-evicts v4 stale label values
+var CACHE_KEY        = 'tafsirkurd_i18n_v6'; // v6: force-evicts v5 (old merge order had cache > bundled)
 var HEALTH_SENT_KEY  = 'i18n_health_sent_session'; // sessionStorage — one report/session
 var _platform        = (function(){ try{ return (window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'web'; }catch(e){ return 'web'; } })();
 var REMOTE_URL       = (_platform==='web'?'':'https://tafsirkurd.com')+'/app-translations?platform='+_platform;
@@ -65,7 +65,8 @@ var CRITICAL_KEYS = [
 // ── Wipe legacy cache keys ────────────────────────────────────────────────────
 ['tafsirkurd_i18n_cache','tafsirkurd_i18n_cache_v2',
  'tafsirkurd_i18n_etag','tafsirkurd_i18n_etag_v2',
- 'tafsirkurd_i18n_v3','tafsirkurd_i18n_v4'].forEach(function(k){  // v4 evicted — v5 clears stale label cache
+ 'tafsirkurd_i18n_v3','tafsirkurd_i18n_v4',
+ 'tafsirkurd_i18n_v5'].forEach(function(k){  // v5 evicted — v6 clears stale cache (old merge order bug)
   try{ localStorage.removeItem(k); }catch(e){}
 });
 
