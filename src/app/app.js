@@ -1825,10 +1825,13 @@ function _getCachedTabItems(){if(!_cachedTabItems)_cachedTabItems=document.query
 function _getCachedTabBtn(name){if(!_cachedTabBtns[name])_cachedTabBtns[name]=document.querySelector('.tab-item[data-tab="'+name+'"]');return _cachedTabBtns[name];}
 // Track pending tab rAF renders so we can cancel them if user switches again
 var _pendingTabRaf=null;
+var _tabAnimTimer=null;   // clears window._tabAnimating after panel animation settles
+var _tabAnimGen=0;        // generation counter — prevents stale timer clearing a newer flag
 // Saved scroll positions per tab — panels preserve scrollTop naturally via display:none,
 // but we need to re-apply it when content is rebuilt (hash change forces re-render).
 var _tabScrollPos={};
 App.tab=function(name){
+  if(window._sbOwns)return;  // swipe-back owns the UI — tab switch completely blocked
   if(tapGuard('tab',80))return; // 80ms guard — fast enough for rapid switching
   if(name===S.tab){
     haptic([8]);
@@ -1885,6 +1888,12 @@ App.tab=function(name){
   var _prevTab=S.tab;
   S.tabHistory.push(_prevTab);
   S.tab=name;
+
+  // ── Block swipe-back from starting during the tab animation window (280ms) ──
+  window._tabAnimating=true;
+  if(_tabAnimTimer)clearTimeout(_tabAnimTimer);
+  var _tg=++_tabAnimGen;
+  _tabAnimTimer=setTimeout(function(){if(_tabAnimGen===_tg)window._tabAnimating=false;},310);
 
   // ── Show new panel instantly — only touch the previous + new panel, not ALL panels ──
   // Suppress CSS transitions for exactly 1 frame so the panel swap is pixel-instant,

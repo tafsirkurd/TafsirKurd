@@ -1,17 +1,19 @@
 /**
  * swipe-back.js — native-style left-edge swipe to go back
  *
- * All types are simple foreground-only translateX. No background manipulation.
+ * Foreground: pure translateX only — no opacity, scale, or visual change.
+ * Destination: revealed naturally (display:'') for readers; static behind fg.
+ * Background interaction: blocked by a transparent fixed overlay (z-index 350).
  *
- * Multi-touch safety:
- *   _abortGesture() is called at every touchstart (cleans up any active gesture
- *   before starting a new one) and when touches.length > 1 appears in touchmove.
- *   It restores all inline styles and scroll state instantly, without animation
- *   or navigation. Stale timeout/rAF callbacks are invalidated via _gid counter.
+ * Scroll lock: overflowY:hidden on scroll host prevents iOS WKScrollView from
+ *   scrolling within the same touch sequence (blocker alone cannot prevent this).
  *
- * Scroll lock:
- *   At horizontal lock, overflowY is set to 'hidden' on the scroll host.
- *   Restored immediately in cancel/abort, and before doBack() in commit.
+ * UI ownership (window._sbOwns):
+ *   Set true at horizontal direction lock; cleared when gesture fully ends.
+ *   App.tab() returns immediately while true — tab switching is completely
+ *   blocked until swipe-back is done. After a multi-touch abort the flag is
+ *   held for 350 ms so the click synthesised from the concurrent touch is also
+ *   blocked (click fires ~100-200 ms after touchend, well within the window).
  */
 (function () {
   'use strict';
@@ -25,9 +27,28 @@
   var CANCEL_MS = 290;
 
   // ── State ────────────────────────────────────────────────────────────────────
-  var _busy        = false;
-  var _cancelTimer = null;
-  var _gid         = 0;   // gesture generation — incremented on each abort/new gesture
+  var _busy         = false;
+  var _cancelTimer  = null;
+  var _cancelTarget = null;   // target of the active cancel animation (interrupt cleanup)
+  var _gid          = 0;
+  var _blocker      = null;
+  var _sbOwnsTimer  = null;
+  window._sbOwns    = false;  // true while swipe-back owns the UI
+
+  // ── UI-ownership helpers ──────────────────────────────────────────────────────
+  // immediate=true  → release now (clean completion, no concurrent click pending)
+  // immediate=false → release after 350 ms (abort path; defers past any synthesised click)
+  function _releaseSbOwns(immediate) {
+    if (_sbOwnsTimer) { clearTimeout(_sbOwnsTimer); _sbOwnsTimer = null; }
+    if (immediate) {
+      window._sbOwns = false;
+    } else {
+      _sbOwnsTimer = setTimeout(function () {
+        _sbOwnsTimer = null;
+        window._sbOwns = false;
+      }, 350);
+    }
+  }
 
   // ── Gate checks ──────────────────────────────────────────────────────────────
 
@@ -81,26 +102,50 @@
     return fg;
   }
 
+  // ── Background interaction blocker ───────────────────────────────────────────
+
+  function _createBlocker() {
+    if (_blocker) return;
+    _blocker = document.createElement('div');
+    _blocker.style.cssText = 'position:fixed;inset:0;z-index:350;background:transparent;';
+    document.body.appendChild(_blocker);
+  }
+
+  function _removeBlocker() {
+    if (_blocker) {
+      if (_blocker.parentNode) _blocker.parentNode.removeChild(_blocker);
+      _blocker = null;
+    }
+  }
+
   // ── Target resolution ────────────────────────────────────────────────────────
 
   function _getTarget() {
     var W = window.innerWidth;
 
+    // Fixed overlays — destination (main app) naturally visible underneath
     var overlayIds = ['profilePanel', 'prayerProgressPanel', 'authPanel'];
     for (var i = 0; i < overlayIds.length; i++) {
       var ov = document.getElementById(overlayIds[i]);
-      if (ov && ov.classList.contains('on')) return { fg: ov, W: W };
+      if (ov && ov.classList.contains('on')) return { fg: ov, bg: null, W: W };
     }
 
+    // IslamVoice series — reveal ivHome behind
     var iv = document.getElementById('ivSeriesView');
-    if (iv && iv.classList.contains('on')) return { fg: iv, W: W };
+    if (iv && iv.classList.contains('on')) {
+      return { fg: iv, bg: document.getElementById('ivHome'), W: W };
+    }
 
+    // Quran reader — reveal quranHome behind
     var qr = document.getElementById('quranReader');
-    if (qr && qr.classList.contains('on')) return { fg: qr, W: W };
+    if (qr && qr.classList.contains('on')) {
+      return { fg: qr, bg: document.getElementById('quranHome'), W: W };
+    }
 
+    // Gencine sub-views — translate whole panel; panel bg (var(--bg)) shows behind
     if (window.GencineUI && window.S && S.tab === 'gencine' && GencineUI._view !== 'home') {
       var gp = document.getElementById('panelGencine');
-      if (gp) return { fg: gp, W: W };
+      if (gp) return { fg: gp, bg: null, W: W };
     }
 
     return null;
@@ -123,41 +168,61 @@
     }
   }
 
+  // ── Cancel-animation interrupt ────────────────────────────────────────────────
+  // Called when a new touchstart arrives during a running cancel animation.
+  // Snaps the panel back to rest immediately; _sbOwns release is handled by caller.
+
+  function _interruptCancel() {
+    if (!_cancelTimer) return;
+    clearTimeout(_cancelTimer);
+    _cancelTimer = null;
+    var ct = _cancelTarget;
+    _cancelTarget = null;
+    if (!ct) return;
+    if (ct.bg) ct.bg.style.display = 'none';
+    ct.fg.style.transition = '';
+    ct.fg.style.transform  = '';
+    ct.fg.style.willChange = '';
+    _removeBlocker();
+  }
+
   // ── Safe abort ───────────────────────────────────────────────────────────────
-  // Instantly cancels any active gesture without animation or navigation.
-  // Called: (a) at every touchstart before creating a new gesture, and
-  //         (b) in touchmove when a second finger appears (touches.length > 1).
-  // After this, the DOM is fully restored and g is null.
 
   function _abortGesture() {
     if (!g) return;
     var t       = g.target;
     var wasLock = g.locked === 'h';
     g = null;
-    if (!wasLock || !t) return;
 
-    // Invalidate stale commit/cancel timeout callbacks
+    if (!wasLock) return;
+
     _gid++;
+    _interruptCancel();  // clean up any concurrent cancel animation first
 
-    // Cancel pending cleanup timer
-    if (_cancelTimer) { clearTimeout(_cancelTimer); _cancelTimer = null; }
+    if (!t) {
+      // No visual target (e.g., PDF/book reader) — just release ownership deferred
+      _releaseSbOwns(false);
+      return;
+    }
 
-    // Restore scroll immediately
     _unlockScroll(t);
-
-    // Remove all inline styles instantly (no animation — second touch is present)
-    var s = t.fg.style;
-    s.transition = '';
-    s.transform  = '';
-    s.willChange = '';
+    if (t.bg) t.bg.style.display = 'none';
+    _removeBlocker();
+    t.fg.style.transition = '';
+    t.fg.style.transform  = '';
+    t.fg.style.willChange = '';
+    _releaseSbOwns(false);  // deferred — blocks click synthesised from concurrent touch
   }
 
   // ── Drag start ───────────────────────────────────────────────────────────────
 
   function _dragStart(t) {
     t.started = true;
-    if (_cancelTimer) { clearTimeout(_cancelTimer); _cancelTimer = null; }
     _lockScroll(t);
+    // Reveal destination — shown in its normal state, no transforms
+    if (t.bg) t.bg.style.display = '';
+    // Block all background interaction until gesture ends
+    _createBlocker();
     t.fg.style.willChange = 'transform';
     t.fg.style.transition = 'none';
   }
@@ -168,13 +233,14 @@
     if (!t.started) return;
     t.fg.style.transition = 'none';
     t.fg.style.transform  = 'translateX(' + dx + 'px)';
+    // bg is never touched — it stays clean, static, and fully opaque behind fg
   }
 
   // ── Commit ───────────────────────────────────────────────────────────────────
 
   function _commit(t) {
     _busy = true;
-    var capturedId = _gid;   // snapshot — if _gid changes before timeout, skip
+    var capturedId = _gid;
 
     var id = t.fg.id;
     if (_isTablet() && (id === 'quranReader' || id === 'ivSeriesView')) {
@@ -190,13 +256,13 @@
     t.fg.style.transform  = 'translateX(' + t.W + 'px)';
 
     setTimeout(function () {
-      if (_gid !== capturedId) { _busy = false; return; }  // gesture was aborted
+      if (_gid !== capturedId) { _removeBlocker(); _busy = false; return; }
       _unlockScroll(t);
       try {
         if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
       } catch (_e) {}
       requestAnimationFrame(function () {
-        if (_gid !== capturedId) { _busy = false; return; }
+        if (_gid !== capturedId) { _removeBlocker(); _busy = false; return; }
         _clearFg(t);
         _busy = false;
       });
@@ -210,10 +276,14 @@
     _unlockScroll(t);
     t.fg.style.transition = 'transform ' + CANCEL_MS + 'ms cubic-bezier(.22,1,.36,1)';
     t.fg.style.transform  = 'translateX(0)';
+    _cancelTarget = t;
     var capturedId = _gid;
     _cancelTimer = setTimeout(function () {
       _cancelTimer = null;
-      if (_gid !== capturedId) return;  // gesture was aborted or superseded
+      _cancelTarget = null;
+      if (_gid !== capturedId) { _removeBlocker(); return; }
+      // Hide destination — gesture was cancelled, original state restored
+      if (t.bg) t.bg.style.display = 'none';
       _clearFg(t);
     }, CANCEL_MS + 16);
   }
@@ -225,6 +295,8 @@
     s.transition = '';
     s.transform  = '';
     s.willChange = '';
+    _removeBlocker();
+    _releaseSbOwns(true);  // clean completion — release ownership immediately
   }
 
   // ── Gesture state ────────────────────────────────────────────────────────────
@@ -233,7 +305,6 @@
   function _onTouchMove(e) {
     if (!g) return;
 
-    // Multi-touch: second finger appeared during drag — abort immediately
     if (e.touches.length > 1) {
       document.removeEventListener('touchmove', _onTouchMove);
       _abortGesture();
@@ -251,6 +322,9 @@
       }
       if (Math.abs(dx) >= Math.abs(dy) && dx > 0) {
         g.locked = 'h';
+        // Claim ownership at lock for all gesture types (incl. no-target / PDF)
+        window._sbOwns = true;
+        if (_sbOwnsTimer) { clearTimeout(_sbOwnsTimer); _sbOwnsTimer = null; }
         if (g.target) _dragStart(g.target);
       } else {
         g = null;
@@ -265,12 +339,22 @@
   }
 
   document.addEventListener('touchstart', function (e) {
-    // Always abort any active gesture before deciding what to do next.
-    // This is the single safe cleanup point — covers new touch, second finger,
-    // and any other scenario where a previous gesture was left open.
     _abortGesture();
+    if (!_busy) _gid++;  // don't invalidate commit animation on incidental touches
 
-    if (e.touches.length !== 1) return;   // multi-touch: don't start new gesture
+    // Interrupt any running cancel animation — snaps panel to rest immediately.
+    // Must run even when g was null (cancel from previous gesture still running).
+    _interruptCancel();
+
+    // If swipe-back still claims ownership (commit/cancel in progress, or just
+    // aborted — deferred release pending), set/extend the deferred release so
+    // any click synthesised from this touch sequence is blocked.
+    if (window._sbOwns && !_sbOwnsTimer) {
+      _releaseSbOwns(false);
+    }
+
+    if (window._tabAnimating) return;
+    if (e.touches.length !== 1) return;
     if (_busy) return;
     var t = e.touches[0];
     if (t.clientX > EDGE_PX) return;
@@ -278,13 +362,19 @@
     if (!window.App || typeof App.hasBack !== 'function') return;
     if (!App.hasBack()) return;
 
+    var target = _getTarget();
+    // Defensive: hide bg if a stale gesture left it visible
+    if (target && target.bg && target.bg.style.display !== 'none') {
+      target.bg.style.display = 'none';
+    }
+
     g = {
       x0:     t.clientX,
       y0:     t.clientY,
       t0:     Date.now(),
       dx:     0,
       locked: null,
-      target: _getTarget(),
+      target: target,
     };
     document.addEventListener('touchmove', _onTouchMove, { passive: false });
   }, { passive: true });
@@ -304,12 +394,19 @@
       else        _cancel(tgt);
     } else if (commit) {
       if (window.App && typeof App.doBack === 'function') App.doBack({ allowExit: false });
+      _releaseSbOwns(true);
+    } else {
+      // No-target gesture cancelled (e.g., PDF reader, below-threshold swipe)
+      _releaseSbOwns(true);
     }
   }, { passive: true });
 
   document.addEventListener('touchcancel', function () {
     document.removeEventListener('touchmove', _onTouchMove);
-    if (g && g.locked === 'h' && g.target) _cancel(g.target);
+    if (g && g.locked === 'h') {
+      if (g.target) _cancel(g.target);
+      else          _releaseSbOwns(true);  // no-target cancelled
+    }
     g = null;
   }, { passive: true });
 
