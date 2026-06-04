@@ -1160,6 +1160,8 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .wizard-confirm-hint{font-size:.68rem;color:var(--text3);margin-top:18px;opacity:.5}
 
 /* ===== SETTINGS TAB ===== */
+#panelSettings{overflow:hidden;padding-bottom:0}
+#settingsContent{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 20px)}
 .settings-content{padding:16px 16px 32px}
 .profile-card{display:flex;flex-direction:column;align-items:center;padding:28px 20px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);margin-bottom:16px;cursor:pointer;transition:transform .15s var(--ease)}
 .profile-card:active{transform:scale(.98)}
@@ -2606,7 +2608,8 @@ html.safe-render:not(.low-end-device) [data-theme="sakina"] .hdr{background:rgba
 .genc-scripts-loading-card{height:150px;border-radius:24px;background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3,#e8e8e8) 50%,var(--bg2) 75%);background-size:200% 100%;animation:mushaf-shimmer 1.4s infinite}
 /* Gencine home — cinematic cards */
 .genc-home{display:flex;flex-direction:column;gap:14px;padding:20px 16px 20px}
-#panelGencine{padding-bottom:calc(var(--tab-h) + var(--safe-b) + 16px)}
+#panelGencine{overflow:hidden;padding-bottom:0}
+#gencineContent{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 16px)}
 /* Base card — original mobile layout */
 .genc-card-btn{position:relative;width:100%;height:150px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;display:block;background:linear-gradient(135deg,#1c3a5e 0%,#0d1f35 100%);box-shadow:0 4px 20px rgba(0,0,0,.25)}
 .genc-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;border-radius:inherit}
