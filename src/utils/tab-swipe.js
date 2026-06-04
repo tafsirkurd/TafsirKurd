@@ -220,7 +220,7 @@
     cs.bottom        = '0';
     cs.display       = 'flex';
     cs.flexDirection = 'column';
-    cs.zIndex        = '98';
+    cs.zIndex        = '99';  // cur stays on top — tgt slides in beneath, not over
     cs.willChange    = 'transform';
     cs.transition    = 'none';
     cs.transform     = 'translate3d(0,0,0)';
@@ -234,7 +234,7 @@
     ts.bottom           = '0';
     ts.display          = 'flex';
     ts.flexDirection    = 'column';
-    ts.zIndex           = '99';
+    ts.zIndex           = '98';  // tgt below cur, revealed as cur peels away
     ts.willChange        = 'transform';
     ts.transition        = 'none';
     ts.transform         = 'translate3d(' + targetStart + 'px,0,0)';
