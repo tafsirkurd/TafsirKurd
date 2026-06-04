@@ -1,5 +1,5 @@
 /**
- * tab-swipe.js v15 — native-feel root tab swipe navigation
+ * tab-swipe.js v16 — native-feel root tab swipe navigation
  *
  * Two-phase gesture detection:
  *   Phase 1 (_onDetect, passive:true): pure observation — never blocks scroll.
@@ -12,10 +12,17 @@
  * Multi-touch during drag cancels safely (no stuck panels).
  *
  * Adaptive durations:
- *   Commit: 160–270ms depending on how far user dragged (shorter = more dragged).
+ *   Commit: 110–270ms depending on how far user dragged and flick velocity.
  *   Cancel: 100–190ms depending on how far user dragged (shorter = barely moved).
  *
  * RTL-aware: html[dir=rtl] → swipe right = higher index.
+ *
+ * v16 over v15:
+ *   - Live pill color fill: source icon pill fades out, target fills in as you drag
+ *   - Live font-weight interpolation on tab labels (700 ↔ 500 smoothly)
+ *   - Velocity-carry easing: CSS linear() with exponential deceleration matched to
+ *     release speed; falls back to cubic-bezier on older engines
+ *   - Interruptible commits: new swipe during commit snaps previous animation instantly
  */
 (function () {
   'use strict';
@@ -44,6 +51,52 @@
 
   var _isRTL = document.documentElement.dir === 'rtl';
 
+  // ── CSS linear() easing support ──────────────────────────────────────────────
+  var _supportsLinear = (function () {
+    try { return CSS.supports('transition-timing-function', 'linear(0,1)'); } catch (_e) { return false; }
+  })();
+
+  // Generates an exponential-deceleration easing matched to finger release velocity.
+  // v0 (px/ms) × durMs / remaining gives how many "remaining distances" per animation
+  // the finger was travelling — that ratio drives the deceleration curve steepness.
+  function _velocityEasing(vel, remaining, durMs) {
+    if (!_supportsLinear || !vel || remaining <= 0 || durMs <= 0) {
+      return 'cubic-bezier(0.22,1,0.36,1)';
+    }
+    var ratio = vel * durMs / remaining;
+    if (ratio < 1.5) return 'cubic-bezier(0.22,1,0.36,1)';
+    var k     = Math.min((ratio - 1) * 1.5, 8);
+    var denom = 1 - Math.exp(-k);
+    if (denom < 1e-9) return 'cubic-bezier(0.22,1,0.36,1)';
+    var N = 14, pts = ['0'];
+    for (var i = 1; i <= N; i++) {
+      var f = (1 - Math.exp(-k * (i / N))) / denom;
+      pts.push(+(Math.min(1, f).toFixed(4)));
+    }
+    return 'linear(' + pts.join(',') + ')';
+  }
+
+  // ── Color helpers ─────────────────────────────────────────────────────────────
+  function _parseRgb(css) {
+    var m = css.match(/rgba?\((\d+)[, ]+(\d+)[, ]+(\d+)/);
+    return m ? [+m[1], +m[2], +m[3]] : null;
+  }
+  function _parseHex(hex) {
+    hex = hex.replace(/^\s*#/, '');
+    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    if (hex.length !== 6) return null;
+    return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)];
+  }
+  // Reads the computed accent pill color from the active tab icon, caches per icon.
+  function _readAccentRgb(activeIcon) {
+    if (!activeIcon) return null;
+    var bg  = window.getComputedStyle(activeIcon).backgroundColor;
+    var rgb = _parseRgb(bg);
+    if (rgb && (rgb[0] + rgb[1] + rgb[2]) > 30) return rgb;
+    var acc = window.getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    return _parseRgb(acc) || _parseHex(acc);
+  }
+
   // ── Icon spring bounce ────────────────────────────────────────────────────────
   // Called on both swipe-commit and direct tap. Pre-sets icon to scale(1.25) then
   // spring-animates it back to scale(1.06) (.on CSS value) with overshoot, matching
@@ -56,7 +109,6 @@
     ico.style.transition = 'none';
     ico.style.transform  = 'scale(1.25)';
     requestAnimationFrame(function () {
-      // cubic-bezier(0.34, 1.56, 0.64, 1) = spring with slight overshoot
       ico.style.transition = 'transform 320ms cubic-bezier(0.34,1.56,0.64,1)';
       ico.style.transform  = '';  // → let .tab-item.on i {transform:scale(1.06)} take over
       setTimeout(function () { ico.style.transition = ''; }, 320);
@@ -75,13 +127,14 @@
   };
 
   // ── Animation lock ───────────────────────────────────────────────────────────
-  var _busy      = false;
-  var _cancelTid = null;  // pending cancel timeout — cleared on each new _cancel call
+  var _busy            = false;
+  var _cancelTid       = null;  // pending cancel timeout
+  var _commitTid       = null;  // pending commit cleanup timeout
+  var _inFlightCommit  = null;  // target object of in-flight commit (for interrupt)
 
   // ── Horizontal scroll / carousel detection ───────────────────────────────────
   function _inHorizScroll(el) {
     if (typeof _ptrInHorizScroll === 'function') return _ptrInHorizScroll(el);
-    // Pass 1: class-name check — no style flush; covers all known horizontal scrollers
     var node = el, steps = 0;
     while (node && node !== document.body && steps++ < 15) {
       var cn = typeof node.className === 'string' ? node.className : '';
@@ -94,7 +147,6 @@
           cn.indexOf('swiper')         >= 0) return true;
       node = node.parentElement;
     }
-    // Pass 2: computed-style fallback — forces style flush; runs only if pass 1 found nothing
     node = el; steps = 0;
     while (node && node !== document.body && steps++ < 15) {
       try {
@@ -172,7 +224,6 @@
     cs.willChange    = 'transform';
     cs.transition    = 'none';
     cs.transform     = 'translate3d(0,0,0)';
-    // Directional shadow on trailing edge — creates physical depth between tiled panels
     cs.boxShadow     = (t.dir === 'left') ? '8px 0 28px rgba(0,0,0,0.13)' : '-8px 0 28px rgba(0,0,0,0.13)';
 
     var ts = t.tgt.style;
@@ -190,7 +241,12 @@
     ts.contentVisibility = 'visible';
     ts.visibility        = 'visible';
 
-    // Force layout flush so tgt is fully rendered before first animation frame
+    // Kill CSS transitions on icon/span so _dragMove can drive them frame-by-frame
+    if (t._curTabIcon) t._curTabIcon.style.transition = 'none';
+    if (t._tgtTabIcon) t._tgtTabIcon.style.transition = 'none';
+    if (t._curTabSpan) t._curTabSpan.style.transition = 'none';
+    if (t._tgtTabSpan) t._tgtTabSpan.style.transition = 'none';
+
     void t.tgt.clientWidth;
     _dragMove(t, t.dx);
   }
@@ -206,7 +262,6 @@
   }
 
   // ── rAF render scheduling ────────────────────────────────────────────────────
-  // Batches multiple touchmove events within a single frame into one paint.
   var _rafId     = null;
   var _rafDx     = 0;
   var _rafTarget = null;
@@ -224,68 +279,84 @@
     _rafTarget = null;
   }
 
-  // ── 1:1 finger tracking ─────────────────────────────────────────────────────
+  // ── 1:1 finger tracking + live tab bar animation ─────────────────────────────
   function _dragMove(t, dx) {
     if (!t.started) return;
     t.cur.style.transform = 'translate3d(' + dx + 'px,0,0)';
     if (t.tgt) {
       t.tgt.style.transform = 'translate3d(' + (_targetStart(t.dir, t.W) + dx) + 'px,0,0)';
 
-      // Tab bar live icon animation: cur dims, tgt brightens proportional to progress
-      var p = Math.min(1, Math.abs(dx) / t.W);
-      if (t._curTabItem) t._curTabItem.style.opacity = (1 - p * 0.42).toFixed(3);
-      if (t._tgtTabItem) t._tgtTabItem.style.opacity = (0.4 + p * 0.6).toFixed(3);
+      var p   = Math.min(1, Math.abs(dx) / t.W);
+      var rgb = t._accentRgbStr;
+
+      // Source tab: dims overall + pill fades out
+      if (t._curTabItem) t._curTabItem.style.opacity = (1 - p * 0.35).toFixed(3);
+      if (t._curTabIcon && rgb) t._curTabIcon.style.background = 'rgba(' + rgb + ',' + (1 - p).toFixed(3) + ')';
+      if (t._curTabSpan) t._curTabSpan.style.fontWeight = Math.round(700 - p * 200);
+
+      // Target tab: pill fills in + label weight rises
+      if (t._tgtTabIcon && rgb) t._tgtTabIcon.style.background = 'rgba(' + rgb + ',' + p.toFixed(3) + ')';
+      if (t._tgtTabSpan) t._tgtTabSpan.style.fontWeight = Math.round(500 + p * 200);
     }
+  }
+
+  // ── Clear drag-only overrides (restores CSS transitions so settle is smooth) ──
+  function _clearDragOverrides(t) {
+    if (t._curTabItem) t._curTabItem.style.opacity = '';
+    if (t._tgtTabItem) t._tgtTabItem.style.opacity = '';
+    // Restore CSS transitions first so the browser animates the settle
+    if (t._curTabIcon) { t._curTabIcon.style.transition = ''; t._curTabIcon.style.background = ''; }
+    if (t._tgtTabIcon) { t._tgtTabIcon.style.transition = ''; t._tgtTabIcon.style.background = ''; }
+    if (t._curTabSpan) { t._curTabSpan.style.transition = ''; t._curTabSpan.style.fontWeight  = ''; }
+    if (t._tgtTabSpan) { t._tgtTabSpan.style.transition = ''; t._tgtTabSpan.style.fontWeight  = ''; }
   }
 
   // ── Commit ───────────────────────────────────────────────────────────────────
   function _commit(t) {
     _busy = true;
+    if (_commitTid) { clearTimeout(_commitTid); _commitTid = null; }
     _cancelRaf();
-    // Haptic fires exactly on commit — not on cancel, not during drag.
-    // Respects user's haptic setting via the app's global helper.
     if (window.H && typeof H.light === 'function') H.light();
 
-    var W        = t.W || window.innerWidth;
-    var vel      = t._vel || 0;
-    var ease     = 'cubic-bezier(0.22,1,0.36,1)';
-    var progress = Math.min(1, Math.abs(t.dx) / W);
-    // Fast-flick shortcut: very high velocity → near-instant animation (110ms floor)
-    var durMs    = Math.max(vel > 1.2 ? 110 : 150, Math.round(ANIM_MS * (1 - progress * 0.5)));
-    var dur      = durMs + 'ms ' + ease;
-    var curFinal = (t.dir === 'left') ? -W : W;
+    var W         = t.W || window.innerWidth;
+    var vel       = t._vel || 0;
+    var progress  = Math.min(1, Math.abs(t.dx) / W);
+    var durMs     = Math.max(vel > 1.2 ? 110 : 150, Math.round(ANIM_MS * (1 - progress * 0.5)));
+    var remaining = Math.max(1, W - Math.abs(t.dx));
+    var ease      = _velocityEasing(vel, remaining, durMs);
+    var dur       = durMs + 'ms ' + ease;
+    var curFinal  = (t.dir === 'left') ? -W : W;
+
+    t._curFinal       = curFinal;
+    _inFlightCommit   = t;
 
     t.cur.style.transition = 'transform ' + dur;
     t.cur.style.transform  = 'translate3d(' + curFinal + 'px,0,0)';
     t.tgt.style.transition = 'transform ' + dur;
     t.tgt.style.transform  = 'translate3d(0,0,0)';
 
-    setTimeout(function () {
-      // Clear tab icon opacity overrides then spring-bounce the destination icon.
-      // The spring runs in the rAF that follows App.tab adding .on — at that point
-      // .tab-item.on i css target (scale(1.06)) is active, and the spring curve
-      // bounces back to it from scale(1.25) with a natural overshoot.
-      if (t._curTabItem) t._curTabItem.style.opacity = '';
-      if (t._tgtTabItem) t._tgtTabItem.style.opacity = '';
-      _springTabIcon(t.tabName);
-      try {
-        if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
-      } catch (_e) {}
-      requestAnimationFrame(function () {
-        _clearCur(t);
-        _clearTgt(t);
-        document.body.classList.remove('ts-dragging');
-        _busy = false;
-      });
+    // Release drag overrides so CSS transitions settle the icon/label state.
+    // App.tab() fires immediately — S.tab is correct, .on class is set — so the
+    // spring can fire right away and CSS transitions settle to the correct values.
+    _clearDragOverrides(t);
+    try {
+      if (window.App && typeof App.tab === 'function') App.tab(t.tabName);
+    } catch (_e) {}
+    _springTabIcon(t.tabName);
+
+    _commitTid = setTimeout(function () {
+      _commitTid      = null;
+      _inFlightCommit = null;
+      _clearCur(t);
+      _clearTgt(t);
+      document.body.classList.remove('ts-dragging');
+      _busy = false;
     }, durMs + 16);
   }
 
   // ── Cancel (snap back) ───────────────────────────────────────────────────────
   function _cancel(t) {
-    // Lock _busy immediately — prevents a new gesture starting during snap-back
-    // and having its inline styles wiped by this cancel's cleanup timeout (fix #6).
     _busy = true;
-    // Clear any prior cancel timeout so stale closures never reach panel elements.
     if (_cancelTid) { clearTimeout(_cancelTid); _cancelTid = null; }
     _cancelRaf();
 
@@ -295,14 +366,14 @@
       return;
     }
 
-    var ease = 'cubic-bezier(0.22,1,0.36,1)';
+    // Release overrides immediately so CSS transitions animate the icons back
+    _clearDragOverrides(t);
 
-    var W        = t.W || window.innerWidth;
-    // Adaptive cancel: barely moved → fast snap; dragged far → proportionally longer
+    var ease = 'cubic-bezier(0.22,1,0.36,1)';
+    var W    = t.W || window.innerWidth;
     var cancelProgress = Math.min(1, Math.abs(t.dx) / W);
     var cancelMs       = Math.round(100 + (CANCEL_MS - 100) * cancelProgress);
 
-    // Edge rubber-band: just snap cur back, no tgt involved
     if (!t.tgt) {
       t.cur.style.transition = 'transform ' + cancelMs + 'ms ' + ease;
       t.cur.style.transform  = 'translate3d(0,0,0)';
@@ -326,8 +397,6 @@
 
     _cancelTid = setTimeout(function () {
       _cancelTid = null;
-      if (t._curTabItem) t._curTabItem.style.opacity = '';
-      if (t._tgtTabItem) t._tgtTabItem.style.opacity = '';
       _clearCur(t);
       _clearTgt(t);
       document.body.classList.remove('ts-dragging');
@@ -356,7 +425,6 @@
   // ── Gesture state ────────────────────────────────────────────────────────────
   var g = null;
 
-  // Called once horizontal intent is confirmed — builds target, starts visual
   function _lockHorizontal(dx) {
     var dir = (dx < 0) ? 'left' : 'right';
     var idx = _currentIdx();
@@ -374,13 +442,23 @@
     g.dx     = dx;
 
     if (targetIdx < 0 || targetIdx >= TAB_ORDER.length) {
-      // Edge: rubber-band — no target tab, just damped resistance on cur
       g.target = { cur: curPanel, tgt: null, tabName: null, dir: dir, started: false, dx: dx * EDGE_RESISTANCE, W: W };
       _edgeStart(g.target);
     } else {
-      var tgtPanel = document.getElementById(PANEL_IDS[TAB_ORDER[targetIdx]]);
+      var tgtPanel    = document.getElementById(PANEL_IDS[TAB_ORDER[targetIdx]]);
       if (!tgtPanel) { g = null; return; }
-      var tabName = TAB_ORDER[targetIdx];
+      var tabName     = TAB_ORDER[targetIdx];
+      var curTabItem  = document.querySelector('.tab-item[data-tab="' + TAB_ORDER[idx] + '"]');
+      var tgtTabItem  = document.querySelector('.tab-item[data-tab="' + tabName + '"]');
+      var curTabIcon  = curTabItem ? curTabItem.querySelector('i')    : null;
+      var tgtTabIcon  = tgtTabItem ? tgtTabItem.querySelector('i')    : null;
+      var curTabSpan  = curTabItem ? curTabItem.querySelector('span') : null;
+      var tgtTabSpan  = tgtTabItem ? tgtTabItem.querySelector('span') : null;
+
+      // Read computed accent color from the active icon (has var(--accent) resolved)
+      var accentRgb    = _readAccentRgb(curTabIcon);
+      var accentRgbStr = accentRgb ? (accentRgb[0] + ',' + accentRgb[1] + ',' + accentRgb[2]) : null;
+
       g.target = {
         cur:          curPanel,
         tgt:          tgtPanel,
@@ -389,14 +467,17 @@
         started:      false,
         dx:           dx,
         W:            W,
-        // Tab bar items for live icon animation during drag
-        _curTabItem:  document.querySelector('.tab-item[data-tab="' + TAB_ORDER[idx] + '"]'),
-        _tgtTabItem:  document.querySelector('.tab-item[data-tab="' + tabName + '"]'),
+        _curTabItem:  curTabItem,
+        _tgtTabItem:  tgtTabItem,
+        _curTabIcon:  curTabIcon,
+        _tgtTabIcon:  tgtTabIcon,
+        _curTabSpan:  curTabSpan,
+        _tgtTabSpan:  tgtTabSpan,
+        _accentRgbStr: accentRgbStr,
       };
       _gestureStart(g.target);
     }
 
-    // Switch to active (non-passive) handler — we now own the gesture
     document.addEventListener('touchmove', _onActive, { passive: false });
   }
 
@@ -409,31 +490,25 @@
     var adx = Math.abs(dx);
     var ady = Math.abs(dy);
 
-    // Dead zone: no decision yet
     if (adx < DEAD_PX && ady < DEAD_PX) return;
 
-    // Vertical lock: clearly scrolling — immediately release, no interference
     if (ady > VERT_LOCK_PX && ady > adx) {
       document.removeEventListener('touchmove', _onDetect);
       g = null;
       return;
     }
 
-    // Horizontal lock: clearly swiping — claim the gesture
     if (adx > LOCK_PX && adx > ady * HORIZ_RATIO) {
       document.removeEventListener('touchmove', _onDetect);
       _lockHorizontal(dx);
       return;
     }
-
-    // Ambiguous diagonal: keep observing without blocking anything
   }
 
   // Phase 2 — active tracking: rAF-batched, calls preventDefault
   function _onActive(e) {
     if (!g || g.locked !== 'h') return;
 
-    // Second finger during drag: abort cleanly so panels are never left stuck
     if (e.touches.length > 1) {
       document.removeEventListener('touchmove', _onActive);
       _cancelRaf();
@@ -447,10 +522,8 @@
     var dx = e.touches[0].clientX - g.x0;
 
     if (!g.target.tgt) {
-      // Edge rubber-band
       g.dx = dx * EDGE_RESISTANCE;
     } else {
-      // Clamp: only move in locked direction
       if (g.dir === 'left') g.dx = Math.min(dx, 0);
       else                  g.dx = Math.max(dx, 0);
     }
@@ -460,7 +533,6 @@
     _rafTarget  = g.target;
     _scheduleRender();
 
-    // Record this sample for end-velocity calculation (keep last 100ms only)
     var now = Date.now();
     g._moves.push({ t: now, dx: g.dx });
     while (g._moves.length > 1 && now - g._moves[0].t > 100) g._moves.shift();
@@ -469,8 +541,27 @@
   }
 
   document.addEventListener('touchstart', function (e) {
-    // Second finger while gesture is locked: cancel before clearing g so panels
-    // are not left stuck in mid-animation fixed positioning.
+    // ── Interrupt in-flight commit ───────────────────────────────────────────
+    // If a commit animation is playing and the user starts a new swipe, snap the
+    // old animation to its final position and let the new gesture start cleanly.
+    if (_busy && _inFlightCommit) {
+      var ifc = _inFlightCommit;
+      _inFlightCommit = null;
+      if (_commitTid) { clearTimeout(_commitTid); _commitTid = null; }
+      // Snap to final without transition so there's no visible flash
+      ifc.cur.style.transition = 'none';
+      ifc.cur.style.transform  = 'translate3d(' + ifc._curFinal + 'px,0,0)';
+      ifc.tgt.style.transition = 'none';
+      ifc.tgt.style.transform  = 'translate3d(0,0,0)';
+      void ifc.cur.clientWidth;  // force layout before clearing inline styles
+      _clearCur(ifc);
+      _clearTgt(ifc);
+      document.body.classList.remove('ts-dragging');
+      _busy = false;
+      // fall through — allow the new gesture to start below
+    }
+
+    // Second finger while gesture is locked: cancel before clearing g
     if (e.touches.length > 1 && g && g.locked === 'h') {
       document.removeEventListener('touchmove', _onDetect);
       document.removeEventListener('touchmove', _onActive);
@@ -498,9 +589,8 @@
       locked: null,
       dir:    null,
       target: null,
-      _moves: [],   // ring buffer: last 100ms of {t, dx} for accurate end-velocity
+      _moves: [],
     };
-    // Passive: pure observation — does not interfere with scroll in any way
     document.addEventListener('touchmove', _onDetect, { passive: true });
   }, { passive: true });
 
@@ -512,8 +602,6 @@
 
     var absDx  = Math.abs(g.dx);
     var W      = (g.target && g.target.W) || window.innerWidth;
-    // Accurate end-velocity: use last 100ms of moves rather than full-gesture average.
-    // Prevents slow-drag-then-fast-flick from being diluted by the slow portion.
     var vel = 0;
     var moves = g._moves;
     if (moves.length >= 2) {
@@ -524,7 +612,6 @@
       var elapsed = Date.now() - g.t0;
       if (elapsed > 0) vel = absDx / elapsed;
     }
-    // Only commit if there is a real target tab (edge bounce never commits)
     var commit  = !!(g.target && g.target.tgt) && (absDx >= Math.min(W * DIST_COMMIT_FRAC, 120) || vel >= VEL_OK);
     var tgt     = g.target;
     g = null;
