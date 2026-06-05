@@ -571,6 +571,10 @@
                     <button class="page-tab active" id="tab-notifications" onclick="switchPageTab('notifications')">
                         <i data-lucide="bell"></i> Notifications
                     </button>
+                    <button class="page-tab" id="tab-scheduled" onclick="switchPageTab('scheduled')">
+                        <i data-lucide="clock"></i> Scheduled
+                        <span id="scheduled-count" class="tmpl-count" style="display:none;background:var(--n-amber-bg);color:var(--n-amber)"></span>
+                    </button>
                     <button class="page-tab" id="tab-templates" onclick="switchPageTab('templates')">
                         <i data-lucide="bookmark"></i> Templates
                         <span id="template-count" class="tmpl-count" style="display:none"></span>
@@ -608,6 +612,29 @@
                     </div>
                     <div id="notif-tbody">
                         <div id="loading-row" class="nc-loading">Loading notifications…</div>
+                    </div>
+                </div>
+
+                <!-- Scheduled Panel -->
+                <div id="panel-scheduled" class="page-panel">
+                    <div class="filter-row">
+                        <select id="sched-platform-filter" onchange="renderScheduled()">
+                            <option value="">All Platforms</option>
+                            <option value="all">All</option>
+                            <option value="android">Android</option>
+                            <option value="ios">iOS</option>
+                        </select>
+                        <select id="sched-recurrence-filter" onchange="renderScheduled()">
+                            <option value="">All Types</option>
+                            <option value="once">Once</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                        <div class="filter-spacer"></div>
+                        <span id="sched-result-count" style="font-size:12px;color:var(--n-text3)"></span>
+                    </div>
+                    <div id="sched-tbody">
+                        <div class="nc-loading">Loading…</div>
                     </div>
                 </div>
 
@@ -1247,6 +1274,10 @@
                 countEl.textContent = templates.length || '';
                 countEl.style.display = templates.length ? '' : 'none';
             }
+            // Update scheduled tab badge
+            var schedCount = _notifications.filter(function(n) { return !n.is_template && n.status === 'scheduled'; }).length;
+            var schedBadge = document.getElementById('scheduled-count');
+            if (schedBadge) { schedBadge.textContent = schedCount || ''; schedBadge.style.display = schedCount ? '' : 'none'; }
             renderTemplateCards(templates);
 
             var container = document.getElementById('notif-tbody');
@@ -1399,12 +1430,68 @@
         }
 
         function switchPageTab(tab) {
-            ['notifications', 'templates', 'devices', 'history'].forEach(function(t) {
+            ['notifications', 'scheduled', 'templates', 'devices', 'history'].forEach(function(t) {
                 document.getElementById('tab-' + t).classList.toggle('active', t === tab);
                 document.getElementById('panel-' + t).classList.toggle('active', t === tab);
             });
+            if (tab === 'scheduled') renderScheduled();
             if (tab === 'devices') loadDevices();
             if (tab === 'history') loadHistory();
+            lucide.createIcons();
+        }
+
+        function renderScheduled() {
+            var platFilter = (document.getElementById('sched-platform-filter') || {}).value || '';
+            var recFilter  = (document.getElementById('sched-recurrence-filter') || {}).value || '';
+            var list = _notifications.filter(function(n) {
+                if (n.is_template) return false;
+                if (n.status !== 'scheduled') return false;
+                if (platFilter && n.platform !== platFilter) return false;
+                if (recFilter) {
+                    var rec = n.recurrence || 'none';
+                    if (recFilter === 'once'   && rec !== 'none')   return false;
+                    if (recFilter === 'daily'  && rec !== 'daily')  return false;
+                    if (recFilter === 'weekly' && rec !== 'weekly') return false;
+                }
+                return true;
+            });
+            // Sort soonest first
+            list.sort(function(a, b) {
+                return new Date(a.scheduled_at || 0) - new Date(b.scheduled_at || 0);
+            });
+            var container = document.getElementById('sched-tbody');
+            var countEl = document.getElementById('sched-result-count');
+            while (container.firstChild) container.removeChild(container.firstChild);
+            if (countEl) countEl.textContent = list.length + ' result' + (list.length !== 1 ? 's' : '');
+            if (!list.length) {
+                var empty = document.createElement('div');
+                empty.className = 'nc-empty';
+                empty.textContent = 'No scheduled notifications';
+                container.appendChild(empty);
+            } else {
+                // Group recurring series same as main panel
+                var seriesItems = {};
+                list.forEach(function(n) {
+                    if (n.recurrence && n.recurrence !== 'none') {
+                        var key = n.title + '::' + n.recurrence + '::' + (n.recurrence_day != null ? n.recurrence_day : '');
+                        if (!seriesItems[key]) seriesItems[key] = [];
+                        seriesItems[key].push(n);
+                    }
+                });
+                var rendered = {};
+                list.forEach(function(n) {
+                    var key = null;
+                    if (n.recurrence && n.recurrence !== 'none') {
+                        key = n.title + '::' + n.recurrence + '::' + (n.recurrence_day != null ? n.recurrence_day : '');
+                    }
+                    if (key && rendered[key]) return;
+                    if (key) rendered[key] = true;
+                    container.appendChild(buildRow(n));
+                    if (key && seriesItems[key] && seriesItems[key].length > 1) {
+                        container.appendChild(_buildSeriesExpander(n.id, seriesItems[key].slice(1)));
+                    }
+                });
+            }
             lucide.createIcons();
         }
 

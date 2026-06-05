@@ -2923,6 +2923,9 @@ function checkNewVideoNotif(){
       localStorage.setItem('lastVideoNotifCheck',now);
       if(!res||!res.data||!res.data.length)return;
       var ep=res.data[0];
+      // Deduplicate: skip if we already fired a local notification for this episode
+      if(localStorage.getItem('lastVideoNotifId')===String(ep.id))return;
+      localStorage.setItem('lastVideoNotifId',String(ep.id));
       var LN=Capacitor.Plugins.LocalNotifications;
       LN.requestPermissions().then(function(perm){
         if(perm.display!=='granted'&&perm.receive!=='granted')return;
@@ -2961,6 +2964,8 @@ function checkNewBookNotif(){
       localStorage.setItem('lastBookNotifCheck',now);
       if(!res||!res.data||!res.data.length)return;
       var book=res.data[0];
+      if(localStorage.getItem('lastBookNotifId')===String(book.id))return;
+      localStorage.setItem('lastBookNotifId',String(book.id));
       var LN=Capacitor.Plugins.LocalNotifications;
       LN.requestPermissions().then(function(perm){
         if(perm.display!=='granted'&&perm.receive!=='granted')return;
