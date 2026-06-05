@@ -1268,7 +1268,7 @@
 
         function renderTable(list) {
             var templates = _notifications.filter(function(n) { return n.is_template; });
-            var regular = list.filter(function(n) { return !n.is_template; });
+            var regular = list.filter(function(n) { return !n.is_template && n.status !== 'scheduled'; });
             var countEl = document.getElementById('template-count');
             if (countEl) {
                 countEl.textContent = templates.length || '';
