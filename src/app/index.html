@@ -4503,7 +4503,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
   navigator.serviceWorker.register('/service-worker.js', { scope: '/', updateViaCache: 'none' })
-    .then(function(reg) { reg.update(); })
+    .then(function(reg) { reg.update().catch(function() {}); })
     .catch(function() {});
 
   /* SW update: when a new service worker takes control, auto-reload if the page is fresh
