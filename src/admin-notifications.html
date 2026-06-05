@@ -595,7 +595,6 @@
                         <select id="status-filter" onchange="applyFilters()">
                             <option value="">All Statuses</option>
                             <option value="draft">Draft</option>
-                            <option value="scheduled">Scheduled</option>
                             <option value="sending">Sending</option>
                             <option value="sent">Sent</option>
                             <option value="failed">Failed</option>
@@ -1258,6 +1257,7 @@
             var platform = document.getElementById('platform-filter').value;
 
             var filtered = _notifications.filter(function(n) {
+                if (n.status === 'scheduled') return false; // scheduled has its own tab
                 if (status && n.status !== status) return false;
                 if (platform && platform !== '' && n.platform !== platform) return false;
                 if (search && !n.title.toLowerCase().includes(search) && !(n.body||'').toLowerCase().includes(search)) return false;
