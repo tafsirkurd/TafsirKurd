@@ -155,8 +155,11 @@
      already in the disk cache when the <script> tags execute at end of body.
      Saves ~300-500ms on cold launch by overlapping network + HTML parsing. -->
 <link rel="preload" href="/utils/supabase.js?v=20260326b" as="script">
+<!-- Preload quran.json (1.5MB) so the fetch in app.js hits browser cache,
+     not the network — eliminates the data-loading wait on first launch -->
+<link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260602t" as="script">
-<link rel="preload" href="/app/app.js?v=1012" as="script">
+<link rel="preload" href="/app/app.min.js?v=1012" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260606" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -4490,7 +4493,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 (function(){Object.defineProperty(window,'__kmrBundle',{set:function(v){window.KMR_TRANSLATIONS=v;},get:function(){return window.KMR_TRANSLATIONS;},configurable:true});})();
 </script>
 <script src="/i18n/kmr-bundled.js?v=20260602t"></script>
-<script src="/i18n/i18n.js?v=20260606"></script>
+<script src="/i18n/i18n.min.js?v=20260606"></script>
 <!-- Non-critical scripts: loaded via requestIdleCallback so they only
      execute when the browser is genuinely idle — never during the user's
      first interaction with the app. Falls back to setTimeout(800) if
@@ -4538,7 +4541,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 <!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
-<script src="/app/app.js?v=1012"></script>
+<script src="/app/app.min.js?v=1012"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
