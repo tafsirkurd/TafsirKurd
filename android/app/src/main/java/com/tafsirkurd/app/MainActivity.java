@@ -61,6 +61,19 @@ public class MainActivity extends BridgeActivity {
         WebView webView = getBridge().getWebView();
         WebSettings settings = webView.getSettings();
 
+        // Boost renderer thread priority so V8 JIT compilation doesn't
+        // compete with other threads. Makes first-load feel as fast as
+        // warm loads.
+        try {
+            webView.setRendererPriorityPolicy(
+                WebView.RENDERER_PRIORITY_IMPORTANT, false);
+        } catch (Exception ignored) {}
+
+        // Enable DOM storage and database for caching
+        settings.setDomStorageEnabled(true);
+        // Use cache when available — speeds up warm launches significantly
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+
         // Chrome UA so YouTube doesn't block embeds
         settings.setUserAgentString(
             "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 " +

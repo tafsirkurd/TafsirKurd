@@ -4476,6 +4476,7 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 
 <audio id="audioEl" preload="auto"></audio>
 
+<!-- Critical: must execute in order before app.js -->
 <script src="/utils/supabase.js?v=20260326b"></script>
 <script src="/dhikr/pdf-store.js?v=20260529"></script>
 <script>/* compat shim: old iOS builds set window.__kmrBundle; forward to KMR_TRANSLATIONS */
@@ -4483,20 +4484,22 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 </script>
 <script src="/i18n/kmr-bundled.js?v=20260602t"></script>
 <script src="/i18n/i18n.js?v=20260606"></script>
-<script src="/prayer/prayer.cache.js?v=20260526"></script>
-<script src="/prayer/prayer.api.js?v=20260604"></script>
-<script src="/prayer/prayer.logic.js?v=20260326b"></script>
-<script src="/prayer/prayer.notifications.android.js?v=20260602b"></script>
-<script src="/prayer/prayer.ui.js?v=20260606"></script>
+<!-- Non-critical: defer so they don't block app.js parsing on first load.
+     Browser still downloads them in parallel; they execute after app.js fires. -->
+<script src="/prayer/prayer.cache.js?v=20260526" defer></script>
+<script src="/prayer/prayer.api.js?v=20260604" defer></script>
+<script src="/prayer/prayer.logic.js?v=20260326b" defer></script>
+<script src="/prayer/prayer.notifications.android.js?v=20260602b" defer></script>
+<script src="/prayer/prayer.ui.js?v=20260606" defer></script>
 <!-- pdf.js loaded lazily in dhikr.js when a PDF book is first opened -->
 <!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
-<script src="/quran/search.js?v=20260520"></script>
-<script src="/rating.js?v=20260401a"></script>
-<script src="/audio-cache.js?v=20260406a"></script>
-<script src="/audio-downloads.js?v=1"></script>
-<script src="/qibla/qibla.js?v=20260417"></script>
-<script src="/utils/fast-scroll.js?v=20260503"></script>
-<script src="/app/quran-font-manager.js?v=20260506"></script>
+<script src="/quran/search.js?v=20260520" defer></script>
+<script src="/rating.js?v=20260401a" defer></script>
+<script src="/audio-cache.js?v=20260406a" defer></script>
+<script src="/audio-downloads.js?v=1" defer></script>
+<script src="/qibla/qibla.js?v=20260417" defer></script>
+<script src="/utils/fast-scroll.js?v=20260503" defer></script>
+<script src="/app/quran-font-manager.js?v=20260506" defer></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/app/app.js?v=1012"></script>
 <script>
