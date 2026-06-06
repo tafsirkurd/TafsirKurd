@@ -1837,7 +1837,7 @@ var _tabAnimGen=0;        // generation counter — prevents stale timer clearin
 // but we need to re-apply it when content is rebuilt (hash change forces re-render).
 var _tabScrollPos={};
 App.tab=function(name){
-  if(tapGuard('tab',80))return; // 80ms guard — fast enough for rapid switching
+  if(tapGuard('tab',350))return; // 350ms: covers touchstart+onclick double-fire gap
   if(name===S.tab){
     haptic([8]);
     if(name==='quran'){
