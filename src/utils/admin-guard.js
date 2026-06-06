@@ -43,5 +43,5 @@
         s.defer = true;
         (document.head || document.documentElement).appendChild(s);
     }
-    loadScript('/utils/admin-security-max.js?v=2');
+    loadScript('/utils/admin-security-max.js?v=3');
 })();
