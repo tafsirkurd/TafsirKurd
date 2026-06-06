@@ -105,6 +105,10 @@
   function _svg_bell()       { return _svgWrap('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'); }
 
   // ── Storage ────────────────────────────────────────────────
+  var DISMISSED_KEY  = 'ant_dismissed_v5';  // persists across clear
+  var CLEARED_AT_KEY = 'ant_cleared_at_v5'; // timestamp of last "Clear all"
+  var MAX_DISMISSED  = 1000;
+
   function _load() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
     catch(e) { return []; }
@@ -118,9 +122,46 @@
     return _load().some(function(n) { return n.sourceId === sourceId; });
   }
 
+  // Permanently dismissed sourceIds — survive clear, survive page reload, survive polls
+  function _getDismissed() {
+    try { var a = JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]'); return new Set(Array.isArray(a) ? a : []); }
+    catch(e) { return new Set(); }
+  }
+  function _saveDismissed(set) {
+    try { localStorage.setItem(DISMISSED_KEY, JSON.stringify(Array.from(set).slice(-MAX_DISMISSED))); } catch(e) {}
+  }
+  function _dismissSourceId(sourceId) {
+    if (!sourceId) return;
+    var s = _getDismissed(); s.add(sourceId); _saveDismissed(s);
+  }
+  function _isDismissed(sourceId) {
+    return sourceId ? _getDismissed().has(sourceId) : false;
+  }
+
+  // BroadcastChannel: sync clear / dismiss / mark-read across tabs on the same browser
+  var _bc = null;
+  try {
+    _bc = new BroadcastChannel('ant_state_v5');
+    _bc.addEventListener('message', function(e) {
+      var msg = e.data || {};
+      if (msg.t === 'clear') {
+        _save([]); _updateBadge(); _refreshPanel();
+      } else if (msg.t === 'dismiss' && msg.sid) {
+        _save(_load().filter(function(i) { return i.sourceId !== msg.sid; }));
+        _updateBadge(); _refreshPanel();
+      } else if (msg.t === 'read') {
+        var all = _load(); all.forEach(function(i) { i.read = true; }); _save(all);
+        _updateBadge(); _refreshPanel();
+      }
+    });
+  } catch(_e) { /* BroadcastChannel not supported — graceful degradation */ }
+
+  function _broadcast(msg) { if (_bc) try { _bc.postMessage(msg); } catch(_e) {} }
+
   // ── Add ───────────────────────────────────────────────────
   function _add(title, desc, type, link, sourceId, dbId, meta) {
     if (sourceId && _hasSeen(sourceId)) return null;
+    if (sourceId && _isDismissed(sourceId)) return null;  // permanently dismissed
     var items = _load();
     var n = {
       id:       Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -162,48 +203,52 @@
   }
 
   // ── Map admin_activity_feed row to notification ────────────
+  // sourceId is normalised to match the realtime subscription format so that
+  // activity-feed poll + realtime events for the same entity dedup correctly.
   function _mapFeedEvent(ev) {
-    // Skip very noisy low-priority content updates
     if (ev.event_type === 'translation_updated') return;
 
-    var type = 'info', link = null;
+    var type = 'info', link = null, sourceId;
     var m = ev.metadata || {};
 
     switch (ev.event_type) {
       case 'new_message':
-        type = 'message';
-        link = '/admin-messages.html';
+        type = 'message'; link = '/admin-messages.html';
+        // Normalise to 'msg_X' — matches realtime subscription sourceId
+        sourceId = (m.message_id || m.id) ? 'msg_' + (m.message_id || m.id) : 'feed_' + ev.id;
         break;
       case 'new_user_signup':
-        type = 'user';
-        link = '/admin-users.html';
+        type = 'user'; link = '/admin-users.html';
+        sourceId = (m.user_id || m.id) ? 'usr_' + (m.user_id || m.id) : 'feed_' + ev.id;
         break;
       case 'admin_login':
-        type = 'security';
-        link = '/admin-audit.html';
+        type = 'security'; link = '/admin-audit.html';
+        sourceId = 'feed_' + ev.id;
         break;
       case 'new_video':
       case 'episode_published':
-        type = 'video';
-        link = '/admin-islamvoice-management.html';
+        type = 'video'; link = '/admin-islamvoice-management.html';
+        // Normalise to 'vid_X' — matches realtime subscription + direct poll sourceId
+        sourceId = (m.episode_id || m.id) ? 'vid_' + (m.episode_id || m.id) : 'feed_' + ev.id;
         break;
       case 'task_created':
       case 'task_assigned':
       case 'task_updated':
-        type = 'task';
-        link = '/admin-tasks.html';
+        type = 'task'; link = '/admin-tasks.html';
+        sourceId = (m.task_id || m.id) ? 'task_' + (m.task_id || m.id) : 'feed_' + ev.id;
         break;
       case 'app_error':
       case 'error':
-        type = 'error';
-        link = '/admin-errors.html';
+        type = 'error'; link = '/admin-errors.html';
+        sourceId = 'feed_' + ev.id;
         break;
       case 'failed_login':
       case 'security_alert':
-        type = 'security';
-        link = '/admin-auth-monitor.html';
+        type = 'security'; link = '/admin-auth-monitor.html';
+        sourceId = 'feed_' + ev.id;
         break;
       default:
+        sourceId = 'feed_' + ev.id;
         switch (ev.category) {
           case 'security': type = 'security'; link = '/admin-audit.html'; break;
           case 'users':    type = 'user';     link = '/admin-users.html'; break;
@@ -212,7 +257,7 @@
         }
     }
 
-    _add(ev.title, ev.message, type, link, 'feed_' + ev.id);
+    _add(ev.title, ev.message, type, link, sourceId);
   }
 
   // ── Time helpers ───────────────────────────────────────────
@@ -526,8 +571,10 @@
     del.innerHTML = '&times;'; del.title = 'Dismiss';
     del.addEventListener('click', function(e) {
       e.stopPropagation();
+      if (item.sourceId) _dismissSourceId(item.sourceId);  // never re-add from polls
       _save(_load().filter(function(i) { return i.id !== item.id; }));
       _updateBadge(); _refreshPanel();
+      _broadcast({ t: 'dismiss', sid: item.sourceId });
     });
     row.appendChild(del);
 
@@ -580,13 +627,22 @@
     markBtn.textContent = 'All read';
     markBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      var all = _load(); all.forEach(function(i) { i.read = true; }); _save(all); _updateBadge(); _refreshPanel();
+      var all = _load(); all.forEach(function(i) { i.read = true; }); _save(all);
+      _updateBadge(); _refreshPanel();
+      _broadcast({ t: 'read' });
     });
 
     var clrBtn = _el('button', 'ant-hbtn ant-hbtn-danger');
     clrBtn.textContent = 'Clear';
     clrBtn.addEventListener('click', function(e) {
-      e.stopPropagation(); _save([]); _updateBadge(); _refreshPanel();
+      e.stopPropagation();
+      // Permanently dismiss all current sourceIds so polls never re-add them
+      var all = _load(), set = _getDismissed();
+      all.forEach(function(n) { if (n.sourceId) set.add(n.sourceId); });
+      _saveDismissed(set);
+      localStorage.setItem(CLEARED_AT_KEY, String(Date.now()));
+      _save([]); _updateBadge(); _refreshPanel();
+      _broadcast({ t: 'clear' });
     });
 
     var closeBtn = _el('button', 'ant-close');
@@ -816,18 +872,9 @@
         });
       });
 
-    // Published IslamVoice episodes (last 48h)
-    sb.from('islamvoice_episodes')
-      .select('id,title,description,duration,created_at')
-      .eq('is_published', true)
-      .gte('created_at', new Date(now - 48 * 3600000).toISOString())
-      .order('created_at', { ascending: false }).limit(5)
-      .then(function(res) {
-        if (res.error || !res.data) return;
-        res.data.forEach(function(ep) {
-          _add('New episode: ' + (ep.title || 'Untitled'), (ep.description || '').slice(0, 80), 'video', '/admin-islamvoice-management.html', 'vid_' + ep.id);
-        });
-      });
+    // NOTE: islamvoice_episodes are intentionally not polled here directly.
+    // They arrive via realtime subscription (vid_X) and activity_feed poll (vid_X after
+    // normalisation). Polling the table directly was creating duplicates.
 
     // Failed login attempts (last 2h)
     sb.from('admin_login_attempts')
