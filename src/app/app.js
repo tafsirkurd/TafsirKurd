@@ -138,10 +138,36 @@ var _sn = (function(){
 window.ForceUpdate = (function(){
   var CFG_CACHE_KEY      = 'tk_update_cfg_v2';
   var SOFT_SNOOZE_KEY    = 'tk_soft_snooze_v2'; // {at, permanent}
+  var ENFORCE_LOCK_KEY   = 'tk_enforce_lock_v1'; // persists block across cold starts
   var _storeUrl          = '';
   var _lastCheckTs       = 0;
   var CHECK_DEBOUNCE     = 10 * 1000; // 10s between checks
   var _fuBtnBusy         = false;     // prevent double-tap on hard update btn
+
+  // ── Early enforce check (runs synchronously on module load) ──────────────
+  // If a hard block was active last session, show the overlay IMMEDIATELY —
+  // before the splash hides, before the 5s async check fires.
+  // This is the key fix: user closes → reopens → block is instant, not 5s later.
+  (function _earlyEnforceCheck() {
+    try {
+      var lock = JSON.parse(localStorage.getItem(ENFORCE_LOCK_KEY) || 'null');
+      if (!lock) return;
+      var overlay = document.getElementById('fuOverlay');
+      if (!overlay || overlay.classList.contains('on')) return;
+      // Restore store URL from lock so the Update button works immediately
+      if (lock.storeUrl) _storeUrl = lock.storeUrl;
+      // Populate min version display if available
+      var minEl = overlay.querySelector('#fuMinVer');
+      if (minEl && lock.minVersion) minEl.textContent = 'v' + lock.minVersion;
+      var verRow = overlay.querySelector('.fu-ver-row');
+      if (verRow) verRow.style.display = lock.minVersion ? '' : 'none';
+      overlay.classList.add('on');
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      requestAnimationFrame(function(){ overlay.classList.add('fu-visible'); });
+      console.log('[Update] Early enforce lock active — blocking app immediately');
+    } catch(e) {}
+  })();
 
   // ── Semver comparison ─────────────────────────────────────────────────────
   function compareVersions(a, b) {
@@ -256,6 +282,14 @@ window.ForceUpdate = (function(){
   function showHard(version, minVersion, cfg) {
     var o = document.getElementById('fuOverlay');
     if (!o || o.classList.contains('on')) return;
+    // Persist the block so cold-start reopens are blocked instantly
+    try {
+      localStorage.setItem(ENFORCE_LOCK_KEY, JSON.stringify({
+        minVersion: minVersion || '',
+        storeUrl: _storeUrl || '',
+        at: Date.now()
+      }));
+    } catch(e) {}
 
     // Populate version row
     var curEl = document.getElementById('fuCurrentVer');
@@ -393,12 +427,14 @@ window.ForceUpdate = (function(){
       console.log('[Update] v=' + version + ' min=' + (minVersion||'—') + ' stage=' + stage + ' mode=' + mode + ' outdated=' + outdated + ' platform=' + platform);
 
       if (mode === 'off' || !minVersion || !outdated) {
-        // If hard overlay is showing but user has now updated (or admin lifted block), dismiss it
+        // Clear the persistent lock — user updated or admin lifted enforce
+        try { localStorage.removeItem(ENFORCE_LOCK_KEY); } catch(e) {}
+        // Dismiss hard overlay if showing
         var overlay = document.getElementById('fuOverlay');
         if (overlay && overlay.classList.contains('on')) {
           overlay.classList.remove('fu-visible');
           setTimeout(function(){ overlay.classList.remove('on'); document.body.style.overflow = ''; document.body.style.touchAction = ''; }, 400);
-          console.log('[Update] Block lifted — overlay dismissed');
+          console.log('[Update] Block lifted — overlay dismissed, enforce lock cleared');
         }
         return;
       }
@@ -994,8 +1030,8 @@ function init(){
           } else {
             console.log('[APP_LIFECYCLE] warm_resume — appStateChange foreground');
             console.log('[APP_LIFECYCLE] resume_refresh_start');
-            // Defer ForceUpdate network check — don't compete with UI settle on resume
-            setTimeout(function(){ ForceUpdate.check(); }, 2000);
+            // Check immediately on resume — enforce lock blocks UI synchronously
+            ForceUpdate.check();
             // Refresh today's verse set so the date is correct after overnight open.
             // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
             // are skipped for today's goal count.
@@ -13993,9 +14029,10 @@ function startApp(){
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||30)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
-  // Force-update check: deferred 5s so it doesn't compete with startup fetches.
-  // Interval bumped to 60s — 12s was excessive on slow networks / low-end devices.
-  setTimeout(function(){ ForceUpdate.check(); }, 5000);
+  // Force-update check: run immediately on startup — enforce lock already blocks
+  // the UI synchronously, this just refreshes the config from server.
+  ForceUpdate.check();
+  // Also check on resume after 2s delay (network may not be ready instantly)
   // Clear any existing interval before creating — prevents duplicate polls if
   // startApp() is called more than once (hot reload, re-init paths).
   if(window._forceUpdateInterval)clearInterval(window._forceUpdateInterval);
