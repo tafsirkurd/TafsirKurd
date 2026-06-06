@@ -151,6 +151,13 @@
 <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin="">
 <link rel="preconnect" href="https://everyayah.com" crossorigin="">
 <link rel="preconnect" href="https://api.quran.com" crossorigin="">
+<!-- preload: fetch the 4 heaviest scripts during <head> parse so they are
+     already in the disk cache when the <script> tags execute at end of body.
+     Saves ~300-500ms on cold launch by overlapping network + HTML parsing. -->
+<link rel="preload" href="/utils/supabase.js?v=20260326b" as="script">
+<link rel="preload" href="/i18n/kmr-bundled.js?v=20260602t" as="script">
+<link rel="preload" href="/app/app.js?v=1012" as="script">
+<link rel="preload" href="/prayer/prayer.ui.js?v=20260606" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
 <script src="/utils/app-error-reporter.js?v=1" defer></script>
