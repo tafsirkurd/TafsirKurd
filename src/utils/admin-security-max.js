@@ -432,67 +432,105 @@
         s.id  = 'adminLockCSS';
         s.textContent = [
             // Overlay
-            '#adminLockScreen{position:fixed;inset:0;z-index:999999;',
-                'background:rgba(5,8,18,.975);',
-                'backdrop-filter:blur(32px) saturate(180%);',
-                '-webkit-backdrop-filter:blur(32px) saturate(180%);',
-                'display:flex;align-items:center;justify-content:center;',
-                'animation:lkIn .3s cubic-bezier(.22,.68,0,1.2) both;}',
-            '@keyframes lkIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}',
-            '@keyframes lkOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.96)}}',
+            '#adminLockScreen{',
+                'position:fixed;inset:0;z-index:999999;',
+                'background:rgba(3,5,14,.97);',
+                'backdrop-filter:blur(40px) saturate(160%);',
+                '-webkit-backdrop-filter:blur(40px) saturate(160%);',
+                'display:flex;flex-direction:column;align-items:center;justify-content:center;',
+                'padding:24px;box-sizing:border-box;',
+                'animation:lkIn .35s cubic-bezier(.22,.68,0,1.15) both;}',
+            '@keyframes lkIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}',
+            '@keyframes lkOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.97)}}',
+
+            // Clock block above card
+            '.lk-clock-wrap{',
+                'display:flex;flex-direction:column;align-items:center;gap:4px;',
+                'margin-bottom:32px;user-select:none;}',
+            '.lk-clock{',
+                'font-size:clamp(52px,9vw,76px);font-weight:200;color:#f1f5f9;',
+                'letter-spacing:-2px;line-height:1;',
+                'font-variant-numeric:tabular-nums;}',
+            '.lk-date{font-size:14px;font-weight:500;color:#64748b;letter-spacing:.02em;}',
+
             // Card
-            '.lk-card{width:100%;max-width:360px;padding:40px 32px 32px;',
-                'background:rgba(255,255,255,.025);',
-                'border:1px solid rgba(255,255,255,.07);border-radius:24px;',
-                'text-align:center;',
-                'box-shadow:0 40px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);',
-                'display:flex;flex-direction:column;align-items:center;gap:0;}',
-            // Avatar
-            '.lk-av{width:84px;height:84px;border-radius:50%;',
-                'background:linear-gradient(135deg,#3b82f6 0%,#6366f1 100%);',
+            '.lk-card{',
+                'width:100%;max-width:380px;',
+                'padding:32px 28px 24px;',
+                'background:rgba(255,255,255,.03);',
+                'border:1px solid rgba(255,255,255,.08);',
+                'border-radius:28px;',
+                'box-shadow:0 32px 72px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);',
+                'display:flex;flex-direction:column;align-items:center;gap:0;',
+                'text-align:center;}',
+
+            // Avatar row
+            '.lk-av-row{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:20px;}',
+            '.lk-av{',
+                'width:72px;height:72px;border-radius:50%;flex-shrink:0;',
+                'background:linear-gradient(135deg,#3b82f6,#6366f1);',
                 'display:flex;align-items:center;justify-content:center;',
-                'font-size:30px;font-weight:800;color:#fff;letter-spacing:-1px;',
-                'box-shadow:0 0 0 6px rgba(59,130,246,.12),0 16px 48px rgba(99,102,241,.4);',
-                'margin-bottom:18px;}',
-            '.lk-nm{font-size:21px;font-weight:700;color:#f1f5f9;letter-spacing:-.4px;margin-bottom:6px;}',
-            '.lk-rl{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;',
-                'color:#3b82f6;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);',
-                'padding:3px 12px;border-radius:20px;margin-bottom:20px;}',
+                'font-size:26px;font-weight:800;color:#fff;letter-spacing:-1px;',
+                'box-shadow:0 0 0 5px rgba(99,102,241,.15),0 12px 36px rgba(99,102,241,.4);}',
+            '.lk-nm{font-size:18px;font-weight:700;color:#f1f5f9;letter-spacing:-.3px;line-height:1.2;}',
+            '.lk-rl{',
+                'display:inline-block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;',
+                'color:#818cf8;background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.2);',
+                'padding:3px 11px;border-radius:20px;}',
+
+            // Divider
+            '.lk-divider{width:100%;height:1px;background:rgba(255,255,255,.06);margin:4px 0 16px;}',
+
             // Info row
-            '.lk-info{display:flex;align-items:center;gap:8px;justify-content:center;',
-                'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);',
-                'border-radius:10px;padding:8px 14px;margin-bottom:20px;',
-                'font-size:11px;color:#94a3b8;}',
-            '.lk-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;',
-                'box-shadow:0 0 8px #22c55e;animation:lkdot 1.8s ease-in-out infinite;}',
-            '@keyframes lkdot{0%,100%{opacity:.4;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}',
-            // Reason box
-            '.lk-why{font-size:12px;color:#475569;line-height:1.6;',
-                'background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);',
-                'border-radius:10px;padding:10px 16px;margin-bottom:22px;width:100%;}',
+            '.lk-info{',
+                'display:flex;align-items:center;gap:8px;justify-content:center;',
+                'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);',
+                'border-radius:10px;padding:7px 14px;',
+                'font-size:11px;color:#64748b;width:100%;box-sizing:border-box;',
+                'margin-bottom:14px;}',
+            '.lk-dot{',
+                'width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;',
+                'box-shadow:0 0 7px #22c55e;animation:lkdot 2s ease-in-out infinite;}',
+            '@keyframes lkdot{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}',
+
             // Session bar
-            '.lk-sess-bar{width:100%;background:rgba(255,255,255,.05);border-radius:6px;',
-                'height:3px;margin-bottom:22px;overflow:hidden;}',
-            '.lk-sess-fill{height:100%;border-radius:6px;',
+            '.lk-sess-bar{',
+                'width:100%;background:rgba(255,255,255,.05);border-radius:99px;',
+                'height:2px;margin-bottom:16px;overflow:hidden;}',
+            '.lk-sess-fill{height:100%;border-radius:99px;',
                 'background:linear-gradient(90deg,#3b82f6,#6366f1);',
                 'transition:width 1s linear;}',
-            // Button
-            '.lk-btn{width:100%;padding:14px;border-radius:13px;',
+
+            // Reason box
+            '.lk-why{',
+                'font-size:12px;color:#475569;line-height:1.65;',
+                'background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);',
+                'border-radius:10px;padding:10px 14px;',
+                'margin-bottom:18px;width:100%;box-sizing:border-box;}',
+
+            // Unlock button
+            '.lk-btn{',
+                'width:100%;padding:13px;border-radius:14px;',
                 'background:linear-gradient(135deg,#3b82f6,#6366f1);',
-                'color:#fff;font-size:15px;font-weight:700;font-family:inherit;',
+                'color:#fff;font-size:14px;font-weight:700;font-family:inherit;',
                 'border:none;cursor:pointer;',
-                'display:flex;align-items:center;justify-content:center;gap:9px;',
-                'box-shadow:0 8px 28px rgba(59,130,246,.45);',
-                'transition:opacity .15s,box-shadow .15s,transform .1s;}',
-            '.lk-btn:hover{opacity:.93;box-shadow:0 10px 36px rgba(59,130,246,.55);}',
+                'display:flex;align-items:center;justify-content:center;gap:8px;',
+                'box-shadow:0 6px 24px rgba(59,130,246,.4);',
+                'transition:opacity .15s,box-shadow .15s,transform .12s;}',
+            '.lk-btn:hover{opacity:.92;box-shadow:0 8px 32px rgba(59,130,246,.55);}',
             '.lk-btn:active{transform:scale(.98);}',
-            '.lk-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}',
-            '.lk-out{background:none;border:none;cursor:pointer;color:#64748b;',
-                'font-size:12px;font-family:inherit;padding:8px 16px;border-radius:8px;',
-                'transition:color .15s;margin-top:10px;}',
+            '.lk-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}',
+
+            // Bottom actions row
+            '.lk-actions{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:12px;}',
+            '.lk-out{',
+                'background:none;border:none;cursor:pointer;color:#475569;',
+                'font-size:12px;font-family:inherit;padding:6px 10px;border-radius:8px;',
+                'transition:color .15s;}',
             '.lk-out:hover{color:#94a3b8;}',
-            '.lk-meta{font-size:10px;color:#475569;margin-top:10px;letter-spacing:.03em;}',
-            '.lk-err{font-size:12px;color:#f87171;min-height:18px;margin-top:8px;}',
+            '.lk-meta{font-size:10px;color:#334155;letter-spacing:.03em;}',
+            '.lk-err{font-size:12px;color:#f87171;min-height:16px;margin-top:6px;width:100%;text-align:center;}',
+
             // FAB
             '#adminLockFab{position:fixed;bottom:22px;right:22px;z-index:9998;',
                 'width:44px;height:44px;border-radius:50%;',
@@ -537,36 +575,68 @@
             } catch(e) {}
         }
 
+        function _fmtClock() {
+            var d = new Date();
+            var h = d.getHours(), m = d.getMinutes();
+            return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+        }
+        function _fmtDate() {
+            return new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+        }
+
         _lockEl = document.createElement('div');
         _lockEl.id = 'adminLockScreen';
         _lockEl.innerHTML =
+            // Clock above card
+            '<div class="lk-clock-wrap">' +
+                '<div class="lk-clock" id="lkClock">' + _fmtClock() + '</div>' +
+                '<div class="lk-date" id="lkDateStr">' + _fmtDate() + '</div>' +
+            '</div>' +
+
             '<div class="lk-card">' +
-                '<div class="lk-av">' + esc(initials(name)) + '</div>' +
-                '<div class="lk-nm">' + esc(name) + '</div>' +
-                (role ? '<span class="lk-rl">' + esc(role) + '</span>' : '') +
+                // Avatar + name
+                '<div class="lk-av-row">' +
+                    '<div class="lk-av">' + esc(initials(name)) + '</div>' +
+                    '<div>' +
+                        '<div class="lk-nm">' + esc(name) + '</div>' +
+                        (role ? '<span class="lk-rl">' + esc(role) + '</span>' : '') +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="lk-divider"></div>' +
+
                 (sinceStr
                     ? '<div class="lk-info"><div class="lk-dot"></div>' + esc(sinceStr) + '</div>'
                     : '') +
                 '<div class="lk-sess-bar"><div class="lk-sess-fill" id="lkSessBar" style="width:' + sessBarPct + '%"></div></div>' +
                 '<div class="lk-why">' + esc(reason || 'Screen locked. Click Unlock to verify your session and continue.') + '</div>' +
+
                 '<button class="lk-btn" id="lkBtn">' +
-                    lockIcon(16) +
+                    lockIcon(15) +
                     '<span id="lkBtnTxt">Unlock Session</span>' +
                 '</button>' +
                 '<div class="lk-err" id="lkErr"></div>' +
-                '<button class="lk-out" id="lkOut">Sign out instead</button>' +
-                '<div class="lk-meta" id="lkMeta"></div>' +
+
+                '<div class="lk-actions">' +
+                    '<button class="lk-out" id="lkOut">Sign out instead</button>' +
+                    '<div class="lk-meta" id="lkMeta"></div>' +
+                '</div>' +
             '</div>';
         document.body.appendChild(_lockEl);
 
-        // Live elapsed timer on the lock screen
+        // Live clock + elapsed timer
         var _at = Date.now();
         _lockTmr = setInterval(function () {
-            var m = document.getElementById('lkMeta');
-            if (!m) return;
-            var sec = Math.floor((Date.now() - _at) / 1000);
-            var min = Math.floor(sec / 60), s = sec % 60;
-            m.textContent = 'Locked ' + (min > 0 ? min + 'm ' : '') + s + 's ago';
+            var cl = document.getElementById('lkClock');
+            var dt = document.getElementById('lkDateStr');
+            var m  = document.getElementById('lkMeta');
+            if (cl) cl.textContent = _fmtClock();
+            if (dt) dt.textContent = _fmtDate();
+            if (m) {
+                var sec = Math.floor((Date.now() - _at) / 1000);
+                var min = Math.floor(sec / 60), s = sec % 60;
+                m.textContent = 'Locked ' + (min > 0 ? min + 'm ' : '') + s + 's ago';
+            }
         }, 1000);
 
         document.getElementById('lkBtn').addEventListener('click', async function () {
