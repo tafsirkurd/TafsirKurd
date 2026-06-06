@@ -457,17 +457,28 @@ window.ForceUpdate = (function(){
       // Cache version so _earlyEnforceCheck Path 2 can use it next cold start
       try { localStorage.setItem(VERSION_CACHE_KEY, version); } catch(e2) {}
 
-      // Stage 1 — instant show using cached config (fires before network fetch)
+      // Stage 1 — instant show OR dismiss using cached config (fires before network fetch)
       var _s1cfg = readCache();
       if (_s1cfg) {
         var _s1mode = resolveMode(_s1cfg);
         var _s1min  = platform === 'ios' ? _s1cfg.min_ios_version : _s1cfg.min_android_version;
         if (_s1mode === 'hard' && _s1min && compareVersions(version, _s1min) < 0) {
+          // Still outdated per cache — show overlay immediately
           _storeUrl = platform === 'ios'
             ? (_s1cfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
             : (_s1cfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
           console.log('[Update] Stage-1 instant block (cached config) — network fetch continuing');
           showHard(version, _s1min, _s1cfg);
+        } else {
+          // Cached config says version is fine — dismiss stale lock overlay immediately
+          // (post-update cold start: user just installed the update, no need to wait for network)
+          var _s1o = document.getElementById('fuOverlay');
+          if (_s1o && _s1o.classList.contains('on')) {
+            try { localStorage.removeItem(ENFORCE_LOCK_KEY); } catch(e2) {}
+            _s1o.classList.remove('fu-visible');
+            setTimeout(function(){ _s1o.classList.remove('on'); document.body.style.overflow = ''; document.body.style.touchAction = ''; }, 400);
+            console.log('[Update] Stage-1 dismiss — version OK per cached config');
+          }
         }
       }
 
@@ -13778,6 +13789,13 @@ App.ivPlay=function(episodeId){
 
       var _ytReady=false;
       var _ytErrShown=false;
+
+      // iframe load = player page rendered (video or error screen) — cancel the stuck-timeout.
+      // Android WebView blocks cross-origin PostMessages so onReady never arrives,
+      // but if the iframe loaded something the player is NOT stuck.
+      iframe.addEventListener('load',function(){
+        if(!_ytErrShown){ _ytReady=true; clearTimeout(window._ytTimeout); }
+      });
 
       // Opens YouTube app on Android (native intent), Browser plugin elsewhere
       function _openYTNative(){
