@@ -94,6 +94,64 @@ async function _handleRequest(context) {
         const twoHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
         const notified = [];
 
+        // ── Daily send limits — anti-spam ─────────────────────────
+        // Max N auto-notifications per content type per Baghdad calendar day.
+        // Overflow items are scheduled for the next available future day at a
+        // random PM time (14:00–20:59 Baghdad = 11:00–17:59 UTC) and appear
+        // in the Scheduled tab of admin-notifications.
+        const DAILY_LIMITS = { video: 3, book: 1, hadith: 1 };
+
+        // Baghdad date string (YYYY-MM-DD) for any timestamp
+        function bgDate(ts) {
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Baghdad' })
+                .format(typeof ts === 'number' ? new Date(ts) : new Date(ts));
+        }
+        const todayBg = bgDate(Date.now());
+
+        // Random PM scheduled_at ISO string on a given Baghdad date
+        // Hours 14-20 Baghdad (UTC+3) = hours 11-17 UTC
+        function randomPmOn(bgDateStr) {
+            const [y, m, d] = bgDateStr.split('-').map(Number);
+            const bgHour = 14 + Math.floor(Math.random() * 7); // 14–20 inclusive
+            const bgMin  = Math.floor(Math.random() * 60);
+            return new Date(Date.UTC(y, m - 1, d, bgHour - 3, bgMin, 0)).toISOString();
+        }
+
+        // Advance a Baghdad date string by one calendar day
+        function nextBgDay(bgDateStr) {
+            const [y, m, d] = bgDateStr.split('-').map(Number);
+            return bgDate(Date.UTC(y, m - 1, d + 1, 12, 0, 0));
+        }
+
+        // Build usage map from existing auto-notifications so overflow from
+        // previous cron runs is correctly counted when assigning new slots.
+        // Counts: { 'video:2026-06-07': 2, 'book:2026-06-08': 1, … }
+        const { data: existingAuto } = await supabase
+            .from('admin_notifications')
+            .select('deep_link_type, scheduled_at, status, created_at')
+            .eq('created_by', 'auto')
+            .in('status', ['sent', 'sending', 'scheduled'])
+            .in('deep_link_type', ['video', 'book', 'hadith'])
+            .limit(500);
+
+        const usage = {};
+        for (const n of (existingAuto || [])) {
+            // Scheduled items count on their scheduled date; sent/sending on creation date
+            const dt = (n.status === 'scheduled' && n.scheduled_at) ? n.scheduled_at : n.created_at;
+            const key = n.deep_link_type + ':' + bgDate(dt);
+            usage[key] = (usage[key] || 0) + 1;
+        }
+
+        // Find the next Baghdad date (starting from today) that has a free slot
+        function nextAvailableDay(type, startDay) {
+            let day = startDay;
+            for (let i = 0; i < 60; i++) {
+                if ((usage[type + ':' + day] || 0) < DAILY_LIMITS[type]) return day;
+                day = nextBgDay(day);
+            }
+            return null; // safety — shouldn't happen
+        }
+
         // Load editable auto-notification texts from translations DB
         const AUTO_KEYS = ['notif.auto_book_body','notif.auto_book_title_fallback','notif.auto_hadith_body','notif.auto_hadith_title_fallback'];
         const { data: txRows } = await supabase.from('kurdish_translations').select('key_id,kurdish_text').in('key_id', AUTO_KEYS);
@@ -103,28 +161,44 @@ async function _handleRequest(context) {
         const autoHadithBody         = tx['notif.auto_hadith_body']          || 'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
         const autoHadithTitleFallback= tx['notif.auto_hadith_title_fallback']|| 'حەدیس';
 
-        // Atomic insert — the unique index (idx_admin_notif_deep_link_auto) makes this
-        // the dedup claim itself. No separate SELECT needed; concurrent runs get 23505
-        // on the second insert and skip silently. No race window.
-        async function sendAutoNotif(title, body, image_url, dlType, dlId) {
+        // Insert a notification and either send immediately (no scheduledAt) or
+        // save as scheduled for a future PM slot (scheduledAt provided).
+        // The unique index on (deep_link_type, deep_link_id) deduplicates across runs.
+        async function sendAutoNotif(title, body, image_url, dlType, dlId, scheduledAt) {
             const { data: notif, error } = await supabase
                 .from('admin_notifications')
                 .insert({
                     title,
                     body,
-                    image_url: image_url || null,
-                    platform: 'all',
-                    audience: 'all',
+                    image_url:      image_url || null,
+                    platform:       'all',
+                    audience:       'all',
                     deep_link_type: dlType,
-                    deep_link_id: String(dlId),
-                    status: 'sending',
-                    created_by: 'auto',
+                    deep_link_id:   String(dlId),
+                    status:         scheduledAt ? 'scheduled' : 'sending',
+                    scheduled_at:   scheduledAt || null,
+                    created_by:     'auto',
                 })
                 .select()
                 .single();
             if (error?.code === '23505') return { skipped: true }; // already notified
             if (error || !notif) return { error: error?.message || 'insert failed' };
+            if (scheduledAt) return { scheduled: true, scheduled_at: scheduledAt };
             return await doSend(supabase, env, notif, notif.id, 'auto');
+        }
+
+        // Helper: assign a slot, call sendAutoNotif, update usage counter
+        async function assignAndSend(title, msgBody, image_url, dlType, dlId, type) {
+            const slot = nextAvailableDay(type, todayBg);
+            if (!slot) return { error: 'no-slot' };
+            const isToday  = slot === todayBg;
+            const sched    = isToday ? null : randomPmOn(slot);
+            const r        = await sendAutoNotif(title, msgBody, image_url, dlType, dlId, sched);
+            if (!r.skipped && !r.error) {
+                const key = type + ':' + slot;
+                usage[key] = (usage[key] || 0) + 1;
+            }
+            return { ...r, slot, isToday };
         }
 
         // ── New episodes ──────────────────────────────────────────
@@ -137,13 +211,7 @@ async function _handleRequest(context) {
 
         for (const ep of (episodes || [])) {
             const seriesName = ep.islamvoice_series?.name_ku || ep.title;
-            const r = await sendAutoNotif(
-                seriesName,
-                ep.title,
-                ep.thumbnail_url,
-                'video',
-                ep.id
-            );
+            const r = await assignAndSend(seriesName, ep.title, ep.thumbnail_url, 'video', ep.id, 'video');
             notified.push({ type: 'video', id: ep.id, title: seriesName, ...r });
         }
 
@@ -157,13 +225,7 @@ async function _handleRequest(context) {
 
         for (const book of (books || [])) {
             const bookTitle = book.title_ku || book.title_ar || autoBookTitleFallback;
-            const r = await sendAutoNotif(
-                bookTitle,
-                autoBookBody,
-                book.cover_url,
-                'book',
-                book.id
-            );
+            const r = await assignAndSend(bookTitle, autoBookBody, book.cover_url, 'book', book.id, 'book');
             notified.push({ type: 'book', id: book.id, title: bookTitle, ...r });
         }
 
@@ -176,12 +238,10 @@ async function _handleRequest(context) {
             .order('created_at', { ascending: false });
 
         for (const h of (hadiths || [])) {
-            const r = await sendAutoNotif(
+            const r = await assignAndSend(
                 h.title || autoHadithTitleFallback,
-                autoHadithBody,
-                null,
-                'hadith',
-                h.id
+                autoHadithBody, null,
+                'hadith', h.id, 'hadith'
             );
             notified.push({ type: 'hadith', id: h.id, title: h.title, ...r });
         }
