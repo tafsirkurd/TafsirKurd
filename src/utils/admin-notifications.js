@@ -1,5 +1,5 @@
 /* =============================================================
-   admin-notifications.js  v8  — Unified Notification System
+   admin-notifications.js  v9  — Unified Notification System
 
    Primary source  → admin_activity_feed (realtime INSERT)
      Captures: new_message, new_user_signup, admin_login,
@@ -28,6 +28,11 @@
    ============================================================= */
 (function () {
   'use strict';
+
+  // Items whose DB timestamp predates this moment by more than 1 h are loaded
+  // as already-read. This prevents a freshly-logged-in second PC from seeing
+  // a flood of unread badge counts from historical poll data.
+  var _sessionStart = Date.now();
 
   var STORE_KEY = 'ant_v5';
   var MAX_ITEMS = 200;
@@ -159,10 +164,15 @@
   function _broadcast(msg) { if (_bc) try { _bc.postMessage(msg); } catch(_e) {} }
 
   // ── Add ───────────────────────────────────────────────────
-  function _add(title, desc, type, link, sourceId, dbId, meta) {
+  // eventTs (optional 8th arg): actual DB timestamp (ms).
+  // Items older than 1 h before this session start are pre-marked read
+  // so a second PC login doesn't flood the badge with historical data.
+  function _add(title, desc, type, link, sourceId, dbId, meta, eventTs) {
     if (sourceId && _hasSeen(sourceId)) return null;
     if (sourceId && _isDismissed(sourceId)) return null;  // permanently dismissed
     var items = _load();
+    var ts = (eventTs && eventTs > 0) ? eventTs : Date.now();
+    var preRead = ts < (_sessionStart - 3600000);  // older than 1h before login → already read
     var n = {
       id:       Date.now() + '_' + Math.random().toString(36).slice(2, 6),
       sourceId: sourceId || null,
@@ -171,15 +181,15 @@
       desc:     desc     || '',
       type:     type     || 'info',
       link:     link     || null,
-      ts:       Date.now(),
-      read:     false,
+      ts:       ts,
+      read:     preRead,
       meta:     meta     || null,
     };
     items.unshift(n);
     _save(items);
     _updateBadge();
     _refreshPanel();
-    _ringBell();
+    if (!preRead) _ringBell();  // only ring for genuinely new items
     return n.id;
   }
 
@@ -257,7 +267,8 @@
         }
     }
 
-    _add(ev.title, ev.message, type, link, sourceId);
+    var evTs = ev.created_at ? new Date(ev.created_at).getTime() : null;
+    _add(ev.title, ev.message, type, link, sourceId, null, null, evTs);
   }
 
   // ── Time helpers ───────────────────────────────────────────
@@ -853,11 +864,12 @@
         if (res.error || !res.data || !res.data.length) return;
         res.data.forEach(function(e) {
           var label = (e.platform ? '[' + e.platform + '] ' : '') + (e.error_type || 'error');
-          _add('App error: ' + label, (e.error_message || '').slice(0, 100), 'error', '/admin-errors.html', 'err_' + e.id);
+          var eTs = e.created_at ? new Date(e.created_at).getTime() : null;
+          _add('App error: ' + label, (e.error_message || '').slice(0, 100), 'error', '/admin-errors.html', 'err_' + e.id, null, null, eTs);
         });
       });
 
-    // Overdue tasks
+    // Overdue tasks — always unread (actionable), no eventTs override
     sb.from('admin_tasks')
       .select('id,title,due_at,priority,status,assigned_to')
       .neq('status', 'done').not('due_at', 'is', null).lt('due_at', new Date().toISOString())
@@ -885,7 +897,8 @@
       .then(function(res) {
         if (res.error || !res.data) return;
         res.data.forEach(function(a) {
-          _add('Failed login attempt', (a.email || 'Unknown') + ' · ' + (a.ip_address || 'unknown IP'), 'security', '/admin-auth-monitor.html', 'sec_' + a.id);
+          var aTs = a.created_at ? new Date(a.created_at).getTime() : null;
+          _add('Failed login attempt', (a.email || 'Unknown') + ' · ' + (a.ip_address || 'unknown IP'), 'security', '/admin-auth-monitor.html', 'sec_' + a.id, null, null, aTs);
         });
       });
 
@@ -902,7 +915,8 @@
           res.data.forEach(function(n) {
             var d = n.data || {};
             var link = d.rowId ? '/admin-translations.html?mention=' + d.rowId : null;
-            _add(n.title, n.body || '', n.type || 'mention', link, 'db_' + n.id, n.id);
+            var nTs = n.created_at ? new Date(n.created_at).getTime() : null;
+            _add(n.title, n.body || '', n.type || 'mention', link, 'db_' + n.id, n.id, null, nTs);
           });
         });
     }
