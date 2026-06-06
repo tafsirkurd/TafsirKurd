@@ -73,9 +73,6 @@ public class MainActivity extends BridgeActivity {
         settings.setDomStorageEnabled(true);
         // Use cache when available — speeds up warm launches significantly
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        // Safe browsing checks every URL against Google servers — adds latency.
-        // Disable it: app only loads trusted local bundle + known origins.
-        settings.setSafeBrowsingEnabled(false);
 
         // Chrome UA so YouTube doesn't block embeds
         settings.setUserAgentString(

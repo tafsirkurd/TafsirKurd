@@ -4491,21 +4491,51 @@ body.tk-scrolling .fp-btn-lg.playing{animation-play-state:paused!important}
 </script>
 <script src="/i18n/kmr-bundled.js?v=20260602t"></script>
 <script src="/i18n/i18n.js?v=20260606"></script>
-<!-- Non-critical: defer so they don't block app.js parsing on first load.
-     Browser still downloads them in parallel; they execute after app.js fires. -->
-<script src="/prayer/prayer.cache.js?v=20260526" defer></script>
-<script src="/prayer/prayer.api.js?v=20260604" defer></script>
-<script src="/prayer/prayer.logic.js?v=20260326b" defer></script>
-<script src="/prayer/prayer.notifications.android.js?v=20260602b" defer></script>
-<script src="/prayer/prayer.ui.js?v=20260606" defer></script>
+<!-- Non-critical scripts: loaded via requestIdleCallback so they only
+     execute when the browser is genuinely idle — never during the user's
+     first interaction with the app. Falls back to setTimeout(800) if
+     rIC is not available. Prayer scripts are ordered so dependencies
+     (cache→api→logic→notifications→ui) load in sequence. -->
+<script>
+(function(){
+  var _seq = [
+    '/prayer/prayer.cache.js?v=20260526',
+    '/prayer/prayer.api.js?v=20260604',
+    '/prayer/prayer.logic.js?v=20260326b',
+    '/prayer/prayer.notifications.android.js?v=20260602b',
+    '/prayer/prayer.ui.js?v=20260606',
+  ];
+  var _par = [
+    '/quran/search.js?v=20260520',
+    '/rating.js?v=20260401a',
+    '/audio-cache.js?v=20260406a',
+    '/audio-downloads.js?v=1',
+    '/qibla/qibla.js?v=20260417',
+    '/utils/fast-scroll.js?v=20260503',
+  ];
+  function _load(src, cb) {
+    var s = document.createElement('script');
+    s.src = src;
+    if (cb) s.onload = s.onerror = cb;
+    document.head.appendChild(s);
+  }
+  function _loadSeq(list, i) {
+    if (i >= list.length) return;
+    _load(list[i], function(){ _loadSeq(list, i + 1); });
+  }
+  function _loadAll() {
+    _loadSeq(_seq, 0);           // prayer scripts in order
+    _par.forEach(function(src){ _load(src); }); // others in parallel
+  }
+  if (window.requestIdleCallback) {
+    requestIdleCallback(_loadAll, { timeout: 2000 });
+  } else {
+    setTimeout(_loadAll, 800);
+  }
+})();
+</script>
 <!-- pdf.js loaded lazily in dhikr.js when a PDF book is first opened -->
 <!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
-<script src="/quran/search.js?v=20260520" defer></script>
-<script src="/rating.js?v=20260401a" defer></script>
-<script src="/audio-cache.js?v=20260406a" defer></script>
-<script src="/audio-downloads.js?v=1" defer></script>
-<script src="/qibla/qibla.js?v=20260417" defer></script>
-<script src="/utils/fast-scroll.js?v=20260503" defer></script>
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/app/app.js?v=1012"></script>
