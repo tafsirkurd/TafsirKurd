@@ -1582,16 +1582,22 @@ function _startTabPrerender(){
     (_isLowEndDev||_isMediumPerf) ? null : function(){if(window.GencineUI)GencineUI.render();}
   ].filter(Boolean); // remove nulls for lower perf tiers
   var _ji=0;
-  // Low/critical: longer gap between jobs to reduce CPU burst at startup
-  var _jobDelay=_isLowEndDev?32:_isMediumPerf?24:16;
+  // Use requestIdleCallback so pre-render jobs only run when the browser has
+  // no user interactions pending — prevents jank on first touch after splash.
+  // timeout: 2500ms guarantees jobs complete even if user stays active.
+  var _jobTimeout=_isLowEndDev?3500:_isMediumPerf?3000:2500;
   function _nextJob(){
     if(_ji>=jobs.length){
       console.log('[Startup] Tab pre-render done',Date.now()-_startupT0,'ms');
       if(window._splashReadyTabs)window._splashReadyTabs();
       return;
     }
-    jobs[_ji++]();
-    setTimeout(_nextJob,_jobDelay);
+    var job=jobs[_ji++];
+    if(window.requestIdleCallback){
+      requestIdleCallback(function(){job();_nextJob();},{timeout:_jobTimeout});
+    }else{
+      setTimeout(function(){job();_nextJob();},16);
+    }
   }
   _nextJob();
 }
