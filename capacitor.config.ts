@@ -20,20 +20,20 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'never',
     scheme: 'capacitor',
-    backgroundColor: '#000000',
+    backgroundColor: '#F3E8CC',
   },
   android: {
-    backgroundColor: '#000000',
+    backgroundColor: '#F3E8CC',
   },
   plugins: {
     SplashScreen: {
       launchAutoHide: false,
       launchShowDuration: 0,
       androidSplashResourceName: 'launch_screen',
-      androidScaleType: 'CENTER_CROP',
+      androidScaleType: 'CENTER_INSIDE',
       splashFullScreen: true,
       splashImmersive: true,
-      backgroundColor: '#00000000',
+      backgroundColor: '#F3E8CC',
       fadeOutDuration: 0,
     },
     PushNotifications: {

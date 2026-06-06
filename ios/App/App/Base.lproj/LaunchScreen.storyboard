@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17132" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
-    <device id="retina4_7" orientation="portrait" appearance="dark"/>
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17105"/>
@@ -15,16 +15,17 @@
                     <view key="view" userInteractionEnabled="NO" contentMode="scaleToFill" id="snD-IY-ifK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <!-- Parchment #F3E8CC = rgb(243,232,204) -->
+                        <color key="backgroundColor" red="0.9529" green="0.9098" blue="0.8" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="SplashDark" translatesAutoresizingMaskIntoConstraints="NO" id="logo-iv">
-                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0" colorSpace="custom" customColorSpace="sRGB"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="SplashParchment" translatesAutoresizingMaskIntoConstraints="NO" id="logo-iv">
+                                <color key="backgroundColor" red="0.9529" green="0.9098" blue="0.8" alpha="0" colorSpace="custom" customColorSpace="sRGB"/>
                             </imageView>
                         </subviews>
                         <constraints>
                             <constraint firstItem="logo-iv" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="cx"/>
                             <constraint firstItem="logo-iv" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" id="cy"/>
-                            <constraint firstItem="logo-iv" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" multiplier="0.75" id="pw"/>
+                            <constraint firstItem="logo-iv" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" multiplier="0.55" id="pw"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -34,6 +35,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="SplashDark"/>
+        <image name="SplashParchment"/>
     </resources>
 </document>
