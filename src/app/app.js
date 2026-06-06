@@ -139,33 +139,76 @@ window.ForceUpdate = (function(){
   var CFG_CACHE_KEY      = 'tk_update_cfg_v2';
   var SOFT_SNOOZE_KEY    = 'tk_soft_snooze_v2'; // {at, permanent}
   var ENFORCE_LOCK_KEY   = 'tk_enforce_lock_v1'; // persists block across cold starts
+  var VERSION_CACHE_KEY  = 'tk_cached_version_v1'; // app version — enables Stage-1 instant check
   var _storeUrl          = '';
   var _lastCheckTs       = 0;
   var CHECK_DEBOUNCE     = 10 * 1000; // 10s between checks
   var _fuBtnBusy         = false;     // prevent double-tap on hard update btn
 
   // ── Early enforce check (runs synchronously on module load) ──────────────
-  // If a hard block was active last session, show the overlay IMMEDIATELY —
-  // before the splash hides, before the 5s async check fires.
-  // This is the key fix: user closes → reopens → block is instant, not 5s later.
+  // Two paths — both show the overlay before ANY async work fires:
+  // Path 1: ENFORCE_LOCK_KEY exists (user already saw the modal last session)
+  // Path 2: No lock yet, but cached config + cached version both say "hard+outdated"
+  //          (handles first cold start after admin enables force update)
   (function _earlyEnforceCheck() {
     try {
+      // ── Path 1: lock exists from prior session ─────────────────────────────
       var lock = JSON.parse(localStorage.getItem(ENFORCE_LOCK_KEY) || 'null');
-      if (!lock) return;
-      var overlay = document.getElementById('fuOverlay');
-      if (!overlay || overlay.classList.contains('on')) return;
-      // Restore store URL from lock so the Update button works immediately
-      if (lock.storeUrl) _storeUrl = lock.storeUrl;
-      // Populate min version display if available
-      var minEl = overlay.querySelector('#fuMinVer');
-      if (minEl && lock.minVersion) minEl.textContent = 'v' + lock.minVersion;
-      var verRow = overlay.querySelector('.fu-ver-row');
-      if (verRow) verRow.style.display = lock.minVersion ? '' : 'none';
-      overlay.classList.add('on');
+      if (lock) {
+        var overlay = document.getElementById('fuOverlay');
+        if (!overlay || overlay.classList.contains('on')) return;
+        if (lock.storeUrl) _storeUrl = lock.storeUrl;
+        var minEl = overlay.querySelector('#fuMinVer');
+        if (minEl && lock.minVersion) minEl.textContent = 'v' + lock.minVersion;
+        var verRow = overlay.querySelector('.fu-ver-row');
+        if (verRow) verRow.style.display = lock.minVersion ? '' : 'none';
+        overlay.classList.add('on');
+        document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+        requestAnimationFrame(function(){ overlay.classList.add('fu-visible'); });
+        console.log('[Update] Early enforce lock active — blocking app immediately');
+        return;
+      }
+
+      // ── Path 2: no lock — check cached config + cached version ────────────
+      var cachedCfg = readCache();
+      var cachedVer = null;
+      try { cachedVer = localStorage.getItem(VERSION_CACHE_KEY); } catch(e2) {}
+      if (!cachedCfg || !cachedVer) return;
+
+      var mode2     = resolveMode(cachedCfg);
+      if (mode2 !== 'hard') return;
+
+      var platform2 = window.Capacitor && Capacitor.getPlatform ? Capacitor.getPlatform() : 'web';
+      if (platform2 === 'web') return;
+
+      var minVer2 = platform2 === 'ios' ? cachedCfg.min_ios_version : cachedCfg.min_android_version;
+      if (!minVer2) return;
+      if (compareVersions(cachedVer, minVer2) >= 0) return;
+
+      var storeUrl2 = platform2 === 'ios'
+        ? (cachedCfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
+        : (cachedCfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
+      _storeUrl = storeUrl2;
+
+      // Write lock so the next cold start uses faster Path 1
+      try {
+        localStorage.setItem(ENFORCE_LOCK_KEY, JSON.stringify({
+          minVersion: minVer2, storeUrl: storeUrl2, at: Date.now()
+        }));
+      } catch(e2) {}
+
+      var overlay2 = document.getElementById('fuOverlay');
+      if (!overlay2 || overlay2.classList.contains('on')) return;
+      var minEl2 = overlay2.querySelector('#fuMinVer');
+      if (minEl2) minEl2.textContent = 'v' + minVer2;
+      var verRow2 = overlay2.querySelector('.fu-ver-row');
+      if (verRow2) verRow2.style.display = minVer2 ? '' : 'none';
+      overlay2.classList.add('on');
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
-      requestAnimationFrame(function(){ overlay.classList.add('fu-visible'); });
-      console.log('[Update] Early enforce lock active — blocking app immediately');
+      requestAnimationFrame(function(){ overlay2.classList.add('fu-visible'); });
+      console.log('[Update] Early cached-config enforce — blocking app immediately');
     } catch(e) {}
   })();
 
@@ -410,6 +453,23 @@ window.ForceUpdate = (function(){
       var version  = info.version;
       var platform = Capacitor.getPlatform ? Capacitor.getPlatform() : 'web';
       if (platform === 'web') return;
+
+      // Cache version so _earlyEnforceCheck Path 2 can use it next cold start
+      try { localStorage.setItem(VERSION_CACHE_KEY, version); } catch(e2) {}
+
+      // Stage 1 — instant show using cached config (fires before network fetch)
+      var _s1cfg = readCache();
+      if (_s1cfg) {
+        var _s1mode = resolveMode(_s1cfg);
+        var _s1min  = platform === 'ios' ? _s1cfg.min_ios_version : _s1cfg.min_android_version;
+        if (_s1mode === 'hard' && _s1min && compareVersions(version, _s1min) < 0) {
+          _storeUrl = platform === 'ios'
+            ? (_s1cfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
+            : (_s1cfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
+          console.log('[Update] Stage-1 instant block (cached config) — network fetch continuing');
+          showHard(version, _s1min, _s1cfg);
+        }
+      }
 
       var cfg = await fetchConfig();
       if (!cfg) { console.log('[Update] No config — skipping'); return; }
@@ -12480,6 +12540,12 @@ function _ptrAnyOverlayOpen(){
   return false;
 }
 
+// Platform detected once — Android WebView needs separate PTR tuning.
+var _ptrIsAndroid=(function(){
+  try{return window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()==='android';}
+  catch(e){return /android/i.test(navigator.userAgent);}
+})();
+
 // ── setupPullToRefresh ────────────────────────────────────────────────────────
 // Design goals:
 //   touchstart  — validate gates, cache everything, zero work in move path
@@ -12492,14 +12558,16 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   ensurePtrSpinner();
 
   // ── Tuning ─────────────────────────────────────────────────────────────────
-  // DEAD_ZONE is minimal — just filters sensor jitter, not a UX pause.
-  // Resistance (0.45) makes the panel feel light and native from the first pixel.
-  // THRESHOLD is in visual px (after resistance), not raw finger travel.
-  var DEAD_ZONE    = 8;     // px raw — jitter filter only
-  var THRESHOLD    = 80;    // px visual to arm trigger (raw ≈ 185px at 0.45 resistance)
-  var MAX_PULL     = 108;   // px visual ceiling
-  var RESISTANCE   = 0.45;  // panel visual travel / raw finger travel
-  var DIR_CHECK_PX = 6;     // Manhattan px before direction locks (no sqrt needed)
+  // iOS keeps the original values. Android uses tighter constants:
+  //   Lower DEAD_ZONE arms PTR before Chrome's ~6px compositor scroll threshold.
+  //   Lower RESISTANCE gives a heavier feel that matches Android conventions.
+  //   Higher THRESHOLD offsets the earlier arm to avoid accidental triggers.
+  //   Wider DIR_CHECK_PX requires a more decisive horizontal gesture to cancel.
+  var DEAD_ZONE    = _ptrIsAndroid ? 4   : 8;    // px raw — jitter filter only
+  var THRESHOLD    = _ptrIsAndroid ? 88  : 80;   // px visual to arm trigger
+  var MAX_PULL     = 108;                         // px visual ceiling
+  var RESISTANCE   = _ptrIsAndroid ? 0.38: 0.45; // panel visual / raw finger travel
+  var DIR_CHECK_PX = _ptrIsAndroid ? 8   : 6;    // Manhattan px before direction locks
   var LOCK_BASE    = 700;
   var COOLDOWN_MS  = 2500;
   var RECENT_MS    = 30000;
@@ -12522,9 +12590,11 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   var _dbg={moves:0,rafs:0,prevs:0,t0:0,dtSum:0,dtN:0,lastT:0};
 
   // ── Scroll tracker — replaces scrollTop read in touchmove ──────────────────
-  // passive: true — never blocks scroll pipeline
+  // passive: true — never blocks scroll pipeline.
+  // Android: raise threshold to 6px — WebView overscroll glow can move scrollTop
+  // 1–3px transiently, causing false positives that cancel PTR before it starts.
   panel.addEventListener('scroll',function(){
-    _panelScrolled=panel.scrollTop>2;
+    _panelScrolled=panel.scrollTop>(_ptrIsAndroid?6:2);
   },{passive:true});
 
   // ── Rubber band — resistance from pixel zero, steeper above threshold ───────
@@ -12622,6 +12692,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   on(panel,'touchstart',function(e){
     _vBuf=[];
     if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
+    if(window._sbLocked)return; // swipe-back gesture active — do not compete
     if(checkFn&&!checkFn())return;
     if(document.body.classList.contains('tk-tab-switching'))return;
     var ae=document.activeElement;
@@ -12679,6 +12750,15 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       }
     }
 
+    // Android: call preventDefault before the dead zone so Chrome's compositor
+    // cannot start scrolling the panel during those first ~4px of downward travel.
+    // Only fires when the gesture is clearly vertical (dy >= |dx|).
+    // armed guarantees scrollTop=0, no overlay, no input, no tab-switching.
+    if(_ptrIsAndroid&&e.cancelable){
+      var _absDxEarly=dx<0?-dx:dx;
+      if(dy>=_absDxEarly){e.preventDefault();}
+    }
+
     if(dy<DEAD_ZONE)return;
 
     // First frame past dead zone: promote layers, arm visuals, subtle haptic.
@@ -12733,13 +12813,24 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       var _prevRefreshTime=_lastRefreshTime;
       _lastRefreshTime=Date.now();
 
-      // Settle panel and spinner into held loading position
+      // Settle panel and spinner into held loading position.
+      // Android: defer transform to rAF so .ptr-releasing transition has one frame
+      // to register before the style change lands — prevents the hard jump to holdY.
       var holdY=44;
-      panel.style.transform='translateY('+holdY+'px)';
-      ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
-      ptrSpinner.style.opacity='1';
-      ptrSpinner.classList.add('refreshing');
       haptic([30]);
+      if(_ptrIsAndroid){
+        requestAnimationFrame(function(){
+          panel.style.transform='translateY('+holdY+'px)';
+          ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
+          ptrSpinner.style.opacity='1';
+          ptrSpinner.classList.add('refreshing');
+        });
+      }else{
+        panel.style.transform='translateY('+holdY+'px)';
+        ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(1)';
+        ptrSpinner.style.opacity='1';
+        ptrSpinner.classList.add('refreshing');
+      }
 
       function _snapBack(){
         if(_snapDone)return;
@@ -14036,7 +14127,7 @@ function startApp(){
   // Clear any existing interval before creating — prevents duplicate polls if
   // startApp() is called more than once (hot reload, re-init paths).
   if(window._forceUpdateInterval)clearInterval(window._forceUpdateInterval);
-  window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 60000);
+  window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 20000);
 
   // ── Runtime jank monitoring — auto-downgrade performance tier ─────────────
   // Starts 8s after launch so startup pre-renders don't trigger false positives.
