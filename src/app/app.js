@@ -1894,11 +1894,11 @@ App.tab=function(name){
   S.tabHistory.push(_prevTab);
   S.tab=name;
 
-  // ── Block swipe-back from starting during the tab animation window (280ms) ──
+  // ── Block swipe-back during the tab animation window ──
   window._tabAnimating=true;
   if(_tabAnimTimer)clearTimeout(_tabAnimTimer);
   var _tg=++_tabAnimGen;
-  _tabAnimTimer=setTimeout(function(){if(_tabAnimGen===_tg)window._tabAnimating=false;},310);
+  _tabAnimTimer=setTimeout(function(){if(_tabAnimGen===_tg)window._tabAnimating=false;},100);
 
   // ── Show new panel instantly — only touch the previous + new panel, not ALL panels ──
   // Suppress CSS transitions for exactly 1 frame so the panel swap is pixel-instant,
