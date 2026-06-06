@@ -13782,20 +13782,17 @@ App.ivPlay=function(episodeId){
       // Android / Web: inline iframe, full error detection + native YouTube fallback
       var videoId=ep.video_url;
       var iframe=document.createElement('iframe');
-      iframe.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=https://tafsirkurd.com';
+      // origin must match location.origin so YouTube routes PostMessages to the right window.
+      // Android Capacitor origin = http://localhost; iOS = capacitor://localhost; web = https://tafsirkurd.com.
+      // Hardcoding tafsirkurd.com caused all PostMessages to be silently dropped on Android.
+      var _ytOrigin=encodeURIComponent(location.origin);
+      iframe.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin='+_ytOrigin;
       iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
       iframe.allowFullscreen=true;
       wrapper.appendChild(iframe);
 
       var _ytReady=false;
       var _ytErrShown=false;
-
-      // iframe load = player page rendered (video or error screen) — cancel the stuck-timeout.
-      // Android WebView blocks cross-origin PostMessages so onReady never arrives,
-      // but if the iframe loaded something the player is NOT stuck.
-      iframe.addEventListener('load',function(){
-        if(!_ytErrShown){ _ytReady=true; clearTimeout(window._ytTimeout); }
-      });
 
       // Opens YouTube app on Android (native intent), Browser plugin elsewhere
       function _openYTNative(){
@@ -13832,23 +13829,23 @@ App.ivPlay=function(episodeId){
         wrapper.appendChild(ov);
       }
 
-      // Timeout: if no onReady / onStateChange in 10 s → player is stuck or showing bot-wall
+      // Timeout: if no onReady/onStateChange in 12s → player stuck or bot-wall
       if(window._ytTimeout){clearTimeout(window._ytTimeout);window._ytTimeout=null;}
       window._ytTimeout=setTimeout(function(){
         if(!_ytReady&&!_ytErrShown)showYTErr();
-      },10000);
+      },12000);
 
       if(window._ytErrHandler){window.removeEventListener('message',window._ytErrHandler);window._ytErrHandler=null;}
       window._ytErrHandler=function(e){
         if(!e.data)return;
         try{
           var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
-          // Player alive signals — cancel timeout
+          // onReady / onStateChange — player is alive, cancel stuck-timeout
           if(d.event==='onReady'||(d.event==='onStateChange'&&d.info!==undefined)){
             _ytReady=true;
             clearTimeout(window._ytTimeout);
           }
-          // onError: info = YT error code (100=not found, 101/150=embed disabled)
+          // onError: YT error code 100=not found, 101/150=embed disabled
           if(d.event==='onError'){showYTErr();}
         }catch(ex){}
       };
