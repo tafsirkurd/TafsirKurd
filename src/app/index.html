@@ -770,28 +770,13 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </script>
 <script src="/i18n/kmr-bundled.js?v=20260602t"></script>
 <script src="/i18n/i18n.min.js?v=20260606"></script>
-<!-- Non-critical scripts: loaded via requestIdleCallback so they only
-     execute when the browser is genuinely idle — never during the user's
-     first interaction with the app. Falls back to setTimeout(800) if
-     rIC is not available. Prayer scripts are ordered so dependencies
-     (cache→api→logic→notifications→ui) load in sequence. -->
+<!-- Script loading strategy:
+     Prayer scripts: short fixed delay (300ms) — critical for main tab,
+       must be ready before user can tap Prayer. Loaded in dependency order.
+     Other scripts: requestIdleCallback — only when browser is truly idle,
+       never competing with user interaction. -->
 <script>
 (function(){
-  var _seq = [
-    '/prayer/prayer.cache.js?v=20260526',
-    '/prayer/prayer.api.js?v=20260604',
-    '/prayer/prayer.logic.js?v=20260326b',
-    '/prayer/prayer.notifications.android.js?v=20260602b',
-    '/prayer/prayer.ui.js?v=20260606',
-  ];
-  var _par = [
-    '/quran/search.js?v=20260520',
-    '/rating.js?v=20260401a',
-    '/audio-cache.js?v=20260406a',
-    '/audio-downloads.js?v=1',
-    '/qibla/qibla.js?v=20260417',
-    '/utils/fast-scroll.js?v=20260503',
-  ];
   function _load(src, cb) {
     var s = document.createElement('script');
     s.src = src;
@@ -802,14 +787,32 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     if (i >= list.length) return;
     _load(list[i], function(){ _loadSeq(list, i + 1); });
   }
-  function _loadAll() {
-    _loadSeq(_seq, 0);           // prayer scripts in order
-    _par.forEach(function(src){ _load(src); }); // others in parallel
+  // Prayer scripts: load after 300ms — ready before user can tap Prayer tab
+  var _prayer = [
+    '/prayer/prayer.cache.js?v=20260526',
+    '/prayer/prayer.api.js?v=20260604',
+    '/prayer/prayer.logic.js?v=20260326b',
+    '/prayer/prayer.notifications.android.js?v=20260602b',
+    '/prayer/prayer.ui.js?v=20260606',
+  ];
+  setTimeout(function(){ _loadSeq(_prayer, 0); }, 300);
+
+  // Non-critical: only when browser is idle (never during user interaction)
+  var _idle = [
+    '/quran/search.js?v=20260520',
+    '/rating.js?v=20260401a',
+    '/audio-cache.js?v=20260406a',
+    '/audio-downloads.js?v=1',
+    '/qibla/qibla.js?v=20260417',
+    '/utils/fast-scroll.js?v=20260503',
+  ];
+  function _loadIdle() {
+    _idle.forEach(function(src){ _load(src); });
   }
   if (window.requestIdleCallback) {
-    requestIdleCallback(_loadAll, { timeout: 2000 });
+    requestIdleCallback(_loadIdle, { timeout: 3000 });
   } else {
-    setTimeout(_loadAll, 800);
+    setTimeout(_loadIdle, 1200);
   }
 })();
 </script>
