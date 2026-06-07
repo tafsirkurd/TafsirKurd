@@ -2726,15 +2726,15 @@ window._showBatteryOptWarning=function(){
   icon.textContent='🔋';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text,#000)';
-  title.textContent='بانگ ڕاستەوخۆ بێت';
+  title.textContent='بانگ ڕاستەوخۆ بیت';
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
   msg.textContent=
-    'بۆ ئەوەی بانگ لە کاتا دروستدا بێت، ئەپ دەبێت لە کۆنترولی بیتاقورادا بێ ئێشکالە بێت.\n\n'+
-    'دوگمەی خوارەوە بکە و "بێ ئێشکالە" (Unrestricted) هەڵبژێرە.';
+    'دا کو بانگ ل دەمێ خۆ یێ دروست دا لێبدەت، پێویستە ئەپ د بن کۆنترۆلا پاتریێ دا یێ "بێ ڕێگری" (unrestricted) بیت.\n\n'+
+    'دوگمەیا خوارێ لێبدە و "بێ ڕێگری" هەڵبژێره.';
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
-  btn.textContent='کردنەوەی ڕێکخستن';
+  btn.textContent='ڤەکرنا ڕێکخستنان';
   btn.onclick=function(){
     overlay.remove();
     var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
@@ -2742,7 +2742,7 @@ window._showBatteryOptWarning=function(){
   };
   var dismissBtn=document.createElement('button');
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
-  dismissBtn.textContent='دواتر';
+  dismissBtn.textContent='پاشان';
   dismissBtn.onclick=function(){overlay.remove();};
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
   card.setAttribute('aria-label',title.textContent);
