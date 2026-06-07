@@ -447,7 +447,9 @@
           if (!_hapticLock) {
             _hapticLock = true;
             setTimeout(function () { _hapticLock = false; }, 2500);
-            if (window.haptic) haptic([12]);
+            // Medium impact on Qibla lock — clear, satisfying confirmation
+            if(window.H){ window.H.medium(); }
+            else if(window.haptic){ window.haptic([35]); }
           }
         }
       }, 120);

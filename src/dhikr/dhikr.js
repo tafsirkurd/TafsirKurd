@@ -717,10 +717,21 @@ function _mkCopyBtn(text) {
 
 function haptic(ms){
   try{
-    var H=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics;
-    if(!H)return;
-    if(ms>=30){H.notification({type:'SUCCESS'});}
-    else{H.impact({style:'MEDIUM'});}
+    // Use app.js H namespace if available (same spam guard + platform checks)
+    if(window.H){
+      if(ms>=40){window.H.success();}
+      else if(ms>=20){window.H.medium();}
+      else if(ms>=8){window.H.light();}
+      else{window.H.selection();}
+      return;
+    }
+    // Direct Capacitor fallback (qibla/standalone context)
+    var Hp=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics;
+    if(!Hp){if(navigator.vibrate)navigator.vibrate([ms]);return;}
+    if(ms>=40){Hp.notification({type:'SUCCESS'});}
+    else if(ms>=20){Hp.impact({style:'MEDIUM'});}
+    else if(ms>=8){Hp.impact({style:'LIGHT'});}
+    else{Hp.selectionChanged();}
   }catch(e){}
 }
 function $(id){return document.getElementById(id)}
@@ -2103,8 +2114,9 @@ window.GencineUI = {
   /* ═══════════════════ TASBIH ACTIONS ═══════════════════ */
   _tasbihTap: function(){
     this._tasbihCount++;
-    haptic(8);
+    // Fire only one haptic per tap — success on completion, selection otherwise
     if(this._tasbihCount >= this._tasbihTarget){ haptic(40); }
+    else { haptic(8); }
     this._saveState();
     this._updateRing();
   },

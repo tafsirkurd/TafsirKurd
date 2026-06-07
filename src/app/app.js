@@ -1976,7 +1976,7 @@ var _tabScrollPos={};
 App.tab=function(name){
   if(tapGuard('tab',350))return; // 350ms: covers touchstart+onclick double-fire gap
   if(name===S.tab){
-    haptic([8]);
+    H.selection(); // re-tapping same tab — subtle acknowledge, not a navigation
     if(name==='quran'){
       if(S.surah){
         // Inside surah: first re-tap scrolls to top, second goes back to grid
@@ -2375,13 +2375,18 @@ var H=(function(){
 
 // Legacy shim — maps old numeric patterns to named semantics.
 // All new code should call H.xxx() directly.
+// Threshold ≤6 → selection (steppers, tiny increments)
+// Threshold ≤25 → light (this upgrades old haptic([8]) calls to light — the
+//   bread-and-butter iOS tap; ≤6ms callers that want selection use H.selection() directly)
 function haptic(pattern){
   var dur=pattern&&pattern[0]||20;
-  if(dur<=8)H.selection();
+  if(dur<=6)H.selection();
   else if(dur<=25)H.light();
   else if(dur<=45)H.medium();
   else H.success();
 }
+window.H=H;       // expose to qibla.js, dhikr.js, rating.js
+window.haptic=haptic; // expose shim for external modules
 
 /* ===== DAILY REMINDER ===== */
 /* Create the 'reminder' channel on Android (capacitor.config channels[] is iOS-only) */
@@ -5309,7 +5314,7 @@ function _setAyahMark(surahNum,ayahNum){
   try{localStorage.setItem('ayahMark',JSON.stringify({surah:surahNum,ayah:ayahNum,expiresAt:expiresAt}));}catch(e){}
   var card=document.querySelector('.ayah-card[data-ayah="'+ayahNum+'"]');
   if(card)card.classList.add('ayah-card--marked');
-  haptic([8]);
+  H.selection(); // tiny in-place mark, not a navigation
   _ayahMarkTimer=setTimeout(function(){
     var c=document.querySelector('.ayah-card--marked');
     if(c)c.classList.remove('ayah-card--marked');
@@ -6701,7 +6706,7 @@ var _dlMgrCache={pdfs:null,audio:null}; // last fetched data — avoids spinner 
 function openDlManager(){
   var sheet=$('dlMgrSheet'),overlay=$('dlMgrOverlay');
   if(!sheet||!overlay)return;
-  H.medium();
+  H.light(); // opening a sheet — not an action completion
   _dlMgrTab='books';
   _dlMgrSelectMode=false;
   _dlMgrSelected={};
@@ -6828,7 +6833,7 @@ function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete,opts){
       var delBtn=el('button','');delBtn.setAttribute('data-dlmgr-del','1');
       delBtn.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(220,50,50,.1);display:flex;align-items:center;justify-content:center;color:var(--danger,#e05);flex-shrink:0;border:none;cursor:pointer;transition:background .15s';
       var delIco=icon('fas fa-trash-alt');delIco.style.fontSize='.8rem';delBtn.appendChild(delIco);
-      on(delBtn,'click',function(e){e.stopPropagation();haptic([30]);onDelete();});
+      on(delBtn,'click',function(e){e.stopPropagation();H.warning();onDelete();}); // destructive delete
       row.appendChild(delBtn);
     }
   }
@@ -7226,7 +7231,7 @@ function _renderFPSpeed(){
     on(btn,'click',function(){
       S.audio.speed=sp;S.audio.el.playbackRate=sp;
       localStorage.setItem('app_speed',String(sp));
-      haptic([8]);_renderFPSpeed();
+      H.selection();_renderFPSpeed(); // speed chip in a picker row — selection feedback
     });
     row.appendChild(btn);
   });
@@ -7849,8 +7854,8 @@ function _showNoteModal(currentNote,onSave){
     ov.classList.remove('on');
     setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},260);
   }
-  cancelBtn.onclick=function(){haptic([8]);_close();};
-  saveBtn.onclick=function(){haptic([8]);_close();onSave(inp.value.trim());};
+  cancelBtn.onclick=function(){H.selection();_close();}; // dismiss without saving
+  saveBtn.onclick=function(){H.light();_close();onSave(inp.value.trim());}; // saving content
   on(ov,'click',function(e){if(e.target===ov)_close();});
   actions.appendChild(cancelBtn);
   actions.appendChild(saveBtn);
@@ -8314,7 +8319,7 @@ function renderGoals(){
   var monthNav=el('div','year-nav');
   var prevMo=el('button','');prevMo.appendChild(icon('fas fa-chevron-right'));
   on(prevMo,'click',function(){
-    S.goalMonth--;haptic([8]);
+    S.goalMonth--;H.selection(); // calendar month stepper
     if(S.goalMonth<0){S.goalMonth=11;S.goalYear--;}
     renderGoals();
   });
@@ -8322,7 +8327,7 @@ function renderGoals(){
   monthNav.appendChild(el('span','year-display',monthNames[calMo]+' '+calYear));
   var nextMo=el('button','');nextMo.appendChild(icon('fas fa-chevron-left'));
   on(nextMo,'click',function(){
-    S.goalMonth++;haptic([8]);
+    S.goalMonth++;H.selection();
     if(S.goalMonth>11){S.goalMonth=0;S.goalYear++;}
     renderGoals();
   });
@@ -8739,7 +8744,7 @@ App.openPrayerDay=function(dKey){
       var fl=getPrayerLog();if(!fl[dKey])fl[dKey]={};
       var prevCnt=_TRACK_PRAYERS.filter(function(p){return fl[dKey][p];}).length;
       fl[dKey][prayer]=!fl[dKey][prayer];savePrayerLog(fl);isDone=fl[dKey][prayer];
-      btn.classList.toggle('on',isDone);ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');haptic([8]);
+      btn.classList.toggle('on',isDone);ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');H.light(); // prayer toggle — meaningful state change
       // Refresh calendar cell
       var cell=document.querySelector('[data-ppp-key="'+dKey+'"]');
       if(cell){
@@ -8802,7 +8807,7 @@ function _pppSyncPanel(log,changedDKey){
         btn2.onclick=(function(pr){return function(){
           var pd=_getPrayerDay();
           var prev=_TRACK_PRAYERS.filter(function(q){return(getPrayerLog()[pd]||{})[q];}).length;
-          var ns=togglePrayerDone(pr);haptic([8]);
+          var ns=togglePrayerDone(pr);H.light();
           var nl=getPrayerLog();var nd=_TRACK_PRAYERS.filter(function(q){return(nl[pd]||{})[q];}).length;
           if(ns&&nd===5&&prev<5)_pppCheckCelebrate(nl,pd);
           _pppSyncPanel(nl,pd);
@@ -8930,7 +8935,7 @@ function _buildPrayerProgressPanel(panel){
       btn.onclick=function(){
         var prevDone=_TRACK_PRAYERS.filter(function(p){return(getPrayerLog()[today]||{})[p];}).length;
         var ns=togglePrayerDone(prayer);
-        btn.classList.toggle('on',ns);ic.className=ns?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');haptic([8]);
+        btn.classList.toggle('on',ns);ic.className=ns?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');H.light();
         var nl=getPrayerLog();var nd=_TRACK_PRAYERS.filter(function(p){return(nl[today]||{})[p];}).length;
         countEl.textContent=nd+'/5';fill.style.width=((nd/5)*100)+'%';
         var mv=card.querySelector('.ppp-motivate');if(mv)mv.textContent=_pppMsg(nd);
@@ -9215,7 +9220,7 @@ App.testYearCelebration=function(){
   _pppCelebrateYear(l,str||365,1);
 };
 function _pppCelebrateDay(){
-  haptic([8,5,12]);
+  H.success(); // all 5 prayers done today — meaningful achievement
   var fill=document.querySelector('.ppp-progress-fill');
   if(fill){fill.classList.add('ppp-pulse');setTimeout(function(){fill.classList.remove('ppp-pulse');},700);}
   var body=document.querySelector('#prayerProgressPanel .ppp-body');if(!body)return;
@@ -9556,7 +9561,7 @@ App.closeWizard=function(){
 };
 App.openDeleteConfirm=function(){
   $('goalConfirmOverlay').classList.add('on');
-  haptic([20]);
+  H.warning(); // destructive confirmation gate opening
 };
 App.closeDeleteConfirm=function(){
   $('goalConfirmOverlay').classList.remove('on');
@@ -9570,7 +9575,7 @@ App.confirmDeleteGoalFull=function(){
   _restartProgressTracking();
   renderContinue(); // clear the continue-reading card immediately
   toast(t('toast.goal_deleted'));
-  haptic([50]);
+  H.medium(); // goal deleted — confirmed destructive action, not a celebration
   renderGoals();
 };
 // Option B — delete goal only, keep Quran reading position (surah_progress survives)
@@ -9581,7 +9586,7 @@ App.confirmDeleteGoalKeep=function(){
   debouncedSync();
   _restartProgressTracking();
   toast(t('toast.goal_deleted'));
-  haptic([50]);
+  H.medium(); // goal deleted — same: confirmed destructive
   renderGoals();
 };
 // Keep legacy name so any old call sites still work
@@ -9603,7 +9608,7 @@ function _finishGoalSave(goal,keepProgress){
   App.closeStartChoice();
   S.wizardStep=2;
   renderWizardStep();
-  haptic([50]);
+  H.success(); // new goal created and saved
 }
 App.confirmStartFresh=function(){
   var g=S.wizardData._pendingGoal;
@@ -9680,7 +9685,7 @@ function renderWizardStep(){
       opt.appendChild(check);
       on(opt,'click',function(){
         S.wizardData.preset=i;S.wizardData.custom=false;
-        haptic([8]);
+        H.selection(); // picker card selection — stays subtle
         renderWizardStep();
       });
       opts.appendChild(opt);
@@ -9700,7 +9705,7 @@ function renderWizardStep(){
     cOpt.appendChild(cCheck);
     on(cOpt,'click',function(){
       S.wizardData.custom=true;S.wizardData.preset=null;
-      haptic([8]);
+      H.selection(); // picker card selection
       renderWizardStep();
     });
     opts.appendChild(cOpt);
@@ -9801,7 +9806,7 @@ function mkToggleRow(labelText,isOn,onToggle,subText){
   row.appendChild(left);
   var toggle=el('div','toggle'+(isOn?' on':''));
   toggle.appendChild(el('div','toggle-knob'));
-  on(toggle,'click',function(){haptic([15]);onToggle();});
+  on(toggle,'click',function(){H.light();onToggle();});
   row.appendChild(toggle);
   return row;
 }
@@ -10179,7 +10184,7 @@ function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger,sub){
   var btn=el('button','hdr-text-btn'+(danger?' danger-btn':''));
   if(btnIcon){btn.appendChild(icon(btnIcon));btn.appendChild(document.createTextNode(' '));}
   btn.appendChild(document.createTextNode(btnLabel));
-  on(btn,'click',function(){haptic(danger?[50]:[8]);onClick();});
+  on(btn,'click',function(){danger?H.warning():H.light();onClick();});
   row.appendChild(btn);
   return row;
 }
@@ -10240,7 +10245,7 @@ function _showIgPicker(){
     row.appendChild(ic);row.appendChild(txt);row.appendChild(chev);
     on(row,'mouseover',function(){row.style.background='var(--bg3)';});
     on(row,'mouseout',function(){row.style.background='';});
-    row.onclick=function(){close();_openLink(opt.url);haptic([8]);};
+    row.onclick=function(){close();_openLink(opt.url);H.selection();};
     sheet.appendChild(row);
   });
   overlay.appendChild(sheet);
@@ -10681,7 +10686,7 @@ function renderSettings(){
       if(def.key==='social_instagram'){
         _showIgPicker();
       } else {
-        _openLink(btn._url);haptic([8]);
+        _openLink(btn._url);H.selection();
       }
     });
     _socBtns[def.key]=btn;
@@ -14002,7 +14007,7 @@ function ivRenderSavedList(){
       info.appendChild(el('div','iv-overlay-ep-title',ep.title||('ئەپیسۆد '+(ep.episode_number||''))));
       item.appendChild(info);
       var del=el('button','iv-overlay-ep-del');del.appendChild(icon('fas fa-xmark'));
-      on(del,'click',function(e){e.stopPropagation();ivToggleSave(ep.id,ep);haptic([8]);ivRenderSavedList();
+      on(del,'click',function(e){e.stopPropagation();ivToggleSave(ep.id,ep);H.selection();ivRenderSavedList();
         document.querySelectorAll('.iv-ep-save').forEach(function(b){var row=b.closest('[data-ep-id]');if(row&&row.dataset.epId==ep.id)b.classList.toggle('saved',ivIsSaved(ep.id))});
       });
       item.appendChild(del);
@@ -14053,7 +14058,7 @@ function ivRenderHistoryList(){
       info.appendChild(el('div','iv-overlay-ep-pct',Math.round(wp.percent)+t('iv.percent_watched')));
       item.appendChild(info);
       var del=el('button','iv-overlay-ep-del');del.appendChild(icon('fas fa-trash'));
-      on(del,'click',function(e){e.stopPropagation();delete progress[epId];try{localStorage.setItem('iv_watch_progress',JSON.stringify(progress))}catch(ex){}haptic([8]);ivRenderHistoryList()});
+      on(del,'click',function(e){e.stopPropagation();delete progress[epId];try{localStorage.setItem('iv_watch_progress',JSON.stringify(progress))}catch(ex){}H.selection();ivRenderHistoryList()});
       item.appendChild(del);
       on(item,'click',function(){overlay.classList.remove('open');App.ivShowSeries(ep.series_id);App.ivPlay(ep.id)});
       frag.appendChild(item);
