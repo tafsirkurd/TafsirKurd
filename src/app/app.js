@@ -150,6 +150,32 @@ window.ForceUpdate = (function(){
   // Path 1: ENFORCE_LOCK_KEY exists (user already saw the modal last session)
   // Path 2: No lock yet, but cached config + cached version both say "hard+outdated"
   //          (handles first cold start after admin enables force update)
+  function _wireHardBtn() {
+    var btn = document.getElementById('fuHardBtn');
+    if (btn && !btn._fuWired) {
+      btn._fuWired = true;
+      btn.onclick = function() {
+        if (_fuBtnBusy) return;
+        _fuBtnBusy = true;
+        btn.classList.add('fu-btn-loading');
+        openStore();
+        setTimeout(function(){ _fuBtnBusy = false; btn.classList.remove('fu-btn-loading'); }, 3000);
+      };
+    }
+  }
+
+  function _showEarlyOverlay(overlay, minVersion) {
+    overlay.classList.add('on');
+    document.body.style.overflow    = 'hidden';
+    document.body.style.touchAction = 'none';
+    // Double-rAF: ensures browser paints initial state (opacity:0, translateY(22px))
+    // before transition starts — fixes CSS transition not firing on cold start
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ overlay.classList.add('fu-visible'); });
+    });
+    _wireHardBtn();
+  }
+
   (function _earlyEnforceCheck() {
     try {
       // ── Path 1: lock exists from prior session ─────────────────────────────
@@ -162,10 +188,7 @@ window.ForceUpdate = (function(){
         if (minEl && lock.minVersion) minEl.textContent = 'v' + lock.minVersion;
         var verRow = overlay.querySelector('.fu-ver-row');
         if (verRow) verRow.style.display = lock.minVersion ? '' : 'none';
-        overlay.classList.add('on');
-        document.body.style.overflow = 'hidden';
-        document.body.style.touchAction = 'none';
-        requestAnimationFrame(function(){ overlay.classList.add('fu-visible'); });
+        _showEarlyOverlay(overlay, lock.minVersion);
         console.log('[Update] Early enforce lock active — blocking app immediately');
         return;
       }
@@ -204,10 +227,7 @@ window.ForceUpdate = (function(){
       if (minEl2) minEl2.textContent = 'v' + minVer2;
       var verRow2 = overlay2.querySelector('.fu-ver-row');
       if (verRow2) verRow2.style.display = minVer2 ? '' : 'none';
-      overlay2.classList.add('on');
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-      requestAnimationFrame(function(){ overlay2.classList.add('fu-visible'); });
+      _showEarlyOverlay(overlay2, minVer2);
       console.log('[Update] Early cached-config enforce — blocking app immediately');
     } catch(e) {}
   })();
@@ -324,21 +344,26 @@ window.ForceUpdate = (function(){
 
   function showHard(version, minVersion, cfg) {
     var o = document.getElementById('fuOverlay');
-    if (!o || o.classList.contains('on')) return;
-    // Persist the block so cold-start reopens are blocked instantly
-    try {
-      localStorage.setItem(ENFORCE_LOCK_KEY, JSON.stringify({
-        minVersion: minVersion || '',
-        storeUrl: _storeUrl || '',
-        at: Date.now()
-      }));
-    } catch(e) {}
+    if (!o) return;
+    var alreadyOn = o.classList.contains('on');
 
-    // Populate version row
+    // Persist the block so cold-start reopens are blocked instantly
+    if (!alreadyOn) {
+      try {
+        localStorage.setItem(ENFORCE_LOCK_KEY, JSON.stringify({
+          minVersion: minVersion || '',
+          storeUrl: _storeUrl || '',
+          at: Date.now()
+        }));
+      } catch(e) {}
+    }
+
+    // Always populate content — cold-start early check shows overlay before this runs,
+    // so we must update version/bullets/button even when overlay is already visible.
     var curEl = document.getElementById('fuCurrentVer');
     var minEl = document.getElementById('fuMinVer');
     if (curEl) curEl.textContent = version ? 'v' + version : '';
-    if (minEl) minEl.textContent = minVersion ? 'v' + minVersion : '';
+    if (minEl && minVersion) minEl.textContent = 'v' + minVersion;
     var verRow = o.querySelector('.fu-ver-row');
     if (verRow) verRow.style.display = (version || minVersion) ? '' : 'none';
 
@@ -362,14 +387,10 @@ window.ForceUpdate = (function(){
       card.style.display = '';
     }
 
-    document.body.style.overflow    = 'hidden';
-    document.body.style.touchAction = 'none';
-    o.classList.add('on');
-    requestAnimationFrame(function(){ o.classList.add('fu-visible'); });
-    if (window.i18n) window.i18n.applyTranslations();
-
+    // Wire button once — works for both first-show and cold-start overlay
     var btn = document.getElementById('fuHardBtn');
-    if (btn) {
+    if (btn && !btn._fuWired) {
+      btn._fuWired = true;
       btn.onclick = function() {
         if (_fuBtnBusy) return;
         _fuBtnBusy = true;
@@ -378,6 +399,15 @@ window.ForceUpdate = (function(){
         setTimeout(function(){ _fuBtnBusy = false; btn.classList.remove('fu-btn-loading'); }, 3000);
       };
     }
+
+    if (window.i18n) window.i18n.applyTranslations();
+
+    if (alreadyOn) return; // already visible — content updated above, skip re-animation
+
+    document.body.style.overflow    = 'hidden';
+    document.body.style.touchAction = 'none';
+    o.classList.add('on');
+    requestAnimationFrame(function(){ o.classList.add('fu-visible'); });
   }
 
   // ── Soft update banner ────────────────────────────────────────────────────
