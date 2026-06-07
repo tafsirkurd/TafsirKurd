@@ -2308,6 +2308,9 @@ var H=(function(){
   var _MIN=25; // ms minimum between standard haptics — prevents spam
 
   function _hp(){return window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;}
+  function _dbg(msg){if(window._hapticDebug)console.log('[Haptics]',msg);}
+
+  function _fallback(webMs){if(navigator.vibrate)navigator.vibrate([webMs]);}
 
   function _std(cap,webMs){
     if(!S.hapticFeedback)return;
@@ -2316,26 +2319,27 @@ var H=(function(){
     _last=now;
     var Hp=_hp();
     if(Hp){
-      try{cap(Hp);}catch(e){
-        try{Hp.vibrate({duration:webMs});}catch(e2){
-          if(navigator.vibrate)navigator.vibrate([webMs]);
-        }
+      _dbg('cap call webMs='+webMs);
+      var p;
+      try{p=cap(Hp);}catch(e){_dbg('sync err '+e);_fallback(webMs);return;}
+      if(p&&typeof p.then==='function'){
+        p.catch(function(e){_dbg('async err '+e);_fallback(webMs);});
       }
-    } else if(navigator.vibrate){
-      navigator.vibrate([webMs]);
+    } else {
+      _dbg('no plugin, webMs='+webMs);
+      _fallback(webMs);
     }
   }
   function _note(type,webPat){
     if(!S.hapticFeedback)return;
-    _last=Date.now()+80; // short blackout after notification haptic to prevent overlap
+    _last=Date.now()+80;
     var Hp=_hp();
     if(Hp){
-      try{Hp.notification({type:type});}catch(e){
-        try{Hp.impact({style:'MEDIUM'});}catch(e2){
-          try{Hp.vibrate({duration:webPat[0]||40});}catch(e3){
-            if(navigator.vibrate)navigator.vibrate(webPat);
-          }
-        }
+      _dbg('notification type='+type);
+      var p;
+      try{p=Hp.notification({type:type});}catch(e){_dbg('note sync err '+e);if(navigator.vibrate)navigator.vibrate(webPat);return;}
+      if(p&&typeof p.then==='function'){
+        p.catch(function(e){_dbg('note async err '+e);if(navigator.vibrate)navigator.vibrate(webPat);});
       }
     } else if(navigator.vibrate){
       navigator.vibrate(webPat);
@@ -2344,13 +2348,18 @@ var H=(function(){
 
   return {
     // selection: subtlest tick — stepper adjustments, picker scrubbing, PTR arm
-    selection:function(){_std(function(Hp){Hp.selectionChanged();},8);},
+    // iOS requires selectionStart() before selectionChanged() to warm up the generator
+    selection:function(){_std(function(Hp){
+      var p=Hp.selectionStart();
+      if(p&&typeof p.then==='function'){p.then(function(){Hp.selectionChanged().then(function(){Hp.selectionEnd();}).catch(function(){});}).catch(function(){});}
+      else{try{Hp.selectionChanged();Hp.selectionEnd();}catch(e){}}
+    },8);},
     // light: gentle tap — tabs, toggles, back navigation, most UI interactions
-    light:    function(){_std(function(Hp){Hp.impact({style:'LIGHT'});},18);},
+    light:    function(){_std(function(Hp){return Hp.impact({style:'LIGHT'});},18);},
     // medium: clear feedback — play/pause, bookmark add, PTR commit, opening players
-    medium:   function(){_std(function(Hp){Hp.impact({style:'MEDIUM'});},35);},
+    medium:   function(){_std(function(Hp){return Hp.impact({style:'MEDIUM'});},35);},
     // heavy: strong — use sparingly, only for the most intentional gestures
-    heavy:    function(){_std(function(Hp){Hp.impact({style:'HEAVY'});},55);},
+    heavy:    function(){_std(function(Hp){return Hp.impact({style:'HEAVY'});},55);},
     // success: achievement/confirmation — goal complete, login, sync success
     success:  function(){_note('SUCCESS',[40,20,40]);},
     // warning: destructive/alert — confirm delete, dangerous actions
@@ -2359,19 +2368,42 @@ var H=(function(){
 })();
 
 // ── Startup haptic availability check ───────────────────────────────────────
-// Runs once. On native (iOS/Android) we MUST have the Capacitor plugin.
-// If it's missing, all haptics will silently fall through to navigator.vibrate()
-// which does nothing on iOS. Log clearly so the issue is obvious in the console.
 (function(){
   try{
-    if(!window.Capacitor||!Capacitor.isNativePlatform||!Capacitor.isNativePlatform())return;
-    if(!window.Capacitor.Plugins||!window.Capacitor.Plugins.Haptics){
-      console.warn('[Haptics] PLUGIN UNAVAILABLE on native platform. All haptic calls will be silent. Fix: npx cap sync');
-    }else{
-      console.log('[Haptics] plugin ready');
+    var isNative=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform();
+    var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+    var platform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'web';
+    console.log('[Haptics] platform='+platform+' native='+!!isNative+' plugin='+!!Hp+' navVibrate='+!!navigator.vibrate);
+    if(isNative&&!Hp){
+      console.warn('[Haptics] PLUGIN UNAVAILABLE on native — all haptics will be silent. Run: npx cap sync');
     }
-  }catch(e){}
+  }catch(e){console.warn('[Haptics] startup check error',e);}
 })();
+
+// ── Debug helpers (call from Safari Web Inspector console) ──────────────────
+// window._hapticDebug = true  → log every haptic call
+// window._hapticTest()        → fire each haptic type in sequence with 400ms gaps
+window._hapticTest=function(){
+  var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+  var platform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'web';
+  console.log('[HapticTest] platform='+platform+' plugin='+!!Hp+' navVibrate='+!!navigator.vibrate);
+  if(!Hp){console.warn('[HapticTest] No Capacitor Haptics plugin. Check pod install / cap sync.');return;}
+  var seq=[
+    {name:'impact LIGHT',fn:function(){return Hp.impact({style:'LIGHT'});}},
+    {name:'impact MEDIUM',fn:function(){return Hp.impact({style:'MEDIUM'});}},
+    {name:'impact HEAVY',fn:function(){return Hp.impact({style:'HEAVY'});}},
+    {name:'notification SUCCESS',fn:function(){return Hp.notification({type:'SUCCESS'});}},
+    {name:'notification WARNING',fn:function(){return Hp.notification({type:'WARNING'});}},
+    {name:'selectionChanged',fn:function(){return Hp.selectionStart().then(function(){return Hp.selectionChanged();}).then(function(){return Hp.selectionEnd();});}}
+  ];
+  seq.forEach(function(s,i){
+    setTimeout(function(){
+      console.log('[HapticTest] firing: '+s.name);
+      try{var p=s.fn();if(p&&p.then)p.then(function(){console.log('[HapticTest] OK: '+s.name);}).catch(function(e){console.error('[HapticTest] FAIL: '+s.name,e);});}
+      catch(e){console.error('[HapticTest] sync err: '+s.name,e);}
+    },i*400);
+  });
+};
 
 // Legacy shim — maps old numeric patterns to named semantics.
 // All new code should call H.xxx() directly.
