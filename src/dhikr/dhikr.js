@@ -450,6 +450,14 @@ function _initDbData(onDone) {
   if (cachedAsma99)   _dbAsma99   = cachedAsma99;
   if (cachedAdhkar)   _dbAdhkar   = cachedAdhkar;
 
+  console.log('[Gencine] data source: cats=' + (cachedCats?'cache':'miss') +
+    ' hadiths=' + (cachedHadiths?'cache':'miss') +
+    ' books=' + (cachedBooks?'cache':'miss') +
+    ' adhkar=' + (cachedAdhkar?'cache':'miss') +
+    ' duas=' + (cachedDuas?'cache':'miss') +
+    ' asma99=' + (cachedAsma99?'cache':'miss') +
+    ' tasbih=' + (cachedTasbih?'cache':'miss'));
+
   if (cachedCats && cachedDuas && cachedHadiths) {
     _dbCats    = cachedCats;
     _dbDuas    = cachedDuas;
@@ -461,6 +469,7 @@ function _initDbData(onDone) {
     /* One silent background refresh per session to pick up admin changes */
     _triggerBgRefresh();
   } else {
+    console.log('[Gencine] cache incomplete — Supabase fetch starting');
     _fetchDbData(onDone);
   }
 }

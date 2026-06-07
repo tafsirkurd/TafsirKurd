@@ -1,4 +1,4 @@
-﻿/* Tafsir Kurd - Mobile App v2.0 */
+/* Tafsir Kurd - Mobile App v2.0 */
 /* Pure DOM methods only - no innerHTML for security */
 
 /* ── localStorage quota guard ──────────────────────────────────────────────────
@@ -1654,6 +1654,9 @@ function _rerenderCurrentTab(){
   // Invalidate all pre-rendered caches so next tab visit rebuilds with fresh strings
   _renderHash={};
   if(window.PrayerUI) PrayerUI.invalidate();
+  // Always bust SmartDhikr section cache — stale DOM must not survive a translation swap
+  // regardless of which tab is currently visible when i18n:updated fires.
+  if(window.SmartDhikr) SmartDhikr.clearCache();
 
   // Re-render the currently visible tab right now
   var tab=S.tab;
@@ -1662,7 +1665,7 @@ function _rerenderCurrentTab(){
   else if(tab==='settings'){renderSettings();_renderHash.settings=_tabHash('settings');}
   else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
   else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
-  else if(tab==='gencine'&&window.GencineUI){if(window.SmartDhikr)SmartDhikr.clearCache();GencineUI._homeEl=null;GencineUI._draw();}
+  else if(tab==='gencine'&&window.GencineUI){GencineUI._homeEl=null;GencineUI._draw();}
   // quran tab uses data-i18n attributes — applyTranslations() handled by i18n.js before dispatch
 }
 
@@ -2221,9 +2224,9 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260603b', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260608b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=58',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=59',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */

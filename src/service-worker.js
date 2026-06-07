@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tafsir-kurd-v1176';
+const CACHE_NAME = 'tafsir-kurd-v1177';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
 // Mismatches cause cache misses — browser fetches from network instead of SW cache.
 const PRECACHE = [
   // Core app shell — index.html intentionally excluded: always served fresh from APK
-  '/app/app.min.js?v=1015',
+  '/app/app.min.js?v=1016',
   '/app/app-styles.min.css?v=2',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
@@ -14,13 +14,13 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260602b',
   '/prayer/prayer.ui.js?v=20260607',
   // Gencine / books module (lazily loaded but pre-cached for offline)
-  '/dhikr/dhikr.js?v=20260602c',
+  '/dhikr/dhikr.js?v=20260608b',
   '/dhikr/pdf-store.js?v=20260529',
   '/dhikr/dua-data.js?v=20260326b',
-  '/dhikr/smart-dhikr.js?v=58',
+  '/dhikr/smart-dhikr.js?v=59',
   // i18n
   '/i18n/i18n.min.js?v=20260607',
-  '/i18n/kmr-bundled.js?v=20260602t',
+  '/i18n/kmr-bundled.js?v=20260608a',
   '/i18n/kmr.json',
   // Data
   '/data/quran.json',
