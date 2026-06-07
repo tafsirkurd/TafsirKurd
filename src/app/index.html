@@ -64,6 +64,9 @@
   // iPad UA fallback: force tablet class when CSS media query can't fire (e.g. TARGETED_DEVICE_FAMILY="1" compatibility mode)
   var isIPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend'in document);
   if(isIPad)document.documentElement.classList.add('is-ipad');
+  // Platform classes — used for platform-specific CSS (e.g. animation gating)
+  if(isIOS)document.documentElement.classList.add('ios');
+  else if(/Android/.test(ua))document.documentElement.classList.add('android');
   // ── Automatic 4-tier Performance Detection ──────────────────────────────
   // Score-based: high(80-100) / medium(55-79) / low(30-54) / critical(0-29)
   // Runs synchronously in <head> so perf-* classes are ready before first paint.
@@ -180,7 +183,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/surah-name-v2.woff2?v=1" as="font" type="font/woff2" crossorigin="" fetchpriority="low">
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="" fetchpriority="low">
 <link rel="preload" href="/dhikr/dua-data.js?v=20260326b" as="script" fetchpriority="low">
-<link rel="preload" href="/dhikr/smart-dhikr.js?v=57" as="script" fetchpriority="low">
+<link rel="preload" href="/dhikr/smart-dhikr.js?v=58" as="script" fetchpriority="low">
 <link rel="preload" href="/dhikr/dhikr.js?v=20260602a" as="script" fetchpriority="low">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17">
@@ -252,7 +255,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   <div id="quranHome">
     <div class="hdr">
       <div class="hdr-logo"><img src="/assets/images/logo.png" alt=""><span>Tafsir Kurd</span></div>
-      <div style="display:flex;gap:2px">
+      <div class="hdr-actions">
         <button class="hdr-btn" id="hdrGoalsBtn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i><span class="hdr-badge" id="goalsBadge"></span></button>
         <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
         <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>

@@ -2223,7 +2223,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false;
   function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260603b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=57',      function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=58',      function() { _p2 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -9339,7 +9339,7 @@ function _setBadge(id,cls){
 }
 function _updateGoalsBadge(){
   var goal=getGoal();
-  if(!goal){_setBadge('goalsBadge','');return;}
+  if(!goal){_setBadge('goalsBadge','hint');return;}
   var log=getReadLog();
   var todayRead=log[dateKey(new Date())]||0;
   var pct=Math.min(100,Math.round(todayRead/(goal.pages||5)*100));
@@ -12613,6 +12613,8 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   var LOCK_BASE    = 700;
   var COOLDOWN_MS  = 2500;
   var RECENT_MS    = 30000;
+  var SCROLL_SETTLE_MS = 350;                     // ms after last scroll before PTR can arm
+  var TOP_EPSILON  = _ptrIsAndroid ? 3 : 1;       // px: max scrollTop still considered "at top"
 
   // ── Per-panel state ─────────────────────────────────────────────────────────
   var startY=0,startX=0;
@@ -12625,19 +12627,25 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   var _spinnerY=-60;
   // _panelScrolled: updated by scroll listener — avoids scrollTop DOM read in touchmove.
   var _panelScrolled=false;
+  var _lastScrollTime=0;    // timestamp of last scroll event inside this panel subtree
+  var _activeScroller=null; // actual scroll container detected on touchstart
   var _latestDy=0,_rafPending=false;
   var _vBuf=[],_VN=5;
 
   // ── Debug metrics (gated: window._ptrDebugMode = true to enable) ────────────
   var _dbg={moves:0,rafs:0,prevs:0,t0:0,dtSum:0,dtN:0,lastT:0};
 
-  // ── Scroll tracker — replaces scrollTop read in touchmove ──────────────────
-  // passive: true — never blocks scroll pipeline.
-  // Android: raise threshold to 6px — WebView overscroll glow can move scrollTop
-  // 1–3px transiently, causing false positives that cancel PTR before it starts.
-  panel.addEventListener('scroll',function(){
-    _panelScrolled=panel.scrollTop>(_ptrIsAndroid?6:2);
-  },{passive:true});
+  // ── Scroll tracker — catches scroll on panel AND nested containers ────────
+  // scroll events do NOT bubble, so panel.addEventListener('scroll') misses nested
+  // scrollers like #settingsContent and #gencineContent which are the real scrollers
+  // for those tabs. document capture fires for ALL scroll targets in the subtree.
+  // Android threshold 6px: WebView overscroll glow transiently moves scrollTop 1-3px.
+  document.addEventListener('scroll',function(e){
+    if(!panel.contains(e.target))return;
+    var st=(e.target).scrollTop||0;
+    _lastScrollTime=Date.now();
+    _panelScrolled=st>(_ptrIsAndroid?6:2);
+  },{passive:true,capture:true});
 
   // ── Rubber band — resistance from pixel zero, steeper above threshold ───────
   // Below threshold: linear at RESISTANCE factor (light, native feel)
@@ -12652,6 +12660,20 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(_vBuf.length<2)return 0;
     var a=_vBuf[0],b=_vBuf[_vBuf.length-1],dt=b.t-a.t;
     return dt>10?(b.y-a.y)/dt:0;
+  }
+
+  // Walk from touch target toward panel boundary.
+  // Returns the first ancestor whose scrollTop > 0 (the element that has actually scrolled),
+  // or the panel itself when nothing inside has scrolled (we are at the true top).
+  // This correctly identifies #settingsContent / #gencineContent as the real scrollers
+  // instead of their non-scrolling outer panels.
+  function _findScrollContainer(node){
+    var cur=node;
+    while(cur&&cur!==panel){
+      if((cur.scrollTop||0)>0)return cur;
+      cur=cur.parentElement;
+    }
+    return panel;
   }
 
   function _setMomentumLock(){
@@ -12743,11 +12765,17 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(_ptrAnyOverlayOpen())return;
     if(e.target&&_ptrInHorizScroll(e.target))return;
     if(Date.now()-_lastRefreshTime<COOLDOWN_MS)return;
-    if(panel.scrollTop>2)return; // only synchronous scrollTop read — on touchstart, not touchmove
+    // Identify the actual scroll container for this gesture — may be a nested element
+    // (#settingsContent, #gencineContent) rather than the outer panel itself.
+    // _findScrollContainer walks from touch target upward: first ancestor with scrollTop>0
+    // is the real scroller; falls back to panel when already at the true top.
+    _activeScroller=_findScrollContainer(e.target||panel);
+    if(_activeScroller.scrollTop>TOP_EPSILON)return; // mid-page — never arm PTR
+    if(Date.now()-_lastScrollTime<SCROLL_SETTLE_MS)return; // momentum may still be settling
 
     startY=e.touches[0].clientY;
     startX=e.touches[0].clientX;
-    _panelScrolled=false; // scroll listener will flip this if panel scrolls mid-gesture
+    _panelScrolled=false; // document capture listener flips this if any nested scroller moves
     // Spinner Y: fixed position just inside the gap that opens above the panel.
     // Captured once — no per-frame getBoundingClientRect.
     _spinnerY=Math.max((panel.getBoundingClientRect().top||0)+18,46);
