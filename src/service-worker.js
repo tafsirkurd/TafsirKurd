@@ -1,11 +1,10 @@
-const CACHE_NAME = 'tafsir-kurd-v1174';
+const CACHE_NAME = 'tafsir-kurd-v1175';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
 // Mismatches cause cache misses — browser fetches from network instead of SW cache.
 const PRECACHE = [
-  // Core app shell
-  '/app/index.html',
+  // Core app shell — index.html intentionally excluded: always served fresh from APK
   '/app/app.min.js?v=1015',
   '/app/app-styles.min.css?v=2',
   // Prayer module
@@ -174,20 +173,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ── HTML pages: stale-while-revalidate ───────────────────────────────────
-  // Serve cached HTML instantly (no network wait on app open), refresh cache in background.
-  // Hard-update overlay in app.js handles forced version upgrades when needed.
+  // ── HTML pages: always fetch fresh — never serve stale cached HTML ──────
+  // index.html references versioned JS/CSS; serving a cached old index.html would
+  // load old JS for 0.5s until the new SW activates. Since APK assets are local
+  // (no real network latency), fetch() is instant and always returns the current build.
   if (req.mode === 'navigate' || req.destination === 'document' || url.endsWith('.html')) {
     event.respondWith(
-      caches.open(CACHE_NAME).then(cache =>
-        cache.match(req).then(cached => {
-          const fetchPromise = fetch(req).then(res => {
-            if (res && res.status === 200) cache.put(req, res.clone()).catch(() => {});
-            return res;
-          }).catch(() => null);
-          return cached || fetchPromise;
-        })
-      )
+      fetch(req).catch(() => caches.match(req))
     );
     return;
   }
