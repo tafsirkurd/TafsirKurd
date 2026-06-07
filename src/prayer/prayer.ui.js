@@ -2139,6 +2139,45 @@
       return;
     }
 
+    // Try bundled static JSON immediately — local APK asset, fast even on first load.
+    // Renders the panel without any spinner in the normal case.
+    try {
+      var bundled = await window.PrayerAPI.fetchFromBundled(city, today);
+      window._prayerDataSource = 'bundled (fast-path)';
+      _currentTimings = bundled.timings;
+      _currentDateISO = today;
+      _currentData    = bundled;
+      markCityGood(city);
+      buildPanel(container, bundled, city, today);
+      startCountdown();
+      pushWidgetData(bundled, city, today);
+      console.log('[PrayerUI] source=bundled (fast-path) city=' + city + ' date=' + today + ' fajr=' + (bundled.timings && bundled.timings.Fajr));
+      _reportPrayerHealth({ city: city, date: today, status: 'fresh_fetch', timings: bundled.timings });
+      window.PrayerAPI.backgroundRefresh(city, today, function(freshData) {
+        var oldFajr = _currentTimings && _currentTimings.Fajr;
+        _currentTimings = freshData.timings;
+        _currentData    = freshData;
+        _renderedKey    = null;
+        buildPanel(container, freshData, city, today);
+        startCountdown();
+        pushWidgetData(freshData, city, today);
+        console.log('[PrayerUI] UI refreshed after bundled fast-path city=' + city + ' date=' + today);
+        _reportPrayerHealth({ city: city, date: today, status: 'stale_then_refresh', timings: freshData.timings,
+          notifRescheduled: false, changedFrom: oldFajr !== freshData.timings.Fajr ? ('fajr:' + oldFajr + '→' + freshData.timings.Fajr) : null });
+        if (getAthan()) {
+          fetchDaysData(city, today, 28).then(function(daysData) {
+            if (!daysData.length) return;
+            window.PrayerNotifications.scheduleAthanMultiDay(daysData, city, getToggles(), true);
+            window.PrayerNotifications.scheduleReminderMultiDay &&
+              window.PrayerNotifications.scheduleReminderMultiDay(daysData, getToggles(), getReminderOffset());
+          });
+        }
+      });
+      return;
+    } catch(bundledErr) {
+      console.warn('[PrayerUI] bundled fast-path failed:', bundledErr && bundledErr.message, '— falling back to network');
+    }
+
     buildLoading(container);
     /* Poll for cache every 600ms (prefetchAllCities may be in-flight) */
     var _pollStart = Date.now();
@@ -3626,18 +3665,11 @@
         // mid-month schedule updates from amozhgary.tv are picked up automatically.
         if (Cache.read(mkey) && !Cache.isStale(mkey, 12 * 3600000)) continue;
         try {
-          var url = 'https://tafsirkurd.com/prayer-kurd?city=' +
-                    encodeURIComponent(city) + '&year=' + ym.year + '&month=' + ym.month;
-          var res = await fetch(url);
-          if (!res.ok) continue;
-          var data = await res.json();
-          if (data && !data.error && data.days && Object.keys(data.days).length > 0) {
-            Cache.writeWithMeta(mkey, data, {
-              fetchedAt: Date.now(), source: 'kurd-prefetch', city: city,
-              year: ym.year, month: ym.month
-            });
-          }
-        } catch(e) { /* network error — will retry next foreground */ }
+          // Use local bundled static JSON first (instant from APK assets, works offline).
+          // fetchPrayerTimes: localStorage → static JSON → CF Worker → Aladhan, writes cache internally.
+          var sampleDate = ym.year + '-' + String(ym.month).padStart(2, '0') + '-01';
+          await API.fetchPrayerTimes(city, sampleDate);
+        } catch(e) { /* best-effort — will retry next foreground */ }
       }
     }
 
