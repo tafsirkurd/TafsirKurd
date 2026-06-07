@@ -80,7 +80,7 @@
     },
     {
       id: 'sleep', categoryKey: 'sleep', icon: 'fas fa-bed',
-      labelKey: 'adhkar.sleep', labelFallback: 'دوای خەوکردن',
+      labelKey: 'adhkar.sleep', labelFallback: 'بەرى نڤستنێ',
       subtitleKey: 'gencine.smart.sleep_hint', subtitleFallback: 'پێش خەوکردنێ بخوێنە',
       fallbackAr: 'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا',
       fallbackRepeat: 3,

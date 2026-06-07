@@ -1662,7 +1662,7 @@ function _rerenderCurrentTab(){
   else if(tab==='settings'){renderSettings();_renderHash.settings=_tabHash('settings');}
   else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
   else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
-  else if(tab==='gencine'&&window.GencineUI){GencineUI._homeEl=null;GencineUI._draw();}
+  else if(tab==='gencine'&&window.GencineUI){if(window.SmartDhikr)SmartDhikr.clearCache();GencineUI._homeEl=null;GencineUI._draw();}
   // quran tab uses data-i18n attributes — applyTranslations() handled by i18n.js before dispatch
 }
 

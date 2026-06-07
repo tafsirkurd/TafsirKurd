@@ -1546,7 +1546,7 @@ window.BULK_TRANSLATIONS = [
     // Adhkar subcategory labels
     { key_id: "adhkar.morning",         kurdish_text: "زکرێن بەیانیکردن",               category: "adhkar", page: "android" },
     { key_id: "adhkar.evening",         kurdish_text: "زکرێن ئێواربوون",                category: "adhkar", page: "android" },
-    { key_id: "adhkar.sleep",           kurdish_text: "دوای خەوکردن",                   category: "adhkar", page: "android" },
+    { key_id: "adhkar.sleep",           kurdish_text: "بەرى نڤستنێ",                   category: "adhkar", page: "android" },
     { key_id: "adhkar.waking",          kurdish_text: "دوای هاتنا خوو",                 category: "adhkar", page: "android" },
     { key_id: "adhkar.house_enter",     kurdish_text: "چونا ماڵ",                       category: "adhkar", page: "android" },
     { key_id: "adhkar.house_exit",      kurdish_text: "دەرچوونا ماڵ",                   category: "adhkar", page: "android" },

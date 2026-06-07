@@ -174,7 +174,7 @@ var ADHKAR_CAT_KEYS = ['morning','evening','sleep','waking','house_enter','house
 var ADHKAR_CAT_LABELS = {
   morning:        'زکرێن بەیانیکردن',
   evening:        'زکرێن ئێواربوون',
-  sleep:          'دوای خەوکردن',
+  sleep:          'بەرى نڤستنێ',
   waking:         'دوای هاتنا خوو',
   house_enter:    'چونا ماڵ',
   house_exit:     'دەرچوونا ماڵ',
