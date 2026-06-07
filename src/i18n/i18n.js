@@ -32,7 +32,7 @@
 'use strict';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-var CACHE_KEY        = 'tafsirkurd_i18n_v6'; // v6: force-evicts v5 (old merge order had cache > bundled)
+var CACHE_KEY        = 'tafsirkurd_i18n_v7'; // v7: cache wins over bundled — correct DB text shows instantly on load
 var HEALTH_SENT_KEY  = 'i18n_health_sent_session'; // sessionStorage — one report/session
 var _platform        = (function(){ try{ return (window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'web'; }catch(e){ return 'web'; } })();
 var REMOTE_URL       = (_platform==='web'?'':'https://tafsirkurd.com')+'/app-translations?platform='+_platform;
@@ -66,7 +66,7 @@ var CRITICAL_KEYS = [
 ['tafsirkurd_i18n_cache','tafsirkurd_i18n_cache_v2',
  'tafsirkurd_i18n_etag','tafsirkurd_i18n_etag_v2',
  'tafsirkurd_i18n_v3','tafsirkurd_i18n_v4',
- 'tafsirkurd_i18n_v5'].forEach(function(k){  // v5 evicted — v6 clears stale cache (old merge order bug)
+ 'tafsirkurd_i18n_v5','tafsirkurd_i18n_v6'].forEach(function(k){  // v6 evicted — v7 flips merge so cache wins
   try{ localStorage.removeItem(k); }catch(e){}
 });
 
@@ -115,6 +115,23 @@ function applyTranslations(){
 }
 
 // ── Cache helpers ─────────────────────────────────────────────────────────────
+
+// Adler-32-based content hash of all bundle values.
+// Detects any value change — not just key count — so stale cache is always evicted.
+function _bundleFingerprint(data){
+  if(!data) return 0;
+  var s1=1, s2=0;
+  var keys = Object.keys(data).sort();
+  for(var i=0; i<keys.length; i++){
+    var v = String(data[keys[i]]);
+    for(var j=0; j<v.length; j++){
+      s1 = (s1 + v.charCodeAt(j)) % 65521;
+      s2 = (s2 + s1) % 65521;
+    }
+  }
+  return ((s2 << 16) | s1) >>> 0;
+}
+
 function readCache(){
   try{
     var raw = localStorage.getItem(CACHE_KEY);
@@ -129,17 +146,11 @@ function readCache(){
       console.log('[i18n] Cache rejected: malformed (no dotted keys) — using bundled');
       return null;
     }
-    // Bundle-version fingerprint: __bver stores the key-count of the bundled snapshot
-    // that was current when this cache was written. If the bundle has since changed
-    // (app update added/renamed strings), reject the cache — bundled text wins instead.
-    var bundledCount = Object.keys(
-      window.KMR_TRANSLATIONS || window.__kmrBundle || {}
-    ).length;
-    if(bundledCount > 0 && data.__bver !== bundledCount){
-      console.log('[i18n] Cache rejected: bundle changed' +
-        ' (cache.__bver=' + (data.__bver || 'none') +
-        ' current_bundled_keys=' + bundledCount +
-        ') — clean start with newest bundled text');
+    // Content fingerprint: __bver is a hash of ALL bundle values.
+    // Any value change (not just key count) causes cache eviction.
+    var bundleFP = _bundleFingerprint(window.KMR_TRANSLATIONS || window.__kmrBundle || {});
+    if(bundleFP > 0 && data.__bver !== bundleFP){
+      console.log('[i18n] Cache rejected: bundle content changed — clean start');
       try{ localStorage.removeItem(CACHE_KEY); }catch(e2){}
       return null;
     }
@@ -152,8 +163,8 @@ function readCache(){
 
 function writeCache(data){
   try{
-    // Stamp __bver so future reads can detect bundle upgrades and reject stale cache
-    var toStore = Object.assign({}, data, { __bver: Object.keys(_bundledSnapshot).length });
+    // Stamp __bver content hash so future reads detect any bundle value change
+    var toStore = Object.assign({}, data, { __bver: _bundleFingerprint(_bundledSnapshot) });
     localStorage.setItem(CACHE_KEY, JSON.stringify(toStore));
   }catch(e){}
 }
@@ -397,13 +408,15 @@ function initLang(){
   // Layer 3 (remote fetch) will still override bundled for intentional admin edits.
   _cachedSnapshot = readCache();
   if(_cachedSnapshot){
-    var merged = Object.assign({}, _cachedSnapshot, _bundledSnapshot);
+    // Cache wins over bundle: last-session DB text shows instantly — zero flash.
+    // Safe because __bver fingerprint evicts stale cache whenever bundle values change.
+    var merged = Object.assign({}, _bundledSnapshot, _cachedSnapshot);
     _applyCriticalKeyGuard(merged);
     translations = merged;
     _initLayer = 'cache';
-    console.log('[i18n] Layer 2: v6 cache applied + bundled wins (' +
+    console.log('[i18n] Layer 2: v7 cache wins (' +
       Object.keys(_cachedSnapshot).length + ' cached, ' +
-      Object.keys(_bundledSnapshot).length + ' bundled) — source=cache+bundled');
+      Object.keys(_bundledSnapshot).length + ' bundled) — source=cache');
   } else {
     console.log('[i18n] Layer 2: no valid cache — source=bundled only (' +
       Object.keys(_bundledSnapshot).length + ' keys)');
