@@ -3579,11 +3579,12 @@ function renderSurahGrid(){
   }
   // Recreate observer when null (happens after leaving Quran tab) then connect to current cards
   if(!_surahBadgeObs){
+    var _badgeBfOk=document.documentElement.classList.contains('safe-render')&&!document.documentElement.classList.contains('low-end-device');
     _surahBadgeObs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         var badge=entry.target._badge||(entry.target._badge=entry.target.querySelector('.surah-num-badge'));
         if(!badge)return;
-        var bf=entry.isIntersecting?'blur(6px) saturate(140%)':'none';
+        var bf=(_badgeBfOk&&entry.isIntersecting)?'blur(6px) saturate(140%)':'none';
         badge.style.backdropFilter=bf;
         badge.style.webkitBackdropFilter=bf;
       });

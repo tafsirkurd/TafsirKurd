@@ -1044,7 +1044,14 @@
     var celWrap = document.getElementById('skyCelWrap');
     var celEl   = document.getElementById('skyCel');
     var glowEl  = document.getElementById('skyCelGlow');
-    if (celWrap) { celWrap.style.left = pos.x + '%'; celWrap.style.top = pos.y + '%'; }
+    if (celWrap) {
+      // Use transform (compositor-only) — left/top would trigger layout reflow on every sky tick
+      var _sw = scene.offsetWidth || 360;
+      var _sh = 268; // CSS fixed height of .sky-scene
+      var _tx = (pos.x / 100 * _sw).toFixed(1);
+      var _ty = (pos.y / 100 * _sh).toFixed(1);
+      celWrap.style.transform = 'translate(calc(' + _tx + 'px - 50%), calc(' + _ty + 'px - 50%))';
+    }
     if (celEl) {
       celEl.style.background = ph.c;
       celEl.className = 'sky-cel ' + (pos.isSun ? 'sky-cel-sun' : 'sky-cel-moon');
