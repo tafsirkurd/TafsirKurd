@@ -13815,7 +13815,6 @@ App.ivPlay=function(episodeId){
       function showYTErr(){
         if(_ytErrShown)return;
         _ytErrShown=true;
-        clearTimeout(window._ytTimeout);
         if(wrapper.querySelector('.yt-err-overlay'))return;
         var ov=el('div','yt-err-overlay');
         var ic=icon('fas fa-lock');ic.className+=' yt-err-icon';
@@ -13829,23 +13828,18 @@ App.ivPlay=function(episodeId){
         wrapper.appendChild(ov);
       }
 
-      // Timeout: if no onReady/onStateChange in 12s → player stuck or bot-wall
+      // Only block when YouTube explicitly fires onError (101/150 = embed disabled).
+      // Never use a timer — if the video plays, let the user watch it in-app.
       if(window._ytTimeout){clearTimeout(window._ytTimeout);window._ytTimeout=null;}
-      window._ytTimeout=setTimeout(function(){
-        if(!_ytReady&&!_ytErrShown)showYTErr();
-      },12000);
-
       if(window._ytErrHandler){window.removeEventListener('message',window._ytErrHandler);window._ytErrHandler=null;}
       window._ytErrHandler=function(e){
         if(!e.data)return;
         try{
           var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
-          // onReady / onStateChange — player is alive, cancel stuck-timeout
           if(d.event==='onReady'||(d.event==='onStateChange'&&d.info!==undefined)){
             _ytReady=true;
-            clearTimeout(window._ytTimeout);
           }
-          // onError: YT error code 100=not found, 101/150=embed disabled
+          // onError: YouTube explicitly blocked embedding — redirect to YouTube
           if(d.event==='onError'){showYTErr();}
         }catch(ex){}
       };
