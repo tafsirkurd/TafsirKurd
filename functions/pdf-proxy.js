@@ -34,6 +34,10 @@ export async function onRequest(context) {
     if (env.BOOKS_BUCKET) {
         try {
             const key = parsed.pathname.replace(/^\//, '');
+            // Only serve objects under the pdfs/ prefix — prevents exposing other bucket contents
+            if (!key.startsWith('pdfs/')) {
+                return new Response('Forbidden', { status: 403, headers: corsHeaders });
+            }
             const object = await env.BOOKS_BUCKET.get(key);
             if (object) {
                 const headers = new Headers(corsHeaders);
