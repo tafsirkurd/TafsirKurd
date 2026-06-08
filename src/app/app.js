@@ -2882,14 +2882,27 @@ function scheduleStreakReminder(){
    first listener registered, so we register it right away. */
 var _pendingPushDeepLink=null; // set by tap listener, consumed after splash
 
+function _markPushSeen(data){
+  var type=data.type||'';
+  var id=data.id||'';
+  if((type==='islamvoice_episodes'||type==='video')&&id)localStorage.setItem('lastVideoNotifId',String(id));
+  if((type==='gencine_books'||type==='gencine')&&id)localStorage.setItem('lastBookNotifId',String(id));
+}
+
 function _initPushTapListener(){
   var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
   if(!PP){return;}
+  // Mark seen when push is RECEIVED (app in foreground) so checkNewVideoNotif skips it
+  PP.addListener('pushNotificationReceived',function(notification){
+    _markPushSeen(notification.data||{});
+  });
   PP.addListener('pushNotificationActionPerformed',function(action){
     var data=(action.notification&&action.notification.data)||{};
     var type=data.type||'';
     var id=data.id||'';
     console.log('[Push] tap type='+type+' id='+id);
+    // Mark seen when push is TAPPED (cold-start or background → foreground)
+    _markPushSeen(data);
     // Store pending link — execute after splash so app is fully visible
     _pendingPushDeepLink={type:type,id:id};
     // Also try immediately in case app is already past splash (background state)
