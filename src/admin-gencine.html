@@ -1250,6 +1250,10 @@
                                 </div>
                             </div>
                             <div class="form-actions">
+                                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary);cursor:pointer;margin-right:auto">
+                                    <input type="checkbox" id="dua-no-push" style="accent-color:var(--primary)">
+                                    No notification
+                                </label>
                                 <button class="btn btn-secondary" onclick="cancelDuaEdit()">Cancel</button>
                                 <button class="btn btn-primary" onclick="saveDua()">Save Dua</button>
                             </div>
@@ -1297,6 +1301,10 @@
                                 <input type="hidden" id="hadith-sort" value="0">
                             </div>
                             <div class="form-actions">
+                                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary);cursor:pointer;margin-right:auto">
+                                    <input type="checkbox" id="hadith-no-push" style="accent-color:var(--primary)">
+                                    No notification
+                                </label>
                                 <button class="btn btn-secondary" onclick="cancelHadithEdit()">Cancel</button>
                                 <button class="btn btn-primary" onclick="saveHadith()">Save Hadith</button>
                             </div>
@@ -1421,6 +1429,10 @@
                             </div>
                         </div>
                         <div class="form-actions">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary);cursor:pointer;margin-right:auto">
+                                <input type="checkbox" id="book-no-push" style="accent-color:var(--primary)">
+                                No notification
+                            </label>
                             <button class="btn btn-primary" onclick="saveBook()">
                                 <i data-lucide="save"></i> Save Book
                             </button>
@@ -1841,6 +1853,10 @@ async function saveDua() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
+    if (!editId && savedRow && document.getElementById('dua-no-push') && document.getElementById('dua-no-push').checked) {
+        _skipAutoNotif('dua', savedRow.id);
+    }
+    var _duaNoPushEl = document.getElementById('dua-no-push'); if (_duaNoPushEl) _duaNoPushEl.checked = false;
     _logActivity(editId ? 'dua_edit' : 'dua_add', (editId ? 'Dua updated: ' : 'Dua added: ') + (savedRow && savedRow.ku ? savedRow.ku.substring(0, 60) : ''));
     if (editId && savedRow) {
         var idx = allDuas.findIndex(function(x){ return String(x.id) === String(editId); });
@@ -1972,6 +1988,10 @@ async function saveHadith() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Hadith updated.' : 'Hadith added.', 'success');
+    if (!editId && savedRow && document.getElementById('hadith-no-push') && document.getElementById('hadith-no-push').checked) {
+        _skipAutoNotif('hadith', savedRow.id);
+    }
+    var _hadithNoPushEl = document.getElementById('hadith-no-push'); if (_hadithNoPushEl) _hadithNoPushEl.checked = false;
     _logActivity(editId ? 'hadith_edit' : 'hadith_add', (editId ? 'Hadith updated: ' : 'Hadith added: ') + (savedRow && (savedRow.title || savedRow.ar) ? (savedRow.title || savedRow.ar).substring(0, 60) : ''));
     if (editId && savedRow) {
         var idx = allHadiths.findIndex(function(x){ return String(x.id) === String(editId); });
@@ -2592,6 +2612,15 @@ function filterAsma(q) { renderAsma99(); }
 function _booksToken() { return sessionStorage.getItem('adminToken') || ''; }
 
 /* Log admin action to activity log */
+function _skipAutoNotif(dlType, dlId) {
+    var token = _booksToken();
+    fetch('/admin-notifications-api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ action: 'skip_auto_notify', dlType: dlType, dlId: dlId })
+    }).catch(function(){});
+}
+
 function _logActivity(action_type, description) {
     var token = _booksToken();
     fetch('/admin-translations-api', {
@@ -2918,6 +2947,10 @@ async function saveBook() {
     if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
     var isNew = !editId;
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
+    if (isNew && r.data && r.data[0] && r.data[0].id && document.getElementById('book-no-push') && document.getElementById('book-no-push').checked) {
+        _skipAutoNotif('book', r.data[0].id);
+    }
+    var _bookNoPushEl = document.getElementById('book-no-push'); if (_bookNoPushEl) _bookNoPushEl.checked = false;
     _logActivity(editId ? 'book_edit' : 'book_add', (editId ? 'Book updated: ' : 'Book added: ') + (payload.title_ku || payload.title_ar || ''));
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
     if (isNew) {

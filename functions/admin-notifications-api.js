@@ -268,6 +268,23 @@ async function _handleRequest(context) {
 
     const { action } = body;
 
+    // ── SKIP AUTO-NOTIFY — pre-insert cancelled row so cron won't send ──
+    if (action === 'skip_auto_notify') {
+        if (!isWriter) return json({ error: 'Forbidden' }, 403);
+        const { dlType, dlId } = body;
+        if (!dlType || !dlId) return json({ error: 'dlType and dlId required' }, 400);
+        const { error } = await supabase.from('admin_notifications').insert({
+            title: '—', body: '—',
+            platform: 'all', audience: 'all',
+            deep_link_type: dlType,
+            deep_link_id: String(dlId),
+            status: 'cancelled',
+            created_by: 'skip',
+        });
+        if (error && error.code !== '23505') return json({ error: error.message }, 500);
+        return json({ success: true });
+    }
+
     // ── CLEAN SERIES — keep only the soonest, cancel the rest ────
     // Fixes duplicates created by old pre-create logic.
     if (action === 'clean_series') {

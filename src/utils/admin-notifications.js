@@ -784,13 +784,6 @@
           _add('Failed login attempt', (a.email || 'Unknown') + ' · ' + (a.ip_address || 'unknown IP'), 'security', '/admin-auth-monitor.html', 'sec_' + a.id);
         }
       })
-      // New published IslamVoice episodes
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'islamvoice_episodes' }, function(p) {
-        var ep = p.new || {};
-        if (ep.is_published) {
-          _add('New episode: ' + (ep.title || 'Untitled'), (ep.description || '').slice(0, 80), 'video', '/admin-islamvoice-management.html', 'vid_' + ep.id);
-        }
-      })
       // New admin tasks (assignments)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_tasks' }, function(p) {
         var t = p.new || {};
