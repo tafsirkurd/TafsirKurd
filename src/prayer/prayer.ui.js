@@ -353,8 +353,9 @@
     }
     p = Math.max(0, Math.min(1, p));
     // Arc: x goes left (5%) to right (95%), y = sinusoidal peak at center
+    // Endpoints at 60% keep the disc fully above the 78px horizon cityscape (190px from top)
     var x = 5 + p * 90;
-    var y = 82 - Math.sin(p * Math.PI) * 68;
+    var y = 60 - Math.sin(p * Math.PI) * 46;
     return { x: x, y: y, isSun: isSun };
   }
 
