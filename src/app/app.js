@@ -2808,17 +2808,17 @@ window._showAthanAlarmPermWarning=function(){
   icon.textContent='⚠️';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:#b45309';
-  title.textContent=t('notif.setup.athan_disabled_title','بانگ نادێت — مەرج هەیە');
+  title.textContent=t('notif.setup.athan_disabled_title','دەنگێ بانگی ناهێت — مەرجەك یێ هەی');
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
   msg.textContent=
-    'مەرجا "ئالارم و بیرهاتن" هاتیە لەناوبردن.\n\n'+
-    'بۆ چارەسەرکرنێ:\n'+
-    'ڕێکخستن ← مەرجا تایبەت ← ئالارم و بیرهاتن\n'+
-    '(Alarms & Reminders) ← ئەپێ TafsirKurd فەرمان بکە';
+    'ڕێپێدانا "Alarms & Reminders" هاتیە ڕاگرتن.\n\n'+
+    'بۆ چارەسەركرنێ:\n'+
+    'ڕێكخستن » ڕێپێدانێن تایبەت » Alarms & Reminders\n'+
+    '» ڕێپێدانێ ب ئەپێ TafsirKurd بدە (یان چالاك بكە).';
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:#b45309;color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
-  btn.textContent=t('notif.setup.go_settings','هەرە ڕێکخستن');
+  btn.textContent=t('notif.setup.go_settings','هەرە ڕێكخستنان');
   btn.onclick=function(){
     overlay.remove();
     // Open exact-alarm settings screen directly via native bridge
@@ -2828,7 +2828,7 @@ window._showAthanAlarmPermWarning=function(){
   };
   var dismissBtn=document.createElement('button');
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
-  dismissBtn.textContent=t('notif.setup.dismiss','دواتر');
+  dismissBtn.textContent=t('notif.setup.dismiss','پاشی');
   dismissBtn.onclick=function(){overlay.remove();};
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
   card.setAttribute('aria-label',title.textContent);
