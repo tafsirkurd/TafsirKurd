@@ -2766,7 +2766,7 @@ window._showBatteryOptWarning=function(){
   icon.textContent='🔋';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text,#000)';
-  title.textContent='بانگ ڕاستەوخۆ بیت';
+  title.textContent=t('notif.setup.direct_title','بانگ ڕاستەوخۆ بیت');
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
   msg.textContent=
@@ -2774,7 +2774,7 @@ window._showBatteryOptWarning=function(){
     'دوگمەیا خوارێ لێبدە و "بێ ڕێگری" هەڵبژێره.';
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
-  btn.textContent='ڤەکرنا ڕێکخستنان';
+  btn.textContent=t('notif.setup.open_settings','ڤەکرنا ڕێکخستنان');
   btn.onclick=function(){
     overlay.remove();
     var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
@@ -2782,7 +2782,7 @@ window._showBatteryOptWarning=function(){
   };
   var dismissBtn=document.createElement('button');
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
-  dismissBtn.textContent='پاشان';
+  dismissBtn.textContent=t('notif.setup.later','پاشان');
   dismissBtn.onclick=function(){overlay.remove();};
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
   card.setAttribute('aria-label',title.textContent);
@@ -2808,7 +2808,7 @@ window._showAthanAlarmPermWarning=function(){
   icon.textContent='⚠️';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:#b45309';
-  title.textContent='بانگ نادێت — مەرج هەیە';
+  title.textContent=t('notif.setup.athan_disabled_title','بانگ نادێت — مەرج هەیە');
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
   msg.textContent=
@@ -2818,7 +2818,7 @@ window._showAthanAlarmPermWarning=function(){
     '(Alarms & Reminders) ← ئەپێ TafsirKurd فەرمان بکە';
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:#b45309;color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
-  btn.textContent='هەرە ڕێکخستن';
+  btn.textContent=t('notif.setup.go_settings','هەرە ڕێکخستن');
   btn.onclick=function(){
     overlay.remove();
     // Open exact-alarm settings screen directly via native bridge
@@ -2828,7 +2828,7 @@ window._showAthanAlarmPermWarning=function(){
   };
   var dismissBtn=document.createElement('button');
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
-  dismissBtn.textContent='دواتر';
+  dismissBtn.textContent=t('notif.setup.dismiss','دواتر');
   dismissBtn.onclick=function(){overlay.remove();};
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
   card.setAttribute('aria-label',title.textContent);
@@ -6753,7 +6753,7 @@ function openDlManager(){
   var editIco=$('dlMgrEditIco');
   function _syncEditBtn(){
     if(!editBtn)return;
-    if(editLbl)editLbl.textContent=_dlMgrSelectMode?'لێزڤڕین':'هەڵبژارتن';
+    if(editLbl)editLbl.textContent=_dlMgrSelectMode?t('dl.mode_back','لێزڤڕین'):t('dl.mode_select','هەڵبژارتن');
     if(editIco)editIco.className=_dlMgrSelectMode?'fas fa-times':'fas fa-check-double';
     editBtn.style.color=_dlMgrSelectMode?'var(--danger,#e05)':'var(--accent)';
   }
@@ -9033,8 +9033,8 @@ function _buildPrayerProgressPanel(panel){
     var title=el('div','ppp-ns-title','دەستپێکرنەکا نوی');
     var sub=el('div','ppp-ns-sub','هەمی تۆمارێن نڤێژان دێ هێنە ژێبرن، تۆ دێ ژ ئەڤرۆ پێڤە دەستپێکەی.');
     var btns=el('div','ppp-ns-btns');
-    var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent='بەلێ، ژێ ببە';
-    var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent='نەخێر';
+    var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent=t('common.yes_delete','بەلێ، ژێ ببە');
+    var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent=t('common.no','نەخێر');
     function closeOv(){document.body.removeChild(ov);}
     on(yesBtn,'click',function(){
       closeOv();
