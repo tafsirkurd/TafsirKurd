@@ -64,4 +64,4 @@ html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5),ht
 .pdf-toc-row-title{flex:1;font-size:.8rem;color:var(--text);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .pdf-toc-row-page{font-size:.72rem;color:var(--text3);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:28px;text-align:left}
 /* ── NEW badge on cover ── */
-.book-cover-new-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--accent-t,#fff);padding:2px 9px;border-radius:20px;font-size:.6rem;font-weight:700;letter-spacing:.15px;white-space:nowrap;z-index:4;pointer-events:none}
+.book-cover-new-badge{position:absolute;top:8px;left:8px;background:var(--accent);color:var(--accent-t,#fff);padding:2px 9px;border-radius:20px;font-size:.6rem;font-weight:700;letter-spacing:.15px;white-space:nowrap;z-index:4;pointer-events:none}

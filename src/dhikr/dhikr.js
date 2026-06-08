@@ -2856,6 +2856,9 @@ window.GencineUI = {
           if (img.complete) img.classList.add('loaded'); cw.appendChild(img);
         } else { var ph = document.createElement('div'); ph.className='book-cover-placeholder'; var phi=document.createElement('i'); phi.className='fas fa-book'; ph.appendChild(phi); cw.appendChild(ph); }
         var vcBadge = document.createElement('div'); vcBadge.className='book-series-vol-count-badge'; vcBadge.textContent=sg.volumes.length+' '+T('gencine.series_vols','بەرگ'); cw.appendChild(vcBadge);
+        if (sg.volumes.some(function(v){ return v.badge_until && new Date(v.badge_until).getTime() > Date.now(); })) {
+          var snb = document.createElement('div'); snb.className = 'book-cover-new-badge'; snb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; cw.appendChild(snb);
+        }
         row.appendChild(cw);
         var info = document.createElement('div'); info.className = 'book-series-info';
         var titleEl = document.createElement('div'); titleEl.className='book-series-title'; titleEl.textContent=sg.series_title_ku||''; info.appendChild(titleEl);
@@ -2891,6 +2894,9 @@ window.GencineUI = {
           var vTit=document.createElement('div'); vTit.className='book-series-vol-title'; vTit.textContent=vol.title_ku||vol.title_ar||(T('gencine.series_vol_lbl','بەرگ')+' '+(vol.volume_number||'')); vInf.appendChild(vTit);
           if (vol.pages) { var vPg=document.createElement('div'); vPg.className='book-pages'; vPg.textContent=vol.pages+' '+T('gencine.pages_unit','ڕۆپەل'); vInf.appendChild(vPg); }
           vRow.appendChild(vInf);
+          if (vol.badge_until && new Date(vol.badge_until).getTime() > Date.now()) {
+            var vNb = document.createElement('div'); vNb.className = 'iv-new-badge'; vNb.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; vRow.appendChild(vNb);
+          }
           var vProg=_bookGetProgress(vol.id);
           if (vProg&&vProg.page>0&&vProg.total>0) { var vPEl=document.createElement('div'); vPEl.className='book-series-vol-pct'; vPEl.textContent=Math.min(100,Math.round(vProg.page/vProg.total*100))+'%'; vRow.appendChild(vPEl); }
           if (window.PdfStore&&vol.pdf_url) {
@@ -3026,7 +3032,7 @@ window.GencineUI = {
           PdfStore.has(book).then(function(cached) {
             if (cached) { dlBadge.classList.add('cached'); dlIco.className = 'fas fa-check'; }
           });
-          card.appendChild(dlBadge);
+          coverWrap.appendChild(dlBadge);
         }
 
         /* Bookmark — bottom-right of info area */
