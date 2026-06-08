@@ -3366,7 +3366,7 @@ window.GencineUI = {
 
       // ── TOC deep scan ──────────────────────────────────────────────────────────
       var _tocData = null;
-      try { var _st = JSON.parse(localStorage.getItem('pdfToc_'+book.id)||'null'); if(_st&&_st.length){_tocData=_st; self._pdfHasToc=true; self._updateHdr();} } catch(e){}
+      try { var _st = JSON.parse(localStorage.getItem('pdfToc_'+book.id)||'null'); if(_st&&_st.length){_tocData=_st; self._pdfHasToc=true; self._updateHeader();} } catch(e){}
       pdf.getOutline().then(function(outline){
         if (!outline||!outline.length) return;
         var flat=[];
@@ -3374,7 +3374,7 @@ window.GencineUI = {
         _co(outline,0); if (!flat.length) return;
         var resolved=new Array(flat.length), done=0;
         flat.forEach(function(item,i){
-          function _res(pg){ resolved[i]={title:item.title,page:pg||1,depth:item.depth}; if(++done===flat.length){ _tocData=resolved; try{localStorage.setItem('pdfToc_'+book.id,JSON.stringify(resolved));}catch(e2){} self._pdfHasToc=true; self._updateHdr(); } }
+          function _res(pg){ resolved[i]={title:item.title,page:pg||1,depth:item.depth}; if(++done===flat.length){ _tocData=resolved; try{localStorage.setItem('pdfToc_'+book.id,JSON.stringify(resolved));}catch(e2){} self._pdfHasToc=true; self._updateHeader(); } }
           try {
             var dest=item.dest; if(!dest){_res(1);return;}
             var getRef=typeof dest==='string'?pdf.getDestination(dest).then(function(d){return d&&d[0];}):Promise.resolve(dest&&dest[0]);
@@ -3732,7 +3732,7 @@ window.GencineUI = {
         self._pdfDoc = null;
         // TOC cleanup
         if (_tocDrawer) { try { _tocDrawer.remove(); } catch(e){} _tocDrawer = null; }
-        self._pdfHasToc = false; self._updateHdr();
+        self._pdfHasToc = false; self._updateHeader();
       };
     };
 
