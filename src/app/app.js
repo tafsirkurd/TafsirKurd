@@ -2892,6 +2892,14 @@ function _markPushSeen(data){
 function _initPushTapListener(){
   var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
   if(!PP){return;}
+  // Scan notifications already in the tray — covers killed-app-manual-open scenario
+  // where pushNotificationReceived never fires but the notification is still visible.
+  // Runs before checkNew* (which are delayed 1.5-2.5s), so dedup keys are set in time.
+  if(PP.getDeliveredNotifications){
+    PP.getDeliveredNotifications().then(function(r){
+      (r.notifications||[]).forEach(function(n){_markPushSeen(n.data||{});});
+    }).catch(function(){});
+  }
   // Mark seen when push is RECEIVED (app in foreground) so checkNewVideoNotif skips it
   PP.addListener('pushNotificationReceived',function(notification){
     _markPushSeen(notification.data||{});
