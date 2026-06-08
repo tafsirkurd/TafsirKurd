@@ -163,8 +163,20 @@ async function _handleRequest(context) {
 
         // Insert a notification and either send immediately (no scheduledAt) or
         // save as scheduled for a future PM slot (scheduledAt provided).
-        // The unique index on (deep_link_type, deep_link_id) deduplicates across runs.
+        // Dedup: explicit pre-check so it works regardless of whether the unique index
+        // is full or partial (partial indexes exclude cancelled rows and would miss skips).
         async function sendAutoNotif(title, body, image_url, dlType, dlId, scheduledAt) {
+            // Check for any existing row for this item (sent, scheduled, or manually skipped)
+            const { data: existing } = await supabase
+                .from('admin_notifications')
+                .select('id, status')
+                .eq('deep_link_type', dlType)
+                .eq('deep_link_id', String(dlId))
+                .in('status', ['sent', 'sending', 'scheduled', 'cancelled'])
+                .limit(1)
+                .maybeSingle();
+            if (existing) return { skipped: true };
+
             const { data: notif, error } = await supabase
                 .from('admin_notifications')
                 .insert({
@@ -181,7 +193,7 @@ async function _handleRequest(context) {
                 })
                 .select()
                 .single();
-            if (error?.code === '23505') return { skipped: true }; // already notified
+            if (error?.code === '23505') return { skipped: true }; // fallback for unique constraint
             if (error || !notif) return { error: error?.message || 'insert failed' };
             if (scheduledAt) return { scheduled: true, scheduled_at: scheduledAt };
             return await doSend(supabase, env, notif, notif.id, 'auto');

@@ -9,6 +9,10 @@ compatibility_flags = ["nodejs_compat"]
 binding = "ADMIN_KV"
 id = "398995d1041042b498189d180b883513"
 
+[[r2_buckets]]
+binding = "BOOKS_BUCKET"
+bucket_name = "tafsirkurd-books"
+
 [env.production]
 name = "tafsirkurd"
 compatibility_flags = ["nodejs_compat"]
@@ -16,3 +20,7 @@ compatibility_flags = ["nodejs_compat"]
 [[env.production.kv_namespaces]]
 binding = "ADMIN_KV"
 id = "398995d1041042b498189d180b883513"
+
+[[env.production.r2_buckets]]
+binding = "BOOKS_BUCKET"
+bucket_name = "tafsirkurd-books"

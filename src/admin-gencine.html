@@ -1250,10 +1250,6 @@
                                 </div>
                             </div>
                             <div class="form-actions">
-                                <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary);cursor:pointer;margin-right:auto">
-                                    <input type="checkbox" id="dua-no-push" style="accent-color:var(--primary)">
-                                    No notification
-                                </label>
                                 <button class="btn btn-secondary" onclick="cancelDuaEdit()">Cancel</button>
                                 <button class="btn btn-primary" onclick="saveDua()">Save Dua</button>
                             </div>
@@ -1853,10 +1849,6 @@ async function saveDua() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
-    if (!editId && savedRow && document.getElementById('dua-no-push') && document.getElementById('dua-no-push').checked) {
-        _skipAutoNotif('dua', savedRow.id);
-    }
-    var _duaNoPushEl = document.getElementById('dua-no-push'); if (_duaNoPushEl) _duaNoPushEl.checked = false;
     _logActivity(editId ? 'dua_edit' : 'dua_add', (editId ? 'Dua updated: ' : 'Dua added: ') + (savedRow && savedRow.ku ? savedRow.ku.substring(0, 60) : ''));
     if (editId && savedRow) {
         var idx = allDuas.findIndex(function(x){ return String(x.id) === String(editId); });

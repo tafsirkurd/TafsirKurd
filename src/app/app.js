@@ -2886,7 +2886,7 @@ function _markPushSeen(data){
   var type=data.type||'';
   var id=data.id||'';
   if((type==='islamvoice_episodes'||type==='video')&&id)localStorage.setItem('lastVideoNotifId',String(id));
-  if((type==='gencine_books'||type==='gencine')&&id)localStorage.setItem('lastBookNotifId',String(id));
+  if((type==='gencine_books'||type==='gencine'||type==='book')&&id)localStorage.setItem('lastBookNotifId',String(id));
 }
 
 function _initPushTapListener(){
@@ -2923,7 +2923,7 @@ function _handlePushDeepLink(type,id){
     // For islamvoice: episode list must exist
     if(type==='islamvoice_episodes'||type==='video')return !!(S.ivEpisodes&&S.ivEpisodes.length);
     // For gencine: GencineUI must exist
-    if(type==='gencine_books'||type==='gencine')return !!(window.GencineUI);
+    if(type==='gencine_books'||type==='gencine'||type==='book')return !!(window.GencineUI);
     // verse, prayer, update, default — just need App to exist
     return true;
   }
@@ -2951,7 +2951,7 @@ function _handlePushDeepLink(type,id){
         setTimeout(_ivOpen,300);
       }
 
-    }else if(type==='gencine_books'||type==='gencine'){
+    }else if(type==='gencine_books'||type==='gencine'||type==='book'){
       App.tab('gencine');
       if(id){
         var _bkT=0;
