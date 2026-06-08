@@ -975,6 +975,8 @@
       var _half0 = 26;
       var _tx0 = Math.max(_half0, Math.min(_sw0 - _half0, _initPos.x / 100 * _sw0));
       var _ty0 = Math.max(_half0, Math.min(242, _initPos.y / 100 * 268));
+      _celWrapInit.dataset.baseX = _tx0.toFixed(1);
+      _celWrapInit.dataset.baseY = _ty0.toFixed(1);
       _celWrapInit.style.transition = 'none';
       _celWrapInit.style.transform = 'translate(calc(' + _tx0.toFixed(1) + 'px - 50%), calc(' + _ty0.toFixed(1) + 'px - 50%))';
     }
@@ -1065,6 +1067,8 @@
       var _half = 26; // half of 52px cel-wrap — clamp so disc never clips at any edge
       var _tx = Math.max(_half, Math.min(_sw - _half, pos.x / 100 * _sw));
       var _ty = Math.max(_half, Math.min(_sh - _half, pos.y / 100 * _sh));
+      celWrap.dataset.baseX = _tx.toFixed(1);
+      celWrap.dataset.baseY = _ty.toFixed(1);
       celWrap.style.transform = 'translate(calc(' + _tx.toFixed(1) + 'px - 50%), calc(' + _ty.toFixed(1) + 'px - 50%))';
     }
     if (celEl) {
@@ -1290,10 +1294,13 @@
       if (cl) cl.style.transform = cl.style.transform.replace(/\s*translateY\([^)]*\)/,'') + ' translateY(' + (y * 0.08).toFixed(2) + 'px)';
     });
 
-    // Layer 5 — Sun/moon (mid-depth)
+    // Layer 5 — Sun/moon (mid-depth) — add parallax offset to stored base position
     var celWrap = document.getElementById('skyCelWrap');
-    if (celWrap) celWrap.style.transform =
-      'translate(calc(-50% + ' + (x * 0.40).toFixed(2) + 'px), calc(-50% + ' + (y * 0.22).toFixed(2) + 'px))';
+    if (celWrap) {
+      var _cbx = parseFloat(celWrap.dataset.baseX) || 0;
+      var _cby = parseFloat(celWrap.dataset.baseY) || 0;
+      celWrap.style.transform = 'translate(calc(' + _cbx.toFixed(1) + 'px + ' + (x * 0.40).toFixed(2) + 'px - 50%), calc(' + _cby.toFixed(1) + 'px + ' + (y * 0.22).toFixed(2) + 'px - 50%))';
+    }
 
     // Layer 6 — Birds (slightly closer than sun)
     var birds = document.getElementById('skyBirds');
