@@ -2923,7 +2923,7 @@ function _handlePushDeepLink(type,id){
     // For islamvoice: episode list must exist
     if(type==='islamvoice_episodes'||type==='video')return !!(S.ivEpisodes&&S.ivEpisodes.length);
     // For gencine: GencineUI must exist
-    if(type==='gencine_books'||type==='gencine')return !!(window.GencineUI);
+    if(type==='gencine_books'||type==='gencine'||type==='book')return !!(window.GencineUI);
     // verse, prayer, update, default — just need App to exist
     return true;
   }
