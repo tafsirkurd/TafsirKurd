@@ -966,6 +966,19 @@
     var horizEl = scene.querySelector('.sky-horizon');
     if (horizEl) { horizEl.style.left = '-3.5%'; horizEl.style.width = '107%'; }
 
+    // Place the celestial body at its correct position immediately (before the RAF that
+    // calls _doUpdateSky) so the disc never flashes in the top-left corner on open.
+    var _celWrapInit = document.getElementById('skyCelWrap');
+    if (_celWrapInit && _currentTimings && _currentDateISO) {
+      var _initPos = _celestialPos(_currentTimings, _currentDateISO, new Date());
+      var _sw0 = scene.offsetWidth || 360;
+      var _half0 = 26;
+      var _tx0 = Math.max(_half0, Math.min(_sw0 - _half0, _initPos.x / 100 * _sw0));
+      var _ty0 = Math.max(_half0, Math.min(242, _initPos.y / 100 * 268));
+      _celWrapInit.style.transition = 'none';
+      _celWrapInit.style.transform = 'translate(calc(' + _tx0.toFixed(1) + 'px - 50%), calc(' + _ty0.toFixed(1) + 'px - 50%))';
+    }
+
     // Populate dates — Hijri only, with Intl fallback if API has no hijri field
     var dateInfo = data.date;
     var dateLines = [];
