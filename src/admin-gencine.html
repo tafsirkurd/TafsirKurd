@@ -1383,6 +1383,30 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Series / Multi-volume -->
+                            <div class="form-row" style="align-items:center;gap:12px;padding:10px 0 4px;border-top:1px solid var(--border-subtle,rgba(255,255,255,.06));margin-top:4px">
+                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
+                                    <input type="checkbox" id="book-is-series" style="width:16px;height:16px;accent-color:var(--primary)" onchange="toggleSeriesFields(this.checked)">
+                                    Part of a Series (multi-volume)
+                                </label>
+                            </div>
+                            <div id="book-series-fields" style="display:none">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex:2">
+                                        <label class="form-label">Series ID <span style="color:var(--text-tertiary);font-weight:400">(short slug, e.g. ibn-kathir-bidaya)</span></label>
+                                        <input type="text" id="book-series-id" class="form-input" placeholder="ibn-kathir-bidaya" autocomplete="off" list="dl-series-id">
+                                        <datalist id="dl-series-id"></datalist>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Volume #</label>
+                                        <input type="number" id="book-volume-number" class="form-input" placeholder="1" min="1">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Series Title (Kurdish) <span style="color:var(--text-tertiary);font-weight:400">— shown as series name in app</span></label>
+                                    <input type="text" id="book-series-title-ku" class="form-input" placeholder="ناڤێ زنجیرەیê" dir="rtl">
+                                </div>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Sort Order</label>
@@ -1458,6 +1482,16 @@ function topAddClick() {
 }
 
 /* ── Collapsible forms ── */
+function toggleSeriesFields(checked) {
+    document.getElementById('book-series-fields').style.display = checked ? '' : 'none';
+    // Populate series ID datalist from existing books
+    if (checked) {
+        var dl = document.getElementById('dl-series-id'); if (!dl) return;
+        var seen = {};
+        (allBooks||[]).forEach(function(b){ if(b.series_id && !seen[b.series_id]){ seen[b.series_id]=true; var opt=document.createElement('option'); opt.value=b.series_id; dl.appendChild(opt); } });
+    }
+}
+
 function toggleForm(prefix) {
     var body = document.getElementById(prefix + '-form-body');
     var toggle = document.getElementById(prefix + '-form-toggle');
@@ -2721,6 +2755,12 @@ function editBook(id) {
     document.getElementById('book-cover-url').value = book.cover_url || '';
     document.getElementById('book-sort').value = book.sort_order || 0;
     document.getElementById('book-active').checked = book.active !== false;
+    var hasSeries = !!(book.series_id);
+    document.getElementById('book-is-series').checked = hasSeries;
+    document.getElementById('book-series-id').value = book.series_id || '';
+    document.getElementById('book-series-title-ku').value = book.series_title_ku || '';
+    document.getElementById('book-volume-number').value = book.volume_number || '';
+    document.getElementById('book-series-fields').style.display = hasSeries ? '' : 'none';
     /* Show cover preview if URL exists */
     var preview = document.getElementById('book-cover-preview');
     if (preview) {
@@ -2742,9 +2782,12 @@ function editBook(id) {
 function cancelBookEdit() {
     document.getElementById('book-edit-id').value = '';
     ['book-title-ku','book-author-ku','book-category',
-     'book-pages','book-pdf-url','book-description','book-cover-url'].forEach(function(id) {
+     'book-pages','book-pdf-url','book-description','book-cover-url',
+     'book-series-id','book-series-title-ku','book-volume-number'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
     });
+    document.getElementById('book-is-series').checked = false;
+    document.getElementById('book-series-fields').style.display = 'none';
     var maxSort = allBooks.reduce(function(m, b){ return Math.max(m, b.sort_order || 0); }, 0);
     document.getElementById('book-sort').value = maxSort + 1;
     document.getElementById('book-active').checked = true;
@@ -2853,18 +2896,22 @@ async function saveBook() {
         ? (allBooks.length ? Math.max.apply(null, allBooks.map(function(b){ return b.sort_order || 0; })) + 1 : 1)
         : (manualSort || 0);
 
+    var isSeries = document.getElementById('book-is-series').checked;
     var payload = {
-        title_ku:    titleKu || null,
-        title_ar:    titleAr || null,
-        author_ku:   document.getElementById('book-author-ku').value.trim() || null,
-        author_ar:   null,
-        category:    document.getElementById('book-category').value.trim() || null,
-        pages:       parseInt(document.getElementById('book-pages').value) || null,
-        pdf_url:     pdfUrl,
-        description: document.getElementById('book-description').value.trim() || null,
-        cover_url:   coverUrl,
-        sort_order:  autoSort,
-        active:      document.getElementById('book-active').checked
+        title_ku:         titleKu || null,
+        title_ar:         titleAr || null,
+        author_ku:        document.getElementById('book-author-ku').value.trim() || null,
+        author_ar:        null,
+        category:         document.getElementById('book-category').value.trim() || null,
+        pages:            parseInt(document.getElementById('book-pages').value) || null,
+        pdf_url:          pdfUrl,
+        description:      document.getElementById('book-description').value.trim() || null,
+        cover_url:        coverUrl,
+        sort_order:       autoSort,
+        active:           document.getElementById('book-active').checked,
+        series_id:        isSeries ? (document.getElementById('book-series-id').value.trim() || null) : null,
+        series_title_ku:  isSeries ? (document.getElementById('book-series-title-ku').value.trim() || null) : null,
+        volume_number:    isSeries ? (parseInt(document.getElementById('book-volume-number').value) || null) : null
     };
     var r = editId ? await _booksApi({ action: 'update', id: editId, payload: payload })
                    : await _booksApi({ action: 'insert', payload: payload });

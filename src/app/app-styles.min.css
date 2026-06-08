@@ -23,4 +23,45 @@ html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(3),ht
 html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(4),html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(4)::after{animation-delay:1.5s}
 html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5),html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5)::after{animation-delay:2s}
 /* Desktop hover: always animate */
-@media(hover:hover){.prayer-grid-card--interactive{animation:2.7s ease-in-out infinite card-float}.prayer-grid-card--interactive::after{animation:2.7s ease-in-out infinite card-line}.prayer-grid-card--interactive:nth-child(2),.prayer-grid-card--interactive:nth-child(2)::after{animation-delay:.5s}.prayer-grid-card--interactive:nth-child(3),.prayer-grid-card--interactive:nth-child(3)::after{animation-delay:1s}.prayer-grid-card--interactive:nth-child(4),.prayer-grid-card--interactive:nth-child(4)::after{animation-delay:1.5s}.prayer-grid-card--interactive:nth-child(5),.prayer-grid-card--interactive:nth-child(5)::after{animation-delay:2s}}
+@media(hover:hover){.prayer-grid-card--interactive{animation:2.7s ease-in-out infinite card-float}.prayer-grid-card--interactive::after{animation:2.7s ease-in-out infinite card-line}.prayer-grid-card--interactive:nth-child(2),.prayer-grid-card--interactive:nth-child(2)::after{animation-delay:.5s}.prayer-grid-card--interactive:nth-child(3),.prayer-grid-card--interactive:nth-child(3)::after{animation-delay:1s}.prayer-grid-card--interactive:nth-child(4),.prayer-grid-card--interactive:nth-child(4)::after{animation-delay:1.5s}.prayer-grid-card--interactive:nth-child(5),.prayer-grid-card--interactive:nth-child(5)::after{animation-delay:2s}}/* ── Series cards ── */
+.book-series-card{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;direction:rtl;cursor:default}
+.book-series-row{display:flex;gap:12px;padding:12px;align-items:stretch}
+.book-series-cover-wrap{width:72px!important;min-width:72px!important;flex-shrink:0;border-radius:10px;overflow:hidden}
+.book-series-info{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.book-series-title{font-size:.9rem;font-weight:800;color:var(--text);line-height:1.4}
+.book-series-vol-count-badge{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:.58rem;font-weight:700;color:#fff;background:rgba(0,0,0,.62);padding:3px 0;letter-spacing:.04em}
+.book-series-prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:2px}
+.book-series-prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.book-series-prog-lbl{font-size:.65rem;color:var(--text3)}
+.book-series-btns{display:flex;gap:6px;align-items:center;margin-top:auto;padding-top:6px;flex-wrap:wrap}
+.book-series-continue{display:flex;align-items:center;gap:4px;padding:5px 12px;background:var(--accent);color:var(--accent-t,#fff);border:none;border-radius:20px;font-size:.72rem;font-weight:700;cursor:pointer}
+.book-series-expand{display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--bg3,var(--bg));color:var(--text2);border:1px solid var(--border);border-radius:20px;font-size:.72rem;cursor:pointer}
+.book-series-vols{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.book-series-vols.open{max-height:4000px}
+.book-series-vol-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--border);cursor:pointer;direction:rtl;transition:background .15s}
+.book-series-vol-row:active{background:var(--bg3,rgba(0,0,0,.04))}
+.book-series-vol-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-t,#fff);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
+.book-series-vol-info{flex:1;min-width:0}
+.book-series-vol-title{font-size:.82rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-series-vol-pct{font-size:.7rem;font-weight:700;color:var(--accent);flex-shrink:0}
+.book-series-vol-dl{width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--text3);flex-shrink:0}
+.book-series-vol-dl.cached{background:var(--accent);color:var(--accent-t,#fff)}
+.book-series-dl-wrap{padding:10px 12px;border-top:1px solid var(--border)}
+.book-series-dl-all{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--text2);cursor:pointer;width:100%;justify-content:center;transition:opacity .2s}
+.book-series-dl-all:disabled{opacity:.5;cursor:not-allowed}
+/* ── PDF TOC drawer ── */
+.pdf-toc-drawer{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.45);display:flex;justify-content:flex-end}
+.pdf-toc-inner{width:min(320px,85vw);background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);height:100%}
+.pdf-toc-drawer.open .pdf-toc-inner{transform:translateX(0)}
+.pdf-toc-hdr{display:flex;align-items:center;gap:8px;padding:16px 14px;border-bottom:1px solid var(--border);direction:rtl;flex-shrink:0}
+.pdf-toc-title{flex:1;font-size:.95rem;font-weight:700;color:var(--text)}
+.pdf-toc-close{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;padding:6px;border-radius:8px}
+.pdf-toc-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pdf-toc-row{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:none;border-bottom:1px solid var(--border);background:none;text-align:right;direction:rtl;cursor:pointer;gap:8px;transition:background .15s}
+.pdf-toc-row:active{background:var(--bg2)}
+.pdf-toc-row.depth-1{padding-right:26px}
+.pdf-toc-row.depth-2{padding-right:40px}
+.pdf-toc-row-title{flex:1;font-size:.8rem;color:var(--text);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pdf-toc-row-page{font-size:.72rem;color:var(--text3);font-variant-numeric:tabular-nums;flex-shrink:0;min-width:28px;text-align:left}
+/* ── NEW badge on cover ── */
+.book-cover-new-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--accent-t,#fff);padding:2px 9px;border-radius:20px;font-size:.6rem;font-weight:700;letter-spacing:.15px;white-space:nowrap;z-index:4;pointer-events:none}

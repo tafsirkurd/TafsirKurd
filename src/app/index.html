@@ -192,8 +192,8 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 /* Critical: theme bg applied before external CSS loads — prevents flash */
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
-<link rel="preload" href="/app/app-styles.min.css?v=2" as="style">
-<link rel="stylesheet" href="/app/app-styles.min.css?v=2">
+<link rel="preload" href="/app/app-styles.min.css?v=3" as="style">
+<link rel="stylesheet" href="/app/app-styles.min.css?v=3">
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 <body>
@@ -409,6 +409,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
                border-radius:7px;padding:4px 2px;-moz-appearance:textfield;outline:none">
       <button class="hdr-btn" id="pdfNextBtn" title="پەڕەی دواتر"><i class="fas fa-chevron-down"></i></button>
     </div>
+    <button class="hdr-btn" id="pdfTocBtn" style="display:none" title="فهرست"><i class="fas fa-list-ul"></i></button>
     <button class="hdr-btn" id="pdfFsBtn" style="display:none" title="پڕ شاشە" data-i18n-title="qs.fullscreen"><i class="fas fa-expand"></i></button>
   </div>
   <div id="gencineContent"></div>
