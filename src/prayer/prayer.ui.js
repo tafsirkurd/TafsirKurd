@@ -1048,9 +1048,10 @@
       // Use transform (compositor-only) — left/top would trigger layout reflow on every sky tick
       var _sw = scene.offsetWidth || 360;
       var _sh = 268; // CSS fixed height of .sky-scene
-      var _tx = (pos.x / 100 * _sw).toFixed(1);
-      var _ty = (pos.y / 100 * _sh).toFixed(1);
-      celWrap.style.transform = 'translate(calc(' + _tx + 'px - 50%), calc(' + _ty + 'px - 50%))';
+      var _half = 26; // half of 52px cel-wrap — clamp so disc never clips at any edge
+      var _tx = Math.max(_half, Math.min(_sw - _half, pos.x / 100 * _sw));
+      var _ty = Math.max(_half, Math.min(_sh - _half, pos.y / 100 * _sh));
+      celWrap.style.transform = 'translate(calc(' + _tx.toFixed(1) + 'px - 50%), calc(' + _ty.toFixed(1) + 'px - 50%))';
     }
     if (celEl) {
       celEl.style.background = ph.c;
