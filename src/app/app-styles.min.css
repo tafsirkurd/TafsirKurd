@@ -46,6 +46,10 @@ html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5),ht
 .book-series-vol-pct{font-size:.7rem;font-weight:700;color:var(--accent);flex-shrink:0}
 .book-series-vol-dl{width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--text3);flex-shrink:0}
 .book-series-vol-dl.cached{background:var(--accent);color:var(--accent-t,#fff)}
+.book-series-save{width:30px;height:30px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--text3);flex-shrink:0;border:none;cursor:pointer;transition:color .15s;padding:0}
+.book-series-save.saved{color:var(--accent)}
+.book-series-vol-save{width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--text3);flex-shrink:0;border:none;cursor:pointer;transition:color .15s,background .15s;padding:0}
+.book-series-vol-save.saved{color:var(--accent)}
 .book-series-dl-wrap{padding:10px 12px;border-top:1px solid var(--border)}
 .book-series-dl-all{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.78rem;color:var(--text2);cursor:pointer;width:100%;justify-content:center;transition:opacity .2s}
 .book-series-dl-all:disabled{opacity:.5;cursor:not-allowed}

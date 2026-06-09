@@ -2811,7 +2811,9 @@ window.GencineUI = {
       _renderItems.forEach(function(item) {
         if (!item._isSeries) return;
         item.volumes.sort(function(a,b){ return (a.volume_number||0)-(b.volume_number||0); });
-        if (!item.cover_url && item.volumes.length) item.cover_url = item.volumes[0].cover_url;
+        // Scan volumes in volume-number order to find first with a cover — DB query order is unreliable
+        var _covVol = item.volumes.find(function(v){ return v.cover_url; });
+        item.cover_url = _covVol ? _covVol.cover_url : null;
       });
 
       if (!_renderItems.length) {
@@ -2869,11 +2871,13 @@ window.GencineUI = {
           var vl=lastRead.vol.volume_number ? (' '+T('gencine.series_vol_lbl','بەرگ')+' '+lastRead.vol.volume_number+' ·') : '';
           lrEl.appendChild(document.createTextNode(vl+' '+T('gencine.page_lbl','ڕ')+'. '+lastRead.prog.page+' — '+_timeAgo(lastRead.prog.ts))); info.appendChild(lrEl);
         }
-        if (readCount > 0) {
-          var pb=document.createElement('div'); pb.className='book-series-prog-bar';
-          var pf=document.createElement('div'); pf.className='book-series-prog-fill'; pf.style.width=Math.round(readCount/sg.volumes.length*100)+'%'; pb.appendChild(pf); info.appendChild(pb);
-          var pl=document.createElement('div'); pl.className='book-series-prog-lbl'; pl.textContent=readCount+' / '+sg.volumes.length+' '+T('gencine.series_done','خوێندیە'); info.appendChild(pl);
-        }
+        var _pctSum=0; sg.volumes.forEach(function(v){ var p=_bookGetProgress(v.id); if(p&&p.total>0) _pctSum+=Math.min(100,Math.round(p.page/p.total*100)); });
+        var _avgPct=sg.volumes.length>0?Math.round(_pctSum/sg.volumes.length):0;
+        var pb=document.createElement('div'); pb.className='book-series-prog-bar';
+        var pf=document.createElement('div'); pf.className='book-series-prog-fill'; pf.style.width=_avgPct+'%'; pb.appendChild(pf); info.appendChild(pb);
+        var pl=document.createElement('div'); pl.className='book-series-prog-lbl';
+        pl.textContent=(_avgPct>0?(_avgPct+'% · '):'')+(readCount>0?readCount+' / '+sg.volumes.length+' '+T('gencine.series_done','خوێندیە'):sg.volumes.length+' '+T('gencine.series_vols','بەرگ'));
+        info.appendChild(pl);
         var btnRow=document.createElement('div'); btnRow.className='book-series-btns';
         if (lastRead) {
           var contBtn=document.createElement('button'); contBtn.className='book-series-continue';
@@ -2882,6 +2886,11 @@ window.GencineUI = {
           (function(lv){ contBtn.onclick=function(e){ e.stopPropagation(); _openBookReader(lv.vol); }; })(lastRead);
           btnRow.appendChild(contBtn);
         }
+        var _sAny=sg.volumes.some(function(v){ return _bookIsSaved(v.id); });
+        var saveAllBtn=document.createElement('button'); saveAllBtn.className='book-series-save'+(_sAny?' saved':'');
+        var saIco=document.createElement('i'); saIco.className='fas fa-bookmark'; saveAllBtn.appendChild(saIco);
+        (function(btn){ saveAllBtn.onclick=function(e){ e.stopPropagation(); var any=sg.volumes.some(function(v){ return _bookIsSaved(v.id); }); sg.volumes.forEach(function(v){ if(any){ if(_bookIsSaved(v.id)) _bookToggleSave(v.id,v); } else { if(!_bookIsSaved(v.id)) _bookToggleSave(v.id,v); } }); btn.classList.toggle('saved',!any); if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics) window.Capacitor.Plugins.Haptics.impact({style:'LIGHT'}); }; })(saveAllBtn);
+        btnRow.appendChild(saveAllBtn);
         var eBtn=document.createElement('button'); eBtn.className='book-series-expand';
         var eIco=document.createElement('i'); eIco.className='fas fa-'+(expanded?'chevron-up':'chevron-down'); eBtn.appendChild(eIco);
         eBtn.appendChild(document.createTextNode(' '+sg.volumes.length+' '+T('gencine.series_vols','بەرگ')));
@@ -2904,7 +2913,11 @@ window.GencineUI = {
             (function(bk,el,ico){ PdfStore.has(bk).then(function(c){ if(c){ el.classList.add('cached'); ico.className='fas fa-check'; } }); })(vol,vDl,vDlIco);
             vRow.appendChild(vDl);
           }
-          (function(bk){ vRow.onclick=function(){ _openBookReader(bk); }; })(vol);
+          var vSaveBtn=document.createElement('button'); vSaveBtn.className='book-series-vol-save'+(_bookIsSaved(vol.id)?' saved':'');
+          var vSIco=document.createElement('i'); vSIco.className='fas fa-bookmark'; vSaveBtn.appendChild(vSIco);
+          (function(bk,btn){ vSaveBtn.onclick=function(e){ e.stopPropagation(); _bookToggleSave(bk.id,bk); btn.classList.toggle('saved',_bookIsSaved(bk.id)); if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics) window.Capacitor.Plugins.Haptics.impact({style:'LIGHT'}); }; })(vol,vSaveBtn);
+          vRow.appendChild(vSaveBtn);
+          (function(bk){ vRow.onclick=function(e){ if(!e.target.closest('.book-series-vol-save')) _openBookReader(bk); }; })(vol);
           vols.appendChild(vRow);
         });
         if (sg.volumes.length>1&&window.PdfStore) {
@@ -2923,7 +2936,7 @@ window.GencineUI = {
           vols.classList.toggle('open',expanded); eIco.className='fas fa-'+(expanded?'chevron-up':'chevron-down');
         }
         eBtn.onclick=_toggleExpand;
-        row.onclick=function(e){ if(!e.target.closest('.book-series-continue')) _toggleExpand(e); };
+        row.onclick=function(e){ if(!e.target.closest('.book-series-continue')&&!e.target.closest('.book-series-save')) _toggleExpand(e); };
         return outer;
       }
 
