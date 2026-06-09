@@ -434,7 +434,7 @@
   "toast.progress_reset": "پێشکەوتنی خوێندن سڕایەوە",
   "toast.link_copied": "لینک کۆپی کرا",
   "toast.synced_live": "داتا نوێکرایەوە",
-  "toast.network_reconnected": "ئینتەرنێت گەڕایەوە ✓",
+  "toast.network_reconnected": "ئینتەرنێت هاتە ڤە ✓",
   "notif.reminder_body": "خوێندنا قورئانێ — بابڵێ بخوێنی!",
   "notif.setup_title": "بۆ ئاگادارکرنا باش ✓",
   "notif.setup_body": "جهت عملكرد الإشعارات بشكل صحيح على هواتف Samsung، قم بما يلي:\n\nڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە\n(Settings → Battery → Unrestricted)",
