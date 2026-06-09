@@ -6,6 +6,8 @@ var PdfStore = (function () {
   var PROXY_BASE = 'https://tafsirkurd.com/pdf-proxy?url=';
 
   function proxyUrl(pdfUrl) {
+    // If the URL already points to our pdf-proxy endpoint, use it as-is (avoid double-wrapping).
+    if (pdfUrl && pdfUrl.includes('/pdf-proxy?')) return pdfUrl;
     return PROXY_BASE + encodeURIComponent(pdfUrl);
   }
 

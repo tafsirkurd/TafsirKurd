@@ -2643,12 +2643,19 @@ async function _setFeatured(id, featured_until) {
     return r.json();
 }
 async function _booksApi(body) {
-    var r = await fetch('/admin-books', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.assign({ token: _booksToken() }, body))
-    });
-    return r.json();
+    try {
+        var r = await fetch('/admin-books', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Object.assign({ token: _booksToken() }, body))
+        });
+        var data;
+        try { data = await r.json(); } catch(e) { data = {}; }
+        if (!r.ok && !data.error) data.error = 'HTTP ' + r.status;
+        return data;
+    } catch(e) {
+        return { error: e.message || 'Network error — check your connection.' };
+    }
 }
 
 async function loadBooks() {
@@ -2892,6 +2899,7 @@ async function saveBook() {
     if (!titleKu && !titleAr) { showNotification('At least one title is required.', 'warning'); return; }
 
     var statusEl = document.getElementById('book-cover-upload-status');
+    if (statusEl) statusEl.textContent = '';
     var coverUrl = document.getElementById('book-cover-url').value.trim() || null;
     var fileInput = document.getElementById('book-cover-file');
 
@@ -2899,16 +2907,26 @@ async function saveBook() {
     if (fileInput && fileInput.files && fileInput.files[0]) {
         if (statusEl) statusEl.textContent = 'Uploading cover...';
         var uploaded = await uploadCover(fileInput.files[0]);
-        if (uploaded) coverUrl = uploaded;
-        if (statusEl) statusEl.textContent = uploaded ? 'Cover uploaded.' : 'Upload failed — using URL field.';
+        if (uploaded) {
+            coverUrl = uploaded;
+            if (statusEl) statusEl.textContent = 'Cover uploaded.';
+        } else {
+            if (statusEl) statusEl.textContent = 'Cover upload failed.';
+            if (!coverUrl) { showNotification('Cover upload failed and no URL fallback — fix the cover before saving.', 'error'); return; }
+            if (statusEl) statusEl.textContent = 'Cover upload failed — keeping existing URL.';
+        }
     }
 
     /* Upload PDF file if one was picked */
+    var pdfStatusEl = document.getElementById('book-pdf-upload-status');
+    if (pdfStatusEl) pdfStatusEl.textContent = '';
     var pdfFileInput = document.getElementById('book-pdf-file');
     var pdfUrl = document.getElementById('book-pdf-url').value.trim() || null;
     if (pdfFileInput && pdfFileInput.files && pdfFileInput.files[0]) {
+        if (pdfStatusEl) pdfStatusEl.textContent = 'Uploading PDF...';
         var uploadedPdf = await uploadPdf(pdfFileInput.files[0]);
-        if (uploadedPdf) pdfUrl = uploadedPdf;
+        if (uploadedPdf) { pdfUrl = uploadedPdf; if (pdfStatusEl) pdfStatusEl.textContent = 'PDF uploaded.'; }
+        else { if (pdfStatusEl) pdfStatusEl.textContent = 'PDF upload failed.'; showNotification('PDF upload failed — the book was not saved. Try again.', 'error'); return; }
     }
 
     var editId = document.getElementById('book-edit-id').value;

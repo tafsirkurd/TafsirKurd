@@ -17,6 +17,29 @@ export async function onRequest(context) {
         return new Response(null, { status: 200, headers: corsHeaders });
     }
 
+    // Direct key access — used when pdf_url is stored as /pdf-proxy?key=pdfs/...
+    // Bypasses public-URL validation; only the key prefix is checked.
+    const directKey = url.searchParams.get('key');
+    if (directKey) {
+        if (!directKey.startsWith('pdfs/')) {
+            return new Response('Forbidden', { status: 403, headers: corsHeaders });
+        }
+        if (!env.BOOKS_BUCKET) {
+            return new Response('Storage not configured', { status: 503, headers: corsHeaders });
+        }
+        try {
+            const object = await env.BOOKS_BUCKET.get(directKey);
+            if (!object) return new Response('Not Found', { status: 404, headers: corsHeaders });
+            const headers = new Headers(corsHeaders);
+            headers.set('Content-Type', object.httpMetadata?.contentType || 'application/pdf');
+            if (object.size) headers.set('Content-Length', String(object.size));
+            headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+            return new Response(object.body, { headers });
+        } catch (e) {
+            return new Response('Failed to fetch PDF', { status: 502, headers: corsHeaders });
+        }
+    }
+
     const pdfUrl = url.searchParams.get('url');
     if (!pdfUrl) {
         return new Response('Missing url param', { status: 400, headers: corsHeaders });

@@ -206,12 +206,19 @@ async function handleProxyUpload(request, env, corsHeaders) {
         return new Response(JSON.stringify({ error: 'R2 upload failed: ' + putRes.status }), { status: 502, headers: corsHeaders });
     }
 
-    const publicDomain = bucketName === 'tafsirkurd-books'
-        ? (env.R2_BOOKS_PUBLIC_DOMAIN || env.R2_PUBLIC_DOMAIN)
-        : env.R2_PUBLIC_DOMAIN;
-    const publicUrl = publicDomain
-        ? `https://${publicDomain}/${key}`
-        : `https://pub-${accountId}.r2.dev/${key}`;
+    // Files in tafsirkurd-books are served through Pages functions (BOOKS_BUCKET R2 binding).
+    // This avoids needing public bucket access and works regardless of env var configuration.
+    let publicUrl;
+    if (bucketName === 'tafsirkurd-books' && key.startsWith('book-covers/')) {
+        publicUrl = `https://tafsirkurd.com/book-cover?key=${encodeURIComponent(key)}`;
+    } else if (bucketName === 'tafsirkurd-books' && key.startsWith('pdfs/')) {
+        publicUrl = `https://tafsirkurd.com/pdf-proxy?key=${encodeURIComponent(key)}`;
+    } else {
+        const publicDomain = env.R2_PUBLIC_DOMAIN;
+        publicUrl = publicDomain
+            ? `https://${publicDomain}/${key}`
+            : `https://pub-${accountId}.r2.dev/${key}`;
+    }
 
     return new Response(JSON.stringify({ success: true, publicUrl, key }), { status: 200, headers: corsHeaders });
 }
