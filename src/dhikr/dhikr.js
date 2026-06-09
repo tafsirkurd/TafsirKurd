@@ -235,7 +235,7 @@ var ADHKAR_CAT_LABELS = {
   istikhara:      'دوعای ئیستیخارە',
   wedding:        'تەبریکا زاوایێ',
   kaffarah:       'کەفارەتا کۆمەلکردنێ',
-  before_quran:   'بەرا خوێندنا قورئانێ',
+  before_quran:   'بەری خوێندنا قورئانێ',
   friday:         'ڕۆژا ئینانێ',
   gratitude:      'سوپاسگوزاری'
 };

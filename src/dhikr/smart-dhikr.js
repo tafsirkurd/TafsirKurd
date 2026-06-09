@@ -256,7 +256,7 @@
     },
     {
       id: 'before_quran', categoryKey: 'before_quran', icon: 'fas fa-book-open-reader',
-      labelKey: 'adhkar.before_quran', labelFallback: 'بەرا خوێندنا قورئانێ',
+      labelKey: 'adhkar.before_quran', labelFallback: 'بەری خوێندنا قورئانێ',
       subtitleKey: 'gencine.smart.before_quran_hint', subtitleFallback: 'پێش دەستپێکردنا قورئانێ',
       fallbackAr: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
       fallbackRepeat: 1,
