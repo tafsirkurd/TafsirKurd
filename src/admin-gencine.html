@@ -1425,9 +1425,9 @@
                             </div>
                         </div>
                         <div class="form-actions">
-                            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary);cursor:pointer;margin-right:auto">
-                                <input type="checkbox" id="book-no-push" style="accent-color:var(--primary)">
-                                No notification
+                            <label id="book-send-notif-label" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;margin-right:auto">
+                                <input type="checkbox" id="book-send-push" checked style="accent-color:var(--primary)">
+                                <i class="fas fa-bell" style="font-size:11px;opacity:.7"></i> Send push notification
                             </label>
                             <button class="btn btn-primary" onclick="saveBook()">
                                 <i data-lucide="save"></i> Save Book
@@ -1514,6 +1514,10 @@ function toggleForm(prefix) {
             if (!editId) {
                 var maxSort = allBooks.reduce(function(m, b){ return Math.max(m, b.sort_order || 0); }, 0);
                 document.getElementById('book-sort').value = maxSort + 1;
+                var _bsnlToggle = document.getElementById('book-send-notif-label');
+                if (_bsnlToggle) _bsnlToggle.style.display = 'flex';
+                var _bspToggle = document.getElementById('book-send-push');
+                if (_bspToggle) _bspToggle.checked = true;
             }
         } else if (prefix === 'cat') {
             var catEditId = document.getElementById('cat-edit-id').value;
@@ -2613,6 +2617,45 @@ function _skipAutoNotif(dlType, dlId) {
     }).catch(function(){});
 }
 
+async function _sendBookNotifNow(bookId, titleKu) {
+    var token = _booksToken();
+    var notifTitle = titleKu || 'پەرتوکێ نوی';
+    var notifBody  = 'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+    try {
+        var createRes = await fetch('/admin-notifications-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({
+                action: 'create',
+                title: notifTitle,
+                body: notifBody,
+                platform: 'all',
+                audience: 'all',
+                deep_link_type: 'book',
+                deep_link_id: String(bookId)
+            })
+        });
+        var createData = await createRes.json();
+        if (!createData.success || !createData.notification) {
+            showNotification('Notification created but could not send: ' + (createData.error || 'unknown'), 'warning');
+            return;
+        }
+        var sendRes = await fetch('/admin-notifications-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: 'send', id: createData.notification.id })
+        });
+        var sendData = await sendRes.json();
+        if (sendData.success) {
+            showNotification('Push notification sent ✓', 'success');
+        } else {
+            showNotification('Notification saved but send failed: ' + (sendData.error || 'unknown'), 'warning');
+        }
+    } catch (e) {
+        showNotification('Notification error: ' + e.message, 'warning');
+    }
+}
+
 function _logActivity(action_type, description) {
     var token = _booksToken();
     fetch('/admin-translations-api', {
@@ -2804,6 +2847,8 @@ function editBook(id) {
         }
     }
     document.getElementById('book-form-toggle-label').textContent = 'Editing: ' + (book.title_ku || book.title_ar || 'book');
+    var _bsnl = document.getElementById('book-send-notif-label');
+    if (_bsnl) _bsnl.style.display = 'none';
     switchTab('books'); openForm('book');
 }
 
@@ -2832,6 +2877,10 @@ function cancelBookEdit() {
     }
     document.getElementById('book-cover-upload-status').textContent = '';
     document.getElementById('book-form-toggle-label').textContent = 'Add Book';
+    var _bsnl2 = document.getElementById('book-send-notif-label');
+    if (_bsnl2) { _bsnl2.style.display = 'flex'; }
+    var _bsp = document.getElementById('book-send-push');
+    if (_bsp) _bsp.checked = true;
     closeForm('book');
 }
 
@@ -2957,10 +3006,15 @@ async function saveBook() {
     if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
     var isNew = !editId;
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
-    if (isNew && r.data && r.data[0] && r.data[0].id && document.getElementById('book-no-push') && document.getElementById('book-no-push').checked) {
-        _skipAutoNotif('book', r.data[0].id);
+    if (isNew && r.data && r.data[0] && r.data[0].id) {
+        var _newBookId = r.data[0].id;
+        var _sendPushEl = document.getElementById('book-send-push');
+        if (_sendPushEl && _sendPushEl.checked) {
+            await _sendBookNotifNow(_newBookId, payload.title_ku || payload.title_ar || 'پەرتوکێ نوی');
+        } else {
+            _skipAutoNotif('book', _newBookId);
+        }
     }
-    var _bookNoPushEl = document.getElementById('book-no-push'); if (_bookNoPushEl) _bookNoPushEl.checked = false;
     _logActivity(editId ? 'book_edit' : 'book_add', (editId ? 'Book updated: ' : 'Book added: ') + (payload.title_ku || payload.title_ar || ''));
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
     if (isNew) {
