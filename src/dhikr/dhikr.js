@@ -3515,7 +3515,7 @@ window.GencineUI = {
       }
       var _navScrollTimer = null;
       var _jumpActive = false;
-      var _panelEl = document.getElementById('panelGencine');
+      var _panelEl = document.getElementById('gencineContent');
       var _prevBtn = document.getElementById('pdfPrevBtn');
       var _nextBtn = document.getElementById('pdfNextBtn');
       var _pageInd = document.getElementById('pdfPageInd');
@@ -3539,7 +3539,7 @@ window.GencineUI = {
         var panelTop = _panelEl.getBoundingClientRect().top;
         /* subtract header height: formula targets panelTop but first visible
            pixel is panelTop + hdrHeight (sticky header sits inside the panel) */
-        _panelEl.scrollTop = _panelEl.scrollTop + (slotTop - panelTop) - _hdrH();
+        _panelEl.scrollTop = _panelEl.scrollTop + (slotTop - panelTop);
       }
 
       /* Jump to arbitrary page with retry loop.
@@ -3562,7 +3562,7 @@ window.GencineUI = {
           setTimeout(function() {
             var slotTop  = slot.getBoundingClientRect().top;
             var panelTop = _panelEl.getBoundingClientRect().top;
-            var off = slotTop - panelTop - _hdrH();
+            var off = slotTop - panelTop;
             if (Math.abs(off) > 4) {
               _panelEl.scrollTop = _panelEl.scrollTop + off;
               _retry();
@@ -3584,7 +3584,7 @@ window.GencineUI = {
           if (!_panelEl || _jumpActive) return;
           var panelTop  = _panelEl.getBoundingClientRect().top;
           var scrollTop = _panelEl.scrollTop;
-          var ref       = scrollTop + (_hdrH() || 0);
+          var ref       = scrollTop;
           var best = 1, bestDist = Infinity;
           slots.forEach(function(sl, i) {
             var absTop = sl.getBoundingClientRect().top - panelTop + scrollTop;
@@ -3689,7 +3689,7 @@ window.GencineUI = {
         if (_panelEl && slots.length) {
           var _pt = _panelEl.getBoundingClientRect().top;
           var _st = _panelEl.scrollTop;
-          var _rf = _st + (_hdrH() || 0);
+          var _rf = _st;
           var _bst = 1, _bd = Infinity;
           slots.forEach(function(sl, i) {
             var d = Math.abs(sl.getBoundingClientRect().top - _pt + _st - _rf);
