@@ -3466,7 +3466,7 @@ window.GencineUI = {
       //   DPR cap at 2  — 3× retina across 200+ pages = instant OOM; 2× is sharp
       var _rq = [], _rqActive = 0, _renderedNums = [];
       var _scrollingPdf = false, _scrollPdfTimer = null;
-      var MAX_RQ = 2, MAX_KEPT = 6;
+      var MAX_RQ = 2, MAX_KEPT = 10;
       var _dpr = Math.min(window.devicePixelRatio || 1,
         document.documentElement.classList.contains('perf-critical') ? 1 : 2);
 
@@ -3491,8 +3491,17 @@ window.GencineUI = {
               if (evC.parentNode) evC.parentNode.removeChild(evC);
             }
             evS._rendered = false; evS._rendering = false;
-            evS.style.minHeight = '300px';
-            if (_evAbove && _panelEl) _panelEl.scrollTop += (evS.offsetHeight - _evPreH);
+            // Preserve the known rendered height so re-renders cause zero layout shift.
+            // If we don't know the height yet, fall back to 300px.
+            if (evS._renderedHeight) {
+              evS.style.minHeight = '';
+              evS.style.height = evS._renderedHeight + 'px';
+            } else {
+              evS.style.minHeight = '300px';
+              evS.style.height = '';
+            }
+            // Height is now preserved — compensation delta is 0 when height is known.
+            if (_evAbove && _panelEl && !evS._renderedHeight) _panelEl.scrollTop += (evS.offsetHeight - _evPreH);
           }
         }
       }
@@ -3522,7 +3531,10 @@ window.GencineUI = {
                       _scAbove = tk.slot.getBoundingClientRect().bottom <= _panelEl.getBoundingClientRect().top;
                       if (_scAbove) _scPreH = tk.slot.offsetHeight;
                     }
+                    var _pageH = Math.floor(vp.height / _dpr);
+                    tk.slot._renderedHeight = _pageH; // remember for eviction
                     tk.slot.style.minHeight = '';
+                    tk.slot.style.height = ''; // canvas inline style sets the height
                     while (tk.slot.firstChild) tk.slot.removeChild(tk.slot.firstChild);
                     tk.slot.appendChild(cv);
                     tk.slot._rendered = true; tk.slot._rendering = false;
@@ -3562,7 +3574,7 @@ window.GencineUI = {
           if (n > 1 && slots[n-2]) _enqueueRender(n-1, slots[n-2], pdf);
           if (n < _totalPages && slots[n]) _enqueueRender(n+1, slots[n], pdf);
         });
-      }, {rootMargin: '200px 0px', threshold: 0});
+      }, {rootMargin: '500px 0px', threshold: 0});
       self._pdfPageObs = obs;
       slots.forEach(function(s) { obs.observe(s); });
       _enqueueRender(1, slots[0], pdf);
