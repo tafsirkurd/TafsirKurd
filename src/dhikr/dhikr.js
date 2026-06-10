@@ -2681,13 +2681,34 @@ window.GencineUI = {
       /* ── Featured books at top (all-view, no filters) ── */
       var _fnow = Date.now();
       var _featBooks = (_dbBooks || []).filter(function(b){ return b.active !== false && b.featured_until && new Date(b.featured_until).getTime() > _fnow; });
-      if (_featBooks.length && self._bookCat === 'all' && !self._bookSearch && !self._bookAuthor) {
+      // Resolve series: if a featured book belongs to a series, show the whole series once
+      var _featSeriesMap = {};
+      (_dbBooks || []).forEach(function(b){ if(b.series_id){ if(!_featSeriesMap[b.series_id]) _featSeriesMap[b.series_id]={_isSeries:true,series_id:b.series_id,series_title_ku:b.series_title_ku||b.title_ku,author_ku:b.author_ku,author_ar:b.author_ar,cover_url:b.cover_url,volumes:[]}; _featSeriesMap[b.series_id].volumes.push(b); } });
+      var _featItems = [], _featSeriesSeen = {};
+      _featBooks.forEach(function(b){
+        if(b.series_id){
+          if(!_featSeriesSeen[b.series_id]){ _featSeriesSeen[b.series_id]=true; var sg=_featSeriesMap[b.series_id]; if(sg){ sg.volumes.sort(function(a,c){return (a.volume_number||0)-(c.volume_number||0);}); var cv=sg.volumes.find(function(v){return v.cover_url;}); if(cv) sg.cover_url=cv.cover_url; _featItems.push(sg); } }
+        } else { _featItems.push(b); }
+      });
+      if (_featItems.length && self._bookCat === 'all' && !self._bookSearch && !self._bookAuthor) {
         featuredSection.style.display = '';
         var _flbl = document.createElement('div'); _flbl.className = 'book-featured-lbl';
         var _flbIco = document.createElement('i'); _flbIco.className = 'fas fa-star'; _flbl.appendChild(_flbIco);
         _flbl.appendChild(document.createTextNode(' ' + T('gencine.featured','تایبەتمەندکری')));
         featuredSection.appendChild(_flbl);
         function _makeFeatClick(fb) {
+          if (fb._isSeries) {
+            return function(){
+              var panel = document.getElementById('panelGencine');
+              self._booksScrollPos = panel ? panel.scrollTop : 0;
+              var lastRead = _seriesGetLastRead(fb.volumes);
+              var vol = lastRead ? lastRead.vol : fb.volumes[0];
+              if (!vol) return;
+              _addToReadingHistory(vol.id);
+              if (!_bookGetProgress(String(vol.id))) { try { localStorage.setItem('pdfProg_'+vol.id, JSON.stringify({page:1,total:vol.pages||0,ts:Date.now()})); } catch(e3) {} }
+              self._currentBook = vol; self._pdfDoc = null; self._pdfPage = 1; self._view = 'book-reader'; self._draw();
+            };
+          }
           return function(){
             var panel = document.getElementById('panelGencine');
             self._booksScrollPos = panel ? panel.scrollTop : 0;
@@ -2698,48 +2719,55 @@ window.GencineUI = {
         }
         function _buildFeatCard(fb, extraClass) {
           var _fc = document.createElement('div'); _fc.className = 'book-feat-card' + (extraClass ? ' '+extraClass : '');
+          var _coverUrl = fb.cover_url;
+          var _title = fb._isSeries ? (fb.series_title_ku||'') : (fb.title_ku||fb.title_ar||'');
+          var _author = fb.author_ku||fb.author_ar||'';
           /* Layer 1: blurred cover as background */
           var _fbg = document.createElement('div'); _fbg.className = 'book-feat-card-bg';
-          if (fb.cover_url) _fbg.style.backgroundImage = 'url('+fb.cover_url+')';
+          if (_coverUrl) _fbg.style.backgroundImage = 'url('+_coverUrl+')';
           _fc.appendChild(_fbg);
           /* Layer 2: dark gradient overlay */
           var _fov = document.createElement('div'); _fov.className = 'book-feat-card-overlay'; _fc.appendChild(_fov);
-          /* Layer 3: sharp thumbnail (floats top-right in RTL) */
+          /* Layer 3: sharp thumbnail */
           var _fth = document.createElement('div'); _fth.className = 'book-feat-card-thumb';
-          if (fb.cover_url) {
-            var _fti = document.createElement('img'); _fti.className = 'book-feat-card-cover'; _fti.alt = fb.title_ku||'';
-            _fti.onload = function(){ _fti.classList.add('loaded'); }; _fti.src = fb.cover_url; _fth.appendChild(_fti);
+          if (_coverUrl) {
+            var _fti = document.createElement('img'); _fti.className = 'book-feat-card-cover'; _fti.alt = _title;
+            _fti.onload = function(){ _fti.classList.add('loaded'); }; _fti.src = _coverUrl; _fth.appendChild(_fti);
           } else { var _ftph = document.createElement('div'); _ftph.className = 'book-feat-card-ph'; var _ftphi = document.createElement('i'); _ftphi.className = 'fas fa-book'; _ftph.appendChild(_ftphi); _fth.appendChild(_ftph); }
           _fc.appendChild(_fth);
-          /* Text overlay (bottom-left in RTL) */
+          /* Text overlay */
           var _finfo = document.createElement('div'); _finfo.className = 'book-feat-card-info';
-          var _ft = document.createElement('div'); _ft.className = 'book-feat-card-title'; _ft.textContent = fb.title_ku||fb.title_ar||''; _finfo.appendChild(_ft);
-          if (fb.author_ku||fb.author_ar){ var _fau = document.createElement('div'); _fau.className = 'book-feat-card-author'; _fau.textContent = fb.author_ku||fb.author_ar; _finfo.appendChild(_fau); }
+          var _ft = document.createElement('div'); _ft.className = 'book-feat-card-title'; _ft.textContent = _title; _finfo.appendChild(_ft);
+          if (_author){ var _fau = document.createElement('div'); _fau.className = 'book-feat-card-author'; _fau.textContent = _author; _finfo.appendChild(_fau); }
           var _fmeta = document.createElement('div'); _fmeta.className = 'book-feat-card-meta';
-          if (fb.pages){ var _fpg = document.createElement('div'); _fpg.className = 'book-feat-card-pages'; _fpg.textContent = fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _fmeta.appendChild(_fpg); }
-          if (fb.badge_until && new Date(fb.badge_until).getTime() > Date.now()){ var _fbdg = document.createElement('div'); _fbdg.className = 'book-feat-card-badge'; _fbdg.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; _fmeta.appendChild(_fbdg); }
+          if (fb._isSeries){
+            var _fvols = document.createElement('div'); _fvols.className = 'book-feat-card-pages'; _fvols.textContent = fb.volumes.length + ' ' + T('gencine.series_vols','بەرگ'); _fmeta.appendChild(_fvols);
+          } else {
+            if (fb.pages){ var _fpg = document.createElement('div'); _fpg.className = 'book-feat-card-pages'; _fpg.textContent = fb.pages + ' ' + T('gencine.pages_unit','ڕۆپەل'); _fmeta.appendChild(_fpg); }
+            if (fb.badge_until && new Date(fb.badge_until).getTime() > Date.now()){ var _fbdg = document.createElement('div'); _fbdg.className = 'book-feat-card-badge'; _fbdg.textContent = (window.t&&window.t('iv.new_badge'))||'نوی'; _fmeta.appendChild(_fbdg); }
+          }
           _finfo.appendChild(_fmeta);
           _fc.appendChild(_finfo);
           _fc.onclick = _makeFeatClick(fb);
           return _fc;
         }
-        if (_featBooks.length === 1) {
-          featuredSection.appendChild(_buildFeatCard(_featBooks[0]));
+        if (_featItems.length === 1) {
+          featuredSection.appendChild(_buildFeatCard(_featItems[0]));
         } else {
           var _caro = document.createElement('div'); _caro.className = 'book-feat-carousel';
           var _track = document.createElement('div'); _track.className = 'book-feat-track';
-          _featBooks.forEach(function(_fb){
+          _featItems.forEach(function(_fb){
             _track.appendChild(_buildFeatCard(_fb, 'book-feat-slide'));
           });
           _caro.appendChild(_track);
           var _dotWrap = document.createElement('div'); _dotWrap.className = 'book-feat-dots';
-          var _dotEls = _featBooks.map(function(_,i){
+          var _dotEls = _featItems.map(function(_,i){
             var _d = document.createElement('div'); _d.className = 'book-feat-dot'+(i===0?' active':''); _dotWrap.appendChild(_d); return _d;
           });
           _caro.appendChild(_dotWrap);
           featuredSection.appendChild(_caro);
           (function(){
-            var _cur=0, _n=_featBooks.length, _tmr=null, _tx0=0;
+            var _cur=0, _n=_featItems.length, _tmr=null, _tx0=0;
             var _w = _caro.getBoundingClientRect().width || _caro.offsetWidth || 300;
             [].slice.call(_track.children).forEach(function(sl){ sl.style.width=_w+'px'; sl.style.minWidth=_w+'px'; });
             function _goTo(i){
