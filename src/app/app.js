@@ -3130,22 +3130,27 @@ function checkNewVideoNotif(){
       // Deduplicate: skip if we already fired a local notification for this episode
       if(localStorage.getItem('lastVideoNotifId')===String(ep.id))return;
       localStorage.setItem('lastVideoNotifId',String(ep.id));
-      var LN=Capacitor.Plugins.LocalNotifications;
-      LN.requestPermissions().then(function(perm){
-        if(perm.display!=='granted'&&perm.receive!=='granted')return;
-        _ensureReminderChannel(LN).then(function(){
-          LN.cancel({notifications:[{id:31}]}).catch(function(){});
-          LN.schedule({notifications:[{
-            id:31,
-            title:tSafe('notif.new_video_title')||'ڤیدیۆیەکا نوی 🎬',
-            body:(ep.title_ku||ep.title)||tSafe('notif.new_video_body')||'ڤیدیۆیەکا نوی زێدەبوو',
-            schedule:{at:new Date(Date.now()+3000),allowWhileIdle:true},
-            smallIcon:'ic_notification',
-            channelId:'reminder',
-            extra:{type:'video',id:ep.id}
-          }]}).catch(function(){});
-        });
-      }).catch(function(){});
+      // Check if admin skipped notification for this episode
+      S.supabase.from('admin_notifications').select('id').eq('deep_link_type','video').eq('deep_link_id',String(ep.id)).eq('status','cancelled').limit(1)
+        .then(function(skipRes){
+          if(skipRes&&skipRes.data&&skipRes.data.length)return; // admin chose no notification
+          var LN=Capacitor.Plugins.LocalNotifications;
+          LN.requestPermissions().then(function(perm){
+            if(perm.display!=='granted'&&perm.receive!=='granted')return;
+            _ensureReminderChannel(LN).then(function(){
+              LN.cancel({notifications:[{id:31}]}).catch(function(){});
+              LN.schedule({notifications:[{
+                id:31,
+                title:tSafe('notif.new_video_title')||'ڤیدیۆیەکا نوی 🎬',
+                body:(ep.title_ku||ep.title)||tSafe('notif.new_video_body')||'ڤیدیۆیەکا نوی زێدەبوو',
+                schedule:{at:new Date(Date.now()+3000),allowWhileIdle:true},
+                smallIcon:'ic_notification',
+                channelId:'reminder',
+                extra:{type:'video',id:ep.id}
+              }]}).catch(function(){});
+            });
+          }).catch(function(){});
+        }).catch(function(){});
     }).catch(function(){});
 }
 
@@ -3170,22 +3175,27 @@ function checkNewBookNotif(){
       var book=res.data[0];
       if(localStorage.getItem('lastBookNotifId')===String(book.id))return;
       localStorage.setItem('lastBookNotifId',String(book.id));
-      var LN=Capacitor.Plugins.LocalNotifications;
-      LN.requestPermissions().then(function(perm){
-        if(perm.display!=='granted'&&perm.receive!=='granted')return;
-        _ensureReminderChannel(LN).then(function(){
-          LN.cancel({notifications:[{id:32}]}).catch(function(){});
-          LN.schedule({notifications:[{
-            id:32,
-            title:tSafe('notif.new_book_title')||'پەرتوکەکا نوی 📖',
-            body:(book.title_ku||book.title_ar)||tSafe('notif.new_book_body')||'پەرتوکەکا نوی زێدەبوو',
-            schedule:{at:new Date(Date.now()+4000),allowWhileIdle:true},
-            smallIcon:'ic_notification',
-            channelId:'reminder',
-            extra:{type:'book',id:book.id}
-          }]}).catch(function(){});
-        });
-      }).catch(function(){});
+      // Check if admin skipped notification for this book
+      S.supabase.from('admin_notifications').select('id').eq('deep_link_type','book').eq('deep_link_id',String(book.id)).eq('status','cancelled').limit(1)
+        .then(function(skipRes){
+          if(skipRes&&skipRes.data&&skipRes.data.length)return; // admin chose no notification
+          var LN=Capacitor.Plugins.LocalNotifications;
+          LN.requestPermissions().then(function(perm){
+            if(perm.display!=='granted'&&perm.receive!=='granted')return;
+            _ensureReminderChannel(LN).then(function(){
+              LN.cancel({notifications:[{id:32}]}).catch(function(){});
+              LN.schedule({notifications:[{
+                id:32,
+                title:tSafe('notif.new_book_title')||'پەرتوکەکا نوی 📖',
+                body:(book.title_ku||book.title_ar)||tSafe('notif.new_book_body')||'پەرتوکەکا نوی زێدەبوو',
+                schedule:{at:new Date(Date.now()+4000),allowWhileIdle:true},
+                smallIcon:'ic_notification',
+                channelId:'reminder',
+                extra:{type:'book',id:book.id}
+              }]}).catch(function(){});
+            });
+          }).catch(function(){});
+        }).catch(function(){});
     }).catch(function(){});
 }
 
