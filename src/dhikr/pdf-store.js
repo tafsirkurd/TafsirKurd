@@ -62,6 +62,14 @@ var PdfStore = (function () {
       headers: { 'Content-Type': 'application/pdf' }
     }));
 
+    // Persist book metadata so the download manager can show the title
+    // even if the book is later set to draft (inactive) and removed from _dbBooks.
+    try {
+      var meta = JSON.parse(localStorage.getItem('pdfMeta') || '{}');
+      meta[url] = { title_ku: book.title_ku || '', title_ar: book.title_ar || '', cover_url: book.cover_url || '', id: book.id || '' };
+      localStorage.setItem('pdfMeta', JSON.stringify(meta));
+    } catch(e) {}
+
     return arrayBuffer;
   }
 
@@ -85,20 +93,27 @@ var PdfStore = (function () {
     } catch (e) { return false; }
   }
 
-  /* List all cached books — returns array of {url, sizeApprox} */
+  /* List all cached books — returns array of {proxyUrl, pdfUrl, bytes, title_ku, title_ar, cover_url, bookId} */
   async function listAll() {
     if (!supported()) return [];
     try {
+      var meta = {};
+      try { meta = JSON.parse(localStorage.getItem('pdfMeta') || '{}'); } catch(e2) {}
       var cache = await caches.open(CACHE_NAME);
       var keys = await cache.keys();
       var results = [];
       for (var i = 0; i < keys.length; i++) {
         var r = await cache.match(keys[i]);
         var buf = r ? await r.arrayBuffer() : null;
+        var m = meta[keys[i].url] || {};
         results.push({
           proxyUrl: keys[i].url,
           pdfUrl: decodeURIComponent(keys[i].url.replace(PROXY_BASE, '')),
-          bytes: buf ? buf.byteLength : 0
+          bytes: buf ? buf.byteLength : 0,
+          title_ku: m.title_ku || '',
+          title_ar: m.title_ar || '',
+          cover_url: m.cover_url || '',
+          bookId: m.id || ''
         });
       }
       return results;

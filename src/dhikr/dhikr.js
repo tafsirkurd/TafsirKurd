@@ -2447,11 +2447,13 @@ window.GencineUI = {
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border-subtle,rgba(255,255,255,.06))';
 
-        // Cover thumb
+        // Cover thumb — use stored metadata as fallback when book not in active list
+        var _coverUrl = (book && book.cover_url) || entry.cover_url || '';
+        var _titleTxt = (book && (book.title_ku || book.title_ar)) || entry.title_ku || entry.title_ar || '';
         var thumb = document.createElement('div');
         thumb.style.cssText = 'width:36px;height:50px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--surface2)';
-        if (book && book.cover_url) {
-          var tImg = document.createElement('img'); tImg.src = book.cover_url; tImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
+        if (_coverUrl) {
+          var tImg = document.createElement('img'); tImg.src = _coverUrl; tImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
           thumb.appendChild(tImg);
         } else {
           var tIco = document.createElement('i'); tIco.className = 'fas fa-book'; tIco.style.cssText = 'margin:14px auto;display:block;text-align:center;color:var(--text-tertiary)';
@@ -2462,7 +2464,7 @@ window.GencineUI = {
         // Title + size
         var info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0';
         var tnEl = document.createElement('div'); tnEl.style.cssText = 'font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl';
-        tnEl.textContent = book ? (book.title_ku || book.title_ar || '—') : entry.pdfUrl.split('/').pop();
+        tnEl.textContent = _titleTxt || entry.pdfUrl.split('/').pop();
         var szEl = document.createElement('div'); szEl.style.cssText = 'font-size:12px;color:var(--text-secondary);margin-top:2px';
         szEl.textContent = PdfStore.fmtSize(entry.bytes);
         info.appendChild(tnEl); info.appendChild(szEl);
