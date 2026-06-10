@@ -1395,6 +1395,7 @@
                                 </label>
                             </div>
                             <div id="book-series-fields" style="display:none">
+                                <div id="series-quick-pick" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 0 4px"></div>
                                 <div class="form-row">
                                     <div class="form-group" style="flex:2">
                                         <label class="form-label">Series ID <span style="color:var(--text-tertiary);font-weight:400">(short slug, e.g. ibn-kathir-bidaya)</span></label>
@@ -1492,12 +1493,40 @@ function topAddClick() {
 /* ── Collapsible forms ── */
 function toggleSeriesFields(checked) {
     document.getElementById('book-series-fields').style.display = checked ? '' : 'none';
-    // Populate series ID datalist from existing books
-    if (checked) {
-        var dl = document.getElementById('dl-series-id'); if (!dl) return;
-        var seen = {};
-        (allBooks||[]).forEach(function(b){ if(b.series_id && !seen[b.series_id]){ seen[b.series_id]=true; var opt=document.createElement('option'); opt.value=b.series_id; dl.appendChild(opt); } });
-    }
+    if (!checked) return;
+    // Populate datalist
+    var dl = document.getElementById('dl-series-id'); if (dl) { dl.textContent = ''; }
+    var seen = {};
+    (allBooks||[]).forEach(function(b){ if(b.series_id && !seen[b.series_id]){ seen[b.series_id]=true; if(dl){var opt=document.createElement('option');opt.value=b.series_id;dl.appendChild(opt);} } });
+    // Render quick-pick pills for existing series
+    var qp = document.getElementById('series-quick-pick'); if (!qp) return;
+    qp.textContent = '';
+    var seriesMap = {};
+    (allBooks||[]).forEach(function(b){
+        if (!b.series_id) return;
+        if (!seriesMap[b.series_id]) seriesMap[b.series_id] = { id: b.series_id, title: b.series_title_ku || b.series_id, vols: [] };
+        seriesMap[b.series_id].vols.push(b.volume_number || 1);
+    });
+    var seriesList = Object.values(seriesMap);
+    if (!seriesList.length) { qp.style.display = 'none'; return; }
+    qp.style.display = 'flex';
+    seriesList.forEach(function(s) {
+        var nextVol = Math.max.apply(null, s.vols) + 1;
+        var pill = document.createElement('button');
+        pill.type = 'button';
+        pill.style.cssText = 'padding:6px 12px;border-radius:20px;border:1.5px solid var(--border-medium,#e0e0e0);background:var(--bg-active);color:var(--text-primary);font-size:13px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s';
+        pill.textContent = s.title + '  (Vol ' + nextVol + ')';
+        pill.title = 'Series ID: ' + s.id;
+        pill.onclick = function() {
+            document.getElementById('book-series-id').value = s.id;
+            document.getElementById('book-series-title-ku').value = s.title;
+            document.getElementById('book-volume-number').value = nextVol;
+            // Highlight selected pill
+            qp.querySelectorAll('button').forEach(function(b){ b.style.background='var(--bg-active)'; b.style.borderColor='var(--border-medium,#e0e0e0)'; b.style.color='var(--text-primary)'; });
+            pill.style.background = 'var(--primary)'; pill.style.borderColor = 'var(--primary)'; pill.style.color = '#fff';
+        };
+        qp.appendChild(pill);
+    });
 }
 
 function toggleForm(prefix) {
