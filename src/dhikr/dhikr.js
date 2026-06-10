@@ -3448,6 +3448,11 @@ window.GencineUI = {
           var evP = _renderedNums.splice(fIdx, 1)[0];
           var evS = slots[evP - 1];
           if (evS) {
+            var _evAbove = false, _evPreH = 0;
+            if (_panelEl && !_jumpActive) {
+              _evAbove = evS.getBoundingClientRect().bottom <= _panelEl.getBoundingClientRect().top;
+              if (_evAbove) _evPreH = evS.offsetHeight;
+            }
             var evC = evS.querySelector('canvas');
             if (evC) {
               try { var evCtx = evC.getContext('2d'); if(evCtx) evCtx.clearRect(0,0,evC.width,evC.height); } catch(e){}
@@ -3456,6 +3461,7 @@ window.GencineUI = {
             }
             evS._rendered = false; evS._rendering = false;
             evS.style.minHeight = '300px';
+            if (_evAbove && _panelEl) _panelEl.scrollTop += (evS.offsetHeight - _evPreH);
           }
         }
       }
@@ -3480,10 +3486,16 @@ window.GencineUI = {
                 return page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise
                   .then(function() {
                     if (!tk.slot._rendering) { cv.width=0; cv.height=0; return; }
+                    var _scAbove = false, _scPreH = 0;
+                    if (_panelEl && !_jumpActive) {
+                      _scAbove = tk.slot.getBoundingClientRect().bottom <= _panelEl.getBoundingClientRect().top;
+                      if (_scAbove) _scPreH = tk.slot.offsetHeight;
+                    }
                     tk.slot.style.minHeight = '';
                     while (tk.slot.firstChild) tk.slot.removeChild(tk.slot.firstChild);
                     tk.slot.appendChild(cv);
                     tk.slot._rendered = true; tk.slot._rendering = false;
+                    if (_scAbove && _panelEl) _panelEl.scrollTop += (tk.slot.offsetHeight - _scPreH);
                     if (_renderedNums.indexOf(tk.n) < 0) _renderedNums.push(tk.n);
                     _evictFarPages(tk.n);
                   }).catch(function(){ tk.slot._rendering = false; });
