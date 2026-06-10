@@ -1052,7 +1052,7 @@ function init(){
     setupPullToRefresh('panelSettings',function(_,done){_renderHash.settings=null;renderSettings();_renderHash.settings=_tabHash('settings');done();});
     // Prayer/Gencine: sync render paths call done(); async refresh() lets hard cap handle it
     setupPullToRefresh('panelPrayer',function(isRecent,done){if(window.PrayerUI){if(isRecent){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');done();}else{PrayerUI.refresh();}}});
-    setupPullToRefresh('panelGencine',function(isRecent,done){if(window.GencineUI){if(isRecent){GencineUI.render();done();}else{GencineUI.refresh();}}});
+    setupPullToRefresh('panelGencine',function(isRecent,done){if(window.GencineUI){if(isRecent){GencineUI._draw();done();}else{GencineUI.refresh();}}});
 
     // Fast-scroll pill for long lists
     if(window._initFastScroll) _initFastScroll();
