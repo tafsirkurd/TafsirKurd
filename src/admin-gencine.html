@@ -3071,8 +3071,7 @@ async function moveBook(idx, dir) {
 async function quickToggleBookActive(book) {
     var newActive = !book.active;
     var label = newActive ? 'Published' : 'Moved to Draft';
-    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    var r = await supabase.from('gencine_books').update({ active: newActive }).eq('id', book.id);
+    var r = await _booksApi({ action: 'update', id: book.id, payload: { active: newActive } });
     if (r.error) { showNotification('Failed: ' + JSON.stringify(r.error), 'error'); return; }
     book.active = newActive;
     localStorage.removeItem('gencine_books_v1');
