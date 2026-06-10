@@ -12826,6 +12826,8 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   // Nothing computed here is repeated in touchmove.
   on(panel,'touchstart',function(e){
     _vBuf=[];
+    // Second finger added while PTR is active — cancel cleanly so the panel doesn't freeze
+    if(e.touches.length>1){if(armed||pulling){_cancelPull();armed=false;}return;}
     if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
     if(window._sbLocked)return; // swipe-back gesture active — do not compete
     if(checkFn&&!checkFn())return;
@@ -12864,6 +12866,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   // NO class or style writes (deferred to rAF and the pulling-start block).
   panel.addEventListener('touchmove',function(e){
     var _now=Date.now();
+    if(e.touches.length>1){if(armed||pulling){_cancelPull();armed=false;}return;}
     _vBuf.push({y:e.touches[0].clientY,t:_now});
     if(_vBuf.length>_VN)_vBuf.shift();
 
