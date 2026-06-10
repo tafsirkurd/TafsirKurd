@@ -2734,6 +2734,7 @@ window.GencineUI = {
           var _fth = document.createElement('div'); _fth.className = 'book-feat-card-thumb';
           if (_coverUrl) {
             var _fti = document.createElement('img'); _fti.className = 'book-feat-card-cover'; _fti.alt = _title;
+            _fti.fetchPriority = 'high';
             _fti.onload = function(){ _fti.classList.add('loaded'); }; _fti.src = _coverUrl; _fth.appendChild(_fti);
           } else { var _ftph = document.createElement('div'); _ftph.className = 'book-feat-card-ph'; var _ftphi = document.createElement('i'); _ftphi.className = 'fas fa-book'; _ftph.appendChild(_ftphi); _fth.appendChild(_ftph); }
           _fc.appendChild(_fth);
@@ -2884,6 +2885,7 @@ window.GencineUI = {
         var cw = document.createElement('div'); cw.className = 'book-cover-wrap book-series-cover-wrap';
         if (sg.cover_url) {
           var img = document.createElement('img'); img.className = 'book-cover'; img.alt = sg.series_title_ku||'';
+          img.fetchPriority = 'high';
           img.onload = function(){ img.classList.add('loaded'); }; img.src = sg.cover_url;
           if (img.complete) img.classList.add('loaded'); cw.appendChild(img);
         } else { var ph = document.createElement('div'); ph.className='book-cover-placeholder'; var phi=document.createElement('i'); phi.className='fas fa-book'; ph.appendChild(phi); cw.appendChild(ph); }
@@ -2970,14 +2972,18 @@ window.GencineUI = {
         return outer;
       }
 
+      var _bookCardIdx = 0;
       _renderItems.forEach(function(book){
         if (book._isSeries) { grid.appendChild(_buildSeriesCard(book)); return; }
         var card = document.createElement('div'); card.className = 'book-card';
+        var _cardIdx = _bookCardIdx++;
 
         var coverWrap = document.createElement('div'); coverWrap.className = 'book-cover-wrap';
         if (book.cover_url) {
           var img = document.createElement('img');
           img.className = 'book-cover'; img.alt = book.title_ku || '';
+          if (_cardIdx < 4) { img.fetchPriority = 'high'; }
+          else { img.loading = 'lazy'; }
           img.onload = function(){ img.classList.add('loaded'); };
           img.onerror = function(){ img.classList.add('loaded'); };
           img.src = book.cover_url;
