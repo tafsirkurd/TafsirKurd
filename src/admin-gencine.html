@@ -2815,13 +2815,21 @@ function renderBooksList() {
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('star', 'Feature', false, (function(b){ return function(){
-            showFeaturedDialog(b.title_ku || b.title_ar || 'Book', function(hours){
+            var seriesVolumes = b.series_id ? allBooks.filter(function(bk){ return bk.series_id === b.series_id; }) : null;
+            var label = seriesVolumes && seriesVolumes.length > 1
+                ? (b.series_title_ku || b.title_ku || 'Series') + ' (' + seriesVolumes.length + ' vols)'
+                : (b.title_ku || b.title_ar || 'Book');
+            showFeaturedDialog(label, function(hours){
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
-                _setFeatured(b.id, until).then(function(res){
-                    if (!res.error){ b.featured_until = until; renderBooksList(); localStorage.removeItem('gencine_books_v3'); showNotification('Book featured!', 'success'); }
-                    else { showNotification('Failed: ' + (res.error||''), 'error'); }
-                });
+                var targets = seriesVolumes && seriesVolumes.length > 1 ? seriesVolumes : [b];
+                Promise.all(targets.map(function(bk){ return _setFeatured(bk.id, until).then(function(res){ if(!res.error) bk.featured_until = until; return res; }); }))
+                    .then(function(results){
+                        var anyErr = results.find(function(r){ return r.error; });
+                        if (anyErr) { showNotification('Failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
+                        renderBooksList(); localStorage.removeItem('gencine_books_v3');
+                        showNotification(targets.length > 1 ? 'Series featured! (' + targets.length + ' volumes)' : 'Book featured!', 'success');
+                    });
             });
         }; })(book)));
         var pubBtn = mkIconBtn(book.active ? 'eye-off' : 'eye', book.active ? 'Unpublish' : 'Publish', false, (function(b){ return function(){ quickToggleBookActive(b); }; })(book));
