@@ -3441,8 +3441,6 @@ window.GencineUI = {
           localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_pg,total:_totalPages,ts:Date.now()}));
         } catch(e2) {}
       }
-      // When resuming mid-book keep spinner visible until the scroll jump settles
-      if (_pg <= 1) loadingEl.style.display = 'none';
       var slots = [];
       for (var i = 1; i <= _totalPages; i++) {
         var slot = document.createElement('div');
@@ -3529,6 +3527,15 @@ window.GencineUI = {
                     if (_scAbove && _panelEl) _panelEl.scrollTop += (tk.slot.offsetHeight - _scPreH);
                     if (_renderedNums.indexOf(tk.n) < 0) _renderedNums.push(tk.n);
                     _evictFarPages(tk.n);
+                    // First-open reveal: page 1 just rendered — fade in instead of showing white flash
+                    if (tk.n === 1 && _curPage === 1 && pagesWrap.style.opacity !== '1') {
+                      requestAnimationFrame(function() {
+                        clearTimeout(_safetyTimer);
+                        loadingEl.style.display = 'none';
+                        pagesWrap.style.transition = 'opacity 0.15s ease';
+                        pagesWrap.style.opacity = '1';
+                      });
+                    }
                   }).catch(function(){ tk.slot._rendering = false; });
               }).catch(function(){ tk.slot._rendering = false; })
               .then(function(){ _rqActive = Math.max(0,_rqActive-1); _drainRQ(); });
@@ -3563,12 +3570,10 @@ window.GencineUI = {
       var _curPage = (_pg && _pg > 1) ? _pg : 1;
       var _revealTimer = null;
       var _safetyTimer = null;
-      if (_curPage > 1) {
-        pagesWrap.style.opacity = '0';
-        _safetyTimer = setTimeout(function(){
-          pagesWrap.style.transition = 'opacity 0.2s ease'; pagesWrap.style.opacity = '1'; loadingEl.style.display = 'none';
-        }, 5000);
-      }
+      pagesWrap.style.opacity = '0';
+      _safetyTimer = setTimeout(function(){
+        pagesWrap.style.transition = 'opacity 0.2s ease'; pagesWrap.style.opacity = '1'; loadingEl.style.display = 'none';
+      }, _curPage > 1 ? 5000 : 2000);
       var _navScrollTimer = null;
       var _jumpActive = false;
       var _panelEl = document.getElementById('gencineContent');

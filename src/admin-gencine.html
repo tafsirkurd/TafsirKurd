@@ -3183,7 +3183,7 @@ function showPublishOptionsDialog(title, isSeries, volumes) {
             var notifBookId = volumes[0] ? volumes[0].id : null;
             if (notifBookId) await _sendBookNotifNow(notifBookId, title);
         } else {
-            if (volumes[0]) _skipAutoNotif('book', volumes[0].id);
+            volumes.forEach(function(bk){ _skipAutoNotif('book', bk.id); });
         }
         // Apply badge to all volumes
         if (selectedBadgeHours !== null) {
