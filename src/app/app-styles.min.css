@@ -26,7 +26,7 @@ html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5),ht
 @media(hover:hover){.prayer-grid-card--interactive{animation:2.7s ease-in-out infinite card-float}.prayer-grid-card--interactive::after{animation:2.7s ease-in-out infinite card-line}.prayer-grid-card--interactive:nth-child(2),.prayer-grid-card--interactive:nth-child(2)::after{animation-delay:.5s}.prayer-grid-card--interactive:nth-child(3),.prayer-grid-card--interactive:nth-child(3)::after{animation-delay:1s}.prayer-grid-card--interactive:nth-child(4),.prayer-grid-card--interactive:nth-child(4)::after{animation-delay:1.5s}.prayer-grid-card--interactive:nth-child(5),.prayer-grid-card--interactive:nth-child(5)::after{animation-delay:2s}}/* ── Series cards ── */
 .book-series-card{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;direction:rtl;cursor:default}
 .book-series-row{display:flex;gap:12px;padding:12px;align-items:stretch}
-.book-series-cover-wrap{width:72px!important;min-width:72px!important;flex-shrink:0;border-radius:10px;overflow:hidden}
+.book-series-cover-wrap{width:72px!important;min-width:72px!important;flex-shrink:0;border-radius:10px;overflow:hidden;align-self:flex-start}
 .book-series-info{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
 .book-series-title{font-size:.9rem;font-weight:800;color:var(--text);line-height:1.4}
 .book-series-vol-count-badge{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:.58rem;font-weight:700;color:#fff;background:rgba(0,0,0,.62);padding:3px 0;letter-spacing:.04em}
