@@ -3107,13 +3107,97 @@ async function moveBook(idx, dir) {
 
 async function quickToggleBookActive(book) {
     var newActive = !book.active;
-    var label = newActive ? 'Published' : 'Moved to Draft';
-    var r = await _booksApi({ action: 'update', id: book.id, payload: { active: newActive } });
-    if (r.error) { showNotification('Failed: ' + JSON.stringify(r.error), 'error'); return; }
-    book.active = newActive;
+    // Unpublish — just do it silently
+    if (!newActive) {
+        var r = await _booksApi({ action: 'update', id: book.id, payload: { active: false } });
+        if (r.error) { showNotification('Failed: ' + JSON.stringify(r.error), 'error'); return; }
+        book.active = false;
+        localStorage.removeItem('gencine_books_v1');
+        renderBooksList();
+        showNotification('"' + (book.title_ku || book.title_ar || 'Book') + '" — Moved to Draft.', 'success');
+        return;
+    }
+    // Publish — detect if part of a series
+    var seriesVolumes = book.series_id ? allBooks.filter(function(bk){ return bk.series_id === book.series_id; }) : null;
+    var isSeries = seriesVolumes && seriesVolumes.length > 1;
+    var displayTitle = isSeries ? (book.series_title_ku || book.title_ku || 'Series') : (book.title_ku || book.title_ar || 'Book');
+    var targets = isSeries ? seriesVolumes : [book];
+    // Publish all targets
+    var results = await Promise.all(targets.map(function(bk){ return _booksApi({ action: 'update', id: bk.id, payload: { active: true } }); }));
+    var anyErr = results.find(function(r){ return r.error; });
+    if (anyErr) { showNotification('Failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
+    targets.forEach(function(bk){ bk.active = true; });
     localStorage.removeItem('gencine_books_v1');
     renderBooksList();
-    showNotification('"' + (book.title_ku || book.title_ar || 'Book') + '" — ' + label + '.', 'success');
+    showNotification('"' + displayTitle + '" — Published' + (isSeries ? ' (' + targets.length + ' volumes)' : '') + '.', 'success');
+    // Show notification + badge options dialog
+    showPublishOptionsDialog(displayTitle, isSeries, targets);
+}
+
+function showPublishOptionsDialog(title, isSeries, volumes) {
+    var selectedBadgeHours = null;
+    var overlay = mke('div', 'badge-dlg-overlay');
+    var dlg = mke('div', 'badge-dlg');
+
+    var ico = mke('div', 'badge-dlg-icon'); ico.textContent = '🎉';
+    var ttl = mke('div', 'badge-dlg-title'); ttl.textContent = 'Published: ' + title;
+    var sub = mke('div', 'badge-dlg-sub'); sub.textContent = isSeries ? 'All volumes are now live.' : 'The book is now live.';
+    dlg.appendChild(ico); dlg.appendChild(ttl); dlg.appendChild(sub);
+
+    // Notification row
+    var notifRow = mke('div', 'badge-dlg-sub');
+    notifRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;padding:10px 12px;background:var(--bg-active);border-radius:8px;cursor:pointer';
+    var notifChk = document.createElement('input'); notifChk.type = 'checkbox'; notifChk.checked = true; notifChk.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;cursor:pointer';
+    var notifIco = mke('i'); notifIco.className = 'fas fa-bell'; notifIco.style.cssText = 'font-size:13px;opacity:.7;flex-shrink:0';
+    var notifLbl = mke('span'); notifLbl.textContent = 'Send push notification';
+    notifRow.appendChild(notifChk); notifRow.appendChild(notifIco); notifRow.appendChild(notifLbl);
+    notifRow.onclick = function(e){ if(e.target !== notifChk) notifChk.checked = !notifChk.checked; };
+    dlg.appendChild(notifRow);
+
+    // Badge section
+    var bdgLbl = mke('div', 'badge-dlg-sub'); bdgLbl.style.cssText = 'margin-top:12px;font-weight:600;font-size:13px';
+    bdgLbl.textContent = 'Add نوی badge?';
+    var grid = mke('div', 'badge-dur-grid');
+    BADGE_DURATIONS.forEach(function(d) {
+        var opt = mke('button', 'badge-dur-opt'); opt.type = 'button'; opt.textContent = d.label;
+        opt.onclick = function() {
+            grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
+            opt.classList.add('sel');
+            selectedBadgeHours = d.hours;
+        };
+        grid.appendChild(opt);
+    });
+    dlg.appendChild(bdgLbl); dlg.appendChild(grid);
+
+    // Actions
+    var actions = mke('div', 'badge-dlg-actions');
+    var skipBtn = mke('button', 'badge-dlg-btn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Skip';
+    skipBtn.onclick = function(){ overlay.remove(); };
+    var doneBtn = mke('button', 'badge-dlg-btn confirm'); doneBtn.type = 'button'; doneBtn.textContent = 'Done';
+    doneBtn.onclick = async function() {
+        overlay.remove();
+        // Send notification — use first volume's id, series title as title
+        if (notifChk.checked) {
+            var notifBookId = volumes[0] ? volumes[0].id : null;
+            if (notifBookId) await _sendBookNotifNow(notifBookId, title);
+        } else {
+            if (volumes[0]) _skipAutoNotif('book', volumes[0].id);
+        }
+        // Apply badge to all volumes
+        if (selectedBadgeHours !== null) {
+            var d = new Date(); d.setHours(d.getHours() + selectedBadgeHours);
+            var until = d.toISOString();
+            await Promise.all(volumes.map(function(bk){ return _setBadge('gencine_books', bk.id, until).then(function(res){ if(!res.error) bk.badge_until = until; }); }));
+            localStorage.removeItem('gencine_books_v1');
+            renderBooksList();
+            showNotification('نوی badge added' + (volumes.length > 1 ? ' to all volumes.' : '.'), 'success');
+        }
+    };
+    actions.appendChild(skipBtn); actions.appendChild(doneBtn);
+    dlg.appendChild(actions);
+    overlay.appendChild(dlg);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.remove(); });
 }
 
 async function deleteBook(id) {
