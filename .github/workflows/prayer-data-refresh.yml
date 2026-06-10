@@ -37,37 +37,55 @@ jobs:
 
       - name: Resolve year(s)
         id: vars
+        env:
+          INPUT_YEAR: ${{ github.event.inputs.year }}
         run: |
-          if [ -n "${{ github.event.inputs.year }}" ]; then
-            # Manual run — use provided year
-            echo "years=${{ github.event.inputs.year }}" >> $GITHUB_OUTPUT
+          if [ -n "$INPUT_YEAR" ]; then
+            # Validate: must be a 4-digit number
+            if ! [[ "$INPUT_YEAR" =~ ^[0-9]{4}$ ]]; then
+              echo "Invalid year: $INPUT_YEAR" && exit 1
+            fi
+            echo "years=$INPUT_YEAR" >> "$GITHUB_OUTPUT"
           elif [ "$(date +%m)" = "12" ]; then
-            # Dec 1 scheduled run — refresh current year AND fetch next year
-            echo "years=$(date +%Y) $(( $(date +%Y) + 1 ))" >> $GITHUB_OUTPUT
+            # Dec 1 — refresh current year AND pre-fetch next year
+            echo "years=$(date +%Y) $(( $(date +%Y) + 1 ))" >> "$GITHUB_OUTPUT"
           else
             # Every other month — refresh current year only
-            echo "years=$(date +%Y)" >> $GITHUB_OUTPUT
+            echo "years=$(date +%Y)" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Fetch prayer data
+        env:
+          INPUT_CITY:  ${{ github.event.inputs.city }}
+          INPUT_MONTH: ${{ github.event.inputs.month }}
+          INPUT_YEARS: ${{ steps.vars.outputs.years }}
         run: |
-          CITY="${{ github.event.inputs.city }}"
-          MONTH="${{ github.event.inputs.month }}"
+          # Validate city (letters only) and month (1-12)
+          if [ -n "$INPUT_CITY" ] && ! [[ "$INPUT_CITY" =~ ^[A-Za-z]+$ ]]; then
+            echo "Invalid city: $INPUT_CITY" && exit 1
+          fi
+          if [ -n "$INPUT_MONTH" ] && ! [[ "$INPUT_MONTH" =~ ^([1-9]|1[0-2])$ ]]; then
+            echo "Invalid month: $INPUT_MONTH" && exit 1
+          fi
 
-          for YEAR in ${{ steps.vars.outputs.years }}; do
-            if [ -n "$CITY" ] && [ -n "$MONTH" ]; then
-              echo "Fetching $YEAR $CITY month $MONTH (correction mode)"
-              node scripts/fetch-prayer-year.js $YEAR $CITY $MONTH
-            elif [ -n "$CITY" ]; then
-              echo "Fetching $YEAR $CITY all months"
-              node scripts/fetch-prayer-year.js $YEAR $CITY
+          for YEAR in $INPUT_YEARS; do
+            if [ -n "$INPUT_CITY" ] && [ -n "$INPUT_MONTH" ]; then
+              echo "Fetching $YEAR $INPUT_CITY month $INPUT_MONTH (correction mode)"
+              node scripts/fetch-prayer-year.js "$YEAR" "$INPUT_CITY" "$INPUT_MONTH"
+            elif [ -n "$INPUT_CITY" ]; then
+              echo "Fetching $YEAR $INPUT_CITY all months"
+              node scripts/fetch-prayer-year.js "$YEAR" "$INPUT_CITY"
             else
               echo "Fetching $YEAR all cities"
-              node scripts/fetch-prayer-year.js $YEAR
+              node scripts/fetch-prayer-year.js "$YEAR"
             fi
           done
 
       - name: Commit and push if data changed
+        env:
+          INPUT_CITY:  ${{ github.event.inputs.city }}
+          INPUT_MONTH: ${{ github.event.inputs.month }}
+          INPUT_YEARS: ${{ steps.vars.outputs.years }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -75,15 +93,12 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes — prayer data already up to date."
           else
-            YEARS="${{ steps.vars.outputs.years }}"
-            CITY="${{ github.event.inputs.city }}"
-            MONTH="${{ github.event.inputs.month }}"
-            if [ -n "$CITY" ] && [ -n "$MONTH" ]; then
-              MSG="data(prayer): refresh $YEARS $CITY/$MONTH from upstream"
-            elif [ -n "$CITY" ]; then
-              MSG="data(prayer): refresh $YEARS $CITY from upstream"
+            if [ -n "$INPUT_CITY" ] && [ -n "$INPUT_MONTH" ]; then
+              MSG="data(prayer): refresh $INPUT_YEARS $INPUT_CITY/$INPUT_MONTH from upstream"
+            elif [ -n "$INPUT_CITY" ]; then
+              MSG="data(prayer): refresh $INPUT_YEARS $INPUT_CITY from upstream"
             else
-              MSG="data(prayer): refresh $YEARS all cities from upstream"
+              MSG="data(prayer): refresh $INPUT_YEARS all cities from upstream"
             fi
             git commit -m "$MSG"
             git push origin main
