@@ -4439,7 +4439,7 @@ function renderMushafView(){
   }).catch(function(){
     clear(view);
     var errWrap=el('div','mushaf-offline-err');
-    var msg=el('div','mushaf-offline-err-msg',t('mushaf.offline_msg')||'Mushaf mode needs internet on first load.');
+    var msg=el('div','mushaf-offline-err-msg',t('mushaf.offline_msg')||'مصحف mode needs internet on first load.');
     var switchBtn=el('button','mushaf-offline-switch-btn',t('mushaf.switch_to_reading')||'Switch to reading mode');
     on(switchBtn,'click',function(){App.toggleMushafMode();});
     errWrap.appendChild(msg);
