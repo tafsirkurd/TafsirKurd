@@ -1,9 +1,10 @@
 name: Refresh Prayer Data
 
 on:
-  # Auto: runs every year on Dec 1 — fetches next year's data before Jan 1
   schedule:
-    - cron: '0 6 1 12 *'
+    # 1st of every month at 06:00 UTC — re-fetches current year (catches upstream corrections)
+    - cron: '0 6 1 * *'
+    # Dec 1 also fetches next year (handled in Resolve year step by NEXT_YEAR flag)
 
   # Manual: run from GitHub Actions tab, pick year + optional city
   workflow_dispatch:
@@ -34,32 +35,37 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Resolve year
+      - name: Resolve year(s)
         id: vars
         run: |
           if [ -n "${{ github.event.inputs.year }}" ]; then
-            echo "year=${{ github.event.inputs.year }}" >> $GITHUB_OUTPUT
+            # Manual run — use provided year
+            echo "years=${{ github.event.inputs.year }}" >> $GITHUB_OUTPUT
+          elif [ "$(date +%m)" = "12" ]; then
+            # Dec 1 scheduled run — refresh current year AND fetch next year
+            echo "years=$(date +%Y) $(( $(date +%Y) + 1 ))" >> $GITHUB_OUTPUT
           else
-            # Scheduled run on Dec 1 → fetch next year
-            echo "year=$(( $(date +%Y) + 1 ))" >> $GITHUB_OUTPUT
+            # Every other month — refresh current year only
+            echo "years=$(date +%Y)" >> $GITHUB_OUTPUT
           fi
 
       - name: Fetch prayer data
         run: |
-          YEAR=${{ steps.vars.outputs.year }}
           CITY="${{ github.event.inputs.city }}"
           MONTH="${{ github.event.inputs.month }}"
 
-          if [ -n "$CITY" ] && [ -n "$MONTH" ]; then
-            echo "Fetching $YEAR $CITY month $MONTH (correction mode)"
-            node scripts/fetch-prayer-year.js $YEAR $CITY $MONTH
-          elif [ -n "$CITY" ]; then
-            echo "Fetching $YEAR $CITY all months"
-            node scripts/fetch-prayer-year.js $YEAR $CITY
-          else
-            echo "Fetching $YEAR all cities"
-            node scripts/fetch-prayer-year.js $YEAR
-          fi
+          for YEAR in ${{ steps.vars.outputs.years }}; do
+            if [ -n "$CITY" ] && [ -n "$MONTH" ]; then
+              echo "Fetching $YEAR $CITY month $MONTH (correction mode)"
+              node scripts/fetch-prayer-year.js $YEAR $CITY $MONTH
+            elif [ -n "$CITY" ]; then
+              echo "Fetching $YEAR $CITY all months"
+              node scripts/fetch-prayer-year.js $YEAR $CITY
+            else
+              echo "Fetching $YEAR all cities"
+              node scripts/fetch-prayer-year.js $YEAR
+            fi
+          done
 
       - name: Commit and push if data changed
         run: |
@@ -69,15 +75,15 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes — prayer data already up to date."
           else
-            YEAR=${{ steps.vars.outputs.year }}
+            YEARS="${{ steps.vars.outputs.years }}"
             CITY="${{ github.event.inputs.city }}"
             MONTH="${{ github.event.inputs.month }}"
             if [ -n "$CITY" ] && [ -n "$MONTH" ]; then
-              MSG="data(prayer): refresh $YEAR $CITY/$MONTH from upstream"
+              MSG="data(prayer): refresh $YEARS $CITY/$MONTH from upstream"
             elif [ -n "$CITY" ]; then
-              MSG="data(prayer): refresh $YEAR $CITY from upstream"
+              MSG="data(prayer): refresh $YEARS $CITY from upstream"
             else
-              MSG="data(prayer): refresh $YEAR all cities from upstream"
+              MSG="data(prayer): refresh $YEARS all cities from upstream"
             fi
             git commit -m "$MSG"
             git push origin main
