@@ -1,0 +1,85 @@
+name: Refresh Prayer Data
+
+on:
+  # Auto: runs every year on Dec 1 — fetches next year's data before Jan 1
+  schedule:
+    - cron: '0 6 1 12 *'
+
+  # Manual: run from GitHub Actions tab, pick year + optional city
+  workflow_dispatch:
+    inputs:
+      year:
+        description: 'Year to fetch (e.g. 2028)'
+        required: true
+        default: ''
+      city:
+        description: 'City to refresh (leave blank for all 20 cities)'
+        required: false
+        default: ''
+      month:
+        description: 'Month to refresh (1-12, only used when city is set)'
+        required: false
+        default: ''
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Resolve year
+        id: vars
+        run: |
+          if [ -n "${{ github.event.inputs.year }}" ]; then
+            echo "year=${{ github.event.inputs.year }}" >> $GITHUB_OUTPUT
+          else
+            # Scheduled run on Dec 1 → fetch next year
+            echo "year=$(( $(date +%Y) + 1 ))" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch prayer data
+        run: |
+          YEAR=${{ steps.vars.outputs.year }}
+          CITY="${{ github.event.inputs.city }}"
+          MONTH="${{ github.event.inputs.month }}"
+
+          if [ -n "$CITY" ] && [ -n "$MONTH" ]; then
+            echo "Fetching $YEAR $CITY month $MONTH (correction mode)"
+            node scripts/fetch-prayer-year.js $YEAR $CITY $MONTH
+          elif [ -n "$CITY" ]; then
+            echo "Fetching $YEAR $CITY all months"
+            node scripts/fetch-prayer-year.js $YEAR $CITY
+          else
+            echo "Fetching $YEAR all cities"
+            node scripts/fetch-prayer-year.js $YEAR
+          fi
+
+      - name: Commit and push if data changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/prayer-data/
+          if git diff --cached --quiet; then
+            echo "No changes — prayer data already up to date."
+          else
+            YEAR=${{ steps.vars.outputs.year }}
+            CITY="${{ github.event.inputs.city }}"
+            MONTH="${{ github.event.inputs.month }}"
+            if [ -n "$CITY" ] && [ -n "$MONTH" ]; then
+              MSG="data(prayer): refresh $YEAR $CITY/$MONTH from upstream"
+            elif [ -n "$CITY" ]; then
+              MSG="data(prayer): refresh $YEAR $CITY from upstream"
+            else
+              MSG="data(prayer): refresh $YEAR all cities from upstream"
+            fi
+            git commit -m "$MSG"
+            git push origin main
+            echo "Pushed updated prayer data."
+          fi
