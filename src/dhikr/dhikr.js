@@ -3190,7 +3190,7 @@ window.GencineUI = {
     /* ── Pinch zoom · double-tap · pan ── */
     var _pdfZoom = 1, _tx = 0, _ty = 0;
     var _pinchStart = null, _panStart = null;
-    var _lastTap = 0, _lastTapX = 0, _lastTapY = 0;
+    var _lastTap = 0, _lastTapX = 0, _lastTapY = 0, _tapMovedSinceLast = false;
     var _badgeTimer = null;
     pagesWrap.style.transformOrigin = '0 0';
 
@@ -3368,15 +3368,15 @@ window.GencineUI = {
       } else if(e.touches.length===1){
         _pinchStart = null;
         var x1=e.touches[0].clientX, y1=e.touches[0].clientY, now=Date.now();
-        if(now-_lastTap<300 && Math.abs(x1-_lastTapX)<40 && Math.abs(y1-_lastTapY)<40){
-          _lastTap = 0;
+        if(now-_lastTap<250 && Math.abs(x1-_lastTapX)<28 && Math.abs(y1-_lastTapY)<28 && !_tapMovedSinceLast){
+          _lastTap = 0; _tapMovedSinceLast = false;
           if(_pdfZoom>1.05){ _pdfZoom=1; _tx=0; _ty=0; _applyPdfTransform(true); }
           else { _zoomAt(2.5, x1, y1); _applyPdfTransform(true); }
           _showBadge(_pdfZoom);
           if(e.cancelable) e.preventDefault();
           return;
         }
-        _lastTap=now; _lastTapX=x1; _lastTapY=y1;
+        _lastTap=now; _lastTapX=x1; _lastTapY=y1; _tapMovedSinceLast=false;
         if(_pdfZoom>1.01){
           _panStart = {x:x1, y:y1, tx:_tx, ty:_ty};
           e.preventDefault();
@@ -3385,6 +3385,7 @@ window.GencineUI = {
     }, {passive:false});
 
     pagesWrap.addEventListener('touchmove', function(e){
+      _tapMovedSinceLast = true; // any movement between taps disqualifies double-tap
       if(e.touches.length===2 && _pinchStart){
         e.preventDefault();
         var newZoom = Math.min(4, Math.max(1, _pinchStart.zoom * _pinchDist(e.touches) / _pinchStart.dist));
