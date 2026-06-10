@@ -194,6 +194,18 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
 <link rel="preload" href="/app/app-styles.min.css?v=3" as="style">
 <link rel="stylesheet" href="/app/app-styles.min.css?v=3">
+<style>
+/* Search bar — open: spring bounce */
+.search-bar.on{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;padding:10px 16px 12px;max-height:600px;transition:max-height .01s,padding .01s,opacity .3s cubic-bezier(0.34,1.56,0.64,1),transform .3s cubic-bezier(0.34,1.56,0.64,1)}
+/* Search bar — close: smooth slide up + fade */
+.search-bar{transform:translateY(-14px) scale(0.96);opacity:0;transition:max-height 0s .22s,padding 0s .22s,opacity .2s ease-in,transform .2s ease-in}
+/* Input row springs in */
+.search-bar.on .search-wrap{animation:_sb-in .32s cubic-bezier(0.34,1.56,0.64,1) both}
+@keyframes _sb-in{from{transform:scale(0.94) translateY(-6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+/* × button rotates in */
+.search-bar.on .search-clear{animation:_sb-x .3s cubic-bezier(0.34,1.56,0.64,1) both}
+@keyframes _sb-x{from{transform:rotate(-90deg) scale(0.5);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
+</style>
 <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.documentElement.classList.remove('preload');});});</script>
 </head>
 <body>
