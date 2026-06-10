@@ -3196,7 +3196,7 @@ window.GencineUI = {
     /* ── Pinch zoom · double-tap · pan ── */
     var _pdfZoom = 1, _tx = 0, _ty = 0;
     var _pinchStart = null, _panStart = null;
-    var _lastTap = 0, _lastTapX = 0, _lastTapY = 0, _tapMovedSinceLast = false;
+    var _lastTap = 0, _lastTapX = 0, _lastTapY = 0, _tapMovedSinceLast = false, _tapLifted = false;
     var _badgeTimer = null;
     pagesWrap.style.transformOrigin = '0 0';
 
@@ -3382,7 +3382,7 @@ window.GencineUI = {
           if(e.cancelable) e.preventDefault();
           return;
         }
-        _lastTap=now; _lastTapX=x1; _lastTapY=y1; _tapMovedSinceLast=false;
+        _lastTap=now; _lastTapX=x1; _lastTapY=y1; _tapMovedSinceLast=false; _tapLifted=false;
         if(_pdfZoom>1.01){
           _panStart = {x:x1, y:y1, tx:_tx, ty:_ty};
           e.preventDefault();
@@ -3391,7 +3391,7 @@ window.GencineUI = {
     }, {passive:false});
 
     pagesWrap.addEventListener('touchmove', function(e){
-      _tapMovedSinceLast = true; // any movement between taps disqualifies double-tap
+      if(_tapLifted) _tapMovedSinceLast = true; // movement after finger lifted = scroll, not tap
       if(e.touches.length===2 && _pinchStart){
         e.preventDefault();
         var newZoom = Math.min(4, Math.max(1, _pinchStart.zoom * _pinchDist(e.touches) / _pinchStart.dist));
@@ -3413,6 +3413,7 @@ window.GencineUI = {
     pagesWrap.addEventListener('touchend', function(e){
       if(e.touches.length < 2) _pinchStart = null;
       if(e.touches.length === 0){
+        _tapLifted = true; // finger up — subsequent touchmove = between-tap scroll
         _panStart = null;
         if(_pdfZoom < 1.08){ _pdfZoom=1; _tx=0; _ty=0; _applyPdfTransform(true); }
       }
