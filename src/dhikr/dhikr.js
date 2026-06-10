@@ -3155,6 +3155,9 @@ window.GencineUI = {
     var progressPct = document.createElement('div');
     progressPct.className = 'pdf-ring-pct';
     ringWrap.appendChild(progressPct);
+    var sizeLabel = document.createElement('div');
+    sizeLabel.className = 'pdf-ring-size';
+    ringWrap.appendChild(sizeLabel);
     loadingEl.appendChild(ringWrap);
 
     // Title + dots grouped
@@ -3845,18 +3848,25 @@ window.GencineUI = {
           _startLoadingTask(pdfjsLib.getDocument(Object.assign({ data: cachedBuf }, _pdfBaseOpts)));
         } else {
           // Download and cache, showing progress ring
-          PdfStore.download(book, function(pct) {
-            if (ringWrap && ringWrap.classList.contains('pdf-ring-idle')) {
-              ringWrap.classList.remove('pdf-ring-idle');
-              arc.classList.add('pdf-ring-progress');
-              arc.style.setProperty('stroke-dashoffset', String(CIRC));
-              ringIcon.style.display = 'none';
-              progressPct.style.display = 'block';
+          function _activateRing(totalBytes) {
+            if (!ringWrap) return;
+            ringWrap.classList.remove('pdf-ring-idle');
+            arc.classList.add('pdf-ring-progress');
+            arc.style.setProperty('stroke-dashoffset', String(CIRC));
+            ringIcon.style.display = 'none';
+            progressPct.style.display = 'block';
+            progressPct.textContent = '0%';
+            if (totalBytes > 0) {
+              var mb = (totalBytes / (1024 * 1024)).toFixed(1);
+              if (sizeLabel) { sizeLabel.textContent = mb + ' MB'; sizeLabel.style.display = 'block'; }
             }
-            if (progressPct) progressPct.textContent = pct + '%';
-            if (arc) arc.style.setProperty('stroke-dashoffset', (CIRC * (1 - pct / 100)).toFixed(2));
+          }
+          PdfStore.download(book, function(pct) {
+            if (ringWrap && ringWrap.classList.contains('pdf-ring-idle')) _activateRing(0);
+            if (progressPct) progressPct.textContent = (pct < 0 ? '...' : pct + '%');
+            if (arc) arc.style.setProperty('stroke-dashoffset', (pct >= 0 ? CIRC * (1 - pct / 100) : CIRC).toFixed(2));
             if (pct >= 100 && arc) arc.classList.add('pdf-ring-done');
-          }).then(function(buf) {
+          }, _activateRing).then(function(buf) {
             if (_loadCancelled) return;
             _startLoadingTask(pdfjsLib.getDocument(Object.assign({ data: buf }, _pdfBaseOpts)));
             self._refreshBookDlBadges();

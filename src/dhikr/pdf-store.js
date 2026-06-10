@@ -26,14 +26,16 @@ var PdfStore = (function () {
   }
 
   /* Download PDF, cache it, and return ArrayBuffer.
+     onStart(totalBytes) fires as soon as response headers arrive.
      onProgress(pct 0-100) called during fetch. */
-  async function download(book, onProgress) {
+  async function download(book, onProgress, onStart) {
     var url = proxyUrl(book.pdf_url);
     var resp = await fetch(url);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
 
     // Stream body to track progress
     var contentLength = parseInt(resp.headers.get('content-length') || '0', 10);
+    if (onStart) onStart(contentLength); // fires immediately — before first byte read
     var reader = resp.body.getReader();
     var chunks = [];
     var received = 0;
@@ -43,6 +45,7 @@ var PdfStore = (function () {
       chunks.push(_r.value);
       received += _r.value.length;
       if (contentLength > 0 && onProgress) onProgress(Math.round(received / contentLength * 100));
+      else if (onProgress) onProgress(-1); // unknown size — still alive
     }
     if (onProgress) onProgress(100);
 
