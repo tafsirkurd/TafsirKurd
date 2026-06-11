@@ -938,8 +938,8 @@ var S={
   supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,syncErrorDetail:null,lastSyncTime:0,realtimeChannel:null,
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
-  mushafFont:'qcf1',
-  mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qcf1':'mushafFontSize_qcf1'))||0;return ip?Math.min(34,Math.max(24,raw||28)):Math.min(25,Math.max(23,raw||24));})(),
+  mushafFont:'qcf4', // QCF4: fully bundled (fonts + page data) — Mushaf works offline. qcf1/qcf2 need network (GitHub fonts + quran.com API).
+  mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qcf4':'mushafFontSize_qcf4'))||0;return ip?Math.min(34,Math.max(22,raw||28)):Math.min(24,Math.max(16,raw||22));})(),
   mushafLineH:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseFloat(localStorage.getItem(ip?'mushafLineH_ipad':'mushafLineH'))||0;return ip?Math.min(2.4,Math.max(1.8,raw||2.0)):Math.min(2.3,Math.max(1.8,raw||1.8));})(),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
@@ -1773,9 +1773,47 @@ function _idbPut(key,val){
     try{db.transaction('files','readwrite').objectStore('files').put(val,key);}catch(e){}
   });
 }
+function _idbDel(key){
+  _openIDB(function(db){
+    if(!db)return;
+    try{db.transaction('files','readwrite').objectStore('files').delete(key);}catch(e){}
+  });
+}
+
+// ── Build-versioned cache wrappers ───────────────────────────────────────────
+// Quran/tafsir IDB entries are stored as {build, data, savedAt} so a new APK
+// (which may ship corrected quran.json / kurdish_tafsir.json) invalidates the
+// old cache automatically. Legacy unwrapped payloads count as stale once the
+// build is known. build==='' (web, or App.getInfo() failed) fails open —
+// the cache is accepted as-is so nothing breaks without the native bridge.
+var _appBuild=null; // null = not yet resolved; '' = unknown
+function _getAppBuild(cb){
+  if(_appBuild!==null){cb(_appBuild);return;}
+  var done=function(b){_appBuild=b;cb(b);};
+  try{
+    if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App&&
+       Capacitor.getPlatform&&Capacitor.getPlatform()!=='web'){
+      Capacitor.Plugins.App.getInfo()
+        .then(function(info){done(String((info&&info.build)||''));})
+        .catch(function(){done('');});
+      return;
+    }
+  }catch(e){}
+  done('');
+}
+function _idbWrap(data){return{build:_appBuild||'',data:data,savedAt:Date.now()};}
+// Returns the usable payload, or null when the cache is absent or belongs to
+// a different build (caller should delete the key and refetch).
+function _idbUnwrap(cached,build){
+  if(!cached)return null;
+  if(cached.data!==undefined&&cached.build!==undefined){
+    return(!build||String(cached.build)===build)?cached.data:null;
+  }
+  return build?null:cached; // legacy unwrapped payload
+}
 
 var _QURAN_IDB_KEY='quran_v1';
-function _fetchQuranData(){
+function _fetchQuranData(cb){
   var _t0=Date.now();
   // Retry up to 2 times with exponential backoff before giving up.
   // Each attempt creates a fresh AbortController so the timeout resets.
@@ -1790,10 +1828,11 @@ function _fetchQuranData(){
   },{maxRetries:2,base:600})
   .then(function(d){
     AndroidLog.fetch('/data/quran.json',200,'quran',false,Date.now()-_t0);
-    S.quranData=d;
-    _idbPut(_QURAN_IDB_KEY,d);
+    S.quranData=d; // swap only on success — old data stays alive if the fetch fails
+    _idbPut(_QURAN_IDB_KEY,_idbWrap(d));
     _dataReady.quran=true;
     _checkDataReady();
+    if(cb)cb(true);
   })
   .catch(function(e){
     AndroidLog.fetch('/data/quran.json',0,'quran',false,Date.now()-_t0,e);
@@ -1801,30 +1840,48 @@ function _fetchQuranData(){
     toast(t('error.data_load'));
     _dataReady.quran=true; // unblock splash even on final failure
     _checkDataReady();
+    if(cb)cb(false);
   });
 }
 function loadQuranData(){
-  // Fast path A: HTML preload script already read IDB during page parse — zero async wait.
-  if(window._tkQuranPreload){
-    S.quranData=window._tkQuranPreload;
-    _dataReady.quran=true;
-    _checkDataReady();
-    return;
-  }
-  // Fast path B: IDB open succeeded but key absent (first launch) — skip IDB round-trip.
-  if(window._tkQuranPreload===false){
-    _fetchQuranData();
-    return;
-  }
-  // Fallback: preload script not yet done (or IDB unavailable) — check IDB ourselves.
-  _idbGet(_QURAN_IDB_KEY,function(cached){
-    if(cached){
-      S.quranData=cached;
-      _dataReady.quran=true;
-      _checkDataReady();
+  _getAppBuild(function(build){
+    // Fast path A: HTML preload script already read IDB during page parse — zero async wait.
+    if(window._tkQuranPreload){
+      var pd=_idbUnwrap(window._tkQuranPreload,build);
+      if(pd){
+        S.quranData=pd;
+        _dataReady.quran=true;
+        _checkDataReady();
+        return;
+      }
+      // Cache belongs to an older build — discard the preload and refetch
+      // (bundled JSON is APK-local, so this costs ~150 ms once per app update).
+      console.log('[quran] IDB cache from older build — refreshing');
+      window._tkQuranPreload=undefined;
+      _idbDel(_QURAN_IDB_KEY);
+      _fetchQuranData();
       return;
     }
-    _fetchQuranData();
+    // Fast path B: IDB open succeeded but key absent (first launch) — skip IDB round-trip.
+    if(window._tkQuranPreload===false){
+      _fetchQuranData();
+      return;
+    }
+    // Fallback: preload script not yet done (or IDB unavailable) — check IDB ourselves.
+    _idbGet(_QURAN_IDB_KEY,function(cached){
+      var pd2=_idbUnwrap(cached,build);
+      if(pd2){
+        S.quranData=pd2;
+        _dataReady.quran=true;
+        _checkDataReady();
+        return;
+      }
+      if(cached){
+        console.log('[quran] IDB cache from older build — refreshing');
+        _idbDel(_QURAN_IDB_KEY);
+      }
+      _fetchQuranData();
+    });
   });
 }
 
@@ -1851,33 +1908,44 @@ function groupTafsirBySurah(data){
 }
 
 var _TAFSIR_IDB_KEY='tafsir_v1';
+function _fetchTafsirData(cb){
+  _tkRetry(function(){
+    var ctrl=new AbortController();
+    var tid=setTimeout(function(){ctrl.abort();},_sn.ms(18000,32000));
+    return fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
+      clearTimeout(tid);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    }).catch(function(e){clearTimeout(tid);throw e;});
+  },{maxRetries:2,base:800})
+  .then(function(d){
+    var grouped=groupTafsirBySurah(d);
+    S.tafsirData=grouped; // swap only on success — old data stays alive if the fetch fails
+    _idbPut(_TAFSIR_IDB_KEY,_idbWrap(grouped));
+    _dataReady.tafsir=true;
+    _checkDataReady();
+    if(cb)cb(true);
+  })
+  .catch(function(e){
+    console.error('[tafsir] failed after retries:',e);
+    toast(t('error.tafsir_load'));
+    _dataReady.tafsir=true; // unblock splash on final failure
+    _checkDataReady();
+    if(cb)cb(false);
+  });
+}
 function loadTafsirData(){
   // Try IDB first — stores the pre-processed grouped object so we skip
   // both the 3 MB fetch and groupTafsirBySurah() on every repeat launch.
-  _idbGet(_TAFSIR_IDB_KEY,function(cached){
-    if(cached){S.tafsirData=cached;_dataReady.tafsir=true;_checkDataReady();return;}
-    var _t0=Date.now();
-    _tkRetry(function(){
-      var ctrl=new AbortController();
-      var tid=setTimeout(function(){ctrl.abort();},_sn.ms(18000,32000));
-      return fetch('/data/kurdish_tafsir.json',{signal:ctrl.signal}).then(function(r){
-        clearTimeout(tid);
-        if(!r.ok)throw new Error('HTTP '+r.status);
-        return r.json();
-      }).catch(function(e){clearTimeout(tid);throw e;});
-    },{maxRetries:2,base:800})
-    .then(function(d){
-      var grouped=groupTafsirBySurah(d);
-      S.tafsirData=grouped;
-      _idbPut(_TAFSIR_IDB_KEY,grouped);
-      _dataReady.tafsir=true;
-      _checkDataReady();
-    })
-    .catch(function(e){
-      console.error('[tafsir] failed after retries:',e);
-      toast(t('error.tafsir_load'));
-      _dataReady.tafsir=true; // unblock splash on final failure
-      _checkDataReady();
+  _getAppBuild(function(build){
+    _idbGet(_TAFSIR_IDB_KEY,function(cached){
+      var pd=_idbUnwrap(cached,build);
+      if(pd){S.tafsirData=pd;_dataReady.tafsir=true;_checkDataReady();return;}
+      if(cached){
+        console.log('[tafsir] IDB cache from older build — refreshing');
+        _idbDel(_TAFSIR_IDB_KEY);
+      }
+      _fetchTafsirData();
     });
   });
 }
@@ -2224,7 +2292,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260609b', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260611a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=59',      function() { _p2 = true; _check(); });
 }
@@ -3187,7 +3255,7 @@ function checkNewBookNotif(){
               LN.schedule({notifications:[{
                 id:32,
                 title:tSafe('notif.new_book_title')||'پەرتوکەکا نوی 📖',
-                body:(book.title_ku||book.title_ar)||tSafe('notif.new_book_body')||'پەرتوکەکا نوی زێدەبوو',
+                body:(book.title_ku||book.title_ar)||tSafe('notif.new_book_body')||'پەرتوکەکا نوی زیادبوو',
                 schedule:{at:new Date(Date.now()+4000),allowWhileIdle:true},
                 smallIcon:'ic_notification',
                 channelId:'reminder',
@@ -4489,22 +4557,48 @@ function _fitQCFLines(pageEl){
   var lines=pageEl.querySelectorAll('.mushaf-qcf-line');
   var n=lines.length;
   if(!n)return;
-  // batch-reset transforms first so measurements reflect natural width
-  for(var i=0;i<n;i++)lines[i].style.transform='';
-  var scales=new Array(n);
-  // batch-read
+  // Reset any previous fit so measurement reflects the user-selected size
+  for(var i=0;i<n;i++){lines[i].style.transform='';lines[i].style.removeProperty('font-size');}
+  // Measure: sum of segment widths. scrollWidth is WRONG here — on a
+  // center-justified flex row browsers don't report start-edge overflow,
+  // so up to half the spill went undetected and lines stayed clipped.
+  var worst=1;
   for(var i=0;i<n;i++){
-    var sw=lines[i].scrollWidth,cw=lines[i].clientWidth;
-    scales[i]=(sw>cw&&cw>0)?cw/sw:1;
+    var line=lines[i],cw=line.clientWidth,total=0,ch=line.children;
+    for(var j=0;j<ch.length;j++)total+=ch[j].getBoundingClientRect().width;
+    if(cw>0&&total>cw){var sc=cw/total;if(sc<worst)worst=sc;}
   }
-  // batch-write
+  if(worst>=1)return; // nothing overflows at the current size
+  // Shrink the FONT uniformly so the widest line fits — keeps authentic glyph
+  // shapes (no scaleX squeeze). QCF pages are designed with near-equal full-line
+  // widths, so one scale fits the whole page and stays visually consistent.
+  var basePx=parseFloat(getComputedStyle(lines[0]).fontSize)||24;
+  var fitPx=Math.max(12,Math.floor(basePx*worst*10)/10);
+  for(var i=0;i<n;i++)lines[i].style.setProperty('font-size',fitPx+'px','important');
+  // Residual guard (font metrics are only ~linear): any line still over after
+  // the shrink gets a tiny per-line scaleX — imperceptible at <2%.
   for(var i=0;i<n;i++){
-    if(scales[i]<1){
-      lines[i].style.transform='scaleX('+scales[i].toFixed(4)+')';
-      lines[i].style.transformOrigin='center';
+    var line2=lines[i],w2=line2.clientWidth,t2=0,ch2=line2.children;
+    for(var k=0;k<ch2.length;k++)t2+=ch2[k].getBoundingClientRect().width;
+    if(w2>0&&t2>w2+0.5){
+      line2.style.transform='scaleX('+(w2/t2).toFixed(4)+')';
+      line2.style.transformOrigin='center';
     }
   }
 }
+
+// Re-fit all rendered mushaf pages (orientation change, window resize, split-screen).
+var _mushafResizeT=null;
+window.addEventListener('resize',function(){
+  if(!S.mushafMode)return;
+  clearTimeout(_mushafResizeT);
+  _mushafResizeT=setTimeout(function(){
+    var mv=$('mushafView');
+    if(!mv)return;
+    var pgs=mv.querySelectorAll('.mushaf-text-page[data-loaded]');
+    for(var i=0;i<pgs.length;i++)_fitQCFLines(pgs[i]);
+  },200);
+});
 
 // Returns a DocumentFragment rendering Quran text with KFGQPC Hafs font.
 // verses: array from getMushafPageData — may be empty when page data unavailable.
@@ -4556,7 +4650,7 @@ function _buildHafsFallbackFrag(verses,pageNum){
 }
 
 function loadMushafPageQCF(pageEl,pageNum){
-  var font=S.mushafFont||'qcf1';
+  var font=S.mushafFont||'qcf4';
   var pf=_getPageFields();
   var _t0=Date.now();
 
@@ -6392,7 +6486,10 @@ App.openMushafSettings=function(){
   if(_abH>0)body.style.paddingBottom='calc(var(--tab-h) + var(--safe-b) + '+(_abH+20)+'px)';
 
   var _isIpad=document.documentElement.classList.contains('is-ipad')||window.innerWidth>=768;
-  var _fsMin=_isIpad?24:23, _fsMax=_isIpad?34:25;
+  // Phone 16-24 / iPad 22-34: most of the range sits BELOW the fit-to-width cap
+  // (~20px on a 384px-wide phone) so every step visibly changes the page.
+  // _fitQCFLines hard-guarantees no line ever clips, whatever value is chosen.
+  var _fsMin=_isIpad?22:16, _fsMax=_isIpad?34:24;
   var _fsKey=_isIpad?'mushafFontSize_ipad_'+S.mushafFont:'mushafFontSize_'+S.mushafFont;
   var _lhKey=_isIpad?'mushafLineH_ipad':'mushafLineH';
   var _lhMax=_isIpad?2.4:2.3;
@@ -6417,6 +6514,14 @@ App.openMushafSettings=function(){
     requestAnimationFrame(function(){
       var mv=$('mushafView');
       if(mv){var pgs=mv.querySelectorAll('.mushaf-text-page[data-loaded]');for(var _i=0;_i<pgs.length;_i++)_fitQCFLines(pgs[_i]);}
+      // If the fit pass capped the rendered size below the requested value,
+      // further "+" presses are a no-op on this device — disable the button so
+      // the stepper reflects the real ceiling instead of silently doing nothing.
+      if(fsPBtn&&mv){
+        var _fl=mv.querySelector('.mushaf-text-page[data-loaded] .mushaf-qcf-line');
+        var _fitted=(_fl&&_fl.style.fontSize)?parseFloat(_fl.style.fontSize):0;
+        if(_fitted&&_fitted<v-0.6)fsPBtn.disabled=true;
+      }
     });
   }
   var fsCtrl=el('div','setting-stepper');
@@ -10627,13 +10732,23 @@ function renderSettings(){
       renderSettings();
     }});
   },true));
-  // Clear cache
+  // Clear cache — deletes the build-versioned IDB copies and refetches from the
+  // bundled JSON. Old data is kept alive until the fresh copy lands (swap-on-success
+  // inside the fetchers), so the reader never blanks and there is no null window.
+  // Success toast fires only when both reloads actually succeeded; on failure the
+  // fetchers show their own error toast and the old data remains usable.
   g4.appendChild(mkBtnRow(t('settings.clear_cache'),'','fas fa-trash',function(){
     _tkConfirm({icon:'🗑️',title:t('settings.clear_confirm')||'کاشێکرنەکان پاک بکرن؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
-      S.quranData=null;S.tafsirData=null;
-      _dataReady.quran=false;_dataReady.tafsir=false;
-      loadQuranData();loadTafsirData();
-      toast(t('toast.cache_cleared'));
+      window._tkQuranPreload=undefined; // never hand back the stale preload object
+      _idbDel(_QURAN_IDB_KEY);
+      _idbDel(_TAFSIR_IDB_KEY);
+      var _qOk=null,_tOk=null;
+      var _both=function(){
+        if(_qOk===null||_tOk===null)return;
+        if(_qOk&&_tOk)toast(t('toast.cache_cleared'));
+      };
+      _fetchQuranData(function(ok){_qOk=ok;_both();});
+      _fetchTafsirData(function(ok){_tOk=ok;_both();});
     }});
   },true));
   // Logout (only when logged in)
@@ -11174,7 +11289,7 @@ var SYNC_SIMPLE_KEYS=[
   'autoAdvance','scrollFollowsAudio','hapticFeedback',
   'bestStreak',
   'mushafMode','readerFont','mushafFont','mushafLineH',
-  'mushafFontSize_qcf1',
+  'mushafFontSize_qcf4','mushafFontSize_ipad_qcf4','mushafFontSize_qcf1',
   'book_saved','book_read_ids',
   'prayerCity','prayerMethod','prayerAthanEnabled','prayerToggles',
   'prayerAthanVoice','prayerTimeFormat',
@@ -11361,10 +11476,23 @@ function applySyncData(data){
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
   S.mushafMode=localStorage.getItem('mushafMode')==='true';
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
-  S.mushafFont='qcf1';
-  try{localStorage.setItem('mushafFont','qcf1');}catch(e){}
-  S.mushafFontSize=Math.min(32,Math.max(25,parseInt(localStorage.getItem('mushafFontSize_qcf1'))||30));
-  S.mushafLineH=Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
+  // Pinned to QCF4 — the only fully-bundled mode (604 local fonts + mushaf-v4-pages.json),
+  // so Mushaf works with no network at all. qcf1/qcf2 remain code-supported but require
+  // internet (raw.githubusercontent.com fonts + api.quran.com page data).
+  S.mushafFont='qcf4';
+  try{localStorage.setItem('mushafFont','qcf4');}catch(e){}
+  // Clamps/defaults MUST match the mushaf-settings stepper (phone 23-25/24,
+  // iPad 24-34/28) — the old 25-32/30 here forced 30px on phones, wider than
+  // the page card, which is what caused clipped line edges before the
+  // fit-to-width pass existed. _fitQCFLines() is the hard guarantee; this
+  // just keeps the first paint close to the fitted size.
+  var _ipadLS=document.documentElement.classList.contains('is-ipad');
+  S.mushafFontSize=_ipadLS
+    ?Math.min(34,Math.max(22,parseInt(localStorage.getItem('mushafFontSize_ipad_qcf4'))||28))
+    :Math.min(24,Math.max(16,parseInt(localStorage.getItem('mushafFontSize_qcf4'))||22));
+  S.mushafLineH=_ipadLS
+    ?Math.min(2.4,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH_ipad'))||2.0))
+    :Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
   S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true';
@@ -11849,6 +11977,17 @@ App.openLogin=function(){
           console.warn('[Auth] signup error:',resp.error.message);
           showMsg(_mapAuthError(resp.error.message),'error');
           submitBtn.disabled=false;submitBtn.textContent=t('auth.signup');
+          return;
+        }
+        // Email already registered — Supabase returns success with empty identities array
+        if(resp.data&&resp.data.user&&resp.data.user.identities&&resp.data.user.identities.length===0){
+          showMsg(_mapAuthError('User already registered'),'error');
+          submitBtn.disabled=false;submitBtn.textContent=t('auth.signup');
+          return;
+        }
+        // Email confirmation disabled in Supabase — session returned immediately
+        if(resp.data&&resp.data.session){
+          createAppProfile(resp.data.session);
           return;
         }
         buildOtpForm(email);
@@ -12826,8 +12965,8 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   // Nothing computed here is repeated in touchmove.
   on(panel,'touchstart',function(e){
     _vBuf=[];
-    // Second finger added while PTR is active — cancel cleanly so the panel doesn't freeze
-    if(e.touches.length>1){if(armed||pulling){_cancelPull();armed=false;}return;}
+    // Second finger added while PTR is active — force-reset so panel snaps back immediately (no rAF delay).
+    if(e.touches.length>1){if(armed||pulling){_forceReset();}return;}
     if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
     if(window._sbLocked)return; // swipe-back gesture active — do not compete
     if(checkFn&&!checkFn())return;
@@ -12866,7 +13005,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   // NO class or style writes (deferred to rAF and the pulling-start block).
   panel.addEventListener('touchmove',function(e){
     var _now=Date.now();
-    if(e.touches.length>1){if(armed||pulling){_cancelPull();armed=false;}return;}
+    if(e.touches.length>1){if(armed||pulling){_forceReset();}return;}
     _vBuf.push({y:e.touches[0].clientY,t:_now});
     if(_vBuf.length>_VN)_vBuf.shift();
 
@@ -13024,7 +13163,12 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     }
   }
 
-  on(panel,'touchend',_doTouchEnd);
+  on(panel,'touchend',function(e){
+    // If another finger is still on screen, abort the gesture rather than
+    // committing (or half-committing) a refresh with phantom data.
+    if(e.touches.length>0){if(armed||pulling){_forceReset();}return;}
+    _doTouchEnd();
+  });
   on(panel,'touchcancel',function(){_setMomentumLock();_cancelPull();});
 }
 
@@ -14260,16 +14404,19 @@ function startApp(){
     });
   });
   // Apply persisted mushaf CSS vars immediately
-  document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||30)+'px');
+  document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||24)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
   // Force-update check: run immediately on startup — enforce lock already blocks
   // the UI synchronously, this just refreshes the config from server.
   ForceUpdate.check();
-  // Also check on resume after 2s delay (network may not be ready instantly)
+  // Freshness comes from the startup check above + the appStateChange resume
+  // check; this interval is only a safety net for sessions that never background.
+  // 15 min floor — the old 20s poll fetched /update-config ~180×/hour per device
+  // for the whole session (battery + data drain, needless backend load).
   // Clear any existing interval before creating — prevents duplicate polls if
   // startApp() is called more than once (hot reload, re-init paths).
   if(window._forceUpdateInterval)clearInterval(window._forceUpdateInterval);
-  window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 20000);
+  window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 15*60*1000);
 
   // ── Runtime jank monitoring — auto-downgrade performance tier ─────────────
   // Starts 8s after launch so startup pre-renders don't trigger false positives.

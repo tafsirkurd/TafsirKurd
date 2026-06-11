@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tafsir-kurd-v1181';
+const CACHE_NAME = 'tafsir-kurd-v1182';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
 // Mismatches cause cache misses — browser fetches from network instead of SW cache.
 const PRECACHE = [
   // Core app shell — index.html intentionally excluded: always served fresh from APK
-  '/app/app.min.js?v=1179',
+  '/app/app.min.js?v=1180',
   '/app/app-styles.min.css?v=3',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
@@ -14,7 +14,7 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260602b',
   '/prayer/prayer.ui.js?v=20260607',
   // Gencine / books module (lazily loaded but pre-cached for offline)
-  '/dhikr/dhikr.js?v=20260609a',
+  '/dhikr/dhikr.js?v=20260611a',
   '/dhikr/pdf-store.js?v=20260529',
   '/dhikr/dua-data.js?v=20260326b',
   '/dhikr/smart-dhikr.js?v=59',
@@ -34,7 +34,6 @@ const PRECACHE = [
   '/utils/kurdish-numbers.js',
   '/utils/auto-kurdish-numbers.js',
   '/utils/notification-messages.js',
-  '/utils/notification-scheduler.js',
   '/utils/theme-loader.js',
   '/utils/footer-loader.js',
   '/utils/secure-storage.js',
@@ -172,6 +171,12 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
+
+  // ── Large proxied content: network passthrough — never cache ─────────────
+  // /pdf-proxy streams multi-MB book PDFs. Caching them here would duplicate
+  // pdf-store.js's IndexedDB copy and bloat origin storage until the browser
+  // quota-evicts everything (including IDB-cached quran/tafsir data).
+  if (reqUrl.pathname.startsWith('/pdf-proxy')) return;
 
   // ── HTML pages: always fetch fresh — never serve stale cached HTML ──────
   // index.html references versioned JS/CSS; serving a cached old index.html would
