@@ -798,6 +798,32 @@ window.GencineUI = {
     return null;
   },
 
+  /* Resolve display title + cover for any book row, including series volumes:
+     a volume's own title_ku may be empty (label lives on series_title_ku +
+     volume_number) and its cover_url is usually empty (the series cover lives
+     on the first volume that has one). Used by the download manager (app.js)
+     and persisted into pdfMeta at download time so entries stay correct even
+     offline or after the row is removed from the DB. */
+  bookDisplayMeta: function(b) {
+    if (!b) return null;
+    var title = b.title_ku || b.title_ar || '';
+    var cover = b.cover_url || '';
+    if (b.series_id) {
+      if (!title) {
+        var st = b.series_title_ku || '';
+        var vn = b.volume_number;
+        title = st ? (st + (vn ? ' — ' + T('gencine.series_vols', 'بەرگ') + ' ' + vn : '')) : '';
+      }
+      if (!cover) {
+        for (var i = 0; i < _dbBooks.length; i++) {
+          var o = _dbBooks[i];
+          if (o.series_id === b.series_id && o.cover_url) { cover = o.cover_url; break; }
+        }
+      }
+    }
+    return { title: title, cover: cover };
+  },
+
   /* ── state persistence ── */
   _loadState: function(){
     var c = parseInt(localStorage.getItem('tasbihCount'))  || 0;

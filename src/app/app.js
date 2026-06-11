@@ -2292,7 +2292,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260611a', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260611b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=59',      function() { _p2 = true; _check(); });
 }
@@ -7145,11 +7145,17 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
     }else{
       pdfCached.forEach(function(entry){
         var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;
-        var title=book?(book.title_ku||book.title_ar||entry.pdfUrl.split('/').pop()):entry.pdfUrl.split('/').pop();
+        // Resolution chain: live row (series-aware: volume label + series cover)
+        // → metadata persisted at download time → raw filename as last resort.
+        // Series volumes have empty own title/cover, which used to fall through
+        // to the bare R2 filename with no cover.
+        var dm=(book&&window.GencineUI&&GencineUI.bookDisplayMeta)?GencineUI.bookDisplayMeta(book):null;
+        var title=(dm&&dm.title)||entry.title_ku||entry.title_ar||entry.pdfUrl.split('/').pop();
+        var cover=(dm&&dm.cover)||entry.cover_url||null;
         var selKey='book:'+entry.pdfUrl;
         var isSel=!!_dlMgrSelected[selKey];
         content.appendChild(_dlMgrItem(
-          book?book.cover_url:null,null,title,_fmtDlBytes(entry.bytes),null,null,
+          cover,null,title,_fmtDlBytes(entry.bytes),null,null,
           _dlMgrSelectMode?null:function(){
             if(!window.PdfStore)return;
             PdfStore.remove(book||{pdf_url:entry.pdfUrl}).then(function(){

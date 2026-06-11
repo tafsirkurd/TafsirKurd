@@ -162,7 +162,7 @@
      not the network — eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260608a" as="script">
-<link rel="preload" href="/app/app.min.js?v=1181" as="script">
+<link rel="preload" href="/app/app.min.js?v=1182" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260607" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -184,7 +184,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="" fetchpriority="low">
 <link rel="preload" href="/dhikr/dua-data.js?v=20260326b" as="script" fetchpriority="low">
 <link rel="preload" href="/dhikr/smart-dhikr.js?v=59" as="script" fetchpriority="low">
-<link rel="preload" href="/dhikr/dhikr.js?v=20260611a" as="script" fetchpriority="low">
+<link rel="preload" href="/dhikr/dhikr.js?v=20260611b" as="script" fetchpriority="low">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17">
 
@@ -780,7 +780,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 
 <!-- Critical: must execute in order before app.js -->
 <script src="/utils/supabase.js?v=20260326b"></script>
-<script src="/dhikr/pdf-store.js?v=20260529"></script>
+<script src="/dhikr/pdf-store.js?v=20260611a"></script>
 <script>/* compat shim: old iOS builds set window.__kmrBundle; forward to KMR_TRANSLATIONS */
 (function(){Object.defineProperty(window,'__kmrBundle',{set:function(v){window.KMR_TRANSLATIONS=v;},get:function(){return window.KMR_TRANSLATIONS;},configurable:true});})();
 </script>
@@ -836,7 +836,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <!-- dua-data.js + dhikr.js loaded lazily on first Gencine tab open (see _loadGencineScripts in app.js) -->
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
-<script src="/app/app.min.js?v=1181"></script>
+<script src="/app/app.min.js?v=1182"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {

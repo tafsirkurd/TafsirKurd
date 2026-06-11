@@ -64,9 +64,18 @@ var PdfStore = (function () {
 
     // Persist book metadata so the download manager can show the title
     // even if the book is later set to draft (inactive) and removed from _dbBooks.
+    // Series-aware: volumes often have no own title/cover — resolve the volume
+    // label and the series cover via GencineUI so offline entries stay correct.
     try {
+      var dm = (window.GencineUI && window.GencineUI.bookDisplayMeta)
+        ? window.GencineUI.bookDisplayMeta(book) : null;
       var meta = JSON.parse(localStorage.getItem('pdfMeta') || '{}');
-      meta[url] = { title_ku: book.title_ku || '', title_ar: book.title_ar || '', cover_url: book.cover_url || '', id: book.id || '' };
+      meta[url] = {
+        title_ku: (dm && dm.title) || book.title_ku || '',
+        title_ar: book.title_ar || '',
+        cover_url: (dm && dm.cover) || book.cover_url || '',
+        id: book.id || ''
+      };
       localStorage.setItem('pdfMeta', JSON.stringify(meta));
     } catch(e) {}
 
