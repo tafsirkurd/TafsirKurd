@@ -3667,13 +3667,24 @@ window.GencineUI = {
           if (!_panelEl || _jumpActive) return;
           var panelTop  = _panelEl.getBoundingClientRect().top;
           var scrollTop = _panelEl.scrollTop;
-          var ref       = scrollTop;
-          var best = 1, bestDist = Infinity;
-          slots.forEach(function(sl, i) {
-            var absTop = sl.getBoundingClientRect().top - panelTop + scrollTop;
-            var dist   = Math.abs(absTop - ref);
-            if (dist < bestDist) { bestDist = dist; best = i + 1; }
-          });
+          // Pick the last page whose top edge has reached or passed the viewport top.
+          // "Closest top" was wrong: it picks the NEXT page once you scroll past
+          // the midpoint of the current one, causing saves to jump 1-2 pages ahead.
+          var best = 1, bestAbsTop = -Infinity;
+          if (scrollTop + _panelEl.clientHeight >= _panelEl.scrollHeight - 2) {
+            // End-of-scroll clamp: a final page shorter than the viewport can never
+            // bring its top edge to the viewport top — when fully scrolled, record
+            // the last page directly so progress restores to it correctly.
+            best = slots.length || 1;
+          } else {
+            slots.forEach(function(sl, i) {
+              var absTop = sl.getBoundingClientRect().top - panelTop + scrollTop;
+              if (absTop <= scrollTop + 2 && absTop > bestAbsTop) {
+                bestAbsTop = absTop;
+                best = i + 1;
+              }
+            });
+          }
           if (best !== _curPage) { _curPage = best; _updatePageNav(); _saveProgress(); }
         });
       }
