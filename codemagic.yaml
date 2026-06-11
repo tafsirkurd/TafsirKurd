@@ -124,11 +124,19 @@ workflows:
       - name: Strip web fonts from iOS bundle (ITMS-90853)
         script: |
           set -e
+          # scripts/strip-ios-fonts.js converts qcf4 woff2 -> qcf4ttf/*.ttf BEFORE
+          # stripping, so Mushaf QCF4 fonts work offline on iOS. The old raw
+          # find-delete below nuked all 604 mushaf fonts without conversion,
+          # which made iOS silently fall back to plain Hafs rendering.
+          node scripts/strip-ios-fonts.js
           PUBLIC=ios/App/App/public
-          echo "Stripping .woff / .woff2 from $PUBLIC ..."
-          find "$PUBLIC" -name "*.woff" -delete
-          find "$PUBLIC" -name "*.woff2" -delete
-          echo "Verifying..."
+          TTF_COUNT=$(find "$PUBLIC/assets/fonts/qcf4ttf" -name "*.ttf" 2>/dev/null | wc -l | tr -d ' ')
+          echo "qcf4ttf TTF files: $TTF_COUNT"
+          if [ "$TTF_COUNT" -ne "604" ]; then
+            echo "ERROR: expected 604 converted mushaf TTFs, got $TTF_COUNT"
+            exit 1
+          fi
+          echo "Verifying no web fonts remain..."
           REMAINING=$(find "$PUBLIC" \( -name "*.woff" -o -name "*.woff2" \) | wc -l | tr -d ' ')
           echo "Web fonts remaining: $REMAINING"
           if [ "$REMAINING" -gt "0" ]; then

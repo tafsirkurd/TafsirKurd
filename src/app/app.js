@@ -3952,7 +3952,21 @@ function ensureQCFV4Font(pageNum){
     }).catch(function(){return false;});
   });
   var timeoutP=new Promise(function(res){setTimeout(function(){res(false);},5000);});
-  _qcfV4FontLoadP[pageNum]=Promise.race([loadP,timeoutP]);
+  _qcfV4FontLoadP[pageNum]=Promise.race([loadP,timeoutP]).then(function(ok){
+    if(!ok){
+      // Log the EXACT failure reason: probe the local file the @font-face points
+      // at. HTTP 404 = font not bundled (e.g. an iOS build that stripped woff2
+      // without the TTF conversion); 200 = file present but the face failed to
+      // apply (sentinel/timeout). Fires only on the rare failure path.
+      var probe=_isIOSCap?('/assets/fonts/qcf4ttf/p'+pageNum+'.ttf'):('/assets/fonts/qcf4/p'+pageNum+'.woff2');
+      fetch(probe).then(function(r){
+        console.warn('[QuranFont] QCFv4p'+pageNum+' FAILED — '+probe+' → HTTP '+r.status+(r.ok?' (file ok; face did not apply)':' (font file missing from bundle)'));
+      }).catch(function(e){
+        console.warn('[QuranFont] QCFv4p'+pageNum+' FAILED — '+probe+' fetch error: '+(e&&e.message));
+      });
+    }
+    return ok;
+  });
   return _qcfV4FontLoadP[pageNum];
 }
 
