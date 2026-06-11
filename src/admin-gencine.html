@@ -666,6 +666,12 @@
         .badge-dlg-btn.confirm { background: #f59e0b; color: #fff; }
         .badge-dlg-btn.confirm:hover { background: #d97706; }
         .badge-dlg-btn.confirm:disabled { opacity: .4; cursor: default; }
+        .badge-dlg-btn.send { background: #3b82f6; color: #fff; }
+        .badge-dlg-btn.send:hover { background: #2563eb; }
+        .notif-preview-field { margin-bottom: 14px; }
+        .notif-preview-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+        .notif-preview-field input, .notif-preview-field textarea { width: 100%; box-sizing: border-box; background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 11px; font-size: 13px; color: var(--text-primary); font-family: inherit; outline: none; resize: vertical; }
+        .notif-preview-field input:focus, .notif-preview-field textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.18); }
         /* Drag-and-drop (item-cards) */
         .item-card[draggable]{cursor:grab}
         .item-card[draggable]:active{cursor:grabbing}
@@ -2013,10 +2019,22 @@ async function saveHadith() {
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Hadith updated.' : 'Hadith added.', 'success');
-    if (!editId && savedRow && document.getElementById('hadith-no-push') && document.getElementById('hadith-no-push').checked) {
-        _skipAutoNotif('hadith', savedRow.id);
+    if (!editId && savedRow) {
+        var _hadithNoPushEl = document.getElementById('hadith-no-push');
+        if (_hadithNoPushEl && _hadithNoPushEl.checked) {
+            _skipAutoNotif('hadith', savedRow.id);
+        } else {
+            var _defHadithTitle = savedRow.title || 'فەرمودەکا نوی';
+            var _defHadithBody  = 'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+            showNotifPreviewDialog(_defHadithTitle, _defHadithBody, function(t, b) {
+                _sendHadithNotifNow(savedRow.id, t, b);
+                _skipAutoNotif('hadith', savedRow.id);
+            }, function() {
+                _skipAutoNotif('hadith', savedRow.id);
+            });
+        }
+        if (_hadithNoPushEl) _hadithNoPushEl.checked = false;
     }
-    var _hadithNoPushEl = document.getElementById('hadith-no-push'); if (_hadithNoPushEl) _hadithNoPushEl.checked = false;
     _logActivity(editId ? 'hadith_edit' : 'hadith_add', (editId ? 'Hadith updated: ' : 'Hadith added: ') + (savedRow && (savedRow.title || savedRow.ar) ? (savedRow.title || savedRow.ar).substring(0, 60) : ''));
     if (editId && savedRow) {
         var idx = allHadiths.findIndex(function(x){ return String(x.id) === String(editId); });
@@ -2648,10 +2666,8 @@ function _skipAutoNotif(dlType, dlId) {
     }).catch(function(){});
 }
 
-async function _sendBookNotifNow(bookId, titleKu) {
+async function _sendBookNotifNow(bookId, notifTitle, notifBody) {
     var token = _booksToken();
-    var notifTitle = titleKu || 'پەرتوکێ نوی';
-    var notifBody  = 'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
     try {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
@@ -2685,6 +2701,103 @@ async function _sendBookNotifNow(bookId, titleKu) {
     } catch (e) {
         showNotification('Notification error: ' + e.message, 'warning');
     }
+}
+
+async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
+    var token = _booksToken();
+    try {
+        var createRes = await fetch('/admin-notifications-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({
+                action: 'create',
+                title: notifTitle,
+                body: notifBody,
+                platform: 'all',
+                audience: 'all',
+                deep_link_type: 'hadith',
+                deep_link_id: String(hadithId)
+            })
+        });
+        var createData = await createRes.json();
+        if (!createData.success || !createData.notification) {
+            showNotification('Notification created but could not send: ' + (createData.error || 'unknown'), 'warning');
+            return;
+        }
+        var sendRes = await fetch('/admin-notifications-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: 'send', id: createData.notification.id })
+        });
+        var sendData = await sendRes.json();
+        if (sendData.success) {
+            showNotification('Push notification sent ✓', 'success');
+        } else {
+            showNotification('Notification saved but send failed: ' + (sendData.error || 'unknown'), 'warning');
+        }
+    } catch (e) {
+        showNotification('Notification error: ' + e.message, 'warning');
+    }
+}
+
+/* Preview-and-edit dialog shown before sending a push notification.
+   onSend(title, body) is called when admin confirms.
+   onSkip() is called when admin clicks Skip or dismisses. */
+function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
+    var overlay = mke('div', 'badge-dlg-overlay');
+    var dlg = mke('div', 'badge-dlg');
+
+    var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '🔔';
+    var heading = mke('div', 'badge-dlg-title'); heading.textContent = 'Send Push Notification';
+    var sub = mke('div', 'badge-dlg-sub');
+    sub.textContent = 'Review and edit the title and body before sending. You can also skip.';
+
+    var titleField = mke('div', 'notif-preview-field');
+    var titleLabel = mke('label'); titleLabel.textContent = 'Title';
+    var titleInput = mke('input');
+    titleInput.type = 'text';
+    titleInput.value = defaultTitle || '';
+    titleInput.setAttribute('dir', 'rtl');
+    titleField.appendChild(titleLabel);
+    titleField.appendChild(titleInput);
+
+    var bodyField = mke('div', 'notif-preview-field');
+    var bodyLabel = mke('label'); bodyLabel.textContent = 'Body';
+    var bodyTextarea = document.createElement('textarea');
+    bodyTextarea.rows = 3;
+    bodyTextarea.style.cssText = 'width:100%;box-sizing:border-box;background:var(--bg-hover);border:1px solid var(--border-light);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--text-primary);font-family:inherit;outline:none;resize:vertical;';
+    bodyTextarea.value = defaultBody || '';
+    bodyTextarea.setAttribute('dir', 'rtl');
+    bodyField.appendChild(bodyLabel);
+    bodyField.appendChild(bodyTextarea);
+
+    var actions = mke('div', 'badge-dlg-actions');
+    var skipBtn = mke('button', 'badge-dlg-btn skip');
+    skipBtn.type = 'button';
+    skipBtn.textContent = 'Skip';
+    skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
+
+    var sendBtn = mke('button', 'badge-dlg-btn send');
+    sendBtn.type = 'button';
+    sendBtn.textContent = 'Send';
+    sendBtn.onclick = function() {
+        var t = titleInput.value.trim();
+        var b = bodyTextarea.value.trim();
+        if (!t || !b) { titleInput.style.borderColor = t ? '' : '#ef4444'; bodyTextarea.style.borderColor = b ? '' : '#ef4444'; return; }
+        overlay.remove();
+        if (onSend) onSend(t, b);
+    };
+
+    actions.appendChild(skipBtn);
+    actions.appendChild(sendBtn);
+    dlg.appendChild(icon); dlg.appendChild(heading); dlg.appendChild(sub);
+    dlg.appendChild(titleField); dlg.appendChild(bodyField); dlg.appendChild(actions);
+    overlay.appendChild(dlg);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) { overlay.remove(); if (onSkip) onSkip(); }
+    });
+    setTimeout(function() { titleInput.focus(); titleInput.select(); }, 80);
 }
 
 function _logActivity(action_type, description) {
@@ -3053,7 +3166,13 @@ async function saveBook() {
         var _newBookId = r.data[0].id;
         var _sendPushEl = document.getElementById('book-send-push');
         if (_sendPushEl && _sendPushEl.checked) {
-            await _sendBookNotifNow(_newBookId, payload.title_ku || payload.title_ar || 'پەرتوکێ نوی');
+            var _defBookTitle = payload.title_ku || payload.title_ar || 'پەرتوکەکا نوی';
+            var _defBookBody  = 'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+            showNotifPreviewDialog(_defBookTitle, _defBookBody, function(t, b) {
+                _sendBookNotifNow(_newBookId, t, b);
+            }, function() {
+                _skipAutoNotif('book', _newBookId);
+            });
         } else {
             _skipAutoNotif('book', _newBookId);
         }

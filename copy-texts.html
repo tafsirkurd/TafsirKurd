@@ -11,11 +11,12 @@
   .section-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#555;text-transform:uppercase;direction:ltr;text-align:left;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #222}
   .row{margin:6px 0;padding:10px 14px;background:#1a1a1a;border-radius:8px;font-size:1rem;border:1px solid #2a2a2a;line-height:1.6}
   .lbl{font-size:.62rem;color:#555;margin-bottom:2px;margin-top:10px;direction:ltr;text-align:left}
+  .key{font-size:.6rem;color:#3b82f6;margin-bottom:2px;margin-top:10px;direction:ltr;text-align:left;font-family:monospace}
   pre{display:none}
 </style>
 </head>
 <body>
-<h1>Strings not yet changed to Kurmanji</h1>
+<h1>Strings — review &amp; correct</h1>
 <button class="copy-all-btn" onclick="copyAll()">📋 کۆپی کە هەمیان</button>
 
 <pre id="allText">
@@ -50,6 +51,49 @@ Subtitle line 1: تە هەمی نڤێژێن مەهێ تەمام کرن!
 Subtitle line 2: خودێ قبوول بکەت 🤲
 Streak badge (X = days): 🔥 X ڕۆژ ل سەر ئێک
 Close button: داخستن
+
+=== NOTIFICATIONS — NEW CONTENT ===
+[notif.new_book_title]   پەرتوکەکا نوی 📖
+[notif.new_book_body]    پەرتوکەکا نوی زیادبوو لە پەرتوکخانە
+[notif.new_video_title]  ڤیدیۆیەکی نوێ 🎬
+[notif.new_video_body]   ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس
+[auto_book_body]         پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
+[auto_hadith_title]      فەرمودەکا نوی
+[auto_hadith_body]       فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
+
+=== NOTIFICATIONS — DAILY REMINDERS ===
+[notif.verse_title]      ئایەتا ڕۆژێ
+[notif.streak_title]     بەردەوامیا ڕۆژانت لێ دەچێت! 🔥
+[notif.streak_body]      ئەڤرۆ ${days} ڕۆژ ل ڕێکێدایت. مەبەست بکە!
+[notif.reminder_body]    خوێندنا قورئانێ — بابڵێ بخوێنی!
+[notif.reminder_msg_0]   ئیمڕۆ چند ئایەتێن قورئانێ دبخوێنی؟ 📖
+[notif.reminder_msg_1]   دلێکی ژیان — ڕۆژێ بێ قورئانێ کم دکەت ✨
+[notif.reminder_msg_2]   خوا ل چاوبیرکرنا تو دایە — قورئانێ بخوێنە 🤲
+[notif.reminder_msg_3]   هەر ئایەتێک نوورێ دکەتە دلێ تو 💚
+[notif.reminder_msg_4]   قورئانێ دەرمانا دلێ تو یە — ئیمڕۆ بخوێنە 🌿
+[notif.reminder_msg_5]   ئیمانا تو هەر ڕۆژ گەشەدکەت — دەستکەت 🔥
+[notif.reminder_msg_6]   ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟
+[notif.reminder_msg_7]   چند خولەکێن قورئانێ ئیمڕۆ — بەرکەتا ڕۆژا تو دکەت ☀️
+[notif.reminder_msg_8]   ڕابوون هاوڕێ — قورئانێ چاوبیرکرن دایە 📿
+[notif.reminder_msg_9]   شەوا باش دەستکەت — ئیمڕۆ قورئانێ بخوێنە 🌙
+[notif.reminder_msg_10]  هەر ئایەتێک تۆ دبخوێنی خوا دبینێت 👁️
+[notif.reminder_msg_11]  قورئانێ بخوێنە — بیانوکا تو باشترین دکەت 🌅
+[notif.reminder_msg_12]  ئاگرا ئیمانێ بدە — ئیمڕۆ قورئانێ بخوێنە ⭐
+[notif.reminder_msg_13]  سەعادەتا ئەم دنیایێ — قورئانێ تاوەکو دلێ تو 💫
+
+=== NOTIFICATIONS — SETUP ===
+[notif.setup_title]             بۆ ئاگادارکرنا باش ✓
+[notif.setup_body]              جهت عملكرد الإشعارات بشكل صحيح على هواتف Samsung، قم بما يلي:
+
+ڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە
+(Settings → Battery → Unrestricted)
+[notif.setup_ok]                تێگەیشتم
+[notif.setup.direct_title]      بانگ ڕاستەوخۆ بیت
+[notif.setup.open_settings]     ڤەکرنا ڕێکخستنان
+[notif.setup.later]             پاشان
+[notif.setup.athan_disabled_title]  دەنگێ بانگی ناهێت — مەرجەك یێ هەی
+[notif.setup.go_settings]       هەرە ڕێكخستنان
+[notif.setup.dismiss]           پاشی
 </pre>
 
 <!-- SMART-DHIKR TAGS -->
@@ -96,6 +140,127 @@ Close button: داخستن
   <div class="lbl">Subtitle</div><div class="row">تە هەمی نڤێژێن مەهێ تەمام کرن!<br>خودێ قبوول بکەت 🤲</div>
   <div class="lbl">Streak badge (X = days)</div><div class="row">🔥 X ڕۆژ ل سەر ئێک</div>
   <div class="lbl">Close button</div><div class="row">داخستن</div>
+</div>
+
+<!-- NOTIFICATIONS — NEW CONTENT -->
+<div class="section">
+  <div class="section-title">Notifications — New Content (book / hadith / video)</div>
+
+  <div class="key">notif.new_book_title</div>
+  <div class="row">پەرتوکەکا نوی 📖</div>
+
+  <div class="key">notif.new_book_body</div>
+  <div class="row">پەرتوکەکا نوی زیادبوو لە پەرتوکخانە</div>
+
+  <div class="key">notif.new_video_title</div>
+  <div class="row">ڤیدیۆیەکی نوێ 🎬</div>
+
+  <div class="key">notif.new_video_body</div>
+  <div class="row">ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس</div>
+
+  <div class="key">auto_book_body &nbsp;(cron — sent when new book added via hourly job)</div>
+  <div class="row">پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
+
+  <div class="key">auto_hadith_title &nbsp;(fallback when hadith has no chapter name)</div>
+  <div class="row">فەرمودەکا نوی</div>
+
+  <div class="key">auto_hadith_body &nbsp;(cron — sent when new hadith added via hourly job)</div>
+  <div class="row">فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
+</div>
+
+<!-- NOTIFICATIONS — DAILY REMINDERS -->
+<div class="section">
+  <div class="section-title">Notifications — Daily Reading Reminders</div>
+
+  <div class="key">notif.verse_title</div>
+  <div class="row">ئایەتا ڕۆژێ</div>
+
+  <div class="key">notif.streak_title</div>
+  <div class="row">بەردەوامیا ڕۆژانت لێ دەچێت! 🔥</div>
+
+  <div class="key">notif.streak_body &nbsp;(${days} = number of days)</div>
+  <div class="row">ئەڤرۆ ${days} ڕۆژ ل ڕێکێدایت. مەبەست بکە!</div>
+
+  <div class="key">notif.reminder_body</div>
+  <div class="row">خوێندنا قورئانێ — بابڵێ بخوێنی!</div>
+
+  <div class="key">notif.reminder_msg_0</div>
+  <div class="row">ئیمڕۆ چند ئایەتێن قورئانێ دبخوێنی؟ 📖</div>
+
+  <div class="key">notif.reminder_msg_1</div>
+  <div class="row">دلێکی ژیان — ڕۆژێ بێ قورئانێ کم دکەت ✨</div>
+
+  <div class="key">notif.reminder_msg_2</div>
+  <div class="row">خوا ل چاوبیرکرنا تو دایە — قورئانێ بخوێنە 🤲</div>
+
+  <div class="key">notif.reminder_msg_3</div>
+  <div class="row">هەر ئایەتێک نوورێ دکەتە دلێ تو 💚</div>
+
+  <div class="key">notif.reminder_msg_4</div>
+  <div class="row">قورئانێ دەرمانا دلێ تو یە — ئیمڕۆ بخوێنە 🌿</div>
+
+  <div class="key">notif.reminder_msg_5</div>
+  <div class="row">ئیمانا تو هەر ڕۆژ گەشەدکەت — دەستکەت 🔥</div>
+
+  <div class="key">notif.reminder_msg_6</div>
+  <div class="row">ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟</div>
+
+  <div class="key">notif.reminder_msg_7</div>
+  <div class="row">چند خولەکێن قورئانێ ئیمڕۆ — بەرکەتا ڕۆژا تو دکەت ☀️</div>
+
+  <div class="key">notif.reminder_msg_8</div>
+  <div class="row">ڕابوون هاوڕێ — قورئانێ چاوبیرکرن دایە 📿</div>
+
+  <div class="key">notif.reminder_msg_9</div>
+  <div class="row">شەوا باش دەستکەت — ئیمڕۆ قورئانێ بخوێنە 🌙</div>
+
+  <div class="key">notif.reminder_msg_10</div>
+  <div class="row">هەر ئایەتێک تۆ دبخوێنی خوا دبینێت 👁️</div>
+
+  <div class="key">notif.reminder_msg_11</div>
+  <div class="row">قورئانێ بخوێنە — بیانوکا تو باشترین دکەت 🌅</div>
+
+  <div class="key">notif.reminder_msg_12</div>
+  <div class="row">ئاگرا ئیمانێ بدە — ئیمڕۆ قورئانێ بخوێنە ⭐</div>
+
+  <div class="key">notif.reminder_msg_13</div>
+  <div class="row">سەعادەتا ئەم دنیایێ — قورئانێ تاوەکو دلێ تو 💫</div>
+</div>
+
+<!-- NOTIFICATIONS — SETUP -->
+<div class="section">
+  <div class="section-title">Notifications — Setup / Permission Prompts</div>
+
+  <div class="key">notif.setup_title</div>
+  <div class="row">بۆ ئاگادارکرنا باش ✓</div>
+
+  <div class="key">notif.setup_body &nbsp;(Samsung battery settings instructions)</div>
+  <div class="row" style="direction:ltr;text-align:left;font-size:.85rem;line-height:1.8">
+    جهت عملكرد الإشعارات بشكل صحيح على هواتف Samsung، قم بما يلي:<br><br>
+    ڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە<br>
+    (Settings → Battery → Unrestricted)
+  </div>
+
+  <div class="key">notif.setup_ok</div>
+  <div class="row">تێگەیشتم</div>
+
+  <div class="key">notif.setup.direct_title</div>
+  <div class="row">بانگ ڕاستەوخۆ بیت</div>
+
+  <div class="key">notif.setup.open_settings</div>
+  <div class="row">ڤەکرنا ڕێکخستنان</div>
+
+  <div class="key">notif.setup.later</div>
+  <div class="row">پاشان</div>
+
+  <div class="key">notif.setup.athan_disabled_title</div>
+  <div class="row">دەنگێ بانگی ناهێت — مەرجەك یێ هەی</div>
+
+  <div class="key">notif.setup.go_settings</div>
+  <div class="row">هەرە ڕێكخستنان</div>
+
+  <div class="key">notif.setup.dismiss</div>
+  <div class="row">پاشی</div>
 </div>
 
 <script>
