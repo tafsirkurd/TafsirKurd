@@ -1182,7 +1182,10 @@ function init(){
             syncWidgetTranslations();
             initDailyVerse();
             scheduleStreakReminder();
-            checkNewVideoNotif();
+            // checkNewVideoNotif removed (2026-06-12): it duplicated the server
+            // FCM push — users got the real push in background, then a second
+            // local "ڤیدیۆیەکی نوی 🎬" on app open whenever the push had been
+            // dismissed (the lastVideoNotifId dedup only saw tapped/in-tray pushes).
             checkNewBookNotif();
             // Re-run prefetch — capped to once per 10 min to avoid spawning 20 city
             // fetches on every single foreground event (rapid background/foreground cycles).
@@ -1456,7 +1459,7 @@ function init(){
   initDailyVerse();
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);
-  setTimeout(function(){checkNewVideoNotif();},1500);
+  // checkNewVideoNotif removed — duplicated the server FCM push (see appStateChange note)
   setTimeout(function(){_warmAboutCache();},2000);
   setTimeout(function(){checkNewBookNotif();},2500);
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
