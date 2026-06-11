@@ -4015,7 +4015,7 @@ function _loadMushafBundledData(){
   if(_mushafV4DataP)return _mushafV4DataP;
   var _mctrl=new AbortController();
   var _mtid=setTimeout(function(){_mctrl.abort();},_sn.ms(30000,55000));
-  _mushafV4DataP=fetch('/data/mushaf-v4-pages.json',{signal:_mctrl.signal})
+  _mushafV4DataP=fetch('/data/mushaf-v4-pages.json?v=2',{signal:_mctrl.signal})
     .then(function(r){clearTimeout(_mtid);return r.ok?r.json():null;})
     .then(function(data){
       if(data&&Array.isArray(data))window._mushafV4Pages=data;
@@ -4063,7 +4063,9 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
 }
 function _getPageFields(){
   if(S.mushafFont==='qcf2')return{fields:'code_v2',cache:'qcfV2p_'};
-  if(S.mushafFont==='qcf4')return{fields:'code_v2',cache:'qcfV4p_',mushafId:19};
+  // qcfV4r_ (was qcfV4p_): bumped 2026-06-12 after the page-assignment repair —
+  // pre-fix cached pages contained misplaced boundary verses (soup/dup/holes).
+  if(S.mushafFont==='qcf4')return{fields:'code_v2',cache:'qcfV4r_',mushafId:19};
   return{fields:'code_v1',cache:'qcfV1p_'};
 }
 
@@ -11513,6 +11515,20 @@ function applySyncData(data){
   S.mushafLineH=_ipadLS
     ?Math.min(2.4,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH_ipad'))||2.0))
     :Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
+  // One-time purge of pre-repair mushaf page caches (prefix qcfV4p_ → qcfV4r_,
+  // 2026-06-12): old entries held misplaced boundary verses (soup/dup/holes)
+  // and could be 100KB+ each — drop them rather than orphan them.
+  try{
+    if(!localStorage.getItem('qcfV4purged')){
+      var _pk=[];
+      for(var _pi=0;_pi<localStorage.length;_pi++){
+        var _pkk=localStorage.key(_pi);
+        if(_pkk&&_pkk.indexOf('qcfV4p_')===0)_pk.push(_pkk);
+      }
+      _pk.forEach(function(k){localStorage.removeItem(k);});
+      localStorage.setItem('qcfV4purged','1');
+    }
+  }catch(e){}
   S.prayerCity=localStorage.getItem('prayerCity')||'Duhok';
   S.prayerMethod=parseInt(localStorage.getItem('prayerMethod')||'13');
   S.prayerAthanEnabled=localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true';
