@@ -79,6 +79,46 @@ export async function onRequest(context) {
         const BATCH = 1000;
         const dbHeaders = { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` };
 
+        // ── Version marker: one tiny site_settings read gates everything ──────
+        // Admin publish bumps i18n_last_published_at. We use it as the ETag so
+        // repeat clients get an instant 304 (skipping the 3-batch table scan),
+        // and as the edge-cache key so even first-time clients in a colo are
+        // served the cached body between publish bumps.
+        let marker = '';
+        try {
+            const mc = new AbortController();
+            const mt = setTimeout(() => mc.abort(), 1200);
+            const mres = await fetch(
+                `${supabaseUrl}/rest/v1/site_settings?select=value&key=eq.i18n_last_published_at&limit=1`,
+                { headers: dbHeaders, signal: mc.signal });
+            clearTimeout(mt);
+            if (mres.ok) {
+                const mrows = await mres.json();
+                marker = String((mrows && mrows[0] && mrows[0].value) || '');
+            }
+        } catch (e) { /* marker optional — fall through to full fetch */ }
+
+        const etag = marker ? `W/"i18n-${platform}-${marker}"` : '';
+
+        // 304 fast path — no table scan, ~100ms total
+        if (etag && request.headers.get('If-None-Match') === etag) {
+            return new Response(null, { status: 304, headers: { ...corsHeaders, 'ETag': etag } });
+        }
+
+        // Edge cache fast path (per-colo). Key embeds the publish marker, so a
+        // bump naturally invalidates by changing the key; stale keys age out.
+        const edge = caches.default;
+        const cacheKey = etag
+            ? new Request(`https://tafsirkurd.com/__i18n-cache?platform=${platform}&v=${encodeURIComponent(marker)}`)
+            : null;
+        if (cacheKey) {
+            const hit = await edge.match(cacheKey);
+            if (hit) {
+                const cachedBody = await hit.text();
+                return new Response(cachedBody, { status: 200, headers: { ...corsHeaders, 'ETag': etag } });
+            }
+        }
+
         const fetchAllRows = async () => {
             let rows = [];
             let offset = 0;
@@ -120,8 +160,19 @@ export async function onRequest(context) {
             translations[row.key_id] = row.kurdish_text;
         }
 
-        return new Response(JSON.stringify(translations), {
-            status: 200, headers: corsHeaders
+        const body = JSON.stringify(translations);
+
+        // Store in the edge cache for future requests (24h — the marker-embedded
+        // key means a publish bump switches keys immediately, so long TTL is safe)
+        if (cacheKey && context.waitUntil) {
+            context.waitUntil(edge.put(cacheKey, new Response(body, {
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' }
+            })));
+        }
+
+        return new Response(body, {
+            status: 200,
+            headers: etag ? { ...corsHeaders, 'ETag': etag } : corsHeaders
         });
     } catch (error) {
         const isTimeout = error && error.name === 'AbortError';

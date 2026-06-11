@@ -14469,7 +14469,17 @@ function startApp(){
     // init() (called from _afterI18n) will replace this with the real gate function and
     // drain the early-fire flag immediately so fast-network Layer-3 releases without delay.
     window._splashI18nEarlyFire = false;
-    window._splashReadyI18n = function(){ window._splashI18nEarlyFire = true; };
+    // Release startup the moment i18n signals usable text — Layer-2 cache applies
+    // ~200ms in on repeat launches. The old stub only set a flag, so the app
+    // still waited for initLang's remote race (~1.5s) even with a warm cache:
+    // pure dead time on every cold start. First install (no cache) is unchanged —
+    // i18n only fires this early signal when a valid cache exists, so the 1.5s
+    // fallback below still governs that path. Remote refresh continues in the
+    // background and lands via the existing atomic swap + re-render hook.
+    window._splashReadyI18n = function(){
+      window._splashI18nEarlyFire = true;
+      setTimeout(_afterI18n, 0); // next tick — let initLang finish its sync work first
+    };
 
     /* 1.5s timeout — if i18n fetch hangs (slow connection), start app anyway */
     var _i18nDone = false;

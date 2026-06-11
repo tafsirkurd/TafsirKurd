@@ -36,7 +36,7 @@ var CACHE_KEY        = 'tafsirkurd_i18n_v7'; // v7: cache wins over bundled — 
 var HEALTH_SENT_KEY  = 'i18n_health_sent_session'; // sessionStorage — one report/session
 var _platform        = (function(){ try{ return (window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform())||'web'; }catch(e){ return 'web'; } })();
 var REMOTE_URL       = (_platform==='web'?'':'https://tafsirkurd.com')+'/app-translations?platform='+_platform;
-var POLL_MS          = 10000;  // 10s polling interval
+var POLL_MS          = 20*60*1000; // version-check cadence while visible (was 10s full-payload polling)
 var STARTUP_TIMEOUT  = 1500;   // max ms to wait for remote before unblocking splash
 var MIN_REMOTE_KEYS  = 10;     // below this → obviously broken payload, reject
 var MAX_EMPTY_RATIO  = 0.15;   // >15% blank values → reject
@@ -264,6 +264,9 @@ function mergeRemote(){
         return; // leave live translations untouched
       }
 
+      // Successful authoritative fetch — basis for the 6h safety-refresh window
+      try{ localStorage.setItem('i18n_last_full_fetch', String(Date.now())); }catch(e){}
+
       // ── Build new state in a temp object — never touch translations directly ──
       // Order: cache → bundled → remote.
       // Bundled wins over cache so newly shipped text always replaces stale cached values.
@@ -470,9 +473,65 @@ function initLang(){
   return _initPromise;
 }
 
-// ── Start polling — exactly once, one fetch in-flight at a time ───────────────
+// ── Background freshness — version-gated, visibility-aware, with backoff ─────
+// The old poller fetched the FULL /app-translations payload every 10s for the
+// entire session (~360 req/h/device against a multi-second endpoint). Now:
+//   • a 60s ticker fires _bgFreshnessCheck(), which no-ops unless due
+//   • due = every POLL_MS (20 min) while the app is VISIBLE — hidden app never polls
+//   • the check itself is the tiny /config payload: compare i18nLastPublishedAt
+//     (admin publish bumps it) against the last value we acted on
+//   • full mergeRemote() runs only when that version moved, or as a 6h safety
+//     refresh (covers edits that skip the publish bump)
+//   • exponential backoff on failed version checks (20m → 40m → … cap 2h)
+//   • on resume (visibilitychange → visible) one version check runs if >60s
+//     since the last — updates land promptly when the user returns
+var VER_KEY       = 'i18n_remote_ver_seen';
+var LAST_FULL_KEY = 'i18n_last_full_fetch';
+var CONFIG_URL    = (_platform==='web'?'':'https://tafsirkurd.com')+'/config';
+var _lastVerCheck = 0;
+var _verFails     = 0;
+
+function _bgFreshnessCheck(isResume){
+  if(typeof document!=='undefined' && document.hidden) return; // visibility gate
+  var now  = Date.now();
+  var wait = _verFails
+    ? Math.min(POLL_MS * Math.pow(2,_verFails), 2*60*60*1000)  // backoff, cap 2h
+    : (isResume ? 60*1000 : POLL_MS);
+  if(now - _lastVerCheck < wait) return;
+  _lastVerCheck = now;
+
+  fetch(CONFIG_URL)
+    .then(function(r){ if(!r.ok) throw new Error('config '+r.status); return r.json(); })
+    .then(function(cfg){
+      _verFails = 0;
+      var ver  = String(cfg.i18nLastPublishedAt || cfg.i18nCacheVersion || '');
+      var seen = '';
+      try{ seen = localStorage.getItem(VER_KEY) || ''; }catch(e){}
+      var lastFull = 0;
+      try{ lastFull = parseInt(localStorage.getItem(LAST_FULL_KEY)) || 0; }catch(e){}
+      var verMoved  = !!ver && ver !== seen;
+      var safetyDue = now - lastFull > 6*60*60*1000;
+      if(!verMoved && !safetyDue) return;
+      if(_fetchInFlight) return;
+      _fetchInFlight = true;
+      mergeRemote()
+        .then(function(){
+          _fetchFailCount = 0;
+          try{ if(ver) localStorage.setItem(VER_KEY, ver); }catch(e){}
+        })
+        .catch(function(){ _fetchFailCount++; _lastFailTs = Date.now(); })
+        .then(function(){ _fetchInFlight = false; });
+    })
+    .catch(function(){ _verFails++; });
+}
+
 if(!_pollInterval){
-  _pollInterval = setInterval(_mergeRemoteGuarded, POLL_MS);
+  _pollInterval = setInterval(function(){ _bgFreshnessCheck(false); }, 60*1000);
+  try{
+    document.addEventListener('visibilitychange', function(){
+      if(!document.hidden) _bgFreshnessCheck(true);
+    });
+  }catch(e){}
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
