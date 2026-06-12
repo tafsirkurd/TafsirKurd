@@ -136,5 +136,19 @@ var PdfStore = (function () {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
-  return { has: has, download: download, load: load, remove: remove, listAll: listAll, fmtSize: fmtSize, supported: supported };
+  /* Merge resolved display metadata into pdfMeta for an entry (keyed by proxy
+     URL, as returned in listAll results). Lets the download managers self-heal
+     old entries that were saved before metadata persistence existed. */
+  function updateMeta(proxyUrlKey, fields) {
+    try {
+      var meta = JSON.parse(localStorage.getItem('pdfMeta') || '{}');
+      var cur = meta[proxyUrlKey] || {};
+      if (fields.title_ku && !cur.title_ku) cur.title_ku = fields.title_ku;
+      if (fields.cover_url && !cur.cover_url) cur.cover_url = fields.cover_url;
+      meta[proxyUrlKey] = cur;
+      localStorage.setItem('pdfMeta', JSON.stringify(meta));
+    } catch (e) {}
+  }
+
+  return { has: has, download: download, load: load, remove: remove, listAll: listAll, fmtSize: fmtSize, supported: supported, updateMeta: updateMeta };
 })();

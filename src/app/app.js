@@ -2295,7 +2295,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
   // then load dhikr.js only after both finish (it depends on both)
   var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260611b', _done); }
+  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260612a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=59',      function() { _p2 = true; _check(); });
 }
@@ -7169,8 +7169,14 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
         // Series volumes have empty own title/cover, which used to fall through
         // to the bare R2 filename with no cover.
         var dm=(book&&window.GencineUI&&GencineUI.bookDisplayMeta)?GencineUI.bookDisplayMeta(book):null;
-        var title=(dm&&dm.title)||entry.title_ku||entry.title_ar||entry.pdfUrl.split('/').pop();
+        // Never show the raw R2 id-filename — generic label as last resort
+        var title=(dm&&dm.title)||entry.title_ku||entry.title_ar||((t('gencine.books_unit')||'پەرتوک')+' (PDF)');
         var cover=(dm&&dm.cover)||entry.cover_url||null;
+        // Self-heal persisted metadata so the entry stays named even if the
+        // book row is later removed from the DB
+        if(dm&&dm.title&&!entry.title_ku&&window.PdfStore&&PdfStore.updateMeta){
+          PdfStore.updateMeta(entry.proxyUrl,{title_ku:dm.title,cover_url:cover||''});
+        }
         var selKey='book:'+entry.pdfUrl;
         var isSel=!!_dlMgrSelected[selKey];
         content.appendChild(_dlMgrItem(

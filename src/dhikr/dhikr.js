@@ -2473,9 +2473,18 @@ window.GencineUI = {
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border-subtle,rgba(255,255,255,.06))';
 
-        // Cover thumb — use stored metadata as fallback when book not in active list
-        var _coverUrl = (book && book.cover_url) || entry.cover_url || '';
-        var _titleTxt = (book && (book.title_ku || book.title_ar)) || entry.title_ku || entry.title_ar || '';
+        // Resolution chain: series-aware live row (volume label + series cover)
+        // → metadata persisted at download time → generic label. Series volumes
+        // have empty own title/cover and used to fall through to the raw R2
+        // id-filename here.
+        var _dm = (book && self.bookDisplayMeta) ? self.bookDisplayMeta(book) : null;
+        var _coverUrl = (_dm && _dm.cover) || (book && book.cover_url) || entry.cover_url || '';
+        var _titleTxt = (_dm && _dm.title) || (book && (book.title_ku || book.title_ar)) || entry.title_ku || entry.title_ar || '';
+        // Self-heal: persist the resolved name/cover so this entry stays correct
+        // even if the book row is later removed from the DB.
+        if (_titleTxt && !entry.title_ku && window.PdfStore && PdfStore.updateMeta) {
+          PdfStore.updateMeta(entry.proxyUrl, { title_ku: _titleTxt, cover_url: _coverUrl });
+        }
         var thumb = document.createElement('div');
         thumb.style.cssText = 'width:36px;height:50px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--surface2)';
         if (_coverUrl) {
@@ -2490,7 +2499,8 @@ window.GencineUI = {
         // Title + size
         var info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0';
         var tnEl = document.createElement('div'); tnEl.style.cssText = 'font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl';
-        tnEl.textContent = _titleTxt || entry.pdfUrl.split('/').pop();
+        // Never show the raw R2 id-filename — a generic label reads far better
+        tnEl.textContent = _titleTxt || (T('gencine.books_unit','پەرتوک') + ' (PDF)');
         var szEl = document.createElement('div'); szEl.style.cssText = 'font-size:12px;color:var(--text-secondary);margin-top:2px';
         szEl.textContent = PdfStore.fmtSize(entry.bytes);
         info.appendChild(tnEl); info.appendChild(szEl);
