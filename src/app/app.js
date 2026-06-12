@@ -12811,6 +12811,11 @@ function _ptrInHorizScroll(node){
        cn.indexOf('as2-reciter-scroll')>=0||cn.indexOf('dua-tabs')>=0||
        cn.indexOf('book-cat-row')>=0||cn.indexOf('mushaf-view')>=0||
        cn.indexOf('perf-chips-row')>=0||cn.indexOf('theme-grid')>=0||
+       // book-feat: featured-books carousel swipes horizontally but uses
+       // overflow:hidden + transform, so the computed-style fallback below
+       // never catches it — without this, a swipe on a featured card also
+       // dragged the whole tab (tab-swipe) = the visible "flash"/glitch.
+       cn.indexOf('book-feat')>=0||
        cn.indexOf('sync-chips')>=0)return true;
     if(!skipCS){
       try{
