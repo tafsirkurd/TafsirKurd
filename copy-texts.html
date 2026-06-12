@@ -52,19 +52,28 @@ Subtitle line 2: خودێ قبوول بکەت 🤲
 Streak badge (X = days): 🔥 X ڕۆژ ل سەر ئێک
 Close button: داخستن
 
-=== NOTIFICATIONS — NEW CONTENT ===
-[notif.new_book_title]   پەرتوکەکا نوی 📖
-[notif.new_book_body]    پەرتوکەکا نوی زیادبوو لە پەرتوکخانە
-[notif.new_video_title]  ڤیدیۆیەکی نوێ 🎬
-[notif.new_video_body]   ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس
-[auto_book_body]         پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
-[auto_hadith_title]      فەرمودەکا نوی
-[auto_hadith_body]       فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
+=== NOTIFICATIONS — ATHAN (local, IDs 100-239) ===
+[prayer.notif_title]        بانگ
+[prayer.notif_body_fajr]    نوکە دەمێ بانگێ سپێدێیە
+[prayer.notif_body_dhuhr]   نوکە دەمێ بانگێ نیڤرۆیە
+[prayer.notif_body_asr]     نوکە دەمێ بانگێ ئێڤارییە
+[prayer.notif_body_maghrib] نوکە دەمێ بانگێ مەغرەبە
+[prayer.notif_body_isha]    نوکە دەمێ بانگێ عەیشایە
 
-=== NOTIFICATIONS — DAILY REMINDERS ===
-[notif.verse_title]      ئایەتا ڕۆژێ
-[notif.streak_title]     بەردەوامیا ڕۆژانت لێ دەچێت! 🔥
-[notif.streak_body]      ئەڤرۆ ${days} ڕۆژ ل ڕێکێدایت. مەبەست بکە!
+=== NOTIFICATIONS — PRAYER REMINDERS (local, IDs 300-439) ===
+[prayer_reminder.fajr.title]    بیرئینان بۆ نڤێژا سپێدێ
+[prayer_reminder.fajr.body]     {minutes} خولەک بۆ نڤێژا سپێدێ ماینە
+[prayer_reminder.dhuhr.title]   بیرئینان بۆ نڤێژا نیڤرۆ
+[prayer_reminder.dhuhr.body]    {minutes} خولەک بۆ نڤێژا نیڤرۆ ماینە
+[prayer_reminder.asr.title]     بیرئینان بۆ نڤێژا ئێڤاری
+[prayer_reminder.asr.body]      {minutes} خولەک بۆ نڤێژا ئێڤاری ماینە
+[prayer_reminder.maghrib.title] بیرئینان بۆ نڤێژا مەغرەب
+[prayer_reminder.maghrib.body]  {minutes} خولەک بۆ نڤێژا مەغرەب ماینە
+[prayer_reminder.isha.title]    بیرئنان بۆ نڤێژا عەیشا   (note: «بیرئنان» — missing ی in DB)
+[prayer_reminder.isha.body]     {minutes} خولەک بۆ نڤێژا عەیشا ماینە
+
+=== NOTIFICATIONS — DAILY READING REMINDERS (local, IDs 10-16) ===
+Title (hardcoded in app.js): TafsirKurd
 [notif.reminder_body]    خوێندنا قورئانێ — بابڵێ بخوێنی!
 [notif.reminder_msg_0]   ئیمڕۆ چند ئایەتێن قورئانێ دبخوێنی؟ 📖
 [notif.reminder_msg_1]   دلێکی ژیان — ڕۆژێ بێ قورئانێ کم دکەت ✨
@@ -80,14 +89,46 @@ Close button: داخستن
 [notif.reminder_msg_11]  قورئانێ بخوێنە — بیانوکا تو باشترین دکەت 🌅
 [notif.reminder_msg_12]  ئاگرا ئیمانێ بدە — ئیمڕۆ قورئانێ بخوێنە ⭐
 [notif.reminder_msg_13]  سەعادەتا ئەم دنیایێ — قورئانێ تاوەکو دلێ تو 💫
+(note: reminder_msg_* live only in kmr.json/bundled — not in DB)
 
-=== NOTIFICATIONS — SETUP ===
-[notif.setup_title]             بۆ ئاگادارکرنا باش ✓
-[notif.setup_body]              جهت عملكرد الإشعارات بشكل صحيح على هواتف Samsung، قم بما يلي:
+=== NOTIFICATIONS — DAILY VERSE (local, IDs 20-26) ===
+Title (dynamic, from code): {surah Arabic name} ({surah}:{ayah})
+Body  (dynamic, from code): تەفسیرا کوردی یا ئایەتێ (یان دەقێ عەرەبی)
+[notif.verse_title]      ئایەتا ڕۆژێ   (key exists in DB but code uses the surah name)
 
-ڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە
-(Settings → Battery → Unrestricted)
-[notif.setup_ok]                تێگەیشتم
+=== NOTIFICATIONS — STREAK (local, ID 30) ===
+[notif.streak_title]     بەردەوامیا ڕۆژانت لێ دەچێت! 🔥
+[notif.streak_body]      ئەڤرۆ ${days} ڕۆژا تە یا ستریکایە.
+
+=== NOTIFICATIONS — NEW BOOK (local app-open check, ID 32) ===
+[notif.new_book_title]   پەرتوکەکا نوی
+Body (dynamic): ناڤێ پەرتوکێ — fallback:
+[notif.new_book_body]    پەرتوکەکا نوی زیادبوو لە پەرتوکخانە
+
+=== NOTIFICATIONS — SERVER PUSH (FCM, automatic) ===
+New video — Title: ناڤێ زنجیرەیێ (dynamic) / Body: ناڤێ ئەلقەیێ (dynamic)
+New book  — Title: ناڤێ پەرتوکێ (dynamic), fallback:
+[notif.auto_book_title_fallback]   پەرتوکەکا نوی
+[notif.auto_book_body]             پەرتووکەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
+New hadith — Title: ناڤێ فەرموودێ (dynamic), fallback:
+[notif.auto_hadith_title_fallback] فەرمودە
+[notif.auto_hadith_body]           فەرموودەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
+Manual (admin) — Title/Body: ئەدمین دنڤێسیت (dynamic)
+
+=== NOTIFICATIONS — NATIVE ANDROID (ID 9900, athan refresh) ===
+Title (hardcoded Java): بانگ
+Body  (hardcoded Java): بۆ نوێکردنەوەی کاتا بانگێ ئەپێ بکەرە
+(DB keys notif.reschedule_athan_* exist but Java does not read them)
+
+=== NOTIFICATIONS — REMOVED ===
+In-app new-video (ID 31) "ڤیدیۆیەکی نوی 🎬" — removed 2026-06-12 (duplicated the server push)
+(keys notif.new_video_title/body remain in DB/kmr but are unused)
+
+=== NOTIFICATIONS — SETUP / PERMISSION PROMPTS ===
+[notif.setup_title]             بۆ ئاگەهدارکرنا باش
+[notif.setup_body]              دا ئاگەهداری باشتر کاربکەن، دویڤچوونا ئەڤان پێنگاڤان بکە:
+Settings → Battery → App Battery Usage → Unrestricted
+[notif.setup_ok]                تێگەهشتم
 [notif.setup.direct_title]      بانگ ڕاستەوخۆ بیت
 [notif.setup.open_settings]     ڤەکرنا ڕێکخستنان
 [notif.setup.later]             پاشان
@@ -142,123 +183,153 @@ Close button: داخستن
   <div class="lbl">Close button</div><div class="row">داخستن</div>
 </div>
 
-<!-- NOTIFICATIONS — NEW CONTENT -->
+<!-- NOTIFICATIONS -->
 <div class="section">
-  <div class="section-title">Notifications — New Content (book / hadith / video)</div>
-
-  <div class="key">notif.new_book_title</div>
-  <div class="row">پەرتوکەکا نوی 📖</div>
-
-  <div class="key">notif.new_book_body</div>
-  <div class="row">پەرتوکەکا نوی زیادبوو لە پەرتوکخانە</div>
-
-  <div class="key">notif.new_video_title</div>
-  <div class="row">ڤیدیۆیەکی نوێ 🎬</div>
-
-  <div class="key">notif.new_video_body</div>
-  <div class="row">ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس</div>
-
-  <div class="key">auto_book_body &nbsp;(cron — sent when new book added via hourly job)</div>
-  <div class="row">پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
-
-  <div class="key">auto_hadith_title &nbsp;(fallback when hadith has no chapter name)</div>
-  <div class="row">فەرمودەکا نوی</div>
-
-  <div class="key">auto_hadith_body &nbsp;(cron — sent when new hadith added via hourly job)</div>
-  <div class="row">فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
+  <div class="section-title">Notifications — Athan (local, IDs 100-239)</div>
+  <div class="key">prayer.notif_title</div>
+  <div class="row">بانگ</div>
+  <div class="key">prayer.notif_body_fajr</div>
+  <div class="row">نوکە دەمێ بانگێ سپێدێیە</div>
+  <div class="key">prayer.notif_body_dhuhr</div>
+  <div class="row">نوکە دەمێ بانگێ نیڤرۆیە</div>
+  <div class="key">prayer.notif_body_asr</div>
+  <div class="row">نوکە دەمێ بانگێ ئێڤارییە</div>
+  <div class="key">prayer.notif_body_maghrib</div>
+  <div class="row">نوکە دەمێ بانگێ مەغرەبە</div>
+  <div class="key">prayer.notif_body_isha</div>
+  <div class="row">نوکە دەمێ بانگێ عەیشایە</div>
 </div>
 
-<!-- NOTIFICATIONS — DAILY REMINDERS -->
+<!-- NOTIFICATIONS -->
 <div class="section">
-  <div class="section-title">Notifications — Daily Reading Reminders</div>
+  <div class="section-title">Notifications — Prayer Reminders (local, IDs 300-439)</div>
+  <div class="key">prayer_reminder.fajr.title</div>
+  <div class="row">بیرئینان بۆ نڤێژا سپێدێ</div>
+  <div class="key">prayer_reminder.fajr.body</div>
+  <div class="row">{minutes} خولەک بۆ نڤێژا سپێدێ ماینە</div>
+  <div class="key">prayer_reminder.dhuhr.title</div>
+  <div class="row">بیرئینان بۆ نڤێژا نیڤرۆ</div>
+  <div class="key">prayer_reminder.dhuhr.body</div>
+  <div class="row">{minutes} خولەک بۆ نڤێژا نیڤرۆ ماینە</div>
+  <div class="key">prayer_reminder.asr.title</div>
+  <div class="row">بیرئینان بۆ نڤێژا ئێڤاری</div>
+  <div class="key">prayer_reminder.asr.body</div>
+  <div class="row">{minutes} خولەک بۆ نڤێژا ئێڤاری ماینە</div>
+  <div class="key">prayer_reminder.maghrib.title</div>
+  <div class="row">بیرئینان بۆ نڤێژا مەغرەب</div>
+  <div class="key">prayer_reminder.maghrib.body</div>
+  <div class="row">{minutes} خولەک بۆ نڤێژا مەغرەب ماینە</div>
+  <div class="key">prayer_reminder.isha.title</div>
+  <div class="row">بیرئنان بۆ نڤێژا عەیشا (note: missing ی in DB)</div>
+  <div class="key">prayer_reminder.isha.body</div>
+  <div class="row">{minutes} خولەک بۆ نڤێژا عەیشا ماینە</div>
+</div>
 
-  <div class="key">notif.verse_title</div>
-  <div class="row">ئایەتا ڕۆژێ</div>
-
-  <div class="key">notif.streak_title</div>
-  <div class="row">بەردەوامیا ڕۆژانت لێ دەچێت! 🔥</div>
-
-  <div class="key">notif.streak_body &nbsp;(${days} = number of days)</div>
-  <div class="row">ئەڤرۆ ${days} ڕۆژ ل ڕێکێدایت. مەبەست بکە!</div>
-
+<!-- NOTIFICATIONS -->
+<div class="section">
+  <div class="section-title">Notifications — Daily Reading Reminders (IDs 10-16) — Title: TafsirKurd (hardcoded)</div>
   <div class="key">notif.reminder_body</div>
   <div class="row">خوێندنا قورئانێ — بابڵێ بخوێنی!</div>
-
   <div class="key">notif.reminder_msg_0</div>
   <div class="row">ئیمڕۆ چند ئایەتێن قورئانێ دبخوێنی؟ 📖</div>
-
   <div class="key">notif.reminder_msg_1</div>
   <div class="row">دلێکی ژیان — ڕۆژێ بێ قورئانێ کم دکەت ✨</div>
-
   <div class="key">notif.reminder_msg_2</div>
   <div class="row">خوا ل چاوبیرکرنا تو دایە — قورئانێ بخوێنە 🤲</div>
-
   <div class="key">notif.reminder_msg_3</div>
   <div class="row">هەر ئایەتێک نوورێ دکەتە دلێ تو 💚</div>
-
   <div class="key">notif.reminder_msg_4</div>
   <div class="row">قورئانێ دەرمانا دلێ تو یە — ئیمڕۆ بخوێنە 🌿</div>
-
   <div class="key">notif.reminder_msg_5</div>
   <div class="row">ئیمانا تو هەر ڕۆژ گەشەدکەت — دەستکەت 🔥</div>
-
   <div class="key">notif.reminder_msg_6</div>
   <div class="row">ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟</div>
-
   <div class="key">notif.reminder_msg_7</div>
   <div class="row">چند خولەکێن قورئانێ ئیمڕۆ — بەرکەتا ڕۆژا تو دکەت ☀️</div>
-
   <div class="key">notif.reminder_msg_8</div>
   <div class="row">ڕابوون هاوڕێ — قورئانێ چاوبیرکرن دایە 📿</div>
-
   <div class="key">notif.reminder_msg_9</div>
   <div class="row">شەوا باش دەستکەت — ئیمڕۆ قورئانێ بخوێنە 🌙</div>
-
   <div class="key">notif.reminder_msg_10</div>
   <div class="row">هەر ئایەتێک تۆ دبخوێنی خوا دبینێت 👁️</div>
-
   <div class="key">notif.reminder_msg_11</div>
   <div class="row">قورئانێ بخوێنە — بیانوکا تو باشترین دکەت 🌅</div>
-
   <div class="key">notif.reminder_msg_12</div>
   <div class="row">ئاگرا ئیمانێ بدە — ئیمڕۆ قورئانێ بخوێنە ⭐</div>
-
   <div class="key">notif.reminder_msg_13</div>
   <div class="row">سەعادەتا ئەم دنیایێ — قورئانێ تاوەکو دلێ تو 💫</div>
 </div>
 
-<!-- NOTIFICATIONS — SETUP -->
+<!-- NOTIFICATIONS -->
+<div class="section">
+  <div class="section-title">Notifications — Daily Verse (IDs 20-26) — Title/Body dynamic (surah name + tafsir)</div>
+  <div class="key">notif.verse_title</div>
+  <div class="row">ئایەتا ڕۆژێ (key in DB; code uses surah name)</div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="section">
+  <div class="section-title">Notifications — Streak (local, ID 30)</div>
+  <div class="key">notif.streak_title</div>
+  <div class="row">بەردەوامیا ڕۆژانت لێ دەچێت! 🔥</div>
+  <div class="key">notif.streak_body</div>
+  <div class="row">ئەڤرۆ ${days} ڕۆژا تە یا ستریکایە.</div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="section">
+  <div class="section-title">Notifications — New Book (local app-open, ID 32) — Body = book name, fallback below</div>
+  <div class="key">notif.new_book_title</div>
+  <div class="row">پەرتوکەکا نوی</div>
+  <div class="key">notif.new_book_body</div>
+  <div class="row">پەرتوکەکا نوی زیادبوو لە پەرتوکخانە</div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="section">
+  <div class="section-title">Notifications — Server Push (FCM) — video: series/episode names (dynamic)</div>
+  <div class="key">notif.auto_book_title_fallback</div>
+  <div class="row">پەرتوکەکا نوی</div>
+  <div class="key">notif.auto_book_body</div>
+  <div class="row">پەرتووکەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
+  <div class="key">notif.auto_hadith_title_fallback</div>
+  <div class="row">فەرمودە</div>
+  <div class="key">notif.auto_hadith_body</div>
+  <div class="row">فەرموودەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="section">
+  <div class="section-title">Notifications — Native Android (ID 9900, athan refresh) — hardcoded in Java</div>
+  <div class="row">بانگ</div>
+  <div class="row">بۆ نوێکردنەوەی کاتا بانگێ ئەپێ بکەرە</div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="section">
+  <div class="section-title">Notifications — Removed (2026-06-12): in-app new-video ID 31 (duplicated server push)</div>
+  <div class="row">ڤیدیۆیەکی نوی 🎬 — REMOVED</div>
+</div>
+
+<!-- NOTIFICATIONS -->
 <div class="section">
   <div class="section-title">Notifications — Setup / Permission Prompts</div>
-
   <div class="key">notif.setup_title</div>
-  <div class="row">بۆ ئاگادارکرنا باش ✓</div>
-
-  <div class="key">notif.setup_body &nbsp;(Samsung battery settings instructions)</div>
-  <div class="row" style="direction:ltr;text-align:left;font-size:.85rem;line-height:1.8">
-    جهت عملكرد الإشعارات بشكل صحيح على هواتف Samsung، قم بما يلي:<br><br>
-    ڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە<br>
-    (Settings → Battery → Unrestricted)
-  </div>
-
+  <div class="row">بۆ ئاگەهدارکرنا باش</div>
+  <div class="key">notif.setup_body</div>
+  <div class="row">دا ئاگەهداری باشتر کاربکەن، دویڤچوونا ئەڤان پێنگاڤان بکە:<br>Settings → Battery → App Battery Usage → Unrestricted</div>
   <div class="key">notif.setup_ok</div>
-  <div class="row">تێگەیشتم</div>
-
+  <div class="row">تێگەهشتم</div>
   <div class="key">notif.setup.direct_title</div>
   <div class="row">بانگ ڕاستەوخۆ بیت</div>
-
   <div class="key">notif.setup.open_settings</div>
   <div class="row">ڤەکرنا ڕێکخستنان</div>
-
   <div class="key">notif.setup.later</div>
   <div class="row">پاشان</div>
-
   <div class="key">notif.setup.athan_disabled_title</div>
   <div class="row">دەنگێ بانگی ناهێت — مەرجەك یێ هەی</div>
-
   <div class="key">notif.setup.go_settings</div>
   <div class="row">هەرە ڕێكخستنان</div>
-
   <div class="key">notif.setup.dismiss</div>
   <div class="row">پاشی</div>
 </div>
