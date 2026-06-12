@@ -1408,7 +1408,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "notif.streak_body",        kurdish_text: "ئەڤرۆ ${days} ڕۆژ ل ڕێکێدایت. مەبەست بکە!", category: "notifications", page: "android" },
     { key_id: "notif.new_video_title",    kurdish_text: "ڤیدیۆیەکی نوێ 🎬",                 category: "notifications", page: "android" },
     { key_id: "notif.new_video_body",     kurdish_text: "ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس", category: "notifications", page: "android" },
-    { key_id: "notif.new_book_title",     kurdish_text: "پەرتوکەکا نوی 📖",                    category: "notifications", page: "android" },
+    { key_id: "notif.new_book_title",     kurdish_text: "پەرتوکەکا نوی",                    category: "notifications", page: "android" },
     { key_id: "notif.new_book_body",      kurdish_text: "پەرتوکەکا نوی زیادبوو لە پەرتوکخانە", category: "notifications", page: "android" },
     { key_id: "notif.reminder_msg_0",     kurdish_text: "ئیمڕۆ چند ئایەتێن قورئانێ دبخوێنی؟ 📖",     category: "notifications", page: "android" },
     { key_id: "notif.reminder_msg_1",     kurdish_text: "دلێکی ژیان — ڕۆژێ بێ قورئانێ کم دکەت ✨",   category: "notifications", page: "android" },

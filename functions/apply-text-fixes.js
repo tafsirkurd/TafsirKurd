@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Bump this string whenever new corrections are added.
-const FIXES_VERSION = '20260602a';
+const FIXES_VERSION = '20260612a';
 
 // Keys whose DB values drifted from the intended Kurdish text.
 const CORRECTIONS = [
@@ -120,7 +120,7 @@ const CORRECTIONS = [
     { key_id: 'pdf.offline_sub',             kurdish_text: 'ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە' },
     { key_id: 'dl.books_section',            kurdish_text: 'پەرتوک' },
     { key_id: 'dl.no_books',                 kurdish_text: 'هیچ پەرتوکێک نەهاتیە داونلود کرن' },
-    { key_id: 'notif.new_book_title',        kurdish_text: 'پەرتوکەکا نوی 📖' },
+    { key_id: 'notif.new_book_title',        kurdish_text: 'پەرتوکەکا نوی' },
     { key_id: 'notif.new_book_body',         kurdish_text: 'پەرتوکەکا نوی زیادبوو لە پەرتوکخانە' },
     { key_id: 'notif.reminder_msg_6',        kurdish_text: 'ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟' },
     { key_id: 'goals.last_session',          kurdish_text: 'دوماهیک خواندن' },

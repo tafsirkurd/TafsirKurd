@@ -3257,7 +3257,7 @@ function checkNewBookNotif(){
               LN.cancel({notifications:[{id:32}]}).catch(function(){});
               LN.schedule({notifications:[{
                 id:32,
-                title:tSafe('notif.new_book_title')||'پەرتوکەکا نوی 📖',
+                title:tSafe('notif.new_book_title')||'پەرتوکەکا نوی',
                 body:(book.title_ku||book.title_ar)||tSafe('notif.new_book_body')||'پەرتوکەکا نوی زیادبوو',
                 schedule:{at:new Date(Date.now()+4000),allowWhileIdle:true},
                 smallIcon:'ic_notification',
