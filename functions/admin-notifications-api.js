@@ -156,9 +156,9 @@ async function _handleRequest(context) {
         const AUTO_KEYS = ['notif.auto_book_body','notif.auto_book_title_fallback','notif.auto_hadith_body','notif.auto_hadith_title_fallback'];
         const { data: txRows } = await supabase.from('kurdish_translations').select('key_id,kurdish_text').in('key_id', AUTO_KEYS);
         const tx = Object.fromEntries((txRows || []).map(r => [r.key_id, r.kurdish_text]));
-        const autoBookBody           = tx['notif.auto_book_body']            || 'پەرتووکەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+        const autoBookBody           = tx['notif.auto_book_body']            || 'پەرتووکەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
         const autoBookTitleFallback  = tx['notif.auto_book_title_fallback']  || 'پەرتوکەکا نوی';
-        const autoHadithBody         = tx['notif.auto_hadith_body']          || 'فەرموودەکا نوو د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
+        const autoHadithBody         = tx['notif.auto_hadith_body']          || 'فەرموودەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.';
         const autoHadithTitleFallback= tx['notif.auto_hadith_title_fallback']|| 'فەرمودەکا نوی';
 
         // Insert a notification and either send immediately (no scheduledAt) or

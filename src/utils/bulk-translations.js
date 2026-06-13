@@ -1403,8 +1403,7 @@ window.BULK_TRANSLATIONS = [
     // Notifications - setup, streak, new content, rotating messages
     { key_id: "notif.streak_title",       kurdish_text: "خواندنا قورئانێ",                                                    category: "notifications", page: "android" },
     { key_id: "notif.streak_body",        kurdish_text: "بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥",                       category: "notifications", page: "android" },
-    { key_id: "notif.new_video_title",    kurdish_text: "ڤیدیۆیەکی نوێ 🎬",                 category: "notifications", page: "android" },
-    { key_id: "notif.new_video_body",     kurdish_text: "ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس", category: "notifications", page: "android" },
+
 
     // IslamVoice extras (social, playback, content management)
     { key_id: "iv.loading_spinner",      kurdish_text: "چاڤەڕێبە...",                         category: "islamvoice", page: "android" },
