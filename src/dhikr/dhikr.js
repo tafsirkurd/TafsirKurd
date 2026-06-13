@@ -426,7 +426,11 @@ function _triggerBgRefresh() {
     ui._homeEl = null;
     if (ui._view === 'home') ui._draw();
     else if (ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
-    else if (ui._view === 'books') ui._draw();
+    else if (ui._view === 'books') {
+      var _bgp = document.getElementById('panelGencine');
+      if (ui._booksScrollPos == null) ui._booksScrollPos = _bgp ? _bgp.scrollTop : 0;
+      ui._draw();
+    }
     else if (ui._view === 'tasbih') ui._draw();
     else if (ui._view === 'adhkar') ui._draw();
     else if (ui._view === 'dua') ui._draw();
