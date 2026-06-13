@@ -331,6 +331,7 @@ var _dbSections = null;   /* [{key, active, sort_order}] */
 var _dbTasbih   = null;   /* [{ar, ku, sort_order}] */
 var _dbAsma99   = null;   /* [{n, ku}] overrides */
 var _dbAdhkar   = null;   /* [{category_key, ar, repeat, source, sort_order}] */
+var _adhkarScrollCleanup = null; /* removes scroll listener + restores header on view change */
 var _dbBooks    = [];
 var _loadingDb  = false;
 var _dbLoaded   = false;
@@ -1000,6 +1001,7 @@ window.GencineUI = {
     if(!el) return;
     if(this._view !== 'tasbih' && this._voiceActive) this._stopVoice();
     if(this._pdfCleanup){ this._pdfCleanup(); this._pdfCleanup = null; }
+    if(_adhkarScrollCleanup){ _adhkarScrollCleanup(); _adhkarScrollCleanup = null; }
     // Clear sheet reference — DOM removal below already removes it from screen
     this._activeSheet = null;
     // Close rec-picker on every Gencine view change — it must never survive navigation within the tab
@@ -1364,12 +1366,39 @@ window.GencineUI = {
       return;
     }
 
+    var totalCount = items.length;
+    var catLabel = (window.t && window.t('adhkar.' + this._adhkarCat)) || ADHKAR_CAT_LABELS[this._adhkarCat] || this._adhkarCat;
+
+    // ── Inject category name + live progress into sticky header ──
+    var hdrTitle = document.getElementById('gencineHdrTitle');
+    var _hdrSavedChildren = [], _hdrSavedVisibility = '';
+    if (hdrTitle) {
+      _hdrSavedVisibility = hdrTitle.style.visibility;
+      while (hdrTitle.firstChild) _hdrSavedChildren.push(hdrTitle.removeChild(hdrTitle.firstChild));
+      hdrTitle.style.visibility = '';
+      var hdrInner = document.createElement('div');
+      hdrInner.className = 'adhkar-hdr-inner';
+      var hdrCat = document.createElement('span');
+      hdrCat.className = 'adhkar-hdr-cat';
+      hdrCat.textContent = catLabel;
+      var hdrProg = document.createElement('span');
+      hdrProg.className = 'adhkar-hdr-progress';
+      hdrProg.id = 'adhkarHdrProgress';
+      hdrProg.textContent = totalCount + ' زکر';
+      hdrInner.appendChild(hdrCat);
+      hdrInner.appendChild(hdrProg);
+      hdrTitle.appendChild(hdrInner);
+    }
+
     var list = document.createElement('div');
     list.className = 'adhkar-list';
+    var cardEls = [];
 
     items.forEach(function(item){
+      var arText = item.ar || '';
+      var isSurah = arText.indexOf('۝') !== -1; // U+06DD Arabic End of Ayah ۝
       var card = document.createElement('div');
-      card.className = 'adhkar-card';
+      card.className = 'adhkar-card' + (isSurah ? ' adhkar-card-surah' : '');
 
       if (item.badge_until && new Date(item.badge_until).getTime() > Date.now()) {
         var aNewChip = document.createElement('div');
@@ -1380,7 +1409,25 @@ window.GencineUI = {
 
       var ar = document.createElement('div');
       ar.className = 'adhkar-card-ar';
-      ar.textContent = item.ar || '';
+      if (isSurah) {
+        var parts = arText.split('۝');
+        parts.forEach(function(part, pi) {
+          var trimmed = part.trim();
+          if (!trimmed) return;
+          var ayahSpan = document.createElement('span');
+          ayahSpan.className = 'adhkar-ayah';
+          ayahSpan.textContent = trimmed;
+          ar.appendChild(ayahSpan);
+          if (pi < parts.length - 1) {
+            var marker = document.createElement('span');
+            marker.className = 'adhkar-ayah-marker';
+            marker.textContent = ' ۝ ';
+            ar.appendChild(marker);
+          }
+        });
+      } else {
+        ar.textContent = arText;
+      }
       card.appendChild(ar);
 
       var footer = document.createElement('div');
@@ -1391,19 +1438,77 @@ window.GencineUI = {
       footer.appendChild(src);
       var right = document.createElement('div');
       right.className = 'adhkar-card-right';
-      if ((item.repeat || 1) > 1){
+      var repeat = item.repeat || 1;
+      if (repeat > 1){
         var rep = document.createElement('span');
         rep.className = 'adhkar-card-repeat';
-        rep.textContent = '\u00D7 ' + item.repeat;
+        rep.textContent = '\u00D7\u00A0' + repeat; // \u00D7 N non-breaking space
         right.appendChild(rep);
       }
-      right.appendChild(_mkCopyBtn(item.ar || ''));
+      right.appendChild(_mkCopyBtn(arText));
       footer.appendChild(right);
       card.appendChild(footer);
       list.appendChild(card);
+      cardEls.push(card);
     });
 
+    // ── Completion card ──
+    var QUOTES = [
+      { ar: 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ', ref: 'الرعد: ٢٨' },
+      { ar: 'فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ', ref: 'البقرة: ١٥٢' },
+      { ar: 'وَاذْكُروا اللَّهَ كَثِيرًا لَّعَلَّكُمْ تُفْلِحُونَ', ref: 'الجمعة: ١٠' }
+    ];
+    var q = QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length];
+    var comp = document.createElement('div');
+    comp.className = 'adhkar-completion';
+    var compCheck = document.createElement('div');
+    compCheck.className = 'adhkar-completion-check';
+    compCheck.textContent = '✓';
+    var compTitle = document.createElement('div');
+    compTitle.className = 'adhkar-completion-title';
+    compTitle.textContent = T('adhkar.completion', 'زکر تەمام بوون');
+    var compQuote = document.createElement('div');
+    compQuote.className = 'adhkar-completion-quote';
+    compQuote.textContent = q.ar;
+    var compRef = document.createElement('div');
+    compRef.className = 'adhkar-completion-ref';
+    compRef.textContent = q.ref;
+    comp.appendChild(compCheck);
+    comp.appendChild(compTitle);
+    comp.appendChild(compQuote);
+    comp.appendChild(compRef);
+    list.appendChild(comp);
+
     container.appendChild(list);
+
+    // ── Scroll: update live progress in sticky header ──
+    var panel = document.getElementById('panelGencine');
+    if (panel && hdrTitle) {
+      function _updateAdhkarProgress() {
+        var progEl = document.getElementById('adhkarHdrProgress');
+        if (!progEl) return;
+        var threshold = panel.getBoundingClientRect().top + 72;
+        var visIdx = 0;
+        for (var i = 0; i < cardEls.length; i++) {
+          if (cardEls[i].getBoundingClientRect().top < threshold) visIdx = i + 1;
+          else break;
+        }
+        if (visIdx < 1) visIdx = 1;
+        progEl.textContent = visIdx >= totalCount
+          ? T('adhkar.done', 'تەمام ✓')
+          : visIdx + ' / ' + totalCount;
+      }
+      panel.addEventListener('scroll', _updateAdhkarProgress, { passive: true });
+      _adhkarScrollCleanup = function() {
+        panel.removeEventListener('scroll', _updateAdhkarProgress);
+        if (hdrTitle) {
+          while (hdrTitle.firstChild) hdrTitle.removeChild(hdrTitle.firstChild);
+          _hdrSavedChildren.forEach(function(c){ hdrTitle.appendChild(c); });
+          hdrTitle.style.visibility = _hdrSavedVisibility;
+        }
+      };
+      _updateAdhkarProgress();
+    }
   },
 
   /* ═══════════════════ DUA (Quran only) ═══════════════════ */
