@@ -1590,6 +1590,8 @@ window.BULK_TRANSLATIONS = [
     { key_id: "adhkar.mirror",          kurdish_text: "دیتنا ئاوینێ",                  category: "adhkar", page: "android" },
     { key_id: "adhkar.nightmare",       kurdish_text: "خەوا خراپ",                     category: "adhkar", page: "android" },
     { key_id: "adhkar.istikhara",       kurdish_text: "دوعای ئیستیخارە",               category: "adhkar", page: "android" },
+    { key_id: "adhkar.done",           kurdish_text: "تەمام ✓",                        category: "adhkar", page: "android" },
+    { key_id: "adhkar.completion",     kurdish_text: "زکر تەمام بوون",                 category: "adhkar", page: "android" },
     { key_id: "adhkar.group.daily",    kurdish_text: "ڕۆژانە",                        category: "adhkar", page: "android" },
     { key_id: "adhkar.group.prayer",   kurdish_text: "نوێژ",                          category: "adhkar", page: "android" },
     { key_id: "adhkar.group.food",     kurdish_text: "خواردن",                        category: "adhkar", page: "android" },

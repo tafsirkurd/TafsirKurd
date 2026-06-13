@@ -1484,22 +1484,28 @@ window.GencineUI = {
     // ── Scroll: update live progress in sticky header ──
     var panel = document.getElementById('panelGencine');
     if (panel && hdrTitle) {
+      var _raf = null;
       function _updateAdhkarProgress() {
-        var progEl = document.getElementById('adhkarHdrProgress');
-        if (!progEl) return;
-        var threshold = panel.getBoundingClientRect().top + 72;
-        var visIdx = 0;
-        for (var i = 0; i < cardEls.length; i++) {
-          if (cardEls[i].getBoundingClientRect().top < threshold) visIdx = i + 1;
-          else break;
-        }
-        if (visIdx < 1) visIdx = 1;
-        progEl.textContent = visIdx >= totalCount
-          ? T('adhkar.done', 'تەمام ✓')
-          : visIdx + ' / ' + totalCount;
+        if (_raf) return;
+        _raf = requestAnimationFrame(function() {
+          _raf = null;
+          var progEl = document.getElementById('adhkarHdrProgress');
+          if (!progEl) return;
+          var threshold = panel.getBoundingClientRect().top + 72;
+          var visIdx = 0;
+          for (var i = 0; i < cardEls.length; i++) {
+            if (cardEls[i].getBoundingClientRect().top < threshold) visIdx = i + 1;
+            else break;
+          }
+          if (visIdx < 1) visIdx = 1;
+          progEl.textContent = visIdx >= totalCount
+            ? T('adhkar.done', 'تەمام ✓')
+            : visIdx + ' / ' + totalCount + ' زکر';
+        });
       }
       panel.addEventListener('scroll', _updateAdhkarProgress, { passive: true });
       _adhkarScrollCleanup = function() {
+        if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
         panel.removeEventListener('scroll', _updateAdhkarProgress);
         if (hdrTitle) {
           while (hdrTitle.firstChild) hdrTitle.removeChild(hdrTitle.firstChild);
@@ -1507,7 +1513,6 @@ window.GencineUI = {
           hdrTitle.style.visibility = _hdrSavedVisibility;
         }
       };
-      _updateAdhkarProgress();
     }
   },
 
