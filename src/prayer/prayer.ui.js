@@ -1843,6 +1843,13 @@
     var _src = source || 'manualRefresh';
     console.log('[WidgetRefresh] forceWidgetRefresh source=' + _src);
     var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
+    // 0. Record the user's current city immediately — even if we go offline before the
+    //    extended cache is ready. Widget reads this to detect city changes.
+    var _intendedCity = getCity();
+    if (sp && _intendedCity) {
+      sp.set({ key: 'widgetIntendedCity', value: _intendedCity })
+        .catch(function(e) { console.log('[WidgetRefresh] intendedCity write FAIL:', e && e.message || e); });
+    }
     // 1. Write new nonce — SharedPrefsPlugin clears ext cache and reloads all widgets
     if (sp) {
       var nonce   = String(Date.now());
@@ -1961,6 +1968,13 @@
     if (!window.PrayerLogic || !window.PrayerCache) return;
     var city     = getCity();
     var today    = window.PrayerLogic.todayBaghdad();
+    // Always record the user's intended city first. This lets the widget detect that the
+    // city changed even before we have prayer data for the new city (e.g., offline change).
+    var _sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
+    if (_sp && city) {
+      _sp.set({ key: 'widgetIntendedCity', value: city })
+         .catch(function(e) { console.log('[Widget] intendedCity write FAIL:', e && e.message || e); });
+    }
     var lastDate = localStorage.getItem('widgetLastPushedDate') || '';
     var lastCity = localStorage.getItem('widgetLastPushedCity') || '';
     var hadTom   = localStorage.getItem('widgetLastPushedHadTomorrow') === '1';
@@ -2040,6 +2054,23 @@
       // and should show a clean "open app" fallback rather than wrong or partial prayer times.
       var validUntil = now + 45 * 86400 * 1000;
       var payload = JSON.stringify({ v: 1, city: city, gen: now, validUntil: validUntil, days: days });
+      // Atomic validation: parse back the JSON before writing to App Group.
+      // If JSON.stringify produced invalid JSON (e.g., corrupted data), reject silently.
+      try {
+        var parsed = JSON.parse(payload);
+        if (!parsed || typeof parsed !== 'object' || !parsed.days || typeof parsed.days !== 'object') {
+          console.log('[WidgetExt] atomic validation FAIL — payload malformed, skipping write');
+          return;
+        }
+        var parsedDayCount = Object.keys(parsed.days).length;
+        if (parsedDayCount !== collected) {
+          console.log('[WidgetExt] atomic validation FAIL — day count mismatch ' + parsedDayCount + ' vs ' + collected + ', skipping write');
+          return;
+        }
+      } catch(ve) {
+        console.log('[WidgetExt] atomic validation FAIL — parse error:', ve && ve.message || ve);
+        return;
+      }
       console.log('[WidgetExt] pushing: city=' + city + ' total=' + collected + ' future=' + futureDays + ' len=' + payload.length);
       sp.set({ key: 'widgetExtendedCache', value: payload })
         .then(function() {

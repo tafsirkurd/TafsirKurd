@@ -230,7 +230,18 @@ struct PrayerProvider: TimelineProvider {
 
         // Always read legacy data first — it is the source of truth for the current city.
         let legacyData = PrayerWidgetData.load()
-        let currentCity = legacyData?.city ?? ""
+
+        // intendedCity: what city the USER has selected right now.
+        // Written to App Group by pushWidgetIfStale/forceWidgetRefresh on every app open
+        // and every city-settings change — even if prayer data for that city hasn't
+        // been fetched yet (e.g., user changed city while offline).
+        let intendedCity: String = {
+            guard let ud = UserDefaults(suiteName: kAppGroup),
+                  let c = ud.string(forKey: "widgetIntendedCity"), !c.isEmpty
+            else { return legacyData?.city ?? "" }
+            return c
+        }()
+        let currentCity = intendedCity
 
         // [WidgetStale] detection: flag in App Group so JS health reporter surfaces it.
         if let legacy = legacyData, legacy.isStale {
@@ -243,11 +254,22 @@ struct PrayerProvider: TimelineProvider {
             }
         }
 
-        // 1. Extended cache: multi-day autonomous path (90+ days, no app required)
-        //    Reject if city doesn't match the current city (user changed city since last push).
+        // 1. Extended cache: multi-day autonomous path (45+ days, no network required)
+        //    Reject if city doesn't match the user's selected city.
         if let ext = WidgetExtendedCache.load(), ext.isUsable {
             if !currentCity.isEmpty && ext.city != currentCity {
-                wLog.warning("[WidgetTimeline] extended cache city '\(ext.city)' ≠ current '\(currentCity)' — discard, fetch fresh")
+                // City changed. If legacy data has the new city, use it for 2-day bridge.
+                // If legacy also has old city (user changed while offline → no new data yet),
+                // show clean NoDataView — never render wrong-city prayer times.
+                let legacyHasNewCity = legacyData?.city == currentCity
+                if !legacyHasNewCity {
+                    wLog.warning("[WidgetTimeline] city changed '\(ext.city)' → '\(currentCity)' offline, no new data — NoDataView 15 min")
+                    completion(Timeline(
+                        entries: [PrayerEntry(date: now, data: nil, next: nil, reason: "city_changed_no_data", display: .empty)],
+                        policy: .after(now.addingTimeInterval(15 * 60))))
+                    return
+                }
+                wLog.warning("[WidgetTimeline] extended cache city '\(ext.city)' ≠ current '\(currentCity)' — discard, legacy bridge")
             } else {
                 wLog.info("[WidgetTimeline] extended cache hit city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
                 let (entries, policyAt) = buildExtendedTimeline(ext: ext, now: now, legacyData: legacyData)
@@ -425,9 +447,14 @@ private func buildExtendedTimeline(ext: WidgetExtendedCache, now: Date,
     let zone2End = now.addingTimeInterval(7 * 24 * 3600) // 48 h–7 d: lean offset [+5 s only]
     // Beyond 7 d (zone 3): exact boundary time only
 
-    // Prayer-boundary entries across the next 14 days + midnight anchors.
+    // Prayer-boundary entries across the next 30 days + midnight anchors.
+    // Zone 1 (0-48 h): 7 dense offset entries per prayer (+5s/30s/60s/5m/10m/15m/20m).
+    // Zone 2 (48 h – 7 d): 1 lean offset per prayer (+5 s).
+    // Zone 3 (7 d – 30 d, days 8-30): exact boundary time only, no offsets.
+    // ~517 total entries; iOS trims the far-future Zone 3 tail if it exceeds its cap
+    // (~400). Nightly Widget rebuild restores the trimmed tail each day.
     var boundaryCount = 0
-    for dateStr in futureDates.prefix(14) {
+    for dateStr in futureDates.prefix(30) {
         let dayData = syntheticData(from: ext, dateStr: dateStr) ?? todayData
 
         for name in kDisplayOrder {

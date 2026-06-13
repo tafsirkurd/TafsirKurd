@@ -256,6 +256,11 @@ struct WidgetExtendedCache: Codable {
                 wLog.warning("[Ext] schema mismatch v=\(ext.v) expected \(kExtCacheSchema)")
                 return nil
             }
+            // Require at least 7 days of data; fewer means an incomplete write.
+            guard ext.days.count >= 7 else {
+                wLog.warning("[Ext] insufficient days \(ext.days.count) < 7 — rejecting as incomplete")
+                return nil
+            }
             wLog.info("[Ext] loaded city=\(ext.city) days=\(ext.days.count) ageH=\(String(format:"%.1f",ext.ageHours))")
             return ext
         } catch {
