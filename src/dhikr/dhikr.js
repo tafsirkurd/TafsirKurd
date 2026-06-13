@@ -1027,11 +1027,12 @@ window.GencineUI = {
     else if(this._view === 'tasbih')  this._renderTasbih(el);
     else if(this._view === 'asma')       this._renderAsma(el);
     else if(this._view === 'books'){
+      if(panel && restoringBooks) panel.scrollTop = 0; // flush large PDF-reader scrollTop before render
       this._renderBooks(el);
       if(restoringBooks){
         var savedPos = this._booksScrollPos;
         this._booksScrollPos = null;
-        if(panel) setTimeout(function(){ panel.scrollTop = savedPos; }, 0);
+        if(panel) requestAnimationFrame(function(){ panel.scrollTop = savedPos; });
       }
     }
     else if(this._view === 'book-reader') this._renderBookReader(el);
