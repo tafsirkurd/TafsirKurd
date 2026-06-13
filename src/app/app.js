@@ -1443,9 +1443,10 @@ function init(){
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications){
     try{
       var _LN=window.Capacitor.Plugins.LocalNotifications;
-      // Create reminder channel immediately at startup
+      // Create notification channel immediately at startup (shared by all notification types)
       _ensureReminderChannel(_LN);
-      // Reschedule daily reminder on every launch so 7-day window never expires
+      // Cancel any daily reading reminder slots (IDs 10-16) left from previous builds
+      _LN.cancel({notifications:[1,10,11,12,13,14,15,16].map(function(id){return{id:id};})}).catch(function(){});
     }catch(e){}
   }
 
@@ -2504,48 +2505,6 @@ function _ensureReminderChannel(LN){
     importance:4,
     vibration:true,
     lights:true
-  }).catch(function(){});
-}
-
-/* Rotating motivational messages — keys live in kmr.json / admin-translations */
-var REMINDER_MSGS_COUNT=14;
-function _getReminderMsg(dayOfYear){
-  var idx=dayOfYear%REMINDER_MSGS_COUNT;
-  return t('notif.reminder_msg_'+idx)||t('notif.reminder_body')||'قورئانێ بخوێنە 📖';
-}
-
-function scheduleReminder(enabled){
-  if(!window.Capacitor||!window.Capacitor.Plugins||!window.Capacitor.Plugins.LocalNotifications)return;
-  var LN=window.Capacitor.Plugins.LocalNotifications;
-  // Cancel old single-slot (ID:1) and 7-day slots (IDs 10-16)
-  LN.cancel({notifications:[1,10,11,12,13,14,15,16].map(function(id){return{id:id};})}).catch(function(){});
-  if(!enabled)return;
-  var now=new Date();
-  var notifications=[];
-  // iOS 64-notification cap: keep to 3 days to leave room for athan+prayer-reminder slots
-  var _isIOS=window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios';
-  var _remDays=_isIOS?3:7;
-  for(var d=0;d<_remDays;d++){
-    var dayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate()+d);
-    var seed=_getDayOfYear(dayBase)*31+7;
-    var h=7+(seed%13);var m=(seed*17)%60;
-    var schedDate=new Date(dayBase.getFullYear(),dayBase.getMonth(),dayBase.getDate(),h,m,0,0);
-    if(d===0&&schedDate<=now){schedDate.setDate(schedDate.getDate()+1);}
-    if(d===0&&schedDate<=now)continue;
-    var msg=_getReminderMsg(_getDayOfYear(schedDate));
-    notifications.push({
-      id:10+d,
-      title:'TafsirKurd',
-      body:msg,
-      schedule:{at:schedDate,allowWhileIdle:true},
-      smallIcon:'ic_notification',
-      channelId:'reminder'
-    });
-  }
-  LN.requestPermissions().then(function(){
-    _ensureReminderChannel(LN).then(function(){
-      LN.schedule({notifications:notifications}).catch(function(e){console.error('scheduleReminder error:',e);});
-    });
   }).catch(function(){});
 }
 

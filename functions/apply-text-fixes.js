@@ -122,7 +122,6 @@ const CORRECTIONS = [
     { key_id: 'dl.no_books',                 kurdish_text: 'هیچ پەرتوکێک نەهاتیە داونلود کرن' },
     { key_id: 'notif.new_book_title',        kurdish_text: 'پەرتوکەکا نوی' },
     { key_id: 'notif.new_book_body',         kurdish_text: 'پەرتوکەکا نوی زیادبوو لە پەرتوکخانە' },
-    { key_id: 'notif.reminder_msg_6',        kurdish_text: 'ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟' },
     { key_id: 'goals.last_session',          kurdish_text: 'دوماهیک خواندن' },
     { key_id: 'gencine.today',               kurdish_text: 'ئەڤڕۆ' },
     { key_id: 'gencine.weeks_ago',           kurdish_text: 'حەفتی' },
