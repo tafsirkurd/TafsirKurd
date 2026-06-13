@@ -705,7 +705,8 @@ private func fetchExtendedPrayerCache(city: String, completion: @escaping (Widge
             return
         }
         let ext = WidgetExtendedCache(v: kExtCacheSchema, city: city,
-                                      gen: Date().timeIntervalSince1970 * 1000, days: allDays)
+                                      gen: Date().timeIntervalSince1970 * 1000,
+                                      validUntil: nil, days: allDays)
         ext.save()
         wLog.info("[Ext] fetch+save complete: city=\(city) totalDays=\(allDays.count)")
         completion(ext)
