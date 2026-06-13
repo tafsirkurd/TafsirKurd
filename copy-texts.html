@@ -48,7 +48,7 @@
 === MONTH CELEBRATION CARD ===
 Title: ما شاء الله! 🌟
 Subtitle line 1: تە هەمی نڤێژێن مەهێ تەمام کرن!
-Subtitle line 2: خودێ قبوول بکەت 🤲
+Subtitle line 2: خودێ تە ل سەر خێرێ جێگیر بکەت.
 Streak badge (X = days): 🔥 X ڕۆژ ل سەر ئێک
 Close button: داخستن
 
@@ -78,13 +78,8 @@ Body  (dynamic, from code): تەفسیرا کوردی یا ئایەتێ (یان 
 [notif.verse_title]      ئایەتا ڕۆژێ   (key exists in DB but code uses the surah name)
 
 === NOTIFICATIONS — STREAK (local, ID 30) ===
-[notif.streak_title]     بەردەوامیا ڕۆژانت لێ دەچێت! 🔥
-[notif.streak_body]      ئەڤرۆ ${days} ڕۆژا تە یا ستریکایە.
-
-=== NOTIFICATIONS — NEW BOOK (local app-open check, ID 32) ===
-[notif.new_book_title]   پەرتوکەکا نوی
-Body (dynamic): ناڤێ پەرتوکێ — fallback:
-[notif.new_book_body]    پەرتوکەکا نوی زیادبوو لە پەرتوکخانە
+[notif.streak_title]     بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥
+[notif.streak_body]      ئەڤرۆ ڕۆژا ${days}ێ یا بەردەوامیا تە (Streak) یە. بەردەوام بە! 🔥
 
 === NOTIFICATIONS — SERVER PUSH (FCM, automatic) ===
 New video — Title: ناڤێ زنجیرەیێ (dynamic) / Body: ناڤێ ئەلقەیێ (dynamic)
@@ -98,24 +93,17 @@ Manual (admin) — Title/Body: ئەدمین دنڤێسیت (dynamic)
 
 === NOTIFICATIONS — NATIVE ANDROID (ID 9900, athan refresh) ===
 Title (hardcoded Java): بانگ
-Body  (hardcoded Java): بۆ نوێکردنەوەی کاتا بانگێ ئەپێ بکەرە
+Body  (hardcoded Java): بۆ نوویكرنا دەمێن بانگی، ئەپێ (بەرنامەی) ڤەکە
 (DB keys notif.reschedule_athan_* exist but Java does not read them)
 
 === NOTIFICATIONS — REMOVED ===
 In-app new-video (ID 31) "ڤیدیۆیەکی نوی 🎬" — removed 2026-06-12 (duplicated the server push)
 (keys notif.new_video_title/body remain in DB/kmr but are unused)
 
-=== NOTIFICATIONS — SETUP / PERMISSION PROMPTS ===
-[notif.setup_title]             بۆ ئاگەهدارکرنا باش
-[notif.setup_body]              دا ئاگەهداری باشتر کاربکەن، دویڤچوونا ئەڤان پێنگاڤان بکە:
-Settings → Battery → App Battery Usage → Unrestricted
-[notif.setup_ok]                تێگەهشتم
-[notif.setup.direct_title]      بانگ ڕاستەوخۆ بیت
-[notif.setup.open_settings]     ڤەکرنا ڕێکخستنان
-[notif.setup.later]             پاشان
-[notif.setup.athan_disabled_title]  دەنگێ بانگی ناهێت — مەرجەك یێ هەی
-[notif.setup.go_settings]       هەرە ڕێكخستنان
-[notif.setup.dismiss]           پاشی
+=== NOTIFICATIONS — SETUP / PERMISSION PROMPTS (keys deleted; UI uses hardcoded fallbacks) ===
+notif.setup_title / notif.setup_body / notif.setup_ok
+notif.setup.direct_title / notif.setup.open_settings / notif.setup.later
+notif.setup.athan_disabled_title / notif.setup.go_settings / notif.setup.dismiss
 </pre>
 
 <!-- SMART-DHIKR TAGS -->
@@ -159,7 +147,7 @@ Settings → Battery → App Battery Usage → Unrestricted
 <div class="section">
   <div class="section-title">Month Celebration Card — never updated</div>
   <div class="lbl">Title</div><div class="row">ما شاء الله! 🌟</div>
-  <div class="lbl">Subtitle</div><div class="row">تە هەمی نڤێژێن مەهێ تەمام کرن!<br>خودێ قبوول بکەت 🤲</div>
+  <div class="lbl">Subtitle</div><div class="row">تە هەمی نڤێژێن مەهێ تەمام کرن!<br>خودێ تە ل سەر خێرێ جێگیر بکەت.</div>
   <div class="lbl">Streak badge (X = days)</div><div class="row">🔥 X ڕۆژ ل سەر ئێک</div>
   <div class="lbl">Close button</div><div class="row">داخستن</div>
 </div>
@@ -217,18 +205,9 @@ Settings → Battery → App Battery Usage → Unrestricted
 <div class="section">
   <div class="section-title">Notifications — Streak (local, ID 30)</div>
   <div class="key">notif.streak_title</div>
-  <div class="row">بەردەوامیا ڕۆژانت لێ دەچێت! 🔥</div>
+  <div class="row">بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥</div>
   <div class="key">notif.streak_body</div>
-  <div class="row">ئەڤرۆ ${days} ڕۆژا تە یا ستریکایە.</div>
-</div>
-
-<!-- NOTIFICATIONS -->
-<div class="section">
-  <div class="section-title">Notifications — New Book (local app-open, ID 32) — Body = book name, fallback below</div>
-  <div class="key">notif.new_book_title</div>
-  <div class="row">پەرتوکەکا نوی</div>
-  <div class="key">notif.new_book_body</div>
-  <div class="row">پەرتوکەکا نوی زیادبوو لە پەرتوکخانە</div>
+  <div class="row">ئەڤرۆ ڕۆژا ${days}ێ یا بەردەوامیا تە (Streak) یە. بەردەوام بە! 🔥</div>
 </div>
 
 <!-- NOTIFICATIONS -->
@@ -248,7 +227,7 @@ Settings → Battery → App Battery Usage → Unrestricted
 <div class="section">
   <div class="section-title">Notifications — Native Android (ID 9900, athan refresh) — hardcoded in Java</div>
   <div class="row">بانگ</div>
-  <div class="row">بۆ نوێکردنەوەی کاتا بانگێ ئەپێ بکەرە</div>
+  <div class="row">بۆ نوویكرنا دەمێن بانگی، ئەپێ (بەرنامەی) ڤەکە</div>
 </div>
 
 <!-- NOTIFICATIONS -->
@@ -259,25 +238,8 @@ Settings → Battery → App Battery Usage → Unrestricted
 
 <!-- NOTIFICATIONS -->
 <div class="section">
-  <div class="section-title">Notifications — Setup / Permission Prompts</div>
-  <div class="key">notif.setup_title</div>
-  <div class="row">بۆ ئاگەهدارکرنا باش</div>
-  <div class="key">notif.setup_body</div>
-  <div class="row">دا ئاگەهداری باشتر کاربکەن، دویڤچوونا ئەڤان پێنگاڤان بکە:<br>Settings → Battery → App Battery Usage → Unrestricted</div>
-  <div class="key">notif.setup_ok</div>
-  <div class="row">تێگەهشتم</div>
-  <div class="key">notif.setup.direct_title</div>
-  <div class="row">بانگ ڕاستەوخۆ بیت</div>
-  <div class="key">notif.setup.open_settings</div>
-  <div class="row">ڤەکرنا ڕێکخستنان</div>
-  <div class="key">notif.setup.later</div>
-  <div class="row">پاشان</div>
-  <div class="key">notif.setup.athan_disabled_title</div>
-  <div class="row">دەنگێ بانگی ناهێت — مەرجەك یێ هەی</div>
-  <div class="key">notif.setup.go_settings</div>
-  <div class="row">هەرە ڕێكخستنان</div>
-  <div class="key">notif.setup.dismiss</div>
-  <div class="row">پاشی</div>
+  <div class="section-title">Notifications — Setup / Permission Prompts (i18n keys deleted; UI uses hardcoded fallbacks)</div>
+  <div class="row">notif.setup_title / setup_body / setup_ok / setup.direct_title / setup.open_settings / setup.later / setup.athan_disabled_title / setup.go_settings / setup.dismiss</div>
 </div>
 
 <script>

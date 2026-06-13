@@ -1400,15 +1400,10 @@ window.BULK_TRANSLATIONS = [
     { key_id: "profile.view_profile", kurdish_text: "پرۆفایلی ببینە", category: "profile", page: "android" },
 
     // Notifications - setup, streak, new content, rotating messages
-    { key_id: "notif.setup_title",        kurdish_text: "بۆ ئاگادارکرنا باش ✓",             category: "notifications", page: "android" },
-    { key_id: "notif.setup_body",         kurdish_text: "ڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە",  category: "notifications", page: "android" },
-    { key_id: "notif.setup_ok",           kurdish_text: "تێگەیشتم",                         category: "notifications", page: "android" },
-    { key_id: "notif.streak_title",       kurdish_text: "ڕیزا ڕۆژانت لێ دەچێت! 🔥",         category: "notifications", page: "android" },
-    { key_id: "notif.streak_body",        kurdish_text: "ئەڤرۆ ${days} ڕۆژ ل ڕێکێدایت. مەبەست بکە!", category: "notifications", page: "android" },
+    { key_id: "notif.streak_title",       kurdish_text: "بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥", category: "notifications", page: "android" },
+    { key_id: "notif.streak_body",        kurdish_text: "ئەڤرۆ ڕۆژا ${days}ێ یا بەردەوامیا تە (Streak) یە. بەردەوام بە! 🔥", category: "notifications", page: "android" },
     { key_id: "notif.new_video_title",    kurdish_text: "ڤیدیۆیەکی نوێ 🎬",                 category: "notifications", page: "android" },
     { key_id: "notif.new_video_body",     kurdish_text: "ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس", category: "notifications", page: "android" },
-    { key_id: "notif.new_book_title",     kurdish_text: "پەرتوکەکا نوی",                    category: "notifications", page: "android" },
-    { key_id: "notif.new_book_body",      kurdish_text: "پەرتوکەکا نوی زیادبوو لە پەرتوکخانە", category: "notifications", page: "android" },
 
     // IslamVoice extras (social, playback, content management)
     { key_id: "iv.loading_spinner",      kurdish_text: "چاڤەڕێبە...",                         category: "islamvoice", page: "android" },

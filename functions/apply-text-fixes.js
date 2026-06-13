@@ -120,8 +120,6 @@ const CORRECTIONS = [
     { key_id: 'pdf.offline_sub',             kurdish_text: 'ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە' },
     { key_id: 'dl.books_section',            kurdish_text: 'پەرتوک' },
     { key_id: 'dl.no_books',                 kurdish_text: 'هیچ پەرتوکێک نەهاتیە داونلود کرن' },
-    { key_id: 'notif.new_book_title',        kurdish_text: 'پەرتوکەکا نوی' },
-    { key_id: 'notif.new_book_body',         kurdish_text: 'پەرتوکەکا نوی زیادبوو لە پەرتوکخانە' },
     { key_id: 'goals.last_session',          kurdish_text: 'دوماهیک خواندن' },
     { key_id: 'gencine.today',               kurdish_text: 'ئەڤڕۆ' },
     { key_id: 'gencine.weeks_ago',           kurdish_text: 'حەفتی' },

@@ -92,7 +92,7 @@ public class AthanRescheduleWorker extends Worker {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(ctx, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("بانگ")
-            .setContentText("بۆ نوێکردنەوەی کاتا بانگێ ئەپێ بکەرە")
+            .setContentText("بۆ نوویكرنا دەمێن بانگی، ئەپێ (بەرنامەی) ڤەکە")
             .setContentIntent(pi)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT);

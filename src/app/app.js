@@ -1186,7 +1186,6 @@ function init(){
             // FCM push — users got the real push in background, then a second
             // local "ڤیدیۆیەکی نوی 🎬" on app open whenever the push had been
             // dismissed (the lastVideoNotifId dedup only saw tapped/in-tray pushes).
-            checkNewBookNotif();
             // Re-run prefetch — capped to once per 10 min to avoid spawning 20 city
             // fetches on every single foreground event (rapid background/foreground cycles).
             (function(){
@@ -1446,7 +1445,7 @@ function init(){
       // Create notification channel immediately at startup (shared by all notification types)
       _ensureReminderChannel(_LN);
       // Cancel any daily reading reminder slots (IDs 10-16) left from previous builds
-      _LN.cancel({notifications:[1,10,11,12,13,14,15,16].map(function(id){return{id:id};})}).catch(function(){});
+      _LN.cancel({notifications:[1,10,11,12,13,14,15,16,32].map(function(id){return{id:id};})}).catch(function(){});
     }catch(e){}
   }
 
@@ -1460,9 +1459,8 @@ function init(){
   initDailyVerse();
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);
-  // checkNewVideoNotif removed — duplicated the server FCM push (see appStateChange note)
+  // checkNewVideoNotif/checkNewBookNotif removed — FCM handles new-content notifications
   setTimeout(function(){_warmAboutCache();},2000);
-  setTimeout(function(){checkNewBookNotif();},2500);
   _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
   setTimeout(function(){_reportAppVersion();},5000);
@@ -2896,8 +2894,8 @@ function scheduleStreakReminder(){
     _ensureReminderChannel(LN).then(function(){
       LN.schedule({notifications:[{
         id:30,
-        title:t('notif.streak_title')||'ڕیزا ڕۆژانت لێ دەچێت! 🔥',
-        body:t('notif.streak_body',{days:String(streak)})||('ئەڤرۆ '+streak+' ڕۆژ ل ڕێکێدایت. مەبەست بکە!'),
+        title:t('notif.streak_title')||'بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥',
+        body:t('notif.streak_body',{days:String(streak)})||('ئەڤرۆ ڕۆژا '+streak+'ێ یا بەردەوامیا تە (Streak) یە. بەردەوام بە! 🔥'),
         schedule:{at:at,allowWhileIdle:true},
         smallIcon:'ic_notification',
         channelId:'reminder',
@@ -3184,50 +3182,6 @@ function checkNewVideoNotif(){
     }).catch(function(){});
 }
 
-/* ===== NEW BOOK NOTIFICATION ===== */
-/* Check on app open if new book added since last check. ID 32 */
-function checkNewBookNotif(){
-  if(localStorage.getItem('appNotifEnabled')==='false')return;
-  if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
-  if(!S.supabase)return;
-  var now=new Date().toISOString();
-  // First-ever launch: no lastCheck saved → seed with now and skip notification
-  // so we never fire for books that existed before the user installed the app.
-  if(!localStorage.getItem('lastBookNotifCheck')){
-    localStorage.setItem('lastBookNotifCheck',now);
-    return;
-  }
-  var lastCheck=localStorage.getItem('lastBookNotifCheck');
-  S.supabase.from('gencine_books').select('id,title_ku,title_ar,created_at').eq('active',true).gt('created_at',lastCheck).order('created_at',{ascending:false}).limit(1)
-    .then(function(res){
-      localStorage.setItem('lastBookNotifCheck',now);
-      if(!res||!res.data||!res.data.length)return;
-      var book=res.data[0];
-      if(localStorage.getItem('lastBookNotifId')===String(book.id))return;
-      localStorage.setItem('lastBookNotifId',String(book.id));
-      // Check if admin skipped notification for this book
-      S.supabase.from('admin_notifications').select('id').eq('deep_link_type','book').eq('deep_link_id',String(book.id)).eq('status','cancelled').limit(1)
-        .then(function(skipRes){
-          if(skipRes&&skipRes.data&&skipRes.data.length)return; // admin chose no notification
-          var LN=Capacitor.Plugins.LocalNotifications;
-          LN.requestPermissions().then(function(perm){
-            if(perm.display!=='granted'&&perm.receive!=='granted')return;
-            _ensureReminderChannel(LN).then(function(){
-              LN.cancel({notifications:[{id:32}]}).catch(function(){});
-              LN.schedule({notifications:[{
-                id:32,
-                title:tSafe('notif.new_book_title')||'پەرتوکەکا نوی',
-                body:(book.title_ku||book.title_ar)||tSafe('notif.new_book_body')||'پەرتوکەکا نوی زیادبوو',
-                schedule:{at:new Date(Date.now()+4000),allowWhileIdle:true},
-                smallIcon:'ic_notification',
-                channelId:'reminder',
-                extra:{type:'book',id:book.id}
-              }]}).catch(function(){});
-            });
-          }).catch(function(){});
-        }).catch(function(){});
-    }).catch(function(){});
-}
 
 /* ===== SEARCH ===== */
 var _searchTimer=null;
@@ -9409,7 +9363,7 @@ function _pppCelebrateMonth(log){
   var card=el('div','ppp-celeb-card');
   card.appendChild(el('div','ppp-celeb-icon','🕌'));
   card.appendChild(el('div','ppp-celeb-title','ما شاء الله! 🌟'));
-  card.appendChild(el('div','ppp-celeb-sub','تە هەمی نڤێژێن مەهێ تەمام کرن!\nخودێ قبوول بکەت 🤲'));
+  card.appendChild(el('div','ppp-celeb-sub','تە هەمی نڤێژێن مەهێ تەمام کرن!\nخودێ تە ل سەر خێرێ جێگیر بکەت.'));
   if(streak>0)card.appendChild(el('div','ppp-celeb-streak','🔥 '+streak+' ڕۆژ ل سەر ئێک'));
   var btn=document.createElement('button');btn.className='ppp-celeb-btn';btn.textContent='داخستن';
   on(btn,'click',function(){App.closePrayerCelebration();});
