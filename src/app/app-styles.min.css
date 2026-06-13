@@ -78,8 +78,8 @@ html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5),ht
 .adhkar-card::before{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--accent),var(--accent-dim,var(--accent)));border-radius:0 4px 4px 0;opacity:.65}
 .adhkar-card-ar{font-family:'Scheherazade New','IBM Plex Sans Arabic',sans-serif;font-size:1.3rem;line-height:2.25;color:var(--text);direction:rtl;text-align:right;margin-bottom:12px}
 .adhkar-card-surah::before{opacity:1;width:5px;background:linear-gradient(180deg,var(--accent),var(--accent-dim,var(--accent)))}
-.adhkar-ayah{display:inline}
-.adhkar-ayah-marker{display:inline;color:var(--accent);font-size:1.1rem;opacity:.8}
+.adhkar-ayah{display:block;line-height:2.25;direction:rtl;text-align:right}
+.adhkar-ayah-marker{display:none}
 .adhkar-card-footer{display:flex;justify-content:space-between;align-items:center;direction:rtl;gap:8px;flex-wrap:wrap}
 .adhkar-card-src{font-size:.7rem;color:var(--text3);flex:1;direction:rtl}
 .adhkar-card-repeat{background:var(--accent);color:var(--accent-t,#fff);border-radius:20px;padding:4px 13px;font-size:.78rem;font-weight:800;letter-spacing:.02em}
@@ -88,4 +88,4 @@ html.android:not(.low-end-device) .prayer-grid-card--interactive:nth-child(5),ht
 .adhkar-completion-check{font-size:1.6rem;margin-bottom:10px;color:var(--accent);line-height:1}
 .adhkar-completion-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:16px}
 .adhkar-completion-quote{font-family:'Scheherazade New','IBM Plex Sans Arabic',sans-serif;font-size:1.1rem;line-height:2;color:var(--text);margin-bottom:6px}
-.adhkar-completion-ref{font-size:.68rem;color:var(--text3)}
+.adhkar-completion-ref{font-size:.68rem;color:var(--text3)}.adhkar-surah-name{display:block;font-size:.72rem;color:var(--accent);font-weight:700;direction:rtl;text-align:right;margin-bottom:10px;letter-spacing:.01em;opacity:.85}

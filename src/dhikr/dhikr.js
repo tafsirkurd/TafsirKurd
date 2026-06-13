@@ -1390,6 +1390,11 @@ window.GencineUI = {
       hdrTitle.appendChild(hdrInner);
     }
 
+    var _SURAH_NAMES = {
+      'قُلْ هُوَ اللَّهُ أَحَدٌ': 'سورة الإخلاص',
+      'قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ': 'سورة الفلق',
+      'قُلْ أَعُوذُ بِرَبِّ النَّاسِ': 'سورة الناس'
+    };
     var list = document.createElement('div');
     list.className = 'adhkar-list';
     var cardEls = [];
@@ -1410,20 +1415,21 @@ window.GencineUI = {
       var ar = document.createElement('div');
       ar.className = 'adhkar-card-ar';
       if (isSurah) {
-        var parts = arText.split('۝');
-        parts.forEach(function(part, pi) {
+        var _firstPart = arText.split('۝')[0].trim();
+        var _surahName = _SURAH_NAMES[_firstPart];
+        if (_surahName) {
+          var _nameEl = document.createElement('div');
+          _nameEl.className = 'adhkar-surah-name';
+          _nameEl.textContent = _surahName;
+          ar.appendChild(_nameEl);
+        }
+        arText.split('۝').forEach(function(part) {
           var trimmed = part.trim();
           if (!trimmed) return;
-          var ayahSpan = document.createElement('span');
-          ayahSpan.className = 'adhkar-ayah';
-          ayahSpan.textContent = trimmed;
-          ar.appendChild(ayahSpan);
-          if (pi < parts.length - 1) {
-            var marker = document.createElement('span');
-            marker.className = 'adhkar-ayah-marker';
-            marker.textContent = ' ۝ ';
-            ar.appendChild(marker);
-          }
+          var _ayahEl = document.createElement('div');
+          _ayahEl.className = 'adhkar-ayah';
+          _ayahEl.textContent = trimmed;
+          ar.appendChild(_ayahEl);
         });
       } else {
         ar.textContent = arText;
@@ -1445,7 +1451,7 @@ window.GencineUI = {
         rep.textContent = '\u00D7\u00A0' + repeat; // \u00D7 N non-breaking space
         right.appendChild(rep);
       }
-      right.appendChild(_mkCopyBtn(arText));
+      right.appendChild(_mkCopyBtn(isSurah ? arText.replace(/\s*۝\s*/g, '\n') : arText));
       footer.appendChild(right);
       card.appendChild(footer);
       list.appendChild(card);
