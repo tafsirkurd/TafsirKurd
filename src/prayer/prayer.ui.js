@@ -1866,8 +1866,9 @@
         // Clear stale guard so push always fires
         localStorage.removeItem('widgetLastPushedDate');
         localStorage.removeItem('widgetExtCacheLastPush');
+        localStorage.removeItem('widgetExtCacheFutureDays');
         pushWidgetData(data, city, today, _src);
-        pushExtendedPrayerCache(city);
+        _ensureExtendedCacheFresh(city);
       } else {
         console.log('[WidgetRefresh] no cache for ' + city + '/' + today + ' — will push on next prayer load');
       }
@@ -1965,14 +1966,14 @@
     var hadTom   = localStorage.getItem('widgetLastPushedHadTomorrow') === '1';
     var sameDayCity = (lastDate === today && lastCity === city);
     if (sameDayCity && hadTom) {
-      // Main widget data is fresh — check extended cache independently
-      if (shouldPushExtendedCache(city)) pushExtendedPrayerCache(city);
+      // Main widget data is fresh — ensure extended cache has 30+ future days
+      if (shouldPushExtendedCache(city)) _ensureExtendedCacheFresh(city);
       return;
     }
     if (sameDayCity && !hadTom) {
       // Same day/city but last push had no tomorrow — only repush if we have it now
       if (!readTomorrowCacheNow(city, today)) {
-        if (shouldPushExtendedCache(city)) pushExtendedPrayerCache(city);
+        if (shouldPushExtendedCache(city)) _ensureExtendedCacheFresh(city);
         return;
       }
       console.log('[Widget] repush: tomorrow data now available for ' + today);
@@ -1983,32 +1984,33 @@
     var data = readCacheNow(city, today);
     if (data) {
       pushWidgetData(data, city, today);
-      pushExtendedPrayerCache(city);
+      _ensureExtendedCacheFresh(city);
     }
     // If no cache: next render() will push when user opens prayer tab
   }
 
-  // Returns true if the extended multi-day cache should be re-pushed: city changed or >24 h old.
+  // Returns true if the extended multi-day cache should be re-pushed: city changed or >6 h old.
   function shouldPushExtendedCache(city) {
     var lastCity = localStorage.getItem('widgetExtCacheLastCity') || '';
     var lastTs   = parseInt(localStorage.getItem('widgetExtCacheLastPush') || '0', 10);
     if (lastCity !== city) return true;
-    return (Date.now() - lastTs) > 24 * 3600 * 1000;
+    return (Date.now() - lastTs) > 6 * 3600 * 1000;
   }
 
   // Collect all locally-cached prayer months into a compact multi-day payload and write it
   // to the App Group (iOS only) so the widget can autonomously build a 90-day timeline
-  // without the app being open.  Format: { v:1, city, gen (Unix ms), days: { "YYYY-MM-DD":
-  // [fajr, sunrise, dhuhr, asr, maghrib, isha] } }
+  // without the app being open.  Format: { v:1, city, gen (Unix ms), validUntil (ms),
+  // days: { "YYYY-MM-DD": [fajr, sunrise, dhuhr, asr, maghrib, isha] } }
   function pushExtendedPrayerCache(city) {
     if (!window.PrayerCache || !window.PrayerLogic) return;
     var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
     if (!sp) return; // iOS-only bridge
     try {
+      var now = Date.now();
       var today = window.PrayerLogic.todayBaghdad();
       var parts = today.split('-').map(Number);
       var baseDate = new Date(parts[0], parts[1] - 1, parts[2]);
-      var days = {}, collected = 0;
+      var days = {}, collected = 0, futureDays = 0;
       for (var d = -3; d <= 90; d++) {
         var target = new Date(baseDate.getTime());
         target.setDate(baseDate.getDate() + d);
@@ -2028,21 +2030,62 @@
           (day.Isha    || '').split(' ')[0]
         ];
         collected++;
+        if (d >= 0) futureDays++;
       }
-      if (collected < 3) {
+      if (collected < 7) {
         console.log('[WidgetExt] too few days in local cache (' + collected + ') — skipping push');
         return;
       }
-      var payload = JSON.stringify({ v: 1, city: city, gen: Date.now(), days: days });
-      console.log('[WidgetExt] pushing: city=' + city + ' days=' + collected + ' len=' + payload.length);
+      // validUntil = 45 days from now. Widget uses this to know when the cache has expired
+      // and should show a clean "open app" fallback rather than wrong or partial prayer times.
+      var validUntil = now + 45 * 86400 * 1000;
+      var payload = JSON.stringify({ v: 1, city: city, gen: now, validUntil: validUntil, days: days });
+      console.log('[WidgetExt] pushing: city=' + city + ' total=' + collected + ' future=' + futureDays + ' len=' + payload.length);
       sp.set({ key: 'widgetExtendedCache', value: payload })
         .then(function() {
-          localStorage.setItem('widgetExtCacheLastPush', String(Date.now()));
+          localStorage.setItem('widgetExtCacheLastPush', String(now));
           localStorage.setItem('widgetExtCacheLastCity', city);
-          console.log('[WidgetExt] write OK days=' + collected);
+          localStorage.setItem('widgetExtCacheFutureDays', String(futureDays));
+          console.log('[WidgetExt] write OK total=' + collected + ' future=' + futureDays);
         })
         .catch(function(e) { console.log('[WidgetExt] write FAIL:', e && e.message || e); });
     } catch(e) { console.log('[WidgetExt] error:', e); }
+  }
+
+  // Ensures the extended cache has at least 30 future days.
+  // If the local prayer cache is missing months, fetches them first (needs network),
+  // then writes the extended cache.  Safe to call on every app open — internally
+  // throttled so the network prefetch fires at most once per 6 h.
+  function _ensureExtendedCacheFresh(city) {
+    if (!window.PrayerCache || !window.PrayerLogic || !window.PrayerAPI) return;
+    var futureDays = parseInt(localStorage.getItem('widgetExtCacheFutureDays') || '0', 10);
+    var lastCity   = localStorage.getItem('widgetExtCacheLastCity') || '';
+    var needsFetch = (lastCity !== city) || futureDays < 30;
+    if (!needsFetch) { pushExtendedPrayerCache(city); return; }
+    // Fetch current month + next 2 months so we always have 60-90 future days
+    var today = window.PrayerLogic.todayBaghdad();
+    var parts = today.split('-').map(Number);
+    var year = parts[0], month = parts[1];
+    var pending = 0;
+    function afterFetch() { pending--; if (pending === 0) pushExtendedPrayerCache(city); }
+    for (var mo = 0; mo < 3; mo++) {
+      var y = (month + mo > 12) ? year + 1 : year;
+      var m = ((month + mo - 1) % 12) + 1;
+      var mkey = window.PrayerCache.monthKey(city, y, m);
+      if (window.PrayerCache.read(mkey)) { continue; }
+      pending++;
+      (function(fy, fm, fmkey) {
+        var url = 'https://tafsirkurd.com/prayer-kurd?city=' + encodeURIComponent(city) +
+                  '&year=' + fy + '&month=' + fm;
+        fetch(url).then(function(res) { return res.ok ? res.json() : null; })
+          .then(function(data) {
+            if (data && data.days) window.PrayerCache.write(fmkey, data);
+            afterFetch();
+          })
+          .catch(function() { afterFetch(); });
+      })(y, m, mkey);
+    }
+    if (pending === 0) pushExtendedPrayerCache(city);
   }
 
   async function render() {
@@ -3906,6 +3949,7 @@
     initScheduleOnStart: initScheduleOnStart,
     pushWidgetIfStale: pushWidgetIfStale,
     pushExtendedPrayerCache: pushExtendedPrayerCache,
+    ensureExtendedCacheFresh: _ensureExtendedCacheFresh,
     forceWidgetRefresh: forceWidgetRefresh,
     getWidgetHealthStatus: getWidgetHealthStatus,
     reportWidgetHealth: reportWidgetHealth,

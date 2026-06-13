@@ -192,13 +192,16 @@ struct PrayerProvider: TimelineProvider {
         print("WIDGET GETTIMELINE REAL NOW:", Date(), "entry:", now)
         wLog.info("[WidgetTimeline] getTimeline called at \(now) lpm=\(isLPM) extBuild=\(extBuild) timelineVersion=\(kTimelineVersion)")
 
-        // Timeline version guard: if kTimelineVersion changed since last build, discard
-        // extended cache so new boundary logic applies immediately without stale entries.
+        // Timeline version guard: track bumps for diagnostics only.
+        // We no longer discard the extended cache on version bump — the cache contains
+        // prayer time DATA, not layout. Timeline entries are rebuilt fresh from that data
+        // on every getTimeline() call, so new boundary logic is always applied immediately.
+        // Discarding the cache on version bump was the primary cause of "widget breaks
+        // 1-2 days after an app update while the phone is offline."
         if let ud = UserDefaults(suiteName: kAppGroup) {
             let stored = ud.integer(forKey: kTimelineVersionKey)
             if stored != kTimelineVersion {
-                wLog.info("[WidgetTimeline] version \(stored) → \(kTimelineVersion) — discarding extended cache")
-                ud.removeObject(forKey: kExtCacheKey)
+                wLog.info("[WidgetTimeline] version \(stored) → \(kTimelineVersion) — tracking bump, keeping cache")
                 ud.set(kTimelineVersion, forKey: kTimelineVersionKey)
                 ud.set(now.timeIntervalSince1970 * 1000, forKey: "widgetLastVersionBumpMs")
                 ud.set(extBuild, forKey: "widgetLastVersionBumpBuild")
@@ -522,10 +525,21 @@ private func buildLegacyTimeline(data: PrayerWidgetData?, now: Date,
     }
     let ageH = data.lastUpdated.map { (now.timeIntervalSince1970 * 1000 - $0) / 3_600_000 } ?? 0
     if data.isStale {
-        // Show stale data rather than nil — blank widget is worse than slightly stale times.
-        // effectiveNextPrayer() re-derives the highlighted prayer from wall-clock Date(),
-        // so the correct prayer is highlighted even if the time strings are off by ~1 min.
-        wLog.warning("buildLegacyTimeline: STALE ageH=\(String(format:"%.1f",ageH)) — showing stale data, retry 30 min")
+        // If the stored date is a different Baghdad calendar day, prayer times are for the wrong
+        // day — showing them causes "only blank/countdown" because nextPrayer() returns nil
+        // (all stored times are in the past). Show the clean NoDataView instead.
+        let todayBaghdad = PrayerWidgetData.baghdadDateString()
+        let isWrongDay   = data.date != todayBaghdad
+        wLog.warning("buildLegacyTimeline: STALE ageH=\(String(format:"%.1f",ageH)) wrongDay=\(isWrongDay) storedDate=\(data.date) today=\(todayBaghdad)")
+        if isWrongDay {
+            // Wrong-day stale: showing yesterdays times is misleading. Use clean empty state.
+            completion(Timeline(entries: [PrayerEntry(date: now, data: nil, next: nil, reason: "stale_wrongday", display: .empty)],
+                                policy: .after(now.addingTimeInterval(30 * 60))))
+            return
+        }
+        // Same-day stale (e.g., data from this morning, validUntil just passed):
+        // show the times — they're still today's and likely correct. nextPrayer() re-derives
+        // the highlighted prayer from wall-clock Date() so the highlight stays accurate.
         let staleNext = data.nextPrayer(from: now)
         let staleDisp = EntryDisplay.make(data: data, next: staleNext, refDate: now)
         completion(Timeline(entries: [PrayerEntry(date: now, data: data, next: staleNext, reason: "stale_legacy", display: staleDisp)],

@@ -237,10 +237,11 @@ struct PrayerWidgetData: Codable {
 
 // MARK: — Extended cache
 struct WidgetExtendedCache: Codable {
-    let v:    Int
-    let city: String
-    let gen:  Double
-    let days: [String: [String]]
+    let v:          Int
+    let city:       String
+    let gen:        Double
+    let validUntil: Double?  // ms since epoch; written by app (45 days from gen)
+    let days:       [String: [String]]
 
     private static let kIdx = ["Fajr": 0, "Sunrise": 1, "Dhuhr": 2, "Asr": 3, "Maghrib": 4, "Isha": 5]
 
@@ -274,7 +275,17 @@ struct WidgetExtendedCache: Codable {
 
     var ageHours: Double { (Date().timeIntervalSince1970 * 1000 - gen) / 3_600_000 }
 
-    var isUsable: Bool { days[PrayerWidgetData.baghdadDateString()] != nil }
+    // hasExpired: validUntil has passed (only meaningful when the app wrote validUntil).
+    // Widget-fetched caches have no validUntil and never expire this way.
+    var hasExpired: Bool {
+        guard let vu = validUntil else { return false }
+        return Date().timeIntervalSince1970 * 1000 > vu
+    }
+
+    var isUsable: Bool {
+        guard days[PrayerWidgetData.baghdadDateString()] != nil else { return false }
+        return !hasExpired
+    }
 
     func timing(_ name: String, for dateStr: String) -> String? {
         guard let arr = days[dateStr], let idx = Self.kIdx[name], idx < arr.count else { return nil }
