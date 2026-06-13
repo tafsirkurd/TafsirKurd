@@ -10662,7 +10662,7 @@ function renderSettings(){
       S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;
       if(S.theme!=='noor'){S.theme='noor';applyTheme();}
       applySizes();
-      toast(t('toast.settings_reset')||'ڕێکخستن گەرانەوە');
+      toast(t('toast.settings_reset')||'ڕێکخستن هاتنە زڤڕاندن بۆ حالەتێ بنەڕەتی');
       renderSettings();
     }});
   },false));

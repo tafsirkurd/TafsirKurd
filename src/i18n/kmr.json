@@ -432,6 +432,7 @@
   "toast.no_bookmarks": "هیچ نیشانکراوەیەک نییە",
   "toast.import_done": "ئایەتێن هەلگرتی هاتن ✓",
   "toast.progress_reset": "پێشکەوتنی خوێندن سڕایەوە",
+  "toast.settings_reset": "ڕێکخستن هاتنە زڤڕاندن بۆ حالەتێ بنەڕەتی",
   "toast.link_copied": "لینک کۆپی کرا",
   "toast.synced_live": "داتا نوێکرایەوە",
   "toast.network_reconnected": "ئینتەرنێت هاتە ڤە ✓",
