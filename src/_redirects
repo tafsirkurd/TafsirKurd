@@ -1,3 +1,6 @@
+# Let /dlin use the main TafsirKurd app
+/dlin /index.html 200
+/dlin/ /index.html 200
 # Block old /tv routes - return 404
 /tv /404.html 404
 /tv.html /404.html 404
