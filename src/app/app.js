@@ -2894,8 +2894,8 @@ function scheduleStreakReminder(){
     _ensureReminderChannel(LN).then(function(){
       LN.schedule({notifications:[{
         id:30,
-        title:t('notif.streak_title')||'بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥',
-        body:t('notif.streak_body',{days:String(streak)})||('ئەڤرۆ ڕۆژا '+streak+'ێ یا بەردەوامیا تە (Streak) یە. بەردەوام بە! 🔥'),
+        title:t('notif.streak_title')||'خواندنا قورئانێ',
+        body:t('notif.streak_body',{days:String(streak)})||'بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥',
         schedule:{at:at,allowWhileIdle:true},
         smallIcon:'ic_notification',
         channelId:'reminder',

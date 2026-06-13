@@ -1400,8 +1400,8 @@ window.BULK_TRANSLATIONS = [
     { key_id: "profile.view_profile", kurdish_text: "پرۆفایلی ببینە", category: "profile", page: "android" },
 
     // Notifications - setup, streak, new content, rotating messages
-    { key_id: "notif.streak_title",       kurdish_text: "بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥", category: "notifications", page: "android" },
-    { key_id: "notif.streak_body",        kurdish_text: "ئەڤرۆ ڕۆژا ${days}ێ یا بەردەوامیا تە (Streak) یە. بەردەوام بە! 🔥", category: "notifications", page: "android" },
+    { key_id: "notif.streak_title",       kurdish_text: "خواندنا قورئانێ",                                                    category: "notifications", page: "android" },
+    { key_id: "notif.streak_body",        kurdish_text: "بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥",                       category: "notifications", page: "android" },
     { key_id: "notif.new_video_title",    kurdish_text: "ڤیدیۆیەکی نوێ 🎬",                 category: "notifications", page: "android" },
     { key_id: "notif.new_video_body",     kurdish_text: "ڤیدیۆیەکی نوێ زیاد بوو لە ئیسلام ڤۆیس", category: "notifications", page: "android" },
 
