@@ -2806,21 +2806,78 @@ window.GencineUI = {
           _caro.appendChild(_dotWrap);
           featuredSection.appendChild(_caro);
           (function(){
-            var _cur=0, _n=_featItems.length, _tmr=null, _tx0=0;
-            var _w = _caro.getBoundingClientRect().width || _caro.offsetWidth || 300;
-            [].slice.call(_track.children).forEach(function(sl){ sl.style.width=_w+'px'; sl.style.minWidth=_w+'px'; });
+            var _cur=0, _n=_featItems.length, _tmr=null;
+            var _tx0=0, _ty0=0, _dirLocked=null, _w=0;
+
+            // Re-measure on every touchstart: _w may be 0 if panel was hidden at build time.
+            // Also re-positions the track silently when width changes (e.g. first open).
+            function _measure(){
+              var w=_caro.getBoundingClientRect().width||_caro.offsetWidth;
+              if(w>0&&(!_w||Math.abs(w-_w)>2)){
+                _w=w;
+                [].slice.call(_track.children).forEach(function(sl){sl.style.width=w+'px';sl.style.minWidth=w+'px';});
+                _track.style.transition='none';
+                _track.style.transform='translateX('+(_cur*_w)+'px)';
+              }
+              if(!_w)_w=300;
+            }
             function _goTo(i){
               _cur=(i+_n)%_n;
               _track.style.transform='translateX('+(_cur*_w)+'px)';
-              _dotEls.forEach(function(d,j){ d.classList.toggle('active',j===_cur); });
+              _dotEls.forEach(function(d,j){d.classList.toggle('active',j===_cur);});
             }
-            function _arm(){ _tmr=setTimeout(function(){ _goTo(_cur+1); _arm(); },3500); }
-            function _rearm(){ clearTimeout(_tmr); _arm(); }
-            _caro.addEventListener('touchstart',function(e){ _tx0=e.touches[0].clientX; clearTimeout(_tmr); },{passive:true});
-            _caro.addEventListener('touchend',function(e){ var dx=e.changedTouches[0].clientX-_tx0; if(Math.abs(dx)>40) _goTo(_cur+(dx<0?1:-1)); _rearm(); },{passive:true});
-            _caro.addEventListener('mouseenter',function(){ clearTimeout(_tmr); });
+            function _arm(){_tmr=setTimeout(function(){_goTo(_cur+1);_arm();},3500);}
+            function _rearm(){clearTimeout(_tmr);_arm();}
+
+            _caro.addEventListener('touchstart',function(e){
+              if(e.touches.length>1)return;
+              clearTimeout(_tmr);
+              _tx0=e.touches[0].clientX;
+              _ty0=e.touches[0].clientY;
+              _dirLocked=null;
+              _measure();
+            },{passive:true});
+
+            // Non-passive: we call preventDefault() once direction is confirmed horizontal.
+            // This stops the gencine panel from scrolling and PTR from arming during a swipe.
+            _caro.addEventListener('touchmove',function(e){
+              if(e.touches.length>1)return;
+              var dx=e.touches[0].clientX-_tx0;
+              var dy=e.touches[0].clientY-_ty0;
+              if(!_dirLocked&&(Math.abs(dx)>6||Math.abs(dy)>6)){
+                _dirLocked=Math.abs(dx)>=Math.abs(dy)?'h':'v';
+              }
+              if(_dirLocked!=='h')return;
+              e.preventDefault();
+              // Provide real drag feedback — finger-follows-track, no snap until release.
+              // RTL: swipe left (dx<0) → -dx > 0 → track shifts right → next slide appears. ✓
+              _track.style.transition='none';
+              _track.style.transform='translateX('+(_cur*_w-dx)+'px)';
+            },{passive:false});
+
+            _caro.addEventListener('touchend',function(e){
+              if(_dirLocked!=='h'){_rearm();return;}
+              var dx=e.changedTouches[0].clientX-_tx0;
+              // Re-enable the CSS transition, flush layout so it takes effect, then snap.
+              _track.style.transition='';
+              _track.getBoundingClientRect();
+              if(Math.abs(dx)>40)_goTo(_cur+(dx<0?1:-1));
+              else _goTo(_cur);
+              _rearm();
+            },{passive:true});
+
+            _caro.addEventListener('mouseenter',function(){clearTimeout(_tmr);});
             _caro.addEventListener('mouseleave',_rearm);
-            _arm();
+
+            // Measure after layout is committed (rAF runs after the current paint).
+            requestAnimationFrame(function(){
+              _measure();
+              _track.style.transition='none';
+              _track.style.transform='translateX(0)';
+              _track.getBoundingClientRect();
+              _track.style.transition='';
+              _arm();
+            });
           })();
         }
       } else { featuredSection.style.display = 'none'; }
