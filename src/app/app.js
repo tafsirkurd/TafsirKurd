@@ -682,12 +682,41 @@ var RECITERS=[
 var RECITER=localStorage.getItem('app_reciter')||'Nasser_Alqatami_128kbps';
 // Load from localStorage cache instantly — no async wait
 var RECITER_PHOTOS=(function(){try{return JSON.parse(localStorage.getItem('reciter_photos_cache')||'{}')}catch(e){return {}}}());
-// Tracks which reciter IDs have their images fully decoded in browser memory this session
-var _imgLoaded={};
+// Bundled local photos — served from app assets, always available offline
+var RECITER_LOCAL_PHOTOS={
+  'Nasser_Alqatami_128kbps':'/assets/reciters/Nasser_Alqatami_128kbps.jpg',
+  'Alafasy_128kbps':'/assets/reciters/Alafasy_128kbps.jpg',
+  'ahmed_ibn_ali_al_ajamy_128kbps':'/assets/reciters/ahmed_ibn_ali_al_ajamy_128kbps.jpg',
+  'MaherAlMuaiqly128kbps':'/assets/reciters/MaherAlMuaiqly128kbps.jpg',
+  'Abdurrahmaan_As-Sudais_192kbps':'/assets/reciters/Abdurrahmaan_As-Sudais_192kbps.jpg',
+  'Saood_ash-Shuraym_128kbps':'/assets/reciters/Saood_ash-Shuraym_128kbps.jpg',
+  'Yasser_Ad-Dussary_128kbps':'/assets/reciters/Yasser_Ad-Dussary_128kbps.jpg',
+  'Hudhaify_128kbps':'/assets/reciters/Hudhaify_128kbps.jpg',
+  'Abu_Bakr_Ash-Shaatree_128kbps':'/assets/reciters/Abu_Bakr_Ash-Shaatree_128kbps.jpg',
+  'Muhammad_Jibreel_128kbps':'/assets/reciters/Muhammad_Jibreel_128kbps.jpg',
+  'Hani_Rifai_192kbps':'/assets/reciters/Hani_Rifai_192kbps.jpg',
+  'Muhammad_Ayyoub_128kbps':'/assets/reciters/Muhammad_Ayyoub_128kbps.jpg',
+  'Ghamadi_40kbps':'/assets/reciters/Ghamadi_40kbps.jpg',
+  'Abdullaah_3awwaad_Al-Juhaynee_128kbps':'/assets/reciters/Abdullaah_3awwaad_Al-Juhaynee_128kbps.jpg',
+  'Sahl_Yassin_128kbps':'/assets/reciters/Sahl_Yassin_128kbps.jpg',
+  'Abdullah_Basfar_192kbps':'/assets/reciters/Abdullah_Basfar_192kbps.jpg',
+  'Fares_Abbad_64kbps':'/assets/reciters/Fares_Abbad_64kbps.jpg',
+  'Abdul_Basit_Murattal_192kbps':'/assets/reciters/Abdul_Basit_Murattal_192kbps.jpg',
+  'Abdul_Basit_Mujawwad_128kbps':'/assets/reciters/Abdul_Basit_Mujawwad_128kbps.jpg',
+  'Minshawy_Murattal_128kbps':'/assets/reciters/Minshawy_Murattal_128kbps.jpg',
+  'Husary_128kbps':'/assets/reciters/Husary_128kbps.jpg',
+  'Mustafa_Ismail_48kbps':'/assets/reciters/Mustafa_Ismail_48kbps.jpg',
+  'Mohammad_al_Tablaway_128kbps':'/assets/reciters/Mohammad_al_Tablaway_128kbps.jpg'
+};
+// Priority: local bundled → Supabase-cached CDN → null
+function _reciterPhoto(id){return RECITER_LOCAL_PHOTOS[id]||RECITER_PHOTOS[id]||null;}
+// Tracks which reciter IDs have their images decoded in browser memory this session.
+// Pre-seeded true for all local reciters — bundled assets are always available offline.
+var _imgLoaded=(function(){var m={};Object.keys(RECITER_LOCAL_PHOTOS).forEach(function(k){m[k]=true;});return m;}());
 
-// Preload a single reciter image and mark it loaded on completion.
-// _imgLoaded[id]=true on success, ='err' on failure — both prevent retries this session.
+// Network-only preload — skip if a local bundled image exists (always available).
 function _preloadReciterImg(id){
+  if(RECITER_LOCAL_PHOTOS[id])return;
   var url=RECITER_PHOTOS[id];
   if(!url||_imgLoaded[id])return;
   var img=new Image();
@@ -696,11 +725,11 @@ function _preloadReciterImg(id){
   img.src=url;
 }
 
-// Startup: prime browser cache from localStorage-cached URLs immediately.
-// On first install RECITER_PHOTOS is empty so this is a no-op.
-// On second+ launch this starts downloading current reciter before Supabase refresh.
+// Startup: prime browser cache from localStorage-cached CDN URLs immediately.
+// Skip reciters that have local bundled images (pre-seeded, always available).
 (function(){
   [RECITER].concat(RECITERS.slice(0,3).map(function(r){return r.id;})).forEach(function(id){
+    if(RECITER_LOCAL_PHOTOS[id])return;
     var url=RECITER_PHOTOS[id];
     if(!url)return;
     var img=new Image();
@@ -721,6 +750,8 @@ function loadReciterPhotos(){
       });
       // Persist so next launch is instant
       try{localStorage.setItem('reciter_photos_cache',JSON.stringify(RECITER_PHOTOS))}catch(e){}
+      // Queue CDN URLs for background caching (offline fallback for bundled photos)
+      if(window.ImgCache){var _rUrls=Object.keys(RECITER_PHOTOS).map(function(k){return RECITER_PHOTOS[k];}).filter(Boolean);ImgCache.queue(_rUrls);}
       // Patch any reciter chips that are already in the DOM but showing initials
       document.querySelectorAll('.qs-reciter-chip[data-reciter-id]').forEach(function(chip){
         var id=chip.dataset.reciterId;
@@ -1494,6 +1525,8 @@ function init(){
   setTimeout(function(){if(!_sn.skip()&&window.PrayerUI)PrayerUI.preloadAthanVoices();},5000);
   // Audio cache warmup — verify manifest entries still exist on disk, populate _uriMap
   setTimeout(function(){if(window.AudioCache)AudioCache.warmup();},4000);
+  // Image cache warmup — runs after AudioCache to avoid competing disk I/O at startup
+  setTimeout(function(){if(window.ImgCache)ImgCache.warmup();},5000);
 
   // Fetch prayer data immediately (no delay) so cache is ready for pre-render below
   if(window.PrayerAPI&&window.PrayerCache&&window.PrayerLogic){
@@ -2307,13 +2340,14 @@ function _loadGencineScripts(cb) {
     cbs.forEach(function(fn) { try { fn(); } catch(e) {} });
   }
 
-  // Load dua-data.js, smart-dhikr.js and adhkar-bundle in PARALLEL (independent),
-  // then load dhikr.js only after all three finish (dhikr.js depends on all three)
-  var _p1 = false, _p2 = false, _p3 = false;
-  function _check() { if (_p1 && _p2 && _p3) _ls('/dhikr/dhikr.js?v=20260612a', _done); }
+  // Load dua-data.js, smart-dhikr.js, adhkar-bundle, and book-covers-map in PARALLEL (independent),
+  // then load dhikr.js only after all four finish (dhikr.js depends on all four)
+  var _p1 = false, _p2 = false, _p3 = false, _p4 = false;
+  function _check() { if (_p1 && _p2 && _p3 && _p4) _ls('/dhikr/dhikr.js?v=20260612a', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',       function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=59',           function() { _p2 = true; _check(); });
   _ls('/data/gencine-bundle.js?v=1',           function() { _p3 = true; _check(); });
+  _ls('/data/book-covers-map.js?v=1',          function() { _p4 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -5887,7 +5921,7 @@ function renderReaderSettings(){
     chip.dataset.reciterId=r.id;
     // Avatar
     var chipAvatar=el('div','qs-reciter-chip-avatar');
-    var photo=RECITER_PHOTOS[r.id];
+    var photo=_reciterPhoto(r.id);
     if(photo){var img=document.createElement('img');img.src=photo;img.alt='';chipAvatar.appendChild(img);}
     else{var initials=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');chipAvatar.appendChild(el('span','qs-reciter-chip-avatar-initials',initials));}
     chip.appendChild(chipAvatar);
@@ -6307,9 +6341,9 @@ function updateAudioBarAvatar(){
   if(RECITER===_lastAvatarReciter&&_imgLoaded[RECITER])return;
   _lastAvatarReciter=RECITER;
   while(avatarEl.firstChild)avatarEl.removeChild(avatarEl.firstChild);
-  var photo=RECITER_PHOTOS[RECITER];
+  var photo=_reciterPhoto(RECITER);
   if(photo&&_imgLoaded[RECITER]===true){
-    // Decoded — show instantly from browser cache
+    // Decoded — show instantly from browser cache / bundled asset
     var img=document.createElement('img');img.src=photo;img.alt='';avatarEl.appendChild(img);
   } else {
     var rec=RECITERS.find(function(r){return r.id===RECITER;});
@@ -6717,7 +6751,7 @@ function renderAudioSettings(){
     // Avatar circle — wrap so check badge isn't clipped by overflow:hidden
     var avatarWrap=el('div','reciter-avatar-wrap');
     var avatar=el('div','reciter-avatar');
-    var photo=RECITER_PHOTOS[r.id];
+    var photo=_reciterPhoto(r.id);
     if(photo){
       avatar.classList.add('skel');
       var img=document.createElement('img');
@@ -6930,7 +6964,7 @@ function _dlMgrItem(coverUrl,flag,title,size,sub,onTap,onDelete,opts){
   var th=el('div','');
   th.style.cssText='width:'+thSize+';height:'+thH+';border-radius:'+thRadius+';overflow:hidden;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.25rem';
   if(coverUrl){
-    var cImg=document.createElement('img');cImg.src=coverUrl;cImg.style.cssText='width:100%;height:100%;object-fit:cover';
+    var cImg=document.createElement('img');cImg.src=(window.ImgCache&&ImgCache.local(coverUrl))||coverUrl;cImg.style.cssText='width:100%;height:100%;object-fit:cover';
     cImg.onerror=function(){this.parentNode.textContent=flag||'';};th.appendChild(cImg);
   }else if(flag){th.textContent=flag;th.style.fontSize='1.4rem';}
   else{var thIco=icon('fas fa-headphones');thIco.style.cssText='color:var(--text3);font-size:.9rem';th.appendChild(thIco);}
@@ -7141,7 +7175,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
         var rInfo=RECITERS.filter(function(x){return x.id===r.id;})[0]||null;
         var realName=rInfo?rInfo.name:r.name;
         var flag=rInfo?(rInfo.flag||''):(r.flag||'');
-        var photo=RECITER_PHOTOS[r.id]||null;
+        var photo=_reciterPhoto(r.id);
         var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
         var selKey='audio:'+r.id;
         var isSel=!!_dlMgrSelected[selKey];
@@ -7417,7 +7451,7 @@ function syncFullPlayer(){
   var fpAv=$('fpAvatar');
   if(fpAv){
     clear(fpAv);
-    var photo=RECITER_PHOTOS[RECITER];
+    var photo=_reciterPhoto(RECITER);
     if(photo&&_imgLoaded[RECITER]===true){
       // Image already decoded — show instantly, no flash
       var img=document.createElement('img');
@@ -7490,7 +7524,7 @@ function _buildRecPicker(){
     var item=el('div','rp-item'+(isOn?' on':''));
     // Avatar
     var av=el('div','rp-av');
-    var photo=RECITER_PHOTOS[r.id];
+    var photo=_reciterPhoto(r.id);
     if(photo&&_imgLoaded[r.id]===true){
       // Decoded — show instantly from browser cache, no crossfade needed
       var avImg=document.createElement('img');avImg.alt='';avImg.src=photo;

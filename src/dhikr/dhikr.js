@@ -156,6 +156,16 @@ var IMG_LOADED = {};
   });
 })();
 
+/* Priority: bundled APK asset → ImgCache filesystem → remote CDN URL */
+function _bookCover(book) {
+  if (!book) return null;
+  var id = String(book.id);
+  var url = book.cover_url || null;
+  if (window.BOOK_LOCAL_COVERS && BOOK_LOCAL_COVERS[id]) return BOOK_LOCAL_COVERS[id];
+  if (url && window.ImgCache) { var cached = ImgCache.local(url); if (cached) return cached; }
+  return url;
+}
+
 var DHIKR_LIST = [
   {ar:'سُبْحَانَ اللَّهِ',                         ku:'سبحان الله',                key:'سبحان'},
   {ar:'الْحَمْدُ لِلَّهِ',                         ku:'الحمد لله',                 key:'الحمد'},
@@ -433,6 +443,13 @@ function _triggerBgRefresh() {
   if (Date.now() - _lastBgRefresh < 300000) return;
   _lastBgRefresh = Date.now();
   _fetchDbData(function() {
+    if (window.ImgCache && _dbBooks) {
+      /* Only queue/cleanup remote covers — bundled books have local assets */
+      var _refreshCovers = _dbBooks
+        .filter(function(b){ return b.cover_url && !(window.BOOK_LOCAL_COVERS && BOOK_LOCAL_COVERS[String(b.id)]); })
+        .map(function(b){ return b.cover_url; });
+      if (_refreshCovers.length) { ImgCache.queue(_refreshCovers); ImgCache.cleanup(_refreshCovers); }
+    }
     var ui = window.GencineUI;
     if (!ui) return;
     ui._homeEl = null;
@@ -611,8 +628,14 @@ function _fetchDbData(onDone) {
     if (!bookRes.error && bookRes.data) {
       _dbBooks = bookRes.data;
       _writeCache('gencine_books_v4', _dbBooks);
-      /* Pre-cache all book cover images in the HTTP cache */
-      _dbBooks.forEach(function(b){ if(b.cover_url){ var img=new Image(); img.src=b.cover_url; } });
+      /* Queue covers for background caching — skip books that already have bundled local assets */
+      var _bCovers = _dbBooks
+        .filter(function(b){ return b.cover_url && !(window.BOOK_LOCAL_COVERS && BOOK_LOCAL_COVERS[String(b.id)]); })
+        .map(function(b){ return b.cover_url; });
+      if (_bCovers.length) {
+        if (window.ImgCache) ImgCache.queue(_bCovers);
+        else _bCovers.forEach(function(u){ var img=new Image(); img.src=u; });
+      }
     }
     if (tasbihRes && !tasbihRes.error && tasbihRes.data) { _dbTasbih = tasbihRes.data; _writeCache('gencine_tasbih_v1', _dbTasbih); }
     if (asma99Res && !asma99Res.error && asma99Res.data) { _dbAsma99 = asma99Res.data; _writeCache('gencine_asma99_v1', _dbAsma99); }
@@ -2714,7 +2737,7 @@ window.GencineUI = {
         var thumb = document.createElement('div');
         thumb.style.cssText = 'width:36px;height:50px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--surface2)';
         if (_coverUrl) {
-          var tImg = document.createElement('img'); tImg.src = _coverUrl; tImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
+          var tImg = document.createElement('img'); tImg.src = _bookCover(book)||_coverUrl; tImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
           thumb.appendChild(tImg);
         } else {
           var tIco = document.createElement('i'); tIco.className = 'fas fa-book'; tIco.style.cssText = 'margin:14px auto;display:block;text-align:center;color:var(--text-tertiary)';
@@ -2983,21 +3006,28 @@ window.GencineUI = {
         }
         function _buildFeatCard(fb, extraClass) {
           var _fc = document.createElement('div'); _fc.className = 'book-feat-card' + (extraClass ? ' '+extraClass : '');
-          var _coverUrl = fb.cover_url;
+          /* Resolve best cover: bundled local → ImgCache → remote CDN */
+          var _bestCover = null;
+          if (fb._isSeries && fb.volumes) {
+            for (var _fvi=0;_fvi<fb.volumes.length;_fvi++){ var _fvc=_bookCover(fb.volumes[_fvi]); if(_fvc){_bestCover=_fvc;break;} }
+            if (!_bestCover) _bestCover = fb.cover_url || null;
+          } else {
+            _bestCover = _bookCover(fb) || null;
+          }
           var _title = fb._isSeries ? (fb.series_title_ku||'') : (fb.title_ku||fb.title_ar||'');
           var _author = fb.author_ku||fb.author_ar||'';
           /* Layer 1: blurred cover as background */
           var _fbg = document.createElement('div'); _fbg.className = 'book-feat-card-bg';
-          if (_coverUrl) _fbg.style.backgroundImage = 'url('+_coverUrl+')';
+          if (_bestCover) _fbg.style.backgroundImage = 'url('+_bestCover+')';
           _fc.appendChild(_fbg);
           /* Layer 2: dark gradient overlay */
           var _fov = document.createElement('div'); _fov.className = 'book-feat-card-overlay'; _fc.appendChild(_fov);
           /* Layer 3: sharp thumbnail */
           var _fth = document.createElement('div'); _fth.className = 'book-feat-card-thumb';
-          if (_coverUrl) {
+          if (_bestCover) {
             var _fti = document.createElement('img'); _fti.className = 'book-feat-card-cover'; _fti.alt = _title;
             _fti.fetchPriority = 'high';
-            _fti.onload = function(){ _fti.classList.add('loaded'); }; _fti.src = _coverUrl; _fth.appendChild(_fti);
+            _fti.onload = function(){ _fti.classList.add('loaded'); }; _fti.src = _bestCover; _fth.appendChild(_fti);
           } else { var _ftph = document.createElement('div'); _ftph.className = 'book-feat-card-ph'; var _ftphi = document.createElement('i'); _ftphi.className = 'fas fa-book'; _ftph.appendChild(_ftphi); _fth.appendChild(_ftph); }
           _fc.appendChild(_fth);
           /* Text overlay */
@@ -3207,10 +3237,13 @@ window.GencineUI = {
         var outer = document.createElement('div'); outer.className = 'book-series-card'; outer.style.gridColumn = '1 / -1';
         var row = document.createElement('div'); row.className = 'book-series-row';
         var cw = document.createElement('div'); cw.className = 'book-cover-wrap book-series-cover-wrap';
-        if (sg.cover_url) {
+        var _sgCover = null;
+        if (sg.volumes) { for (var _vi=0;_vi<sg.volumes.length;_vi++){ var _vc=_bookCover(sg.volumes[_vi]); if(_vc){_sgCover=_vc;break;} } }
+        if (!_sgCover) _sgCover = sg.cover_url || null;
+        if (_sgCover) {
           var img = document.createElement('img'); img.className = 'book-cover'; img.alt = sg.series_title_ku||'';
           img.fetchPriority = 'high';
-          img.onload = function(){ img.classList.add('loaded'); }; img.src = sg.cover_url;
+          img.onload = function(){ img.classList.add('loaded'); }; img.src = _sgCover;
           if (img.complete) img.classList.add('loaded'); cw.appendChild(img);
         } else { var ph = document.createElement('div'); ph.className='book-cover-placeholder'; var phi=document.createElement('i'); phi.className='fas fa-book'; ph.appendChild(phi); cw.appendChild(ph); }
         var vcBadge = document.createElement('div'); vcBadge.className='book-series-vol-count-badge'; vcBadge.textContent=sg.volumes.length+' '+T('gencine.series_vols','بەرگ'); cw.appendChild(vcBadge);
@@ -3303,14 +3336,15 @@ window.GencineUI = {
         var _cardIdx = _bookCardIdx++;
 
         var coverWrap = document.createElement('div'); coverWrap.className = 'book-cover-wrap';
-        if (book.cover_url) {
+        var _bcUrl = _bookCover(book);
+        if (_bcUrl) {
           var img = document.createElement('img');
           img.className = 'book-cover'; img.alt = book.title_ku || '';
           if (_cardIdx < 4) { img.fetchPriority = 'high'; }
           else { img.loading = 'lazy'; }
           img.onload = function(){ img.classList.add('loaded'); };
           img.onerror = function(){ img.classList.add('loaded'); };
-          img.src = book.cover_url;
+          img.src = _bcUrl;
           if (img.complete) img.classList.add('loaded');
           coverWrap.appendChild(img);
         } else {
@@ -4175,9 +4209,9 @@ window.GencineUI = {
         window._pdfJsLoading = false;
         var lib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
         if (lib) { lib.GlobalWorkerOptions.workerSrc = _PDF_CDN + 'pdf.worker.min.js'; self._draw(); }
-        else { titleEl.textContent = 'PDF.js failed to load'; }
+        else { titleEl.textContent = 'دابەزاندنا پەرتووکێ سەرنەکەفت'; }
       };
-      scr.onerror = function() { window._pdfJsLoading = false; titleEl.textContent = 'Failed to load PDF viewer'; };
+      scr.onerror = function() { window._pdfJsLoading = false; titleEl.textContent = 'دابەزاندنا پەرتووکێ سەرنەکەفت'; };
       document.head.appendChild(scr);
       return;
     }
@@ -4274,7 +4308,7 @@ window.GencineUI = {
       if (isOffline) {
         var subTxt = document.createElement('div');
         subTxt.style.cssText = 'font-size:.82rem;color:var(--text-tertiary);line-height:1.55';
-        subTxt.textContent = T('pdf.offline_sub','ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە');
+        subTxt.textContent = T('pdf.offline_sub','ئەڤ پەرتووکە هێشتا نەهاتیە دابەزاندن- ئینتەرنێتێ ڤەکە و دووبارە بزاڤێ بکە.');
         txtWrap.appendChild(subTxt);
       }
       loadingEl.appendChild(txtWrap);

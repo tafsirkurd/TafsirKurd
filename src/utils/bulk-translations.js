@@ -1264,7 +1264,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "gencine.books_loading",    kurdish_text: "بارکرن...",                                category: "gencine",    page: "android" },
     { key_id: "gencine.books_error",      kurdish_text: "خەلەتیەک ڕوویدا",                           category: "gencine",    page: "android" },
     { key_id: "pdf.offline_title",        kurdish_text: "ئینتەرنێت نینە",                           category: "gencine",    page: "android" },
-    { key_id: "pdf.offline_sub",          kurdish_text: "ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە", category: "gencine", page: "android" },
+    { key_id: "pdf.offline_sub",          kurdish_text: "ئەڤ پەرتووکە هێشتا نەهاتیە دابەزاندن- ئینتەرنێتێ ڤەکە و دووبارە بزاڤێ بکە.", category: "gencine", page: "android" },
     { key_id: "gencine.cat_all",          kurdish_text: "هەمی",                                     category: "gencine",    page: "android" },
     { key_id: "gencine.cat_quran",        kurdish_text: "ژ قورئانا پیرۆز.",                               category: "gencine",    page: "android" },
     { key_id: "gencine.cat_morning",      kurdish_text: "بەیانیکردن",                               category: "gencine",    page: "android" },
@@ -1401,7 +1401,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "profile.view_profile", kurdish_text: "پرۆفایلی ببینە", category: "profile", page: "android" },
 
     // Notifications - setup, streak, new content, rotating messages
-    { key_id: "notif.streak_title",       kurdish_text: "خواندنا قورئانێ",                                                    category: "notifications", page: "android" },
+    { key_id: "notif.streak_title",       kurdish_text: "ئارمانجا خواندنا قورئانێ",                                             category: "notifications", page: "android" },
     { key_id: "notif.streak_body",        kurdish_text: "بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥",                       category: "notifications", page: "android" },
 
 

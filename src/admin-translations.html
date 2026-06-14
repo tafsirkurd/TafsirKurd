@@ -4140,7 +4140,7 @@
             {key_id:'iv.clear_filter',          kurdish_text:'لادانا فلتەری',             page:'android',category:'general',context:'IV: clear active filter button'},
             // PDF offline state
             {key_id:'pdf.offline_title',        kurdish_text:'ئینتەرنێت نینە',            page:'android',category:'gencine',context:'PDF viewer: shown when user opens a book with no internet'},
-            {key_id:'pdf.offline_sub',          kurdish_text:'ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە',page:'android',category:'gencine',context:'PDF viewer: subtitle when offline and PDF not cached'},
+            {key_id:'pdf.offline_sub',          kurdish_text:'ئەڤ پەرتووکە هێشتا نەهاتیە دابەزاندن- ئینتەرنێتێ ڤەکە و دووبارە بزاڤێ بکە.',page:'android',category:'gencine',context:'PDF viewer: subtitle when offline and PDF not cached'},
             // Haptic settings
             {key_id:'settings.haptic_native',   kurdish_text:'تەنها لە ئاپی ڕەسمی کار دەکات',page:'android',category:'ui',context:'Settings: haptic not supported on web — native app only note'},
             // Prayer progress panel insights
@@ -4499,7 +4499,7 @@
                 // Uses ignoreDuplicates:true so existing manual edits are never overwritten.
                 var _BOOTSTRAP_KEYS = [
                     { key_id: 'pdf.offline_title',    kurdish_text: 'ئینتەرنێت نینە',           category: 'gencine', page: 'android' },
-                    { key_id: 'pdf.offline_sub',      kurdish_text: 'ئەڤ کتێب هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە', category: 'gencine', page: 'android' },
+                    { key_id: 'pdf.offline_sub',      kurdish_text: 'ئەڤ پەرتووکە هێشتا نەهاتیە دابەزاندن- ئینتەرنێتێ ڤەکە و دووبارە بزاڤێ بکە.', category: 'gencine', page: 'android' },
                     { key_id: 'settings.haptic_native', kurdish_text: 'تەنها لە ئاپی ڕەسمی کار دەکات', category: 'ui', page: 'android' },
                     { key_id: 'ppp.section_week',     kurdish_text: 'حەفتیا دوماهییێ',                    category: 'prayer', page: 'android' },
                     { key_id: 'ppp.section_insights', kurdish_text: 'ئاگەهداری',                          category: 'prayer', page: 'android' },
@@ -4631,12 +4631,9 @@
                         { key_id: 'gencine.books_unit',         expected: 'پەرتوک' },
                         { key_id: 'gencine.books_read',         expected: 'پەرتوک' },
                         { key_id: 'gencine.search_books',       expected: 'لێگەڕیان بە پەرتوکان...' },
-                        { key_id: 'pdf.offline_sub',            expected: 'ئەڤ پەرتوک هێشتا نەهاتیە داخستن — ئینتەرنێتێ بخستۆ و دووبارە هەوڵ بدە' },
+                        { key_id: 'pdf.offline_sub',            expected: 'ئەڤ پەرتووکە هێشتا نەهاتیە دابەزاندن- ئینتەرنێتێ ڤەکە و دووبارە بزاڤێ بکە.' },
                         { key_id: 'dl.books_section',           expected: 'پەرتوک' },
                         { key_id: 'dl.no_books',                expected: 'هیچ پەرتوکێک نەهاتیە داونلود کرن' },
-                        { key_id: 'notif.new_book_title',       expected: 'پەرتوکێکی نوێ 📖' },
-                        { key_id: 'notif.new_book_body',        expected: 'پەرتوکێکی نوێ زیاد بوو لە پەرتوکخانە' },
-                        { key_id: 'notif.reminder_msg_6',       expected: 'ئەو پەرتوکەی خوا لێ ناڕەحەت نابێت — بخوێنە 🌟' },
                         { key_id: 'goals.last_session',         expected: 'دوماهیک خواندن' },
                         { key_id: 'gencine.today',              expected: 'ئەڤڕۆ' },
                         { key_id: 'gencine.weeks_ago',          expected: 'حەفتی' },
@@ -4709,12 +4706,6 @@
             var STALE_KEYS = [
                 'settings.reminder','settings.reminder_sub',
                 'settings.daily_verse','settings.daily_verse_sub',
-                'notif.reminder_body',
-                'notif.reminder_msg_0','notif.reminder_msg_1','notif.reminder_msg_2',
-                'notif.reminder_msg_3','notif.reminder_msg_4','notif.reminder_msg_5',
-                'notif.reminder_msg_6','notif.reminder_msg_7','notif.reminder_msg_8',
-                'notif.reminder_msg_9','notif.reminder_msg_10','notif.reminder_msg_11',
-                'notif.reminder_msg_12','notif.reminder_msg_13',
                 'update.notice_notification_title','update.notice_notification_body',
                 // Like & comment features removed from app
                 'iv.like_btn','iv.liked_btn','iv.like_success','iv.thanks_like','iv.unliked',

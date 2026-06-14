@@ -137,33 +137,6 @@ const TRANSLATIONS_SEED = [
     { key_id: 'error.invalid_input', kurdish_text: 'زانیاری نادروست. تکایە دووبارە بپشکنە.', category: 'errors', page: 'all', context: 'Invalid input' },
 
     // ==========================================
-    // NOTIFICATIONS
-    // ==========================================
-    { key_id: 'notif.daily_complete', kurdish_text: 'ماشاءالله! تە خواندنا ئەڤرۆ ب دووماهی ئینایە — خشتەیا تە هەر بەردەوامە 🌙.', category: 'notifications', page: 'all', context: 'Daily reading complete' },
-    { key_id: 'notif.streak_day', kurdish_text: 'تۆ د رۆژا ${dayCount} ێ دا یێ ل سەر رێکا خوە یا قورئانێ. بلا رۆناهی هەر بمینیت!', category: 'notifications', page: 'all', context: 'Streak day notification' },
-    { key_id: 'notif.streak_bright', kurdish_text: 'خشتەیا تە گەش و پر رۆناهی یە — نەئێخە. ئەڤرۆ بتنێ ئایەتەکێ بخوینە 🌸.', category: 'notifications', page: 'all', context: 'Streak bright notification' },
-    { key_id: 'notif.reminder_single_verse', kurdish_text: 'بیرئینان: هەتا ئایەتەک بتنێ ژی تە نێزیکێ خودێ دکەت. نها خشتەیا خوە بەردەوام کە.', category: 'notifications', page: 'all', context: 'Single verse reminder' },
-    { key_id: 'notif.consistency_worship', kurdish_text: 'بەردەوامبوون پەرستنە — قورئانا خوە ڤەکە و پێشکەفتنا خوە بەردەوام کە 🌿.', category: 'notifications', page: 'all', context: 'Consistency is worship' },
-    { key_id: 'notif.near_end_day', kurdish_text: 'نێزیکی دووماهیا رۆژێ یە! ئایەتەکێ بخوینە دا خشتەیا تە نەشکێت 🌖.', category: 'notifications', page: 'all', context: 'Near end of day reminder' },
-    { key_id: 'notif.streak_stopped', kurdish_text: 'خشتەیا تە یا خواندنا قورئانێ راوەستیا — ئەڤرۆ ژ نوی دەستپێبکە بۆ خێر و قازانجێن نوی ✨.', category: 'notifications', page: 'all', context: 'Streak stopped' },
-    { key_id: 'notif.missed_day_ok', kurdish_text: 'خەم نەبە ئەگەر تە د دیرۆکێ دا ژ دەست دایە. ئەڤرۆ ژ نوی دەستپێبکە — خودێ حەز ژ بەردەوامیێ دکەت ❤️.', category: 'notifications', page: 'all', context: 'Missed day encouragement' },
-    { key_id: 'notif.new_day_opportunity', kurdish_text: 'رۆژەک نوی، دەرفەتەک نوی بۆ ڤەگۆهارتن ب قورئانێ 🌅.', category: 'notifications', page: 'all', context: 'New day opportunity' },
-    { key_id: 'notif.goal_complete', kurdish_text: 'ئارمانج هاتە ب دەستڤەئینان! تە ${goalName} ب دووماهی ئینایە — خودێ خێرا خوە بدەتە تە 🤍.', category: 'notifications', page: 'goals', context: 'Goal complete notification' },
-    { key_id: 'notif.getting_closer', kurdish_text: 'تۆ رۆژ ب رۆژ نێزیکتر دبیت ژ ئارمانجا خوە — بارک الله فیک!', category: 'notifications', page: 'goals', context: 'Getting closer to goal' },
-    { key_id: 'notif.remaining_levels', kurdish_text: 'بتنێ ${remaining} ئاستێن مای بۆ ب دووماهی ئینانا ئارمانجا خوە. هەر بەردەوام بە، تۆ دشێی 💪.', category: 'notifications', page: 'goals', context: 'Remaining levels' },
-    { key_id: 'notif.progress_saved_continue', kurdish_text: 'پێشکەفتن ب سەرکەفتی هاتە پاشکەفتن ✅. هەر دەمێ تۆ ئامادە بی رێکا خوە بەردەوام کە.', category: 'notifications', page: 'all', context: 'Progress saved continue' },
-    { key_id: 'notif.friday_reminder', kurdish_text: 'بیرئینانا ئەینیێ: خواندنا خوە یا قورئانێ زێدە بکە — ئەڤە باشترین زکرە د رۆژا ئەینیێ دا 🌸.', category: 'notifications', page: 'all', context: 'Friday reminder' },
-    { key_id: 'notif.little_daily', kurdish_text: 'هندەک قورئان رۆژانە باشترە ژ گەلەک بتنێ جاران. دلی خوە گرێدە ب قورئانێ 💫.', category: 'notifications', page: 'all', context: 'Little daily better' },
-    { key_id: 'notif.quran_heals', kurdish_text: 'قورئان دلا ساخ دکەت — هەتا ئایەتەک بتنێ ژی هەر تشتەکی دگۆهۆریت 💖.', category: 'notifications', page: 'all', context: 'Quran heals hearts' },
-    { key_id: 'notif.each_verse_light', kurdish_text: 'هەر ئایەتەکێ تۆ دخوینی رۆناهیێ ل ژیانا تە زێدە دکەت. هەر بخوینە، ئەی باوەردار 🌙.', category: 'notifications', page: 'all', context: 'Each verse adds light' },
-    { key_id: 'notif.heavy_heart', kurdish_text: 'دەما دلی تە گران هەست پێدکەت، کتێبا خوە ڤەکە یا کو چ جاران بێ هیڤی ناکەت 📖.', category: 'notifications', page: 'all', context: 'Heavy heart comfort' },
-    { key_id: 'notif.ramadan_near', kurdish_text: 'رەمەزان نێزیکە! نها ئارمانجا خوە یا قورئانێ دیارکە و دلی خوە ئامادە کە 🌙.', category: 'notifications', page: 'all', context: 'Ramadan is near' },
-    { key_id: 'notif.verse_milestone', kurdish_text: 'الحمدلله! تە گەهاندیە ${count} ئایەتان — هەر بەردەوام بە 🌿.', category: 'notifications', page: 'all', context: 'Verse milestone' },
-    { key_id: 'notif.new_tafsir', kurdish_text: 'پشکەکا نوی یا تەفسیرێ هاتە زێدەکرن! رامانێن دێرینتر ل tafsirkurd.com/quran ڤەکۆلین بکە 📜.', category: 'notifications', page: 'all', context: 'New tafsir added' },
-    { key_id: 'notif.special_verse', kurdish_text: 'بیرئینانەکا تایبەت: ل سەر ئایەتا ئەڤرۆ راوەستە و رامان لێ بکە — دبیت ئەڤە یاکو رۆژا تە بگۆهۆریت ✨.', category: 'notifications', page: 'all', context: 'Special verse reminder' },
-    { key_id: 'notif.new_version', kurdish_text: 'ڤێرژنەکا نوی یا تەفسیرکورد بەردەستە. تازە بکە بۆ دیتنا نویکرنان 🔁.', category: 'notifications', page: 'all', context: 'New version available' },
-
-    // ==========================================
     // SETTINGS DESCRIPTIONS
     // ==========================================
     { key_id: 'settings_desc.dark_mode', kurdish_text: 'گوهۆڕین بۆ رەوشا تاریک بۆ خواندنا ئاسانتر', category: 'settings_desc', page: 'settings', context: 'Dark mode description' },
