@@ -355,6 +355,17 @@ var _skeletonShown = false; /* true while skeleton is visible — triggers fade-
     var tasbih   = _rc('gencine_tasbih_v1');
     var asma99   = _rc('gencine_asma99_v1');
     var adhkar   = _rc('gencine_adhkar_v1');
+    /* Offline bundle: seed all datasets from bundled JS when Supabase cache is absent */
+    var _bndl = window.GENCINE_BUNDLE;
+    if (_bndl) {
+      if (!cats     && _bndl.cats)     cats     = _bndl.cats;
+      if (!duas     && _bndl.duas)     duas     = _bndl.duas;
+      if (!hadiths  && _bndl.hadiths)  hadiths  = _bndl.hadiths;
+      if (!adhkar   && _bndl.adhkar)   adhkar   = _bndl.adhkar;
+      if (!sections && _bndl.sections) sections = _bndl.sections;
+      if (!books    && _bndl.books)    books    = _bndl.books;
+      if (!tasbih   && _bndl.tasbih)   tasbih   = _bndl.tasbih;
+    }
     if (sections) _dbSections = sections;
     if (books)    _dbBooks    = books;
     if (tasbih)   _dbTasbih   = tasbih;
@@ -416,10 +427,10 @@ function _getSupabase() {
 
 var _lastBgRefresh = 0; /* timestamp of last silent re-fetch (ms) */
 
-/* Silent background re-fetch — at most once per 60s, updates badges/new content */
+/* Silent background re-fetch — throttled to once per 5 min, updates all Gencine data */
 function _triggerBgRefresh() {
   if (!navigator.onLine || _loadingDb) return;
-  if (Date.now() - _lastBgRefresh < 60000) return;
+  if (Date.now() - _lastBgRefresh < 300000) return;
   _lastBgRefresh = Date.now();
   _fetchDbData(function() {
     var ui = window.GencineUI;
@@ -428,14 +439,37 @@ function _triggerBgRefresh() {
     if (ui._view === 'home') ui._draw();
     else if (ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
     else if (ui._view === 'books') {
-      var _bgp = document.getElementById('panelGencine');
+      var _bgp = document.getElementById('gencineContent');
       if (ui._booksScrollPos == null) ui._booksScrollPos = _bgp ? _bgp.scrollTop : 0;
       ui._draw();
     }
     else if (ui._view === 'tasbih') ui._draw();
     else if (ui._view === 'adhkar') ui._draw();
     else if (ui._view === 'dua') ui._draw();
+    else if (ui._view === 'asma') ui._draw();
   });
+}
+
+/* Register connectivity-recovery listeners once — fires _triggerBgRefresh when network returns
+   or app comes to foreground. Debounced 1.5s to ignore brief WiFi/cellular transitions.
+   Never fires more than once per 5 minutes (enforced inside _triggerBgRefresh). */
+var _connListenersAdded = false;
+var _connDebounceTimer  = null;
+function _onConnRecovery() {
+  clearTimeout(_connDebounceTimer);
+  _connDebounceTimer = setTimeout(_triggerBgRefresh, 1500);
+}
+function _registerConnListeners() {
+  if (_connListenersAdded) return;
+  _connListenersAdded = true;
+  window.addEventListener('online', _onConnRecovery);
+  try {
+    if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
+      Capacitor.Plugins.App.addListener('appStateChange', function(state) {
+        if (state.isActive) _onConnRecovery();
+      });
+    }
+  } catch(e) {}
 }
 
 /* Load from cache instantly, then re-fetch once in background per session */
@@ -455,6 +489,25 @@ function _initDbData(onDone) {
   if (cachedAsma99)   _dbAsma99   = cachedAsma99;
   if (cachedAdhkar)   _dbAdhkar   = cachedAdhkar;
 
+  /* Bundle offline fallback: fill all datasets if Supabase caches absent */
+  var _fullBndl = window.GENCINE_BUNDLE;
+  if (_fullBndl) {
+    if (!cachedCats    && _fullBndl.cats)     cachedCats    = _fullBndl.cats;
+    if (!cachedDuas    && _fullBndl.duas)     cachedDuas    = _fullBndl.duas;
+    if (!cachedHadiths && _fullBndl.hadiths)  cachedHadiths = _fullBndl.hadiths;
+    if (!_dbSections   && _fullBndl.sections) _dbSections   = _fullBndl.sections;
+    if (!_dbBooks      && _fullBndl.books)    _dbBooks      = _fullBndl.books;
+    if (!_dbTasbih     && _fullBndl.tasbih)   _dbTasbih     = _fullBndl.tasbih;
+    if (!_dbAdhkar     && _fullBndl.adhkar)   _dbAdhkar     = _fullBndl.adhkar;
+  } else {
+    /* Legacy adhkar-only bundle backward compat */
+    var _bndlInit = window.GENCINE_ADHKAR_BUNDLE;
+    if (_bndlInit) {
+      if (!_dbAdhkar   && _bndlInit.data)     _dbAdhkar   = _bndlInit.data;
+      if (!_dbSections && _bndlInit.sections) _dbSections = _bndlInit.sections;
+    }
+  }
+
   console.log('[Gencine] data source: cats=' + (cachedCats?'cache':'miss') +
     ' hadiths=' + (cachedHadiths?'cache':'miss') +
     ' books=' + (cachedBooks?'cache':'miss') +
@@ -471,7 +524,15 @@ function _initDbData(onDone) {
     window._gencineDbVersion = (window._gencineDbVersion || 0) + 1; // bump for _tabHash cache
     if (onDone) onDone();
     if (window._splashReadyGencine) window._splashReadyGencine();
-    /* One silent background refresh per session to pick up admin changes */
+    _registerConnListeners();
+    _triggerBgRefresh();
+  } else if (_dbAdhkar) {
+    /* Adhkar available from bundle — render immediately, refresh Supabase in background */
+    _dbLoaded = true;
+    window._gencineDbVersion = (window._gencineDbVersion || 0) + 1;
+    if (onDone) onDone();
+    if (window._splashReadyGencine) window._splashReadyGencine();
+    _registerConnListeners();
     _triggerBgRefresh();
   } else {
     console.log('[Gencine] cache incomplete — Supabase fetch starting');
@@ -897,7 +958,7 @@ window.GencineUI = {
   /* ── called by section nav buttons ── */
   section: function(name){
     if (this._view === 'home') {
-      var _pg = document.getElementById('panelGencine');
+      var _pg = document.getElementById('gencineContent');
       if (_pg) this._homeScrollPos = _pg.scrollTop;
     }
     this._view = name;
@@ -921,7 +982,7 @@ window.GencineUI = {
     }
     if (!book) return false;
     // Save scroll position so we can restore it when closing the book
-    var panel = document.getElementById('panelGencine');
+    var panel = document.getElementById('gencineContent');
     this._booksScrollPos = panel ? panel.scrollTop : 0;
     this._view = 'book-reader';
     this._currentBook = book;
@@ -1007,18 +1068,20 @@ window.GencineUI = {
     // Close rec-picker on every Gencine view change — it must never survive navigation within the tab
     if(window.App && App.closeRecPicker) App.closeRecPicker();
     while(el.firstChild) el.removeChild(el.firstChild);
-    var panel = document.getElementById('panelGencine');
-    var restoringBooks  = (this._view === 'books'  && this._booksScrollPos != null);
-    var restoringHome   = (this._view === 'home'   && this._homeScrollPos  != null);
+    var panel = document.getElementById('gencineContent');
+    // Always reset immediately — prevents any outgoing view's scrollTop from bleeding into
+    // the incoming view while the rAF restore is pending.
+    if(panel) panel.scrollTop = 0;
+    var restoringBooks  = (this._view === 'books'  && this._booksScrollPos  != null);
+    var restoringHome   = (this._view === 'home'   && this._homeScrollPos   != null);
     var restoringAdhkar = (this._view === 'adhkar' && this._adhkarView === 'grid' && this._adhkarGridScrollPos != null);
-    if(panel && !restoringBooks && !restoringHome && !restoringAdhkar) panel.scrollTop = 0;
     this._updateHeader();
     if(this._view === 'home'){
       this._renderHome(el);
       if(restoringHome){
         var _savedHome = this._homeScrollPos;
         this._homeScrollPos = null;
-        if(panel) setTimeout(function(){ panel.scrollTop = _savedHome; }, 0);
+        if(panel) requestAnimationFrame(function(){ panel.scrollTop = _savedHome; });
       }
     }
     else if(this._view === 'adhkar'){
@@ -1026,14 +1089,13 @@ window.GencineUI = {
       if(restoringAdhkar){
         var _savedAdhkar = this._adhkarGridScrollPos;
         this._adhkarGridScrollPos = null;
-        if(panel) setTimeout(function(){ panel.scrollTop = _savedAdhkar; }, 0);
+        if(panel) requestAnimationFrame(function(){ panel.scrollTop = _savedAdhkar; });
       }
     }
     else if(this._view === 'dua')     this._renderDua(el);
     else if(this._view === 'tasbih')  this._renderTasbih(el);
     else if(this._view === 'asma')       this._renderAsma(el);
     else if(this._view === 'books'){
-      if(panel && restoringBooks) panel.scrollTop = 0; // flush large PDF-reader scrollTop before render
       this._renderBooks(el);
       if(restoringBooks){
         var savedPos = this._booksScrollPos;
@@ -1212,6 +1274,24 @@ window.GencineUI = {
     var self = this;
     var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     var catKeys = _getAdhkarCatKeys();
+    var _now = new Date(), _hour = _now.getHours();
+    var _todayStr = _now.toISOString().slice(0, 10);
+    var _yesterdayStr = new Date(_now.getTime() - 86400000).toISOString().slice(0, 10);
+    var _isFriday = (_now.getDay() === 5);
+    var _timeCat = (_hour >= 4 && _hour < 12) ? 'morning' :
+                   (_hour >= 14 && _hour < 21) ? 'evening' :
+                   (_hour >= 21 || _hour < 4)  ? 'sleep'   : null;
+    try {
+      var _staleKeys = [];
+      for (var _li = 0; _li < localStorage.length; _li++) {
+        var _lk = localStorage.key(_li);
+        if (_lk && _lk.indexOf('adhkar_done_') === 0 &&
+            _lk.indexOf(_todayStr) === -1 && _lk.indexOf(_yesterdayStr) === -1) {
+          _staleKeys.push(_lk);
+        }
+      }
+      _staleKeys.forEach(function(k){ localStorage.removeItem(k); });
+    } catch(e) {}
 
     var GROUPS = [
       { labelKey: 'adhkar.group.daily',   label: 'ڕۆژانە',         keys: ['morning','evening','waking','sleep'] },
@@ -1301,7 +1381,7 @@ window.GencineUI = {
         var row = document.createElement('button');
         row.className = 'adhkar-list-row' + (ki === keys.length - 1 ? ' adhkar-list-row-last' : '');
         row.onclick = function() {
-          var _pg = document.getElementById('panelGencine');
+          var _pg = document.getElementById('gencineContent');
           if (_pg) self._adhkarGridScrollPos = _pg.scrollTop;
           self._adhkarView = 'list';
           self._adhkarCat  = key;
@@ -1331,6 +1411,17 @@ window.GencineUI = {
           cnt.textContent = count;
           right.appendChild(cnt);
         }
+        if (key === _timeCat || (_isFriday && key === 'friday')) {
+          row.classList.add('adhkar-list-row--featured');
+        }
+        try {
+          if (localStorage.getItem('adhkar_done_' + key + '_' + _todayStr)) {
+            var _chip = document.createElement('span');
+            _chip.className = 'adhkar-done-chip';
+            _chip.textContent = 'ئەڤڕۆ ✓';
+            right.appendChild(_chip);
+          }
+        } catch(e) {}
         var chev = document.createElement('i');
         chev.className = 'fas fa-chevron-left adhkar-list-chev';
         right.appendChild(chev);
@@ -1367,7 +1458,8 @@ window.GencineUI = {
     }
 
     var totalCount = items.length;
-    var catLabel = (window.t && window.t('adhkar.' + this._adhkarCat)) || ADHKAR_CAT_LABELS[this._adhkarCat] || this._adhkarCat;
+    var _catKey = this._adhkarCat;
+    var catLabel = (window.t && window.t('adhkar.' + _catKey)) || ADHKAR_CAT_LABELS[_catKey] || _catKey;
 
     // ── Inject category name + live progress into sticky header ──
     var hdrTitle = document.getElementById('gencineHdrTitle');
@@ -1387,6 +1479,13 @@ window.GencineUI = {
       hdrProg.textContent = totalCount + ' زکر';
       hdrInner.appendChild(hdrCat);
       hdrInner.appendChild(hdrProg);
+      var _hdrBarWrap = document.createElement('div');
+      _hdrBarWrap.className = 'adhkar-hdr-bar-wrap';
+      var _hdrBarFill = document.createElement('div');
+      _hdrBarFill.className = 'adhkar-hdr-bar-fill';
+      _hdrBarFill.id = 'adhkarHdrBar';
+      _hdrBarWrap.appendChild(_hdrBarFill);
+      hdrInner.appendChild(_hdrBarWrap);
       hdrTitle.appendChild(hdrInner);
     }
 
@@ -1488,7 +1587,7 @@ window.GencineUI = {
     container.appendChild(list);
 
     // ── Scroll: update live progress in sticky header ──
-    var panel = document.getElementById('panelGencine');
+    var panel = document.getElementById('gencineContent');
     if (panel && hdrTitle) {
       var _raf = null;
       function _updateAdhkarProgress() {
@@ -1497,16 +1596,22 @@ window.GencineUI = {
           _raf = null;
           var progEl = document.getElementById('adhkarHdrProgress');
           if (!progEl) return;
-          var threshold = panel.getBoundingClientRect().top + 72;
+          var threshold = panel.getBoundingClientRect().top + panel.clientHeight * 0.65;
           var visIdx = 0;
           for (var i = 0; i < cardEls.length; i++) {
             if (cardEls[i].getBoundingClientRect().top < threshold) visIdx = i + 1;
             else break;
           }
           if (visIdx < 1) visIdx = 1;
+          if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 4) visIdx = totalCount;
           progEl.textContent = visIdx >= totalCount
             ? T('adhkar.done', 'تەمام ✓')
             : visIdx + ' / ' + totalCount + ' زکر';
+          var _bar = document.getElementById('adhkarHdrBar');
+          if (_bar) _bar.style.width = (Math.min(visIdx, totalCount) / totalCount * 100) + '%';
+          if (visIdx >= totalCount) {
+            try { localStorage.setItem('adhkar_done_' + _catKey + '_' + new Date().toISOString().slice(0,10), '1'); } catch(e) {}
+          }
         });
       }
       panel.addEventListener('scroll', _updateAdhkarProgress, { passive: true });
@@ -2017,7 +2122,7 @@ window.GencineUI = {
       var prevLbl = document.createElement('span');
       prevLbl.textContent = T('gencine.hadith_prev','پێشوو');
       prevBtn.appendChild(prevLbl);
-      prevBtn.onclick = function(){ self._hadithDetailIdx--; self._draw(); var p=document.getElementById('panelGencine');if(p)p.scrollTop=0; };
+      prevBtn.onclick = function(){ self._hadithDetailIdx--; self._draw(); var p=document.getElementById('gencineContent');if(p)p.scrollTop=0; };
       nav.appendChild(prevBtn);
 
       var navCount = document.createElement('span');
@@ -2034,7 +2139,7 @@ window.GencineUI = {
       var nextIco = document.createElement('i');
       nextIco.className = 'fas fa-arrow-left';
       nextBtn.appendChild(nextIco);
-      nextBtn.onclick = function(){ self._hadithDetailIdx++; self._draw(); var p=document.getElementById('panelGencine');if(p)p.scrollTop=0; };
+      nextBtn.onclick = function(){ self._hadithDetailIdx++; self._draw(); var p=document.getElementById('gencineContent');if(p)p.scrollTop=0; };
       nav.appendChild(nextBtn);
 
       container.appendChild(nav);
@@ -2178,7 +2283,7 @@ window.GencineUI = {
         row.appendChild(arrow);
 
         row.onclick = function(){
-          var p = document.getElementById('panelGencine');
+          var p = document.getElementById('gencineContent');
           self._hadithListScroll = p ? p.scrollTop : 0;
           self._hadithDetailIdx = origIdx;
           self._draw();
@@ -2858,7 +2963,7 @@ window.GencineUI = {
         function _makeFeatClick(fb) {
           if (fb._isSeries) {
             return function(){
-              var panel = document.getElementById('panelGencine');
+              var panel = document.getElementById('gencineContent');
               self._booksScrollPos = panel ? panel.scrollTop : 0;
               var lastRead = _seriesGetLastRead(fb.volumes);
               var vol = lastRead ? lastRead.vol : fb.volumes[0];
@@ -2869,7 +2974,7 @@ window.GencineUI = {
             };
           }
           return function(){
-            var panel = document.getElementById('panelGencine');
+            var panel = document.getElementById('gencineContent');
             self._booksScrollPos = panel ? panel.scrollTop : 0;
             _addToReadingHistory(fb.id);
             if (!_bookGetProgress(String(fb.id))) { try { localStorage.setItem('pdfProg_'+fb.id, JSON.stringify({page:1,total:fb.pages||0,ts:Date.now()})); } catch(e3) {} }
@@ -3067,7 +3172,12 @@ window.GencineUI = {
       }
 
       function _openBookReader(vol) {
-        var panel = document.getElementById('panelGencine');
+        if (!vol.pdf_url) {
+          var T2 = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
+          if (window.App && App.toast) App.toast(T2('gencine.book_needs_online','پەرتوک ئامادەیە دەما ئینتەرنێت هەیە'));
+          return;
+        }
+        var panel = document.getElementById('gencineContent');
         self._booksScrollPos = panel ? panel.scrollTop : 0;
         _addToReadingHistory(vol.id);
         if (!_bookGetProgress(String(vol.id))) {

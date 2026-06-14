@@ -2291,12 +2291,13 @@ function _loadGencineScripts(cb) {
     cbs.forEach(function(fn) { try { fn(); } catch(e) {} });
   }
 
-  // Load dua-data.js and smart-dhikr.js in PARALLEL (independent of each other),
-  // then load dhikr.js only after both finish (it depends on both)
-  var _p1 = false, _p2 = false;
-  function _check() { if (_p1 && _p2) _ls('/dhikr/dhikr.js?v=20260612a', _done); }
-  _ls('/dhikr/dua-data.js?v=20260326b',  function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=59',      function() { _p2 = true; _check(); });
+  // Load dua-data.js, smart-dhikr.js and adhkar-bundle in PARALLEL (independent),
+  // then load dhikr.js only after all three finish (dhikr.js depends on all three)
+  var _p1 = false, _p2 = false, _p3 = false;
+  function _check() { if (_p1 && _p2 && _p3) _ls('/dhikr/dhikr.js?v=20260612a', _done); }
+  _ls('/dhikr/dua-data.js?v=20260326b',       function() { _p1 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=59',           function() { _p2 = true; _check(); });
+  _ls('/data/gencine-bundle.js?v=1',           function() { _p3 = true; _check(); });
 }
 
 /* ===== TAP GUARD ===== */
@@ -3761,7 +3762,8 @@ App.backToList=function(){
   if(al)al.scrollTop=0;
   if(S._quranListScroll!=null){
     var _scrollEl=_isT2?$('quranHome'):$('panelQuran');
-    if(_scrollEl)setTimeout(function(){_scrollEl.scrollTop=S._quranListScroll;S._quranListScroll=null;},0);
+    var _qSaved=S._quranListScroll;S._quranListScroll=null;
+    if(_scrollEl)requestAnimationFrame(function(){_scrollEl.scrollTop=_qSaved;});
   }
   renderContinue();
 };
@@ -13798,6 +13800,7 @@ App.ivShowSeries=function(seriesId){
   S.ivCurrentSeries=seriesId;
   $('ivHome').style.display='none';
   $('ivSeriesView').classList.add('on');
+  if(_piv)_piv.scrollTop=0;
 
   var series=null;
   if(S.ivSeries){
@@ -13938,7 +13941,9 @@ App.ivBack=function(){
   S.ivCurrentSeries=null;
   $('ivSeriesView').classList.remove('on');
   $('ivHome').style.display='';
-  if(S._ivHomeScroll!=null){var _piv=$('panelIslamvoice');if(_piv)setTimeout(function(){_piv.scrollTop=S._ivHomeScroll;S._ivHomeScroll=null;},0);}
+  var _piv=$('panelIslamvoice');
+  if(_piv)_piv.scrollTop=0;
+  if(S._ivHomeScroll!=null){var _ivSaved=S._ivHomeScroll;S._ivHomeScroll=null;if(_piv)requestAnimationFrame(function(){_piv.scrollTop=_ivSaved;});}
 };
 
 App.ivPlay=function(episodeId){
