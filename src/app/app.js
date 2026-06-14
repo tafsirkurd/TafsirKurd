@@ -975,13 +975,14 @@ function init(){
     });
     on(S.audio.el,'pause',function(){if(_audioEndTimer){clearTimeout(_audioEndTimer);_audioEndTimer=null;}});
     on(S.audio.el,'play',_scheduleAyahEnd);
+    var _audioNetRetry=0;
     on(S.audio.el,'error',function(){
       if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
       if(!S.audio.surah)return;
       var errCode=S.audio.el.error&&S.audio.el.error.code;
       var currentSrc=S.audio.el.src||'';
       console.warn('[Audio] error — reciter:'+RECITER+' surah:'+S.audio.surah+' ayah:'+S.audio.ayah
-        +' errCode:'+errCode+' src:'+currentSrc.slice(0,100));
+        +' errCode:'+errCode+' src:'+currentSrc.slice(0,100)+' retry:'+_audioNetRetry);
       // If src was a local cached file — clear it and transparently retry with remote URL.
       // Local files can fail if the OS evicted them from cache storage.
       // errCode 4 (SRC_NOT_SUPPORTED) is the typical code when a capacitor:// file is missing.
@@ -990,11 +991,26 @@ function init(){
         if(window.AudioCache)AudioCache.clearLocalUri(RECITER,S.audio.surah,S.audio.ayah);
         var remoteUrl=audioUrl(S.audio.surah,S.audio.ayah);
         S.audio.el.src=remoteUrl;
+        S.audio.el.load();
         S.audio.el.play().catch(function(){});
         return; // transparent retry — no toast shown
       }
+      // errCode 2 = MEDIA_ERR_NETWORK — transient failure (CDN hiccup, TLS timeout, etc.)
+      // Auto-retry up to 2 times with a short delay before showing a toast.
+      if(errCode===2&&_audioNetRetry<2){
+        _audioNetRetry++;
+        var _retryUrl=audioUrl(S.audio.surah,S.audio.ayah);
+        console.warn('[Audio] network error — auto-retry #'+_audioNetRetry+' in 800ms');
+        setTimeout(function(){
+          if(!S.audio.playing||S.audio.el.src.indexOf('blob:')===0)return; // gave up or switched to blob
+          S.audio.el.src=_retryUrl;
+          S.audio.el.load();
+          S.audio.el.play().catch(function(){});
+        },800);
+        return;
+      }
+      _audioNetRetry=0;
       // errCode 4 = MEDIA_ERR_SRC_NOT_SUPPORTED — reciter has no audio for this surah (404/unsupported)
-      // errCode 2 = MEDIA_ERR_NETWORK — transient network failure (NOT a missing-reciter issue)
       // errCode 3 = MEDIA_ERR_DECODE — bad file data
       // errCode 1 = MEDIA_ERR_ABORTED — user/system cancelled (usually silent)
       var msg;
@@ -1004,7 +1020,6 @@ function init(){
       } else if(errCode===1){
         return; // aborted — no toast
       } else {
-        // code 2 (network) or code 3 (decode) — show a generic load error, not "not available"
         msg=t('error.audio_load')||'کێشەی بارکردنی دەنگ';
         console.error('[Audio] load error code:'+errCode+' reciter:'+RECITER
           +' url:'+audioUrl(S.audio.surah,S.audio.ayah));
@@ -1024,6 +1039,7 @@ function init(){
     });
     on(S.audio.el,'playing',function(){
       clearTimeout(_audioWaitTimer);_audioWaitTimer=null;
+      _audioNetRetry=0;
       setAudioIcon('pause');
       if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
       if(_playStartT){
@@ -6251,6 +6267,9 @@ function playAyah(surah,ayah){
     S.audio.el.currentTime=0;
   }else{
     S.audio.el.src=src;
+    // Force reload when element is stuck in error state — Chromium WebView ignores
+    // el.src = sameUrl on an errored element without an explicit load() call.
+    if(S.audio.el.error)S.audio.el.load();
   }
   S.audio.el.playbackRate=S.audio.speed;
   _playStartT=Date.now();
