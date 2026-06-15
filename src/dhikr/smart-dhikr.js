@@ -991,21 +991,20 @@
        last. Book of the day
   ───────────────────────────────────────────── */
   function getItemsNow() {
-    var items = [
-      { _type: 'adhkar', _adhkarItem: _getZikrItem() }    /* card 1: time zikr — never displaced */
-    ];
+    var seen  = {};
+    var items = [];
 
-    /* seasonal slides — added after card 1, one slide each */
-    var seasonal = _getSeasonalItems();
-    for (var si = 0; si < seasonal.length; si++) {
-      items.push(seasonal[si]);
+    function _push(item) {
+      if (!seen[item.id] && _catHasData(item.categoryKey)) {
+        seen[item.id] = true;
+        items.push({ _type: 'adhkar', _adhkarItem: item });
+      }
     }
 
-    /* weather slide — added when condition is not clear */
-    var weatherItem = (_getWeatherCondition() !== 'clear') ? _getWeatherItem() : null;
-    if (weatherItem) {
-      items.push({ _type: 'adhkar', _adhkarItem: weatherItem });
-    }
+    TIME_ITEMS.forEach(_push);
+    FALLBACK_ZIKR.forEach(_push);
+    SEASONAL_ITEMS.forEach(_push);
+    WEATHER_ITEMS.forEach(_push);
 
     items.push(_buildAyahItem());
     items.push(_buildHadithItem());
