@@ -6,7 +6,33 @@
 <title>Dev Preview</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#0d1520;color:#cde;padding:24px;font-size:14px}
+body{font-family:system-ui,sans-serif;background:#0d1520;color:#cde;padding:16px;font-size:14px}
+
+/* ── mushaf viewer ── */
+#mushaf-wrap{max-width:500px;margin:0 auto 32px}
+.m-title{text-align:center;color:#ffc850;font-size:1rem;margin-bottom:4px}
+.m-sub{text-align:center;color:#445;font-size:.65rem;margin-bottom:14px;direction:ltr}
+.m-tabs{display:flex;gap:8px;margin-bottom:12px;direction:ltr}
+.m-tab{flex:1;text-align:center;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:.75rem;border:1px solid #1e2d3d;background:#0a1018;color:#556;transition:.15s}
+.m-tab.on{background:#1e2d3d;color:#7ab4ff;border-color:#2a3d52}
+.m-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px}
+.m-nav button{background:#1e2d3d;border:1px solid #2a3d52;color:#cde;padding:8px 22px;border-radius:8px;cursor:pointer;font-size:.9rem}
+.m-nav button:disabled{opacity:.3;cursor:default}
+#m-lbl{color:#7ab4ff;min-width:80px;text-align:center;font-size:.82rem}
+#m-img{width:100%;border-radius:10px;display:none;border:1px solid #222}
+#m-loading{text-align:center;padding:40px;color:#445;font-size:.8rem}
+#m-err{display:none;text-align:center;padding:16px;color:#f4a261;font-size:.75rem;direction:ltr;background:#1a0f0a;border-radius:8px;margin-top:8px}
+
+/* ── ayahs ── */
+#m-ayahs{}
+.s-hdr{text-align:center;background:#1a2030;border-radius:8px;padding:10px;margin:10px 0 4px;color:#ffc850;font-size:.85rem}
+.ayah-row{padding:10px 12px;border-bottom:1px solid #111;line-height:2.1;direction:rtl}
+.a-num{display:inline-block;background:#1e2d3d;color:#7ab4ff;font-size:.6rem;border-radius:999px;padding:1px 7px;margin-right:5px;vertical-align:middle}
+.a-txt{font-size:1.1rem;color:#e8d9b8}
+#m-ayahs-loading{text-align:center;padding:20px;color:#445;font-size:.78rem}
+#m-ayahs-err{color:#f4a261;padding:16px;font-size:.75rem;direction:ltr;display:none}
+
+/* ── coverage table ── */
 h1{text-align:center;color:#7ab4ff;margin-bottom:6px;font-size:1.1rem}
 .subtitle{text-align:center;color:#556;font-size:.75rem;margin-bottom:24px}
 h2{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#445;margin:28px 0 10px;border-top:1px solid #1a2535;padding-top:16px}
@@ -22,216 +48,233 @@ tr:hover td{background:#111d2a}
 .ar{color:#aaa;font-size:.78rem;line-height:1.5;direction:rtl;max-width:320px}
 .ok{color:#4caf84;font-size:.7rem;font-weight:700}
 .warn{color:#f4a261;font-size:.7rem;font-weight:700}
-.info{color:#7ab4ff;font-size:.7rem}
-.sub-row{font-size:.72rem;color:#7a9ab0;padding:2px 8px 6px;border-bottom:1px solid #141e2a}
-.sub-row span{color:#a0c4d8;font-weight:600}
 </style>
 </head>
 <body>
-<!-- ═══════════════════════════════════════════
-     MUSHAF VIEWER — API TEST
-════════════════════════════════════════════ -->
-<div id="mushaf-section" style="margin-bottom:32px">
-  <h1 style="color:#ffc850;margin-bottom:4px;text-align:center">مصحف — تاقیکرن</h1>
-  <p style="text-align:center;color:#445;font-size:.68rem;margin-bottom:16px;direction:ltr">
-    https://quran.yousefheiba.com/api/quranPagesImage · test pages 1–3
-  </p>
 
-  <!-- Page viewer -->
-  <div id="mushaf-viewer" style="
-    background:#1a1008;border-radius:14px;overflow:hidden;
-    max-width:480px;margin:0 auto;position:relative;min-height:200px;
-    box-shadow:0 8px 40px rgba(0,0,0,.6);border:1px solid #2a1e0a">
+<!-- ══════════════════ MUSHAF VIEWER ══════════════════ -->
+<div id="mushaf-wrap">
+  <p class="m-title">مصحف — تاقیکرن</p>
+  <p class="m-sub">quran.yousefheiba.com · image + text · 604 pages</p>
 
-    <div id="mushaf-loading" style="
-      position:absolute;inset:0;display:flex;align-items:center;
-      justify-content:center;color:#8a7040;font-size:.8rem">جارکرن...</div>
-
-    <img id="mushaf-img" src="" alt=""
-      style="width:100%;display:none;border-radius:0" />
-
-    <div id="mushaf-error" style="
-      display:none;padding:32px;text-align:center;color:#f4a261;font-size:.8rem"></div>
+  <div class="m-nav">
+    <button id="m-prev" onclick="mNav(-1)" disabled>◀</button>
+    <span id="m-lbl">— / —</span>
+    <button id="m-next" onclick="mNav(1)">▶</button>
   </div>
 
-  <!-- Navigation -->
-  <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:14px">
-    <button onclick="mushafNav(-1)" style="
-      background:#1a2533;border:1px solid #253545;color:#cde;
-      padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.85rem">◀</button>
-    <span id="mushaf-page-lbl" style="color:#7ab4ff;font-size:.8rem;min-width:60px;text-align:center">— / —</span>
-    <button onclick="mushafNav(1)" style="
-      background:#1a2533;border:1px solid #253545;color:#cde;
-      padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.85rem">▶</button>
+  <div class="m-tabs">
+    <div class="m-tab on" id="tab-both" onclick="mTab('both')">Image + Text</div>
+    <div class="m-tab" id="tab-img"  onclick="mTab('img')">Image only</div>
+    <div class="m-tab" id="tab-txt"  onclick="mTab('txt')">Text only</div>
   </div>
 
-  <!-- Raw JSON dump — always visible -->
-  <div style="max-width:480px;margin:14px auto 0">
-    <div style="color:#445;font-size:.65rem;direction:ltr;margin-bottom:4px">▼ raw JSON response</div>
-    <pre id="mushaf-raw" style="
-      background:#0a1018;padding:12px;border-radius:8px;font-size:.65rem;
-      color:#a0c4d8;white-space:pre-wrap;word-break:break-all;
-      max-height:400px;overflow:auto;direction:ltr"></pre>
-    <div style="color:#445;font-size:.65rem;direction:ltr;margin-top:10px;margin-bottom:4px">▼ all string values found in response</div>
-    <pre id="mushaf-strings" style="
-      background:#0a1018;padding:12px;border-radius:8px;font-size:.65rem;
-      color:#ffc850;white-space:pre-wrap;word-break:break-all;
-      max-height:200px;overflow:auto;direction:ltr"></pre>
-  </div>
+  <div id="m-loading">جارکرن...</div>
+  <img id="m-img" alt="quran page">
+  <div id="m-err"></div>
+
+  <div id="m-ayahs"></div>
 </div>
-<!-- ═══════════════════════════════════════════
-     QURAN PAGES TEXT API TEST
-════════════════════════════════════════════ -->
-<div style="max-width:640px;margin:0 auto 28px">
-  <h1 style="color:#7ab4ff;margin-bottom:4px;text-align:center">Quran Pages Text API — Test</h1>
-  <p style="text-align:center;color:#445;font-size:.68rem;margin-bottom:14px;direction:ltr">
-    GET https://quran.yousefheiba.com/api/quranPagesText?page=1
-  </p>
-  <div id="txt-status" style="text-align:center;color:#7ab4ff;font-size:.78rem;margin-bottom:10px">جارکرن...</div>
-  <pre id="txt-raw" style="background:#0a1018;padding:14px;border-radius:10px;font-size:.65rem;color:#a0c4d8;white-space:pre-wrap;word-break:break-all;max-height:400px;overflow:auto;direction:ltr"></pre>
-</div>
+
+<!-- ══════════════════ COVERAGE TABLE ══════════════════ -->
 <hr style="border:none;border-top:1px solid #1a2535;margin-bottom:24px">
+<h1>Smart Dhikr — Card Text Coverage</h1>
+<p class="subtitle">✅ = hardcoded in JS &nbsp;|&nbsp; ⚠️ = comes from Supabase/i18n</p>
 
 <script>
+/* ═══════════ MUSHAF VIEWER ═══════════ */
 (function() {
-  fetch('https://quran.yousefheiba.com/api/quranPagesText?page=1', {
-    headers: { 'Accept': 'application/json' }
-  })
-  .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
-  .then(function(res) {
-    document.getElementById('txt-status').textContent = '✅ HTTP ' + res.status;
-    document.getElementById('txt-raw').textContent = JSON.stringify(res.data, null, 2).substring(0, 3000) + '\n…';
-  })
-  .catch(function(e) {
-    document.getElementById('txt-status').textContent = '❌ ' + e.message + ' (CORS?)';
-  });
-})();
-</script>
+  var IMG_BASE  = 'https://quran.yousefheiba.com/api/quranPagesImage';
+  var TEXT_BASE = 'https://quran.yousefheiba.com/api/quranPagesText';
 
-<hr style="border:none;border-top:1px solid #1a2535;margin-bottom:24px">
+  var pageUrls = {};        // page_number → page_url
+  var total    = 604;
+  var cur      = 1;
+  var mode     = 'both';    // 'both' | 'img' | 'txt'
 
-<script>
-(function() {
-  var BASE = 'https://quran.yousefheiba.com/api/quranPagesImage';
-  var allPages   = [];  // full pages array from API
-  var currentPage = 1;
+  var imgEl    = document.getElementById('m-img');
+  var loadEl   = document.getElementById('m-loading');
+  var errEl    = document.getElementById('m-err');
+  var ayahsEl  = document.getElementById('m-ayahs');
+  var lblEl    = document.getElementById('m-lbl');
 
-  var img    = document.getElementById('mushaf-img');
-  var loader = document.getElementById('mushaf-loading');
-  var err    = document.getElementById('mushaf-error');
-  var lbl    = document.getElementById('mushaf-page-lbl');
-  var rawEl  = document.getElementById('mushaf-raw');
-  var strEl  = document.getElementById('mushaf-strings');
+  window.mTab = function(t) {
+    mode = t;
+    ['both','img','txt'].forEach(function(x) {
+      document.getElementById('tab-'+x).className = 'm-tab' + (x===t?' on':'');
+    });
+    render();
+  };
 
-  function goTo(pageNum) {
-    var entry = null;
-    for (var i = 0; i < allPages.length; i++) {
-      if (allPages[i].page_number === pageNum) { entry = allPages[i]; break; }
-    }
-    if (!entry) return;
-    currentPage = pageNum;
-    lbl.textContent = 'پ ' + pageNum + ' / ' + allPages.length;
-    loader.style.display = 'flex';
-    img.style.display = 'none';
-    err.style.display = 'none';
-    var url = entry.page_url;
-    img.onload  = function() { loader.style.display = 'none'; img.style.display = 'block'; };
-    img.onerror = function() { loader.style.display = 'none'; err.style.display = 'block'; err.textContent = '❌ ' + url; };
-    img.src = url;
+  window.mNav = function(dir) {
+    cur = Math.max(1, Math.min(total, cur + dir));
+    render();
+  };
+
+  function render() {
+    lblEl.textContent = 'پ ' + cur + ' / ' + total;
+    document.getElementById('m-prev').disabled = cur <= 1;
+    document.getElementById('m-next').disabled = cur >= total;
+
+    var wantImg = mode === 'img'  || mode === 'both';
+    var wantTxt = mode === 'txt'  || mode === 'both';
+
+    imgEl.style.display  = 'none';
+    loadEl.style.display = 'none';
+    errEl.style.display  = 'none';
+    ayahsEl.innerHTML    = '';
+
+    if (wantImg) showImage(cur);
+    if (wantTxt) showText(cur);
   }
 
-  window.mushafNav = function(dir) { goTo(Math.max(1, Math.min(allPages.length, currentPage + dir))); };
+  function showImage(page) {
+    if (pageUrls[page]) {
+      setImg(pageUrls[page]);
+    } else if (Object.keys(pageUrls).length > 0) {
+      errEl.style.display = 'block';
+      errEl.textContent   = 'No URL cached for page ' + page;
+    } else {
+      loadEl.style.display  = 'block';
+      loadEl.textContent    = 'Image جارکرن...';
+      fetch(IMG_BASE + '?page=1', {headers:{'Accept':'application/json'}})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if (d.pages) d.pages.forEach(function(p){pageUrls[p.page_number]=p.page_url;});
+          if (d.total_pages) total = d.total_pages;
+          loadEl.style.display = 'none';
+          if (pageUrls[page]) setImg(pageUrls[page]);
+          else { errEl.style.display='block'; errEl.textContent='No URL for page '+page; }
+        })
+        .catch(function(e){
+          loadEl.style.display = 'none';
+          errEl.style.display  = 'block';
+          errEl.textContent    = '❌ Image API: '+e.message;
+        });
+    }
+  }
 
-  fetch(BASE + '?page=1', { headers: { 'Accept': 'application/json' } })
-    .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
-    .then(function(res) {
-      rawEl.textContent = '// HTTP ' + res.status + '\n' + JSON.stringify(res.data, null, 2).substring(0, 1500) + '\n…';
-      var d = res.data;
-      if (d && Array.isArray(d.pages) && d.pages.length) {
-        allPages = d.pages;
-        strEl.textContent = '✅ key: page_url\n✅ total: ' + d.total_pages + ' pages\n✅ example: ' + d.pages[0].page_url;
-        goTo(1);
-      } else {
-        loader.style.display = 'none';
-        err.style.display = 'block';
-        err.textContent = 'Unexpected shape — see raw JSON';
-      }
+  function setImg(url) {
+    imgEl.onload  = function(){imgEl.style.display='block';};
+    imgEl.onerror = function(){errEl.style.display='block';errEl.textContent='❌ Image load failed: '+url;};
+    imgEl.src = url;
+  }
+
+  function showText(page) {
+    var loadDiv = document.createElement('div');
+    loadDiv.id  = 'm-ayahs-loading';
+    loadDiv.textContent = 'Text جارکرن...';
+    ayahsEl.appendChild(loadDiv);
+
+    fetch(TEXT_BASE + '?page=' + page, {headers:{'Accept':'application/json'}})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        ayahsEl.innerHTML = '';
+        if (!d.data || !d.data.ayahs) {
+          var e = document.createElement('div'); e.id='m-ayahs-err'; e.style.display='block';
+          e.textContent='Unexpected API shape'; ayahsEl.appendChild(e); return;
+        }
+        var lastSurah = null;
+        d.data.ayahs.forEach(function(a){
+          if (a.surah.number !== lastSurah) {
+            lastSurah = a.surah.number;
+            var hdr = document.createElement('div');
+            hdr.className = 's-hdr';
+            hdr.textContent = a.surah.name;
+            ayahsEl.appendChild(hdr);
+          }
+          var row = document.createElement('div');
+          row.className = 'ayah-row';
+          var num = document.createElement('span');
+          num.className = 'a-num'; num.textContent = a.numberInSurah;
+          var txt = document.createElement('span');
+          txt.className = 'a-txt'; txt.textContent = a.text;
+          row.appendChild(num); row.appendChild(txt);
+          ayahsEl.appendChild(row);
+        });
+      })
+      .catch(function(e){
+        ayahsEl.innerHTML = '';
+        var err = document.createElement('div'); err.id='m-ayahs-err'; err.style.display='block';
+        err.textContent='❌ Text API: '+e.message; ayahsEl.appendChild(err);
+      });
+  }
+
+  // Boot: pre-fetch image index so navigation is instant
+  loadEl.style.display = 'block';
+  loadEl.textContent   = 'جارکرن...';
+  fetch(IMG_BASE + '?page=1', {headers:{'Accept':'application/json'}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (d.pages) d.pages.forEach(function(p){pageUrls[p.page_number]=p.page_url;});
+      if (d.total_pages) { total=d.total_pages; }
+      loadEl.style.display = 'none';
+      render();
     })
-    .catch(function(e) {
-      loader.style.display = 'none';
-      err.style.display = 'block';
-      err.textContent = '❌ ' + e.message;
-      strEl.textContent = 'fetch failed — CORS or network issue';
+    .catch(function(e){
+      loadEl.style.display = 'none';
+      errEl.style.display  = 'block';
+      errEl.textContent    = '❌ Image API failed: '+e.message+' — text-only mode';
+      mode = 'txt';
+      document.getElementById('tab-txt').className='m-tab on';
+      document.getElementById('tab-both').className='m-tab';
+      render();
     });
 })();
 </script>
 
-<h1>Smart Dhikr — Card Text Coverage</h1>
-<p class="subtitle">
-  ✅ = hardcoded in JS (shows instantly) &nbsp;|&nbsp;
-  ⚠️ = comes from Supabase/i18n (may be blank before load)
-</p>
-
+<!-- ══════════════════ COVERAGE TABLE ══════════════════ -->
 <script>
 var ITEMS = {
   'TIME_ITEMS': [
     { id:'masjid_enter', timeTag:'مزگەفت', tagStatus:'ok',
       label:'چونا مزگەوت', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:3, source:'مسلم', sourceStatus:'ok',
-      ar:'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ' },
+      repeat:3, source:'مسلم', ar:'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ' },
     { id:'after_prayer', timeTag:'پشتی نڤێژێ', tagStatus:'ok',
-      label:'دوای نوێژ', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:33, source:'البخاري ومسلم', sourceStatus:'ok',
-      ar:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' },
+      label:'دوای نوێژ', labelStatus:'warn', labelNote:'labelFallback',
+      repeat:33, source:'البخاري ومسلم', ar:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' },
     { id:'morning', timeTag:'سپێدە', tagStatus:'ok',
       label:'زکرێ سپێدێ', labelStatus:'ok', labelNote:'confirmed correct',
-      repeat:3, source:'أبو داود', sourceStatus:'ok',
-      ar:'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا' },
+      repeat:3, source:'أبو داود', ar:'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا' },
     { id:'waking', timeTag:'سپێدە', tagStatus:'ok',
-      label:'دوای هاتنا خوو', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:1, source:'البخاري', sourceStatus:'ok',
-      ar:'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا' },
+      label:'دوای هاتنا خوو', labelStatus:'warn', labelNote:'labelFallback',
+      repeat:1, source:'البخاري', ar:'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا' },
     { id:'sunrise', timeTag:'ئیشراق', tagStatus:'ok',
-      label:'نوێژا ئیشراق', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:null, source:null, sourceStatus:'ok',
-      ar:null },
+      label:'نوێژا ئیشراق', labelStatus:'warn', labelNote:'labelFallback',
+      repeat:null, source:null, ar:null },
     { id:'evening', timeTag:'ئێڤار', tagStatus:'ok',
-      label:'زکرێن ئێواربوون', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:3, source:'أبو داود والترمذي', sourceStatus:'ok',
-      ar:'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا' },
+      label:'زکرێن ئێواربوون', labelStatus:'warn', labelNote:'labelFallback',
+      repeat:3, source:'أبو داود والترمذي', ar:'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا' },
     { id:'sleep', timeTag:'شەڤ', tagStatus:'ok',
-      label:'بەرى نڤستنێ', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:3, source:'البخاري ومسلم', sourceStatus:'ok',
-      ar:'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا' },
+      label:'بەرى نڤستنێ', labelStatus:'warn', labelNote:'labelFallback',
+      repeat:3, source:'البخاري ومسلم', ar:'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا' },
     { id:'friday', timeTag:'ئەینی', tagStatus:'ok',
-      label:'ڕۆژا ئینانێ', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:1, source:'أبو داود', sourceStatus:'ok',
-      ar:null },
+      label:'ڕۆژا ئینانێ', labelStatus:'warn', labelNote:'labelFallback',
+      repeat:1, source:'أبو داود', ar:null },
     { id:'salawat', timeTag:null, tagStatus:'none',
-      label:'صەڵەوات', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
-      repeat:10, source:'مسلم', sourceStatus:'ok',
-      ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ' }
+      label:'صەڵەوات', labelStatus:'warn', labelNote:'labelFallback',
+      repeat:10, source:'مسلم', ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ' }
   ],
   'FALLBACK_ZIKR': [
-    { id:'forgiveness', timeTag:null, tagStatus:'none', label:'داواکاری لێبوردن', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'البخاري ومسلم', sourceStatus:'ok', ar:'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ' },
-    { id:'protection', timeTag:null, tagStatus:'none', label:'پاراستن', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'أبو داود والترمذي', sourceStatus:'ok', ar:'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ' },
-    { id:'gratitude', timeTag:null, tagStatus:'none', label:'سوپاسگوزاری', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'ابن ماجه', sourceStatus:'ok', ar:'الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ' },
-    { id:'before_quran', timeTag:null, tagStatus:'none', label:'بەری خوێندنا قورئانێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ' },
-    { id:'distress', timeTag:null, tagStatus:'none', label:'پەریشانی', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'الترمذي', sourceStatus:'ok', ar:'لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ' },
-    { id:'istikhara', timeTag:null, tagStatus:'none', label:'دوعای ئیستیخارە', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ وَأَسْتَقْدِرُكَ بِقُدْرَتِكَ' },
-    { id:'adhan', timeTag:null, tagStatus:'none', label:'دوای ئەزان', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ' }
+    { id:'forgiveness', timeTag:null, tagStatus:'none', label:'داواکاری لێبوردن', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'البخاري ومسلم', ar:'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ' },
+    { id:'protection', timeTag:null, tagStatus:'none', label:'پاراستن', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'أبو داود والترمذي', ar:'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ' },
+    { id:'gratitude', timeTag:null, tagStatus:'none', label:'سوپاسگوزاری', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'ابن ماجه', ar:'الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ' },
+    { id:'before_quran', timeTag:null, tagStatus:'none', label:'بەری خوێندنا قورئانێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', ar:'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ' },
+    { id:'distress', timeTag:null, tagStatus:'none', label:'پەریشانی', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'الترمذي', ar:'لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ' },
+    { id:'istikhara', timeTag:null, tagStatus:'none', label:'دوعای ئیستیخارە', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', ar:'اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ وَأَسْتَقْدِرُكَ بِقُدْرَتِكَ' },
+    { id:'adhan', timeTag:null, tagStatus:'none', label:'دوای ئەزان', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', ar:'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ' }
   ],
   'SEASONAL_ITEMS': [
-    { id:'fasting', timeTag:'ڕەمەزان', tagStatus:'ok', label:'نیەتا ڕۆژوو', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود', sourceStatus:'ok', ar:'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ' },
-    { id:'breaking_fast', timeTag:'فتارە', tagStatus:'ok', label:'کاتا ئیفتارێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود والترمذي', sourceStatus:'ok', ar:'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ' },
-    { id:'lailat_qadr', timeTag:'شەڤا قەدرێ', tagStatus:'ok', label:'شەوا قەدرێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'الترمذي', sourceStatus:'ok', ar:'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي' },
-    { id:'dhul_hijjah', timeTag:'ذوالحیجە', tagStatus:'ok', label:'دەیا ذولحیجەیێ', labelStatus:'warn', labelNote:'labelFallback', repeat:100, source:'البخاري', sourceStatus:'ok', ar:'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ' },
-    { id:'arafat', timeTag:'عەرەفە', tagStatus:'ok', label:'دوعای عەرەفاتێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'مالك والترمذي', sourceStatus:'ok', ar:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' }
+    { id:'fasting', timeTag:'ڕەمەزان', tagStatus:'ok', label:'نیەتا ڕۆژوو', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود', ar:'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ' },
+    { id:'breaking_fast', timeTag:'فتارە', tagStatus:'ok', label:'کاتا ئیفتارێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود والترمذي', ar:'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ' },
+    { id:'lailat_qadr', timeTag:'شەڤا قەدرێ', tagStatus:'ok', label:'شەوا قەدرێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'الترمذي', ar:'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي' },
+    { id:'dhul_hijjah', timeTag:'ذوالحیجە', tagStatus:'ok', label:'دەیا ذولحیجەیێ', labelStatus:'warn', labelNote:'labelFallback', repeat:100, source:'البخاري', ar:'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ' },
+    { id:'arafat', timeTag:'عەرەفە', tagStatus:'ok', label:'دوعای عەرەفاتێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'مالك والترمذي', ar:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' }
   ],
   'WEATHER_ITEMS': [
-    { id:'rain', timeTag:'باران', tagStatus:'ok', label:'باران', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'اللَّهُمَّ صَيِّبًا نَافِعًا' },
-    { id:'thunder', timeTag:'هەوا', tagStatus:'ok', label:'کاتا برووسکێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'الموطأ', sourceStatus:'ok', ar:'سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ' },
-    { id:'wind', timeTag:'هەوا', tagStatus:'ok', label:'کاتا هەوایی', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود', sourceStatus:'ok', ar:'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا وَخَيْرَ مَا فِيهَا' }
+    { id:'rain',    timeTag:'باران', tagStatus:'ok', label:'باران',         labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري',  ar:'اللَّهُمَّ صَيِّبًا نَافِعًا' },
+    { id:'thunder', timeTag:'هەوا',  tagStatus:'ok', label:'کاتا برووسکێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'الموطأ',   ar:'سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ' },
+    { id:'wind',    timeTag:'هەوا',  tagStatus:'ok', label:'کاتا هەوایی',  labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود', ar:'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا وَخَيْرَ مَا فِيهَا' }
   ]
 };
 
@@ -241,30 +284,28 @@ Object.keys(ITEMS).forEach(function(pool) {
   document.body.appendChild(h2);
 
   var table = document.createElement('table');
-  table.innerHTML = '<tr>'
-    + '<th>id</th><th>تاگ (sd-tag)</th><th>تێکست (sd-sub)</th><th>چاوکانی</th><th>عەرەبی</th>'
-    + '</tr>';
+  var thead = document.createElement('tr');
+  thead.innerHTML = '<th>id</th><th>تاگ</th><th>تێکست</th><th>چاوکانی</th><th>عەرەبی</th>';
+  table.appendChild(thead);
 
   ITEMS[pool].forEach(function(item) {
-    var subParts = [item.label];
-    if (item.repeat > 1) subParts.push('× ' + item.repeat);
-    if (item.source) subParts.push(item.source);
-    var subText = subParts.join('  ·  ');
+    var parts = [item.label];
+    if (item.repeat > 1) parts.push('× ' + item.repeat);
+    if (item.source)     parts.push(item.source);
 
     var tr = document.createElement('tr');
+    var tagCell = item.timeTag
+      ? '<span class="tag">' + item.timeTag + '</span> <span class="ok">✅</span>'
+      : '<span class="tag none">بێ تاگ</span>';
+    var statusBit = item.labelStatus === 'ok'
+      ? '<span class="ok">✅ هاردکۆد</span>'
+      : '<span class="warn">⚠️ ' + item.labelNote + '</span>';
+
     tr.innerHTML = '<td class="id">' + item.id + '</td>'
-      + '<td>' + (item.timeTag
-          ? '<span class="tag">' + item.timeTag + '</span> <span class="ok">✅</span>'
-          : '<span class="tag none">بێ تاگ</span>') + '</td>'
-      + '<td>'
-        + '<div class="label">' + subText + '</div>'
-        + '<div style="font-size:.65rem;margin-top:3px">'
-          + (item.labelStatus==='ok'
-              ? '<span class="ok">✅ هاردکۆد</span>'
-              : '<span class="warn">⚠️ ' + item.labelNote + '</span>')
-        + '</div>'
-      + '</td>'
-      + '<td><span class="' + item.sourceStatus + '">' + (item.sourceStatus==='ok'?'✅':'⚠️') + '</span></td>'
+      + '<td>' + tagCell + '</td>'
+      + '<td><div class="label">' + parts.join(' · ') + '</div>'
+         + '<div style="font-size:.65rem;margin-top:3px">' + statusBit + '</div></td>'
+      + '<td><span class="ok">✅</span></td>'
       + '<td class="ar">' + (item.ar || '—') + '</td>';
     table.appendChild(tr);
   });
