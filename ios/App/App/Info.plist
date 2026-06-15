@@ -72,11 +72,11 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ئەم ئەپە شوێن بکار تینێت دا ئاراستەی قیبلە و دەمێن نوژێ حیساب بکێت</string>
+	<string>ئەڤ ئەپە جهێ تە بەکار دئینیت، دا کو ئاراستەیا قیبلێ و دەمێن نڤێژان دیار بکەت.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>ئەم ئەپە ب دەنگا تە ئیزنا دەخوازێت دا بتوانی ئایەتێن قورئانێ ب دەنگ بژمێری</string>
+	<string>ئەڤ ئەپە پێویستی ب ڕێپێدانا مایکرۆفۆنی هەیە، دا کو تو بشێی زکرێن خۆ ب ڕێیا دەنگی بژمێری.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>ئەم ئەپە ناسینا دەنگی بکار تینێت دا بتوانی ئایەتێن قورئانێ ب دەنگ بژمێری</string>
+	<string>ئەڤ ئەپە ناسینا دەنگی بکار دئینیت، دا کو تو بشێی زکرێن خۆ ب ڕێیا دەنگی بژمێری.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>UthmanicHafs1Ver18.ttf</string>
