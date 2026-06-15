@@ -883,10 +883,7 @@
       horizSVG +
       '<div class="sky-top-row">' +
         '<div class="sky-city">' + (getCityLabel(city)) + '</div>' +
-        '<div class="sky-top-right">' +
-          '<div class="sky-sync" id="skySyncTime" style="display:none"><i class="fas fa-rotate" id="skySyncIcon"></i><span id="skySyncText"></span></div>' +
-          '<button class="sky-bell' + (getAthan() ? ' sky-bell--on' : '') + '" id="skyBell" onclick="(function(){window.PrayerUI&&document.getElementById(\'prayerSettingsOverlay\')&&document.getElementById(\'prayerSettingsOverlay\').classList.add(\'open\')})()"><i class="fas fa-' + (getAthan() ? 'bell' : 'bell-slash') + '"></i></button>' +
-        '</div>' +
+        '<button class="sky-bell' + (getAthan() ? ' sky-bell--on' : '') + '" id="skyBell" onclick="(function(){window.PrayerUI&&document.getElementById(\'prayerSettingsOverlay\')&&document.getElementById(\'prayerSettingsOverlay\').classList.add(\'open\')})()"><i class="fas fa-' + (getAthan() ? 'bell' : 'bell-slash') + '"></i></button>' +
       '</div>' +
       '<div class="sky-bottom-row">' +
         '<div class="sky-next-name" id="skyNextName"></div>' +
@@ -2411,7 +2408,6 @@
         // Network failed but we have existing data — keep panel visible
         // Ensure countdown is running
         if (_currentTimings && !_countdownInterval) startCountdown();
-        _setSyncPill('');
       } else {
         // No data at all — show error with retry
         buildError(container);
@@ -2467,20 +2463,6 @@
     // Silently use cached data — no badge shown
   }
 
-  function _setSyncPill(timeStr) {
-    var wrap = document.getElementById('skySyncTime');
-    if (!wrap) return;
-    if (timeStr === null) { wrap.style.display = 'none'; return; }
-    wrap.style.display = '';
-    var icon = document.getElementById('skySyncIcon');
-    var text = document.getElementById('skySyncText');
-    if (icon) {
-      if (!timeStr) { icon.classList.add('sky-sync--spin'); }
-      else { icon.classList.remove('sky-sync--spin'); }
-    }
-    if (text) text.textContent = timeStr || '';
-  }
-
   function buildPanel(container, data, city, today) {
     _cdEls = null;
     _gridCards = null;
@@ -2505,38 +2487,9 @@
       clearEl(container);
       buildSkyScene(container, data, city, today);
     } else {
-      // City unchanged — update only the date/sync indicator inside existing scene
-      if (data._fromCache) {
-        var lastSync2 = localStorage.getItem('prayerLastSynced');
-        if (lastSync2) {
-          var diffMs2 = Date.now() - parseInt(lastSync2, 10);
-          var diffH2  = Math.floor(diffMs2 / 3600000);
-          var diffM2  = Math.floor(diffMs2 / 60000);
-          _setSyncPill(diffH2 >= 1 ? (diffH2 + 'h') : (diffM2 >= 1 ? (diffM2 + 'm') : ''));
-        } else {
-          _setSyncPill('');
-        }
-      } else {
-        _setSyncPill(null);
-      }
       // Remove old prayer grid so it gets rebuilt below
       var oldGrid = container.querySelector('.prayer-grid');
       if (oldGrid) oldGrid.remove();
-    }
-
-    // Populate last-synced indicator (first build path)
-    if (!existingScene || existingScene.dataset.city !== city) {
-      if (data._fromCache) {
-        var lastSync = localStorage.getItem('prayerLastSynced');
-        if (lastSync) {
-          var diffMs = Date.now() - parseInt(lastSync, 10);
-          var diffH  = Math.floor(diffMs / 3600000);
-          var diffM  = Math.floor(diffMs / 60000);
-          _setSyncPill(diffH >= 1 ? (diffH + 'h') : (diffM >= 1 ? (diffM + 'm') : ''));
-        } else {
-          _setSyncPill('');
-        }
-      }
     }
 
     // ── 2-column prayer grid ──
