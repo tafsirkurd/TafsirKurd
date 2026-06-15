@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Dhikr — Text Coverage</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0d1520;color:#cde;padding:24px;font-size:14px}
+h1{text-align:center;color:#7ab4ff;margin-bottom:6px;font-size:1.1rem}
+.subtitle{text-align:center;color:#556;font-size:.75rem;margin-bottom:24px}
+h2{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#445;margin:28px 0 10px;border-top:1px solid #1a2535;padding-top:16px}
+table{width:100%;border-collapse:collapse;margin-bottom:8px}
+th{font-size:.65rem;color:#445;text-align:right;padding:4px 8px;background:#0a1018;position:sticky;top:0}
+td{padding:7px 8px;border-bottom:1px solid #141e2a;vertical-align:top}
+tr:hover td{background:#111d2a}
+.id{font-size:.65rem;color:#334;font-family:monospace}
+.tag{display:inline-block;background:rgba(255,200,80,.18);color:#ffc850;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:999px}
+.tag.none{background:rgba(120,120,120,.15);color:#556}
+.label{color:#e8d9b8;font-size:.9rem}
+.source{color:#7a9ab0;font-size:.75rem}
+.ar{color:#aaa;font-size:.78rem;line-height:1.5;direction:rtl;max-width:320px}
+.ok{color:#4caf84;font-size:.7rem;font-weight:700}
+.warn{color:#f4a261;font-size:.7rem;font-weight:700}
+.info{color:#7ab4ff;font-size:.7rem}
+.sub-row{font-size:.72rem;color:#7a9ab0;padding:2px 8px 6px;border-bottom:1px solid #141e2a}
+.sub-row span{color:#a0c4d8;font-weight:600}
+</style>
+</head>
+<body>
+<h1>Smart Dhikr — Card Text Coverage</h1>
+<p class="subtitle">
+  ✅ = hardcoded in JS (shows instantly) &nbsp;|&nbsp;
+  ⚠️ = comes from Supabase/i18n (may be blank before load)
+</p>
+
+<script>
+var ITEMS = {
+  'TIME_ITEMS': [
+    { id:'masjid_enter', timeTag:'مزگەفت', tagStatus:'ok',
+      label:'چونا مزگەوت', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:3, source:'مسلم', sourceStatus:'ok',
+      ar:'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ' },
+    { id:'after_prayer', timeTag:'پشتی نڤێژێ', tagStatus:'ok',
+      label:'دوای نوێژ', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:33, source:'البخاري ومسلم', sourceStatus:'ok',
+      ar:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' },
+    { id:'morning', timeTag:'سپێدە', tagStatus:'ok',
+      label:'زکرێ سپێدێ', labelStatus:'ok', labelNote:'confirmed correct',
+      repeat:3, source:'أبو داود', sourceStatus:'ok',
+      ar:'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا' },
+    { id:'waking', timeTag:'سپێدە', tagStatus:'ok',
+      label:'دوای هاتنا خوو', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:1, source:'البخاري', sourceStatus:'ok',
+      ar:'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا' },
+    { id:'sunrise', timeTag:'ئیشراق', tagStatus:'ok',
+      label:'نوێژا ئیشراق', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:null, source:null, sourceStatus:'ok',
+      ar:null },
+    { id:'evening', timeTag:'ئێڤار', tagStatus:'ok',
+      label:'زکرێن ئێواربوون', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:3, source:'أبو داود والترمذي', sourceStatus:'ok',
+      ar:'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا' },
+    { id:'sleep', timeTag:'شەڤ', tagStatus:'ok',
+      label:'بەرى نڤستنێ', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:3, source:'البخاري ومسلم', sourceStatus:'ok',
+      ar:'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا' },
+    { id:'friday', timeTag:'ئەینی', tagStatus:'ok',
+      label:'ڕۆژا ئینانێ', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:1, source:'أبو داود', sourceStatus:'ok',
+      ar:null },
+    { id:'salawat', timeTag:null, tagStatus:'none',
+      label:'صەڵەوات', labelStatus:'warn', labelNote:'labelFallback — verify vs Supabase',
+      repeat:10, source:'مسلم', sourceStatus:'ok',
+      ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ' }
+  ],
+  'FALLBACK_ZIKR': [
+    { id:'forgiveness', timeTag:null, tagStatus:'none', label:'داواکاری لێبوردن', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'البخاري ومسلم', sourceStatus:'ok', ar:'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ' },
+    { id:'protection', timeTag:null, tagStatus:'none', label:'پاراستن', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'أبو داود والترمذي', sourceStatus:'ok', ar:'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ' },
+    { id:'gratitude', timeTag:null, tagStatus:'none', label:'سوپاسگوزاری', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'ابن ماجه', sourceStatus:'ok', ar:'الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ' },
+    { id:'before_quran', timeTag:null, tagStatus:'none', label:'بەری خوێندنا قورئانێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ' },
+    { id:'distress', timeTag:null, tagStatus:'none', label:'پەریشانی', labelStatus:'warn', labelNote:'labelFallback', repeat:3, source:'الترمذي', sourceStatus:'ok', ar:'لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ' },
+    { id:'istikhara', timeTag:null, tagStatus:'none', label:'دوعای ئیستیخارە', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ وَأَسْتَقْدِرُكَ بِقُدْرَتِكَ' },
+    { id:'adhan', timeTag:null, tagStatus:'none', label:'دوای ئەزان', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ' }
+  ],
+  'SEASONAL_ITEMS': [
+    { id:'fasting', timeTag:'ڕەمەزان', tagStatus:'ok', label:'نیەتا ڕۆژوو', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود', sourceStatus:'ok', ar:'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ' },
+    { id:'breaking_fast', timeTag:'فتارە', tagStatus:'ok', label:'کاتا ئیفتارێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود والترمذي', sourceStatus:'ok', ar:'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ' },
+    { id:'lailat_qadr', timeTag:'شەڤا قەدرێ', tagStatus:'ok', label:'شەوا قەدرێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'الترمذي', sourceStatus:'ok', ar:'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي' },
+    { id:'dhul_hijjah', timeTag:'ذوالحیجە', tagStatus:'ok', label:'دەیا ذولحیجەیێ', labelStatus:'warn', labelNote:'labelFallback', repeat:100, source:'البخاري', sourceStatus:'ok', ar:'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ' },
+    { id:'arafat', timeTag:'عەرەفە', tagStatus:'ok', label:'دوعای عەرەفاتێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'مالك والترمذي', sourceStatus:'ok', ar:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' }
+  ],
+  'WEATHER_ITEMS': [
+    { id:'rain', timeTag:'باران', tagStatus:'ok', label:'باران', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'البخاري', sourceStatus:'ok', ar:'اللَّهُمَّ صَيِّبًا نَافِعًا' },
+    { id:'thunder', timeTag:'هەوا', tagStatus:'ok', label:'کاتا برووسکێ', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'الموطأ', sourceStatus:'ok', ar:'سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ' },
+    { id:'wind', timeTag:'هەوا', tagStatus:'ok', label:'کاتا هەوایی', labelStatus:'warn', labelNote:'labelFallback', repeat:1, source:'أبو داود', sourceStatus:'ok', ar:'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا وَخَيْرَ مَا فِيهَا' }
+  ]
+};
+
+Object.keys(ITEMS).forEach(function(pool) {
+  var h2 = document.createElement('h2');
+  h2.textContent = pool;
+  document.body.appendChild(h2);
+
+  var table = document.createElement('table');
+  table.innerHTML = '<tr>'
+    + '<th>id</th><th>تاگ (sd-tag)</th><th>تێکست (sd-sub)</th><th>چاوکانی</th><th>عەرەبی</th>'
+    + '</tr>';
+
+  ITEMS[pool].forEach(function(item) {
+    var subParts = [item.label];
+    if (item.repeat > 1) subParts.push('× ' + item.repeat);
+    if (item.source) subParts.push(item.source);
+    var subText = subParts.join('  ·  ');
+
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td class="id">' + item.id + '</td>'
+      + '<td>' + (item.timeTag
+          ? '<span class="tag">' + item.timeTag + '</span> <span class="ok">✅</span>'
+          : '<span class="tag none">بێ تاگ</span>') + '</td>'
+      + '<td>'
+        + '<div class="label">' + subText + '</div>'
+        + '<div style="font-size:.65rem;margin-top:3px">'
+          + (item.labelStatus==='ok'
+              ? '<span class="ok">✅ هاردکۆد</span>'
+              : '<span class="warn">⚠️ ' + item.labelNote + '</span>')
+        + '</div>'
+      + '</td>'
+      + '<td><span class="' + item.sourceStatus + '">' + (item.sourceStatus==='ok'?'✅':'⚠️') + '</span></td>'
+      + '<td class="ar">' + (item.ar || '—') + '</td>';
+    table.appendChild(tr);
+  });
+
+  document.body.appendChild(table);
+});
+</script>
+</body>
+</html>
