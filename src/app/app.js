@@ -3749,7 +3749,7 @@ function renderContinue(){
   var deco=_cdec;
   card.appendChild(deco);
   var info=el('div','continue-info');
-  info.appendChild(el('div','continue-label',t('reader.continue')));
+  info.appendChild(el('div','continue-label','بەردەوامی د خواندنێدا'));
   info.appendChild(el('div','continue-title',s.en+' - '+s.ar));
   info.appendChild(el('div','continue-sub',t('reader.ayah')+' '+last.ayah));
   card.appendChild(info);
@@ -10456,7 +10456,7 @@ function renderSettings(){
     profile.appendChild(avatarEl);
     // Info block
     var pInfo=el('div','profile-info');
-    pInfo.appendChild(el('div','profile-name',S.user.name||t('profile.guest')));
+    pInfo.appendChild(el('div','profile-name',S.user.name||'بکارهێنەر'));
     pInfo.appendChild(el('div','profile-email',S.user.email||''));
     var syncBadge=el('div','profile-sync');
     syncBadge.appendChild(icon('fas fa-cloud-upload-alt'));
@@ -10475,8 +10475,8 @@ function renderSettings(){
     guestAv.appendChild(icon('fas fa-user'));
     profile.appendChild(guestAv);
     var pInfo2=el('div','profile-info');
-    pInfo2.appendChild(el('div','profile-name',t('profile.guest')));
-    pInfo2.appendChild(el('div','profile-email',t('profile.login_prompt')));
+    pInfo2.appendChild(el('div','profile-name','بکارهێنەر'));
+    pInfo2.appendChild(el('div','profile-email','ژبۆ هەلگرتنا داتایان، چووناژوور ئەنجام بده'));
     profile.appendChild(pInfo2);
     var loginBtn=el('button','profile-login-btn',t('profile.login'));
     on(loginBtn,'click',function(){App.openLogin()});
@@ -10514,12 +10514,12 @@ function renderSettings(){
 
   // ── Appearance ───────────────────────────────
   var g1=el('div','settings-group');
-  g1.appendChild(el('div','settings-group-title',t('settings.appearance')));
+  g1.appendChild(el('div','settings-group-title','شێواز'));
   var themes=[
-    {id:'noor',  name:t('settings.theme_noor')||'نوور',       sub:'Parchment',bg:'#f4e8cc',surface:'#fdf4e3', accent:'#1a5c3a'},
-    {id:'sakina',name:t('settings.theme_sakina')||'سکینە',   sub:'Emerald', bg:'#0c1c12', surface:'#112318', accent:'#c9a84c'},
-    {id:'light', name:t('settings.theme_light')||'ڕووناک',    sub:'Light',   bg:'#fafafa', surface:'#ffffff', accent:'#000000'},
-    {id:'dark',  name:t('settings.theme_dark')||'تاریکی',    sub:'Dark',    bg:'#0a0a0a', surface:'#161616', accent:'#ffffff'},
+    {id:'noor',  name:'نوور',    sub:'Parchment',bg:'#f4e8cc',surface:'#fdf4e3', accent:'#1a5c3a'},
+    {id:'sakina',name:'کەسك',   sub:'Emerald', bg:'#0c1c12', surface:'#112318', accent:'#c9a84c'},
+    {id:'light', name:'ڕوون',   sub:'Light',   bg:'#fafafa', surface:'#ffffff', accent:'#000000'},
+    {id:'dark',  name:'تاری',   sub:'Dark',    bg:'#0a0a0a', surface:'#161616', accent:'#ffffff'},
   ];
   var tGrid=el('div','theme-grid');
   themes.forEach(function(th){
@@ -10554,38 +10554,38 @@ function renderSettings(){
 
   // ── Reading ──────────────────────────────────
   var g2=el('div','settings-group');
-  g2.appendChild(el('div','settings-group-title',t('settings.reading')));
-  g2.appendChild(mkToggleRow(t('settings.show_tafsir'),S.showTafsir,function(){
+  g2.appendChild(el('div','settings-group-title','خواندن'));
+  g2.appendChild(mkToggleRow('نیشادانا تەفسیرێ',S.showTafsir,function(){
     S.showTafsir=!S.showTafsir;
     localStorage.setItem('showTafsir',String(S.showTafsir));
     applyShowTafsir();renderSettings();
   }));
-  g2.appendChild(mkToggleRow(t('settings.auto_advance'),S.autoAdvance,function(){
+  g2.appendChild(mkToggleRow('چوونا ئۆتۆماتیکی بۆ سورەتا دویڤدا',S.autoAdvance,function(){
     S.autoAdvance=!S.autoAdvance;
     localStorage.setItem('autoAdvance',String(S.autoAdvance));
     renderSettings();
-  },t('settings.auto_advance_sub')));
-  g2.appendChild(mkToggleRow(t('settings.scroll_follows'),S.scrollFollowsAudio,function(){
+  },'دەمێ دەنگێ سوورەتەکێ ب دوماهی دهێت'));
+  g2.appendChild(mkToggleRow('گوهدان و دیتنا قورئانێ د هەمان دەمدا.',S.scrollFollowsAudio,function(){
     S.scrollFollowsAudio=!S.scrollFollowsAudio;
     localStorage.setItem('scrollFollowsAudio',String(S.scrollFollowsAudio));
     renderSettings();
-  },t('settings.scroll_follows_sub')));
-  g2.appendChild(mkToggleRow(t('qs.screen_lock'),S.keepAwake,function(){
+  },'ئەرێ تە دڤێت دەمێ گوهدانا قورئانێ، نڤیسین ئوتوماتیک بچیتە ئایەتا دویڤدا؟ ئەڤێ هەلبژێرە.'));
+  g2.appendChild(mkToggleRow('دەمێ خواندنا قورئانێ، شاشە ڤەنامریت',S.keepAwake,function(){
     S.keepAwake=!S.keepAwake;
     localStorage.setItem('keepAwake',String(S.keepAwake));
     applyKeepAwake();renderSettings();
   }));
-  g2.appendChild(mkToggleRow(t('settings.bg_audio'),S.bgAudio,function(){
+  g2.appendChild(mkToggleRow('دەمێ دەرکەفتنێ، دەنگێ قورئانێ دمینیت.',S.bgAudio,function(){
     S.bgAudio=!S.bgAudio;
     localStorage.setItem('bgAudio',String(S.bgAudio));
     renderSettings();
   }));
-  var _hapticRow=mkToggleRow(t('settings.haptic'),S.hapticFeedback,function(){
+  var _hapticRow=mkToggleRow('لەرزینا دەستی',S.hapticFeedback,function(){
     S.hapticFeedback=!S.hapticFeedback;
     localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
     H.success();
     renderSettings();
-  },t('settings.haptic_sub'));
+  },'لەرزین دگەل هەر هەلبژارتنەکێ');
   var _hapticSupported=!!(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics)||!!navigator.vibrate;
   if(!_hapticSupported){
     var _hapticNote=el('div','setting-sub');
@@ -10600,10 +10600,10 @@ function renderSettings(){
 
   // ── Data & Sync ──────────────────────────────
   var g4=el('div','settings-group');
-  g4.appendChild(el('div','settings-group-title',t('settings.data')));
+  g4.appendChild(el('div','settings-group-title','داتا'));
   // Downloads manager
   var _dlRow=el('div','setting-row s-row');_dlRow.style.cursor='pointer';
-  var _dlRowL=el('div','setting-label-wrap');_dlRowL.appendChild(el('div','setting-label',t('dl.manage')||'دابەزاندن'));
+  var _dlRowL=el('div','setting-label-wrap');_dlRowL.appendChild(el('div','setting-label','دابەزاندن'));
   _dlRow.appendChild(_dlRowL);
   var _dlRowChev=icon('fas fa-chevron-left');_dlRowChev.style.cssText='color:var(--text-tertiary);font-size:.8rem;flex-shrink:0';
   _dlRow.appendChild(_dlRowChev);
@@ -10659,17 +10659,17 @@ function renderSettings(){
   // App notifications toggle (new video, new book — NOT prayer)
   var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
   g4.appendChild(mkToggleRow(
-    _appNotifOn ? (t('settings.app_notif_off')||'چاڵاككرنا بیرئینانان') : (t('settings.app_notif_on')||'نەچاڵاككرنا بیرئینانان'),
+    _appNotifOn ? 'چاڵاككرنا بیرئینانان' : 'نەچاڵاككرنا بیرئینانان',
     _appNotifOn,
     function(){
       _appNotifOn=!_appNotifOn;
       localStorage.setItem('appNotifEnabled',String(_appNotifOn));
       renderSettings();
     },
-    t('settings.app_notif_sub')||'ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)'
+    'ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)'
   ));
   // Export bookmarks
-  g4.appendChild(mkBtnRow(t('settings.export_bookmarks'),'','fas fa-download',function(){
+  g4.appendChild(mkBtnRow('هەلگرتنا ئایەتان','','fas fa-download',function(){
     var bms2=getBookmarks();
     if(!bms2.length){toast(t('toast.no_bookmarks'));return;}
     var json=JSON.stringify(bms2,null,2);
@@ -10679,7 +10679,7 @@ function renderSettings(){
     a.href=url2;a.download='tafsirkurd-bookmarks.json';
     document.body.appendChild(a);a.click();
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url2)},500);
-  },false,t('settings.export_bookmarks_sub')||'ئەو ئایەتێن تە هەلبژارتین بهەلگری'));
+  },false,'ئەو ئایەتێن تە هەلبژارتین بهەلگری'));
   // Import bookmarks
   g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'بینینا ئایەتێن هەلگرتی','','fas fa-upload',function(){
     var inp=document.createElement('input');
@@ -10709,8 +10709,8 @@ function renderSettings(){
     inp.click();
   },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
   // Reset settings to defaults
-  g4.appendChild(mkBtnRow(t('settings.reset_defaults')||'زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
-    _tkConfirm({icon:'↩️',title:t('settings.reset_defaults_confirm')||'تۆ پشتڕاستی ژ زڤڕاندنا ڕێکخستنان بۆ بارێ دەستپێکێ؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
+  g4.appendChild(mkBtnRow('زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
+    _tkConfirm({icon:'↩️',title:'تۆ پشتڕاستی ژ زڤڕاندنا ڕێکخستنان بۆ بارێ دەستپێکێ؟',yes:'بەلێ',no:'نەخێر',onYes:function(){
       var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
       _sk.forEach(function(k){localStorage.removeItem(k);});
       S.showTafsir=true;S.bgAudio=false;S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;S.hapticFeedback=true;
@@ -10722,8 +10722,8 @@ function renderSettings(){
     }});
   },false));
   // Reset reading progress
-  g4.appendChild(mkBtnRow(t('settings.reset_progress'),'','fas fa-broom',function(){
-    _tkConfirm({icon:'🧹',title:t('settings.reset_confirm')||'پێشکەوتنا خواندنێ سڕینەوە؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',danger:true,onYes:function(){
+  g4.appendChild(mkBtnRow('ژێبرنا پێشکەفتنا خواندنێ','','fas fa-broom',function(){
+    _tkConfirm({icon:'🧹',title:'تۆ پشتڕاستی؟ هەمی تۆمارێن خواندنێ دێ هێنە ژێبرن.',yes:'بەلێ',no:'نەخێر',danger:true,onYes:function(){
       _clearTrackingState();
       for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
       debouncedSync();
@@ -10736,8 +10736,8 @@ function renderSettings(){
   // inside the fetchers), so the reader never blanks and there is no null window.
   // Success toast fires only when both reloads actually succeeded; on failure the
   // fetchers show their own error toast and the old data remains usable.
-  g4.appendChild(mkBtnRow(t('settings.clear_cache'),'','fas fa-trash',function(){
-    _tkConfirm({icon:'🗑️',title:t('settings.clear_confirm')||'کاشێکرنەکان پاک بکرن؟',yes:t('common.yes')||'بەلێ',no:t('profile.confirm_no')||'نەخێر',onYes:function(){
+  g4.appendChild(mkBtnRow('ژێبرنا داتایێن ب شێوەیەکێ دەمکی هاتینە هەلگرتن','','fas fa-trash',function(){
+    _tkConfirm({icon:'🗑️',title:'تۆ پشتڕاستی؟ بابەتێن هەلگرتی دێ هێنە ژێبرن',yes:'بەلێ',no:'نەخێر',onYes:function(){
       window._tkQuranPreload=undefined; // never hand back the stale preload object
       _idbDel(_QURAN_IDB_KEY);
       _idbDel(_TAFSIR_IDB_KEY);
@@ -10768,9 +10768,9 @@ function renderSettings(){
   // Hidden from normal users by default. Contains performance override and future
   // ── App ──────────────────────────────────────
   var g5=el('div','settings-group');
-  g5.appendChild(el('div','settings-group-title',t('settings.app_group')));
+  g5.appendChild(el('div','settings-group-title','ئەپ'));
   // (4) Share app
-  g5.appendChild(mkBtnRow(t('settings.share_app'),'','fas fa-share-nodes',function(){
+  g5.appendChild(mkBtnRow('بەڵاڤکرنا ئەپی','','fas fa-share-nodes',function(){
     var url3='https://tafsirkurd.com';
     if(navigator.share){
       navigator.share({title:'Tafsir Kurd',text:t('settings.about_desc'),url:url3}).catch(function(){});
@@ -10784,9 +10784,9 @@ function renderSettings(){
   var _rateIconBox=el('div','rate-app-icon');
   _rateIconBox.appendChild(icon('fas fa-star'));
   var _rateText=el('div','rate-app-text');
-  _rateText.appendChild(el('div','rate-app-label',t('settings.rate_app')));
+  _rateText.appendChild(el('div','rate-app-label','هەڵسەنگاندنا ئەپی'));
   var _ratePlat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
-  var _rateSub=_ratePlat==='ios'?'لەسەر App Store هەڵسەنگاندن بکە':t('settings.rate_sub');
+  var _rateSub=_ratePlat==='ios'?'لەسەر App Store هەڵسەنگاندن بکە':'لسەر Google Play هەڵسەنگاندنێ بکە';
   _rateText.appendChild(el('div','rate-app-sub',_rateSub));
   _rateLeft.appendChild(_rateIconBox);_rateLeft.appendChild(_rateText);
   _rateRow.appendChild(_rateLeft);
@@ -10807,7 +10807,7 @@ function renderSettings(){
 
   // ── About Us ─────────────────────────────────
   var g6=el('div','settings-group');
-  g6.appendChild(el('div','settings-group-title',t('settings.about')));
+  g6.appendChild(el('div','settings-group-title','دەربارەی مە'));
 
   function mkAboutNavRow(iconClassOrImg,label,sub,onClick){
     var row=el('div','about-nav-row s-row');
@@ -10841,7 +10841,7 @@ function renderSettings(){
   else{_founderEl=icon('fas fa-user');}
   g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژەی',function(){openAboutSheet('app');}));
   g6.appendChild(mkAboutNavRow(_founderEl,'سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
-  g6.appendChild(mkAboutNavRow('fas fa-heart','سوپاسنامە',_ft('thanks_nav_sub','بۆ هەر کەسێک یارمەتیدا'),function(){openAboutSheet('thanks');}));
+  g6.appendChild(mkAboutNavRow('fas fa-heart','سوپاسنامە','بۆ هەر کەسەکێ هاریکاری پێشکێشکری',function(){openAboutSheet('thanks');}));
   // ── Social Links (inside ئەپ group) ──
   var g7=g5;
   var socialCard=el('div','settings-social-card');
@@ -10898,7 +10898,7 @@ function renderSettings(){
       if(info&&info.version)verEl.textContent='v'+info.version;
     }).catch(function(){});
   }
-  about.appendChild(el('div','about-desc',t('settings.about_desc')));
+  about.appendChild(el('div','about-desc','تێگەهشتنا ئیسلامێ ب زمانەکێ سادە'));
   frag.appendChild(about);
   clear(content); content.appendChild(frag);
 }

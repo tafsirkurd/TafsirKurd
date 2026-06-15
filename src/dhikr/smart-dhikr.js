@@ -1594,7 +1594,7 @@
 
     /* header row — RTL flex: title on right, countdown chip on left */
     var hdr = _mk('div', 'sd-hdr');
-    hdr.appendChild(_mk('span', 'sd-hdr-label', T('gencine.smart.section_title', 'یادکرینا ڕۆژانە')));
+    hdr.appendChild(_mk('span', 'sd-hdr-label', 'بیرئینانا ڕۆژانە'));
     hdr.appendChild(_buildCountdown());
     section.appendChild(hdr);
 

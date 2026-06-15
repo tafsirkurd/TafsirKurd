@@ -335,7 +335,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel" id="panelIslamvoice" data-tab="islamvoice">
   <div id="ivHome" class="iv-home">
     <div class="hdr">
-      <div class="hdr-title"><span data-i18n="header.islamvoice" data-t="android_span_5">ئیسلام ڤۆیس</span></div>
+      <div class="hdr-title"><span data-t="android_span_5">دەنگێ ئیسلامێ</span></div>
       <div style="display:flex;gap:2px">
         <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user"></i></button>
         <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو" data-i18n-title="iv.history_title"><i class="fas fa-clock-rotate-left"></i></button>
@@ -394,7 +394,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 
 <!-- TAB: SETTINGS -->
 <section class="panel" id="panelSettings" data-tab="settings">
-  <div class="hdr"><div class="hdr-title"><span data-i18n="header.settings" data-t="android_span_6">ڕێکخستن</span></div></div>
+  <div class="hdr"><div class="hdr-title"><span data-t="android_span_6">ڕێکخستن</span></div></div>
   <div class="settings-content" id="settingsContent"></div>
 </section>
 
@@ -402,7 +402,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel" id="panelGencine" data-tab="gencine">
   <div class="hdr">
     <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title" id="gencineHdrTitle" style="transform:translateX(-1px)"><span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
+    <div class="hdr-title" id="gencineHdrTitle" style="transform:translateX(-1px)"><span>گەنجینەیا ئیسلامێ</span></div>
     <div id="booksHdrBtns" style="display:none;gap:2px">
       <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
       <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
@@ -430,7 +430,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <!-- TAB: PRAYER TIMES -->
 <section class="panel" id="panelPrayer" data-tab="prayer">
   <div class="hdr">
-    <div class="hdr-title"><span data-i18n="header.prayer">کاتا نوێژ</span></div>
+    <div class="hdr-title"><span>دەمێن بانگی</span></div>
     <div style="display:flex;gap:4px">
       <button class="hdr-btn" id="hdrPrayerBtn" onclick="App.openPrayerProgress()" title="Prayer Progress" aria-label="Prayer Progress"><i class="fas fa-chart-line"></i><span class="hdr-badge" id="prayerBadge"></span></button>
       <button class="hdr-btn" onclick="QiblaUI.open()" title="Qibla"><i class="fas fa-location-arrow"></i></button>
@@ -608,11 +608,11 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   </div>
 </div>
 <nav class="tabbar" role="tablist" aria-label="Navigation tabs">
-  <button class="tab-item on" data-tab="quran" ontouchstart="App.tab('quran')" onclick="App.tab('quran')" role="tab" aria-selected="true" aria-controls="panelQuran"><i class="fas fa-book" aria-hidden="true"></i><span data-i18n="tabs.quran" data-t="android_span_12">قورئان</span></button>
-  <button class="tab-item" data-tab="islamvoice" ontouchstart="App.tab('islamvoice')" onclick="App.tab('islamvoice')" role="tab" aria-selected="false" aria-controls="panelIslamvoice"><i class="fas fa-video" aria-hidden="true"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
-  <button class="tab-item" data-tab="gencine" ontouchstart="App.tab('gencine')" onclick="App.tab('gencine')" role="tab" aria-selected="false" aria-controls="panelGencine"><i class="fas fa-gem" aria-hidden="true"></i><span data-i18n="tabs.gencine">گەنجینە</span></button>
-  <button class="tab-item" data-tab="prayer" ontouchstart="App.tab('prayer')" onclick="App.tab('prayer')" role="tab" aria-selected="false" aria-controls="panelPrayer"><i class="fas fa-mosque" aria-hidden="true"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
-  <button class="tab-item" data-tab="settings" ontouchstart="App.tab('settings')" onclick="App.tab('settings')" role="tab" aria-selected="false" aria-controls="panelSettings"><i class="fas fa-cog" aria-hidden="true"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
+  <button class="tab-item on" data-tab="quran" ontouchstart="App.tab('quran')" onclick="App.tab('quran')" role="tab" aria-selected="true" aria-controls="panelQuran"><i class="fas fa-book" aria-hidden="true"></i><span data-t="android_span_12">قورئان</span></button>
+  <button class="tab-item" data-tab="islamvoice" ontouchstart="App.tab('islamvoice')" onclick="App.tab('islamvoice')" role="tab" aria-selected="false" aria-controls="panelIslamvoice"><i class="fas fa-video" aria-hidden="true"></i><span data-t="android_span_13">ڤیدیۆ</span></button>
+  <button class="tab-item" data-tab="gencine" ontouchstart="App.tab('gencine')" onclick="App.tab('gencine')" role="tab" aria-selected="false" aria-controls="panelGencine"><i class="fas fa-gem" aria-hidden="true"></i><span>گەنجینە</span></button>
+  <button class="tab-item" data-tab="prayer" ontouchstart="App.tab('prayer')" onclick="App.tab('prayer')" role="tab" aria-selected="false" aria-controls="panelPrayer"><i class="fas fa-mosque" aria-hidden="true"></i><span>نڤێژ</span></button>
+  <button class="tab-item" data-tab="settings" ontouchstart="App.tab('settings')" onclick="App.tab('settings')" role="tab" aria-selected="false" aria-controls="panelSettings"><i class="fas fa-cog" aria-hidden="true"></i><span data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
 
 <!-- COPY MODAL -->
