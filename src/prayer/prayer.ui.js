@@ -2912,7 +2912,7 @@
     // ── Bottom actions ────────────────────────────────
     var actions = cel('div', 'as2-actions');
     var saveBtn = cel('button', 'as2-save-btn');
-    saveBtn.textContent = tStr('prayer.save_settings') || 'پاراستنی ڕێکخستنەکان';
+    saveBtn.textContent = 'تۆمارکرنا ڕێکخستنان';
     saveBtn.onclick = function() {
       var today2 = window.PrayerLogic.todayBaghdad();
       fetchDaysData(getCity(), today2, 28).then(function(daysData) {
@@ -2930,7 +2930,7 @@
     };
     actions.appendChild(saveBtn);
     var resetBtn = cel('button', 'as2-reset-btn');
-    resetBtn.textContent = tStr('prayer.reset_settings') || 'گەڕانەوە بۆ پێشووەکەی';
+    resetBtn.textContent = 'ڤەگەڕیان بۆ تومارا پێشتر';
     resetBtn.onclick = function() {
       var allOn = {};
       window.PrayerLogic.NOTIF_PRAYERS.forEach(function(n) { allOn[n] = true; });
@@ -3096,14 +3096,14 @@
     // ── Prayer Reminder ───────────────────────────────────────────
     var remEnabled = getReminderEnabled();
     var remOffset  = getReminderOffset();
-    container.appendChild(secTitle(tStr('prayer.reminder_label') || 'بیرخستنەوە', ' as2-dimable' + (isOn ? '' : ' as2-dim')));
+    container.appendChild(secTitle('بیرئینان', ' as2-dimable' + (isOn ? '' : ' as2-dim')));
 
     var remCard = cel('div', 'as2-reminder-card as2-dimable' + (isOn ? '' : ' as2-dim'));
 
     var remTop  = cel('div', 'as2-reminder-top');
     var remLeft = cel('div', 'as2-reminder-left');
     var remTitle = cel('div', 'as2-reminder-title');
-    remTitle.textContent = tStr('prayer.reminder_title') || 'پێش نوێژ بیرت بخاتەوە';
+    remTitle.textContent = 'بەری نڤێژێ بیرا من بینە';
     remLeft.appendChild(remTitle);
     var remTog = cel('div', 'toggle toggle--sm' + (remEnabled ? ' on' : ''));
     remTog.appendChild(cel('div', 'toggle-knob'));
@@ -3113,7 +3113,7 @@
 
     var offsetRow = cel('div', 'as2-reminder-offset' + (remEnabled ? '' : ' as2-hidden'));
     var offsetLabel = cel('div', 'as2-reminder-offset-label');
-    offsetLabel.textContent = tStr('prayer.reminder_offset_label') || 'خولەک پێش نوێژ';
+    offsetLabel.textContent = 'خولەک بەری نڤێژێ';
     var offsetChips = cel('div', 'as2-offset-chips');
     [5, 10, 15, 20, 30, 45, 60].forEach(function(min) {
       var chip = cel('button', 'as2-offset-chip' + (remOffset === min ? ' active' : ''));
@@ -3142,7 +3142,7 @@
     container.appendChild(remCard);
 
     // ── Reciter ───────────────────────────────────────────────────
-    container.appendChild(secTitle(tStr('prayer.voice_label'), ' as2-dimable' + (isOn ? '' : ' as2-dim')));
+    container.appendChild(secTitle('دەنگێ بانگی', ' as2-dimable' + (isOn ? '' : ' as2-dim')));
     var reciterWrap = cel('div', 'as2-dimable' + (isOn ? '' : ' as2-dim'));
     buildVoicePicker(reciterWrap, city);
     container.appendChild(reciterWrap);
@@ -3323,7 +3323,7 @@
       }
 
       var nameEl = cel('div', 'as2-reciter-name');
-      nameEl.textContent = (voice.nameKey && tStr(voice.nameKey)) || (voice.nameAr || '').split(' ')[0];
+      nameEl.textContent = voice.nameKu || (voice.nameKey && tStr(voice.nameKey)) || (voice.nameAr || '').split(' ')[0];
       card.appendChild(nameEl);
 
       if (!isSimple) {

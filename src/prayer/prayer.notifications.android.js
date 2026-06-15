@@ -38,7 +38,7 @@
   /** Available athan voices — id must match res/raw/athan_{id}.mp3 (Android) and athan_{id}.m4a (iOS).
    *  Special id 'simple' = no athan audio, OS default notification sound only. */
   var ATHAN_VOICES = [
-    { id: 'simple',   nameAr: '',                      nameKey: 'prayer.voice_simple',  previewUrl: null                      },
+    { id: 'simple',   nameAr: '', nameKu: 'ئاگەهدارییا سادە', nameKey: 'prayer.voice_simple',  previewUrl: null                      },
     { id: 'nasser',   nameAr: 'ناصر القطامي',         nameKey: 'prayer.voice_nasser',  previewUrl: '/audio/athan_nasser.mp3'  },
     { id: 'mishary',  nameAr: 'مشاری راشد العفاسی', nameKey: 'prayer.voice_mishary', previewUrl: '/audio/athan_mishary.mp3' },
     { id: 'omar',     nameAr: 'عمر هشام العربي',      nameKey: 'prayer.voice_omar',    previewUrl: '/audio/athan_omar.mp3'    },
