@@ -476,14 +476,21 @@ function _onConnRecovery() {
   clearTimeout(_connDebounceTimer);
   _connDebounceTimer = setTimeout(_triggerBgRefresh, 1500);
 }
+function _stopVoiceIfActive() {
+  if (window.GencineUI && window.GencineUI._voiceActive) window.GencineUI._stopVoice();
+}
 function _registerConnListeners() {
   if (_connListenersAdded) return;
   _connListenersAdded = true;
   window.addEventListener('online', _onConnRecovery);
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) _stopVoiceIfActive();
+  });
   try {
     if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
       Capacitor.Plugins.App.addListener('appStateChange', function(state) {
         if (state.isActive) _onConnRecovery();
+        else _stopVoiceIfActive();
       });
     }
   } catch(e) {}
