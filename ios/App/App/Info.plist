@@ -74,9 +74,9 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ئەڤ ئەپە جهێ تە بەکار دئینیت، دا کو ئاراستەیا قیبلێ و دەمێن نڤێژان دیار بکەت.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>ئەڤ ئەپە پێویستی ب ڕێپێدانا مایکرۆفۆنی هەیە، دا کو تو بشێی زکرێن خۆ ب ڕێیا دەنگی بژمێری.</string>
+	<string>ئەڤ ئەپلیكەیشنە (دەنگی) بكار دئینیت، دا كو تۆ بشێی زكرێن خۆ ب ڕێكا دەنگی بهژمێری.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>ئەڤ ئەپە ناسینا دەنگی بکار دئینیت، دا کو تو بشێی زکرێن خۆ ب ڕێیا دەنگی بژمێری.</string>
+	<string>ئەڤ ئەپلیكەیشنە پێدڤی ب ڕێپێدانا مایكرۆفۆنی هەیە، دا كو تۆ بشێی زكرێن خۆ ب ڕێكا دەنگی بهژمێری.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>UthmanicHafs1Ver18.ttf</string>
