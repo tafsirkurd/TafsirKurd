@@ -90,13 +90,13 @@
   }
   var CITY_LABEL = CITY_LABEL_FB;
 
-  var PRAYER_I18N = {
-    Fajr:    'prayer.fajr',
-    Sunrise: 'prayer.sunrise',
-    Dhuhr:   'prayer.dhuhr',
-    Asr:     'prayer.asr',
-    Maghrib: 'prayer.maghrib',
-    Isha:    'prayer.isha'
+  var PRAYER_NAMES = {
+    Fajr:    'سپێدە',
+    Sunrise: 'ڕوژهەلات',
+    Dhuhr:   'نیڤرۆ',
+    Asr:     'ئێڤار',
+    Maghrib: 'مەغرەب',
+    Isha:    'عەیشا'
   };
 
   function tStr(key, replacements) {
@@ -1513,10 +1513,10 @@
       if (_tomorrowTimings && _tomorrowDateISO) {
         var fajrAt = pl.parseAsDate(_tomorrowTimings.Fajr, _tomorrowDateISO);
         cd2   = pl.formatCountdown(fajrAt - now);
-        name2 = tStr('prayer.fajr') + ' — ' + tStr('prayer.tomorrow');
+        name2 = 'سپێدە — ' + (tStr('prayer.tomorrow') || 'سبەیکو');
       } else {
         cd2   = '--:--:--';
-        name2 = tStr('prayer.fajr');
+        name2 = 'سپێدە';
         fetchTomorrow();
       }
       if (skyCd)   skyCd.textContent   = cd2;
@@ -2554,7 +2554,7 @@
       var pgcContent = cel('div', 'pgc-content');
 
       var nameEl = cel('div', 'prayer-grid-name');
-      nameEl.textContent = tStr(PRAYER_I18N[name] || name);
+      nameEl.textContent = PRAYER_NAMES[name] || name;
       pgcContent.appendChild(nameEl);
 
       var timeEl = cel('div', 'prayer-grid-time');
@@ -3100,7 +3100,7 @@
 
       var info = cel('div', 'as2-prayer-info');
       var nameEl = cel('div', 'as2-prayer-name');
-      nameEl.textContent = tStr(PRAYER_I18N[name] || name);
+      nameEl.textContent = PRAYER_NAMES[name] || name;
       var timeEl = cel('div', 'as2-prayer-time');
       timeEl.textContent = timeDisplay;
       info.appendChild(nameEl);

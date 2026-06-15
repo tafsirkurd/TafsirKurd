@@ -28,16 +28,11 @@
   var MAX_DAYS_IOS_BOTH  = 6;  // shared budget when athan + prayer-reminders both active
 
   // Kurdish prayer name fallbacks (used in notification body)
-  var PRAYER_KMR_FB = {
-    Fajr: 'بەیانی', Dhuhr: 'نیڤرو', Asr: 'ئێوارە', Maghrib: 'ئاوابوون', Isha: 'عیشا'
-  };
-  var PRAYER_KMR_KEY = {
-    Fajr: 'prayer.fajr', Dhuhr: 'prayer.dhuhr', Asr: 'prayer.asr',
-    Maghrib: 'prayer.maghrib', Isha: 'prayer.isha'
+  var PRAYER_KMR_NAMES = {
+    Fajr: 'سپێدە', Dhuhr: 'نیڤرۆ', Asr: 'ئێڤار', Maghrib: 'مەغرەب', Isha: 'عەیشا'
   };
   function prayerName(name) {
-    var key = PRAYER_KMR_KEY[name];
-    return (window.t && key && window.t(key)) || PRAYER_KMR_FB[name] || name;
+    return PRAYER_KMR_NAMES[name] || name;
   }
 
   /** Available athan voices — id must match res/raw/athan_{id}.mp3 (Android) and athan_{id}.m4a (iOS).
