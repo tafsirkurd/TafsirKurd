@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Dhikr — Card Preview</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #0f1923; color: #fff; padding: 20px; }
+h1 { text-align: center; font-size: 1rem; color: #aaa; margin-bottom: 20px; letter-spacing: .05em; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.card { background: #1a2533; border-radius: 14px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
+.icon { width: 40px; height: 40px; border-radius: 10px; background: #243040; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
+.content { flex: 1; min-width: 0; }
+.tag-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.tag { background: rgba(255,200,80,.18); color: #ffc850; font-size: .65rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.tag.none { background: rgba(160,160,160,.15); color: #888; }
+.pool { background: rgba(100,160,255,.15); color: #7ab4ff; font-size: .6rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+.ar { font-size: .95rem; line-height: 1.6; color: #e8d9b8; margin-bottom: 6px; direction: rtl; }
+.sub { font-size: .72rem; color: #7a9ab0; }
+.sub b { color: #a0c4d8; }
+.hint { font-size: .67rem; color: #556; font-style: italic; margin-top: 4px; }
+hr { border: none; border-top: 1px solid #1e2d3d; margin: 24px 0 10px; }
+h2 { font-size: .75rem; color: #556; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<h1>Smart Dhikr — Card Preview (all pools)</h1>
+
+<h2>TIME_ITEMS</h2>
+<div class="grid" id="time"></div>
+<hr>
+<h2>FALLBACK_ZIKR</h2>
+<div class="grid" id="fallback"></div>
+<hr>
+<h2>SEASONAL_ITEMS</h2>
+<div class="grid" id="seasonal"></div>
+<hr>
+<h2>WEATHER_ITEMS</h2>
+<div class="grid" id="weather"></div>
+
+<script>
+var ICONS = {
+  'fas fa-mosque':'🕌','fas fa-hands-praying':'🤲','fas fa-sun':'☀️',
+  'fas fa-cloud-sun':'🌤️','fas fa-moon':'🌙','fas fa-bed':'🛏️',
+  'fas fa-calendar-day':'📅','fas fa-star-and-crescent':'☪️',
+  'fas fa-dove':'🕊️','fas fa-shield-halved':'🛡️','fas fa-star':'⭐',
+  'fas fa-book-open-reader':'📖','fas fa-hand-holding-heart':'🫶',
+  'fas fa-compass':'🧭','fas fa-bullhorn':'📢','fas fa-kaaba':'🕋',
+  'fas fa-cloud-rain':'🌧️','fas fa-bolt':'⚡','fas fa-wind':'💨'
+};
+
+var TIME_ITEMS = [
+  { id:'masjid_enter', icon:'fas fa-mosque', timeTag:'مزگەفت', labelFallback:'چونا مزگەوت', fallbackRepeat:3, fallbackSource:'مسلم', fallbackAr:'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ' },
+  { id:'after_prayer', icon:'fas fa-hands-praying', timeTag:'پشتی نڤێژێ', labelFallback:'دوای نوێژ', fallbackRepeat:33, fallbackSource:'البخاري ومسلم', fallbackAr:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' },
+  { id:'morning', icon:'fas fa-sun', timeTag:'سپێدە', labelFallback:'زکرێ سپێدێ', fallbackRepeat:3, fallbackSource:'أبو داود', fallbackAr:'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا' },
+  { id:'waking', icon:'fas fa-cloud-sun', timeTag:'سپێدە', labelFallback:'دوای هاتنا خوو', fallbackRepeat:1, fallbackSource:'البخاري', fallbackAr:'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا' },
+  { id:'sunrise', icon:'fas fa-sun', timeTag:'ئیشراق', labelFallback:'نوێژا ئیشراق', fallbackSource:null, fallbackAr:null },
+  { id:'evening', icon:'fas fa-moon', timeTag:'ئێڤار', labelFallback:'زکرێن ئێواربوون', fallbackRepeat:3, fallbackSource:'أبو داود والترمذي', fallbackAr:'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا' },
+  { id:'sleep', icon:'fas fa-bed', timeTag:'شەڤ', labelFallback:'بەرى نڤستنێ', fallbackRepeat:3, fallbackSource:'البخاري ومسلم', fallbackAr:'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا' },
+  { id:'friday', icon:'fas fa-calendar-day', timeTag:'ئەینی', labelFallback:'ڕۆژا ئینانێ', fallbackRepeat:1, fallbackSource:'أبو داود', fallbackAr:null },
+  { id:'salawat', icon:'fas fa-star-and-crescent', timeTag:null, labelFallback:'صەڵەوات', fallbackRepeat:10, fallbackSource:'مسلم', fallbackAr:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ' }
+];
+
+var FALLBACK_ZIKR = [
+  { id:'forgiveness', icon:'fas fa-dove', timeTag:null, labelFallback:'داواکاری لێبوردن', fallbackRepeat:3, fallbackSource:'البخاري ومسلم', fallbackAr:'أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ' },
+  { id:'protection', icon:'fas fa-shield-halved', timeTag:null, labelFallback:'پاراستن', fallbackRepeat:3, fallbackSource:'أبو داود والترمذي', fallbackAr:'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ' },
+  { id:'gratitude', icon:'fas fa-star', timeTag:null, labelFallback:'سوپاسگوزاری', fallbackRepeat:3, fallbackSource:'ابن ماجه', fallbackAr:'الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ' },
+  { id:'before_quran', icon:'fas fa-book-open-reader', timeTag:null, labelFallback:'بەری خوێندنا قورئانێ', fallbackRepeat:1, fallbackSource:'البخاري', fallbackAr:'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ' },
+  { id:'distress', icon:'fas fa-hand-holding-heart', timeTag:null, labelFallback:'پەریشانی', fallbackRepeat:3, fallbackSource:'الترمذي', fallbackAr:'لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ' },
+  { id:'istikhara', icon:'fas fa-compass', timeTag:null, labelFallback:'دوعای ئیستیخارە', fallbackRepeat:1, fallbackSource:'البخاري', fallbackAr:'اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ' },
+  { id:'adhan', icon:'fas fa-bullhorn', timeTag:null, labelFallback:'دوای ئەزان', fallbackRepeat:1, fallbackSource:'البخاري', fallbackAr:'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ' }
+];
+
+var SEASONAL_ITEMS = [
+  { id:'fasting', icon:'fas fa-moon', timeTag:'ڕەمەزان', labelFallback:'نیەتا ڕۆژوو', fallbackRepeat:1, fallbackSource:'أبو داود', fallbackAr:'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ' },
+  { id:'breaking_fast', icon:'fas fa-utensils', timeTag:'فتارە', labelFallback:'کاتا ئیفتارێ', fallbackRepeat:1, fallbackSource:'أبو داود والترمذي', fallbackAr:'اللَّهُمَّ إِنِّي لَكَ صُمْتُ وَبِكَ آمَنْتُ' },
+  { id:'lailat_qadr', icon:'fas fa-star', timeTag:'شەڤا قەدرێ', labelFallback:'شەوا قەدرێ', fallbackRepeat:1, fallbackSource:'الترمذي', fallbackAr:'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي' },
+  { id:'dhul_hijjah', icon:'fas fa-kaaba', timeTag:'ذوالحیجە', labelFallback:'دەیا ذولحیجەیێ', fallbackRepeat:100, fallbackSource:'البخاري', fallbackAr:'سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ' },
+  { id:'arafat', icon:'fas fa-kaaba', timeTag:'عەرەفە', labelFallback:'دوعای عەرەفاتێ', fallbackRepeat:1, fallbackSource:'مالك والترمذي', fallbackAr:'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ' }
+];
+
+var WEATHER_ITEMS = [
+  { id:'rain', icon:'fas fa-cloud-rain', timeTag:'باران', labelFallback:'باران', fallbackRepeat:1, fallbackSource:'البخاري', fallbackAr:'اللَّهُمَّ صَيِّبًا نَافِعًا' },
+  { id:'thunder', icon:'fas fa-bolt', timeTag:'هەوا', labelFallback:'کاتا برووسکێ', fallbackRepeat:1, fallbackSource:'الموطأ', fallbackAr:'سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ' },
+  { id:'wind', icon:'fas fa-wind', timeTag:'هەوا', labelFallback:'کاتا هەوایی', fallbackRepeat:1, fallbackSource:'أبو داود', fallbackAr:'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا' }
+];
+
+function buildCard(item) {
+  var rep = item.fallbackRepeat > 1 ? ' · × ' + item.fallbackRepeat : '';
+  var src = item.fallbackSource ? ' · ' + item.fallbackSource : '';
+  var sub = item.labelFallback + rep + src;
+  var tagHtml = item.timeTag
+    ? '<span class="tag">' + item.timeTag + '</span>'
+    : '<span class="tag none">بێ تاگ</span>';
+  var arHtml = item.fallbackAr ? '<div class="ar">' + item.fallbackAr + '</div>' : '';
+  return '<div class="card">'
+    + '<div class="icon">' + (ICONS[item.icon] || '📿') + '</div>'
+    + '<div class="content">'
+    + '<div class="tag-row">' + tagHtml + '</div>'
+    + arHtml
+    + '<div class="sub"><b>' + item.labelFallback + '</b>' + (item.fallbackRepeat > 1 ? ' · × ' + item.fallbackRepeat : '') + (item.fallbackSource ? ' · ' + item.fallbackSource : '') + '</div>'
+    + '</div></div>';
+}
+
+function renderPool(id, items) {
+  document.getElementById(id).innerHTML = items.map(buildCard).join('');
+}
+
+renderPool('time', TIME_ITEMS);
+renderPool('fallback', FALLBACK_ZIKR);
+renderPool('seasonal', SEASONAL_ITEMS);
+renderPool('weather', WEATHER_ITEMS);
+</script>
+</body>
+</html>

@@ -1004,7 +1004,12 @@
     TIME_ITEMS.forEach(_push);
     FALLBACK_ZIKR.forEach(_push);
     SEASONAL_ITEMS.forEach(_push);
-    WEATHER_ITEMS.forEach(_push);
+    WEATHER_ITEMS.forEach(function(item) {
+      if (!seen[item.id]) {
+        seen[item.id] = true;
+        items.push({ _type: 'adhkar', _adhkarItem: item });
+      }
+    });
 
     items.push(_buildAyahItem());
     items.push(_buildHadithItem());
