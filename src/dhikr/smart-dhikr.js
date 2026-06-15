@@ -43,11 +43,11 @@
 
     {
       id: 'morning', categoryKey: 'morning', icon: 'fas fa-sun',
-      labelKey: 'adhkar.morning', labelFallback: 'زکرێن بەیانیکردن',
+      labelKey: 'adhkar.morning', labelFallback: 'زکرێ سپێدێ',
       subtitleKey: 'gencine.smart.morning_hint', subtitleFallback: 'ڕۆژا خوه ب زکرێ دەستپێکە',
       fallbackAr: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا',
       fallbackRepeat: 3,
-      fallbackSource: 'أبو داود والترمذي',
+      fallbackSource: 'أبو داود',
       timeTag: 'سپێدە', basePriority: 50,
       timeWindow: { start: 'Fajr', end: 'Dhuhr', fs: 5*60, fe: 11*60+30, wraps: false }
     },
