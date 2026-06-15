@@ -2855,7 +2855,7 @@
     closeBtn.onclick = closeSettings;
     var hdrInner = cel('div', 'as2-hdr-inner');
     var hdrTitle = cel('div', 'as2-hdr-title');
-    hdrTitle.textContent = tStr('prayer.settings_title');
+    hdrTitle.textContent = 'ڕێکخستنێن نڤێژێ';
     var hdrSub = cel('div', 'as2-hdr-sub');
     hdrSub.textContent = getCityLabel(getCity());
     hdrSub.id = 'as2HdrCitySub';
@@ -2871,7 +2871,7 @@
 
     // City
     var cityLabel = cel('div', 'as2-sec-title');
-    cityLabel.textContent = tStr('prayer.city_label');
+    cityLabel.textContent = 'باژێر';
     body.appendChild(cityLabel);
     var cityScroll = cel('div', 'as2-city-scroll');
     cityScroll.id = 'prayerCityGrid';
@@ -2889,14 +2889,14 @@
 
     // Format
     var fmtLabel = cel('div', 'as2-sec-title');
-    fmtLabel.textContent = tStr('prayer.format_label');
+    fmtLabel.textContent = 'شێوازێ دەمی';
     body.appendChild(fmtLabel);
     var seg = cel('div', 'as2-seg');
     var fmt = getFormat();
     ['12', '24'].forEach(function(f) {
       var btn = cel('button', 'as2-seg-btn' + (f === fmt ? ' on' : ''));
       btn.dataset.fmt = f;
-      btn.textContent = f === '24' ? tStr('prayer.format_24h','24h') : tStr('prayer.format_12h','12h');
+      btn.textContent = f === '24' ? '٢٤ دەمژمێر' : '١٢ دەمژمێر';
       btn.onclick = function() { onFormatChange(f); };
       seg.appendChild(btn);
     });
@@ -3016,16 +3016,16 @@
     }
 
     // ── Master notification card ──────────────────────────────────
-    container.appendChild(secTitle(tStr('prayer.athan_section')));
+    container.appendChild(secTitle('ئاگەهدارییا بانگی'));
 
     var masterCard = cel('div', 'as2-master-card' + (isOn ? ' as2-master-card--on' : ''));
     masterCard.id = 'prayerMasterCard';
 
     var masterLeft = cel('div', 'as2-master-left');
     var masterTitle = cel('div', 'as2-master-title');
-    masterTitle.textContent = tStr('prayer.enable_athan');
+    masterTitle.textContent = 'چاڵاككرنا بانگی';
     var masterDesc = cel('div', 'as2-master-desc');
-    masterDesc.textContent = isOn ? tStr('prayer.athan_on_hint') : tStr('prayer.athan_section');
+    masterDesc.textContent = isOn ? 'بانگ چالاکە' : 'ئاگەهدارییا بانگی';
     masterLeft.appendChild(masterTitle);
     masterLeft.appendChild(masterDesc);
 
@@ -3036,7 +3036,7 @@
       var newVal = !masterTog.classList.contains('on');
       masterTog.classList.toggle('on', newVal);
       masterCard.classList.toggle('as2-master-card--on', newVal);
-      masterDesc.textContent = newVal ? tStr('prayer.athan_on_hint') : tStr('prayer.athan_section');
+      masterDesc.textContent = newVal ? 'بانگ چالاکە' : 'ئاگەهدارییا بانگی';
       setDim(newVal);
       onAthanMasterToggle(newVal, timings, city, dateISO);
     });
@@ -3045,7 +3045,7 @@
     container.appendChild(masterCard);
 
     // ── Prayer list ───────────────────────────────────────────────
-    container.appendChild(secTitle(tStr('prayer.prayers_label') || 'نمازەکان', ' as2-dimable' + (isOn ? '' : ' as2-dim')));
+    container.appendChild(secTitle('نڤێژ', ' as2-dimable' + (isOn ? '' : ' as2-dim')));
 
     var prayerWrap = cel('div', 'as2-prayer-wrap as2-dimable' + (isOn ? '' : ' as2-dim'));
     prayerWrap.id = 'prayerPrayersGrid';
