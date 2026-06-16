@@ -5,7 +5,7 @@ const CACHE_NAME = 'tafsir-kurd-v1191';
 // Mismatches cause cache misses — browser fetches from network instead of SW cache.
 const PRECACHE = [
   // Core app shell — index.html intentionally excluded: always served fresh from APK
-  '/app/app.min.js?v=1188',
+  '/app/app.min.js?v=1190',
   '/app/app-styles.min.css?v=3',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
