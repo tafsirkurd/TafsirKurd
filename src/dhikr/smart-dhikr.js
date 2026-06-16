@@ -119,7 +119,7 @@
     /* ── Ramadan ── */
     {
       id: 'fasting', categoryKey: 'fasting', icon: 'fas fa-moon',
-      labelKey: 'adhkar.fasting', labelFallback: 'نیەتا ڕۆژیێ',
+      labelKey: 'adhkar.fasting', labelFallback: 'ئنیەتا ڕۆژیێ',
       subtitleKey: 'gencine.smart.fasting_hint', subtitleFallback: 'ڕۆژیبوونا تە خودێ قەبیل بکەت',
       fallbackAr: 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ',
       fallbackRepeat: 1,
