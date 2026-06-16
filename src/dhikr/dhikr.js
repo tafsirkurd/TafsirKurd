@@ -518,9 +518,15 @@ function _initDbData(onDone) {
   if (_fullBndl) {
     if (!cachedCats    && _fullBndl.cats)     cachedCats    = _fullBndl.cats;
     if (!cachedDuas    && _fullBndl.duas)     cachedDuas    = _fullBndl.duas;
-    if (!cachedHadiths && _fullBndl.hadiths)  cachedHadiths = _fullBndl.hadiths;
+    if (!cachedHadiths && _fullBndl.hadiths) {
+      cachedHadiths = _fullBndl.hadiths;
+      _writeCache('gencine_hadiths_v2', cachedHadiths); /* persist so smart-dhikr reads on first install */
+    }
     if (!_dbSections   && _fullBndl.sections) _dbSections   = _fullBndl.sections;
-    if (!_dbBooks      && _fullBndl.books)    _dbBooks      = _fullBndl.books;
+    if (!_dbBooks      && _fullBndl.books) {
+      _dbBooks = _fullBndl.books;
+      _writeCache('gencine_books_v4', _dbBooks); /* persist so smart-dhikr reads on first install */
+    }
     if (!_dbTasbih     && _fullBndl.tasbih)   _dbTasbih     = _fullBndl.tasbih;
     if (!_dbAdhkar     && _fullBndl.adhkar)   _dbAdhkar     = _fullBndl.adhkar;
   } else {

@@ -14,7 +14,7 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260602b',
   '/prayer/prayer.ui.js?v=20260607',
   // Gencine / books module (lazily loaded but pre-cached for offline)
-  '/dhikr/dhikr.js?v=20260612a',
+  '/dhikr/dhikr.js?v=20260616a',
   '/dhikr/pdf-store.js?v=20260612a',
   '/dhikr/dua-data.js?v=20260326b',
   '/dhikr/smart-dhikr.js?v=61',
