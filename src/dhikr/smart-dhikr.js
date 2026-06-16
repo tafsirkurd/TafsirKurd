@@ -149,6 +149,7 @@
       fallbackRepeat: 1,
       fallbackSource: 'الترمذي',
       timeTag: 'دوعایێن شەڤا قەدرێ',
+      hero: true,
       hijriCond: function(h, nowMin, fajrMin, maghribMin) {
         if (h.month !== 9) return false;
         var isNight = nowMin >= maghribMin || nowMin < fajrMin;
@@ -176,7 +177,117 @@
       fallbackRepeat: 1,
       fallbackSource: 'مالك والترمذي',
       timeTag: 'ڕۆژا عەرەفێ',
+      hero: true,
       hijriCond: function() { return _getDhulHijjahDay() === 9; }
+    },
+
+    /* ── Tashreeq days (Dhul Hijjah 11-13 — takbeer days) ── */
+    {
+      id: 'tashreeq', categoryKey: 'tashreeq', icon: 'fas fa-kaaba',
+      labelKey: 'adhkar.tashreeq', labelFallback: 'ڕۆژێن تەشریقێ',
+      subtitleKey: 'gencine.smart.tashreeq_hint', subtitleFallback: 'ڕۆژێن تەکبیر و شادی',
+      fallbackAr: 'اللَّهُ أَكْبَرُ اللَّهُ أَكْبَرُ لَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ اللَّهُ أَكْبَرُ وَلِلَّهِ الْحَمْدُ',
+      fallbackRepeat: 1, fallbackSource: 'البخاري',
+      timeTag: 'تەشریق',
+      hijriCond: function() { var d = _getDhulHijjahDay(); return d >= 11 && d <= 13; }
+    },
+
+    /* ── Muharram: Islamic New Year (days 1-3) ── */
+    {
+      id: 'muharram_new_year', categoryKey: 'muharram', icon: 'fas fa-star-and-crescent',
+      labelKey: 'adhkar.muharram', labelFallback: 'سەرسالا ئیسلامی',
+      subtitleKey: 'gencine.smart.muharram_hint', subtitleFallback: 'مانگێ پیرۆز',
+      fallbackAr: 'اللَّهُمَّ أَدْخِلْهُ عَلَيْنَا بِالْأَمْنِ وَالْإِيمَانِ وَالسَّلَامَةِ وَالْإِسْلَامِ',
+      fallbackRepeat: 1, fallbackSource: 'الطبراني',
+      timeTag: 'مانگا موحەررەمێ',
+      hijriCond: function(h) { return h.month === 1 && h.day <= 3; }
+    },
+
+    /* ── Ashura (Muharram 9-10 — sunnah fast) ── */
+    {
+      id: 'ashura', categoryKey: 'ashura', icon: 'fas fa-sun',
+      labelKey: 'adhkar.ashura', labelFallback: 'ڕۆژا عاشووراء',
+      subtitleKey: 'gencine.smart.ashura_hint', subtitleFallback: 'ڕوژیگرتنا عاشووراء',
+      fallbackAr: 'صِيَامُ يَوْمِ عَاشُورَاءَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ',
+      fallbackRepeat: 1, fallbackSource: 'مسلم',
+      timeTag: 'عاشووراء', hero: true,
+      hijriCond: function(h, nowMin, fajrMin) {
+        return h.month === 1 && (h.day === 9 || h.day === 10) && nowMin >= fajrMin;
+      }
+    },
+
+    /* ── Rajab: 1st + 27th (Isra wa Miraj) ── */
+    {
+      id: 'rajab', categoryKey: 'rajab', icon: 'fas fa-moon',
+      labelKey: 'adhkar.rajab', labelFallback: 'مانگا ڕەجەبێ',
+      subtitleKey: 'gencine.smart.rajab_hint', subtitleFallback: 'ڕۆژا ئیسرا و معراجێ',
+      fallbackAr: 'اللَّهُمَّ بَارِكْ لَنَا فِي رَجَبٍ وَشَعْبَانَ وَبَلِّغْنَا رَمَضَانَ',
+      fallbackRepeat: 1, fallbackSource: 'الطبراني',
+      timeTag: 'ڕەجەب',
+      hijriCond: function(h) { return h.month === 7 && (h.day === 1 || h.day === 27); }
+    },
+
+    /* ── Sha'ban: middle night (after Maghrib of 14th Sha'ban) ── */
+    {
+      id: 'shaban_night', categoryKey: 'shaban', icon: 'fas fa-moon',
+      labelKey: 'adhkar.shaban_night', labelFallback: 'شەوا نیوا شەعبانێ',
+      subtitleKey: 'gencine.smart.shaban_hint', subtitleFallback: 'شەوا تایبەتمەند',
+      fallbackAr: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ كَرِيمٌ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
+      fallbackRepeat: 1, fallbackSource: 'ابن ماجه',
+      timeTag: 'شەعبان',
+      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
+        return h.month === 8 && h.day === 14 && nowMin >= maghribMin;
+      }
+    },
+
+    /* ── White Days (Hijri 13-15 each month — sunnah fast, excluding Ramadan/Eid/Tashreeq) ── */
+    {
+      id: 'white_days', categoryKey: 'white_days', icon: 'fas fa-circle-dot',
+      labelKey: 'adhkar.white_days', labelFallback: 'ڕۆژێن سپی',
+      subtitleKey: 'gencine.smart.white_days_hint', subtitleFallback: 'سوننەتا ڕوژیگرتنێ',
+      fallbackAr: 'صَوْمُ ثَلَاثَةِ أَيَّامٍ مِنْ كُلِّ شَهْرٍ صَوْمُ الدَّهْرِ كُلِّهِ',
+      fallbackRepeat: 1, fallbackSource: 'البخاري ومسلم',
+      timeTag: 'ڕۆژێن سپی',
+      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
+        if (h.month === 9) return false; /* Ramadan has its own fasting card */
+        if (h.month === 10 && h.day === 1) return false; /* Eid al-Fitr */
+        if (h.month === 12 && h.day >= 10 && h.day <= 13) return false; /* Eid al-Adha + Tashreeq */
+        return (h.day === 13 || h.day === 14 || h.day === 15) && nowMin >= fajrMin && nowMin < maghribMin;
+      }
+    },
+
+    /* ── Monday sunnah fast ── */
+    {
+      id: 'monday_fast', categoryKey: 'monday_fast', icon: 'fas fa-calendar-check',
+      labelKey: 'adhkar.monday_fast', labelFallback: 'ڕوژیگرتنا دووشەمێ',
+      subtitleKey: 'gencine.smart.monday_fast_hint', subtitleFallback: 'سوننەتا دووشەمبێ',
+      fallbackAr: 'ذَاكَ يَوْمٌ وُلِدْتُ فِيهِ وَيَوْمٌ بُعِثْتُ أَوْ أُنْزِلَ عَلَيَّ فِيهِ',
+      fallbackRepeat: 1, fallbackSource: 'مسلم',
+      timeTag: 'دووشەم',
+      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
+        if (_baghdadDate().getUTCDay() !== 1) return false;
+        if (h.month === 9) return false;
+        if (h.month === 10 && h.day === 1) return false;
+        if (h.month === 12 && h.day >= 10 && h.day <= 13) return false;
+        return nowMin >= fajrMin && nowMin < maghribMin;
+      }
+    },
+
+    /* ── Thursday sunnah fast ── */
+    {
+      id: 'thursday_fast', categoryKey: 'thursday_fast', icon: 'fas fa-calendar-check',
+      labelKey: 'adhkar.thursday_fast', labelFallback: 'ڕوژیگرتنا پێنجشەمێ',
+      subtitleKey: 'gencine.smart.thursday_fast_hint', subtitleFallback: 'سوننەتا پێنجشەمبێ',
+      fallbackAr: 'تُعْرَضُ الْأَعْمَالُ يَوْمَ الِاثْنَيْنِ وَالْخَمِيسِ فَأُحِبُّ أَنْ يُعْرَضَ عَمَلِي وَأَنَا صَائِمٌ',
+      fallbackRepeat: 1, fallbackSource: 'الترمذي',
+      timeTag: 'پێنجشەم',
+      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
+        if (_baghdadDate().getUTCDay() !== 4) return false;
+        if (h.month === 9) return false;
+        if (h.month === 10 && h.day === 1) return false;
+        if (h.month === 12 && h.day >= 10 && h.day <= 13) return false;
+        return nowMin >= fajrMin && nowMin < maghribMin;
+      }
     }
   ];
 
@@ -765,9 +876,9 @@
        yield to fallback — user already read it, no point repeating it
        just because they opened the app again within the same window.      */
     var winner = active.length ? active[0].item : null;
-    var winnerExhausted = winner
-      && winner.prayerOffset !== undefined
-      && state.completed.indexOf(winner.id) >= 0;
+    /* Any completed winner yields to fallback — score system already penalises by -60,
+       but if all active items are completed the top-scorer is still completed; use fallback. */
+    var winnerExhausted = winner && state.completed.indexOf(winner.id) >= 0;
 
     /* ── Debug log ── */
     try {
@@ -804,18 +915,13 @@
   function _getWeatherItem() {
     _fetchRain(); /* background refresh — never blocks rendering */
     var condition = _getWeatherCondition();
+    if (condition === 'clear') return null; /* clear sky — don't waste a slide */
 
     /* Map condition → preferred WEATHER_ITEMS index */
     var preferred;
-    if (condition === 'thunder') preferred = WEATHER_ITEMS[1];  /* thunder */
-    else if (condition === 'rain') preferred = WEATHER_ITEMS[0]; /* rain    */
-    else if (condition === 'wind') preferred = WEATHER_ITEMS[2]; /* wind    */
-    else {
-      /* clear sky — rotate thunder/wind by daily seed (salt 6) */
-      var fallbacks = [WEATHER_ITEMS[1], WEATHER_ITEMS[2]];
-      var start = _seededIdx(fallbacks.length, 6);
-      preferred = fallbacks[start];
-    }
+    if (condition === 'thunder') preferred = WEATHER_ITEMS[1];
+    else if (condition === 'rain') preferred = WEATHER_ITEMS[0];
+    else preferred = WEATHER_ITEMS[2]; /* wind / snow */
 
     /* Use preferred if it has data */
     if (_catHasData(preferred.categoryKey)) return preferred;
@@ -976,7 +1082,9 @@
 
     return SEASONAL_ITEMS
       .filter(function(item) {
-        return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin, fajrMin);
+        /* items with fallbackAr always have content — bypass DB data gate */
+        var catOk = item.fallbackAr ? true : _catHasData(item.categoryKey);
+        return catOk && _isTimeActive(item, nowMin, dow, prayers, maghribMin, fajrMin);
       })
       .map(function(item) { return { _type: 'adhkar', _adhkarItem: item }; });
   }
@@ -992,15 +1100,21 @@
   ───────────────────────────────────────────── */
   function getItemsNow() {
     var items = [];
+    var seasonal = _getSeasonalItems();
+
+    /* Hero seasonal items first — most important Islamic occasion before daily zikr */
+    seasonal.filter(function(s) { return s._adhkarItem.hero; })
+      .forEach(function(s) { items.push(s); });
 
     /* Card 1: one time-active zikr (or daily-seeded fallback) */
     var zikrItem = _getZikrItem();
     if (zikrItem) items.push({ _type: 'adhkar', _adhkarItem: zikrItem });
 
-    /* Seasonal slides — only currently active ones */
-    _getSeasonalItems().forEach(function(s) { items.push(s); });
+    /* Remaining seasonal slides (non-hero) */
+    seasonal.filter(function(s) { return !s._adhkarItem.hero; })
+      .forEach(function(s) { items.push(s); });
 
-    /* Weather slide — only when condition matches a category with data */
+    /* Weather slide — only when raining / thunder / wind */
     var weatherItem = _getWeatherItem();
     if (weatherItem) items.push({ _type: 'adhkar', _adhkarItem: weatherItem });
 
