@@ -4471,16 +4471,14 @@ function renderMushafView(){
         _hdrTimer=setTimeout(function(){
           if(S.surah!==capturedSurah)return;
           var banners=view.querySelectorAll('.mushaf-surah-banner[data-surah]');
-          var viewRect=view.getBoundingClientRect();
-          var best=null,bestTop=Infinity;
+          if(!banners.length)return;
+          var scrollTop=view.scrollTop;
+          var best=null,bestTop=-1;
           for(var b=0;b<banners.length;b++){
-            var br=banners[b].getBoundingClientRect();
-            var dist=Math.abs(br.top-viewRect.top);
-            if(br.bottom>viewRect.top&&br.top<viewRect.bottom&&dist<bestTop){
-              bestTop=dist;best=banners[b];
-            }
+            var bTop=banners[b].offsetTop;
+            if(bTop<=scrollTop+80&&bTop>bestTop){bestTop=bTop;best=banners[b];}
           }
-          if(!best)return;
+          if(!best)best=banners[0];
           var sn=parseInt(best.dataset.surah);
           var ns=SURAHS[sn-1];
           if(ns&&$('readerName'))$('readerName').textContent=ns.en+' - '+ns.ar;
@@ -5633,7 +5631,7 @@ function updateMushafProgress(view){
     return parseInt(best.dataset.surah)||_currentSurah;
   }
 
-  // ── Update visible label + all-Quran bar ─────────────────────────────────
+  // ── Update visible label + surah header ──────────────────────────────────
   function updateHeader(){
     if(destroyed)return;
     var dispS=_currentSurah||sessionSurah;
@@ -5642,16 +5640,17 @@ function updateMushafProgress(view){
     var seen=_getSeen(dispS);
     var count=Math.min(seen.size,total);
 
+    // Header surah name — switches as user scrolls across surah boundaries
+    if(sData){var nm=$('readerName');if(nm)nm.textContent=sData.en+' - '+sData.ar;}
+
     // Ayah label = per-surah progress
     var lbl=$('readerAyahLabel');
     if(lbl)lbl.textContent=count+'/'+total+' '+t('reader.ayah');
 
-    // Bar + % = positional all-Quran progress (cumulative ayahs up to current surah)
-    var cumul=0;
-    for(var ci=1;ci<=dispS;ci++){var cs=SURAHS[ci-1];if(cs)cumul+=cs.a;}
-    var allPct=_totalQ>0?Math.min(100,Math.round(cumul/_totalQ*100)):0;
-    var fill=$('readerProgressFill');if(fill)fill.style.width=allPct+'%';
-    var pctEl=$('readerPct');if(pctEl)pctEl.textContent=allPct+'%';
+    // Bar + % = per-surah progress (resets to 0% on each new surah)
+    var pct=total>0?Math.min(100,Math.round(count/total*100)):0;
+    var fill=$('readerProgressFill');if(fill)fill.style.width=pct+'%';
+    var pctEl=$('readerPct');if(pctEl)pctEl.textContent=pct+'%';
 
     // Update lastRead
     var max=0;seen.forEach(function(n){if(n>max)max=n;});
