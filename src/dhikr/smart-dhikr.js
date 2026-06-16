@@ -991,26 +991,20 @@
        last. Book of the day
   ───────────────────────────────────────────── */
   function getItemsNow() {
-    var seen  = {};
     var items = [];
 
-    function _push(item) {
-      if (!seen[item.id] && _catHasData(item.categoryKey)) {
-        seen[item.id] = true;
-        items.push({ _type: 'adhkar', _adhkarItem: item });
-      }
-    }
+    /* Card 1: one time-active zikr (or daily-seeded fallback) */
+    var zikrItem = _getZikrItem();
+    if (zikrItem) items.push({ _type: 'adhkar', _adhkarItem: zikrItem });
 
-    TIME_ITEMS.forEach(_push);
-    FALLBACK_ZIKR.forEach(_push);
-    SEASONAL_ITEMS.forEach(_push);
-    WEATHER_ITEMS.forEach(function(item) {
-      if (!seen[item.id]) {
-        seen[item.id] = true;
-        items.push({ _type: 'adhkar', _adhkarItem: item });
-      }
-    });
+    /* Seasonal slides — only currently active ones */
+    _getSeasonalItems().forEach(function(s) { items.push(s); });
 
+    /* Weather slide — only when condition matches a category with data */
+    var weatherItem = _getWeatherItem();
+    if (weatherItem) items.push({ _type: 'adhkar', _adhkarItem: weatherItem });
+
+    /* Daily cards — always */
     items.push(_buildAyahItem());
     items.push(_buildHadithItem());
     items.push(_buildBookItem());
