@@ -523,10 +523,10 @@
        'wind'      — high wind (≥ 40 km/h), no precip
        'clear'     — nothing notable
   ───────────────────────────────────────────── */
-  var _RAIN_KEY = 'sd_rain_v4';
+  var _RAIN_KEY = 'sd_rain_v5';
   var _RAIN_TTL = 30 * 60 * 1000; /* 30 min — weather changes slowly; reduces API pressure */
   /* clean up orphaned old cache keys */
-  try { localStorage.removeItem('sd_rain_v3'); localStorage.removeItem('sd_rain_v2'); localStorage.removeItem('sd_rain_v1'); } catch(e) {}
+  try { localStorage.removeItem('sd_rain_v4'); localStorage.removeItem('sd_rain_v3'); localStorage.removeItem('sd_rain_v2'); localStorage.removeItem('sd_rain_v1'); } catch(e) {}
 
 
   /* Weather-code → condition classifier (WMO codes, Open-Meteo scale) */
@@ -558,11 +558,24 @@
     return 'clear';
   }
 
-  /* Shared Open-Meteo parser — same WMO weather_code scale for all models */
+  /* Returns {condition, temp} for the weather slide when online + data available.
+     Returns null when offline — slide is completely hidden without a network connection. */
+  function _getWeatherSlideData() {
+    _fetchRain(); /* trigger background refresh */
+    if (!navigator.onLine) return null;
+    try {
+      var c = JSON.parse(localStorage.getItem(_RAIN_KEY));
+      if (!c) return null;
+      if ((Date.now() - c.ts) > _RAIN_TTL * 2) return null; /* too stale even for stale-while-revalidate */
+      return { condition: c.condition || 'clear', temp: c.temp };
+    } catch(e) { return null; }
+  }
+
+  /* Shared Open-Meteo parser — returns {cond, temp} so temperature is saved to cache */
   function _omFetch(url) {
     return fetch(url).then(function(r){return r.json();}).then(function(d){
       var c = d.current || {};
-      return _classifyCode(c.weather_code, c.precipitation, c.wind_speed_10m);
+      return { cond: _classifyCode(c.weather_code, c.precipitation, c.wind_speed_10m), temp: typeof c.temperature_2m === 'number' ? Math.round(c.temperature_2m) : null };
     }).catch(function(){return null;});
   }
 
@@ -583,7 +596,7 @@
     }).catch(function(){return null;});
   }
 
-  var _OM = 'https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1';
+  var _OM = 'https://api.open-meteo.com/v1/forecast?latitude=36.87&longitude=42.95&current=temperature_2m,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FBaghdad&forecast_days=1';
 
   var _fetchRainInProgress = false;
   var _fetchRainFailTs = 0;
@@ -630,8 +643,15 @@
 
     Promise.all([s1, s2, s3, s4]).then(function(results) {
       _fetchRainInProgress = false;
+      /* s1 (Open-Meteo) returns {cond, temp}; s2/s3/s4 return condition strings */
+      var temp = null;
+      var normalized = results.map(function(r, idx) {
+        if (r === null) return null;
+        if (idx === 0 && typeof r === 'object') { temp = r.temp; return r.cond; }
+        return r;
+      });
       /* Filter out nulls (failed sources) */
-      var valid = results.filter(function(r) { return r !== null; });
+      var valid = normalized.filter(function(r) { return r !== null; });
       if (!valid.length) { _fetchRainFailTs = Date.now(); return; } /* all failed — back off */
 
       /* Majority vote across 4 sources (Open-Meteo auto, wttr.in ×2, Norwegian Met).
@@ -656,7 +676,8 @@
         localStorage.setItem(_RAIN_KEY, JSON.stringify({
           ts: Date.now(),
           condition: winner,
-          sources: results  /* debug: what each source returned */
+          temp: temp,
+          sources: results
         }));
       } catch(e2) {}
 
@@ -937,6 +958,56 @@
   }
 
   /* ─────────────────────────────────────────────
+     WEATHER CARD BUILDER
+     Shows current Duhok weather (temp + condition) when online.
+     Click navigates to relevant adhkar when rain/thunder/wind.
+  ───────────────────────────────────────────── */
+  var _WX_ICON  = { clear: 'fas fa-sun', rain: 'fas fa-cloud-rain', snow: 'fas fa-snowflake', thunder: 'fas fa-bolt', wind: 'fas fa-wind' };
+  var _WX_LABEL = { clear: 'ئاسمانێ ڕووناک', rain: 'بارانی', snow: 'بەفر', thunder: 'برووسکە', wind: 'هەوای بایوک' };
+  var _WX_HINT  = { rain: 'باران دکەت — دوعا بکە', thunder: 'زکرێن هەورووبرووسکە', wind: 'زکرێن کاتی باد', snow: 'دوعایا بەفرێ' };
+
+  function _buildWeatherCard(wData, gencineUI) {
+    var cond = wData.condition || 'clear';
+    var temp = wData.temp;
+    var card = _mk('div', 'sd-card');
+
+    var iWrap = _mk('div', 'sd-icon');
+    iWrap.appendChild(_mk('i', _WX_ICON[cond] || 'fas fa-cloud'));
+    card.appendChild(iWrap);
+
+    var content = _mk('div', 'sd-content');
+    var tagWrap = document.createElement('div');
+    tagWrap.appendChild(_mk('span', 'sd-tag', 'دهۆک'));
+    if (temp !== null && temp !== undefined) {
+      tagWrap.appendChild(_mk('span', 'sd-wx-temp', temp + '°C'));
+    }
+    content.appendChild(tagWrap);
+
+    var titleZone = _mk('div', 'sd-title-zone');
+    titleZone.appendChild(_mk('div', 'sd-title', _WX_LABEL[cond] || ''));
+    content.appendChild(titleZone);
+
+    content.appendChild(_mk('div', 'sd-sub', _WX_HINT[cond] || ''));
+    card.appendChild(content);
+
+    if (cond !== 'clear') {
+      var arrow = _mk('div', 'sd-arrow');
+      arrow.appendChild(_mk('i', 'fas fa-chevron-left'));
+      card.appendChild(arrow);
+      card.addEventListener('click', function() {
+        if (!gencineUI) return;
+        var idx = cond === 'thunder' ? 1 : cond === 'rain' ? 0 : 2;
+        var wxItem = WEATHER_ITEMS[idx];
+        gencineUI._adhkarCat  = wxItem.categoryKey;
+        gencineUI._adhkarView = 'list';
+        gencineUI._view       = 'adhkar';
+        gencineUI._draw();
+      });
+    }
+    return card;
+  }
+
+  /* ─────────────────────────────────────────────
      CARD 2 — AYAH OF THE DAY  (salt 1)
      Always available — no network needed.
   ───────────────────────────────────────────── */
@@ -1114,9 +1185,9 @@
     seasonal.filter(function(s) { return !s._adhkarItem.hero; })
       .forEach(function(s) { items.push(s); });
 
-    /* Weather slide — only when raining / thunder / wind */
-    var weatherItem = _getWeatherItem();
-    if (weatherItem) items.push({ _type: 'adhkar', _adhkarItem: weatherItem });
+    /* Weather slide — shows Duhok weather when online; hidden when offline */
+    var wData = _getWeatherSlideData();
+    if (wData) items.push({ _type: 'weather', _weatherData: wData });
 
     /* Daily cards — always */
     items.push(_buildAyahItem());
@@ -1298,6 +1369,8 @@
   function _buildCard(hybridItem, gencineUI) {
     if (hybridItem._type === 'adhkar')
       return _buildAdhkarCard(hybridItem._adhkarItem, gencineUI);
+    if (hybridItem._type === 'weather')
+      return _buildWeatherCard(hybridItem._weatherData, gencineUI);
     return _buildDailyCard(hybridItem, gencineUI);
   }
 

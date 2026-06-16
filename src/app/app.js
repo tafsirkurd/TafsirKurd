@@ -4481,7 +4481,7 @@ function renderMushafView(){
           if(!best)best=banners[0];
           var sn=parseInt(best.dataset.surah);
           var ns=SURAHS[sn-1];
-          if(ns&&$('readerName'))$('readerName').textContent=ns.en+' - '+ns.ar;
+          if(ns&&$('readerName')){var _rnm=$('readerName'),_rnn=ns.en+' - '+ns.ar;if(_rnm.textContent!==_rnn){_rnm.style.opacity='0';(function(_t){setTimeout(function(){_rnm.textContent=_t;_rnm.style.opacity='1';},140);}(_rnn));}}}
         },200);
       }
       view.addEventListener('scroll',_updateHeaderFromScroll,{passive:true});
@@ -5640,8 +5640,8 @@ function updateMushafProgress(view){
     var seen=_getSeen(dispS);
     var count=Math.min(seen.size,total);
 
-    // Header surah name — switches as user scrolls across surah boundaries
-    if(sData){var nm=$('readerName');if(nm)nm.textContent=sData.en+' - '+sData.ar;}
+    // Header surah name — fades in smoothly when switching surahs
+    if(sData){var nm=$('readerName');if(nm){var _nn=sData.en+' - '+sData.ar;if(nm.textContent!==_nn){nm.style.opacity='0';(function(_t){setTimeout(function(){nm.textContent=_t;nm.style.opacity='1';},140);}(_nn));}else if(!nm.textContent){nm.textContent=_nn;}}}
 
     // Ayah label = per-surah progress
     var lbl=$('readerAyahLabel');
