@@ -1437,7 +1437,7 @@
 
     if (next) {
       var cd   = pl.formatCountdown(next.time - now);
-      var name = tStr(PRAYER_I18N[next.name] || next.name);
+      var name = PRAYER_NAMES[next.name] || next.name;
 
       // ── Urgency level ────────────────────────────────────────────────────────
       var msLeft = next.time - nowMs;
@@ -2652,7 +2652,7 @@
     // ── Prayer name + time ──
     var top = cel('div', 'pcso-top');
     var nameEl2 = cel('div', 'pcso-name');
-    nameEl2.textContent = tStr(PRAYER_I18N[name] || name);
+    nameEl2.textContent = PRAYER_NAMES[name] || name;
     var timeEl2 = cel('div', 'pcso-time');
     timeEl2.textContent = timeDisplay;
     top.appendChild(nameEl2);

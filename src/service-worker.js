@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'tafsir-kurd-v1195';
+﻿const CACHE_NAME = 'tafsir-kurd-v1196';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -285,4 +285,5 @@ self.addEventListener('notificationclick', event => {
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
+
 
