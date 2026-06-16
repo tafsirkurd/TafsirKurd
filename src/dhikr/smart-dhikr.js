@@ -904,8 +904,8 @@
       return {
         _type: 'daily', id: 'hadith_day',
         icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
-        title:    'فەرمودە',
-        subtitle: 'فەرمودێن پێغەمبەرێ ئیسلامێ ﷺ',
+        title:    h.title || preview,
+        subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
         nav: function(ui) {
           if (!ui) return;
           ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = idx; ui._draw();
@@ -917,8 +917,8 @@
     return {
       _type: 'daily', id: 'hadith_day',
       icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
-      title:    'فەرمودە',
-      subtitle: 'فەرمودێن پێغەمبەرێ ئیسلامێ ﷺ',
+      title:    'حەدیسا ڕۆژێ',
+      subtitle: 'دابەزێنا داتا...',
       nav: function(ui) {
         if (!ui) return;
         ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = null; ui._draw();
