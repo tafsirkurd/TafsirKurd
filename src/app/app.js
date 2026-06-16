@@ -4897,6 +4897,20 @@ function loadMushafPageQCF(pageEl,pageNum){
         if(QFM)QFM.qcfPageFailed(pageNum,'font-unavailable');
         clear(pageEl);
         pageEl.classList.add('mushaf-page-hafs-fallback');
+        // Banner: tell user font is unavailable and offer retry
+        var _fb=document.createElement('div');_fb.className='mushaf-fallback-banner';
+        var _fi=document.createElement('i');_fi.className='fas fa-info-circle';_fb.appendChild(_fi);
+        var _ft=document.createElement('span');_ft.textContent=' '+(window.t?t('mushaf.font_offline'):'ستایلا پەڕینێ نەکەتە دەست بی ئینتەرنەت.');_fb.appendChild(_ft);
+        var _fr=document.createElement('button');_fr.className='mushaf-fallback-retry';_fr.textContent=window.t?t('general.retry','دوبارە'):'دوبارە';
+        _fr.addEventListener('click',function(){
+          delete _qcfV4FontLoadP[pageNum];delete _qcfV4FontInjected[pageNum];
+          delete pageEl.dataset.loaded;clear(pageEl);
+          pageEl.classList.remove('mushaf-page-hafs-fallback');
+          pageEl.appendChild(_mushafSkeleton());
+          loadMushafPageQCF(pageEl,pageNum).catch(function(){});
+        },{once:true});
+        _fb.appendChild(_fr);
+        pageEl.appendChild(_fb);
         pageEl.appendChild(_buildHafsFallbackFrag(verses,pageNum));
         _mushafRenderMetrics[pageNum]={fontMs:_fontMs,dataMs:_dataMs,total:Date.now()-_t0,ok:false,missing:['qcf4-font']};
         console.log('[MushafPerf] page='+pageNum+' status=hafs-fallback total='+(Date.now()-_t0));

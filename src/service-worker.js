@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1191';
+const CACHE_NAME = 'tafsir-kurd-v1192';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -6,7 +6,7 @@ const CACHE_NAME = 'tafsir-kurd-v1191';
 const PRECACHE = [
   // Core app shell — index.html intentionally excluded: always served fresh from APK
   '/app/app.min.js?v=1190',
-  '/app/app-styles.min.css?v=3',
+  '/app/app-styles.min.css?v=5',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
   '/prayer/prayer.api.js?v=20260604',
@@ -14,7 +14,7 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260602b',
   '/prayer/prayer.ui.js?v=20260607',
   // Gencine / books module (lazily loaded but pre-cached for offline)
-  '/dhikr/dhikr.js?v=20260616a',
+  '/dhikr/dhikr.js?v=20260616b',
   '/dhikr/pdf-store.js?v=20260612a',
   '/dhikr/dua-data.js?v=20260326b',
   '/dhikr/smart-dhikr.js?v=61',
@@ -26,6 +26,48 @@ const PRECACHE = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/data/mushaf-v4-pages.json?v=2',
+  // Prayer static annual JSON — all 20 cities × 2 years bundled for offline
+  // Covers fresh-install offline and 30-day offline month-boundary on web
+  '/prayer-data/2026/Akre.json',
+  '/prayer-data/2026/Bardarash.json',
+  '/prayer-data/2026/Daquq.json',
+  '/prayer-data/2026/Darbandikhan.json',
+  '/prayer-data/2026/Duhok.json',
+  '/prayer-data/2026/DuzKhormatou.json',
+  '/prayer-data/2026/Erbil.json',
+  '/prayer-data/2026/Halabja.json',
+  '/prayer-data/2026/Kalar.json',
+  '/prayer-data/2026/Kfry.json',
+  '/prayer-data/2026/Kirkuk.json',
+  '/prayer-data/2026/Koya.json',
+  '/prayer-data/2026/Makhmur.json',
+  '/prayer-data/2026/Mandali.json',
+  '/prayer-data/2026/Mosul.json',
+  '/prayer-data/2026/Qaladze.json',
+  '/prayer-data/2026/Qarahanjir.json',
+  '/prayer-data/2026/Rania.json',
+  '/prayer-data/2026/Sulaymaniyah.json',
+  '/prayer-data/2026/Zakho.json',
+  '/prayer-data/2027/Akre.json',
+  '/prayer-data/2027/Bardarash.json',
+  '/prayer-data/2027/Daquq.json',
+  '/prayer-data/2027/Darbandikhan.json',
+  '/prayer-data/2027/Duhok.json',
+  '/prayer-data/2027/DuzKhormatou.json',
+  '/prayer-data/2027/Erbil.json',
+  '/prayer-data/2027/Halabja.json',
+  '/prayer-data/2027/Kalar.json',
+  '/prayer-data/2027/Kfry.json',
+  '/prayer-data/2027/Kirkuk.json',
+  '/prayer-data/2027/Koya.json',
+  '/prayer-data/2027/Makhmur.json',
+  '/prayer-data/2027/Mandali.json',
+  '/prayer-data/2027/Mosul.json',
+  '/prayer-data/2027/Qaladze.json',
+  '/prayer-data/2027/Qarahanjir.json',
+  '/prayer-data/2027/Rania.json',
+  '/prayer-data/2027/Sulaymaniyah.json',
+  '/prayer-data/2027/Zakho.json',
   // Styles
   '/styles/mobile-optimize.css',
   // Core utils

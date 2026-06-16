@@ -529,6 +529,7 @@ function _initDbData(onDone) {
     }
     if (!_dbTasbih     && _fullBndl.tasbih)   _dbTasbih     = _fullBndl.tasbih;
     if (!_dbAdhkar     && _fullBndl.adhkar)   _dbAdhkar     = _fullBndl.adhkar;
+    if (!cachedAsma99  && _fullBndl.asma99) { cachedAsma99  = _fullBndl.asma99; _dbAsma99 = cachedAsma99; }
   } else {
     /* Legacy adhkar-only bundle backward compat */
     var _bndlInit = window.GENCINE_ADHKAR_BUNDLE;
