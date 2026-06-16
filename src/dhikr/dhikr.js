@@ -2751,7 +2751,9 @@ window.GencineUI = {
         var thumb = document.createElement('div');
         thumb.style.cssText = 'width:36px;height:50px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--surface2)';
         if (_coverUrl) {
-          var tImg = document.createElement('img'); tImg.src = _bookCover(book)||_coverUrl; tImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
+          var tImg = document.createElement('img'); tImg.style.cssText = 'width:100%;height:100%;object-fit:cover';
+          tImg.onerror = function(){ var _ti=document.createElement('i');_ti.className='fas fa-book';_ti.style.cssText='margin:14px auto;display:block;text-align:center;color:var(--text-tertiary)';tImg.parentNode&&tImg.parentNode.replaceChild(_ti,tImg); };
+          tImg.src = _bookCover(book)||_coverUrl;
           thumb.appendChild(tImg);
         } else {
           var tIco = document.createElement('i'); tIco.className = 'fas fa-book'; tIco.style.cssText = 'margin:14px auto;display:block;text-align:center;color:var(--text-tertiary)';
@@ -3041,7 +3043,9 @@ window.GencineUI = {
           if (_bestCover) {
             var _fti = document.createElement('img'); _fti.className = 'book-feat-card-cover'; _fti.alt = _title;
             _fti.fetchPriority = 'high';
-            _fti.onload = function(){ _fti.classList.add('loaded'); }; _fti.src = _bestCover; _fth.appendChild(_fti);
+            _fti.onload = function(){ _fti.classList.add('loaded'); };
+            _fti.onerror = function(){ var _fph=document.createElement('div');_fph.className='book-feat-card-ph';var _fphi=document.createElement('i');_fphi.className='fas fa-book';_fph.appendChild(_fphi);_fti.parentNode&&_fti.parentNode.replaceChild(_fph,_fti); };
+            _fti.src = _bestCover; _fth.appendChild(_fti);
           } else { var _ftph = document.createElement('div'); _ftph.className = 'book-feat-card-ph'; var _ftphi = document.createElement('i'); _ftphi.className = 'fas fa-book'; _ftph.appendChild(_ftphi); _fth.appendChild(_ftph); }
           _fc.appendChild(_fth);
           /* Text overlay */
@@ -3257,7 +3261,9 @@ window.GencineUI = {
         if (_sgCover) {
           var img = document.createElement('img'); img.className = 'book-cover'; img.alt = sg.series_title_ku||'';
           img.fetchPriority = 'high';
-          img.onload = function(){ img.classList.add('loaded'); }; img.src = _sgCover;
+          img.onload = function(){ img.classList.add('loaded'); };
+          img.onerror = function(){ var _ph=document.createElement('div');_ph.className='book-cover-placeholder';var _pi=document.createElement('i');_pi.className='fas fa-book';_ph.appendChild(_pi);img.parentNode&&img.parentNode.replaceChild(_ph,img); };
+          img.src = _sgCover;
           if (img.complete) img.classList.add('loaded'); cw.appendChild(img);
         } else { var ph = document.createElement('div'); ph.className='book-cover-placeholder'; var phi=document.createElement('i'); phi.className='fas fa-book'; ph.appendChild(phi); cw.appendChild(ph); }
         var vcBadge = document.createElement('div'); vcBadge.className='book-series-vol-count-badge'; vcBadge.textContent=sg.volumes.length+' '+T('gencine.series_vols','بەرگ'); cw.appendChild(vcBadge);
@@ -3357,7 +3363,7 @@ window.GencineUI = {
           if (_cardIdx < 4) { img.fetchPriority = 'high'; }
           else { img.loading = 'lazy'; }
           img.onload = function(){ img.classList.add('loaded'); };
-          img.onerror = function(){ img.classList.add('loaded'); };
+          img.onerror = function(){ var _ph=document.createElement('div');_ph.className='book-cover-placeholder';var _pi=document.createElement('i');_pi.className='fas fa-book';_ph.appendChild(_pi);img.parentNode&&img.parentNode.replaceChild(_ph,img); };
           img.src = _bcUrl;
           if (img.complete) img.classList.add('loaded');
           coverWrap.appendChild(img);
