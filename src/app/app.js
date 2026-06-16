@@ -1,14 +1,14 @@
-﻿/* Tafsir Kurd - Mobile App v2.0 */
+/* Tafsir Kurd - Mobile App v2.0 */
 /* Pure DOM methods only - no innerHTML for security */
 
-/* â”€â”€ localStorage quota guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ── localStorage quota guard ──────────────────────────────────────────────────
    Monkey-patches localStorage.setItem so every call throughout the app
    automatically evicts stale data and retries on QuotaExceededError.
    Must run before any other code. */
 (function(){
   var _origSet = Storage.prototype.setItem;
 
-  /* Eviction tiers â€” called in order until write succeeds */
+  /* Eviction tiers — called in order until write succeeds */
   var _TIERS = [
     /* Tier 1: old-prefix prayer keys (always safe to drop) */
     function() {
@@ -20,7 +20,7 @@
       drop.forEach(function(k){ localStorage.removeItem(k); });
       return drop.length;
     },
-    /* Tier 2: out-of-window prayer-kurd3 months (keep Â±2 from today) */
+    /* Tier 2: out-of-window prayer-kurd3 months (keep ±2 from today) */
     function() {
       var now = new Date(), keep = {};
       for (var d = -1; d <= 2; d++) {
@@ -67,7 +67,7 @@
     catch (e) {
       if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
         _freeSpace();
-        try { _origSet.call(this, key, val); } catch (e2) { /* truly full â€” skip silently */ }
+        try { _origSet.call(this, key, val); } catch (e2) { /* truly full — skip silently */ }
       } else { throw e; }
     }
   };
@@ -76,7 +76,7 @@
 (function(){
 'use strict';
 
-// â”€â”€ Android diagnostics logger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Android diagnostics logger ──────────────────────────────────────────────
 // Lightweight flag-guarded logger. Enable with: localStorage.setItem('android_debug','1')
 var _androidDebug = (typeof localStorage !== 'undefined' && localStorage.getItem('android_debug') === '1');
 window.AndroidLog = {
@@ -100,8 +100,8 @@ window.AndroidLog = {
   }
 };
 
-// â”€â”€ Global safe-translation helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// window.t() returns the KEY STRING when a key is missing (truthy) â€” this
+// ── Global safe-translation helper ──────────────────────────────────────────
+// window.t() returns the KEY STRING when a key is missing (truthy) — this
 // wrapper converts that case to null so || fallback chains always work,
 // even on first offline launch before Supabase translations have loaded.
 function tSafe(key) {
@@ -109,7 +109,7 @@ function tSafe(key) {
   return (v && v !== key) ? v : null;
 }
 
-// â”€â”€ Slow-network detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Slow-network detection ────────────────────────────────────────────────────
 // Adapts timeouts, defers non-critical fetches, and prevents hung spinners on
 // 2G / weak WiFi. Updated automatically when the connection changes.
 var _sn = (function(){
@@ -127,7 +127,7 @@ var _sn = (function(){
   try{ if(navigator.connection) navigator.connection.addEventListener('change', _check); }catch(e){}
   return {
     get: function(){ return _slow; },
-    // Adaptive timeout â€” longer on slow connections
+    // Adaptive timeout — longer on slow connections
     ms:  function(fast, slow){ return _slow ? (slow || fast * 2) : fast; },
     // True when heavy background work should be skipped / deferred
     skip: function(){ return _slow; }
@@ -139,14 +139,14 @@ window.ForceUpdate = (function(){
   var CFG_CACHE_KEY      = 'tk_update_cfg_v2';
   var SOFT_SNOOZE_KEY    = 'tk_soft_snooze_v2'; // {at, permanent}
   var ENFORCE_LOCK_KEY   = 'tk_enforce_lock_v1'; // persists block across cold starts
-  var VERSION_CACHE_KEY  = 'tk_cached_version_v1'; // app version â€” enables Stage-1 instant check
+  var VERSION_CACHE_KEY  = 'tk_cached_version_v1'; // app version — enables Stage-1 instant check
   var _storeUrl          = '';
   var _lastCheckTs       = 0;
   var CHECK_DEBOUNCE     = 10 * 1000; // 10s between checks
   var _fuBtnBusy         = false;     // prevent double-tap on hard update btn
 
-  // â”€â”€ Early enforce check (runs synchronously on module load) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Two paths â€” both show the overlay before ANY async work fires:
+  // ── Early enforce check (runs synchronously on module load) ──────────────
+  // Two paths — both show the overlay before ANY async work fires:
   // Path 1: ENFORCE_LOCK_KEY exists (user already saw the modal last session)
   // Path 2: No lock yet, but cached config + cached version both say "hard+outdated"
   //          (handles first cold start after admin enables force update)
@@ -169,7 +169,7 @@ window.ForceUpdate = (function(){
     document.body.style.overflow    = 'hidden';
     document.body.style.touchAction = 'none';
     // Double-rAF: ensures browser paints initial state (opacity:0, translateY(22px))
-    // before transition starts â€” fixes CSS transition not firing on cold start
+    // before transition starts — fixes CSS transition not firing on cold start
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){ overlay.classList.add('fu-visible'); });
     });
@@ -178,7 +178,7 @@ window.ForceUpdate = (function(){
 
   (function _earlyEnforceCheck() {
     try {
-      // â”€â”€ Path 1: lock exists from prior session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Path 1: lock exists from prior session ─────────────────────────────
       var lock = JSON.parse(localStorage.getItem(ENFORCE_LOCK_KEY) || 'null');
       if (lock) {
         var overlay = document.getElementById('fuOverlay');
@@ -189,11 +189,11 @@ window.ForceUpdate = (function(){
         var verRow = overlay.querySelector('.fu-ver-row');
         if (verRow) verRow.style.display = lock.minVersion ? '' : 'none';
         _showEarlyOverlay(overlay, lock.minVersion);
-        console.log('[Update] Early enforce lock active â€” blocking app immediately');
+        console.log('[Update] Early enforce lock active — blocking app immediately');
         return;
       }
 
-      // â”€â”€ Path 2: no lock â€” check cached config + cached version â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Path 2: no lock — check cached config + cached version ────────────
       var cachedCfg = readCache();
       var cachedVer = null;
       try { cachedVer = localStorage.getItem(VERSION_CACHE_KEY); } catch(e2) {}
@@ -228,11 +228,11 @@ window.ForceUpdate = (function(){
       var verRow2 = overlay2.querySelector('.fu-ver-row');
       if (verRow2) verRow2.style.display = minVer2 ? '' : 'none';
       _showEarlyOverlay(overlay2, minVer2);
-      console.log('[Update] Early cached-config enforce â€” blocking app immediately');
+      console.log('[Update] Early cached-config enforce — blocking app immediately');
     } catch(e) {}
   })();
 
-  // â”€â”€ Semver comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Semver comparison ─────────────────────────────────────────────────────
   function compareVersions(a, b) {
     var pa = String(a).split('.').map(Number);
     var pb = String(b).split('.').map(Number);
@@ -244,7 +244,7 @@ window.ForceUpdate = (function(){
     return 0;
   }
 
-  // â”€â”€ Config cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Config cache ──────────────────────────────────────────────────────────
   function readCache() {
     try { return JSON.parse(localStorage.getItem(CFG_CACHE_KEY)); } catch(e) { return null; }
   }
@@ -261,13 +261,13 @@ window.ForceUpdate = (function(){
     return readCache();
   }
 
-  // â”€â”€ Resolve effective mode (includes auto-transition) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Resolve effective mode (includes auto-transition) ─────────────────────
   // update_stage: "release" | "soft" | "enforce"
-  // Auto-transition: if stage="soft" AND enforce_delay has elapsed â†’ treat as hard
+  // Auto-transition: if stage="soft" AND enforce_delay has elapsed → treat as hard
   function resolveMode(cfg) {
     // Legacy compat: update_mode takes priority if present
     if (cfg.update_mode && cfg.update_mode !== 'off') {
-      // Normalise: 'enforce' â†’ 'hard'
+      // Normalise: 'enforce' → 'hard'
       return cfg.update_mode === 'enforce' ? 'hard' : cfg.update_mode;
     }
     if (cfg.force_update_enabled === 'true') return 'hard';
@@ -276,19 +276,19 @@ window.ForceUpdate = (function(){
     if (stage === 'release') return 'off';
     if (stage === 'enforce') return 'hard';
 
-    // stage = 'soft' â€” check auto-transition
+    // stage = 'soft' — check auto-transition
     if (stage === 'soft' && cfg.update_release_time && cfg.update_enforce_delay_hours) {
       var releaseTs  = new Date(cfg.update_release_time).getTime();
       var delayMs    = parseFloat(cfg.update_enforce_delay_hours) * 3600000;
       if (!isNaN(releaseTs) && releaseTs > 0 && !isNaN(delayMs) && Date.now() > releaseTs + delayMs) {
-        console.log('[Update] Auto-transition: soft â†’ hard (delay elapsed)');
+        console.log('[Update] Auto-transition: soft → hard (delay elapsed)');
         return 'hard';
       }
     }
     return 'soft';
   }
 
-  // â”€â”€ Snooze helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Snooze helpers ────────────────────────────────────────────────────────
   function isSnoozed(cooldownDays, minVersion, sentAt) {
     try {
       var s = JSON.parse(localStorage.getItem(SOFT_SNOOZE_KEY));
@@ -312,8 +312,8 @@ window.ForceUpdate = (function(){
     try { localStorage.setItem(SOFT_SNOOZE_KEY, JSON.stringify({ at: Date.now(), permanent: true, ver: String(minVersion||'') })); } catch(e) {}
   }
 
-  // â”€â”€ Store safety check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Verify store URL is reachable before hard-blocking. If unreachable â†’ soft.
+  // ── Store safety check ────────────────────────────────────────────────────
+  // Verify store URL is reachable before hard-blocking. If unreachable → soft.
   async function isStoreReachable(url) {
     if (!url) return false;
     try {
@@ -325,7 +325,7 @@ window.ForceUpdate = (function(){
     } catch(e) { return false; }
   }
 
-  // â”€â”€ Open store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Open store ────────────────────────────────────────────────────────────
   function openStore() {
     if (!_storeUrl) return;
     try {
@@ -335,7 +335,7 @@ window.ForceUpdate = (function(){
     } catch(e) { window.open(_storeUrl, '_system'); }
   }
 
-  // â”€â”€ Hard update UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Hard update UI ────────────────────────────────────────────────────────
   function _parseWhatsNew(raw) {
     if (!raw) return [];
     try { var p = JSON.parse(raw); if (Array.isArray(p)) return p.filter(Boolean); } catch(e) {}
@@ -358,7 +358,7 @@ window.ForceUpdate = (function(){
       } catch(e) {}
     }
 
-    // Always populate content â€” cold-start early check shows overlay before this runs,
+    // Always populate content — cold-start early check shows overlay before this runs,
     // so we must update version/bullets/button even when overlay is already visible.
     var curEl = document.getElementById('fuCurrentVer');
     var minEl = document.getElementById('fuMinVer');
@@ -370,9 +370,9 @@ window.ForceUpdate = (function(){
     // What's new bullets (from config or defaults)
     var bullets = cfg ? _parseWhatsNew(cfg.update_whats_new) : [];
     if (!bullets.length) bullets = [
-      tSafe('update.default_bullet1') || 'Ø¨Û•Ù‡ÛŽØ²ØªØ±ÛŒÙ† Ø¨Ú©Ø±Ù† Ùˆ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ Ù†ÙˆÛŽØªØ±',
-      tSafe('update.default_bullet2') || 'Ø®ÙˆÛŽÙ†Ø¯Ù†ÛŒ Ù‚ÙˆØ±Ø¦Ø§Ù† Ùˆ Ù†Ø§Ú¤Ø¨Ú•ÛŒÙ† Ø¨Ø§Ø´ØªØ± Ø¨ÙˆÙˆ',
-      tSafe('update.default_bullet3') || 'Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±Ú©Ø±Ù†Û•ÙˆÛ•Ú©Ø§Ù† Ùˆ Ù¾Ø´Ú©Ù†ÛŒÙ†Û•Ú©Ø§Ù† Ø¨Ø§Ø´ØªØ± Ø¨ÙˆÙˆÙ†',
+      tSafe('update.default_bullet1') || 'بەهێزترین بکرن و ئەزموونی نوێتر',
+      tSafe('update.default_bullet2') || 'خوێندنی قورئان و ناڤبڕین باشتر بوو',
+      tSafe('update.default_bullet3') || 'ئاگادارکرنەوەکان و پشکنینەکان باشتر بوون',
     ];
     var list = document.getElementById('fuNewsList');
     var card = document.getElementById('fuNewsCard');
@@ -387,7 +387,7 @@ window.ForceUpdate = (function(){
       card.style.display = '';
     }
 
-    // Wire button once â€” works for both first-show and cold-start overlay
+    // Wire button once — works for both first-show and cold-start overlay
     var btn = document.getElementById('fuHardBtn');
     if (btn && !btn._fuWired) {
       btn._fuWired = true;
@@ -402,7 +402,7 @@ window.ForceUpdate = (function(){
 
     if (window.i18n) window.i18n.applyTranslations();
 
-    if (alreadyOn) return; // already visible â€” content updated above, skip re-animation
+    if (alreadyOn) return; // already visible — content updated above, skip re-animation
 
     document.body.style.overflow    = 'hidden';
     document.body.style.touchAction = 'none';
@@ -410,7 +410,7 @@ window.ForceUpdate = (function(){
     requestAnimationFrame(function(){ o.classList.add('fu-visible'); });
   }
 
-  // â”€â”€ Soft update banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Soft update banner ────────────────────────────────────────────────────
   // whatsNew: optional string from cfg.update_whats_new (admin-set release notes)
   function showSoftBanner(whatsNew, minVersion) {
     if (document.getElementById('fuBanner')) return;
@@ -428,11 +428,11 @@ window.ForceUpdate = (function(){
     var title = document.createElement('div');
     title.className = 'fu-banner-title';
     title.setAttribute('data-i18n', 'update.notice_title');
-    title.textContent = tSafe('update.notice_title') || 'ÙˆÛ•Ø´Ø§Ù†ÛŽÚ©ÛŒ Ù†ÙˆÛŒ Ù‡Û•ÛŒÛ•';
+    title.textContent = tSafe('update.notice_title') || 'وەشانێکی نوی هەیە';
 
     var msg = document.createElement('div');
     msg.className = 'fu-banner-msg';
-    var msgText = (whatsNew && whatsNew.trim()) || tSafe('update.notice_message') || 'ØªÚ©Ø§ÛŒÛ• Ø¦Ø§Ù¾Ø¯Û•ÛŒØª Ø¨Ú©Û•';
+    var msgText = (whatsNew && whatsNew.trim()) || tSafe('update.notice_message') || 'تکایە ئاپدەیت بکە';
     msg.textContent = msgText;
 
     textWrap.appendChild(title);
@@ -441,7 +441,7 @@ window.ForceUpdate = (function(){
     var updateBtn = document.createElement('button');
     updateBtn.className = 'fu-banner-btn';
     updateBtn.setAttribute('data-i18n', 'update.notice_btn');
-    updateBtn.textContent = tSafe('update.notice_btn') || 'Ø¦Ø§Ù¾Ø¯Û•ÛŒØª';
+    updateBtn.textContent = tSafe('update.notice_btn') || 'ئاپدەیت';
     updateBtn.onclick = function() {
       openStore();
       snoozeForever(minVersion);
@@ -450,7 +450,7 @@ window.ForceUpdate = (function(){
 
     var dismissBtn = document.createElement('button');
     dismissBtn.className = 'fu-banner-dismiss';
-    dismissBtn.textContent = 'Ã—';
+    dismissBtn.textContent = '×';
     dismissBtn.onclick = function() { snoozeDismiss(minVersion); dismissBanner(); };
 
     banner.appendChild(dot);
@@ -470,7 +470,7 @@ window.ForceUpdate = (function(){
     setTimeout(function(){ if (banner.parentNode) banner.parentNode.removeChild(banner); }, 520);
   }
 
-  // â”€â”€ Main check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Main check ────────────────────────────────────────────────────────────
   async function check() {
     var now = Date.now();
     if (now - _lastCheckTs < CHECK_DEBOUNCE) return;
@@ -487,33 +487,33 @@ window.ForceUpdate = (function(){
       // Cache version so _earlyEnforceCheck Path 2 can use it next cold start
       try { localStorage.setItem(VERSION_CACHE_KEY, version); } catch(e2) {}
 
-      // Stage 1 â€” instant show OR dismiss using cached config (fires before network fetch)
+      // Stage 1 — instant show OR dismiss using cached config (fires before network fetch)
       var _s1cfg = readCache();
       if (_s1cfg) {
         var _s1mode = resolveMode(_s1cfg);
         var _s1min  = platform === 'ios' ? _s1cfg.min_ios_version : _s1cfg.min_android_version;
         if (_s1mode === 'hard' && _s1min && compareVersions(version, _s1min) < 0) {
-          // Still outdated per cache â€” show overlay immediately
+          // Still outdated per cache — show overlay immediately
           _storeUrl = platform === 'ios'
             ? (_s1cfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
             : (_s1cfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
-          console.log('[Update] Stage-1 instant block (cached config) â€” network fetch continuing');
+          console.log('[Update] Stage-1 instant block (cached config) — network fetch continuing');
           showHard(version, _s1min, _s1cfg);
         } else {
-          // Cached config says version is fine â€” dismiss stale lock overlay immediately
+          // Cached config says version is fine — dismiss stale lock overlay immediately
           // (post-update cold start: user just installed the update, no need to wait for network)
           var _s1o = document.getElementById('fuOverlay');
           if (_s1o && _s1o.classList.contains('on')) {
             try { localStorage.removeItem(ENFORCE_LOCK_KEY); } catch(e2) {}
             _s1o.classList.remove('fu-visible');
             setTimeout(function(){ _s1o.classList.remove('on'); document.body.style.overflow = ''; document.body.style.touchAction = ''; }, 400);
-            console.log('[Update] Stage-1 dismiss â€” version OK per cached config');
+            console.log('[Update] Stage-1 dismiss — version OK per cached config');
           }
         }
       }
 
       var cfg = await fetchConfig();
-      if (!cfg) { console.log('[Update] No config â€” skipping'); return; }
+      if (!cfg) { console.log('[Update] No config — skipping'); return; }
 
       var mode       = resolveMode(cfg);
       var minVersion = platform === 'ios' ? cfg.min_ios_version : cfg.min_android_version;
@@ -525,17 +525,17 @@ window.ForceUpdate = (function(){
       var cooldown   = cfg.soft_update_cooldown_days;
       var outdated   = minVersion ? compareVersions(version, minVersion) < 0 : false;
 
-      console.log('[Update] v=' + version + ' min=' + (minVersion||'â€”') + ' stage=' + stage + ' mode=' + mode + ' outdated=' + outdated + ' platform=' + platform);
+      console.log('[Update] v=' + version + ' min=' + (minVersion||'—') + ' stage=' + stage + ' mode=' + mode + ' outdated=' + outdated + ' platform=' + platform);
 
       if (mode === 'off' || !minVersion || !outdated) {
-        // Clear the persistent lock â€” user updated or admin lifted enforce
+        // Clear the persistent lock — user updated or admin lifted enforce
         try { localStorage.removeItem(ENFORCE_LOCK_KEY); } catch(e) {}
         // Dismiss hard overlay if showing
         var overlay = document.getElementById('fuOverlay');
         if (overlay && overlay.classList.contains('on')) {
           overlay.classList.remove('fu-visible');
           setTimeout(function(){ overlay.classList.remove('on'); document.body.style.overflow = ''; document.body.style.touchAction = ''; }, 400);
-          console.log('[Update] Block lifted â€” overlay dismissed, enforce lock cleared');
+          console.log('[Update] Block lifted — overlay dismissed, enforce lock cleared');
         }
         return;
       }
@@ -546,18 +546,18 @@ window.ForceUpdate = (function(){
         // request failed immediately (ATS / CORS) before the 2s safety timer, making every
         // hard block silently degrade to soft.
         if (!_storeUrl) {
-          console.log('[Update] HARD requested but no store URL â€” falling back to SOFT');
+          console.log('[Update] HARD requested but no store URL — falling back to SOFT');
           if (!isSnoozed(cooldown, minVersion, cfg.update_sent_at)) showSoftBanner(cfg.update_whats_new, minVersion);
           return;
         }
-        console.log('[Update] HARD â€” blocking app');
+        console.log('[Update] HARD — blocking app');
         showHard(version, minVersion, cfg);
       } else if (mode === 'soft') {
         if (isSnoozed(cooldown, minVersion, cfg.update_sent_at)) {
-          console.log('[Update] SOFT â€” snoozed (cooldown active or permanent)');
+          console.log('[Update] SOFT — snoozed (cooldown active or permanent)');
           return;
         }
-        console.log('[Update] SOFT â€” queuing banner (6s delay)');
+        console.log('[Update] SOFT — queuing banner (6s delay)');
         showSoftBanner(cfg.update_whats_new, minVersion);
       }
     } catch(e) {
@@ -580,25 +580,25 @@ function icon(name){var i=document.createElement('i');i.className=name;return i}
 function on(e,ev,fn){if(e)e.addEventListener(ev,fn)}
 function clear(e){if(e)while(e.firstChild)e.removeChild(e.firstChild)}
 
-// â”€â”€ Retry with exponential backoff + jitter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// _tkRetry(fn, opts) â€” fn() must return a Promise.
+// ── Retry with exponential backoff + jitter ───────────────────────────────────
+// _tkRetry(fn, opts) — fn() must return a Promise.
 // Calls fn() fresh on each attempt so AbortControllers can be recreated.
 // opts: { maxRetries:2, base:600 }
 // Skips retries when: AbortError thrown | document backgrounded | offline
-// Delay schedule (base=600, 2 retries): ~500ms â†’ ~1000ms (with Â±30% jitter)
+// Delay schedule (base=600, 2 retries): ~500ms → ~1000ms (with ±30% jitter)
 function _tkRetry(fn, opts){
   var n=(opts&&opts.maxRetries)!==undefined?(opts&&opts.maxRetries):2;
   var base=(opts&&opts.base)||600;
   var attempt=0;
   function go(){
     return fn().catch(function(e){
-      if(e&&e.name==='AbortError')throw e;       // explicit abort â€” don't retry
-      if(document.hidden&&attempt>0)throw e;     // backgrounded â€” stop retrying
-      if(!navigator.onLine)throw e;              // offline â€” no point retrying
+      if(e&&e.name==='AbortError')throw e;       // explicit abort — don't retry
+      if(document.hidden&&attempt>0)throw e;     // backgrounded — stop retrying
+      if(!navigator.onLine)throw e;              // offline — no point retrying
       if(attempt<n){
         attempt++;
         var delay=Math.min(base*Math.pow(2,attempt-1),8000);
-        delay=Math.round(delay*(0.7+Math.random()*0.6)); // Â±30% jitter
+        delay=Math.round(delay*(0.7+Math.random()*0.6)); // ±30% jitter
         return new Promise(function(res){setTimeout(res,delay);}).then(go);
       }
       throw e;
@@ -609,80 +609,80 @@ function _tkRetry(fn, opts){
 
 /* ===== SURAH DATA ===== */
 var SURAHS=[
-{n:1,en:'Al-Fatiha',ar:'Ø§Ù„ÙØ§ØªØ­Ø©',a:7,t:'Meccan'},{n:2,en:'Al-Baqarah',ar:'Ø§Ù„Ø¨Ù‚Ø±Ø©',a:286,t:'Medinan'},{n:3,en:'Ali Imran',ar:'Ø¢Ù„ Ø¹Ù…Ø±Ø§Ù†',a:200,t:'Medinan'},
-{n:4,en:'An-Nisa',ar:'Ø§Ù„Ù†Ø³Ø§Ø¡',a:176,t:'Medinan'},{n:5,en:'Al-Ma\'idah',ar:'Ø§Ù„Ù…Ø§Ø¦Ø¯Ø©',a:120,t:'Medinan'},{n:6,en:'Al-An\'am',ar:'Ø§Ù„Ø£Ù†Ø¹Ø§Ù…',a:165,t:'Meccan'},
-{n:7,en:'Al-A\'raf',ar:'Ø§Ù„Ø£Ø¹Ø±Ø§Ù',a:206,t:'Meccan'},{n:8,en:'Al-Anfal',ar:'Ø§Ù„Ø£Ù†ÙØ§Ù„',a:75,t:'Medinan'},{n:9,en:'At-Tawbah',ar:'Ø§Ù„ØªÙˆØ¨Ø©',a:129,t:'Medinan'},
-{n:10,en:'Yunus',ar:'ÙŠÙˆÙ†Ø³',a:109,t:'Meccan'},{n:11,en:'Hud',ar:'Ù‡ÙˆØ¯',a:123,t:'Meccan'},{n:12,en:'Yusuf',ar:'ÙŠÙˆØ³Ù',a:111,t:'Meccan'},
-{n:13,en:'Ar-Ra\'d',ar:'Ø§Ù„Ø±Ø¹Ø¯',a:43,t:'Medinan'},{n:14,en:'Ibrahim',ar:'Ø¥Ø¨Ø±Ø§Ù‡ÙŠÙ…',a:52,t:'Meccan'},{n:15,en:'Al-Hijr',ar:'Ø§Ù„Ø­Ø¬Ø±',a:99,t:'Meccan'},
-{n:16,en:'An-Nahl',ar:'Ø§Ù„Ù†Ø­Ù„',a:128,t:'Meccan'},{n:17,en:'Al-Isra',ar:'Ø§Ù„Ø¥Ø³Ø±Ø§Ø¡',a:111,t:'Meccan'},{n:18,en:'Al-Kahf',ar:'Ø§Ù„ÙƒÙ‡Ù',a:110,t:'Meccan'},
-{n:19,en:'Maryam',ar:'Ù…Ø±ÙŠÙ…',a:98,t:'Meccan'},{n:20,en:'Taha',ar:'Ø·Ù‡',a:135,t:'Meccan'},{n:21,en:'Al-Anbiya',ar:'Ø§Ù„Ø£Ù†Ø¨ÙŠØ§Ø¡',a:112,t:'Meccan'},
-{n:22,en:'Al-Hajj',ar:'Ø§Ù„Ø­Ø¬',a:78,t:'Medinan'},{n:23,en:'Al-Mu\'minun',ar:'Ø§Ù„Ù…Ø¤Ù…Ù†ÙˆÙ†',a:118,t:'Meccan'},{n:24,en:'An-Nur',ar:'Ø§Ù„Ù†ÙˆØ±',a:64,t:'Medinan'},
-{n:25,en:'Al-Furqan',ar:'Ø§Ù„ÙØ±Ù‚Ø§Ù†',a:77,t:'Meccan'},{n:26,en:'Ash-Shu\'ara',ar:'Ø§Ù„Ø´Ø¹Ø±Ø§Ø¡',a:227,t:'Meccan'},{n:27,en:'An-Naml',ar:'Ø§Ù„Ù†Ù…Ù„',a:93,t:'Meccan'},
-{n:28,en:'Al-Qasas',ar:'Ø§Ù„Ù‚ØµØµ',a:88,t:'Meccan'},{n:29,en:'Al-Ankabut',ar:'Ø§Ù„Ø¹Ù†ÙƒØ¨ÙˆØª',a:69,t:'Meccan'},{n:30,en:'Ar-Rum',ar:'Ø§Ù„Ø±ÙˆÙ…',a:60,t:'Meccan'},
-{n:31,en:'Luqman',ar:'Ù„Ù‚Ù…Ø§Ù†',a:34,t:'Meccan'},{n:32,en:'As-Sajdah',ar:'Ø§Ù„Ø³Ø¬Ø¯Ø©',a:30,t:'Meccan'},{n:33,en:'Al-Ahzab',ar:'Ø§Ù„Ø£Ø­Ø²Ø§Ø¨',a:73,t:'Medinan'},
-{n:34,en:'Saba',ar:'Ø³Ø¨Ø£',a:54,t:'Meccan'},{n:35,en:'Fatir',ar:'ÙØ§Ø·Ø±',a:45,t:'Meccan'},{n:36,en:'Ya-Sin',ar:'ÙŠØ³',a:83,t:'Meccan'},
-{n:37,en:'As-Saffat',ar:'Ø§Ù„ØµØ§ÙØ§Øª',a:182,t:'Meccan'},{n:38,en:'Sad',ar:'Øµ',a:88,t:'Meccan'},{n:39,en:'Az-Zumar',ar:'Ø§Ù„Ø²Ù…Ø±',a:75,t:'Meccan'},
-{n:40,en:'Ghafir',ar:'ØºØ§ÙØ±',a:85,t:'Meccan'},{n:41,en:'Fussilat',ar:'ÙØµÙ„Øª',a:54,t:'Meccan'},{n:42,en:'Ash-Shura',ar:'Ø§Ù„Ø´ÙˆØ±Ù‰',a:53,t:'Meccan'},
-{n:43,en:'Az-Zukhruf',ar:'Ø§Ù„Ø²Ø®Ø±Ù',a:89,t:'Meccan'},{n:44,en:'Ad-Dukhan',ar:'Ø§Ù„Ø¯Ø®Ø§Ù†',a:59,t:'Meccan'},{n:45,en:'Al-Jathiyah',ar:'Ø§Ù„Ø¬Ø§Ø«ÙŠØ©',a:37,t:'Meccan'},
-{n:46,en:'Al-Ahqaf',ar:'Ø§Ù„Ø£Ø­Ù‚Ø§Ù',a:35,t:'Meccan'},{n:47,en:'Muhammad',ar:'Ù…Ø­Ù…Ø¯',a:38,t:'Medinan'},{n:48,en:'Al-Fath',ar:'Ø§Ù„ÙØªØ­',a:29,t:'Medinan'},
-{n:49,en:'Al-Hujurat',ar:'Ø§Ù„Ø­Ø¬Ø±Ø§Øª',a:18,t:'Medinan'},{n:50,en:'Qaf',ar:'Ù‚',a:45,t:'Meccan'},{n:51,en:'Adh-Dhariyat',ar:'Ø§Ù„Ø°Ø§Ø±ÙŠØ§Øª',a:60,t:'Meccan'},
-{n:52,en:'At-Tur',ar:'Ø§Ù„Ø·ÙˆØ±',a:49,t:'Meccan'},{n:53,en:'An-Najm',ar:'Ø§Ù„Ù†Ø¬Ù…',a:62,t:'Meccan'},{n:54,en:'Al-Qamar',ar:'Ø§Ù„Ù‚Ù…Ø±',a:55,t:'Meccan'},
-{n:55,en:'Ar-Rahman',ar:'Ø§Ù„Ø±Ø­Ù…Ù†',a:78,t:'Medinan'},{n:56,en:'Al-Waqi\'ah',ar:'Ø§Ù„ÙˆØ§Ù‚Ø¹Ø©',a:96,t:'Meccan'},{n:57,en:'Al-Hadid',ar:'Ø§Ù„Ø­Ø¯ÙŠØ¯',a:29,t:'Medinan'},
-{n:58,en:'Al-Mujadilah',ar:'Ø§Ù„Ù…Ø¬Ø§Ø¯Ù„Ø©',a:22,t:'Medinan'},{n:59,en:'Al-Hashr',ar:'Ø§Ù„Ø­Ø´Ø±',a:24,t:'Medinan'},{n:60,en:'Al-Mumtahanah',ar:'Ø§Ù„Ù…Ù…ØªØ­Ù†Ø©',a:13,t:'Medinan'},
-{n:61,en:'As-Saff',ar:'Ø§Ù„ØµÙ',a:14,t:'Medinan'},{n:62,en:'Al-Jumu\'ah',ar:'Ø§Ù„Ø¬Ù…Ø¹Ø©',a:11,t:'Medinan'},{n:63,en:'Al-Munafiqun',ar:'Ø§Ù„Ù…Ù†Ø§ÙÙ‚ÙˆÙ†',a:11,t:'Medinan'},
-{n:64,en:'At-Taghabun',ar:'Ø§Ù„ØªØºØ§Ø¨Ù†',a:18,t:'Medinan'},{n:65,en:'At-Talaq',ar:'Ø§Ù„Ø·Ù„Ø§Ù‚',a:12,t:'Medinan'},{n:66,en:'At-Tahrim',ar:'Ø§Ù„ØªØ­Ø±ÙŠÙ…',a:12,t:'Medinan'},
-{n:67,en:'Al-Mulk',ar:'Ø§Ù„Ù…Ù„Ùƒ',a:30,t:'Meccan'},{n:68,en:'Al-Qalam',ar:'Ø§Ù„Ù‚Ù„Ù…',a:52,t:'Meccan'},{n:69,en:'Al-Haqqah',ar:'Ø§Ù„Ø­Ø§Ù‚Ø©',a:52,t:'Meccan'},
-{n:70,en:'Al-Ma\'arij',ar:'Ø§Ù„Ù…Ø¹Ø§Ø±Ø¬',a:44,t:'Meccan'},{n:71,en:'Nuh',ar:'Ù†ÙˆØ­',a:28,t:'Meccan'},{n:72,en:'Al-Jinn',ar:'Ø§Ù„Ø¬Ù†',a:28,t:'Meccan'},
-{n:73,en:'Al-Muzzammil',ar:'Ø§Ù„Ù…Ø²Ù…Ù„',a:20,t:'Meccan'},{n:74,en:'Al-Muddaththir',ar:'Ø§Ù„Ù…Ø¯Ø«Ø±',a:56,t:'Meccan'},{n:75,en:'Al-Qiyamah',ar:'Ø§Ù„Ù‚ÙŠØ§Ù…Ø©',a:40,t:'Meccan'},
-{n:76,en:'Al-Insan',ar:'Ø§Ù„Ø¥Ù†Ø³Ø§Ù†',a:31,t:'Medinan'},{n:77,en:'Al-Mursalat',ar:'Ø§Ù„Ù…Ø±Ø³Ù„Ø§Øª',a:50,t:'Meccan'},{n:78,en:'An-Naba',ar:'Ø§Ù„Ù†Ø¨Ø£',a:40,t:'Meccan'},
-{n:79,en:'An-Nazi\'at',ar:'Ø§Ù„Ù†Ø§Ø²Ø¹Ø§Øª',a:46,t:'Meccan'},{n:80,en:'Abasa',ar:'Ø¹Ø¨Ø³',a:42,t:'Meccan'},{n:81,en:'At-Takwir',ar:'Ø§Ù„ØªÙƒÙˆÙŠØ±',a:29,t:'Meccan'},
-{n:82,en:'Al-Infitar',ar:'Ø§Ù„Ø§Ù†ÙØ·Ø§Ø±',a:19,t:'Meccan'},{n:83,en:'Al-Mutaffifin',ar:'Ø§Ù„Ù…Ø·ÙÙÙŠÙ†',a:36,t:'Meccan'},{n:84,en:'Al-Inshiqaq',ar:'Ø§Ù„Ø§Ù†Ø´Ù‚Ø§Ù‚',a:25,t:'Meccan'},
-{n:85,en:'Al-Buruj',ar:'Ø§Ù„Ø¨Ø±ÙˆØ¬',a:22,t:'Meccan'},{n:86,en:'At-Tariq',ar:'Ø§Ù„Ø·Ø§Ø±Ù‚',a:17,t:'Meccan'},{n:87,en:'Al-A\'la',ar:'Ø§Ù„Ø£Ø¹Ù„Ù‰',a:19,t:'Meccan'},
-{n:88,en:'Al-Ghashiyah',ar:'Ø§Ù„ØºØ§Ø´ÙŠØ©',a:26,t:'Meccan'},{n:89,en:'Al-Fajr',ar:'Ø§Ù„ÙØ¬Ø±',a:30,t:'Meccan'},{n:90,en:'Al-Balad',ar:'Ø§Ù„Ø¨Ù„Ø¯',a:20,t:'Meccan'},
-{n:91,en:'Ash-Shams',ar:'Ø§Ù„Ø´Ù…Ø³',a:15,t:'Meccan'},{n:92,en:'Al-Layl',ar:'Ø§Ù„Ù„ÙŠÙ„',a:21,t:'Meccan'},{n:93,en:'Ad-Duha',ar:'Ø§Ù„Ø¶Ø­Ù‰',a:11,t:'Meccan'},
-{n:94,en:'Ash-Sharh',ar:'Ø§Ù„Ø´Ø±Ø­',a:8,t:'Meccan'},{n:95,en:'At-Tin',ar:'Ø§Ù„ØªÙŠÙ†',a:8,t:'Meccan'},{n:96,en:'Al-Alaq',ar:'Ø§Ù„Ø¹Ù„Ù‚',a:19,t:'Meccan'},
-{n:97,en:'Al-Qadr',ar:'Ø§Ù„Ù‚Ø¯Ø±',a:5,t:'Meccan'},{n:98,en:'Al-Bayyinah',ar:'Ø§Ù„Ø¨ÙŠÙ†Ø©',a:8,t:'Medinan'},{n:99,en:'Az-Zalzalah',ar:'Ø§Ù„Ø²Ù„Ø²Ù„Ø©',a:8,t:'Medinan'},
-{n:100,en:'Al-Adiyat',ar:'Ø§Ù„Ø¹Ø§Ø¯ÙŠØ§Øª',a:11,t:'Meccan'},{n:101,en:'Al-Qari\'ah',ar:'Ø§Ù„Ù‚Ø§Ø±Ø¹Ø©',a:11,t:'Meccan'},{n:102,en:'At-Takathur',ar:'Ø§Ù„ØªÙƒØ§Ø«Ø±',a:8,t:'Meccan'},
-{n:103,en:'Al-Asr',ar:'Ø§Ù„Ø¹ØµØ±',a:3,t:'Meccan'},{n:104,en:'Al-Humazah',ar:'Ø§Ù„Ù‡Ù…Ø²Ø©',a:9,t:'Meccan'},{n:105,en:'Al-Fil',ar:'Ø§Ù„ÙÙŠÙ„',a:5,t:'Meccan'},
-{n:106,en:'Quraysh',ar:'Ù‚Ø±ÙŠØ´',a:4,t:'Meccan'},{n:107,en:'Al-Ma\'un',ar:'Ø§Ù„Ù…Ø§Ø¹ÙˆÙ†',a:7,t:'Meccan'},{n:108,en:'Al-Kawthar',ar:'Ø§Ù„ÙƒÙˆØ«Ø±',a:3,t:'Meccan'},
-{n:109,en:'Al-Kafirun',ar:'Ø§Ù„ÙƒØ§ÙØ±ÙˆÙ†',a:6,t:'Meccan'},{n:110,en:'An-Nasr',ar:'Ø§Ù„Ù†ØµØ±',a:3,t:'Medinan'},{n:111,en:'Al-Masad',ar:'Ø§Ù„Ù…Ø³Ø¯',a:5,t:'Meccan'},
-{n:112,en:'Al-Ikhlas',ar:'Ø§Ù„Ø¥Ø®Ù„Ø§Øµ',a:4,t:'Meccan'},{n:113,en:'Al-Falaq',ar:'Ø§Ù„ÙÙ„Ù‚',a:5,t:'Meccan'},{n:114,en:'An-Nas',ar:'Ø§Ù„Ù†Ø§Ø³',a:6,t:'Meccan'}
+{n:1,en:'Al-Fatiha',ar:'الفاتحة',a:7,t:'Meccan'},{n:2,en:'Al-Baqarah',ar:'البقرة',a:286,t:'Medinan'},{n:3,en:'Ali Imran',ar:'آل عمران',a:200,t:'Medinan'},
+{n:4,en:'An-Nisa',ar:'النساء',a:176,t:'Medinan'},{n:5,en:'Al-Ma\'idah',ar:'المائدة',a:120,t:'Medinan'},{n:6,en:'Al-An\'am',ar:'الأنعام',a:165,t:'Meccan'},
+{n:7,en:'Al-A\'raf',ar:'الأعراف',a:206,t:'Meccan'},{n:8,en:'Al-Anfal',ar:'الأنفال',a:75,t:'Medinan'},{n:9,en:'At-Tawbah',ar:'التوبة',a:129,t:'Medinan'},
+{n:10,en:'Yunus',ar:'يونس',a:109,t:'Meccan'},{n:11,en:'Hud',ar:'هود',a:123,t:'Meccan'},{n:12,en:'Yusuf',ar:'يوسف',a:111,t:'Meccan'},
+{n:13,en:'Ar-Ra\'d',ar:'الرعد',a:43,t:'Medinan'},{n:14,en:'Ibrahim',ar:'إبراهيم',a:52,t:'Meccan'},{n:15,en:'Al-Hijr',ar:'الحجر',a:99,t:'Meccan'},
+{n:16,en:'An-Nahl',ar:'النحل',a:128,t:'Meccan'},{n:17,en:'Al-Isra',ar:'الإسراء',a:111,t:'Meccan'},{n:18,en:'Al-Kahf',ar:'الكهف',a:110,t:'Meccan'},
+{n:19,en:'Maryam',ar:'مريم',a:98,t:'Meccan'},{n:20,en:'Taha',ar:'طه',a:135,t:'Meccan'},{n:21,en:'Al-Anbiya',ar:'الأنبياء',a:112,t:'Meccan'},
+{n:22,en:'Al-Hajj',ar:'الحج',a:78,t:'Medinan'},{n:23,en:'Al-Mu\'minun',ar:'المؤمنون',a:118,t:'Meccan'},{n:24,en:'An-Nur',ar:'النور',a:64,t:'Medinan'},
+{n:25,en:'Al-Furqan',ar:'الفرقان',a:77,t:'Meccan'},{n:26,en:'Ash-Shu\'ara',ar:'الشعراء',a:227,t:'Meccan'},{n:27,en:'An-Naml',ar:'النمل',a:93,t:'Meccan'},
+{n:28,en:'Al-Qasas',ar:'القصص',a:88,t:'Meccan'},{n:29,en:'Al-Ankabut',ar:'العنكبوت',a:69,t:'Meccan'},{n:30,en:'Ar-Rum',ar:'الروم',a:60,t:'Meccan'},
+{n:31,en:'Luqman',ar:'لقمان',a:34,t:'Meccan'},{n:32,en:'As-Sajdah',ar:'السجدة',a:30,t:'Meccan'},{n:33,en:'Al-Ahzab',ar:'الأحزاب',a:73,t:'Medinan'},
+{n:34,en:'Saba',ar:'سبأ',a:54,t:'Meccan'},{n:35,en:'Fatir',ar:'فاطر',a:45,t:'Meccan'},{n:36,en:'Ya-Sin',ar:'يس',a:83,t:'Meccan'},
+{n:37,en:'As-Saffat',ar:'الصافات',a:182,t:'Meccan'},{n:38,en:'Sad',ar:'ص',a:88,t:'Meccan'},{n:39,en:'Az-Zumar',ar:'الزمر',a:75,t:'Meccan'},
+{n:40,en:'Ghafir',ar:'غافر',a:85,t:'Meccan'},{n:41,en:'Fussilat',ar:'فصلت',a:54,t:'Meccan'},{n:42,en:'Ash-Shura',ar:'الشورى',a:53,t:'Meccan'},
+{n:43,en:'Az-Zukhruf',ar:'الزخرف',a:89,t:'Meccan'},{n:44,en:'Ad-Dukhan',ar:'الدخان',a:59,t:'Meccan'},{n:45,en:'Al-Jathiyah',ar:'الجاثية',a:37,t:'Meccan'},
+{n:46,en:'Al-Ahqaf',ar:'الأحقاف',a:35,t:'Meccan'},{n:47,en:'Muhammad',ar:'محمد',a:38,t:'Medinan'},{n:48,en:'Al-Fath',ar:'الفتح',a:29,t:'Medinan'},
+{n:49,en:'Al-Hujurat',ar:'الحجرات',a:18,t:'Medinan'},{n:50,en:'Qaf',ar:'ق',a:45,t:'Meccan'},{n:51,en:'Adh-Dhariyat',ar:'الذاريات',a:60,t:'Meccan'},
+{n:52,en:'At-Tur',ar:'الطور',a:49,t:'Meccan'},{n:53,en:'An-Najm',ar:'النجم',a:62,t:'Meccan'},{n:54,en:'Al-Qamar',ar:'القمر',a:55,t:'Meccan'},
+{n:55,en:'Ar-Rahman',ar:'الرحمن',a:78,t:'Medinan'},{n:56,en:'Al-Waqi\'ah',ar:'الواقعة',a:96,t:'Meccan'},{n:57,en:'Al-Hadid',ar:'الحديد',a:29,t:'Medinan'},
+{n:58,en:'Al-Mujadilah',ar:'المجادلة',a:22,t:'Medinan'},{n:59,en:'Al-Hashr',ar:'الحشر',a:24,t:'Medinan'},{n:60,en:'Al-Mumtahanah',ar:'الممتحنة',a:13,t:'Medinan'},
+{n:61,en:'As-Saff',ar:'الصف',a:14,t:'Medinan'},{n:62,en:'Al-Jumu\'ah',ar:'الجمعة',a:11,t:'Medinan'},{n:63,en:'Al-Munafiqun',ar:'المنافقون',a:11,t:'Medinan'},
+{n:64,en:'At-Taghabun',ar:'التغابن',a:18,t:'Medinan'},{n:65,en:'At-Talaq',ar:'الطلاق',a:12,t:'Medinan'},{n:66,en:'At-Tahrim',ar:'التحريم',a:12,t:'Medinan'},
+{n:67,en:'Al-Mulk',ar:'الملك',a:30,t:'Meccan'},{n:68,en:'Al-Qalam',ar:'القلم',a:52,t:'Meccan'},{n:69,en:'Al-Haqqah',ar:'الحاقة',a:52,t:'Meccan'},
+{n:70,en:'Al-Ma\'arij',ar:'المعارج',a:44,t:'Meccan'},{n:71,en:'Nuh',ar:'نوح',a:28,t:'Meccan'},{n:72,en:'Al-Jinn',ar:'الجن',a:28,t:'Meccan'},
+{n:73,en:'Al-Muzzammil',ar:'المزمل',a:20,t:'Meccan'},{n:74,en:'Al-Muddaththir',ar:'المدثر',a:56,t:'Meccan'},{n:75,en:'Al-Qiyamah',ar:'القيامة',a:40,t:'Meccan'},
+{n:76,en:'Al-Insan',ar:'الإنسان',a:31,t:'Medinan'},{n:77,en:'Al-Mursalat',ar:'المرسلات',a:50,t:'Meccan'},{n:78,en:'An-Naba',ar:'النبأ',a:40,t:'Meccan'},
+{n:79,en:'An-Nazi\'at',ar:'النازعات',a:46,t:'Meccan'},{n:80,en:'Abasa',ar:'عبس',a:42,t:'Meccan'},{n:81,en:'At-Takwir',ar:'التكوير',a:29,t:'Meccan'},
+{n:82,en:'Al-Infitar',ar:'الانفطار',a:19,t:'Meccan'},{n:83,en:'Al-Mutaffifin',ar:'المطففين',a:36,t:'Meccan'},{n:84,en:'Al-Inshiqaq',ar:'الانشقاق',a:25,t:'Meccan'},
+{n:85,en:'Al-Buruj',ar:'البروج',a:22,t:'Meccan'},{n:86,en:'At-Tariq',ar:'الطارق',a:17,t:'Meccan'},{n:87,en:'Al-A\'la',ar:'الأعلى',a:19,t:'Meccan'},
+{n:88,en:'Al-Ghashiyah',ar:'الغاشية',a:26,t:'Meccan'},{n:89,en:'Al-Fajr',ar:'الفجر',a:30,t:'Meccan'},{n:90,en:'Al-Balad',ar:'البلد',a:20,t:'Meccan'},
+{n:91,en:'Ash-Shams',ar:'الشمس',a:15,t:'Meccan'},{n:92,en:'Al-Layl',ar:'الليل',a:21,t:'Meccan'},{n:93,en:'Ad-Duha',ar:'الضحى',a:11,t:'Meccan'},
+{n:94,en:'Ash-Sharh',ar:'الشرح',a:8,t:'Meccan'},{n:95,en:'At-Tin',ar:'التين',a:8,t:'Meccan'},{n:96,en:'Al-Alaq',ar:'العلق',a:19,t:'Meccan'},
+{n:97,en:'Al-Qadr',ar:'القدر',a:5,t:'Meccan'},{n:98,en:'Al-Bayyinah',ar:'البينة',a:8,t:'Medinan'},{n:99,en:'Az-Zalzalah',ar:'الزلزلة',a:8,t:'Medinan'},
+{n:100,en:'Al-Adiyat',ar:'العاديات',a:11,t:'Meccan'},{n:101,en:'Al-Qari\'ah',ar:'القارعة',a:11,t:'Meccan'},{n:102,en:'At-Takathur',ar:'التكاثر',a:8,t:'Meccan'},
+{n:103,en:'Al-Asr',ar:'العصر',a:3,t:'Meccan'},{n:104,en:'Al-Humazah',ar:'الهمزة',a:9,t:'Meccan'},{n:105,en:'Al-Fil',ar:'الفيل',a:5,t:'Meccan'},
+{n:106,en:'Quraysh',ar:'قريش',a:4,t:'Meccan'},{n:107,en:'Al-Ma\'un',ar:'الماعون',a:7,t:'Meccan'},{n:108,en:'Al-Kawthar',ar:'الكوثر',a:3,t:'Meccan'},
+{n:109,en:'Al-Kafirun',ar:'الكافرون',a:6,t:'Meccan'},{n:110,en:'An-Nasr',ar:'النصر',a:3,t:'Medinan'},{n:111,en:'Al-Masad',ar:'المسد',a:5,t:'Meccan'},
+{n:112,en:'Al-Ikhlas',ar:'الإخلاص',a:4,t:'Meccan'},{n:113,en:'Al-Falaq',ar:'الفلق',a:5,t:'Meccan'},{n:114,en:'An-Nas',ar:'الناس',a:6,t:'Meccan'}
 ];
 window.SURAHS=SURAHS; // expose for audio-downloads.js (outside IIFE)
 
 var JUZS={1:1,2:2,3:2,4:3,5:4,6:4,7:5,8:6,9:7,10:8,11:9,12:11,13:12,14:13,15:15,16:17,17:18,18:20,19:21,20:23,21:25,22:27,23:29,24:31,25:34,26:36,27:39,28:46,29:51,30:67};
 
 var RECITERS=[
-  {id:'Nasser_Alqatami_128kbps',      name:'Ù†Ø§ØµØ± Ø§Ù„Ù‚Ø·Ø§Ù…ÙŠ',               flag:'ðŸ‡°ðŸ‡¼',style:'murattal'},
-  {id:'Alafasy_128kbps',              name:'Ù…Ø´Ø§Ø±ÙŠ Ø§Ù„Ø¹ÙØ§Ø³ÙŠ',              flag:'ðŸ‡°ðŸ‡¼',style:'murattal'},
-  {id:'ahmed_ibn_ali_al_ajamy_128kbps',         name:'Ø£Ø­Ù…Ø¯ Ø§Ù„Ø¹Ø¬Ù…ÙŠ',       flag:'ðŸ‡°ðŸ‡¼',style:'murattal'},
-  {id:'MaherAlMuaiqly128kbps',        name:'Ù…Ø§Ù‡Ø± Ø§Ù„Ù…Ø¹ÙŠÙ‚Ù„ÙŠ',              flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Abdurrahmaan_As-Sudais_192kbps',name:'Ø¹Ø¨Ø¯ Ø§Ù„Ø±Ø­Ù…Ù† Ø§Ù„Ø³Ø¯ÙŠØ³',         flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Saood_ash-Shuraym_128kbps',    name:'Ø³Ø¹ÙˆØ¯ Ø§Ù„Ø´Ø±ÙŠÙ…',                flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Yasser_Ad-Dussary_128kbps',    name:'ÙŠØ§Ø³Ø± Ø§Ù„Ø¯ÙˆØ³Ø±ÙŠ',               flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Hudhaify_128kbps',             name:'Ø¹Ù„ÙŠ Ø§Ù„Ø­Ø°ÙŠÙÙŠ',                flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Abu_Bakr_Ash-Shaatree_128kbps',name:'Ø£Ø¨Ùˆ Ø¨ÙƒØ± Ø§Ù„Ø´Ø§Ø·Ø±ÙŠ',           flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Muhammad_Jibreel_128kbps',     name:'Ù…Ø­Ù…Ø¯ Ø¬Ø¨Ø±ÙŠÙ„',                 flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Hani_Rifai_192kbps',           name:'Ù‡Ø§Ù†ÙŠ Ø§Ù„Ø±ÙØ§Ø¹ÙŠ',               flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Muhammad_Ayyoub_128kbps',      name:'Ù…Ø­Ù…Ø¯ Ø£ÙŠÙˆØ¨',                  flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Ghamadi_40kbps',               name:'Ø³Ø¹Ø¯ Ø§Ù„ØºØ§Ù…Ø¯ÙŠ',                flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Abdullaah_3awwaad_Al-Juhaynee_128kbps',name:'Ø¹Ø¨Ø¯ Ø§Ù„Ù„Ù‡ Ø§Ù„Ø¬Ù‡Ù†ÙŠ',    flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Sahl_Yassin_128kbps',          name:'Ø³Ù‡Ù„ ÙŠØ§Ø³ÙŠÙ†',                  flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Abdullah_Basfar_192kbps',      name:'Ø¹Ø¨Ø¯ Ø§Ù„Ù„Ù‡ Ø¨ØµÙØ±',              flag:'ðŸ‡¸ðŸ‡¦',style:'murattal'},
-  {id:'Fares_Abbad_64kbps',           name:'ÙØ§Ø±Ø³ Ø¹Ø¨Ø§Ø¯',                  flag:'ðŸ‡©ðŸ‡¿',style:'murattal'},
-  {id:'Abdul_Basit_Murattal_192kbps', name:'Ø¹Ø¨Ø¯ Ø§Ù„Ø¨Ø§Ø³Ø· Ø¹Ø¨Ø¯ Ø§Ù„ØµÙ…Ø¯',       flag:'ðŸ‡ªðŸ‡¬',style:'murattal'},
-  {id:'Abdul_Basit_Mujawwad_128kbps', name:'Ø¹Ø¨Ø¯ Ø§Ù„Ø¨Ø§Ø³Ø· Ø¹Ø¨Ø¯ Ø§Ù„ØµÙ…Ø¯',       flag:'ðŸ‡ªðŸ‡¬',style:'mujawwad'},
-  {id:'Minshawy_Murattal_128kbps',    name:'Ù…Ø­Ù…Ø¯ Ø§Ù„Ù…Ù†Ø´Ø§ÙˆÙŠ',              flag:'ðŸ‡ªðŸ‡¬',style:'murattal'},
-  {id:'Husary_128kbps',               name:'Ù…Ø­Ù…ÙˆØ¯ Ø§Ù„Ø­ØµØ±ÙŠ',               flag:'ðŸ‡ªðŸ‡¬',style:'murattal'},
-  {id:'Mustafa_Ismail_48kbps',        name:'Ù…ØµØ·ÙÙ‰ Ø¥Ø³Ù…Ø§Ø¹ÙŠÙ„',             flag:'ðŸ‡ªðŸ‡¬',style:'mujawwad'},
-  {id:'Mohammad_al_Tablaway_128kbps', name:'Ù…Ø­Ù…Ø¯ Ø§Ù„Ø·Ø¨Ù„Ø§ÙˆÙŠ',              flag:'ðŸ‡ªðŸ‡¬',style:'murattal'}
+  {id:'Nasser_Alqatami_128kbps',      name:'ناصر القطامي',               flag:'🇰🇼',style:'murattal'},
+  {id:'Alafasy_128kbps',              name:'مشاري العفاسي',              flag:'🇰🇼',style:'murattal'},
+  {id:'ahmed_ibn_ali_al_ajamy_128kbps',         name:'أحمد العجمي',       flag:'🇰🇼',style:'murattal'},
+  {id:'MaherAlMuaiqly128kbps',        name:'ماهر المعيقلي',              flag:'🇸🇦',style:'murattal'},
+  {id:'Abdurrahmaan_As-Sudais_192kbps',name:'عبد الرحمن السديس',         flag:'🇸🇦',style:'murattal'},
+  {id:'Saood_ash-Shuraym_128kbps',    name:'سعود الشريم',                flag:'🇸🇦',style:'murattal'},
+  {id:'Yasser_Ad-Dussary_128kbps',    name:'ياسر الدوسري',               flag:'🇸🇦',style:'murattal'},
+  {id:'Hudhaify_128kbps',             name:'علي الحذيفي',                flag:'🇸🇦',style:'murattal'},
+  {id:'Abu_Bakr_Ash-Shaatree_128kbps',name:'أبو بكر الشاطري',           flag:'🇸🇦',style:'murattal'},
+  {id:'Muhammad_Jibreel_128kbps',     name:'محمد جبريل',                 flag:'🇸🇦',style:'murattal'},
+  {id:'Hani_Rifai_192kbps',           name:'هاني الرفاعي',               flag:'🇸🇦',style:'murattal'},
+  {id:'Muhammad_Ayyoub_128kbps',      name:'محمد أيوب',                  flag:'🇸🇦',style:'murattal'},
+  {id:'Ghamadi_40kbps',               name:'سعد الغامدي',                flag:'🇸🇦',style:'murattal'},
+  {id:'Abdullaah_3awwaad_Al-Juhaynee_128kbps',name:'عبد الله الجهني',    flag:'🇸🇦',style:'murattal'},
+  {id:'Sahl_Yassin_128kbps',          name:'سهل ياسين',                  flag:'🇸🇦',style:'murattal'},
+  {id:'Abdullah_Basfar_192kbps',      name:'عبد الله بصفر',              flag:'🇸🇦',style:'murattal'},
+  {id:'Fares_Abbad_64kbps',           name:'فارس عباد',                  flag:'🇩🇿',style:'murattal'},
+  {id:'Abdul_Basit_Murattal_192kbps', name:'عبد الباسط عبد الصمد',       flag:'🇪🇬',style:'murattal'},
+  {id:'Abdul_Basit_Mujawwad_128kbps', name:'عبد الباسط عبد الصمد',       flag:'🇪🇬',style:'mujawwad'},
+  {id:'Minshawy_Murattal_128kbps',    name:'محمد المنشاوي',              flag:'🇪🇬',style:'murattal'},
+  {id:'Husary_128kbps',               name:'محمود الحصري',               flag:'🇪🇬',style:'murattal'},
+  {id:'Mustafa_Ismail_48kbps',        name:'مصطفى إسماعيل',             flag:'🇪🇬',style:'mujawwad'},
+  {id:'Mohammad_al_Tablaway_128kbps', name:'محمد الطبلاوي',              flag:'🇪🇬',style:'murattal'}
 ];
-// Migrate old broken reciter IDs â†’ correct ones
+// Migrate old broken reciter IDs → correct ones
 (function(){var map={'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar':'ahmed_ibn_ali_al_ajamy_128kbps','Ahmed_ibn_Ali_al-Ajamy_128kbps':'ahmed_ibn_ali_al_ajamy_128kbps'};var cur=localStorage.getItem('app_reciter');if(cur&&map[cur]){localStorage.setItem('app_reciter',map[cur]);localStorage.removeItem('reciter_photos_cache');}})();
 var RECITER=localStorage.getItem('app_reciter')||'Nasser_Alqatami_128kbps';
-// Load from localStorage cache instantly â€” no async wait
+// Load from localStorage cache instantly — no async wait
 var RECITER_PHOTOS=(function(){try{return JSON.parse(localStorage.getItem('reciter_photos_cache')||'{}')}catch(e){return {}}}());
-// Bundled local photos â€” served from app assets, always available offline
+// Bundled local photos — served from app assets, always available offline
 var RECITER_LOCAL_PHOTOS={
   'Nasser_Alqatami_128kbps':'/assets/reciters/Nasser_Alqatami_128kbps.jpg',
   'Alafasy_128kbps':'/assets/reciters/Alafasy_128kbps.jpg',
@@ -708,13 +708,13 @@ var RECITER_LOCAL_PHOTOS={
   'Mustafa_Ismail_48kbps':'/assets/reciters/Mustafa_Ismail_48kbps.jpg',
   'Mohammad_al_Tablaway_128kbps':'/assets/reciters/Mohammad_al_Tablaway_128kbps.jpg'
 };
-// Priority: local bundled â†’ Supabase-cached CDN â†’ null
+// Priority: local bundled → Supabase-cached CDN → null
 function _reciterPhoto(id){return RECITER_LOCAL_PHOTOS[id]||RECITER_PHOTOS[id]||null;}
 // Tracks which reciter IDs have their images decoded in browser memory this session.
-// Pre-seeded true for all local reciters â€” bundled assets are always available offline.
+// Pre-seeded true for all local reciters — bundled assets are always available offline.
 var _imgLoaded=(function(){var m={};Object.keys(RECITER_LOCAL_PHOTOS).forEach(function(k){m[k]=true;});return m;}());
 
-// Network-only preload â€” skip if a local bundled image exists (always available).
+// Network-only preload — skip if a local bundled image exists (always available).
 function _preloadReciterImg(id){
   if(RECITER_LOCAL_PHOTOS[id])return;
   var url=RECITER_PHOTOS[id];
@@ -764,10 +764,10 @@ function loadReciterPhotos(){
         var img=document.createElement('img');img.src=url;img.alt='';
         avatar.appendChild(img);
       });
-      // Priority 1: current reciter + top 3 by index â€” start immediately, not idle
+      // Priority 1: current reciter + top 3 by index — start immediately, not idle
       _preloadReciterImg(RECITER);
       RECITERS.slice(0,3).forEach(function(r){_preloadReciterImg(r.id);});
-      // Priority 2: remaining reciters â€” idle time to avoid initial network burst
+      // Priority 2: remaining reciters — idle time to avoid initial network burst
       (window.requestIdleCallback||function(fn){setTimeout(fn,800)})(function(){
         RECITERS.forEach(function(r){_preloadReciterImg(r.id);});
       });
@@ -779,8 +779,8 @@ function audioUrl(surah,ayah){
   return 'https://everyayah.com/data/'+RECITER+'/'+String(surah).padStart(3,'0')+String(ayah).padStart(3,'0')+'.mp3';
 }
 
-// Multi-slot lookahead cache â€” keeps up to 3 upcoming ayahs pre-downloaded as blobs
-var _pfCache={}; // url â†’ {blob, xhr}
+// Multi-slot lookahead cache — keeps up to 3 upcoming ayahs pre-downloaded as blobs
+var _pfCache={}; // url → {blob, xhr}
 var _blobToRevoke=null;
 var _PF_AHEAD=5; // how many ayahs to fetch ahead
 
@@ -807,7 +807,7 @@ function prefetchAyahBlob(surah,ayah){
       var slot=_pfCache[u];
       if(slot.xhr){slot.xhr.abort();}
       if(u===_audioBufKey){
-        // This blob is live inside _audioBuf â€” clear the prebuf first so playAyah
+        // This blob is live inside _audioBuf — clear the prebuf first so playAyah
         // doesn't pick up the now-revoked URL, then revoke safely.
         _audioBuf=null;_audioBufKey=null;
       }
@@ -827,7 +827,7 @@ function prefetchAyahBlob(surah,ayah){
       if(xhr.status===200&&_pfCache[url]===slot){
         slot.blob=URL.createObjectURL(xhr.response);
         slot.xhr=null;
-        // Persist to local cache â€” fire and forget, never interrupts playback
+        // Persist to local cache — fire and forget, never interrupts playback
         if(window.AudioCache){
           var _p=url.match(/\/([^/]+)\/(\d{3})(\d{3})\.mp3$/);
           if(_p)AudioCache.saveBlob(_p[1],parseInt(_p[2],10),parseInt(_p[3],10),xhr.response);
@@ -886,7 +886,7 @@ function _scheduleAyahEnd(){
   },ms);
 }
 
-// Called when prebuf becomes ready mid-ayah â€” reschedule with tighter early offset.
+// Called when prebuf becomes ready mid-ayah — reschedule with tighter early offset.
 function _rescheduleEarlyEnd(){
   var ae=S.audio.el;
   if(!ae||!ae.duration||ae.duration===Infinity||!S.audio.playing||_audioNextCalled)return;
@@ -909,7 +909,7 @@ function _primeNextBuffer(surah,ayah){
   var url=audioUrl(surah,ayah);
   if(_audioBufKey===url)return; // already primed
   var slot=_pfCache[url];
-  if(!slot||!slot.blob)return; // blob not ready yet â€” will prime when it arrives
+  if(!slot||!slot.blob)return; // blob not ready yet — will prime when it arrives
   try{
     var buf=new Audio();
     buf.preload='auto';
@@ -918,12 +918,12 @@ function _primeNextBuffer(surah,ayah){
     _audioBuf=buf;
     _audioBufKey=url;
     console.log('[QuranAudioPerf] primed next='+surah+':'+ayah);
-    // Prebuf just became ready â€” tighten the early-end timer if it's still pending
+    // Prebuf just became ready — tighten the early-end timer if it's still pending
     _rescheduleEarlyEnd();
   }catch(e){}
 }
 
-// Update play/pause/loading icon â€” also keeps full player in sync
+// Update play/pause/loading icon — also keeps full player in sync
 function setAudioIcon(state){
   var ic=$('audioPlayIcon');if(!ic)return;
   ic.className=state==='loading'?'fas fa-spinner fa-spin':state==='pause'?'fas fa-pause':'fas fa-play';
@@ -958,7 +958,7 @@ var S={
   prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')===null?(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='mac')):localStorage.getItem('prayerAthanEnabled')==='true',
   prayerToggles:(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return {}}}()),
   theme:localStorage.getItem('theme')||((function(){try{return JSON.parse(localStorage.getItem('userPreferences')||'{}');}catch(e){return {};}}()).darkMode?'dark':'noor'),
-  dailyVerse:localStorage.getItem('dailyVerse')!=='false', // true by default â€” null/absent â†’ ON; 'false' string â†’ OFF
+  dailyVerse:localStorage.getItem('dailyVerse')!=='false', // true by default — null/absent → ON; 'false' string → OFF
   arSize:parseFloat(localStorage.getItem('app_arSize'))||2.0,
   tfSize:parseFloat(localStorage.getItem('app_tfSize'))||1.0,
   lineH:parseFloat(localStorage.getItem('app_lineH'))||2.2,
@@ -969,7 +969,7 @@ var S={
   supabase:null,user:null,syncInterval:null,isSyncing:false,syncFailed:false,syncErrorDetail:null,lastSyncTime:0,realtimeChannel:null,
   readerFont:localStorage.getItem('readerFont')||'hafs',
   glyphVerses:{},
-  mushafFont:'qcf4', // QCF4: fully bundled (fonts + page data) â€” Mushaf works offline. qcf1/qcf2 need network (GitHub fonts + quran.com API).
+  mushafFont:'qcf4', // QCF4: fully bundled (fonts + page data) — Mushaf works offline. qcf1/qcf2 need network (GitHub fonts + quran.com API).
   mushafFontSize:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseInt(localStorage.getItem(ip?'mushafFontSize_ipad_qcf4':'mushafFontSize_qcf4'))||0;return ip?Math.min(34,Math.max(22,raw||28)):Math.min(24,Math.max(16,raw||22));})(),
   mushafLineH:(function(){var ip=document.documentElement.classList.contains('is-ipad');var raw=parseFloat(localStorage.getItem(ip?'mushafLineH_ipad':'mushafLineH'))||0;return ip?Math.min(2.4,Math.max(1.8,raw||2.0)):Math.min(2.3,Math.max(1.8,raw||1.8));})(),
   copy:{surah:0,ayah:0,rangeFmt:'both'}
@@ -1012,26 +1012,26 @@ function init(){
       if(!S.audio.surah)return;
       var errCode=S.audio.el.error&&S.audio.el.error.code;
       var currentSrc=S.audio.el.src||'';
-      console.warn('[Audio] error â€” reciter:'+RECITER+' surah:'+S.audio.surah+' ayah:'+S.audio.ayah
+      console.warn('[Audio] error — reciter:'+RECITER+' surah:'+S.audio.surah+' ayah:'+S.audio.ayah
         +' errCode:'+errCode+' src:'+currentSrc.slice(0,100)+' retry:'+_audioNetRetry);
-      // If src was a local cached file â€” clear it and transparently retry with remote URL.
+      // If src was a local cached file — clear it and transparently retry with remote URL.
       // Local files can fail if the OS evicted them from cache storage.
       // errCode 4 (SRC_NOT_SUPPORTED) is the typical code when a capacitor:// file is missing.
       if(currentSrc.indexOf('capacitor://')===0||currentSrc.indexOf('file://')===0){
-        console.warn('[Audio] local file failed â€” evicting from cache, retrying remote');
+        console.warn('[Audio] local file failed — evicting from cache, retrying remote');
         if(window.AudioCache)AudioCache.clearLocalUri(RECITER,S.audio.surah,S.audio.ayah);
         var remoteUrl=audioUrl(S.audio.surah,S.audio.ayah);
         S.audio.el.src=remoteUrl;
         S.audio.el.load();
         S.audio.el.play().catch(function(){});
-        return; // transparent retry â€” no toast shown
+        return; // transparent retry — no toast shown
       }
-      // errCode 2 = MEDIA_ERR_NETWORK â€” transient failure (CDN hiccup, TLS timeout, etc.)
+      // errCode 2 = MEDIA_ERR_NETWORK — transient failure (CDN hiccup, TLS timeout, etc.)
       // Auto-retry up to 2 times with a short delay before showing a toast.
       if(errCode===2&&_audioNetRetry<2){
         _audioNetRetry++;
         var _retryUrl=audioUrl(S.audio.surah,S.audio.ayah);
-        console.warn('[Audio] network error â€” auto-retry #'+_audioNetRetry+' in 800ms');
+        console.warn('[Audio] network error — auto-retry #'+_audioNetRetry+' in 800ms');
         setTimeout(function(){
           if(!S.audio.playing||S.audio.el.src.indexOf('blob:')===0)return; // gave up or switched to blob
           S.audio.el.src=_retryUrl;
@@ -1041,17 +1041,17 @@ function init(){
         return;
       }
       _audioNetRetry=0;
-      // errCode 4 = MEDIA_ERR_SRC_NOT_SUPPORTED â€” reciter has no audio for this surah (404/unsupported)
-      // errCode 3 = MEDIA_ERR_DECODE â€” bad file data
-      // errCode 1 = MEDIA_ERR_ABORTED â€” user/system cancelled (usually silent)
+      // errCode 4 = MEDIA_ERR_SRC_NOT_SUPPORTED — reciter has no audio for this surah (404/unsupported)
+      // errCode 3 = MEDIA_ERR_DECODE — bad file data
+      // errCode 1 = MEDIA_ERR_ABORTED — user/system cancelled (usually silent)
       var msg;
       if(errCode===4){
-        msg=t('error.audio_unavailable')||'Ù‡Ø°Ø§ Ø§Ù„Ù‚Ø§Ø±Ø¦ Ù„Ø§ ØªØªÙˆÙØ± Ù„Ù‡ ØªÙ„Ø§ÙˆØ© Ù„Ù‡Ø°Ù‡ Ø§Ù„Ø³ÙˆØ±Ø©';
-        console.warn('[Audio] 404/unsupported â€” url:'+audioUrl(S.audio.surah,S.audio.ayah));
+        msg=t('error.audio_unavailable')||'هذا القارئ لا تتوفر له تلاوة لهذه السورة';
+        console.warn('[Audio] 404/unsupported — url:'+audioUrl(S.audio.surah,S.audio.ayah));
       } else if(errCode===1){
-        return; // aborted â€” no toast
+        return; // aborted — no toast
       } else {
-        msg=t('error.audio_load')||'Ú©ÛŽØ´Û•ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø¯Ù†ÛŒ Ø¯Û•Ù†Ú¯';
+        msg=t('error.audio_load')||'کێشەی بارکردنی دەنگ';
         console.error('[Audio] load error code:'+errCode+' reciter:'+RECITER
           +' url:'+audioUrl(S.audio.surah,S.audio.ayah));
       }
@@ -1089,7 +1089,7 @@ function init(){
     renderContinue();
 
     // Pull-to-refresh on all tabs
-    // On tablet the quran panel is a flex row â€” quranHome is the actual scroll container.
+    // On tablet the quran panel is a flex row — quranHome is the actual scroll container.
     var _isTabletLayout=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
     setupPullToRefresh(_isTabletLayout?'quranHome':'panelQuran',function(_,done){renderSurahGrid();renderContinue();done();},_isTabletLayout?null:function(){return !S.surah});
     setupPullToRefresh('panelBookmarks',function(_,done){_renderHash.bm=null;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');done();});
@@ -1104,7 +1104,7 @@ function init(){
     // Fast-scroll pill for long lists
     if(window._initFastScroll) _initFastScroll();
 
-    // Pre-render static tabs immediately â€” they don't need quran data.
+    // Pre-render static tabs immediately — they don't need quran data.
     // By the time quran.json loads, these are already built.
     setTimeout(function(){
       renderSettings(); _renderHash.settings=_tabHash('settings');
@@ -1149,9 +1149,9 @@ function init(){
         if(S.tab==='prayer'){
           var _skyEl=document.getElementById('prayerSkyScene');
           if(_skyEl)_skyEl.classList.remove('sky-paused');
-          // Re-render prayer panel on foreground â€” handles overnight stale date for web users.
+          // Re-render prayer panel on foreground — handles overnight stale date for web users.
           // Capacitor users get this via appStateChange below; this covers desktop/PWA.
-          // Skipped on Capacitor (appStateChange fires there instead â€” avoids double render).
+          // Skipped on Capacitor (appStateChange fires there instead — avoids double render).
           if(!window.Capacitor&&window.PrayerUI){
             requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
           }
@@ -1164,7 +1164,7 @@ function init(){
       if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
         window.Capacitor.Plugins.App.addListener('appStateChange',function(state){
           if(!state.isActive){
-            // Save background timestamp â€” used by startApp() warm-resume detection
+            // Save background timestamp — used by startApp() warm-resume detection
             // when iOS/Android kills the WebView under memory pressure and reloads it.
             localStorage.setItem('tk_last_bg', String(Date.now()));
             console.log('[APP_LIFECYCLE] background');
@@ -1176,16 +1176,16 @@ function init(){
             // Sync data when app goes to background
             if(S.user)syncToCloud();
           } else {
-            console.log('[APP_LIFECYCLE] warm_resume â€” appStateChange foreground');
+            console.log('[APP_LIFECYCLE] warm_resume — appStateChange foreground');
             console.log('[APP_LIFECYCLE] resume_refresh_start');
-            // Check immediately on resume â€” enforce lock blocks UI synchronously
+            // Check immediately on resume — enforce lock blocks UI synchronously
             ForceUpdate.check();
             // Refresh today's verse set so the date is correct after overnight open.
             // Without this, S.todayVerses stays as yesterday's Set and re-read ayahs
             // are skipped for today's goal count.
             initTodayVerses();
             // On every foreground resume: check exact alarm permission via native bridge.
-            // If it was revoked â†’ show warning; if it was just granted â†’ clear rate-limit
+            // If it was revoked → show warning; if it was just granted → clear rate-limit
             // and reschedule immediately (covers the case where user came back from Settings).
             (function(){
               var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
@@ -1194,15 +1194,15 @@ function init(){
                   if(r&&r.canSchedule===false){
                     if(window._showAthanAlarmPermWarning)window._showAthanAlarmPermWarning();
                   } else if(r&&r.canSchedule===true&&localStorage.getItem('athanExactAlarmWarned')){
-                    // Just got permission back â€” reschedule right now
+                    // Just got permission back — reschedule right now
                     localStorage.removeItem('athanExactAlarmWarned');
                     localStorage.removeItem('prayerLastScheduleTs');
                     PrayerUI.initScheduleOnStart();
                   }
                 }).catch(function(){});
-                // Check battery optimization on resume â€” re-check every 7 days in case user
+                // Check battery optimization on resume — re-check every 7 days in case user
                 // reverted the exemption (Samsung OEM can reset it after OS updates).
-                // Re-check battery opt every 7 days â€” Samsung OEM can silently revoke exemption
+                // Re-check battery opt every 7 days — Samsung OEM can silently revoke exemption
                 var _bwAge=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
                 if(Date.now()-_bwAge>7*24*60*60*1000){
                   _AA.isIgnoringBatteryOpts&&_AA.isIgnoringBatteryOpts().then(function(r){
@@ -1213,14 +1213,14 @@ function init(){
             })();
             // Reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
-            // Rebuild prayer panel if active â€” handles overnight stale date.
+            // Rebuild prayer panel if active — handles overnight stale date.
             // Skipped on macOS: athan notifications bring app to foreground automatically;
             // re-rendering would cause a visible "refresh" the user didn't ask for.
             var _fgPlatform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'';
             if(window.PrayerUI&&S.tab==='prayer'&&_fgPlatform!=='mac'){
               requestAnimationFrame(function(){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');});
             } else if(window.PrayerUI&&_fgPlatform!=='mac'){
-              // Not on prayer tab â€” just invalidate hash so it rebuilds fresh on next visit
+              // Not on prayer tab — just invalidate hash so it rebuilds fresh on next visit
               _renderHash.prayer=null;
             }
             // Push fresh widget data if date or city changed since last push
@@ -1230,10 +1230,10 @@ function init(){
             initDailyVerse();
             scheduleStreakReminder();
             // checkNewVideoNotif removed (2026-06-12): it duplicated the server
-            // FCM push â€” users got the real push in background, then a second
-            // local "Ú¤ÛŒØ¯ÛŒÛ†ÛŒÛ•Ú©ÛŒ Ù†ÙˆÛŒ ðŸŽ¬" on app open whenever the push had been
+            // FCM push — users got the real push in background, then a second
+            // local "ڤیدیۆیەکی نوی 🎬" on app open whenever the push had been
             // dismissed (the lastVideoNotifId dedup only saw tapped/in-tray pushes).
-            // Re-run prefetch â€” capped to once per 10 min to avoid spawning 20 city
+            // Re-run prefetch — capped to once per 10 min to avoid spawning 20 city
             // fetches on every single foreground event (rapid background/foreground cycles).
             (function(){
               var _now=Date.now(),_lp=parseInt(localStorage.getItem('tk_prefetch_ts')||'0');
@@ -1250,7 +1250,7 @@ function init(){
       }
     }catch(e){console.warn('App state listener not available',e)}
 
-    // Handle iOS widget tap â†’ deep link to prayer tab (tafsirkurd://prayer)
+    // Handle iOS widget tap → deep link to prayer tab (tafsirkurd://prayer)
     try{
       if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){
         Capacitor.Plugins.App.addListener('appUrlOpen',function(ev){
@@ -1259,14 +1259,14 @@ function init(){
       }
     }catch(e){}
 
-    // Handle notification tap â†’ deep link to ayah/video
+    // Handle notification tap → deep link to ayah/video
     if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications){
       Capacitor.Plugins.LocalNotifications.addListener('localNotificationActionPerformed',function(ev){
         var extra=ev&&ev.notification&&ev.notification.extra;
         if(!extra)return;
         // On macOS, Alert-style athan notifications automatically bring the app to the
         // foreground without any user interaction. Guard prayer-tab navigation so it only
-        // fires when the user explicitly tapped â€” not on every athan fire.
+        // fires when the user explicitly tapped — not on every athan fire.
         var _isMac=(window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()==='mac');
         var _isUserTap=(!ev.actionId||ev.actionId==='tap');
         if(_isMac&&!_isUserTap)return;
@@ -1340,7 +1340,7 @@ function init(){
       _updateMacInteraction(); // stamp once on launch so first open never auto-minimizes
     }
 
-    // â”€â”€ Centralised back logic â€” used by hardware back button AND swipe-back gesture â”€â”€
+    // ── Centralised back logic — used by hardware back button AND swipe-back gesture ──
     // hasBack: returns true when there is a layer that can be dismissed
     App.hasBack=function(){
       if($('fuOverlay')&&$('fuOverlay').classList.contains('on'))return false; // hard block
@@ -1362,7 +1362,7 @@ function init(){
       if(S.ivCurrentSeries&&S.tab==='islamvoice')return true;
       if(S.surah&&S.tab==='quran')return true;
       if(S.tab==='gencine'&&window.GencineUI&&GencineUI._view!=='home')return true;
-      return false; // root tabs are coordinate peers â€” no back between them
+      return false; // root tabs are coordinate peers — no back between them
     };
     // doBack: performs the back action. opts.allowExit controls whether to exit the app.
     App.doBack=function(opts){
@@ -1408,7 +1408,7 @@ function init(){
 
             var url=event.url;
 
-            // Common session handler â€” upserts profile and signs the user in
+            // Common session handler — upserts profile and signs the user in
             function _applySession(session){
               setUserFromSession(session);
               var u=session.user;var meta=u.user_metadata||{};
@@ -1428,7 +1428,7 @@ function init(){
 
             if(!S.supabase)return;
 
-            // â”€â”€ PKCE flow (Supabase v2 default): code in query params â”€â”€â”€â”€â”€â”€
+            // ── PKCE flow (Supabase v2 default): code in query params ──────
             // Supabase returns ?code=... which must be exchanged for a session.
             var qStr=(url.split('?')[1]||'').split('#')[0];
             var code=new URLSearchParams(qStr).get('code');
@@ -1440,7 +1440,7 @@ function init(){
               return;
             }
 
-            // â”€â”€ Implicit grant (fallback): tokens in hash fragment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Implicit grant (fallback): tokens in hash fragment ───────────
             var hashPart=url.split('#')[1]||'';
             var hParams=new URLSearchParams(hashPart);
             var accessToken=hParams.get('access_token');
@@ -1469,7 +1469,7 @@ function init(){
     });
 
     // Scroll-pause: add tk-scrolling class during active scroll so CSS can
-    // pause heavy GPU animations (sky, audio wave, etc.) â€” reduces compositor
+    // pause heavy GPU animations (sky, audio wave, etc.) — reduces compositor
     // work that causes scroll jank on mid-range Android devices.
     (function(){
       var _st=null;
@@ -1484,7 +1484,7 @@ function init(){
   }
 
   // Ensure notification channels exist on Android (capacitor.config channels[] is iOS-only)
-  // Note: requestPermissions() is NOT called here â€” _doSchedule() handles it at the right
+  // Note: requestPermissions() is NOT called here — _doSchedule() handles it at the right
   // time (after athan data is ready), preventing a premature dialog on top of the splash.
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications){
     try{
@@ -1506,12 +1506,12 @@ function init(){
   initDailyVerse();
   // Stagger non-critical background work to avoid network + CPU spike right after entry
   setTimeout(function(){scheduleStreakReminder();},800);
-  // checkNewVideoNotif/checkNewBookNotif removed â€” FCM handles new-content notifications
+  // checkNewVideoNotif/checkNewBookNotif removed — FCM handles new-content notifications
   setTimeout(function(){_warmAboutCache();},2000);
-  _initPushTapListener(); // register tap listener immediately â€” never miss cold-start events
+  _initPushTapListener(); // register tap listener immediately — never miss cold-start events
   setTimeout(function(){initPushToken();},3000);
   setTimeout(function(){_reportAppVersion();},5000);
-  // Load Gencine scripts immediately â€” all three are SW-precached so this is near-instant.
+  // Load Gencine scripts immediately — all three are SW-precached so this is near-instant.
   // Pre-render runs as soon as scripts are ready so buttons are always there on first tap.
   _loadGencineScripts(function(){
     if(window.GencineUI&&S.tab!=='gencine'){
@@ -1519,13 +1519,13 @@ function init(){
       if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}
     }
   });
-  // Heavy: fetches prayer data for all 20 cities â€” skip on slow networks (user's city is already cached)
+  // Heavy: fetches prayer data for all 20 cities — skip on slow networks (user's city is already cached)
   setTimeout(function(){if(!_sn.skip()&&window.PrayerUI)PrayerUI.prefetchAllCities();},6000);
-  // Athan voice decode is CPU-intensive â€” skip on slow networks
+  // Athan voice decode is CPU-intensive — skip on slow networks
   setTimeout(function(){if(!_sn.skip()&&window.PrayerUI)PrayerUI.preloadAthanVoices();},5000);
-  // Audio cache warmup â€” verify manifest entries still exist on disk, populate _uriMap
+  // Audio cache warmup — verify manifest entries still exist on disk, populate _uriMap
   setTimeout(function(){if(window.AudioCache)AudioCache.warmup();},4000);
-  // Image cache warmup â€” runs after AudioCache to avoid competing disk I/O at startup
+  // Image cache warmup — runs after AudioCache to avoid competing disk I/O at startup
   setTimeout(function(){if(window.ImgCache)ImgCache.warmup();},5000);
 
   // Fetch prayer data immediately (no delay) so cache is ready for pre-render below
@@ -1539,7 +1539,7 @@ function init(){
     }
   }
 
-  // Mushaf font warm-up â€” prefetch current page Â±4 fonts/data so Mushaf tab opens fast
+  // Mushaf font warm-up — prefetch current page ±4 fonts/data so Mushaf tab opens fast
   setTimeout(function(){
     getMushafPageRange(S.surah||1).then(function(pages){
       var cur=pages.start;
@@ -1559,43 +1559,43 @@ function init(){
     }catch(e){}
   })();
 
-  // Early data prefetch â€” warm all API/DB caches before user taps any tab.
-  // No DOM work here â€” just fires network requests so cache is hot when tab opens.
+  // Early data prefetch — warm all API/DB caches before user taps any tab.
+  // No DOM work here — just fires network requests so cache is hot when tab opens.
   setTimeout(function(){
     if(window.GencineUI&&GencineUI.prefetch)GencineUI.prefetch();
   },200);
 
-  // Pre-render fallback â€” fires at 1500ms if _checkDataReady() hasn't triggered it yet.
+  // Pre-render fallback — fires at 1500ms if _checkDataReady() hasn't triggered it yet.
   // Normal case: _checkDataReady() triggers _startTabPrerender() ~100ms after start.
   setTimeout(function(){_startTabPrerender();},1500);
 
-  // Smart splash â€” 2 gates: quran data loaded + all tabs pre-rendered.
-  // Hybrid timing: first launch / new version â†’ 800ms minimum (logo animation).
-  //                repeat same-version launches â†’ immediate exit when data ready.
+  // Smart splash — 2 gates: quran data loaded + all tabs pre-rendered.
+  // Hybrid timing: first launch / new version → 800ms minimum (logo animation).
+  //                repeat same-version launches → immediate exit when data ready.
   var _splashStart = Date.now();
   var _splashReady = {quran:false, i18n:false}; // i18n gate: holds splash until live translations ready
   var _splashDismissed = false;
   var _splashSeenKey = 'tk_splash_seen';
   var _splashMinPassed = false;
 
-  // Version check â€” resolves in <10ms on device (Capacitor bridge call)
+  // Version check — resolves in <10ms on device (Capacitor bridge call)
   (function(){
     try {
       if (!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.App) {
-        _splashMinPassed=true; return; // web/dev â€” no minimum
+        _splashMinPassed=true; return; // web/dev — no minimum
       }
       Capacitor.Plugins.App.getInfo().then(function(info){
         if (localStorage.getItem(_splashSeenKey)===(info.version||'')) {
-          // Repeat launch, same version â€” exit as soon as data is ready
+          // Repeat launch, same version — exit as soon as data is ready
           _splashMinPassed=true;
           _checkSplashReady();
         }
-        // else: first launch or new version â€” 3s timer handles it below
+        // else: first launch or new version — 3s timer handles it below
       }).catch(function(){ _splashMinPassed=true; _checkSplashReady(); });
     } catch(e){ _splashMinPassed=true; }
   })();
 
-  // 600ms minimum â€” only active for first launch / new version (logo animation duration).
+  // 600ms minimum — only active for first launch / new version (logo animation duration).
   // Writes the "seen" flag so next launch exits as soon as data is ready.
   setTimeout(function(){
     if(_splashMinPassed)return; // already cleared (repeat launch)
@@ -1616,10 +1616,10 @@ function init(){
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
         console.log('[Startup] Transitioning into app at',Date.now()-_splashStart,'ms');
-        // Dismiss themed native overlay (iOS MainViewController) â€” runs in parallel with HTML exit
+        // Dismiss themed native overlay (iOS MainViewController) — runs in parallel with HTML exit
         try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.splashDismiss)
           window.webkit.messageHandlers.splashDismiss.postMessage(null);}catch(e){}
-        // Logo exit animation â€” skipped on warm resume (instant restore)
+        // Logo exit animation — skipped on warm resume (instant restore)
         var logo=document.getElementById('splashLogo');
         if(logo&&!window._splashFastExit)logo.classList.add('exit');
         // Refresh current tab with latest translations just before fade-in.
@@ -1645,17 +1645,17 @@ function init(){
     if(_splashDismissed)return;
     if(!_splashReady.quran)return;
     if(!_splashReady.i18n)return;  // wait for live translations (or 1500ms fallback)
-    if(!_splashReady.video)return; // video gate (auto-passes â€” no video element)
+    if(!_splashReady.video)return; // video gate (auto-passes — no video element)
     if(!_splashMinPassed)return; // first launch / new version: wait for 800ms minimum
-    console.log('[Startup] All gates passed â€” exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
-    // Pre-warm app layout one frame before transition starts â€” gives browser a head start
+    console.log('[Startup] All gates passed — exiting splash. Elapsed:',Date.now()-_splashStart,'ms');
+    // Pre-warm app layout one frame before transition starts — gives browser a head start
     // painting the app before the splash fade begins (3 rAFs total on normal path).
     var app=$('app');
     if(app)app.style.display='flex';
     requestAnimationFrame(function(){_doSplashTransition();});
   }
 
-  // Image-only splash â€” no video element, gate passes immediately
+  // Image-only splash — no video element, gate passes immediately
   var _splashVid=document.getElementById('splashVideo');
   if(_splashVid){
     // Legacy fallback if someone has a cached HTML with the old video element
@@ -1665,10 +1665,10 @@ function init(){
     _splashReady.video=true;
   }
 
-  // â”€â”€ Warm resume fast path â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Warm resume fast path ─────────────────────────────────────────────────
   // WebView was killed while app was in background (iOS/Android memory pressure).
-  // Skip ALL splash gates â€” user was already in the app, never show animation again.
-  // This prevents the "blank â†’ logo animation â†’ delay â†’ app" sequence on resume.
+  // Skip ALL splash gates — user was already in the app, never show animation again.
+  // This prevents the "blank → logo animation → delay → app" sequence on resume.
   if(window._isWarmResume){
     window._splashFastExit=true; // skip logo exit animation on resume
     _splashMinPassed=true;
@@ -1678,7 +1678,7 @@ function init(){
     _splashReady.video=true;
     console.log('[APP_LIFECYCLE] skipped_full_loader_on_resume');
     requestAnimationFrame(function(){
-      // Instant fade (0.1s) instead of the normal exit animation â€” feels like native restore
+      // Instant fade (0.1s) instead of the normal exit animation — feels like native restore
       var _sp=$('splash');
       if(_sp)_sp.style.transition='opacity 0.1s';
       _doSplashTransition();
@@ -1690,12 +1690,12 @@ function init(){
   window._splashReadyI18n       =function(){if(_splashReady.i18n)return;_splashReady.i18n=true;_checkSplashReady();};
   // Drain any early signal from i18n.js that fired before init() ran (fast-network path)
   if(window._splashI18nEarlyFire) window._splashReadyI18n();
-  window._splashReadyGencine    =function(){}; // not a gate â€” Supabase-dependent, loads async
-  window._splashReadyIslamvoice =function(){}; // not a gate â€” Supabase-dependent, loads async
-  window._splashReadyTabs       =function(){}; // no longer a gate â€” pre-render runs in background
-  // Overall failsafe â€” force app visible after 6s no matter what
+  window._splashReadyGencine    =function(){}; // not a gate — Supabase-dependent, loads async
+  window._splashReadyIslamvoice =function(){}; // not a gate — Supabase-dependent, loads async
+  window._splashReadyTabs       =function(){}; // no longer a gate — pre-render runs in background
+  // Overall failsafe — force app visible after 6s no matter what
   setTimeout(function(){_doSplashTransition();},6000);
-  // Data always loads async now (no localStorage cache) â€” splash waits for both files
+  // Data always loads async now (no localStorage cache) — splash waits for both files
 }
 
 /* ===== LIVE TRANSLATION UPDATE ===== */
@@ -1705,7 +1705,7 @@ function _rerenderCurrentTab(){
   // Invalidate all pre-rendered caches so next tab visit rebuilds with fresh strings
   _renderHash={};
   if(window.PrayerUI) PrayerUI.invalidate();
-  // Always bust SmartDhikr section cache â€” stale DOM must not survive a translation swap
+  // Always bust SmartDhikr section cache — stale DOM must not survive a translation swap
   // regardless of which tab is currently visible when i18n:updated fires.
   if(window.SmartDhikr) SmartDhikr.clearCache();
 
@@ -1717,7 +1717,7 @@ function _rerenderCurrentTab(){
   else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
   else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
   else if(tab==='gencine'&&window.GencineUI){GencineUI._homeEl=null;GencineUI._draw();}
-  // quran tab uses data-i18n attributes â€” applyTranslations() handled by i18n.js before dispatch
+  // quran tab uses data-i18n attributes — applyTranslations() handled by i18n.js before dispatch
 }
 
 // Register hook so i18n.js can trigger re-render directly after atomic swap
@@ -1732,10 +1732,10 @@ var _startupT0=Date.now();   // module load time for debug logs
 
 function _checkDataReady(){
   if(!_dataReady.quran)return;
-  // Signal splash gate as soon as quran.json is ready â€” tafsir (3MB) is only needed
+  // Signal splash gate as soon as quran.json is ready — tafsir (3MB) is only needed
   // when the user opens a surah to read, so it must not block the splash or tab pre-render.
   if(window._splashReadyQuran){window._splashReadyQuran();window._splashReadyQuran=null;}
-  // Tab pre-render doesn't need tafsir â€” start immediately when quran is ready.
+  // Tab pre-render doesn't need tafsir — start immediately when quran is ready.
   // _tabsPrerendering guard ensures this runs only once even when called twice.
   setTimeout(_startTabPrerender,50);
   // Notify SmartDhikr that quranData is ready so the ayah card rebuilds with real text
@@ -1764,17 +1764,17 @@ function _startTabPrerender(){
   var jobs=[
     function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
     function(){renderGoals();_renderHash.goals=_tabHash('goals');},
-    // Settings: always pre-render â€” it's static DOM, cheap on all device tiers
+    // Settings: always pre-render — it's static DOM, cheap on all device tiers
     function(){renderSettings();_renderHash.settings=_tabHash('settings');},
     function(){if(window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},
-    // IslamVoice/Gencine: skip on medium/low/critical â€” expensive, rarely first
+    // IslamVoice/Gencine: skip on medium/low/critical — expensive, rarely first
     (_isLowEndDev||_isMediumPerf) ? null : function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
     (_isLowEndDev||_isMediumPerf) ? null : function(){if(window.GencineUI)GencineUI.render();}
   ].filter(Boolean); // remove nulls for lower perf tiers
   var _ji=0;
   // Use requestIdleCallback so pre-render jobs only run when the browser has
-  // no user interactions pending â€” prevents jank on first touch after splash.
+  // no user interactions pending — prevents jank on first touch after splash.
   // timeout: 2500ms guarantees jobs complete even if user stays active.
   var _jobTimeout=_isLowEndDev?3500:_isMediumPerf?3000:2500;
   function _nextJob(){
@@ -1792,10 +1792,10 @@ function _startTabPrerender(){
   }
   _nextJob();
 }
-// â”€â”€ IndexedDB cache for large immutable data files â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── IndexedDB cache for large immutable data files ───────────────────────────
 // Quran text and Kurdish tafsir never change between app versions, so we
 // parse them once, store the JS object in IDB, and skip fetch+JSON.parse on
-// every subsequent launch (~150 ms â†’ ~15 ms for quran.json on repeat opens).
+// every subsequent launch (~150 ms → ~15 ms for quran.json on repeat opens).
 var _tkIDB=null;
 function _openIDB(cb){
   if(_tkIDB){cb(_tkIDB);return;}
@@ -1831,11 +1831,11 @@ function _idbDel(key){
   });
 }
 
-// â”€â”€ Build-versioned cache wrappers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Build-versioned cache wrappers ───────────────────────────────────────────
 // Quran/tafsir IDB entries are stored as {build, data, savedAt} so a new APK
 // (which may ship corrected quran.json / kurdish_tafsir.json) invalidates the
 // old cache automatically. Legacy unwrapped payloads count as stale once the
-// build is known. build==='' (web, or App.getInfo() failed) fails open â€”
+// build is known. build==='' (web, or App.getInfo() failed) fails open —
 // the cache is accepted as-is so nothing breaks without the native bridge.
 var _appBuild=null; // null = not yet resolved; '' = unknown
 function _getAppBuild(cb){
@@ -1879,7 +1879,7 @@ function _fetchQuranData(cb){
   },{maxRetries:2,base:600})
   .then(function(d){
     AndroidLog.fetch('/data/quran.json',200,'quran',false,Date.now()-_t0);
-    S.quranData=d; // swap only on success â€” old data stays alive if the fetch fails
+    S.quranData=d; // swap only on success — old data stays alive if the fetch fails
     _idbPut(_QURAN_IDB_KEY,_idbWrap(d));
     _dataReady.quran=true;
     _checkDataReady();
@@ -1896,7 +1896,7 @@ function _fetchQuranData(cb){
 }
 function loadQuranData(){
   _getAppBuild(function(build){
-    // Fast path A: HTML preload script already read IDB during page parse â€” zero async wait.
+    // Fast path A: HTML preload script already read IDB during page parse — zero async wait.
     if(window._tkQuranPreload){
       var pd=_idbUnwrap(window._tkQuranPreload,build);
       if(pd){
@@ -1905,20 +1905,20 @@ function loadQuranData(){
         _checkDataReady();
         return;
       }
-      // Cache belongs to an older build â€” discard the preload and refetch
+      // Cache belongs to an older build — discard the preload and refetch
       // (bundled JSON is APK-local, so this costs ~150 ms once per app update).
-      console.log('[quran] IDB cache from older build â€” refreshing');
+      console.log('[quran] IDB cache from older build — refreshing');
       window._tkQuranPreload=undefined;
       _idbDel(_QURAN_IDB_KEY);
       _fetchQuranData();
       return;
     }
-    // Fast path B: IDB open succeeded but key absent (first launch) â€” skip IDB round-trip.
+    // Fast path B: IDB open succeeded but key absent (first launch) — skip IDB round-trip.
     if(window._tkQuranPreload===false){
       _fetchQuranData();
       return;
     }
-    // Fallback: preload script not yet done (or IDB unavailable) â€” check IDB ourselves.
+    // Fallback: preload script not yet done (or IDB unavailable) — check IDB ourselves.
     _idbGet(_QURAN_IDB_KEY,function(cached){
       var pd2=_idbUnwrap(cached,build);
       if(pd2){
@@ -1928,7 +1928,7 @@ function loadQuranData(){
         return;
       }
       if(cached){
-        console.log('[quran] IDB cache from older build â€” refreshing');
+        console.log('[quran] IDB cache from older build — refreshing');
         _idbDel(_QURAN_IDB_KEY);
       }
       _fetchQuranData();
@@ -1971,7 +1971,7 @@ function _fetchTafsirData(cb){
   },{maxRetries:2,base:800})
   .then(function(d){
     var grouped=groupTafsirBySurah(d);
-    S.tafsirData=grouped; // swap only on success â€” old data stays alive if the fetch fails
+    S.tafsirData=grouped; // swap only on success — old data stays alive if the fetch fails
     _idbPut(_TAFSIR_IDB_KEY,_idbWrap(grouped));
     _dataReady.tafsir=true;
     _checkDataReady();
@@ -1986,14 +1986,14 @@ function _fetchTafsirData(cb){
   });
 }
 function loadTafsirData(){
-  // Try IDB first â€” stores the pre-processed grouped object so we skip
+  // Try IDB first — stores the pre-processed grouped object so we skip
   // both the 3 MB fetch and groupTafsirBySurah() on every repeat launch.
   _getAppBuild(function(build){
     _idbGet(_TAFSIR_IDB_KEY,function(cached){
       var pd=_idbUnwrap(cached,build);
       if(pd){S.tafsirData=pd;_dataReady.tafsir=true;_checkDataReady();return;}
       if(cached){
-        console.log('[tafsir] IDB cache from older build â€” refreshing');
+        console.log('[tafsir] IDB cache from older build — refreshing');
         _idbDel(_TAFSIR_IDB_KEY);
       }
       _fetchTafsirData();
@@ -2077,13 +2077,13 @@ function _tabHash(name){
     return 'p:'+(localStorage.getItem('prayerCity')||'Duhok')+':'+(localStorage.getItem('prayerMethod')||'13')+':'+new Date().toDateString();
   }
   if(name==='gencine'){
-    // Version key + date â€” forces re-render on DB reload OR new day
+    // Version key + date — forces re-render on DB reload OR new day
     return 'g:'+(window._gencineDbVersion||0)+':'+new Date().toDateString();
   }
   return null;
 }
 window.App={};
-// Cached panel/tab-item NodeLists â€” populated once on first tab switch (DOM is ready by then)
+// Cached panel/tab-item NodeLists — populated once on first tab switch (DOM is ready by then)
 var _cachedPanels=null,_cachedTabItems=null,_cachedTabBtns={};
 function _getCachedPanels(){if(!_cachedPanels)_cachedPanels=document.querySelectorAll('.panel');return _cachedPanels;}
 function _getCachedTabItems(){if(!_cachedTabItems)_cachedTabItems=document.querySelectorAll('.tab-item');return _cachedTabItems;}
@@ -2091,14 +2091,14 @@ function _getCachedTabBtn(name){if(!_cachedTabBtns[name])_cachedTabBtns[name]=do
 // Track pending tab rAF renders so we can cancel them if user switches again
 var _pendingTabRaf=null;
 var _tabAnimTimer=null;   // clears window._tabAnimating after panel animation settles
-var _tabAnimGen=0;        // generation counter â€” prevents stale timer clearing a newer flag
-// Saved scroll positions per tab â€” panels preserve scrollTop naturally via display:none,
+var _tabAnimGen=0;        // generation counter — prevents stale timer clearing a newer flag
+// Saved scroll positions per tab — panels preserve scrollTop naturally via display:none,
 // but we need to re-apply it when content is rebuilt (hash change forces re-render).
 var _tabScrollPos={};
 App.tab=function(name){
   if(tapGuard('tab',350))return; // 350ms: covers touchstart+onclick double-fire gap
   if(name===S.tab){
-    H.selection(); // re-tapping same tab â€” subtle acknowledge, not a navigation
+    H.selection(); // re-tapping same tab — subtle acknowledge, not a navigation
     if(name==='quran'){
       if(S.surah){
         // Inside surah: first re-tap scrolls to top, second goes back to grid
@@ -2144,7 +2144,7 @@ App.tab=function(name){
     }
     return;
   }
-  H.light(); // different-tab switch â€” clear selection feel
+  H.light(); // different-tab switch — clear selection feel
 
   // Cancel any pending rAF render from a previous fast tab switch
   if(_pendingTabRaf){cancelAnimationFrame(_pendingTabRaf);_pendingTabRaf=null;}
@@ -2153,13 +2153,13 @@ App.tab=function(name){
   S.tabHistory.push(_prevTab);
   S.tab=name;
 
-  // â”€â”€ Block swipe-back during the tab animation window â”€â”€
+  // ── Block swipe-back during the tab animation window ──
   window._tabAnimating=true;
   if(_tabAnimTimer)clearTimeout(_tabAnimTimer);
   var _tg=++_tabAnimGen;
   _tabAnimTimer=setTimeout(function(){if(_tabAnimGen===_tg)window._tabAnimating=false;},100);
 
-  // â”€â”€ Show new panel instantly â€” only touch the previous + new panel, not ALL panels â”€â”€
+  // ── Show new panel instantly — only touch the previous + new panel, not ALL panels ──
   // Suppress CSS transitions for exactly 1 frame so the panel swap is pixel-instant,
   // not a 150ms fade. Transitions resume on the next requestAnimationFrame.
   document.body.classList.add('tk-tab-switching');
@@ -2169,7 +2169,7 @@ App.tab=function(name){
   if(panel)panel.classList.add('on');
   requestAnimationFrame(function(){document.body.classList.remove('tk-tab-switching');});
 
-  // â”€â”€ Tab bar icon + ARIA â”€â”€
+  // ── Tab bar icon + ARIA ──
   var prevBtnName=(_prevTab==='goals'||_prevTab==='bookmarks')?'quran':_prevTab;
   var prevBtn=_getCachedTabBtn(prevBtnName);
   if(prevBtn){prevBtn.classList.remove('on');prevBtn.setAttribute('aria-selected','false');}
@@ -2178,7 +2178,7 @@ App.tab=function(name){
   if(tabBtn){tabBtn.classList.add('on');tabBtn.setAttribute('aria-selected','true');}
   if(window._tsSpringTabIcon)_tsSpringTabIcon(tabBtnName);
 
-  // â”€â”€ Prayer: unpause sky in next frame â”€â”€
+  // ── Prayer: unpause sky in next frame ──
   if(name==='prayer'){
     requestAnimationFrame(function(){
       var _skyEl=document.getElementById('prayerSkyScene');
@@ -2186,11 +2186,11 @@ App.tab=function(name){
     });
   }
 
-  // â”€â”€ Defer all cleanup + renders to next frame so tab switch paints first â”€â”€
+  // ── Defer all cleanup + renders to next frame so tab switch paints first ──
   _pendingTabRaf=requestAnimationFrame(function(){
     _pendingTabRaf=null;
 
-    // â”€â”€ Save scroll of departing tab before any cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Save scroll of departing tab before any cleanup ──────────────────────
     // display:none preserves scrollTop natively, but render rebuilds reset it.
     // Saving now lets us restore position when user returns after a data change.
     var _prevPanelEl=document.getElementById('panel'+_prevTab.charAt(0).toUpperCase()+_prevTab.slice(1));
@@ -2217,7 +2217,7 @@ App.tab=function(name){
     if(typeof closeCfgSheet==='function')closeCfgSheet();
     App.closeReaderSettings();
 
-    // Renders for new tab â€” hash checks prevent unnecessary rebuilds.
+    // Renders for new tab — hash checks prevent unnecessary rebuilds.
     // Each tab renders once (at pre-render or first open) and stays in DOM.
     // Only re-renders when the tab's data actually changes (hash mismatch).
     // Rebuilds are deferred by one rAF so the panel shows old content for
@@ -2284,7 +2284,7 @@ App.tab=function(name){
       if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();
     }
     if(name==='gencine'){
-      // Show instant skeleton if scripts aren't ready yet â€” prevents blank panel
+      // Show instant skeleton if scripts aren't ready yet — prevents blank panel
       if(!_gencineScriptsLoaded){
         var _gc=$('gencineContent');
         if(_gc&&!_gc.firstChild){
@@ -2301,7 +2301,7 @@ App.tab=function(name){
       _loadGencineScripts(function(){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine&&S.tab==='gencine'){GencineUI.render();_renderHash.gencine=_gh;}});
     }
 
-    // â”€â”€ Restore scroll for tabs where content was NOT rebuilt â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Restore scroll for tabs where content was NOT rebuilt ─────────────────
     // When content is preserved (hash same), scrollTop is already correct since
     // display:none panels keep their scrollTop. When content IS rebuilt (_didRebuild),
     // scroll naturally starts at 0 which is correct for fresh content.
@@ -2364,7 +2364,7 @@ function tapGuard(key,ms){
 /* ===== TOAST ===== */
 /* ===== UNIFIED CONFIRM POPUP ===== */
 // _tkConfirm({icon, title, msg, yes, no, danger, onYes, onNo})
-// Shows a centered card overlay â€” works on iOS (no window.confirm needed).
+// Shows a centered card overlay — works on iOS (no window.confirm needed).
 function _tkConfirm(opts){
   var ov=$('tkConfirmOverlay');
   if(!ov)return;
@@ -2378,8 +2378,8 @@ function _tkConfirm(opts){
   if(opts.title){card.appendChild(el('div','tk-confirm-title',opts.title));}
   if(opts.msg&&opts.msg.indexOf(' ')!==-1){card.appendChild(el('div','tk-confirm-msg',opts.msg));}
   var btns=el('div','tk-confirm-btns');
-  var yesBtn=el('button','tk-confirm-yes'+(opts.danger||isCinematic?' danger':''),opts.yes||t('common.yes')||'Ø¨Û•Ù„ÛŽ');
-  var noBtn=el('button','tk-confirm-no',opts.no||t('common.no')||'Ù†Û•Ø®ÛŽØ±');
+  var yesBtn=el('button','tk-confirm-yes'+(opts.danger||isCinematic?' danger':''),opts.yes||t('common.yes')||'بەلێ');
+  var noBtn=el('button','tk-confirm-no',opts.no||t('common.no')||'نەخێر');
   on(yesBtn,'click',function(){_tkConfirmClose();if(opts.onYes)opts.onYes();});
   on(noBtn,'click',function(){_tkConfirmClose();if(opts.onNo)opts.onNo();});
   btns.appendChild(yesBtn);btns.appendChild(noBtn);
@@ -2398,7 +2398,7 @@ var _toastMsg=null;
 function toast(msg){
   var el=$('toast');
   clearTimeout(_toastTimer);
-  // Same message still visible â†’ silently extend, no re-animation (prevents spam)
+  // Same message still visible → silently extend, no re-animation (prevents spam)
   if(msg===_toastMsg&&el.classList.contains('on')){
     _toastTimer=setTimeout(function(){el.classList.remove('on');_toastTimer=null;_toastMsg=null;},2500);
     return;
@@ -2408,28 +2408,28 @@ function toast(msg){
   el.classList.add('on');
   _toastTimer=setTimeout(function(){el.classList.remove('on');_toastTimer=null;_toastMsg=null;},2500);
 }
-App.toast=toast; // iOS: window.toast is the DOM element â€” use App.toast in other modules
+App.toast=toast; // iOS: window.toast is the DOM element — use App.toast in other modules
 
 /* ===== HAPTICS ===== */
 // Centralized haptic system. Use H.xxx() for all new code.
 //
 // iOS native mapping (Capacitor Haptics plugin):
-//   selection â†’ UISelectionFeedbackGenerator.selectionChanged() â€” tightest/subtlest
-//   light     â†’ UIImpactFeedbackGenerator(.light)
-//   medium    â†’ UIImpactFeedbackGenerator(.medium)
-//   heavy     â†’ UIImpactFeedbackGenerator(.heavy)
-//   success   â†’ UINotificationFeedbackGenerator(.success)
-//   warning   â†’ UINotificationFeedbackGenerator(.warning)
+//   selection → UISelectionFeedbackGenerator.selectionChanged() — tightest/subtlest
+//   light     → UIImpactFeedbackGenerator(.light)
+//   medium    → UIImpactFeedbackGenerator(.medium)
+//   heavy     → UIImpactFeedbackGenerator(.heavy)
+//   success   → UINotificationFeedbackGenerator(.success)
+//   warning   → UINotificationFeedbackGenerator(.warning)
 //
 // Android web fallback (navigator.vibrate):
-//   selection â†’ 8ms  | light â†’ 18ms | medium â†’ 35ms | heavy â†’ 55ms
-//   success   â†’ [40,20,40] | warning â†’ [60,30,60]
+//   selection → 8ms  | light → 18ms | medium → 35ms | heavy → 55ms
+//   success   → [40,20,40] | warning → [60,30,60]
 //
 // Spam guard: standard haptics have a 50ms minimum gap.
 // Notification haptics (success/warning) always fire but block for 200ms after.
 var H=(function(){
   var _last=0;
-  var _MIN=25; // ms minimum between standard haptics â€” prevents spam
+  var _MIN=25; // ms minimum between standard haptics — prevents spam
 
   function _hp(){return window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;}
   function _dbg(msg){if(window._hapticDebug)console.log('[Haptics]',msg);}
@@ -2471,27 +2471,27 @@ var H=(function(){
   }
 
   return {
-    // selection: subtlest tick â€” stepper adjustments, picker scrubbing, PTR arm
+    // selection: subtlest tick — stepper adjustments, picker scrubbing, PTR arm
     // iOS requires selectionStart() before selectionChanged() to warm up the generator
     selection:function(){_std(function(Hp){
       var p=Hp.selectionStart();
       if(p&&typeof p.then==='function'){p.then(function(){Hp.selectionChanged().then(function(){Hp.selectionEnd();}).catch(function(){});}).catch(function(){});}
       else{try{Hp.selectionChanged();Hp.selectionEnd();}catch(e){}}
     },8);},
-    // light: gentle tap â€” tabs, toggles, back navigation, most UI interactions
+    // light: gentle tap — tabs, toggles, back navigation, most UI interactions
     light:    function(){_std(function(Hp){return Hp.impact({style:'LIGHT'});},18);},
-    // medium: clear feedback â€” play/pause, bookmark add, PTR commit, opening players
+    // medium: clear feedback — play/pause, bookmark add, PTR commit, opening players
     medium:   function(){_std(function(Hp){return Hp.impact({style:'MEDIUM'});},35);},
-    // heavy: strong â€” use sparingly, only for the most intentional gestures
+    // heavy: strong — use sparingly, only for the most intentional gestures
     heavy:    function(){_std(function(Hp){return Hp.impact({style:'HEAVY'});},55);},
-    // success: achievement/confirmation â€” goal complete, login, sync success
+    // success: achievement/confirmation — goal complete, login, sync success
     success:  function(){_note('SUCCESS',[40,20,40]);},
-    // warning: destructive/alert â€” confirm delete, dangerous actions
+    // warning: destructive/alert — confirm delete, dangerous actions
     warning:  function(){_note('WARNING',[60,30,60]);}
   };
 })();
 
-// â”€â”€ Startup haptic availability check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Startup haptic availability check ───────────────────────────────────────
 (function(){
   try{
     var isNative=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform();
@@ -2499,14 +2499,14 @@ var H=(function(){
     var platform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'web';
     console.log('[Haptics] platform='+platform+' native='+!!isNative+' plugin='+!!Hp+' navVibrate='+!!navigator.vibrate);
     if(isNative&&!Hp){
-      console.warn('[Haptics] PLUGIN UNAVAILABLE on native â€” all haptics will be silent. Run: npx cap sync');
+      console.warn('[Haptics] PLUGIN UNAVAILABLE on native — all haptics will be silent. Run: npx cap sync');
     }
   }catch(e){console.warn('[Haptics] startup check error',e);}
 })();
 
-// â”€â”€ Debug helpers (call from Safari Web Inspector console) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// window._hapticDebug = true  â†’ log every haptic call
-// window._hapticTest()        â†’ fire each haptic type in sequence with 400ms gaps
+// ── Debug helpers (call from Safari Web Inspector console) ──────────────────
+// window._hapticDebug = true  → log every haptic call
+// window._hapticTest()        → fire each haptic type in sequence with 400ms gaps
 window._hapticTest=function(){
   var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
   var platform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'web';
@@ -2529,11 +2529,11 @@ window._hapticTest=function(){
   });
 };
 
-// Legacy shim â€” maps old numeric patterns to named semantics.
+// Legacy shim — maps old numeric patterns to named semantics.
 // All new code should call H.xxx() directly.
-// Threshold â‰¤6 â†’ selection (steppers, tiny increments)
-// Threshold â‰¤25 â†’ light (this upgrades old haptic([8]) calls to light â€” the
-//   bread-and-butter iOS tap; â‰¤6ms callers that want selection use H.selection() directly)
+// Threshold ≤6 → selection (steppers, tiny increments)
+// Threshold ≤25 → light (this upgrades old haptic([8]) calls to light — the
+//   bread-and-butter iOS tap; ≤6ms callers that want selection use H.selection() directly)
 function haptic(pattern){
   var dur=pattern&&pattern[0]||20;
   if(dur<=6)H.selection();
@@ -2562,7 +2562,7 @@ function _ensureReminderChannel(LN){
 var DAILY_VERSE_LIST=[
   /* Al-Fatiha */
   {s:1,a:1},{s:1,a:2},{s:1,a:5},{s:1,a:6},{s:1,a:7},
-  /* Al-Baqarah â€” famous & short */
+  /* Al-Baqarah — famous & short */
   {s:2,a:45},{s:2,a:152},{s:2,a:153},{s:2,a:155},{s:2,a:177},{s:2,a:186},
   {s:2,a:255},{s:2,a:256},{s:2,a:257},{s:2,a:261},{s:2,a:269},{s:2,a:285},{s:2,a:286},
   /* Al-Imran */
@@ -2807,18 +2807,18 @@ window._showNotifSetupHint=function _showNotifSetupHint(force){
   card.style.cssText='width:100%;max-width:480px;background:var(--surface,#fff);border-radius:20px 20px 0 0;padding:24px 20px 20px;text-align:center';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text,#000)';
-  title.textContent=t('notif.setup_title')||'Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±Ú©Ø±Ù†Û•Ú©Ø§Ù† Ú•ÛŽÚ©Ø¨Ø®Û• âœ“';
+  title.textContent=t('notif.setup_title')||'ئاگادارکرنەکان ڕێکبخە ✓';
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
   msg.textContent=t('notif.setup_body')||
-    'Ø¨Û† Ø¦Û•ÙˆÛ•ÛŒ Ø¨Ø§Ù†Ú¯ Ù„Û• Ú©Ø§ØªØ§ Ø®Û†ÛŒØ¯Ø§ Ø¨ÛŽØªØŒ Ø¦Û•Ù… Ø¯ÙˆÙˆØ§Ù† Ù¾Ø´ØªØ±Ø§Ø³Øª Ø¨Ú©Û•:\n\n'+
-    'â‘  Ø¨ÛŒØªØ§Ù‚ÙˆØ±Ø§: Ú•ÛŽÚ©Ø®Ø³ØªÙ† â† Ù…Û•Ø±Ø¬ â† Ø¨ÛŒØªØ§Ù‚ÙˆØ±Ø§ â† Ø¨ÛŽ Ø¦ÛŽØ´Ú©Ø§Ù„Û•\n'+
+    'بۆ ئەوەی بانگ لە کاتا خۆیدا بێت، ئەم دووان پشتراست بکە:\n\n'+
+    '① بیتاقورا: ڕێکخستن ← مەرج ← بیتاقورا ← بێ ئێشکالە\n'+
     '   (Unrestricted Battery Usage)\n\n'+
-    'â‘¡ Ø¦Ø§Ù„Ø§Ø±Ù… Ùˆ Ø¨ÛŒØ±Ù‡Ø§ØªÙ†: Ú•ÛŽÚ©Ø®Ø³ØªÙ† â† Ù…Û•Ø±Ø¬Ø§ ØªØ§ÛŒØ¨Û•Øª â† Ø¦Ø§Ù„Ø§Ø±Ù…\n'+
-    '   (Alarms & Reminders â† ÙÛ•Ø±Ù…Ø§Ù†ÛŒ Ø¦Û•Ù¾ÛŽ Ø¨Ø¯Û•)';
+    '② ئالارم و بیرهاتن: ڕێکخستن ← مەرجا تایبەت ← ئالارم\n'+
+    '   (Alarms & Reminders ← فەرمانی ئەپێ بدە)';
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
-  btn.textContent=t('notif.setup_ok')||'ØªÛŽÚ¯Û•ÛŒØ´ØªÙ…';
+  btn.textContent=t('notif.setup_ok')||'تێگەیشتم';
   btn.onclick=function(){overlay.remove();};
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
   card.setAttribute('aria-label',title.textContent);
@@ -2829,7 +2829,7 @@ window._showNotifSetupHint=function _showNotifSetupHint(force){
   setTimeout(function(){btn.focus();},50); // move focus into dialog
 };
 
-/* Show battery-optimization guidance â€” triggered when isIgnoringBatteryOpts() returns false */
+/* Show battery-optimization guidance — triggered when isIgnoringBatteryOpts() returns false */
 window._showBatteryOptWarning=function(){
   if(!window.Capacitor)return;
   if(window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')return;
@@ -2842,18 +2842,18 @@ window._showBatteryOptWarning=function(){
   card.style.cssText='width:100%;max-width:480px;background:var(--surface,#fff);border-radius:20px 20px 0 0;padding:24px 20px 20px;text-align:center';
   var icon=document.createElement('div');
   icon.style.cssText='font-size:2rem;margin-bottom:8px';
-  icon.textContent='ðŸ”‹';
+  icon.textContent='🔋';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text,#000)';
-  title.textContent=t('notif.setup.direct_title','Ø¨Ø§Ù†Ú¯ Ú•Ø§Ø³ØªÛ•ÙˆØ®Û† Ø¨ÛŒØª');
+  title.textContent=t('notif.setup.direct_title','بانگ ڕاستەوخۆ بیت');
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
   msg.textContent=
-    'Ø¯Ø§ Ú©Ùˆ Ø¨Ø§Ù†Ú¯ Ù„ Ø¯Û•Ù…ÛŽ Ø®Û† ÛŒÛŽ Ø¯Ø±ÙˆØ³Øª Ø¯Ø§ Ù„ÛŽØ¨Ø¯Û•ØªØŒ Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ø¦Û•Ù¾ Ø¯ Ø¨Ù† Ú©Û†Ù†ØªØ±Û†Ù„Ø§ Ù¾Ø§ØªØ±ÛŒÛŽ Ø¯Ø§ ÛŒÛŽ "Ø¨ÛŽ Ú•ÛŽÚ¯Ø±ÛŒ" (unrestricted) Ø¨ÛŒØª.\n\n'+
-    'Ø¯ÙˆÚ¯Ù…Û•ÛŒØ§ Ø®ÙˆØ§Ø±ÛŽ Ù„ÛŽØ¨Ø¯Û• Ùˆ "Ø¨ÛŽ Ú•ÛŽÚ¯Ø±ÛŒ" Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Ù‡.';
+    'دا کو بانگ ل دەمێ خۆ یێ دروست دا لێبدەت، پێویستە ئەپ د بن کۆنترۆلا پاتریێ دا یێ "بێ ڕێگری" (unrestricted) بیت.\n\n'+
+    'دوگمەیا خوارێ لێبدە و "بێ ڕێگری" هەڵبژێره.';
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
-  btn.textContent=t('notif.setup.open_settings','Ú¤Û•Ú©Ø±Ù†Ø§ Ú•ÛŽÚ©Ø®Ø³ØªÙ†Ø§Ù†');
+  btn.textContent=t('notif.setup.open_settings','ڤەکرنا ڕێکخستنان');
   btn.onclick=function(){
     overlay.remove();
     var _AA=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.AthanAlarm;
@@ -2861,7 +2861,7 @@ window._showBatteryOptWarning=function(){
   };
   var dismissBtn=document.createElement('button');
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
-  dismissBtn.textContent=t('notif.setup.later','Ù¾Ø§Ø´Ø§Ù†');
+  dismissBtn.textContent=t('notif.setup.later','پاشان');
   dismissBtn.onclick=function(){overlay.remove();};
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
   card.setAttribute('aria-label',title.textContent);
@@ -2873,7 +2873,7 @@ window._showBatteryOptWarning=function(){
   setTimeout(function(){btn.focus();},50);
 };
 
-/* Show exact-alarm-revoked warning â€” triggered when OS verification finds 0 pending after schedule */
+/* Show exact-alarm-revoked warning — triggered when OS verification finds 0 pending after schedule */
 window._showAthanAlarmPermWarning=function(){
   if(!window.Capacitor)return;
   if(window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')return;
@@ -2884,20 +2884,20 @@ window._showAthanAlarmPermWarning=function(){
   // Warning icon row
   var icon=document.createElement('div');
   icon.style.cssText='font-size:2rem;margin-bottom:8px';
-  icon.textContent='âš ï¸';
+  icon.textContent='⚠️';
   var title=document.createElement('div');
   title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:#b45309';
-  title.textContent=t('notif.setup.athan_disabled_title','Ø¯Û•Ù†Ú¯ÛŽ Ø¨Ø§Ù†Ú¯ÛŒ Ù†Ø§Ù‡ÛŽØª â€” Ù…Û•Ø±Ø¬Û•Ùƒ ÛŒÛŽ Ù‡Û•ÛŒ');
+  title.textContent=t('notif.setup.athan_disabled_title','دەنگێ بانگی ناهێت — مەرجەك یێ هەی');
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
   msg.textContent=
-    'Ú•ÛŽÙ¾ÛŽØ¯Ø§Ù†Ø§ "Alarms & Reminders" Ù‡Ø§ØªÛŒÛ• Ú•Ø§Ú¯Ø±ØªÙ†.\n\n'+
-    'Ø¨Û† Ú†Ø§Ø±Û•Ø³Û•Ø±ÙƒØ±Ù†ÛŽ:\n'+
-    'Ú•ÛŽÙƒØ®Ø³ØªÙ† Â» Ú•ÛŽÙ¾ÛŽØ¯Ø§Ù†ÛŽÙ† ØªØ§ÛŒØ¨Û•Øª Â» Alarms & Reminders\n'+
-    'Â» Ú•ÛŽÙ¾ÛŽØ¯Ø§Ù†ÛŽ Ø¨ Ø¦Û•Ù¾ÛŽ TafsirKurd Ø¨Ø¯Û• (ÛŒØ§Ù† Ú†Ø§Ù„Ø§Ùƒ Ø¨ÙƒÛ•).';
+    'ڕێپێدانا "Alarms & Reminders" هاتیە ڕاگرتن.\n\n'+
+    'بۆ چارەسەركرنێ:\n'+
+    'ڕێكخستن » ڕێپێدانێن تایبەت » Alarms & Reminders\n'+
+    '» ڕێپێدانێ ب ئەپێ TafsirKurd بدە (یان چالاك بكە).';
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:#b45309;color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
-  btn.textContent=t('notif.setup.go_settings','Ù‡Û•Ø±Û• Ú•ÛŽÙƒØ®Ø³ØªÙ†Ø§Ù†');
+  btn.textContent=t('notif.setup.go_settings','هەرە ڕێكخستنان');
   btn.onclick=function(){
     overlay.remove();
     // Open exact-alarm settings screen directly via native bridge
@@ -2907,7 +2907,7 @@ window._showAthanAlarmPermWarning=function(){
   };
   var dismissBtn=document.createElement('button');
   dismissBtn.style.cssText='width:100%;padding:10px;background:none;border:none;color:var(--text3,#999);font-size:.85rem;cursor:pointer;margin-top:6px';
-  dismissBtn.textContent=t('notif.setup.dismiss','Ù¾Ø§Ø´ÛŒ');
+  dismissBtn.textContent=t('notif.setup.dismiss','پاشی');
   dismissBtn.onclick=function(){overlay.remove();};
   card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');
   card.setAttribute('aria-label',title.textContent);
@@ -2927,7 +2927,7 @@ function initDailyVerse(){
 }
 
 /* ===== STREAK REMINDER NOTIFICATION ===== */
-/* ID 30 â€” fires at 9pm if user has a streak but hasn't read today */
+/* ID 30 — fires at 9pm if user has a streak but hasn't read today */
 function scheduleStreakReminder(){
   if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
   var LN=Capacitor.Plugins.LocalNotifications;
@@ -2945,8 +2945,8 @@ function scheduleStreakReminder(){
     _ensureReminderChannel(LN).then(function(){
       LN.schedule({notifications:[{
         id:30,
-        title:t('notif.streak_title')||'Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ',
-        body:t('notif.streak_body',{days:String(streak)})||'Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù…ÛŒØ§ ØªÛ• ÛŒØ§ Ú•Û†Ú˜Ø§Ù†Û• Ø¯ÛŽ Ú˜ Ø¯Û•Ø³Øª ØªÛ• Ú†ÛŒØª! ðŸ”¥',
+        title:t('notif.streak_title')||'خواندنا قورئانێ',
+        body:t('notif.streak_body',{days:String(streak)})||'بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥',
         schedule:{at:at,allowWhileIdle:true},
         smallIcon:'ic_notification',
         channelId:'reminder',
@@ -2956,8 +2956,8 @@ function scheduleStreakReminder(){
   }).catch(function(){});
 }
 
-/* ===== PUSH TAP LISTENER â€” registered immediately on startup ===== */
-/* Must not wait 3s â€” cold-start buffered events are delivered to the
+/* ===== PUSH TAP LISTENER — registered immediately on startup ===== */
+/* Must not wait 3s — cold-start buffered events are delivered to the
    first listener registered, so we register it right away. */
 var _pendingPushDeepLink=null; // set by tap listener, consumed after splash
 
@@ -2971,7 +2971,7 @@ function _markPushSeen(data){
 function _initPushTapListener(){
   var PP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.PushNotifications;
   if(!PP){return;}
-  // Scan notifications already in the tray â€” covers killed-app-manual-open scenario
+  // Scan notifications already in the tray — covers killed-app-manual-open scenario
   // where pushNotificationReceived never fires but the notification is still visible.
   // Runs before checkNew* (which are delayed 1.5-2.5s), so dedup keys are set in time.
   if(PP.getDeliveredNotifications){
@@ -2988,9 +2988,9 @@ function _initPushTapListener(){
     var type=data.type||'';
     var id=data.id||'';
     console.log('[Push] tap type='+type+' id='+id);
-    // Mark seen when push is TAPPED (cold-start or background â†’ foreground)
+    // Mark seen when push is TAPPED (cold-start or background → foreground)
     _markPushSeen(data);
-    // Store pending link â€” execute after splash so app is fully visible
+    // Store pending link — execute after splash so app is fully visible
     _pendingPushDeepLink={type:type,id:id};
     // Also try immediately in case app is already past splash (background state)
     _handlePushDeepLink(type,id);
@@ -3002,7 +3002,7 @@ function _initPushTapListener(){
    Handles cold starts (app killed) where data isn't loaded yet. */
 function _handlePushDeepLink(type,id){
   var tries=0;
-  var MAX=60; // 60 Ã— 200ms = 12 seconds max wait
+  var MAX=60; // 60 × 200ms = 12 seconds max wait
 
   function ready(){
     // App core must exist and tabs must be rendered
@@ -3011,7 +3011,7 @@ function _handlePushDeepLink(type,id){
     if(type==='islamvoice_episodes'||type==='video')return !!(S.ivEpisodes&&S.ivEpisodes.length);
     // For gencine: GencineUI must exist
     if(type==='gencine_books'||type==='gencine'||type==='book')return !!(window.GencineUI);
-    // verse, prayer, update, default â€” just need App to exist
+    // verse, prayer, update, default — just need App to exist
     return true;
   }
 
@@ -3137,7 +3137,7 @@ function initPushToken(){
       var platform=window.Capacitor.getPlatform()||'unknown';
       var token=tokenData.value||'';
       _pushLog('registration event fired platform='+platform+' tokenLen='+token.length);
-      localStorage.setItem('push_token_preview',token.slice(0,20)+'â€¦');
+      localStorage.setItem('push_token_preview',token.slice(0,20)+'…');
       localStorage.setItem('push_token_platform',platform);
       if(!token){_pushLog('ERROR: empty token');return;}
       // Persist for cross-session retry (cleared on success)
@@ -3220,8 +3220,8 @@ function checkNewVideoNotif(){
               LN.cancel({notifications:[{id:31}]}).catch(function(){});
               LN.schedule({notifications:[{
                 id:31,
-                title:tSafe('notif.new_video_title')||'Ú¤ÛŒØ¯ÛŒÛ†ÛŒÛ•Ú©Ø§ Ù†ÙˆÛŒ ðŸŽ¬',
-                body:(ep.title_ku||ep.title)||tSafe('notif.new_video_body')||'Ú¤ÛŒØ¯ÛŒÛ†ÛŒÛ•Ú©Ø§ Ù†ÙˆÛŒ Ø²ÛŽØ¯Û•Ø¨ÙˆÙˆ',
+                title:tSafe('notif.new_video_title')||'ڤیدیۆیەکا نوی 🎬',
+                body:(ep.title_ku||ep.title)||tSafe('notif.new_video_body')||'ڤیدیۆیەکا نوی زێدەبوو',
                 schedule:{at:new Date(Date.now()+3000),allowWhileIdle:true},
                 smallIcon:'ic_notification',
                 channelId:'reminder',
@@ -3236,13 +3236,13 @@ function checkNewVideoNotif(){
 
 /* ===== SEARCH ===== */
 var _searchTimer=null;
-/* â”€â”€â”€ Search result cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Search result cache ──────────────────────────────────────── */
 var _searchCache=new Map();
 var _SEARCH_CACHE_MAX=50;
 function _cachePut(k,v){if(_searchCache.size>=_SEARCH_CACHE_MAX){_searchCache.delete(_searchCache.keys().next().value);}_searchCache.set(k,v);}
 function _cacheInvalidate(){_searchCache.clear();}
 
-/* â”€â”€â”€ Search history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Search history ───────────────────────────────────────────── */
 var _SEARCH_HIST_KEY='qs_history';
 var _SEARCH_HIST_MAX=8;
 function _shGet(){try{return JSON.parse(localStorage.getItem(_SEARCH_HIST_KEY)||'[]');}catch(e){return[];}}
@@ -3305,8 +3305,8 @@ function _hlNodes(text,tokens,isAr){
         if(isAr){
           while(oE<text.length&&REMOVE_AR.test(text[oE]))oE++;
           // expand to full word so Arabic letter-joining is never broken at element boundaries
-          while(oS>0&&text[oS-1]!==' '&&text[oS-1]!=='\n'&&text[oS-1]!=='ØŒ'&&text[oS-1]!=='Û”')oS--;
-          while(oE<text.length&&text[oE]!==' '&&text[oE]!=='\n'&&text[oE]!=='ØŒ'&&text[oE]!=='Û”')oE++;
+          while(oS>0&&text[oS-1]!==' '&&text[oS-1]!=='\n'&&text[oS-1]!=='،'&&text[oS-1]!=='۔')oS--;
+          while(oE<text.length&&text[oE]!==' '&&text[oE]!=='\n'&&text[oE]!=='،'&&text[oE]!=='۔')oE++;
         }
         if(oS<oE)ranges.push([oS,oE,isPhraseTok?1:0]);
       }
@@ -3408,7 +3408,7 @@ App._renderSearchEmpty=function(){
   res.classList.add('on');
 };
 
-/* Suggestions disabled â€” search only */
+/* Suggestions disabled — search only */
 App._renderSuggestions=function(){
   var old=$('searchResults').querySelector('.search-suggestions');
   if(old)old.remove();
@@ -3456,7 +3456,7 @@ App._renderSearchHistory=function(){
   res.appendChild(wrap);res.classList.add('on');
 };
 
-/* Debounced entry point â€” called on every keystroke */
+/* Debounced entry point — called on every keystroke */
 App.onSearch=function(v){
   clearTimeout(_searchTimer);
   if(!v.trim()){App._renderSearchHistory();return;}
@@ -3471,17 +3471,17 @@ App.onSearch=function(v){
 App._execSearch=function(v){
   var q=v.trim();
   // Strip quote wrappers for display-side normalization (search.js handles them too)
-  var isExactMode=(q.length>2&&((q[0]==='"'&&q[q.length-1]==='"')||(q[0]==='Â«'&&q[q.length-1]==='Â»')));
+  var isExactMode=(q.length>2&&((q[0]==='"'&&q[q.length-1]==='"')||(q[0]==='«'&&q[q.length-1]==='»')));
   S.search=q;
   var res=$('searchResults');
   if(!q){App._renderSearchEmpty();return;}
 
-  // Quran data not loaded yet â€” show retry prompt instead of silently doing nothing
+  // Quran data not loaded yet — show retry prompt instead of silently doing nothing
   if(!S.quranData){
     clear(res);res.classList.add('on');
     var _sd=el('div','search-unavailable');
-    _sd.innerHTML='<i class="fas fa-wifi-slash"></i><p>'+t('search.unavailable','Ú¯Û•Ú•Ø§Ù† Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•')+'</p>';
-    var _srb=el('button','search-retry-btn',t('search.retry','Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•'));
+    _sd.innerHTML='<i class="fas fa-wifi-slash"></i><p>'+t('search.unavailable','گەڕان بەردەست نییە')+'</p>';
+    var _srb=el('button','search-retry-btn',t('search.retry','دووبارە هەوڵبدە'));
     _srb.onclick=function(){loadQuranData().then(function(){App._execSearch(v);});};
     _sd.appendChild(_srb);res.appendChild(_sd);
     return;
@@ -3533,7 +3533,7 @@ App._execSearch=function(v){
 App._renderSearchResults=function(q,results,isExactMode){
   var res=$('searchResults');
   if(!results||!results.length){App._renderSearchNoResults(q);return;}
-  // Build fragment before clearing â€” old results stay visible until new ones are ready
+  // Build fragment before clearing — old results stay visible until new ones are ready
   var frag=document.createDocumentFragment();
   // Exact-mode banner
   if(isExactMode){
@@ -3552,18 +3552,18 @@ App._renderSearchResults=function(q,results,isExactMode){
   clear(res); res.classList.add('on'); res.appendChild(frag); // atomic replace
 };
 
-/* No-results state â€” clean message only */
+/* No-results state — clean message only */
 App._renderSearchNoResults=function(q){
   var res=$('searchResults');
   var wrap=document.createElement('div');
   wrap.className='search-noresult';
-  wrap.appendChild(el('div','search-noresult-icon','â—Œ'));
+  wrap.appendChild(el('div','search-noresult-icon','◌'));
   wrap.appendChild(el('div','search-noresult-msg',t('search.no_results')));
   wrap.appendChild(el('div','search-noresult-sub',t('search.no_results_sub')));
   clear(res); res.appendChild(wrap); res.classList.add('on'); // atomic replace
 };
 
-/* Build a single result card â€” clean minimal layout */
+/* Build a single result card — clean minimal layout */
 App._mkSearchItem=function(r,isPrimary){
   var cls='search-result search-result--'+r.type+(isPrimary?' search-result--primary':'');
   var item=el('div',cls);
@@ -3605,7 +3605,7 @@ App._mkSearchItem=function(r,isPrimary){
     var info=document.createElement('div');
     info.className='search-surah-info';
     info.appendChild(el('div','search-result-title',r.surahEn));
-    info.appendChild(el('div','search-result-sub',r.surahAr+'Â â€¢Â '+r.ayahCount+'Â '+t('reader.ayah')));
+    info.appendChild(el('div','search-result-sub',r.surahAr+' • '+r.ayahCount+' '+t('reader.ayah')));
     row.appendChild(info);
     item.appendChild(row);
     on(item,'click',(function(sn,q){return function(){
@@ -3619,7 +3619,7 @@ App._mkSearchItem=function(r,isPrimary){
     _hlNodes(_ctxSnippet(r.arO,r.posAr,90),allAr,true).forEach(function(n){arDiv2.appendChild(n);});
     item.appendChild(arDiv2);
     var metaRow=el('div','search-result-sub');
-    metaRow.textContent=(r.surahAr||r.surahEn)+'Â â€¢Â '+t('reader.ayah')+'Â '+r.an;
+    metaRow.textContent=(r.surahAr||r.surahEn)+' • '+t('reader.ayah')+' '+r.an;
     item.appendChild(metaRow);
     if(r.kuO){
       var kuDiv2=document.createElement('div');
@@ -3749,7 +3749,7 @@ function renderContinue(){
   var deco=_cdec;
   card.appendChild(deco);
   var info=el('div','continue-info');
-  info.appendChild(el('div','continue-label','Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù…ÛŒ Ø¯ Ø®ÙˆØ§Ù†Ø¯Ù†ÛŽØ¯Ø§'));
+  info.appendChild(el('div','continue-label','بەردەوامی د خواندنێدا'));
   info.appendChild(el('div','continue-title',s.en+' - '+s.ar));
   info.appendChild(el('div','continue-sub',t('reader.ayah')+' '+last.ayah));
   card.appendChild(info);
@@ -3796,7 +3796,7 @@ App.backToList=function(){
   if(S.surah){
     try{localStorage.setItem('surah_scroll_'+S.surah,String($('ayahList').scrollTop))}catch(e){}
   }
-  // Clean up mushaf DOM + observer â€” keep mode preference so next surah reopens in mushaf
+  // Clean up mushaf DOM + observer — keep mode preference so next surah reopens in mushaf
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   _mqReset();
   clearMushafHighlights();
@@ -3822,7 +3822,7 @@ App.backToList=function(){
 var _qcfFontInjected={};
 var _qcfV2FontInjected={};
 var _qcfV4FontInjected={};
-// pageNum â†’ Promise<boolean> â€” deduplicates concurrent font-load waits
+// pageNum → Promise<boolean> — deduplicates concurrent font-load waits
 var _qcfV4FontLoadP={};
 // Concurrency limiter: cap simultaneous QCF4 font fetches to 4 so fast-scroll
 // doesn't exhaust the browser's HTTP connection pool (typically 6 per origin).
@@ -3832,10 +3832,10 @@ function _qcfFontSlot(fn){
   return new Promise(function(res,rej){_qcfFontQueue.push(function(){_qcfFontActive++;fn().finally(function(){_qcfFontActive--;if(_qcfFontQueue.length)(_qcfFontQueue.shift())();}).then(res,rej);});});
 }
 
-// Detect iOS Capacitor once â€” strip script removes local woff2, so skip local src on iOS
+// Detect iOS Capacitor once — strip script removes local woff2, so skip local src on iOS
 var _isIOSCap=(function(){try{return window.Capacitor&&Capacitor.getPlatform()==='ios';}catch(e){return false;}}());
 
-/* SurahName font readiness â€” delegates to QuranFontManager (quran-font-manager.js).
+/* SurahName font readiness — delegates to QuranFontManager (quran-font-manager.js).
    Local flags mirror manager state so render-time isReady checks stay O(1). */
 var _surahNameFontReady=false;
 var _surahNameV2FontReady=false;
@@ -3853,7 +3853,7 @@ var _surahNameV2FontReady=false;
   });
 })();
 
-function toArabicNum(n){return String(n).replace(/\d/g,function(d){return'Ù Ù¡Ù¢Ù£Ù¤Ù¥Ù¦Ù§Ù¨Ù©'[+d];});}
+function toArabicNum(n){return String(n).replace(/\d/g,function(d){return'٠١٢٣٤٥٦٧٨٩'[+d];});}
 
 function injectQCFFont(pageNum){
   if(_qcfFontInjected[pageNum])return;
@@ -3886,14 +3886,14 @@ function injectQCFV4Font(pageNum){
   document.head.appendChild(s);
 }
 
-// Inject + wait for QCF4 font â€” returns Promise<boolean>.
+// Inject + wait for QCF4 font — returns Promise<boolean>.
 // Deduplicates: calling for the same pageNum returns the same Promise.
 function ensureQCFV4Font(pageNum){
   if(_qcfV4FontLoadP[pageNum])return _qcfV4FontLoadP[pageNum];
   injectQCFV4Font(pageNum);
   var fontName='QCFv4p'+pageNum;
   // Canvas sentinel: after document.fonts.load() says the font is ready, verify that
-  // PUA glyphs (U+E001â€“U+E00A) render with a DIFFERENT width than the monospace fallback.
+  // PUA glyphs (U+E001–U+E00A) render with a DIFFERENT width than the monospace fallback.
   // This catches WebKit/Android cases where fonts.load() resolves but the real file was
   // never applied (e.g. swap-fallback, wrong face, cached-then-evicted).
   function _sentinelOk(){
@@ -3901,7 +3901,7 @@ function ensureQCFV4Font(pageNum){
       var cv=document.createElement('canvas');
       var cx=cv.getContext('2d');
       if(!cx)return false;
-      var s='î€î€‚î€ƒî€„î€…î€†î€‡î€ˆî€‰î€Š';
+      var s='';
       cx.font='48px monospace';
       var wRef=cx.measureText(s).width;
       cx.font='48px "'+fontName+'",monospace';
@@ -3928,9 +3928,9 @@ function ensureQCFV4Font(pageNum){
       // apply (sentinel/timeout). Fires only on the rare failure path.
       var probe=_isIOSCap?('/assets/fonts/qcf4ttf/p'+pageNum+'.ttf'):('/assets/fonts/qcf4/p'+pageNum+'.woff2');
       fetch(probe).then(function(r){
-        console.warn('[QuranFont] QCFv4p'+pageNum+' FAILED â€” '+probe+' â†’ HTTP '+r.status+(r.ok?' (file ok; face did not apply)':' (font file missing from bundle)'));
+        console.warn('[QuranFont] QCFv4p'+pageNum+' FAILED — '+probe+' → HTTP '+r.status+(r.ok?' (file ok; face did not apply)':' (font file missing from bundle)'));
       }).catch(function(e){
-        console.warn('[QuranFont] QCFv4p'+pageNum+' FAILED â€” '+probe+' fetch error: '+(e&&e.message));
+        console.warn('[QuranFont] QCFv4p'+pageNum+' FAILED — '+probe+' fetch error: '+(e&&e.message));
       });
     }
     return ok;
@@ -3938,7 +3938,7 @@ function ensureQCFV4Font(pageNum){
   return _qcfV4FontLoadP[pageNum];
 }
 
-// Prefetch QCF4 font + page data for a page number â€” fire and forget.
+// Prefetch QCF4 font + page data for a page number — fire and forget.
 function _prefetchMushafPage(pageNum){
   if(pageNum<1||pageNum>604)return;
   var pf=_getPageFields();
@@ -3952,13 +3952,13 @@ function _prefetchMushafPage(pageNum){
   getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).catch(function(){});
 }
 
-// Medina Mushaf (QPC Hafs, mushaf=19) â€” surah page ranges bundled for offline use.
+// Medina Mushaf (QPC Hafs, mushaf=19) — surah page ranges bundled for offline use.
 // Index = surah number - 1.  Each entry = [firstPage, lastPage].
 // Source: api.quran.com/api/v4/chapters (retrieved 2026-05-15).
 var _MUSHAF_PAGE_RANGES=[[1,1],[2,49],[50,76],[77,106],[106,127],[128,150],[151,176],[177,186],[187,207],[208,221],[221,235],[235,248],[249,255],[255,261],[262,267],[267,281],[282,293],[293,304],[305,312],[312,321],[322,331],[332,341],[342,349],[350,359],[359,366],[367,376],[377,385],[385,396],[396,404],[404,410],[411,414],[415,417],[418,427],[428,434],[434,440],[440,445],[446,452],[453,458],[458,467],[467,476],[477,482],[483,489],[489,495],[496,498],[499,502],[502,506],[507,510],[511,515],[515,517],[518,520],[520,523],[523,525],[526,528],[528,531],[531,534],[534,537],[537,541],[542,545],[545,548],[549,551],[551,552],[553,554],[554,555],[556,557],[558,559],[560,561],[562,564],[564,566],[566,568],[568,570],[570,571],[572,573],[574,575],[575,577],[577,578],[578,580],[580,581],[582,583],[583,584],[585,585],[586,586],[587,587],[587,589],[589,589],[590,590],[591,591],[591,592],[592,592],[593,594],[594,594],[595,595],[595,596],[596,596],[596,596],[597,597],[597,597],[598,598],[598,599],[599,599],[599,600],[600,600],[600,600],[601,601],[601,601],[601,601],[602,602],[602,602],[602,602],[603,603],[603,603],[603,603],[604,604],[604,604],[604,604]];
 
 function getMushafPageRange(surahNum){
-  // Bundled static data â€” works fully offline
+  // Bundled static data — works fully offline
   var r=_MUSHAF_PAGE_RANGES[surahNum-1];
   if(r)return Promise.resolve({start:r[0],end:r[1]});
   // localStorage cache (populated from previous API calls)
@@ -3996,7 +3996,7 @@ function _loadMushafBundledData(){
 function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   fields=fields||'code_v1';cachePrefix=cachePrefix||'qcfV1p_';
   var key=cachePrefix+pageNum;
-  // 1. localStorage (fastest â€” populated from prior visits or bundle seed)
+  // 1. localStorage (fastest — populated from prior visits or bundle seed)
   try{var c=JSON.parse(localStorage.getItem(key)||'null');if(c&&c.verses)return Promise.resolve(c);}catch(e){}
   // 2. For QCF4: wait for bundled data to finish loading, THEN check it.
   //    This resolves the race where getMushafPageData was called before the
@@ -4010,8 +4010,8 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
           return bd;
         }
       }
-      // 3. Network fallback â€” never reject; offline returns noData sentinel so caller
-      //    can show Hafs fallback instead of an Ã— error card.
+      // 3. Network fallback — never reject; offline returns noData sentinel so caller
+      //    can show Hafs fallback instead of an × error card.
       var _mc4=new AbortController();
       var _mt4=setTimeout(function(){_mc4.abort();},_sn.ms(12000,22000));
       return fetch('https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields=code_v2&per_page=300&mushaf=19',{signal:_mc4.signal})
@@ -4031,7 +4031,7 @@ function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
 }
 function _getPageFields(){
   if(S.mushafFont==='qcf2')return{fields:'code_v2',cache:'qcfV2p_'};
-  // qcfV4r_ (was qcfV4p_): bumped 2026-06-12 after the page-assignment repair â€”
+  // qcfV4r_ (was qcfV4p_): bumped 2026-06-12 after the page-assignment repair —
   // pre-fix cached pages contained misplaced boundary verses (soup/dup/holes).
   if(S.mushafFont==='qcf4')return{fields:'code_v2',cache:'qcfV4r_',mushafId:19};
   return{fields:'code_v1',cache:'qcfV1p_'};
@@ -4071,7 +4071,7 @@ function _visibleAyahInMushaf(){
 }
 
 // Polls until mushaf has rendered the target ayah then scrolls to it (max ~2s)
-// Scroll a container to center an element â€” explicit scrollTop, safe on iOS
+// Scroll a container to center an element — explicit scrollTop, safe on iOS
 function _scrollElToCenter(container,el){
   if(!container||!el)return;
   var elRect=el.getBoundingClientRect();
@@ -4150,7 +4150,7 @@ App.toggleMushafMode=function(){
     if(ayahList)ayahList.style.display='';
     var s2=SURAHS[(S.surah||1)-1];
     updateProgress(ayahList,s2?s2.a:0);
-    // Scroll normal list to where user was in mushaf â€” explicit scrollTop, safe on iOS
+    // Scroll normal list to where user was in mushaf — explicit scrollTop, safe on iOS
     requestAnimationFrame(function(){
       var card=ayahList&&ayahList.querySelector('.ayah-card[data-ayah="'+fromAyahM+'"]');
       _scrollElToCenter(ayahList,card);
@@ -4159,20 +4159,20 @@ App.toggleMushafMode=function(){
 };
 
 
-// Standard Medina Mushaf (604-page Hafs/Uthmani) â€” juz start pages
+// Standard Medina Mushaf (604-page Hafs/Uthmani) — juz start pages
 var JUZ_PAGES=[1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
 function juzForPage(p){for(var j=JUZ_PAGES.length-1;j>=0;j--){if(p>=JUZ_PAGES[j])return j+1;}return 1;}
 
 function _mushafSkeleton(){
   var sk=el('div','mushaf-skeleton');
 
-  // Surah header â€” title + basmala
+  // Surah header — title + basmala
   var hdr=el('div','mushaf-skel-hdr');
   var nm=el('div','mushaf-skel-name'); hdr.appendChild(nm);
   var bsm=el('div','mushaf-skel-basml'); bsm.style.animationDelay='.12s'; hdr.appendChild(bsm);
   sk.appendChild(hdr);
 
-  // Text rows â€” widths + marker positions mimic a real Quran page
+  // Text rows — widths + marker positions mimic a real Quran page
   // marker:true = verse ends on this line (shows circle at the left/end in RTL)
   var rows=[
     {w:'100',m:false},{w:'100',m:false},{w:'82',m:true},
@@ -4198,9 +4198,9 @@ function _mushafSkeleton(){
   return sk;
 }
 
-// â”€â”€ Mushaf integrity validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Mushaf integrity validation ──────────────────────────────────────────────
 // pageData = the raw API json; pageEl = rendered DOM element
-var _mushafRenderMetrics={};  // pageNum â†’ {fontMs,dataMs,renderMs,total,height,ok}
+var _mushafRenderMetrics={};  // pageNum → {fontMs,dataMs,renderMs,total,height,ok}
 
 function validateMushafPage(pageNum,pageData,pageEl){
   var verses=pageData.verses||[];
@@ -4301,7 +4301,7 @@ window.MushafDebug={
 };
 
 // Wrap mushaf pages into horizontal snap spreads for iPad
-// Landscape (â‰¥1024px): 2 pages per spread. Portrait (<1024px): 1 page per spread.
+// Landscape (≥1024px): 2 pages per spread. Portrait (<1024px): 1 page per spread.
 function _mushafWrapSpreads(view){
   var isLandscape=window.innerWidth>=1024;
   var step=isLandscape?2:1;
@@ -4348,15 +4348,15 @@ function renderMushafView(){
   if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   _mqReset();
   window._mushafVerseElements={};
-  _mushafRenderMetrics={}; // reset per-surah â€” prevents unbounded growth across long sessions
-  // Single clear + skeleton â€” never clear twice. When page range resolves we remove
+  _mushafRenderMetrics={}; // reset per-surah — prevents unbounded growth across long sessions
+  // Single clear + skeleton — never clear twice. When page range resolves we remove
   // only the skeleton node, so the view is never in a blank state between clears.
   clear(view);
   view.scrollTop=0;view.scrollLeft=0;
   var _skel=_mushafSkeleton();
   view.appendChild(_skel);
 
-  var _renderSurah=S.surah; // capture at render time â€” abort if surah changes during async
+  var _renderSurah=S.surah; // capture at render time — abort if surah changes during async
   getMushafPageRange(S.surah).then(function(pages){
     if(!S.mushafMode||S.surah!==_renderSurah)return;
     if(_skel.parentNode===view)view.removeChild(_skel); // remove skeleton, not entire view
@@ -4369,15 +4369,15 @@ function renderMushafView(){
       else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
     }
 
-    // Full Quran: page 1â†’604. Always start from page 1 so scrolling back to
+    // Full Quran: page 1→604. Always start from page 1 so scrolling back to
     // Al-Fatiha from any surah works like a real Mushaf.
     // Pre-scroll to near the target surah before the observer fires so the
     // initial intersection check loads pages around the right position.
     var _estPx=(pages.start-1)*560; // ~560px per skeleton page
     // Build all 604 page containers in a DocumentFragment (single DOM insertion)
-    // with no children â€” CSS min-height keeps scroll range intact. Skeletons are
+    // with no children — CSS min-height keeps scroll range intact. Skeletons are
     // added by the IO callback just before data loads, cutting initial DOM nodes
-    // from ~9,000 (604Ã—15 lines) down to 604 bare divs.
+    // from ~9,000 (604×15 lines) down to 604 bare divs.
     var _frag=document.createDocumentFragment();
     for(var p=1;p<=604;p++){
       var pageEl=el('div','mushaf-text-page');
@@ -4393,7 +4393,7 @@ function renderMushafView(){
 
     function _mushafPageErr(pageEl){
       clear(pageEl);
-      var ph=el('div','mushaf-page-ph mushaf-page-err','â€”');
+      var ph=el('div','mushaf-page-ph mushaf-page-err','—');
       pageEl.appendChild(ph);
     }
 
@@ -4414,7 +4414,7 @@ function renderMushafView(){
     view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(pe){
       _mushafLazyObs.observe(pe);
     });
-    // Scroll gate â€” same pattern as PDF reader: pause queue during scroll, drain after settle
+    // Scroll gate — same pattern as PDF reader: pause queue during scroll, drain after settle
     if(_mqScrollEl&&_mqScrollFn)_mqScrollEl.removeEventListener('scroll',_mqScrollFn);
     _mqScrollEl=view;
     _mqScrollFn=function(){_mqScrolling=true;clearTimeout(_mqScrollTimer);_mqScrollTimer=setTimeout(function(){_mqScrolling=false;_drainMQ();},200);};
@@ -4423,7 +4423,7 @@ function renderMushafView(){
     // Preload target page + up to 8 pages above it, THEN scroll once.
     //
     // Old approach: load only the target page, then run a setTimeout retry loop
-    // (Ã—8, 200ms apart) to chase layout shifts. Each correction scrolled further
+    // (×8, 200ms apart) to chase layout shifts. Each correction scrolled further
     // down because IO-triggered pages above were still growing from min-height
     // (560px) to real height (~900px). The cascade landed ~70 ayahs past ayah 1.
     //
@@ -4450,7 +4450,7 @@ function renderMushafView(){
       if(b)view.scrollTop=b.offsetTop;
       updateMushafProgress(view);
       // One residual check: any IO pages just outside the preload range may still
-      // be settling. A single correction 500ms later is enough â€” no cascade.
+      // be settling. A single correction 500ms later is enough — no cascade.
       setTimeout(function(){
         if(S.surah!==capturedSurah||!S.mushafMode)return;
         var b2=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
@@ -4463,7 +4463,7 @@ function renderMushafView(){
       if(b)view.scrollTop=b.offsetTop;
     });
 
-    // Header: update as user scrolls through pages â€” reflect topmost visible surah
+    // Header: update as user scrolls through pages — reflect topmost visible surah
     (function(){
       var _hdrTimer=null;
       function _updateHeaderFromScroll(){
@@ -4494,14 +4494,14 @@ function renderMushafView(){
       if(_mushafScrollAnim){_mushafScrollAnim.cancelled=true;_mushafScrollAnim=null;}
     },{passive:true});
 
-    // iPad (any orientation â‰¥768px): page-by-page horizontal navigation
+    // iPad (any orientation ≥768px): page-by-page horizontal navigation
     if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=768){
       _mushafWrapSpreads(view);
     }
   }).catch(function(){
     clear(view);
     var errWrap=el('div','mushaf-offline-err');
-    var msg=el('div','mushaf-offline-err-msg',t('mushaf.offline_msg')||'Ù…ØµØ­Ù mode needs internet on first load.');
+    var msg=el('div','mushaf-offline-err-msg',t('mushaf.offline_msg')||'مصحف mode needs internet on first load.');
     var switchBtn=el('button','mushaf-offline-switch-btn',t('mushaf.switch_to_reading')||'Switch to reading mode');
     on(switchBtn,'click',function(){App.toggleMushafMode();});
     errWrap.appendChild(msg);
@@ -4543,7 +4543,7 @@ function _fitQCFLines(pageEl){
   if(!n)return;
   // Reset any previous fit so measurement reflects the user-selected size
   for(var i=0;i<n;i++){lines[i].style.transform='';lines[i].style.removeProperty('font-size');}
-  // Measure: sum of segment widths. scrollWidth is WRONG here â€” on a
+  // Measure: sum of segment widths. scrollWidth is WRONG here — on a
   // center-justified flex row browsers don't report start-edge overflow,
   // so up to half the spill went undetected and lines stayed clipped.
   var worst=1;
@@ -4553,14 +4553,14 @@ function _fitQCFLines(pageEl){
     if(cw>0&&total>cw){var sc=cw/total;if(sc<worst)worst=sc;}
   }
   if(worst>=1)return; // nothing overflows at the current size
-  // Shrink the FONT uniformly so the widest line fits â€” keeps authentic glyph
+  // Shrink the FONT uniformly so the widest line fits — keeps authentic glyph
   // shapes (no scaleX squeeze). QCF pages are designed with near-equal full-line
   // widths, so one scale fits the whole page and stays visually consistent.
   var basePx=parseFloat(getComputedStyle(lines[0]).fontSize)||24;
   var fitPx=Math.max(12,Math.floor(basePx*worst*10)/10);
   for(var i=0;i<n;i++)lines[i].style.setProperty('font-size',fitPx+'px','important');
   // Residual guard (font metrics are only ~linear): any line still over after
-  // the shrink gets a tiny per-line scaleX â€” imperceptible at <2%.
+  // the shrink gets a tiny per-line scaleX — imperceptible at <2%.
   for(var i=0;i<n;i++){
     var line2=lines[i],w2=line2.clientWidth,t2=0,ch2=line2.children;
     for(var k=0;k<ch2.length;k++)t2+=ch2[k].getBoundingClientRect().width;
@@ -4585,7 +4585,7 @@ window.addEventListener('resize',function(){
 });
 
 // Returns a DocumentFragment rendering Quran text with KFGQPC Hafs font.
-// verses: array from getMushafPageData â€” may be empty when page data unavailable.
+// verses: array from getMushafPageData — may be empty when page data unavailable.
 // pageNum: used to look up which surahs fall on this page when verses is empty.
 function _buildHafsFallbackFrag(verses,pageNum){
   var frag=document.createDocumentFragment();
@@ -4596,9 +4596,9 @@ function _buildHafsFallbackFrag(verses,pageNum){
     var nt=document.createElement('div');nt.className='surah-name-ar no-kurdish-convert';
     var gc='surah'+String(sn).padStart(3,'0');nt.dataset.glyph=gc;
     var fr=(window.QuranFontManager&&window.QuranFontManager.isReady('SurahName'))||window._surahNameFontReady;
-    var ss=SURAHS[sn-1];nt.textContent=fr?gc:(ss?ss.ar:('Ø³ÙˆØ±Ø© '+sn));
+    var ss=SURAHS[sn-1];nt.textContent=fr?gc:(ss?ss.ar:('سورة '+sn));
     bn.appendChild(nt);frag.appendChild(bn);
-    if(sn!==1&&sn!==9){var bm=el('div','mushaf-bismillah');bm.textContent='Ø¨ÙØ³Û¡Ù…Ù Ù±Ù„Ù„ÙŽÙ‘Ù‡Ù Ù±Ù„Ø±ÙŽÙ‘Ø­Û¡Ù…ÙŽÙ°Ù†Ù Ù±Ù„Ø±ÙŽÙ‘Ø­ÙÙŠÙ…Ù';frag.appendChild(bm);}
+    if(sn!==1&&sn!==9){var bm=el('div','mushaf-bismillah');bm.textContent='بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';frag.appendChild(bm);}
   }
   function _hafsVerse(sn,vn){
     var sd=S.quranData&&S.quranData[String(sn)];
@@ -4606,7 +4606,7 @@ function _buildHafsFallbackFrag(verses,pageNum){
     var txt=(ao&&ao.text)||('('+sn+':'+vn+')');
     var ve=el('div','mushaf-flow-verse');
     ve.style.fontFamily="'KFGQPC Hafs','Amiri Quran',serif";
-    ve.textContent=txt+' ï´¿'+toArabicNum(vn)+'ï´¾';
+    ve.textContent=txt+' ﴿'+toArabicNum(vn)+'﴾';
     (function(v,s){on(ve,'click',function(e){e.stopPropagation();App.showMushafVerseTafsir(v,s);});})(vn,sn);
     frag.appendChild(ve);
   }
@@ -4617,7 +4617,7 @@ function _buildHafsFallbackFrag(verses,pageNum){
       _hafsHeader(sn);_hafsVerse(sn,vn);
     });
   } else {
-    // No verse data available â€” approximate from quranData for surahs on this page
+    // No verse data available — approximate from quranData for surahs on this page
     for(var i=0;i<_MUSHAF_PAGE_RANGES.length;i++){
       var r=_MUSHAF_PAGE_RANGES[i];
       if(r[0]>pageNum||r[1]<pageNum)continue;
@@ -4659,17 +4659,17 @@ function loadMushafPageQCF(pageEl,pageNum){
     var _dataMs=Date.now()-_dataT;
     var verses=json.verses||[];
     if(!verses.length){
-      // No page data â€” render Hafs Arabic text as fallback (never show Ã—)
+      // No page data — render Hafs Arabic text as fallback (never show ×)
       if(font==='qcf4'){
         var _nd=_buildHafsFallbackFrag([],pageNum);
         clear(pageEl);pageEl.classList.add('mushaf-page-hafs-fallback');pageEl.appendChild(_nd);
-      } else {clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','â€”'));}
+      } else {clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','—'));}
       return;
     }
 
-    // Render into a fragment â€” spinner stays visible until font is ready
+    // Render into a fragment — spinner stays visible until font is ready
     var frag=document.createDocumentFragment();
-    // Juz banner â€” show only at the START of a new juz
+    // Juz banner — show only at the START of a new juz
     var juzIdx=JUZ_PAGES.indexOf(pageNum);
     if(juzIdx>=0){
       var juzBanner=el('div','mushaf-juz-banner',t('reader.juz_label')+' '+toArabicNum(juzIdx+1));
@@ -4686,18 +4686,18 @@ function loadMushafPageQCF(pageEl,pageNum){
       titleEl.className='surah-name-ar no-kurdish-convert';
       titleEl.dataset.glyph=gc;
       var fontReady=(window.QuranFontManager&&window.QuranFontManager.isReady('SurahName'))||window._surahNameFontReady;
-      titleEl.textContent=fontReady?gc:(s?s.ar:('Ø³ÙˆØ±Ø© '+sn));
+      titleEl.textContent=fontReady?gc:(s?s.ar:('سورة '+sn));
       banner.appendChild(titleEl);
       frag.appendChild(banner);
       if(sn!==1&&sn!==9){
         var bism=el('div','mushaf-bismillah');
-        bism.textContent='Ø¨ÙØ³Û¡Ù…Ù Ù±Ù„Ù„ÙŽÙ‘Ù‡Ù Ù±Ù„Ø±ÙŽÙ‘Ø­Û¡Ù…ÙŽÙ°Ù†Ù Ù±Ù„Ø±ÙŽÙ‘Ø­ÙÙŠÙ…Ù';
+        bism.textContent='بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
         frag.appendChild(bism);
       }
     }
 
     if(font==='qcf1'||font==='qcf2'||font==='qcf4'){
-      // â”€â”€ QCF line-by-line rendering (V1, V2, or V4 tajweed) â”€â”€
+      // ── QCF line-by-line rendering (V1, V2, or V4 tajweed) ──
       var fontFam=(font==='qcf2')?"'QCFv2p"+pageNum+"'":(font==='qcf4')?"'QCFv4p"+pageNum+"'":"'QCFv1p"+pageNum+"'";
       var codeField=(font==='qcf2'||font==='qcf4')?'code_v2':'code_v1';
       var lineOrder=[];var lineOrderSeen={};var lineStartsSurah={};var lineAyahGroups={};
@@ -4726,7 +4726,7 @@ function loadMushafPageQCF(pageEl,pageNum){
         var lineEl=el('div','mushaf-qcf-line');
         lineEl.style.fontFamily=fontFam;
         var grps=lineAyahGroups[ln]||[];
-        // Always wrap every ayah segment in a span â€” never register the full line div
+        // Always wrap every ayah segment in a span — never register the full line div
         grps.forEach(function(g){
           var seg=document.createElement('span');
           seg.className='mushaf-ayah-seg';
@@ -4757,7 +4757,7 @@ function loadMushafPageQCF(pageEl,pageNum){
           lineEl.appendChild(seg);
         });
         // Line-level fallback: only for single-ayah lines (gaps between glyphs still clickable)
-        // Multi-ayah lines: use segment spans directly â€” no ambiguous line-level handler
+        // Multi-ayah lines: use segment spans directly — no ambiguous line-level handler
         if(grps.length===1){
           (function(v,s){on(lineEl,'click',function(){App.showMushafVerseTafsir(v,s);});})(grps[0].vn,grps[0].sn);
         }
@@ -4765,7 +4765,7 @@ function loadMushafPageQCF(pageEl,pageNum){
       });
 
     } else if(font==='tajweed'){
-      // â”€â”€ Tajweed: flowing text with safe DOM colored spans â”€â”€
+      // ── Tajweed: flowing text with safe DOM colored spans ──
       var stripTags=function(s){
         var out='',i=0;
         while(i<s.length){
@@ -4818,7 +4818,7 @@ function loadMushafPageQCF(pageEl,pageNum){
       });
 
     } else {
-      // â”€â”€ Fallback: flowing plain text â”€â”€
+      // ── Fallback: flowing plain text ──
       var prevSurahF=-1;
       verses.forEach(function(verse){
         var sn=verse.surah_number||parseInt((verse.verse_key||'1:1').split(':')[0]);
@@ -4838,7 +4838,7 @@ function loadMushafPageQCF(pageEl,pageNum){
     foot.appendChild(el('span','mushaf-page-num',toArabicNum(pageNum)));
     frag.appendChild(foot);
 
-    // Metadata â€” set on pageEl immediately (progress tracking reads dataset)
+    // Metadata — set on pageEl immediately (progress tracking reads dataset)
     // dataset.verses  : verse numbers for S.surah only (legacy, used by scroll-resume)
     // dataset.verseKeys: all "surah:ayah" pairs on this page (multi-surah progress tracking)
     var svn=[],vks=[];
@@ -4865,7 +4865,7 @@ function loadMushafPageQCF(pageEl,pageNum){
       var _renderMs=Date.now()-_rT;
       var _total=Date.now()-_t0;
       // Re-fit once QCF1/QCF2 font actually downloads (fontP resolved instantly so
-      // the first RAF below measures with the fallback font â€” this corrects it)
+      // the first RAF below measures with the fallback font — this corrects it)
       if(font==='qcf1'||font==='qcf2'){
         var _qcfFam=(font==='qcf2')?"1em 'QCFv2p"+pageNum+"'":"1em 'QCFv1p"+pageNum+"'";
         if(document.fonts&&document.fonts.load){
@@ -4874,7 +4874,7 @@ function loadMushafPageQCF(pageEl,pageNum){
           });
         }
       }
-      // Integrity validation + line auto-fit â€” runs after DOM commit
+      // Integrity validation + line auto-fit — runs after DOM commit
       requestAnimationFrame(function(){
         _fitQCFLines(pageEl);
         var result=validateMushafPage(pageNum,json,pageEl);
@@ -4892,7 +4892,7 @@ function loadMushafPageQCF(pageEl,pageNum){
       var QFM=window.QuranFontManager;
       var _fontMs=Date.now()-_t0-_dataMs;
       if(font==='qcf4'&&!fontOk){
-        // QCF4 font unavailable â€” sentinel test failed or font timed out.
+        // QCF4 font unavailable — sentinel test failed or font timed out.
         // Render readable Hafs Arabic text; never show broken PUA glyph codes.
         if(QFM)QFM.qcfPageFailed(pageNum,'font-unavailable');
         clear(pageEl);
@@ -4908,7 +4908,7 @@ function loadMushafPageQCF(pageEl,pageNum){
   }).catch(function(err){
     console.warn('[Mushaf] page='+pageNum+' render error:',err&&err.message||err);
     clear(pageEl);
-    // Never show Ã—: attempt Hafs fallback so users on slow networks see
+    // Never show ×: attempt Hafs fallback so users on slow networks see
     // readable text immediately instead of a perpetual shimmer skeleton.
     // Mark the page so tapping it re-queues the proper font load.
     try{
@@ -4928,7 +4928,7 @@ function loadMushafPageQCF(pageEl,pageNum){
         };
         pageEl.addEventListener('click',_retryOnce,{once:true});
       }
-    }catch(e2){pageEl.appendChild(el('div','mushaf-page-ph','â€”'));}
+    }catch(e2){pageEl.appendChild(el('div','mushaf-page-ph','—'));}
   });
 }
 
@@ -4950,11 +4950,11 @@ function renderAyahs(surahNum,scrollTo){
       S.glyphFetching=S.glyphFetching||{};
       if(S.glyphFetching[_gkey])return;
       S.glyphFetching[_gkey]=true;
-      // Keep existing list content visible while loading â€” don't clear.
+      // Keep existing list content visible while loading — don't clear.
       // Only show spinner when list is actually empty.
       var _hadContent=list.hasChildNodes();
       if(!_hadContent){
-        var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'ØªÛ•Ù…Ø§Ø´Û•Ú©Ø±Ù†...';
+        var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'تەماشەکرن...';
         list.appendChild(sp);
       }
       var _gctrl=new AbortController();
@@ -4966,7 +4966,7 @@ function renderAyahs(surahNum,scrollTo){
           var vs=d.verses||[];
           S.glyphVerses[surahNum]=vs;
           try{localStorage.setItem(_gkey,JSON.stringify(vs));}catch(e){}
-          if(S.surah!==surahNum)return; // user navigated away â€” discard
+          if(S.surah!==surahNum)return; // user navigated away — discard
           renderAyahs(surahNum,scrollTo);
         })
         .catch(function(){
@@ -4975,15 +4975,15 @@ function renderAyahs(surahNum,scrollTo){
           if(S.surah!==surahNum)return;
           if(!_hadContent){
             clear(list);
-            var e2=el('div','prayer-status prayer-error');e2.textContent=t('prayer.error')||'Ù‡Û•Ù„Û• â€” Ø¯ÙˆÙˆØ¨Ø§Ø±Ù‡ Ù‡Û•ÙˆÚµØ¨Ø¯Û•';list.appendChild(e2);
+            var e2=el('div','prayer-status prayer-error');e2.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(e2);
           }
-          // If list already had content, keep it â€” silent fail is better than blank screen
+          // If list already had content, keep it — silent fail is better than blank screen
         });
       return;
     }
   }
 
-  // Data is ready â€” clear and render
+  // Data is ready — clear and render
   clear(list);
   list.scrollTop=0; // reset scroll after clear, not before
 
@@ -5025,7 +5025,7 @@ function renderAyahs(surahNum,scrollTo){
   }
 
 
-  // bmSet removed â€” buildCard calls isBookmarked() directly (O(1), no storage read)
+  // bmSet removed — buildCard calls isBookmarked() directly (O(1), no storage read)
 
   // Read active position mark for this surah (used in buildCard + to restore timer)
   var _markState=null;
@@ -5046,11 +5046,11 @@ function renderAyahs(surahNum,scrollTo){
   hdr.appendChild(_rn);
   // Bismillah
   if(surahNum!==1&&surahNum!==9){
-    hdr.appendChild(el('div','surah-reader-bismillah','Ø¨ÙØ³Û¡Ù…Ù Ù±Ù„Ù„ÙŽÙ‘Ù‡Ù Ù±Ù„Ø±ÙŽÙ‘Ø­Û¡Ù…ÙŽÙ°Ù†Ù Ù±Ù„Ø±ÙŽÙ‘Ø­ÙÙŠÙ…Ù'));
+    hdr.appendChild(el('div','surah-reader-bismillah','بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ'));
   }
   list.appendChild(hdr);
 
-  // Single delegated click handler â€” added once ever (list is a persistent element)
+  // Single delegated click handler — added once ever (list is a persistent element)
   if(!list._clickSetup){
     list._clickSetup=true;
     list.addEventListener('click',function(e){
@@ -5067,7 +5067,7 @@ function renderAyahs(surahNum,scrollTo){
       if(bmBtn){
         var an2=+bmBtn.dataset.bm;
         var added=toggleBookmark(S.surah,an2);
-        // Surgical update â€” toggle classes on this card only, no re-render
+        // Surgical update — toggle classes on this card only, no re-render
         var bCard=bmBtn.closest('.ayah-card');
         if(bCard)bCard.classList.toggle('bookmarked',added);
         bmBtn.classList.toggle('active',added);
@@ -5101,7 +5101,7 @@ function renderAyahs(surahNum,scrollTo){
       if(!_lpCard)return;
       var dx=e.touches[0].clientX-_lpX,dy=e.touches[0].clientY-_lpY;
       var dist2=dx*dx+dy*dy;
-      if(dist2>36)_tapMoved=true; // â‰¥6px movement â€” will block tap highlight in onclick
+      if(dist2>36)_tapMoved=true; // ≥6px movement — will block tap highlight in onclick
       if(dist2>80){clearTimeout(_lpTimer);_lpTimer=null;_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
     },{passive:true});
     list.addEventListener('touchend',function(){
@@ -5115,7 +5115,7 @@ function renderAyahs(surahNum,scrollTo){
     list.addEventListener('contextmenu',function(e){if(e.target.closest('.ayah-card'))e.preventDefault();});
   }
 
-  // Nav buttons (always at bottom â€” batches insert before them)
+  // Nav buttons (always at bottom — batches insert before them)
   var nav=el('div','surah-nav');
   var prevBtn=el('button','surah-nav-btn');
   prevBtn.appendChild(icon('fas fa-arrow-right'));
@@ -5131,7 +5131,7 @@ function renderAyahs(surahNum,scrollTo){
   nav.appendChild(nextBtn);
   list.appendChild(nav);
 
-  // Batch rendering â€” keeps DOM small for smooth scroll
+  // Batch rendering — keeps DOM small for smooth scroll
   var BATCH=25;
   var _renderedTo=0;
   var _sentinel=null;
@@ -5158,7 +5158,7 @@ function renderAyahs(surahNum,scrollTo){
     copyBtn.dataset.cp=String(ayahNum);
     copyBtn.appendChild(icon('fas fa-copy'));
     actions.appendChild(copyBtn);
-    // Widget button â€” iOS only (Android has no widget support)
+    // Widget button — iOS only (Android has no widget support)
     var _isIOS=window.Capacitor&&typeof Capacitor.getPlatform==='function'&&Capacitor.getPlatform()==='ios';
     if(_isIOS){
       var wgtBtn=el('button','ayah-act');
@@ -5172,7 +5172,7 @@ function renderAyahs(surahNum,scrollTo){
     if(glyphMode&&S.glyphVerses[surahNum]&&S.glyphVerses[surahNum][ayahNum-1]){
       var _isV4g=S.readerFont==='v4tajweed';
       var _vd=S.glyphVerses[surahNum][ayahNum-1];
-      // Show normal Hafs text immediately â€” no blank box while glyph font loads
+      // Show normal Hafs text immediately — no blank box while glyph font loads
       arabic.textContent=ayahs[ayahNum-1]?(ayahs[ayahNum-1].text||ayahs[ayahNum-1]):'';
       // Build glyph spans in detached container
       var _glyphDiv=document.createElement('div');
@@ -5217,12 +5217,12 @@ function renderAyahs(surahNum,scrollTo){
     }
     // Tap to mark: per-card onclick avoids stacking across renderAyahs calls.
     // Guards: skip action buttons; skip if long-press just fired; skip if touch
-    // was too quick (<120ms) or moved â‰¥6px (likely a scroll or accidental graze).
+    // was too quick (<120ms) or moved ≥6px (likely a scroll or accidental graze).
     card.onclick=function(e){
       if(e.target.closest('[data-play],[data-bm],[data-cp],[data-wgt]'))return;
       if(Date.now()-_ayahMarkLpAt<700)return;  // suppress post-long-press click
-      if(_tapMoved)return;                      // touch moved â€” was a scroll
-      if(Date.now()-_tapStartMs<120)return;     // too quick â€” accidental graze
+      if(_tapMoved)return;                      // touch moved — was a scroll
+      if(Date.now()-_tapStartMs<120)return;     // too quick — accidental graze
       _setAyahMark(surahNum,ayahNum);
     };
     return card;
@@ -5249,7 +5249,7 @@ function renderAyahs(surahNum,scrollTo){
       // rAF staggered: 12 cards per frame for subsequent batches
       var SUB=12,cur=from;
       (function renderFrame(){
-        if(S.surah!==surahNum||!nav.parentNode)return; // surah changed while rendering â€” bail
+        if(S.surah!==surahNum||!nav.parentNode)return; // surah changed while rendering — bail
         var frameEnd=Math.min(cur+SUB-1,end);
         var frag=document.createDocumentFragment();
         for(var i=cur;i<=frameEnd;i++){var c=buildCard(i);if(window._onNewAyahCard)window._onNewAyahCard(c);frag.appendChild(c);}
@@ -5262,7 +5262,7 @@ function renderAyahs(surahNum,scrollTo){
         else{_renderedTo=end;setupSentinel();if(onTarget){onTarget=null;}}
       })();
     }else{
-      // Synchronous for first batch â€” fast initial render
+      // Synchronous for first batch — fast initial render
       var frag=document.createDocumentFragment();
       for(var i=from;i<=end;i++){var c=buildCard(i);if(window._onNewAyahCard)window._onNewAyahCard(c);frag.appendChild(c);}
       _renderedTo=end;
@@ -5271,7 +5271,7 @@ function renderAyahs(surahNum,scrollTo){
     }
   }
 
-  // Always sync-render only the first BATCH â€” never block main thread on large surahs
+  // Always sync-render only the first BATCH — never block main thread on large surahs
   appendBatch(1,BATCH,true);
   // Restore any active playback highlight state onto the freshly-rendered cards
   requestAnimationFrame(_hlRestoreAll);
@@ -5290,7 +5290,7 @@ function renderAyahs(surahNum,scrollTo){
     },_remaining);
   }
 
-  // Jump to target ayah â€” instant scroll, no smooth animation
+  // Jump to target ayah — instant scroll, no smooth animation
   if(scrollTo&&scrollTo>1){
     var _jumpDone=false;
     function _jumpScroll(){
@@ -5302,7 +5302,7 @@ function renderAyahs(surahNum,scrollTo){
       list.scrollTop+=cRect.top-lRect.top-Math.max(0,(list.clientHeight-cRect.height)/2);
     }
     if(scrollTo<=BATCH){
-      // Card already in DOM â€” scroll next frame
+      // Card already in DOM — scroll next frame
       requestAnimationFrame(_jumpScroll);
     }else{
       // Render cards up to target async (rAF-batched), scroll the moment target lands
@@ -5316,18 +5316,18 @@ var _progressCleanup=null;
 // Track mushaf lazy-load observer so we can disconnect on re-render
 var _mushafLazyObs=null;
 
-// â”€â”€ Mushaf render queue â€” same memory-safe architecture as PDF reader â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Mushaf render queue — same memory-safe architecture as PDF reader ─────────
 // Without this, IntersectionObserver fires loadMushafPageQCF for every page
 // entering the extended viewport during fast scroll with no concurrency cap,
 // and all loaded pages stay in DOM forever (font resources + many DOM nodes
 // per page accumulate until the WKWebView process is killed on low-end devices).
 var _mqRQ=[];          // pending: [{pe, n, errFn}]
 var _mqActive=0;       // currently loading count
-var _mqLoadedPages=[]; // page numbers in DOM â€” used for eviction targeting
-var _mqInFlight=[];    // page numbers mid-load â€” eviction skips these
+var _mqLoadedPages=[]; // page numbers in DOM — used for eviction targeting
+var _mqInFlight=[];    // page numbers mid-load — eviction skips these
 var _mqScrolling=false,_mqScrollTimer=null;
 var _mqScrollEl=null,_mqScrollFn=null;
-var MAX_MQ=2,MAX_MQ_KEPT=10; // 10 pages Ã— ~300 DOM nodes Ã— ~50KB font each
+var MAX_MQ=2,MAX_MQ_KEPT=10; // 10 pages × ~300 DOM nodes × ~50KB font each
 
 // Evict pages farthest from anchor, preserving slot heights to avoid scroll jump
 function _mqEvictFar(anchor){
@@ -5343,7 +5343,7 @@ function _mqEvictFar(anchor){
     if(_mqInFlight.indexOf(evP)>=0)continue; // in-flight: load already paid for, keep
     var evEl=view&&view.querySelector('.mushaf-text-page[data-page="'+evP+'"]');
     if(!evEl)continue;
-    // Capture rendered height BEFORE clearing â€” prevents scroll jump when slot empties
+    // Capture rendered height BEFORE clearing — prevents scroll jump when slot empties
     var h=evEl.offsetHeight;
     if(h>0)evEl.style.minHeight=h+'px';
     // Remove segment references belonging to this page from the global verse index
@@ -5413,7 +5413,7 @@ function _mqReset(){
   }
 }
 
-// RAF-based smooth scroll for mushaf â€” ease-out-cubic, self-cancelling.
+// RAF-based smooth scroll for mushaf — ease-out-cubic, self-cancelling.
 // Avoids browser smooth-scroll which jank on iOS WebView (300-800ms lag).
 var _mushafScrollAnim=null;
 function _mushafSmoothScrollTo(view,targetTop,duration){
@@ -5429,18 +5429,18 @@ function _mushafSmoothScrollTo(view,targetTop,duration){
     if(anim.cancelled)return;
     if(!t0)t0=ts;
     var prog=Math.min((ts-t0)/duration,1);
-    var ease=1-Math.pow(1-prog,3); // ease-out-cubic â€” fast start, gentle landing
+    var ease=1-Math.pow(1-prog,3); // ease-out-cubic — fast start, gentle landing
     view.scrollTop=startTop+delta*ease;
     if(prog<1)requestAnimationFrame(step);
     else _mushafScrollAnim=null;
   }
   requestAnimationFrame(step);
 }
-// Ayah position marker â€” 2-minute highlight so user knows where they are
+// Ayah position marker — 2-minute highlight so user knows where they are
 var _ayahMarkTimer=null;
 var _ayahMarkLpAt=0;  // timestamp of last long-press mark, to suppress following click event
-var _tapStartMs=0;    // touchstart timestamp â€” used to require minimum hold duration for tap highlight
-var _tapMoved=false;  // true if touch moved â‰¥6px â€” prevents scroll from triggering highlight
+var _tapStartMs=0;    // touchstart timestamp — used to require minimum hold duration for tap highlight
+var _tapMoved=false;  // true if touch moved ≥6px — prevents scroll from triggering highlight
 function _setAyahMark(surahNum,ayahNum){
   clearTimeout(_ayahMarkTimer);
   // Remove existing highlight
@@ -5487,7 +5487,7 @@ function updateProgress(list,total){
   }
 
   // Progress = highest ayah number that's been visible on screen.
-  // Scroll to ayah 1 â†’ 1/total. Scroll further â†’ count increases naturally.
+  // Scroll to ayah 1 → 1/total. Scroll further → count increases naturally.
   var maxSeen=0;
   try{
     var saved=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;
@@ -5523,7 +5523,7 @@ function updateProgress(list,total){
   // Show saved progress on open
   if(maxSeen>0)updateHeader();
 
-  // IntersectionObserver: browser tracks visibility natively â€” zero reflow, zero polling
+  // IntersectionObserver: browser tracks visibility natively — zero reflow, zero polling
   var _ioProgress=new IntersectionObserver(function(entries){
     if(destroyed||S.surah!==surahId)return;
     var highest=maxSeen;
@@ -5569,11 +5569,11 @@ function updateMushafProgress(view){
   var progressEl=document.querySelector('.sticky-progress');
   if(progressEl)progressEl.style.display='';
 
-  // â”€â”€ All-Quran totals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── All-Quran totals ──────────────────────────────────────────────────────
   var _totalQ=0;SURAHS.forEach(function(s){_totalQ+=s.a;});
 
-  // â”€â”€ Per-surah seen sets, loaded lazily from localStorage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var _surahSeen={}; // surahNum (int) â†’ Set<ayahNum>
+  // ── Per-surah seen sets, loaded lazily from localStorage ─────────────────
+  var _surahSeen={}; // surahNum (int) → Set<ayahNum>
   function _getSeen(sn){
     sn=parseInt(sn);
     if(!_surahSeen[sn]){
@@ -5585,7 +5585,7 @@ function updateMushafProgress(view){
     }
     return _surahSeen[sn];
   }
-  // â”€â”€ Dirty-save tracker â€” saves all modified surahs in one debounced flush â”€
+  // ── Dirty-save tracker — saves all modified surahs in one debounced flush ─
   var _dirty=new Set();
   function scheduleSave(sn){
     _dirty.add(parseInt(sn));
@@ -5603,7 +5603,7 @@ function updateMushafProgress(view){
     },400);
   }
 
-  // â”€â”€ Current visible surah (updates on scroll) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Current visible surah (updates on scroll) ─────────────────────────────
   var _currentSurah=sessionSurah;
   function _detectSurah(){
     // Find the last surah banner whose top is at/above the current scroll position
@@ -5615,11 +5615,11 @@ function updateMushafProgress(view){
       var bTop=banners[b].offsetTop;
       if(bTop<=scrollTop+80&&bTop>bestTop){bestTop=bTop;best=banners[b];}
     }
-    if(!best)best=banners[0]; // all banners below fold â€” show first surah
+    if(!best)best=banners[0]; // all banners below fold — show first surah
     return parseInt(best.dataset.surah)||_currentSurah;
   }
 
-  // â”€â”€ Update visible label + all-Quran bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Update visible label + all-Quran bar ─────────────────────────────────
   function updateHeader(){
     if(destroyed)return;
     var dispS=_currentSurah||sessionSurah;
@@ -5644,7 +5644,7 @@ function updateMushafProgress(view){
     if(max>0){try{localStorage.setItem('lastRead',JSON.stringify({surah:dispS,ayah:max}));}catch(e){}}
   }
 
-  // â”€â”€ Mark a single ayah seen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Mark a single ayah seen ───────────────────────────────────────────────
   function markAyahSeen(sn,vn){
     sn=parseInt(sn);vn=parseInt(vn);
     var s2=SURAHS[sn-1];if(!s2||vn<1||vn>s2.a)return false;
@@ -5655,7 +5655,7 @@ function updateMushafProgress(view){
     return true;
   }
 
-  // â”€â”€ Mark a whole page seen (uses verseKeys for multi-surah pages) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Mark a whole page seen (uses verseKeys for multi-surah pages) ─────────
   function markPage(pageEl){
     var changed=false;var changedSurahs={};
     var vks=[];
@@ -5679,7 +5679,7 @@ function updateMushafProgress(view){
   // Show saved progress immediately on open
   updateHeader();
 
-  // â”€â”€ Dwell tracking: mark page after 2.5s of dominance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Dwell tracking: mark page after 2.5s of dominance ───────────────────
   function visibleRatio(pageEl){
     var pr=pageEl.getBoundingClientRect();
     if(pr.right<=0||pr.left>=window.innerWidth)return 0;
@@ -5797,7 +5797,7 @@ function renderReaderSettings(){
   clear(body);
 
   /* ---- READING ---- */
-  body.appendChild(el('div','qs-section-title',t('settings.reading')||'Ø®ÙˆÛŽÙ†Ø¯Ù†'));
+  body.appendChild(el('div','qs-section-title',t('settings.reading')||'خوێندن'));
 
   // Show tafsir
   var tafRow=el('div','qs-row');
@@ -5837,7 +5837,7 @@ function renderReaderSettings(){
   rfFonts.forEach(function(f){
     var card=el('div','qs-font-card'+(S.readerFont===f.id?' on':''));
     var sample=el('div','qs-font-card-sample');
-    sample.textContent='Ø¨ÙØ³Ù’Ù…Ù Ø§Ù„Ù„ÙŽÙ‘Ù‡Ù';
+    sample.textContent='بِسْمِ اللَّهِ';
     sample.style.fontFamily=f.family;
     var lbl=el('div','qs-font-card-label',f.label);
     card.appendChild(sample);
@@ -5859,10 +5859,10 @@ function renderReaderSettings(){
   /* ---- TEXT SIZE ---- */
   body.appendChild(el('div','qs-section-title',t('qs.text_size')));
 
-  // Live preview box â€” updates in real-time because applySizes() sets CSS vars
+  // Live preview box — updates in real-time because applySizes() sets CSS vars
   var prev=el('div','qs-font-preview');
   var prevAr=el('div','qs-font-preview-ar');
-  prevAr.textContent='Ø¨ÙØ³Ù’Ù…Ù Ø§Ù„Ù„ÙŽÙ‘Ù‡Ù Ø§Ù„Ø±ÙŽÙ‘Ø­Ù’Ù…ÙŽÙ†Ù Ø§Ù„Ø±ÙŽÙ‘Ø­ÙÙŠÙ…Ù';
+  prevAr.textContent='بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ';
   var prevTf=el('div','qs-font-preview-tf');
   prevTf.textContent=t('settings.quran_reading_intention');
   prev.appendChild(prevAr);prev.appendChild(prevTf);
@@ -5914,7 +5914,7 @@ function renderReaderSettings(){
   body.appendChild(lhRow);
 
   /* ---- RECITER ---- */
-  body.appendChild(el('div','qs-section-title',t('audio.reciter')||'Ø®ÙˆÛŽÙ†Û•Ø±'));
+  body.appendChild(el('div','qs-section-title',t('audio.reciter')||'خوێنەر'));
   var recList=el('div','qs-reciter-list');
   RECITERS.forEach(function(r){
     var chip=el('div','qs-reciter-chip'+(RECITER===r.id?' on':''));
@@ -5950,7 +5950,7 @@ function renderReaderSettings(){
     jumpRow.appendChild(el('div','qs-row-label',t('qs.jump_to')));
     var jumpInput=document.createElement('input');
     jumpInput.type='number';jumpInput.className='qs-jump-input';
-    jumpInput.min='1';jumpInput.max=s?String(s.a):'286';jumpInput.placeholder='Ù¡';
+    jumpInput.min='1';jumpInput.max=s?String(s.a):'286';jumpInput.placeholder='١';
     var jumpBtn=el('button','qs-jump-btn',t('qs.go'));
     on(jumpBtn,'click',function(){
       var n=parseInt(jumpInput.value);
@@ -6021,7 +6021,7 @@ App.mushafPlayToggle=function(){
 
 /* ===== QURAN AUDIO HIGHLIGHT STATE MACHINE ===== */
 // Tracks current/next/read state for both reader and mushaf modes.
-// Only updates the elements that change â€” no full DOM scan per ayah.
+// Only updates the elements that change — no full DOM scan per ayah.
 var _hl={currentKey:null,nextKey:null,currentEls:[],nextEls:[],readMap:{}};
 
 function _hlKey(s,a){return String(s)+':'+String(a);}
@@ -6038,7 +6038,7 @@ function _hlSet(els,cls,add){
   for(var i=0;i<els.length;i++){if(add)els[i].classList.add(cls);else els[i].classList.remove(cls);}
 }
 
-// Called every time the playing ayah changes â€” updates only the diff.
+// Called every time the playing ayah changes — updates only the diff.
 function updateHighlight(surah,ayah){
   if(!surah||!ayah){clearAllHighlights();return;}
   var mode=S.mushafMode?'mushaf':'reader';
@@ -6047,7 +6047,7 @@ function updateHighlight(surah,ayah){
   var RC=mode==='mushaf'?'mushaf-ayah-seg--read':'quran-ayah--read';
   var newKey=_hlKey(surah,ayah);
 
-  // Demote previous current â†’ read
+  // Demote previous current → read
   if(_hl.currentKey&&_hl.currentKey!==newKey){
     _hlSet(_hl.currentEls,CC,false);
     _hlSet(_hl.currentEls,RC,true);
@@ -6066,7 +6066,7 @@ function updateHighlight(surah,ayah){
     _hl.nextKey=null;_hl.nextEls=[];
   }
 
-  // Apply current â€” re-trigger animation by removing then re-adding in next frame.
+  // Apply current — re-trigger animation by removing then re-adding in next frame.
   // In performance mode (body.mushaf-audio-playing) the animation is suppressed by CSS
   // so this only costs a class toggle, not a full paint cycle.
   var _hlT0=Date.now();
@@ -6076,7 +6076,7 @@ function updateHighlight(surah,ayah){
   _hlSet(newEls,CC,false);
   requestAnimationFrame(function(){_hlSet(newEls,CC,true);});
 
-  // Mark next ayah as up-next â€” mushaf mode only
+  // Mark next ayah as up-next — mushaf mode only
   if(mode==='mushaf'){
     var nxt=_nextAyahPos(surah,ayah);
     if(nxt){
@@ -6105,18 +6105,18 @@ function updateHighlight(surah,ayah){
           requestAnimationFrame(function(){
             var vr=view.getBoundingClientRect();
             var er=_scrollEl.getBoundingClientRect();
-            // Safe zone: middle 64% of view â€” only scroll when ayah drifts outside it
+            // Safe zone: middle 64% of view — only scroll when ayah drifts outside it
             var _margin=vr.height*0.18;
             var _inSafe=(er.top>=vr.top+_margin&&er.bottom<=vr.bottom-_margin);
             if(_inSafe){return;}
-            // Position ayah at 38% from top â€” leaves space below for next-ayah preview
+            // Position ayah at 38% from top — leaves space below for next-ayah preview
             var relTop=er.top-vr.top+view.scrollTop;
             var targetTop=relTop-vr.height*0.38+er.height/2;
             _mushafSmoothScrollTo(view,targetTop,_isPlaying?220:320);
           });
         }
       } else if(S.audio.playing) {
-        // Target page not loaded yet â€” bootstrap-scroll to estimated position so
+        // Target page not loaded yet — bootstrap-scroll to estimated position so
         // the IntersectionObserver fires, loads the page, then retry finds elements.
         _scrollMushafToAyah(surah,ayah);
       }
@@ -6125,8 +6125,8 @@ function updateHighlight(surah,ayah){
     var _hlMs=Date.now()-_hlT0;
     if(_hlMs>4)console.log('[MushafJank] highlightMs='+_hlMs+' elCount='+newEls.length+' key='+newKey);
   }
-  // Always sync performance mode class â€” must run for both mushaf AND reader
-  // so switching mushafâ†’reader while audio plays correctly removes the class.
+  // Always sync performance mode class — must run for both mushaf AND reader
+  // so switching mushaf→reader while audio plays correctly removes the class.
   document.body.classList.toggle('mushaf-audio-playing',!!(S.mushafMode&&S.audio.playing));
 }
 
@@ -6156,7 +6156,7 @@ function _hlRestoreMushafPage(pageEl){
 function _hlClearDom(){
   var ALL=['mushaf-ayah-seg--current','mushaf-ayah-seg--next','mushaf-ayah-seg--read',
            'quran-ayah--current','quran-ayah--next','quran-ayah--read'];
-  // Clear only tracked elements â€” we maintain full ref arrays so querySelectorAll
+  // Clear only tracked elements — we maintain full ref arrays so querySelectorAll
   // fallback scans are unnecessary and expensive on long reading sessions.
   var seen=(_hl.currentEls||[]).concat(_hl.nextEls||[]);
   Object.keys(_hl.readMap).forEach(function(k){seen=seen.concat(_hl.readMap[k]||[]);});
@@ -6165,7 +6165,7 @@ function _hlClearDom(){
   Object.keys(_hl.readMap).forEach(function(k){_hl.readMap[k]=[];});
 }
 
-// Full reset â€” only call when playback actually ends (audioClose, surah change, etc.)
+// Full reset — only call when playback actually ends (audioClose, surah change, etc.)
 function clearAllHighlights(){
   _hlClearDom();
   _hl.currentKey=null;_hl.nextKey=null;_hl.readMap={};
@@ -6174,7 +6174,7 @@ function clearAllHighlights(){
 // Re-apply saved highlight state to current DOM without touching _hl keys.
 // Called after tab switch back to Quran, after renderAyahs, after mushaf page render.
 function _hlRestoreAll(){
-  if(!_hl.currentKey)return; // no active audio session â€” nothing to restore
+  if(!_hl.currentKey)return; // no active audio session — nothing to restore
   var mode=S.mushafMode?'mushaf':'reader';
   if(mode==='reader'){
     var playSurah=parseInt(_hl.currentKey.split(':')[0],10);
@@ -6194,9 +6194,9 @@ function _hlRestoreAll(){
   });
 }
 
-// Tab-switch/mode-toggle: clear DOM only â€” preserve state so _hlRestoreAll() can replay it
+// Tab-switch/mode-toggle: clear DOM only — preserve state so _hlRestoreAll() can replay it
 function clearMushafHighlights(){_hlClearDom();}
-// Legacy alias â€” updateMushafHighlight(0,0) called from audioClose
+// Legacy alias — updateMushafHighlight(0,0) called from audioClose
 function updateMushafHighlight(s,a){updateHighlight(s,a);}
 
 // Pre-buffer the first ayah of the current surah into the audio element so
@@ -6221,9 +6221,9 @@ function scrollToAyah(ayahNum){
   if(cards[ayahNum-1])cards[ayahNum-1].scrollIntoView({behavior:'smooth',block:'center'});
 }
 
-var _readerPlayBtn=null; // cached â€” avoids querySelectorAll on every ayah change
+var _readerPlayBtn=null; // cached — avoids querySelectorAll on every ayah change
 function updateReaderPlayState(surah,ayah,playing){
-  // Clear previous play button directly â€” no DOM scan needed
+  // Clear previous play button directly — no DOM scan needed
   if(_readerPlayBtn){
     _readerPlayBtn.classList.remove('playing');
     var _pi=_readerPlayBtn.querySelector('i');if(_pi)_pi.className='fas fa-play';
@@ -6246,8 +6246,8 @@ function playAyah(surah,ayah){
   _audioNextCalled=false;
   var _t0=Date.now();
   var url=audioUrl(surah,ayah);
-  // Priority 1: user-downloaded offline copy (persistent Directory.Data â€” never evicted)
-  // Priority 2: transparent LRU cache (Directory.Cache â€” may be evicted by OS)
+  // Priority 1: user-downloaded offline copy (persistent Directory.Data — never evicted)
+  // Priority 2: transparent LRU cache (Directory.Cache — may be evicted by OS)
   var localUri=(window.AudioDownloads&&AudioDownloads.getLocalUri(RECITER,surah,ayah))
               ||(window.AudioCache&&AudioCache.getLocalUri(RECITER,surah,ayah))||null;
   var src;var _srcType;
@@ -6261,7 +6261,7 @@ function playAyah(surah,ayah){
     }
     AudioCache.touchAccess(RECITER,surah,ayah);
   } else if(_audioBufKey===url&&_audioBuf){
-    // Pre-decoded secondary buffer is ready â€” swap it as the main element src
+    // Pre-decoded secondary buffer is ready — swap it as the main element src
     src=_audioBuf.src;_srcType='prebuf';
     _audioBuf=null;_audioBufKey=null;
     // Defer revoke: slot.blob === src, must not revoke before audio element loads it
@@ -6269,7 +6269,7 @@ function playAyah(surah,ayah){
     _blobToRevoke=src;
     if(slot){
       if(slot.xhr){slot.xhr.abort();}
-      // slot.blob already transferred to _blobToRevoke â€” do NOT revoke here
+      // slot.blob already transferred to _blobToRevoke — do NOT revoke here
       delete _pfCache[url];
     }
   } else if(slot&&slot.blob){
@@ -6280,7 +6280,7 @@ function playAyah(surah,ayah){
   } else {
     src=url;_srcType='stream';
     if(slot&&slot.xhr){slot.xhr.abort();delete _pfCache[url];}
-    // Show buffering indicator for stream path â€” user has to wait for network
+    // Show buffering indicator for stream path — user has to wait for network
     setAudioIcon('loading');
   }
   _lastSrcType=_srcType;
@@ -6301,7 +6301,7 @@ function playAyah(surah,ayah){
     S.audio.el.currentTime=0;
   }else{
     S.audio.el.src=src;
-    // Force reload when element is stuck in error state â€” Chromium WebView ignores
+    // Force reload when element is stuck in error state — Chromium WebView ignores
     // el.src = sameUrl on an errored element without an explicit load() call.
     if(S.audio.el.error)S.audio.el.load();
   }
@@ -6314,7 +6314,7 @@ function playAyah(surah,ayah){
   if(S.surah===surah&&S.scrollFollowsAudio&&!S.mushafMode)scrollToAyah(ayah);
   updateHighlight(surah,ayah);
   updateMushafPlayBtn();
-  // Defer prefetch when streaming â€” gives audio a 600ms head start on the network
+  // Defer prefetch when streaming — gives audio a 600ms head start on the network
   // before competing fetches begin. Blob/prebuf paths start immediately (already cached).
   if(_srcType==='stream'){
     setTimeout(function(){prefetchAyahBlob(surah,ayah);},600);
@@ -6343,14 +6343,14 @@ function updateAudioBarAvatar(){
   while(avatarEl.firstChild)avatarEl.removeChild(avatarEl.firstChild);
   var photo=_reciterPhoto(RECITER);
   if(photo&&_imgLoaded[RECITER]===true){
-    // Decoded â€” show instantly from browser cache / bundled asset
+    // Decoded — show instantly from browser cache / bundled asset
     var img=document.createElement('img');img.src=photo;img.alt='';avatarEl.appendChild(img);
   } else {
     var rec=RECITERS.find(function(r){return r.id===RECITER;});
     var ini=rec?rec.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
     avatarEl.appendChild(el('span','audio-bar-avatar-initials',ini));
     if(photo&&_imgLoaded[RECITER]!=='err'){
-      // URL known, not yet settled â€” queue upgrade when it loads; onerror silences retries
+      // URL known, not yet settled — queue upgrade when it loads; onerror silences retries
       var watchId=RECITER;var watchImg=new Image();
       watchImg.onload=function(){_imgLoaded[watchId]=true;if(RECITER===watchId){_lastAvatarReciter=null;updateAudioBarAvatar();}};
       watchImg.onerror=function(){_imgLoaded[watchId]='err';};
@@ -6411,7 +6411,7 @@ App.audioNext=function(){
     var _advSurah=S.audio.surah+1;
     playAyah(_advSurah,1);
     if(S.mushafMode){
-      // Mushaf shows full 604-page Quran â€” update state and scroll, no re-render
+      // Mushaf shows full 604-page Quran — update state and scroll, no re-render
       S.surah=_advSurah;
       _scrollMushafToAyah(_advSurah,1,0);
       updateMushafPlayBtn();
@@ -6502,7 +6502,7 @@ App.openMushafSettings=function(){
       var mv=$('mushafView');
       if(mv){var pgs=mv.querySelectorAll('.mushaf-text-page[data-loaded]');for(var _i=0;_i<pgs.length;_i++)_fitQCFLines(pgs[_i]);}
       // If the fit pass capped the rendered size below the requested value,
-      // further "+" presses are a no-op on this device â€” disable the button so
+      // further "+" presses are a no-op on this device — disable the button so
       // the stepper reflects the real ceiling instead of silently doing nothing.
       if(fsPBtn&&mv){
         var _fl=mv.querySelector('.mushaf-text-page[data-loaded] .mushaf-qcf-line');
@@ -6521,12 +6521,12 @@ App.openMushafSettings=function(){
 
   // Line Height stepper
   body.appendChild(el('div','ms-section-label',t('qs.line_spacing_label')));
-  var lhVal=el('span','stepper-val',S.mushafLineH.toFixed(1)+'Ã—');
+  var lhVal=el('span','stepper-val',S.mushafLineH.toFixed(1)+'×');
   var lhCtrl=el('div','setting-stepper');
   var lhMBtn=el('button','stepper-btn','-');var lhPBtn=el('button','stepper-btn','+');
   (function(){
     var min=1.8,max=_lhMax,step=0.1;
-    function updLh(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;S.mushafLineH=v;lhVal.textContent=v.toFixed(1)+'Ã—';document.documentElement.style.setProperty('--mushaf-lh',String(v));localStorage.setItem(_lhKey,String(v));lhMBtn.disabled=(v<=min);lhPBtn.disabled=(v>=max);}
+    function updLh(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;S.mushafLineH=v;lhVal.textContent=v.toFixed(1)+'×';document.documentElement.style.setProperty('--mushaf-lh',String(v));localStorage.setItem(_lhKey,String(v));lhMBtn.disabled=(v<=min);lhPBtn.disabled=(v>=max);}
     on(lhMBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH-step).toFixed(1)));});
     on(lhPBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH+step).toFixed(1)));});
     lhMBtn.disabled=(S.mushafLineH<=min);lhPBtn.disabled=(S.mushafLineH>=max);
@@ -6567,7 +6567,7 @@ App.showMushafVerseTafsir=function(vn,sn){
   snGlyph.textContent=gc;
   if(window.QuranFontManager)window.QuranFontManager.onReady('SurahName',function(ok){if(ok)snGlyph.textContent=gc;});
   titleSpan.appendChild(snGlyph);
-  titleSpan.appendChild(document.createTextNode(' â€” '+toArabicNum(vn)));
+  titleSpan.appendChild(document.createTextNode(' — '+toArabicNum(vn)));
   hdr.appendChild(titleSpan);
 
   // Actions: play + close grouped on one side
@@ -6643,7 +6643,7 @@ App.showMushafLinePicker=function(ayahs){
   var body=el('div','mushaf-tafsir-body');
   ayahs.forEach(function(a){
     var s=SURAHS[(a.sn||1)-1];
-    var label=(s?s.n:'')+' â€” '+t('reader.ayah')+' '+toArabicNum(a.vn);
+    var label=(s?s.n:'')+' — '+t('reader.ayah')+' '+toArabicNum(a.vn);
     var btn=el('button','mushaf-picker-btn');
     btn.textContent=label;
     on(btn,'click',function(){dismiss();setTimeout(function(){App.showMushafVerseTafsir(a.vn,a.sn);},270);});
@@ -6661,7 +6661,7 @@ App.showMushafLinePicker=function(ayahs){
 App.openCopyModal=function(surah,ayah){
   S.copy.surah=surah;S.copy.ayah=ayah;
   var s=SURAHS[surah-1];
-  $('copyModalTitle').textContent=(s?s.en+' â€” ':'')+t('reader.ayah')+' '+ayah;
+  $('copyModalTitle').textContent=(s?s.en+' — ':'')+t('reader.ayah')+' '+ayah;
   $('copyMainOpts').style.display='';
   $('copyRangeOpts').style.display='none';
   var maxAyah=s?s.a:1;
@@ -6687,7 +6687,7 @@ function buildCopyText(surah,ayahNum,mode){
   var arabic=getAyahArabicText(surah,ayahNum);
   var tafsir=getAyahTafsirText(surah,ayahNum);
   var lines=[];
-  if((mode==='both'||mode==='quran')&&arabic)lines.push(String(ayahNum)+' ï´¿ '+arabic+' ï´¾');
+  if((mode==='both'||mode==='quran')&&arabic)lines.push(String(ayahNum)+' ﴿ '+arabic+' ﴾');
   if((mode==='both'||mode==='tafsir')&&tafsir)lines.push(tafsir);
   return lines.join('\n');
 }
@@ -6724,7 +6724,7 @@ function renderAudioSettings(){
   var body=$('audioSettingsBody');
   clear(body);
 
-  // â”€â”€ Speed section (top) â”€â”€
+  // ── Speed section (top) ──
   body.appendChild(el('div','audio-settings-title',t('audio.speed')));
   var speedSeg=el('div','speed-seg');
   [0.5,0.75,1,1.25,1.5,2].forEach(function(sp){
@@ -6740,15 +6740,15 @@ function renderAudioSettings(){
   });
   body.appendChild(speedSeg);
 
-  // â”€â”€ Reciter section â”€â”€
+  // ── Reciter section ──
   body.appendChild(el('div','audio-settings-title',t('audio.reciter')));
   var recGrid=el('div','reciter-grid');
-  var styleLbls={murattal:t('audio.style_murattal')||'Ù…ÙˆØ±ØªÙ„',mujawwad:t('audio.style_mujawwad')||'Ù…Ø¬ÙˆØ¯',hadr:t('audio.style_hadr')||'Ø­Ø¯Ø±'};
+  var styleLbls={murattal:t('audio.style_murattal')||'مورتل',mujawwad:t('audio.style_mujawwad')||'مجود',hadr:t('audio.style_hadr')||'حدر'};
   RECITERS.forEach(function(r){
     var isOn=r.id===RECITER;
     var card=el('div','reciter-card'+(isOn?' on':''));
 
-    // Avatar circle â€” wrap so check badge isn't clipped by overflow:hidden
+    // Avatar circle — wrap so check badge isn't clipped by overflow:hidden
     var avatarWrap=el('div','reciter-avatar-wrap');
     var avatar=el('div','reciter-avatar');
     var photo=_reciterPhoto(r.id);
@@ -6782,7 +6782,7 @@ function renderAudioSettings(){
     info.appendChild(meta);
     card.appendChild(info);
 
-    // Download button (right side of card â€” stops propagation so it doesn't select reciter)
+    // Download button (right side of card — stops propagation so it doesn't select reciter)
     if(window.AudioDownloads){
       var dlBtn=el('button','reciter-dl-btn');
       var _dlSt=AudioDownloads.dlState(r.id);
@@ -6805,7 +6805,7 @@ function renderAudioSettings(){
       else if(S.surah)prefetchAyahBlob(S.surah,(S.audio.ayah||1)-1);
       else showAudioBar();
       toast(r.name);
-      // Update active card in-place â€” no full re-render, user stays in scroll position
+      // Update active card in-place — no full re-render, user stays in scroll position
       recGrid.querySelectorAll('.reciter-card').forEach(function(c){
         c.classList.remove('on');
         var ck=c.querySelector('.reciter-avatar-check');
@@ -6823,7 +6823,7 @@ function renderAudioSettings(){
 /* ===== DOWNLOAD SHEET ===== */
 var _dlSheetOpen=false;
 var _dlSheetReciter=null;
-var _dlScope='full'; // 'full' | 'surah' â€” reset each time sheet opens
+var _dlScope='full'; // 'full' | 'surah' — reset each time sheet opens
 
 function openDlSheet(reciterId){
   if(!window.AudioDownloads)return;
@@ -6839,7 +6839,7 @@ function openDlSheet(reciterId){
   sheet.classList.add('open');
   overlay.classList.add('on');
   _dlSheetOpen=true;
-  // Probe real file sizes from everyayah.com â€” re-render once we have real data
+  // Probe real file sizes from everyayah.com — re-render once we have real data
   AudioDownloads.probeReciterSize(reciterId,function(bytes){
     if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);
   });
@@ -6855,16 +6855,16 @@ function closeDlSheet(){
 
 /* ===== UNIFIED DOWNLOAD MANAGER ===== */
 // Shows downloaded PDF books + audio reciters in one bottom sheet.
-// Accessible from: Settings â†’ Audio section, and Books header button.
+// Accessible from: Settings → Audio section, and Books header button.
 var _dlMgrOpen=false;
 var _dlMgrSelectMode=false;
 var _dlMgrSelected={};   // key: 'book:pdfUrl' or 'audio:id'
-var _dlMgrCache={pdfs:null,audio:null}; // last fetched data â€” avoids spinner on reopen
+var _dlMgrCache={pdfs:null,audio:null}; // last fetched data — avoids spinner on reopen
 
 function openDlManager(){
   var sheet=$('dlMgrSheet'),overlay=$('dlMgrOverlay');
   if(!sheet||!overlay)return;
-  H.light(); // opening a sheet â€” not an action completion
+  H.light(); // opening a sheet — not an action completion
   _dlMgrTab='books';
   _dlMgrSelectMode=false;
   _dlMgrSelected={};
@@ -6876,7 +6876,7 @@ function openDlManager(){
   var editIco=$('dlMgrEditIco');
   function _syncEditBtn(){
     if(!editBtn)return;
-    if(editLbl)editLbl.textContent=_dlMgrSelectMode?t('dl.mode_back','Ù„ÛŽØ²Ú¤Ú•ÛŒÙ†'):t('dl.mode_select','Ù‡Û•ÚµØ¨Ú˜Ø§Ø±ØªÙ†');
+    if(editLbl)editLbl.textContent=_dlMgrSelectMode?t('dl.mode_back','لێزڤڕین'):t('dl.mode_select','هەڵبژارتن');
     if(editIco)editIco.className=_dlMgrSelectMode?'fas fa-times':'fas fa-check-double';
     editBtn.style.color=_dlMgrSelectMode?'var(--danger,#e05)':'var(--accent)';
   }
@@ -6924,7 +6924,7 @@ function _dlMgrFetchAndRefresh(){
 }
 
 function _fmtDlBytes(b){
-  if(!b||b<=0)return 'â€”';
+  if(!b||b<=0)return '—';
   if(window.PdfStore&&PdfStore.fmtSize)return PdfStore.fmtSize(b);
   if(b<1024*1024)return(b/1024).toFixed(0)+' KB';
   return(b/(1024*1024)).toFixed(1)+' MB';
@@ -7024,23 +7024,23 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
     var emp=el('div','');
     emp.style.cssText='display:flex;flex-direction:column;align-items:center;gap:10px;padding:48px 24px;color:var(--text-tertiary)';
     var empIc=icon('fas fa-cloud-download-alt');empIc.style.cssText='font-size:2.4rem;opacity:.3';emp.appendChild(empIc);
-    var empT=el('div','');empT.style.cssText='font-size:.92rem;font-weight:600';empT.textContent=t('dl.nothing_downloaded')||'Ú† Ø¯Ø§Ø¨Û•Ø²Ø§Ù†Ø¯Ù† Ù†ÛŒÙ†Ù†';emp.appendChild(empT);
+    var empT=el('div','');empT.style.cssText='font-size:.92rem;font-weight:600';empT.textContent=t('dl.nothing_downloaded')||'چ دابەزاندن نینن';emp.appendChild(empT);
     var empS=el('div','');empS.style.cssText='font-size:.78rem;opacity:.5;text-align:center;line-height:1.7;direction:rtl;max-width:220px';
-    empS.textContent=t('dl.nothing_hint')||'Ù¾Û•Ø±ØªÙˆÙˆÚ© Ùˆ Ø¯Û•Ù†Ú¯Ø§Ù† Ø¯Ø§Ø¨Û•Ø²ÛŒÙ†Û• Ø¨Û† Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ø¨ÛŽ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØª';emp.appendChild(empS);
+    empS.textContent=t('dl.nothing_hint')||'پەرتووک و دەنگان دابەزینە بۆ خواندنا بێ ئینتەرنێت';emp.appendChild(empS);
     body.appendChild(emp);
     return;
   }
   if(editBtn)editBtn.style.display='';
 
   var hasBoth=pdfCached.length>0&&audioAll.length>0;
-  // If only one type exists, force that tab â€” no tab bar needed
+  // If only one type exists, force that tab — no tab bar needed
   if(!hasBoth){_dlMgrTab=pdfCached.length?'books':'audio';}
   else{
     if(_dlMgrTab==='books'&&!pdfCached.length)_dlMgrTab='audio';
     if(_dlMgrTab==='audio'&&!audioAll.length)_dlMgrTab='books';
   }
 
-  // â”€â”€ Tab bar â€” only shown when both types exist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Tab bar — only shown when both types exist ──────────
   if(hasBoth){
     var tabRow=el('div','');
     tabRow.style.cssText='display:flex;border-bottom:1.5px solid var(--border);margin-bottom:4px;touch-action:manipulation';
@@ -7052,12 +7052,12 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
       on(btn,'click',function(){_dlMgrTab=key;_dlMgrSelected={};_renderDlMgrBodyWith(pdfCached,audioAll);});
       tabRow.appendChild(btn);
     }
-    _makeTab('books',t('dl.books_section')||'Ù¾Û•Ø±ØªÙˆÚ©Û•Ú©Ø§Ù†',pdfCached.length);
-    _makeTab('audio',t('dl.audio_section')||'Ø¯Û•Ù†Ú¯',audioAll.length);
+    _makeTab('books',t('dl.books_section')||'پەرتوکەکان',pdfCached.length);
+    _makeTab('audio',t('dl.audio_section')||'دەنگ',audioAll.length);
     body.appendChild(tabRow);
   }
 
-  // â”€â”€ Storage line â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Storage line ─────────────────────────────────────
   var totalB=pdfCached.reduce(function(s,c){return s+c.bytes;},0)+audioAll.reduce(function(s,r){return s+r.bytes;},0);
   if(totalB>0){
     var stBar=el('div','');
@@ -7067,13 +7067,13 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
     body.appendChild(stBar);
   }
 
-  // â”€â”€ Select bar (visible in select mode) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Select bar (visible in select mode) ─────────────
   var curItems=_dlMgrTab==='books'?pdfCached:audioAll;
   if(_dlMgrSelectMode&&curItems.length){
     var selBar=el('div','dl-sel-bar');
     var selCount=Object.keys(_dlMgrSelected).length;
     var allSelected=selCount===curItems.length&&curItems.length>0;
-    var selAll=el('button','dl-sel-all',allSelected?(t('dl.deselect_all')||'Ú•Û•ØªÚ©Ø±Ù†Ø§ Ù‡Û•Ù…ÛŒØ§'):(t('dl.select_all')||'Ù‡Û•ÚµØ¨Ú˜Ø§Ø±ØªÙ†Ø§ Ù‡Û•Ù…ÛŒØ§'));
+    var selAll=el('button','dl-sel-all',allSelected?(t('dl.deselect_all')||'ڕەتکرنا هەمیا'):(t('dl.select_all')||'هەڵبژارتنا هەمیا'));
     on(selAll,'click',function(){
       if(allSelected){
         _dlMgrSelected={};
@@ -7086,7 +7086,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
       _renderDlMgrBodyWith(pdfCached,audioAll);
     });
     var selDel=el('button','dl-sel-del');
-    selDel.textContent=(t('dl.delete_selected')||'Ú˜ÛŽØ¨Ø±Ù†Ø§ ÛŒÛŽÙ† Ù‡Ø§ØªÛŒÛŒÙ†Û• Ù‡Û•ÚµØ¨Ú˜Ø§Ø±ØªÙ†')+(selCount?' ('+selCount+')':'');
+    selDel.textContent=(t('dl.delete_selected')||'ژێبرنا یێن هاتیینە هەڵبژارتن')+(selCount?' ('+selCount+')':'');
     if(!selCount)selDel.disabled=true;
     on(selDel,'click',function(){
       var keys=Object.keys(_dlMgrSelected);
@@ -7113,7 +7113,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
         if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
         renderAudioSettings();
         _renderDlMgrBody();
-        toast(t('toast.dl_removed')||'Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•');
+        toast(t('toast.dl_removed')||'سڕایەوە');
       });
     });
     selBar.appendChild(selDel);
@@ -7122,23 +7122,23 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
     body.appendChild(selBar);
   }
 
-  // â”€â”€ Tab content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Tab content ─────────────────────────────────────
   var content=el('div','');content.style.cssText='padding:4px 16px 8px';
 
   if(_dlMgrTab==='books'){
     if(!pdfCached.length){
       var noB=el('div','');noB.style.cssText='padding:32px;text-align:center;color:var(--text3);font-size:.85rem;direction:rtl';
-      noB.textContent=t('dl.no_books')||'Ù‡ÛŒÚ† Ù¾Û•Ø±ØªÙˆÚ©ÛŽÚ© Ù†Û•Ù‡Ø§ØªÛŒÛ• Ø¯Ø§ÙˆÙ†Ù„Û†Ø¯ Ú©Ø±Ù†';content.appendChild(noB);
+      noB.textContent=t('dl.no_books')||'هیچ پەرتوکێک نەهاتیە داونلۆد کرن';content.appendChild(noB);
     }else{
       pdfCached.forEach(function(entry){
         var book=(window.GencineUI&&GencineUI.getBook)?GencineUI.getBook(entry.pdfUrl):null;
         // Resolution chain: live row (series-aware: volume label + series cover)
-        // â†’ metadata persisted at download time â†’ raw filename as last resort.
+        // → metadata persisted at download time → raw filename as last resort.
         // Series volumes have empty own title/cover, which used to fall through
         // to the bare R2 filename with no cover.
         var dm=(book&&window.GencineUI&&GencineUI.bookDisplayMeta)?GencineUI.bookDisplayMeta(book):null;
-        // Never show the raw R2 id-filename â€” generic label as last resort
-        var title=(dm&&dm.title)||entry.title_ku||entry.title_ar||((t('gencine.books_unit')||'Ù¾Û•Ø±ØªÙˆÚ©')+' (PDF)');
+        // Never show the raw R2 id-filename — generic label as last resort
+        var title=(dm&&dm.title)||entry.title_ku||entry.title_ar||((t('gencine.books_unit')||'پەرتوک')+' (PDF)');
         var cover=(dm&&dm.cover)||entry.cover_url||null;
         // Self-heal persisted metadata so the entry stays named even if the
         // book row is later removed from the DB
@@ -7155,7 +7155,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
               if(window.GencineUI&&GencineUI._refreshBookDlBadges)GencineUI._refreshBookDlBadges();
               _dlMgrCache.pdfs=null;
               if(_dlMgrOpen)_renderDlMgrBody();
-              toast(t('toast.dl_removed')||'Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•');
+              toast(t('toast.dl_removed')||'سڕایەوە');
             });
           },
           _dlMgrSelectMode?{select:true,selected:isSel,onSelect:function(){
@@ -7169,14 +7169,14 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
   }else{
     if(!audioAll.length){
       var noA=el('div','');noA.style.cssText='padding:32px;text-align:center;color:var(--text3);font-size:.85rem;direction:rtl';
-      noA.textContent=t('dl.no_audio')||'Ù‡ÛŒÚ† Ø¯Û•Ù†Ú¯ÛŽÚ© Ù†Û•Ù‡Ø§ØªÛŒÛ• Ø¯Ø§ÙˆÙ†Ù„Û†Ø¯ Ú©Ø±Ù†';content.appendChild(noA);
+      noA.textContent=t('dl.no_audio')||'هیچ دەنگێک نەهاتیە داونلۆد کرن';content.appendChild(noA);
     }else{
       audioAll.forEach(function(r){
         var rInfo=RECITERS.filter(function(x){return x.id===r.id;})[0]||null;
         var realName=rInfo?rInfo.name:r.name;
         var flag=rInfo?(rInfo.flag||''):(r.flag||'');
         var photo=_reciterPhoto(r.id);
-        var sub=r.surahs+'/114 '+(t('audio.surahs')||'Ø³ÙˆØ±Û•Øª')+(r.corrupt?' âš ï¸':'');
+        var sub=r.surahs+'/114 '+(t('audio.surahs')||'سورەت')+(r.corrupt?' ⚠️':'');
         var selKey='audio:'+r.id;
         var isSel=!!_dlMgrSelected[selKey];
         content.appendChild(_dlMgrItem(
@@ -7187,7 +7187,7 @@ function _renderDlMgrBodyWith(pdfCached,audioAll){
               _dlMgrCache.pdfs=null;
               if(_dlMgrOpen)_renderDlMgrBody();
               renderAudioSettings();
-              toast(t('toast.dl_removed')||'Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•');
+              toast(t('toast.dl_removed')||'سڕایەوە');
             });
           },
           _dlMgrSelectMode?{circular:true,select:true,selected:isSel,onSelect:function(){
@@ -7232,12 +7232,12 @@ function renderDlSheetBody(reciterId){
   var estBytes=AD.estimateBytes(reciterId,scopeSurahs);
   var remBytes=AD.remainingBytes(reciterId,scopeSurahs);
 
-  // â”€â”€ Scope selector (only when a surah is active) â”€â”€
+  // ── Scope selector (only when a surah is active) ──
   if(S.surah&&!isDling){
     var surahName2=SURAHS&&SURAHS[S.surah-1]?SURAHS[S.surah-1].n:'';
     var scopeSeg=el('div','dl-scope-seg');
     ['full','surah'].forEach(function(sc){
-      var lbl2=sc==='full'?t('dl.full_quran'):'Surah '+S.surah+(surahName2?' â€” '+surahName2:'');
+      var lbl2=sc==='full'?t('dl.full_quran'):'Surah '+S.surah+(surahName2?' — '+surahName2:'');
       var btn=el('button','dl-scope-btn'+(_dlScope===sc?' on':''),lbl2);
       on(btn,'click',function(){if(_dlScope!==sc){_dlScope=sc;renderDlSheetBody(reciterId);}});
       scopeSeg.appendChild(btn);
@@ -7245,7 +7245,7 @@ function renderDlSheetBody(reciterId){
     body.appendChild(scopeSeg);
   }
 
-  // â”€â”€ Wi-Fi toggle â”€â”€
+  // ── Wi-Fi toggle ──
   if(!isDling){
     var wifiRow=el('div','dl-wifi-row');
     wifiRow.appendChild(el('span','dl-wifi-lbl',t('dl.wifi_only')));
@@ -7259,7 +7259,7 @@ function renderDlSheetBody(reciterId){
     body.appendChild(wifiRow);
   }
 
-  // â”€â”€ Determine scope state â”€â”€
+  // ── Determine scope state ──
   var scopeState;
   if(_dlScope==='surah'&&S.surah){
     scopeState=AD.isSurahCorrupt(reciterId,S.surah)?'corrupt':
@@ -7269,7 +7269,7 @@ function renderDlSheetBody(reciterId){
     scopeState=AD.dlState(reciterId);
   }
 
-  // â”€â”€ Corrupt warning â”€â”€
+  // ── Corrupt warning ──
   if(scopeState==='corrupt'&&!isDling){
     var nCorrupt=_dlScope==='surah'?1:stats.needsRepair.length;
     var cBadge=el('div','dl-corrupt-badge');
@@ -7278,7 +7278,7 @@ function renderDlSheetBody(reciterId){
     body.appendChild(cBadge);
   }
 
-  // â”€â”€ Status row â”€â”€
+  // ── Status row ──
   var statusRow=el('div','dl-status-row');
   var statusLbl=el('div','dl-status-lbl');
   var statusVal=el('div','dl-status-val');
@@ -7303,7 +7303,7 @@ function renderDlSheetBody(reciterId){
   statusRow.appendChild(statusVal);
   body.appendChild(statusRow);
 
-  // â”€â”€ Progress bar â”€â”€
+  // ── Progress bar ──
   if(isDling&&prog){
     var pw=el('div','dl-progress-wrap');
     var pb=el('div','dl-progress-bar');
@@ -7311,12 +7311,12 @@ function renderDlSheetBody(reciterId){
     pf.style.width=prog.pct+'%';
     pb.appendChild(pf);pw.appendChild(pb);
     var surahName3=prog.surah&&SURAHS[prog.surah-1]?SURAHS[prog.surah-1].n:'';
-    pw.appendChild(el('div','dl-progress-txt','Surah '+prog.surah+(surahName3?' â€” '+surahName3:'')+' Â· '+prog.done+'/'+prog.total+' ayahs'));
+    pw.appendChild(el('div','dl-progress-txt','Surah '+prog.surah+(surahName3?' — '+surahName3:'')+' · '+prog.done+'/'+prog.total+' ayahs'));
     body.appendChild(pw);
     setTimeout(function(){if(_dlSheetOpen&&_dlSheetReciter===reciterId)renderDlSheetBody(reciterId);},1000);
   }
 
-  // â”€â”€ Actions â”€â”€
+  // ── Actions ──
   if(!isDling){
     // Repair button (when corrupt)
     if(scopeState==='corrupt'){
@@ -7330,8 +7330,8 @@ function renderDlSheetBody(reciterId){
 
     // Download / Continue / Re-download
     var dlIcon=scopeState==='full'?'fas fa-rotate-right':'fas fa-arrow-down';
-    var _szEst=_sizeReady?AD.fmtBytes(estBytes):'â€¦';
-    var _szRem=_sizeReady?AD.fmtBytes(remBytes)+' '+t('dl.left'):'â€¦';
+    var _szEst=_sizeReady?AD.fmtBytes(estBytes):'…';
+    var _szRem=_sizeReady?AD.fmtBytes(remBytes)+' '+t('dl.left'):'…';
     var dlLabel=scopeState==='full'?t('dl.redownload_btn')+' ('+_szEst+')':
                 scopeState==='partial'?t('dl.continue_btn')+' ('+_szRem+')':
                 t('dl.download_btn')+' ('+_szEst+')';
@@ -7401,7 +7401,7 @@ function _renderFPSpeed(){
     on(btn,'click',function(){
       S.audio.speed=sp;S.audio.el.playbackRate=sp;
       localStorage.setItem('app_speed',String(sp));
-      H.selection();_renderFPSpeed(); // speed chip in a picker row â€” selection feedback
+      H.selection();_renderFPSpeed(); // speed chip in a picker row — selection feedback
     });
     row.appendChild(btn);
   });
@@ -7440,8 +7440,8 @@ function _fpUpdateAyahs(surah,ayah,instant){
     if(_fpGen===myGen)_fill();
     area.classList.add('fp-in');
     area.classList.remove('fp-out');
-    area.offsetHeight; // force reflow â€” browser registers fp-in state
-    area.classList.remove('fp-in'); // CSS transition fires: opacity 0â†’1, translateY 8â†’0
+    area.offsetHeight; // force reflow — browser registers fp-in state
+    area.classList.remove('fp-in'); // CSS transition fires: opacity 0→1, translateY 8→0
     setTimeout(function(){_fpAnimating=false;},350);
   },260);
 }
@@ -7453,12 +7453,12 @@ function syncFullPlayer(){
     clear(fpAv);
     var photo=_reciterPhoto(RECITER);
     if(photo&&_imgLoaded[RECITER]===true){
-      // Image already decoded â€” show instantly, no flash
+      // Image already decoded — show instantly, no flash
       var img=document.createElement('img');
       img.alt='';img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';
       img.src=photo;fpAv.appendChild(img);
     } else if(photo&&_imgLoaded[RECITER]!=='err'){
-      // URL known, not yet settled â€” show initials immediately, crossfade to image when ready
+      // URL known, not yet settled — show initials immediately, crossfade to image when ready
       var rec=RECITERS.find(function(r){return r.id===RECITER;});
       var ini=rec?rec.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
       var initEl=el('span','fp-avatar-initials',ini);
@@ -7476,7 +7476,7 @@ function syncFullPlayer(){
       fpPre.onerror=function(){_imgLoaded[fpId]='err';};
       fpPre.src=photo;
     } else {
-      // No URL or known-broken URL â€” initials only
+      // No URL or known-broken URL — initials only
       var rec2=RECITERS.find(function(r){return r.id===RECITER;});
       var ini2=rec2?rec2.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join(''):'';
       fpAv.appendChild(el('span','fp-avatar-initials',ini2));
@@ -7485,7 +7485,7 @@ function syncFullPlayer(){
   }
   var s=SURAHS[S.audio.surah-1];
   var se=$('fpSurah');
-  if(se)se.textContent=s?(s.ar+' Â· '+(t('reader.ayah')||'Ø¦Ø§ÛŒÛ•Øª')+' '+S.audio.ayah):'';
+  if(se)se.textContent=s?(s.ar+' · '+(t('reader.ayah')||'ئایەت')+' '+S.audio.ayah):'';
   var re=$('fpReciter');if(re)re.textContent=getReciterName();
   var fi=$('fpPlayIcon');if(fi)fi.className=S.audio.playing?'fas fa-pause':'fas fa-play';
   _renderFPSpeed();
@@ -7494,14 +7494,14 @@ function syncFullPlayer(){
 
 function _fpTick(ts){
   if(!_fpOpen){_fpRafId=null;return;}
-  // Skip expensive work when app is backgrounded â€” RAF pauses anyway but
+  // Skip expensive work when app is backgrounded — RAF pauses anyway but
   // when it resumes (tab focus) avoid a burst of stale-delta updates.
   if(document.hidden){_fpRafId=requestAnimationFrame(_fpTick);return;}
   var dt=ts-_fpLastTick;_fpLastTick=ts;
   var ae=S.audio.el;
   if(ae&&ae.duration>0&&!isNaN(ae.duration)){
     var target=ae.currentTime/ae.duration;
-    // Time-based exponential lerp â€” smooth at any frame rate, ~100ms convergence
+    // Time-based exponential lerp — smooth at any frame rate, ~100ms convergence
     _fpProg+=((target-_fpProg)*Math.min(1,(dt||16)*0.009));
     var fill=$('fpProgressFill');if(fill)fill.style.transform='scaleX('+_fpProg+')';
     var bp=$('audioBarProgress');if(bp)bp.style.transform='scaleX('+_fpProg+')';
@@ -7518,7 +7518,7 @@ function _fpTick(ts){
 function _buildRecPicker(){
   var list=$('rpList');if(!list)return;
   clear(list);
-  var styleLbls={murattal:t('audio.style_murattal')||'Ù…ÙˆØ±ØªÙ„',mujawwad:t('audio.style_mujawwad')||'Ù…Ø¬ÙˆØ¯',hadr:t('audio.style_hadr')||'Ø­Ø¯Ø±'};
+  var styleLbls={murattal:t('audio.style_murattal')||'مورتل',mujawwad:t('audio.style_mujawwad')||'مجود',hadr:t('audio.style_hadr')||'حدر'};
   RECITERS.forEach(function(r){
     var isOn=r.id===RECITER;
     var item=el('div','rp-item'+(isOn?' on':''));
@@ -7526,11 +7526,11 @@ function _buildRecPicker(){
     var av=el('div','rp-av');
     var photo=_reciterPhoto(r.id);
     if(photo&&_imgLoaded[r.id]===true){
-      // Decoded â€” show instantly from browser cache, no crossfade needed
+      // Decoded — show instantly from browser cache, no crossfade needed
       var avImg=document.createElement('img');avImg.alt='';avImg.src=photo;
       av.appendChild(avImg);
     } else if(photo&&_imgLoaded[r.id]!=='err'){
-      // URL known, not yet settled â€” show initials + crossfade to image when loaded
+      // URL known, not yet settled — show initials + crossfade to image when loaded
       var rpIni=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');
       var rpIniEl=el('span','rp-ini',rpIni);
       av.appendChild(rpIniEl);
@@ -7548,7 +7548,7 @@ function _buildRecPicker(){
         rpPre.src=url2;
       })(av,rpIniEl,r.id,photo);
     } else {
-      // No URL or known-broken URL â€” initials only, no retry
+      // No URL or known-broken URL — initials only, no retry
       var rpFallIni=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');
       av.appendChild(el('span','rp-ini',rpFallIni));
     }
@@ -7678,7 +7678,7 @@ function _attachSheetDrag(sheet,overlay,closeFn,scrollEl){
 
 var _rpDragInited=false;
 App.openRecPicker=function(){
-  // Only open when the full player is actually showing â€” blocks all rogue call paths
+  // Only open when the full player is actually showing — blocks all rogue call paths
   var fp=$('fullPlayer');
   if(!fp||!fp.classList.contains('open'))return;
   _buildRecPicker();
@@ -7702,12 +7702,12 @@ App.openFP=function(){
   var ov=$('fpOverlay'),pl=$('fullPlayer');
   if(!ov||!pl)return;
   if(!_fpDragInited){_fpDragInited=true;_attachSheetDrag(pl,ov,App.closeFP,$('fpAyahArea'));}
-  // Seed interpolated progress to current position â€” prevents slide-from-zero on open
+  // Seed interpolated progress to current position — prevents slide-from-zero on open
   var ae=S.audio.el;
   if(ae&&ae.duration>0&&!isNaN(ae.duration))_fpProg=ae.currentTime/ae.duration;
   _fpOpen=true;
-  _fpUpdateAyahs(S.audio.surah,S.audio.ayah,true); // instant first â€” seeds _fpLastSurah/Ayah
-  syncFullPlayer(); // _fpUpdateAyahs inside hits the guard and returns early â€” no animation
+  _fpUpdateAyahs(S.audio.surah,S.audio.ayah,true); // instant first — seeds _fpLastSurah/Ayah
+  syncFullPlayer(); // _fpUpdateAyahs inside hits the guard and returns early — no animation
   ov.classList.add('open');
   pl.classList.add('open');
   if(!_fpRafId)_fpRafId=requestAnimationFrame(_fpTick);
@@ -7722,7 +7722,7 @@ App.closeFP=function(){
   if(_fpRafId){cancelAnimationFrame(_fpRafId);_fpRafId=null;}
   App.closeRecPicker();
   if(!pl||!pl.classList.contains('open'))return;
-  // Slide player back down before hiding â€” mirrors the slideUp entry animation
+  // Slide player back down before hiding — mirrors the slideUp entry animation
   pl.style.animation='slideDown .28s cubic-bezier(.4,0,1,1) both';
   setTimeout(function(){
     pl.style.animation='';
@@ -7892,10 +7892,10 @@ App.stopRepeat=function(){
 /* ===== BOOKMARKS ===== */
 /*
  * Architecture: in-memory map (_bmMap) is the authoritative runtime state.
- * Reads are O(1). Writes are coalesced â€” rapid taps produce one storage write.
+ * Reads are O(1). Writes are coalesced — rapid taps produce one storage write.
  * UI updates surgically (one card, one button). No full re-render on toggle.
  */
-var _bmMap={};          // "surah:ayah" â†’ bookmark object
+var _bmMap={};          // "surah:ayah" → bookmark object
 var _bmSaveTimer=null;  // coalesced-write timer
 
 function _bmKey(s,a){return s+':'+a;}
@@ -7912,10 +7912,10 @@ function _bmToArray(){
   return Object.keys(_bmMap).map(function(k){return _bmMap[k];});
 }
 
-// O(1) bookmark check â€” used directly in card rendering
+// O(1) bookmark check — used directly in card rendering
 function isBookmarked(surah,ayah){return !!_bmMap[_bmKey(surah,ayah)];}
 
-// Coalesced save: any number of taps within 300ms â†’ exactly one write
+// Coalesced save: any number of taps within 300ms → exactly one write
 function _scheduleBmSave(){
   clearTimeout(_bmSaveTimer);
   _bmSaveTimer=setTimeout(function(){
@@ -7927,7 +7927,7 @@ function _scheduleBmSave(){
 // Returns array for bookmarks tab / export (reads from in-memory map)
 function getBookmarks(){return _bmToArray();}
 
-// Direct write â€” used by note edits and deletions from bookmarks tab
+// Direct write — used by note edits and deletions from bookmarks tab
 function saveBookmarks(bms){
   _bmMap={};
   bms.forEach(function(b){if(b&&b.surah&&b.ayah)_bmMap[_bmKey(b.surah,b.ayah)]=b;});
@@ -7935,7 +7935,7 @@ function saveBookmarks(bms){
   debouncedSync();
 }
 
-// Toggle bookmark â€” returns true if added, false if removed
+// Toggle bookmark — returns true if added, false if removed
 function toggleBookmark(surah,ayah){
   var key=_bmKey(surah,ayah);
   if(_bmMap[key]){
@@ -7956,7 +7956,7 @@ function toggleBookmark(surah,ayah){
 function renderBookmarks(){
   var bms=getBookmarks();
 
-  // â”€â”€ Stats â€” build into fragment, then atomic replace â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Stats — build into fragment, then atomic replace ─────────────────────
   var statsFrag=document.createDocumentFragment();
   var row=el('div','stats-row');
   [{v:bms.length,l:t('bookmarks.total')},{v:new Set(bms.map(function(b){return b.surah})).size,l:t('bookmarks.surahs')},{v:bms.filter(function(b){return b.note}).length,l:t('bookmarks.notes')}].forEach(function(s){
@@ -7967,7 +7967,7 @@ function renderBookmarks(){
   });
   statsFrag.appendChild(row);
 
-  // â”€â”€ Controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Controls ─────────────────────────────────────────────────────────────
   var ctrlFrag=document.createDocumentFragment();
   if(bms.length){
     var ctrlDiv=el('div','bm-controls');
@@ -7988,7 +7988,7 @@ function renderBookmarks(){
     ctrlFrag.appendChild(ctrlDiv);
   }
 
-  // Atomic replace â€” old content stays visible until both sections are ready
+  // Atomic replace — old content stays visible until both sections are ready
   var stats=$('bmStats'); clear(stats); stats.appendChild(statsFrag);
   var ctrls=$('bmControls'); clear(ctrls); ctrls.appendChild(ctrlFrag);
   renderBmList(bms);
@@ -8001,25 +8001,25 @@ function getAyahArabicText(surah,ayah){
   var v=vv[ayah-1];return v?(v.text||v):'';
 }
 
-// â”€â”€ In-app note editor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Replaces native prompt() for bookmark notes â€” proper mobile UX with safe-area support.
+// ── In-app note editor ────────────────────────────────────────────────────────
+// Replaces native prompt() for bookmark notes — proper mobile UX with safe-area support.
 function _showNoteModal(currentNote,onSave){
   var ov=el('div','note-modal-ov');
   var card=el('div','note-modal-card');
-  var titleEl=el('div','note-modal-title',t('bookmarks.note_prompt')||'ØªÛŽØ¨ÛŒÙ†ÛŒ Ø¯Û•Ø³ØªÚ©Ø§Ø±ÛŒ Ø¨Ú©Û•');
+  var titleEl=el('div','note-modal-title',t('bookmarks.note_prompt')||'تێبینی دەستکاری بکە');
   var inp=document.createElement('textarea');
   inp.className='note-modal-inp';
   inp.maxLength=280;
   inp.value=currentNote||'';
   inp.rows=3;
-  inp.placeholder=t('bookmarks.note_placeholder')||'ØªÛŽØ¨ÛŒÙ†ÛŒ...';
+  inp.placeholder=t('bookmarks.note_placeholder')||'تێبینی...';
   var charCount=el('div','note-modal-chars','');
-  function _updateCount(){charCount.textContent=(280-inp.value.length)+' '+t('bookmarks.chars_left')||'Ù¾ÛŒØª Ù…Ø§ÙˆÛ•';}
+  function _updateCount(){charCount.textContent=(280-inp.value.length)+' '+t('bookmarks.chars_left')||'پیت ماوە';}
   _updateCount();
   inp.addEventListener('input',_updateCount);
   var actions=el('div','note-modal-actions');
-  var cancelBtn=el('button','note-modal-btn note-modal-cancel',t('cancel')||'Ù¾Ø§Ø´Ú¯Û•Ø²Ø¨ÙˆÙˆÙ†');
-  var saveBtn=el('button','note-modal-btn note-modal-save',t('bookmarks.note')||'Ù¾Ø§Ø´Û•Ú©Û•ÙˆØªÚ©Ø±Ù†');
+  var cancelBtn=el('button','note-modal-btn note-modal-cancel',t('cancel')||'پاشگەزبوون');
+  var saveBtn=el('button','note-modal-btn note-modal-save',t('bookmarks.note')||'پاشەکەوتکرن');
   function _close(){
     ov.classList.remove('on');
     setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},260);
@@ -8098,7 +8098,7 @@ function renderBmList(bms){
     noteBtn.appendChild(icon('fas fa-pen'));
     noteBtn.appendChild(document.createTextNode(' '+t('bookmarks.note')));
     on(noteBtn,'click',function(){
-      // Use in-app modal â€” never native prompt() on mobile
+      // Use in-app modal — never native prompt() on mobile
       _showNoteModal(bm.note,function(note){
         bm.note=note;
         saveBookmarks(getBookmarks().map(function(b){return b.surah===bm.surah&&b.ayah===bm.ayah?bm:b}));
@@ -8123,7 +8123,7 @@ function renderBmList(bms){
 }
 
 /* ===== GOALS ===== */
-// Clear only goal counters â€” preserves general Quran reading position (surah_progress_*, lastRead, bookmarks)
+// Clear only goal counters — preserves general Quran reading position (surah_progress_*, lastRead, bookmarks)
 function _clearGoalCounters(){
   localStorage.removeItem('readLog');
   localStorage.removeItem('readAyahsToday');
@@ -8132,7 +8132,7 @@ function _clearGoalCounters(){
   localStorage.setItem('trackingResetAt',new Date().toISOString());
   S.todayVerses=new Set();
 }
-// Full tracking reset â€” also wipes ayah-level read marks from Quran pages
+// Full tracking reset — also wipes ayah-level read marks from Quran pages
 function _clearTrackingState(){
   // Cancel any pending scheduleSave timer so it can't re-write cleared keys
   if(_progressCleanup){_progressCleanup();_progressCleanup=null;}
@@ -8153,7 +8153,7 @@ function getReadLog(){
   try{return JSON.parse(localStorage.getItem('readLog'))||{}}catch(e){return{}}
 }
 function saveReadLog(l){
-  // Prune entries older than 365 days â€” prevents unbounded readLog growth over years of use.
+  // Prune entries older than 365 days — prevents unbounded readLog growth over years of use.
   var cutoff=dateKey(new Date(Date.now()-365*86400000));
   Object.keys(l).forEach(function(k){if(k<cutoff)delete l[k];});
   localStorage.setItem('readLog',JSON.stringify(l));
@@ -8189,10 +8189,10 @@ function trackVerse(surah,ayah){
   var l=getReadLog();
   l[today]=(l[today]||0)+1;
   saveReadLog(l);
-  // Haptic exactly once on daily goal completion â€” success pattern
+  // Haptic exactly once on daily goal completion — success pattern
   var g=getGoal();
   if(g&&l[today]===g.pages){H.success();}
-  // Khatm celebration â€” fires each time total crosses a new multiple of 6236
+  // Khatm celebration — fires each time total crosses a new multiple of 6236
   var totalAfter=calcTotalRead(l);
   var khatmAt=parseInt(localStorage.getItem('khatmCelebAt')||'0');
   var nextKhatm=(Math.floor(khatmAt/6236)+1)*6236;
@@ -8201,7 +8201,7 @@ function trackVerse(surah,ayah){
     setTimeout(function(){_goalCelebrateKhatm(totalAfter,calcStreak(l),calcBestStreak(l));},900);
   }
   _updateGoalsBadge();
-  // Keep goal widget current â€” lightweight, no network
+  // Keep goal widget current — lightweight, no network
   pushGoalDataToWidget();
 }
 
@@ -8260,8 +8260,8 @@ function renderGoals(){
     ng.appendChild(el('div','ng-title',t('goals.empty.title')));
     ng.appendChild(el('div','ng-sub',t('goals.empty.subtitle')));
     ng.appendChild(el('div','ng-motivate',t('goals.empty.motivate')));
-    ng.appendChild(el('div','ng-verse','ÙÙŽØ¥ÙÙ†ÙŽÙ‘ Ù…ÙŽØ¹ÙŽ Ø§Ù„Ù’Ø¹ÙØ³Ù’Ø±Ù ÙŠÙØ³Ù’Ø±Ù‹Ø§'));
-    ng.appendChild(el('div','ng-verse-ref','Ø§Ù„Ø´Ø±Ø­ Ù©Ù¤:Ù¥'));
+    ng.appendChild(el('div','ng-verse','فَإِنَّ مَعَ الْعُسْرِ يُسْرًا'));
+    ng.appendChild(el('div','ng-verse-ref','الشرح ٩٤:٥'));
     var btn=el('button','btn');
     btn.appendChild(icon('fas fa-plus'));
     btn.appendChild(document.createTextNode(' '+t('goals.empty.start')));
@@ -8326,7 +8326,7 @@ function renderGoals(){
   }else if(streak>=7){
     hero.appendChild(el('div','streak-milestone',t('goals.streak.week')));
   }
-  // Animate streak number count-up and ring fill â€” only when panel is actually visible
+  // Animate streak number count-up and ring fill — only when panel is actually visible
   var ringOffset=circumference-Math.round(circumference*(Math.min(pct,100)/100));
   setTimeout(function(){
     circleFill.setAttribute('stroke-dashoffset',String(ringOffset));
@@ -8343,11 +8343,11 @@ function renderGoals(){
     requestAnimationFrame(countUp);
   },80);
 
-  // Week dots â€” fixed Kurdish week (Ø´Û•Ù…Ø¨ÛŒâ†’Ø¦Û•ÛŒÙ†ÛŒ), RTL order
+  // Week dots — fixed Kurdish week (شەمبی→ئەینی), RTL order
   var week=el('div','week-grid');
   week.setAttribute('dir','rtl');
   var dayNames=[t('goals.days.0'),t('goals.days.1'),t('goals.days.2'),t('goals.days.3'),t('goals.days.4'),t('goals.days.5'),t('goals.days.6')];
-  // Kurdish week starts Saturday; (getDay()+1)%7 gives 0=Satâ€¦6=Fri
+  // Kurdish week starts Saturday; (getDay()+1)%7 gives 0=Sat…6=Fri
   var todayWeekIdx=(today.getDay()+1)%7;
   var satStart=new Date(today);
   satStart.setDate(today.getDate()-todayWeekIdx);
@@ -8388,11 +8388,11 @@ function renderGoals(){
 
   // Today's progress card with encouragement
   var prgSec=el('div','progress-section');
-  // Header: prominent "X/100 Ø¨Û† Ø®ØªÙ…" counter
+  // Header: prominent "X/100 بۆ ختم" counter
   var prgHdr=el('div','progress-hdr');
   var prgLeft=el('div','progress-left');
   var prgCount=el('div','progress-count no-kurdish-convert',todayRead+'/'+target);
-  var prgKhatmLbl=el('div','progress-khatm-lbl','Ø®ØªÙ…Ú©Ø±Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ');
+  var prgKhatmLbl=el('div','progress-khatm-lbl','ختمکرنا قورئانێ');
   prgLeft.appendChild(prgCount);prgLeft.appendChild(prgKhatmLbl);
   prgHdr.appendChild(prgLeft);
   prgHdr.appendChild(el('span','progress-pct',pct+'%'));
@@ -8406,7 +8406,7 @@ function renderGoals(){
   var msgEl=el('div','progress-msg');
   if(pct>=100){
     msgEl.appendChild(document.createTextNode(t('goals.progress.complete')+' '));
-    var chk=el('span','complete-check','âœ“');
+    var chk=el('span','complete-check','✓');
     msgEl.appendChild(chk);
   }else if(pct>=50){
     msgEl.textContent=t('goals.progress.almost');
@@ -8423,7 +8423,7 @@ function renderGoals(){
   var journeyFill=el('div','progress-journey-fill');
   journeyBar.appendChild(journeyFill);
   var jLabel=el('div','progress-journey-lbl no-kurdish-convert');
-  jLabel.appendChild(document.createTextNode('Ø®ØªÙ…Ú©Ø±Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ â€” '+totalRead+'/6236'));
+  jLabel.appendChild(document.createTextNode('ختمکرنا قورئانێ — '+totalRead+'/6236'));
   var jPct=el('span','progress-journey-pct no-kurdish-convert',journeyPct+'%');
   jLabel.appendChild(jPct);
   journeyEl.appendChild(jLabel);
@@ -8441,7 +8441,7 @@ function renderGoals(){
   frag.appendChild(prgSec);
   setTimeout(function(){fill.style.width=pct+'%'},50);
 
-  // Stats card â€” total read, days to khatm, best streak
+  // Stats card — total read, days to khatm, best streak
   var gc=el('div','goal-card');
   gc.appendChild(el('div','goal-card-name',goal.name||t('goals.card.name')));
   gc.appendChild(el('div','goal-card-desc',t('goals.card.daily',{count:target})));
@@ -8504,7 +8504,7 @@ function renderGoals(){
   monthNav.appendChild(nextMo);
   calSec.appendChild(monthNav);
 
-  // Day-of-week headers: Sat,Sun,Mon,Tue,Wed,Thu,Fri (RTL: Ø´Û•Ù…Ø¨ÛŒ rightmost)
+  // Day-of-week headers: Sat,Sun,Mon,Tue,Wed,Thu,Fri (RTL: شەمبی rightmost)
   var dayHdrs=_KU_DAYS;
   var _dhOrder=[6,0,1,2,3,4,5];
   var hdrsRow=el('div','month-cal-grid');
@@ -8518,7 +8518,7 @@ function renderGoals(){
   var firstDay=new Date(calYear,calMo,1).getDay();
   var daysInMonth=new Date(calYear,calMo+1,0).getDate();
 
-  // Blank cells before 1st (RTL week starts Saturday: Sat=0 blanks, Sun=1, â€¦, Fri=6)
+  // Blank cells before 1st (RTL week starts Saturday: Sat=0 blanks, Sun=1, …, Fri=6)
   var blanks=(firstDay+1)%7;
   for(var bb=0;bb<blanks;bb++){calGrid.appendChild(el('div','month-cal-cell month-cal-empty',''))}
 
@@ -8582,8 +8582,8 @@ function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 
 /* ===== PRAYER TRACKER ===== */
 var _TRACK_PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
-// Kurdish day names Sunâ€“Sat â€” single source of truth used everywhere in the prayer tracker
-var _KU_DAYS=['Ø¦ÛŽÚ©Ø´Û•Ù…Ø¨','Ø¯ÙˆÙˆØ´Û•Ù…Ø¨','Ø³ÛŽØ´Û•Ù…Ø¨','Ú†Ø§Ø±Ø´Û•Ù…Ø¨','Ù¾ÛŽÙ†Ø¬Ø´Û•Ù…Ø¨','Ø¦Û•ÛŒÙ†ÛŒ','Ø´Û•Ù…Ø¨ÛŒ'];
+// Kurdish day names Sun–Sat — single source of truth used everywhere in the prayer tracker
+var _KU_DAYS=['ئێکشەمب','دووشەمب','سێشەمب','چارشەمب','پێنجشەمب','ئەینی','شەمبی'];
 var _KU_DAYS_FULL=_KU_DAYS; // alias kept for call-site clarity, same array
 
 function getPrayerLog(){try{return JSON.parse(localStorage.getItem('prayer_log'))||{};}catch(e){return {};}}
@@ -8600,8 +8600,8 @@ function togglePrayerDone(prayer){
   savePrayerLog(log);return log[today][prayer];
 }
 
-// â”€â”€ Prayer tracking start date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Days before this date are locked â€” user can't check them.
+// ── Prayer tracking start date ───────────────────────────────────────────────
+// Days before this date are locked — user can't check them.
 // Set once on first panel open: uses earliest existing log entry, or today.
 function _prayerTrackingStart(){return localStorage.getItem('prayerTrackingStart')||null;}
 function _initPrayerTrackingStart(){
@@ -8612,10 +8612,10 @@ function _initPrayerTrackingStart(){
   if(window.S&&S.user)debouncedSync();
 }
 
-// â”€â”€ Smart prayer engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Smart prayer engine ──────────────────────────────────────────────────────
 
 // Timings for any date key (YYYY-MM-DD).
-// Primary: window._prayerUITimings exposed by prayer.ui.js buildPanel() â€” reliable on iOS WKWebView
+// Primary: window._prayerUITimings exposed by prayer.ui.js buildPanel() — reliable on iOS WKWebView
 // where the localStorage prayer-kurd3: cache may not be populated yet.
 // Fallback: localStorage cache populated by prayer.cache.js.
 function _getTimingsForDate(dKey){
@@ -8651,10 +8651,10 @@ function _todayPassedPrayers(){
   });
 }
 
-// Islamic prayer day: before today's Fajr â†’ still in yesterday's prayer day
+// Islamic prayer day: before today's Fajr → still in yesterday's prayer day
 function _getPrayerDay(){
   var now=new Date();var todayKey=dateKey(now);
-  // Use live panel timings as fallback â€” covers the case where localStorage cache
+  // Use live panel timings as fallback — covers the case where localStorage cache
   // hasn't populated yet (common on iOS WKWebView before prayer tab loads)
   var t=_getTimingsForDate(todayKey)||
     (window._prayerUITimings&&{Fajr:window._prayerUITimings.Fajr});
@@ -8662,7 +8662,7 @@ function _getPrayerDay(){
     var hm=t.Fajr.trim().split(' ')[0].split(':');
     var h=+hm[0],m=+hm[1];
     if(!isNaN(h)&&!isNaN(m)){
-      // UTC+3 arithmetic â€” identical to _pppMsUntil â€” avoids device-timezone vs
+      // UTC+3 arithmetic — identical to _pppMsUntil — avoids device-timezone vs
       // Baghdad-timezone mismatch that caused wrong pre-Fajr detection
       var nowBgd=Date.now()+3*3600000;
       var dayStart=nowBgd-(nowBgd%86400000);
@@ -8685,7 +8685,7 @@ function _isPrayerCheckable(prayer,dKey){
   if(dKey>todayKey)return false;
   if(dKey===todayKey&&prayerDay!==todayKey)return false;
   // Primary: localStorage cache keyed by city+month. Fallback: live panel timings
-  // (window._prayerUITimings) â€” covers the case where the date-key format differs
+  // (window._prayerUITimings) — covers the case where the date-key format differs
   // between PrayerLogic.todayBaghdad() (Asia/Baghdad locale) and dateKey(new Date())
   // (device local), causing _getTimingsForDate to miss the cache and return null.
   var timings=_getTimingsForDate(dKey);
@@ -8695,7 +8695,7 @@ function _isPrayerCheckable(prayer,dKey){
       Isha:window._prayerUITimings.Isha};
   }
   if(!timings||!timings[prayer])return false;
-  // Use UTC+3 arithmetic (same as _pppMsUntil / _msToPrayer) â€” consistent with
+  // Use UTC+3 arithmetic (same as _pppMsUntil / _msToPrayer) — consistent with
   // countdown display and avoids device-timezone vs Baghdad-timezone mismatch.
   return _pppMsUntil(timings[prayer])<=0;
 }
@@ -8727,14 +8727,14 @@ function _pppMsUntil(timeStr){
   var dayStart=nowBgd-(nowBgd%86400000);
   return dayStart+h*3600000+m*60000-nowBgd;
 }
-// Format ms â†’ "Ù¢Ø³ Ù¥Ø®" / "Ù¤Ù§Ø®" / "Ù£Ù¨Ú†"
+// Format ms → "٢س ٥خ" / "٤٧خ" / "٣٨چ"
 function _pppFmtMs(ms){
   var s=Math.max(0,Math.floor(ms/1000));
   var h=Math.floor(s/3600);s-=h*3600;
   var m=Math.floor(s/60);s-=m*60;
-  if(h>0)return h+'Ø³'+(m>0?' '+m+'Ø®':'');
-  if(m>0)return m+'Ø®'+(s>0?' '+s+'Ú†':'');
-  return s+'Ú†';
+  if(h>0)return h+'س'+(m>0?' '+m+'خ':'');
+  if(m>0)return m+'خ'+(s>0?' '+s+'چ':'');
+  return s+'چ';
 }
 
 function _startPppTick(){
@@ -8747,13 +8747,13 @@ function _startPppTick(){
 }
 function _stopPppTick(){if(_pppTickId){clearInterval(_pppTickId);_pppTickId=null;}}
 
-// Lightweight 1-second tick â€” only updates countdown text on locked buttons
+// Lightweight 1-second tick — only updates countdown text on locked buttons
 function _startPppCdTick(){
   if(_pppCdTickId)return;
   _pppCdTickId=setInterval(function(){
     var panel=$('prayerProgressPanel');
     if(!panel||!panel.classList.contains('on')){_stopPppCdTick();return;}
-    var pDay=dateKey(new Date()); // calendar date â€” matches panel display
+    var pDay=dateKey(new Date()); // calendar date — matches panel display
     var timings=_getTimingsForDate(pDay)||
       (window._prayerUITimings&&{Fajr:window._prayerUITimings.Fajr,Dhuhr:window._prayerUITimings.Dhuhr,
         Asr:window._prayerUITimings.Asr,Maghrib:window._prayerUITimings.Maghrib,Isha:window._prayerUITimings.Isha});
@@ -8763,12 +8763,12 @@ function _startPppCdTick(){
       if(!timings||!timings[p]){cdSpan.textContent='';return;}
       var rem=_pppMsUntil(timings[p]);
       if(rem<=0){
-        needsSync=true; // prayer time just passed â€” unlock immediately on next sync
+        needsSync=true; // prayer time just passed — unlock immediately on next sync
       }else{
         cdSpan.textContent=_pppFmtMs(rem);
       }
     });
-    // Immediately sync panel when any countdown reaches zero â€” don't wait for the
+    // Immediately sync panel when any countdown reaches zero — don't wait for the
     // 20-second tick. Prayer time passed = button should unlock right now.
     if(needsSync)_pppSyncPanel(getPrayerLog(),pDay);
   },1000);
@@ -8800,7 +8800,7 @@ function calcPrayerMonthStats(log,year,month){
 }
 function calcPrayerWeekData(log){
   var now=new Date();var pDay=_getPrayerDay();var result=[];
-  // Fixed Kurdish week: Saturdayâ†’Friday; (getDay()+1)%7 gives 0=Satâ€¦6=Fri
+  // Fixed Kurdish week: Saturday→Friday; (getDay()+1)%7 gives 0=Sat…6=Fri
   var weekOffset=(now.getDay()+1)%7;
   var satStart=new Date(now);satStart.setDate(now.getDate()-weekOffset);
   for(var i=0;i<7;i++){
@@ -8897,7 +8897,7 @@ App.openPrayerDay=function(dKey){
   var parts=dKey.split('-');
   var d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
   var dayNames=_KU_DAYS;
-  sheet.appendChild(el('div','ppp-day-title',dayNames[d.getDay()]+' â€” '+parts[2]+'/'+parts[1]));
+  sheet.appendChild(el('div','ppp-day-title',dayNames[d.getDay()]+' — '+parts[2]+'/'+parts[1]));
   var btns=el('div','ppp-day-prayers');
   _TRACK_PRAYERS.forEach(function(prayer){
     var isDone=!!(dayLog[prayer]);
@@ -8914,7 +8914,7 @@ App.openPrayerDay=function(dKey){
       var fl=getPrayerLog();if(!fl[dKey])fl[dKey]={};
       var prevCnt=_TRACK_PRAYERS.filter(function(p){return fl[dKey][p];}).length;
       fl[dKey][prayer]=!fl[dKey][prayer];savePrayerLog(fl);isDone=fl[dKey][prayer];
-      btn.classList.toggle('on',isDone);ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');H.light(); // prayer toggle â€” meaningful state change
+      btn.classList.toggle('on',isDone);ic.className=isDone?'fas fa-check-circle':(passed?'far fa-circle':'fas fa-clock');H.light(); // prayer toggle — meaningful state change
       // Refresh calendar cell
       var cell=document.querySelector('[data-ppp-key="'+dKey+'"]');
       if(cell){
@@ -8940,26 +8940,26 @@ App.closePrayerDay=function(){
   $('pppDayOverlay').classList.remove('on');
 };
 
-function _pppStreakVal(n){return n>0?'ðŸ”¥ '+n:'0';}
+function _pppStreakVal(n){return n>0?'🔥 '+n:'0';}
 
 // Live-update all panel stats + insights immediately after any prayer toggle
 function _pppSyncPanel(log,changedDKey){
   var panel=$('prayerProgressPanel');if(!panel)return;
-  var now=new Date();var pDay=dateKey(now); // calendar date â€” consistent with _buildPrayerProgressPanel
+  var now=new Date();var pDay=dateKey(now); // calendar date — consistent with _buildPrayerProgressPanel
   var streak=calcPrayerStreak(log);var best=calcBestPrayerStreak(log);
   var mStats=calcPrayerMonthStats(log,now.getFullYear(),now.getMonth());
   var consistency=calcConsistencyScore(log,30);
   var sv=panel.querySelector('.ppp-stat-streak');if(sv)sv.textContent=_pppStreakVal(streak);
-  var bv=panel.querySelector('.ppp-stat-best');if(bv)bv.textContent=best>0?'â­ '+best:'0';
+  var bv=panel.querySelector('.ppp-stat-best');if(bv)bv.textContent=best>0?'⭐ '+best:'0';
   var mv=panel.querySelector('.ppp-stat-month');if(mv)mv.textContent=mStats.full+'/'+mStats.total;
   var cv=panel.querySelector('.ppp-stat-consistency');if(cv)cv.textContent=consistency+'%';
-  // Today card â€” update count, bar, motivate AND individual button states
+  // Today card — update count, bar, motivate AND individual button states
   if(changedDKey===pDay){
     var nd=_TRACK_PRAYERS.filter(function(p){return(log[pDay]||{})[p];}).length;
     var tc=panel.querySelector('.ppp-today-count');if(tc)tc.textContent=nd+'/5';
     var pf=panel.querySelector('.ppp-progress-fill');if(pf)pf.style.width=((nd/5)*100)+'%';
     var mot=panel.querySelector('.ppp-motivate');if(mot)mot.textContent=_pppMsg(nd);
-    // Sync individual prayer button states in today card â€” including unlocking when time arrives
+    // Sync individual prayer button states in today card — including unlocking when time arrives
     _TRACK_PRAYERS.forEach(function(p){
       var isDone2=!!(log[pDay]&&log[pDay][p]);
       var passed2=_isPrayerCheckable(p,pDay);
@@ -8987,7 +8987,7 @@ function _pppSyncPanel(log,changedDKey){
       if(ic2)ic2.className=isDone2?'fas fa-check-circle':(canCheck2?'far fa-circle':'fas fa-clock');
     });
   }
-  // Day sheet â€” sync button states if the sheet is open for the same day
+  // Day sheet — sync button states if the sheet is open for the same day
   var dayOverlay=$('pppDayOverlay');
   if(dayOverlay&&dayOverlay.classList.contains('on')){
     _TRACK_PRAYERS.forEach(function(p){
@@ -9000,7 +9000,7 @@ function _pppSyncPanel(log,changedDKey){
       if(icD)icD.className=isDoneD?'fas fa-check-circle':(passedD?'far fa-circle':'fas fa-clock');
     });
   }
-  // Prayer grid card done-dot (prayer.ui.js panel) â€” keep in sync
+  // Prayer grid card done-dot (prayer.ui.js panel) — keep in sync
   if(changedDKey===pDay){
     _TRACK_PRAYERS.forEach(function(p){
       var isDoneG=!!(log[pDay]&&log[pDay][p]);
@@ -9011,7 +9011,7 @@ function _pppSyncPanel(log,changedDKey){
       else{if(dot)dot.parentNode.removeChild(dot);}
     });
   }
-  // Calendar cell â€” live color update for the changed day
+  // Calendar cell — live color update for the changed day
   var calCell=document.querySelector('.ppp-cal-cell[data-ppp-key="'+changedDKey+'"]');
   if(calCell){
     var cc=(log[changedDKey]||{});
@@ -9024,7 +9024,7 @@ function _pppSyncPanel(log,changedDKey){
     if(changedDKey===dateKey(new Date()))ccls+=' today-cell';
     calCell.className=ccls;
   }
-  // Week dot â€” live color update for the changed day
+  // Week dot — live color update for the changed day
   var wdotEl=document.querySelector('.ppp-wday[data-ppp-wkey="'+changedDKey+'"] .ppp-wday-dot');
   if(wdotEl){
     var wc=(log[changedDKey]||{});
@@ -9032,7 +9032,7 @@ function _pppSyncPanel(log,changedDKey){
     wdotEl.className='ppp-wday-dot'+(wn>=5?' full':wn>=4?' high':wn>=3?' mid':wn>=1?' low':'');
     wdotEl.textContent=wn>0?wn:'';
   }
-  // Insights â€” rebuild in-place
+  // Insights — rebuild in-place
   var oldIns=panel.querySelector('.ppp-insights');
   if(oldIns){
     var newIns=_buildPppInsights(log,mStats,calcPrayerWeekData(log),calcMostMissed(log));
@@ -9040,18 +9040,18 @@ function _pppSyncPanel(log,changedDKey){
   }
 }
 function _pppMsg(n){
-  if(n>=5)return'Ù…Ø§Ø´Ø§Ø¡Ø§Ù„Ù„Ù‡â€Œ! ØªÛ• Ø¦Û•Ú¤Ú•Û† Ù‡Û•Ù…ÛŒ Ù†Ú¤ÛŽÚ˜ÛŽÙ† Ø®Û† ØªÛ•Ù…Ø§Ù… Ú©Ø±Ù† ðŸŒŸ';
-  if(n>=4)return'Ø¨Ø§Ø´ØªØ±ÛŒÙ†Ù† â€” Ù†Ú¤ÛŽÚ˜Ø§ Ø¯ÙˆÙ…Ø§Ù‡ÛŒÛŒÛŽ ØªÛ•Ù…Ø§Ù… Ø¨Ú©Û• â­';
-  if(n>=3)return'Ù†ÛŽØ²ÛŒÚ© Ø¨ÙˆÙˆÛŒ â€” Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù… Ø¨Û• ðŸ’š';
-  if(n>=1)return'ØªÛ• Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø± â€” Ø¦Û•Ú¤Ú•Û† Ø²ÛŽØ¯Û• Ø¨Ú©Û• ðŸ¤²';
-  return'Ø¦Û•Ú¤Ú•Û† Ù‡ÛŽØ´ØªØ§ ØªÛ• Ù†Ú¤ÛŽÚ˜ Ù†Û•Ú©Ø±ÛŒÛ• â€” Ø¯Û•Ø³ØªÙ¾ÛŽØ¨Ú©Û• ðŸŒ…';
+  if(n>=5)return'ماشاءالله‌! تە ئەڤڕۆ هەمی نڤێژێن خۆ تەمام کرن 🌟';
+  if(n>=4)return'باشترینن — نڤێژا دوماهییێ تەمام بکە ⭐';
+  if(n>=3)return'نێزیک بووی — بەردەوام بە 💚';
+  if(n>=1)return'تە دەستپێکر — ئەڤڕۆ زێدە بکە 🤲';
+  return'ئەڤڕۆ هێشتا تە نڤێژ نەکریە — دەستپێبکە 🌅';
 }
 
 function _buildPrayerProgressPanel(panel){
   clear(panel);
   var log=getPrayerLog();var now=new Date();
   // Always use the calendar date (midnight-based) for the today card.
-  // Before Fajr: shows today's prayers as locked with countdown â€” user sees
+  // Before Fajr: shows today's prayers as locked with countdown — user sees
   // today's fresh grid, not yesterday's completed state.
   var today=dateKey(now);
   var todayLog=log[today]||{};
@@ -9064,18 +9064,18 @@ function _buildPrayerProgressPanel(panel){
   // Header
   var hdr=el('div','ppp-hdr');
   var back=document.createElement('button');back.className='ppp-back';
-  back.setAttribute('aria-label','Ø¯Ø§Ø®Ø³ØªÙ†');
+  back.setAttribute('aria-label','داخستن');
   back.appendChild(icon('fas fa-chevron-right'));on(back,'click',App.closePrayerProgress);
-  hdr.appendChild(back);hdr.appendChild(el('span','ppp-title','Ù†Ú¤ÛŽÚ˜Ú©Ø±Ù†'));
+  hdr.appendChild(back);hdr.appendChild(el('span','ppp-title','نڤێژکرن'));
   var sp=el('div');sp.style.width='36px';hdr.appendChild(sp);
   panel.appendChild(hdr);
 
   var body=el('div','ppp-body');
 
-  // â”€ Today card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Today card ─────────────────────────────────────────────
   var card=el('div','ppp-today-card');
   var topRow=el('div','ppp-today-hdr');
-  var todayLabel='Ø¦Û•Ú¤Ú•Û†';
+  var todayLabel='ئەڤڕۆ';
   topRow.appendChild(el('span','ppp-today-label',todayLabel));
   var countEl=el('span','ppp-today-count',doneToday+'/5');topRow.appendChild(countEl);
   card.appendChild(topRow);
@@ -9121,21 +9121,21 @@ function _buildPrayerProgressPanel(panel){
   card.appendChild(pBtns);card.appendChild(el('p','ppp-motivate',_pppMsg(doneToday)));
   body.appendChild(card);
 
-  // â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Stats ──────────────────────────────────────────────────
   var stats=el('div','ppp-stats');
   function mkStat(val,lbl,extraCls){
     var s=el('div','ppp-stat');
     s.appendChild(el('span','ppp-stat-val'+(extraCls?' '+extraCls:''),val));
     s.appendChild(el('span','ppp-stat-lbl',lbl));return s;
   }
-  stats.appendChild(mkStat(_pppStreakVal(streak),'Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù…ÛŒØ§ Ú•Û†Ú˜Ø§Ù†Û•','ppp-stat-streak'));
-  stats.appendChild(mkStat(best>0?'â­ '+best:'0','Ø¨Ø§Ø´ØªØ±ÛŒÙ† Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù…ÛŒ','ppp-stat-best'));
-  stats.appendChild(mkStat(mStats.full+'/'+mStats.total,'Ø¦Û•Ú¤ Ù‡Û•ÛŒÚ¤Û• ØªÛ•Ù…Ø§Ù… Ø¨ÙˆÙˆ','ppp-stat-month'));
-  stats.appendChild(mkStat(consistency+'%','Ù¾ÛŽÚ¯ÛŒØ±ÛŒ Ø¯ Ù£Ù  Ú•Û†Ú˜Ø§Ù† Ø¯Ø§','ppp-stat-consistency'));
+  stats.appendChild(mkStat(_pppStreakVal(streak),'بەردەوامیا ڕۆژانە','ppp-stat-streak'));
+  stats.appendChild(mkStat(best>0?'⭐ '+best:'0','باشترین بەردەوامی','ppp-stat-best'));
+  stats.appendChild(mkStat(mStats.full+'/'+mStats.total,'ئەڤ هەیڤە تەمام بوو','ppp-stat-month'));
+  stats.appendChild(mkStat(consistency+'%','پێگیری د ٣٠ ڕۆژان دا','ppp-stat-consistency'));
   body.appendChild(stats);
 
-  // â”€ This week â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  body.appendChild(el('div','ppp-section-title',t('ppp.section_week')||'Ø­Û•ÙØªÛŒØ§ Ø¯ÙˆÙ…Ø§Ù‡ÛŒÛŒÛŽ'));
+  // ─ This week ──────────────────────────────────────────────
+  body.appendChild(el('div','ppp-section-title',t('ppp.section_week')||'حەفتیا دوماهییێ'));
   var week=el('div','ppp-week');
   week.setAttribute('dir','rtl');
   weekData.forEach(function(d){
@@ -9149,27 +9149,27 @@ function _buildPrayerProgressPanel(panel){
   });
   body.appendChild(week);
 
-  // â”€ Monthly calendar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  body.appendChild(el('div','ppp-section-title','Ù‡Û•ÛŒÚ¤'));
+  // ─ Monthly calendar ───────────────────────────────────────
+  body.appendChild(el('div','ppp-section-title','هەیڤ'));
   body.appendChild(_buildPppCal(log));
 
-  // â”€ Insights â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  body.appendChild(el('div','ppp-section-title',t('ppp.section_insights')||'Ø¦Ø§Ú¯Û•Ù‡Ø¯Ø§Ø±ÛŒ'));
+  // ─ Insights ───────────────────────────────────────────────
+  body.appendChild(el('div','ppp-section-title',t('ppp.section_insights')||'ئاگەهداری'));
   body.appendChild(_buildPppInsights(log,mStats,weekData,missed));
 
-  // â”€ New Start â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ New Start ──────────────────────────────────────────────
   var nsWrap=el('div','ppp-newstart-wrap');
   var nsBtn=document.createElement('button');nsBtn.className='ppp-newstart-btn';
-  nsBtn.appendChild(icon('fas fa-redo-alt'));nsBtn.appendChild(document.createTextNode(' Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø±Ù†Û•Ú©Ø§ Ù†ÙˆÛŒ'));
+  nsBtn.appendChild(icon('fas fa-redo-alt'));nsBtn.appendChild(document.createTextNode(' دەستپێکرنەکا نوی'));
   on(nsBtn,'click',function(){
     var ov=el('div','ppp-ns-overlay');
     var card=el('div','ppp-ns-card');
     var iconEl=el('div','ppp-ns-icon');iconEl.appendChild(icon('fas fa-redo-alt'));
-    var title=el('div','ppp-ns-title','Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø±Ù†Û•Ú©Ø§ Ù†ÙˆÛŒ');
-    var sub=el('div','ppp-ns-sub','Ù‡Û•Ù…ÛŒ ØªÛ†Ù…Ø§Ø±ÛŽÙ† Ù†Ú¤ÛŽÚ˜Ø§Ù† Ø¯ÛŽ Ù‡ÛŽÙ†Û• Ú˜ÛŽØ¨Ø±Ù†ØŒ ØªÛ† Ø¯ÛŽ Ú˜ Ø¦Û•Ú¤Ø±Û† Ù¾ÛŽÚ¤Û• Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Û•ÛŒ.');
+    var title=el('div','ppp-ns-title','دەستپێکرنەکا نوی');
+    var sub=el('div','ppp-ns-sub','هەمی تۆمارێن نڤێژان دێ هێنە ژێبرن، تۆ دێ ژ ئەڤرۆ پێڤە دەستپێکەی.');
     var btns=el('div','ppp-ns-btns');
-    var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent=t('common.yes_delete','Ø¨Û•Ù„ÛŽØŒ Ú˜ÛŽ Ø¨Ø¨Û•');
-    var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent=t('common.no','Ù†Û•Ø®ÛŽØ±');
+    var yesBtn=document.createElement('button');yesBtn.className='ppp-ns-yes';yesBtn.textContent=t('common.yes_delete','بەلێ، ژێ ببە');
+    var noBtn=document.createElement('button');noBtn.className='ppp-ns-no';noBtn.textContent=t('common.no','نەخێر');
     function closeOv(){document.body.removeChild(ov);}
     on(yesBtn,'click',function(){
       closeOv();
@@ -9200,11 +9200,11 @@ function _buildPppCal(log){
   // Nav
   var nav=el('div','ppp-cal-nav');
   var prevBtn=document.createElement('button');prevBtn.className='ppp-cal-btn';
-  prevBtn.setAttribute('aria-label','Ù…Ø§ÙˆÛ•ÛŒ Ù¾ÛŽØ´ÙˆÙˆ');
+  prevBtn.setAttribute('aria-label','ماوەی پێشوو');
   prevBtn.appendChild(icon('fas fa-chevron-right'));
   on(prevBtn,'click',function(){_pppMonthOffset--;var o=$('pppCalWrap');if(o){var n=_buildPppCal(getPrayerLog());o.parentNode.replaceChild(n,o);}});
   var nextBtn=document.createElement('button');nextBtn.className='ppp-cal-btn';
-  nextBtn.setAttribute('aria-label','Ù…Ø§ÙˆÛ•ÛŒ Ø¯ÙˆØ§ØªØ±');
+  nextBtn.setAttribute('aria-label','ماوەی دواتر');
   if(isCur){nextBtn.disabled=true;nextBtn.style.opacity='.3';}
   nextBtn.appendChild(icon('fas fa-chevron-left'));
   on(nextBtn,'click',function(){if(_pppMonthOffset>=0)return;_pppMonthOffset++;var o=$('pppCalWrap');if(o){var n=_buildPppCal(getPrayerLog());o.parentNode.replaceChild(n,o);}});
@@ -9212,7 +9212,7 @@ function _buildPppCal(log){
   nav.appendChild(el('span','ppp-cal-month',t('goals.months.'+(month+1))+' '+year));
   nav.appendChild(nextBtn);
   wrap.appendChild(nav);
-  // Day headers: Sat,Sun,Mon,Tue,Wed,Thu,Fri (RTL: Ø´Û•Ù…Ø¨ÛŒ rightmost)
+  // Day headers: Sat,Sun,Mon,Tue,Wed,Thu,Fri (RTL: شەمبی rightmost)
   var dhr=el('div','ppp-cal-grid');
   var _pppDhOrder=[6,0,1,2,3,4,5];
   for(var _dhi=0;_dhi<7;_dhi++)dhr.appendChild(el('div','ppp-cal-dh',_KU_DAYS[_pppDhOrder[_dhi]]));
@@ -9260,9 +9260,9 @@ function _buildPppInsights(log,mStats,weekData,missed){
     return s+(d.key===_twToday?_twPassed.length:5);
   },0);
   var weekPct=weekExpected>0?Math.round((weekDone/weekExpected)*100):0;
-  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week',t('ppp.this_week')||'Ø¦Û•Ú¤ Ø­Û•ÙØªÛŒÛ•',weekPct+'% â€” '+weekDone+'/'+weekExpected+' Ù†Ú¤ÛŽÚ˜');
+  insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-calendar-week',t('ppp.this_week')||'ئەڤ حەفتیە',weekPct+'% — '+weekDone+'/'+weekExpected+' نڤێژ');
 
-  // All missed prayers (30 days) â€” show each prayer with its miss count
+  // All missed prayers (30 days) — show each prayer with its miss count
   (function(){
     var now=new Date();var hasSome=false;
     var counts={};
@@ -9279,12 +9279,12 @@ function _buildPppInsights(log,mStats,weekData,missed){
     var ic=el('div','ppp-insight-icon');ic.style.background='rgba(220,60,40,.12)';
     var ii=icon('fas fa-exclamation-circle');ii.style.color='#dc3c28';ic.appendChild(ii);r.appendChild(ic);
     var tx=el('div','ppp-insight-text');
-    tx.appendChild(el('div','ppp-insight-label',t('ppp.missed_label')||'Ù†Ú¤ÛŽÚ˜ÛŽÙ† Ù†Û•Ù‡Ø§ØªÛŒÙ†Û• Ø²ÛŽØ¯Û•Ú©Ø±Ù† (Ù£Ù  Ú•Û†Ú˜)'));
+    tx.appendChild(el('div','ppp-insight-label',t('ppp.missed_label')||'نڤێژێن نەهاتینە زێدەکرن (٣٠ ڕۆژ)'));
     var grid=el('div','ppp-missed-grid');
     sorted.forEach(function(p){
       var cell=el('div','ppp-missed-cell');
       var nameEl=el('span','ppp-missed-name',t('prayer.'+p.toLowerCase())||p);
-      var cntEl=el('span','ppp-missed-cnt'+(counts[p]===0?' zero':''),counts[p]+' Ú•Û†Ú˜');
+      var cntEl=el('span','ppp-missed-cnt'+(counts[p]===0?' zero':''),counts[p]+' ڕۆژ');
       cell.appendChild(nameEl);cell.appendChild(cntEl);
       grid.appendChild(cell);
     });
@@ -9295,13 +9295,13 @@ function _buildPppInsights(log,mStats,weekData,missed){
   var weak=calcWeakestDay(log);
   if(weak){
     var weakColor=weak.avg<2?'#dc3c28':weak.avg<4?'#f09000':'var(--accent)';
-    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day',t('ppp.weakest_day')||'Ú©Û•ÛŒÙØ®Û†Ø´ØªØ±ÛŒÙ† Ú•Û†Ú˜',weak.name+' â€” '+weak.avg+'/5 Ù†Ø§Ú¤Ù†Ø¬ÛŒ');
+    insightRow('rgba(240,144,0,.12)',weakColor,'fas fa-calendar-day',t('ppp.weakest_day')||'کەیفخۆشترین ڕۆژ',weak.name+' — '+weak.avg+'/5 ناڤنجی');
   }
 
   // Monthly avg per day
   if(mStats.total>0){
     var avg=(mStats.done/mStats.total).toFixed(1);
-    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line',t('ppp.monthly_avg')||'ØªÛŽÚ©Ú•Ø§ÛŒÛŽ Ø¦Û•Ú¤ÛŽ Ù‡Û•ÛŒÚ¤ÛŽ Ø¨Û† Ù‡Û•Ø± Ú•Û†Ú˜Û•Ú©ÛŽ',avg+'/5 Ù†Ú¤ÛŽÚ˜');
+    insightRow('rgba(240,144,0,.12)','#f09000','fas fa-chart-line',t('ppp.monthly_avg')||'تێکڕایێ ئەڤێ هەیڤێ بۆ هەر ڕۆژەکێ',avg+'/5 نڤێژ');
   }
 
   // Month projection
@@ -9309,22 +9309,22 @@ function _buildPppInsights(log,mStats,weekData,missed){
   if(proj&&proj.daysLeft>0){
     var projIcon=proj.rate>=80?'fas fa-rocket':proj.rate>=50?'fas fa-chart-line':'fas fa-seedling';
     var projColor=proj.rate>=80?'var(--accent)':proj.rate>=50?'#f09000':'#dc3c28';
-    insightRow('rgba(34,197,94,.08)',projColor,projIcon,'Ø¦Û•Ú¤ Ù‡Û•ÛŒÚ¤Û• Ø¯ Ù†Ø§Ú¤ '+proj.daysLeft+' Ú•Û†Ú˜Ø§Ù† Ø¯Ø§','Ù¾ÛŽØ´Ø¨ÛŒÙ†ÛŒ Ø¯Ù‡ÛŽØªÛ• Ú©Ø±Ù† '+proj.projected+' Ú•Û†Ú˜ ØªÛ•Ù…Ø§Ù… Ø¨Ø¨Ù†');
+    insightRow('rgba(34,197,94,.08)',projColor,projIcon,'ئەڤ هەیڤە د ناڤ '+proj.daysLeft+' ڕۆژان دا','پێشبینی دهێتە کرن '+proj.projected+' ڕۆژ تەمام ببن');
   }
 
   // Complete days this month
   if(mStats.full>0){
-    insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-check-double','Ú•Û†Ú˜ÛŽÙ† ØªÛ•Ù…Ø§Ù… Ø¯ Ú¤ÛŽ Ù‡Û•ÛŒÚ¤ÛŽ Ø¯Ø§',mStats.full+' Ú•Û†Ú˜ ('+Math.round((mStats.full/mStats.total)*100)+'%)');
+    insightRow('rgba(34,197,94,.12)','var(--accent)','fas fa-check-double','ڕۆژێن تەمام د ڤێ هەیڤێ دا',mStats.full+' ڕۆژ ('+Math.round((mStats.full/mStats.total)*100)+'%)');
   }
 
   return wrap;
 }
 
-/* â”€â”€ Prayer celebration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Prayer celebration ──────────────────────────────────────────────────── */
 function _pppCheckCelebrate(log,dKey){
   var now=new Date();var d=new Date(dKey.replace(/-/g,'/'));
   if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())return;
-  // Year celebration takes full priority â€” check first
+  // Year celebration takes full priority — check first
   var streak=calcPrayerStreak(log);
   var yearNum=Math.floor(streak/365);
   var yearCelebAt=parseInt(localStorage.getItem('prayerYearCelebAt')||'0');
@@ -9344,7 +9344,7 @@ function _pppCelebrateYear(log,streak,yearNum){
   haptic([30,12,30,12,50,12,80,12,100]);
   var best=calcBestPrayerStreak(log);
   var ov=document.createElement('div');ov.className='ppp-celeb-overlay year-celeb-overlay';ov.id='yearCelebOverlay';
-  // 250 confetti â€” gold/silver/white/teal/green palette with star + circle + square shapes
+  // 250 confetti — gold/silver/white/teal/green palette with star + circle + square shapes
   var colors=['#fbbf24','#f59e0b','#fde68a','#d4af37','#ffffff','#e2e8f0','#22c55e','#2dd4bf','#a78bfa','#fb923c'];
   var frag=document.createDocumentFragment();
   for(var i=0;i<250;i++){
@@ -9359,23 +9359,23 @@ function _pppCelebrateYear(log,streak,yearNum){
   var card=el('div','year-celeb-card');
   // Shimmer ring behind trophy
   var ring=el('div','year-celeb-ring');
-  var iconEl=el('div','year-celeb-icon','ðŸ†');
+  var iconEl=el('div','year-celeb-icon','🏆');
   ring.appendChild(iconEl);card.appendChild(ring);
   // Year number badge
-  var yBadge=el('div','year-celeb-ybadge',yearNum>1?'Ø³Ø§ÚµÛŒ Ú˜Ù…Ø§Ø±Û• '+yearNum:'Ø³Ø§ÚµØ§ Ø¦ÛŽÚ©ÛŽ');
+  var yBadge=el('div','year-celeb-ybadge',yearNum>1?'ساڵی ژمارە '+yearNum:'ساڵا ئێکێ');
   card.appendChild(yBadge);
-  card.appendChild(el('div','year-celeb-title','Ø³Ø§Ù„Û•Ú© ØªÛ•Ù…Ø§Ù… Ø¨ÙˆÙˆ! ðŸŒŸ'));
+  card.appendChild(el('div','year-celeb-title','سالەک تەمام بوو! 🌟'));
   // Arabic verse
-  card.appendChild(el('div','year-celeb-ayah','ï´¿ Ø¥ÙÙ†ÙŽÙ‘ Ø§Ù„ØµÙŽÙ‘Ù„ÙŽØ§Ø©ÙŽ ÙƒÙŽØ§Ù†ÙŽØªÙ’ Ø¹ÙŽÙ„ÙŽÙ‰ Ø§Ù„Ù’Ù…ÙØ¤Ù’Ù…ÙÙ†ÙÙŠÙ†ÙŽ ÙƒÙØªÙŽØ§Ø¨Ù‹Ø§ Ù…ÙŽÙˆÙ’Ù‚ÙÙˆØªÙ‹Ø§ ï´¾'));
+  card.appendChild(el('div','year-celeb-ayah','﴿ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا ﴾'));
   var totalPrayers=yearNum*1825;
-  card.appendChild(el('div','year-celeb-sub',yearNum>1?'Ø³Ø§ÚµÛŽ '+yearNum+'Û•Ù… ØªÛ•Ù…Ø§Ù… Ú©Ø±!\nØ®ÙˆØ¯ÛŽ Ù‚Û•Ø¨ÛŒÙ„ Ø¨Ú©Û•Øª ðŸ¤²':totalPrayers+' Ù†Ú¤ÛŽÚ˜ ØªÛ•Ù…Ø§Ù… Ø¨ÙˆÙˆÙ†!\nØ®ÙˆØ¯ÛŽ Ù‚Û•Ø¨ÛŒÙ„ Ø¨Ú©Û•Øª ðŸ¤²'));
+  card.appendChild(el('div','year-celeb-sub',yearNum>1?'ساڵێ '+yearNum+'ەم تەمام کر!\nخودێ قەبیل بکەت 🤲':totalPrayers+' نڤێژ تەمام بوون!\nخودێ قەبیل بکەت 🤲'));
   // Stats badges
   var badges=el('div','year-celeb-badges');
-  badges.appendChild(el('div','year-celeb-badge gold','ðŸ”¥ '+streak+' Ú•Û†Ú˜ Ù„ Ø¯ÛŒÙ Ø¦ÛŽÚ©'));
-  if(best>0&&best!==streak)badges.appendChild(el('div','year-celeb-badge silver','â­ Ø¨Ø§Ø´ØªØ±ÛŒÙ†: '+best+' Ú•Û†Ú˜'));
-  badges.appendChild(el('div','year-celeb-badge teal','ðŸ•Œ '+totalPrayers+' Ù†Ú¤ÛŽÚ˜'));
+  badges.appendChild(el('div','year-celeb-badge gold','🔥 '+streak+' ڕۆژ ل دیف ئێک'));
+  if(best>0&&best!==streak)badges.appendChild(el('div','year-celeb-badge silver','⭐ باشترین: '+best+' ڕۆژ'));
+  badges.appendChild(el('div','year-celeb-badge teal','🕌 '+totalPrayers+' نڤێژ'));
   card.appendChild(badges);
-  var btn=document.createElement('button');btn.className='year-celeb-btn';btn.textContent='Ø¯Ø§Ø®Ø³ØªÙ†';
+  var btn=document.createElement('button');btn.className='year-celeb-btn';btn.textContent='داخستن';
   on(btn,'click',function(){App.closeYearCelebration();});
   card.appendChild(btn);
   on(ov,'click',function(e){if(e.target===ov)App.closeYearCelebration();});
@@ -9390,12 +9390,12 @@ App.testYearCelebration=function(){
   _pppCelebrateYear(l,str||365,1);
 };
 function _pppCelebrateDay(){
-  H.success(); // all 5 prayers done today â€” meaningful achievement
+  H.success(); // all 5 prayers done today — meaningful achievement
   var fill=document.querySelector('.ppp-progress-fill');
   if(fill){fill.classList.add('ppp-pulse');setTimeout(function(){fill.classList.remove('ppp-pulse');},700);}
   var body=document.querySelector('#prayerProgressPanel .ppp-body');if(!body)return;
   var old=body.querySelector('.ppp-day-toast');if(old&&old.parentNode)old.parentNode.removeChild(old);
-  var toast=el('div','ppp-day-toast','Ù…Ø§Ø´Ø§Ø¡Ø§Ù„Ù„Ù‡â€Œ! ØªÛ• Ø¦Û•Ú¤Ú•Û† ØªÛ•Ù…Ø§Ù… Ú©Ø± ðŸŒŸ');
+  var toast=el('div','ppp-day-toast','ماشاءالله‌! تە ئەڤڕۆ تەمام کر 🌟');
   body.insertBefore(toast,body.firstChild);
   setTimeout(function(){toast.classList.add('show');},20);
   setTimeout(function(){toast.classList.remove('show');setTimeout(function(){if(toast.parentNode)toast.parentNode.removeChild(toast);},400);},2800);
@@ -9416,11 +9416,11 @@ function _pppCelebrateMonth(log){
   ov.appendChild(frag);
   // Achievement card
   var card=el('div','ppp-celeb-card');
-  card.appendChild(el('div','ppp-celeb-icon','ðŸ•Œ'));
-  card.appendChild(el('div','ppp-celeb-title','Ù…Ø§ Ø´Ø§Ø¡ Ø§Ù„Ù„Ù‡! ðŸŒŸ'));
-  card.appendChild(el('div','ppp-celeb-sub','ØªÛ• Ù‡Û•Ù…ÛŒ Ù†Ú¤ÛŽÚ˜ÛŽÙ† Ù…Û•Ù‡ÛŽ ØªÛ•Ù…Ø§Ù… Ú©Ø±Ù†!\nØ®ÙˆØ¯ÛŽ ØªÛ• Ù„ Ø³Û•Ø± Ø®ÛŽØ±ÛŽ Ø¬ÛŽÚ¯ÛŒØ± Ø¨Ú©Û•Øª.'));
-  if(streak>0)card.appendChild(el('div','ppp-celeb-streak','ðŸ”¥ '+streak+' Ú•Û†Ú˜ Ù„ Ø³Û•Ø± Ø¦ÛŽÚ©'));
-  var btn=document.createElement('button');btn.className='ppp-celeb-btn';btn.textContent='Ø¯Ø§Ø®Ø³ØªÙ†';
+  card.appendChild(el('div','ppp-celeb-icon','🕌'));
+  card.appendChild(el('div','ppp-celeb-title','ما شاء الله! 🌟'));
+  card.appendChild(el('div','ppp-celeb-sub','تە هەمی نڤێژێن مەهێ تەمام کرن!\nخودێ تە ل سەر خێرێ جێگیر بکەت.'));
+  if(streak>0)card.appendChild(el('div','ppp-celeb-streak','🔥 '+streak+' ڕۆژ ل سەر ئێک'));
+  var btn=document.createElement('button');btn.className='ppp-celeb-btn';btn.textContent='داخستن';
   on(btn,'click',function(){App.closePrayerCelebration();});
   card.appendChild(btn);
   on(ov,'click',function(e){if(e.target===ov)App.closePrayerCelebration();});
@@ -9437,12 +9437,12 @@ App.testCelebration=function(){
 };
 App.testDayToast=function(){_pppCelebrateDay();};
 
-/* â”€â”€ Khatm / Quran Journey Celebration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Khatm / Quran Journey Celebration ─────────────────────────────────── */
 function _goalCelebrateKhatm(totalRead,streak,bestStreak){
   haptic([15,8,15,8,30,8,50]);
   var khatmNum=Math.floor(totalRead/6236); // which khatm (1st, 2nd, ...)
   var ov=document.createElement('div');ov.className='ppp-celeb-overlay khatm-celeb-overlay';ov.id='khatmCelebOverlay';
-  // Confetti â€” gold/green/white palette, more particles than prayer
+  // Confetti — gold/green/white palette, more particles than prayer
   var colors=['#fbbf24','#f59e0b','#22c55e','#86efac','#ffffff','#fde68a','#6ee7b7','#fcd34d'];
   var frag=document.createDocumentFragment();
   for(var i=0;i<160;i++){
@@ -9456,23 +9456,23 @@ function _goalCelebrateKhatm(totalRead,streak,bestStreak){
   // Card
   var card=el('div','khatm-celeb-card');
   // Icon with glow
-  var iconWrap=el('div','khatm-celeb-icon','ðŸ“–');
+  var iconWrap=el('div','khatm-celeb-icon','📖');
   card.appendChild(iconWrap);
   // Title
-  card.appendChild(el('div','khatm-celeb-title','Ø®ØªÙ… Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ! ðŸŒŸ'));
+  card.appendChild(el('div','khatm-celeb-title','ختم قورئانێ! 🌟'));
   // Quran verse reference
-  card.appendChild(el('div','khatm-celeb-ayah','ï´¿ ÙˆÙŽØ±ÙŽØªÙÙ‘Ù„Ù Ø§Ù„Ù’Ù‚ÙØ±Ù’Ø¢Ù†ÙŽ ØªÙŽØ±Ù’ØªÙÙŠÙ„Ù‹Ø§ ï´¾'));
+  card.appendChild(el('div','khatm-celeb-ayah','﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾'));
   // Message
-  var msg=khatmNum>1?('Ø®ØªÙ…ÛŽ Ú˜Ù…Ø§Ø±Û• '+khatmNum+'!\nØ¦Û•Ù„Ø­Û•Ù…Ø¯ÙˆÙ„Ù„Ù‡ Ú•Ø§Ø¨ÙˆÙˆ ðŸ¤²'):'Ú•ÛŽÚ©Ø§Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ ØªÛ•Ù…Ø§Ù… Ú©Ø±!\nØ®ÙˆØ§ Ù‚Ø¨ÙˆÙˆÙ„ Ø¨Ú©Ø§ ðŸ¤²';
+  var msg=khatmNum>1?('ختمێ ژمارە '+khatmNum+'!\nئەلحەمدولله ڕابوو 🤲'):'ڕێکاا قورئانێ تەمام کر!\nخوا قبوول بکا 🤲';
   card.appendChild(el('div','khatm-celeb-sub',msg));
   // Badges row
   var badges=el('div','khatm-celeb-badges');
-  if(streak>0)badges.appendChild(el('div','khatm-celeb-badge gold','ðŸ”¥ '+streak+' Ú•Û†Ú˜ Ù„ Ø³Û•Ø± Ø¦ÛŽÚ©'));
-  if(bestStreak>0)badges.appendChild(el('div','khatm-celeb-badge green','â­ Ø¨Ø§Ø´ØªØ±ÛŒÙ†: '+bestStreak+' Ú•Û†Ú˜'));
-  if(khatmNum>1)badges.appendChild(el('div','khatm-celeb-badge gold','ðŸ“– Ø®ØªÙ… Ã—'+khatmNum));
+  if(streak>0)badges.appendChild(el('div','khatm-celeb-badge gold','🔥 '+streak+' ڕۆژ ل سەر ئێک'));
+  if(bestStreak>0)badges.appendChild(el('div','khatm-celeb-badge green','⭐ باشترین: '+bestStreak+' ڕۆژ'));
+  if(khatmNum>1)badges.appendChild(el('div','khatm-celeb-badge gold','📖 ختم ×'+khatmNum));
   if(badges.children.length)card.appendChild(badges);
   // Button
-  var btn=document.createElement('button');btn.className='khatm-celeb-btn';btn.textContent='Ø¯Ø§Ø®Ø³ØªÙ†';
+  var btn=document.createElement('button');btn.className='khatm-celeb-btn';btn.textContent='داخستن';
   on(btn,'click',function(){App.closeGoalCelebration();});
   card.appendChild(btn);
   on(ov,'click',function(e){if(e.target===ov)App.closeGoalCelebration();});
@@ -9488,7 +9488,7 @@ App.testKhatmCelebration=function(){
   _goalCelebrateKhatm(6236,str,best);
 };
 
-// Public bridge for prayer.ui.js â€” allows the grid-card sheet to read/toggle logs
+// Public bridge for prayer.ui.js — allows the grid-card sheet to read/toggle logs
 App.prayerLog={
   get:function(){return getPrayerLog();},
   toggle:function(prayer,dKey){
@@ -9507,7 +9507,7 @@ App.prayerLog={
   prayerDay:function(){return _getPrayerDay();}
 };
 
-/* â”€â”€ Header button badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Header button badges ─────────────────────────────────────────────────── */
 function _setBadge(id,cls){
   var b=$(id);if(!b)return;
   b.className='hdr-badge'+(cls?' show '+cls:'');
@@ -9550,14 +9550,14 @@ setTimeout(function(){
 
 /* ===== WIDGET DATA PUSH ===== */
 
-// Unified helper â€” same plugin name as prayer.ui.js (proven to work).
-// @objc(SharedPrefsPlugin) â†’ Capacitor exposes as "SharedPrefs" on iOS.
-// â”€â”€ Widget translation sync â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Unified helper — same plugin name as prayer.ui.js (proven to work).
+// @objc(SharedPrefsPlugin) → Capacitor exposes as "SharedPrefs" on iOS.
+// ── Widget translation sync ──────────────────────────────────────────────
 // Fetches widget.* keys from Supabase, resolves iOS override values,
-// and writes a flat keyâ†’text JSON blob to SharedPrefs key 'widgetTranslations'.
+// and writes a flat key→text JSON blob to SharedPrefs key 'widgetTranslations'.
 // Writing 'widgetTranslations' now triggers WidgetCenter.shared.reloadAllTimelines()
 // in SharedPrefsPlugin.swift so the widget extension picks up the new strings
-// on the very next render â€” without waiting for its own timeline expiry.
+// on the very next render — without waiting for its own timeline expiry.
 //
 // Called on init and every foreground resume. Throttled to once per 5 minutes.
 function _doSyncWidgetTranslations(force){
@@ -9565,20 +9565,20 @@ function _doSyncWidgetTranslations(force){
   var lastTs=parseInt(localStorage.getItem(CACHE_KEY)||'0',10);
   var elapsed=Date.now()-lastTs;
   if(!force && elapsed<5*60*1000){
-    console.log('[WidgetT9n] skipped â€” last sync '+Math.round(elapsed/1000)+'s ago (throttle 300s)');
+    console.log('[WidgetT9n] skipped — last sync '+Math.round(elapsed/1000)+'s ago (throttle 300s)');
     return;
   }
   console.log('[WidgetT9n] syncWidgetTranslations START force='+!!force);
   // S.supabase = initialized Supabase client (set in initSupabase).
-  // window.supabase = the raw CDN library â€” do NOT use it here (has no .from()).
+  // window.supabase = the raw CDN library — do NOT use it here (has no .from()).
   var sb=S.supabase||window._appSupabase;
-  if(!sb){console.warn('[WidgetT9n] no Supabase client â€” Supabase not yet initialized');return;}
+  if(!sb){console.warn('[WidgetT9n] no Supabase client — Supabase not yet initialized');return;}
   sb.from('kurdish_translations')
     .select('key_id,kurdish_text,ios_text,android_text')
     .like('key_id','widget.%')
     .then(function(res){
       if(res.error){console.error('[WidgetT9n] DB error:',res.error.message);return;}
-      if(!res.data||!res.data.length){console.warn('[WidgetT9n] 0 rows returned â€” no widget.* keys in DB?');return;}
+      if(!res.data||!res.data.length){console.warn('[WidgetT9n] 0 rows returned — no widget.* keys in DB?');return;}
       console.log('[WidgetT9n] fetched '+res.data.length+' rows from kurdish_translations');
       var keys={};
       res.data.forEach(function(row){
@@ -9595,7 +9595,7 @@ function _doSyncWidgetTranslations(force){
       _sharedPrefsSet('widgetTranslations',payload)
         .then(function(){
           localStorage.setItem(CACHE_KEY,String(Date.now()));
-          console.log('[WidgetT9n] write SUCCESS â€” widgetTranslations written, WidgetKit reload triggered');
+          console.log('[WidgetT9n] write SUCCESS — widgetTranslations written, WidgetKit reload triggered');
         })
         .catch(function(e){
           console.warn('[WidgetT9n] _sharedPrefsSet failed (non-iOS or bridge missing):',e&&e.message);
@@ -9606,13 +9606,13 @@ function _doSyncWidgetTranslations(force){
 
 function syncWidgetTranslations(){ _doSyncWidgetTranslations(false); }
 
-// Temporary debug helper â€” call from DevTools or console to force an immediate sync.
+// Temporary debug helper — call from DevTools or console to force an immediate sync.
 // Bypasses throttle. Proves whether the sync+write pipeline works end-to-end.
 // Usage: window.forceWidgetTranslationSync()
 window.forceWidgetTranslationSync=function(){ _doSyncWidgetTranslations(true); };
 
 function _sharedPrefsSet(key,value){
-  // iOS only â€” Capacitor SharedPrefs plugin writes to App Group UserDefaults
+  // iOS only — Capacitor SharedPrefs plugin writes to App Group UserDefaults
   // so the widget extension can read the data without hitting the network.
   // Android widgets were removed; this path is iOS-only.
   var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefs;
@@ -9627,7 +9627,7 @@ function _sharedPrefsSet(key,value){
 // Persist the active theme to native storage so cold-launch backgrounds match.
 // iOS reads from App Group UserDefaults (set by _sharedPrefsSet above) before WebView starts.
 // Android reads from CapacitorStorage SharedPreferences in MainActivity.onCreate.
-// Called every time applyTheme() runs â€” keeps native storage in sync automatically.
+// Called every time applyTheme() runs — keeps native storage in sync automatically.
 function _nativeSyncTheme(theme){
   try{
     var plugins=window.Capacitor&&window.Capacitor.Plugins;
@@ -9636,11 +9636,11 @@ function _nativeSyncTheme(theme){
     if(plugins.Preferences){
       plugins.Preferences.set({key:'appTheme',value:theme}).catch(function(){});
     }
-    // iOS only: App Group UserDefaults â€” readable by AppDelegate before WebView starts
+    // iOS only: App Group UserDefaults — readable by AppDelegate before WebView starts
     _sharedPrefsSet('appTheme',theme);
     // iOS only: write accent hex so widgets can follow the app theme highlight color.
-    // Only the accent/highlight changes â€” widget bg and text colors are fixed dark.
-    // light theme uses #26bd69 (original green) since widget bg is always dark â€”
+    // Only the accent/highlight changes — widget bg and text colors are fixed dark.
+    // light theme uses #26bd69 (original green) since widget bg is always dark —
     // #000000 would be invisible on the dark widget background.
     var accentMap={dark:'#ffffff',light:'#26bd69',sakina:'#c9a84c',noor:'#6dbf82'};
     var accentHex=accentMap[theme]||'#26bd69';
@@ -9649,7 +9649,7 @@ function _nativeSyncTheme(theme){
 }
 
 // Push selected ayah + tafsir to iOS widget via shared App Group.
-// Called when user taps the star (â­) button on an ayah card.
+// Called when user taps the star (⭐) button on an ayah card.
 function pushAyahToWidget(surahNum,ayahNum){
   console.log('[WidgetAyah] pushAyahToWidget called surah='+surahNum+' ayah='+ayahNum);
   var quranSurah=S.quranData&&S.quranData[String(surahNum)];
@@ -9669,14 +9669,14 @@ function pushAyahToWidget(surahNum,ayahNum){
     verse:ayahNum,
     arabic:ayah.text||'',
     tafsir:tafsirText,
-    surahName:surahInfo.ar||('Ø³ÙˆØ±Ø© '+surahNum),
+    surahName:surahInfo.ar||('سورة '+surahNum),
     showTafsir:true,
     showReference:true
   });
   console.log('[WidgetAyah] writing payload len='+payload.length);
   _sharedPrefsSet('widgetAyahData',payload)
     .then(function(){
-      console.log('[WidgetAyah] write SUCCESS âœ“');
+      console.log('[WidgetAyah] write SUCCESS ✓');
       toast(t('toast.widget_saved'));
     })
     .catch(function(e){
@@ -9707,8 +9707,8 @@ function pushGoalDataToWidget(){
   });
   console.log('[WidgetGoal] pushGoalDataToWidget today='+today+' count='+todayCount+'/'+dailyGoal+' streak='+streak);
   _sharedPrefsSet('widgetGoalData',payload)
-    .then(function(){console.log('[WidgetGoal] write SUCCESS âœ“');})
-    .catch(function(){/* non-iOS â€” silent */});
+    .then(function(){console.log('[WidgetGoal] write SUCCESS ✓');})
+    .catch(function(){/* non-iOS — silent */});
 }
 
 
@@ -9736,7 +9736,7 @@ App.openDeleteConfirm=function(){
 App.closeDeleteConfirm=function(){
   $('goalConfirmOverlay').classList.remove('on');
 };
-// Option A â€” delete goal + full reset (clears surah progress marks too)
+// Option A — delete goal + full reset (clears surah progress marks too)
 App.confirmDeleteGoalFull=function(){
   localStorage.removeItem('readingGoal');
   _clearTrackingState();
@@ -9745,10 +9745,10 @@ App.confirmDeleteGoalFull=function(){
   _restartProgressTracking();
   renderContinue(); // clear the continue-reading card immediately
   toast(t('toast.goal_deleted'));
-  H.medium(); // goal deleted â€” confirmed destructive action, not a celebration
+  H.medium(); // goal deleted — confirmed destructive action, not a celebration
   renderGoals();
 };
-// Option B â€” delete goal only, keep Quran reading position (surah_progress survives)
+// Option B — delete goal only, keep Quran reading position (surah_progress survives)
 App.confirmDeleteGoalKeep=function(){
   localStorage.removeItem('readingGoal');
   _clearGoalCounters();
@@ -9756,13 +9756,13 @@ App.confirmDeleteGoalKeep=function(){
   debouncedSync();
   _restartProgressTracking();
   toast(t('toast.goal_deleted'));
-  H.medium(); // goal deleted â€” same: confirmed destructive
+  H.medium(); // goal deleted — same: confirmed destructive
   renderGoals();
 };
 // Keep legacy name so any old call sites still work
 App.confirmDeleteGoal=App.confirmDeleteGoalFull;
 
-// â”€â”€ Start-choice overlay (shown when creating a new goal while old data exists) â”€â”€
+// ── Start-choice overlay (shown when creating a new goal while old data exists) ──
 App.closeStartChoice=function(){
   $('goalStartChoiceOverlay').classList.remove('on');
 };
@@ -9816,7 +9816,7 @@ App.wizardNext=function(){
       haptic([8]);
       return; // wait for user choice
     }
-    // No old data â€” save cleanly with no questions
+    // No old data — save cleanly with no questions
     _finishGoalSave(goal,false);
   } else if(S.wizardStep===2){
     App.closeWizard();
@@ -9855,7 +9855,7 @@ function renderWizardStep(){
       opt.appendChild(check);
       on(opt,'click',function(){
         S.wizardData.preset=i;S.wizardData.custom=false;
-        H.selection(); // picker card selection â€” stays subtle
+        H.selection(); // picker card selection — stays subtle
         renderWizardStep();
       });
       opts.appendChild(opt);
@@ -10074,7 +10074,7 @@ async function openAboutSheet(type){
 
   var pull=el('div','cfg-sheet-pull');_cfgSheetEl.appendChild(pull);
   var hdr=el('div','cfg-sheet-hdr');
-  var titleEl=el('div','cfg-sheet-title',type==='founder'?'Ø³Ø§Ù…Ø§Ù† Ø¹Ø¨Ø¯Ø§Ù„Ø±Ø­Ù…Ù†':'ØªÛ•ÙØ³ÛŒØ± Ú©ÙˆØ±Ø¯');
+  var titleEl=el('div','cfg-sheet-title',type==='founder'?'سامان عبدالرحمن':'تەفسیر کورد');
   var closeBtn=el('button','cfg-sheet-close');
   closeBtn.appendChild(icon('fas fa-xmark'));
   on(closeBtn,'click',closeCfgSheet);
@@ -10112,10 +10112,10 @@ async function openAboutSheet(type){
     (text||'').split('\n\n').filter(Boolean).forEach(function(p){parent.appendChild(el('div','cfg-sheet-para',p));});
   }
   if(type==='founder'){
-    var fname=_ft('founder_name',ss.founder_name)||'Ø³Ø§Ù…Ø§Ù† Ø¹Ø¨Ø¯Ø§Ù„Ø±Ø­Ù…Ù† Ø¹Ø§Ø¯Ù„';
+    var fname=_ft('founder_name',ss.founder_name)||'سامان عبدالرحمن عادل';
     titleEl.textContent=fname;
 
-    // â”€â”€ 1. Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 1. Hero ──────────────────────────────────
     var hero=el('div','cfg-sheet-hero');
     var avDiv=el('div','cfg-sheet-avatar');
     var avUrl=ss.founder_avatar_url||'';
@@ -10123,34 +10123,34 @@ async function openAboutSheet(type){
     else{avDiv.appendChild(icon('fas fa-user'));}
     hero.appendChild(avDiv);
     hero.appendChild(el('div','cfg-sheet-name',fname));
-    hero.appendChild(el('div','cfg-sheet-role',_ft('founder_role',ss.founder_role)||'Ø¯Ø§Ù…Û•Ø²Ø±ÛŽÙ†Û•Ø±ÛŽ ØªÛ•ÙØ³ÛŒØ± Ú©ÙˆØ±Ø¯'));
+    hero.appendChild(el('div','cfg-sheet-role',_ft('founder_role',ss.founder_role)||'دامەزرێنەرێ تەفسیر کورد'));
     body.appendChild(hero);
 
-    // â”€â”€ 2. Story â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 2. Story ─────────────────────────────────
     var cfoStory=el('div','cfo-section');
     cfoStory.appendChild(el('div','cfo-bio-name',fname));
     // Admin saves bio as 3 separate paragraphs: founder_story_desc1/2/3
     [_ft('founder_story_desc1',ss.founder_story_desc1),_ft('founder_story_desc2',ss.founder_story_desc2),_ft('founder_story_desc3',ss.founder_story_desc3)].filter(Boolean).forEach(function(p){cfoStory.appendChild(el('div','cfo-para',p));});
     body.appendChild(cfoStory);
 
-    // â”€â”€ 3. Quote 1 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 3. Quote 1 ───────────────────────────────
     var cfoQ1=el('div','cfo-ayah');
-    cfoQ1.appendChild(el('div','cfo-ayah-ar',_ft('founder_quote1_arabic',ss.founder_quote_ar)||'Ø¥ÙÙ†Ù’ Ø£ÙØ±ÙÙŠØ¯Ù Ø¥ÙÙ„ÙŽÙ‘Ø§ Ø§Ù„Ù’Ø¥ÙØµÙ’Ù„ÙŽØ§Ø­ÙŽ Ù…ÙŽØ§ Ø§Ø³Ù’ØªÙŽØ·ÙŽØ¹Ù’ØªÙ Ûš ÙˆÙŽÙ…ÙŽØ§ ØªÙŽÙˆÙ’ÙÙÙŠÙ‚ÙÙŠ Ø¥ÙÙ„ÙŽÙ‘Ø§ Ø¨ÙØ§Ù„Ù„ÙŽÙ‘Ù‡Ù'));
+    cfoQ1.appendChild(el('div','cfo-ayah-ar',_ft('founder_quote1_arabic',ss.founder_quote_ar)||'إِنْ أُرِيدُ إِلَّا الْإِصْلَاحَ مَا اسْتَطَعْتُ ۚ وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ'));
     var _qku=_ft('founder_quote1_translation',ss.founder_quote_ku);
     if(_qku){var qku=el('div','cfo-ayah-ku');qku.textContent='"'+_qku+'"';cfoQ1.appendChild(qku);}
-    cfoQ1.appendChild(el('div','cfo-ayah-ref',_ft('founder_quote1_ref',ss.founder_quote_ref)||'Ø³ÙˆÚ•Û•ØªØ§ Ù‡ÙˆØ¯ â€” Ù¨Ù¨'));
+    cfoQ1.appendChild(el('div','cfo-ayah-ref',_ft('founder_quote1_ref',ss.founder_quote_ref)||'سوڕەتا هود — ٨٨'));
     body.appendChild(cfoQ1);
 
     // Journey section moved to app sheet
 
-    // â”€â”€ 5. Values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 5. Values ────────────────────────────────
     var cfoVals=el('div','cfo-section');
-    cfoVals.appendChild(el('div','cab-sec-label',_ft('founder_values_label',ss.founder_values_label)||'Ù¾Ø§Ø¨Û•Ù†Ø¯Ø¨ÙˆÙˆÙ†'));
+    cfoVals.appendChild(el('div','cab-sec-label',_ft('founder_values_label',ss.founder_values_label)||'پابەندبوون'));
     var VALUES=[
-      {t:_ft('founder_value1_title',ss.founder_v1_title)||'Ú•Ø§Ø²Û•Ù…Û•Ù†Ø¯ÛŒÛŒØ§ Ø®ÙˆØ¯Ø§ÛŒ',d:_ft('founder_value1_desc',ss.founder_v1_desc)||'Ø¦Û•Ú¤ Ú©Ø§Ø±Û• Ø¨ØªÙ†ÛŽ Ø¨Û† Ú•Ø§Ø²Û•Ù…Û•Ù†Ø¯ÛŒÛŒØ§ Ø®ÙˆØ¯ÛŽ Ø¯Ù‡ÛŽØªÛ• Ø¦Û•Ù†Ø¬Ø§Ù…Ø¯Ø§Ù†. Ø¦Û•Ù… Ù„ Ø¯ÙˆÛŒÚ¤ Ú† Ø¯Ø§Ù†Ù¾ÛŽØ¯Ø§Ù† Ùˆ Ù‚Ø§Ø²Ø§Ù†Ø¬ÛŽÙ† Ø¯ÙˆÙ†ÛŒØ§ÛŒÛŒØ¯Ø§ Ù†Ø§Ú¯Û•Ú•ÛŒÙ†ØŒ Ù‡ÛŒÚ¤ÛŒÛŒØ§ Ù…Û• Ø¨ØªÙ†ÛŽ Ù‚Û•Ø¨ÙˆÛŒÙ„Ø¨ÙˆÙˆÙ†Ø§ Ú˜Ù„Ø§ÛŒÛŽ Ø®ÙˆØ¯Ø§ÛŒÛŒÛ•.'},
-      {t:_ft('founder_value2_title',ss.founder_v2_title)||'Ø®Ø²Ù…Û•ØªØ§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ',d:_ft('founder_value2_desc',ss.founder_v2_desc)||'Ø®Ø²Ù…Û•ØªÚ©Ø±Ù†Ø§ Ù¾Û•Ø±ØªÙˆÚ©Ø§ Ø®ÙˆØ¯Ø§ÛŒ Ùˆ Ú¯Û•Ù‡Ø§Ù†Ø¯Ù†Ø§ Ù…Ø§Ù†Ø§ÛŒÛŽÙ† Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ Ø¨Û† Ù‡Û•Ù…ÛŒ Ú©ÙˆØ±Ø¯Ø§Ù† Ø¨ Ø´ÛŽÙˆØ§Ø²Û•Ú©ÛŽ Ú•ÙˆÙˆÙ† Ùˆ Ø³Ø§Ø¯Û• Ùˆ Ø¨ÛŽ Ø¦Ø§ÚµÛ†Ø²ÛŒ.'},
-      {t:_ft('founder_value3_title',ss.founder_v3_title)||'Ú¯Û•Ù‡Ø§Ù†Ø¯Ù† Ø¨Û† Ù‡Û•Ù…ÛŒÛŒØ§Ù†',d:_ft('founder_value3_desc',ss.founder_v3_desc)||'Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ù†Ø§ Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…Û•Ú©Ø§ Ø¯ÛŒØ¬ÛŒØªØ§Úµ Ú©Ùˆ Ø¨Û•Ø±Ø¯Û•Ø³ØªÛ• Ø¨Û† Ù‡Û•Ù…ÛŒ Ú©ÙˆØ±Ø¯Ø§Ù† Ù„ Ù‡Û•Ø± Ø¬Ù‡Û•Ú©ÛŒØŒ Ø¨ÛŽ Ø³Ù†ÙˆÙˆØ± Ùˆ Ø¨ÛŽ Ø¬ÛŒØ§ÙˆØ§Ø²ÛŒ.'},
-      {t:_ft('founder_value4_title',ss.founder_v4_title)||'Ú¯Û•Ø´Û•Ú©Ø±Ù†',d:_ft('founder_value4_desc',ss.founder_v4_desc)||'ÙÛŽØ±Ø¨ÙˆÙˆÙ† Ùˆ Ú¯Û•Ø´Û•Ú©Ø±Ù†Ø§ Ù¾ÛŽØ²Ø§Ù†ÛŒÙ†ÛŽÙ† Ø¦Ø§ÛŒÛŒÙ†ÛŒØŒ Ùˆ Ù¾Ø§Ø±Ú¤Û•Ú©Ø±Ù†Ø§ ÙˆØ§Ù† Ø¯Ú¯Û•Ù„ Ú¯Û•Ù„ÛŽ Ø®Û† Ø¨ Ø´ÛŽÙˆØ§Ø²Û•Ú©ÛŽ Ú•Û•ÙˆØ§Ù†.'}
+      {t:_ft('founder_value1_title',ss.founder_v1_title)||'ڕازەمەندییا خودای',d:_ft('founder_value1_desc',ss.founder_v1_desc)||'ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن دونیاییدا ناگەڕین، هیڤییا مە بتنێ قەبویلبوونا ژلایێ خوداییە.'},
+      {t:_ft('founder_value2_title',ss.founder_v2_title)||'خزمەتا قورئانێ',d:_ft('founder_value2_desc',ss.founder_v2_desc)||'خزمەتکرنا پەرتوکا خودای و گەهاندنا مانایێن قورئانێ بۆ هەمی کوردان ب شێوازەکێ ڕوون و سادە و بێ ئاڵۆزی.'},
+      {t:_ft('founder_value3_title',ss.founder_v3_title)||'گەهاندن بۆ هەمییان',d:_ft('founder_value3_desc',ss.founder_v3_desc)||'دروستکرنا پلاتفۆرمەکا دیجیتاڵ کو بەردەستە بۆ هەمی کوردان ل هەر جهەکی، بێ سنوور و بێ جیاوازی.'},
+      {t:_ft('founder_value4_title',ss.founder_v4_title)||'گەشەکرن',d:_ft('founder_value4_desc',ss.founder_v4_desc)||'فێربوون و گەشەکرنا پێزانینێن ئایینی، و پارڤەکرنا وان دگەل گەلێ خۆ ب شێوازەکێ ڕەوان.'}
     ];
     var valList=el('div','cfo-values');
     VALUES.forEach(function(v){
@@ -10161,22 +10161,22 @@ async function openAboutSheet(type){
     });
     cfoVals.appendChild(valList);body.appendChild(cfoVals);
 
-    // â”€â”€ 6. Dua â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 6. Dua ───────────────────────────────────
     var cfoDua=el('div','cfo-dua');
-    cfoDua.appendChild(el('div','cfo-dua-label',_ft('founder_dua_label',ss.founder_dua_label)||'Ø¯ÙˆØ¹Ø§'));
-    cfoDua.appendChild(el('div','cfo-dua-title',_ft('founder_dua_title',ss.founder_dua_title)||'Ø¯ÙˆØ¹Ø§ Ø¨Û† Ø¨ÛŒÙ†Û•Ø±ÛŽÙ† Ù…Û•'));
+    cfoDua.appendChild(el('div','cfo-dua-label',_ft('founder_dua_label',ss.founder_dua_label)||'دوعا'));
+    cfoDua.appendChild(el('div','cfo-dua-title',_ft('founder_dua_title',ss.founder_dua_title)||'دوعا بۆ بینەرێن مە'));
     cfoDua.appendChild(el('div','cfo-dua-text',_ft('founder_dua_desc',ss.founder_dua_text)||''));
     body.appendChild(cfoDua);
 
-    // â”€â”€ 7. Quote 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 7. Quote 2 ───────────────────────────────
     var cfoQ2=el('div','cfo-ayah');
-    cfoQ2.appendChild(el('div','cfo-ayah-ar',_ft('founder_quote2_arabic',ss.founder_quote2_ar)||'Ø±ÙŽØ¨ÙŽÙ‘Ù†ÙŽØ§ ØªÙŽÙ‚ÙŽØ¨ÙŽÙ‘Ù„Ù’ Ù…ÙÙ†ÙŽÙ‘Ø§ Û– Ø¥ÙÙ†ÙŽÙ‘ÙƒÙŽ Ø£ÙŽÙ†ØªÙŽ Ø§Ù„Ø³ÙŽÙ‘Ù…ÙÙŠØ¹Ù Ø§Ù„Ù’Ø¹ÙŽÙ„ÙÙŠÙ…Ù'));
+    cfoQ2.appendChild(el('div','cfo-ayah-ar',_ft('founder_quote2_arabic',ss.founder_quote2_ar)||'رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ'));
     var _qku2=_ft('founder_quote2_translation',ss.founder_quote2_ku);
     if(_qku2){var qku2=el('div','cfo-ayah-ku');qku2.textContent='"'+_qku2+'"';cfoQ2.appendChild(qku2);}
-    cfoQ2.appendChild(el('div','cfo-ayah-ref',_ft('founder_quote2_ref',ss.founder_quote2_ref)||'Ø³ÙˆÚ•Û•ØªØ§ Ø§Ù„Ø¨Ù‚Ø±Ø© â€” Ù¡Ù¢Ù§'));
+    cfoQ2.appendChild(el('div','cfo-ayah-ref',_ft('founder_quote2_ref',ss.founder_quote2_ref)||'سوڕەتا البقرة — ١٢٧'));
     body.appendChild(cfoQ2);
 
-    // â”€â”€ 8. Closing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 8. Closing ───────────────────────────────
     var _cloTitle=_ft('founder_closing_title',ss.founder_closing_title);
     var _cloDesc=_ft('founder_closing_desc',ss.founder_closing_desc||ss.founder_closing);
     if(_cloTitle||_cloDesc){
@@ -10188,27 +10188,27 @@ async function openAboutSheet(type){
   }
 
   if(type==='app'){
-    titleEl.textContent='ØªÛ•ÙØ³ÛŒØ± Ú©ÙˆØ±Ø¯';
+    titleEl.textContent='تەفسیر کورد';
 
-    // â”€â”€ 1. Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 1. Hero ──────────────────────────────────
     var cabHero=el('div','cfg-sheet-hero');
     var cabAv=el('div','cfg-sheet-avatar');
     var appAvUrl=ss.about_avatar_url||'';
     if(appAvUrl){var cabAvImg=document.createElement('img');cabAvImg.alt='';cabAvImg.style.opacity=_aboutImgCache[appAvUrl]?'1':'0';cabAvImg.style.transition='opacity .25s';cabAvImg.onload=function(){cabAvImg.style.opacity='1';};cabAvImg.src=appAvUrl;cabAv.appendChild(cabAvImg);}
     else{var cabLogo=document.createElement('img');cabLogo.src='/assets/images/logo.png';cabLogo.alt='';cabAv.appendChild(cabLogo);}
     cabHero.appendChild(cabAv);
-    cabHero.appendChild(el('div','cfg-sheet-name','ØªÛ•ÙØ³ÛŒØ± Ú©ÙˆØ±Ø¯'));
-    cabHero.appendChild(el('div','cfg-sheet-role',_ft('about_hero_sub',ss.about_hero_sub)||'Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…Û•Ú©Ø§ Ú©ÙˆØ±Ø¯ÛŒ Ø¨Û† Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†Ø§ Ù¾ÛŒØ±Û†Ø²'));
+    cabHero.appendChild(el('div','cfg-sheet-name','تەفسیر کورد'));
+    cabHero.appendChild(el('div','cfg-sheet-role',_ft('about_hero_sub',ss.about_hero_sub)||'پلاتفۆرمەکا کوردی بۆ خواندنا قورئانا پیرۆز'));
     body.appendChild(cabHero);
 
-    // â”€â”€ 2. Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 2. Services ───────────────────────────────
     var cabSvc=el('div','cab-section');
-    cabSvc.appendChild(el('div','cab-sec-label',_ft('about_svc_label',ss.about_svc_label)||'Ø®Ø²Ù…Û•ØªÚ¯ÙˆØ²Ø§Ø±ÛŒ'));
-    cabSvc.appendChild(el('div','cab-sec-title',_ft('about_svc_title',ss.about_svc_title)||'Ø¦Û•Ù… Ú† Ù¾ÛŽØ´Ú©ÛŽØ´ Ø¯Ú©Û•ÛŒÙ†'));
+    cabSvc.appendChild(el('div','cab-sec-label',_ft('about_svc_label',ss.about_svc_label)||'خزمەتگوزاری'));
+    cabSvc.appendChild(el('div','cab-sec-title',_ft('about_svc_title',ss.about_svc_title)||'ئەم چ پێشکێش دکەین'));
     var FEATS=[
-      {num:_ft('about_feat1_num',ss.about_feat1_num)||'Ù Ù¡',title:_ft('about_feat1_title',ss.about_feat1_title)||'Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ',desc:_ft('about_feat1_desc',ss.about_feat1_desc)||'Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†Ø§ Ù¾ÛŒØ±Û†Ø² Ø¨ Ø¯Û•Ù‚ÛŽ Ø¹Û•Ø±Û•Ø¨ÛŒ ÛŒÛŽ Ú•Û•Ø³Û•Ù† Ø¯Ú¯Û•Ù„ ÙˆÛ•Ø±Ú¯ÛŽÚ•Ø§Ù†Ø§ Ú©ÙˆØ±Ø¯ÛŒ Ùˆ ØªÛ•ÙØ³ÛŒØ±Ø§ Ø³Ø§Ù†Ø§Ù‡ÛŒ Ø¨Û† Ù‡Û•Ø± Ø¦Ø§ÛŒÛ•ØªÛ•Ú©ÛŽ.'},
-      {num:_ft('about_feat2_num',ss.about_feat2_num)||'Ù Ù¢',title:_ft('about_feat2_title',ss.about_feat2_title)||'Ø¯Û•Ù†Ú¯ÛŽ Ø¦ÛŒØ³Ù„Ø§Ù…ÛŽ',desc:_ft('about_feat2_desc',ss.about_feat2_desc)||'Ú¤ÛŒØ¯ÛŒÙˆÛŒÛŽÙ† Ø¦ÛŒØ³Ù„Ø§Ù…ÛŒ ÛŒÛŽÙ† Ø¨ Ø²Ù…Ø§Ù†ÛŽ Ú©ÙˆØ±Ø¯ÛŒØŒ Ø²Ù†Ø¬ÛŒØ±Û•ÛŒÛŽÙ† ÙÛŽØ±Ø¨ÙˆÙˆÙ†ÛŽ Ùˆ Ù†Ø§Ú¤Û•Ú•Û†Ú©Ø§ Ù‡Û•ÙˆÛ•Ø¯Û•Ø± Ø¨Û† Ú¯Û•Ø´Û•Ú©Ø±Ù†Ø§ Ø²Ø§Ù†ÛŒØ§Ø±ÛŒÛŒØ§ Ø¦Ø§ÛŒÛŒÙ†ÛŒ.'},
-      {num:_ft('about_feat3_num',ss.about_feat3_num)||'Ù Ù£',title:_ft('about_feat3_title',ss.about_feat3_title)||'Ù†ÛŒØ´Ø§Ù†Û•Ú©Ø±Ù† Ùˆ Ù¾ÛŽØ´Ú©Û•ÙØªÙ†',desc:_ft('about_feat3_desc',ss.about_feat3_desc)||'Ø´ÙˆÛŽÙ†Ú©Û•ÙØªÙ†Ø§ Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ø®Û†ØŒ Ù†ÛŒØ´Ø§Ù†Û•Ú©Ø±Ù†Ø§ Ø¦Ø§ÛŒÛ•ØªØ§Ù†ØŒ Ùˆ Ù‡Û•Ú¤Ø¯Û•Ù†Ú¯Ú©Ø±Ù†Ø§ Ø¯Ø§Ù†Û•ÛŒØ§Ù† Ù„ Ù‡Û•Ù…ÛŒ Ø¦Ø§Ù…ÛŽØ±Ø§Ù†.'}
+      {num:_ft('about_feat1_num',ss.about_feat1_num)||'٠١',title:_ft('about_feat1_title',ss.about_feat1_title)||'خواندنا قورئانێ',desc:_ft('about_feat1_desc',ss.about_feat1_desc)||'خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.'},
+      {num:_ft('about_feat2_num',ss.about_feat2_num)||'٠٢',title:_ft('about_feat2_title',ss.about_feat2_title)||'دەنگێ ئیسلامێ',desc:_ft('about_feat2_desc',ss.about_feat2_desc)||'ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.'},
+      {num:_ft('about_feat3_num',ss.about_feat3_num)||'٠٣',title:_ft('about_feat3_title',ss.about_feat3_title)||'نیشانەکرن و پێشکەفتن',desc:_ft('about_feat3_desc',ss.about_feat3_desc)||'شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.'}
     ];
     FEATS.forEach(function(f){
       var card=el('div','cab-feat');
@@ -10221,9 +10221,9 @@ async function openAboutSheet(type){
     });
     body.appendChild(cabSvc);
 
-    // â”€â”€ 3. Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 3. Stats ──────────────────────────────────
     var cabStats=el('div','cab-stats');
-    [[_ft('about_stat1_num',ss.about_stat1_num)||'Ù¦Ù¥Ú¾+',_ft('about_stat1_label',ss.about_stat1_label)||'ÙÛ†ÚµÛ†ÙˆÛ•Ø±'],[_ft('about_stat2_num',ss.about_stat2_num)||'Ù¢Ù¥Ù…+',_ft('about_stat2_label',ss.about_stat2_label)||'Ø¨ÛŒÙ†Û•Ø±']].forEach(function(s){
+    [[_ft('about_stat1_num',ss.about_stat1_num)||'٦٥ھ+',_ft('about_stat1_label',ss.about_stat1_label)||'فۆڵۆوەر'],[_ft('about_stat2_num',ss.about_stat2_num)||'٢٥م+',_ft('about_stat2_label',ss.about_stat2_label)||'بینەر']].forEach(function(s){
       var st=el('div','cab-stat');
       st.appendChild(el('span','cab-stat-num',s[0]));
       st.appendChild(el('span','cab-stat-label',s[1]));
@@ -10231,33 +10231,33 @@ async function openAboutSheet(type){
     });
     body.appendChild(cabStats);
 
-    // â”€â”€ 4. Ayah â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 4. Ayah ───────────────────────────────────
     var cabAyah=el('div','cab-ayah-wrap');
-    cabAyah.appendChild(el('div','cab-ayah-ar',_ft('about_quote_ar',ss.about_quote_ar)||'ÙˆÙŽÙ…ÙŽÙ†Ù’ Ø£ÙŽØ­Ù’Ø³ÙŽÙ†Ù Ù‚ÙŽÙˆÙ’Ù„Ù‹Ø§ Ù…ÙÙ‘Ù…ÙŽÙ‘Ù† Ø¯ÙŽØ¹ÙŽØ§ Ø¥ÙÙ„ÙŽÙ‰ Ø§Ù„Ù„ÙŽÙ‘Ù‡Ù ÙˆÙŽØ¹ÙŽÙ…ÙÙ„ÙŽ ØµÙŽØ§Ù„ÙØ­Ù‹Ø§ ÙˆÙŽÙ‚ÙŽØ§Ù„ÙŽ Ø¥ÙÙ†ÙŽÙ‘Ù†ÙÙŠ Ù…ÙÙ†ÙŽ Ø§Ù„Ù’Ù…ÙØ³Ù’Ù„ÙÙ…ÙÙŠÙ†ÙŽ'));
+    cabAyah.appendChild(el('div','cab-ayah-ar',_ft('about_quote_ar',ss.about_quote_ar)||'وَمَنْ أَحْسَنُ قَوْلًا مِّمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا وَقَالَ إِنَّنِي مِنَ الْمُسْلِمِينَ'));
     var _abQku=_ft('about_quote_ku',ss.about_quote_ku);
     if(_abQku)cabAyah.appendChild(el('div','cab-ayah-ku','"'+_abQku+'"'));
-    cabAyah.appendChild(el('div','cab-ayah-ref',_ft('about_quote_ref',ss.about_quote_ref)||'Ø³ÙˆÚ•Û•ØªØ§ ÙØµÙ„Øª â€” Ù£Ù£'));
+    cabAyah.appendChild(el('div','cab-ayah-ref',_ft('about_quote_ref',ss.about_quote_ref)||'سوڕەتا فصلت — ٣٣'));
     body.appendChild(cabAyah);
 
-    // â”€â”€ 5. Declaration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 5. Declaration ────────────────────────────
     var cabDecl=el('div','cab-decl');
-    cabDecl.appendChild(el('div','cab-decl-title',_ft('about_decl_title',ss.about_decl_title)||'Ù†Û• Ø³ÛŒØ§Ø³ÛŒØŒ Ù†Û• Ø­Ø²Ø¨ÛŒ'));
+    cabDecl.appendChild(el('div','cab-decl-title',_ft('about_decl_title',ss.about_decl_title)||'نە سیاسی، نە حزبی'));
     (_ft('about_declaration_text',ss.about_declaration_text)||'').split('\n\n').filter(Boolean).forEach(function(p){
       cabDecl.appendChild(el('div','cab-decl-para',p));
     });
     body.appendChild(cabDecl);
 
-    // â”€â”€ 6. Journey â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 6. Journey ────────────────────────────────
     var cabJrn=el('div','cfo-section');
-    cabJrn.appendChild(el('div','cab-sec-label',_ft('founder_journey_label',ss.founder_journey_label)||'Ú¯Û•Ø´Øª'));
-    cabJrn.appendChild(el('div','cab-sec-title',_ft('founder_journey_title',ss.founder_journey_title)||'Ú•ÛŽÚ©Ø§ ØªÛ•ÙØ³ÛŒØ± Ú©ÙˆØ±Ø¯'));
+    cabJrn.appendChild(el('div','cab-sec-label',_ft('founder_journey_label',ss.founder_journey_label)||'گەشت'));
+    cabJrn.appendChild(el('div','cab-sec-title',_ft('founder_journey_title',ss.founder_journey_title)||'ڕێکا تەفسیر کورد'));
     var _jIntro=_ft('founder_journey_desc',ss.founder_journey_intro);
     if(_jIntro)cabJrn.appendChild(el('div','cfo-para',_jIntro));
     var APP_JOURNEY=[
-      {t:_ft('founder_timeline1_title',ss.founder_j1_title)||'Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø§ Ù‡Ø²Ø±ÛŽ',d:_ft('founder_timeline1_desc',ss.founder_j1_desc)||'Ø¨ ØªÛŽØ¨ÛŒÙ†ÛŒÚ©Ø±Ù†Ø§ Ú©ÛŽÙ…ÛŒÛŒØ§ Ù†Ø§Ú¤Û•Ú•Û†Ú©Ø§ Ø¦ÛŒØ³Ù„Ø§Ù…ÛŒ Ø¨ Ø²Ù…Ø§Ù†ÛŽ Ú©ÙˆØ±Ø¯ÛŒØŒ Ù‡Ø²Ø±Ø§ Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ù†Ø§ Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…Û•Ú©ÛŽ Ø¨Û† Ù…Ù† Ù‡Ø§ØªØŒ Ú©Ùˆ Ù†Ø§Ú¤Û•Ú•Û†Ú©Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ Ø¨ Ø´ÛŽÙˆØ§Ø²Û•Ú©ÛŽ Ù…Û†Ø¯ÛŽØ±Ù† Ù¾ÛŽØ´Ú©ÛŽØ´ Ø¨Ú©Û•Øª.'},
-      {t:_ft('founder_timeline2_title',ss.founder_j2_title)||'Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ù†Ø§ Ù†Ø§Ú¤Û•Ú•Û†Ú©Ø§ Ú¤ÛŒØ¯ÛŒÙˆÛŒÛŒ',d:_ft('founder_timeline2_desc',ss.founder_j2_desc)||'Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø±Ù†Ø§ Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ù†Ø§ Ú¤ÛŒØ¯ÛŒÙˆÛŒÛŽÙ† Ø¦ÛŒØ³Ù„Ø§Ù…ÛŒ ÛŒÛŽÙ† Ú©ÙˆØ±Øª Ø¨Û† ØªÛ†Ú•ÛŽÙ† Ø¬Ú¤Ø§Ú©ÛŒ ÙˆÛ•Ú© Ø¦ÛŒÙ†Ø³ØªØ§Ú¯Ø±Ø§Ù… Ùˆ ØªÛŒÚ©ØªÛ†Ú©ØŒ Ø¨ Ø´ÛŽÙˆØ§Ø²Û•Ú©ÛŽ Ø¨Ø§Ù„Ú©ÛŽØ´ Ú©Ùˆ Ø¨Ú¯Û•Ù‡ÛŒØªÛ• Ù†Û•ÙˆÛ•ÛŒÛŽ Ù†ÙˆÛŒ ÛŒÛŽ Ú©ÙˆØ±Ø¯Ø§Ù†.'},
-      {t:_ft('founder_timeline3_title',ss.founder_j3_title)||'Ø¯Ø§Ù…Û•Ø²Ø±Ø§Ù†Ø¯Ù†Ø§ Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…ÛŽ',d:_ft('founder_timeline3_desc',ss.founder_j3_desc)||'Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ù†Ø§ Ù…Ø§Ù„Ù¾Û•Ú•Û•Ú©Ø§ ØªÛ•Ù…Ø§Ù… Ø¨Û† Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†Ø§ Ù¾ÛŒØ±Û†Ø² Ø¨ ØªÛ•ÙØ³ÛŒØ±Ø§ Ø³Ø§Ù†Ø§Ù‡ÛŒ Ùˆ ÙˆÛ•Ø±Ú¯ÛŽÚ•Ø§Ù†Ø§ Ú©ÙˆØ±Ø¯ÛŒØŒ Ø¨ ØªØ§ÛŒØ¨Û•ØªÙ…Û•Ù†Ø¯ÛŒÛŽÙ† Ù…Û†Ø¯ÛŽØ±Ù† ÙˆÛ•Ú© Ø´ÙˆÛŽÙ†Ú©Û•ÙØªÙ†Ø§ Ø®ÙˆØ§Ù†Ø¯Ù†ÛŽ Ùˆ Ù†ÛŒØ´Ø§Ù†Û•Ú©Ø±Ù†.'},
-      {t:_ft('founder_timeline4_title',ss.founder_j4_title)||'Ú¯Û•Ù‡Ø´ØªÙ† Ø¨ Ù…Ù„ÛŒÛ†Ù†Ø§Ù† Ø¨ÛŒÙ†Û•Ø±Ø§Ù†',d:_ft('founder_timeline4_desc',ss.founder_j4_desc)||'Ø¨ Ú•ÛŽÚ©Ø§ Ø¦ÛŒÙ†Ø³ØªØ§Ú¯Ø±Ø§Ù…ØŒ ØªÛŒÚ©ØªÛ†Ú© Ùˆ ÛŒÙˆØªÙˆØ¨ Ú¯Û•Ù‡Ø´ØªÛŒÙ†Û• Ø²ÛŽØ¯Û•ØªØ± Ú˜ Ù¢Ù¥ Ù…Ù„ÛŒÛ†Ù† Ø¨ÛŒÙ†Û•Ø± Ùˆ Ù¦Ù¥ Ù‡Ø²Ø§Ø± ÙÛ†ÚµÛ†ÙˆÛ•Ø±Ø§Ù†. Ø¦Û•Ú¤ Ú˜Ù…Ø§Ø±Û• Ù†ÛŒØ´Ø§Ù†Ø§ Ù¾ÛŽØ¯Ú¤ÛŒÛŒØ§ Ú©ÙˆØ±Ø¯Ø§Ù†Û• Ø¨Û† Ù†Ø§Ú¤Û•Ú•Û†Ú©Û•Ú©Ø§ Ø¦ÛŒØ³Ù„Ø§Ù…ÛŒ Ø²Ù…Ø§Ù†ÛŽ ÙˆØ§Ù† Ø¨Ø®Ùˆ.'}
+      {t:_ft('founder_timeline1_title',ss.founder_j1_title)||'دەستپێکا هزرێ',d:_ft('founder_timeline1_desc',ss.founder_j1_desc)||'ب تێبینیکرنا کێمییا ناڤەڕۆکا ئیسلامی ب زمانێ کوردی، هزرا دروستکرنا پلاتفۆرمەکێ بۆ من هات، کو ناڤەڕۆکا قورئانێ ب شێوازەکێ مۆدێرن پێشکێش بکەت.'},
+      {t:_ft('founder_timeline2_title',ss.founder_j2_title)||'دروستکرنا ناڤەڕۆکا ڤیدیویی',d:_ft('founder_timeline2_desc',ss.founder_j2_desc)||'دەستپێکرنا دروستکرنا ڤیدیویێن ئیسلامی یێن کورت بۆ تۆڕێن جڤاکی وەک ئینستاگرام و تیکتۆک، ب شێوازەکێ بالکێش کو بگەهیتە نەوەیێ نوی یێ کوردان.'},
+      {t:_ft('founder_timeline3_title',ss.founder_j3_title)||'دامەزراندنا پلاتفۆرمێ',d:_ft('founder_timeline3_desc',ss.founder_j3_desc)||'دروستکرنا مالپەڕەکا تەمام بۆ خواندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی، ب تایبەتمەندیێن مۆدێرن وەک شوێنکەفتنا خواندنێ و نیشانەکرن.'},
+      {t:_ft('founder_timeline4_title',ss.founder_j4_title)||'گەهشتن ب ملیۆنان بینەران',d:_ft('founder_timeline4_desc',ss.founder_j4_desc)||'ب ڕێکا ئینستاگرام، تیکتۆک و یوتوب گەهشتینە زێدەتر ژ ٢٥ ملیۆن بینەر و ٦٥ هزار فۆڵۆوەران. ئەڤ ژمارە نیشانا پێدڤییا کوردانە بۆ ناڤەڕۆکەکا ئیسلامی زمانێ وان بخو.'}
     ];
     var appJrnTl=el('div','cfo-timeline');
     APP_JOURNEY.forEach(function(j){
@@ -10270,59 +10270,59 @@ async function openAboutSheet(type){
     });
     cabJrn.appendChild(appJrnTl);body.appendChild(cabJrn);
 
-    // â”€â”€ 7. Tafsir source â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 7. Tafsir source ──────────────────────────
     var _tafsirText=_ft('about_tafsir_text',ss.about_tafsir_text);
     if(_tafsirText){
       var cabTafsir=el('div','cab-section');
-      cabTafsir.appendChild(el('div','cab-sec-label',_ft('about_tafsir_label',ss.about_tafsir_label)||'Ú˜ÛŽØ¯Û•Ø±ÛŽ ØªÛ•ÙØ³ÛŒØ±ÛŽ'));
+      cabTafsir.appendChild(el('div','cab-sec-label',_ft('about_tafsir_label',ss.about_tafsir_label)||'ژێدەرێ تەفسیرێ'));
       _tafsirText.split('\n\n').filter(Boolean).forEach(function(p){
         cabTafsir.appendChild(el('div','cab-decl-para',p));
       });
       body.appendChild(cabTafsir);
     }
 
-    // â”€â”€ 7. Book card + image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 7. Book card + image ──────────────────────
     var bookImgUrl=ss.tafsir_book_image||'';
     var cabCard=el('div','cab-book-card');
     var cabCardText=el('div','cab-book-card-text');
-    var _bookTitle=_ft('about_book_title',ss.about_book_title)||'ØªÛ•ÙØ³ÛŒØ±Ø§ Ø³Ø§Ù†Ø§Ù‡ÛŒ';
+    var _bookTitle=_ft('about_book_title',ss.about_book_title)||'تەفسیرا ساناهی';
     cabCardText.appendChild(el('div','cab-book-card-badge',_bookTitle));
     cabCardText.appendChild(el('div','cab-book-card-title',_bookTitle));
-    cabCardText.appendChild(el('div','cab-book-card-author',_ft('about_tafsir_author',ss.about_tafsir_author)||'Ù…Ø§Ù…ÙˆØ³ØªØ§ ØªÛ•Ø­Ø³ÛŒÙ† Ø¦ÛŒØ¨Ø±Ø§Ù‡ÛŒÙ… Ø¯Û†Ø³Ú©ÛŒ'));
-    cabCardText.appendChild(el('div','cab-book-card-desc',_ft('about_tafsir_book_desc',ss.about_tafsir_book_desc)||'ÙˆÛ•Ø±Ú¯ÛŽÚ•Ø§Ù† Ùˆ ØªÛ•ÙØ³ÛŒØ±Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†Ø§ Ù¾ÛŒØ±Û†Ø² Ø¨ Ø²Ù…Ø§Ù†ÛŽ Ú©ÙˆØ±Ø¯ÛŒ (Ú©Ø±Ù…Ø§Ù†Ø¬ÛŒ) Ø¨Û† Ù‡Û•Ù…ÛŒ Ú©ÙˆØ±Ø¯ Ø²Ù…Ø§Ù†Ø§Ù† Ù„ Ø³Û•Ø±Ø§Ù†Ø³Û•Ø±ÛŒ Ø¬ÛŒÙ‡Ø§Ù†ÛŽ.'));
+    cabCardText.appendChild(el('div','cab-book-card-author',_ft('about_tafsir_author',ss.about_tafsir_author)||'ماموستا تەحسین ئیبراهیم دۆسکی'));
+    cabCardText.appendChild(el('div','cab-book-card-desc',_ft('about_tafsir_book_desc',ss.about_tafsir_book_desc)||'وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.'));
     cabCard.appendChild(cabCardText);
     body.appendChild(cabCard);
     if(bookImgUrl){var bookImg=document.createElement('img');bookImg.alt='';bookImg.className='cfg-sheet-img';bookImg.style.opacity=_aboutImgCache[bookImgUrl]?'1':'0';bookImg.style.transition='opacity .4s';bookImg.onload=function(){bookImg.style.opacity='1';};bookImg.src=bookImgUrl;body.appendChild(bookImg);}
   }
 
   if(type==='thanks'){
-    titleEl.textContent='Ø³ÙˆÙ¾Ø§Ø³Ù†Ø§Ù…Û•';
+    titleEl.textContent='سوپاسنامە';
 
-    // â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Hero ──────────────────────────────────────
     var thHero=el('div','cfg-sheet-hero');
     var thIcon=el('div','cfg-sheet-avatar');
     thIcon.style.cssText='background:linear-gradient(135deg,#e8445a,#ff7c95);font-size:1.8rem;width:96px;height:96px;box-shadow:0 8px 24px rgba(232,68,90,.35);';
     thIcon.appendChild(icon('fas fa-heart'));
     thHero.appendChild(thIcon);
-    thHero.appendChild(el('div','cfg-sheet-name','Ø³ÙˆÙ¾Ø§Ø³Ù†Ø§Ù…Û•'));
-    thHero.appendChild(el('div','cfg-sheet-role',_ft('thanks_hero_role','Ø¨Û† Ù‡Û•Ù…ÙˆÙˆ Ø¯ÚµØ³Û†Ø²Ø§Ù†ÛŒÛŽÙ† Ú¤ÛŒ Ù¾Ø±Û†Ú˜Û•ÛŒ')));
+    thHero.appendChild(el('div','cfg-sheet-name','سوپاسنامە'));
+    thHero.appendChild(el('div','cfg-sheet-role',_ft('thanks_hero_role','بۆ هەموو دڵسۆزانیێن ڤی پرۆژەی')));
     body.appendChild(thHero);
 
-    // â”€â”€ Opening praise â€” accent-bordered quote â”€â”€â”€â”€
+    // ── Opening praise — accent-bordered quote ────
     var thQuote=el('div','cfg-sheet-quote');
     thQuote.style.cssText='border-right:3px solid var(--accent);border-radius:0 var(--r-l) var(--r-l) 0;margin:8px 20px 0;';
     var thQuoteText=document.createElement('div');
     thQuoteText.style.cssText='font-weight:600;color:var(--text);font-size:.93rem;line-height:2;direction:rtl;';
-    thQuoteText.textContent=_ft('thanks_quote','Ù„ Ø¯Û•Ø³ØªÙ¾ÛŽÚ©ÛŽ Ùˆ Ù„ Ø¯ÙˆÙ…Ø§Ù‡ÛŒÛŒÛŽØŒ Ø³ÙˆÙ¾Ø§Ø³ Ùˆ Ø³ØªØ§ÛŒØ´ Ø¨Û† Ø®ÙˆØ¯Ø§ÛŒÛŽ Ù…Û•Ø²Ù† Ú©Ùˆ Ù‡ÛŽØ² Ùˆ Ø¯Û•Ø±ÙÛ•Øª Ø¯Ø§ Ù…Û• Ø¯Ø§ Ú©Ùˆ Ø¦Û•Ú¤ÛŒ Ù¾Ø±Û†Ú˜Û•ÛŒ Ø¨Ú¯Û•Ù‡ÛŒÙ†ÛŒÙ†Û• Ø³Û•Ø±Ú©Û•ÙØªÙ†ÛŽ.');
+    thQuoteText.textContent=_ft('thanks_quote','ل دەستپێکێ و ل دوماهییێ، سوپاس و ستایش بۆ خودایێ مەزن کو هێز و دەرفەت دا مە دا کو ئەڤی پرۆژەی بگەهینینە سەرکەفتنێ.');
     thQuote.appendChild(thQuoteText);
     body.appendChild(thQuote);
 
-    // â”€â”€ Body paragraphs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Body paragraphs ───────────────────────────
     var thBody=el('div','cfo-section');
     thBody.style.cssText='padding:20px 20px 0;';
     [
-      _ft('thanks_para1','Ø¦Û•Ú¤ Ø¦Û•Ù¾Ù„ÛŒÙƒÛ•ÛŒØ´Ù†Û• Ø¨Û•Ø±Ù‡Û•Ù…ÛŽ Ú©Ø§Ø±Û•Ú©ÛŽ Ø¨ Ú©Û†Ù… Ùˆ Ø¯ÚµØ³Û†Ø²Ø§Ù†Û•ÛŒÛ•. Ú˜ Ù†Ø§Ø®ÛŽ Ø¯ÚµÛŽ Ø®Û† Ø³ÙˆÙ¾Ø§Ø³ÛŒØ§ Ø¦ÛŽÚ© Ø¨ Ø¦ÛŽÚ©ÛŽ ÙˆØ§Ù† Ø¯Û†Ø³Øª Ùˆ Ø¯ÚµØ³Û†Ø²Ø§Ù† Ø¯Ú©Û•Ù… Ú©Ùˆ Ù‚ÙˆÙ†Ø§Øº Ø¨ Ù‚ÙˆÙ†Ø§Øº Ù‡Ø§Ø±ÛŒÙƒØ§Ø±ÛŒØ§ Ù…Ù† Ø¯ Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ù†ØŒ Ø¯ÛŒØ²Ø§ÛŒÙ†Ú©Ø±Ù† Ùˆ Ù¾ÛŽØ´Ú¤Û•Ø¨Ø±Ù†Ø§ Ú¤ÛŒ Ø¦Û•Ù¾ÛŒ Ø¯Ø§ Ú©Ø±ÛŒ. Ø¦Û•Ùˆ Ø¯Ù‡â€ŒØ³ØªÛŽÙ† Ú•Ù‡â€ŒÙ†Ú¯ÛŒÙ† ÛŒÛŽÙ† Ú©Ø§Ø± ØªÛŽØ¯Ø§ Ú©Ø±ÛŒ Ùˆ Ø¦Û•Ùˆ Ù‡Ø²Ø±ÛŽÙ† Ø¬ÙˆØ§Ù† ÛŒÛŽÙ† Ú•ÛŽØ¨Û•Ø±ÛŒØ§ Ù…Ù† Ú©Ø±ÛŒØŒ Ø¦Û•Ú¯Û•Ø±ÛŽ Ø³Û•Ø±Û•Ú©ÛŒ Ø¨ÙˆÙˆÙ† Ú©Ùˆ Ø¦Û•Ú¤Ú•Û† Ø¦Û•Ú¤ Ù¾Ø±Û†Ú˜Û• Ø¨ Ø³Û•Ø±Ú©Û•ÙØªÛŒØ§Ù†Û• Ø¨Ú©Û•Ú¤ÛŒØªÛ• Ø¯ Ø®Ø²Ù…Û•ØªØ§ ÙˆÛ• Ø¯Ø§. Ù…Ø§Ù†Ø¯ÙˆÙˆØ¨ÙˆÙˆÙ†Ø§ Ù‡Û•ÙˆÛ• Ù„ Ø¯Û•Ú¤ Ù…Ù† ÛŒØ§ Ù‚Û•Ø¯Ø±Ú¯Ø±Ø§Ù† Ùˆ Ø¨ Ù†Ø±Ø®Û•.'),
-      _ft('thanks_para2','Ø¯ Ù‡Û•Ù…Ø§Ù† Ø¯Û•Ù… Ø¯Ø§ØŒ Ø³ÙˆÙ¾Ø§Ø³ÛŒØ§ Ù‡Û•ÙˆÛ• ÛŒÛŽÙ† Ø¦Û•Ø²ÛŒØ² Ùˆ Ø¨Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø±ÛŽÙ† Ø¦Û•Ù¾ÛŒ Ø¯Ú©Û•Ù… Ú©Ùˆ Ø¨ Ù…ØªÙ…Ø§Ù†Û• Ùˆ Ù¾Ø´ØªÛ•Ú¤Ø§Ù†ÛŒØ§ Ø®Û†ØŒ Ù‡ÛŽØ² Ø¯Ø§ÛŒÛ• Ù…Û•. Ù‡ÛŒÚ¤ÛŒØ¯Ø§Ø±Ù… Ø¦Û•Ú¤ Ú©Ø§Ø±Û• Ù¾Ú• Ù…ÙØ§ Ø¨ÛŒØª Ùˆ Ø¨Ø¨ÛŒØªÙ‡â€Œ Ø¬Ù‡ÛŽ Ú•Ø§Ø²ÛŒØ¨ÙˆÙˆÙ† Ùˆ Ø¯ÚµØ®Û†Ø´ÛŒØ§ Ù‡Û•ÙˆÛ• Ù‡Û•Ù…ÛŒØ§ÛŒ.')
+      _ft('thanks_para1','ئەڤ ئەپلیكەیشنە بەرهەمێ کارەکێ ب کۆم و دڵسۆزانەیە. ژ ناخێ دڵێ خۆ سوپاسیا ئێک ب ئێکێ وان دۆست و دڵسۆزان دکەم کو قوناغ ب قوناغ هاریكاریا من د دروستکرن، دیزاینکرن و پێشڤەبرنا ڤی ئەپی دا کری. ئەو ده‌ستێن ڕه‌نگین یێن کار تێدا کری و ئەو هزرێن جوان یێن ڕێبەریا من کری، ئەگەرێ سەرەکی بوون کو ئەڤڕۆ ئەڤ پرۆژە ب سەرکەفتیانە بکەڤیتە د خزمەتا وە دا. ماندووبوونا هەوە ل دەڤ من یا قەدرگران و ب نرخە.'),
+      _ft('thanks_para2','د هەمان دەم دا، سوپاسیا هەوە یێن ئەزیز و بکارهێنەرێن ئەپی دکەم کو ب متمانە و پشتەڤانیا خۆ، هێز دایە مە. هیڤیدارم ئەڤ کارە پڕ مفا بیت و ببیته‌ جهێ ڕازیبوون و دڵخۆشیا هەوە هەمیای.')
     ].filter(Boolean).forEach(function(p){
       var para=el('div','cfo-para',p);
       para.style.cssText='font-size:.9rem;line-height:2;margin-bottom:18px;';
@@ -10330,12 +10330,12 @@ async function openAboutSheet(type){
     });
     body.appendChild(thBody);
 
-    // â”€â”€ Closing prayer card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Closing prayer card ───────────────────────
     var thDua=el('div','cfo-dua');
-    thDua.appendChild(el('div','cfo-dua-label',_ft('thanks_dua_label','Ø¯ÙˆØ¹Ø§')));
+    thDua.appendChild(el('div','cfo-dua-label',_ft('thanks_dua_label','دوعا')));
     var duaText=el('div','cfo-dua-text');
     duaText.style.cssText='font-size:.88rem;line-height:2.1;';
-    duaText.textContent=_ft('thanks_dua_text','Ú˜ Ø®ÙˆØ¯Ø§ÛŒÛŽ Ù…ÛŒÙ‡Ø±Û•Ø¨Ø§Ù† Ø¯Ø®Û†Ø§Ø²Ù… Ø®ÛŽØ± Ùˆ Ø¨Û•Ø±Û•Ú©Û•ØªÛŽ Ø¨ÛŽØ®ÛŒØªÛ• Ø¯ Ú˜ÛŒØ§Ù† Ùˆ Ú©Ø§Ø±ÛŽÙ† ÙˆÙ‡â€Œ Ø¯Ø§. Ø®ÙˆØ¯ÛŽ Ø¯Û•Ø±Ú¯Û•Ù‡ÛŽÙ† Ú•Ø²Ù‚ÛŽ Ø­Û•Ù„Ø§Ù„ Ùˆ Ø³Û•Ø±Ú©Û•ÙØªÙ†ÛŽ Ù„ Ø¨Û•Ø±Ø¯Û•Ù… Ù‡Û•ÙˆÛ• Ú¤Û•Ú©Û•ØªØŒ Ùˆ Ù‡Û•ÙˆÛ• Ú˜ Ù‡Û•Ø± Ù†Û•Ø®Û†Ø´ÛŒ Ùˆ ØªÛ•Ù†Ú¯Ø§Ú¤ÛŒÛ•Ú©ÛŽ Ø¨Ù¾Ø§Ø±ÛŽØ²ÛŒØª. Ú˜ Ø¯Ù„ Ù‡ÛŒÚ¤ÛŒØ®ÙˆØ§Ø²Ù… Ú©Ùˆ Ø¯Ø§ÛŒÙ… ÛŒÛŽÙ† Ø³Ø§Ø®Ù„Û•Ù…ØŒ Ø¯Ù„Ø®Û†Ø´ Ùˆ Ø³Û•Ø±Ú©Û•ÙØªÛŒ Ø¨Ù† Ùˆ Ø®ÙˆØ¯ÛŽ Ø¬Ø²Ø§ Ùˆ Ù¾Ø§Ø¯Ø§Ø´ØªÛŽ Ú¤ÛŽ Ù‡Ø§Ø±ÛŒÙƒØ§Ø±ÛŒ Ùˆ Ú†Ø§Ú©ÛŒØ§ ÙˆÛ• Ø¨Ø¯Û•ØªÛ• Ù…Ù‡â€ŒØ²Ù†ØªØ± Ù„ÛŽ Ø¨Ú©Û•Øª.');
+    duaText.textContent=_ft('thanks_dua_text','ژ خودایێ میهرەبان دخۆازم خێر و بەرەکەتێ بێخیتە د ژیان و کارێن وه‌ دا. خودێ دەرگەهێن ڕزقێ حەلال و سەرکەفتنێ ل بەردەم هەوە ڤەکەت، و هەوە ژ هەر نەخۆشی و تەنگاڤیەکێ بپارێزیت. ژ دل هیڤیخوازم کو دایم یێن ساخلەم، دلخۆش و سەرکەفتی بن و خودێ جزا و پاداشتێ ڤێ هاریكاری و چاکیا وە بدەتە مه‌زنتر لێ بکەت.');
     thDua.appendChild(duaText);
     body.appendChild(thDua);
   }
@@ -10434,7 +10434,7 @@ function renderSettings(){
   var content=$('settingsContent');
   var frag=document.createDocumentFragment();
 
-  // â”€â”€ Profile hero card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Profile hero card ────────────────────────
   var profile=el('div','profile-card');
   if(S.user){
     // Avatar
@@ -10456,7 +10456,7 @@ function renderSettings(){
     profile.appendChild(avatarEl);
     // Info block
     var pInfo=el('div','profile-info');
-    pInfo.appendChild(el('div','profile-name',S.user.name||'Ø¨Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø±'));
+    pInfo.appendChild(el('div','profile-name',S.user.name||'بکارهێنەر'));
     pInfo.appendChild(el('div','profile-email',S.user.email||''));
     var syncBadge=el('div','profile-sync');
     syncBadge.appendChild(icon('fas fa-cloud-upload-alt'));
@@ -10465,7 +10465,7 @@ function renderSettings(){
     profile.appendChild(pInfo);
     // "View profile" hint row
     var chevRow=el('div','profile-chevron-row');
-    chevRow.appendChild(document.createTextNode(t('profile.view_profile')||'Ù¾Ø±Û†ÙØ§ÛŒÙ„ÛŒ Ø¨Ø¨ÛŒÙ†Û•'));
+    chevRow.appendChild(document.createTextNode(t('profile.view_profile')||'پرۆفایلی ببینە'));
     chevRow.appendChild(icon('fas fa-chevron-left'));
     profile.appendChild(chevRow);
     on(profile,'click',function(){App.openProfile()});
@@ -10475,8 +10475,8 @@ function renderSettings(){
     guestAv.appendChild(icon('fas fa-user'));
     profile.appendChild(guestAv);
     var pInfo2=el('div','profile-info');
-    pInfo2.appendChild(el('div','profile-name','Ø¨Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø±'));
-    pInfo2.appendChild(el('div','profile-email','Ú˜Ø¨Û† Ù‡Û•Ù„Ú¯Ø±ØªÙ†Ø§ Ø¯Ø§ØªØ§ÛŒØ§Ù†ØŒ Ú†ÙˆÙˆÙ†Ø§Ú˜ÙˆÙˆØ± Ø¦Û•Ù†Ø¬Ø§Ù… Ø¨Ø¯Ù‡'));
+    pInfo2.appendChild(el('div','profile-name','بکارهێنەر'));
+    pInfo2.appendChild(el('div','profile-email','ژبۆ هەلگرتنا داتایان، چووناژوور ئەنجام بده'));
     profile.appendChild(pInfo2);
     var loginBtn=el('button','profile-login-btn',t('profile.login'));
     on(loginBtn,'click',function(){App.openLogin()});
@@ -10485,7 +10485,7 @@ function renderSettings(){
   }
   frag.appendChild(profile);
 
-  // â”€â”€ (1) Reading Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── (1) Reading Stats Card ────────────────────
   var log=getReadLog();
   var bms=getBookmarks();
   var totalRead=calcTotalRead(log);
@@ -10496,12 +10496,12 @@ function renderSettings(){
   var totalPrayers=Object.keys(pLog).reduce(function(acc,d){return acc+_TRACK_PRAYERS.filter(function(p){return pLog[d]&&pLog[d][p];}).length;},0);
   function _tl(key,fb){var v=t(key);return(v&&v!==key)?v:fb;}
   var statsCard=el('div','stats-card');
-  [[icon('fas fa-book-open'),totalRead,_tl('settings.stats_ayahs','Ø¦Ø§ÛŒÛ•ØªÛŽÙ† Ø®ÙˆØ§Ù†Ø¯ÛŒ')],
-   [icon('fas fa-fire'),streak,_tl('settings.stats_streak','Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù…ÛŒØ§ Ú•Û†Ú˜Ø§Ù†')],
-   [icon('fas fa-bookmark'),bms.length,_tl('settings.stats_bookmarks','Ù†ÛŒØ´Ø§Ù†Ú©Ø±ÛŒ')],
-   [icon('fas fa-ranking-star'),bestStreak,_tl('settings.stats_best_streak','Ø¨Ù„Ù†Ø¯ØªØ±ÛŒÙ† Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù…ÛŒÛŒØ§ Ø®ÙˆØ§Ù†Ø¯Ù†ÛŽ')],
-   [icon('fas fa-star'),khatmCount,_tl('settings.stats_khatm','Ø®ØªÙ…')],
-   [icon('fas fa-mosque'),totalPrayers,_tl('settings.stats_prayers','Ù†Ú¤ÛŽÚ˜')]
+  [[icon('fas fa-book-open'),totalRead,_tl('settings.stats_ayahs','ئایەتێن خواندی')],
+   [icon('fas fa-fire'),streak,_tl('settings.stats_streak','بەردەوامیا ڕۆژان')],
+   [icon('fas fa-bookmark'),bms.length,_tl('settings.stats_bookmarks','نیشانکری')],
+   [icon('fas fa-ranking-star'),bestStreak,_tl('settings.stats_best_streak','بلندترین بەردەوامییا خواندنێ')],
+   [icon('fas fa-star'),khatmCount,_tl('settings.stats_khatm','ختم')],
+   [icon('fas fa-mosque'),totalPrayers,_tl('settings.stats_prayers','نڤێژ')]
   ].forEach(function(item){
     var col=el('div','stats-col');
     var ic=item[0];ic.className+=' stats-icon';
@@ -10512,14 +10512,14 @@ function renderSettings(){
   });
   frag.appendChild(statsCard);
 
-  // â”€â”€ Appearance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Appearance ───────────────────────────────
   var g1=el('div','settings-group');
-  g1.appendChild(el('div','settings-group-title','Ø´ÛŽÙˆØ§Ø²'));
+  g1.appendChild(el('div','settings-group-title','شێواز'));
   var themes=[
-    {id:'noor',  name:'Ù†ÙˆÙˆØ±',    sub:'Parchment',bg:'#f4e8cc',surface:'#fdf4e3', accent:'#1a5c3a'},
-    {id:'sakina',name:'Ú©Û•Ø³Ùƒ',   sub:'Emerald', bg:'#0c1c12', surface:'#112318', accent:'#c9a84c'},
-    {id:'light', name:'Ú•ÙˆÙˆÙ†',   sub:'Light',   bg:'#fafafa', surface:'#ffffff', accent:'#000000'},
-    {id:'dark',  name:'ØªØ§Ø±ÛŒ',   sub:'Dark',    bg:'#0a0a0a', surface:'#161616', accent:'#ffffff'},
+    {id:'noor',  name:'نوور',    sub:'Parchment',bg:'#f4e8cc',surface:'#fdf4e3', accent:'#1a5c3a'},
+    {id:'sakina',name:'کەسك',   sub:'Emerald', bg:'#0c1c12', surface:'#112318', accent:'#c9a84c'},
+    {id:'light', name:'ڕوون',   sub:'Light',   bg:'#fafafa', surface:'#ffffff', accent:'#000000'},
+    {id:'dark',  name:'تاری',   sub:'Dark',    bg:'#0a0a0a', surface:'#161616', accent:'#ffffff'},
   ];
   var tGrid=el('div','theme-grid');
   themes.forEach(function(th){
@@ -10552,58 +10552,58 @@ function renderSettings(){
   g1.appendChild(tGrid);
   frag.appendChild(g1);
 
-  // â”€â”€ Reading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Reading ──────────────────────────────────
   var g2=el('div','settings-group');
-  g2.appendChild(el('div','settings-group-title','Ø®ÙˆØ§Ù†Ø¯Ù†'));
-  g2.appendChild(mkToggleRow('Ù†ÛŒØ´Ø§Ø¯Ø§Ù†Ø§ ØªÛ•ÙØ³ÛŒØ±ÛŽ',S.showTafsir,function(){
+  g2.appendChild(el('div','settings-group-title','خواندن'));
+  g2.appendChild(mkToggleRow('نیشادانا تەفسیرێ',S.showTafsir,function(){
     S.showTafsir=!S.showTafsir;
     localStorage.setItem('showTafsir',String(S.showTafsir));
     applyShowTafsir();renderSettings();
   }));
-  g2.appendChild(mkToggleRow('Ú†ÙˆÙˆÙ†Ø§ Ø¦Û†ØªÛ†Ù…Ø§ØªÛŒÚ©ÛŒ Ø¨Û† Ø³ÙˆØ±Û•ØªØ§ Ø¯ÙˆÛŒÚ¤Ø¯Ø§',S.autoAdvance,function(){
+  g2.appendChild(mkToggleRow('چوونا ئۆتۆماتیکی بۆ سورەتا دویڤدا',S.autoAdvance,function(){
     S.autoAdvance=!S.autoAdvance;
     localStorage.setItem('autoAdvance',String(S.autoAdvance));
     renderSettings();
-  },'Ø¯Û•Ù…ÛŽ Ø¯Û•Ù†Ú¯ÛŽ Ø³ÙˆÙˆØ±Û•ØªÛ•Ú©ÛŽ Ø¨ Ø¯ÙˆÙ…Ø§Ù‡ÛŒ Ø¯Ù‡ÛŽØª'));
-  g2.appendChild(mkToggleRow('Ú¯ÙˆÙ‡Ø¯Ø§Ù† Ùˆ Ø¯ÛŒØªÙ†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ Ø¯ Ù‡Û•Ù…Ø§Ù† Ø¯Û•Ù…Ø¯Ø§.',S.scrollFollowsAudio,function(){
+  },'دەمێ دەنگێ سوورەتەکێ ب دوماهی دهێت'));
+  g2.appendChild(mkToggleRow('گوهدان و دیتنا قورئانێ د هەمان دەمدا.',S.scrollFollowsAudio,function(){
     S.scrollFollowsAudio=!S.scrollFollowsAudio;
     localStorage.setItem('scrollFollowsAudio',String(S.scrollFollowsAudio));
     renderSettings();
-  },'Ø¦Û•Ø±ÛŽ ØªÛ• Ø¯Ú¤ÛŽØª Ø¯Û•Ù…ÛŽ Ú¯ÙˆÙ‡Ø¯Ø§Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽØŒ Ù†Ú¤ÛŒØ³ÛŒÙ† Ø¦ÙˆØªÙˆÙ…Ø§ØªÛŒÚ© Ø¨Ú†ÛŒØªÛ• Ø¦Ø§ÛŒÛ•ØªØ§ Ø¯ÙˆÛŒÚ¤Ø¯Ø§ØŸ Ø¦Û•Ú¤ÛŽ Ù‡Û•Ù„Ø¨Ú˜ÛŽØ±Û•.'));
-  g2.appendChild(mkToggleRow('Ø¯Û•Ù…ÛŽ Ø®ÙˆØ§Ù†Ø¯Ù†Ø§ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽØŒ Ø´Ø§Ø´Û• Ú¤Û•Ù†Ø§Ù…Ø±ÛŒØª',S.keepAwake,function(){
+  },'ئەرێ تە دڤێت دەمێ گوهدانا قورئانێ، نڤیسین ئوتوماتیک بچیتە ئایەتا دویڤدا؟ ئەڤێ هەلبژێرە.'));
+  g2.appendChild(mkToggleRow('دەمێ خواندنا قورئانێ، شاشە ڤەنامریت',S.keepAwake,function(){
     S.keepAwake=!S.keepAwake;
     localStorage.setItem('keepAwake',String(S.keepAwake));
     applyKeepAwake();renderSettings();
   }));
-  g2.appendChild(mkToggleRow('Ø¯Û•Ù…ÛŽ Ø¯Û•Ø±Ú©Û•ÙØªÙ†ÛŽØŒ Ø¯Û•Ù†Ú¯ÛŽ Ù‚ÙˆØ±Ø¦Ø§Ù†ÛŽ Ø¯Ù…ÛŒÙ†ÛŒØª.',S.bgAudio,function(){
+  g2.appendChild(mkToggleRow('دەمێ دەرکەفتنێ، دەنگێ قورئانێ دمینیت.',S.bgAudio,function(){
     S.bgAudio=!S.bgAudio;
     localStorage.setItem('bgAudio',String(S.bgAudio));
     renderSettings();
   }));
-  var _hapticRow=mkToggleRow('Ù„Û•Ø±Ø²ÛŒÙ†Ø§ Ø¯Û•Ø³ØªÛŒ',S.hapticFeedback,function(){
+  var _hapticRow=mkToggleRow('لەرزینا دەستی',S.hapticFeedback,function(){
     S.hapticFeedback=!S.hapticFeedback;
     localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
     H.success();
     renderSettings();
-  },'Ù„Û•Ø±Ø²ÛŒÙ† Ø¯Ú¯Û•Ù„ Ù‡Û•Ø± Ù‡Û•Ù„Ø¨Ú˜Ø§Ø±ØªÙ†Û•Ú©ÛŽ');
+  },'لەرزین دگەل هەر هەلبژارتنەکێ');
   var _hapticSupported=!!(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics)||!!navigator.vibrate;
   if(!_hapticSupported){
     var _hapticNote=el('div','setting-sub');
     _hapticNote.style.cssText='color:var(--text-tertiary);font-size:.75rem;margin-top:2px;';
-    _hapticNote.textContent=t('settings.haptic_native')||'ØªÛ•Ù†Ù‡Ø§ Ù„Û• Ø¦Ø§Ù¾ÛŒ Ú•Û•Ø³Ù…ÛŒ Ú©Ø§Ø± Ø¯Û•Ú©Ø§Øª';
+    _hapticNote.textContent=t('settings.haptic_native')||'تەنها لە ئاپی ڕەسمی کار دەکات';
     var _hapticLabelWrap=_hapticRow.querySelector('.setting-label-wrap');
     if(_hapticLabelWrap)_hapticLabelWrap.appendChild(_hapticNote);
-    // Keep toggle clickable â€” Capacitor bridge may not be ready at render time
+    // Keep toggle clickable — Capacitor bridge may not be ready at render time
   }
   g2.appendChild(_hapticRow);
   frag.appendChild(g2);
 
-  // â”€â”€ Data & Sync â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Data & Sync ──────────────────────────────
   var g4=el('div','settings-group');
-  g4.appendChild(el('div','settings-group-title','Ø¯Ø§ØªØ§'));
+  g4.appendChild(el('div','settings-group-title','داتا'));
   // Downloads manager
   var _dlRow=el('div','setting-row s-row');_dlRow.style.cursor='pointer';
-  var _dlRowL=el('div','setting-label-wrap');_dlRowL.appendChild(el('div','setting-label','Ø¯Ø§Ø¨Û•Ø²Ø§Ù†Ø¯Ù†'));
+  var _dlRowL=el('div','setting-label-wrap');_dlRowL.appendChild(el('div','setting-label','دابەزاندن'));
   _dlRow.appendChild(_dlRowL);
   var _dlRowChev=icon('fas fa-chevron-left');_dlRowChev.style.cssText='color:var(--text-tertiary);font-size:.8rem;flex-shrink:0';
   _dlRow.appendChild(_dlRowChev);
@@ -10656,20 +10656,20 @@ function renderSettings(){
 
     g4.appendChild(syncCard);
   }
-  // App notifications toggle (new video, new book â€” NOT prayer)
+  // App notifications toggle (new video, new book — NOT prayer)
   var _appNotifOn=localStorage.getItem('appNotifEnabled')!=='false';
   g4.appendChild(mkToggleRow(
-    _appNotifOn ? 'Ú†Ø§ÚµØ§ÙƒÙƒØ±Ù†Ø§ Ø¨ÛŒØ±Ø¦ÛŒÙ†Ø§Ù†Ø§Ù†' : 'Ù†Û•Ú†Ø§ÚµØ§ÙƒÙƒØ±Ù†Ø§ Ø¨ÛŒØ±Ø¦ÛŒÙ†Ø§Ù†Ø§Ù†',
+    _appNotifOn ? 'چاڵاككرنا بیرئینانان' : 'نەچاڵاككرنا بیرئینانان',
     _appNotifOn,
     function(){
       _appNotifOn=!_appNotifOn;
       localStorage.setItem('appNotifEnabled',String(_appNotifOn));
       renderSettings();
     },
-    'Ú•Ø§ÙˆÛ•Ø³ØªØ§Ù†Ø¯Ù†Ø§ Ú†Ø§ÚµØ§Ú©ÛŒÛŒØ§ Ø¨ÛŒØ±Ø¦ÛŒÙ†Ø§Ù†Ø§Ù† (Ù¾Û•Ø±ØªÙˆÚ©ÛŽÙ† Ù†ÙˆÛŒØŒ ÙÛ•Ø±Ù…ÙˆÙˆØ¯Û•ØŒ Ú¤ÛŒØ¯ÛŒÙˆØŒ Ø¦Ø§ÛŒÛ•ØªØŒ Ø²Ú©Ø±..)'
+    'ڕاوەستاندنا چاڵاکییا بیرئینانان (پەرتوکێن نوی، فەرموودە، ڤیدیو، ئایەت، زکر..)'
   ));
   // Export bookmarks
-  g4.appendChild(mkBtnRow('Ù‡Û•Ù„Ú¯Ø±ØªÙ†Ø§ Ø¦Ø§ÛŒÛ•ØªØ§Ù†','','fas fa-download',function(){
+  g4.appendChild(mkBtnRow('هەلگرتنا ئایەتان','','fas fa-download',function(){
     var bms2=getBookmarks();
     if(!bms2.length){toast(t('toast.no_bookmarks'));return;}
     var json=JSON.stringify(bms2,null,2);
@@ -10679,9 +10679,9 @@ function renderSettings(){
     a.href=url2;a.download='tafsirkurd-bookmarks.json';
     document.body.appendChild(a);a.click();
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url2)},500);
-  },false,'Ø¦Û•Ùˆ Ø¦Ø§ÛŒÛ•ØªÛŽÙ† ØªÛ• Ù‡Û•Ù„Ø¨Ú˜Ø§Ø±ØªÛŒÙ† Ø¨Ù‡Û•Ù„Ú¯Ø±ÛŒ'));
+  },false,'ئەو ئایەتێن تە هەلبژارتین بهەلگری'));
   // Import bookmarks
-  g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'Ø¨ÛŒÙ†ÛŒÙ†Ø§ Ø¦Ø§ÛŒÛ•ØªÛŽÙ† Ù‡Û•Ù„Ú¯Ø±ØªÛŒ','','fas fa-upload',function(){
+  g4.appendChild(mkBtnRow(t('settings.import_bookmarks')||'بینینا ئایەتێن هەلگرتی','','fas fa-upload',function(){
     var inp=document.createElement('input');
     inp.type='file';inp.accept='.json,application/json';
     inp.onchange=function(){
@@ -10693,37 +10693,37 @@ function renderSettings(){
           var imported=JSON.parse(e.target.result);
           if(!Array.isArray(imported))throw new Error('not array');
           var valid=imported.filter(function(b){return b&&typeof b.surah==='number'&&typeof b.ayah==='number';});
-          if(!valid.length){toast(t('toast.import_invalid')||'ÙØ§ÛŒÙ„ Ø¯Ø±ÙˆØ³Øª Ù†ÛŒÙ†Û•');return;}
-          // Merge with existing â€” imported wins on conflict
+          if(!valid.length){toast(t('toast.import_invalid')||'فایل دروست نینە');return;}
+          // Merge with existing — imported wins on conflict
           var existing=getBookmarks();
           var merged={};
           existing.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
           valid.forEach(function(b){merged[b.surah+':'+b.ayah]=b;});
           saveBookmarks(Object.values(merged));
-          toast((t('toast.import_done')||'Ø¦Ø§ÛŒÛ•ØªÛŽÙ† Ù‡Û•Ù„Ú¯Ø±ØªÛŒ Ù‡Ø§ØªÙ† âœ“')+' ('+valid.length+')');
+          toast((t('toast.import_done')||'ئایەتێن هەلگرتی هاتن ✓')+' ('+valid.length+')');
           renderSettings();
-        }catch(err){toast(t('toast.import_invalid')||'ÙØ§ÛŒÙ„ Ø¯Ø±ÙˆØ³Øª Ù†ÛŒÙ†Û•');}
+        }catch(err){toast(t('toast.import_invalid')||'فایل دروست نینە');}
       };
       reader.readAsText(file);
     };
     inp.click();
-  },false,t('settings.import_bookmarks_sub')||'Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ø¨ÛŒÙ†ÛŒÙ†Ø§ Ø¦Û•Ùˆ Ø¦Ø§ÛŒÛ•ØªÛŽÙ† ØªÛ• Ù‡Û•Ù„Ú¯Ø±ØªÛŒÙ†'));
+  },false,t('settings.import_bookmarks_sub')||'دووبارە بینینا ئەو ئایەتێن تە هەلگرتین'));
   // Reset settings to defaults
-  g4.appendChild(mkBtnRow('Ø²Ú¤Ú•Ø§Ù†Ø¯Ù† Ø¨Û† Ø¨Ø§Ø±ÛŽ Ø¯Û•Ø³ØªÙ¾ÛŽÚ©ÛŽ','','fas fa-undo',function(){
-    _tkConfirm({icon:'â†©ï¸',title:'ØªÛ† Ù¾Ø´ØªÚ•Ø§Ø³ØªÛŒ Ú˜ Ø²Ú¤Ú•Ø§Ù†Ø¯Ù†Ø§ Ú•ÛŽÚ©Ø®Ø³ØªÙ†Ø§Ù† Ø¨Û† Ø¨Ø§Ø±ÛŽ Ø¯Û•Ø³ØªÙ¾ÛŽÚ©ÛŽØŸ',yes:'Ø¨Û•Ù„ÛŽ',no:'Ù†Û•Ø®ÛŽØ±',onYes:function(){
+  g4.appendChild(mkBtnRow('زڤڕاندن بۆ بارێ دەستپێکێ','','fas fa-undo',function(){
+    _tkConfirm({icon:'↩️',title:'تۆ پشتڕاستی ژ زڤڕاندنا ڕێکخستنان بۆ بارێ دەستپێکێ؟',yes:'بەلێ',no:'نەخێر',onYes:function(){
       var _sk=['showTafsir','bgAudio','keepAwake','autoAdvance','scrollFollowsAudio','hapticFeedback','app_arSize','app_tfSize','app_lineH'];
       _sk.forEach(function(k){localStorage.removeItem(k);});
       S.showTafsir=true;S.bgAudio=false;S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;S.hapticFeedback=true;
       S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;
       if(S.theme!=='noor'){S.theme='noor';applyTheme();}
       applySizes();
-      toast(t('toast.settings_reset')||'Ú•ÛŽÚ©Ø®Ø³ØªÙ† Ù‡Ø§ØªÙ†Û• Ø²Ú¤Ú•Ø§Ù†Ø¯Ù† Ø¨Û† Ø­Ø§Ù„Û•ØªÛŽ Ø¨Ù†Û•Ú•Û•ØªÛŒ');
+      toast(t('toast.settings_reset')||'ڕێکخستن هاتنە زڤڕاندن بۆ حالەتێ بنەڕەتی');
       renderSettings();
     }});
   },false));
   // Reset reading progress
-  g4.appendChild(mkBtnRow('Ú˜ÛŽØ¨Ø±Ù†Ø§ Ù¾ÛŽØ´Ú©Û•ÙØªÙ†Ø§ Ø®ÙˆØ§Ù†Ø¯Ù†ÛŽ','','fas fa-broom',function(){
-    _tkConfirm({icon:'ðŸ§¹',title:'ØªÛ† Ù¾Ø´ØªÚ•Ø§Ø³ØªÛŒØŸ Ù‡Û•Ù…ÛŒ ØªÛ†Ù…Ø§Ø±ÛŽÙ† Ø®ÙˆØ§Ù†Ø¯Ù†ÛŽ Ø¯ÛŽ Ù‡ÛŽÙ†Û• Ú˜ÛŽØ¨Ø±Ù†.',yes:'Ø¨Û•Ù„ÛŽ',no:'Ù†Û•Ø®ÛŽØ±',danger:true,onYes:function(){
+  g4.appendChild(mkBtnRow('ژێبرنا پێشکەفتنا خواندنێ','','fas fa-broom',function(){
+    _tkConfirm({icon:'🧹',title:'تۆ پشتڕاستی؟ هەمی تۆمارێن خواندنێ دێ هێنە ژێبرن.',yes:'بەلێ',no:'نەخێر',danger:true,onYes:function(){
       _clearTrackingState();
       for(var i=1;i<=114;i++){localStorage.removeItem('surah_scroll_'+i);}
       debouncedSync();
@@ -10731,13 +10731,13 @@ function renderSettings(){
       renderSettings();
     }});
   },true));
-  // Clear cache â€” deletes the build-versioned IDB copies and refetches from the
+  // Clear cache — deletes the build-versioned IDB copies and refetches from the
   // bundled JSON. Old data is kept alive until the fresh copy lands (swap-on-success
   // inside the fetchers), so the reader never blanks and there is no null window.
   // Success toast fires only when both reloads actually succeeded; on failure the
   // fetchers show their own error toast and the old data remains usable.
-  g4.appendChild(mkBtnRow('Ú˜ÛŽØ¨Ø±Ù†Ø§ Ø¯Ø§ØªØ§ÛŒÛŽÙ† Ø¨ Ø´ÛŽÙˆÛ•ÛŒÛ•Ú©ÛŽ Ø¯Û•Ù…Ú©ÛŒ Ù‡Ø§ØªÛŒÙ†Û• Ù‡Û•Ù„Ú¯Ø±ØªÙ†','','fas fa-trash',function(){
-    _tkConfirm({icon:'ðŸ—‘ï¸',title:'ØªÛ† Ù¾Ø´ØªÚ•Ø§Ø³ØªÛŒØŸ Ø¨Ø§Ø¨Û•ØªÛŽÙ† Ù‡Û•Ù„Ú¯Ø±ØªÛŒ Ø¯ÛŽ Ù‡ÛŽÙ†Û• Ú˜ÛŽØ¨Ø±Ù†',yes:'Ø¨Û•Ù„ÛŽ',no:'Ù†Û•Ø®ÛŽØ±',onYes:function(){
+  g4.appendChild(mkBtnRow('ژێبرنا داتایێن ب شێوەیەکێ دەمکی هاتینە هەلگرتن','','fas fa-trash',function(){
+    _tkConfirm({icon:'🗑️',title:'تۆ پشتڕاستی؟ بابەتێن هەلگرتی دێ هێنە ژێبرن',yes:'بەلێ',no:'نەخێر',onYes:function(){
       window._tkQuranPreload=undefined; // never hand back the stale preload object
       _idbDel(_QURAN_IDB_KEY);
       _idbDel(_TAFSIR_IDB_KEY);
@@ -10752,25 +10752,25 @@ function renderSettings(){
   },true));
   // Logout (only when logged in)
   if(S.user){
-    g4.appendChild(mkBtnRow(t('profile.logout')||'Ø¯Û•Ø±Ú†ÙˆÙˆÙ†','','fas fa-sign-out-alt',function(){
+    g4.appendChild(mkBtnRow(t('profile.logout')||'دەرچوون','','fas fa-sign-out-alt',function(){
       App.logout();
     },true));
   }
   // Delete account (only when logged in)
   if(S.user){
-    g4.appendChild(mkBtnRow(t('profile.delete_account')||'Ú˜ÛŽØ¨Ø±Ù†Ø§ Ù‡Û•Ú˜Ù…Ø§Ø±ÛŽ','','fas fa-user-slash',function(){
+    g4.appendChild(mkBtnRow(t('profile.delete_account')||'ژێبرنا هەژمارێ','','fas fa-user-slash',function(){
       App.deleteAccount();
     },true));
   }
   frag.appendChild(g4);
 
-  // â”€â”€ Advanced (collapsible) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Advanced (collapsible) ───────────────────
   // Hidden from normal users by default. Contains performance override and future
-  // â”€â”€ App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── App ──────────────────────────────────────
   var g5=el('div','settings-group');
-  g5.appendChild(el('div','settings-group-title','Ø¦Û•Ù¾'));
+  g5.appendChild(el('div','settings-group-title','ئەپ'));
   // (4) Share app
-  g5.appendChild(mkBtnRow('Ø¨Û•ÚµØ§Ú¤Ú©Ø±Ù†Ø§ Ø¦Û•Ù¾ÛŒ','','fas fa-share-nodes',function(){
+  g5.appendChild(mkBtnRow('بەڵاڤکرنا ئەپی','','fas fa-share-nodes',function(){
     var url3='https://tafsirkurd.com';
     if(navigator.share){
       navigator.share({title:'Tafsir Kurd',text:t('settings.about_desc'),url:url3}).catch(function(){});
@@ -10778,15 +10778,15 @@ function renderSettings(){
       navigator.clipboard.writeText(url3).then(function(){toast(t('toast.link_copied'))}).catch(function(){toast(url3)});
     }
   }));
-  // (5) Rate app â€” full-row tappable (both iOS and Android)
+  // (5) Rate app — full-row tappable (both iOS and Android)
   var _rateRow=el('div','rate-app-row s-row');
   var _rateLeft=el('div','rate-app-left');
   var _rateIconBox=el('div','rate-app-icon');
   _rateIconBox.appendChild(icon('fas fa-star'));
   var _rateText=el('div','rate-app-text');
-  _rateText.appendChild(el('div','rate-app-label','Ù‡Û•ÚµØ³Û•Ù†Ú¯Ø§Ù†Ø¯Ù†Ø§ Ø¦Û•Ù¾ÛŒ'));
+  _rateText.appendChild(el('div','rate-app-label','هەڵسەنگاندنا ئەپی'));
   var _ratePlat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
-  var _rateSub=_ratePlat==='ios'?'Ù„Û•Ø³Û•Ø± App Store Ù‡Û•ÚµØ³Û•Ù†Ú¯Ø§Ù†Ø¯Ù† Ø¨Ú©Û•':'Ù„Ø³Û•Ø± Google Play Ù‡Û•ÚµØ³Û•Ù†Ú¯Ø§Ù†Ø¯Ù†ÛŽ Ø¨Ú©Û•';
+  var _rateSub=_ratePlat==='ios'?'لەسەر App Store هەڵسەنگاندن بکە':'لسەر Google Play هەڵسەنگاندنێ بکە';
   _rateText.appendChild(el('div','rate-app-sub',_rateSub));
   _rateLeft.appendChild(_rateIconBox);_rateLeft.appendChild(_rateText);
   _rateRow.appendChild(_rateLeft);
@@ -10799,15 +10799,15 @@ function renderSettings(){
     if(_plat==='ios'){
       window.open('itms-apps://itunes.apple.com/app/id6760433688?action=write-review','_system');
     }else{
-      // market:// is intercepted by Android as an Intent â€” opens Play Store app directly
+      // market:// is intercepted by Android as an Intent — opens Play Store app directly
       window.location.href='market://details?id=com.tafsirkurd.app';
     }
   });
   g5.appendChild(_rateRow);
 
-  // â”€â”€ About Us â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── About Us ─────────────────────────────────
   var g6=el('div','settings-group');
-  g6.appendChild(el('div','settings-group-title','Ø¯Û•Ø±Ø¨Ø§Ø±Û•ÛŒ Ù…Û•'));
+  g6.appendChild(el('div','settings-group-title','دەربارەی مە'));
 
   function mkAboutNavRow(iconClassOrImg,label,sub,onClick){
     var row=el('div','about-nav-row s-row');
@@ -10830,19 +10830,19 @@ function renderSettings(){
     on(row,'click',onClick);
     return row;
   }
-  // App logo â€” accent circle with padding so PNG sits cleanly on all themes
+  // App logo — accent circle with padding so PNG sits cleanly on all themes
   var _appLogoImg=document.createElement('img');_appLogoImg.src='/assets/images/logo.png';_appLogoImg.alt='';
   _appLogoImg._iconMod='about-nav-icon--img about-nav-icon--logo';
-  // Founder avatar â€” check in-memory cache first, then fall back to localStorage cache
+  // Founder avatar — check in-memory cache first, then fall back to localStorage cache
   var _founderImgSrc=(_ssMemory&&_ssMemory.founder_avatar_url)||'';
   if(!_founderImgSrc){try{var _ssDisk=JSON.parse(localStorage.getItem(_ssCacheKey)||'null');if(_ssDisk&&_ssDisk.d&&_ssDisk.d.founder_avatar_url)_founderImgSrc=_ssDisk.d.founder_avatar_url;}catch(e){}}
   var _founderEl;
   if(_founderImgSrc){_founderEl=document.createElement('img');_founderEl.src=_founderImgSrc;_founderEl.alt='';_founderEl._iconMod='about-nav-icon--img about-nav-icon--person';}
   else{_founderEl=icon('fas fa-user');}
-  g6.appendChild(mkAboutNavRow(_appLogoImg,'ØªÛ•ÙØ³ÛŒØ± Ú©ÙˆØ±Ø¯','Ø¯Û•Ø±Ø¨Ø§Ø±Û•ÛŒ Ù¾Ú•Û†Ú˜Û•ÛŒ',function(){openAboutSheet('app');}));
-  g6.appendChild(mkAboutNavRow(_founderEl,'Ø³Ø§Ù…Ø§Ù† Ø¹Ø¨Ø¯Ø§Ù„Ø±Ø­Ù…Ù†','Ø¯Ø§Ù…Û•Ø²Ø±ÛŽÙ†Û•Ø±',function(){openAboutSheet('founder');}));
-  g6.appendChild(mkAboutNavRow('fas fa-heart','Ø³ÙˆÙ¾Ø§Ø³Ù†Ø§Ù…Û•','Ø¨Û† Ù‡Û•Ø± Ú©Û•Ø³Û•Ú©ÛŽ Ù‡Ø§Ø±ÛŒÚ©Ø§Ø±ÛŒ Ù¾ÛŽØ´Ú©ÛŽØ´Ú©Ø±ÛŒ',function(){openAboutSheet('thanks');}));
-  // â”€â”€ Social Links (inside Ø¦Û•Ù¾ group) â”€â”€
+  g6.appendChild(mkAboutNavRow(_appLogoImg,'تەفسیر کورد','دەربارەی پڕۆژەی',function(){openAboutSheet('app');}));
+  g6.appendChild(mkAboutNavRow(_founderEl,'سامان عبدالرحمن','دامەزرێنەر',function(){openAboutSheet('founder');}));
+  g6.appendChild(mkAboutNavRow('fas fa-heart','سوپاسنامە','بۆ هەر کەسەکێ هاریکاری پێشکێشکری',function(){openAboutSheet('thanks');}));
+  // ── Social Links (inside ئەپ group) ──
   var g7=g5;
   var socialCard=el('div','settings-social-card');
   var SOCIAL_DEFS=[
@@ -10885,7 +10885,7 @@ function renderSettings(){
     });
   });
 
-  // â”€â”€ About â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── About ────────────────────────────────────
   var about=el('div','about-section');
   var aboutLogo=document.createElement('img');
   aboutLogo.src='/assets/images/logo.png';aboutLogo.alt='';
@@ -10898,7 +10898,7 @@ function renderSettings(){
       if(info&&info.version)verEl.textContent='v'+info.version;
     }).catch(function(){});
   }
-  about.appendChild(el('div','about-desc','ØªÛŽÚ¯Û•Ù‡Ø´ØªÙ†Ø§ Ø¦ÛŒØ³Ù„Ø§Ù…ÛŽ Ø¨ Ø²Ù…Ø§Ù†Û•Ú©ÛŽ Ø³Ø§Ø¯Û•'));
+  about.appendChild(el('div','about-desc','تێگەهشتنا ئیسلامێ ب زمانەکێ سادە'));
   frag.appendChild(about);
   clear(content); content.appendChild(frag);
 }
@@ -10926,7 +10926,7 @@ function initSupabase(cb){
   // Pre-clear expired OAuth callback tokens before any Supabase client is created.
   // If the JWT in the URL hash is already expired, sending it to the server causes a
   // 403 loop: Supabase's _initialize retries the dead token on every page load because
-  // it never clears the hash on failure. We decode the JWT payload (no crypto needed â€”
+  // it never clears the hash on failure. We decode the JWT payload (no crypto needed —
   // just base64) and wipe the hash when exp < now, so Supabase never fires the request.
   try{
     var _pch=window.location.hash||'';
@@ -10934,7 +10934,7 @@ function initSupabase(cb){
       var _pcps=new URLSearchParams(_pch.charAt(0)==='#'?_pch.substring(1):_pch);
       var _pctok=_pcps.get('access_token')||'';
       var _pcparts=_pctok.split('.');
-      var _expired=_pcparts.length!==3; // malformed JWT â†’ treat as expired
+      var _expired=_pcparts.length!==3; // malformed JWT → treat as expired
       if(!_expired){
         var _pcb64=_pcparts[1].replace(/-/g,'+').replace(/_/g,'/');
         while(_pcb64.length%4)_pcb64+='=';
@@ -10978,11 +10978,11 @@ function initSupabase(cb){
         // Silently replace client when URL changed (e.g. after proxy migration).
         // supa_cfg was just updated to the new URL; the cache-created client still
         // holds the old URL. storageKey 'sb-tafsirkurd-v1' is stable so the existing
-        // session survives the swap â€” no logout occurs.
+        // session survives the swap — no logout occurs.
         var _nc=(cfg.supabaseUrl||'').replace(/\/$/,'');
         var _oc='';try{_oc=(S.supabase.supabaseUrl||'').replace(/\/$/,'');}catch(e){}
         if(_oc&&_nc&&_oc!==_nc){
-          // detectSessionInUrl:false â€” Client A already processed (or attempted) the URL.
+          // detectSessionInUrl:false — Client A already processed (or attempted) the URL.
           // Re-enabling it here would trigger a second _getSessionFromURL with the same
           // token, causing a 403 and a hash that never gets cleared.
           S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
@@ -10990,36 +10990,36 @@ function initSupabase(cb){
         }
       }
     }
-    // Remote prayer cache version â€” if admin bumped it, purge all local prayer caches
+    // Remote prayer cache version — if admin bumped it, purge all local prayer caches
     // so every phone fetches fresh data from amozhgary.tv on next prayer tab open.
     if(cfg.prayerCacheVersion){
       var _storedVer=localStorage.getItem('prayer_cache_schema_ver')||'';
       if(_storedVer!==String(cfg.prayerCacheVersion)){
         if(window.PrayerCache&&window.PrayerCache.purgeAllCaches)window.PrayerCache.purgeAllCaches();
         try{localStorage.setItem('prayer_cache_schema_ver',String(cfg.prayerCacheVersion));}catch(e){}
-        console.log('[PrayerCache] remote version changed to',cfg.prayerCacheVersion,'â€” all caches purged');
+        console.log('[PrayerCache] remote version changed to',cfg.prayerCacheVersion,'— all caches purged');
       }
     }
-    // Remote widget refresh nonce â€” if admin bumped it, force-push all widget data
+    // Remote widget refresh nonce — if admin bumped it, force-push all widget data
     // so every iOS device gets a fresh App Group write and WidgetCenter reload.
     if(cfg.widgetRefreshNonce){
       var _storedWidgetNonce=localStorage.getItem('widget_refresh_nonce_seen')||'';
       if(_storedWidgetNonce!==String(cfg.widgetRefreshNonce)){
         localStorage.setItem('widget_refresh_nonce_seen',String(cfg.widgetRefreshNonce));
-        console.log('[WidgetRefresh] admin nonce changed â†’ forceWidgetRefresh');
+        console.log('[WidgetRefresh] admin nonce changed → forceWidgetRefresh');
         if(window.PrayerUI&&window.PrayerUI.forceWidgetRefresh){
           window.PrayerUI.forceWidgetRefresh('adminNonce');
         }
       }
     }
-    // Remote i18n cache version â€” if admin bumped it, purge translation cache
+    // Remote i18n cache version — if admin bumped it, purge translation cache
     // so every device fetches fresh translations from Supabase on next open.
     if(cfg.i18nCacheVersion){
       var _storedI18nVer=localStorage.getItem('i18n_schema_ver')||'';
       if(_storedI18nVer!==String(cfg.i18nCacheVersion)){
         if(window.i18n&&window.i18n.purgeCache)window.i18n.purgeCache();
         try{localStorage.setItem('i18n_schema_ver',String(cfg.i18nCacheVersion));}catch(e){}
-        console.log('[i18n] remote version changed to',cfg.i18nCacheVersion,'â€” translation cache purged');
+        console.log('[i18n] remote version changed to',cfg.i18nCacheVersion,'— translation cache purged');
         // Flag so health report on this session includes the purge event
         try{sessionStorage.setItem('i18n_version_purged','1');}catch(e){}
         // Rebuild search index so new translations are reflected immediately
@@ -11028,7 +11028,7 @@ function initSupabase(cb){
         }
       }
     }
-    // i18n health reporting gate â€” admin can disable/enable remotely
+    // i18n health reporting gate — admin can disable/enable remotely
     if(cfg.i18nHealthReportingEnabled!==undefined){
       window.i18nHealthReportingEnabled = cfg.i18nHealthReportingEnabled!=='false';
     }
@@ -11053,7 +11053,7 @@ function _clearProfileCache(){
 
 function checkAuthSession(){
   if(!S.supabase)return;
-  // Restore cached profile synchronously â€” Settings renders correctly on first paint,
+  // Restore cached profile synchronously — Settings renders correctly on first paint,
   // never flashes guest state for a user who is already logged in.
   if(!S.user) _readProfileCache();
 
@@ -11077,7 +11077,7 @@ function checkAuthSession(){
         }
       }
     }else{
-      // No session â€” clear stale cache so we don't show a ghost logged-in card
+      // No session — clear stale cache so we don't show a ghost logged-in card
       if(S.user){_clearProfileCache();S.user=null;_renderHash.settings=null;if(S.tab==='settings')renderSettings();}
     }
   }).catch(function(e){console.error('Auth session check error:',e)});
@@ -11095,7 +11095,7 @@ function checkAuthSession(){
       if(S.tab==='settings')renderSettings();
       // Clear stale auth callback URL params so a failed/expired OAuth token
       // doesn't cause a 403 loop on every subsequent page load.
-      // Normal sign-outs never have auth params in the URL â€” this only fires
+      // Normal sign-outs never have auth params in the URL — this only fires
       // when _getSessionFromURL failed and Supabase left the hash uncleaned.
       try{
         var _ah=window.location.hash||'';
@@ -11129,20 +11129,20 @@ function setUserFromSession(session){
 /* --- Cloud Sync --- */
 /* ===== PRODUCTION SYNC SYSTEM ===== */
 
-// â”€â”€ Sync panel live-update helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Sync panel live-update helpers ─────────────────────────────────────────
 var _syncPanelStatusEl=null;
 var _syncPanelBtnEl=null;
 
 function _syncStatusInfo(){
   if(!S.user)return null;
-  if(!navigator.onLine)return{dot:'âš ',txt:t('settings.sync_status_offline'),col:'#f09000'};
-  if(S.isSyncing)return{dot:'âŸ³',txt:t('settings.sync_status_syncing'),col:'var(--text3)'};
-  if(S.syncFailed)return{dot:'âœ•',txt:(t('settings.sync_status_failed')||'Ù‡Û•Ù„Ú¯Ø±ØªÙ† Ø³Û•Ø±Ù†Û•Ú©Û•ÙØª')+(S.syncErrorDetail?' ['+S.syncErrorDetail.slice(0,60)+']':''),col:'#e53935'};
+  if(!navigator.onLine)return{dot:'⚠',txt:t('settings.sync_status_offline'),col:'#f09000'};
+  if(S.isSyncing)return{dot:'⟳',txt:t('settings.sync_status_syncing'),col:'var(--text3)'};
+  if(S.syncFailed)return{dot:'✕',txt:(t('settings.sync_status_failed')||'هەلگرتن سەرنەکەفت')+(S.syncErrorDetail?' ['+S.syncErrorDetail.slice(0,60)+']':''),col:'#e53935'};
   if(S.lastSyncTime){
     var ts=new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    return{dot:'âœ“',txt:(t('settings.sync_last')||'')+' '+ts,col:'#43a047'};
+    return{dot:'✓',txt:(t('settings.sync_last')||'')+' '+ts,col:'#43a047'};
   }
-  return{dot:'â—‹',txt:t('settings.sync_never'),col:'var(--text3)'};
+  return{dot:'○',txt:t('settings.sync_never'),col:'var(--text3)'};
 }
 
 function _updateSyncPanelStatus(){
@@ -11158,7 +11158,7 @@ function _updateSyncPanelStatus(){
   _syncPanelBtnEl.appendChild(document.createTextNode(' '+(S.syncFailed?t('settings.sync_retry_btn'):t('settings.sync_btn'))));
 }
 
-// â”€â”€ Device / Session management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Device / Session management ────────────────────────────────────────────
 
 function _getDeviceId(){
   var id=localStorage.getItem('_deviceId');
@@ -11191,13 +11191,13 @@ function _getDeviceInfo(){
 
 function _timeAgo(date){
   var s=Math.floor((Date.now()-date.getTime())/1000);
-  if(s<90)return t('profile.time_now')||'Ø¦ÛŽØ³ØªØ§';
+  if(s<90)return t('profile.time_now')||'ئێستا';
   var m=Math.floor(s/60);
-  if(m<60)return m+' '+(t('profile.time_min')||'Ø®ÙˆÙ„Û•Ú©');
+  if(m<60)return m+' '+(t('profile.time_min')||'خولەک');
   var h=Math.floor(m/60);
-  if(h<24)return h+' '+(t('profile.time_hour')||'Ø¯Û•Ù…Ú˜Ù…ÛŽØ±');
+  if(h<24)return h+' '+(t('profile.time_hour')||'دەمژمێر');
   var d=Math.floor(h/24);
-  if(d<8)return d+' '+(t('profile.time_day')||'Ú•Û†Ú˜');
+  if(d<8)return d+' '+(t('profile.time_day')||'ڕۆژ');
   return date.toLocaleDateString();
 }
 
@@ -11234,7 +11234,7 @@ function _registerSession(){
 }
 
 function _startSessionHeartbeat(){
-  // Stop previous instance first â€” removes both the interval AND the visibilitychange
+  // Stop previous instance first — removes both the interval AND the visibilitychange
   // listener. Without this, the old listener is orphaned when _sessionFgHandler ref
   // is overwritten below, causing duplicate touches on re-login.
   _stopSessionHeartbeat();
@@ -11256,7 +11256,7 @@ function _subscribeSessionRevocation(){
     .on('postgres_changes',{event:'DELETE',schema:'public',table:'user_sessions',
       filter:'user_id=eq.'+S.user.id},function(payload){
       if(payload.old&&payload.old.device_id===myDeviceId){
-        toast(t('profile.session_revoked')||'Ù‡Ø§ØªÛ• Ø¯Û•Ø±Ø¦ÛŽØ®Ø³ØªÙ† Ú˜ Ù„Ø§ÛŒÛŽ Ø¦Ø§Ù…ÛŒØ±Û•Ú©ÛŽ Ø¯ÛŒ Ú¤Û•');
+        toast(t('profile.session_revoked')||'هاتە دەرئێخستن ژ لایێ ئامیرەکێ دی ڤە');
         setTimeout(function(){S.supabase.auth.signOut();},1500);
       }
     }).subscribe();
@@ -11275,9 +11275,9 @@ function _removeCurrentDeviceSession(){
     .eq('user_id',S.user.id).eq('device_id',_getDeviceId()).then(function(){});
 }
 // Field categories:
-//   ADDITIVE  â€” always union across devices (never lose data)
-//   LWW       â€” last-write-wins (settings, scroll positions)
-//   FURTHEST  â€” take whichever position is further in the Quran (lastRead)
+//   ADDITIVE  — always union across devices (never lose data)
+//   LWW       — last-write-wins (settings, scroll positions)
+//   FURTHEST  — take whichever position is further in the Quran (lastRead)
 
 var SYNC_SIMPLE_KEYS=[
   'lastRead','readingGoal','readLog','readAyahsToday','trackingResetAt','fullResetAt',
@@ -11296,9 +11296,9 @@ var SYNC_SIMPLE_KEYS=[
   'prayerTrackingStart'
 ];
 
-// â”€â”€ Merge helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Merge helpers ─────────────────────────────────────────────────────────────
 
-// NOTE: bookmarks use LWW (last-write-wins) â€” see mergeSyncData.
+// NOTE: bookmarks use LWW (last-write-wins) — see mergeSyncData.
 // Additive union was removed because it prevented deletions from propagating:
 // removing a bookmark on one device would be restored by the union on other devices.
 
@@ -11329,7 +11329,7 @@ function _mergeProgress(aStr,bStr){
   }catch(e){return aStr||bStr||'[]'}
 }
 
-// prayer_log: additive union â€” per-day, per-prayer OR (done on either device = done)
+// prayer_log: additive union — per-day, per-prayer OR (done on either device = done)
 function _mergePrayerLog(aStr,bStr){
   try{
     var a=JSON.parse(aStr||'{}');var b=JSON.parse(bStr||'{}');
@@ -11345,33 +11345,33 @@ function _mergePrayerLog(aStr,bStr){
   }catch(e){return aStr||bStr||'{}';}
 }
 
-// Master merge â€” called on both login-load and realtime push
+// Master merge — called on both login-load and realtime push
 function mergeSyncData(local,cloud){
   if(!local)return cloud;
   if(!cloud)return local;
   var lTime=new Date(local._syncTime||0).getTime();
   var cTime=new Date(cloud._syncTime||0).getTime();
   // Start with the newer set as LWW base for settings.
-  // Strict >: when timestamps are equal, cloud IS what we last pushed â€” local wins
+  // Strict >: when timestamps are equal, cloud IS what we last pushed — local wins
   // because the user may have changed settings after that push without syncing yet.
   var base=cTime>lTime?cloud:local;
   var result=Object.assign({},base);
 
-  // Determine if either side has a reset â€” the newer reset wins
+  // Determine if either side has a reset — the newer reset wins
   var localReset=new Date(local.trackingResetAt||0).getTime();
   var cloudReset=new Date(cloud.trackingResetAt||0).getTime();
   var newestReset=Math.max(localReset,cloudReset);
   // The side that owns the newest reset is the authoritative source for progress
   var resetWinner=cloudReset>=localReset?cloud:local;
 
-  // ADDITIVE: reading log â€” per-day max, but discard entries before the newest reset
+  // ADDITIVE: reading log — per-day max, but discard entries before the newest reset
   result.readLog=_mergeReadLog(local.readLog,cloud.readLog,newestReset||undefined);
 
-  // ADDITIVE (with reset): surah progress â€” union, but if a reset exists use only reset-winner's data
+  // ADDITIVE (with reset): surah progress — union, but if a reset exists use only reset-winner's data
   for(var i=1;i<=114;i++){
     var pk='surah_progress_'+i;
     if(newestReset>0){
-      // After a reset, trust only the side that did the reset â€” don't restore stale data
+      // After a reset, trust only the side that did the reset — don't restore stale data
       var rv=resetWinner[pk];
       if(rv)result[pk]=rv; else delete result[pk];
     } else if(local[pk]||cloud[pk]){
@@ -11386,14 +11386,14 @@ function mergeSyncData(local,cloud){
     if(lrv>0||crv>0){result[vrk]=String(Math.max(lrv,crv));}
   }
 
-  // FURTHEST: last read position â€” take whichever is deeper in the Quran,
-  // UNLESS a full reset has happened (fullResetAt) â€” then use reset-winner's lastRead
+  // FURTHEST: last read position — take whichever is deeper in the Quran,
+  // UNLESS a full reset has happened (fullResetAt) — then use reset-winner's lastRead
   try{
     var localFull=new Date(local.fullResetAt||0).getTime();
     var cloudFull=new Date(cloud.fullResetAt||0).getTime();
     var newestFull=Math.max(localFull,cloudFull);
     if(newestFull>0){
-      // Full reset happened â€” the side that owns the newest reset is authoritative for lastRead
+      // Full reset happened — the side that owns the newest reset is authoritative for lastRead
       var fullWinner=cloudFull>=localFull?cloud:local;
       if(fullWinner.lastRead){result.lastRead=fullWinner.lastRead;}else{delete result.lastRead;}
     }else{
@@ -11405,7 +11405,7 @@ function mergeSyncData(local,cloud){
     }
   }catch(e){}
 
-  // book_read_ids â€” additive union across devices
+  // book_read_ids — additive union across devices
   try{
     var _lIds=JSON.parse(local.book_read_ids||'[]');
     var _cIds=JSON.parse(cloud.book_read_ids||'[]');
@@ -11414,7 +11414,7 @@ function mergeSyncData(local,cloud){
     _cIds.forEach(function(id){_idSet[String(id)]=true;});
     result.book_read_ids=JSON.stringify(Object.keys(_idSet));
   }catch(e){}
-  // pdfProg_* â€” per-book LWW by ts (highest ts = most recently read)
+  // pdfProg_* — per-book LWW by ts (highest ts = most recently read)
   var _allBpKeys={};
   Object.keys(local).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
   Object.keys(cloud).forEach(function(k){if(k.indexOf('pdfProg_')===0)_allBpKeys[k]=true;});
@@ -11433,7 +11433,7 @@ function mergeSyncData(local,cloud){
   return result;
 }
 
-// â”€â”€ Gather / Apply â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Gather / Apply ────────────────────────────────────────────────────────────
 
 function gatherSyncData(){
   var data={};
@@ -11449,7 +11449,7 @@ function gatherSyncData(){
     if(sv!==null)data[sk]=sv;
     if(rv!==null)data[rk]=rv;
   }
-  // Book reading progress â€” pdfProg_{bookId} keys
+  // Book reading progress — pdfProg_{bookId} keys
   var _bpKeys=[];
   for(var _bi=0;_bi<localStorage.length;_bi++){var _bk=localStorage.key(_bi);if(_bk&&_bk.indexOf('pdfProg_')===0)_bpKeys.push(_bk);}
   _bpKeys.forEach(function(k){var v=localStorage.getItem(k);if(v!==null)data[k]=v;});
@@ -11475,13 +11475,13 @@ function applySyncData(data){
   S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
   S.mushafMode=localStorage.getItem('mushafMode')==='true';
   S.readerFont=localStorage.getItem('readerFont')||'hafs';
-  // Pinned to QCF4 â€” the only fully-bundled mode (604 local fonts + mushaf-v4-pages.json),
+  // Pinned to QCF4 — the only fully-bundled mode (604 local fonts + mushaf-v4-pages.json),
   // so Mushaf works with no network at all. qcf1/qcf2 remain code-supported but require
   // internet (raw.githubusercontent.com fonts + api.quran.com page data).
   S.mushafFont='qcf4';
   try{localStorage.setItem('mushafFont','qcf4');}catch(e){}
   // Clamps/defaults MUST match the mushaf-settings stepper (phone 23-25/24,
-  // iPad 24-34/28) â€” the old 25-32/30 here forced 30px on phones, wider than
+  // iPad 24-34/28) — the old 25-32/30 here forced 30px on phones, wider than
   // the page card, which is what caused clipped line edges before the
   // fit-to-width pass existed. _fitQCFLines() is the hard guarantee; this
   // just keeps the first paint close to the fitted size.
@@ -11492,9 +11492,9 @@ function applySyncData(data){
   S.mushafLineH=_ipadLS
     ?Math.min(2.4,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH_ipad'))||2.0))
     :Math.min(2.3,Math.max(1.8,parseFloat(localStorage.getItem('mushafLineH'))||1.8));
-  // One-time purge of pre-repair mushaf page caches (prefix qcfV4p_ â†’ qcfV4r_,
+  // One-time purge of pre-repair mushaf page caches (prefix qcfV4p_ → qcfV4r_,
   // 2026-06-12): old entries held misplaced boundary verses (soup/dup/holes)
-  // and could be 100KB+ each â€” drop them rather than orphan them.
+  // and could be 100KB+ each — drop them rather than orphan them.
   try{
     if(!localStorage.getItem('qcfV4purged')){
       var _pk=[];
@@ -11525,7 +11525,7 @@ function renderCurrentTab(){
   if(S.tab==='prayer'&&window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');}
 }
 
-// â”€â”€ Sync to cloud â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Sync to cloud ─────────────────────────────────────────────────────────────
 
 var _syncRetryDelay=2000;
 var _syncRetryTimer=null;
@@ -11535,7 +11535,7 @@ function syncToCloud(){
   var now=Date.now();
   if(now-S.lastSyncTime<5000)return;
   S.isSyncing=true;
-  _updateSyncPanelStatus(); // show "syncingâ€¦" immediately
+  _updateSyncPanelStatus(); // show "syncing…" immediately
   var payload=gatherSyncData();
   payload._syncTime=new Date().toISOString();
   var _syncTO=new Promise(function(_,rej){setTimeout(function(){rej(new Error('sync_timeout'));},_sn.ms(18000,30000));});
@@ -11575,7 +11575,7 @@ function _schedSyncRetry(){
   },_syncRetryDelay);
 }
 
-// â”€â”€ Load from cloud â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Load from cloud ───────────────────────────────────────────────────────────
 
 function loadFromCloud(cb){
   if(!S.supabase||!S.user){if(cb)cb();return}
@@ -11583,11 +11583,11 @@ function loadFromCloud(cb){
   .then(function(resp){
     if(resp.error){
       if(resp.error.code==='PGRST116'){
-        syncToCloud(); // first login â€” upload local data
+        syncToCloud(); // first login — upload local data
       }else{
         console.error('Load cloud error:',resp.error);
         S.syncErrorDetail=(resp.error.code||'')+' '+(resp.error.message||'');
-        // JWT/auth errors â€” try refreshing the token once before giving up
+        // JWT/auth errors — try refreshing the token once before giving up
         var isAuthErr=resp.error.status===401||resp.error.message&&resp.error.message.indexOf('JWT')!==-1;
         if(isAuthErr&&S.supabase){
           S.supabase.auth.refreshSession().then(function(r){
@@ -11619,7 +11619,7 @@ function loadFromCloud(cb){
   }).catch(function(e){console.error('Load cloud failed:',e);S.syncErrorDetail=String(e);S.syncFailed=true;_updateSyncPanelStatus();if(cb)cb();});
 }
 
-// â”€â”€ Realtime (instant cross-device push) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Realtime (instant cross-device push) ─────────────────────────────────────
 
 function subscribeRealtime(){
   if(!S.supabase||!S.user||S.realtimeChannel)return;
@@ -11652,7 +11652,7 @@ function unsubscribeRealtime(){
   }
 }
 
-// â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 /* Clear all user-specific local data (called when a different account logs in) */
 function _clearUserLocalData(){
@@ -11668,7 +11668,7 @@ function _clearUserLocalData(){
   for(var _ci=0;_ci<localStorage.length;_ci++){var _ck=localStorage.key(_ci);if(_ck&&_ck.indexOf('pdfProg_')===0)_clearBpKeys.push(_ck);}
   _clearBpKeys.forEach(function(k){localStorage.removeItem(k);});
   /* Cancel all old user's scheduled notifications */
-  scheduleStreakReminder();     // cancels streak ID 30 (streak=0 after log clear â†’ no reschedule)
+  scheduleStreakReminder();     // cancels streak ID 30 (streak=0 after log clear → no reschedule)
   /* Cancel old reminder/verse slots in case user upgrading from old build */
   (function(){ var LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications; if(LN) LN.cancel({notifications:[1,10,11,12,13,14,15,16,20,21,22,23,24,25,26,50].map(function(id){return{id:id};})}).catch(function(){}); })();
   localStorage.removeItem('dailyVerse');
@@ -11711,7 +11711,7 @@ function _freeLocalStorage(){
   toRemove.forEach(function(k){localStorage.removeItem(k);});
 }
 
-/* Safe localStorage.setItem â€” frees stale data on QuotaExceededError then retries. */
+/* Safe localStorage.setItem — frees stale data on QuotaExceededError then retries. */
 function lsSet(key,val){
   try{localStorage.setItem(key,val);}catch(e){
     if(e&&(e.name==='QuotaExceededError'||e.code===22)){
@@ -11776,7 +11776,7 @@ window.addEventListener('online',function(){
 
 window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
 
-// Persistent offline banner â€” small non-dismissible chip at top of screen.
+// Persistent offline banner — small non-dismissible chip at top of screen.
 // Created once, toggled with .on class, never shown on Capacitor (native UI handles it).
 (function(){
   var _b=null;
@@ -11785,7 +11785,7 @@ window.addEventListener('offline',function(){ _updateOfflineBanner(true); });
     _b.id='offlineBanner';
     _b.setAttribute('role','status');
     _b.setAttribute('aria-live','polite');
-    _b.textContent=t('toast.offline_cached','Ø¨Û•Ø¨ÛŽ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØª â€” Ù†Ø§ÙˆÛ•Ø±Û†Ú©ÛŒ Ú©Ø§Ø´ÛŽ');
+    _b.textContent=t('toast.offline_cached','بەبێ ئینتەرنێت — ناوەرۆکی کاشێ');
     document.body.appendChild(_b);
   }
   window._updateOfflineBanner=function(isOffline){
@@ -11850,19 +11850,19 @@ App.openLogin=function(){
     if(!msg)return t('error.generic');
     var m=msg.toLowerCase();
     if(m.indexOf('invalid login')!==-1||m.indexOf('invalid credentials')!==-1||m.indexOf('wrong password')!==-1)
-      return t('auth.err_wrong_credentials')||'Ø¦ÛŒÙ…Û•ÛŒÙ„ ÛŒØ§Ù† Ú˜Ù…Ø§Ø±Ø§ Ù†Ù‡ÛŽÙ†ÛŒ ÛŒØ§ Ø®Û•Ù„Û•ØªÛ•';
+      return t('auth.err_wrong_credentials')||'ئیمەیل یان ژمارا نهێنی یا خەلەتە';
     if(m.indexOf('email not confirmed')!==-1||m.indexOf('not confirmed')!==-1)
-      return t('auth.err_email_not_confirmed')||'Ø¦ÛŒÙ…Û•ÛŒÙ„Ø§ ØªÛ• Ù†Û•Ù‡Ø§ØªÛŒÛŒÛ• Ù¾Ø´ØªÚ•Ø§Ø³ØªÚ©Ø±Ù†ØŒ Ù‡ÛŒÚ¤ÛŒÛŒÛ• Ù¾Ø´Ú©Ù†ÛŒÙ†Ø§ Ø¦ÛŒÙ…Û•ÛŒÙ„ÛŽ Ø®Û† Ø¨Ú©Û•.';
+      return t('auth.err_email_not_confirmed')||'ئیمەیلا تە نەهاتییە پشتڕاستکرن، هیڤییە پشکنینا ئیمەیلێ خۆ بکە.';
     if(m.indexOf('too many requests')!==-1||m.indexOf('rate limit')!==-1||m.indexOf('over_email_send_rate_limit')!==-1)
-      return t('auth.err_rate_limit')||'Ù‡Û•ÙˆÚµØ¯Ø§Ù†ÛŽÙ† Ø²ÛŽØ¯Û• Ú†ÛŽØ¨ÙˆÙˆÙ†. Ù¾Ø´ØªÛŒ Ú†Û•Ù†Ø¯ Ø®Û†Ù„Û•Ú©Ø§Ù† Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµ Ø¨Ø¯Û•.';
+      return t('auth.err_rate_limit')||'هەوڵدانێن زێدە چێبوون. پشتی چەند خۆلەکان دووبارە هەوڵ بدە.';
     if(m.indexOf('user already registered')!==-1||m.indexOf('already been registered')!==-1||m.indexOf('already exists')!==-1)
-      return t('auth.err_already_registered')||'Ø¦Û•Ú¤ Ø¦ÛŒÙ…Û•ÛŒÙ„Û• Ù¾ÛŽØ´ØªØ± Ù‡Ø§ØªÛŒÛŒÛ• ØªÛ†Ù…Ø§Ø±Ú©Ø±Ù†. Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ± Ø¨Û† Ù†Ø§Ú¤ Ø¦Û•Ú©Ø§ÙˆÙ†ØªÛŽ Ø®Û† Ø¨Ú©Û•.';
+      return t('auth.err_already_registered')||'ئەڤ ئیمەیلە پێشتر هاتییە تۆمارکرن. چوونەژوور بۆ ناڤ ئەکاونتێ خۆ بکە.';
     if(m.indexOf('network')!==-1||m.indexOf('fetch')!==-1)
-      return t('auth.err_network')||'Ø¦Ø§Ø±ÛŒØ´Û•Ú© Ø¯ ØªÛ†Ú•ÛŽ Ø¯Ø§ Ú†ÛŽØ¨ÙˆÙˆ. Ù¾Ø´Ú©Ù†ÛŒÙ†ÛŽ Ø¨Û† Ù‡ÛŽÙ„Ø§ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªØ§ Ø®Û† Ø¨Ú©Û•';
+      return t('auth.err_network')||'ئاریشەک د تۆڕێ دا چێبوو. پشکنینێ بۆ هێلا ئینتەرنێتا خۆ بکە';
     if(m.indexOf('token')!==-1&&m.indexOf('expired')!==-1)
-      return t('auth.err_token_expired')||'Ø¯Û•Ù…ÛŽ Ú©Û†Ø¯ÛŒ Ø¨ Ø¯ÙˆÙ…Ø§Ù‡ÛŒ Ù‡Ø§Øª. Ø¯Ø§Ø®ÙˆØ§Ø²Ø§ Ú©Û†Ø¯Û•Ú©ÛŽ Ù†ÙˆÛŒ Ø¨Ú©Û•';
+      return t('auth.err_token_expired')||'دەمێ کۆدی ب دوماهی هات. داخوازا کۆدەکێ نوی بکە';
     if(m.indexOf('token')!==-1&&(m.indexOf('invalid')!==-1||m.indexOf('wrong')!==-1))
-      return t('auth.err_token_invalid')||'Koda te ÅŸaÅŸ e. Kontrol bike Ã» dÃ»barÃ© biceribÃ®ne.';
+      return t('auth.err_token_invalid')||'Koda te şaş e. Kontrol bike û dûbaré biceribîne.';
     return t('error.generic');
   }
 
@@ -11884,7 +11884,7 @@ App.openLogin=function(){
     passGrp.appendChild(passInput);
     f.appendChild(passGrp);
 
-    // Enter on email â†’ focus password; Enter on password â†’ submit
+    // Enter on email → focus password; Enter on password → submit
     on(emailInput,'keydown',function(e){if(e.key==='Enter'){e.preventDefault();passInput.focus();}});
 
     function doSignin(){
@@ -11992,13 +11992,13 @@ App.openLogin=function(){
           submitBtn.disabled=false;submitBtn.textContent=t('auth.signup');
           return;
         }
-        // Email already registered â€” Supabase returns success with empty identities array
+        // Email already registered — Supabase returns success with empty identities array
         if(resp.data&&resp.data.user&&resp.data.user.identities&&resp.data.user.identities.length===0){
           showMsg(_mapAuthError('User already registered'),'error');
           submitBtn.disabled=false;submitBtn.textContent=t('auth.signup');
           return;
         }
-        // Email confirmation disabled in Supabase â€” session returned immediately
+        // Email confirmation disabled in Supabase — session returned immediately
         if(resp.data&&resp.data.session){
           createAppProfile(resp.data.session);
           return;
@@ -12083,16 +12083,16 @@ App.openLogin=function(){
     on(submitBtn,'click',doVerify);
     f.appendChild(submitBtn);
 
-    var resendBtn=el('button','auth-guest-btn',t('auth.resend_code')||'Ú©ÙˆØ¯ÛŒ Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ø¨ Ù‡Ù†ÛŽØ±Û•');
+    var resendBtn=el('button','auth-guest-btn',t('auth.resend_code')||'کودی دووبارە ب هنێرە');
     on(resendBtn,'click',function(){
       resendBtn.disabled=true;resendBtn.textContent='...';
       S.supabase.auth.resend({type:'signup',email:email}).then(function(){
-        showMsg(t('auth.code_resent')||'Koda nÃ» hat ÅŸandin.','info');
-        setTimeout(function(){resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'Ú©ÙˆØ¯ÛŒ Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ø¨ Ù‡Ù†ÛŽØ±Û•';},30000);
+        showMsg(t('auth.code_resent')||'Koda nû hat şandin.','info');
+        setTimeout(function(){resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'کودی دووبارە ب هنێرە';},30000);
       }).catch(function(e){
         console.warn('[Auth] resend error:',e);
         showMsg(_mapAuthError(e.message),'error');
-        resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'Ú©ÙˆØ¯ÛŒ Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ø¨ Ù‡Ù†ÛŽØ±Û•';
+        resendBtn.disabled=false;resendBtn.textContent=t('auth.resend_code')||'کودی دووبارە ب هنێرە';
       });
     });
     f.appendChild(resendBtn);
@@ -12104,7 +12104,7 @@ App.openLogin=function(){
 
   function loginSuccess(session){
     setUserFromSession(session);
-    // startCloudSync() is triggered by onAuthStateChange(SIGNED_IN) â€” don't call twice
+    // startCloudSync() is triggered by onAuthStateChange(SIGNED_IN) — don't call twice
     App.closeLogin();
     App.tab('settings');
     renderSettings();
@@ -12153,7 +12153,7 @@ App.openLogin=function(){
     if(btn){btn.disabled=true;btn.style.opacity='0.6';}
 
     var _isNative=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
-    // Use 'tafsirkurd://' â€” this scheme IS registered in Info.plist CFBundleURLSchemes.
+    // Use 'tafsirkurd://' — this scheme IS registered in Info.plist CFBundleURLSchemes.
     // 'com.tafsirkurd.app://' was NOT registered, so SFSafariViewController couldn't
     // intercept it and Safari showed "address is invalid".
     var redirectUrl=_isNative?'https://tafsirkurd.com/auth/callback':(window.location.origin+'/app/index.html');
@@ -12164,7 +12164,7 @@ App.openLogin=function(){
         redirectTo:redirectUrl,
         queryParams:{access_type:'offline',prompt:'consent'},
         // On native: skip auto-redirect so we can open the URL in the Capacitor browser.
-        // On web: let Supabase handle the redirect directly â€” no manual navigation needed.
+        // On web: let Supabase handle the redirect directly — no manual navigation needed.
         skipBrowserRedirect:_isNative
       }
     }).then(function(resp){
@@ -12175,7 +12175,7 @@ App.openLogin=function(){
         if(btn){btn.disabled=false;btn.style.opacity='';}
         return;
       }
-      // On native, Supabase returned the URL without redirecting â€” open it in the native browser
+      // On native, Supabase returned the URL without redirecting — open it in the native browser
       if(_isNative&&resp.data&&resp.data.url){
         if(window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
           window.Capacitor.Plugins.Browser.open({url:resp.data.url});
@@ -12183,7 +12183,7 @@ App.openLogin=function(){
           window.location.href=resp.data.url;
         }
       }
-      // On web, Supabase already redirected the page â€” nothing to do here
+      // On web, Supabase already redirected the page — nothing to do here
       // Restore button after 3s so user can retry if something went wrong
       setTimeout(function(){
         _googleBusy=false;
@@ -12218,13 +12218,13 @@ App.openLogin=function(){
     // Set loading state on Apple button
     var appleBtn=document.querySelector('.auth-apple-btn');
     if(appleBtn){appleBtn.disabled=true;appleBtn.style.opacity='0.6';}
-    console.log('[Apple] authorize() â€” starting');
+    console.log('[Apple] authorize() — starting');
     var rawNonce=_genNonce(32);
     _sha256hex(rawNonce).then(function(hashedNonce){
       console.log('[Apple] nonce ready, calling plugin.authorize()');
       return plugin.authorize({nonce:hashedNonce});
     }).then(function(res){
-      console.log('[Apple] native result â€” user:',res&&res.user,'token present:',(res&&!!res.identityToken),'email:',res&&res.email,'givenName:',res&&res.givenName);
+      console.log('[Apple] native result — user:',res&&res.user,'token present:',(res&&!!res.identityToken),'email:',res&&res.email,'givenName:',res&&res.givenName);
       var token=res&&res.identityToken;
       if(!token){
         console.warn('[Apple] no identityToken in result');
@@ -12241,7 +12241,7 @@ App.openLogin=function(){
         return;
       }
       var session=resp.data&&resp.data.session;
-      console.log('[Apple] Supabase session OK â€” user:',session&&session.user&&session.user.email);
+      console.log('[Apple] Supabase session OK — user:',session&&session.user&&session.user.email);
       if(session){
         // checkProfileComplete handles profile creation + startCloudSync + loginSuccess
         checkProfileComplete(session);
@@ -12249,15 +12249,15 @@ App.openLogin=function(){
     }).catch(function(e){
       var code=e&&e.data&&e.data.errorCode;
       var msg=e&&(e.message||e.errorMessage||'');
-      console.log('[Apple] error â€” code:',code,'msg:',msg);
-      // 1001 = user cancelled â€” always silent
+      console.log('[Apple] error — code:',code,'msg:',msg);
+      // 1001 = user cancelled — always silent
       if(code===1001||msg.indexOf('1001')!==-1||msg.toLowerCase().indexOf('cancel')!==-1)return;
-      // 1000 = presentation/context error â€” show friendly retry message
+      // 1000 = presentation/context error — show friendly retry message
       if(code===1000||msg.indexOf('1000')!==-1){
         showMsg(t('error.apple_try_again')||'Could not open Sign in with Apple. Please try again.','error');
         return;
       }
-      // Any other error â€” friendly message, not raw system string
+      // Any other error — friendly message, not raw system string
       showMsg(t('error.apple_failed')||'Apple sign-in failed. Please try again.','error');
     }).finally(function(){
       _appleBusy=false;
@@ -12290,10 +12290,10 @@ App.closeLogin=function(){
 App.logout=function(){
   if(!S.supabase)return;
   _tkConfirm({
-    icon:'ðŸ‘‹',
-    title:t('profile.confirm_logout')||'Ø¯Û•Ø±Ú†ÙˆÙˆÙ† Ù„Û• Ø¦Û•Ù¾ÛŽØŸ',
-    yes:t('profile.logout')||'Ø¯Û•Ø±Ú†ÙˆÙˆÙ†',
-    no:t('profile.confirm_no')||'Ù†Û•Ø®ÛŽØ±',
+    icon:'👋',
+    title:t('profile.confirm_logout')||'دەرچوون لە ئەپێ؟',
+    yes:t('profile.logout')||'دەرچوون',
+    no:t('profile.confirm_no')||'نەخێر',
     onYes:function(){
       _removeCurrentDeviceSession();
       S.supabase.auth.signOut().then(function(){
@@ -12310,16 +12310,16 @@ App.logout=function(){
 App.deleteAccount=function(){
   if(!S.supabase||!S.user)return;
   _tkConfirm({
-    icon:'âš ï¸',
-    title:t('profile.confirm_delete1')||'ØªÙˆ Ù¾Ø´ØªÚ•Ø§Ø³ØªÛŒ Ú˜ Ú˜ÛŽØ¨Ø±Ù†Ø§ Ú¾Û•Ú˜Ù…Ø§Ø±ÛŽØŸ',
-    yes:t('profile.confirm_delete1_yes')||'Ø¨Û•Ù„ÛŽØŒ Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù… Ø¨Û•',
-    no:t('profile.confirm_no')||'Ù†Û•Ø®ÛŽØ±',
+    icon:'⚠️',
+    title:t('profile.confirm_delete1')||'تو پشتڕاستی ژ ژێبرنا ھەژمارێ؟',
+    yes:t('profile.confirm_delete1_yes')||'بەلێ، بەردەوام بە',
+    no:t('profile.confirm_no')||'نەخێر',
     onYes:function(){
       _tkConfirm({
-        icon:'ðŸ—‘ï¸',
-        title:(t('profile.confirm_delete2')||'Ø¯ÙˆØ§ÛŒ Ø³Ú•ÛŒÙ†Û•ÙˆÛ• Ù†Ø§ØªÙˆØ§Ù†ÛŒ Ø¨Ú¯Û•Ú•ÛŽÛŒØªÛ•ÙˆÛ•')+'\n'+(t('profile.confirm_delete1_sub')||'Ø²Ú¤Ú•ÛŒÙ† Ø¨Û† Ú¤ÛŒ Ú©Ø§Ø±ÛŒ Ù†ÛŒÙ†Û•!'),
-        yes:t('profile.confirm_delete_yes')||'Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ø¦Û•Ú©Ø§ÙˆÙ†Øª',
-        no:t('profile.confirm_no')||'Ù†Û•Ø®ÛŽØ±',
+        icon:'🗑️',
+        title:(t('profile.confirm_delete2')||'دوای سڕینەوە ناتوانی بگەڕێیتەوە')+'\n'+(t('profile.confirm_delete1_sub')||'زڤڕین بۆ ڤی کاری نینە!'),
+        yes:t('profile.confirm_delete_yes')||'سڕینەوەی ئەکاونت',
+        no:t('profile.confirm_no')||'نەخێر',
         cinematic:true,
         onYes:function(){
           toast(t('profile.deleting')||'...');
@@ -12377,7 +12377,7 @@ function renderProfile(panel){
   function cfm(el){el.className='pp-field-msg';el.textContent='';}
   var totalRead=calcTotalRead(log);var streak=calcStreak(log);
 
-  // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Header ────────────────────────────────────
   var hdr=el('div','pp-hdr');
   var backBtn=el('button','hdr-btn');
   backBtn.appendChild(icon('fas fa-arrow-right'));
@@ -12388,14 +12388,14 @@ function renderProfile(panel){
 
   var body=el('div','pp-body');
 
-  // â”€â”€ Hero section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Hero section ──────────────────────────────
   var hero=el('div','pp-hero');
   var avatar=el('div','pp-avatar');
   if(S.user.avatar){
     var img=document.createElement('img');
     img.alt='';img.referrerPolicy='no-referrer';img.crossOrigin='anonymous';
     img.onerror=function(){
-      // Auth avatar failed â€” degrade gracefully to initials
+      // Auth avatar failed — degrade gracefully to initials
       this.style.display='none';
       avatar.textContent=(S.user.name||'?').charAt(0).toUpperCase();
     };
@@ -12421,7 +12421,7 @@ function renderProfile(panel){
   function showPPMsg(text,type){msg.textContent=text;msg.className='pp-msg '+type;msg.scrollIntoView({block:'nearest'})}
   function clearPPMsg(){msg.className='pp-msg';msg.textContent=''}
 
-  // â”€â”€ Info card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Info card ─────────────────────────────────
   var infoSec=el('div','pp-section');
   infoSec.appendChild(el('div','pp-section-title',t('profile.info')));
   var infoCard=el('div','pp-card');
@@ -12429,29 +12429,29 @@ function renderProfile(panel){
   provRow.appendChild(el('div','pp-row-label',t('profile.login_method')));
   provRow.appendChild(el('div','pp-row-value',providerLabel));
   infoCard.appendChild(provRow);
-  // Member since + last sign-in â€” use cached session (no network call)
+  // Member since + last sign-in — use cached session (no network call)
   if(S.supabase){
     var sinceRow=el('div','pp-row');
     sinceRow.appendChild(el('div','pp-row-label',t('profile.member_since')));
-    var sinceVal=el('div','pp-row-value','â€¦');
+    var sinceVal=el('div','pp-row-value','…');
     sinceRow.appendChild(sinceVal);
     infoCard.appendChild(sinceRow);
     var lastRow=el('div','pp-row');
-    lastRow.appendChild(el('div','pp-row-label',t('profile.last_signin')||'Ø¯ÙˆÙ…Ø§Ù‡ÛŒÚ© Ú¤Û•Ú©Ø±Ù†'));
-    var lastVal=el('div','pp-row-value','â€¦');
+    lastRow.appendChild(el('div','pp-row-label',t('profile.last_signin')||'دوماهیک ڤەکرن'));
+    var lastVal=el('div','pp-row-value','…');
     lastRow.appendChild(lastVal);
     infoCard.appendChild(lastRow);
     S.supabase.auth.getSession().then(function(resp){
       var u=resp.data&&resp.data.session&&resp.data.session.user;
       function _fmt(iso){var d=new Date(iso);return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');}
       if(u&&u.created_at){sinceVal.textContent=_fmt(u.created_at);}else{sinceRow.remove();}
-      if(u&&u.last_sign_in_at){lastVal.textContent=_fmt(u.last_sign_in_at)+' Â· '+_timeAgo(new Date(u.last_sign_in_at));}else{lastRow.remove();}
+      if(u&&u.last_sign_in_at){lastVal.textContent=_fmt(u.last_sign_in_at)+' · '+_timeAgo(new Date(u.last_sign_in_at));}else{lastRow.remove();}
     });
   }
   infoSec.appendChild(infoCard);
   body.appendChild(infoSec);
 
-  // â”€â”€ Edit name â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Edit name ─────────────────────────────────
   var nameSec=el('div','pp-section');
   nameSec.appendChild(el('div','pp-section-title',t('profile.change_name')));
   var nameGroup=el('div','pp-edit-group');
@@ -12477,7 +12477,7 @@ function renderProfile(panel){
   nameSec.appendChild(nameGroup);
   body.appendChild(nameSec);
 
-  // â”€â”€ Edit email (email-auth users only) â”€â”€â”€â”€â”€â”€â”€
+  // ── Edit email (email-auth users only) ───────
   if(!isOAuth){
     var emailSec=el('div','pp-section');
     emailSec.appendChild(el('div','pp-section-title',t('profile.change_email')));
@@ -12503,7 +12503,7 @@ function renderProfile(panel){
     body.appendChild(emailSec);
   }
 
-  // â”€â”€ Change password (email users only) â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Change password (email users only) ────────
   if(!isOAuth){
     var passSec=el('div','pp-section');
     passSec.appendChild(el('div','pp-section-title',t('profile.change_pass')));
@@ -12532,13 +12532,13 @@ function renderProfile(panel){
     body.appendChild(passSec);
   }
 
-  // â”€â”€ Your Devices â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Your Devices ──────────────────────────────
   var devSec=el('div','pp-section');
   // Title row with refresh button
   var devTitleRow=el('div','pp-section-title-row');
   devTitleRow.appendChild(el('span',null,t('profile.devices_title')));
   var devRefreshBtn=el('button','pp-devices-refresh');
-  devRefreshBtn.title=t('profile.devices_refresh')||'Ù†ÙˆÛŽÚ©Ø±Ø¯Ù†Û•ÙˆÛ•';
+  devRefreshBtn.title=t('profile.devices_refresh')||'نوێکردنەوە';
   devRefreshBtn.appendChild(icon('fas fa-rotate-right'));
   devTitleRow.appendChild(devRefreshBtn);
   devSec.appendChild(devTitleRow);
@@ -12550,7 +12550,7 @@ function renderProfile(panel){
   // Note: devices only appear after they open this version of the app
   var devNote=el('div','pp-devices-note');
   devNote.appendChild(icon('fas fa-circle-info'));
-  devNote.appendChild(document.createTextNode(' '+(t('profile.devices_note')||'Ø¦Ø§Ù…ÛŽØ±Û•Ú©Ø§Ù† Ø¯Û•Ú©Û•ÙˆÙ†Û• Ù„ÛŒØ³ØªÛ•Ú©Û• Ú©Ø§ØªÛŽÚ© Ù†ÙˆÛŽØªØ±ÛŒÙ† ÙˆÛ•Ø´Ø§Ù†ÛŒ Ø¦Û•Ù¾ Ú©Ø±Ø¯Ù†Û•ÙˆÛ•')));
+  devNote.appendChild(document.createTextNode(' '+(t('profile.devices_note')||'ئامێرەکان دەکەونە لیستەکە کاتێک نوێترین وەشانی ئەپ کردنەوە')));
   devSec.appendChild(devNote);
   body.appendChild(devSec);
 
@@ -12610,23 +12610,23 @@ function renderProfile(panel){
           var dInfo=el('div','pp-device-info');
           var dName=el('div','pp-device-name',sess.device_label||sess.platform||'Web');
           if(isThis){dName.appendChild(el('span','pp-device-badge',t('profile.this_device')));}
-          else if(isOnline){dName.appendChild(el('span','pp-device-badge pp-device-badge--online',t('profile.device_online')||'Ú†Ø§Ù„Ø§Ú©'));}
+          else if(isOnline){dName.appendChild(el('span','pp-device-badge pp-device-badge--online',t('profile.device_online')||'چالاک'));}
           dInfo.appendChild(dName);
           // Time row: relative + absolute date for older entries
           var timeEl=el('div','pp-device-time');
           if(isThis){
-            timeEl.textContent=t('profile.time_now')||'Ø¦ÛŽØ³ØªØ§';
+            timeEl.textContent=t('profile.time_now')||'ئێستا';
           }else if(isOnline){
             var dot=el('span','pp-device-online-dot');
             timeEl.appendChild(dot);
-            timeEl.appendChild(document.createTextNode(t('profile.device_active_now')||'Ø¦ÛŽØ³ØªØ§ Ú†Ø§Ù„Ø§Ú©Û•'));
+            timeEl.appendChild(document.createTextNode(t('profile.device_active_now')||'ئێستا چالاکە'));
           }else{
             var rel=_timeAgo(lastActive);
             var abs=lastActive.toLocaleDateString()+' '+lastActive.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
             if(isStale){
-              timeEl.textContent=rel+' â€” '+(t('profile.device_stale')||'(inactive)');
+              timeEl.textContent=rel+' — '+(t('profile.device_stale')||'(inactive)');
             }else{
-              timeEl.textContent=rel+' Â· '+abs;
+              timeEl.textContent=rel+' · '+abs;
             }
           }
           dInfo.appendChild(timeEl);
@@ -12634,7 +12634,7 @@ function renderProfile(panel){
           row.appendChild(dLeft);
           if(!isThis){
             var rmBtn=el('button','pp-device-remove');
-            rmBtn.title=t('profile.device_remove')||'Ø¯Û•Ø±Ú©Ø±Ø¯Ù†';
+            rmBtn.title=t('profile.device_remove')||'دەرکردن';
             rmBtn.appendChild(icon('fas fa-right-from-bracket'));
             (function(sid,rowEl,btn){
               var confirmed=false,timer=null;
@@ -12709,7 +12709,7 @@ function renderProfile(panel){
   on(devRefreshBtn,'click',_loadDevices);
   _loadDevices();
 
-  // â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Actions ───────────────────────────────────
   var actSec=el('div','pp-section');
   actSec.appendChild(el('div','pp-section-title',t('profile.actions')));
   var actWrap=el('div','pp-actions');
@@ -12729,7 +12729,7 @@ function renderProfile(panel){
   // Separator before destructive action
   actWrap.appendChild(el('div','pp-actions-sep'));
 
-  // â”€â”€ Delete account â€” two-step popup confirm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Delete account — two-step popup confirm ──────────────
   var deleteWrap=el('div','pp-delete-wrap');
 
   var deleteBtn=el('button','pp-action-btn pp-delete');
@@ -12746,7 +12746,7 @@ function renderProfile(panel){
 }
 
 /* ===== PULL TO REFRESH ===== */
-// Shared spinner DOM element â€” only one can be on screen at a time.
+// Shared spinner DOM element — only one can be on screen at a time.
 var ptrSpinner;
 var _ptrArc=null;
 var _ptrGlobalRefreshing=false;
@@ -12766,8 +12766,8 @@ function ensurePtrSpinner(){
   document.body.appendChild(ptrSpinner);
 }
 
-// â”€â”€ Horizontal container detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Runs only on touchstart â€” not in the move hot-path.
+// ── Horizontal container detection ───────────────────────────────────────────
+// Runs only on touchstart — not in the move hot-path.
 // perf-critical mode: skip getComputedStyle, class-name only.
 function _ptrInHorizScroll(node){
   var skipCS=document.documentElement.classList.contains('perf-critical');
@@ -12781,7 +12781,7 @@ function _ptrInHorizScroll(node){
        cn.indexOf('perf-chips-row')>=0||cn.indexOf('theme-grid')>=0||
        // book-feat: featured-books carousel swipes horizontally but uses
        // overflow:hidden + transform, so the computed-style fallback below
-       // never catches it â€” without this, a swipe on a featured card also
+       // never catches it — without this, a swipe on a featured card also
        // dragged the whole tab (tab-swipe) = the visible "flash"/glitch.
        cn.indexOf('book-feat')>=0||
        cn.indexOf('sync-chips')>=0)return true;
@@ -12796,7 +12796,7 @@ function _ptrInHorizScroll(node){
   return false;
 }
 
-// â”€â”€ Active overlay / sheet detection â€” touchstart only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Active overlay / sheet detection — touchstart only ───────────────────────
 function _ptrAnyOverlayOpen(){
   if(document.querySelector('.fu-overlay.on'))return true;
   if(document.querySelector('.dl-overlay.on'))return true;
@@ -12810,30 +12810,30 @@ function _ptrAnyOverlayOpen(){
   return false;
 }
 
-// Platform detected once â€” Android WebView needs separate PTR tuning.
+// Platform detected once — Android WebView needs separate PTR tuning.
 var _ptrIsAndroid=(function(){
   try{return window.Capacitor&&Capacitor.getPlatform&&Capacitor.getPlatform()==='android';}
   catch(e){return /android/i.test(navigator.userAgent);}
 })();
 
-// â”€â”€ setupPullToRefresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── setupPullToRefresh ────────────────────────────────────────────────────────
 // Design goals:
-//   touchstart  â€” validate gates, cache everything, zero work in move path
-//   touchmove   â€” calculate delta only, schedule rAF; no DOM reads, no layout
-//   rAF         â€” apply transform + opacity only; single pending rAF at a time
-//   touchend    â€” commit or snap; refresh runs async after animation settles
+//   touchstart  — validate gates, cache everything, zero work in move path
+//   touchmove   — calculate delta only, schedule rAF; no DOM reads, no layout
+//   rAF         — apply transform + opacity only; single pending rAF at a time
+//   touchend    — commit or snap; refresh runs async after animation settles
 function setupPullToRefresh(panelId,refreshFn,checkFn){
   var panel=$(panelId);
   if(!panel)return;
   ensurePtrSpinner();
 
-  // â”€â”€ Tuning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Tuning ─────────────────────────────────────────────────────────────────
   // iOS keeps the original values. Android uses tighter constants:
   //   Lower DEAD_ZONE arms PTR before Chrome's ~6px compositor scroll threshold.
   //   Lower RESISTANCE gives a heavier feel that matches Android conventions.
   //   Higher THRESHOLD offsets the earlier arm to avoid accidental triggers.
   //   Wider DIR_CHECK_PX requires a more decisive horizontal gesture to cancel.
-  var DEAD_ZONE    = _ptrIsAndroid ? 4   : 8;    // px raw â€” jitter filter only
+  var DEAD_ZONE    = _ptrIsAndroid ? 4   : 8;    // px raw — jitter filter only
   var THRESHOLD    = _ptrIsAndroid ? 88  : 80;   // px visual to arm trigger
   var MAX_PULL     = 108;                         // px visual ceiling
   var RESISTANCE   = _ptrIsAndroid ? 0.38: 0.45; // panel visual / raw finger travel
@@ -12844,26 +12844,26 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   var SCROLL_SETTLE_MS = 350;                     // ms after last scroll before PTR can arm
   var TOP_EPSILON  = _ptrIsAndroid ? 3 : 1;       // px: max scrollTop still considered "at top"
 
-  // â”€â”€ Per-panel state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Per-panel state ─────────────────────────────────────────────────────────
   var startY=0,startX=0;
   var armed=false,pulling=false,refreshing=false,_snapDone=false;
   var _ticked=false,_dirDecided=false;
   var _momentumLock=false,_momentumTimer=null;
   var _lastRefreshTime=0;
   // _spinnerY: fixed viewport Y for spinner, captured once on touchstart.
-  // Constant during the gesture â€” no recalculation per frame.
+  // Constant during the gesture — no recalculation per frame.
   var _spinnerY=-60;
-  // _panelScrolled: updated by scroll listener â€” avoids scrollTop DOM read in touchmove.
+  // _panelScrolled: updated by scroll listener — avoids scrollTop DOM read in touchmove.
   var _panelScrolled=false;
   var _lastScrollTime=0;    // timestamp of last scroll event inside this panel subtree
   var _activeScroller=null; // actual scroll container detected on touchstart
   var _latestDy=0,_rafPending=false;
   var _vBuf=[],_VN=5;
 
-  // â”€â”€ Debug metrics (gated: window._ptrDebugMode = true to enable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Debug metrics (gated: window._ptrDebugMode = true to enable) ────────────
   var _dbg={moves:0,rafs:0,prevs:0,t0:0,dtSum:0,dtN:0,lastT:0};
 
-  // â”€â”€ Scroll tracker â€” catches scroll on panel AND nested containers â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Scroll tracker — catches scroll on panel AND nested containers ────────
   // scroll events do NOT bubble, so panel.addEventListener('scroll') misses nested
   // scrollers like #settingsContent and #gencineContent which are the real scrollers
   // for those tabs. document capture fires for ALL scroll targets in the subtree.
@@ -12875,7 +12875,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     _panelScrolled=st>(_ptrIsAndroid?6:2);
   },{passive:true,capture:true});
 
-  // â”€â”€ Rubber band â€” resistance from pixel zero, steeper above threshold â”€â”€â”€â”€â”€â”€â”€
+  // ── Rubber band — resistance from pixel zero, steeper above threshold ───────
   // Below threshold: linear at RESISTANCE factor (light, native feel)
   // Above threshold: extra resistance so pull "stalls" near MAX_PULL
   function _rubberBand(raw){
@@ -12918,7 +12918,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(ptrSpinner)ptrSpinner.style.willChange='';
   }
 
-  // Hard reset â€” visibilitychange / tab-switch / interrupted gesture
+  // Hard reset — visibilitychange / tab-switch / interrupted gesture
   function _forceReset(){
     if(ptrSpinner){
       ptrSpinner.style.transition='none';
@@ -12935,7 +12935,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   }
   _ptrResets.push(_forceReset);
 
-  // Smooth cancel â€” two-phase: remove ptr-pulling this frame, add transition in next rAF
+  // Smooth cancel — two-phase: remove ptr-pulling this frame, add transition in next rAF
   // so the browser captures the current translateY as the animation "from" value.
   function _cancelPull(){
     _rafPending=false;
@@ -12959,7 +12959,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     armed=false;_ticked=false;_dirDecided=false;
   }
 
-  // â”€â”€ rAF visual update â€” ALL style writes live here â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── rAF visual update — ALL style writes live here ─────────────────────────
   // Called at most once per display frame. No DOM reads. Only transform + opacity.
   function _updateVisuals(){
     _rafPending=false;
@@ -12969,24 +12969,24 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(pullRaw<0)return;
     var pull=_rubberBand(pullRaw);
     panel.style.transform='translateY('+pull+'px)';
-    // Spinner: fixed position captured on touchstart â€” no recalculation per frame.
+    // Spinner: fixed position captured on touchstart — no recalculation per frame.
     // Opacity and scale grow independently for a smooth emerge effect.
     ptrSpinner.style.opacity=String(Math.min(pullRaw/50,1));
     ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale('+Math.min(pullRaw/55,1)+')';
-    // Arc rotates up to 360Â° at threshold â€” one full turn signals "ready to release"
+    // Arc rotates up to 360° at threshold — one full turn signals "ready to release"
     if(_ptrArc)_ptrArc.style.transform='rotate('+Math.min(pullRaw*2.0,360)+'deg)';
     if(!_ticked&&pull>=THRESHOLD){_ticked=true;H.selection();}
   }
 
-  // â”€â”€ touchstart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── touchstart ────────────────────────────────────────────────────────────
   // All expensive work (DOM queries, getBoundingClientRect) happens here only.
   // Nothing computed here is repeated in touchmove.
   on(panel,'touchstart',function(e){
     _vBuf=[];
-    // Second finger added while PTR is active â€” force-reset so panel snaps back immediately (no rAF delay).
+    // Second finger added while PTR is active — force-reset so panel snaps back immediately (no rAF delay).
     if(e.touches.length>1){if(armed||pulling){_forceReset();}return;}
     if(refreshing||_momentumLock||_ptrGlobalRefreshing)return;
-    if(window._sbLocked)return; // swipe-back gesture active â€” do not compete
+    if(window._sbLocked)return; // swipe-back gesture active — do not compete
     if(checkFn&&!checkFn())return;
     if(document.body.classList.contains('tk-tab-switching'))return;
     var ae=document.activeElement;
@@ -12995,29 +12995,29 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(_ptrAnyOverlayOpen())return;
     if(e.target&&_ptrInHorizScroll(e.target))return;
     if(Date.now()-_lastRefreshTime<COOLDOWN_MS)return;
-    // Identify the actual scroll container for this gesture â€” may be a nested element
+    // Identify the actual scroll container for this gesture — may be a nested element
     // (#settingsContent, #gencineContent) rather than the outer panel itself.
     // _findScrollContainer walks from touch target upward: first ancestor with scrollTop>0
     // is the real scroller; falls back to panel when already at the true top.
     _activeScroller=_findScrollContainer(e.target||panel);
-    if(_activeScroller.scrollTop>TOP_EPSILON)return; // mid-page â€” never arm PTR
+    if(_activeScroller.scrollTop>TOP_EPSILON)return; // mid-page — never arm PTR
     if(Date.now()-_lastScrollTime<SCROLL_SETTLE_MS)return; // momentum may still be settling
 
     startY=e.touches[0].clientY;
     startX=e.touches[0].clientX;
     _panelScrolled=false; // document capture listener flips this if any nested scroller moves
     // Spinner Y: fixed position just inside the gap that opens above the panel.
-    // Captured once â€” no per-frame getBoundingClientRect.
+    // Captured once — no per-frame getBoundingClientRect.
     _spinnerY=Math.max((panel.getBoundingClientRect().top||0)+18,46);
     armed=true;_dirDecided=false;pulling=false;_snapDone=false;
     if(window._ptrDebugMode){_dbg.moves=0;_dbg.rafs=0;_dbg.prevs=0;_dbg.t0=Date.now();_dbg.dtSum=0;_dbg.dtN=0;_dbg.lastT=Date.now();}
   },{passive:true});
 
-  // â”€â”€ touchmove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Hot path â€” must do almost no work:
+  // ── touchmove ─────────────────────────────────────────────────────────────
+  // Hot path — must do almost no work:
   //   1. push velocity sample
   //   2. compute dy/dx (arithmetic only)
-  //   3. direction lock once â€” no sqrt, Manhattan distance
+  //   3. direction lock once — no sqrt, Manhattan distance
   //   4. store dy, schedule one rAF
   // NO DOM reads (scrollTop replaced by _panelScrolled cache).
   // NO class or style writes (deferred to rAF and the pulling-start block).
@@ -13038,11 +13038,11 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     var dx=e.touches[0].clientX-startX;
 
     if(dy<=0){_cancelPull();return;}
-    // Use cached flag â€” avoids forced synchronous layout from scrollTop read
+    // Use cached flag — avoids forced synchronous layout from scrollTop read
     if(_panelScrolled){_cancelPull();return;}
 
     // Direction lock: Manhattan distance, no sqrt.
-    // Cancel if |dx| > 55% of dy â€” gesture has significant horizontal component.
+    // Cancel if |dx| > 55% of dy — gesture has significant horizontal component.
     if(!_dirDecided){
       var absDx=dx<0?-dx:dx;
       if(absDx+dy>=DIR_CHECK_PX){
@@ -13063,7 +13063,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(dy<DEAD_ZONE)return;
 
     // First frame past dead zone: promote layers, arm visuals, subtle haptic.
-    // Only class + willChange writes here â€” actual style deferred to rAF.
+    // Only class + willChange writes here — actual style deferred to rAF.
     if(!pulling){
       pulling=true;
       panel.style.willChange='transform';
@@ -13075,7 +13075,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       haptic([4]);
     }
 
-    // preventDefault must be synchronous â€” cannot defer to rAF
+    // preventDefault must be synchronous — cannot defer to rAF
     if(e.cancelable){
       e.preventDefault();
       if(window._ptrDebugMode)_dbg.prevs++;
@@ -13085,7 +13085,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     if(!_rafPending){_rafPending=true;requestAnimationFrame(_updateVisuals);}
   },{passive:false});
 
-  // â”€â”€ touchend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── touchend ──────────────────────────────────────────────────────────────
   function _doTouchEnd(){
     _setMomentumLock();
     _ticked=false;_dirDecided=false;_rafPending=false;
@@ -13108,7 +13108,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     }
 
     if(currentY>=THRESHOLD*0.75){
-      // â”€â”€ TRIGGERED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── TRIGGERED ─────────────────────────────────────────────────────────
       refreshing=true;
       _ptrGlobalRefreshing=true;
       var _prevRefreshTime=_lastRefreshTime;
@@ -13116,7 +13116,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
 
       // Settle panel and spinner into held loading position.
       // Android: defer transform to rAF so .ptr-releasing transition has one frame
-      // to register before the style change lands â€” prevents the hard jump to holdY.
+      // to register before the style change lands — prevents the hard jump to holdY.
       var holdY=44;
       haptic([30]);
       if(_ptrIsAndroid){
@@ -13151,7 +13151,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
         },260);
       }
       _snapDone=false;
-      // Hard cap â€” fires if refreshFn never calls done() (async paths, network timeout)
+      // Hard cap — fires if refreshFn never calls done() (async paths, network timeout)
       var _hardCap=setTimeout(_snapBack,1500);
       // done() is passed to refreshFn so sync renders snap back as soon as content is ready,
       // rather than waiting a fixed 600ms minimum.
@@ -13168,7 +13168,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       try{refreshFn(_isRecent,_ptrDone);}catch(e){console.warn('[PTR] refreshFn error:',e);_ptrDone();}
 
     }else{
-      // â”€â”€ BELOW THRESHOLD â€” snap back silently â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── BELOW THRESHOLD — snap back silently ──────────────────────────────
       _clearWillChange();
       panel.style.transform='';
       ptrSpinner.style.transform='translate(-50%,'+_spinnerY+'px) scale(0)';
@@ -13194,14 +13194,14 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
 var IV_CONFIG_URL='https://tafsirkurd.com/config';
 
 // Callback queue: all callers that arrive while init is in-flight get queued here
-// and fired together when the config fetch resolves or fails â€” no polling needed.
+// and fired together when the config fetch resolves or fails — no polling needed.
 var _ivInitCbs=[];
 
 function initIslamVoice(cb){
-  // Already ready â€” fire immediately
+  // Already ready — fire immediately
   if(S.ivSupabase){if(cb)cb();return;}
 
-  // In-flight â€” queue this callback and return; first fetch will fire it
+  // In-flight — queue this callback and return; first fetch will fire it
   if(S.ivInited){if(cb)_ivInitCbs.push(cb);return;}
   S.ivInited=true;
 
@@ -13235,7 +13235,7 @@ function initIslamVoice(cb){
     if(cfg.supabaseUrl&&cfg.supabaseKey){
       S.ivSupabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{storageKey:'sb-tafsirkurd-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
       if(!S.supabase){S.supabase=S.ivSupabase;window._appSupabase=S.ivSupabase;_notifySupabaseReady();}
-      // Fire all queued callbacks â€” they will each call ivFetchFresh
+      // Fire all queued callbacks — they will each call ivFetchFresh
       var _q=_ivInitCbs.splice(0);_q.forEach(function(fn){try{fn();}catch(e){}});
     }else{
       throw new Error('Missing supabaseUrl/supabaseKey');
@@ -13278,18 +13278,18 @@ function renderIvError(msg,type){
   card.appendChild(icoWrap);
 
   // Title
-  var titleText=isOffline?(tSafe('iv.error.offline_title')||'Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØª Ù†ÛŒÙ†Û•'):(isTimeout?(tSafe('iv.error.timeout_title')||'Ø¯Û•Ù… ØªÛ•Ù…Ø§Ù… Ø¨ÙˆÙˆ'):(tSafe('iv.error.title')||'Ú©ÛŽØ´Û•ÛŒÛ•Ú© Ù‡Û•ÛŒÛ•'));
+  var titleText=isOffline?(tSafe('iv.error.offline_title')||'ئینتەرنێت نینە'):(isTimeout?(tSafe('iv.error.timeout_title')||'دەم تەمام بوو'):(tSafe('iv.error.title')||'کێشەیەک هەیە'));
   card.appendChild(el('div','iv-state-title',titleText));
 
-  // Subtitle â€” show the technical message only if no i18n title was resolved
-  var subText=msg||tSafe('error.occurred')||'ØªÚ©Ø§ÛŒÛ• Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•ÙˆÛ•';
+  // Subtitle — show the technical message only if no i18n title was resolved
+  var subText=msg||tSafe('error.occurred')||'تکایە دووبارە هەوڵبدەوە';
   card.appendChild(el('div','iv-state-sub',subText));
 
   // Retry button
   var btn=el('button','iv-state-btn');
   var btnIco=icon('fas fa-arrows-rotate');
   btn.appendChild(btnIco);
-  btn.appendChild(document.createTextNode(' '+(tSafe('iv.retry')||'Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•ÙˆÛ•')));
+  btn.appendChild(document.createTextNode(' '+(tSafe('iv.retry')||'دووبارە هەوڵبدەوە')));
   on(btn,'click',function(){
     S.ivInited=false;S.ivSupabase=null;
     loadIslamVoiceData(true);
@@ -13317,11 +13317,11 @@ function renderIvBanner(msg){
   banner.appendChild(icoWrap);
 
   // Text
-  banner.appendChild(el('span','iv-notice-text',msg||tSafe('iv.partial_load_warn')||'Ø¯Ø§ØªØ§ Ù¾Û†ÚµÛ•Ú©ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§'));
+  banner.appendChild(el('span','iv-notice-text',msg||tSafe('iv.partial_load_warn')||'داتا پۆڵەکی بارکرا'));
 
   // Retry
   var retryBtn=el('button','iv-notice-btn');
-  retryBtn.textContent=tSafe('iv.retry')||'Ù†ÙˆÛŽÚ©Ø±Ø¯Ù†Û•ÙˆÛ•';
+  retryBtn.textContent=tSafe('iv.retry')||'نوێکردنەوە';
   on(retryBtn,'click',function(){
     if(banner.parentNode)banner.parentNode.removeChild(banner);
     ivFetchFresh(true);
@@ -13332,7 +13332,7 @@ function renderIvBanner(msg){
   else grid.appendChild(banner);
 }
 
-// Episodes grouped by series_id â€” avoids O(series*episodes) filter on every renderIvGrid call.
+// Episodes grouped by series_id — avoids O(series*episodes) filter on every renderIvGrid call.
 var _ivEpsBySeriesId=null;
 function _buildIvEpsCache(){
   _ivEpsBySeriesId={};
@@ -13351,7 +13351,7 @@ function preloadIvThumbnails(){
   if(!S.ivSeries||!S.ivSeries.length)return;
   _preloadedIvImages=[];
   var sorted=S.ivSeries.slice().sort(function(a,b){return(a.display_order||999)-(b.display_order||999);});
-  // On slow networks skip thumbnail preloading â€” let them load on-demand when the panel opens
+  // On slow networks skip thumbnail preloading — let them load on-demand when the panel opens
   if(_sn.skip()){return;}
   sorted.slice(0,6).forEach(function(series){
     if(!series.thumbnail_url)return;
@@ -13368,7 +13368,7 @@ function preloadIvThumbnails(){
 }
 
 function loadIslamVoiceData(force){
-  // Always pre-populate from cache into memory â€” even on force=true â€” so that
+  // Always pre-populate from cache into memory — even on force=true — so that
   // a network failure degrades to an inline banner rather than a blank error page.
   if(!S.ivSeries){
     try{
@@ -13406,9 +13406,9 @@ function loadIslamVoiceData(force){
 
 function ivFetchFresh(force){
   if(!S.ivSupabase)return;
-  if(S.ivLoading&&!force)return; // in-flight guard â€” prevent duplicate fetches
+  if(S.ivLoading&&!force)return; // in-flight guard — prevent duplicate fetches
   S.ivLoading=true;
-  _ivEpsBySeriesId=null; // invalidate cache â€” fresh data incoming
+  _ivEpsBySeriesId=null; // invalidate cache — fresh data incoming
   if(force)_ivGridHash=null; // force pull-to-refresh always rebuilds grid
   var _ivFetchT0=Date.now();
 
@@ -13439,7 +13439,7 @@ function ivFetchFresh(force){
     S.ivSeries=seriesRes.data||[];
     S.ivEpisodes=epRes.data||[];
     _buildIvEpsCache();
-    _ivHeroInvalidate(); // fresh data â†’ pick new random slides next render
+    _ivHeroInvalidate(); // fresh data → pick new random slides next render
 
     // Cache
     try{
@@ -13447,7 +13447,7 @@ function ivFetchFresh(force){
       localStorage.setItem('iv_episodes_cache',JSON.stringify(S.ivEpisodes));
     }catch(e){console.warn('IV cache save failed')}
 
-    // Remove any lingering warning banner â€” fetch succeeded
+    // Remove any lingering warning banner — fetch succeeded
     var _wb=document.getElementById('ivWarnBanner');
     if(_wb&&_wb.parentNode)_wb.parentNode.removeChild(_wb);
 
@@ -13506,7 +13506,7 @@ var _ivHeroTimer=null;
 var _ivHeroIdx=0;
 var _ivHeroSlides=[];
 var _ivHeroBuilt=false;
-var _ivGridHash=null; // last-rendered content hash â€” skip rebuild when data unchanged
+var _ivGridHash=null; // last-rendered content hash — skip rebuild when data unchanged
 var _ivHeroTrackEl=null;
 var _ivHeroDotsEls=null;
 var _ivHeroTouchListened=false;
@@ -13515,7 +13515,7 @@ var _ivHeroDragSX=0,_ivHeroDragSY=0;
 var _ivHeroVx=0,_ivHeroVtLast=0,_ivHeroXLast=0;
 
 function _ivThumb(url){
-  // mqdefault (320Ã—180) â€” already warmed by preloadIvThumbnails(), best quality/size balance
+  // mqdefault (320×180) — already warmed by preloadIvThumbnails(), best quality/size balance
   return (url||'').replace('maxresdefault.jpg','mqdefault.jpg').replace('hqdefault.jpg','mqdefault.jpg');
 }
 
@@ -13633,7 +13633,7 @@ function renderIvHero(){
   });
 
   // page is dir=rtl so flex items go right-to-left; first appended = rightmost.
-  // Loop 0â†’count-1 so dot[0] (active) is appended first = rightmost.
+  // Loop 0→count-1 so dot[0] (active) is appended first = rightmost.
   _ivHeroDotsEls=new Array(_ivHeroSlides.length);
   for(var di=0;di<_ivHeroSlides.length;di++){
     (function(idx){
@@ -13646,7 +13646,7 @@ function renderIvHero(){
 
   _ivHeroTrackEl=track;
 
-  // Attach touch listeners once â€” reusing the same hero element across rebuilds
+  // Attach touch listeners once — reusing the same hero element across rebuilds
   if(!_ivHeroTouchListened){
     _ivHeroTouchListened=true;
     hero.addEventListener('touchstart',function(e){
@@ -13720,7 +13720,7 @@ function renderIvGrid(){
   grid.style.display='';
 
   // Content hash: series IDs + counts + active filters.
-  // If identical to last render AND grid has content, skip full rebuild â€” prevents
+  // If identical to last render AND grid has content, skip full rebuild — prevents
   // the double-render flash when cached data is shown then fresh (identical) data arrives.
   var _h=(S.ivSeries||[]).map(function(s){
     return s.id+':'+((_ivEpsBySeriesId&&_ivEpsBySeriesId[s.id])||[]).length;
@@ -13796,7 +13796,7 @@ function renderIvGrid(){
 
     var card=el('div','iv-card');
 
-    // Thumbnail â€” prefer series thumbnail, fall back to first episode thumbnail
+    // Thumbnail — prefer series thumbnail, fall back to first episode thumbnail
     var imgWrap=el('div','iv-card-img');
     var _thumbSrc=series.thumbnail_url||(eps[0]&&eps[0].thumbnail_url)||'';
     _thumbSrc=_thumbSrc.replace('maxresdefault.jpg','mqdefault.jpg').replace('hqdefault.jpg','mqdefault.jpg');
@@ -13804,7 +13804,7 @@ function renderIvGrid(){
       var img=document.createElement('img');
       img.src=_thumbSrc;
       img.alt='';
-      // First 4 cards: eager â€” browser fetches even in hidden panels
+      // First 4 cards: eager — browser fetches even in hidden panels
       img.loading=_ivCardIdx<4?'eager':'lazy';
       img.onload=function(){this.parentNode.style.animation='none';this.parentNode.style.background='none'};
       img.onerror=function(){AndroidLog.img(this.src);this.style.display='none'};
@@ -13827,7 +13827,7 @@ function renderIvGrid(){
       return ep.created_at&&new Date(ep.created_at).getTime()>_now24h;
     }).length;
     if(newEpCount>0){
-      body.appendChild(el('div','iv-card-new-badge',newEpCount+' '+(tSafe('iv.new_eps')||'Ù†ÙˆÛŒ')));
+      body.appendChild(el('div','iv-card-new-badge',newEpCount+' '+(tSafe('iv.new_eps')||'نوی')));
     }
     card.appendChild(body);
 
@@ -13844,7 +13844,7 @@ function renderIvGrid(){
     frag.appendChild(noRes);
   }
 
-  // Atomic replace â€” old grid stays visible until all new cards are ready
+  // Atomic replace — old grid stays visible until all new cards are ready
   clear(grid); grid.appendChild(frag);
 }
 
@@ -13899,7 +13899,7 @@ function renderIvEpisodes(seriesId){
     var item=el('div','iv-ep-item');
     item.setAttribute('data-ep-id',ep.id);
 
-    // Thumbnail â€” fade in after decode to avoid image pop
+    // Thumbnail — fade in after decode to avoid image pop
     var thumb=el('div','iv-ep-thumb');
     var thumbUrl=ep.thumbnail_url;
     if(!thumbUrl&&ep.video_url&&ep.video_type!=='s3'){
@@ -13918,7 +13918,7 @@ function renderIvEpisodes(seriesId){
     var playIcon=el('div','iv-play-icon');
     playIcon.appendChild(icon('fas fa-play'));
     thumb.appendChild(playIcon);
-    // Episode number badge â€” overlaid top-right corner
+    // Episode number badge — overlaid top-right corner
     thumb.appendChild(el('div','iv-ep-num',String(ep.episode_number||idx+1)));
     item.appendChild(thumb);
 
@@ -13953,9 +13953,9 @@ function renderIvEpisodes(seriesId){
     }
     item.appendChild(info);
 
-    // NEW badge â€” show for 24h after created_at
+    // NEW badge — show for 24h after created_at
     if(ep.created_at&&(Date.now()-new Date(ep.created_at).getTime())<86400000){
-      var newBadge=el('div','iv-new-badge');newBadge.textContent=t('iv.new_badge')||'Ù†ÙˆÛŒ';item.appendChild(newBadge);
+      var newBadge=el('div','iv-new-badge');newBadge.textContent=t('iv.new_badge')||'نوی';item.appendChild(newBadge);
     }
 
     // Save button
@@ -13973,7 +13973,7 @@ function renderIvEpisodes(seriesId){
     on(item,'click',function(){App.ivPlay(ep.id)});
     frag.appendChild(item);
   });
-  clear(list); list.appendChild(frag); // atomic replace â€” old list stays until all cards built
+  clear(list); list.appendChild(frag); // atomic replace — old list stays until all cards built
 }
 
 function ivGetSaved(){try{return JSON.parse(localStorage.getItem('iv_saved_eps')||'[]')}catch(e){return[]}}
@@ -14017,7 +14017,7 @@ App.ivPlay=function(episodeId){
   var playerEl; // will be set to the top-level element appended to container
 
   if(isYouTube&&isIOS){
-    // iOS: polished preview card â€” open in SFSafariViewController (no broken iframe)
+    // iOS: polished preview card — open in SFSafariViewController (no broken iframe)
     var videoId=ep.video_url;
     var ytUrl='https://www.youtube.com/watch?v='+videoId;
 
@@ -14048,7 +14048,7 @@ App.ivPlay=function(episodeId){
     var metaParts=[];
     if(ep.series_title)metaParts.push(ep.series_title);
     if(ep.duration)metaParts.push(ep.duration);
-    if(metaParts.length){body.appendChild(el('div','iv-yt-card-meta',metaParts.join(' Â· ')));}
+    if(metaParts.length){body.appendChild(el('div','iv-yt-card-meta',metaParts.join(' · ')));}
     var btn=el('button','iv-yt-card-btn');
     btn.appendChild(icon('fab fa-youtube'));
     btn.appendChild(document.createTextNode(' '+t('iv.watch_on_youtube')));
@@ -14097,7 +14097,7 @@ App.ivPlay=function(episodeId){
         var ytUrl='https://www.youtube.com/watch?v='+videoId;
         var plat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
         if(plat==='android'){
-          // _system target â†’ Capacitor routes to Android Intent â†’ opens YouTube app if installed
+          // _system target → Capacitor routes to Android Intent → opens YouTube app if installed
           try{window.open('vnd.youtube://watch?v='+videoId,'_system');}catch(e){}
           // Delayed browser fallback in case YouTube app is not installed
           setTimeout(function(){
@@ -14127,7 +14127,7 @@ App.ivPlay=function(episodeId){
       }
 
       // Only block when YouTube explicitly fires onError (101/150 = embed disabled).
-      // Never use a timer â€” if the video plays, let the user watch it in-app.
+      // Never use a timer — if the video plays, let the user watch it in-app.
       if(window._ytTimeout){clearTimeout(window._ytTimeout);window._ytTimeout=null;}
       if(window._ytErrHandler){window.removeEventListener('message',window._ytErrHandler);window._ytErrHandler=null;}
       window._ytErrHandler=function(e){
@@ -14137,7 +14137,7 @@ App.ivPlay=function(episodeId){
           if(d.event==='onReady'||(d.event==='onStateChange'&&d.info!==undefined)){
             _ytReady=true;
           }
-          // onError: YouTube explicitly blocked embedding â€” redirect to YouTube
+          // onError: YouTube explicitly blocked embedding — redirect to YouTube
           if(d.event==='onError'){showYTErr();}
         }catch(ex){}
       };
@@ -14238,7 +14238,7 @@ function ivRenderSavedList(){
       item.appendChild(thumb);
       var info=el('div','iv-overlay-ep-info');
       if(ep.series_title)info.appendChild(el('div','iv-overlay-ep-series',ep.series_title));
-      info.appendChild(el('div','iv-overlay-ep-title',ep.title||('Ø¦Û•Ù¾ÛŒØ³Û†Ø¯ '+(ep.episode_number||''))));
+      info.appendChild(el('div','iv-overlay-ep-title',ep.title||('ئەپیسۆد '+(ep.episode_number||''))));
       item.appendChild(info);
       var del=el('button','iv-overlay-ep-del');del.appendChild(icon('fas fa-xmark'));
       on(del,'click',function(e){e.stopPropagation();ivToggleSave(ep.id,ep);H.selection();ivRenderSavedList();
@@ -14348,7 +14348,7 @@ App.ivShowSpeakerFilter=function(){
 
   // Header
   var sheetHdr=el('div','iv-spk-hdr');
-  sheetHdr.appendChild(el('span','iv-spk-title',t('iv.sheikh_title')||'Ù…Ø§Ù…ÙˆØ³ØªØ§'));
+  sheetHdr.appendChild(el('span','iv-spk-title',t('iv.sheikh_title')||'ماموستا'));
   var closeBtn=el('button','iv-spk-close');
   closeBtn.appendChild(icon('fas fa-times'));
   on(closeBtn,'click',function(){if(overlay.parentNode)overlay.parentNode.removeChild(overlay);});
@@ -14399,21 +14399,21 @@ function ivTrackView(episodeId){
 
 /* ===== START ===== */
 function startApp(){
-  // â”€â”€ Warm resume detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Warm resume detection ─────────────────────────────────────────────────
   // tk_last_bg is written by appStateChange + visibilitychange when app goes to background.
-  // If it was < 3 h ago, WebView was killed under memory pressure â€” skip splash.
+  // If it was < 3 h ago, WebView was killed under memory pressure — skip splash.
   // 3 h covers realistic backgrounding patterns (30 min was too short).
   var _bgTs = parseInt(localStorage.getItem('tk_last_bg') || '0');
   var _sinceBackground = _bgTs ? (Date.now() - _bgTs) : Infinity;
   if (_bgTs && _sinceBackground < 3 * 60 * 60 * 1000) {
     window._isWarmResume = true;
-    console.log('[APP_LIFECYCLE] warm_resume â€” backgrounded', Math.round(_sinceBackground / 1000), 's ago');
+    console.log('[APP_LIFECYCLE] warm_resume — backgrounded', Math.round(_sinceBackground / 1000), 's ago');
   } else {
     window._isWarmResume = false;
     console.log('[APP_LIFECYCLE] cold_start');
   }
   console.log('[Startup] startApp()',Date.now()-_startupT0,'ms');
-  // Hide native splash after TWO rAFs â€” double rAF guarantees the browser has
+  // Hide native splash after TWO rAFs — double rAF guarantees the browser has
   // committed at least one paint of the HTML splash before the native overlay
   // disappears. Single rAF fires before paint on fast devices, leaving a 1-frame
   // gap where the raw WebView background is briefly visible.
@@ -14427,26 +14427,26 @@ function startApp(){
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||24)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
-  // Force-update check: run immediately on startup â€” enforce lock already blocks
+  // Force-update check: run immediately on startup — enforce lock already blocks
   // the UI synchronously, this just refreshes the config from server.
   ForceUpdate.check();
   // Freshness comes from the startup check above + the appStateChange resume
   // check; this interval is only a safety net for sessions that never background.
-  // 15 min floor â€” the old 20s poll fetched /update-config ~180Ã—/hour per device
+  // 15 min floor — the old 20s poll fetched /update-config ~180×/hour per device
   // for the whole session (battery + data drain, needless backend load).
-  // Clear any existing interval before creating â€” prevents duplicate polls if
+  // Clear any existing interval before creating — prevents duplicate polls if
   // startApp() is called more than once (hot reload, re-init paths).
   if(window._forceUpdateInterval)clearInterval(window._forceUpdateInterval);
   window._forceUpdateInterval=setInterval(function(){ if(!document.hidden) ForceUpdate.check(); }, 15*60*1000);
 
-  // â”€â”€ Runtime jank monitoring â€” auto-downgrade performance tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Runtime jank monitoring — auto-downgrade performance tier ─────────────
   // Starts 8s after launch so startup pre-renders don't trigger false positives.
-  // Uses PerformanceObserver longtask (Chrome/Android only â€” silently skipped on iOS).
-  // Stops after 20s â€” we only care about real-use jank, not background tasks.
+  // Uses PerformanceObserver longtask (Chrome/Android only — silently skipped on iOS).
+  // Stops after 20s — we only care about real-use jank, not background tasks.
   setTimeout(function(){
     if(!window.TKPerf)return;
     if(window.TKPerf.override){
-      console.log('[PERFORMANCE] jank monitor skipped â€” user has manual override: '+window.TKPerf.override);
+      console.log('[PERFORMANCE] jank monitor skipped — user has manual override: '+window.TKPerf.override);
       return;
     }
     try{
@@ -14466,7 +14466,7 @@ function startApp(){
           var _idx=_lvls.indexOf(window.TKPerf.level);
           if(_idx>=0&&_idx<_lvls.length-1){
             var _nl=_lvls[_idx+1];
-            console.log('[PERFORMANCE] downgraded due to jank: '+window.TKPerf.level+' â†’ '+_nl);
+            console.log('[PERFORMANCE] downgraded due to jank: '+window.TKPerf.level+' → '+_nl);
             window.TKPerf.detected=_nl;
             try{localStorage.setItem('tk_perf_detected',_nl);}catch(e){}
             window.TKPerf.applyLevel(_nl);
@@ -14474,7 +14474,7 @@ function startApp(){
         }
       });
       _jObs.observe({entryTypes:['longtask']});
-      // Stop after 20s â€” sufficient window to catch real-use jank
+      // Stop after 20s — sufficient window to catch real-use jank
       setTimeout(function(){
         if(!_jStop){
           _jStop=true;
@@ -14490,38 +14490,38 @@ function startApp(){
     // init() (called from _afterI18n) will replace this with the real gate function and
     // drain the early-fire flag immediately so fast-network Layer-3 releases without delay.
     window._splashI18nEarlyFire = false;
-    // Release startup the moment i18n signals usable text â€” Layer-2 cache applies
+    // Release startup the moment i18n signals usable text — Layer-2 cache applies
     // ~200ms in on repeat launches. The old stub only set a flag, so the app
     // still waited for initLang's remote race (~1.5s) even with a warm cache:
-    // pure dead time on every cold start. First install (no cache) is unchanged â€”
+    // pure dead time on every cold start. First install (no cache) is unchanged —
     // i18n only fires this early signal when a valid cache exists, so the 1.5s
     // fallback below still governs that path. Remote refresh continues in the
     // background and lands via the existing atomic swap + re-render hook.
     window._splashReadyI18n = function(){
       window._splashI18nEarlyFire = true;
-      setTimeout(_afterI18n, 0); // next tick â€” let initLang finish its sync work first
+      setTimeout(_afterI18n, 0); // next tick — let initLang finish its sync work first
     };
 
-    /* 1.5s timeout â€” if i18n fetch hangs (slow connection), start app anyway */
+    /* 1.5s timeout — if i18n fetch hangs (slow connection), start app anyway */
     var _i18nDone = false;
     function _afterI18n(){
       if(_i18nDone){ console.log('[APP_LIFECYCLE] duplicate_init_prevented'); return; }
       _i18nDone=true;
 
       // Safe render guard: if bundled didn't load, UI must not show raw keys.
-      // Layer 1 (kmr-bundled.js) is synchronous â€” if it's missing, log the critical error
+      // Layer 1 (kmr-bundled.js) is synchronous — if it's missing, log the critical error
       // and let initLang's health report surface it in the admin dashboard.
       if(window.i18n && !window.i18n.isHealthy()){
         console.error('[i18n] UNHEALTHY: bundled translations not loaded or key count too low.',
           window.i18n.getStatus());
-        // Still proceed â€” app is usable with whatever keys loaded; health report will fire.
+        // Still proceed — app is usable with whatever keys loaded; health report will fire.
       }
 
       init();
       i18n.applyTranslations();
       if(window._splashReadyI18n){window._splashReadyI18n();window._splashReadyI18n=null;}
     }
-    setTimeout(_afterI18n, 1500); /* fallback â€” never wait more than 1.5s */
+    setTimeout(_afterI18n, 1500); /* fallback — never wait more than 1.5s */
     i18n.initLang().then(function(){
       console.log('[Startup] i18n ready',Date.now()-_startupT0,'ms',
         window.i18n.getStatus ? window.i18n.getStatus() : '');
@@ -14531,9 +14531,8 @@ function startApp(){
     init();
     if(window._splashReadyI18n){window._splashReadyI18n();window._splashReadyI18n=null;}
   }
-  // i18n:updated already handled at top of file (line ~558) â€” no duplicate here
+  // i18n:updated already handled at top of file (line ~558) — no duplicate here
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startApp)}else{startApp()}
 
 })();
-
