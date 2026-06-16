@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tafsir-kurd-v1194';
+﻿const CACHE_NAME = 'tafsir-kurd-v1195';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
-// Mismatches cause cache misses — browser fetches from network instead of SW cache.
+// Mismatches cause cache misses â€” browser fetches from network instead of SW cache.
 const PRECACHE = [
-  // Core app shell — index.html intentionally excluded: always served fresh from APK
-  '/app/app.min.js?v=1192',
+  // Core app shell â€” index.html intentionally excluded: always served fresh from APK
+  '/app/app.min.js?v=1193',
   '/app/app-styles.min.css?v=6',
   // Prayer module
   '/prayer/prayer.cache.js?v=20260526',
@@ -26,7 +26,7 @@ const PRECACHE = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/data/mushaf-v4-pages.json?v=2',
-  // Prayer static annual JSON — all 20 cities × 2 years bundled for offline
+  // Prayer static annual JSON â€” all 20 cities Ã— 2 years bundled for offline
   // Covers fresh-install offline and 30-day offline month-boundary on web
   '/prayer-data/2026/Akre.json',
   '/prayer-data/2026/Bardarash.json',
@@ -116,7 +116,7 @@ const SWR_PATTERNS = [
   '/config'
 ];
 
-// ── Install: pre-cache everything needed to run offline ──────────────────────
+// â”€â”€ Install: pre-cache everything needed to run offline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
@@ -130,7 +130,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// ── Activate: clean up old caches immediately ─────────────────────────────────
+// â”€â”€ Activate: clean up old caches immediately â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -139,7 +139,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ── Fetch: smart caching strategies ──────────────────────────────────────────
+// â”€â”€ Fetch: smart caching strategies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 self.addEventListener('fetch', event => {
   const req = event.request;
   const url = req.url;
@@ -153,9 +153,9 @@ self.addEventListener('fetch', event => {
   const reqUrl = new URL(url);
   const isOwnOrigin = reqUrl.origin === self.location.origin;
 
-  // ── Remote QCF mushaf fonts: cache-first (immutable per page number) ────
+  // â”€â”€ Remote QCF mushaf fonts: cache-first (immutable per page number) â”€â”€â”€â”€
   // iOS strips local .bin files; iOS/web both fall back to this Cloudflare Worker.
-  // Once cached the font loads instantly — Mushaf feels native-fast offline.
+  // Once cached the font loads instantly â€” Mushaf feels native-fast offline.
   if (url.includes('qpc-v4-fonts.tefsirkurd.workers.dev')) {
     event.respondWith(
       caches.match(req).then(cached => {
@@ -171,12 +171,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ── External domains: pass through (Supabase, YouTube, CDNs, analytics) ──
+  // â”€â”€ External domains: pass through (Supabase, YouTube, CDNs, analytics) â”€â”€
   if (!isOwnOrigin) return;
 
-  // ── Prayer static JSON: stale-while-revalidate ──────────────────────────────
+  // â”€â”€ Prayer static JSON: stale-while-revalidate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Serve cached copy instantly when available so Prayer tab works offline.
-  // Always revalidate in background — corrections deployed via fetch-prayer-year.js
+  // Always revalidate in background â€” corrections deployed via fetch-prayer-year.js
   // propagate on the very next online visit (same session), not only after a cache
   // expiry. First visit (online) populates the cache; subsequent offline visits use it.
   if (reqUrl.pathname.startsWith('/prayer-data/')) {
@@ -194,7 +194,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ── Same-origin API calls: stale-while-revalidate ─────────────────────────
+  // â”€â”€ Same-origin API calls: stale-while-revalidate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Returns cached response instantly, updates cache in background
   const isSWR = SWR_PATTERNS.some(p => reqUrl.pathname.startsWith(p));
   if (isSWR) {
@@ -215,13 +215,13 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ── Large proxied content: network passthrough — never cache ─────────────
+  // â”€â”€ Large proxied content: network passthrough â€” never cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // /pdf-proxy streams multi-MB book PDFs. Caching them here would duplicate
   // pdf-store.js's IndexedDB copy and bloat origin storage until the browser
   // quota-evicts everything (including IDB-cached quran/tafsir data).
   if (reqUrl.pathname.startsWith('/pdf-proxy')) return;
 
-  // ── HTML pages: always fetch fresh — never serve stale cached HTML ──────
+  // â”€â”€ HTML pages: always fetch fresh â€” never serve stale cached HTML â”€â”€â”€â”€â”€â”€
   // index.html references versioned JS/CSS; serving a cached old index.html would
   // load old JS for 0.5s until the new SW activates. Since APK assets are local
   // (no real network latency), fetch() is instant and always returns the current build.
@@ -232,7 +232,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // ── Everything else (JS, CSS, fonts, images): cache first ─────────────────
+  // â”€â”€ Everything else (JS, CSS, fonts, images): cache first â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   event.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
@@ -246,7 +246,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// ── Background push notifications ────────────────────────────────────────────
+// â”€â”€ Background push notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 self.addEventListener('push', event => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch(e) {}
@@ -281,7 +281,8 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// ── Message: force update ─────────────────────────────────────────────────────
+// â”€â”€ Message: force update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
+
