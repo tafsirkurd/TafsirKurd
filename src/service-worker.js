@@ -17,7 +17,7 @@ const PRECACHE = [
   '/dhikr/dhikr.js?v=20260612a',
   '/dhikr/pdf-store.js?v=20260612a',
   '/dhikr/dua-data.js?v=20260326b',
-  '/dhikr/smart-dhikr.js?v=59',
+  '/dhikr/smart-dhikr.js?v=60',
   // i18n
   '/i18n/i18n.min.js?v=20260611a',
   '/i18n/kmr-bundled.js?v=20260612a',
