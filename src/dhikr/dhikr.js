@@ -897,6 +897,7 @@ window.GencineUI = {
   _voiceLastMatch:  0,
   _voiceDedupMs:    200,
   _voiceBufCursor:  0,
+  _voiceTarget:     null,  /* pre-compiled matcher for the selected dhikr */
   _bookCat:         'all',
   _bookSearch:      '',
   _bookAuthor:      '',
@@ -2598,6 +2599,88 @@ window.GencineUI = {
     return best ? best.e : -1;
   },
 
+  /* Build a pre-compiled target object for the CURRENTLY SELECTED dhikr.
+     Called once at voice start — all expensive work happens here so onresult
+     is a pure string search with no dynamic lookups. */
+  _buildVoiceTarget: function(){
+    var self = this;
+    var COMMON = {'الله':1,'اله':1,'لا':1,'في':1,'من':1,'على':1,'و':1,'ب':1,'ل':1};
+    var list = _getTasbih();
+    var dhikr = list[self._tasbihDhikrIdx];
+    if(!dhikr) return null;
+
+    var arNorm  = self._normalizeAr(dhikr.ar  || '');
+    var kuNorm  = self._normalizeAr(dhikr.ku  || '');
+    var keyNorm = dhikr.key ? self._normalizeAr(dhikr.key) : null;
+
+    /* normalized full-phrase candidates */
+    var fullPhrases = [];
+    if(arNorm) fullPhrases.push(arNorm);
+    if(kuNorm && kuNorm !== arNorm) fullPhrases.push(kuNorm);
+
+    /* keyword list from the Arabic phrase (used as partial-interim fallback) */
+    var kws = [];
+    if(arNorm){
+      var words = arNorm.split(' ');
+      kws = words.filter(function(w){ return w.length>=3 && !COMMON[w]; });
+      if(!kws.length) kws = words.filter(function(w){ return w.length>=2 && !COMMON[w]; });
+      if(!kws.length) kws = words.filter(function(w){ return w.length>=2; });
+    }
+
+    /* grammar alternatives for SpeechGrammarList hint (raw text, not normalized) */
+    var grammarAlts = [];
+    if(dhikr.ar && dhikr.ar.trim()) grammarAlts.push(dhikr.ar.trim());
+    if(dhikr.key && dhikr.key.trim()) grammarAlts.push(dhikr.key.trim());
+
+    return {
+      fullPhrases:  fullPhrases,                             /* e.g. ['سبحان الله'] */
+      keyOverride:  keyNorm,                                 /* dhikr.key normalized */
+      keywords:     kws,                                     /* ['سبحان'] */
+      minRequired:  Math.max(1, Math.ceil(kws.length*0.6)), /* ≥60% of keywords */
+      grammarAlts:  grammarAlts,                             /* for JSGF hint */
+      label:        dhikr.ar || dhikr.ku || '',
+    };
+  },
+
+  /* Target-locked phrase detector — only matches self._voiceTarget.
+     Returns end position of FIRST match in `text`, or -1. O(n) string search only. */
+  _findPhraseEndLocked: function(text){
+    var tgt = this._voiceTarget;
+    if(!tgt) return -1;
+    var best = null;
+    function upd(s,e){ if(!best || s < best.s) best = {s:s,e:e}; }
+
+    /* Pass 1: full phrase (highest confidence) */
+    for(var i=0; i<tgt.fullPhrases.length; i++){
+      var ph = tgt.fullPhrases[i];
+      var idx = text.indexOf(ph);
+      if(idx !== -1) upd(idx, idx+ph.length);
+    }
+
+    /* Pass 2: key override — single decisive word (e.g. dhikr.key = 'سبحان') */
+    if(!best && tgt.keyOverride){
+      var ki = text.indexOf(tgt.keyOverride);
+      if(ki !== -1) upd(ki, ki+tgt.keyOverride.length);
+    }
+
+    /* Pass 3: ordered keyword sequence (partial interim before phrase is complete) */
+    if(!best && tgt.keywords.length){
+      if(tgt.keywords.length === 1){
+        var ki2 = text.indexOf(tgt.keywords[0]);
+        if(ki2 !== -1) upd(ki2, ki2+tgt.keywords[0].length);
+      } else {
+        var pos=0, found=0, firstPos=-1, lastEnd=-1;
+        for(var j=0; j<tgt.keywords.length; j++){
+          var kj=tgt.keywords[j], kji=text.indexOf(kj,pos);
+          if(kji!==-1){ if(firstPos===-1)firstPos=kji; lastEnd=kji+kj.length; pos=kji+1; found++; }
+        }
+        if(found>=tgt.minRequired && firstPos!==-1) upd(firstPos, lastEnd);
+      }
+    }
+
+    return best ? best.e : -1;
+  },
+
   _startVoice: function(){
     var self = this;
     var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
@@ -2617,6 +2700,7 @@ window.GencineUI = {
     self._voiceActive    = true;
     self._voiceLastMatch = 0;
     self._voiceBufCursor = 0;
+    self._voiceTarget    = null;
     self._updateVoiceBtn();
     self._setVoiceStatus(T('gencine.voice_requesting','داخوازییا مۆڵەتێ دهێتەکرن...'));
 
@@ -2651,19 +2735,57 @@ window.GencineUI = {
     var self = this;
     T = T || window.t || function(k,d){ return d||k; };
 
+    /* ── Pre-compile target: one selected phrase = one locked matcher ── */
+    self._voiceTarget    = self._buildVoiceTarget();
+    self._voiceBufCursor = 0;
+    var tgt = self._voiceTarget;
+
     var rec = new SRClass();
     rec.continuous      = true;
-    rec.interimResults  = true;  /* fire on partial results for zero-delay detection */
+    rec.interimResults  = true;
     rec.lang            = 'ar-SA';
-    rec.maxAlternatives = 1;     /* 1 = fastest; alternatives not needed for streaming */
+    rec.maxAlternatives = 1;
     self._recognition   = rec;
-    self._voiceBufCursor = 0;
-    self._setVoiceStatus(T('gencine.voice_listening','...دابیستم'));
+
+    /* ── Vocabulary hint: bias the language model toward the single phrase ──
+       SpeechGrammarList (JSGF) is best-effort — silently ignored if the
+       recognizer doesn't support it, but measurably helps on Android WebView. */
+    var GrList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+    if(GrList && tgt && tgt.grammarAlts.length){
+      try{
+        var gl = new GrList();
+        var jsgf = '#JSGF V1.0; grammar dhikr; public <dhikr> = ' + tgt.grammarAlts.join(' | ') + ' ;';
+        gl.addFromString(jsgf, 1);
+        rec.grammars = gl;
+      }catch(_){}
+    }
+
+    /* Show which phrase is being listened for */
+    self._setVoiceStatus(
+      tgt && tgt.label
+        ? T('gencine.voice_listening','...دابیستم') + ' — ' + tgt.label
+        : T('gencine.voice_listening','...دابیستم')
+    );
+
+    /* ── Timing instrumentation: measure all 4 stages per utterance ──────
+       Stages:  speechstart → interim | interim → match | match → count | match → haptic
+       Targets: <200ms = excellent  <400ms = good  <700ms = slow  ≥700ms = bug  */
+    var _tSpeechStart = 0, _tFirstInterim = 0;
+    try{
+      rec.addEventListener('speechstart', function(){
+        _tSpeechStart   = performance.now();
+        _tFirstInterim  = 0;
+        console.log('[VoiceTasbih] speechstart — locked to: ' + (tgt ? tgt.label : '?'));
+      });
+      rec.addEventListener('speechend', function(){
+        _tSpeechStart = 0; _tFirstInterim = 0;
+      });
+    }catch(_){}
 
     rec.onresult = function(event){
-      /* ── Build rolling buffer from ALL results (final + interim) ──────────
-         event.results is a live SpeechResultList — concat every transcript.
-         Final results are committed text; interim may still be revised.     */
+      var t0 = performance.now();
+
+      /* Build rolling buffer from ALL accumulated results */
       var buf = '';
       for(var i=0; i<event.results.length; i++){
         buf += event.results[i][0].transcript;
@@ -2671,29 +2793,44 @@ window.GencineUI = {
       }
       buf = self._normalizeAr(buf);
 
-      /* Show most-recent interim transcript as live feedback */
+      /* Log speech→interim on first result of each utterance */
+      if(_tSpeechStart && !_tFirstInterim){
+        _tFirstInterim = t0;
+        console.log('[VoiceTasbih] speech→interim: ' + Math.round(t0-_tSpeechStart) + 'ms');
+      }
+
+      /* Live transcript feedback */
       var liveText = event.results[event.results.length-1][0].transcript.trim();
       var tEl = document.getElementById('tasbihVoiceTranscript');
       if(tEl && liveText){ tEl.textContent = liveText; tEl.classList.add('visible'); }
 
-      /* Clamp cursor if recognizer corrected earlier text (buffer shrank) */
+      /* Clamp cursor on recognizer text correction */
       if(self._voiceBufCursor > buf.length) self._voiceBufCursor = Math.max(0, buf.length-10);
 
-      /* ── Find and consume phrase occurrences from cursor forward ──────────
-         Each detected occurrence advances the cursor past the match so the
-         same text is never counted twice, even across repeated interim events. */
+      /* Detect and consume phrase occurrences — cursor prevents double-counting */
       var searchText = buf.slice(self._voiceBufCursor);
-      var endOffset  = self._findPhraseEnd(searchText);
+      var endOffset  = self._findPhraseEndLocked(searchText);
 
       while(endOffset !== -1){
         var now = Date.now();
-        /* duplicate protection: ignore matches within _voiceDedupMs of last count */
         if(now - self._voiceLastMatch < self._voiceDedupMs) break;
+
         self._voiceBufCursor += endOffset;
         self._voiceLastMatch  = now;
-        self._tasbihTap();  /* increments count + haptic */
+
+        /* Timing log for this count event */
+        var tMatch = performance.now();
+        var lagInterim = _tFirstInterim ? Math.round(tMatch-_tFirstInterim) : -1;
+        var lagTotal   = _tSpeechStart  ? Math.round(tMatch-_tSpeechStart)  : -1;
+        var quality    = lagTotal<0?'?':lagTotal<200?'EXCELLENT':lagTotal<400?'GOOD':lagTotal<700?'SLOW':'BUG';
+        console.log('[VoiceTasbih] interim→match: ' + lagInterim + 'ms | speech→count: ' + lagTotal + 'ms [' + quality + ']');
+
+        self._tasbihTap();  /* count++ + haptic — both fire synchronously here */
+        console.log('[VoiceTasbih] match→haptic: ' + Math.round(performance.now()-tMatch) + 'ms');
+
+        _tSpeechStart = 0; _tFirstInterim = 0; /* reset for next utterance */
         searchText = buf.slice(self._voiceBufCursor);
-        endOffset  = self._findPhraseEnd(searchText);
+        endOffset  = self._findPhraseEndLocked(searchText);
       }
     };
 
@@ -2708,7 +2845,8 @@ window.GencineUI = {
 
     rec.onend = function(){
       if(!self._voiceActive || self._recognition !== rec) return;
-      self._voiceBufCursor = 0; /* results array resets on restart — cursor must too */
+      self._voiceBufCursor = 0;
+      _tSpeechStart = 0; _tFirstInterim = 0;
       setTimeout(function(){
         if(!self._voiceActive || self._recognition !== rec) return;
         try{ rec.start(); }catch(e){}
@@ -2727,6 +2865,7 @@ window.GencineUI = {
     var self = this;
     var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
     self._voiceActive = false;
+    self._voiceTarget = null;
     if(self._recognition){
       try{ self._recognition.abort(); }catch(e){}
       self._recognition = null;
