@@ -2126,7 +2126,7 @@ App.tab=function(name){
       return;
     }
     if(name==='gencine'){
-      var _gp=$('panelGencine');
+      var _gp=$('gencineContent'); // gencineContent is the real scroller, not panelGencine
       if(window.GencineUI&&GencineUI._view!=='home'){
         // Inside sub-view: scroll to top first, then go home
         if(_gp&&_gp.scrollTop>20){_gp.scrollTo({top:0,behavior:'smooth'});}
@@ -2138,7 +2138,7 @@ App.tab=function(name){
       return;
     }
     if(name==='settings'){
-      var _sp=$('panelSettings');
+      var _sp=$('settingsContent'); // settingsContent is the real scroller, not panelSettings
       if(_sp&&_sp.scrollTop>20){_sp.scrollTo({top:0,behavior:'smooth'});}
       return;
     }
