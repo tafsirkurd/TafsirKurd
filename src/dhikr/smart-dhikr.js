@@ -192,17 +192,6 @@
       hijriCond: function() { var d = _getDhulHijjahDay(); return d >= 11 && d <= 13; }
     },
 
-    /* ── Muharram: Islamic New Year (days 1-3) ── */
-    {
-      id: 'muharram_new_year', categoryKey: 'muharram', icon: 'fas fa-star-and-crescent',
-      labelKey: 'adhkar.muharram', labelFallback: 'سەرسالا ئیسلامی',
-      subtitleKey: 'gencine.smart.muharram_hint', subtitleFallback: 'مانگێ پیرۆز',
-      fallbackAr: 'اللَّهُمَّ أَدْخِلْهُ عَلَيْنَا بِالْأَمْنِ وَالْإِيمَانِ وَالسَّلَامَةِ وَالْإِسْلَامِ',
-      fallbackRepeat: 1, fallbackSource: 'الطبراني',
-      timeTag: 'مانگا موحەررەمێ',
-      hijriCond: function(h) { return h.month === 1 && h.day <= 3; }
-    },
-
     /* ── Ashura (Muharram 9-10 — sunnah fast) ── */
     {
       id: 'ashura', categoryKey: 'ashura', icon: 'fas fa-sun',
