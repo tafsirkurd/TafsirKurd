@@ -11,7 +11,7 @@
 // iOS WKWebView ignores Cache-Control: no-store for previously cached pages.
 // On every cold-start (sessionStorage cleared), add a timestamp param so WKWebView
 // treats the URL as new and fetches fresh HTML + versioned JS from the network.
-// Skip for capacitor: scheme â€” local bundle has no stale-cache issue and the
+// Skip for capacitor: scheme — local bundle has no stale-cache issue and the
 // redirect would cause a redundant full page reload on every cold native start.
 (function(){
   if(window.webkit&&location.protocol!=='capacitor:'&&!sessionStorage.getItem('_tksr')){
@@ -39,24 +39,24 @@
   document.documentElement.style.colorScheme=(theme==='dark'||theme==='sakina')?'dark':'light';
   document.documentElement.style.setProperty('--bg',bg);
   document.documentElement.classList.add('preload');
-  // Splash background â€” exact per-theme color, independent of app --bg
+  // Splash background — exact per-theme color, independent of app --bg
   var _sbg={light:'#f8f8f8',dark:'#000000',noor:'#f3e8cc',parchment:'#f3e8cc',sakina:'#0c1c12',emerald:'#0c1c12'}[theme]||'#f8f8f8';
   document.documentElement.style.setProperty('--splash-bg',_sbg);
-  // Theme â†’ splash asset name
-  // lightâ†’splash-light  darkâ†’splash-dark  parchment/noorâ†’splash-parchment  sakina/emeraldâ†’splash-emerald
+  // Theme → splash asset name
+  // light→splash-light  dark→splash-dark  parchment/noor→splash-parchment  sakina/emerald→splash-emerald
   var _sm={light:'light',dark:'dark',noor:'parchment',parchment:'parchment',sakina:'emerald',emerald:'emerald'};
   window._splashName=_sm[theme]||'light';
   // Store resolved image path for the splash img (used by document.write below)
   window._splashImgSrc='/assets/images/splash-'+window._splashName+'.png';
 })();
-// Device-safe rendering detection â€” default OFF, only enable on confirmed safe devices
+// Device-safe rendering detection — default OFF, only enable on confirmed safe devices
 (function(){
   var ua=navigator.userAgent;
   var isIOS=/iPhone|iPad|iPod/.test(ua);
   var isSamsung=/samsung|SM-[A-Z]/i.test(ua);
   var cv=parseInt((ua.match(/Chrome\/(\d+)/)||[,0])[1]);
   // Safe criteria:
-  // iOS: WKWebView is reliable â€” always safe
+  // iOS: WKWebView is reliable — always safe
   // Samsung: Exynos 2200 GPU bugs fixed in WebView 120+
   // Other Android: safe with WebView 100+
   var safe=isIOS||(isSamsung?cv>=120:cv>=100);
@@ -64,27 +64,27 @@
   // iPad UA fallback: force tablet class when CSS media query can't fire (e.g. TARGETED_DEVICE_FAMILY="1" compatibility mode)
   var isIPad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend'in document);
   if(isIPad)document.documentElement.classList.add('is-ipad');
-  // Platform classes â€” used for platform-specific CSS (e.g. animation gating)
+  // Platform classes — used for platform-specific CSS (e.g. animation gating)
   if(isIOS)document.documentElement.classList.add('ios');
   else if(/Android/.test(ua))document.documentElement.classList.add('android');
-  // â”€â”€ Automatic 4-tier Performance Detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Automatic 4-tier Performance Detection ──────────────────────────────
   // Score-based: high(80-100) / medium(55-79) / low(30-54) / critical(0-29)
   // Runs synchronously in <head> so perf-* classes are ready before first paint.
   // User can override via Settings: tk_perf_override = 'high'|'medium'|'low'
-  // Migration: old tk_low_end='1' â†’ tk_perf_override='low' automatically.
+  // Migration: old tk_low_end='1' → tk_perf_override='low' automatically.
   (function(){
     var _DE=document.documentElement;
-    // â”€â”€ Migrate from old binary system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Migrate from old binary system ────────────────────────────────────
     try{
       if(localStorage.getItem('tk_low_end')==='1'){
         localStorage.setItem('tk_perf_override','low');
         localStorage.removeItem('tk_low_end');
       }
     }catch(e){}
-    // â”€â”€ Read user override (settings) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Read user override (settings) ────────────────────────────────────
     var _ov=null;
     try{_ov=localStorage.getItem('tk_perf_override');}catch(e){}
-    // â”€â”€ Hardware score â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Hardware score ─────────────────────────────────────────────────────
     var _sc=100,_rs=[];
     var _mem=navigator.deviceMemory||0;
     if(_mem>0&&_mem<2){_sc-=35;_rs.push('RAM<2GB');}
@@ -105,22 +105,22 @@
       else if(_iv<16){_sc-=5;_rs.push('iOS<16');} // minor penalty for not being on latest
     }
     if(window.devicePixelRatio>3){_sc-=5;_rs.push('DPR>3');}
-    // Network: session-only (connection improves â€” don't persist)
+    // Network: session-only (connection improves — don't persist)
     var _cn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
     if(_cn&&(_cn.effectiveType==='2g'||_cn.effectiveType==='slow-2g')){_sc-=15;_rs.push('2G');}
-    // â”€â”€ Score â†’ detected level â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Score → detected level ─────────────────────────────────────────────
     var _det=_sc>=80?'high':_sc>=55?'medium':_sc>=30?'low':'critical';
     // prefers-reduced-motion: floor at medium (accessibility + battery saver)
     var _prm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)');
     if(_prm&&_prm.matches&&_det==='high'){_det='medium';_rs.push('reduced-motion');}
-    // â”€â”€ Active level = override || detected â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Active level = override || detected ───────────────────────────────
     var _lvls=['high','medium','low','critical'];
     var _act=(_ov&&_lvls.indexOf(_ov)>=0)?_ov:_det;
-    // â”€â”€ Apply classes to <html> â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Apply classes to <html> ────────────────────────────────────────────
     _DE.classList.add('perf-'+_act);
     // Backward-compat alias: low-end-device is still used in CSS below
     if(_act==='low'||_act==='critical')_DE.classList.add('low-end-device');
-    // â”€â”€ Expose TKPerf API â€” used by settings + runtime jank monitor â”€â”€â”€â”€â”€â”€â”€
+    // ── Expose TKPerf API — used by settings + runtime jank monitor ───────
     window.TKPerf={
       level:_act,detected:_det,override:_ov,score:_sc,reasons:_rs,
       applyLevel:function(l){
@@ -141,7 +141,7 @@
         }
       }
     };
-    // â”€â”€ Console logs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Console logs ──────────────────────────────────────────────────────
     console.log('[PERFORMANCE] detected: '+_det+' score='+_sc+(_rs.length?' reasons='+_rs.join(','):''));
     if(_ov)console.log('[PERFORMANCE] override mode: '+_ov);
     console.log('[PERFORMANCE] applied: perf-'+_act+((_act==='low'||_act==='critical')?' low-end-device':''));
@@ -189,20 +189,20 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17">
 
 <style>
-/* Critical: theme bg applied before external CSS loads â€” prevents flash */
+/* Critical: theme bg applied before external CSS loads — prevents flash */
 html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 </style>
 <link rel="preload" href="/app/app-styles.min.css?v=6" as="style">
 <link rel="stylesheet" href="/app/app-styles.min.css?v=6">
 <style>
-/* Search bar â€” open: spring bounce */
+/* Search bar — open: spring bounce */
 .search-bar.on{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;padding:10px 16px 12px;max-height:600px;transition:max-height .01s,padding .01s,opacity .3s cubic-bezier(0.34,1.56,0.64,1),transform .3s cubic-bezier(0.34,1.56,0.64,1)}
-/* Search bar â€” close: smooth slide up + fade */
+/* Search bar — close: smooth slide up + fade */
 .search-bar{transform:translateY(-14px) scale(0.96);opacity:0;transition:max-height 0s .22s,padding 0s .22s,opacity .2s ease-in,transform .2s ease-in}
 /* Input row springs in */
 .search-bar.on .search-wrap{animation:_sb-in .32s cubic-bezier(0.34,1.56,0.64,1) both}
 @keyframes _sb-in{from{transform:scale(0.94) translateY(-6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-/* Ã— button rotates in */
+/* × button rotates in */
 .search-bar.on .search-clear{animation:_sb-x .3s cubic-bezier(0.34,1.56,0.64,1) both}
 @keyframes _sb-x{from{transform:rotate(-90deg) scale(0.5);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
 </style>
@@ -215,7 +215,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   <script>
   document.write('<img class="splash-logo" id="splashLogo" src="'+window._splashImgSrc+'" alt="" fetchpriority="high">');
   // Hide native splash as soon as our HTML splash is painted (2 rAFs = browser committed a frame).
-  // This runs long before app.js loads â€” eliminates the blank gap between native and HTML splash.
+  // This runs long before app.js loads — eliminates the blank gap between native and HTML splash.
   requestAnimationFrame(function(){requestAnimationFrame(function(){
     try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen)
       Capacitor.Plugins.SplashScreen.hide({fadeOutDuration:150});}catch(e){}
@@ -225,7 +225,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 
 <!-- Font primer: forces KFGQPC Hafs to activate at page-load so Gencine/Dua
      tab Arabic text is instant with zero FOUT on first open -->
-<div aria-hidden="true" style="position:fixed;top:-200px;left:-200px;pointer-events:none;font-family:'KFGQPC Hafs',serif;font-size:1px;opacity:0">Ø¨Ø³Ù… Ø§Ù„Ù„Ù‡</div>
+<div aria-hidden="true" style="position:fixed;top:-200px;left:-200px;pointer-events:none;font-family:'KFGQPC Hafs',serif;font-size:1px;opacity:0">بسم الله</div>
 
 <!-- HARD UPDATE OVERLAY (full-screen block, no dismiss) -->
 <div class="fu-overlay" id="fuOverlay">
@@ -241,19 +241,19 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
         <img src="/assets/images/logo.png" class="fu-hero-img" alt="">
       </div>
     </div>
-    <h1 class="fu-title" data-i18n="update.title">Ù†ÙˆÛŽÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ù¾ÛŽÙˆÛŒØ³ØªÛ•</h1>
-    <p class="fu-msg" data-i18n="update.message">ÙˆÛ•Ø´Ø§Ù†ÛŽÚ©ÛŒ Ù†ÙˆÛŽÛŒÛŒ Ø¨Û•Ø±Ø¯Û•Ø³ØªÛ•. ØªÚ©Ø§ÛŒÛ• Ø¨Û† Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù…Ø¨ÙˆÙˆÙ† Ø¨Û•Ø±Ù†Ø§Ù…Û• Ù†ÙˆÛŽØ¨Ú©Û•Ø±Û•ÙˆÛ•.</p>
+    <h1 class="fu-title" data-i18n="update.title">نوێکردنەوەی پێویستە</h1>
+    <p class="fu-msg" data-i18n="update.message">وەشانێکی نوێیی بەردەستە. تکایە بۆ بەردەوامبوون بەرنامە نوێبکەرەوە.</p>
     <div class="fu-ver-row">
       <span class="fu-ver-old" id="fuCurrentVer"></span>
-      <span class="fu-ver-arrow">â€º</span>
+      <span class="fu-ver-arrow">›</span>
       <span class="fu-ver-new" id="fuMinVer"></span>
     </div>
     <div class="fu-news-card" id="fuNewsCard" style="display:none">
-      <div class="fu-news-hdr" data-i18n="update.whats_new">Ú†ÛŒ Ù†ÙˆÛŽØ¨ÙˆÙˆ</div>
+      <div class="fu-news-hdr" data-i18n="update.whats_new">چی نوێبوو</div>
       <ul class="fu-news-list" id="fuNewsList"></ul>
     </div>
     <button class="fu-cta" id="fuHardBtn">
-      <span data-i18n="update.btn">Ù†ÙˆÛŽØ¨Ú©Û•Ø±Û•ÙˆÛ•</span>
+      <span data-i18n="update.btn">نوێبکەرەوە</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
     </button>
   </div>
@@ -287,7 +287,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   <div class="reader" id="quranReader">
     <div class="reader-placeholder">
       <i class="fas fa-book-open reader-placeholder-icon"></i>
-      <span class="reader-placeholder-text" data-i18n="reader.select_surah" data-t="reader.select_surah">Ø³ÙˆØ±Û•ØªÛŽÚ©Û• Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Û•</span>
+      <span class="reader-placeholder-text" data-i18n="reader.select_surah" data-t="reader.select_surah">سورەتێکە هەڵبژێرە</span>
     </div>
     <div class="reader-hdr">
       <button class="back-btn" onclick="App.backToList()"><i class="fas fa-arrow-right"></i></button>
@@ -301,7 +301,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     <div class="sticky-progress">
       <div class="sticky-progress-bar"><div class="sticky-progress-fill" id="readerProgressFill"></div></div>
       <div class="sticky-progress-info">
-        <span class="sticky-ayah-label" id="readerAyahLabel" data-i18n="reader.ayah" data-t="android_span_1">0/0 Ø¦Ø§ÛŒÛ•Øª</span>
+        <span class="sticky-ayah-label" id="readerAyahLabel" data-i18n="reader.ayah" data-t="android_span_1">0/0 ئایەت</span>
         <span class="sticky-pct" id="readerPct">0%</span>
       </div>
     </div>
@@ -314,7 +314,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel" id="panelBookmarks" data-tab="bookmarks">
   <div class="hdr">
     <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title"><span data-i18n="header.bookmarks" data-t="android_span_2">Ù†ÛŒØ´Ø§Ù†Û•Ú©Ø±ÛŒ</span></div>
+    <div class="hdr-title"><span data-i18n="header.bookmarks" data-t="android_span_2">نیشانەکری</span></div>
   </div>
   <div id="bmStats"></div>
   <div id="bmControls"></div>
@@ -325,8 +325,8 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel" id="panelGoals" data-tab="goals">
   <div class="hdr">
     <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title"><span data-i18n="header.goals" data-t="android_span_3">Ø¦Ø§Ø±Ù…Ø§Ù†Ø¬</span></div>
-    <button class="hdr-text-btn" onclick="App.openWizard()"><i class="fas fa-plus"></i> <span data-i18n="header.goals_new" data-t="android_span_4">Ù†ÙˆÛŒ</span></button>
+    <div class="hdr-title"><span data-i18n="header.goals" data-t="android_span_3">ئارمانج</span></div>
+    <button class="hdr-text-btn" onclick="App.openWizard()"><i class="fas fa-plus"></i> <span data-i18n="header.goals_new" data-t="android_span_4">نوی</span></button>
   </div>
   <div id="goalsContent"></div>
 </section>
@@ -372,7 +372,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="iv-overlay-handle"></div>
       <div class="iv-overlay-hdr">
         <div class="iv-overlay-icon iv-overlay-icon--saved"><i class="fas fa-bookmark"></i></div>
-        <span class="iv-overlay-title">Ù¾Ø§Ø±Ø§Ø³ØªÛ•Ú©Ø§Ù†</span>
+        <span class="iv-overlay-title">پاراستەکان</span>
         <button class="iv-overlay-close" onclick="App.ivCloseSaved()"><i class="fas fa-times"></i></button>
       </div>
       <div id="ivSavedList" class="iv-overlay-list"></div>
@@ -384,7 +384,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="iv-overlay-handle"></div>
       <div class="iv-overlay-hdr">
         <div class="iv-overlay-icon iv-overlay-icon--history"><i class="fas fa-clock-rotate-left"></i></div>
-        <span class="iv-overlay-title">Ù…ÛŽÚ˜ÙˆÙˆÛŒ ØªÛ•Ù…Ø§Ø´Ø§Ú©Ø±Ø¯Ù†</span>
+        <span class="iv-overlay-title">مێژووی تەماشاکردن</span>
         <button class="iv-overlay-close" onclick="App.ivCloseHistory()"><i class="fas fa-times"></i></button>
       </div>
       <div id="ivHistoryList" class="iv-overlay-list"></div>
@@ -402,7 +402,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel" id="panelGencine" data-tab="gencine">
   <div class="hdr">
     <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title" id="gencineHdrTitle" style="transform:translateX(-1px)"><span>Ú¯Û•Ù†Ø¬ÛŒÙ†Û•ÛŒØ§ Ø¦ÛŒØ³Ù„Ø§Ù…ÛŽ</span></div>
+    <div class="hdr-title" id="gencineHdrTitle" style="transform:translateX(-1px)"><span>گەنجینەیا ئیسلامێ</span></div>
     <div id="booksHdrBtns" style="display:none;gap:2px">
       <button class="hdr-btn" id="bookSheikhBtn" title="Ù…Ø§Ù…ÙˆØ³ØªØ§" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
       <button class="hdr-btn" id="bookSavedBtn" title="Ù¾Ø§Ø±Ø§Ø³ØªÛ•" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
@@ -430,7 +430,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <!-- TAB: PRAYER TIMES -->
 <section class="panel" id="panelPrayer" data-tab="prayer">
   <div class="hdr">
-    <div class="hdr-title"><span>Ø¯Û•Ù…ÛŽÙ† Ø¨Ø§Ù†Ú¯ÛŒ</span></div>
+    <div class="hdr-title"><span>دەمێن بانگی</span></div>
     <div style="display:flex;gap:4px">
       <button class="hdr-btn" id="hdrPrayerBtn" onclick="App.openPrayerProgress()" title="Prayer Progress" aria-label="Prayer Progress"><i class="fas fa-chart-line"></i><span class="hdr-badge" id="prayerBadge"></span></button>
       <button class="hdr-btn" onclick="QiblaUI.open()" title="Qibla"><i class="fas fa-location-arrow"></i></button>
@@ -444,8 +444,8 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="App.closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sidebar-hdr">
-    <button class="sidebar-tab on" data-st="surah" onclick="App.sidebarTab('surah')" data-i18n="sidebar.surah" data-t="android_button_7">Ø³ÙˆÙˆØ±Û•Øª</button>
-    <button class="sidebar-tab" data-st="juz" onclick="App.sidebarTab('juz')" data-i18n="sidebar.juz" data-t="android_button_8">Ø¬ÙˆØ²</button>
+    <button class="sidebar-tab on" data-st="surah" onclick="App.sidebarTab('surah')" data-i18n="sidebar.surah" data-t="android_button_7">سوورەت</button>
+    <button class="sidebar-tab" data-st="juz" onclick="App.sidebarTab('juz')" data-i18n="sidebar.juz" data-t="android_button_8">جوز</button>
   </div>
   <div class="sidebar-list" id="sidebarList"></div>
 </div>
@@ -454,7 +454,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="qs-overlay" id="qsOverlay" onclick="App.closeReaderSettings()"></div>
 <div class="qs-sheet" id="qsSheet" style="display:none">
   <div class="qs-hdr">
-    <span data-i18n="settings.appearance">Ú•ÙˆÙˆÚ©Ø§Ø±</span>
+    <span data-i18n="settings.appearance">ڕووکار</span>
     <button class="qs-close-btn" onclick="App.closeReaderSettings()"><i class="fas fa-times"></i></button>
   </div>
   <div id="qsBody"></div>
@@ -516,7 +516,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="rec-picker" id="recPicker" style="display:none">
   <div class="rp-handle-bar" onclick="App.closeRecPicker()"></div>
   <div class="rp-hdr">
-    <div class="rp-title" data-i18n="audio.reciter">Ù‚Ø§Ø±ÛŒØ¡</div>
+    <div class="rp-title" data-i18n="audio.reciter">قاریء</div>
     <button class="rp-close" onclick="App.closeRecPicker()"><i class="fas fa-times"></i></button>
   </div>
   <div class="rp-list" id="rpList"></div>
@@ -526,7 +526,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="audio-settings-panel" id="audioSettingsPanel" role="dialog" aria-modal="true" aria-label="Audio settings">
   <div class="audio-settings-hdr">
     <button class="hdr-btn" onclick="App.closeAudioSettings()"><i class="fas fa-times"></i></button>
-    <div class="hdr-title" data-i18n="header.audio_settings" data-t="android_div_9">Ú•ÛŽÚ©Ø®Ø³ØªÙ†ÛŒ Ø¯Û•Ù†Ú¯</div>
+    <div class="hdr-title" data-i18n="header.audio_settings" data-t="android_div_9">ڕێکخستنی دەنگ</div>
   </div>
   <div class="audio-settings-body" id="audioSettingsBody"></div>
 </div>
@@ -540,8 +540,8 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   <div class="wizard-progress"><div class="wizard-progress-fill" id="wizardProgress"></div></div>
   <div class="wizard-body" id="wizardBody"></div>
   <div class="wizard-footer">
-    <button class="wizard-btn secondary" id="wizardBack" onclick="App.wizardBack()"><i class="fas fa-arrow-right"></i> <span data-i18n="wizard.btn_back" data-t="android_span_10">Ù¾Ø§Ø´Ú¯Û•Ø²</span></button>
-    <button class="wizard-btn primary" id="wizardNext" onclick="App.wizardNext()"><span data-i18n="wizard.btn_next" data-t="android_span_11">Ø¯ÙˆØ§ØªØ±</span> <i class="fas fa-arrow-left"></i></button>
+    <button class="wizard-btn secondary" id="wizardBack" onclick="App.wizardBack()"><i class="fas fa-arrow-right"></i> <span data-i18n="wizard.btn_back" data-t="android_span_10">پاشگەز</span></button>
+    <button class="wizard-btn primary" id="wizardNext" onclick="App.wizardNext()"><span data-i18n="wizard.btn_next" data-t="android_span_11">دواتر</span> <i class="fas fa-arrow-left"></i></button>
   </div>
 </div>
 
@@ -569,8 +569,8 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   <div class="dl-sheet-pull"></div>
   <div class="dl-sheet-hdr">
     <button class="dl-sheet-close" id="dlMgrClose"><i class="fas fa-times"></i></button>
-    <span class="dl-sheet-name" data-i18n="dl.manage">Ø¯Ø§ÙˆÙ†Ù„Û†Ø¯Û•Ú©Ø§Ù†</span>
-    <button id="dlMgrEditBtn" style="background:var(--bg2);border:none;cursor:pointer;font-size:.75rem;font-weight:700;color:var(--accent);border-radius:20px;padding:6px 14px;gap:8px;display:flex;align-items:center;flex-shrink:0"><span id="dlMgrEditLbl">Ù‡Û•ÚµØ¨Ú˜Ø§Ø±ØªÙ†</span><i id="dlMgrEditIco" class="fas fa-check-double" style="font-size:.8rem;flex-shrink:0;margin-inline-start:2px"></i></button>
+    <span class="dl-sheet-name" data-i18n="dl.manage">داونلۆدەکان</span>
+    <button id="dlMgrEditBtn" style="background:var(--bg2);border:none;cursor:pointer;font-size:.75rem;font-weight:700;color:var(--accent);border-radius:20px;padding:6px 14px;gap:8px;display:flex;align-items:center;flex-shrink:0"><span id="dlMgrEditLbl">هەڵبژارتن</span><i id="dlMgrEditIco" class="fas fa-check-double" style="font-size:.8rem;flex-shrink:0;margin-inline-start:2px"></i></button>
   </div>
   <div class="dl-sheet-body" id="dlMgrBody"></div>
 </div>
@@ -610,40 +610,40 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <nav class="tabbar" role="tablist" aria-label="Navigation tabs">
   <button class="tab-item on" data-tab="quran" ontouchstart="App.tab('quran')" onclick="App.tab('quran')" role="tab" aria-selected="true" aria-controls="panelQuran"><i class="fas fa-book" aria-hidden="true"></i><span data-t="android_span_12">قورئان</span></button>
   <button class="tab-item" data-tab="islamvoice" ontouchstart="App.tab('islamvoice')" onclick="App.tab('islamvoice')" role="tab" aria-selected="false" aria-controls="panelIslamvoice"><i class="fas fa-video" aria-hidden="true"></i><span data-t="android_span_13">ڤیدیۆ</span></button>
-  <button class="tab-item" data-tab="gencine" ontouchstart="App.tab('gencine')" onclick="App.tab('gencine')" role="tab" aria-selected="false" aria-controls="panelGencine"><i class="fas fa-gem" aria-hidden="true"></i><span>Ú¯Û•Ù†Ø¬ÛŒÙ†Û•</span></button>
-  <button class="tab-item" data-tab="prayer" ontouchstart="App.tab('prayer')" onclick="App.tab('prayer')" role="tab" aria-selected="false" aria-controls="panelPrayer"><i class="fas fa-mosque" aria-hidden="true"></i><span>Ù†Ú¤ÛŽÚ˜</span></button>
-  <button class="tab-item" data-tab="settings" ontouchstart="App.tab('settings')" onclick="App.tab('settings')" role="tab" aria-selected="false" aria-controls="panelSettings"><i class="fas fa-cog" aria-hidden="true"></i><span data-t="android_span_16">Ú•ÛŽÚ©Ø®Ø³ØªÙ†</span></button>
+  <button class="tab-item" data-tab="gencine" ontouchstart="App.tab('gencine')" onclick="App.tab('gencine')" role="tab" aria-selected="false" aria-controls="panelGencine"><i class="fas fa-gem" aria-hidden="true"></i><span>گەنجینە</span></button>
+  <button class="tab-item" data-tab="prayer" ontouchstart="App.tab('prayer')" onclick="App.tab('prayer')" role="tab" aria-selected="false" aria-controls="panelPrayer"><i class="fas fa-mosque" aria-hidden="true"></i><span>نڤێژ</span></button>
+  <button class="tab-item" data-tab="settings" ontouchstart="App.tab('settings')" onclick="App.tab('settings')" role="tab" aria-selected="false" aria-controls="panelSettings"><i class="fas fa-cog" aria-hidden="true"></i><span data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
 
 <!-- COPY MODAL -->
 <div class="copy-modal" id="copyModal" role="dialog" aria-modal="true" aria-label="Copy ayah" onclick="if(event.target===this)App.closeCopyModal()">
   <div class="copy-sheet">
     <div class="copy-sheet-hdr">
-      <span id="copyModalTitle" data-i18n="copy.title">Ú©Û†Ù¾ÛŒÚ©Ø±Ù†</span>
+      <span id="copyModalTitle" data-i18n="copy.title">کۆپیکرن</span>
       <button onclick="App.closeCopyModal()"><i class="fas fa-times"></i></button>
     </div>
     <div id="copyMainOpts">
       <button class="copy-opt-btn" onclick="App.copyDo('both')"><i class="fas fa-layer-group"></i><span data-i18n="copy.both">Ù‚ÙˆØ±Ø¦Ø§Ù† + ØªÛ•ÙØ³ÛŒØ±</span></button>
-      <button class="copy-opt-btn" onclick="App.copyDo('quran')"><i class="fas fa-book"></i><span data-i18n="copy.quran_only">Ù‚ÙˆØ±Ø¦Ø§Ù† ØªÛ•Ù†Ù‡Ø§</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('quran')"><i class="fas fa-book"></i><span data-i18n="copy.quran_only">قورئان تەنها</span></button>
       <button class="copy-opt-btn" onclick="App.copyDo('tafsir')"><i class="fas fa-book-open"></i><span data-i18n="copy.tafsir_only">ØªÛ•ÙØ³ÛŒØ± ØªÛ•Ù†Ù‡Ø§</span></button>
-      <button class="copy-opt-btn" onclick="App.copyShowRange()"><i class="fas fa-list-ol"></i><span data-i18n="copy.range">Ù…Û•ÙˆØ¯Ø§ÛŒ Ø¦Ø§ÛŒÛ•ØªÛ•Ú©Ø§Ù†</span></button>
+      <button class="copy-opt-btn" onclick="App.copyShowRange()"><i class="fas fa-list-ol"></i><span data-i18n="copy.range">مەودای ئایەتەکان</span></button>
     </div>
     <div id="copyRangeOpts" style="display:none">
       <div class="copy-range-row">
-        <label data-i18n="copy.from">Ù„Û• Ø¦Ø§ÛŒÛ•Øª:</label>
+        <label data-i18n="copy.from">لە ئایەت:</label>
         <input type="number" id="copyFrom" min="1" value="1">
       </div>
       <div class="copy-range-row">
-        <label data-i18n="copy.to">Ø¨Û† Ø¦Ø§ÛŒÛ•Øª:</label>
+        <label data-i18n="copy.to">بۆ ئایەت:</label>
         <input type="number" id="copyTo" min="1" value="3">
       </div>
       <div class="copy-range-fmt">
         <button class="copy-fmt-btn on" data-i18n="copy.both" onclick="App.copyFmtSelect(this,'both')">Ù‚ÙˆØ±Ø¦Ø§Ù† + ØªÛ•ÙØ³ÛŒØ±</button>
-        <button class="copy-fmt-btn" data-i18n="copy.fmt_quran" onclick="App.copyFmtSelect(this,'quran')">Ù‚ÙˆØ±Ø¦Ø§Ù†</button>
+        <button class="copy-fmt-btn" data-i18n="copy.fmt_quran" onclick="App.copyFmtSelect(this,'quran')">قورئان</button>
         <button class="copy-fmt-btn" data-i18n="copy.fmt_tafsir" onclick="App.copyFmtSelect(this,'tafsir')">ØªÛ•ÙØ³ÛŒØ±</button>
       </div>
-      <button class="copy-range-copy-btn" onclick="App.copyRangeDo()"><i class="fas fa-copy"></i> <span data-i18n="copy.copy_btn">Ú©Û†Ù¾ÛŒÚ©Ø±Ù†</span></button>
-      <button class="copy-back-btn" onclick="App.copyBackToMain()"><i class="fas fa-arrow-right"></i> <span data-i18n="copy.back">Ú¯Û•Ú•Ø§Ù†Û•Ú¤Û•</span></button>
+      <button class="copy-range-copy-btn" onclick="App.copyRangeDo()"><i class="fas fa-copy"></i> <span data-i18n="copy.copy_btn">کۆپیکرن</span></button>
+      <button class="copy-back-btn" onclick="App.copyBackToMain()"><i class="fas fa-arrow-right"></i> <span data-i18n="copy.back">گەڕانەڤە</span></button>
     </div>
   </div>
 </div>
@@ -652,75 +652,75 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="repeat-modal" id="repeatModal">
   <div class="repeat-modal-content">
     <div class="repeat-modal-hdr">
-      <h3 data-i18n="repeat.title" data-t="android_h3_17">Ø¯ÙˆÙˆØ¨Ø§Ø±Û•Ú©Ø±Ø¯Ù†Û•ÙˆÛ•</h3>
+      <h3 data-i18n="repeat.title" data-t="android_h3_17">دووبارەکردنەوە</h3>
       <button class="repeat-modal-close" onclick="App.closeRepeat()"><i class="fas fa-times"></i></button>
     </div>
     <div class="repeat-mode-tabs">
-      <button class="repeat-tab on" data-rmode="single" onclick="App.repeatMode('single')" data-i18n="repeat.single" data-t="android_button_18">Ø¦Ø§ÛŒÛ•ØªÛŒ ØªØ§Ú©</button>
-      <button class="repeat-tab" data-rmode="range" onclick="App.repeatMode('range')" data-i18n="repeat.range" data-t="android_button_19">Ù…Û•ÙˆØ¯Ø§</button>
-      <button class="repeat-tab" data-rmode="surah" onclick="App.repeatMode('surah')" data-i18n="repeat.surah" data-t="android_button_20">Ø³ÙˆÙˆØ±Û•Øª</button>
+      <button class="repeat-tab on" data-rmode="single" onclick="App.repeatMode('single')" data-i18n="repeat.single" data-t="android_button_18">ئایەتی تاک</button>
+      <button class="repeat-tab" data-rmode="range" onclick="App.repeatMode('range')" data-i18n="repeat.range" data-t="android_button_19">مەودا</button>
+      <button class="repeat-tab" data-rmode="surah" onclick="App.repeatMode('surah')" data-i18n="repeat.surah" data-t="android_button_20">سوورەت</button>
     </div>
     <div class="repeat-mode-body" id="rmSingle">
       <div class="repeat-input-group">
-        <label data-i18n="repeat.verse_label" data-t="android_label_21">Ø¦Ø§ÛŒÛ•Øª:</label>
+        <label data-i18n="repeat.verse_label" data-t="android_label_21">ئایەت:</label>
         <input type="text" id="rmSingleInput" placeholder="1:1" readonly="">
       </div>
     </div>
     <div class="repeat-mode-body hide" id="rmRange">
       <div class="repeat-input-group">
-        <label data-i18n="repeat.from" data-t="android_label_22">Ù„Û• Ø¦Ø§ÛŒÛ•Øª:</label>
+        <label data-i18n="repeat.from" data-t="android_label_22">لە ئایەت:</label>
         <input type="text" id="rmRangeStart" placeholder="1:1">
       </div>
       <div class="repeat-input-group">
-        <label data-i18n="repeat.to" data-t="android_label_23">Ø¨Û† Ø¦Ø§ÛŒÛ•Øª:</label>
+        <label data-i18n="repeat.to" data-t="android_label_23">بۆ ئایەت:</label>
         <input type="text" id="rmRangeEnd" placeholder="1:7">
       </div>
     </div>
     <div class="repeat-mode-body hide" id="rmSurah">
       <div class="repeat-input-group">
-        <label data-i18n="repeat.surah_label" data-t="android_label_24">Ø³ÙˆÙˆØ±Û•Øª:</label>
+        <label data-i18n="repeat.surah_label" data-t="android_label_24">سوورەت:</label>
         <select id="rmSurahSelect"></select>
       </div>
     </div>
     <div class="repeat-controls">
       <div class="repeat-ctrl-item">
-        <span class="repeat-ctrl-label" data-i18n="repeat.play_count" data-t="android_span_25">Ú˜Ù…Ø§Ø±Û•ÛŒ Ù„ÛŽØ¯Ø§Ù†</span>
+        <span class="repeat-ctrl-label" data-i18n="repeat.play_count" data-t="android_span_25">ژمارەی لێدان</span>
         <div class="repeat-counter">
           <button class="repeat-counter-btn" onclick="App.rmCounter('play',-1)">-</button>
           <span class="repeat-counter-val" id="rmPlayCount">2</span>
           <button class="repeat-counter-btn" onclick="App.rmCounter('play',1)">+</button>
-          <span class="repeat-counter-unit" data-i18n="repeat.times" data-t="android_span_26">Ø¬Ø§Ø±</span>
+          <span class="repeat-counter-unit" data-i18n="repeat.times" data-t="android_span_26">جار</span>
         </div>
       </div>
       <div class="repeat-ctrl-item">
-        <span class="repeat-ctrl-label" data-i18n="repeat.verse_repeat" data-t="android_span_27">Ø¯ÙˆÙˆØ¨Ø§Ø±Û•ÛŒ Ù‡Û•Ø± Ø¦Ø§ÛŒÛ•Øª</span>
+        <span class="repeat-ctrl-label" data-i18n="repeat.verse_repeat" data-t="android_span_27">دووبارەی هەر ئایەت</span>
         <div class="repeat-counter">
           <button class="repeat-counter-btn" onclick="App.rmCounter('verse',-1)">-</button>
           <span class="repeat-counter-val" id="rmVerseCount">1</span>
           <button class="repeat-counter-btn" onclick="App.rmCounter('verse',1)">+</button>
-          <span class="repeat-counter-unit" data-i18n="repeat.times" data-t="android_span_28">Ø¬Ø§Ø±</span>
+          <span class="repeat-counter-unit" data-i18n="repeat.times" data-t="android_span_28">جار</span>
         </div>
       </div>
       <div class="repeat-ctrl-item">
-        <span class="repeat-ctrl-label" data-i18n="repeat.delay" data-t="android_span_29">Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†ÛŒ Ù†ÛŽÙˆØ§Ù†</span>
+        <span class="repeat-ctrl-label" data-i18n="repeat.delay" data-t="android_span_29">چاوەڕوانی نێوان</span>
         <div class="repeat-counter">
           <button class="repeat-counter-btn" onclick="App.rmCounter('delay',-1)">-</button>
           <span class="repeat-counter-val" id="rmDelayCount">0</span>
           <button class="repeat-counter-btn" onclick="App.rmCounter('delay',1)">+</button>
-          <span class="repeat-counter-unit" data-i18n="repeat.seconds" data-t="android_span_30">Ú†Ø±Ú©Û•</span>
+          <span class="repeat-counter-unit" data-i18n="repeat.seconds" data-t="android_span_30">چرکە</span>
         </div>
       </div>
     </div>
     <div class="repeat-actions">
-      <button class="repeat-cancel-btn" onclick="App.closeRepeat()" data-i18n="repeat.cancel" data-t="android_button_31">Ù¾Ø§Ø´Ú¯Û•Ø²</button>
-      <button class="repeat-start-btn" onclick="App.startRepeat()" data-i18n="repeat.start" data-t="android_button_32">Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø±Ø¯Ù†</button>
+      <button class="repeat-cancel-btn" onclick="App.closeRepeat()" data-i18n="repeat.cancel" data-t="android_button_31">پاشگەز</button>
+      <button class="repeat-start-btn" onclick="App.startRepeat()" data-i18n="repeat.start" data-t="android_button_32">دەستپێکردن</button>
     </div>
   </div>
 </div>
 
 <!-- REPEAT STATUS BAR -->
 <div class="repeat-status" id="repeatStatus">
-  <span class="repeat-status-text" id="repeatStatusText" data-i18n="repeat.active" data-t="android_span_33">Ø¯ÙˆÙˆØ¨Ø§Ø±Û•Ú©Ø±Ø¯Ù†Û•ÙˆÛ•...</span>
+  <span class="repeat-status-text" id="repeatStatusText" data-i18n="repeat.active" data-t="android_span_33">دووبارەکردنەوە...</span>
   <button class="repeat-status-stop" onclick="App.stopRepeat()"><i class="fas fa-stop"></i></button>
 </div>
 
@@ -728,49 +728,49 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="goal-confirm-overlay" id="goalConfirmOverlay" onclick="if(event.target===this)App.closeDeleteConfirm()">
   <div class="goal-confirm-box">
     <span class="goal-confirm-icon"><i class="fas fa-trash-can"></i></span>
-    <div class="goal-confirm-title" data-i18n="goals.confirm.title">Ø¦Ø§Ø±Ù…Ø§Ù†Ø¬ Ø¨Ø³Ú•ÛŒØªÛ•ÙˆÛ•ØŸ</div>
-    <div class="goal-confirm-text" data-i18n="goals.confirm.text">Ú†Û†Ù† Ø¯Û•ØªÛ•ÙˆÛŽØª Ø¨Ú©Ø±ÛŽØªØŸ</div>
+    <div class="goal-confirm-title" data-i18n="goals.confirm.title">ئارمانج بسڕیتەوە؟</div>
+    <div class="goal-confirm-text" data-i18n="goals.confirm.text">چۆن دەتەوێت بکرێت؟</div>
     <div class="goal-choice-list">
       <button class="goal-choice-btn goal-choice-danger" onclick="App.confirmDeleteGoalFull()">
         <i class="fas fa-rotate-left"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label" data-i18n="goals.choice.delete_full_label">Ø³Ú•ÛŒÙ†Û•ÙˆÛ• Ùˆ Ø±ÛŒØ³ØªÛŒ Ù‡Û•Ù…ÙˆÙˆ</span>
-          <span class="goal-choice-desc" data-i18n="goals.choice.delete_full_desc">Ø¦Ø§Ù…Ø§Ù†Ø¬ Ùˆ Ù‡Û•Ù…ÙˆÙˆ Ø±ÛŒÚ©Û†Ø±Ø¯Û•Ú©Ø§Ù†ÛŒ Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ• Ø¯Û•Ø³Ú•ÛŽÙ†Û•ÙˆÛ•</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.delete_full_label">سڕینەوە و ریستی هەموو</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.delete_full_desc">ئامانج و هەموو ریکۆردەکانی خوێندنەوە دەسڕێنەوە</span>
         </div>
       </button>
       <button class="goal-choice-btn" onclick="App.confirmDeleteGoalKeep()">
         <i class="fas fa-book-open"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label" data-i18n="goals.choice.delete_keep_label">ØªÛ•Ù†ÛŒØ§ Ø¦Ø§Ù…Ø§Ù†Ø¬ Ø¨Ø³Ú•Û•ÙˆÛ•</span>
-          <span class="goal-choice-desc" data-i18n="goals.choice.delete_keep_desc">Ø´ÙˆÛŽÙ†ÛŒ Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•Ù… Ù„Û• Ù‚ÙˆØ±Ø¦Ø§Ù†Ø¯Ø§ Ø¯Û•Ù…ÛŽÙ†ÛŽØªÛ•ÙˆÛ•</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.delete_keep_label">تەنیا ئامانج بسڕەوە</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.delete_keep_desc">شوێنی خوێندنەوەم لە قورئاندا دەمێنێتەوە</span>
         </div>
       </button>
     </div>
-    <button class="goal-confirm-cancel-full" onclick="App.closeDeleteConfirm()" data-i18n="goals.confirm.cancel">Ù¾Ø§Ø´Ú¯Û•Ø²</button>
+    <button class="goal-confirm-cancel-full" onclick="App.closeDeleteConfirm()" data-i18n="goals.confirm.cancel">پاشگەز</button>
   </div>
 </div>
 <div class="goal-confirm-overlay" id="goalStartChoiceOverlay" onclick="if(event.target===this)App.closeStartChoice()">
   <div class="goal-confirm-box">
     <span class="goal-confirm-icon" style="background:rgba(var(--accent-rgb),.08);color:var(--accent)"><i class="fas fa-seedling"></i></span>
-    <div class="goal-confirm-title" data-i18n="goals.start_choice.title">Ø¦Ø§Ù…Ø§Ù†Ø¬ÛŒ Ú©Û†Ù† Ù‡Û•ÛŒÛ•</div>
-    <div class="goal-confirm-text" data-i18n="goals.start_choice.text">Ø¦Ø§Ù…Ø§Ù†Ø¬ÛŒ Ù†ÙˆÛŽ Ú†Û†Ù† Ø¯Û•Ø³ØªØª Ù¾ÛŽ Ø¨Ú©Ø§ØªØŸ</div>
+    <div class="goal-confirm-title" data-i18n="goals.start_choice.title">ئامانجی کۆن هەیە</div>
+    <div class="goal-confirm-text" data-i18n="goals.start_choice.text">ئامانجی نوێ چۆن دەستت پێ بکات؟</div>
     <div class="goal-choice-list">
       <button class="goal-choice-btn goal-choice-danger" onclick="App.confirmStartFresh()">
         <i class="fas fa-rotate-left"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label" data-i18n="goals.choice.fresh_label">Ø¯Û•Ø³ØªÙ¾ÛŽÚ©ÛŒ ØªØ§Ø²Û•</span>
-          <span class="goal-choice-desc" data-i18n="goals.choice.fresh_desc">Ø±ÛŒÚ©Û†Ø±Ø¯Û•Ú©Ø§Ù†ÛŒ Ú©Û†Ù† Ø¯Û•Ø³Ú•ÛŽÙ†Û•ÙˆÛ• Ùˆ ØªØ§Ø²Û• Ø¯Û•Ø³ØªØª Ù¾ÛŽ Ø¯Û•Ú©Ø§Øª</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.fresh_label">دەستپێکی تازە</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.fresh_desc">ریکۆردەکانی کۆن دەسڕێنەوە و تازە دەستت پێ دەکات</span>
         </div>
       </button>
       <button class="goal-choice-btn" onclick="App.confirmStartKeep()">
         <i class="fas fa-book-open"></i>
         <div class="goal-choice-text">
-          <span class="goal-choice-label" data-i18n="goals.choice.keep_label">Ø´ÙˆÛŽÙ†Ù… Ø¨Ù…ÛŽÙ†ÛŽØªÛ•ÙˆÛ•</span>
-          <span class="goal-choice-desc" data-i18n="goals.choice.keep_desc">Ø¦Ø§Ù…Ø§Ù†Ø¬ÛŒ Ù†ÙˆÛŽ Ø¨Ú©Û•ØŒ Ø´ÙˆÛŽÙ†ÛŒ Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•Ù… Ù„Û• Ù‚ÙˆØ±Ø¦Ø§Ù†Ø¯Ø§ Ø¨Ù…ÛŽÙ†ÛŽØªÛ•ÙˆÛ•</span>
+          <span class="goal-choice-label" data-i18n="goals.choice.keep_label">شوێنم بمێنێتەوە</span>
+          <span class="goal-choice-desc" data-i18n="goals.choice.keep_desc">ئامانجی نوێ بکە، شوێنی خوێندنەوەم لە قورئاندا بمێنێتەوە</span>
         </div>
       </button>
     </div>
-    <button class="goal-confirm-cancel-full" onclick="App.closeStartChoice()" data-i18n="goals.confirm.cancel">Ù¾Ø§Ø´Ú¯Û•Ø²</button>
+    <button class="goal-confirm-cancel-full" onclick="App.closeStartChoice()" data-i18n="goals.confirm.cancel">پاشگەز</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -803,7 +803,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     if (i >= list.length) return;
     _load(list[i], function(){ _loadSeq(list, i + 1); });
   }
-  // Prayer scripts: load after 300ms â€” ready before user can tap Prayer tab
+  // Prayer scripts: load after 300ms — ready before user can tap Prayer tab
   var _prayer = [
     '/prayer/prayer.cache.js?v=20260526',
     '/prayer/prayer.api.js?v=20260604',
@@ -839,14 +839,14 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script src="/img-cache.js?v=1"></script>
 <script src="/app/app.min.js?v=1196"></script>
 <script>
-/* Register service worker â€” web/PWA only; native Capacitor loads from bundle, no SW needed */
+/* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
   navigator.serviceWorker.register('/service-worker.js', { scope: '/', updateViaCache: 'none' })
     .then(function(reg) { reg.update().catch(function() {}); })
     .catch(function() {});
 
   /* SW update: when a new service worker takes control, auto-reload if the page is fresh
-     (opened within the last 4 seconds â€” user hasn't started reading anything yet).
+     (opened within the last 4 seconds — user hasn't started reading anything yet).
      Otherwise show a dismissible banner so we don't interrupt mid-session use. */
   var _swLoadTs = Date.now();
   navigator.serviceWorker.addEventListener('controllerchange', function() {
@@ -855,7 +855,7 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
     var b = document.createElement('div');
     b.id = 'sw-update-bar';
     b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a56db;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:10px;z-index:99999;font-family:sans-serif;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.2)';
-    b.innerHTML = 'ðŸ”„ App updated! <button onclick="location.reload()" style="background:#fff;color:#1a56db;border:none;padding:4px 14px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer">Refresh Now</button><button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:0 4px">Ã—</button>';
+    b.innerHTML = 'ðŸ”„ App updated! <button onclick="location.reload()" style="background:#fff;color:#1a56db;border:none;padding:4px 14px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer">Refresh Now</button><button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:0 4px">×</button>';
     document.body.appendChild(b);
   });
 
@@ -868,7 +868,7 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
     var extra = event.data.extra || {};
     var type = extra.type || '';
     var id   = String(extra.id || '');
-    console.log('[SWâ†’App] NOTIF_TAP type=' + type + ' id=' + id);
+    console.log('[SW→App] NOTIF_TAP type=' + type + ' id=' + id);
     if (window._handlePushDeepLink) {
       window._handlePushDeepLink(type, id);
     }
