@@ -3111,6 +3111,19 @@ window.GencineUI = {
             var _cloneFirst = _track.firstChild.cloneNode(true);
             _track.insertBefore(_cloneLast, _track.firstChild);
             _track.appendChild(_cloneFirst);
+            // cloneNode copies the DOM snapshot — onload never fires on clones.
+            // Mark their cover imgs loaded immediately so they don't flash invisible.
+            [_cloneLast, _cloneFirst].forEach(function(_cl){
+              [].slice.call(_cl.querySelectorAll('img.book-feat-card-cover')).forEach(function(_ci){
+                if (!_ci.classList.contains('loaded')) {
+                  if ((_ci.complete && _ci.naturalWidth > 0) || _coverCache.has(_ci.src)) {
+                    _ci.classList.add('loaded');
+                  } else {
+                    _ci.onload = function(){ _ci.classList.add('loaded'); };
+                  }
+                }
+              });
+            });
 
             var _cur=1, _tmr=null, _tx0=0, _ty0=0, _dirLocked=null, _w=0;
 
