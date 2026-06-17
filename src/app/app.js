@@ -5573,9 +5573,8 @@ function updateMushafProgress(view){
   var sessionSurah=S.surah; // surah that opened this mushaf session
   var destroyed=false;
   var saveTimer=null;
-  var dwellTimer=null;var dwellPage=null;var retryTimer=null;
+  var dwellTimer=null;var dwellPage=null;
   var scrollTick=null;var initTimer=null;var periodic=null;
-  var markedPages=new Set();
 
   // Always show the progress bar in mushaf mode
   var progressEl=document.querySelector('.sticky-progress');
@@ -5689,6 +5688,20 @@ function updateMushafProgress(view){
     }
   }
 
+  // ── Mark only ayahs whose top edge is on-screen (viewport-accurate tracker) ─
+  function markVisibleAyahs(pageEl){
+    var vh=window.innerHeight;
+    var changed=false;var changedSurahs={};
+    var segs=pageEl.querySelectorAll('.mushaf-ayah-seg[data-surah][data-ayah]');
+    for(var i=0;i<segs.length;i++){
+      var r=segs[i].getBoundingClientRect();
+      if(r.top<vh){
+        if(markAyahSeen(segs[i].dataset.surah,segs[i].dataset.ayah)){changed=true;changedSurahs[parseInt(segs[i].dataset.surah)]=true;}
+      }
+    }
+    if(changed){updateHeader();Object.keys(changedSurahs).forEach(function(sn){scheduleSave(sn);});}
+  }
+
   // Show saved progress immediately on open
   updateHeader();
 
@@ -5717,20 +5730,12 @@ function updateMushafProgress(view){
     if(dwellPage&&(dwellPage!==bestPage||bestRatio<0.3)){
       clearTimeout(dwellTimer);dwellTimer=null;dwellPage=null;
     }
-    if(bestPage&&bestRatio>=0.35&&!dwellTimer&&!markedPages.has(bestPn)){
+    if(bestPage&&bestRatio>=0.35&&!dwellTimer){
       dwellPage=bestPage;
       dwellTimer=setTimeout(function(){
         dwellTimer=null;dwellPage=null;
         if(destroyed)return;
-        markedPages.add(bestPn);
-        if(bestPage.dataset.verseKeys||bestPage.dataset.verses){
-          markPage(bestPage);
-        } else {
-          retryTimer=setTimeout(function(){
-            retryTimer=null;
-            if(!destroyed&&(bestPage.dataset.verseKeys||bestPage.dataset.verses))markPage(bestPage);
-          },2000);
-        }
+        markVisibleAyahs(bestPage);
       },2500);
     }
   }
@@ -5747,7 +5752,7 @@ function updateMushafProgress(view){
   _progressCleanup=function(){
     destroyed=true;
     clearTimeout(saveTimer);clearTimeout(initTimer);clearTimeout(scrollTick);
-    clearTimeout(dwellTimer);clearTimeout(retryTimer);clearInterval(periodic);
+    clearTimeout(dwellTimer);clearInterval(periodic);
     window.removeEventListener('scroll',onScroll,{capture:true});
     view.removeEventListener('scroll',onScroll);
   };
