@@ -44,7 +44,8 @@ export async function onRequest(context) {
         const ipHash   = await hashIp(ip);
         const severity = VALID_SEVERITIES.has(body.severity) ? body.severity : 'error';
         const component = VALID_COMPONENTS.has(body.component) ? body.component : (san(body.component, 50) || null);
-        const fp = san(body.fingerprint, 16) || await serverFingerprint(body.error_type, body.error_message, body.stack_trace);
+        const rawFp = san(body.fingerprint, 20) || '';
+        const fp = (rawFp.replace(/[^a-f0-9]/gi, '') || await serverFingerprint(body.error_type, body.error_message, body.stack_trace));
         const ts = new Date().toISOString();
 
         const row = {

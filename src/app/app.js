@@ -5709,9 +5709,10 @@ function updateMushafProgress(view){
   function visibleRatio(pageEl){
     var pr=pageEl.getBoundingClientRect();
     if(pr.right<=0||pr.left>=window.innerWidth)return 0;
+    var vh=(window.visualViewport&&window.visualViewport.height)||window.innerHeight||document.documentElement.clientHeight;
     var top=Math.max(pr.top,0);
-    var bot=Math.min(pr.bottom,window.innerHeight);
-    return Math.max(0,bot-top)/Math.max(1,window.innerHeight);
+    var bot=Math.min(pr.bottom,vh);
+    return Math.max(0,bot-top)/Math.max(1,vh);
   }
 
   function checkVisible(){
@@ -5727,16 +5728,16 @@ function updateMushafProgress(view){
       if(r>bestRatio){bestRatio=r;bestPage=pageEl;}
     });
     var bestPn=bestPage?bestPage.dataset.page||'0':null;
-    if(dwellPage&&(dwellPage!==bestPage||bestRatio<0.3)){
+    if(dwellPage&&(dwellPage!==bestPage||bestRatio<0.1)){
       clearTimeout(dwellTimer);dwellTimer=null;dwellPage=null;
     }
-    if(bestPage&&bestRatio>=0.35&&!dwellTimer){
+    if(bestPage&&bestRatio>=0.15&&!dwellTimer){
       dwellPage=bestPage;
       dwellTimer=setTimeout(function(){
         dwellTimer=null;dwellPage=null;
         if(destroyed)return;
         markVisibleAyahs(bestPage);
-      },2500);
+      },1800);
     }
   }
 
