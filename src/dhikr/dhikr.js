@@ -3045,7 +3045,9 @@ window.GencineUI = {
             _fti.fetchPriority = 'high';
             _fti.onload = function(){ _fti.classList.add('loaded'); };
             _fti.onerror = function(){ var _fph=document.createElement('div');_fph.className='book-feat-card-ph';var _fphi=document.createElement('i');_fphi.className='fas fa-book';_fph.appendChild(_fphi);_fti.parentNode&&_fti.parentNode.replaceChild(_fph,_fti); };
-            _fti.src = _bestCover; _fth.appendChild(_fti);
+            _fti.src = _bestCover;
+            if (_fti.complete && _fti.naturalWidth > 0) _fti.classList.add('loaded');
+            _fth.appendChild(_fti);
           } else { var _ftph = document.createElement('div'); _ftph.className = 'book-feat-card-ph'; var _ftphi = document.createElement('i'); _ftphi.className = 'fas fa-book'; _ftph.appendChild(_ftphi); _fth.appendChild(_ftph); }
           _fc.appendChild(_fth);
           /* Text overlay */
