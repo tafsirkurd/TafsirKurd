@@ -5661,10 +5661,10 @@ function updateMushafProgress(view){
     sn=parseInt(sn);vn=parseInt(vn);
     var s2=SURAHS[sn-1];if(!s2||vn<1||vn>s2.a)return false;
     var set=_getSeen(sn);
-    if(set.has(vn))return false;
-    set.add(vn);
+    var isNew=!set.has(vn);
+    if(isNew)set.add(vn);
     trackVerse(sn,vn);
-    return true;
+    return isNew;
   }
 
   // â”€â”€ Mark a whole page seen (uses verseKeys for multi-surah pages) â”€â”€â”€â”€â”€â”€â”€â”€â”€
