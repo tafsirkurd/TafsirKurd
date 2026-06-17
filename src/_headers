@@ -33,12 +33,6 @@
   Pragma: no-cache
   Expires: 0
 
-# 🔄 Service worker — must never be cached (browser checks for SW updates on every navigate)
-/service-worker.js
-  Cache-Control: no-cache, no-store, must-revalidate
-  Pragma: no-cache
-  Expires: 0
-
 # 🕌 Prayer data — static annual JSON, 1h CDN cache so corrections propagate within 1h
 /prayer-data/*
   Cache-Control: public, max-age=3600
@@ -57,6 +51,13 @@
 
 /**/*.css
   Cache-Control: public, max-age=31536000, immutable
+
+# 🔄 Service worker — must never be cached (browser checks for SW updates on every navigate)
+# MUST come AFTER /*.js glob so it wins (Cloudflare Pages: last matching rule takes precedence)
+/service-worker.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
 
 # 🔤 Fonts — immutable (versioned via ?v= param in HTML)
 /assets/fonts/*
