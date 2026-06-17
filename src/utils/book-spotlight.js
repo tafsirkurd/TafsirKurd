@@ -1,13 +1,16 @@
-/* Book Spotlight v1 — premium featured-book recommendation system
-   Reads featured_book from gencine_books_v4 localStorage cache.
+/* Book Spotlight v3 — premium featured-book recommendation system
+   Reads featured_book from gencine_books_v4 localStorage cache,
+   or fetches directly from Supabase if cache is stale/missing.
    Shows a floating card after 2 min, disappears permanently on discovery. */
 (function(window) {
   'use strict';
 
   var LAUNCH_TIME = Date.now();
-  var SHOW_DELAY  = 120000; /* 2 minutes */
+  var SHOW_DELAY  = 120000; /* 2 minutes after app launch */
   var DISC_KEY    = 'featured_book_discovered_v1';
   var DISM_KEY    = 'book_spotlight_dismissed_v1';
+  var BS_CACHE    = 'bs_featured_book_v1'; /* lightweight single-book cache */
+  var _fetchPending = false;
 
   /* ── CSS (injected once) ──────────────────────────────────────────── */
   (function() {
@@ -15,35 +18,100 @@
     var s = document.createElement('style');
     s.id = 'bs-style';
     s.textContent = [
-      '.book-spotlight-card{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);left:16px;width:280px;',
-      'background:var(--bg-surface,#1c1c1e);border:1px solid rgba(255,255,255,0.08);border-radius:16px;',
-      'box-shadow:0 8px 32px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.2);',
-      'display:flex;flex-direction:row;align-items:center;gap:12px;padding:12px;',
-      'z-index:9000;opacity:0;transform:translateY(20px);',
-      'transition:opacity 300ms ease,transform 300ms ease;pointer-events:none;cursor:pointer;',
-      'direction:rtl;user-select:none;-webkit-tap-highlight-color:transparent;}',
+      /* ── Card shell ── */
+      '.book-spotlight-card{',
+        'position:fixed;',
+        'bottom:calc(env(safe-area-inset-bottom,0px) + 78px);',
+        'left:12px;right:12px;',
+        'background:#2a2420;',            /* warm dark brown — not cold black */
+        'border:1px solid rgba(180,150,60,0.2);',
+        'border-radius:20px;',
+        'box-shadow:0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.25),0 0 0 0.5px rgba(255,255,255,.04);',
+        'display:flex;flex-direction:row;align-items:center;gap:14px;',
+        'padding:14px 14px 14px 16px;',
+        'z-index:9000;',
+        'opacity:0;transform:translateY(28px);',
+        'transition:opacity 420ms cubic-bezier(0.16,1,0.3,1),transform 420ms cubic-bezier(0.34,1.3,0.64,1);',
+        'pointer-events:none;cursor:pointer;',
+        'direction:rtl;user-select:none;-webkit-tap-highlight-color:transparent;}',
+
       '.book-spotlight-card.bs-visible{opacity:1;transform:translateY(0);pointer-events:auto;}',
-      '.bs-close{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;',
-      'border:none;background:rgba(255,255,255,.1);color:var(--text-secondary,#888);',
-      'cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;padding:0;flex-shrink:0;}',
-      '.bs-close:active{background:rgba(255,255,255,.2);}',
-      '.bs-cover-wrap{width:56px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3);}',
+      '.book-spotlight-card:active{opacity:.92;}',
+
+      /* ── Light / noor theme override ── */
+      '[data-theme="noor"] .book-spotlight-card,[data-theme="light"] .book-spotlight-card,[data-theme="parchment"] .book-spotlight-card{',
+        'background:#f5edda;',            /* warm parchment */
+        'border-color:rgba(160,120,40,0.25);',
+        'box-shadow:0 8px 32px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.08);}',
+      '[data-theme="noor"] .bs-title,[data-theme="light"] .bs-title,[data-theme="parchment"] .bs-title{color:#1a1208!important;}',
+      '[data-theme="noor"] .bs-subtitle,[data-theme="light"] .bs-subtitle,[data-theme="parchment"] .bs-subtitle{color:#6b5a3e!important;}',
+      '[data-theme="noor"] .bs-close,[data-theme="light"] .bs-close,[data-theme="parchment"] .bs-close{color:#8a7a60!important;background:rgba(0,0,0,.07)!important;}',
+
+      /* ── Sakina theme override ── */
+      '[data-theme="sakina"] .book-spotlight-card{background:#0f201a;}',
+
+      /* ── Close button (top-left physical = top-end RTL) ── */
+      '.bs-close{',
+        'position:absolute;top:10px;left:10px;',
+        'width:26px;height:26px;border-radius:50%;',
+        'border:none;',
+        'background:rgba(128,128,128,.15);',
+        'color:var(--text-tertiary,#666);',
+        'cursor:pointer;display:flex;align-items:center;justify-content:center;',
+        'font-size:10px;padding:0;flex-shrink:0;',
+        'transition:background .15s;}',
+      '.bs-close:active{background:rgba(128,128,128,.28);}',
+
+      /* ── Cover ── */
+      '.bs-cover-wrap{',
+        'width:68px;height:88px;',
+        'border-radius:10px;overflow:hidden;flex-shrink:0;',
+        'box-shadow:0 6px 18px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.25);}',
       '.bs-cover{width:100%;height:100%;object-fit:cover;display:block;}',
-      '.bs-cover-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;',
-      'background:var(--bg-active,#2a2a2a);}',
-      '.bs-cover-placeholder i{font-size:20px;color:var(--text-tertiary,#555);}',
-      '.bs-content{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-right:4px;}',
-      '.bs-label{font-size:10px;font-weight:600;letter-spacing:.3px;color:#d4af37;',
-      'text-transform:uppercase;display:flex;align-items:center;gap:4px;}',
-      '.bs-title{font-size:13px;font-weight:700;color:var(--text-primary,#f0f0f0);line-height:1.35;',
-      'font-family:"IBM Plex Sans Arabic",sans-serif;overflow:hidden;display:-webkit-box;',
-      '-webkit-line-clamp:2;-webkit-box-orient:vertical;}',
-      '.bs-subtitle{font-size:11px;color:var(--text-secondary,#999);overflow:hidden;',
-      'white-space:nowrap;text-overflow:ellipsis;}',
-      '.bs-cta{margin-top:5px;padding:4px 10px;border-radius:8px;border:none;',
-      'background:var(--primary,#4f8ef7);color:#fff;font-size:11px;font-weight:600;',
-      'cursor:pointer;align-self:flex-start;font-family:"IBM Plex Sans Arabic",sans-serif;',
-      'transition:opacity .15s;}'
+      '.bs-cover-placeholder{',
+        'width:100%;height:100%;display:flex;align-items:center;justify-content:center;',
+        'background:var(--bg-active,#2a2a2a);}',
+      '.bs-cover-placeholder i{font-size:26px;color:var(--text-tertiary,#555);}',
+
+      /* ── Content ── */
+      '.bs-content{flex:1;min-width:0;display:flex;flex-direction:column;gap:0;}',
+
+      /* ── Label ── */
+      '.bs-label{',
+        'font-size:10px;font-weight:700;letter-spacing:.5px;',
+        'color:#c9a040;',   /* warm Islamic gold */
+        'text-transform:uppercase;',
+        'display:flex;align-items:center;gap:5px;',
+        'margin-bottom:5px;}',
+      '.bs-label i{font-size:9px;}',
+
+      /* ── Title ── */
+      '.bs-title{',
+        'font-size:15px;font-weight:700;',
+        'color:var(--text-primary,#f0f0f0);',
+        'line-height:1.3;',
+        'font-family:"IBM Plex Sans Arabic",sans-serif;',
+        'overflow:hidden;display:-webkit-box;',
+        '-webkit-line-clamp:2;-webkit-box-orient:vertical;',
+        'margin-bottom:4px;}',
+
+      /* ── Subtitle ── */
+      '.bs-subtitle{',
+        'font-size:12px;color:var(--text-secondary,#888);',
+        'overflow:hidden;white-space:nowrap;text-overflow:ellipsis;',
+        'margin-bottom:8px;}',
+
+      /* ── CTA button ── */
+      '.bs-cta{',
+        'padding:7px 16px;border-radius:10px;border:none;',
+        'background:linear-gradient(135deg,#c9a040,#9a7820);',
+        'color:#fff;font-size:12px;font-weight:700;',
+        'cursor:pointer;align-self:flex-start;',
+        'font-family:"IBM Plex Sans Arabic",sans-serif;',
+        'letter-spacing:.2px;',
+        'box-shadow:0 3px 10px rgba(160,120,30,.4);',
+        'transition:opacity .15s;}',
+      '.bs-cta:active{opacity:.8;}'
     ].join('');
     document.head.appendChild(s);
   })();
@@ -53,13 +121,50 @@
   function _lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
 
   function _getFeaturedBook() {
+    /* 1. Try the full books cache first */
     try {
       var books = _lsGet('gencine_books_v4');
-      if (!books || !books.length) return null;
-      return books.find(function(b) {
-        return b.featured_book === true && b.featured_enabled !== false && b.active !== false;
-      }) || null;
-    } catch(e) { return null; }
+      if (books && books.length) {
+        var found = books.find(function(b) {
+          return b.featured_book === true && b.featured_enabled !== false && b.active !== false;
+        });
+        if (found) { _lsSet(BS_CACHE, found); return found; }
+      }
+    } catch(e) {}
+    /* 2. Fall back to dedicated spotlight cache (populated by _fetchFeaturedBook) */
+    try {
+      var cached = _lsGet(BS_CACHE);
+      if (cached && cached.id) return cached;
+    } catch(e) {}
+    /* 3. Neither found — trigger async Supabase fetch (once) */
+    _fetchFeaturedBook();
+    return null;
+  }
+
+  function _fetchFeaturedBook() {
+    if (_fetchPending) return;
+    _fetchPending = true;
+    /* Wait for _appSupabase to be ready (may take a few seconds after app start) */
+    var attempts = 0;
+    var timer = setInterval(function() {
+      var sb = window._appSupabase;
+      if (!sb && ++attempts < 30) return; /* retry up to 30 times (45s) */
+      clearInterval(timer);
+      _fetchPending = false;
+      if (!sb) return;
+      sb.from('gencine_books')
+        .select('id,title_ku,title_ar,author_ku,author_ar,cover_url,featured_book,featured_enabled,featured_title,featured_subtitle,active')
+        .eq('featured_book', true)
+        .eq('active', true)
+        .limit(1)
+        .maybeSingle()
+        .then(function(res) {
+          if (res && res.data && res.data.id) {
+            _lsSet(BS_CACHE, res.data);
+          }
+        })
+        .catch(function() {});
+    }, 1500);
   }
 
   function _isDiscovered(bookId) {
@@ -177,8 +282,9 @@
 
     card.appendChild(content);
 
-    /* Click whole card → open book */
+    /* Click whole card → hide immediately then open book */
     card.addEventListener('click', function() {
+      _hideCard();
       _trackEvent(book.id, 'open');
       _openFeaturedBook(book);
     });
@@ -187,17 +293,27 @@
   }
 
   function _openFeaturedBook(book) {
-    /* Navigate to Gencine tab and open the book */
     try {
-      if (window.GencineUI && window.GencineUI.openBook) {
-        /* Switch to Gencine tab first */
-        var gencineTab = document.querySelector('[data-tab="gencine"]');
-        if (gencineTab) gencineTab.click();
-        setTimeout(function() {
-          if (window.GencineUI) window.GencineUI.openBook(book.id);
-        }, 150);
+      /* Always click the Gencine tab first — loads dhikr.js if not yet loaded */
+      var tabBtn = document.querySelector('.tab-item[data-tab="gencine"]');
+      if (tabBtn) tabBtn.click();
+
+      /* If GencineUI already ready, open immediately */
+      if (window.GencineUI && typeof window.GencineUI.openBook === 'function') {
+        setTimeout(function() { if (window.GencineUI) window.GencineUI.openBook(book.id); }, 120);
+        return;
       }
-    } catch(e) {}
+
+      /* Otherwise poll until dhikr.js initializes GencineUI */
+      var _att = 0;
+      var _t = setInterval(function() {
+        if (window.GencineUI && typeof window.GencineUI.openBook === 'function') {
+          clearInterval(_t);
+          window.GencineUI.openBook(book.id);
+        }
+        if (++_att > 40) clearInterval(_t);
+      }, 200);
+    } catch(e) { /* ignore */ }
   }
 
   /* ── Dismiss / Discover ───────────────────────────────────────────── */
@@ -289,16 +405,15 @@
 
   function _poll() {
     if (_shown) return;
-    if ((Date.now() - LAUNCH_TIME) < SHOW_DELAY) return;
+    var elapsed = Date.now() - LAUNCH_TIME;
+    if (elapsed < SHOW_DELAY) return;
     if (_audioActive) return;
     if (_isScrolling()) return;
     if (!_isEligibleTab()) return;
-
     var book = _getFeaturedBook();
     if (!book) return;
     if (_isDiscovered(book.id)) return;
     if (_isDismissed(book.id)) return;
-
     _showCard(book);
   }
 
