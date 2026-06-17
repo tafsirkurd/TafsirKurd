@@ -1371,6 +1371,18 @@
                                     <textarea id="book-description" class="form-input" rows="2" placeholder="Short description..." dir="rtl" style="resize:vertical"></textarea>
                                 </div>
                             </div>
+                            <div class="form-row" style="border-top:1px solid var(--border-subtle,rgba(255,255,255,.06));margin-top:4px;padding-top:10px">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label" style="color:#d4af37">★ Spotlight Title <span style="color:var(--text-tertiary);font-weight:400">(optional — shown on spotlight card)</span></label>
+                                    <input type="text" id="book-featured-title" class="form-input" placeholder="Custom title for spotlight card" dir="rtl">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label" style="color:#d4af37">★ Spotlight Subtitle <span style="color:var(--text-tertiary);font-weight:400">(optional — short tagline)</span></label>
+                                    <input type="text" id="book-featured-subtitle" class="form-input" placeholder="e.g. author name or short description" dir="rtl">
+                                </div>
+                            </div>
                             <!-- Cover image upload -->
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
@@ -1441,6 +1453,15 @@
                             </button>
                             <button class="btn btn-secondary" onclick="cancelBookEdit()">Cancel</button>
                         </div>
+                    </div>
+                </div>
+                <div id="spotlight-stats" style="display:none;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+                    <div style="font-size:11px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">★ Book Spotlight Analytics — <span class="sp-book-name" style="font-weight:600;color:var(--text-primary)"></span></div>
+                    <div style="display:flex;gap:20px;flex-wrap:wrap">
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-impressions">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Impressions</div></div>
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-opens">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Opens</div></div>
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#d4af37" class="sp-discovered">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Discovered</div></div>
+                        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:#10b981" class="sp-rate">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Discovery Rate</div></div>
                     </div>
                 </div>
                 <div class="list-toolbar">
@@ -2819,6 +2840,22 @@ async function _setBadge(table, id, badge_until) {
     });
     return r.json();
 }
+/* Toggle featured_book spotlight (instant boolean, replaces any active spotlight) */
+async function _setSpotlightFeatured(id, enable) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return { error: 'no supabase' };
+    try {
+        if (enable) {
+            await supabase.from('gencine_books').update({ featured_book: false }).neq('id', id);
+        }
+        var res = await supabase.from('gencine_books').update({ featured_book: !!enable }).eq('id', id);
+        if (!res.error) {
+            allBooks.forEach(function(b) { b.featured_book = (String(b.id) === String(id)) ? !!enable : false; });
+            localStorage.removeItem('gencine_books_v4');
+        }
+        return { error: res.error };
+    } catch(e) { return { error: e.message }; }
+}
+
 /* Set or clear featured_until on gencine_books */
 async function _setFeatured(id, featured_until) {
     var token = _booksToken();
@@ -2918,6 +2955,16 @@ function renderBooksList() {
             }; })(book);
             fPill.appendChild(fRm); body.appendChild(fPill);
         }
+        if (book.featured_book) {
+            var spPill = mke('div', 'section-badge-pill');
+            spPill.style.cssText = 'background:rgba(212,175,55,.15);color:#d4af37;border:1px solid rgba(212,175,55,.3);';
+            spPill.appendChild(document.createTextNode('★ Book Spotlight — Active'));
+            var spRm = mke('button', 'section-badge-remove'); spRm.type = 'button'; spRm.textContent = '×'; spRm.title = 'Remove Spotlight';
+            spRm.onclick = (function(bb){ return function(e){ e.preventDefault();
+                _setSpotlightFeatured(bb.id, false).then(function(r){ if (!r.error){ renderBooksList(); showNotification('Spotlight removed.', 'success'); } });
+            }; })(book);
+            spPill.appendChild(spRm); body.appendChild(spPill);
+        }
         if (book.author_ku || book.author_ar) {
             var auth = mke('div', 'item-card-ku'); auth.textContent = book.author_ku || book.author_ar; body.appendChild(auth);
         }
@@ -2929,7 +2976,7 @@ function renderBooksList() {
         body.appendChild(meta);
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var acts = mke('div', 'item-card-actions');
-        acts.appendChild(mkIconBtn('star', 'Feature', false, (function(b){ return function(){
+        acts.appendChild(mkIconBtn('star', 'Feature (timed)', false, (function(b){ return function(){
             var seriesVolumes = b.series_id ? allBooks.filter(function(bk){ return bk.series_id === b.series_id; }) : null;
             var label = seriesVolumes && seriesVolumes.length > 1
                 ? (b.series_title_ku || b.title_ku || 'Series') + ' (' + seriesVolumes.length + ' vols)'
@@ -2947,6 +2994,21 @@ function renderBooksList() {
                     });
             });
         }; })(book)));
+        var _alreadySpot = book.featured_book;
+        var spBtn = mkIconBtn(_alreadySpot ? 'star-off' : 'bookmark-check', _alreadySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(b){ return function() {
+            var newState = !b.featured_book;
+            var msg = newState
+                ? 'Set "' + (b.title_ku || b.title_ar || 'Book') + '" as Book Spotlight?\n\nThis will remove the spotlight from any currently active book.'
+                : 'Remove Book Spotlight from "' + (b.title_ku || b.title_ar || 'Book') + '"?';
+            if (!confirm(msg)) return;
+            _setSpotlightFeatured(b.id, newState).then(function(r){
+                if (r.error) { showNotification('Failed: ' + JSON.stringify(r.error), 'error'); return; }
+                renderBooksList();
+                showNotification(newState ? '★ Spotlight activated!' : 'Spotlight removed.', 'success');
+            });
+        }; })(book));
+        if (_alreadySpot) spBtn.style.color = '#d4af37';
+        acts.appendChild(spBtn);
         var pubBtn = mkIconBtn(book.active ? 'eye-off' : 'eye', book.active ? 'Unpublish' : 'Publish', false, (function(b){ return function(){ quickToggleBookActive(b); }; })(book));
         pubBtn.title = book.active ? 'Unpublish (move to Draft)' : 'Publish (make Live)';
         pubBtn.style.color = book.active ? '#d97706' : '#16a34a';
@@ -2968,6 +3030,28 @@ function renderBooksList() {
             showNotification('Order saved.', 'success');
         }
     );
+    _renderSpotlightStats();
+}
+
+async function _renderSpotlightStats() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var featBook = allBooks.find(function(b){ return b.featured_book; });
+    var statsEl = document.getElementById('spotlight-stats');
+    if (!statsEl) return;
+    if (!featBook) { statsEl.style.display = 'none'; return; }
+    var res = await supabase.from('book_spotlight_events').select('event_type').eq('book_id', featBook.id);
+    var data = res.data;
+    if (!data) { statsEl.style.display = 'none'; return; }
+    var impressions = data.filter(function(e){ return e.event_type === 'impression'; }).length;
+    var opens = data.filter(function(e){ return e.event_type === 'open' || e.event_type === 'slide_open'; }).length;
+    var discovered = data.filter(function(e){ return e.event_type === 'discovered'; }).length;
+    var rate = impressions > 0 ? Math.round(discovered / impressions * 100) : 0;
+    statsEl.style.display = '';
+    statsEl.querySelector('.sp-book-name').textContent = featBook.title_ku || featBook.title_ar || '';
+    statsEl.querySelector('.sp-impressions').textContent = impressions;
+    statsEl.querySelector('.sp-opens').textContent = opens;
+    statsEl.querySelector('.sp-discovered').textContent = discovered;
+    statsEl.querySelector('.sp-rate').textContent = rate + '%';
 }
 
 function editBook(id) {
@@ -3002,6 +3086,8 @@ function editBook(id) {
             preview.appendChild(ico);
         }
     }
+    document.getElementById('book-featured-title').value = book.featured_title || '';
+    document.getElementById('book-featured-subtitle').value = book.featured_subtitle || '';
     document.getElementById('book-form-toggle-label').textContent = 'Editing: ' + (book.title_ku || book.title_ar || 'book');
     var _bsnl = document.getElementById('book-send-notif-label');
     if (_bsnl) _bsnl.style.display = 'none';
@@ -3012,7 +3098,8 @@ function cancelBookEdit() {
     document.getElementById('book-edit-id').value = '';
     ['book-title-ku','book-author-ku','book-category',
      'book-pages','book-pdf-url','book-description','book-cover-url',
-     'book-series-id','book-series-title-ku','book-volume-number'].forEach(function(id) {
+     'book-series-id','book-series-title-ku','book-volume-number',
+     'book-featured-title','book-featured-subtitle'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
     });
     document.getElementById('book-is-series').checked = false;
@@ -3155,7 +3242,9 @@ async function saveBook() {
         active:           document.getElementById('book-active').checked,
         series_id:        isSeries ? (document.getElementById('book-series-id').value.trim() || null) : null,
         series_title_ku:  isSeries ? (document.getElementById('book-series-title-ku').value.trim() || null) : null,
-        volume_number:    isSeries ? (parseInt(document.getElementById('book-volume-number').value) || null) : null
+        volume_number:    isSeries ? (parseInt(document.getElementById('book-volume-number').value) || null) : null,
+        featured_title:   document.getElementById('book-featured-title').value.trim() || null,
+        featured_subtitle: document.getElementById('book-featured-subtitle').value.trim() || null
     };
     var r = editId ? await _booksApi({ action: 'update', id: editId, payload: payload })
                    : await _booksApi({ action: 'insert', payload: payload });

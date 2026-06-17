@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260572 */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260617j */
 (function(){
 'use strict';
 
@@ -1118,6 +1118,7 @@ window.GencineUI = {
     if(!el) return;
     if(this._view !== 'tasbih' && this._voiceActive) this._stopVoice();
     if(this._pdfCleanup){ this._pdfCleanup(); this._pdfCleanup = null; }
+    if(window._bsDiscTimer){ clearTimeout(window._bsDiscTimer); window._bsDiscTimer = null; }
     if(_adhkarScrollCleanup){ _adhkarScrollCleanup(); _adhkarScrollCleanup = null; }
     // Clear sheet reference — DOM removal below already removes it from screen
     this._activeSheet = null;
@@ -3515,6 +3516,19 @@ window.GencineUI = {
         var panel = document.getElementById('gencineContent');
         self._booksScrollPos = panel ? panel.scrollTop : 0;
         _addToReadingHistory(vol.id);
+        // Book Spotlight discovery tracking
+        (function() {
+          try {
+            var _featBook = window.BookSpotlight ? window.BookSpotlight.getFeaturedBook() : null;
+            if (_featBook && String(_featBook.id) === String(vol.id)) {
+              if (window._bsDiscTimer) { clearTimeout(window._bsDiscTimer); }
+              window._bsDiscTimer = setTimeout(function() {
+                if (window.BookSpotlight) window.BookSpotlight.markDiscovered(vol.id);
+              }, 60000);
+              if (window.BookSpotlight) window.BookSpotlight.trackEvent(vol.id, 'open');
+            }
+          } catch(_bse) {}
+        })();
         if (!_bookGetProgress(String(vol.id))) {
           try { localStorage.setItem('pdfProg_'+vol.id, JSON.stringify({page:1,total:vol.pages||0,ts:Date.now()})); } catch(e3) {}
         }
@@ -4382,6 +4396,18 @@ window.GencineUI = {
           var _ts = Date.now();
           try { localStorage.setItem('pdfProg_'+book.id, JSON.stringify({page:_curPage,total:_totalPages,ts:_ts})); } catch(e2) {}
           _syncProgressToSupabase(book.id, _curPage, _totalPages, _ts);
+          // Spotlight: track unique pages; 3+ pages = discovered
+          try {
+            var _fb = window.BookSpotlight ? window.BookSpotlight.getFeaturedBook() : null;
+            if (_fb && String(_fb.id) === String(book.id) && !window.BookSpotlight.isDiscovered(_fb.id)) {
+              var _pgKey = 'bs_pgset_' + book.id;
+              var _pgSet = {};
+              try { _pgSet = JSON.parse(localStorage.getItem(_pgKey) || '{}'); } catch(_pe) {}
+              _pgSet[String(_curPage)] = 1;
+              localStorage.setItem(_pgKey, JSON.stringify(_pgSet));
+              if (Object.keys(_pgSet).length >= 3) window.BookSpotlight.markDiscovered(_fb.id);
+            }
+          } catch(_bse2) {}
         }
       }
       if (_prevBtn) _prevBtn.onclick = function() {

@@ -1,5 +1,5 @@
 ﻿/**
- * Smart Daily Companion  v41
+ * Smart Daily Companion  v42
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1178,6 +1178,9 @@
     items.push(_buildAyahItem());
     items.push(_buildHadithItem());
     items.push(_buildBookItem());
+    /* Featured book spotlight slide (once per day, disappears on discovery) */
+    var _fbSlide = _buildFeaturedBookSlide();
+    if (_fbSlide) items.push(_fbSlide);
     return items;
   }
 
@@ -1351,11 +1354,84 @@
     return card;
   }
 
+  function _buildFeaturedBookSlide() {
+    var featBook = null;
+    try {
+      var _raw = localStorage.getItem('gencine_books_v4');
+      if (_raw) {
+        var _books = JSON.parse(_raw);
+        featBook = (_books || []).find(function(b) {
+          return b.featured_book === true && b.featured_enabled !== false && b.active !== false;
+        }) || null;
+      }
+    } catch(e) {}
+    if (!featBook) return null;
+    try {
+      var _disc = JSON.parse(localStorage.getItem('featured_book_discovered_v1') || '{}');
+      if (_disc[String(featBook.id)]) return null;
+    } catch(e) {}
+    try {
+      var _dism = JSON.parse(localStorage.getItem('book_spotlight_dismissed_v1') || '{}');
+      if (_dism[String(featBook.id)]) return null;
+    } catch(e) {}
+    try {
+      var _shownKey = 'bs_slide_shown_' + featBook.id;
+      var _shownTs = parseInt(localStorage.getItem(_shownKey) || '0', 10);
+      if (_shownTs) {
+        var _shownD = new Date(_shownTs);
+        var _today = new Date();
+        if (_shownD.getFullYear() === _today.getFullYear() &&
+            _shownD.getMonth() === _today.getMonth() &&
+            _shownD.getDate() === _today.getDate()) return null;
+      }
+    } catch(e) {}
+    return { _type: 'featured_book', _featBook: featBook, id: 'featured_book_' + featBook.id };
+  }
+
+  function _buildFeaturedBookCard(item, gencineUI) {
+    var book = item._featBook;
+    var card = _mk('div', 'sd-card sd-card-featured');
+    if (book.cover_url) {
+      var cWrap = _mk('div', 'sd-book-cover-icon');
+      var cImg = document.createElement('img');
+      cImg.className = 'sd-book-cover-img';
+      cImg.src = book.cover_url;
+      cImg.alt = '';
+      cImg.loading = 'lazy';
+      cWrap.appendChild(cImg);
+      card.appendChild(cWrap);
+    } else {
+      var iWrap = _mk('div', 'sd-icon');
+      iWrap.appendChild(_mk('i', 'fas fa-book-open'));
+      card.appendChild(iWrap);
+    }
+    var content = _mk('div', 'sd-content');
+    var tagWrap = _mk('div', 'sd-tag-zone');
+    tagWrap.appendChild(_mk('span', 'sd-tag', 'پەرتوکی تایبەت'));
+    content.appendChild(tagWrap);
+    var tz = _mk('div', 'sd-title-zone');
+    tz.appendChild(_mk('div', 'sd-title', book.featured_title || book.title_ku || book.title_ar || ''));
+    content.appendChild(tz);
+    content.appendChild(_mk('div', 'sd-sub', book.featured_subtitle || book.author_ku || book.author_ar || 'پیشکەش ژ لایێ تەفسیر کورد'));
+    card.appendChild(content);
+    var arrow = _mk('div', 'sd-arrow');
+    arrow.appendChild(_mk('i', 'fas fa-chevron-left'));
+    card.appendChild(arrow);
+    card.addEventListener('click', function() {
+      try { localStorage.setItem('bs_slide_shown_' + book.id, String(Date.now())); } catch(e) {}
+      if (window.BookSpotlight) window.BookSpotlight.trackEvent(book.id, 'slide_open');
+      if (gencineUI) gencineUI.openBook(book.id);
+    });
+    return card;
+  }
+
   function _buildCard(hybridItem, gencineUI) {
     if (hybridItem._type === 'adhkar')
       return _buildAdhkarCard(hybridItem._adhkarItem, gencineUI);
     if (hybridItem._type === 'weather')
       return _buildWeatherCard(hybridItem._weatherData, gencineUI);
+    if (hybridItem._type === 'featured_book')
+      return _buildFeaturedBookCard(hybridItem, gencineUI);
     return _buildDailyCard(hybridItem, gencineUI);
   }
 
