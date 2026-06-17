@@ -1132,35 +1132,54 @@ window.GencineUI = {
     var restoringHome   = (this._view === 'home'   && this._homeScrollPos   != null);
     var restoringAdhkar = (this._view === 'adhkar' && this._adhkarView === 'grid' && this._adhkarGridScrollPos != null);
     this._updateHeader();
-    if(this._view === 'home'){
-      this._renderHome(el);
-      if(restoringHome){
-        var _savedHome = this._homeScrollPos;
-        this._homeScrollPos = null;
-        if(panel) requestAnimationFrame(function(){ panel.scrollTop = _savedHome; });
+    try {
+      if(this._view === 'home'){
+        this._renderHome(el);
+        if(restoringHome){
+          var _savedHome = this._homeScrollPos;
+          this._homeScrollPos = null;
+          if(panel) requestAnimationFrame(function(){ panel.scrollTop = _savedHome; });
+        }
       }
-    }
-    else if(this._view === 'adhkar'){
-      this._renderAdhkar(el);
-      if(restoringAdhkar){
-        var _savedAdhkar = this._adhkarGridScrollPos;
-        this._adhkarGridScrollPos = null;
-        if(panel) requestAnimationFrame(function(){ panel.scrollTop = _savedAdhkar; });
+      else if(this._view === 'adhkar'){
+        this._renderAdhkar(el);
+        if(restoringAdhkar){
+          var _savedAdhkar = this._adhkarGridScrollPos;
+          this._adhkarGridScrollPos = null;
+          if(panel) requestAnimationFrame(function(){ panel.scrollTop = _savedAdhkar; });
+        }
       }
-    }
-    else if(this._view === 'dua')     this._renderDua(el);
-    else if(this._view === 'tasbih')  this._renderTasbih(el);
-    else if(this._view === 'asma')       this._renderAsma(el);
-    else if(this._view === 'books'){
-      this._renderBooks(el);
-      if(restoringBooks){
-        var savedPos = this._booksScrollPos;
-        this._booksScrollPos = null;
-        if(panel) requestAnimationFrame(function(){ panel.scrollTop = savedPos; });
+      else if(this._view === 'dua')     this._renderDua(el);
+      else if(this._view === 'tasbih')  this._renderTasbih(el);
+      else if(this._view === 'asma')    this._renderAsma(el);
+      else if(this._view === 'books'){
+        this._renderBooks(el);
+        if(restoringBooks){
+          var savedPos = this._booksScrollPos;
+          this._booksScrollPos = null;
+          if(panel) requestAnimationFrame(function(){ panel.scrollTop = savedPos; });
+        }
       }
+      else if(this._view === 'book-reader') this._renderBookReader(el);
+      else                                  this._renderHadith(el);
+    } catch(err) {
+      console.error('[Gencine] _draw error in view=' + this._view + ':', err);
+      while(el.firstChild) el.removeChild(el.firstChild);
+      var _fw = document.createElement('div');
+      _fw.style.cssText = 'padding:40px 20px;text-align:center;direction:rtl;';
+      var _fm = document.createElement('p');
+      _fm.style.cssText = 'margin-bottom:16px;opacity:.7;';
+      _fm.textContent = 'کێشەیەک هات. دووبارە هەوڵبدەرەوە.';
+      var _fb = document.createElement('button');
+      _fb.style.cssText = 'padding:10px 24px;border-radius:12px;background:var(--accent,#5b7a99);color:#fff;border:none;cursor:pointer;font-size:15px;';
+      _fb.textContent = 'ماڵەوە';
+      var _gSelf = this;
+      _fb.onclick = function(){ _gSelf._view = 'home'; try { _gSelf._draw(); } catch(e2) {} };
+      _fw.appendChild(_fm);
+      _fw.appendChild(_fb);
+      el.appendChild(_fw);
+      try { if(window.AppErrorReporter) AppErrorReporter.report('gencine_render', err && err.message, 'warning', 'gencine'); } catch(e2) {}
     }
-    else if(this._view === 'book-reader') this._renderBookReader(el);
-    else                                  this._renderHadith(el);
   },
 
   /* ═══════════════════ HOME ═══════════════════ */

@@ -18,7 +18,10 @@
         "cap:ios:sync": "npx cap sync ios && node scripts/strip-ios-fonts.js && node scripts/verify-assets.js",
         "cap:ios": "npx cap open ios",
         "cap:android": "npx cap open android",
-        "android:live": "node scripts/android-live.js"
+        "android:live": "node scripts/android-live.js",
+        "preflight": "node scripts/preflight.js",
+        "check:versions": "node scripts/check-versions.js",
+        "check:sw": "node scripts/check-sw.js"
     },
     "repository": {
         "type": "git",

@@ -162,7 +162,7 @@
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260612a" as="script">
-<link rel="preload" href="/app/app.min.js?v=1201" as="script">
+<link rel="preload" href="/app/app.min.js?v=1202" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -184,7 +184,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preload" href="/assets/fonts/scheherazade-new-400.woff2?v=1" as="font" type="font/woff2" crossorigin="" fetchpriority="low">
 <link rel="preload" href="/dhikr/dua-data.js?v=20260326b" as="script" fetchpriority="low">
 <link rel="preload" href="/dhikr/smart-dhikr.js?v=64" as="script" fetchpriority="low">
-<link rel="preload" href="/dhikr/dhikr.js?v=20260617h" as="script" fetchpriority="low">
+<link rel="preload" href="/dhikr/dhikr.js?v=20260617i" as="script" fetchpriority="low">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=17">
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=17">
 
@@ -837,7 +837,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/img-cache.js?v=1"></script>
-<script src="/app/app.min.js?v=1201"></script>
+<script src="/app/app.min.js?v=1202"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
@@ -891,7 +891,7 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
     }, 200);
   })();
 }
-/* Failsafe: reveal app after 8s even if app.js IIFE throws */
+/* Failsafe: reveal app after 7s even if app.js IIFE throws, then show recovery banner */
 setTimeout(function(){
   var sp=document.getElementById('splash');
   var ap=document.getElementById('app');
@@ -901,8 +901,19 @@ setTimeout(function(){
     ap.style.opacity='1';
     ap.style.display='flex';
     console.error('Splash failsafe triggered - app.js may have errors');
+    var _rb=document.createElement('div');
+    _rb.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;padding:12px 16px;text-align:center;font-size:14px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:12px;';
+    var _rt=document.createElement('span');
+    _rt.textContent='کێشەیەک هات. ئەپ باشی کار ناکات.';
+    var _reloadBtn=document.createElement('button');
+    _reloadBtn.textContent='دووبارە بکەوە';
+    _reloadBtn.style.cssText='padding:4px 14px;background:#fff;color:#c0392b;border:none;border-radius:6px;cursor:pointer;font-size:13px;flex-shrink:0;';
+    _reloadBtn.onclick=function(){location.reload();};
+    _rb.appendChild(_rt);
+    _rb.appendChild(_reloadBtn);
+    document.body.appendChild(_rb);
   }
-},8000);
+},7000);
 </script>
 
 
