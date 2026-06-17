@@ -3212,6 +3212,16 @@ window.GencineUI = {
               _track.getBoundingClientRect();
               _track.style.transition='';
               _arm();
+              // Deferred sweep: by 100ms WebView has decoded all cached imgs.
+              // Any cover still missing .loaded (timing race on clones) gets it now.
+              setTimeout(function(){
+                [].slice.call(_track.querySelectorAll('img.book-feat-card-cover')).forEach(function(_ti){
+                  if (!_ti.classList.contains('loaded') && _ti.complete && _ti.naturalWidth > 0) {
+                    _ti.classList.add('loaded');
+                    _coverCache.add(_ti.src);
+                  }
+                });
+              }, 100);
             });
           })();
         }
