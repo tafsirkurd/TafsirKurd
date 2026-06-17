@@ -427,7 +427,22 @@ function _readCache(key) {
   } catch(e) { return null; }
 }
 function _writeCache(key, data) {
-  try { localStorage.setItem(key, JSON.stringify({ts: Date.now(), data: data})); } catch(e) {}
+  try {
+    localStorage.setItem(key, JSON.stringify({ts: Date.now(), data: data}));
+  } catch(e) {
+    var _kb = 0;
+    try { _kb = Math.round(JSON.stringify(data).length / 1024); } catch(_) {}
+    console.warn('[Gencine] cache write failed', {key: key, sizeKB: _kb, error: e.name || String(e)});
+    if (localStorage.getItem('debug') === '1') {
+      try {
+        var _toast = document.createElement('div');
+        _toast.textContent = '⚠️ Cache write failed: ' + key + ' (~' + _kb + ' KB) — ' + (e.name || 'QuotaExceededError');
+        _toast.style.cssText = 'position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#b03a2e;color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;z-index:99999;pointer-events:none;max-width:88vw;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+        document.body.appendChild(_toast);
+        setTimeout(function(){ if (_toast.parentNode) _toast.parentNode.removeChild(_toast); }, 5000);
+      } catch(_) {}
+    }
+  }
 }
 
 function _getSupabase() {
