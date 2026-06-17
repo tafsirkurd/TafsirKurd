@@ -895,7 +895,8 @@ window.GencineUI = {
   _voiceActive:     false,
   _recognition:     null,
   _voiceLastMatch:  0,
-  _voiceDebounceMs: 1200,
+  _voiceDedupMs:    200,
+  _voiceBufCursor:  0,
   _bookCat:         'all',
   _bookSearch:      '',
   _bookAuthor:      '',
@@ -2544,6 +2545,59 @@ window.GencineUI = {
     return best;
   },
 
+  /* Streaming phrase detector — returns char position where the FIRST match ends
+     in `text`, or -1 if not found. Used by voice onresult to advance the cursor. */
+  _findPhraseEnd: function(text){
+    var self = this;
+    var COMMON = {'الله':1,'اله':1,'لا':1,'في':1,'من':1,'على':1,'و':1,'ب':1,'ل':1};
+    var list = _getTasbih();
+    var dhikr = list[self._tasbihDhikrIdx];
+    if(!dhikr) return -1;
+    var best = null; /* {s: start, e: end} — earliest match wins */
+
+    function upd(s, e){ if(!best || s < best.s) best = {s:s, e:e}; }
+
+    /* collect normalized candidate phrases */
+    var srcs = [];
+    if(dhikr.key) srcs.push(self._normalizeAr(dhikr.key));
+    if(dhikr.ar)  srcs.push(self._normalizeAr(dhikr.ar));
+    if(dhikr.ku)  srcs.push(self._normalizeAr(dhikr.ku));
+
+    /* Pass 1 — full phrase match (most specific, highest confidence) */
+    for(var p=0; p<srcs.length; p++){
+      var tgt=srcs[p]; if(!tgt) continue;
+      var idx=text.indexOf(tgt);
+      if(idx!==-1) upd(idx, idx+tgt.length);
+    }
+
+    /* Pass 2 — keyword match (fallback for partial interim results) */
+    if(!best){
+      for(var q=0; q<srcs.length; q++){
+        var tgt2=srcs[q]; if(!tgt2) continue;
+        var words=tgt2.split(' ');
+        var kws=words.filter(function(w){ return w.length>=3&&!COMMON[w]; });
+        if(!kws.length) kws=words.filter(function(w){ return w.length>=2&&!COMMON[w]; });
+        if(!kws.length) kws=words.filter(function(w){ return w.length>=2; });
+        if(!kws.length) continue;
+
+        if(kws.length===1){
+          var ki=text.indexOf(kws[0]);
+          if(ki!==-1) upd(ki, ki+kws[0].length);
+        } else {
+          /* all keywords must appear in order; require ≥60% for streaming tolerance */
+          var required=Math.max(1, Math.ceil(kws.length*0.6));
+          var pos=0, found=0, firstPos=-1, lastEnd=-1;
+          for(var k=0; k<kws.length; k++){
+            var ki2=text.indexOf(kws[k], pos);
+            if(ki2!==-1){ if(firstPos===-1) firstPos=ki2; lastEnd=ki2+kws[k].length; pos=ki2+1; found++; }
+          }
+          if(found>=required && firstPos!==-1) upd(firstPos, lastEnd);
+        }
+      }
+    }
+    return best ? best.e : -1;
+  },
+
   _startVoice: function(){
     var self = this;
     var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
@@ -2562,6 +2616,7 @@ window.GencineUI = {
     /* set active + show pending state immediately so button feels responsive */
     self._voiceActive    = true;
     self._voiceLastMatch = 0;
+    self._voiceBufCursor = 0;
     self._updateVoiceBtn();
     self._setVoiceStatus(T('gencine.voice_requesting','داخوازییا مۆڵەتێ دهێتەکرن...'));
 
@@ -2598,44 +2653,47 @@ window.GencineUI = {
 
     var rec = new SRClass();
     rec.continuous      = true;
-    rec.interimResults  = true;
+    rec.interimResults  = true;  /* fire on partial results for zero-delay detection */
     rec.lang            = 'ar-SA';
-    rec.maxAlternatives = 3;
+    rec.maxAlternatives = 1;     /* 1 = fastest; alternatives not needed for streaming */
     self._recognition   = rec;
+    self._voiceBufCursor = 0;
     self._setVoiceStatus(T('gencine.voice_listening','...دابیستم'));
 
     rec.onresult = function(event){
-      var interim = '', final_ = '';
-      for(var i = event.resultIndex; i < event.results.length; i++){
-        var res = event.results[i];
-        for(var a = 0; a < res.length; a++){
-          if(res.isFinal) final_ += res[a].transcript + ' ';
-          else            interim += res[a].transcript + ' ';
-        }
+      /* ── Build rolling buffer from ALL results (final + interim) ──────────
+         event.results is a live SpeechResultList — concat every transcript.
+         Final results are committed text; interim may still be revised.     */
+      var buf = '';
+      for(var i=0; i<event.results.length; i++){
+        buf += event.results[i][0].transcript;
+        if(i < event.results.length-1) buf += ' ';
       }
-      /* show live feedback */
-      var live = (interim || final_).trim();
-      if(live){
-        var tEl = document.getElementById('tasbihVoiceTranscript');
-        if(tEl){ tEl.textContent = live; tEl.classList.add('visible'); }
-      }
-      /* count only from final results with debounce */
-      if(final_.trim()){
+      buf = self._normalizeAr(buf);
+
+      /* Show most-recent interim transcript as live feedback */
+      var liveText = event.results[event.results.length-1][0].transcript.trim();
+      var tEl = document.getElementById('tasbihVoiceTranscript');
+      if(tEl && liveText){ tEl.textContent = liveText; tEl.classList.add('visible'); }
+
+      /* Clamp cursor if recognizer corrected earlier text (buffer shrank) */
+      if(self._voiceBufCursor > buf.length) self._voiceBufCursor = Math.max(0, buf.length-10);
+
+      /* ── Find and consume phrase occurrences from cursor forward ──────────
+         Each detected occurrence advances the cursor past the match so the
+         same text is never counted twice, even across repeated interim events. */
+      var searchText = buf.slice(self._voiceBufCursor);
+      var endOffset  = self._findPhraseEnd(searchText);
+
+      while(endOffset !== -1){
         var now = Date.now();
-        if(now - self._voiceLastMatch >= self._voiceDebounceMs){
-          var best = 0; var bestText = '';
-          var lastRes = event.results[event.results.length - 1];
-          for(var ai = 0; ai < lastRes.length; ai++){
-            var n = self._countMatches(lastRes[ai].transcript);
-            if(n > best){ best = n; bestText = lastRes[ai].transcript; }
-          }
-          if(!best){ best = self._countMatches(final_); bestText = final_; }
-          if(best > 0){
-            self._voiceLastMatch = now;
-            self._showTranscript(bestText, best);
-            for(var j = 0; j < best; j++) self._tasbihTap();
-          }
-        }
+        /* duplicate protection: ignore matches within _voiceDedupMs of last count */
+        if(now - self._voiceLastMatch < self._voiceDedupMs) break;
+        self._voiceBufCursor += endOffset;
+        self._voiceLastMatch  = now;
+        self._tasbihTap();  /* increments count + haptic */
+        searchText = buf.slice(self._voiceBufCursor);
+        endOffset  = self._findPhraseEnd(searchText);
       }
     };
 
@@ -2645,16 +2703,16 @@ window.GencineUI = {
         var T2 = window.t || function(k,d){ return d||k; };
         self._setVoiceStatus(T2('gencine.voice_permission','مۆڵەتدان ب مایکرۆفۆنی.'));
       }
-      /* no-speech, aborted, network — onend handles restart */
+      /* no-speech / aborted / network — onend handles restart */
     };
 
     rec.onend = function(){
       if(!self._voiceActive || self._recognition !== rec) return;
-      /* small delay to avoid tight restart loop on rapid errors */
+      self._voiceBufCursor = 0; /* results array resets on restart — cursor must too */
       setTimeout(function(){
         if(!self._voiceActive || self._recognition !== rec) return;
         try{ rec.start(); }catch(e){}
-      }, 300);
+      }, 150);
     };
 
     try{
