@@ -1185,10 +1185,6 @@
     seasonal.filter(function(s) { return !s._adhkarItem.hero; })
       .forEach(function(s) { items.push(s); });
 
-    /* Weather slide — shows Duhok weather when online; hidden when offline */
-    var wData = _getWeatherSlideData();
-    if (wData) items.push({ _type: 'weather', _weatherData: wData });
-
     /* Daily cards — always */
     items.push(_buildAyahItem());
     items.push(_buildHadithItem());
