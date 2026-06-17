@@ -345,6 +345,7 @@ var _adhkarScrollCleanup = null; /* removes scroll listener + restores header on
 var _dbBooks    = [];
 var _loadingDb  = false;
 var _dbLoaded   = false;
+var _coverCache = new Set();
 var _skeletonShown = false; /* true while skeleton is visible — triggers fade-in on first real render */
 
 /* Pre-warm: read all caches into memory immediately at script load so _dbLoaded=true
@@ -3059,10 +3060,10 @@ window.GencineUI = {
           if (_bestCover) {
             var _fti = document.createElement('img'); _fti.className = 'book-feat-card-cover'; _fti.alt = _title;
             _fti.fetchPriority = 'high';
-            _fti.onload = function(){ _fti.classList.add('loaded'); };
+            _fti.onload = function(){ _fti.classList.add('loaded'); _coverCache.add(_bestCover); };
             _fti.onerror = function(){ var _fph=document.createElement('div');_fph.className='book-feat-card-ph';var _fphi=document.createElement('i');_fphi.className='fas fa-book';_fph.appendChild(_fphi);_fti.parentNode&&_fti.parentNode.replaceChild(_fph,_fti); };
             _fti.src = _bestCover;
-            if (_fti.complete && _fti.naturalWidth > 0) _fti.classList.add('loaded');
+            if ((_fti.complete && _fti.naturalWidth > 0) || _coverCache.has(_bestCover)) _fti.classList.add('loaded');
             _fth.appendChild(_fti);
           } else { var _ftph = document.createElement('div'); _ftph.className = 'book-feat-card-ph'; var _ftphi = document.createElement('i'); _ftphi.className = 'fas fa-book'; _ftph.appendChild(_ftphi); _fth.appendChild(_ftph); }
           _fc.appendChild(_fth);
@@ -3308,10 +3309,10 @@ window.GencineUI = {
         if (_sgCover) {
           var img = document.createElement('img'); img.className = 'book-cover'; img.alt = sg.series_title_ku||'';
           img.fetchPriority = 'high';
-          img.onload = function(){ img.classList.add('loaded'); };
+          img.onload = function(){ img.classList.add('loaded'); _coverCache.add(_sgCover); };
           img.onerror = function(){ var _ph=document.createElement('div');_ph.className='book-cover-placeholder';var _pi=document.createElement('i');_pi.className='fas fa-book';_ph.appendChild(_pi);img.parentNode&&img.parentNode.replaceChild(_ph,img); };
           img.src = _sgCover;
-          if (img.complete) img.classList.add('loaded'); cw.appendChild(img);
+          if (img.complete || _coverCache.has(_sgCover)) img.classList.add('loaded'); cw.appendChild(img);
         } else { var ph = document.createElement('div'); ph.className='book-cover-placeholder'; var phi=document.createElement('i'); phi.className='fas fa-book'; ph.appendChild(phi); cw.appendChild(ph); }
         var vcBadge = document.createElement('div'); vcBadge.className='book-series-vol-count-badge'; vcBadge.textContent=sg.volumes.length+' '+T('gencine.series_vols','بەرگ'); cw.appendChild(vcBadge);
         if (sg.volumes.some(function(v){ return v.badge_until && new Date(v.badge_until).getTime() > Date.now(); })) {
@@ -3409,10 +3410,10 @@ window.GencineUI = {
           img.className = 'book-cover'; img.alt = book.title_ku || '';
           if (_cardIdx < 4) { img.fetchPriority = 'high'; }
           else { img.loading = 'lazy'; }
-          img.onload = function(){ img.classList.add('loaded'); };
+          img.onload = function(){ img.classList.add('loaded'); _coverCache.add(_bcUrl); };
           img.onerror = function(){ var _ph=document.createElement('div');_ph.className='book-cover-placeholder';var _pi=document.createElement('i');_pi.className='fas fa-book';_ph.appendChild(_pi);img.parentNode&&img.parentNode.replaceChild(_ph,img); };
           img.src = _bcUrl;
-          if (img.complete) img.classList.add('loaded');
+          if (img.complete || _coverCache.has(_bcUrl)) img.classList.add('loaded');
           coverWrap.appendChild(img);
         } else {
           var ph = document.createElement('div'); ph.className = 'book-cover-placeholder';
