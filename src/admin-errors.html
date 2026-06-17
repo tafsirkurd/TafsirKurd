@@ -18,42 +18,86 @@
         .sidebar.collapsed + .main-content { margin-left: 64px; }
         @media (max-width: 768px) { .main-content { margin-left: 0; } }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
-        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; }
-        .stat-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-        .stat-icon i { width: 16px; height: 16px; }
-        .stat-value { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -0.5px; margin-bottom: 4px; }
+        /* Stat cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 14px; margin-bottom: 22px; }
+        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 16px 18px; }
+        .stat-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 9px; }
+        .stat-icon i { width: 15px; height: 15px; }
+        .stat-value { font-size: 26px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -0.5px; margin-bottom: 4px; }
         .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); }
 
-        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
-        .filter-row select, .filter-row input { padding: 8px 12px; background: var(--bg-app); border: 1px solid var(--border-medium); border-radius: 6px; color: var(--text-primary); font-size: 13px; font-family: var(--font-family); }
-        .filter-row select:focus, .filter-row input:focus { outline: none; border-color: #3b82f6; }
+        /* Charts */
+        .charts-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+        @media (max-width: 1100px) { .charts-row { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 700px)  { .charts-row { grid-template-columns: 1fr; } }
+        .chart-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 16px 18px; }
+        .chart-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-tertiary); margin-bottom: 12px; }
+        .chart-wrap { position: relative; height: 150px; }
+
+        /* View toggle */
+        .view-toggle { display: flex; background: var(--bg-app); border: 1px solid var(--border-medium); border-radius: 8px; padding: 3px; gap: 2px; }
+        .view-btn { padding: 5px 14px; border: none; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 500; border-radius: 5px; cursor: pointer; transition: all .15s; font-family: var(--font-family); white-space: nowrap; }
+        .view-btn.active { background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+        /* Filters */
+        .filter-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+        .filter-row select { padding: 7px 10px; background: var(--bg-app); border: 1px solid var(--border-medium); border-radius: 6px; color: var(--text-primary); font-size: 13px; font-family: var(--font-family); }
+        .filter-row select:focus { outline: none; border-color: #3b82f6; }
         .filter-spacer { flex: 1; }
+        .incl-resolved-label { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; user-select: none; white-space: nowrap; }
+        .incl-resolved-label input { cursor: pointer; }
 
-        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
-        @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
-        .chart-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; }
-        .chart-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
-        .chart-wrap { position: relative; height: 180px; }
+        /* Severity badges */
+        .sev-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+        .sev-critical { background: #fee2e2; color: #dc2626; }
+        .sev-error    { background: #ffedd5; color: #c2410c; }
+        .sev-warning  { background: #fef9c3; color: #a16207; }
+        .sev-info     { background: #dbeafe; color: #1d4ed8; }
 
-        .error-type-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
-        .et-js_error { background: #fef2f2; color: #991b1b; }
-        .et-network_error { background: #fff7ed; color: #9a3412; }
-        .et-render_error { background: #fdf4ff; color: #7e22ce; }
-        .et-i18n_error { background: #f0fdf4; color: #166534; }
-        .et-unknown { background: var(--bg-active); color: var(--text-secondary); }
+        /* Type badges */
+        .type-badge { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .et-js_error       { background: #fef2f2; color: #991b1b; }
+        .et-network_error  { background: #fff7ed; color: #9a3412; }
+        .et-render_error   { background: #fdf4ff; color: #7e22ce; }
+        .et-i18n_error     { background: #f0fdf4; color: #166534; }
+        .et-cache_error    { background: #fff3cd; color: #856404; }
+        .et-db_error       { background: #e8f4fd; color: #1565c0; }
+        .et-critical_error { background: #ffe0e0; color: #b91c1c; }
+        .et-warning        { background: #fefce8; color: #92400e; }
+        .et-unknown        { background: var(--bg-active); color: var(--text-secondary); }
 
-        .stack-trace { font-family: monospace; font-size: 11px; color: var(--text-secondary); background: var(--bg-active); border-radius: 6px; padding: 8px 10px; margin-top: 6px; white-space: pre-wrap; word-break: break-all; max-height: 120px; overflow-y: auto; }
+        /* Count badge */
+        .count-badge     { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #fee2e2; color: #dc2626; }
+        .count-badge.med { background: #ffedd5; color: #c2410c; }
+        .count-badge.low { background: var(--bg-active); color: var(--text-secondary); }
 
+        /* Stack trace */
+        .stack-trace { font-family: monospace; font-size: 11px; color: var(--text-secondary); background: var(--bg-active); border-radius: 6px; padding: 8px 10px; margin-top: 6px; white-space: pre-wrap; word-break: break-all; max-height: 130px; overflow-y: auto; }
+
+        /* Breadcrumbs */
+        .crumb-timeline { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+        .crumb-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; }
+        .crumb-dot { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; margin-top: 3px; flex-shrink: 0; }
+        .crumb-type { color: var(--text-tertiary); font-size: 11px; min-width: 28px; }
+        .crumb-label { color: var(--text-primary); flex: 1; }
+        .crumb-time { color: var(--text-tertiary); font-size: 11px; white-space: nowrap; }
+
+        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--bg-surface); border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
-        .modal-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
-        .modal-close { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center; }
-        .modal-body { padding: 24px; }
-        .detail-row { display: flex; gap: 8px; margin-bottom: 10px; font-size: 13px; }
-        .detail-label { color: var(--text-tertiary); min-width: 100px; font-weight: 500; }
+        .modal-content { background: var(--bg-surface); border-radius: 14px; width: 90%; max-width: 680px; max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.35); }
+        .modal-header { padding: 18px 22px 14px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--bg-surface); z-index: 1; }
+        .modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+        .modal-close { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center; border-radius: 6px; }
+        .modal-close:hover { background: var(--bg-active); }
+        .modal-body { padding: 18px 22px; }
+        .detail-section { margin-bottom: 16px; }
+        .detail-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-tertiary); margin-bottom: 8px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .detail-item { display: flex; flex-direction: column; gap: 2px; }
+        .detail-label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
+        .detail-value { font-size: 13px; color: var(--text-primary); word-break: break-word; }
+        .modal-footer { padding: 12px 22px 18px; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border-light); }
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav { visibility: visible; }
@@ -181,15 +225,20 @@
                     <div class="stat-value" id="stat-7d">—</div>
                     <div class="stat-label">Last 7 Days</div>
                 </div>
+                <div class="stat-card" style="border-left:3px solid #dc2626">
+                    <div class="stat-icon" style="background:#dc262620"><i data-lucide="zap" style="color:#dc2626"></i></div>
+                    <div class="stat-value" id="stat-critical">—</div>
+                    <div class="stat-label">Critical 24h</div>
+                </div>
                 <div class="stat-card" style="border-left:3px solid #3b82f6">
-                    <div class="stat-icon" style="background:#3b82f620"><i data-lucide="layers" style="color:#3b82f6"></i></div>
-                    <div class="stat-value" id="stat-types">—</div>
-                    <div class="stat-label">Error Types</div>
+                    <div class="stat-icon" style="background:#3b82f620"><i data-lucide="fingerprint" style="color:#3b82f6"></i></div>
+                    <div class="stat-value" id="stat-fp">—</div>
+                    <div class="stat-label">Unique Errors</div>
                 </div>
                 <div class="stat-card" style="border-left:3px solid #8b5cf6">
                     <div class="stat-icon" style="background:#8b5cf620"><i data-lucide="smartphone" style="color:#8b5cf6"></i></div>
                     <div class="stat-value" id="stat-platforms">—</div>
-                    <div class="stat-label">Platforms Affected</div>
+                    <div class="stat-label">Platforms</div>
                 </div>
             </div>
 
@@ -200,13 +249,46 @@
                     <div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
                 </div>
                 <div class="chart-card">
-                    <div class="chart-title">By Error Type (Last 7 Days)</div>
-                    <div id="type-breakdown" style="padding-top:8px"></div>
+                    <div class="chart-title">By Severity (7d)</div>
+                    <div class="chart-wrap"><canvas id="chart-severity"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">By Component (7d)</div>
+                    <div id="component-breakdown" style="padding-top:4px;overflow-y:auto;max-height:150px"></div>
                 </div>
             </div>
 
-            <!-- Filters -->
+            <!-- View toggle + Filters -->
             <div class="filter-row">
+                <div class="view-toggle">
+                    <button class="view-btn active" id="view-btn-individual" onclick="setView('individual')">Individual</button>
+                    <button class="view-btn" id="view-btn-grouped" onclick="setView('grouped')">Grouped</button>
+                </div>
+                <select id="filter-severity" onchange="applyFilters()">
+                    <option value="">All Severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="error">Error</option>
+                    <option value="warning">Warning</option>
+                    <option value="info">Info</option>
+                </select>
+                <select id="filter-component" onchange="applyFilters()">
+                    <option value="">All Components</option>
+                    <option value="app">App</option>
+                    <option value="prayer">Prayer</option>
+                    <option value="gencine">Gencine</option>
+                    <option value="mushaf">Mushaf</option>
+                    <option value="audio">Audio</option>
+                    <option value="quran">Quran</option>
+                    <option value="qibla">Qibla</option>
+                    <option value="books">Books</option>
+                    <option value="cache">Cache</option>
+                    <option value="supabase">Supabase</option>
+                    <option value="network">Network</option>
+                    <option value="i18n">i18n</option>
+                    <option value="promise">Promise</option>
+                    <option value="sw">Service Worker</option>
+                    <option value="smart-slides">Smart Slides</option>
+                </select>
                 <select id="filter-platform" onchange="applyFilters()">
                     <option value="">All Platforms</option>
                     <option value="android">Android</option>
@@ -216,9 +298,11 @@
                 <select id="filter-type" onchange="applyFilters()">
                     <option value="">All Types</option>
                     <option value="js_error">JS Error</option>
-                    <option value="network_error">Network Error</option>
-                    <option value="render_error">Render Error</option>
-                    <option value="i18n_error">i18n Error</option>
+                    <option value="network_error">Network</option>
+                    <option value="cache_error">Cache</option>
+                    <option value="db_error">DB Error</option>
+                    <option value="critical_error">Critical</option>
+                    <option value="warning">Warning</option>
                     <option value="unknown">Unknown</option>
                 </select>
                 <select id="filter-since" onchange="reloadErrors()">
@@ -227,25 +311,46 @@
                     <option value="30d">Last 30 days</option>
                     <option value="all">All time</option>
                 </select>
+                <label class="incl-resolved-label"><input type="checkbox" id="incl-resolved" onchange="reloadErrors()"> Show resolved</label>
                 <div class="filter-spacer"></div>
                 <span id="result-count" style="font-size:13px;color:var(--text-tertiary)"></span>
             </div>
 
-            <!-- Table -->
-            <div class="table-container">
+            <!-- Individual table -->
+            <div class="table-container" id="table-individual">
                 <table>
                     <thead>
                         <tr>
-                            <th>Type</th>
+                            <th style="width:88px">Severity</th>
+                            <th style="width:108px">Type</th>
                             <th>Message</th>
-                            <th>Platform</th>
-                            <th>Version</th>
-                            <th>Page</th>
-                            <th>Time</th>
-                            <th></th>
+                            <th style="width:96px">Component</th>
+                            <th style="width:76px">Platform</th>
+                            <th style="width:118px">Time</th>
+                            <th style="width:78px"></th>
                         </tr>
                     </thead>
                     <tbody id="errors-tbody">
+                        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Grouped table -->
+            <div class="table-container" id="table-grouped" style="display:none">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:64px">Count</th>
+                            <th style="width:108px">Type</th>
+                            <th style="width:88px">Severity</th>
+                            <th>Message</th>
+                            <th style="width:96px">Component</th>
+                            <th style="width:118px">Last Seen</th>
+                            <th style="width:96px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="grouped-tbody">
                         <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>
                     </tbody>
                 </table>
@@ -258,11 +363,13 @@
 <div id="detail-modal" class="modal" onclick="if(event.target===this)closeModal()">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Error Detail</h2>
+            <h2 class="modal-title" id="modal-title">Error Detail</h2>
             <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body" id="modal-body"></div>
-        <div style="padding:0 24px 20px;display:flex;justify-content:flex-end">
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            <button class="btn btn-secondary" id="modal-resolve-fp-btn" style="display:none;color:#10b981;border-color:#10b98140"><i data-lucide="check-check"></i> Resolve All</button>
             <button class="btn btn-secondary" id="modal-resolve-btn" style="color:#10b981;border-color:#10b98140"><i data-lucide="check"></i> Mark Resolved</button>
         </div>
     </div>
@@ -278,8 +385,12 @@
 
     var _errors = [];
     var _filtered = [];
+    var _groups = [];
+    var _filteredGroups = [];
     var _role = '';
+    var _view = 'individual';
     var _dailyChart = null;
+    var _sevChart = null;
 
     window.addEventListener('DOMContentLoaded', function() {
         window.adminAuth.checkAuth().then(function(data) {
@@ -291,7 +402,7 @@
             }
             lucide.createIcons();
             loadPage();
-            setInterval(loadPage, 60000); // auto-refresh every 60s
+            setInterval(loadPage, 60000);
         });
 
         document.getElementById('menu-toggle').addEventListener('click', function() {
@@ -320,18 +431,22 @@
         reloadErrors();
     }
 
+    // ── Stats ─────────────────────────────────────────────────────────────
     async function loadStats() {
         try {
             var d = await api('get_stats');
-            document.getElementById('stat-24h').textContent = (d.counts.last24h || 0).toLocaleString();
-            document.getElementById('stat-7d').textContent = (d.counts.last7d || 0).toLocaleString();
-            document.getElementById('stat-types').textContent = (d.byType || []).length;
+            document.getElementById('stat-24h').textContent      = (d.counts.last24h     || 0).toLocaleString();
+            document.getElementById('stat-7d').textContent       = (d.counts.last7d      || 0).toLocaleString();
+            document.getElementById('stat-critical').textContent = (d.counts.critical24h || 0).toLocaleString();
+            document.getElementById('stat-fp').textContent       = (d.counts.uniqueTypes || 0).toLocaleString();
             document.getElementById('stat-platforms').textContent = (d.byPlatform || []).length;
             renderDailyChart(d.dailyData || []);
-            renderTypeBreakdown(d.byType || []);
+            renderSeverityChart(d.bySeverity || []);
+            renderComponentBreakdown(d.byComponent || []);
         } catch(e) { /* fail silently */ }
     }
 
+    // ── Daily chart ───────────────────────────────────────────────────────
     function renderDailyChart(dailyData) {
         var labels = dailyData.map(function(r) {
             var dt = new Date(r.date + 'T12:00:00');
@@ -346,60 +461,141 @@
         if (!ctx) return;
         _dailyChart = new Chart(ctx, {
             type: 'bar',
-            data: { labels: labels, datasets: [{ data: counts, backgroundColor: '#ef444440', borderColor: '#ef4444', borderWidth: 1.5, borderRadius: 4 }] },
+            data: { labels: labels, datasets: [{ data: counts, backgroundColor: '#ef444440', borderColor: '#ef4444', borderWidth: 1.5, borderRadius: 3 }] },
             options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-                scales:{ x:{ticks:{color:textSec,font:{size:10},maxRotation:0},grid:{color:borderL}},
+                scales:{ x:{ticks:{color:textSec,font:{size:9},maxRotation:0,maxTicksLimit:10},grid:{color:borderL}},
                          y:{ticks:{color:textSec,font:{size:10},precision:0},grid:{color:borderL}} } }
         });
     }
 
-    function renderTypeBreakdown(byType) {
-        var container = document.getElementById('type-breakdown');
-        if (!byType.length) { container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">No errors in last 7 days.</div>'; return; }
-        var total = byType.reduce(function(s,r){return s+r.count;},0);
-        var colors = { js_error:'#ef4444', network_error:'#f59e0b', render_error:'#8b5cf6', i18n_error:'#10b981', unknown:'#94a3b8' };
-        var html = '<div style="display:flex;flex-direction:column;gap:8px">';
-        byType.slice(0,6).forEach(function(r) {
+    // ── Severity donut ────────────────────────────────────────────────────
+    function renderSeverityChart(bySeverity) {
+        if (_sevChart) { _sevChart.destroy(); _sevChart = null; }
+        var ctx = document.getElementById('chart-severity');
+        if (!ctx) return;
+        if (!bySeverity.length) {
+            ctx.closest('.chart-wrap').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:13px">No data</div>';
+            return;
+        }
+        var SEV_COLORS = { critical:'#dc2626', error:'#f97316', warning:'#eab308', info:'#3b82f6', unknown:'#94a3b8' };
+        var labels = bySeverity.map(function(r) { return r.name; });
+        var counts = bySeverity.map(function(r) { return r.count; });
+        var colors = bySeverity.map(function(r) { return SEV_COLORS[r.name] || '#94a3b8'; });
+        var textSec = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#6b7280';
+        _sevChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: labels, datasets: [{ data: counts, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+            options: { responsive:true, maintainAspectRatio:false, cutout:'62%',
+                plugins:{ legend:{ position:'right', labels:{ color: textSec, boxWidth:9, padding:6, font:{size:10} } } } }
+        });
+    }
+
+    // ── Component bars ────────────────────────────────────────────────────
+    function renderComponentBreakdown(byComp) {
+        var container = document.getElementById('component-breakdown');
+        if (!container) return;
+        if (!byComp.length) { container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:4px 0">No data</div>'; return; }
+        var total = byComp.reduce(function(s,r){return s+r.count;},0);
+        var html = '<div style="display:flex;flex-direction:column;gap:5px">';
+        byComp.slice(0,10).forEach(function(r) {
             var pct = total > 0 ? Math.round((r.count/total)*100) : 0;
-            var color = colors[r.type] || '#94a3b8';
-            html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">';
-            html += '<span style="color:var(--text-primary)">' + esc(r.type) + '</span>';
-            html += '<span style="color:var(--text-secondary)">' + r.count + ' (' + pct + '%)</span></div>';
-            html += '<div style="background:var(--bg-active);border-radius:4px;height:5px"><div style="width:' + pct + '%;height:100%;background:' + color + ';border-radius:4px"></div></div></div>';
+            html += '<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">'
+                + '<span style="color:var(--text-primary)">' + esc(r.name) + '</span>'
+                + '<span style="color:var(--text-tertiary)">' + r.count + '</span></div>'
+                + '<div style="background:var(--bg-active);border-radius:3px;height:4px"><div style="width:' + pct + '%;height:100%;background:#3b82f6;border-radius:3px"></div></div></div>';
         });
         html += '</div>';
         container.innerHTML = html;
     }
 
+    // ── View switch ───────────────────────────────────────────────────────
+    function setView(v) {
+        _view = v;
+        document.getElementById('view-btn-individual').classList.toggle('active', v === 'individual');
+        document.getElementById('view-btn-grouped').classList.toggle('active', v === 'grouped');
+        document.getElementById('table-individual').style.display = v === 'individual' ? '' : 'none';
+        document.getElementById('table-grouped').style.display    = v === 'grouped'    ? '' : 'none';
+        reloadErrors();
+    }
+
+    // ── Load errors ───────────────────────────────────────────────────────
     async function reloadErrors() {
-        var tbody = document.getElementById('errors-tbody');
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>';
         var sinceVal = document.getElementById('filter-since').value;
         var sinceMap = { '24h': new Date(Date.now()-86400000).toISOString(), '7d': new Date(Date.now()-7*86400000).toISOString(), '30d': new Date(Date.now()-30*86400000).toISOString(), 'all': null };
-        try {
-            var d = await api('list', { since: sinceMap[sinceVal], limit: 200 });
-            _errors = d.errors || [];
-            applyFilters();
-        } catch(e) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#e53e3e">Failed: ' + esc(e.message) + '</td></tr>';
+        var since    = sinceMap[sinceVal];
+        var severity  = document.getElementById('filter-severity').value;
+        var component = document.getElementById('filter-component').value;
+        var platform  = document.getElementById('filter-platform').value;
+        var inclResolved = document.getElementById('incl-resolved').checked;
+
+        if (_view === 'grouped') {
+            var gbody = document.getElementById('grouped-tbody');
+            gbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>';
+            try {
+                var payload = {};
+                if (since)     payload.since     = since;
+                if (severity)  payload.severity  = severity;
+                if (component) payload.component = component;
+                if (platform)  payload.platform  = platform;
+                var gd = await api('get_grouped', payload);
+                _groups = gd.groups || [];
+                applyFilters();
+            } catch(e) {
+                gbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#e53e3e">Failed: ' + esc(e.message) + '</td></tr>';
+            }
+        } else {
+            var ibody = document.getElementById('errors-tbody');
+            ibody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">Loading…</td></tr>';
+            try {
+                var ipayload = { limit: 300 };
+                if (since)        ipayload.since    = since;
+                if (severity)     ipayload.severity = severity;
+                if (component)    ipayload.component = component;
+                if (platform)     ipayload.platform = platform;
+                if (inclResolved) ipayload.include_resolved = true;
+                var id2 = await api('list', ipayload);
+                _errors = id2.errors || [];
+                applyFilters();
+            } catch(e) {
+                ibody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#e53e3e">Failed: ' + esc(e.message) + '</td></tr>';
+            }
         }
     }
 
+    // ── Filters ───────────────────────────────────────────────────────────
     function applyFilters() {
-        var search = (document.getElementById('topbar-search-input').value || '').toLowerCase();
-        var platform = document.getElementById('filter-platform').value;
-        var type = document.getElementById('filter-type').value;
-        _filtered = _errors.filter(function(e) {
-            if (platform && e.platform !== platform) return false;
-            if (type && e.error_type !== type) return false;
-            if (search && !(e.error_message||'').toLowerCase().includes(search) && !(e.error_type||'').toLowerCase().includes(search)) return false;
-            return true;
-        });
-        renderTable(_filtered);
+        var search    = (document.getElementById('topbar-search-input').value || '').toLowerCase();
+        var platform  = document.getElementById('filter-platform').value;
+        var type      = document.getElementById('filter-type').value;
+        var severity  = document.getElementById('filter-severity').value;
+        var component = document.getElementById('filter-component').value;
+
+        if (_view === 'grouped') {
+            _filteredGroups = _groups.filter(function(g) {
+                if (platform  && g.platform  !== platform)  return false;
+                if (type      && g.error_type !== type)      return false;
+                if (severity  && g.severity   !== severity)  return false;
+                if (component && g.component  !== component) return false;
+                if (search && !(g.error_message||'').toLowerCase().includes(search) && !(g.error_type||'').toLowerCase().includes(search)) return false;
+                return true;
+            });
+            renderGroupedTable(_filteredGroups);
+        } else {
+            _filtered = _errors.filter(function(e) {
+                if (platform  && e.platform  !== platform)  return false;
+                if (type      && e.error_type !== type)      return false;
+                if (severity  && e.severity   !== severity)  return false;
+                if (component && e.component  !== component) return false;
+                if (search && !(e.error_message||'').toLowerCase().includes(search) && !(e.error_type||'').toLowerCase().includes(search)) return false;
+                return true;
+            });
+            renderTable(_filtered);
+        }
     }
 
+    // ── Individual table ──────────────────────────────────────────────────
     function renderTable(list) {
-        var tbody = document.getElementById('errors-tbody');
+        var tbody   = document.getElementById('errors-tbody');
         var countEl = document.getElementById('result-count');
         tbody.innerHTML = '';
         if (countEl) countEl.textContent = list.length + ' result' + (list.length !== 1 ? 's' : '');
@@ -409,52 +605,172 @@
         }
         list.forEach(function(e) {
             var tr = document.createElement('tr');
-            var typeClass = 'et-' + (e.error_type || 'unknown').replace(/[^a-z_]/g,'');
-            tr.innerHTML = '<td><span class="error-type-badge ' + typeClass + '">' + esc(e.error_type||'unknown') + '</span></td>'
-                + '<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">' + esc(e.error_message||'—') + '</td>'
-                + '<td style="font-size:13px">' + esc(e.platform||'—') + '</td>'
-                + '<td style="font-size:12px;color:var(--text-tertiary)">' + esc(e.app_version||'—') + '</td>'
-                + '<td style="font-size:12px;color:var(--text-tertiary)">' + esc(e.page_context||'—') + '</td>'
-                + '<td style="font-size:12px;white-space:nowrap">' + fmtDate(e.created_at) + '</td>'
-                + '<td style="white-space:nowrap"><button class="btn btn-secondary" style="padding:3px 9px;font-size:12px" onclick="showDetail(' + e.id + ')">View</button>'
-                + ' <button class="btn btn-secondary" style="padding:3px 9px;font-size:12px;color:#10b981;border-color:#10b98140" title="Mark resolved" onclick="resolveError(' + e.id + ')"><i data-lucide="check"></i></button></td>';
+            var typeClass = 'et-' + (e.error_type || 'unknown').replace(/[^a-z_]/g, '');
+            var sevClass  = 'sev-' + (e.severity  || 'error');
+            tr.innerHTML = '<td><span class="sev-badge ' + sevClass + '">' + esc(e.severity||'error') + '</span></td>'
+                + '<td><span class="type-badge ' + typeClass + '">' + esc(e.error_type||'unknown') + '</span></td>'
+                + '<td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="' + esc(e.error_message||'') + '">' + esc(e.error_message||'—') + '</td>'
+                + '<td style="font-size:12px;color:var(--text-secondary)">' + esc(e.component||'—') + '</td>'
+                + '<td style="font-size:12px;color:var(--text-secondary)">' + esc(e.platform||'—') + '</td>'
+                + '<td style="font-size:12px;white-space:nowrap;color:var(--text-tertiary)">' + fmtDate(e.created_at) + '</td>'
+                + '<td style="white-space:nowrap">'
+                + '<button class="btn btn-secondary" style="padding:3px 8px;font-size:12px" onclick="showDetail(' + e.id + ')">View</button>'
+                + ' <button class="btn btn-secondary" style="padding:3px 8px;font-size:12px;color:#10b981;border-color:#10b98140" title="Mark resolved" onclick="resolveError(' + e.id + ')"><i data-lucide="check"></i></button></td>';
             tbody.appendChild(tr);
         });
         lucide.createIcons();
     }
 
+    // ── Grouped table ─────────────────────────────────────────────────────
+    function renderGroupedTable(list) {
+        var tbody   = document.getElementById('grouped-tbody');
+        var countEl = document.getElementById('result-count');
+        tbody.innerHTML = '';
+        if (countEl) countEl.textContent = list.length + ' group' + (list.length !== 1 ? 's' : '');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-tertiary)">No errors found.</td></tr>';
+            lucide.createIcons(); return;
+        }
+        list.forEach(function(g) {
+            var tr = document.createElement('tr');
+            var typeClass = 'et-' + (g.error_type || 'unknown').replace(/[^a-z_]/g, '');
+            var sevClass  = 'sev-' + (g.severity  || 'error');
+            var cntClass  = g.count >= 10 ? '' : (g.count >= 3 ? ' med' : ' low');
+            tr.innerHTML = '<td><span class="count-badge' + cntClass + '">' + g.count + 'x</span></td>'
+                + '<td><span class="type-badge ' + typeClass + '">' + esc(g.error_type||'unknown') + '</span></td>'
+                + '<td><span class="sev-badge ' + sevClass + '">' + esc(g.severity||'error') + '</span></td>'
+                + '<td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="' + esc(g.error_message||'') + '">' + esc(g.error_message||'—') + '</td>'
+                + '<td style="font-size:12px;color:var(--text-secondary)">' + esc(g.component||'—') + '</td>'
+                + '<td style="font-size:12px;white-space:nowrap;color:var(--text-tertiary)">' + fmtDate(g.last_seen) + '</td>'
+                + '<td style="white-space:nowrap">'
+                + '<button class="btn btn-secondary" style="padding:3px 8px;font-size:12px" onclick="showGroupedDetail(' + JSON.stringify(g.fingerprint) + ')">Detail</button>'
+                + ' <button class="btn btn-secondary" style="padding:3px 8px;font-size:12px;color:#10b981;border-color:#10b98140" title="Resolve all" onclick="resolveFingerprint(' + JSON.stringify(g.fingerprint) + ')"><i data-lucide="check-check"></i></button></td>';
+            tbody.appendChild(tr);
+        });
+        lucide.createIcons();
+    }
+
+    // ── Individual detail modal ───────────────────────────────────────────
     function showDetail(id) {
         var e = _errors.find(function(x) { return x.id === id; });
         if (!e) return;
-        var html = '';
-        var fields = [['Type', e.error_type], ['Platform', e.platform], ['Version', e.app_version], ['Page', e.page_context], ['Session', e.session_id], ['Time', fmtDate(e.created_at)]];
-        fields.forEach(function(f) {
-            html += '<div class="detail-row"><span class="detail-label">' + esc(f[0]) + '</span><span style="color:var(--text-primary)">' + esc(f[1]||'—') + '</span></div>';
+        document.getElementById('modal-title').textContent = 'Error Detail';
+
+        var sevClass  = 'sev-' + (e.severity  || 'error');
+        var typeClass = 'et-'  + (e.error_type || 'unknown').replace(/[^a-z_]/g, '');
+        var html = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">'
+            + '<span class="sev-badge '  + sevClass  + '">' + esc(e.severity  || 'error')   + '</span>'
+            + '<span class="type-badge ' + typeClass + '">' + esc(e.error_type || 'unknown') + '</span>'
+            + (e.component ? '<span style="background:var(--bg-active);color:var(--text-secondary);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600">' + esc(e.component) + '</span>' : '')
+            + '</div>';
+
+        html += '<div class="detail-section"><div class="detail-section-title">Details</div><div class="detail-grid">';
+        [['Platform', e.platform], ['Version', e.app_version], ['Page', e.page_context], ['Tab', e.tab_context],
+         ['Connection', e.connection_type], ['Session', e.session_id ? e.session_id.slice(0,10)+'…' : '—'],
+         ['Time', fmtDate(e.created_at)], ['Fingerprint', e.fingerprint || '—']].forEach(function(f) {
+            html += '<div class="detail-item"><span class="detail-label">' + esc(f[0]) + '</span><span class="detail-value">' + esc(f[1]||'—') + '</span></div>';
         });
+        html += '</div></div>';
+
+        if (e.url) {
+            html += '<div class="detail-section"><div class="detail-section-title">URL</div>'
+                + '<div style="font-size:12px;color:var(--text-secondary);word-break:break-all;font-family:monospace">' + esc(e.url) + '</div></div>';
+        }
+        if (e.user_agent) {
+            html += '<div class="detail-section"><div class="detail-section-title">User Agent</div>'
+                + '<div style="font-size:11px;color:var(--text-secondary);word-break:break-all;font-family:monospace">' + esc(e.user_agent) + '</div></div>';
+        }
         if (e.error_message) {
-            html += '<div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Message</div>';
-            html += '<div style="font-size:13px;color:var(--text-primary);margin-top:4px;white-space:pre-wrap;word-break:break-all">' + esc(e.error_message) + '</div>';
+            html += '<div class="detail-section"><div class="detail-section-title">Message</div>'
+                + '<div style="font-size:13px;color:var(--text-primary);white-space:pre-wrap;word-break:break-word">' + esc(e.error_message) + '</div></div>';
         }
+
+        var crumbs = null;
+        try { crumbs = JSON.parse(e.breadcrumbs || 'null'); } catch(_) {}
+        if (Array.isArray(crumbs) && crumbs.length) {
+            html += '<div class="detail-section"><div class="detail-section-title">Breadcrumbs (' + crumbs.length + ')</div><div class="crumb-timeline">';
+            crumbs.forEach(function(c) {
+                var rel = c.ts ? (Math.round((Date.now() - c.ts) / 1000) + 's ago') : '';
+                html += '<div class="crumb-item"><div class="crumb-dot"></div>'
+                    + '<span class="crumb-type">' + esc(c.t || '') + '</span>'
+                    + '<span class="crumb-label">' + esc(c.l || '') + '</span>'
+                    + '<span class="crumb-time">'  + esc(rel) + '</span></div>';
+            });
+            html += '</div></div>';
+        }
+
         if (e.stack_trace) {
-            html += '<div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Stack Trace</div>';
-            html += '<div class="stack-trace">' + esc(e.stack_trace) + '</div>';
+            html += '<div class="detail-section"><div class="detail-section-title">Stack Trace</div>'
+                + '<div class="stack-trace">' + esc(e.stack_trace) + '</div></div>';
         }
+
         document.getElementById('modal-body').innerHTML = html;
-        var resolveBtn = document.getElementById('modal-resolve-btn');
-        if (resolveBtn) resolveBtn.onclick = function(){ resolveError(e.id); closeModal(); };
+        var resolveBtn   = document.getElementById('modal-resolve-btn');
+        var resolveFpBtn = document.getElementById('modal-resolve-fp-btn');
+        if (resolveBtn)   { resolveBtn.style.display = ''; resolveBtn.onclick = function(){ resolveError(e.id); closeModal(); }; }
+        if (resolveFpBtn)   resolveFpBtn.style.display = 'none';
+        document.getElementById('detail-modal').classList.add('active');
+        lucide.createIcons();
+    }
+
+    // ── Grouped detail modal ──────────────────────────────────────────────
+    function showGroupedDetail(fp) {
+        var g = _groups.find(function(x) { return x.fingerprint === fp; });
+        if (!g) return;
+        document.getElementById('modal-title').textContent = 'Group: ' + g.count + ' occurrence' + (g.count !== 1 ? 's' : '');
+
+        var sevClass  = 'sev-' + (g.severity  || 'error');
+        var typeClass = 'et-'  + (g.error_type || 'unknown').replace(/[^a-z_]/g, '');
+        var html = '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">'
+            + '<span class="count-badge' + (g.count >= 10 ? '' : g.count >= 3 ? ' med' : ' low') + '">' + g.count + 'x</span>'
+            + '<span class="sev-badge '  + sevClass  + '">' + esc(g.severity  || 'error')   + '</span>'
+            + '<span class="type-badge ' + typeClass + '">' + esc(g.error_type || 'unknown') + '</span>'
+            + (g.component ? '<span style="background:var(--bg-active);color:var(--text-secondary);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600">' + esc(g.component) + '</span>' : '')
+            + '</div>';
+
+        html += '<div class="detail-section"><div class="detail-section-title">Summary</div><div class="detail-grid">';
+        [['Occurrences', g.count], ['Platform', g.platform || '—'], ['Component', g.component || '—'],
+         ['Fingerprint', fp ? fp.slice(0, 12) + (fp.length > 12 ? '…' : '') : '—'],
+         ['First Seen', fmtDate(g.first_seen)], ['Last Seen', fmtDate(g.last_seen)]].forEach(function(f) {
+            html += '<div class="detail-item"><span class="detail-label">' + esc(String(f[0])) + '</span><span class="detail-value">' + esc(String(f[1])) + '</span></div>';
+        });
+        html += '</div></div>';
+
+        if (g.error_message) {
+            html += '<div class="detail-section"><div class="detail-section-title">Message</div>'
+                + '<div style="font-size:13px;color:var(--text-primary);white-space:pre-wrap;word-break:break-word">' + esc(g.error_message) + '</div></div>';
+        }
+
+        document.getElementById('modal-body').innerHTML = html;
+        var resolveBtn   = document.getElementById('modal-resolve-btn');
+        var resolveFpBtn = document.getElementById('modal-resolve-fp-btn');
+        if (resolveBtn)   resolveBtn.style.display = 'none';
+        if (resolveFpBtn) { resolveFpBtn.style.display = ''; resolveFpBtn.onclick = function(){ resolveFingerprint(fp); closeModal(); }; }
         document.getElementById('detail-modal').classList.add('active');
         lucide.createIcons();
     }
 
     function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
 
+    // ── Resolve ───────────────────────────────────────────────────────────
     async function resolveError(id) {
         try {
             await api('resolve', { id: id });
             _errors = _errors.filter(function(e) { return e.id !== id; });
             applyFilters();
             loadStats();
-            showToast('Error resolved ✓');
+            showToast('Resolved ✓');
+        } catch(e) { alert('Failed: ' + e.message); }
+    }
+
+    async function resolveFingerprint(fp) {
+        if (!confirm('Resolve all occurrences of this error group?')) return;
+        try {
+            await api('resolve_fingerprint', { fingerprint: fp });
+            _groups = _groups.filter(function(g) { return g.fingerprint !== fp; });
+            applyFilters();
+            loadStats();
+            showToast('Group resolved ✓');
         } catch(e) { alert('Failed: ' + e.message); }
     }
 
@@ -467,10 +783,11 @@
         } catch(e) { alert('Failed: ' + e.message); }
     }
 
+    // ── Helpers ───────────────────────────────────────────────────────────
     function fmtDate(str) {
         if (!str) return '—';
         var d = new Date(str);
-        return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+        return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
     }
 
     function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

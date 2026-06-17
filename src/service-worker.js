@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'tafsir-kurd-v1206';
+﻿const CACHE_NAME = 'tafsir-kurd-v1207';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -71,6 +71,7 @@ const PRECACHE = [
   // Styles
   '/styles/mobile-optimize.css',
   // Core utils
+  '/utils/app-error-reporter.js?v=2',
   '/utils/supabase.js?v=20260326b',
   '/utils/fast-scroll.js?v=20260503',
   '/utils/console-cleaner.js?v=2',

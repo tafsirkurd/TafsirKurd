@@ -433,6 +433,7 @@ function _writeCache(key, data) {
     var _kb = 0;
     try { _kb = Math.round(JSON.stringify(data).length / 1024); } catch(_) {}
     console.warn('[Gencine] cache write failed', {key: key, sizeKB: _kb, error: e.name || String(e)});
+    try { if (window.ErrorReporter) window.ErrorReporter.cache(key, _kb, e.name); } catch(_) {}
     if (localStorage.getItem('debug') === '1') {
       try {
         var _toast = document.createElement('div');

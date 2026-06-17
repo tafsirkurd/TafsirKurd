@@ -1,219 +1,188 @@
-/* ================================================================
-   app-error-reporter.js  v1
-   Catches uncaught JS errors and unhandled rejections and POSTs
-   them to /app-error-report (Cloudflare Worker → app_error_logs).
-
-   What it reports:
-     • window.onerror          — uncaught exceptions
-     • unhandledrejection      — unhandled promise rejections
-     • AppErrors.report()      — manual reports from anywhere
-     • logger.error() hook     — if logger.js is loaded
-
-   Limits:
-     • Max 10 reports per session (sessionStorage counter)
-     • Same error message deduped within 60 s
-     • Only on tafsirkurd.com (silent on localhost/dev)
-     • Network errors from the reporter itself are swallowed
-   ================================================================ */
-(function () {
+// app-error-reporter.js v2 — comprehensive anonymous error telemetry
+// Loaded early so boot errors are captured. No PII: IP hashed server-side.
+(function(w, d) {
   'use strict';
 
-  var ENDPOINT      = 'https://tafsirkurd.com/app-error-report';
-  var SESSION_KEY   = 'aer_count_v1';
-  var MAX_PER_SESSION = 10;
+  var EP          = '/app-error-report';
+  var MAX_REPORTS = 25;
+  var MAX_CRUMBS  = 12;
 
-  // Only report on production domain
-  var _enabled = (window.location.hostname === 'tafsirkurd.com');
+  var _sent    = 0;
+  var _session = _uid();
+  var _crumbs  = [];
 
-  // ── cached state ──────────────────────────────────────────────
-  var _platform   = 'web';
-  var _appVersion = null;
-  var _sessionId  = null;
-  var _recentMsgs = {}; // message → timestamp, for 60s dedup
-
-  // ── session ID ────────────────────────────────────────────────
-  function _getSessionId() {
-    if (_sessionId) return _sessionId;
-    try {
-      var id = sessionStorage.getItem('aer_sid');
-      if (!id) {
-        id = Math.random().toString(36).slice(2) + Date.now().toString(36);
-        sessionStorage.setItem('aer_sid', id);
-      }
-      _sessionId = id;
-    } catch(e) {
-      _sessionId = 'nostorage';
-    }
-    return _sessionId;
+  function _uid() {
+    return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
   }
 
-  // ── rate limit ────────────────────────────────────────────────
-  function _canSend() {
+  function _platform() {
     try {
-      var n = parseInt(sessionStorage.getItem(SESSION_KEY) || '0', 10);
-      return n < MAX_PER_SESSION;
-    } catch(e) { return true; }
-  }
-  function _bumpCount() {
-    try {
-      var n = parseInt(sessionStorage.getItem(SESSION_KEY) || '0', 10);
-      sessionStorage.setItem(SESSION_KEY, String(n + 1));
+      if (w.Capacitor && w.Capacitor.getPlatform) return w.Capacitor.getPlatform();
+      if (w.Capacitor) return 'capacitor';
     } catch(e) {}
+    var ua = navigator.userAgent || '';
+    if (/android/i.test(ua)) return 'android';
+    if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+    return 'web';
   }
 
-  // ── dedup: same message within 60 s → skip ───────────────────
-  function _isDupe(msg) {
-    var now = Date.now();
-    var key = String(msg || '').slice(0, 120);
-    if (_recentMsgs[key] && (now - _recentMsgs[key]) < 60000) return true;
-    _recentMsgs[key] = now;
-    return false;
+  function _version() {
+    try {
+      var m = d.querySelector('meta[name="app-version"]');
+      if (m && m.content) return m.content.slice(0, 20);
+    } catch(e) {}
+    return '';
   }
 
-  // ── classify error type ───────────────────────────────────────
-  function _classify(msg, stack) {
-    var m = String(msg || '').toLowerCase();
-    var s = String(stack || '').toLowerCase();
-    if (m.includes('network') || m.includes('fetch') || m.includes('load') ||
-        m.includes('failed to fetch') || m.includes('networkerror'))
-      return 'network_error';
-    if (m.includes('render') || m.includes('display') || m.includes('paint') ||
-        s.includes('render') || s.includes('buildpanel') || s.includes('buildview'))
-      return 'render_error';
-    if (m.includes('translation') || m.includes('i18n') || m.includes('t(') ||
-        s.includes('i18n') || s.includes('translations'))
-      return 'i18n_error';
-    return 'js_error';
+  function _connection() {
+    try {
+      if (!navigator.onLine) return 'offline';
+      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (!c) return 'online';
+      return c.effectiveType || c.type || 'online';
+    } catch(e) { return 'unknown'; }
   }
 
-  // ── sanitise string ───────────────────────────────────────────
-  function _san(v, max) {
-    if (v === null || v === undefined) return null;
-    return String(v).slice(0, max || 200);
+  function _tab() {
+    try {
+      if (w.GencineUI && w.GencineUI._view) return 'gencine:' + w.GencineUI._view;
+      var hash = (w.location.hash || '').replace('#', '');
+      return hash || w.location.pathname.split('/').filter(Boolean).pop() || 'home';
+    } catch(e) { return 'unknown'; }
   }
 
-  // ── send ──────────────────────────────────────────────────────
-  function _send(type, message, stack, context) {
-    if (!_enabled) return;
-    if (!_canSend()) return;
-    if (_isDupe(message)) return;
-    _bumpCount();
+  function _component(src) {
+    src = String(src || '');
+    if (!src) return '';
+    if (src.includes('prayer'))      return 'prayer';
+    if (src.includes('smart-dhikr')) return 'smart-slides';
+    if (src.includes('dhikr') || src.includes('gencine')) return 'gencine';
+    if (src.includes('mushaf'))      return 'mushaf';
+    if (src.includes('audio'))       return 'audio';
+    if (src.includes('i18n'))        return 'i18n';
+    if (src.includes('quran'))       return 'quran';
+    if (src.includes('qibla'))       return 'qibla';
+    if (src.includes('pdf-store'))   return 'books';
+    if (src.includes('app.min') || src.includes('app.js')) return 'app';
+    return '';
+  }
 
-    var body = {
-      platform:      _platform,
-      app_version:   _appVersion,
-      error_type:    type || 'js_error',
-      error_message: _san(message, 500),
-      stack_trace:   _san(stack, 2000),
-      page_context:  _san(context || window.location.pathname, 100),
-      session_id:    _getSessionId(),
+  function _fingerprint(type, msg, stack) {
+    var key = (type || '') + ':' + (msg || '').slice(0, 80) + ':' + ((stack || '').split('\n')[0] || '').slice(0, 80);
+    var h = 5381;
+    for (var i = 0; i < key.length; i++) h = ((h << 5) + h) ^ key.charCodeAt(i);
+    return (h >>> 0).toString(16);
+  }
+
+  // ── Core send ──────────────────────────────────────────────────────────────
+  function _send(type, msg, opts) {
+    if (_sent >= MAX_REPORTS) return;
+    _sent++;
+    opts = opts || {};
+
+    var payload = {
+      error_type:      String(type || 'unknown').slice(0, 50),
+      error_message:   String(msg  || '').slice(0, 500),
+      stack_trace:     String(opts.stack    || '').slice(0, 2000),
+      severity:        String(opts.severity || 'error').slice(0, 20),
+      component:       String(opts.component || _component(opts.src || '') || '').slice(0, 50),
+      page_context:    String(opts.page || _tab()).slice(0, 100),
+      tab_context:     _tab(),
+      session_id:      _session,
+      platform:        _platform(),
+      app_version:     _version(),
+      user_agent:      (navigator.userAgent || '').slice(0, 200),
+      connection_type: _connection(),
+      breadcrumbs:     JSON.stringify(_crumbs).slice(0, 1000),
+      fingerprint:     _fingerprint(type, msg, opts.stack),
+      url:             (w.location.href || '').slice(0, 200),
     };
 
-    // Use sendBeacon when available (survives page unload), fall back to fetch
     try {
-      var json = JSON.stringify(body);
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(ENDPOINT, new Blob([json], { type: 'application/json' }));
-      } else {
-        fetch(ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: json,
-          keepalive: true,
-        }).catch(function() {});
-      }
-    } catch(e) { /* never throw from the reporter */ }
-  }
-
-  // ── resolve platform + version (async, Capacitor native) ─────
-  function _resolveNativeInfo() {
-    try {
-      if (!window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.App) return;
-      _platform = Capacitor.getPlatform ? Capacitor.getPlatform() : 'web';
-      Capacitor.Plugins.App.getInfo().then(function(info) {
-        if (info && info.version) {
-          _appVersion = info.build ? info.version + '.' + info.build : info.version;
-        }
+      var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      if (navigator.sendBeacon && navigator.sendBeacon(EP, blob)) return;
+      fetch(EP, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
       }).catch(function() {});
     } catch(e) {}
   }
 
-  // ── window.onerror ────────────────────────────────────────────
-  var _prevOnError = window.onerror;
-  window.onerror = function(msg, src, line, col, error) {
-    var _msg = String(msg || '');
+  // ── Breadcrumbs ────────────────────────────────────────────────────────────
+  function _crumb(type, label) {
+    _crumbs.push({ t: type, l: String(label || '').slice(0, 40), ts: Date.now() });
+    if (_crumbs.length > MAX_CRUMBS) _crumbs.shift();
+  }
 
-    // "Script error." with no source/line is the browser's cross-origin sanitization.
-    // It is always produced by errors inside cross-origin iframes (YouTube embeds,
-    // browser extensions, third-party widgets) and never contains actionable info.
-    // Reporting it fills the log with noise — skip it entirely.
-    if (_msg === 'Script error.' || _msg === 'Script error') {
-      if (_prevOnError) return _prevOnError.apply(this, arguments);
-      return false;
-    }
+  d.addEventListener('click', function(e) {
+    try {
+      var el = e.target.closest('[data-tab],[data-section],[data-view],a[href^="#"],.tab-btn,.gencine-tab-btn,.nav-tab');
+      if (el) {
+        var label = el.dataset.tab || el.dataset.section || el.dataset.view
+                  || el.getAttribute('href') || (el.textContent || '').trim().slice(0, 20);
+        if (label) _crumb('tap', label);
+      }
+    } catch(ex) {}
+  }, true);
 
-    // Service worker script load failures are handled gracefully: both the landing page
-    // and the app already have .catch() on navigator.serviceWorker.register(). These
-    // failures are always transient (network blip, CDN moment, browser update check)
-    // and never actionable. Some browsers also fire window.onerror for them, which
-    // would otherwise flood the error log.
-    if (_msg.indexOf('service-worker') !== -1 || String(src || '').indexOf('service-worker') !== -1) {
-      if (_prevOnError) return _prevOnError.apply(this, arguments);
-      return false;
-    }
-    var stack = error && error.stack ? error.stack : (src + ':' + line + ':' + col);
-    var type  = _classify(_msg, stack);
-    _send(type, _msg, stack, null);
-    if (_prevOnError) return _prevOnError.apply(this, arguments);
+  // ── Global error capture ───────────────────────────────────────────────────
+  var _prevOnerror = w.onerror;
+  w.onerror = function(msg, src, line, col, err) {
+    _send('js_error', msg, {
+      stack:    err ? err.stack : (String(src || '') + ':' + line + ':' + col),
+      severity: 'error',
+      src:      src,
+    });
+    if (typeof _prevOnerror === 'function') return _prevOnerror.apply(this, arguments);
     return false;
   };
 
-  // ── unhandledrejection ────────────────────────────────────────
-  window.addEventListener('unhandledrejection', function(ev) {
-    var reason = ev.reason;
-    var msg    = reason instanceof Error ? reason.message : String(reason || 'Unhandled rejection');
-    var stack  = reason instanceof Error ? reason.stack   : null;
-    // SW load failures are transient network blips — same logic as in window.onerror
-    if (msg.indexOf('service-worker') !== -1 || msg.indexOf('ServiceWorker') !== -1) return;
-    _send(_classify(msg, stack), msg, stack, null);
+  w.addEventListener('unhandledrejection', function(e) {
+    var r = e.reason;
+    var msg = r ? (r.message || String(r)) : 'Unhandled Promise rejection';
+    _send('js_error', msg, {
+      stack:     r && r.stack,
+      severity:  'error',
+      component: 'promise',
+    });
   });
 
-  // ── hook logger.js if present ─────────────────────────────────
-  function _hookLogger() {
-    if (!window.logger || !window.logger.error || window.logger.__aerHooked) return;
-    var orig = window.logger.error.bind(window.logger);
-    window.logger.error = function() {
-      orig.apply(null, arguments);
-      try {
-        var msg   = Array.prototype.slice.call(arguments).join(' ');
-        var stack = arguments[0] instanceof Error ? arguments[0].stack : null;
-        _send(_classify(msg, stack), msg, stack, 'logger');
-      } catch(e) {}
-    };
-    window.logger.__aerHooked = true;
-  }
+  // ── Public API ─────────────────────────────────────────────────────────────
+  w.ErrorReporter = {
+    report:     _send,
+    breadcrumb: _crumb,
 
-  // ── public API ────────────────────────────────────────────────
-  window.AppErrors = {
-    // Manual report: AppErrors.report('network_error', 'Prayer fetch failed', err.stack)
-    report: function(type, message, stack, context) {
-      _send(type || 'js_error', message, stack, context);
+    network: function(url, status, component) {
+      _send('network_error', 'HTTP ' + status + ': ' + String(url || '').slice(0, 120), {
+        severity:  status >= 500 ? 'error' : 'warning',
+        component: component || 'network',
+      });
     },
-    // Enable/disable (e.g. during tests)
-    enable:  function() { _enabled = true; },
-    disable: function() { _enabled = false; },
+
+    cache: function(key, sizeKB, errName) {
+      _send('cache_error', 'localStorage write failed: ' + key, {
+        severity:  'warning',
+        component: 'cache',
+        stack:     'key=' + key + ' ~' + sizeKB + 'KB err=' + (errName || 'QuotaExceededError'),
+      });
+    },
+
+    db: function(table, op, errMsg) {
+      _send('db_error', table + ' ' + op + ' failed: ' + String(errMsg || '').slice(0, 100), {
+        severity:  'error',
+        component: 'supabase',
+      });
+    },
+
+    warn: function(component, message) {
+      _send('warning', message, { severity: 'warning', component: component });
+    },
+
+    critical: function(component, message, stack) {
+      _send('critical_error', message, { severity: 'critical', component: component, stack: stack });
+    },
   };
 
-  // ── init ──────────────────────────────────────────────────────
-  _resolveNativeInfo();
-  // Hook logger if it's already loaded, or wait for it
-  if (window.logger) {
-    _hookLogger();
-  } else {
-    var _t = 0;
-    var _w = setInterval(function() {
-      if (window.logger) { _hookLogger(); clearInterval(_w); }
-      else if (++_t > 20) clearInterval(_w);
-    }, 300);
-  }
-})();
+})(window, document);
