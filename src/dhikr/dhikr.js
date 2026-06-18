@@ -1,4 +1,4 @@
-/* Gencine (Religious Treasure) Tab — GencineUI v20260617j */
+/* Gencine (Religious Treasure) Tab — GencineUI v20260618a */
 (function(){
 'use strict';
 
@@ -799,10 +799,15 @@ function _getHadiths() {
 }
 /* Return adhkar for a category from DB */
 function _getAdhkar(catKey) {
+  var entries = [];
   if (_dbAdhkar && _dbAdhkar.length) {
-    return _dbAdhkar.filter(function(a){ return a.category_key === catKey; });
+    entries = _dbAdhkar.filter(function(a){ return a.category_key === catKey; });
   }
-  return [];
+  /* Use fallback injected by smart-dhikr when this category has no DB entries */
+  if (!entries.length && window._smartDhikrFallback && window._smartDhikrFallback.catKey === catKey) {
+    return window._smartDhikrFallback.entries;
+  }
+  return entries;
 }
 /* Return ALL adhkar — used by smart-dhikr.js to get in-memory data on iOS
    where localStorage may not be written yet on first session open */

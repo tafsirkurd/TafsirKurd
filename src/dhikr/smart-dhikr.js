@@ -1,5 +1,5 @@
 ﻿/**
- * Smart Daily Companion  v42
+ * Smart Daily Companion  v43
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1284,6 +1284,22 @@
     card.addEventListener('click', function() {
       _markOpened(item.id);
       if (gencineUI) {
+        /* If this category has no DB entries but the item has fallback text,
+           inject a synthetic entry so the reader shows something instead of empty */
+        var catData = _getAdhkarFromCache(item.categoryKey);
+        if (!catData.length && item.fallbackAr) {
+          window._smartDhikrFallback = {
+            catKey: item.categoryKey,
+            entries: [{
+              category_key: item.categoryKey,
+              ar:           item.fallbackAr,
+              repeat:       item.fallbackRepeat || 1,
+              source:       item.fallbackSource || ''
+            }]
+          };
+        } else {
+          window._smartDhikrFallback = null;
+        }
         gencineUI._adhkarCat  = item.categoryKey;
         gencineUI._adhkarView = 'list';
         gencineUI._view       = 'adhkar';
