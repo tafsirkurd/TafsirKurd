@@ -1,5 +1,5 @@
 ﻿/**
- * Smart Daily Companion  v46
+ * Smart Daily Companion  v47
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1304,6 +1304,10 @@
       iImg.src = item.coverUrl;
       iImg.alt = '';
       iImg.loading = 'lazy';
+      iImg.onerror = function() {
+        var fb = _mk('div', 'sd-icon'); fb.appendChild(_mk('i', item.icon || 'fas fa-book-open'));
+        if (iCover.parentNode) iCover.parentNode.replaceChild(fb, iCover);
+      };
       iCover.appendChild(iImg);
       card.appendChild(iCover);
     } else {
@@ -1398,6 +1402,10 @@
       cImg.src = book.cover_url;
       cImg.alt = '';
       cImg.loading = 'lazy';
+      cImg.onerror = function() {
+        var fb = _mk('div', 'sd-icon'); fb.appendChild(_mk('i', 'fas fa-book-open'));
+        if (cWrap.parentNode) cWrap.parentNode.replaceChild(fb, cWrap);
+      };
       cWrap.appendChild(cImg);
       card.appendChild(cWrap);
     } else {
