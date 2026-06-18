@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v48
+ * Smart Daily Companion  v79
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1060,36 +1060,27 @@
     var hadiths = (function() {
       try {
         var raw = JSON.parse(localStorage.getItem('gencine_hadiths_v2'));
-        return (raw && Array.isArray(raw.data)) ? raw.data : raw; /* unwrap {ts,data} envelope */
-      } catch(e) { return null; }
+        var ls = (raw && Array.isArray(raw.data)) ? raw.data : raw;
+        if (ls && ls.length) return ls;
+      } catch(e) {}
+      var bndl = window.GENCINE_BUNDLE;
+      return (bndl && Array.isArray(bndl.hadiths) && bndl.hadiths.length) ? bndl.hadiths : null;
     }());
 
-    if (hadiths && hadiths.length) {
-      var idx     = _seededIdx(hadiths.length, 2);
-      var h       = hadiths[idx];
-      var preview = (h.ku || h.ar || '').trim();
-      if (preview.length > 55) preview = preview.slice(0, 55) + '\u2026';
-      return {
-        _type: 'daily', id: 'hadith_day',
-        icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
-        title:    h.title || preview,
-        subtitle: h.source || 'پێغەمبەرێ ئیسلامێ \uFDFA',
-        nav: function(ui) {
-          if (!ui) return;
-          ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = idx; ui._draw();
-        }
-      };
-    }
+    if (!hadiths || !hadiths.length) return null;
 
-    /* Cache not yet populated — show the slide with neutral text (no "loading" label) */
+    var idx     = _seededIdx(hadiths.length, 2);
+    var h       = hadiths[idx];
+    var preview = (h.ku || h.ar || '').trim();
+    if (preview.length > 55) preview = preview.slice(0, 55) + '…';
     return {
       _type: 'daily', id: 'hadith_day',
       icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
-      title:    'حەدیسا ڕۆژێ',
-      subtitle: 'دیوانا حەدیسان',
+      title:    h.title || preview,
+      subtitle: h.source || 'پێغەمبەرێ ئیسلامێ ﷺ',
       nav: function(ui) {
         if (!ui) return;
-        ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = null; ui._draw();
+        ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = idx; ui._draw();
       }
     };
   }
@@ -1103,30 +1094,24 @@
     var books = (function() {
       try {
         var raw = JSON.parse(localStorage.getItem('gencine_books_v4'));
-        return (raw && Array.isArray(raw.data)) ? raw.data : raw; /* unwrap {ts,data} envelope */
-      } catch(e) { return null; }
+        var ls = (raw && Array.isArray(raw.data)) ? raw.data : raw;
+        if (ls && ls.length) return ls;
+      } catch(e) {}
+      var bndl = window.GENCINE_BUNDLE;
+      return (bndl && Array.isArray(bndl.books) && bndl.books.length) ? bndl.books : null;
     }());
 
-    if (books && books.length) {
-      var b      = books[_seededIdx(books.length, 4)] || books[0];
-      var bookId = b.id;
-      return {
-        _type: 'daily', id: 'book_day',
-        icon: 'fas fa-book-open', tag: 'پەرتوکا ڕۆژێ',
-        title:    b.title_ku || b.title_ar || 'پەرتوک',
-        subtitle: b.author_ku || 'بخوێنە',
-        coverUrl: b.cover_url || null,
-        nav: function(ui) { if (ui) ui.openBook(bookId); }
-      };
-    }
+    if (!books || !books.length) return null;
 
-    /* Cache not yet populated — show the slide with neutral text (no "loading" label) */
+    var b      = books[_seededIdx(books.length, 4)] || books[0];
+    var bookId = b.id;
     return {
       _type: 'daily', id: 'book_day',
       icon: 'fas fa-book-open', tag: 'پەرتوکا ڕۆژێ',
-      title:    'پەرتوکا ڕۆژێ',
-      subtitle: 'کتێبخانە',
-      nav: function(ui) { if (ui) { ui._view = 'books'; ui._draw(); } }
+      title:    b.title_ku || b.title_ar || 'پەرتوک',
+      subtitle: b.author_ku || 'بخوێنە',
+      coverUrl: b.cover_url || null,
+      nav: function(ui) { if (ui) ui.openBook(bookId); }
     };
   }
 
@@ -1176,10 +1161,10 @@
     seasonal.filter(function(s) { return !s._adhkarItem.hero; })
       .forEach(function(s) { items.push(s); });
 
-    /* Daily cards — always */
+    /* Daily cards — only push when data exists (null = no data yet) */
     items.push(_buildAyahItem());
-    items.push(_buildHadithItem());
-    items.push(_buildBookItem());
+    var _hSlide = _buildHadithItem(); if (_hSlide) items.push(_hSlide);
+    var _bSlide = _buildBookItem();   if (_bSlide) items.push(_bSlide);
     /* Featured book spotlight slide (once per day, disappears on discovery) */
     var _fbSlide = _buildFeaturedBookSlide();
     if (_fbSlide) items.push(_fbSlide);
