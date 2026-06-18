@@ -1,5 +1,5 @@
 ﻿/**
- * Smart Daily Companion  v44
+ * Smart Daily Companion  v45
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1160,6 +1160,10 @@
   ───────────────────────────────────────────── */
   function getItemsNow() {
     var items = [];
+
+    /* Greeting card — always first, personalised by time of day */
+    items.push(_buildGreetingItem());
+
     var seasonal = _getSeasonalItems();
 
     /* Hero seasonal items first — most important Islamic occasion before daily zikr */
@@ -1227,9 +1231,9 @@
     var cls = 'sd-card' + (done ? ' sd-card-done' : '') + (isFriday ? ' sd-card-friday' : '');
     var card = _mk('div', cls);
 
-    /* icon */
-    var iWrap = _mk('div', 'sd-icon');
-    iWrap.appendChild(_mk('i', item.icon));
+    /* icon — swap to green checkmark when completed today */
+    var iWrap = _mk('div', 'sd-icon' + (done ? ' sd-icon-done' : ''));
+    iWrap.appendChild(_mk('i', done ? 'fas fa-circle-check' : item.icon));
     card.appendChild(iWrap);
 
     /* content — same class as other cards */
@@ -1244,6 +1248,7 @@
       tagWrap.appendChild(_mk('span', 'sd-tag', T(item.subtitleKey, item.subtitleFallback)));
     }
     if (totalCount > 0) tagWrap.appendChild(_mk('span', 'sd-zikr-count', totalCount + ' ' + T('gencine.smart.zikr_count_label', 'زکر')));
+    if (streak.count >= 2) tagWrap.appendChild(_mk('span', 'sd-streak-badge', '🔥 ' + streak.count));
     content.appendChild(tagWrap);
 
     /* title zone — same min-height as other cards */
@@ -1263,12 +1268,10 @@
     }
     content.appendChild(titleZone);
 
-    /* sub line — Kurdish label + badge + source, same as sd-sub on other cards */
+    /* sub line — done confirmation OR category info (label · repeat · source) */
     var subEl = _mk('div', 'sd-sub' + (done ? ' sd-sub-done' : ''));
     if (done) {
       subEl.textContent = T('gencine.smart.done_today', 'ئەڤڕۆ تەمام بوو ✓');
-    } else if (streak.count >= 2) {
-      subEl.textContent = streak.count + ' ' + T('gencine.smart.days_row', 'ڕۆژ پەی هەم 🔥');
     } else {
       var subParts = [T(item.labelKey, item.labelFallback)];
       var _rep = featured ? (featured.repeat || 1) : (item.fallbackRepeat || 1);
@@ -1425,7 +1428,82 @@
     return card;
   }
 
+  /* ─────────────────────────────────────────────
+     GREETING CARD — always first slide
+     Warm, time-aware Islamic greeting.
+     Purely informational — no click/nav.
+  ───────────────────────────────────────────── */
+  function _getGreetingKey() {
+    var now = new Date();
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    var dow = now.getDay();
+    if (dow === 5) return 'fri';
+    var p = _getPrayerTimings();
+    var f = (p && _toMin(p.Fajr)    >= 0) ? _toMin(p.Fajr)    :  5*60;
+    var d = (p && _toMin(p.Dhuhr)   >= 0) ? _toMin(p.Dhuhr)   : 12*60;
+    var a = (p && _toMin(p.Asr)     >= 0) ? _toMin(p.Asr)     : 15*60+30;
+    var m = (p && _toMin(p.Maghrib) >= 0) ? _toMin(p.Maghrib) : 18*60;
+    var i = (p && _toMin(p.Isha)    >= 0) ? _toMin(p.Isha)    : 20*60;
+    if (nowMin >= f && nowMin < d) return 'morn';
+    if (nowMin >= d && nowMin < a) return 'noon';
+    if (nowMin >= a && nowMin < m) return 'eve';
+    if (nowMin >= m && nowMin < i) return 'mgrib';
+    return 'night';
+  }
+
+  function _buildGreetingItem() {
+    var key = _getGreetingKey();
+    var icon, label, sub;
+    if (key === 'fri') {
+      icon = 'fas fa-star-and-crescent';
+      label = 'ڕۆژا ئینیێ مبارەک';
+      sub = 'باشترین ڕۆژا هەفتێ — صەڵەواتێ بزیادە بکە';
+    } else if (key === 'morn') {
+      icon = 'fas fa-sun';
+      label = 'سپێدەیەکا پاک';
+      sub = 'ڕووژا تان پڕ ب بەرەکەت بێت';
+    } else if (key === 'noon') {
+      icon = 'fas fa-cloud-sun';
+      label = 'نیوانڕۆژا باش';
+      sub = 'زکرێن ڕووژ بخوێنە';
+    } else if (key === 'eve') {
+      icon = 'fas fa-cloud-sun';
+      label = 'ئێوارەکا باش';
+      sub = 'کاتا زکرێن ئێڤارێ';
+    } else if (key === 'mgrib') {
+      icon = 'fas fa-moon';
+      label = 'ئێڤارا بەرەکەت';
+      sub = 'ئێڤارا تان مبارەک بێت';
+    } else {
+      icon = 'fas fa-star';
+      label = 'شەڤا خوش';
+      sub = 'پێش نڤستنێ زکرێن خەوکردنێ بخوێنە';
+    }
+    return { _type: 'greeting', id: 'greeting', _icon: icon, _label: label, _sub: sub };
+  }
+
+  function _buildGreetingCard(item) {
+    var card = _mk('div', 'sd-card sd-card-greeting');
+    var iWrap = _mk('div', 'sd-icon');
+    iWrap.appendChild(_mk('i', item._icon));
+    card.appendChild(iWrap);
+
+    var content = _mk('div', 'sd-content');
+    var tagWrap = document.createElement('div');
+    tagWrap.appendChild(_mk('span', 'sd-tag', 'تەفسیر کورد'));
+    content.appendChild(tagWrap);
+
+    var titleZone = _mk('div', 'sd-title-zone');
+    titleZone.appendChild(_mk('div', 'sd-title', item._label));
+    content.appendChild(titleZone);
+    content.appendChild(_mk('div', 'sd-sub', item._sub));
+    card.appendChild(content);
+    return card;
+  }
+
   function _buildCard(hybridItem, gencineUI) {
+    if (hybridItem._type === 'greeting')
+      return _buildGreetingCard(hybridItem);
     if (hybridItem._type === 'adhkar')
       return _buildAdhkarCard(hybridItem._adhkarItem, gencineUI);
     if (hybridItem._type === 'weather')
@@ -1948,24 +2026,28 @@
      On any change: bust cache + redraw immediately if home is visible.
   ───────────────────────────────────────────── */
   (function() {
-    var _prevSeasonalKey = null;
-    var _prevZikrId      = null;
-    var _prevDaySeed     = null;
+    var _prevSeasonalKey  = null;
+    var _prevZikrId       = null;
+    var _prevDaySeed      = null;
+    var _prevGreetingKey  = null;
 
     setInterval(function() {
       try {
         var seasonalKey = _getSeasonalItems()
           .map(function(s) { return s._adhkarItem.id; }).join(',');
-        var zikrId  = _getZikrItem().id;
-        var daySeed = _daySeed();
+        var zikrId      = _getZikrItem().id;
+        var daySeed     = _daySeed();
+        var greetingKey = _getGreetingKey();
 
-        var changed = seasonalKey !== _prevSeasonalKey
-                   || zikrId     !== _prevZikrId
-                   || daySeed    !== _prevDaySeed;
+        var changed = seasonalKey  !== _prevSeasonalKey
+                   || zikrId       !== _prevZikrId
+                   || daySeed      !== _prevDaySeed
+                   || greetingKey  !== _prevGreetingKey;
 
         _prevSeasonalKey = seasonalKey;
         _prevZikrId      = zikrId;
         _prevDaySeed     = daySeed;
+        _prevGreetingKey = greetingKey;
 
         if (changed) {
           clearCache();
