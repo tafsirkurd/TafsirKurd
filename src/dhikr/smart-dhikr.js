@@ -1081,12 +1081,12 @@
       };
     }
 
-    /* Cache empty — placeholder, navigates to hadith list until data loads */
+    /* Cache not yet populated — show the slide with neutral text (no "loading" label) */
     return {
       _type: 'daily', id: 'hadith_day',
       icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
       title:    'حەدیسا ڕۆژێ',
-      subtitle: 'دابەزێنا داتا...',
+      subtitle: 'دیوانا حەدیسان',
       nav: function(ui) {
         if (!ui) return;
         ui._view = 'hadith'; ui._hadithSearch = ''; ui._hadithDetailIdx = null; ui._draw();
@@ -1120,12 +1120,12 @@
       };
     }
 
-    /* Cache empty — placeholder until data loads */
+    /* Cache not yet populated — show the slide with neutral text (no "loading" label) */
     return {
       _type: 'daily', id: 'book_day',
       icon: 'fas fa-book-open', tag: 'پەرتوکا ڕۆژێ',
       title:    'پەرتوکا ڕۆژێ',
-      subtitle: 'دابەزێنا داتا...',
+      subtitle: 'کتێبخانە',
       nav: function(ui) { if (ui) { ui._view = 'books'; ui._draw(); } }
     };
   }
@@ -1304,7 +1304,6 @@
       iImg.className = 'sd-book-cover-img';
       iImg.src = item.coverUrl;
       iImg.alt = '';
-      iImg.loading = 'lazy';
       iImg.onerror = function() {
         var fb = _mk('div', 'sd-icon'); fb.appendChild(_mk('i', item.icon || 'fas fa-book-open'));
         if (iCover.parentNode) iCover.parentNode.replaceChild(fb, iCover);
@@ -1364,8 +1363,9 @@
     try {
       var _raw = localStorage.getItem('gencine_books_v4');
       if (_raw) {
-        var _books = JSON.parse(_raw);
-        featBook = (_books || []).find(function(b) {
+        var _parsed = JSON.parse(_raw);
+        var _books = (_parsed && Array.isArray(_parsed.data)) ? _parsed.data : (Array.isArray(_parsed) ? _parsed : []);
+        featBook = _books.find(function(b) {
           return b.featured_book === true && b.featured_enabled !== false && b.active !== false;
         }) || null;
       }
@@ -1402,7 +1402,6 @@
       cImg.className = 'sd-book-cover-img';
       cImg.src = book.cover_url;
       cImg.alt = '';
-      cImg.loading = 'lazy';
       cImg.onerror = function() {
         var fb = _mk('div', 'sd-icon'); fb.appendChild(_mk('i', 'fas fa-book-open'));
         if (cWrap.parentNode) cWrap.parentNode.replaceChild(fb, cWrap);
