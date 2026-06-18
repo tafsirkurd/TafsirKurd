@@ -1,5 +1,5 @@
 ﻿/**
- * Smart Daily Companion  v43
+ * Smart Daily Companion  v44
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -880,7 +880,8 @@
       .map(function(item) { return { item: item, score: _scoreItem(item, state) }; })
       .sort(function(a, b) { return b.score - a.score; });
 
-    var fallback = FALLBACK_ZIKR[_seededIdx(FALLBACK_ZIKR.length, 3)];
+    var validFallbacks = FALLBACK_ZIKR.filter(function(item) { return _catHasData(item.categoryKey); });
+    var fallback = validFallbacks.length ? validFallbacks[_seededIdx(validFallbacks.length, 3)] : null;
 
     /* If the top winner is a prayer-offset item already completed today,
        yield to fallback — user already read it, no point repeating it
@@ -1142,9 +1143,8 @@
 
     return SEASONAL_ITEMS
       .filter(function(item) {
-        /* items with fallbackAr always have content — bypass DB data gate */
-        var catOk = item.fallbackAr ? true : _catHasData(item.categoryKey);
-        return catOk && _isTimeActive(item, nowMin, dow, prayers, maghribMin, fajrMin);
+        /* Only show slide if admin has real dhikr entries in the DB for this category */
+        return _catHasData(item.categoryKey) && _isTimeActive(item, nowMin, dow, prayers, maghribMin, fajrMin);
       })
       .map(function(item) { return { _type: 'adhkar', _adhkarItem: item }; });
   }
@@ -1284,22 +1284,6 @@
     card.addEventListener('click', function() {
       _markOpened(item.id);
       if (gencineUI) {
-        /* If this category has no DB entries but the item has fallback text,
-           inject a synthetic entry so the reader shows something instead of empty */
-        var catData = _getAdhkarFromCache(item.categoryKey);
-        if (!catData.length && item.fallbackAr) {
-          window._smartDhikrFallback = {
-            catKey: item.categoryKey,
-            entries: [{
-              category_key: item.categoryKey,
-              ar:           item.fallbackAr,
-              repeat:       item.fallbackRepeat || 1,
-              source:       item.fallbackSource || ''
-            }]
-          };
-        } else {
-          window._smartDhikrFallback = null;
-        }
         gencineUI._adhkarCat  = item.categoryKey;
         gencineUI._adhkarView = 'list';
         gencineUI._view       = 'adhkar';
