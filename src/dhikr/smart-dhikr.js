@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Smart Daily Companion  v48
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)

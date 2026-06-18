@@ -161,7 +161,7 @@
 <!-- Preload quran.json (1.5MB) so the fetch in app.js hits browser cache,
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
-<link rel="preload" href="/i18n/kmr-bundled.js?v=20260612a" as="script">
+<link rel="preload" href="/i18n/kmr-bundled.js?v=20260618a" as="script">
 <link rel="preload" href="/app/app.min.js?v=1202" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
@@ -785,7 +785,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script>/* compat shim: old iOS builds set window.__kmrBundle; forward to KMR_TRANSLATIONS */
 (function(){Object.defineProperty(window,'__kmrBundle',{set:function(v){window.KMR_TRANSLATIONS=v;},get:function(){return window.KMR_TRANSLATIONS;},configurable:true});})();
 </script>
-<script src="/i18n/kmr-bundled.js?v=20260612a"></script>
+<script src="/i18n/kmr-bundled.js?v=20260618a"></script>
 <script src="/i18n/i18n.min.js?v=20260611a"></script>
 <!-- Script loading strategy:
      Prayer scripts: short fixed delay (300ms) â€” critical for main tab,
