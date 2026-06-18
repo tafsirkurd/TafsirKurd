@@ -1,56 +1,260 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
-<head><meta charset="UTF-8"><title>Untouched Texts</title>
+<head><meta charset="UTF-8"><title>Smart Dhikr Texts</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:sans-serif;padding:24px;background:#0f0f0f;color:#e5e5e5;direction:rtl;max-width:680px;margin:0 auto}
+  body{font-family:sans-serif;padding:24px;background:#0f0f0f;color:#e5e5e5;direction:rtl;max-width:720px;margin:0 auto}
   h1{font-size:.85rem;color:#666;margin-bottom:16px;direction:ltr;text-align:left}
   .copy-all-btn{display:block;width:100%;margin-bottom:28px;padding:14px;background:#22c55e;color:#000;font-size:1rem;font-weight:800;border:none;border-radius:12px;cursor:pointer}
   .copy-all-btn:active{opacity:.8}
-  .section{margin-bottom:28px}
-  .section-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#555;text-transform:uppercase;direction:ltr;text-align:left;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #222}
-  .row{margin:6px 0;padding:10px 14px;background:#1a1a1a;border-radius:8px;font-size:1rem;border:1px solid #2a2a2a;line-height:1.6}
-  .lbl{font-size:.62rem;color:#555;margin-bottom:2px;margin-top:10px;direction:ltr;text-align:left}
-  .key{font-size:.6rem;color:#3b82f6;margin-bottom:2px;margin-top:10px;direction:ltr;text-align:left;font-family:monospace}
+  .section{margin-bottom:32px}
+  .section-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#555;text-transform:uppercase;direction:ltr;text-align:left;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #222}
+  .card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;margin:8px 0}
+  .card-id{font-size:.58rem;color:#3b82f6;font-family:monospace;direction:ltr;text-align:left;margin-bottom:6px}
+  .field{margin:4px 0}
+  .field-lbl{font-size:.58rem;color:#555;direction:ltr;text-align:left;margin-bottom:1px}
+  .field-val{font-size:.95rem;line-height:1.55;color:#e5e5e5}
+  .field-val.ar{font-family:'Scheherazade New','IBM Plex Sans Arabic',sans-serif;font-size:1.05rem}
+  .tag-chip{display:inline-block;font-size:.72rem;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:20px;padding:2px 10px;color:#f59e0b}
+  .ui-row{margin:6px 0;padding:10px 14px;background:#1a1a1a;border-radius:8px;font-size:.95rem;border:1px solid #2a2a2a;line-height:1.6}
+  .note{font-size:.68rem;color:#666;direction:ltr;text-align:left;margin-top:3px}
   pre{display:none}
 </style>
 </head>
 <body>
-<h1>Strings — review &amp; correct</h1>
+<h1>Smart Dhikr — all slide texts v45 (review &amp; correct)</h1>
 <button class="copy-all-btn" onclick="copyAll()">📋 کۆپی کە هەمیان</button>
 
 <pre id="allText">
-=== SMART-DHIKR TAGS (sd-tag) ===
-مزگەفت
-پشتی نڤێژێ
-سپێدەهی
-ئیشراق
-ئێواربوون
-شەو
-ئینانی
-ڕەمەزان
-ئیفتار
-لێلەتول قەدر
-ذوالحیجە
-عەرەفە
-باران
-هەوا
+=== GREETING CARD (first slide, time-aware) ===
+tag: تەفسیر کورد
 
-=== PRE-FAJR LABEL ===
-دووهی (هێشتا بەردەستە)
+[morning — Fajr→Dhuhr]
+label:    سپێدەیەکا پاک
+subtitle: ڕووژا تان پڕ ب بەرەکەت بێت
 
-=== BACK BUTTON ===
-داخستن
+[noon — Dhuhr→Asr]
+label:    نیوانڕۆژا باش
+subtitle: زکرێن ڕووژ بخوێنە
 
-=== INSIGHT ROW 3 value suffix ===
-ناڤنجی
+[evening — Asr→Maghrib]
+label:    ئێوارەکا باش
+subtitle: کاتا زکرێن ئێڤارێ
 
-=== MONTH CELEBRATION CARD ===
-Title: ما شاء الله! 🌟
-Subtitle line 1: تە هەمی نڤێژێن مەهێ تەمام کرن!
-Subtitle line 2: خودێ تە ل سەر خێرێ جێگیر بکەت.
-Streak badge (X = days): 🔥 X ڕۆژ ل سەر ئێک
-Close button: داخستن
+[after-Maghrib — Maghrib→Isha]
+label:    ئێڤارا بەرەکەت
+subtitle: ئێڤارا تان مبارەک بێت
+
+[night — Isha→Fajr]
+label:    شەڤا خوش
+subtitle: پێش نڤستنێ زکرێن خەوکردنێ بخوێنە
+
+[friday — all day]
+label:    ڕۆژا ئینیێ مبارەک
+subtitle: باشترین ڕۆژا هەفتێ — صەڵەواتێ بزیادە بکە
+
+=== TIME ITEMS (Card 1 — time-aware zikr) ===
+
+[masjid_enter]
+tag:      مزگەفت
+label:    چوونا مزگەفتێ
+subtitle: کاتا چوونا مزگەوتێ
+
+[after_prayer]
+tag:      پشتی نڤێژێ
+label:    پشتی نڤێژێ
+subtitle: زکرێن پشتی نڤێژێ
+
+[morning]
+tag:      سپێدە
+label:    زکرێ سپێدێ
+subtitle: ڕۆژا خوه ب زکرێ دەستپێکە
+
+[waking]
+tag:      ڕابوون ژ خەوێ
+label:    پشتی ڕابوونێ ژ خەوێ
+subtitle: پشتی ژ خەو ڕابوونێ بخوێنە
+
+[sunrise]
+tag:      ئیشراق
+label:    نڤێژا ئیشراقێ
+subtitle: دەمێ نڤێژا ڕۆژهەلاتنێ
+
+[evening]
+tag:      ئێڤار
+label:    زکرێن ئێڤاری
+subtitle: ئێوارا خوە ب زکرێ بکە
+
+[sleep]
+tag:      شەڤ
+label:    بەرى نڤستنێ
+subtitle: پێش خەوکردنێ بخوێنە
+
+[friday]
+tag:      ئەینی
+label:    ڕۆژا ئینیێ
+subtitle: ئەڤڕۆ ڕۆژا ئینیێ یە
+
+[salawat]
+tag:      صەڵەوات
+label:    صەڵەواتدان ل سەر پێغەمبەری ﷺ
+subtitle: صەڵەواتێ بکە سەر پێغەمبەر ﷺ
+
+=== SEASONAL ITEMS (extra slides) ===
+
+[fasting — Ramadan daytime]
+tag:      ڕۆژیگرتن
+label:    ئنیەتا ڕۆژیێ
+subtitle: ڕۆژیبوونا تە خودێ قەبیل بکەت
+
+[breaking_fast — Ramadan Maghrib window]
+tag:      فتارە
+label:    دەمێ فتارێ
+subtitle: ڕۆژیا تە یا ب تام بیت
+
+[lailat_qadr — Ramadan odd nights 21-29]
+tag:      دوعایێن شەڤا قەدرێ
+label:    شەوا قەدرێ
+subtitle: شەوا هەزار مانگ
+
+[dhul_hijjah — days 1-8]
+tag:      ذولحیجە
+label:    دەهکێن ذولحیجەیێ
+subtitle: دەهـ ڕۆژێن مەزن
+
+[arafat — day 9]
+tag:      ڕۆژا عەرەفێ
+label:    دوعایا عەرەفاتێ
+subtitle: باشترین ڕۆژی ساڵ
+
+[tashreeq — days 11-13]
+tag:      تەشریق
+label:    ڕۆژێن تەشریقێ
+subtitle: ڕۆژێن تەکبیر و شادی
+
+[ashura — Muharram 9-10]
+tag:      عاشووراء
+label:    ڕۆژا عاشووراء
+subtitle: ڕوژیگرتنا عاشووراء
+
+[rajab — 1st and 27th Rajab]
+tag:      ڕەجەب
+label:    مانگا ڕەجەبێ
+subtitle: ڕۆژا ئیسرا و معراجێ
+
+[shaban_night — 14th Shaaban after Maghrib]
+tag:      شەعبان
+label:    شەوا نیوا شەعبانێ
+subtitle: شەوا تایبەتمەند
+
+[white_days — Hijri 13-15 each month]
+tag:      ڕۆژێن سپی
+label:    ڕۆژێن سپی
+subtitle: سوننەتا ڕوژیگرتنێ
+
+[monday_fast — every Monday daytime]
+tag:      دووشەم
+label:    ڕوژیگرتنا دووشەمێ
+subtitle: سوننەتا دووشەمبێ
+
+[thursday_fast — every Thursday daytime]
+tag:      پێنجشەم
+label:    ڕوژیگرتنا پێنجشەمێ
+subtitle: سوننەتا پێنجشەمبێ
+
+=== FALLBACK ZIKR (daily-seeded, when no time window active) ===
+
+[forgiveness]
+tag:      ئیستغفار
+label:    داخوازا لێبۆرینێ
+subtitle: ئیستیغفارەکە زیادە بکە
+
+[protection]
+tag:      پاراستن
+label:    پاراستنا موسلمانی
+subtitle: زکرێن پاراستن و حەمایەتێ
+
+[salawat]
+tag:      صەڵەوات
+label:    صەڵەواتدان ل سەر پێغەمبەری ﷺ
+subtitle: صەڵەواتێ بکە سەر پێغەمبەر ﷺ
+
+[gratitude]
+tag:      سوپاسگوزاری
+label:    حەمد و سەنا
+subtitle: سوپاسا خواێ بکە
+
+[before_quran]
+tag:      بەرى خواندنا قورئانێ
+label:    ئادابێن قورئانێ
+subtitle: پێش دەستپێکردنا قورئانێ
+
+[distress]
+tag:      دەمێ دلتەنگیێ
+label:    پەریشانی
+subtitle: دوعا لە کاتی زەحمەت
+
+[istikhara]
+tag:      ئیستیخارە
+label:    دوعایا ئیستیخارێ
+subtitle: داواکاری ڕێنمایی
+
+[adhan]
+tag:      دوعایا پشتی بانگی
+label:    پشتی بانگی
+subtitle: دوعایا پشتی بانگی
+
+=== WEATHER SLIDE ===
+city tag: دهۆک
+
+[rain]
+tag:      دوعایێن بارانێ
+label:    بارانی
+subtitle: باران دکەت — دوعا بکە
+
+[snow]
+label:    بەفر
+subtitle: دوعایا بەفرێ
+
+[thunder]
+tag:      بریسی
+label:    برووسکە
+subtitle: زکرێن هەورووبرووسکە
+
+[wind]
+tag:      دوعایا بایێ ب هێز
+label:    هەوای بایوک
+subtitle: زکرێن کاتی باد
+
+[clear sky]
+label:    ئاسمانێ ڕووناک
+
+=== DAILY CARDS ===
+
+[ayah_day]
+tag:      ئایەتا ڕۆژێ
+Friday subtitle: سورەتا کەهف · ئایەت 1
+
+[hadith_day]
+tag:      حەدیسا ڕۆژێ
+default source: پێغەمبەرێ ئیسلامێ ﷺ
+loading:  دابەزێنا داتا...
+
+[book_day]
+tag:      پەرتوکا ڕۆژێ
+default subtitle: بخوێنە
+loading:  دابەزێنا داتا...
+
+[featured_book]
+tag:      پەرتوکی تایبەت
+default subtitle: پیشکەش ژ لایێ تەفسیر کورد
+
+=== UI STRINGS ===
+Section header:    بیرئینانا ڕۆژانە
+Countdown label:   نویکرن:
+Zikr count suffix: زکر
+Done badge:        ئەڤڕۆ تەمام بوو ✓
+Streak badge:      🔥 N  (N = number of days)
 
 === NOTIFICATIONS — ATHAN (local, IDs 100-239) ===
 [prayer.notif_title]        بانگ
@@ -72,174 +276,433 @@ Close button: داخستن
 [prayer_reminder.isha.title]    بیرئنان بۆ نڤێژا عەیشا   (note: «بیرئنان» — missing ی in DB)
 [prayer_reminder.isha.body]     {minutes} خولەک بۆ نڤێژا عەیشا ماینە
 
-=== NOTIFICATIONS — DAILY VERSE (local, IDs 20-26) ===
-Title (dynamic, from code): {surah Arabic name} ({surah}:{ayah})
-Body  (dynamic, from code): تەفسیرا کوردی یا ئایەتێ (یان دەقێ عەرەبی)
-[notif.verse_title]      ئایەتا ڕۆژێ   (key exists in DB but code uses the surah name)
-
 === NOTIFICATIONS — STREAK (local, ID 30) ===
-[notif.streak_title]     خواندنا قورئانێ
-[notif.streak_body]      بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥
+[notif.streak_title]  خواندنا قورئانێ
+[notif.streak_body]   بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥
 
-=== NOTIFICATIONS — SERVER PUSH (FCM, automatic) ===
-New video — Title: ناڤێ زنجیرەیێ (dynamic) / Body: ناڤێ ئەلقەیێ (dynamic)
-New book  — Title: ناڤێ پەرتوکێ (dynamic), fallback:
+=== NOTIFICATIONS — SERVER PUSH (FCM) ===
 [notif.auto_book_title_fallback]   پەرتوکەکا نوی
 [notif.auto_book_body]             پەرتووکەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
-New hadith — Title: ناڤێ فەرموودێ (dynamic), fallback:
 [notif.auto_hadith_title_fallback] فەرمودە
 [notif.auto_hadith_body]           فەرموودەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.
-Manual (admin) — Title/Body: ئەدمین دنڤێسیت (dynamic)
-
-=== NOTIFICATIONS — NATIVE ANDROID (ID 9900, athan refresh) ===
-Title (hardcoded Java): بانگ
-Body  (hardcoded Java): بۆ نوویكرنا دەمێن بانگی، ئەپێ (بەرنامەی) ڤەکە
-(DB keys notif.reschedule_athan_* exist but Java does not read them)
-
-=== NOTIFICATIONS — REMOVED ===
-In-app new-video (ID 31) "ڤیدیۆیەکی نوی 🎬" — removed 2026-06-12 (duplicated the server push)
-(keys notif.new_video_title/body remain in DB/kmr but are unused)
-
-=== NOTIFICATIONS — SETUP / PERMISSION PROMPTS (keys deleted; UI uses hardcoded fallbacks) ===
-notif.setup_title / notif.setup_body / notif.setup_ok
-notif.setup.direct_title / notif.setup.open_settings / notif.setup.later
-notif.setup.athan_disabled_title / notif.setup.go_settings / notif.setup.dismiss
 </pre>
 
-<!-- SMART-DHIKR TAGS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- GREETING CARD                                          -->
+<!-- ══════════════════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-title">Smart-Dhikr Tags (sd-tag) — hardcoded in smart-dhikr.js</div>
-  <div class="row">مزگەفت</div>
-  <div class="row">پشتی نڤێژێ</div>
-  <div class="row">سپێدەهی</div>
-  <div class="row">ئیشراق</div>
-  <div class="row">ئێڤاری</div>
-  <div class="row">شەڤ</div>
-  <div class="row">ئەینی</div>
-  <div class="row">ڕەمەزان</div>
-  <div class="row">فتارە</div>
-  <div class="row">شەڤا قەدرێ</div>
-  <div class="row">ذوالحیجە</div>
-  <div class="row">عەرەفە</div>
-  <div class="row">باران</div>
-  <div class="row">هەوا</div>
+  <div class="section-title">Greeting Card — first slide, time-aware (v45 new)</div>
+
+  <div class="card">
+    <div class="card-id">tag (all variants)</div>
+    <div class="field"><div class="field-val"><span class="tag-chip">تەفسیر کورد</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">morning — Fajr → Dhuhr</div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">سپێدەیەکا پاک</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ڕووژا تان پڕ ب بەرەکەت بێت</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">noon — Dhuhr → Asr</div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">نیوانڕۆژا باش</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">زکرێن ڕووژ بخوێنە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">evening — Asr → Maghrib</div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ئێوارەکا باش</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">کاتا زکرێن ئێڤارێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">after-Maghrib — Maghrib → Isha</div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ئێڤارا بەرەکەت</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ئێڤارا تان مبارەک بێت</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">night — Isha → Fajr</div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">شەڤا خوش</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">پێش نڤستنێ زکرێن خەوکردنێ بخوێنە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">friday — all day</div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ڕۆژا ئینیێ مبارەک</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">باشترین ڕۆژا هەفتێ — صەڵەواتێ بزیادە بکە</div></div>
+  </div>
 </div>
 
-<!-- PRE-FAJR -->
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TIME ITEMS                                             -->
+<!-- ══════════════════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-title">Pre-fajr label (shows when yesterday still open)</div>
-  <div class="row">دووهی (هێشتا بەردەستە)</div>
+  <div class="section-title">Time Items — Card 1, time-aware zikr (categoryKey → DB adhkar)</div>
+
+  <div class="card">
+    <div class="card-id">masjid_enter · 0–20 min after each athan</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">مزگەفت</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">چوونا مزگەفتێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">کاتا چوونا مزگەوتێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">after_prayer · 20–40 min after each athan</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">پشتی نڤێژێ</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">پشتی نڤێژێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">زکرێن پشتی نڤێژێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">morning · Fajr → Dhuhr</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">سپێدە</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">زکرێ سپێدێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ڕۆژا خوه ب زکرێ دەستپێکە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">waking · Fajr → Sunrise</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ڕابوون ژ خەوێ</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">پشتی ڕابوونێ ژ خەوێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">پشتی ژ خەو ڕابوونێ بخوێنە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">sunrise · ±30 min around Sunrise</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ئیشراق</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">نڤێژا ئیشراقێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">دەمێ نڤێژا ڕۆژهەلاتنێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">evening · Asr → Maghrib</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ئێڤار</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">زکرێن ئێڤاری</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ئێوارا خوە ب زکرێ بکە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">sleep · Isha → Fajr</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">شەڤ</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">بەرى نڤستنێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">پێش خەوکردنێ بخوێنە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">friday · all day Friday</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ئەینی</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ڕۆژا ئینیێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ئەڤڕۆ ڕۆژا ئینیێ یە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">salawat · Friday + Thursday night</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">صەڵەوات</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">صەڵەواتدان ل سەر پێغەمبەری ﷺ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">صەڵەواتێ بکە سەر پێغەمبەر ﷺ</div></div>
+  </div>
 </div>
 
-<!-- BACK BUTTON -->
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SEASONAL ITEMS                                         -->
+<!-- ══════════════════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-title">Back button aria-label</div>
-  <div class="row">داخستن</div>
+  <div class="section-title">Seasonal Items — extra slides (only when admin has DB entries)</div>
+
+  <div class="card">
+    <div class="card-id">fasting · Ramadan daytime</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ڕۆژیگرتن</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ئنیەتا ڕۆژیێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ڕۆژیبوونا تە خودێ قەبیل بکەت</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">breaking_fast · Ramadan, Maghrib window (45 min)</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">فتارە</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">دەمێ فتارێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ڕۆژیا تە یا ب تام بیت</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">lailat_qadr · Ramadan odd nights 21-29 · HERO slide</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">دوعایێن شەڤا قەدرێ</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">شەوا قەدرێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">شەوا هەزار مانگ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">dhul_hijjah · Dhul Hijjah days 1–8</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ذولحیجە</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">دەهکێن ذولحیجەیێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">دەهـ ڕۆژێن مەزن</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">arafat · Dhul Hijjah day 9 · HERO slide</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ڕۆژا عەرەفێ</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">دوعایا عەرەفاتێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">باشترین ڕۆژی ساڵ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">tashreeq · Dhul Hijjah days 11–13</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">تەشریق</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ڕۆژێن تەشریقێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ڕۆژێن تەکبیر و شادی</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">ashura · Muharram 9–10 · HERO slide</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">عاشووراء</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ڕۆژا عاشووراء</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ڕوژیگرتنا عاشووراء</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">rajab · 1st and 27th Rajab</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ڕەجەب</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">مانگا ڕەجەبێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ڕۆژا ئیسرا و معراجێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">shaban_night · 14th Shaaban after Maghrib</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">شەعبان</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">شەوا نیوا شەعبانێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">شەوا تایبەتمەند</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">white_days · Hijri 13–15 each month (not Ramadan/Eid)</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ڕۆژێن سپی</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ڕۆژێن سپی</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">سوننەتا ڕوژیگرتنێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">monday_fast · every Monday daytime</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">دووشەم</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ڕوژیگرتنا دووشەمێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">سوننەتا دووشەمبێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">thursday_fast · every Thursday daytime</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">پێنجشەم</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ڕوژیگرتنا پێنجشەمێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">سوننەتا پێنجشەمبێ</div></div>
+  </div>
 </div>
 
-<!-- INSIGHT ROW 3 -->
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- FALLBACK ZIKR                                          -->
+<!-- ══════════════════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-title">Insight Row 3 — value suffix (weakest day average)</div>
-  <div class="row">ناڤنجی</div>
+  <div class="section-title">Fallback Zikr — daily-seeded (shown when no time window is active)</div>
+
+  <div class="card">
+    <div class="card-id">forgiveness</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ئیستغفار</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">داخوازا لێبۆرینێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">ئیستیغفارەکە زیادە بکە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">protection</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">پاراستن</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">پاراستنا موسلمانی</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">زکرێن پاراستن و حەمایەتێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">salawat</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">صەڵەوات</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">صەڵەواتدان ل سەر پێغەمبەری ﷺ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">صەڵەواتێ بکە سەر پێغەمبەر ﷺ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">gratitude</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">سوپاسگوزاری</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">حەمد و سەنا</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">سوپاسا خواێ بکە</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">before_quran</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">بەرى خواندنا قورئانێ</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">ئادابێن قورئانێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">پێش دەستپێکردنا قورئانێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">distress</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">دەمێ دلتەنگیێ</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">پەریشانی</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">دوعا لە کاتی زەحمەت</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">istikhara</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ئیستیخارە</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">دوعایا ئیستیخارێ</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">داواکاری ڕێنمایی</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">adhan</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">دوعایا پشتی بانگی</span></div></div>
+    <div class="field"><div class="field-lbl">label</div><div class="field-val">پشتی بانگی</div></div>
+    <div class="field"><div class="field-lbl">subtitle</div><div class="field-val">دوعایا پشتی بانگی</div></div>
+  </div>
 </div>
 
-<!-- MONTH CELEBRATION -->
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- WEATHER SLIDE                                          -->
+<!-- ══════════════════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-title">Month Celebration Card — never updated</div>
-  <div class="lbl">Title</div><div class="row">ما شاء الله! 🌟</div>
-  <div class="lbl">Subtitle</div><div class="row">تە هەمی نڤێژێن مەهێ تەمام کرن!<br>خودێ تە ل سەر خێرێ جێگیر بکەت.</div>
-  <div class="lbl">Streak badge (X = days)</div><div class="row">🔥 X ڕۆژ ل سەر ئێک</div>
-  <div class="lbl">Close button</div><div class="row">داخستن</div>
+  <div class="section-title">Weather Slide — shown when online + weather data available</div>
+
+  <div class="card">
+    <div class="card-id">city tag (always shown)</div>
+    <div class="field"><div class="field-val"><span class="tag-chip">دهۆک</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">rain</div>
+    <div class="field"><div class="field-lbl">wx-label (big title)</div><div class="field-val">بارانی</div></div>
+    <div class="field"><div class="field-lbl">wx-hint (subtitle)</div><div class="field-val">باران دکەت — دوعا بکە</div></div>
+    <div class="field"><div class="field-lbl">adhkar tag</div><div class="field-val"><span class="tag-chip">دوعایێن بارانێ</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">snow</div>
+    <div class="field"><div class="field-lbl">wx-label</div><div class="field-val">بەفر</div></div>
+    <div class="field"><div class="field-lbl">wx-hint</div><div class="field-val">دوعایا بەفرێ</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">thunder</div>
+    <div class="field"><div class="field-lbl">wx-label</div><div class="field-val">برووسکە</div></div>
+    <div class="field"><div class="field-lbl">wx-hint</div><div class="field-val">زکرێن هەورووبرووسکە</div></div>
+    <div class="field"><div class="field-lbl">adhkar tag</div><div class="field-val"><span class="tag-chip">بریسی</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">wind</div>
+    <div class="field"><div class="field-lbl">wx-label</div><div class="field-val">هەوای بایوک</div></div>
+    <div class="field"><div class="field-lbl">wx-hint</div><div class="field-val">زکرێن کاتی باد</div></div>
+    <div class="field"><div class="field-lbl">adhkar tag</div><div class="field-val"><span class="tag-chip">دوعایا بایێ ب هێز</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">clear sky (no adhkar card shown — informational only)</div>
+    <div class="field"><div class="field-lbl">wx-label</div><div class="field-val">ئاسمانێ ڕووناک</div></div>
+  </div>
 </div>
 
-<!-- NOTIFICATIONS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- DAILY CARDS                                            -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Daily Cards — Baghdad-date seeded (same for all users each day)</div>
+
+  <div class="card">
+    <div class="card-id">ayah_day — Ayah of the Day</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">ئایەتا ڕۆژێ</span></div></div>
+    <div class="field"><div class="field-lbl">Friday subtitle</div><div class="field-val">سورەتا کەهف · ئایەت 1</div></div>
+    <div class="note">title = Arabic surah name · subtitle = surah name + · ئایەت N</div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">hadith_day — Hadith of the Day</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">حەدیسا ڕۆژێ</span></div></div>
+    <div class="field"><div class="field-lbl">default source</div><div class="field-val">پێغەمبەرێ ئیسلامێ ﷺ</div></div>
+    <div class="field"><div class="field-lbl">loading subtitle</div><div class="field-val">دابەزێنا داتا...</div></div>
+    <div class="note">title + source come from DB hadiths table when loaded</div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">book_day — Book of the Day</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">پەرتوکا ڕۆژێ</span></div></div>
+    <div class="field"><div class="field-lbl">default subtitle</div><div class="field-val">بخوێنە</div></div>
+    <div class="field"><div class="field-lbl">loading subtitle</div><div class="field-val">دابەزێنا داتا...</div></div>
+    <div class="note">title = book title_ku · subtitle = author_ku, both from DB books table</div>
+  </div>
+
+  <div class="card">
+    <div class="card-id">featured_book — Featured Book Spotlight (once per day until opened)</div>
+    <div class="field"><div class="field-lbl">tag</div><div class="field-val"><span class="tag-chip">پەرتوکی تایبەت</span></div></div>
+    <div class="field"><div class="field-lbl">default subtitle</div><div class="field-val">پیشکەش ژ لایێ تەفسیر کورد</div></div>
+    <div class="note">title + subtitle overrideable per-book via featured_title / featured_subtitle in DB</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- UI STRINGS                                             -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">UI Strings — section header, countdown, badges</div>
+  <div class="ui-row"><span style="color:#555;font-size:.65rem;direction:ltr;display:block">section header</span>بیرئینانا ڕۆژانە</div>
+  <div class="ui-row"><span style="color:#555;font-size:.65rem;direction:ltr;display:block">countdown chip label</span>نویکرن:</div>
+  <div class="ui-row"><span style="color:#555;font-size:.65rem;direction:ltr;display:block">zikr count badge suffix (key: gencine.smart.zikr_count_label)</span>زکر</div>
+  <div class="ui-row"><span style="color:#555;font-size:.65rem;direction:ltr;display:block">done badge (key: gencine.smart.done_today)</span>ئەڤڕۆ تەمام بوو ✓</div>
+  <div class="ui-row"><span style="color:#555;font-size:.65rem;direction:ltr;display:block">streak badge in tag row (N = consecutive days)</span>🔥 N</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- NOTIFICATIONS                                          -->
+<!-- ══════════════════════════════════════════════════════ -->
 <div class="section">
   <div class="section-title">Notifications — Athan (local, IDs 100-239)</div>
-  <div class="key">prayer.notif_title</div>
-  <div class="row">بانگ</div>
-  <div class="key">prayer.notif_body_fajr</div>
-  <div class="row">نوکە دەمێ بانگێ سپێدێیە</div>
-  <div class="key">prayer.notif_body_dhuhr</div>
-  <div class="row">نوکە دەمێ بانگێ نیڤرۆیە</div>
-  <div class="key">prayer.notif_body_asr</div>
-  <div class="row">نوکە دەمێ بانگێ ئێڤارییە</div>
-  <div class="key">prayer.notif_body_maghrib</div>
-  <div class="row">نوکە دەمێ بانگێ مەغرەبە</div>
-  <div class="key">prayer.notif_body_isha</div>
-  <div class="row">نوکە دەمێ بانگێ عەیشایە</div>
+  <div class="card">
+    <div class="card-id">prayer.notif_title</div><div class="field"><div class="field-val">بانگ</div></div>
+  </div>
+  <div class="card">
+    <div class="card-id">prayer.notif_body_fajr</div><div class="field"><div class="field-val">نوکە دەمێ بانگێ سپێدێیە</div></div>
+  </div>
+  <div class="card">
+    <div class="card-id">prayer.notif_body_dhuhr</div><div class="field"><div class="field-val">نوکە دەمێ بانگێ نیڤرۆیە</div></div>
+  </div>
+  <div class="card">
+    <div class="card-id">prayer.notif_body_asr</div><div class="field"><div class="field-val">نوکە دەمێ بانگێ ئێڤارییە</div></div>
+  </div>
+  <div class="card">
+    <div class="card-id">prayer.notif_body_maghrib</div><div class="field"><div class="field-val">نوکە دەمێ بانگێ مەغرەبە</div></div>
+  </div>
+  <div class="card">
+    <div class="card-id">prayer.notif_body_isha</div><div class="field"><div class="field-val">نوکە دەمێ بانگێ عەیشایە</div></div>
+  </div>
 </div>
 
-<!-- NOTIFICATIONS -->
 <div class="section">
   <div class="section-title">Notifications — Prayer Reminders (local, IDs 300-439)</div>
-  <div class="key">prayer_reminder.fajr.title</div>
-  <div class="row">بیرئینان بۆ نڤێژا سپێدێ</div>
-  <div class="key">prayer_reminder.fajr.body</div>
-  <div class="row">{minutes} خولەک بۆ نڤێژا سپێدێ ماینە</div>
-  <div class="key">prayer_reminder.dhuhr.title</div>
-  <div class="row">بیرئینان بۆ نڤێژا نیڤرۆ</div>
-  <div class="key">prayer_reminder.dhuhr.body</div>
-  <div class="row">{minutes} خولەک بۆ نڤێژا نیڤرۆ ماینە</div>
-  <div class="key">prayer_reminder.asr.title</div>
-  <div class="row">بیرئینان بۆ نڤێژا ئێڤاری</div>
-  <div class="key">prayer_reminder.asr.body</div>
-  <div class="row">{minutes} خولەک بۆ نڤێژا ئێڤاری ماینە</div>
-  <div class="key">prayer_reminder.maghrib.title</div>
-  <div class="row">بیرئینان بۆ نڤێژا مەغرەب</div>
-  <div class="key">prayer_reminder.maghrib.body</div>
-  <div class="row">{minutes} خولەک بۆ نڤێژا مەغرەب ماینە</div>
-  <div class="key">prayer_reminder.isha.title</div>
-  <div class="row">بیرئنان بۆ نڤێژا عەیشا (note: missing ی in DB)</div>
-  <div class="key">prayer_reminder.isha.body</div>
-  <div class="row">{minutes} خولەک بۆ نڤێژا عەیشا ماینە</div>
+  <div class="card"><div class="card-id">prayer_reminder.fajr.title</div><div class="field"><div class="field-val">بیرئینان بۆ نڤێژا سپێدێ</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.fajr.body</div><div class="field"><div class="field-val">{minutes} خولەک بۆ نڤێژا سپێدێ ماینە</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.dhuhr.title</div><div class="field"><div class="field-val">بیرئینان بۆ نڤێژا نیڤرۆ</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.dhuhr.body</div><div class="field"><div class="field-val">{minutes} خولەک بۆ نڤێژا نیڤرۆ ماینە</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.asr.title</div><div class="field"><div class="field-val">بیرئینان بۆ نڤێژا ئێڤاری</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.asr.body</div><div class="field"><div class="field-val">{minutes} خولەک بۆ نڤێژا ئێڤاری ماینە</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.maghrib.title</div><div class="field"><div class="field-val">بیرئینان بۆ نڤێژا مەغرەب</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.maghrib.body</div><div class="field"><div class="field-val">{minutes} خولەک بۆ نڤێژا مەغرەب ماینە</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.isha.title <span style="color:#ef4444">(note: «بیرئنان» — missing ی in DB)</span></div><div class="field"><div class="field-val">بیرئنان بۆ نڤێژا عەیشا</div></div></div>
+  <div class="card"><div class="card-id">prayer_reminder.isha.body</div><div class="field"><div class="field-val">{minutes} خولەک بۆ نڤێژا عەیشا ماینە</div></div></div>
 </div>
 
-<!-- NOTIFICATIONS -->
-<div class="section">
-  <div class="section-title">Notifications — Daily Verse (IDs 20-26) — Title/Body dynamic (surah name + tafsir)</div>
-  <div class="key">notif.verse_title</div>
-  <div class="row">ئایەتا ڕۆژێ (key in DB; code uses surah name)</div>
-</div>
-
-<!-- NOTIFICATIONS -->
 <div class="section">
   <div class="section-title">Notifications — Streak (local, ID 30)</div>
-  <div class="key">notif.streak_title</div>
-  <div class="row">خواندنا قورئانێ</div>
-  <div class="key">notif.streak_body</div>
-  <div class="row">بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥</div>
+  <div class="card"><div class="card-id">notif.streak_title</div><div class="field"><div class="field-val">خواندنا قورئانێ</div></div></div>
+  <div class="card"><div class="card-id">notif.streak_body</div><div class="field"><div class="field-val">بەردەوامیا تە یا ڕۆژانە دێ ژ دەست تە چیت! 🔥</div></div></div>
 </div>
 
-<!-- NOTIFICATIONS -->
 <div class="section">
-  <div class="section-title">Notifications — Server Push (FCM) — video: series/episode names (dynamic)</div>
-  <div class="key">notif.auto_book_title_fallback</div>
-  <div class="row">پەرتوکەکا نوی</div>
-  <div class="key">notif.auto_book_body</div>
-  <div class="row">پەرتووکەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
-  <div class="key">notif.auto_hadith_title_fallback</div>
-  <div class="row">فەرمودە</div>
-  <div class="key">notif.auto_hadith_body</div>
-  <div class="row">فەرموودەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div>
-</div>
-
-<!-- NOTIFICATIONS -->
-<div class="section">
-  <div class="section-title">Notifications — Native Android (ID 9900, athan refresh) — hardcoded in Java</div>
-  <div class="row">بانگ</div>
-  <div class="row">بۆ نوویكرنا دەمێن بانگی، ئەپێ (بەرنامەی) ڤەکە</div>
-</div>
-
-<!-- NOTIFICATIONS -->
-<div class="section">
-  <div class="section-title">Notifications — Removed (2026-06-12): in-app new-video ID 31 (duplicated server push)</div>
-  <div class="row">ڤیدیۆیەکی نوی 🎬 — REMOVED</div>
-</div>
-
-<!-- NOTIFICATIONS -->
-<div class="section">
-  <div class="section-title">Notifications — Setup / Permission Prompts (i18n keys deleted; UI uses hardcoded fallbacks)</div>
-  <div class="row">notif.setup_title / setup_body / setup_ok / setup.direct_title / setup.open_settings / setup.later / setup.athan_disabled_title / setup.go_settings / setup.dismiss</div>
+  <div class="section-title">Notifications — Server Push (FCM)</div>
+  <div class="card"><div class="card-id">notif.auto_book_title_fallback</div><div class="field"><div class="field-val">پەرتوکەکا نوی</div></div></div>
+  <div class="card"><div class="card-id">notif.auto_book_body</div><div class="field"><div class="field-val">پەرتووکەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div></div></div>
+  <div class="card"><div class="card-id">notif.auto_hadith_title_fallback</div><div class="field"><div class="field-val">فەرمودە</div></div></div>
+  <div class="card"><div class="card-id">notif.auto_hadith_body</div><div class="field"><div class="field-val">فەرموودەکا نوی د تەفسیر کورد دا یا بەردەستە. نوکە بخوینە.</div></div></div>
 </div>
 
 <script>
