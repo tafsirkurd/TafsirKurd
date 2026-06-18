@@ -1,5 +1,5 @@
 ﻿/**
- * Smart Daily Companion  v45
+ * Smart Daily Companion  v46
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1161,9 +1161,6 @@
   function getItemsNow() {
     var items = [];
 
-    /* Greeting card — always first, personalised by time of day */
-    items.push(_buildGreetingItem());
-
     var seasonal = _getSeasonalItems();
 
     /* Hero seasonal items first — most important Islamic occasion before daily zikr */
@@ -2026,28 +2023,24 @@
      On any change: bust cache + redraw immediately if home is visible.
   ───────────────────────────────────────────── */
   (function() {
-    var _prevSeasonalKey  = null;
-    var _prevZikrId       = null;
-    var _prevDaySeed      = null;
-    var _prevGreetingKey  = null;
+    var _prevSeasonalKey = null;
+    var _prevZikrId      = null;
+    var _prevDaySeed     = null;
 
     setInterval(function() {
       try {
         var seasonalKey = _getSeasonalItems()
           .map(function(s) { return s._adhkarItem.id; }).join(',');
-        var zikrId      = _getZikrItem().id;
-        var daySeed     = _daySeed();
-        var greetingKey = _getGreetingKey();
+        var zikrId  = _getZikrItem().id;
+        var daySeed = _daySeed();
 
-        var changed = seasonalKey  !== _prevSeasonalKey
-                   || zikrId       !== _prevZikrId
-                   || daySeed      !== _prevDaySeed
-                   || greetingKey  !== _prevGreetingKey;
+        var changed = seasonalKey !== _prevSeasonalKey
+                   || zikrId     !== _prevZikrId
+                   || daySeed    !== _prevDaySeed;
 
         _prevSeasonalKey = seasonalKey;
         _prevZikrId      = zikrId;
         _prevDaySeed     = daySeed;
-        _prevGreetingKey = greetingKey;
 
         if (changed) {
           clearCache();
