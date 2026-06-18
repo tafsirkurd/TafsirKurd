@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v79
+ * Smart Daily Companion  v80
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -244,40 +244,6 @@
         return (h.day === 13 || h.day === 14 || h.day === 15) && nowMin >= fajrMin && nowMin < maghribMin;
       }
     },
-
-    /* ── Monday sunnah fast ── */
-    {
-      id: 'monday_fast', categoryKey: 'monday_fast', icon: 'fas fa-calendar-check',
-      labelKey: 'adhkar.monday_fast', labelFallback: 'ڕوژیگرتنا دووشەمێ',
-      subtitleKey: 'gencine.smart.monday_fast_hint', subtitleFallback: 'سوننەتا دووشەمبێ',
-      fallbackAr: 'ذَاكَ يَوْمٌ وُلِدْتُ فِيهِ وَيَوْمٌ بُعِثْتُ أَوْ أُنْزِلَ عَلَيَّ فِيهِ',
-      fallbackRepeat: 1, fallbackSource: 'مسلم',
-      timeTag: 'دووشەم',
-      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
-        if (_baghdadDate().getUTCDay() !== 1) return false;
-        if (h.month === 9) return false;
-        if (h.month === 10 && h.day === 1) return false;
-        if (h.month === 12 && h.day >= 10 && h.day <= 13) return false;
-        return nowMin >= fajrMin && nowMin < maghribMin;
-      }
-    },
-
-    /* ── Thursday sunnah fast ── */
-    {
-      id: 'thursday_fast', categoryKey: 'thursday_fast', icon: 'fas fa-calendar-check',
-      labelKey: 'adhkar.thursday_fast', labelFallback: 'ڕوژیگرتنا پێنجشەمێ',
-      subtitleKey: 'gencine.smart.thursday_fast_hint', subtitleFallback: 'سوننەتا پێنجشەمبێ',
-      fallbackAr: 'تُعْرَضُ الْأَعْمَالُ يَوْمَ الِاثْنَيْنِ وَالْخَمِيسِ فَأُحِبُّ أَنْ يُعْرَضَ عَمَلِي وَأَنَا صَائِمٌ',
-      fallbackRepeat: 1, fallbackSource: 'الترمذي',
-      timeTag: 'پێنجشەم',
-      hijriCond: function(h, nowMin, fajrMin, maghribMin) {
-        if (_baghdadDate().getUTCDay() !== 4) return false;
-        if (h.month === 9) return false;
-        if (h.month === 10 && h.day === 1) return false;
-        if (h.month === 12 && h.day >= 10 && h.day <= 13) return false;
-        return nowMin >= fajrMin && nowMin < maghribMin;
-      }
-    }
   ];
 
   /* ─────────────────────────────────────────────

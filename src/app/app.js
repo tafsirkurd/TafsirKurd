@@ -2345,7 +2345,7 @@ function _loadGencineScripts(cb) {
   var _p1 = false, _p2 = false, _p3 = false, _p4 = false;
   function _check() { if (_p1 && _p2 && _p3 && _p4) _ls('/dhikr/dhikr.js?v=20260618b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',       function() { _p1 = true; _check(); });
-  _ls('/dhikr/smart-dhikr.js?v=79',           function() { _p2 = true; _check(); });
+  _ls('/dhikr/smart-dhikr.js?v=80',           function() { _p2 = true; _check(); });
   _ls('/data/gencine-bundle.js?v=1',           function() { _p3 = true; _check(); });
   _ls('/data/book-covers-map.js?v=1',          function() { _p4 = true; _check(); });
 }
