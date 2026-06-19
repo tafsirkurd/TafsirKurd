@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v80
+ * Smart Daily Companion  v81
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -566,17 +566,18 @@
     _fetchRainInProgress = true;
 
     /* 4 independent sources — 1 Open-Meteo (auto model), wttr.in ×2,
-       Norwegian Met Office. Reduced from 6 Open-Meteo model variants
-       to avoid 429 burst-rate errors on the free tier.               */
+       Norwegian Met Office. wttr.in only runs inside Capacitor (native)
+       because wttr.in has no CORS headers — web browsers block it.     */
+    var _isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
     /* Source 1 — Open-Meteo auto-model (best regional blend) */
     var s1 = _omFetch(_OM);
 
-    /* Source 2 — wttr.in by city name */
-    var s2 = _wttrFetch('https://wttr.in/Duhok?format=j1');
+    /* Source 2 — wttr.in by city name (native only) */
+    var s2 = _isNative ? _wttrFetch('https://wttr.in/Duhok?format=j1') : Promise.resolve(null);
 
-    /* Source 3 — wttr.in by exact Duhok coordinates */
-    var s3 = _wttrFetch('https://wttr.in/36.87,42.95?format=j1');
+    /* Source 3 — wttr.in by exact Duhok coordinates (native only) */
+    var s3 = _isNative ? _wttrFetch('https://wttr.in/36.87,42.95?format=j1') : Promise.resolve(null);
 
     /* Source 4 — Norwegian Met Office (fully independent provider) */
     var s4 = fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.87&lon=42.95',
