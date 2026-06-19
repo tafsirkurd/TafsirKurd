@@ -1,16 +1,22 @@
-/* Book Spotlight v3 — premium featured-book recommendation system
-   Reads featured_book from gencine_books_v4 localStorage cache,
-   or fetches directly from Supabase if cache is stale/missing.
-   Shows a floating card after 2 min, disappears permanently on discovery. */
+/* Book Spotlight v9 — smart-frequency featured-book recommendation system
+   Frequency rules:
+     auto-dismiss (7s timer)  → show again after 24 h
+     manual close (X button)  → show again after 3 days
+     user opens book          → never show again (discovered)
+     3 total dismissals       → stop permanently for this book
+   New featured book (different ID) = fresh start. */
 (function(window) {
   'use strict';
 
   var LAUNCH_TIME      = Date.now();
-  var SHOW_DELAY       = 30000; /* 30 seconds after app launch */
-  var AUTO_DISMISS_MS  = 7000;  /* auto-hide after 7 s if no interaction */
+  var SHOW_DELAY       = 30000;     /* 30 s after app launch before first check */
+  var AUTO_DISMISS_MS  = 7000;      /* bar drains for 7 s then auto-hides */
+  var COOLDOWN_AUTO    = 86400000;  /* 24 h cooldown after auto-dismiss */
+  var COOLDOWN_MANUAL  = 259200000; /* 3-day cooldown after manual X */
+  var MAX_IMPRESS      = 3;         /* stop after 3 total dismissals for same book */
   var DISC_KEY    = 'featured_book_discovered_v1';
-  var DISM_KEY    = 'book_spotlight_dismissed_v1';
-  var BS_CACHE    = 'bs_featured_book_v1'; /* lightweight single-book cache */
+  var DISM_KEY    = 'book_spotlight_dismissed_v2'; /* {bookId:{ts,count,type}} */
+  var BS_CACHE    = 'bs_featured_book_v1';
   var _fetchPending = false;
 
   /* ── CSS (injected once) ──────────────────────────────────────────── */
@@ -184,11 +190,6 @@
     return !!disc[String(bookId)];
   }
 
-  function _isDismissed(bookId) {
-    var dism = _lsGet(DISM_KEY) || {};
-    return !!dism[String(bookId)];
-  }
-
   /* ── Analytics ────────────────────────────────────────────────────── */
   var _pendingKey = 'bs_pending_events';
 
@@ -241,7 +242,7 @@
     closeBtn.appendChild(closeIcon);
     closeBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      _dismiss(book.id);
+      _dismiss(book.id, 'manual');
     });
     card.appendChild(closeBtn);
 
@@ -337,10 +338,24 @@
   }
 
   /* ── Dismiss / Discover ───────────────────────────────────────────── */
-  function _dismiss(bookId) {
-    _trackEvent(bookId, 'dismiss');
+  function _isDismissed(bookId) {
     var dism = _lsGet(DISM_KEY) || {};
-    dism[String(bookId)] = Date.now();
+    var rec  = dism[String(bookId)];
+    if (!rec || !rec.ts) return false;
+    if ((rec.count || 0) >= MAX_IMPRESS) return true; /* shown too many times */
+    var cooldown = (rec.type === 'manual') ? COOLDOWN_MANUAL : COOLDOWN_AUTO;
+    return (Date.now() - rec.ts) < cooldown;
+  }
+
+  function _dismiss(bookId, type) {
+    /* type: 'auto' (timer) or 'manual' (X button) */
+    _trackEvent(bookId, type === 'auto' ? 'auto_dismiss' : 'dismiss');
+    var dism = _lsGet(DISM_KEY) || {};
+    var rec  = dism[String(bookId)] || { count: 0 };
+    rec.ts    = Date.now();
+    rec.count = (rec.count || 0) + 1;
+    rec.type  = type || 'manual';
+    dism[String(bookId)] = rec;
     _lsSet(DISM_KEY, dism);
     _hideCard();
   }
@@ -431,8 +446,7 @@
           }
           _autoTimer = setTimeout(function() {
             _autoTimer = null;
-            _trackEvent(book.id, 'auto_dismiss');
-            _hideCard();
+            _dismiss(book.id, 'auto');
           }, AUTO_DISMISS_MS);
         }, 450);
       });
