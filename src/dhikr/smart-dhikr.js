@@ -1380,7 +1380,7 @@
     tagWrap.appendChild(_mk('span', 'sd-tag', 'پەرتوکی تایبەت'));
     content.appendChild(tagWrap);
     var tz = _mk('div', 'sd-title-zone');
-    tz.appendChild(_mk('div', 'sd-title', book.featured_title || book.series_title_ku || book.title_ku || book.title_ar || ''));
+    tz.appendChild(_mk('div', 'sd-title', book.series_title_ku || book.featured_title || book.title_ku || book.title_ar || ''));
     content.appendChild(tz);
     content.appendChild(_mk('div', 'sd-sub', book.featured_subtitle || book.author_ku || book.author_ar || 'پیشکەش ژ لایێ تەفسیر کورد'));
     card.appendChild(content);
