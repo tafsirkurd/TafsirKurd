@@ -362,7 +362,7 @@ var _skeletonShown = false; /* true while skeleton is visible — triggers fade-
     var duas     = _rc('gencine_duas_v3');
     var hadiths  = _rc('gencine_hadiths_v2');
     var sections = _rc('gencine_sections_v1');
-    var books    = _rc('gencine_books_v4');
+    var books    = (_rc('gencine_books_v4') || []).filter(function(b){ return !b.is_hidden; });
     var tasbih   = _rc('gencine_tasbih_v1');
     var asma99   = _rc('gencine_asma99_v1');
     var adhkar   = _rc('gencine_adhkar_v1');
@@ -525,7 +525,7 @@ function _initDbData(onDone) {
   var cachedAdhkar   = _readCache('gencine_adhkar_v1');
 
   if (cachedSections) _dbSections = cachedSections;
-  if (cachedBooks)    _dbBooks    = cachedBooks;
+  if (cachedBooks)    _dbBooks    = cachedBooks.filter(function(b){ return !b.is_hidden; });
   if (cachedTasbih)   _dbTasbih   = cachedTasbih;
   if (cachedAsma99)   _dbAsma99   = cachedAsma99;
   if (cachedAdhkar)   _dbAdhkar   = cachedAdhkar;
@@ -632,7 +632,7 @@ function _fetchDbData(onDone) {
   var sectionsPromise = sb.from('gencine_sections').select('*').order('sort_order');
   var tasbihPromise   = sb.from('gencine_tasbih').select('*').eq('active', true).order('sort_order');
   var asma99Promise   = sb.from('gencine_asma99').select('n,ku');
-  var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order', { ascending: false }).order('created_at', { ascending: false });
+  var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).eq('is_hidden', false).order('sort_order', { ascending: false }).order('created_at', { ascending: false });
   var adhkarPromise   = sb.from('gencine_adhkar').select('*').eq('active', true).order('category_key').order('sort_order');
   var _gcTimeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('gencine_timeout'));},15000);});
   Promise.race([

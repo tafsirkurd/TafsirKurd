@@ -3212,6 +3212,8 @@ function renderSeriesList() {
 
     seriesList.forEach(function(s) {
         var group = mke('div', 'series-group-card');
+        var _sIsHidden = s.volumes.length > 0 && s.volumes.every(function(v){ return v.is_hidden; });
+        if (_sIsHidden) group.style.opacity = '0.45';
 
         /* Header */
         var hdr = mke('div', 'series-group-hdr');
@@ -3219,8 +3221,13 @@ function renderSeriesList() {
         var titleEl = mke('div', 'series-group-title'); titleEl.textContent = s.title;
         var metaEl = mke('div', 'series-group-meta'); metaEl.textContent = s.volumes.length + ' volume' + (s.volumes.length !== 1 ? 's' : '') + ' · ID: ' + s.id;
         hdrLeft.appendChild(titleEl); hdrLeft.appendChild(metaEl);
+        if (_sIsHidden) { var hb = mke('span', 'badge badge-warn'); hb.textContent = 'hidden'; hdrLeft.appendChild(hb); }
 
         var hdrBtns = mke('div', 'series-group-btns');
+
+        /* ── Hide/Show (eye) button ── */
+        var eyeBtn = mkIconBtn(_sIsHidden ? 'eye-off' : 'eye', _sIsHidden ? 'Show series' : 'Hide series', false, (function(sg, _h){ return function(){ toggleSeriesHiddenGencine(sg, _h); }; })(s, _sIsHidden));
+        hdrBtns.appendChild(eyeBtn);
 
         /* ── Featured (⭐) button — sets featured_until on ALL volumes ── */
         var _sAnyFeat = s.volumes.some(function(v){ return v.featured_until && new Date(v.featured_until).getTime() > Date.now(); });
@@ -3321,6 +3328,62 @@ function renderSeriesList() {
     });
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function toggleSeriesHiddenGencine(s, currentlyHidden) {
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var ids = s.volumes.map(function(v){ return v.id; });
+    if (!ids.length) return;
+    if (!currentlyHidden) {
+        var r = await supabase.from('gencine_books').update({ is_hidden: true }).in('id', ids);
+        if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+        allBooks.forEach(function(b){ if (ids.indexOf(b.id) !== -1) b.is_hidden = true; });
+        renderSeriesList();
+        localStorage.removeItem('gencine_books_v4');
+        showNotification('Series hidden. Will not appear in the app.', 'success');
+    } else {
+        showNotifPreviewDialog(
+            s.title, '',
+            async function(title, body) {
+                var r = await supabase.from('gencine_books').update({ is_hidden: false }).in('id', ids);
+                if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+                allBooks.forEach(function(b){ if (ids.indexOf(b.id) !== -1) b.is_hidden = false; });
+                renderSeriesList();
+                localStorage.removeItem('gencine_books_v4');
+                showNotification('Series is now visible.', 'success');
+                await _sendSeriesBookNotifNow(s.id, title, body);
+            },
+            async function() {
+                var r = await supabase.from('gencine_books').update({ is_hidden: false }).in('id', ids);
+                if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+                allBooks.forEach(function(b){ if (ids.indexOf(b.id) !== -1) b.is_hidden = false; });
+                renderSeriesList();
+                localStorage.removeItem('gencine_books_v4');
+                showNotification('Series is now visible.', 'success');
+            }
+        );
+    }
+}
+async function _sendSeriesBookNotifNow(seriesId, title, body) {
+    var token = _booksToken();
+    try {
+        var createRes = await fetch('/admin-notifications-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: 'create', title: title, body: body, platform: 'all', audience: 'all', deep_link_type: 'series', deep_link_id: String(seriesId) })
+        });
+        var createData = await createRes.json();
+        if (!createData.success || !createData.notification) { showNotification('Notification created but could not send: ' + (createData.error || 'unknown'), 'warning'); return; }
+        var sendRes = await fetch('/admin-notifications-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ action: 'send', id: createData.notification.id })
+        });
+        var sendData = await sendRes.json();
+        if (sendData.success) { showNotification('Push notification sent ✓', 'success'); }
+        else { showNotification('Notification saved but send failed: ' + (sendData.error || 'unknown'), 'warning'); }
+    } catch (e) { showNotification('Notification error: ' + e.message, 'warning'); }
 }
 
 async function _renderSpotlightStats() {
