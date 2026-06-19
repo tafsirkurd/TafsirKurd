@@ -153,7 +153,7 @@
       _fetchPending = false;
       if (!sb) return;
       sb.from('gencine_books')
-        .select('id,title_ku,title_ar,author_ku,author_ar,cover_url,featured_book,featured_enabled,featured_title,featured_subtitle,active')
+        .select('id,title_ku,title_ar,author_ku,author_ar,cover_url,featured_book,featured_enabled,featured_title,featured_subtitle,series_title_ku,active')
         .eq('featured_book', true)
         .eq('active', true)
         .limit(1)
