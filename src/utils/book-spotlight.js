@@ -32,7 +32,7 @@
         'left:12px;right:12px;',
         'background:#2a2420;',            /* warm dark brown — not cold black */
         'border:1px solid rgba(180,150,60,0.2);',
-        'border-radius:20px;',
+        'border-radius:20px;overflow:hidden;',
         'box-shadow:0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.25),0 0 0 0.5px rgba(255,255,255,.04);',
         'display:flex;flex-direction:row;align-items:center;gap:14px;',
         'padding:14px 14px 14px 16px;',
@@ -123,7 +123,7 @@
       /* ── Auto-dismiss progress bar ── */
       '.bs-progress{',
         'position:absolute;bottom:0;left:0;right:0;',
-        'height:3px;border-radius:0 0 20px 20px;overflow:hidden;',
+        'height:3px;overflow:hidden;',
         'background:rgba(128,128,128,0.12);}',
       '.bs-progress-fill{',
         'height:100%;width:100%;',
