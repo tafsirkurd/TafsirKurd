@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v82
+ * Smart Daily Companion  v83
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1070,17 +1070,20 @@
 
     if (!books || !books.length) return null;
 
-    /* Series volumes must never appear as standalone "book of the day" —
-       only standalone books (no series_id) are eligible for this slot.  */
-    var _standalone = books.filter(function(b) { return !b.series_id; });
+    /* Series volumes must never appear as standalone "book of the day".
+       Guard 1: series_id set  (normal case)
+       Guard 2: series_title_ku set but series_id null (data edge-case) */
+    var _standalone = books.filter(function(b) { return !b.series_id && !b.series_title_ku; });
     var _pool = _standalone.length ? _standalone : books;
 
     var b      = _pool[_seededIdx(_pool.length, 4)] || _pool[0];
     var bookId = b.id;
+    /* If a series volume somehow slips through, show series title not volume title */
+    var _title = b.series_title_ku || b.title_ku || b.title_ar || 'پەرتوک';
     return {
       _type: 'daily', id: 'book_day',
       icon: 'fas fa-book-open', tag: 'پەرتوکا ڕۆژێ',
-      title:    b.title_ku || b.title_ar || 'پەرتوک',
+      title:    _title,
       subtitle: b.author_ku || 'بخوێنە',
       coverUrl: b.cover_url || null,
       nav: function(ui) { if (ui) ui.openBook(bookId); }
