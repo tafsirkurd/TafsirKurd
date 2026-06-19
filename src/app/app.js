@@ -686,7 +686,7 @@ var RECITERS=[
   if (!localStorage.getItem(PURGE_KEY)) {
     try { localStorage.removeItem('tafsirkurd_i18n_v7'); } catch(e) {}
     // Also clear any gencine caches that may have rendered corrupted names
-    ['gencine_cats_v5','gencine_duas_v3','gencine_books_v4',
+    ['gencine_cats_v5','gencine_duas_v3','gencine_books_v5',
      'gencine_cats_v4','gencine_duas_v2','gencine_books_v3'].forEach(function(k){
       try { localStorage.removeItem(k); } catch(e) {}
     });

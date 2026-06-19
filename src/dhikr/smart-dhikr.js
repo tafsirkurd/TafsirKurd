@@ -1058,12 +1058,12 @@
      If data not yet cached: placeholder until data loads.
   ───────────────────────────────────────────── */
   function _buildBookItem() {
-    /* Only use gencine_books_v4 (DB-sourced, has series_id/series_title_ku).
+    /* Only use gencine_books_v5 (DB-sourced, has series_id/series_title_ku).
        The static bundle has no series metadata so series volumes can't be
        filtered — skip bundle entirely; return null until real data is cached. */
     var books = (function() {
       try {
-        var raw = JSON.parse(localStorage.getItem('gencine_books_v4'));
+        var raw = JSON.parse(localStorage.getItem('gencine_books_v5'));
         var ls = (raw && Array.isArray(raw.data)) ? raw.data : raw;
         if (ls && ls.length) return ls;
       } catch(e) {}
@@ -1323,7 +1323,7 @@
   function _buildFeaturedBookSlide() {
     var featBook = null;
     try {
-      var _raw = localStorage.getItem('gencine_books_v4');
+      var _raw = localStorage.getItem('gencine_books_v5');
       if (_raw) {
         var _parsed = JSON.parse(_raw);
         var _books = (_parsed && Array.isArray(_parsed.data)) ? _parsed.data : (Array.isArray(_parsed) ? _parsed : []);
@@ -1833,7 +1833,7 @@
     var hasData = (function() {
       try {
         var h = JSON.parse(localStorage.getItem('gencine_hadiths_v2') || 'null');
-        var b = JSON.parse(localStorage.getItem('gencine_books_v4')   || 'null');
+        var b = JSON.parse(localStorage.getItem('gencine_books_v5')   || 'null');
         var hArr = (h && h.data) ? h.data : h;
         var bArr = (b && b.data) ? b.data : b;
         return !!(Array.isArray(hArr) && hArr.length && Array.isArray(bArr) && bArr.length);

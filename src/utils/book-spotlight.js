@@ -140,7 +140,7 @@
   function _getFeaturedBook() {
     /* 1. Try the full books cache first — stored as {ts, data:[...]} by dhikr.js */
     try {
-      var _bRaw = _lsGet('gencine_books_v4');
+      var _bRaw = _lsGet('gencine_books_v5');
       var books = (_bRaw && Array.isArray(_bRaw.data)) ? _bRaw.data : (Array.isArray(_bRaw) ? _bRaw : null);
       if (books && books.length) {
         var found = books.find(function(b) {

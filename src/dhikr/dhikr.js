@@ -362,7 +362,7 @@ var _skeletonShown = false; /* true while skeleton is visible — triggers fade-
     var duas     = _rc('gencine_duas_v3');
     var hadiths  = _rc('gencine_hadiths_v2');
     var sections = _rc('gencine_sections_v1');
-    var books    = (_rc('gencine_books_v4') || []).filter(function(b){ return !b.is_hidden; });
+    var books    = (_rc('gencine_books_v5') || []).filter(function(b){ return !b.is_hidden; });
     var tasbih   = _rc('gencine_tasbih_v1');
     var asma99   = _rc('gencine_asma99_v1');
     var adhkar   = _rc('gencine_adhkar_v1');
@@ -519,7 +519,7 @@ function _initDbData(onDone) {
   var cachedDuas     = _readCache('gencine_duas_v3');
   var cachedHadiths  = _readCache('gencine_hadiths_v2');
   var cachedSections = _readCache('gencine_sections_v1');
-  var cachedBooks    = _readCache('gencine_books_v4');
+  var cachedBooks    = _readCache('gencine_books_v5');
   var cachedTasbih   = _readCache('gencine_tasbih_v1');
   var cachedAsma99   = _readCache('gencine_asma99_v1');
   var cachedAdhkar   = _readCache('gencine_adhkar_v1');
@@ -542,7 +542,7 @@ function _initDbData(onDone) {
     if (!_dbSections   && _fullBndl.sections) _dbSections   = _fullBndl.sections;
     if (!_dbBooks      && _fullBndl.books) {
       _dbBooks = _fullBndl.books;
-      /* Do NOT write bundle to gencine_books_v4 — bundle has no series_id/series_title_ku
+      /* Do NOT write bundle to gencine_books_v5 — bundle has no series_id/series_title_ku
          so smart-dhikr can't filter series volumes. Cache is written by Supabase fetch only. */
     }
     if (!_dbTasbih     && _fullBndl.tasbih)   _dbTasbih     = _fullBndl.tasbih;
@@ -659,7 +659,7 @@ function _fetchDbData(onDone) {
     }
     if (!bookRes.error && bookRes.data) {
       _dbBooks = bookRes.data;
-      _writeCache('gencine_books_v4', _dbBooks);
+      _writeCache('gencine_books_v5', _dbBooks);
       /* Queue covers for background caching — skip books that already have bundled local assets */
       var _bCovers = _dbBooks
         .filter(function(b){ return b.cover_url && !(window.BOOK_LOCAL_COVERS && BOOK_LOCAL_COVERS[String(b.id)]); })
@@ -1000,7 +1000,7 @@ window.GencineUI = {
     localStorage.removeItem('gencine_cats_v5');
     localStorage.removeItem('gencine_duas_v3');
     localStorage.removeItem('gencine_hadiths_v2');
-    localStorage.removeItem('gencine_books_v4');
+    localStorage.removeItem('gencine_books_v5');
     localStorage.removeItem('gencine_sections_v1');
     localStorage.removeItem('gencine_tasbih_v1');
     localStorage.removeItem('gencine_adhkar_v1');
