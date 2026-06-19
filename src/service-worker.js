@@ -1,11 +1,12 @@
-const CACHE_NAME = 'tafsir-kurd-v1251';
+const CACHE_NAME = 'tafsir-kurd-v1255';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
-// Mismatches cause cache misses â€” browser fetches from network instead of SW cache.
+// Mismatches cause cache misses — browser fetches from network instead of SW cache.
 const PRECACHE = [
-  // Core app shell â€” index.html intentionally excluded: always served fresh from APK
-  '/app/app.min.js?v=1203',
+  // Core app shell — index.html intentionally excluded: always served fresh from APK
+  '/utils/app-hardening.js?v=2',
+  '/app/app.min.js?v=1208',
   '/utils/book-spotlight.js?v=10',
   '/app/app-styles.min.css?v=8',
   // Prayer module

@@ -90,9 +90,9 @@
     if(_mem>0&&_mem<2){_sc-=35;_rs.push('RAM<2GB');}
     else if(_mem>=2&&_mem<4){_sc-=15;_rs.push('RAM<4GB');}
     var _co=navigator.hardwareConcurrency||0;
-    if(_co>0&&_co<=2){_sc-=25;_rs.push('coresâ‰¤2');}
-    else if(_co>2&&_co<=4){_sc-=10;_rs.push('coresâ‰¤4');}
-    // cv + isIOS already parsed above (safe-render block) â€” reuse them
+    if(_co>0&&_co<=2){_sc-=25;_rs.push('cores≤2');}
+    else if(_co>2&&_co<=4){_sc-=10;_rs.push('cores≤4');}
+    // cv + isIOS already parsed above (safe-render block) — reuse them
     if(!isIOS&&cv>0&&cv<85){_sc-=25;_rs.push('Chrome<85');}
     else if(!isIOS&&cv>=85&&cv<100){_sc-=10;_rs.push('Chrome<100');}
     // iOS: no deviceMemory API, so version is the main proxy for device age.
@@ -100,7 +100,7 @@
     var _iosM=ua.match(/OS (\d+)_/);
     if(isIOS&&_iosM){
       var _iv=parseInt(_iosM[1]);
-      if(_iv<13){_sc-=28;_rs.push('iOS<13');} // iPhone 5s/6 era â€” genuinely old
+      if(_iv<13){_sc-=28;_rs.push('iOS<13');} // iPhone 5s/6 era — genuinely old
       else if(_iv<15){_sc-=14;_rs.push('iOS<15');} // iPhone 7 era (A10), capped at iOS 14
       else if(_iv<16){_sc-=5;_rs.push('iOS<16');} // minor penalty for not being on latest
     }
@@ -277,7 +277,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     <div class="search-bar" id="searchBar">
       <div class="search-wrap">
         <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="Ú¯Û•Ú•Ø§Ù†..." oninput="App.onSearch(this.value)">
+        <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="گەڕان..." oninput="App.onSearch(this.value)">
         <button class="search-clear" onclick="App.toggleSearch()"><i class="fas fa-times"></i></button>
       </div>
       <div class="search-results" id="searchResults"></div>
@@ -295,7 +295,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <div class="reader-title"><span class="surah-label" id="readerName"></span></div>
       <div style="display:flex;gap:2px;align-items:center">
         <button class="hdr-btn" id="mushafPlayBtn" onclick="App.mushafPlayToggle()" style="display:none" title="Play"><i class="fas fa-play"></i></button>
-        <button class="hdr-btn" id="mushafToggleBtn" onclick="App.toggleMushafMode()" title="Ù…ØµØ­Ù"><i class="fas fa-book-open"></i><span class="hdr-badge" id="mushafBadge"></span></button>
+        <button class="hdr-btn" id="mushafToggleBtn" onclick="App.toggleMushafMode()" title="مصحف"><i class="fas fa-book-open"></i><span class="hdr-badge" id="mushafBadge"></span></button>
         <button class="hdr-btn" onclick="App.openReaderSettings()"><i class="fas fa-cog"></i></button>
       </div>
     </div>
@@ -338,16 +338,16 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     <div class="hdr">
       <div class="hdr-title"><span data-t="android_span_5">دەنگێ ئیسلامێ</span></div>
       <div style="display:flex;gap:2px">
-        <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="Ù…Ø§Ù…ÙˆØ³ØªØ§" data-i18n-title="iv.sheikh_title"><i class="fas fa-user"></i></button>
-        <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="Ù…ÛŽÚ˜ÙˆÙˆ" data-i18n-title="iv.history_title"><i class="fas fa-clock-rotate-left"></i></button>
-        <button class="hdr-btn" id="ivSavedBtn" onclick="App.ivShowSaved()" title="Ù¾Ø§Ø±Ø§Ø³ØªÛ•" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
+        <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user"></i></button>
+        <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو" data-i18n-title="iv.history_title"><i class="fas fa-clock-rotate-left"></i></button>
+        <button class="hdr-btn" id="ivSavedBtn" onclick="App.ivShowSaved()" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
         <button class="hdr-btn" onclick="App.ivToggleSearch()"><i class="fas fa-search"></i></button>
       </div>
     </div>
     <div class="iv-search-bar" id="ivSearchBar">
       <div class="iv-search-wrap">
         <i class="fas fa-search iv-search-icon"></i>
-        <input type="text" id="ivSearchInput" class="iv-search-input" data-i18n-placeholder="iv.search_placeholder" placeholder="Ø¨Ú¯Û•Ú•ÛŽ Ø¨Û† Ø¨Û•Ø´ØŒ Ø²Ù†Ø¬ÛŒØ±Û•ØŒ ÛŒØ§Ù† Ø¨Ø§Ø¨Û•Øª..." oninput="App.ivSearch(this.value)">
+        <input type="text" id="ivSearchInput" class="iv-search-input" data-i18n-placeholder="iv.search_placeholder" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." oninput="App.ivSearch(this.value)">
         <button class="iv-search-clear" onclick="App.ivToggleSearch()"><i class="fas fa-times"></i></button>
       </div>
     </div>
@@ -405,25 +405,25 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
     <div class="hdr-title" id="gencineHdrTitle" style="transform:translateX(-1px)"><span>گەنجینەیا ئیسلامێ</span></div>
     <div id="booksHdrBtns" style="display:none;gap:2px">
-      <button class="hdr-btn" id="bookSheikhBtn" title="Ù…Ø§Ù…ÙˆØ³ØªØ§" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
-      <button class="hdr-btn" id="bookSavedBtn" title="Ù¾Ø§Ø±Ø§Ø³ØªÛ•" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
-      <button class="hdr-btn" id="bookReadBtn" title="Ù‡Ø§ØªÛŒÛŒÛ• Ø®ÙˆÛŒÙ†Ø¯Ù†" data-i18n-title="iv.read_title"><i class="fas fa-check-circle"></i></button>
-      <button class="hdr-btn" id="bookDlBtn" title="Ø¯Ø§ÙˆÙ†Ù„Û†Ø¯Ú©Ø±Ø§Ùˆ" data-i18n-title="dl.manage"><i class="fas fa-cloud-download-alt"></i></button>
-      <button class="hdr-btn" id="bookSearchBtn" title="Ú¯Û•Ú•Ø§Ù†" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
+      <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
+      <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
+      <button class="hdr-btn" id="bookReadBtn" title="هاتییە خویندن" data-i18n-title="iv.read_title"><i class="fas fa-check-circle"></i></button>
+      <button class="hdr-btn" id="bookDlBtn" title="داونلۆدکراو" data-i18n-title="dl.manage"><i class="fas fa-cloud-download-alt"></i></button>
+      <button class="hdr-btn" id="bookSearchBtn" title="گەڕان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
     </div>
     <div id="gencSearchBtns" style="display:none;gap:2px">
-      <button class="hdr-btn" id="gencSearchBtn" title="Ù„ÛŽÚ¯Û•Ú•ÛŒØ§Ù†" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
+      <button class="hdr-btn" id="gencSearchBtn" title="لێگەڕیان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
     </div>
     <div id="pdfNavBtns" style="display:none;align-items:center;gap:2px">
-      <button class="hdr-btn" id="pdfPrevBtn" title="Ù¾Û•Ú•Û•ÛŒ Ù¾ÛŽØ´ÙˆÙˆ"><i class="fas fa-chevron-up"></i></button>
+      <button class="hdr-btn" id="pdfPrevBtn" title="پەڕەی پێشوو"><i class="fas fa-chevron-up"></i></button>
       <input id="pdfPageInd" type="number" min="1" inputmode="numeric" pattern="[0-9]*"
         style="width:52px;text-align:center;font-size:.75rem;font-variant-numeric:tabular-nums;
                color:var(--text1);background:var(--bg2);border:1.5px solid var(--border);
                border-radius:7px;padding:4px 2px;-moz-appearance:textfield;outline:none">
-      <button class="hdr-btn" id="pdfNextBtn" title="Ù¾Û•Ú•Û•ÛŒ Ø¯ÙˆØ§ØªØ±"><i class="fas fa-chevron-down"></i></button>
+      <button class="hdr-btn" id="pdfNextBtn" title="پەڕەی دواتر"><i class="fas fa-chevron-down"></i></button>
     </div>
-    <button class="hdr-btn" id="pdfTocBtn" style="display:none" title="ÙÙ‡Ø±Ø³Øª"><i class="fas fa-list-ul"></i></button>
-    <button class="hdr-btn" id="pdfFsBtn" style="display:none" title="Ù¾Ú• Ø´Ø§Ø´Û•" data-i18n-title="qs.fullscreen"><i class="fas fa-expand"></i></button>
+    <button class="hdr-btn" id="pdfTocBtn" style="display:none" title="فهرست"><i class="fas fa-list-ul"></i></button>
+    <button class="hdr-btn" id="pdfFsBtn" style="display:none" title="پڕ شاشە" data-i18n-title="qs.fullscreen"><i class="fas fa-expand"></i></button>
   </div>
   <div id="gencineContent"></div>
 </section>
@@ -838,7 +838,8 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script src="/app/quran-font-manager.js?v=20260506"></script>
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/img-cache.js?v=1"></script>
-<script src="/app/app.min.js?v=1203"></script>
+<script src="/utils/app-hardening.js?v=2"></script>
+<script src="/app/app.min.js?v=1208"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
@@ -856,7 +857,7 @@ if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNat
     var b = document.createElement('div');
     b.id = 'sw-update-bar';
     b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a56db;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:10px;z-index:99999;font-family:sans-serif;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.2)';
-    b.innerHTML = 'ðŸ”„ App updated! <button onclick="location.reload()" style="background:#fff;color:#1a56db;border:none;padding:4px 14px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer">Refresh Now</button><button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:0 4px">×</button>';
+    b.innerHTML = '🔄 App updated! <button onclick="location.reload()" style="background:#fff;color:#1a56db;border:none;padding:4px 14px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer">Refresh Now</button><button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:rgba(255,255,255,.75);font-size:20px;cursor:pointer;padding:0 4px">×</button>';
     document.body.appendChild(b);
   });
 

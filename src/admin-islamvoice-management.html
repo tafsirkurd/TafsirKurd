@@ -1376,6 +1376,7 @@
                 html += series.map((s, index) => `
                     <div class="series-card"
                          draggable="true"
+                         style="${s.is_hidden ? 'opacity:0.45;' : ''}"
                          data-series-id="${s.id}"
                          data-index="${index}"
                          ondragstart="handleDragStart(event)"
@@ -1393,10 +1394,14 @@
                             <div class="series-card-title" style="display:flex;align-items:center;gap:6px;">
                                 ${s.youtube_playlist_id ? '<span style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;background:#ff000018;color:#ff0000;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:500;"><i class="fab fa-youtube" style="font-size:10px;"></i></span>' : ''}
                                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name_ku}</span>
+                                ${s.is_hidden ? '<span style="flex-shrink:0;background:#7c3aed22;color:#7c3aed;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;">hidden</span>' : ''}
                             </div>
                             <div class="series-card-meta">
                                 <span>${s.speaker || ''}</span>
                                 <div>
+                                    <button class="table-btn" onclick="event.stopPropagation(); toggleSeriesHidden('${s.id}', ${!!s.is_hidden})" title="${s.is_hidden ? 'Show series' : 'Hide series'}">
+                                        <i data-lucide="${s.is_hidden ? 'eye-off' : 'eye'}"></i>
+                                    </button>
                                     <button class="table-btn" onclick="event.stopPropagation(); reverseEpisodeNumbers('${s.id}', '${s.name_ku}')" title="Reverse Episode Order">
                                         <i data-lucide="arrow-up-down"></i>
                                     </button>
@@ -1988,6 +1993,142 @@
             } catch (error) {
                 console.error('Error deleting series:', error);
                 alert('Error deleting series: ' + error.message);
+            }
+        }
+
+        async function toggleSeriesHidden(id, currentHidden) {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            if (!currentHidden) {
+                const { error } = await supabase.from('islamvoice_series').update({ is_hidden: true }).eq('id', id);
+                if (error) { showNotification('Error: ' + error.message, 'error'); return; }
+                showNotification('Series hidden. It will not appear in the app.', 'success');
+                loadAllSeries();
+            } else {
+                const s = allSeriesData.find(x => x.id === id);
+                _showSeriesUnhideDialog(id, s ? s.name_ku : '');
+            }
+        }
+
+        function _showSeriesUnhideDialog(id, name) {
+            var overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:16px;';
+            var dlg = document.createElement('div');
+            dlg.style.cssText = 'background:var(--bg-surface);border-radius:16px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+
+            var icon = document.createElement('div');
+            icon.textContent = '🔔';
+            icon.style.cssText = 'font-size:32px;text-align:center;margin-bottom:12px;';
+
+            var titleEl = document.createElement('div');
+            titleEl.textContent = 'Send Push Notification?';
+            titleEl.style.cssText = 'font-weight:600;font-size:16px;text-align:center;margin-bottom:4px;color:var(--text-primary);';
+
+            var sub = document.createElement('div');
+            sub.textContent = 'Notify users that “' + (name || 'this series') + '” is now available. You can skip if you prefer.';
+            sub.style.cssText = 'font-size:13px;color:var(--text-secondary);text-align:center;margin-bottom:20px;';
+
+            var titleLabel = document.createElement('div');
+            titleLabel.textContent = 'Title';
+            titleLabel.style.cssText = 'font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;';
+            var titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.value = name || '';
+            titleInput.dir = 'rtl';
+            titleInput.style.cssText = 'width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-hover);color:var(--text-primary);font-size:13px;outline:none;margin-bottom:12px;';
+
+            var bodyLabel = document.createElement('div');
+            bodyLabel.textContent = 'Body';
+            bodyLabel.style.cssText = 'font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;';
+            var bodyTextarea = document.createElement('textarea');
+            bodyTextarea.rows = 3;
+            bodyTextarea.dir = 'rtl';
+            bodyTextarea.style.cssText = 'width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-hover);color:var(--text-primary);font-size:13px;outline:none;resize:vertical;font-family:inherit;margin-bottom:20px;';
+
+            var actions = document.createElement('div');
+            actions.style.cssText = 'display:flex;gap:10px;';
+
+            var skipBtn = document.createElement('button');
+            skipBtn.type = 'button';
+            skipBtn.textContent = 'Skip — just unhide';
+            skipBtn.style.cssText = 'flex:1;padding:10px;border-radius:8px;border:1px solid var(--border-medium);background:var(--bg-hover);color:var(--text-secondary);font-size:13px;cursor:pointer;font-weight:500;';
+
+            var sendBtn = document.createElement('button');
+            sendBtn.type = 'button';
+            sendBtn.textContent = 'Send & Unhide';
+            sendBtn.style.cssText = 'flex:1;padding:10px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-size:13px;cursor:pointer;font-weight:600;';
+
+            async function doUnhide() {
+                overlay.remove();
+                const supabase = window.adminAuth.getSupabase();
+                if (!supabase) return;
+                const { error } = await supabase.from('islamvoice_series').update({ is_hidden: false }).eq('id', id);
+                if (error) { showNotification('Error: ' + error.message, 'error'); return; }
+                showNotification('Series is now visible in the app.', 'success');
+                loadAllSeries();
+            }
+
+            skipBtn.onclick = function() { doUnhide(); };
+
+            sendBtn.onclick = async function() {
+                var t = titleInput.value.trim();
+                var b = bodyTextarea.value.trim();
+                if (!t) { titleInput.style.borderColor = '#ef4444'; return; }
+                if (!b) { bodyTextarea.style.borderColor = '#ef4444'; return; }
+                await doUnhide();
+                await _sendSeriesNotifNow(id, t, b);
+            };
+
+            actions.appendChild(skipBtn);
+            actions.appendChild(sendBtn);
+            dlg.appendChild(icon);
+            dlg.appendChild(titleEl);
+            dlg.appendChild(sub);
+            dlg.appendChild(titleLabel);
+            dlg.appendChild(titleInput);
+            dlg.appendChild(bodyLabel);
+            dlg.appendChild(bodyTextarea);
+            dlg.appendChild(actions);
+            overlay.appendChild(dlg);
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+            setTimeout(function() { titleInput.focus(); titleInput.select(); }, 80);
+        }
+
+        async function _sendSeriesNotifNow(seriesId, title, body) {
+            var token = sessionStorage.getItem('adminToken') || '';
+            try {
+                var createRes = await fetch('/admin-notifications-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({
+                        action: 'create',
+                        title: title,
+                        body: body,
+                        platform: 'all',
+                        audience: 'all',
+                        deep_link_type: 'series',
+                        deep_link_id: String(seriesId)
+                    })
+                });
+                var createData = await createRes.json();
+                if (!createData.success || !createData.notification) {
+                    showNotification('Notification created but could not send: ' + (createData.error || 'unknown'), 'warning');
+                    return;
+                }
+                var sendRes = await fetch('/admin-notifications-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ action: 'send', id: createData.notification.id })
+                });
+                var sendData = await sendRes.json();
+                if (sendData.success) {
+                    showNotification('Push notification sent ✓', 'success');
+                } else {
+                    showNotification('Notification saved but send failed: ' + (sendData.error || 'unknown'), 'warning');
+                }
+            } catch (e) {
+                showNotification('Notification error: ' + e.message, 'warning');
             }
         }
 
