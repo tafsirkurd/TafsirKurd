@@ -542,7 +542,8 @@ function _initDbData(onDone) {
     if (!_dbSections   && _fullBndl.sections) _dbSections   = _fullBndl.sections;
     if (!_dbBooks      && _fullBndl.books) {
       _dbBooks = _fullBndl.books;
-      _writeCache('gencine_books_v4', _dbBooks); /* persist so smart-dhikr reads on first install */
+      /* Do NOT write bundle to gencine_books_v4 — bundle has no series_id/series_title_ku
+         so smart-dhikr can't filter series volumes. Cache is written by Supabase fetch only. */
     }
     if (!_dbTasbih     && _fullBndl.tasbih)   _dbTasbih     = _fullBndl.tasbih;
     if (!_dbAdhkar     && _fullBndl.adhkar)   _dbAdhkar     = _fullBndl.adhkar;
