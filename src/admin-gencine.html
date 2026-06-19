@@ -1765,6 +1765,7 @@ var allDuas = [];
 var allHadiths = [];
 var allSections = [];
 var allBooks = [];
+var _bookReaderCounts = {};
 var _booksSubTab = 'books';
 var duaFilterCat = 'all';
 
@@ -3032,6 +3033,14 @@ async function loadBooks() {
     var r = await _booksApi({ action: 'list' });
     if (r.error) { showNotification('Error loading books: ' + JSON.stringify(r.error), 'error'); return; }
     allBooks = r.data || [];
+    var supabase = window.adminAuth.getSupabase();
+    if (supabase) {
+        var cr = await supabase.from('book_reader_counts').select('book_id,reader_count');
+        if (!cr.error && cr.data) {
+            _bookReaderCounts = {};
+            cr.data.forEach(function(row){ _bookReaderCounts[row.book_id] = Number(row.reader_count); });
+        }
+    }
     renderBooksList(); renderSeriesList(); updateStats();
 }
 
@@ -3121,6 +3130,8 @@ function renderBooksList() {
         if (book.pages) { var pb = mke('span', 'badge badge-repeat'); pb.textContent = book.pages + ' pages'; meta.appendChild(pb); }
         var ab = mke('span', 'badge'); ab.style.cssText = book.active ? 'background:rgba(34,197,94,.12);color:#16a34a;font-weight:600' : 'background:rgba(234,179,8,.12);color:#d97706;font-weight:600';
         ab.textContent = book.active ? 'Live' : 'Draft'; meta.appendChild(ab);
+        var rc = _bookReaderCounts[book.id];
+        if (rc) { var rb = mke('span', 'badge'); rb.style.cssText = 'background:rgba(59,130,246,.1);color:#3b82f6;font-weight:600;'; rb.title = rc + ' reader' + (rc !== 1 ? 's' : ''); rb.textContent = '👁 ' + rc; meta.appendChild(rb); }
         body.appendChild(meta);
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var acts = mke('div', 'item-card-actions');
@@ -3305,6 +3316,8 @@ function renderSeriesList() {
             var vStatus = mke('span'); vStatus.style.cssText = vol.active ? 'color:#16a34a;font-weight:600' : 'color:#d97706;font-weight:600';
             vStatus.textContent = vol.active ? 'Live' : 'Draft';
             vMeta.appendChild(vStatus);
+            var vRc = _bookReaderCounts[vol.id];
+            if (vRc) { var vRcEl = mke('span'); vRcEl.style.cssText = 'color:#3b82f6;font-weight:600;margin-right:4px;'; vRcEl.textContent = ' · 👁 ' + vRc; vMeta.appendChild(vRcEl); }
             vInfo.appendChild(vNum); vInfo.appendChild(vTitle); vInfo.appendChild(vMeta);
             vRow.appendChild(vInfo);
 
