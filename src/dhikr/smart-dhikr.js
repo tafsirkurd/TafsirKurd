@@ -1,5 +1,5 @@
 /**
- * Smart Daily Companion  v83
+ * Smart Daily Companion  v84
  * Variable number of slides — seasonal items each get own slide, never displace card 1:
  *   1. Zikr of current time   (time-aware, always present via fallback)
  *   2+. Seasonal slides       (Dhul Hijjah / Ramadan / Arafat — one slide each when active)
@@ -1058,14 +1058,16 @@
      If data not yet cached: placeholder until data loads.
   ───────────────────────────────────────────── */
   function _buildBookItem() {
+    /* Only use gencine_books_v4 (DB-sourced, has series_id/series_title_ku).
+       The static bundle has no series metadata so series volumes can't be
+       filtered — skip bundle entirely; return null until real data is cached. */
     var books = (function() {
       try {
         var raw = JSON.parse(localStorage.getItem('gencine_books_v4'));
         var ls = (raw && Array.isArray(raw.data)) ? raw.data : raw;
         if (ls && ls.length) return ls;
       } catch(e) {}
-      var bndl = window.GENCINE_BUNDLE;
-      return (bndl && Array.isArray(bndl.books) && bndl.books.length) ? bndl.books : null;
+      return null;
     }());
 
     if (!books || !books.length) return null;
