@@ -3054,7 +3054,7 @@ function renderBooksList() {
     list.textContent = '';
     updateBookDataLists();
     _updateBooksSubTabCounts();
-    var displayBooks = (allBooks || []).filter(function(b){ return !b.series_id; });
+    var displayBooks = (allBooks || []).filter(function(b){ return !b.series_id && !b.series_title_ku; });
     var countEl = document.getElementById('book-count');
     if (countEl) countEl.textContent = displayBooks.length + ' book' + (displayBooks.length !== 1 ? 's' : '');
     if (!displayBooks.length) {
@@ -3338,7 +3338,7 @@ async function _renderSpotlightStats() {
     var discovered = data.filter(function(e){ return e.event_type === 'discovered'; }).length;
     var rate = impressions > 0 ? Math.round(discovered / impressions * 100) : 0;
     statsEl.style.display = '';
-    statsEl.querySelector('.sp-book-name').textContent = featBook.title_ku || featBook.title_ar || '';
+    statsEl.querySelector('.sp-book-name').textContent = featBook.series_title_ku || featBook.featured_title || featBook.title_ku || featBook.title_ar || '';
     statsEl.querySelector('.sp-impressions').textContent = impressions;
     statsEl.querySelector('.sp-opens').textContent = opens;
     statsEl.querySelector('.sp-discovered').textContent = discovered;

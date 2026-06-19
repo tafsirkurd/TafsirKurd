@@ -267,7 +267,7 @@
 
     var title = document.createElement('div');
     title.className = 'bs-title';
-    title.textContent = book.featured_title || book.title_ku || book.title_ar || '';
+    title.textContent = book.featured_title || book.series_title_ku || book.title_ku || book.title_ar || '';
     content.appendChild(title);
 
     var subtitle = document.createElement('div');
