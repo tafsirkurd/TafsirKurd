@@ -5,8 +5,9 @@
 (function(window) {
   'use strict';
 
-  var LAUNCH_TIME = Date.now();
-  var SHOW_DELAY  = 120000; /* 2 minutes after app launch */
+  var LAUNCH_TIME      = Date.now();
+  var SHOW_DELAY       = 120000; /* 2 minutes after app launch */
+  var AUTO_DISMISS_MS  = 7000;  /* auto-hide after 7 s if no interaction */
   var DISC_KEY    = 'featured_book_discovered_v1';
   var DISM_KEY    = 'book_spotlight_dismissed_v1';
   var BS_CACHE    = 'bs_featured_book_v1'; /* lightweight single-book cache */
@@ -111,7 +112,17 @@
         'letter-spacing:.2px;',
         'box-shadow:0 3px 10px rgba(160,120,30,.4);',
         'transition:opacity .15s;}',
-      '.bs-cta:active{opacity:.8;}'
+      '.bs-cta:active{opacity:.8;}',
+
+      /* ── Auto-dismiss progress bar ── */
+      '.bs-progress{',
+        'position:absolute;bottom:0;left:0;right:0;',
+        'height:3px;border-radius:0 0 20px 20px;overflow:hidden;',
+        'background:rgba(128,128,128,0.12);}',
+      '.bs-progress-fill{',
+        'height:100%;width:100%;',
+        'background:linear-gradient(90deg,#c9a040,#9a7820);',
+        'transform-origin:left center;will-change:transform;}'
     ].join('');
     document.head.appendChild(s);
   })();
@@ -282,6 +293,14 @@
 
     card.appendChild(content);
 
+    /* Progress bar (auto-dismiss indicator) */
+    var _prog = document.createElement('div');
+    _prog.className = 'bs-progress';
+    var _fill = document.createElement('div');
+    _fill.className = 'bs-progress-fill';
+    _prog.appendChild(_fill);
+    card.appendChild(_prog);
+
     /* Click whole card → hide immediately then open book */
     card.addEventListener('click', function() {
       _hideCard();
@@ -336,6 +355,7 @@
 
   function _hideCard() {
     if (!_card) return;
+    if (_autoTimer) { clearTimeout(_autoTimer); _autoTimer = null; }
     _card.classList.remove('bs-visible');
     var c = _card;
     setTimeout(function() { if (c && c.parentNode) c.parentNode.removeChild(c); }, 350);
@@ -347,6 +367,7 @@
   var _lastScroll = 0;
   var _audioActive = false;
   var _pollTimer = null;
+  var _autoTimer = null;
   var _shown = false;
 
   /* Scroll guard — suppress card if user scrolled in last 500ms */
@@ -397,7 +418,22 @@
     /* Animate in */
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
-        if (_card) _card.classList.add('bs-visible');
+        if (!_card) return;
+        _card.classList.add('bs-visible');
+        /* Start progress bar + auto-dismiss after card finishes sliding in (450ms) */
+        setTimeout(function() {
+          if (!_card) return;
+          var fill = _card.querySelector('.bs-progress-fill');
+          if (fill) {
+            fill.style.transition = 'transform ' + (AUTO_DISMISS_MS / 1000) + 's linear';
+            fill.style.transform = 'scaleX(0)';
+          }
+          _autoTimer = setTimeout(function() {
+            _autoTimer = null;
+            _trackEvent(book.id, 'auto_dismiss');
+            _hideCard();
+          }, AUTO_DISMISS_MS);
+        }, 450);
       });
     });
     _trackEvent(book.id, 'impression');
