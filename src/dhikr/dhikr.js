@@ -3501,6 +3501,8 @@ window.GencineUI = {
         var _covVol = item.volumes.find(function(v){ return v.cover_url; });
         item.cover_url = _covVol ? _covVol.cover_url : null;
       });
+      // Series cards float above individual books regardless of DB sort order
+      _renderItems.sort(function(a, b) { return (b._isSeries ? 1 : 0) - (a._isSeries ? 1 : 0); });
 
       if (!_renderItems.length) {
         et.textContent = T('gencine.books_empty','پەرتوکەکە نیە');
