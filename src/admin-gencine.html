@@ -1591,6 +1591,7 @@ function switchBooksSubTab(tab) {
     if (tab === 'books') {
         if (bookList) bookList.style.display = '';
         if (seriesList) seriesList.style.display = 'none';
+        if (spotlightStats) spotlightStats.style.display = 'none';
         if (toolbar) toolbar.style.display = '';
         if (addToggleBtn) addToggleBtn.style.display = '';
         renderBooksList();
@@ -3189,7 +3190,7 @@ function renderBooksList() {
             showNotification('Order saved.', 'success');
         }
     );
-    _renderSpotlightStats();
+    if (_booksSubTab === 'series') _renderSpotlightStats();
 }
 
 function renderSeriesList() {
@@ -3400,6 +3401,7 @@ async function _sendSeriesBookNotifNow(seriesId, title, body) {
 }
 
 async function _renderSpotlightStats() {
+    if (_booksSubTab !== 'series') return;
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var featBook = allBooks.find(function(b){ return b.featured_book; });
     var statsEl = document.getElementById('spotlight-stats');
