@@ -3221,6 +3221,53 @@ function renderSeriesList() {
         hdrLeft.appendChild(titleEl); hdrLeft.appendChild(metaEl);
 
         var hdrBtns = mke('div', 'series-group-btns');
+
+        /* ── Featured (⭐) button — sets featured_until on ALL volumes ── */
+        var _sAnyFeat = s.volumes.some(function(v){ return v.featured_until && new Date(v.featured_until).getTime() > Date.now(); });
+        var featBtn = mkIconBtn('star', _sAnyFeat ? 'Remove Featured' : 'Feature Series', false, (function(sg, _isFeat){ return function() {
+            if (_isFeat) {
+                if (!confirm('Remove featured badge from all volumes of "' + sg.title + '"?')) return;
+                Promise.all(sg.volumes.map(function(bk){ return _setFeatured(bk.id, null).then(function(res){ if(!res.error) bk.featured_until = null; return res; }); }))
+                    .then(function(){ renderSeriesList(); localStorage.removeItem('gencine_books_v4'); showNotification('Featured removed from series.', 'success'); });
+            } else {
+                showFeaturedDialog(sg.title, function(hours) {
+                    if (!hours) return;
+                    var d = new Date(); d.setHours(d.getHours() + hours);
+                    var until = d.toISOString();
+                    Promise.all(sg.volumes.map(function(bk){ return _setFeatured(bk.id, until).then(function(res){ if(!res.error) bk.featured_until = until; return res; }); }))
+                        .then(function(results){
+                            var anyErr = results.find(function(r){ return r.error; });
+                            if (anyErr) { showNotification('Failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
+                            renderSeriesList(); localStorage.removeItem('gencine_books_v4');
+                            showNotification('Series featured! (' + sg.volumes.length + ' volumes)', 'success');
+                        });
+                });
+            }
+        }; })(s, _sAnyFeat));
+        if (_sAnyFeat) featBtn.style.color = '#d4af37';
+        hdrBtns.appendChild(featBtn);
+
+        /* ── Spotlight (★) button — sets featured_book on volume 1 ── */
+        var _sAnySpot = s.volumes.some(function(v){ return v.featured_book; });
+        var spotBtn = mkIconBtn(_sAnySpot ? 'star-off' : 'bookmark-check', _sAnySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(sg, _cur){ return function() {
+            var firstVol = sg.volumes.slice().sort(function(a,b){ return (a.volume_number||0)-(b.volume_number||0); })[0];
+            if (!firstVol) return;
+            var newState = !_cur;
+            var msg = newState
+                ? 'Set "' + sg.title + '" as Book Spotlight?\n\nThis will remove the spotlight from any currently active book.'
+                : 'Remove Book Spotlight from "' + sg.title + '"?';
+            if (!confirm(msg)) return;
+            _setSpotlightFeatured(firstVol.id, newState).then(function(res) {
+                if (res && res.error) { showNotification('Failed: ' + JSON.stringify(res.error), 'error'); return; }
+                sg.volumes.forEach(function(v){ v.featured_book = false; });
+                if (newState) firstVol.featured_book = true;
+                renderSeriesList(); localStorage.removeItem('gencine_books_v4');
+                showNotification(newState ? 'Series set as spotlight!' : 'Spotlight removed.', 'success');
+            });
+        }; })(s, _sAnySpot));
+        if (_sAnySpot) spotBtn.style.color = '#d4af37';
+        hdrBtns.appendChild(spotBtn);
+
         hdrBtns.appendChild(mkIconBtn('pencil', 'Rename Series', false, (function(sg){ return function(){ editSeriesTitle(sg); }; })(s)));
         hdrBtns.appendChild(mkIconBtn('trash-2', 'Delete Series', true, (function(sg){ return function(){ deleteSeriesAll(sg); }; })(s)));
 
