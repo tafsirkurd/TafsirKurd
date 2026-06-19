@@ -6,7 +6,7 @@
   'use strict';
 
   var LAUNCH_TIME      = Date.now();
-  var SHOW_DELAY       = 120000; /* 2 minutes after app launch */
+  var SHOW_DELAY       = 30000; /* 30 seconds after app launch */
   var AUTO_DISMISS_MS  = 7000;  /* auto-hide after 7 s if no interaction */
   var DISC_KEY    = 'featured_book_discovered_v1';
   var DISM_KEY    = 'book_spotlight_dismissed_v1';
@@ -132,9 +132,10 @@
   function _lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
 
   function _getFeaturedBook() {
-    /* 1. Try the full books cache first */
+    /* 1. Try the full books cache first — stored as {ts, data:[...]} by dhikr.js */
     try {
-      var books = _lsGet('gencine_books_v4');
+      var _bRaw = _lsGet('gencine_books_v4');
+      var books = (_bRaw && Array.isArray(_bRaw.data)) ? _bRaw.data : (Array.isArray(_bRaw) ? _bRaw : null);
       if (books && books.length) {
         var found = books.find(function(b) {
           return b.featured_book === true && b.featured_enabled !== false && b.active !== false;
