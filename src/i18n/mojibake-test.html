@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head><meta charset="utf-8"><title>i18n Mojibake Test Harness</title></head>
+<body>
+<div id="out" style="font-family:monospace;font-size:13px;padding:16px;white-space:pre-wrap"></div>
+<script>
+// ── Mock environment (must be in place BEFORE i18n.min.js IIFE fires) ────────
+window.Capacitor = { getPlatform: () => 'android' };
+window.__healthReports = [];
+window.__warns = [];
+window.__logs  = [];
+const _w = console.warn.bind(console);
+const _l = console.log.bind(console);
+console.warn = function() { const m = Array.from(arguments).join(' '); window.__warns.push(m); _w(m); };
+console.log  = function() { const m = Array.from(arguments).join(' '); window.__logs.push(m);  _l(m); };
+
+// Remote payload override — set per test before calling initLang
+window.__mockRemote = null;  // null → empty {} → bundled only
+window.__mockOffline = false; // true → all fetches fail (simulate offline)
+
+window.fetch = function(url, opts) {
+  const u = String(url || '');
+  if (window.__mockOffline) return Promise.reject(new Error('offline'));
+  if (u.includes('apply-text-fixes'))
+    return Promise.resolve({ ok: false, json: () => Promise.resolve({}) });
+  if (u.includes('i18n-health-report')) {
+    try { window.__healthReports.push(JSON.parse((opts || {}).body || '{}')); } catch(e) {}
+    return Promise.resolve({ ok: true });
+  }
+  if (u.includes('app-translations')) {
+    const payload = window.__mockRemote !== null ? window.__mockRemote : {};
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(payload) });
+  }
+  if (u.includes('config'))
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ i18nLastPublishedAt: '2025-01-01' }) });
+  return Promise.reject(new Error('blocked:' + u));
+};
+</script>
+<script src="./kmr-bundled.js"></script>
+<script src="./i18n.min.js"></script>
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function reset() {
+  window.__healthReports = [];
+  window.__warns = [];
+  window.__logs = [];
+  window.__mockRemote = null;
+  window.__mockOffline = false;
+  try { localStorage.removeItem('tafsirkurd_i18n_v7'); } catch(e) {}
+  // Reset i18n module internal state so initLang() can be called fresh
+  if (window.i18n) {
+    // Force l (cached promise) to null by calling purgeCache and resetting
+    window.i18n.purgeCache();
+  }
+}
+
+// Compute the __bver the module expects (same formula as p() in i18n.min.js)
+function computeBver(obj) {
+  if (!obj) return 0;
+  var keys = Object.keys(obj).sort(), t = 1, n = 0;
+  for (var o = 0; o < keys.length; o++) {
+    var a = String(obj[keys[o]]);
+    for (var i = 0; i < a.length; i++) n = (n + (t = (t + a.charCodeAt(i)) % 65521)) % 65521;
+  }
+  return ((n << 16 | t) >>> 0);
+}
+
+// Build a cache entry (with correct __bver so the bundle-check passes)
+function makeCache(overrides) {
+  var base = {};
+  Object.assign(base, window.KMR_TRANSLATIONS || {}, overrides, {
+    __bver: computeBver(window.KMR_TRANSLATIONS || {})
+  });
+  return base;
+}
+
+// Check if a string is valid Kurdish (U+0600-U+06FF present, no mojibake)
+function isKurdish(s) { return /[؀-ۿ]/.test(s); }
+
+window.__runTest = async function(name, setup) {
+  reset();
+  // i18n module caches initLang result in `l`; we need to clear it
+  // The only way without modifying the module is to reload — but we instead
+  // reset the outer `l` by abusing the fact that purgeCache resets s,
+  // and we rely on the test running on a fresh page per test via Playwright navigate.
+  await setup();
+  const warns   = window.__warns.slice();
+  const reports = window.__healthReports.slice();
+  const cache   = localStorage.getItem('tafsirkurd_i18n_v7');
+  const tr      = window.i18n ? window.i18n.getTranslations() : {};
+  const status  = window.i18n ? window.i18n.getStatus() : {};
+  return { name, warns, reports, cachePresent: !!cache, cacheRaw: cache, tr, status };
+};
+</script>
+</body>
+</html>
