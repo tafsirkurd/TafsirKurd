@@ -3323,14 +3323,10 @@ window.GencineUI = {
             // ── Clone-based infinite loop ────────────────────────────────────
             // Layout: [clone-last | s0 | s1 | … | sN-1 | clone-first]
             //          idx 0        1    2       N        N+1
-            // Start at _cur=1 (real first slide). When we animate to a clone,
-            // instantly jump to the real counterpart so the seam is invisible.
             var _cloneLast  = _track.lastChild.cloneNode(true);
             var _cloneFirst = _track.firstChild.cloneNode(true);
             _track.insertBefore(_cloneLast, _track.firstChild);
             _track.appendChild(_cloneFirst);
-            // cloneNode copies the DOM snapshot — onload never fires on clones.
-            // Mark their cover imgs loaded immediately so they don't flash invisible.
             [_cloneLast, _cloneFirst].forEach(function(_cl){
               [].slice.call(_cl.querySelectorAll('img.book-feat-card-cover')).forEach(function(_ci){
                 if (!_ci.classList.contains('loaded')) {
@@ -3343,56 +3339,114 @@ window.GencineUI = {
               });
             });
 
+            var CSNAP_MS=700, CSNAP_FN='cubic-bezier(0.22,1,0.36,1)';
+            var _sls=[].slice.call(_track.children); /* n+2 elements incl. clones */
             var _cur=1, _tmr=null, _tx0=0, _ty0=0, _dirLocked=null, _w=0;
+            var _trackXNow=0, _vx=0, _vtLast=0, _xLast=0, _sprRaf=null;
+
+            function _stopSpr(){if(_sprRaf){cancelAnimationFrame(_sprRaf);_sprRaf=null;}}
+
+            function _setSlsTrans(css){for(var i=0;i<_sls.length;i++)_sls[i].style.transition=css;}
+
+            function _updateScales(xPos){
+              if(!_w)return;
+              var aIdx=xPos/_w;
+              for(var i=0;i<_sls.length;i++){
+                var d=Math.abs(i-aIdx);
+                var sc=d<1?(1-d*0.05):d<2?(0.95-(d-1)*0.03):0.92;
+                var op=d<1?(1-d*0.12):d<2?(0.88-(d-1)*0.10):0.78;
+                _sls[i].style.transform='scale('+sc.toFixed(3)+') translateZ(0)';
+                _sls[i].style.opacity=op.toFixed(3);
+              }
+            }
+
+            function _springTo(targetX,initVel,onDone){
+              var K=260,D=26,x=_trackXNow,v=initVel,lastT=null;
+              _stopSpr();
+              _setSlsTrans('none');
+              function _stp(t){
+                if(!lastT){lastT=t;_sprRaf=requestAnimationFrame(_stp);return;}
+                var dt=Math.min((t-lastT)/1000,0.032);lastT=t;
+                v+=(-K*(x-targetX)-D*v)*dt;
+                x+=v*dt;
+                if(Math.abs(x-targetX)<0.4&&Math.abs(v)<2){x=targetX;}
+                _trackXNow=x;
+                _track.style.transition='none';
+                _track.style.transform='translate3d('+x+'px,0,0)';
+                _updateScales(x);
+                if(x!==targetX){_sprRaf=requestAnimationFrame(_stp);}
+                else{_sprRaf=null;if(onDone)onDone();}
+              }
+              _sprRaf=requestAnimationFrame(_stp);
+            }
 
             function _dotIdx(idx){
               if(idx===0)      return _n-1;
               if(idx===_n+1)   return 0;
               return idx-1;
             }
-            function _setPos(idx, animated){
-              _track.style.transition = animated ? '' : 'none';
-              _track.style.transform  = 'translateX('+(idx*_w)+'px)';
+
+            function _setPos(idx,animated){
+              var tx=idx*_w;
+              _trackXNow=tx;
+              var ct=animated?('transform '+CSNAP_MS+'ms '+CSNAP_FN+',opacity '+CSNAP_MS+'ms '+CSNAP_FN):'none';
+              _setSlsTrans(ct);
+              _track.style.transition=animated?('transform '+CSNAP_MS+'ms '+CSNAP_FN):'none';
+              _track.style.transform='translate3d('+tx+'px,0,0)';
+              _updateScales(tx);
               var ri=_dotIdx(idx);
               _dotEls.forEach(function(d,j){d.classList.toggle('active',j===ri);});
             }
-            function _goTo(idx){
+
+            function _goTo(idx,anim,vel){
+              _stopSpr();
               _cur=idx;
-              _setPos(_cur, true);
-              // Seamless wrap: after sliding into a clone, jump to the real slide
-              if(_cur===_n+1||_cur===0){
-                var _jumped=false;
-                function _doJump(){
-                  if(_jumped)return; _jumped=true;
-                  var ri=_cur===_n+1?1:_n;
-                  _setPos(ri,false);
-                  _cur=ri;
+              var isWrap=idx===_n+1||idx===0;
+              var wrapIdx=isWrap?(idx===_n+1?1:_n):-1;
+              if(anim==='spring'){
+                var ri=_dotIdx(idx);
+                _dotEls.forEach(function(d,j){d.classList.toggle('active',j===ri);});
+                _springTo(idx*_w,vel||0,isWrap?function(){_setPos(wrapIdx,false);_cur=wrapIdx;}:null);
+              } else {
+                _setPos(idx,anim!==false);
+                if(isWrap&&anim!==false){
+                  var _jumped=false,_wIdx=wrapIdx;
+                  function _doJump(){
+                    if(_jumped)return;_jumped=true;
+                    _setPos(_wIdx,false);_cur=_wIdx;
+                  }
+                  _track.addEventListener('transitionend',function _onTe(){
+                    _track.removeEventListener('transitionend',_onTe);
+                    _doJump();
+                  });
+                  setTimeout(_doJump,CSNAP_MS+120);
                 }
-                _track.addEventListener('transitionend',function _onEnd(){
-                  _track.removeEventListener('transitionend',_onEnd);
-                  _doJump();
-                });
-                setTimeout(_doJump,350); // fallback if transitionend doesn't fire
               }
             }
+
             function _measure(){
               var w=_caro.getBoundingClientRect().width||_caro.offsetWidth;
               if(w>0&&(!_w||Math.abs(w-_w)>2)){
                 _w=w;
-                [].slice.call(_track.children).forEach(function(sl){sl.style.width=w+'px';sl.style.minWidth=w+'px';});
+                _sls.forEach(function(sl){sl.style.width=w+'px';sl.style.minWidth=w+'px';});
                 _setPos(_cur,false);
               }
               if(!_w)_w=300;
             }
-            function _arm(){_tmr=setTimeout(function(){_goTo(_cur+1);_arm();},3500);}
+
+            function _arm(){_tmr=setTimeout(function(){_goTo(_cur+1,true);_arm();},3500);}
             function _rearm(){clearTimeout(_tmr);_arm();}
 
             _caro.addEventListener('touchstart',function(e){
               if(e.touches.length>1)return;
               clearTimeout(_tmr);
+              _stopSpr();
               _tx0=e.touches[0].clientX;
               _ty0=e.touches[0].clientY;
               _dirLocked=null;
+              _vx=0;_vtLast=performance.now();_xLast=_tx0;
+              _trackXNow=_cur*_w;
+              _setSlsTrans('none');
               _measure();
             },{passive:true});
 
@@ -3405,21 +3459,30 @@ window.GencineUI = {
               }
               if(_dirLocked!=='h')return;
               e.preventDefault();
-              // Finger physically drags the track: +dx keeps content under the finger.
-              // Clones pad both ends so dragging past the edge never shows a gap.
+              var now=performance.now(),dt=now-_vtLast;
+              if(dt>0){_vx=(e.touches[0].clientX-_xLast)/dt;}
+              _vtLast=now;_xLast=e.touches[0].clientX;
+              var raw=_cur*_w+dx;
+              var clamped=raw<0?raw*0.22:raw>(_n+1)*_w?(_n+1)*_w+(raw-(_n+1)*_w)*0.22:raw;
+              _trackXNow=clamped;
               _track.style.transition='none';
-              _track.style.transform='translateX('+(_cur*_w+dx)+'px)';
+              _track.style.transform='translate3d('+clamped+'px,0,0)';
+              _updateScales(clamped);
             },{passive:false});
 
             _caro.addEventListener('touchend',function(e){
               if(_dirLocked!=='h'){_rearm();return;}
               var dx=e.changedTouches[0].clientX-_tx0;
-              _track.style.transition='';
-              _track.getBoundingClientRect();
-              // Swipe right (dx>0) → next slide; swipe left (dx<0) → prev slide
-              if(Math.abs(dx)>40)_goTo(_cur+(dx>0?1:-1));
-              else _setPos(_cur,true);
-              _rearm();
+              var vxFresh=(performance.now()-_vtLast)<80?_vx:0;
+              var flick=Math.abs(vxFresh)>0.3;
+              clearTimeout(_tmr);
+              if(flick||Math.abs(dx)>_w*0.18){
+                var dir=vxFresh!==0?(vxFresh>0?1:-1):(dx>0?1:-1);
+                _goTo(_cur+dir,'spring',vxFresh*1000);
+              } else {
+                _goTo(_cur,'spring',vxFresh*1000);
+              }
+              _arm();
             },{passive:true});
 
             _caro.addEventListener('mouseenter',function(){clearTimeout(_tmr);});
@@ -3428,10 +3491,8 @@ window.GencineUI = {
             requestAnimationFrame(function(){
               _measure();
               _track.getBoundingClientRect();
-              _track.style.transition='';
+              _setPos(_cur,false);
               _arm();
-              // Deferred sweep: by 100ms WebView has decoded all cached imgs.
-              // Any cover still missing .loaded (timing race on clones) gets it now.
               setTimeout(function(){
                 [].slice.call(_track.querySelectorAll('img.book-feat-card-cover')).forEach(function(_ti){
                   if (!_ti.classList.contains('loaded') && _ti.complete && _ti.naturalWidth > 0) {

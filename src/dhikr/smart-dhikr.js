@@ -1519,7 +1519,7 @@
     if (count <= 1) { dotsEl.style.display = 'none'; return; }
 
     var DURATION = 10000;
-    var SNAP_MS  = 320;
+    var SNAP_MS  = 700;
     var SNAP_FN  = 'cubic-bezier(0.22,1,0.36,1)';
     var current  = 0;   /* logical index 0..count-1 */
 
@@ -1549,10 +1549,56 @@
     function _posX(cur) { return -(count - cur) * _W(); }
 
     var _trackX = _posX(0); // JS-tracked position — avoids getComputedStyle reads
+
+    /* ── depth effect: scale + opacity per card based on distance from active ── */
+    var _slides = [].slice.call(track.children);
+    function _setCardTrans(css) {
+      for (var i = 0; i < _slides.length; i++) _slides[i].style.transition = css;
+    }
+    function _updateCardScales(xPos) {
+      var W = _W(); if (!W) return;
+      var aIdx = -xPos / W;
+      for (var i = 0; i < _slides.length; i++) {
+        var d  = Math.abs(i - aIdx);
+        var sc = d < 1 ? (1 - d * 0.05) : d < 2 ? (0.95 - (d - 1) * 0.03) : 0.92;
+        var op = d < 1 ? (1 - d * 0.12) : d < 2 ? (0.88 - (d - 1) * 0.10) : 0.78;
+        _slides[i].style.transform = 'scale(' + sc.toFixed(3) + ') translateZ(0)';
+        _slides[i].style.opacity   = op.toFixed(3);
+      }
+    }
+
+    /* ── spring physics for gesture release ── */
+    var _sprRaf = null;
+    function _stopSpring() {
+      if (_sprRaf) { cancelAnimationFrame(_sprRaf); _sprRaf = null; }
+    }
+    function _springTo(targetX, initVel, onDone) {
+      var K = 260, D = 26, x = _trackX, v = initVel, lastT = null;
+      _stopSpring();
+      _setCardTrans('none');
+      function _stp(t) {
+        if (!lastT) { lastT = t; _sprRaf = requestAnimationFrame(_stp); return; }
+        var dt = Math.min((t - lastT) / 1000, 0.032); lastT = t;
+        v += (-K * (x - targetX) - D * v) * dt;
+        x += v * dt;
+        if (Math.abs(x - targetX) < 0.4 && Math.abs(v) < 2) { x = targetX; }
+        _trackX = x;
+        track.style.transition = 'none';
+        track.style.transform  = 'translate3d(' + x + 'px,0,0)';
+        _updateCardScales(x);
+        if (x !== targetX) { _sprRaf = requestAnimationFrame(_stp); }
+        else { _sprRaf = null; if (onDone) onDone(); }
+      }
+      _sprRaf = requestAnimationFrame(_stp);
+    }
+
     function _applyX(px, anim) {
       _trackX = px;
+      var ct = anim ? ('transform ' + SNAP_MS + 'ms ' + SNAP_FN + ',opacity ' + SNAP_MS + 'ms ' + SNAP_FN) : 'none';
+      _setCardTrans(ct);
       track.style.transition = anim ? 'transform ' + SNAP_MS + 'ms ' + SNAP_FN : 'none';
       track.style.transform  = 'translate3d(' + px + 'px,0,0)';
+      _updateCardScales(px);
     }
 
     function _syncDots() {
@@ -1569,8 +1615,9 @@
       }
     }
 
-    function _goTo(idx, anim) {
+    function _goTo(idx, anim, vel) {
       _cancelTeleport();
+      _stopSpring();
       var dest, teleportX, isWrap = false;
 
       if (idx >= count) {
@@ -1591,17 +1638,22 @@
       }
 
       _syncDots();
-      _applyX(dest, anim !== false);
 
-      /* After animation reaches clone, instantly jump to the real slide.
-         transitionend fires once per property — guard with _cancelTeleport. */
-      if (isWrap && anim !== false) {
-        var tX = teleportX;
-        _teleportFn = function() {
-          _cancelTeleport();
-          _applyX(tX, false);
-        };
-        track.addEventListener('transitionend', _teleportFn);
+      if (anim === 'spring') {
+        var wrapTo = isWrap ? teleportX : null;
+        _springTo(dest, vel || 0, wrapTo !== null ? function() { _applyX(wrapTo, false); } : null);
+      } else {
+        _applyX(dest, anim !== false);
+        /* After animation reaches clone, instantly jump to the real slide.
+           transitionend fires once per property — guard with _cancelTeleport. */
+        if (isWrap && anim !== false) {
+          var tX = teleportX;
+          _teleportFn = function() {
+            _cancelTeleport();
+            _applyX(tX, false);
+          };
+          track.addEventListener('transitionend', _teleportFn);
+        }
       }
 
       _resetProg();
@@ -1656,13 +1708,16 @@
     /* ── swipe — non-passive so we can preventDefault vertical scroll ── */
     track.addEventListener('touchstart', function(e) {
       _cancelTeleport();
+      _stopSpring();
       var actualX = _readX();
       _drag = true; _decided = false; _horiz = false;
       _sx = e.touches[0].clientX; _sy = e.touches[0].clientY;
       _baseX = actualX;
       _vx = 0; _vtLast = performance.now(); _xLast = _sx;
+      _setCardTrans('none');
       track.style.transition = 'none';
       track.style.transform  = 'translate3d(' + actualX + 'px,0,0)';
+      _updateCardScales(actualX);
       _pauseProg();
     }, { passive: false });
 
@@ -1688,7 +1743,9 @@
       var clamped = raw > max ? max + (raw - max) * 0.25
                   : raw < min ? min + (raw - min) * 0.25
                   : raw;
+      _trackX = clamped;
       track.style.transform = 'translate3d(' + clamped + 'px,0,0)';
+      _updateCardScales(clamped);
     }, { passive: false });
 
     function _onEnd(e) {
@@ -1701,9 +1758,9 @@
       if (flick || Math.abs(delta) > W * 0.18) {
         /* RTL: swipe right (delta>0 / vx>0) = next (+1), swipe left = prev (-1) */
         var dir = (vxFresh !== 0) ? (vxFresh > 0 ? 1 : -1) : (delta > 0 ? 1 : -1);
-        _goTo(current + dir, true);
+        _goTo(current + dir, 'spring', vxFresh * 1000);
       } else {
-        _goTo(current, true);
+        _goTo(current, 'spring', vxFresh * 1000);
       }
     }
     track.addEventListener('touchend',    _onEnd, { passive: false });
