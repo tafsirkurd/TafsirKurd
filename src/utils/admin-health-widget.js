@@ -11,10 +11,11 @@
     var CACHE_TTL = 5 * 60 * 1000; // 5 min
 
     // ── URL → section mapping ─────────────────────────────────────────────
+    // Patterns match with or without .html extension
     var URL_MAP = [
-        [/admin-notifications\.html/,          'notifications'],
-        [/admin-notification-analytics/,        'notifications'],
-        [/admin-schedule\.html/,               'notifications'],
+        [/admin-notification-analytics/,       'notifications'],
+        [/admin-notifications/,                'notifications'],
+        [/admin-schedule/,                     'notifications'],
         [/admin-islamvoice/,                   'islamvoice'],
         [/admin-videos/,                       'islamvoice'],
         [/admin-gencine/,                      'gencine'],
@@ -412,10 +413,10 @@
         var st = (result && result.status) ? result.status : 'idle';
 
         var STATUS = {
-            ok:   { cls: 'ahw-ok',   label: 'کاردەکات' },
-            warn: { cls: 'ahw-warn', label: 'ئاگاداری' },
-            err:  { cls: 'ahw-err',  label: 'کێشە هەیە' },
-            idle: { cls: 'ahw-idle', label: 'پشکنین نەکراوە' },
+            ok:   { cls: 'ahw-ok',   label: 'Healthy' },
+            warn: { cls: 'ahw-warn', label: 'Warning' },
+            err:  { cls: 'ahw-err',  label: 'Error' },
+            idle: { cls: 'ahw-idle', label: 'Not Checked' },
         };
         var sm = STATUS[st] || STATUS.idle;
 
@@ -590,9 +591,13 @@
         var meta = SECTION_META[sectionId];
         if (!meta) return;
 
-        var contentArea = document.querySelector('.content-area');
-        var pageHeader  = document.querySelector('.page-header');
-        if (!contentArea || !pageHeader) return;
+        // Works for both layouts:
+        //   admin-system-health:  main.main-content > div.content-area > div.page-header
+        //   most other pages:     main.main-content > div.page-header   (no .content-area)
+        var pageHeader = document.querySelector('.page-header');
+        if (!pageHeader) return;
+        var container = pageHeader.parentNode;
+        if (!container) return;
 
         injectStyles();
 
@@ -606,8 +611,8 @@
 
         // Insert strip then detail panel, right after .page-header
         var anchor = pageHeader.nextSibling;
-        contentArea.insertBefore(detail, anchor);
-        contentArea.insertBefore(strip, detail);
+        container.insertBefore(detail, anchor);
+        container.insertBefore(strip, detail);
 
         // Auto-run if cache is stale or missing
         if (!fresh) {
