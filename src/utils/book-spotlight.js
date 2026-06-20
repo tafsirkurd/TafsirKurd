@@ -1,4 +1,4 @@
-/* Book Spotlight v9 — smart-frequency featured-book recommendation system
+/* Book Spotlight v12 — smart-frequency featured-book recommendation system
    Frequency rules:
      auto-dismiss (7s timer)  → show again after 24 h
      manual close (X button)  → show again after 3 days
@@ -171,7 +171,7 @@
       _fetchPending = false;
       if (!sb) return;
       sb.from('gencine_books')
-        .select('id,title_ku,title_ar,author_ku,author_ar,cover_url,featured_book,featured_enabled,featured_title,featured_subtitle,series_title_ku,active')
+        .select('id,title_ku,title_ar,author_ku,author_ar,cover_url,featured_book,featured_enabled,featured_title,featured_subtitle,series_title_ku,series_id,volume_number,active')
         .eq('featured_book', true)
         .eq('active', true)
         .limit(1)
@@ -275,7 +275,7 @@
     var labelIcon = document.createElement('i');
     labelIcon.className = 'fas fa-star';
     label.appendChild(labelIcon);
-    label.appendChild(document.createTextNode(' پێشنیاری تەفسیر کورد'));
+    label.appendChild(document.createTextNode(' پێشنیارا تەفسیركورد'));
     content.appendChild(label);
 
     var title = document.createElement('div');
@@ -290,7 +290,7 @@
 
     var cta = document.createElement('button');
     cta.className = 'bs-cta';
-    cta.textContent = 'بخوێنە ←';
+    cta.textContent = 'بخوینە ←';
     content.appendChild(cta);
 
     card.appendChild(content);
@@ -313,15 +313,38 @@
     return card;
   }
 
+  /* Resolve which book ID to open: VOL 1 of the series, or the book itself. */
+  function _resolveVol1(book) {
+    try {
+      var bRaw = JSON.parse(localStorage.getItem('gencine_books_v5') || 'null');
+      var books = (bRaw && Array.isArray(bRaw.data)) ? bRaw.data : (Array.isArray(bRaw) ? bRaw : []);
+      /* Get series_id from full cache (featured-only fetch may not include it) */
+      var seriesId = book.series_id;
+      if (!seriesId) {
+        for (var i = 0; i < books.length; i++) {
+          if (String(books[i].id) === String(book.id)) { seriesId = books[i].series_id; break; }
+        }
+      }
+      if (!seriesId) return book.id;
+      /* Find the lowest volume_number in this series */
+      var vols = books.filter(function(b) { return b.series_id === seriesId && b.active !== false; });
+      vols.sort(function(a, b) { return (a.volume_number || 0) - (b.volume_number || 0); });
+      return vols.length ? vols[0].id : book.id;
+    } catch(e) { return book.id; }
+  }
+
   function _openFeaturedBook(book) {
     try {
       /* Always click the Gencine tab first — loads dhikr.js if not yet loaded */
       var tabBtn = document.querySelector('.tab-item[data-tab="gencine"]');
       if (tabBtn) tabBtn.click();
 
+      /* Open VOL 1 if this is a series spotlight */
+      var targetId = _resolveVol1(book);
+
       /* If GencineUI already ready, open immediately */
       if (window.GencineUI && typeof window.GencineUI.openBook === 'function') {
-        setTimeout(function() { if (window.GencineUI) window.GencineUI.openBook(book.id); }, 120);
+        setTimeout(function() { if (window.GencineUI) window.GencineUI.openBook(targetId); }, 120);
         return;
       }
 
@@ -330,7 +353,7 @@
       var _t = setInterval(function() {
         if (window.GencineUI && typeof window.GencineUI.openBook === 'function') {
           clearInterval(_t);
-          window.GencineUI.openBook(book.id);
+          window.GencineUI.openBook(targetId);
         }
         if (++_att > 40) clearInterval(_t);
       }, 200);
