@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import CapacitorHaptics
 import WebKit
 
 class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
@@ -67,6 +68,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         bridge?.registerPluginInstance(TafsirAppleSignIn())
         bridge?.registerPluginInstance(SharedPrefsPlugin())
         bridge?.registerPluginInstance(CompassPlugin())
+        bridge?.registerPluginInstance(HapticsPlugin())
 
         // JS calls: window.webkit.messageHandlers.splashDismiss.postMessage(null)
         bridge?.webView?.configuration.userContentController.add(self, name: "splashDismiss")
