@@ -41,6 +41,7 @@
                 { href: '/admin-errors.html',           icon: 'triangle-alert', label: 'App Errors' },
                 { href: '/admin-app-versions.html',     icon: 'smartphone',     label: 'App Versions' },
                 { href: '/admin-db-health.html',        icon: 'activity',       label: 'DB Health' },
+                { href: '/admin-system-health.html',    icon: 'shield-check',   label: 'System Health' },
                 { href: '/admin-widget-health.html',    icon: 'layout-grid',    label: 'Widget Health' },
                 { href: '/admin-codemagic.html',        icon: 'rocket',         label: 'iOS Builds' },
                 { href: '/admin-release-history.html',  icon: 'git-branch',     label: 'Release History' },

@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/utils/admin-guard.js?v=2"></script>
+    <link rel="icon" type="image/png" href="/assets/images/TafsirKurd-favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js?v=2"></script>
+    <title>System Health - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css?v=15">
+    <style>
+        .dashboard-container { display:flex; min-height:100vh; }
+        .main-content { flex:1; margin-left:240px; min-width:0; overflow-x:hidden; transition:margin-left .3s; }
+        .sidebar.collapsed + .main-content { margin-left:64px; }
+        @media(max-width:768px){ .main-content{ margin-left:0; } }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        /* ── Summary bar ── */
+        .sh-summary {
+            display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+            background:var(--bg-surface); border:1px solid var(--border-light);
+            border-radius:14px; padding:18px 22px; margin-bottom:24px;
+        }
+        .sh-summary-stat { text-align:center; min-width:56px; }
+        .sh-summary-num  { font-size:26px; font-weight:800; line-height:1; color:var(--text-primary); }
+        .sh-summary-lbl  { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-tertiary); margin-top:3px; }
+        .sh-summary-ok   .sh-summary-num { color:#10b981; }
+        .sh-summary-warn .sh-summary-num { color:#f59e0b; }
+        .sh-summary-err  .sh-summary-num { color:#ef4444; }
+        .sh-summary-divider { width:1px; height:36px; background:var(--border-light); }
+        .sh-summary-msg { flex:1; min-width:160px; font-size:13px; color:var(--text-secondary); }
+        .sh-last-checked { margin-left:auto; font-size:12px; color:var(--text-tertiary); }
+
+        /* ── Grid ── */
+        .sh-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+
+        /* ── Health card ── */
+        .sh-card {
+            background:var(--bg-surface); border:1px solid var(--border-light);
+            border-radius:14px; overflow:hidden; transition:box-shadow .15s;
+            border-left:4px solid var(--border-light);
+        }
+        .sh-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.12); }
+        .sh-card.ok   { border-left-color:#10b981; }
+        .sh-card.warn { border-left-color:#f59e0b; }
+        .sh-card.err  { border-left-color:#ef4444; }
+        .sh-card.idle { border-left-color:var(--border-light); }
+
+        .sh-card-hdr {
+            display:flex; align-items:center; gap:12px; padding:14px 16px;
+            cursor:pointer; user-select:none;
+        }
+        .sh-card-icon {
+            width:34px; height:34px; border-radius:9px;
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0;
+        }
+        .sh-card-icon i { width:16px; height:16px; }
+        .sh-card-info { flex:1; min-width:0; }
+        .sh-card-name { font-size:14px; font-weight:700; color:var(--text-primary); }
+        .sh-card-name-ku { font-size:11px; color:var(--text-tertiary); margin-top:1px; }
+        .sh-card-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0; }
+
+        /* Status badge */
+        .sh-status {
+            display:inline-flex; align-items:center; gap:5px;
+            font-size:11px; font-weight:700; padding:3px 9px;
+            border-radius:20px; white-space:nowrap;
+        }
+        .sh-status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+        .sh-status.ok   { background:rgba(16,185,129,.12); color:#059669; }
+        .sh-status.warn { background:rgba(245,158,11,.12);  color:#b45309; }
+        .sh-status.err  { background:rgba(239,68,68,.12);   color:#dc2626; }
+        .sh-status.idle { background:rgba(156,163,175,.12); color:#6b7280; }
+        .sh-status.ok   .sh-status-dot { background:#10b981; }
+        .sh-status.warn .sh-status-dot { background:#f59e0b; animation:pulse 1.2s infinite; }
+        .sh-status.err  .sh-status-dot { background:#ef4444; animation:pulse .8s infinite; }
+        .sh-status.idle .sh-status-dot { background:#9ca3af; }
+
+        /* Platform chips */
+        .sh-plats { display:flex; gap:4px; }
+        .sh-plat {
+            font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px;
+            background:var(--bg-active); color:var(--text-tertiary);
+            display:flex; align-items:center; gap:3px;
+        }
+        .sh-plat.ok   { background:rgba(16,185,129,.1);  color:#059669; }
+        .sh-plat.warn { background:rgba(245,158,11,.1);  color:#b45309; }
+        .sh-plat.err  { background:rgba(239,68,68,.1);   color:#dc2626; }
+        .sh-plat.na   { opacity:.4; }
+
+        /* Collapse body */
+        .sh-card-body { border-top:1px solid var(--border-light); padding:12px 16px; display:none; }
+        .sh-card-body.open { display:block; }
+
+        /* Check rows */
+        .sh-check { display:flex; align-items:flex-start; gap:8px; padding:5px 0; font-size:12.5px; }
+        .sh-check:not(:last-child) { border-bottom:1px solid var(--border-light); }
+        .sh-check-icon { width:16px; height:16px; flex-shrink:0; margin-top:1px; }
+        .sh-check-name { flex:1; color:var(--text-secondary); }
+        .sh-check-detail { font-size:11.5px; color:var(--text-tertiary); margin-top:1px; }
+        .sh-check.ok   .sh-check-icon { color:#10b981; }
+        .sh-check.warn .sh-check-icon { color:#f59e0b; }
+        .sh-check.err  .sh-check-icon { color:#ef4444; }
+        .sh-check.idle .sh-check-icon { color:#9ca3af; }
+        .sh-check.running .sh-check-icon { animation:spin .7s linear infinite; color:var(--text-tertiary); }
+
+        .sh-card-link { display:block; padding:8px 16px; border-top:1px solid var(--border-light); font-size:12px; color:var(--accent-blue,#3b82f6); text-decoration:none; }
+        .sh-card-link:hover { background:var(--bg-hover); }
+
+        /* Spinner while loading */
+        .sh-spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--border-light); border-top-color:var(--text-secondary); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
+
+        .btn-run-all { display:inline-flex; align-items:center; gap:7px; padding:9px 18px; background:var(--accent-blue,#3b82f6); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:opacity .15s; }
+        .btn-run-all:hover { opacity:.88; }
+        .btn-run-all:disabled { opacity:.5; cursor:default; }
+        .btn-recheck { display:inline-flex; align-items:center; gap:5px; padding:5px 11px; background:var(--bg-surface2,var(--bg-active)); color:var(--text-secondary); border:1px solid var(--border-light); border-radius:8px; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; }
+        .btn-recheck:hover { color:var(--text-primary); }
+    </style>
+    <style id="early-sidebar-hide">
+        .sidebar-nav { visibility:visible; }
+    </style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            if (role && style) {
+                if (role === 'analyst') style.textContent = '.sidebar-nav{visibility:visible}[href*="admin-gencine"]{display:none!important}';
+                else style.textContent = '.sidebar-nav{visibility:visible}';
+            }
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <nav class="sidebar-nav"></nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center" title="Logout"><i data-lucide="log-out"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+            <div class="topbar-search">
+                <i data-lucide="shield-check"></i>
+                <input type="text" placeholder="System Health" readonly style="cursor:default;background:transparent;border:none;outline:none;color:var(--text-secondary);font-family:inherit">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer"><i data-lucide="clock"></i><span id="sessionTimerText">2:00:00</span></div>
+                <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">System Health</h1>
+                    <p id="sh-subtitle" style="margin:2px 0 0;font-size:13px;color:var(--text-tertiary)">Control-room view of all app services</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span id="sh-last" style="font-size:12px;color:var(--text-tertiary)"></span>
+                    <button class="btn-run-all" id="btn-run-all" onclick="runAllChecks()">
+                        <i data-lucide="play"></i> Run All Checks
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary bar -->
+            <div class="sh-summary" id="sh-summary" style="display:none">
+                <div class="sh-summary-stat sh-summary-ok">
+                    <div class="sh-summary-num" id="sum-ok">0</div>
+                    <div class="sh-summary-lbl">Healthy</div>
+                </div>
+                <div class="sh-summary-stat sh-summary-warn">
+                    <div class="sh-summary-num" id="sum-warn">0</div>
+                    <div class="sh-summary-lbl">Warning</div>
+                </div>
+                <div class="sh-summary-stat sh-summary-err">
+                    <div class="sh-summary-num" id="sum-err">0</div>
+                    <div class="sh-summary-lbl">Error</div>
+                </div>
+                <div class="sh-summary-divider"></div>
+                <div class="sh-summary-msg" id="sum-msg"></div>
+                <div class="sh-last-checked" id="sum-time"></div>
+            </div>
+
+            <!-- Health cards grid -->
+            <div class="sh-grid" id="sh-grid"></div>
+        </div>
+    </main>
+</div>
+
+<script src="/utils/admin-auth-v2.js?v=5"></script>
+<script src="/utils/admin-sidebar.js?v=7"></script>
+<script src="/utils/admin-session-timer-ui.js?v=2"></script>
+<script>
+// ── Service definitions ─────────────────────────────────────────────
+var SERVICES = [
+    {
+        id: 'notifications',
+        name: 'Push Notifications',
+        name_ku: 'ئاگادارکردنەوەی تەلەفۆن',
+        icon: 'bell',
+        color: '#10b981',
+        platforms: { android: true, ios: true, web: false },
+        link: '/admin-notifications.html',
+        checks: ['notif_api', 'push_tokens', 'failed_notifs']
+    },
+    {
+        id: 'islamvoice',
+        name: 'IslamVoice',
+        name_ku: 'دەنگی ئیسلام',
+        icon: 'radio',
+        color: '#8b5cf6',
+        platforms: { android: true, ios: true, web: true },
+        link: '/admin-islamvoice-management.html',
+        checks: ['iv_episodes', 'iv_series']
+    },
+    {
+        id: 'gencine',
+        name: 'Gencine (Books, Adhkar, Dua, Hadith)',
+        name_ku: 'گەنجینە',
+        icon: 'gem',
+        color: '#f59e0b',
+        platforms: { android: true, ios: true, web: true },
+        link: '/admin-gencine.html',
+        checks: ['gencine_cats', 'gencine_duas', 'gencine_books', 'gencine_hadiths']
+    },
+    {
+        id: 'prayer',
+        name: 'Prayer Times',
+        name_ku: 'کاتەکانی نوێژ',
+        icon: 'clock',
+        color: '#3b82f6',
+        platforms: { android: true, ios: true, web: true },
+        checks: ['prayer_json', 'prayer_api']
+    },
+    {
+        id: 'quran',
+        name: 'Quran Reader (Mushaf)',
+        name_ku: 'خواندنی قورئان',
+        icon: 'book-open',
+        color: '#10b981',
+        platforms: { android: true, ios: true, web: true },
+        checks: ['quran_json', 'mushaf_pages', 'mushaf_fonts']
+    },
+    {
+        id: 'tafsir',
+        name: 'Tafsir',
+        name_ku: 'تەفسیری قورئان',
+        icon: 'scroll-text',
+        color: '#059669',
+        platforms: { android: true, ios: true, web: true },
+        checks: ['tafsir_json']
+    },
+    {
+        id: 'audio',
+        name: 'Reciters & Audio',
+        name_ku: 'دەنگخوێنەران و دەنگ',
+        icon: 'headphones',
+        color: '#ec4899',
+        platforms: { android: true, ios: true, web: true },
+        checks: ['audio_cache_js', 'reciter_photos']
+    },
+    {
+        id: 'translations',
+        name: 'Translations (i18n)',
+        name_ku: 'وەرگێڕان',
+        icon: 'languages',
+        color: '#6366f1',
+        platforms: { android: true, ios: true, web: true },
+        link: '/admin-translations.html',
+        checks: ['kmr_json', 'kmr_bundled', 'translations_db']
+    },
+    {
+        id: 'smart_dhikr',
+        name: 'Smart Dhikr',
+        name_ku: 'زیکری زیرەک',
+        icon: 'zap',
+        color: '#f97316',
+        platforms: { android: true, ios: true, web: true },
+        checks: ['smart_dhikr_js', 'dhikr_data']
+    },
+    {
+        id: 'config',
+        name: 'App Config',
+        name_ku: 'ڕێکخستنی ئەپ',
+        icon: 'settings',
+        color: '#64748b',
+        platforms: { android: true, ios: true, web: true },
+        checks: ['config_endpoint', 'sw_file']
+    },
+    {
+        id: 'assets',
+        name: 'Core Assets',
+        name_ku: 'فایلەکانی بنەڕەت',
+        icon: 'package',
+        color: '#0ea5e9',
+        platforms: { android: true, ios: true, web: true },
+        checks: ['app_js', 'hafs_font', 'fontawesome']
+    },
+    {
+        id: 'admin_api',
+        name: 'Admin API Functions',
+        name_ku: 'فەنکشنەکانی ئەدمین',
+        icon: 'terminal',
+        color: '#475569',
+        platforms: { android: false, ios: false, web: true },
+        checks: ['notif_api_fn', 'db_health_fn', 'config_fn']
+    }
+];
+
+// ── Individual check runners ────────────────────────────────────────
+var token = '';
+var supabase = null;
+
+var CHECK_DEFS = {
+    // Notifications
+    notif_api: {
+        name: 'Notifications API',
+        run: async function() {
+            var r = await apiFetch('/admin-notifications-api', 'get_stats');
+            var d = await r.json();
+            if (!d.success) throw new Error(d.error || 'API error');
+            return { detail: 'API responds · ' + (d.total || 0) + ' total sent' };
+        }
+    },
+    push_tokens: {
+        name: 'Push tokens registered',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('push_tokens').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { warn: true, detail: 'No device tokens registered' };
+            var { count: android } = await supabase.from('push_tokens').select('id', { count: 'exact', head: true }).eq('platform', 'android');
+            var { count: ios } = await supabase.from('push_tokens').select('id', { count: 'exact', head: true }).eq('platform', 'ios');
+            return { detail: count + ' tokens · Android: ' + (android||0) + ' · iOS: ' + (ios||0) };
+        }
+    },
+    failed_notifs: {
+        name: 'No recent failed sends',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var ago7 = new Date(Date.now() - 7*86400000).toISOString();
+            var { count } = await supabase.from('admin_notifications').select('id', { count: 'exact', head: true }).eq('status', 'failed').gte('created_at', ago7);
+            if (count && count > 0) return { warn: true, detail: count + ' failed notification(s) in last 7 days' };
+            return { detail: 'No failed sends in last 7 days' };
+        }
+    },
+    // IslamVoice
+    iv_episodes: {
+        name: 'Episodes in DB',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('islamvoice_episodes').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { ok: false, detail: 'No episodes found' };
+            return { detail: count + ' episodes' };
+        }
+    },
+    iv_series: {
+        name: 'Series in DB',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('islamvoice_series').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { ok: false, detail: 'No series found' };
+            return { detail: count + ' series' };
+        }
+    },
+    // Gencine
+    gencine_cats: {
+        name: 'Gencine categories',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('gencine_categories').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { ok: false, detail: 'No categories found' };
+            return { detail: count + ' categories' };
+        }
+    },
+    gencine_duas: {
+        name: 'Adhkar & Dua',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('gencine_duas').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { ok: false, detail: 'No duas found' };
+            return { detail: count + ' duas / adhkar' };
+        }
+    },
+    gencine_books: {
+        name: 'Books',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('gencine_books').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { ok: false, detail: 'No books found' };
+            var { count: active } = await supabase.from('gencine_books').select('id', { count: 'exact', head: true }).eq('active', true);
+            return { detail: count + ' books (' + (active||0) + ' active)' };
+        }
+    },
+    gencine_hadiths: {
+        name: 'Hadiths',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('gencine_hadiths').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { ok: false, detail: 'No hadiths found' };
+            return { detail: count + ' hadiths' };
+        }
+    },
+    // Prayer
+    prayer_json: {
+        name: 'Prayer data files (2026)',
+        run: async function() {
+            var r = await fetch('/prayer-data/2026/Erbil.json', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'Static JSON accessible' };
+        }
+    },
+    prayer_api: {
+        name: 'Prayer API endpoint',
+        run: async function() {
+            var r = await fetch('/prayer-kurd', { method: 'HEAD' });
+            if (!r.ok && r.status !== 405) return { warn: true, detail: 'prayer-kurd returned ' + r.status };
+            return { detail: 'Endpoint reachable' };
+        }
+    },
+    // Quran / Mushaf
+    quran_json: {
+        name: 'Quran JSON data',
+        run: async function() {
+            var r = await fetch('/data/quran.json', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'quran.json accessible' };
+        }
+    },
+    mushaf_pages: {
+        name: 'Mushaf page data',
+        run: async function() {
+            var r = await fetch('/data/mushaf-v4-pages.json?v=2', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'mushaf-v4-pages.json accessible' };
+        }
+    },
+    mushaf_fonts: {
+        name: 'QCF4 font CDN',
+        run: async function() {
+            var r = await fetch('https://qpc-v4-fonts.tefsirkurd.workers.dev/QCF4001.woff2', { method: 'HEAD', mode: 'cors' }).catch(function() { return null; });
+            if (!r) return { warn: true, detail: 'CDN unreachable from browser (CORS) — check Worker logs' };
+            if (!r.ok) return { warn: true, detail: 'CDN returned ' + r.status };
+            return { detail: 'QCF4 font CDN responds' };
+        }
+    },
+    // Tafsir
+    tafsir_json: {
+        name: 'Kurdish Tafsir JSON',
+        run: async function() {
+            var r = await fetch('/data/kurdish_tafsir.json', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'kurdish_tafsir.json accessible' };
+        }
+    },
+    // Audio
+    audio_cache_js: {
+        name: 'Audio cache script',
+        run: async function() {
+            var r = await fetch('/audio-cache.js?v=20260406a', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'audio-cache.js accessible' };
+        }
+    },
+    reciter_photos: {
+        name: 'Reciter photos (site_settings)',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('site_settings').select('key', { count: 'exact', head: true }).like('key', 'reciter_photo_%');
+            if (!count || count === 0) return { warn: true, detail: 'No reciter photos configured' };
+            return { detail: count + ' reciter photo(s) configured' };
+        }
+    },
+    // Translations
+    kmr_json: {
+        name: 'kmr.json translation file',
+        run: async function() {
+            var r = await fetch('/i18n/kmr.json', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'kmr.json accessible' };
+        }
+    },
+    kmr_bundled: {
+        name: 'kmr-bundled.js',
+        run: async function() {
+            var r = await fetch('/i18n/kmr-bundled.js?v=20260620b', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'kmr-bundled.js accessible' };
+        }
+    },
+    translations_db: {
+        name: 'Translations in DB',
+        run: async function() {
+            if (!supabase) throw new Error('Supabase not ready');
+            var { count } = await supabase.from('kurdish_translations').select('id', { count: 'exact', head: true });
+            if (!count || count === 0) return { warn: true, detail: 'No translations in DB' };
+            return { detail: count + ' translation entries' };
+        }
+    },
+    // Smart Dhikr
+    smart_dhikr_js: {
+        name: 'smart-dhikr.js',
+        run: async function() {
+            var r = await fetch('/dhikr/smart-dhikr.js?v=88', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'smart-dhikr.js accessible' };
+        }
+    },
+    dhikr_data: {
+        name: 'Dhikr data file',
+        run: async function() {
+            var r = await fetch('/dhikr/dua-data.js?v=20260326b', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'dua-data.js accessible' };
+        }
+    },
+    // Config / SW
+    config_endpoint: {
+        name: '/config endpoint',
+        run: async function() {
+            var r = await fetch('/config');
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            var d = await r.json();
+            if (!d.supabaseUrl) return { warn: true, detail: 'Config missing supabaseUrl' };
+            return { detail: 'Config valid · Supabase URL present' };
+        }
+    },
+    sw_file: {
+        name: 'Service worker file',
+        run: async function() {
+            var r = await fetch('/service-worker.js', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'service-worker.js accessible' };
+        }
+    },
+    // Core assets
+    app_js: {
+        name: 'app.min.js',
+        run: async function() {
+            var r = await fetch('/app/app.min.js?v=1211', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'app.min.js v1211 accessible' };
+        }
+    },
+    hafs_font: {
+        name: 'Hafs Quran font',
+        run: async function() {
+            var r = await fetch('/assets/fonts/hafs.woff2', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'hafs.woff2 accessible' };
+        }
+    },
+    fontawesome: {
+        name: 'FontAwesome icons',
+        run: async function() {
+            var r = await fetch('/assets/fontawesome/all.min.css', { method: 'HEAD' });
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'fontawesome CSS accessible' };
+        }
+    },
+    // Admin API functions
+    notif_api_fn: {
+        name: 'Notifications API function',
+        run: async function() {
+            var r = await apiFetch('/admin-notifications-api', 'get_stats');
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'admin-notifications-api responds' };
+        }
+    },
+    db_health_fn: {
+        name: 'DB Health API function',
+        run: async function() {
+            var r = await apiFetch('/admin-db-health-api', 'get_stats');
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: 'admin-db-health-api responds' };
+        }
+    },
+    config_fn: {
+        name: 'Config function',
+        run: async function() {
+            var r = await fetch('/config');
+            if (!r.ok) return { ok: false, detail: 'HTTP ' + r.status };
+            return { detail: '/config function responds' };
+        }
+    }
+};
+
+// ── State ────────────────────────────────────────────────────────────
+var _results = {};   // serviceId → { status:'ok'|'warn'|'err'|'idle', checks:[...] }
+var _running = false;
+
+// ── Helpers ───────────────────────────────────────────────────────────
+async function apiFetch(endpoint, action) {
+    return fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ action: action })
+    });
+}
+
+function timeAgo(ts) {
+    var s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s/60) + 'm ago';
+    return Math.floor(s/3600) + 'h ago';
+}
+
+// ── Render ────────────────────────────────────────────────────────────
+function renderGrid() {
+    var grid = document.getElementById('sh-grid');
+    grid.textContent = '';
+    SERVICES.forEach(function(svc) {
+        var card = buildCard(svc);
+        grid.appendChild(card);
+    });
+    lucide.createIcons();
+}
+
+function buildCard(svc) {
+    var res = _results[svc.id] || { status: 'idle', checks: [] };
+    var card = document.createElement('div');
+    card.className = 'sh-card ' + res.status;
+    card.id = 'card-' + svc.id;
+
+    // Header
+    var hdr = document.createElement('div');
+    hdr.className = 'sh-card-hdr';
+    hdr.onclick = function() {
+        var body = card.querySelector('.sh-card-body');
+        if (body) body.classList.toggle('open');
+    };
+
+    var iconWrap = document.createElement('div');
+    iconWrap.className = 'sh-card-icon';
+    iconWrap.style.background = svc.color + '18';
+    var ic = document.createElement('i');
+    ic.setAttribute('data-lucide', svc.icon);
+    ic.style.color = svc.color;
+    iconWrap.appendChild(ic);
+
+    var info = document.createElement('div');
+    info.className = 'sh-card-info';
+    var name = document.createElement('div');
+    name.className = 'sh-card-name';
+    name.textContent = svc.name;
+    var nameku = document.createElement('div');
+    nameku.className = 'sh-card-name-ku';
+    nameku.textContent = svc.name_ku;
+    info.appendChild(name);
+    info.appendChild(nameku);
+
+    var right = document.createElement('div');
+    right.className = 'sh-card-right';
+
+    // Status badge
+    var badge = document.createElement('div');
+    badge.className = 'sh-status ' + res.status;
+    var dot = document.createElement('span');
+    dot.className = 'sh-status-dot';
+    var label = document.createElement('span');
+    var labels = { ok: '🟢 Working', warn: '🟡 Warning', err: '🔴 Error', idle: '⚪ Not Checked' };
+    var ku_labels = { ok: 'کاردەکات', warn: 'ئاگاداری', err: 'کێشە هەیە', idle: 'پشکنین نەکراوە' };
+    label.textContent = ku_labels[res.status] || 'پشکنین نەکراوە';
+    badge.appendChild(dot);
+    badge.appendChild(label);
+
+    // Platform chips
+    var plats = document.createElement('div');
+    plats.className = 'sh-plats';
+    var platNames = { android: 'Android', ios: 'iOS', web: 'Web' };
+    Object.keys(platNames).forEach(function(p) {
+        var chip = document.createElement('div');
+        var supported = svc.platforms[p];
+        chip.className = 'sh-plat' + (supported ? (' ' + (res.status === 'idle' ? '' : res.status)) : ' na');
+        chip.textContent = platNames[p] + (supported ? (res.status === 'ok' ? ' ✅' : res.status === 'warn' ? ' ⚠️' : res.status === 'err' ? ' ❌' : ' …') : ' —');
+        plats.appendChild(chip);
+    });
+
+    right.appendChild(badge);
+    right.appendChild(plats);
+
+    hdr.appendChild(iconWrap);
+    hdr.appendChild(info);
+    hdr.appendChild(right);
+    card.appendChild(hdr);
+
+    // Body (checks detail)
+    var body = document.createElement('div');
+    body.className = 'sh-card-body';
+
+    // Re-check button
+    var recheckRow = document.createElement('div');
+    recheckRow.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:8px';
+    var recheckBtn = document.createElement('button');
+    recheckBtn.className = 'btn-recheck';
+    recheckBtn.innerHTML = '<span class="sh-spinner" style="width:11px;height:11px;border-width:2px;display:none" id="spin-'+svc.id+'"></span> <i data-lucide="refresh-cw" style="width:11px;height:11px"></i> Re-check';
+    recheckBtn.onclick = function(e) { e.stopPropagation(); runService(svc); };
+    recheckRow.appendChild(recheckBtn);
+    body.appendChild(recheckRow);
+
+    // Checks list
+    var checkList = document.createElement('div');
+    checkList.id = 'checks-' + svc.id;
+    if (res.checks.length === 0) {
+        var empty = document.createElement('div');
+        empty.style.cssText = 'font-size:12.5px;color:var(--text-tertiary);padding:4px 0';
+        empty.textContent = 'Click "Run All Checks" to test this service.';
+        checkList.appendChild(empty);
+    } else {
+        res.checks.forEach(function(ch) {
+            checkList.appendChild(buildCheckRow(ch));
+        });
+    }
+    body.appendChild(checkList);
+    card.appendChild(body);
+
+    // Link
+    if (svc.link) {
+        var link = document.createElement('a');
+        link.className = 'sh-card-link';
+        link.href = svc.link;
+        link.textContent = '→ Open ' + svc.name + ' admin page';
+        card.appendChild(link);
+    }
+
+    return card;
+}
+
+function buildCheckRow(ch) {
+    var row = document.createElement('div');
+    row.className = 'sh-check ' + ch.status;
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'flex:1;min-width:0';
+    var nameEl = document.createElement('div');
+    nameEl.className = 'sh-check-name';
+    nameEl.textContent = ch.name;
+    var detailEl = document.createElement('div');
+    detailEl.className = 'sh-check-detail';
+    detailEl.textContent = ch.detail || '';
+    wrap.appendChild(nameEl);
+    if (ch.detail) wrap.appendChild(detailEl);
+    var icon = document.createElement('i');
+    icon.className = 'sh-check-icon';
+    var iconNames = { ok: 'check-circle', warn: 'alert-triangle', err: 'x-circle', idle: 'minus-circle', running: 'loader' };
+    icon.setAttribute('data-lucide', iconNames[ch.status] || 'minus-circle');
+    row.appendChild(icon);
+    row.appendChild(wrap);
+    return row;
+}
+
+function updateCard(svc) {
+    var old = document.getElementById('card-' + svc.id);
+    if (!old) return;
+    var wasOpen = old.querySelector('.sh-card-body.open');
+    var newCard = buildCard(svc);
+    if (wasOpen) newCard.querySelector('.sh-card-body').classList.add('open');
+    old.parentNode.replaceChild(newCard, old);
+    lucide.createIcons();
+}
+
+// ── Checks runner ─────────────────────────────────────────────────────
+async function runService(svc) {
+    var spin = document.getElementById('spin-' + svc.id);
+    if (spin) spin.style.display = '';
+
+    _results[svc.id] = { status: 'idle', checks: [] };
+    var checkResults = [];
+
+    for (var i = 0; i < svc.checks.length; i++) {
+        var checkId = svc.checks[i];
+        var def = CHECK_DEFS[checkId];
+        if (!def) continue;
+
+        var ch = { name: def.name, status: 'running', detail: '' };
+        checkResults.push(ch);
+
+        try {
+            var r = await def.run();
+            // r: { ok?, warn?, detail? } — default ok=true if not set
+            if (r && r.ok === false) {
+                ch.status = 'err';
+                ch.detail = r.detail || 'Check failed';
+            } else if (r && r.warn) {
+                ch.status = 'warn';
+                ch.detail = r.detail || 'Warning';
+            } else {
+                ch.status = 'ok';
+                ch.detail = (r && r.detail) || 'OK';
+            }
+        } catch (e) {
+            ch.status = 'err';
+            ch.detail = e.message || 'Error';
+        }
+    }
+
+    // Derive service-level status
+    var hasErr  = checkResults.some(function(c) { return c.status === 'err'; });
+    var hasWarn = checkResults.some(function(c) { return c.status === 'warn'; });
+    _results[svc.id] = {
+        status: hasErr ? 'err' : hasWarn ? 'warn' : 'ok',
+        checks: checkResults,
+        ts: Date.now()
+    };
+
+    updateCard(svc);
+    if (spin) spin.style.display = 'none';
+    updateSummary();
+}
+
+async function runAllChecks() {
+    if (_running) return;
+    _running = true;
+    var btn = document.getElementById('btn-run-all');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="sh-spinner"></span> Checking…';
+
+    // Re-render grid in idle state (no previous results cleared)
+    renderGrid();
+
+    // Run all services in parallel (but stagger slightly to avoid rate-limiting)
+    var promises = SERVICES.map(function(svc) { return runService(svc); });
+    await Promise.allSettled(promises);
+
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="play"></i> Run All Checks';
+    lucide.createIcons();
+    _running = false;
+
+    var lastEl = document.getElementById('sh-last');
+    if (lastEl) lastEl.textContent = 'Last run: ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('sh-summary').style.display = '';
+    updateSummary();
+}
+
+function updateSummary() {
+    var ids = Object.keys(_results);
+    var ok = 0, warn = 0, err = 0;
+    ids.forEach(function(id) {
+        var s = _results[id].status;
+        if (s === 'ok') ok++;
+        else if (s === 'warn') warn++;
+        else if (s === 'err') err++;
+    });
+    document.getElementById('sum-ok').textContent = ok;
+    document.getElementById('sum-warn').textContent = warn;
+    document.getElementById('sum-err').textContent = err;
+    var total = SERVICES.length;
+    var msg = '';
+    if (err > 0) msg = err + ' service(s) have errors — check the red cards.';
+    else if (warn > 0) msg = warn + ' service(s) have warnings. Everything else is healthy.';
+    else if (ok > 0 && ok === ids.length) msg = 'All ' + ok + ' services are healthy ✅';
+    else msg = 'Checking ' + ids.length + ' of ' + total + ' services…';
+    document.getElementById('sum-msg').textContent = msg;
+    var sumTime = document.getElementById('sum-time');
+    if (sumTime) sumTime.textContent = new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+(async function() {
+    var isAuth = await window.adminAuth.checkAuth();
+    if (!isAuth) return;
+    token = sessionStorage.getItem('adminToken') || '';
+    supabase = window.adminAuth.getSupabase();
+    renderGrid();
+
+    // Sidebar toggle
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+    var mmt = document.getElementById('mobile-menu-toggle');
+    if (mmt) mmt.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+    });
+
+    // Theme toggle
+    var themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) themeBtn.addEventListener('click', function() {
+        var d = document.documentElement;
+        var cur = d.getAttribute('data-theme') || 'dark';
+        d.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+        localStorage.setItem('adminTheme', cur === 'dark' ? 'light' : 'dark');
+        var icon = document.getElementById('theme-icon');
+        if (icon) icon.setAttribute('data-lucide', cur === 'dark' ? 'sun' : 'moon');
+        lucide.createIcons();
+    });
+
+    lucide.createIcons();
+})();
+</script>
+<script src="/utils/admin-command-palette.js?v=2"></script>
+<script src="/utils/admin-presence-avatars.js"></script>
+</body>
+</html>
