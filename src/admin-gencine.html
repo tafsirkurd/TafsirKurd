@@ -36,6 +36,10 @@
         /* ── Adhkar filter chips ── */
         .adhkar-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border-light);cursor:pointer;white-space:nowrap;transition:all .15s}
         .adhkar-filter-btn.active{background:#3b82f6;color:#fff;border-color:transparent}
+        /* ── Priority badges ── */
+        .priority-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.02em;margin-bottom:4px}
+        .priority-badge.important{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+        .priority-badge.optional{background:var(--bg-active);color:var(--text-tertiary);border:1px solid var(--border-light)}
         /* ── Stats row ── */
         .stats-row {
             display: grid;
@@ -1108,6 +1112,14 @@
                                 <div class="form-group">
                                     <label class="form-label">Sort Order</label>
                                     <input type="number" id="adhkar-sort" class="form-input" value="10" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Priority</label>
+                                    <select id="adhkar-priority" class="form-select">
+                                        <option value="">— Normal —</option>
+                                        <option value="important">⭐ Important (pinned first)</option>
+                                        <option value="optional">○ Optional (shown last)</option>
+                                    </select>
                                 </div>
                                 <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
                                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -2667,7 +2679,13 @@ function renderAdhkarList() {
     var list = document.getElementById('adhkar-list');
     if (!list) return;
     list.textContent = '';
-    var items = adhkarCatFilter ? allAdhkar.filter(function(a){ return a.category_key === adhkarCatFilter; }) : allAdhkar;
+    var items = (adhkarCatFilter ? allAdhkar.filter(function(a){ return a.category_key === adhkarCatFilter; }) : allAdhkar.slice());
+    var priorityRank = { important: 0, '': 1, optional: 2 };
+    items.sort(function(a, b) {
+        var pa = priorityRank[a.priority || ''], pb = priorityRank[b.priority || ''];
+        if (pa !== pb) return pa - pb;
+        return (a.sort_order || 0) - (b.sort_order || 0);
+    });
     var countEl = document.getElementById('adhkar-count');
     if (countEl) countEl.textContent = items.length + ' adhkar items';
     if (!items.length) {
@@ -2687,6 +2705,11 @@ function renderAdhkarList() {
         var meta = mke('div','item-card-meta');
         meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + (item.active ? '' : ' · hidden');
         body.appendChild(catBadge);
+        if (item.priority) {
+            var pb = mke('span', 'priority-badge ' + item.priority);
+            pb.textContent = item.priority === 'important' ? '⭐ Important' : '○ Optional';
+            body.appendChild(pb);
+        }
         var aTimeLeft = _badgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
@@ -2718,6 +2741,7 @@ function editAdhkar(id) {
     document.getElementById('adhkar-source').value = item.source || '';
     document.getElementById('adhkar-repeat').value = item.repeat || 1;
     document.getElementById('adhkar-sort').value = item.sort_order || 10;
+    document.getElementById('adhkar-priority').value = item.priority || '';
     document.getElementById('adhkar-active').checked = item.active !== false;
     var body = document.getElementById('adhkar-form-body');
     body.classList.add('open');
@@ -2731,6 +2755,7 @@ function cancelAdhkarEdit() {
     document.getElementById('adhkar-source').value = '';
     document.getElementById('adhkar-repeat').value = 1;
     document.getElementById('adhkar-sort').value = 10;
+    document.getElementById('adhkar-priority').value = '';
     document.getElementById('adhkar-active').checked = true;
     document.getElementById('adhkar-form-body').classList.remove('open');
     document.getElementById('adhkar-form-toggle-label').textContent = 'Add Adhkar';
@@ -2746,6 +2771,7 @@ async function saveAdhkar() {
         source: document.getElementById('adhkar-source').value.trim() || null,
         repeat: parseInt(document.getElementById('adhkar-repeat').value) || 1,
         sort_order: parseInt(document.getElementById('adhkar-sort').value) || 10,
+        priority: document.getElementById('adhkar-priority').value || null,
         active: document.getElementById('adhkar-active').checked
     };
     var supabase = window.adminAuth.getSupabase();
