@@ -437,8 +437,9 @@ var CHECK_DEFS = {
         name: 'Prayer API endpoint',
         run: async function() {
             var r = await fetch('/prayer-kurd', { method: 'HEAD' });
-            if (!r.ok && r.status !== 405) return { warn: true, detail: 'prayer-kurd returned ' + r.status };
-            return { detail: 'Endpoint reachable' };
+            // 400 = needs query params (lat/lng/date) — endpoint exists; 405 = HEAD not allowed but route exists
+            if (!r.ok && r.status !== 405 && r.status !== 400) return { warn: true, detail: 'prayer-kurd returned ' + r.status };
+            return { detail: 'Endpoint reachable (status ' + r.status + ')' };
         }
     },
     // Quran / Mushaf
@@ -783,6 +784,7 @@ function updateCard(svc) {
 
 // ── Checks runner ─────────────────────────────────────────────────────
 async function runService(svc) {
+    if (!supabase && window.adminAuth) supabase = window.adminAuth.getSupabase();
     var spin = document.getElementById('spin-' + svc.id);
     if (spin) spin.style.display = '';
 
@@ -839,6 +841,7 @@ async function runService(svc) {
 
 async function runAllChecks() {
     if (_running) return;
+    if (!supabase && window.adminAuth) supabase = window.adminAuth.getSupabase();
     _running = true;
     var btn = document.getElementById('btn-run-all');
     btn.disabled = true;
@@ -890,7 +893,13 @@ function updateSummary() {
     var isAuth = await window.adminAuth.checkAuth();
     if (!isAuth) return;
     token = sessionStorage.getItem('adminToken') || '';
-    supabase = window.adminAuth.getSupabase();
+    // Poll until Supabase client is ready — initSupabase() inside checkAuth() is async
+    // and may not have completed yet if the /config fetch was slow.
+    for (var _si = 0; _si < 20; _si++) {
+        supabase = window.adminAuth.getSupabase();
+        if (supabase) break;
+        await new Promise(function(r) { setTimeout(r, 300); });
+    }
     renderGrid();
 
     // Sidebar toggle
