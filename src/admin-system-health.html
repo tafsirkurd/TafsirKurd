@@ -62,7 +62,6 @@
         .sh-card-icon i { width:16px; height:16px; }
         .sh-card-info { flex:1; min-width:0; }
         .sh-card-name { font-size:14px; font-weight:700; color:var(--text-primary); }
-        .sh-card-name-ku { font-size:11px; color:var(--text-tertiary); margin-top:1px; }
         .sh-card-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex-shrink:0; }
 
         /* Status badge */
@@ -667,11 +666,7 @@ function buildCard(svc) {
     var name = document.createElement('div');
     name.className = 'sh-card-name';
     name.textContent = svc.name;
-    var nameku = document.createElement('div');
-    nameku.className = 'sh-card-name-ku';
-    nameku.textContent = svc.name_ku;
     info.appendChild(name);
-    info.appendChild(nameku);
 
     var right = document.createElement('div');
     right.className = 'sh-card-right';
@@ -683,8 +678,7 @@ function buildCard(svc) {
     dot.className = 'sh-status-dot';
     var label = document.createElement('span');
     var labels = { ok: '🟢 Working', warn: '🟡 Warning', err: '🔴 Error', idle: '⚪ Not Checked' };
-    var ku_labels = { ok: 'کاردەکات', warn: 'ئاگاداری', err: 'کێشە هەیە', idle: 'پشکنین نەکراوە' };
-    label.textContent = ku_labels[res.status] || 'پشکنین نەکراوە';
+    label.textContent = labels[res.status] || 'Not Checked';
     badge.appendChild(dot);
     badge.appendChild(label);
 
