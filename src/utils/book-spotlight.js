@@ -275,7 +275,7 @@
     var labelIcon = document.createElement('i');
     labelIcon.className = 'fas fa-star';
     label.appendChild(labelIcon);
-    label.appendChild(document.createTextNode(' پێشنیارا تەفسیركورد'));
+    label.appendChild(document.createTextNode(' پێشنیارا تەفسیر كورد'));
     content.appendChild(label);
 
     var title = document.createElement('div');
