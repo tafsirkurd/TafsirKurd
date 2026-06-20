@@ -2015,11 +2015,12 @@
                 if (n.status === 'sent') {
                     (function(_id) { ag.appendChild(ncBtn('Edit (Copy)', '', function() { duplicateNotif(_id); })); })(n.id);
                 }
-                if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
+                if (n.status === 'draft' || n.status === 'failed') {
                     (function(_id) { ag.appendChild(ncBtn('Test', 'test', function() { sendTestToDevice(_id); })); })(n.id);
                     (function(_id) { ag.appendChild(ncBtn('Send', 'send', function() { openSendSafety(_id); })); })(n.id);
                 }
                 if (n.status === 'scheduled') {
+                    (function(_id) { ag.appendChild(ncBtn('Test', 'test', function() { sendTestToDevice(_id); })); })(n.id);
                     ag.appendChild(ncBtn('Cancel', '', function() { cancelNotif(n.id); }));
                 }
                 ag.appendChild(ncBtn('Copy', '', function() { duplicateNotif(n.id); }));
@@ -2039,6 +2040,37 @@
             bodyEl.textContent = n.body;
             card.appendChild(titleEl);
             card.appendChild(bodyEl);
+
+            // ── Schedule Summary Card (scheduled only) ──
+            if (n.status === 'scheduled' && n.scheduled_at) {
+                var schd = new Date(n.scheduled_at);
+                var schdIsPast = schd < new Date();
+                var schdColor = schdIsPast ? 'var(--n-red)' : 'var(--n-amber)';
+                var schdBg = schdIsPast ? 'rgba(244,63,94,.08)' : 'rgba(245,158,11,.08)';
+                var schdBorder = schdIsPast ? 'rgba(244,63,94,.2)' : 'rgba(245,158,11,.2)';
+                var schdBox = document.createElement('div');
+                schdBox.style.cssText = 'background:' + schdBg + ';border:1px solid ' + schdBorder + ';border-radius:10px;padding:10px 14px;margin:8px 0 0;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap';
+                var schdLeft = document.createElement('div');
+                var schdLbl = document.createElement('div');
+                schdLbl.style.cssText = 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:' + schdColor + ';margin-bottom:4px';
+                schdLbl.textContent = schdIsPast ? '⚠️ OVERDUE — AWAITING CRON' : '📅 Scheduled For';
+                var schdDateEl = document.createElement('div');
+                schdDateEl.style.cssText = 'font-size:13px;font-weight:700;color:var(--n-text)';
+                schdDateEl.textContent = schd.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+                var schdTimeEl = document.createElement('div');
+                schdTimeEl.style.cssText = 'font-size:12px;color:var(--n-text2);margin-top:1px';
+                var schdTZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+                schdTimeEl.textContent = schd.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' · ' + schdTZ;
+                schdLeft.appendChild(schdLbl);
+                schdLeft.appendChild(schdDateEl);
+                schdLeft.appendChild(schdTimeEl);
+                var schdBadge = document.createElement('div');
+                schdBadge.style.cssText = 'font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;white-space:nowrap;background:' + (schdIsPast ? 'rgba(244,63,94,.15)' : 'rgba(245,158,11,.15)') + ';color:' + schdColor;
+                schdBadge.textContent = schdIsPast ? '⚠️ OVERDUE' : '⏰ SCHEDULED';
+                schdBox.appendChild(schdLeft);
+                schdBox.appendChild(schdBadge);
+                card.appendChild(schdBox);
+            }
 
             // ── Footer ──
             var foot = document.createElement('div');
@@ -2618,6 +2650,32 @@
             var fd = getFormData();
             if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
             if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
+
+            // ── Safety gate: if a FUTURE schedule is set, this is a SAVE — NOT an immediate send ──
+            // "Preview & Send" with a schedule means "schedule this", not "send now".
+            if (fd.scheduled_at && new Date(fd.scheduled_at) > new Date()) {
+                var ssb = document.getElementById('save-send-btn');
+                ssb.disabled = true; ssb.textContent = 'Scheduling...';
+                try {
+                    var payload0 = Object.assign({}, fd);
+                    if (_currentEditId) payload0.id = _currentEditId;
+                    await notifAPI(_currentEditId ? 'update' : 'create', payload0);
+                    closeCreateModal();
+                    loadPage();
+                    var _dt = new Date(fd.scheduled_at);
+                    var _dtStr = _dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+                        + ' at ' + _dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+                    showToast('Scheduled for ' + _dtStr + ' ✓');
+                } catch(e) {
+                    errEl.textContent = e.message; errEl.style.display = 'block';
+                    ssb.disabled = false; ssb.textContent = '';
+                    var ic3 = document.createElement('i'); ic3.setAttribute('data-lucide', 'eye'); ssb.appendChild(ic3);
+                    ssb.appendChild(document.createTextNode(' Preview & Send')); lucide.createIcons();
+                }
+                return;
+            }
+
+            // No future schedule — proceed with immediate-send safety flow
             var btn = document.getElementById('save-send-btn');
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
@@ -2696,6 +2754,17 @@
             if (notif.deep_link_type && notif.deep_link_type !== 'none') addChip('Link: ' + notif.deep_link_type + (notif.deep_link_id ? ' #' + notif.deep_link_id : ''));
             // Update the send button label
             document.getElementById('ssp-send-btn').textContent = 'Send to ' + count.toLocaleString() + ' devices →';
+            // ── Scheduled override warning ──
+            var oldWarn = document.getElementById('ssp-sched-warn');
+            if (oldWarn) oldWarn.parentNode.removeChild(oldWarn);
+            if (notif.scheduled_at && new Date(notif.scheduled_at) > new Date()) {
+                var warn = document.createElement('div');
+                warn.id = 'ssp-sched-warn';
+                warn.style.cssText = 'background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--n-amber);margin-top:12px;line-height:1.5';
+                warn.textContent = '⚠️ This notification is scheduled for ' + formatDate(notif.scheduled_at) + '. Pressing "Send Now" will override the schedule and deliver immediately to all recipients.';
+                var step1Body = document.querySelector('#ssp-step1 .modal-body');
+                if (step1Body) step1Body.appendChild(warn);
+            }
         }
 
         function _sspAbort() {
@@ -2861,12 +2930,19 @@
             footer.appendChild(closeBtn);
 
             if (_role !== 'analyst') {
-                if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
+                if (n.status === 'draft' || n.status === 'failed') {
                     footer.appendChild(makeBtn('Edit', '', function() { closeDetailModal(); openEditModal(n); }));
                     (function(_id) {
                         footer.appendChild(makeBtn('Test on My Device', '', function() { sendTestToDevice(_id); }));
                         footer.appendChild(makeBtn('Send Now', 'btn-send-green', function() { closeDetailModal(); openSendSafety(_id); }));
                     })(n.id);
+                }
+                if (n.status === 'scheduled') {
+                    footer.appendChild(makeBtn('Edit', '', function() { closeDetailModal(); openEditModal(n); }));
+                    (function(_id) {
+                        footer.appendChild(makeBtn('Test on My Device', '', function() { sendTestToDevice(_id); }));
+                    })(n.id);
+                    footer.appendChild(makeBtn('Cancel Schedule', '', function() { closeDetailModal(); cancelNotif(n.id); }));
                 }
                 if (n.status === 'sent') {
                     (function(_id) {

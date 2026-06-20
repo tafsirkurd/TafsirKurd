@@ -600,6 +600,9 @@ async function _handleRequest(context) {
 
         if (!title || !msgBody) return json({ error: 'title and body required' }, 400);
 
+        const schedErr = validateScheduledAt(scheduled_at, recurrence, is_template);
+        if (schedErr) return json({ error: schedErr }, 400);
+
         const status = scheduled_at ? 'scheduled' : 'draft';
         const { data, error } = await supabase
             .from('admin_notifications')
@@ -641,6 +644,9 @@ async function _handleRequest(context) {
         const { title, body: msgBody, image_url, platform, audience, deep_link_type, deep_link_id,
                 scheduled_at, recurrence, recurrence_day, notes, is_template } = body;
 
+        const schedErrU = validateScheduledAt(scheduled_at, recurrence, is_template);
+        if (schedErrU) return json({ error: schedErrU }, 400);
+
         const status = scheduled_at ? 'scheduled' : 'draft';
         const { data, error } = await supabase
             .from('admin_notifications')
@@ -673,6 +679,16 @@ async function _handleRequest(context) {
         if (!notif) return json({ error: 'Not found' }, 404);
         if (notif.status === 'sending') return json({ error: 'Already sending' }, 400);
         if (notif.status === 'cancelled') return json({ error: 'Cannot send cancelled notification' }, 400);
+        if (notif.status === 'scheduled' && !body.override_schedule) {
+            const schedTime = notif.scheduled_at
+                ? new Date(notif.scheduled_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+                : 'a future time';
+            return json({
+                error: `This notification is scheduled for ${schedTime}. It will be delivered automatically by the scheduler. Cancel the schedule first, or pass override_schedule:true to send immediately.`,
+                is_scheduled: true,
+                scheduled_at: notif.scheduled_at,
+            }, 400);
+        }
         if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID) return json({ error: 'FCM not configured' }, 503);
 
         let trackingId = body.id;
@@ -808,6 +824,18 @@ async function _handleRequest(context) {
 
 function json(obj, status = 200) {
     return new Response(JSON.stringify(obj), { status, headers: CORS });
+}
+
+// Returns an error string if scheduled_at is invalid or in the past, null if OK.
+// Recurring notifications and templates are exempt from the past-time check.
+function validateScheduledAt(scheduled_at, recurrence, is_template) {
+    if (!scheduled_at || is_template) return null;
+    const schedDate = new Date(scheduled_at);
+    if (isNaN(schedDate.getTime())) return 'Invalid scheduled_at date';
+    if ((recurrence || 'none') === 'none' && schedDate <= new Date()) {
+        return 'Scheduled time is in the past. Please pick a future time.';
+    }
+    return null;
 }
 
 async function doSend(supabase, env, notif, trackingId, sentBy) {
