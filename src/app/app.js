@@ -2397,7 +2397,7 @@ function _loadGencineScripts(cb) {
   // Load dua-data.js, smart-dhikr.js, adhkar-bundle, and book-covers-map in PARALLEL (independent),
   // then load dhikr.js only after all four finish (dhikr.js depends on all four)
   var _p1 = false, _p2 = false, _p3 = false, _p4 = false;
-  function _check() { if (_p1 && _p2 && _p3 && _p4) _ls('/dhikr/dhikr.js?v=20260620a', _done); }
+  function _check() { if (_p1 && _p2 && _p3 && _p4) _ls('/dhikr/dhikr.js?v=20260620b', _done); }
   _ls('/dhikr/dua-data.js?v=20260326b',       function() { _p1 = true; _check(); });
   _ls('/dhikr/smart-dhikr.js?v=88',           function() { _p2 = true; _check(); });
   _ls('/data/gencine-bundle.js?v=1',           function() { _p3 = true; _check(); });
@@ -2529,8 +2529,9 @@ var H=(function(){
     // iOS requires selectionStart() before selectionChanged() to warm up the generator
     selection:function(){_std(function(Hp){
       var p=Hp.selectionStart();
-      if(p&&typeof p.then==='function'){p.then(function(){Hp.selectionChanged().then(function(){Hp.selectionEnd();}).catch(function(){});}).catch(function(){});}
-      else{try{Hp.selectionChanged();Hp.selectionEnd();}catch(e){}}
+      if(p&&typeof p.then==='function'){
+        p.then(function(){return Hp.selectionChanged();}).then(function(){Hp.selectionEnd();}).catch(function(e){_dbg('sel err '+e);try{Hp.impact({style:'LIGHT'});}catch(e2){}});
+      }else{try{Hp.selectionChanged();Hp.selectionEnd();}catch(e){try{Hp.impact({style:'LIGHT'});}catch(e2){}}}
     },8);},
     // light: gentle tap — tabs, toggles, back navigation, most UI interactions
     light:    function(){_std(function(Hp){return Hp.impact({style:'LIGHT'});},18);},
@@ -2586,7 +2587,7 @@ window._hapticTest=function(){
 // Legacy shim — maps old numeric patterns to named semantics.
 // All new code should call H.xxx() directly.
 // Threshold â‰¤6 → selection (steppers, tiny increments)
-// Threshold â‰¤25 → light (this upgrades old haptic([8]) calls to light — the
+// Threshold â‰¤25 → light (this upgrades old H.light() calls to light — the
 //   bread-and-butter iOS tap; â‰¤6ms callers that want selection use H.selection() directly)
 function haptic(pattern){
   var dur=pattern&&pattern[0]||20;
@@ -2597,6 +2598,7 @@ function haptic(pattern){
 }
 window.H=H;       // expose to qibla.js, dhikr.js, rating.js
 window.haptic=haptic; // expose shim for external modules
+App.haptic = function(type) { if (H && typeof H[type] === 'function') H[type](); };
 
 /* ===== DAILY REMINDER ===== */
 /* Create the 'reminder' channel on Android (capacitor.config channels[] is iOS-only) */
@@ -3817,7 +3819,7 @@ App.openSurah=function(num,scrollTo){
   if(tapGuard('openSurah',300))return; // prevent double-tap race
   var s=SURAHS[num-1]; // bounds-check before any state mutation
   if(!s){console.warn('[openSurah] invalid surah num:',num);return;}
-  haptic([8]);
+  H.light();
   var _isT=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
   // Auto-enable mushaf mode on iPad when no preference saved yet
   if(_isT&&!S.mushafMode&&localStorage.getItem('mushafMode')===null){
@@ -3846,7 +3848,7 @@ App.openSurah=function(num,scrollTo){
 };
 
 App.backToList=function(){
-  haptic([8]);
+  H.light();
   if(S.surah){
     try{localStorage.setItem('surah_scroll_'+S.surah,String($('ayahList').scrollTop))}catch(e){}
   }
@@ -5126,7 +5128,7 @@ function renderAyahs(surahNum,scrollTo){
       var wgtBtn=e.target.closest('[data-wgt]');
       if(plBtn){
         var an=+plBtn.dataset.play;
-        haptic([8]);
+        H.light();
         if(S.audio.playing&&S.audio.surah===S.surah&&S.audio.ayah===an){App.audioToggle();}
         else{playAyah(S.surah,an);}
       }
@@ -5828,14 +5830,14 @@ function _restartProgressTracking(){
 
 /* ===== SIDEBAR ===== */
 App.openSidebar=function(){
-  haptic([8]);
+  H.light();
   S.sidebar=true;
   $('sidebarOverlay').classList.add('on');
   $('sidebar').classList.add('on');
   renderSidebarList();
 };
 App.closeSidebar=function(){
-  haptic([8]);
+  H.light();
   S.sidebar=false;
   $('sidebarOverlay').classList.remove('on');
   $('sidebar').classList.remove('on');
@@ -5921,7 +5923,7 @@ function renderReaderSettings(){
       S.glyphVerses={};
       localStorage.setItem('readerFont',f.id);
       applySizes();
-      haptic([6]);
+      H.selection();
       if(S.surah)renderAyahs(S.surah);
       renderReaderSettings();
     });
@@ -5949,8 +5951,8 @@ function renderReaderSettings(){
     var ctrl=el('div','setting-stepper');
     var mBtn=el('button','stepper-btn','-');var vEl=el('span','stepper-val',cur.toFixed(1));var pBtn=el('button','stepper-btn','+');
     function upd(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;cur=v;vEl.textContent=v.toFixed(1);mBtn.disabled=(v<=min);pBtn.disabled=(v>=max);S.arSize=v;applySizes();localStorage.setItem('app_arSize',String(v));}
-    on(mBtn,'click',function(){haptic([6]);upd(parseFloat((cur-step).toFixed(1)));});
-    on(pBtn,'click',function(){haptic([6]);upd(parseFloat((cur+step).toFixed(1)));});
+    on(mBtn,'click',function(){H.selection();upd(parseFloat((cur-step).toFixed(1)));});
+    on(pBtn,'click',function(){H.selection();upd(parseFloat((cur+step).toFixed(1)));});
     mBtn.disabled=(cur<=min);pBtn.disabled=(cur>=max);
     ctrl.appendChild(mBtn);ctrl.appendChild(vEl);ctrl.appendChild(pBtn);arRow.appendChild(ctrl);
   })();
@@ -5964,8 +5966,8 @@ function renderReaderSettings(){
     var ctrl=el('div','setting-stepper');
     var mBtn=el('button','stepper-btn','-');var vEl=el('span','stepper-val',cur.toFixed(1));var pBtn=el('button','stepper-btn','+');
     function upd(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;cur=v;vEl.textContent=v.toFixed(1);mBtn.disabled=(v<=min);pBtn.disabled=(v>=max);S.tfSize=v;applySizes();localStorage.setItem('app_tfSize',String(v));}
-    on(mBtn,'click',function(){haptic([6]);upd(parseFloat((cur-step).toFixed(1)));});
-    on(pBtn,'click',function(){haptic([6]);upd(parseFloat((cur+step).toFixed(1)));});
+    on(mBtn,'click',function(){H.selection();upd(parseFloat((cur-step).toFixed(1)));});
+    on(pBtn,'click',function(){H.selection();upd(parseFloat((cur+step).toFixed(1)));});
     mBtn.disabled=(cur<=min);pBtn.disabled=(cur>=max);
     ctrl.appendChild(mBtn);ctrl.appendChild(vEl);ctrl.appendChild(pBtn);tfRow.appendChild(ctrl);
   })();
@@ -5979,8 +5981,8 @@ function renderReaderSettings(){
     var ctrl=el('div','setting-stepper');
     var mBtn=el('button','stepper-btn','-');var vEl=el('span','stepper-val',cur.toFixed(1));var pBtn=el('button','stepper-btn','+');
     function upd(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;cur=v;vEl.textContent=v.toFixed(1);mBtn.disabled=(v<=min);pBtn.disabled=(v>=max);S.lineH=v;applySizes();localStorage.setItem('app_lineH',String(v));}
-    on(mBtn,'click',function(){haptic([6]);upd(parseFloat((cur-step).toFixed(1)));});
-    on(pBtn,'click',function(){haptic([6]);upd(parseFloat((cur+step).toFixed(1)));});
+    on(mBtn,'click',function(){H.selection();upd(parseFloat((cur-step).toFixed(1)));});
+    on(pBtn,'click',function(){H.selection();upd(parseFloat((cur+step).toFixed(1)));});
     mBtn.disabled=(cur<=min);pBtn.disabled=(cur>=max);
     ctrl.appendChild(mBtn);ctrl.appendChild(vEl);ctrl.appendChild(pBtn);lhRow.appendChild(ctrl);
   })();
@@ -6084,7 +6086,7 @@ function updateMushafPlayBtn(){
   btn.appendChild(icon(isPlaying?'fas fa-pause':'fas fa-play'));
 }
 App.mushafPlayToggle=function(){
-  haptic([8]);
+  H.light();
   if(S.audio.playing&&S.audio.surah===S.surah){
     App.audioClose();
   } else {
@@ -6451,7 +6453,7 @@ function showAudioBar(){
 }
 
 App.audioToggle=function(){
-  haptic([8]);
+  H.light();
   if(S.audio.playing){
     S.audio.el.pause();S.audio.playing=false;setAudioIcon('play');updateReaderPlayState(0,0,false);
     document.body.classList.remove('mushaf-audio-playing');
@@ -6496,7 +6498,7 @@ App.audioNext=function(){
 };
 
 App.audioPrev=function(){
-  haptic([8]);
+  H.light();
   S.audio.currentRepeat=0;
   if(S.audio.ayah>1){playAyah(S.audio.surah,S.audio.ayah-1)}
   else if(S.audio.surah>1){var ps=SURAHS[S.audio.surah-2];playAyah(S.audio.surah-1,ps?ps.a:1)}
@@ -6586,8 +6588,8 @@ App.openMushafSettings=function(){
   }
   var fsCtrl=el('div','setting-stepper');
   fsMBtn=el('button','stepper-btn','-');fsPBtn=el('button','stepper-btn','+');
-  on(fsMBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize-1);});
-  on(fsPBtn,'click',function(){haptic([6]);setFsSize(S.mushafFontSize+1);});
+  on(fsMBtn,'click',function(){H.selection();setFsSize(S.mushafFontSize-1);});
+  on(fsPBtn,'click',function(){H.selection();setFsSize(S.mushafFontSize+1);});
   fsMBtn.disabled=(S.mushafFontSize<=_fsMin);fsPBtn.disabled=(S.mushafFontSize>=_fsMax);
   fsCtrl.appendChild(fsMBtn);fsCtrl.appendChild(fsVal);fsCtrl.appendChild(fsPBtn);
   body.appendChild(fsCtrl);
@@ -6600,8 +6602,8 @@ App.openMushafSettings=function(){
   (function(){
     var min=1.8,max=_lhMax,step=0.1;
     function updLh(v){v=Math.round(v*10)/10;if(v<min)v=min;if(v>max)v=max;S.mushafLineH=v;lhVal.textContent=v.toFixed(1)+'×';document.documentElement.style.setProperty('--mushaf-lh',String(v));localStorage.setItem(_lhKey,String(v));lhMBtn.disabled=(v<=min);lhPBtn.disabled=(v>=max);}
-    on(lhMBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH-step).toFixed(1)));});
-    on(lhPBtn,'click',function(){haptic([6]);updLh(parseFloat((S.mushafLineH+step).toFixed(1)));});
+    on(lhMBtn,'click',function(){H.selection();updLh(parseFloat((S.mushafLineH-step).toFixed(1)));});
+    on(lhPBtn,'click',function(){H.selection();updLh(parseFloat((S.mushafLineH+step).toFixed(1)));});
     lhMBtn.disabled=(S.mushafLineH<=min);lhPBtn.disabled=(S.mushafLineH>=max);
   })();
   lhCtrl.appendChild(lhMBtn);lhCtrl.appendChild(lhVal);lhCtrl.appendChild(lhPBtn);
@@ -6653,7 +6655,7 @@ App.showMushafVerseTafsir=function(vn,sn){
   }
   _setPlayIcon(S.audio.playing&&S.audio.surah===sn&&S.audio.ayah===vn);
   on(playBtn,'click',function(){
-    haptic([8]);
+    H.light();
     if(S.audio.playing&&S.audio.surah===sn&&S.audio.ayah===vn){
       App.audioToggle();
       _setPlayIcon(false);
@@ -7652,7 +7654,7 @@ function _buildRecPicker(){
     }
     // Click
     on(item,'click',function(){
-      haptic([8]);
+      H.light();
       App.closeRecPicker();
       if(RECITER===r.id)return;
       RECITER=r.id;
@@ -7758,7 +7760,7 @@ App.openRecPicker=function(){
   var ov=$('rpOverlay'),pk=$('recPicker');
   if(!ov||!pk)return;
   if(!_rpDragInited){_rpDragInited=true;_attachSheetDrag(pk,ov,App.closeRecPicker,$('rpList'));}
-  haptic([5]);
+  H.selection();
   ov.style.display='';ov.classList.add('open');
   pk.style.display='';pk.classList.add('open');
 };
@@ -9414,7 +9416,7 @@ function _pppCheckCelebrate(log,dKey){
   else{_pppCelebrateDay();}
 }
 function _pppCelebrateYear(log,streak,yearNum){
-  haptic([30,12,30,12,50,12,80,12,100]);
+  H.success();
   var best=calcBestPrayerStreak(log);
   var ov=document.createElement('div');ov.className='ppp-celeb-overlay year-celeb-overlay';ov.id='yearCelebOverlay';
   // 250 confetti — gold/silver/white/teal/green palette with star + circle + square shapes
@@ -9474,7 +9476,7 @@ function _pppCelebrateDay(){
   setTimeout(function(){toast.classList.remove('show');setTimeout(function(){if(toast.parentNode)toast.parentNode.removeChild(toast);},400);},2800);
 }
 function _pppCelebrateMonth(log){
-  haptic([20,10,20,10,30]);
+  H.success();
   var streak=calcPrayerStreak(log);
   var ov=document.createElement('div');ov.className='ppp-celeb-overlay';ov.id='pppCelebOverlay';
   // Confetti particles
@@ -9512,7 +9514,7 @@ App.testDayToast=function(){_pppCelebrateDay();};
 
 /* ── Khatm / Quran Journey Celebration ─────────────────────────────────── */
 function _goalCelebrateKhatm(totalRead,streak,bestStreak){
-  haptic([15,8,15,8,30,8,50]);
+  H.success();
   var khatmNum=Math.floor(totalRead/6236); // which khatm (1st, 2nd, ...)
   var ov=document.createElement('div');ov.className='ppp-celeb-overlay khatm-celeb-overlay';ov.id='khatmCelebOverlay';
   // Confetti — gold/green/white palette, more particles than prayer
@@ -9939,14 +9941,14 @@ App.confirmStartKeep=function(){
   _finishGoalSave(g,true);
 };
 App.wizardBack=function(){
-  if(S.wizardStep>0){S.wizardStep--;renderWizardStep();haptic([8]);}
+  if(S.wizardStep>0){S.wizardStep--;renderWizardStep();H.light();}
 };
 App.wizardNext=function(){
   if(S.wizardStep===0){
     if(S.wizardData.preset==null&&!S.wizardData.custom)return;
     S.wizardStep++;
     renderWizardStep();
-    haptic([8]);
+    H.light();
   } else if(S.wizardStep===1){
     var preset=PRESETS[S.wizardData.preset];
     var goal;
@@ -9961,7 +9963,7 @@ App.wizardNext=function(){
     if(hasOldData){
       S.wizardData._pendingGoal=goal;
       $('goalStartChoiceOverlay').classList.add('on');
-      haptic([8]);
+      H.light();
       return; // wait for user choice
     }
     // No old data — save cleanly with no questions
@@ -10217,7 +10219,7 @@ function _openLink(url){
 
 async function openAboutSheet(type){
   _ensureCfgSheet();
-  haptic([8]);
+  H.light();
   clear(_cfgSheetEl);
 
   var pull=el('div','cfg-sheet-pull');_cfgSheetEl.appendChild(pull);
@@ -10521,8 +10523,8 @@ function mkSliderRow(labelText,value,min,max,step,onInput,onChange){
     minusBtn.disabled=(v<=min);plusBtn.disabled=(v>=max);
     onInput(v);onChange(v);
   }
-  on(minusBtn,'click',function(){haptic([6]);update(parseFloat((cur-step).toFixed(2)));});
-  on(plusBtn,'click',function(){haptic([6]);update(parseFloat((cur+step).toFixed(2)));});
+  on(minusBtn,'click',function(){H.selection();update(parseFloat((cur-step).toFixed(2)));});
+  on(plusBtn,'click',function(){H.selection();update(parseFloat((cur+step).toFixed(2)));});
   minusBtn.disabled=(cur<=min);plusBtn.disabled=(cur>=max);
   ctrl.appendChild(minusBtn);ctrl.appendChild(valEl);ctrl.appendChild(plusBtn);
   row.appendChild(ctrl);
@@ -10530,7 +10532,7 @@ function mkSliderRow(labelText,value,min,max,step,onInput,onChange){
 }
 
 function _showIgPicker(){
-  haptic([8]);
+  H.light();
   var existing=document.getElementById('_igPickerOverlay');
   if(existing){existing.remove();return;}
   var overlay=document.createElement('div');
@@ -10755,7 +10757,7 @@ function renderSettings(){
   _dlRow.appendChild(_dlRowL);
   var _dlRowChev=icon('fas fa-chevron-left');_dlRowChev.style.cssText='color:var(--text-tertiary);font-size:.8rem;flex-shrink:0';
   _dlRow.appendChild(_dlRowChev);
-  on(_dlRow,'click',function(){haptic([8]);openDlManager();});
+  on(_dlRow,'click',function(){H.light();openDlManager();});
   g4.appendChild(_dlRow);
   // (6) Sync status panel
   if(S.user){
@@ -10940,7 +10942,7 @@ function renderSettings(){
   _rateRow.appendChild(_rateLeft);
   var _rateChev=el('span','about-nav-chevron');_rateChev.appendChild(icon('fas fa-chevron-left'));_rateRow.appendChild(_rateChev);
   on(_rateRow,'click',function(){
-    haptic([8]);
+    H.light();
     toast(t('toast.rating_opening'));
     localStorage.setItem('ratingPromptDone','true');
     var _plat=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
@@ -13220,7 +13222,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       panel.classList.remove('ptr-releasing');
       ptrSpinner.classList.remove('ptr-snapping');
       ptrSpinner.style.transition='none';
-      haptic([4]);
+      H.selection();
     }
 
     // preventDefault must be synchronous — cannot defer to rAF
@@ -13266,7 +13268,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       // Android: defer transform to rAF so .ptr-releasing transition has one frame
       // to register before the style change lands — prevents the hard jump to holdY.
       var holdY=44;
-      haptic([30]);
+      H.medium();
       if(_ptrIsAndroid){
         requestAnimationFrame(function(){
           panel.style.transform='translateY('+holdY+'px)';
@@ -14114,7 +14116,7 @@ function renderIvEpisodes(seriesId){
       e.stopPropagation();
       ivToggleSave(ep.id,ep);
       saveBtn.classList.toggle('saved',ivIsSaved(ep.id));
-      haptic([8]);
+      H.light();
     });
     item.appendChild(saveBtn);
 
@@ -14399,7 +14401,7 @@ function ivRenderSavedList(){
   }
   clear(list); list.appendChild(frag);
 }
-App.ivShowSaved=function(){$('ivSavedOverlay').classList.add('open');ivRenderSavedList();haptic([8])};
+App.ivShowSaved=function(){$('ivSavedOverlay').classList.add('open');ivRenderSavedList();H.light()};
 App.ivCloseSaved=function(){$('ivSavedOverlay').classList.remove('open')};
 
 function ivRenderHistoryList(){
@@ -14448,7 +14450,7 @@ function ivRenderHistoryList(){
   }
   clear(list); list.appendChild(frag);
 }
-App.ivShowHistory=function(){$('ivHistoryOverlay').classList.add('open');ivRenderHistoryList();haptic([8])};
+App.ivShowHistory=function(){$('ivHistoryOverlay').classList.add('open');ivRenderHistoryList();H.light()};
 App.ivCloseHistory=function(){$('ivHistoryOverlay').classList.remove('open')};
 
 App.ivToggleSearch=function(){

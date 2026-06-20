@@ -149,7 +149,7 @@ window.AppRating = {
   // or when the OS quota is exhausted.
   requestReview: function(){
     if(typeof window.toast==='function') window.toast(window.t ? window.t('toast.rating_opening') : '…بازارگەی ئەپ کرایەوە');
-    if(window.haptic) window.haptic([20]);
+    if(window.H) window.H.light();
     _openStorePage();
     localStorage.setItem('ratingPromptDone','true');
   },
@@ -171,13 +171,13 @@ window.AppRating = {
   _onRate: function(){
     _hidePopup();
     localStorage.setItem('ratingPromptDone','true');
-    if(window.haptic) window.haptic([30]);
+    if(window.H) window.H.medium();
     if(typeof window.toast==='function') window.toast(window.t ? window.t('toast.rating_opening') : '…بازارگەی ئەپ کرایەوە');
     _openStorePage();
   },
   _onLater: function(){
     _hidePopup();
-    if(window.haptic) window.haptic([8]);
+    if(window.H) window.H.light();
     // ratingLastPromptAt already set; 30-day cooldown will apply automatically
   }
 };

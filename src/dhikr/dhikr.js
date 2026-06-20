@@ -849,7 +849,7 @@ function _mkCopyBtn(text) {
       try { document.execCommand('copy'); } catch(ex){}
       document.body.removeChild(ta);
     }
-    haptic(12);
+    window.H&&window.H.light();
     ico.className = 'fas fa-check';
     btn.classList.add('copied');
     setTimeout(function(){
@@ -2178,7 +2178,7 @@ window.GencineUI = {
           shareBtn.onclick = function(e) {
             e.stopPropagation();
             navigator.share({title: h.title||'Hadith', text: shareText}).catch(function(){});
-            haptic(12);
+            window.H&&window.H.light();
           };
         })(copyText);
         detailFooter.appendChild(shareBtn);
@@ -2472,8 +2472,8 @@ window.GencineUI = {
   _tasbihTap: function(){
     this._tasbihCount++;
     // Fire only one haptic per tap — success on completion, selection otherwise
-    if(this._tasbihCount >= this._tasbihTarget){ haptic(40); }
-    else { haptic(8); }
+    if(this._tasbihCount >= this._tasbihTarget){ window.H&&window.H.success(); }
+    else { window.H&&window.H.light(); }
     this._saveState();
     this._updateRing();
   },

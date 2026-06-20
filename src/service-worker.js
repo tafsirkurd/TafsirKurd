@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1262';
+const CACHE_NAME = 'tafsir-kurd-v1263';
 
 // All files required to run the app fully offline.
 // IMPORTANT: version strings here must match the ?v= params in index.html exactly.
@@ -6,7 +6,7 @@ const CACHE_NAME = 'tafsir-kurd-v1262';
 const PRECACHE = [
   // Core app shell — index.html intentionally excluded: always served fresh from APK
   '/utils/app-hardening.js?v=2',
-  '/app/app.min.js?v=1209',
+  '/app/app.min.js?v=1210',
   '/utils/book-spotlight.js?v=12',
   '/app/app-styles.min.css?v=8',
   // Prayer module
@@ -16,7 +16,7 @@ const PRECACHE = [
   '/prayer/prayer.notifications.android.js?v=20260602b',
   '/prayer/prayer.ui.js?v=20260616d',
   // Gencine / books module (lazily loaded but pre-cached for offline)
-  '/dhikr/dhikr.js?v=20260620a',
+  '/dhikr/dhikr.js?v=20260620b',
   '/dhikr/pdf-store.js?v=20260612a',
   '/dhikr/dua-data.js?v=20260326b',
   '/dhikr/smart-dhikr.js?v=88',
