@@ -6,6 +6,8 @@
  */
 (function () {
     'use strict';
+    if (window.__ahwLoaded) return;
+    window.__ahwLoaded = true;
 
     var CACHE_KEY = 'admin_health_cache_v1';
     var CACHE_TTL = 5 * 60 * 1000; // 5 min

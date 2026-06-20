@@ -96,10 +96,4 @@
         render();
     }
 
-    // Load per-page health widget (auto-injects status strip on mapped pages)
-    (function () {
-        var s = document.createElement('script');
-        s.src = '/utils/admin-health-widget.js?v=1';
-        document.head.appendChild(s);
-    })();
 })();
