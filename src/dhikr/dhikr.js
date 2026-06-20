@@ -1537,6 +1537,10 @@ window.GencineUI = {
     var totalCount = items.length;
     var _catKey = this._adhkarCat;
     var catLabel = (window.t && window.t('adhkar.' + _catKey)) || ADHKAR_CAT_LABELS[_catKey] || _catKey;
+    var _todayStr  = new Date().toISOString().slice(0, 10);
+    var _progKey   = 'adhkar_prog_' + _catKey + '_' + _todayStr;
+    var _savedProg = 0;
+    try { _savedProg = Math.min(parseInt(localStorage.getItem(_progKey)) || 0, totalCount); } catch(e) {}
 
     // ── Inject category name + live progress into sticky header ──
     var hdrTitle = document.getElementById('gencineHdrTitle');
@@ -1553,7 +1557,11 @@ window.GencineUI = {
       var hdrProg = document.createElement('span');
       hdrProg.className = 'adhkar-hdr-progress';
       hdrProg.id = 'adhkarHdrProgress';
-      hdrProg.textContent = totalCount + ' زکر';
+      hdrProg.textContent = _savedProg >= totalCount
+        ? T('adhkar.done', 'تەمام ✓')
+        : _savedProg > 0
+          ? _savedProg + ' / ' + totalCount + ' زکر'
+          : totalCount + ' زکر';
       hdrInner.appendChild(hdrCat);
       hdrInner.appendChild(hdrProg);
       var _hdrBarWrap = document.createElement('div');
@@ -1561,6 +1569,7 @@ window.GencineUI = {
       var _hdrBarFill = document.createElement('div');
       _hdrBarFill.className = 'adhkar-hdr-bar-fill';
       _hdrBarFill.id = 'adhkarHdrBar';
+      _hdrBarFill.style.width = (_savedProg / totalCount * 100) + '%';
       _hdrBarWrap.appendChild(_hdrBarFill);
       hdrInner.appendChild(_hdrBarWrap);
       hdrTitle.appendChild(hdrInner);
@@ -1663,6 +1672,13 @@ window.GencineUI = {
 
     container.appendChild(list);
 
+    // ── Restore scroll to where the user left off today ──
+    if (_savedProg > 0 && _savedProg < totalCount && cardEls[_savedProg - 1]) {
+      requestAnimationFrame(function() {
+        cardEls[_savedProg - 1].scrollIntoView({ behavior: 'auto', block: 'start' });
+      });
+    }
+
     // ── Scroll: update live progress in sticky header ──
     var panel = document.getElementById('gencineContent');
     if (panel && hdrTitle) {
@@ -1686,8 +1702,9 @@ window.GencineUI = {
             : visIdx + ' / ' + totalCount + ' زکر';
           var _bar = document.getElementById('adhkarHdrBar');
           if (_bar) _bar.style.width = (Math.min(visIdx, totalCount) / totalCount * 100) + '%';
+          try { localStorage.setItem(_progKey, visIdx); } catch(e) {}
           if (visIdx >= totalCount) {
-            try { localStorage.setItem('adhkar_done_' + _catKey + '_' + new Date().toISOString().slice(0,10), '1'); } catch(e) {}
+            try { localStorage.setItem('adhkar_done_' + _catKey + '_' + _todayStr, '1'); } catch(e) {}
           }
         });
       }
