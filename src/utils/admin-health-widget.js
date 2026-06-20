@@ -540,31 +540,23 @@
         return panel;
     }
 
-    // ── Remove all existing strips/details from DOM ───────────────────────
-    function removeAllWidgetEls() {
-        var wasOpen = false;
-        var all = document.querySelectorAll('[id="ahw-strip"],[id="ahw-detail"]');
-        for (var i = 0; i < all.length; i++) {
-            if (all[i].id === 'ahw-detail' && all[i].style.display === 'block') wasOpen = true;
-            if (all[i].parentNode) all[i].parentNode.removeChild(all[i]);
-        }
-        return wasOpen;
+    // ── Rebuild the host container's contents ────────────────────────────
+    function setHostContent(host, strip, detail) {
+        while (host.firstChild) host.removeChild(host.firstChild);
+        host.appendChild(strip);
+        host.appendChild(detail);
     }
 
     // ── Replace strip + panel in place ───────────────────────────────────
     function updateUI(sectionId, result) {
-        var wasOpen = removeAllWidgetEls();
-
+        var host = document.getElementById('ahw-host');
+        if (!host) return;
+        var oldDetail = host.querySelector('[id="ahw-detail"]');
+        var wasOpen   = oldDetail && oldDetail.style.display === 'block';
         var newStrip  = buildStrip(sectionId, result);
         var newDetail = buildDetailPanel(sectionId, result);
         if (wasOpen) newDetail.style.display = 'block';
-
-        var pageHeader = document.querySelector('.page-header');
-        if (!pageHeader) return;
-        var container = pageHeader.parentNode;
-        var anchor = pageHeader.nextSibling;
-        container.insertBefore(newDetail, anchor);
-        container.insertBefore(newStrip, newDetail);
+        setHostContent(host, newStrip, newDetail);
     }
 
     // ── Run checks and update UI ──────────────────────────────────────────
@@ -604,22 +596,24 @@
     function init() {
         var sectionId = detectSection();
         if (!sectionId) return;
-
         var meta = SECTION_META[sectionId];
         if (!meta) return;
 
-        // Works for both layouts:
-        //   admin-system-health:  main.main-content > div.content-area > div.page-header
-        //   most other pages:     main.main-content > div.page-header   (no .content-area)
-        var pageHeader = document.querySelector('.page-header');
-        if (!pageHeader) return;
-        var container = pageHeader.parentNode;
-        if (!container) return;
-
-        // Purge any stale/duplicate widgets before inserting
-        removeAllWidgetEls();
-
         injectStyles();
+
+        // Use a single host div as the permanent anchor.
+        // If the script executes twice (Rocket Loader, bfcache, etc.) the second
+        // run finds the existing host and just refreshes its content — no duplicate.
+        var host = document.getElementById('ahw-host');
+        if (!host) {
+            var pageHeader = document.querySelector('.page-header');
+            if (!pageHeader) return;
+            var container = pageHeader.parentNode;
+            if (!container) return;
+            host = document.createElement('div');
+            host.id = 'ahw-host';
+            container.insertBefore(host, pageHeader.nextSibling);
+        }
 
         var cache  = readCache();
         var cached = cache[sectionId] || null;
@@ -629,10 +623,7 @@
         var detail = buildDetailPanel(sectionId, cached);
         if (!strip) return;
 
-        // Insert strip then detail panel, right after .page-header
-        var anchor = pageHeader.nextSibling;
-        container.insertBefore(detail, anchor);
-        container.insertBefore(strip, detail);
+        setHostContent(host, strip, detail);
 
         // Auto-run if cache is stale or missing
         if (!fresh) {
