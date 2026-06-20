@@ -587,11 +587,15 @@
         }).catch(function () { _busy = false; });
     }
 
-    // ── Wait for adminAuth to be available ───────────────────────────────
+    // ── Wait for adminAuth AND Supabase client to be ready ───────────────
     function waitForAuth(cb) {
         var n = 0;
         (function check() {
-            if (window.adminAuth && typeof window.adminAuth.getSupabase === 'function') { cb(); return; }
+            if (window.adminAuth &&
+                typeof window.adminAuth.getSupabase === 'function' &&
+                window.adminAuth.getSupabase()) {
+                cb(); return;
+            }
             if (++n < 20) setTimeout(check, 300);
         })();
     }
