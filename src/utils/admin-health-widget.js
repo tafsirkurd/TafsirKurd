@@ -435,8 +435,9 @@
         badge.onclick = function () {
             var panel = document.getElementById('ahw-detail');
             if (!panel) return;
-            var open = panel.classList.toggle('open');
-            badge.setAttribute('aria-expanded', String(open));
+            var isOpen = panel.style.display === 'block';
+            panel.style.display = isOpen ? 'none' : 'block';
+            badge.setAttribute('aria-expanded', String(!isOpen));
         };
         strip.appendChild(badge);
 
@@ -489,6 +490,7 @@
         var meta = SECTION_META[sectionId];
         var panel = el('div', 'ahw-detail');
         panel.id = 'ahw-detail';
+        panel.style.display = 'none'; // always hidden by default — don't rely on CSS timing
 
         var checks = (result && result.checks) ? result.checks : [];
 
@@ -542,11 +544,11 @@
     function updateUI(sectionId, result) {
         var oldStrip  = document.getElementById('ahw-strip');
         var oldDetail = document.getElementById('ahw-detail');
-        var wasOpen   = oldDetail && oldDetail.classList.contains('open');
+        var wasOpen   = oldDetail && oldDetail.style.display === 'block';
 
         var newStrip  = buildStrip(sectionId, result);
         var newDetail = buildDetailPanel(sectionId, result);
-        if (wasOpen) newDetail.classList.add('open');
+        if (wasOpen) newDetail.style.display = 'block';
 
         if (oldStrip && oldStrip.parentNode) {
             oldStrip.parentNode.insertBefore(newStrip,  oldStrip);
@@ -587,6 +589,7 @@
 
     // ── Main init ─────────────────────────────────────────────────────────
     function init() {
+        if (document.getElementById('ahw-strip')) return; // already injected
         var sectionId = detectSection();
         if (!sectionId) return;
 
