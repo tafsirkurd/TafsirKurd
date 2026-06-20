@@ -2488,57 +2488,63 @@ var H=(function(){
   function _hp(){return window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;}
   function _dbg(msg){if(window._hapticDebug)console.log('[Haptics]',msg);}
 
-  function _fallback(webMs){if(navigator.vibrate)navigator.vibrate([webMs]);}
+  function _fallback(webMs){
+    _dbg('fallback vibrate webMs='+webMs);
+    if(navigator.vibrate)navigator.vibrate([webMs]);
+  }
 
   function _std(cap,webMs){
-    if(!S.hapticFeedback)return;
+    if(!S.hapticFeedback){_dbg('blocked: hapticFeedback disabled in settings');return;}
     var now=Date.now();
-    if(now-_last<_MIN)return;
+    if(now-_last<_MIN){_dbg('blocked: spam guard ('+(now-_last)+'ms since last)');return;}
     _last=now;
     var Hp=_hp();
     if(Hp){
-      _dbg('cap call webMs='+webMs);
+      _dbg('→ native call webMs='+webMs);
       var p;
-      try{p=cap(Hp);}catch(e){_dbg('sync err '+e);_fallback(webMs);return;}
+      try{p=cap(Hp);}catch(e){_dbg('✗ sync throw: '+e);_fallback(webMs);return;}
       if(p&&typeof p.then==='function'){
-        p.catch(function(e){_dbg('async err '+e);_fallback(webMs);});
-      }
+        p.then(function(){_dbg('✓ native resolved');}).catch(function(e){_dbg('✗ async reject: '+e);_fallback(webMs);});
+      }else{_dbg('✓ native (sync, no promise)');}
     } else {
-      _dbg('no plugin, webMs='+webMs);
+      _dbg('✗ plugin undefined → fallback webMs='+webMs);
       _fallback(webMs);
     }
   }
   function _note(type,webPat){
-    if(!S.hapticFeedback)return;
+    if(!S.hapticFeedback){_dbg('blocked: hapticFeedback disabled in settings');return;}
     _last=Date.now()+80;
     var Hp=_hp();
     if(Hp){
-      _dbg('notification type='+type);
+      _dbg('→ notification type='+type);
       var p;
-      try{p=Hp.notification({type:type});}catch(e){_dbg('note sync err '+e);if(navigator.vibrate)navigator.vibrate(webPat);return;}
+      try{p=Hp.notification({type:type});}catch(e){_dbg('✗ note sync throw: '+e);if(navigator.vibrate)navigator.vibrate(webPat);return;}
       if(p&&typeof p.then==='function'){
-        p.catch(function(e){_dbg('note async err '+e);if(navigator.vibrate)navigator.vibrate(webPat);});
-      }
-    } else if(navigator.vibrate){
-      navigator.vibrate(webPat);
+        p.then(function(){_dbg('✓ notification resolved');}).catch(function(e){_dbg('✗ note async reject: '+e);if(navigator.vibrate)navigator.vibrate(webPat);});
+      }else{_dbg('✓ notification (sync, no promise)');}
+    } else {
+      _dbg('✗ plugin undefined → vibrate fallback');
+      if(navigator.vibrate)navigator.vibrate(webPat);
     }
   }
 
   return {
     // selection: subtlest tick — stepper adjustments, picker scrubbing, PTR arm
-    // iOS requires selectionStart() before selectionChanged() to warm up the generator
     selection:function(){_std(function(Hp){
+      _dbg('selectionStart...');
       var p=Hp.selectionStart();
       if(p&&typeof p.then==='function'){
-        p.then(function(){return Hp.selectionChanged();}).then(function(){Hp.selectionEnd();}).catch(function(e){_dbg('sel err '+e);try{Hp.impact({style:'LIGHT'});}catch(e2){}});
+        p.then(function(){_dbg('selectionStart ok → selectionChanged');return Hp.selectionChanged();})
+         .then(function(){_dbg('selectionChanged ok → selectionEnd');Hp.selectionEnd();})
+         .catch(function(e){_dbg('✗ sel chain err: '+e);try{Hp.impact({style:'LIGHT'});}catch(e2){}});
       }else{try{Hp.selectionChanged();Hp.selectionEnd();}catch(e){try{Hp.impact({style:'LIGHT'});}catch(e2){}}}
     },8);},
     // light: gentle tap — tabs, toggles, back navigation, most UI interactions
-    light:    function(){_std(function(Hp){return Hp.impact({style:'LIGHT'});},18);},
+    light:    function(){_std(function(Hp){_dbg('impact LIGHT');return Hp.impact({style:'LIGHT'});},18);},
     // medium: clear feedback — play/pause, bookmark add, PTR commit, opening players
-    medium:   function(){_std(function(Hp){return Hp.impact({style:'MEDIUM'});},35);},
+    medium:   function(){_std(function(Hp){_dbg('impact MEDIUM');return Hp.impact({style:'MEDIUM'});},35);},
     // heavy: strong — use sparingly, only for the most intentional gestures
-    heavy:    function(){_std(function(Hp){return Hp.impact({style:'HEAVY'});},55);},
+    heavy:    function(){_std(function(Hp){_dbg('impact HEAVY');return Hp.impact({style:'HEAVY'});},55);},
     // success: achievement/confirmation — goal complete, login, sync success
     success:  function(){_note('SUCCESS',[40,20,40]);},
     // warning: destructive/alert — confirm delete, dangerous actions
@@ -2550,11 +2556,14 @@ var H=(function(){
 (function(){
   try{
     var isNative=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform();
-    var Hp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+    var plugins=window.Capacitor&&window.Capacitor.Plugins;
+    var Hp=plugins&&plugins.Haptics;
     var platform=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'web';
+    var pluginKeys=plugins?Object.keys(plugins).join(','):'none';
     console.log('[Haptics] platform='+platform+' native='+!!isNative+' plugin='+!!Hp+' navVibrate='+!!navigator.vibrate);
+    console.log('[Haptics] registered plugins: '+pluginKeys);
     if(isNative&&!Hp){
-      console.warn('[Haptics] PLUGIN UNAVAILABLE on native — all haptics will be silent. Run: npx cap sync');
+      console.warn('[Haptics] PLUGIN UNAVAILABLE on native — “Haptics” missing from: '+pluginKeys);
     }
   }catch(e){console.warn('[Haptics] startup check error',e);}
 })();
@@ -2598,7 +2607,45 @@ function haptic(pattern){
 }
 window.H=H;       // expose to qibla.js, dhikr.js, rating.js
 window.haptic=haptic; // expose shim for external modules
-App.haptic = function(type) { if (H && typeof H[type] === 'function') H[type](); };
+App.haptic = function(type) {
+  if(window._hapticDebug){
+    var _pl=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'web';
+    var _nat=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+    var _Hp=!!(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics);
+    console.log('[App.haptic] type='+type+' platform='+_pl+' native='+_nat+' plugin='+_Hp+' S.hapticFeedback='+!!(window.S&&S.hapticFeedback));
+  }
+  if(H&&typeof H[type]==='function')H[type]();
+  else if(window._hapticDebug)console.warn('[App.haptic] unknown type: '+type);
+};
+
+// Full diagnostic dump — run window._hapticDiag() in Safari Web Inspector
+window._hapticDiag=function(){
+  var pl=window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():'web';
+  var nat=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+  var plugins=window.Capacitor&&window.Capacitor.Plugins;
+  var Hp=plugins&&plugins.Haptics;
+  console.log('=== HAPTIC DIAGNOSTIC ===');
+  console.log('A) platform:',pl);
+  console.log('B) isNativePlatform:',nat);
+  console.log('C) S.hapticFeedback:',!!(window.S&&S.hapticFeedback));
+  console.log('D) navigator.vibrate:',!!navigator.vibrate);
+  console.log('E) Capacitor.Plugins keys:',plugins?Object.keys(plugins).join(', '):'NO PLUGINS OBJECT');
+  console.log('F) Capacitor.Plugins.Haptics:',Hp);
+  if(Hp){
+    console.log('G) Haptics methods:',Object.keys(Hp).join(', '));
+    console.log('H) Testing impact LIGHT...');
+    try{
+      var p=Hp.impact({style:'LIGHT'});
+      if(p&&typeof p.then==='function')p.then(function(){console.log('H) impact LIGHT: RESOLVED ✓');}).catch(function(e){console.error('H) impact LIGHT: REJECTED ✗',e);});
+      else console.log('H) impact LIGHT: sync ok (no promise) ✓');
+    }catch(e){console.error('H) impact LIGHT: THREW ✗',e);}
+  }else{
+    console.warn('F) Haptics plugin UNDEFINED — not registered in native binary');
+    console.warn('   Fix: add bridge?.registerPluginInstance(HapticsPlugin()) in capacitorDidLoad()');
+    console.warn('   And: import CapacitorHaptics in MainViewController.swift');
+  }
+  console.log('=== END DIAGNOSTIC ===');
+};
 
 /* ===== DAILY REMINDER ===== */
 /* Create the 'reminder' channel on Android (capacitor.config channels[] is iOS-only) */
