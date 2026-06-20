@@ -824,6 +824,13 @@ async function runService(svc) {
         ts: Date.now()
     };
 
+    // Write to shared cache so per-page health widgets show fresh results
+    try {
+        var _hc = JSON.parse(localStorage.getItem('admin_health_cache_v1') || '{}');
+        _hc[svc.id] = _results[svc.id];
+        localStorage.setItem('admin_health_cache_v1', JSON.stringify(_hc));
+    } catch (e) {}
+
     updateCard(svc);
     if (spin) spin.style.display = 'none';
     updateSummary();
