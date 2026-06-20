@@ -36,10 +36,9 @@
         /* ── Adhkar filter chips ── */
         .adhkar-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border-light);cursor:pointer;white-space:nowrap;transition:all .15s}
         .adhkar-filter-btn.active{background:#3b82f6;color:#fff;border-color:transparent}
-        /* ── Priority badges ── */
-        .priority-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.02em;margin-bottom:4px}
-        .priority-badge.important{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
-        .priority-badge.optional{background:var(--bg-active);color:var(--text-tertiary);border:1px solid var(--border-light)}
+        /* ── Priority / sort inline actions ── */
+        .icon-action.star-active { color: #f59e0b !important; }
+        .adhkar-pos { display:inline-block;min-width:20px;text-align:center;font-size:11px;font-weight:700;color:var(--text-tertiary);background:var(--bg-active);border-radius:6px;padding:1px 5px;margin-left:4px; }
         /* ── Stats row ── */
         .stats-row {
             display: grid;
@@ -1113,15 +1112,7 @@
                                     <label class="form-label">Sort Order</label>
                                     <input type="number" id="adhkar-sort" class="form-input" value="10" min="0">
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Priority</label>
-                                    <select id="adhkar-priority" class="form-select">
-                                        <option value="">— Normal —</option>
-                                        <option value="important">⭐ Important (pinned first)</option>
-                                        <option value="optional">○ Optional (shown last)</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
+<div class="form-group" style="justify-content:flex-end;align-items:flex-end">
                                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                                         <input type="checkbox" id="adhkar-active" checked>
                                         <span class="form-label" style="margin:0">Active</span>
@@ -2705,11 +2696,6 @@ function renderAdhkarList() {
         var meta = mke('div','item-card-meta');
         meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + (item.active ? '' : ' · hidden');
         body.appendChild(catBadge);
-        if (item.priority) {
-            var pb = mke('span', 'priority-badge ' + item.priority);
-            pb.textContent = item.priority === 'important' ? '⭐ Important' : '○ Optional';
-            body.appendChild(pb);
-        }
         var aTimeLeft = _badgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
@@ -2724,12 +2710,52 @@ function renderAdhkarList() {
         }
         body.appendChild(arEl); body.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
+        // ⭐ Star — toggle important
+        var starBtn = mkIconBtn('star', item.priority === 'important' ? 'Remove important' : 'Mark as important', false, (function(it){ return function(){ toggleAdhkarImportant(it); }; })(item));
+        if (item.priority === 'important') starBtn.classList.add('star-active');
+        acts.appendChild(starBtn);
+        // ↑ ↓ — reorder within category
+        acts.appendChild(mkIconBtn('arrow-up',   'Move up',   false, (function(id){ return function(){ moveAdhkar(id, -1); }; })(item.id)));
+        acts.appendChild(mkIconBtn('arrow-down', 'Move down', false, (function(id){ return function(){ moveAdhkar(id,  1); }; })(item.id)));
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(id){ return function(){ editAdhkar(id); }; })(item.id)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteAdhkar(id); }; })(item.id)));
         card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function toggleAdhkarImportant(item) {
+    var newPriority = item.priority === 'important' ? null : 'important';
+    var sb = window.adminAuth.getSupabase();
+    var r = await sb.from('gencine_adhkar').update({ priority: newPriority }).eq('id', item.id);
+    if (r.error) { showNotification('Failed: ' + r.error.message, 'error'); return; }
+    item.priority = newPriority;
+    renderAdhkarList();
+    localStorage.removeItem('gencine_adhkar_v1');
+}
+
+async function moveAdhkar(itemId, dir) {
+    var item = allAdhkar.find(function(x){ return x.id === itemId; });
+    if (!item) return;
+    var group = allAdhkar.filter(function(a){
+        return a.category_key === item.category_key && (a.priority || null) === (item.priority || null);
+    }).sort(function(a, b){ return (a.sort_order || 0) - (b.sort_order || 0); });
+    var idx = group.findIndex(function(a){ return a.id === itemId; });
+    var swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= group.length) return;
+    var other = group[swapIdx];
+    var tmp = item.sort_order || 0;
+    item.sort_order = other.sort_order || 0;
+    other.sort_order = tmp;
+    if (item.sort_order === other.sort_order) { dir > 0 ? other.sort_order++ : item.sort_order++; }
+    var sb = window.adminAuth.getSupabase();
+    await Promise.all([
+        sb.from('gencine_adhkar').update({ sort_order: item.sort_order }).eq('id', item.id),
+        sb.from('gencine_adhkar').update({ sort_order: other.sort_order }).eq('id', other.id)
+    ]);
+    renderAdhkarList();
+    localStorage.removeItem('gencine_adhkar_v1');
 }
 
 function editAdhkar(id) {
@@ -2741,7 +2767,6 @@ function editAdhkar(id) {
     document.getElementById('adhkar-source').value = item.source || '';
     document.getElementById('adhkar-repeat').value = item.repeat || 1;
     document.getElementById('adhkar-sort').value = item.sort_order || 10;
-    document.getElementById('adhkar-priority').value = item.priority || '';
     document.getElementById('adhkar-active').checked = item.active !== false;
     var body = document.getElementById('adhkar-form-body');
     body.classList.add('open');
@@ -2755,7 +2780,6 @@ function cancelAdhkarEdit() {
     document.getElementById('adhkar-source').value = '';
     document.getElementById('adhkar-repeat').value = 1;
     document.getElementById('adhkar-sort').value = 10;
-    document.getElementById('adhkar-priority').value = '';
     document.getElementById('adhkar-active').checked = true;
     document.getElementById('adhkar-form-body').classList.remove('open');
     document.getElementById('adhkar-form-toggle-label').textContent = 'Add Adhkar';
@@ -2771,7 +2795,6 @@ async function saveAdhkar() {
         source: document.getElementById('adhkar-source').value.trim() || null,
         repeat: parseInt(document.getElementById('adhkar-repeat').value) || 1,
         sort_order: parseInt(document.getElementById('adhkar-sort').value) || 10,
-        priority: document.getElementById('adhkar-priority').value || null,
         active: document.getElementById('adhkar-active').checked
     };
     var supabase = window.adminAuth.getSupabase();
