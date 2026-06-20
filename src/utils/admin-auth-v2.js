@@ -7,6 +7,18 @@ let adminPermissions = [];
 async function initSupabase() {
     if (supabaseClient) return true;
 
+    // Ensure supabase-js global is available — Rocket Loader can defer the
+    // <head> CDN script so window.supabase is undefined at call time.
+    if (!window.supabase) {
+        await new Promise(function(resolve, reject) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0/dist/umd/supabase.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
     try {
         const configResponse = await fetch('/config');
         if (!configResponse.ok) {
