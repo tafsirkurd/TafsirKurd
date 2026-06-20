@@ -1,5 +1,5 @@
 // Admin Notifications API — full CRUD + FCM send
-// Actions: list, get, create, update, send, cancel, delete, duplicate, get_stats, get_token_count
+// Actions: list, get, create, update, send, send_test, cancel, delete, duplicate, get_stats, get_token_count
 import { createClient } from '@supabase/supabase-js';
 
 const CORS = {
@@ -697,6 +697,27 @@ async function _handleRequest(context) {
                       stale_removed: r.stale_removed, next_scheduled: notif.recurrence !== 'none' });
     }
 
+    // ── SEND TEST (admin's own devices only — no DB status change) ─
+    if (action === 'send_test') {
+        if (!body.id) return json({ error: 'id required' }, 400);
+
+        const { data: notif } = await supabase.from('admin_notifications').select('*').eq('id', body.id).single();
+        if (!notif) return json({ error: 'Not found' }, 404);
+        if (!env.FCM_SERVICE_ACCOUNT || !env.FCM_PROJECT_ID) return json({ error: 'FCM not configured' }, 503);
+
+        const { data: myTokens } = await supabase
+            .from('push_tokens')
+            .select('token, platform')
+            .eq('user_id', session.user_id);
+
+        if (!myTokens?.length)
+            return json({ error: 'No device tokens found for your account. Open TafsirKurd on your device and log in, then try again.' }, 400);
+
+        const r = await doSendTokenList(env, notif, myTokens);
+        if (r.error) return json({ error: r.error }, 500);
+        return json({ success: true, sent: r.sent, failed: r.failed, total: r.total });
+    }
+
     // ── CANCEL ────────────────────────────────────────────────────
     if (action === 'cancel') {
         if (!body.id) return json({ error: 'id required' }, 400);
@@ -908,6 +929,51 @@ async function doSend(supabase, env, notif, trackingId, sentBy) {
     }
 
     return { sent: successCount, failed: failCount, total: tokens.length, stale_removed: staleTokens.length };
+}
+
+async function doSendTokenList(env, notif, tokens) {
+    if (!tokens.length) return { sent: 0, failed: 0, total: 0 };
+
+    const apnsTokens = tokens.filter(t => isApnsToken(t.token));
+    const fcmTokens  = tokens.filter(t => !isApnsToken(t.token));
+
+    let accessToken = null;
+    if (fcmTokens.length && env.FCM_SERVICE_ACCOUNT) {
+        try { accessToken = await getFCMAccessToken(env.FCM_SERVICE_ACCOUNT); }
+        catch (e) { if (!apnsTokens.length) return { error: 'FCM auth: ' + e.message }; }
+    }
+
+    let apnsJwt = null;
+    if (apnsTokens.length && env.APNS_KEY_P8) {
+        try { apnsJwt = await getAPNsJWT(env.APNS_KEY_P8, env.APNS_KEY_ID || 'KLG2RRCRNR', env.APNS_TEAM_ID || '8KA7UDSC9D'); }
+        catch (e) { /* proceed without APNs */ }
+    }
+
+    const deepLinkData = buildDeepLinkData(notif.deep_link_type, notif.deep_link_id);
+    const FCM_URL = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`;
+    let successCount = 0, failCount = 0;
+
+    const CHUNK = 200;
+    const allJobs = [
+        ...fcmTokens.map(({ token, platform }) => async () => {
+            if (!accessToken) { failCount++; return; }
+            const res = await fetch(FCM_URL, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: buildFCMMessage(token, platform, notif.title, notif.body, notif.image_url, deepLinkData) }),
+            });
+            if (res.ok) { successCount++; } else { failCount++; }
+        }),
+        ...apnsTokens.map(({ token }) => async () => {
+            if (!apnsJwt) { failCount++; return; }
+            const res = await sendApns(token, notif.title, notif.body, deepLinkData, apnsJwt, 'com.tafsirkurd.app');
+            if (res.ok) { successCount++; } else { failCount++; }
+        }),
+    ];
+    for (let i = 0; i < allJobs.length; i += CHUNK) {
+        await Promise.allSettled(allJobs.slice(i, i + CHUNK).map(fn => fn()));
+    }
+    return { sent: successCount, failed: failCount, total: tokens.length };
 }
 
 async function getTokensForAudience(env, audience, platform) {

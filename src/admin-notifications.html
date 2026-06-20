@@ -307,6 +307,57 @@
         .notif-stats { font-size:12px; color:var(--n-text2); white-space:nowrap; }
         .notif-stats .ok  { color:var(--n-green); }
         .notif-stats .bad { color:var(--n-red); }
+
+        /* ─── Safety Send Modal ──────────────────────────────────── */
+        .nc-btn--test { background:rgba(79,142,247,.12); color:var(--n-blue); border-color:rgba(79,142,247,.2); }
+        .nc-btn--test:hover { background:rgba(79,142,247,.22); }
+        .ssp-count-box {
+            display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+            background:var(--n-surface2); border:1px solid var(--n-border); border-radius:12px;
+            padding:16px 20px; margin-bottom:16px;
+        }
+        .ssp-count-num { font-size:40px; font-weight:800; color:var(--n-text); font-family:var(--n-mono); line-height:1; }
+        .ssp-count-lbl { font-size:11px; color:var(--n-text2); text-transform:uppercase; letter-spacing:.07em; margin-top:4px; }
+        .ssp-count-loading { font-size:14px; color:var(--n-text3); }
+        .ssp-phone-wrap { display:flex; justify-content:center; margin-bottom:16px; }
+        .ssp-notif-card {
+            width:272px; background:#1c1c1e; border-radius:15px; padding:12px 14px;
+            border:1px solid rgba(255,255,255,.07); box-shadow:0 6px 28px rgba(0,0,0,.5);
+        }
+        .ssp-notif-hdr { display:flex; align-items:center; gap:7px; margin-bottom:7px; }
+        .ssp-notif-dot { width:20px; height:20px; background:#10b981; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+        .ssp-notif-app-name { font-size:11px; font-weight:600; color:rgba(235,235,245,.5); flex:1; }
+        .ssp-notif-time-lbl { font-size:11px; color:rgba(235,235,245,.28); }
+        .ssp-notif-t { font-size:13px; font-weight:600; color:#ebebf5; margin-bottom:2px; word-break:break-word; }
+        .ssp-notif-b { font-size:12px; color:rgba(235,235,245,.55); line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
+        .ssp-meta-chips { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
+        .ssp-chip { background:var(--n-surface2); border:1px solid var(--n-border); border-radius:7px; padding:4px 10px; font-size:11px; font-weight:600; color:var(--n-text2); }
+        .ssp-divider { height:1px; background:var(--n-border); margin:16px 0; }
+        /* Step 2: type confirm */
+        .ssp-type-wrap { text-align:center; padding:10px 0 4px; }
+        .ssp-tci-heading { font-size:16px; font-weight:700; color:var(--n-text); margin-bottom:6px; }
+        .ssp-tci-sub { font-size:13px; color:var(--n-text2); margin-bottom:24px; line-height:1.5; }
+        .ssp-tci-input {
+            display:block; width:100%; max-width:260px; margin:0 auto;
+            padding:13px 16px; border:2px solid var(--n-border2); border-radius:10px;
+            background:var(--n-bg); color:var(--n-text); font-size:20px; font-weight:700;
+            text-align:center; font-family:var(--n-mono); letter-spacing:4px;
+            transition:border-color .15s; box-sizing:border-box;
+        }
+        .ssp-tci-input:focus { outline:none; border-color:var(--n-blue); }
+        .ssp-tci-input.ok { border-color:var(--n-green); color:var(--n-green); }
+        /* Step 3: countdown */
+        .ssp-countdown-wrap { text-align:center; padding:18px 0 4px; }
+        .ssp-cd-circle {
+            width:96px; height:96px; border-radius:50%; position:relative;
+            display:flex; align-items:center; justify-content:center; margin:0 auto 18px;
+        }
+        .ssp-cd-svg { position:absolute; inset:0; transform:rotate(-90deg); width:96px; height:96px; }
+        .ssp-cd-track { fill:none; stroke:var(--n-red-bg); stroke-width:8; }
+        .ssp-cd-fill  { fill:none; stroke:var(--n-red); stroke-width:8; stroke-linecap:round; stroke-dasharray:276.46; stroke-dashoffset:0; transition:stroke-dashoffset .95s linear; }
+        .ssp-cd-num { font-size:30px; font-weight:800; color:var(--n-text); font-family:var(--n-mono); position:relative; line-height:1; }
+        .ssp-cd-lbl { font-size:14px; color:var(--n-text2); margin-bottom:4px; }
+        .ssp-cd-sub { font-size:12px; color:var(--n-text3); }
     </style>
 
     <style id="early-sidebar-hide">
@@ -976,8 +1027,8 @@
                 <button class="btn btn-primary" id="save-btn" onclick="saveNotification()" style="font-size:13px">
                     <i data-lucide="save"></i> Save
                 </button>
-                <button class="btn btn-primary btn-send-green" id="save-send-btn" onclick="saveAndSend()" style="font-size:13px">
-                    <i data-lucide="send"></i> Send Now
+                <button class="btn btn-primary btn-send-green" id="save-send-btn" onclick="saveAndOpenSafety()" style="font-size:13px">
+                    <i data-lucide="eye"></i> Preview &amp; Send
                 </button>
             </div>
         </div>
@@ -1736,18 +1787,9 @@
             var sendBtn = document.createElement('button');
             sendBtn.className = 'tmpl-btn-send';
             sendBtn.textContent = 'Send Now';
-            sendBtn.onclick = async function() {
-                if (sendBtn.disabled) return;
-                sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
-                try {
-                    var result = await notifAPI('send', { id: n.id });
-                    loadPage();
-                    showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
-                } catch(e) {
-                    sendBtn.disabled = false; sendBtn.textContent = 'Send Now';
-                    showToast('Send failed: ' + e.message, true);
-                }
-            };
+            (function(_id) {
+                sendBtn.onclick = function() { openSendSafety(_id); };
+            })(n.id);
 
             var editBtn = document.createElement('button');
             editBtn.className = 'tmpl-btn-edit';
@@ -1970,8 +2012,12 @@
                 if (n.status === 'draft' || n.status === 'scheduled') {
                     ag.appendChild(ncBtn('Edit', '', function() { openEditModal(n); }));
                 }
+                if (n.status === 'sent') {
+                    (function(_id) { ag.appendChild(ncBtn('Edit (Copy)', '', function() { duplicateNotif(_id); })); })(n.id);
+                }
                 if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
-                    (function() { var sb = ncBtn('Send', 'send', function() { confirmSend(n.id, sb); }); ag.appendChild(sb); })();
+                    (function(_id) { ag.appendChild(ncBtn('Test', 'test', function() { sendTestToDevice(_id); })); })(n.id);
+                    (function(_id) { ag.appendChild(ncBtn('Send', 'send', function() { openSendSafety(_id); })); })(n.id);
                 }
                 if (n.status === 'scheduled') {
                     ag.appendChild(ncBtn('Cancel', '', function() { cancelNotif(n.id); }));
@@ -2286,7 +2332,7 @@
             var sb = document.getElementById('save-btn');
             if (sb) { sb.disabled = false; sb.innerHTML = '<i data-lucide="save"></i> Save'; lucide.createIcons(); }
             var ssb = document.getElementById('save-send-btn');
-            if (ssb) { ssb.disabled = false; ssb.innerHTML = '<i data-lucide="send"></i> Save &amp; Send Now'; lucide.createIcons(); }
+            if (ssb) { ssb.disabled = false; ssb.innerHTML = '<i data-lucide="eye"></i> Preview &amp; Send'; lucide.createIcons(); }
         }
 
         function clearForm() {
@@ -2566,74 +2612,165 @@
             }
         }
 
-        async function saveAndSend() {
+        async function saveAndOpenSafety() {
             var errEl = document.getElementById('modal-error');
             errEl.style.display = 'none';
             var fd = getFormData();
             if (!fd.title) { errEl.textContent = 'Title is required'; errEl.style.display = 'block'; return; }
             if (!fd.body)  { errEl.textContent = 'Body is required';  errEl.style.display = 'block'; return; }
             var btn = document.getElementById('save-send-btn');
-            btn.disabled = true; btn.textContent = 'Sending...';
+            btn.disabled = true; btn.textContent = 'Saving...';
             try {
-                fd.scheduled_at = null;
                 var payload = Object.assign({}, fd);
                 if (_currentEditId) payload.id = _currentEditId;
                 var saved = await notifAPI(_currentEditId ? 'update' : 'create', payload);
-                var result = await notifAPI('send', { id: saved.notification.id });
                 closeCreateModal();
-                loadPage();
-                showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
+                await openSendSafety(saved.notification.id);
             } catch(e) {
                 errEl.textContent = e.message;
                 errEl.style.display = 'block';
                 btn.disabled = false;
                 btn.textContent = '';
-                var ic2 = document.createElement('i'); ic2.setAttribute('data-lucide', 'send'); btn.appendChild(ic2);
-                btn.appendChild(document.createTextNode(' Save & Send Now'));
+                var ic2 = document.createElement('i'); ic2.setAttribute('data-lucide', 'eye'); btn.appendChild(ic2);
+                btn.appendChild(document.createTextNode(' Preview & Send'));
                 lucide.createIcons();
             }
         }
 
-        // ── Actions ──────────────────────────────────────────────
-        var _sending = {};
-        var _confirmTimers = {};
-        async function confirmSend(id, btn) {
-            if (_sending[id]) return;
-            // Two-click inline confirm: first click arms the button, second click fires.
-            // Avoids browser confirm() which can be silently blocked or accidentally dismissed.
-            if (!btn._armed) {
-                btn._armed = true;
-                var _prevText = btn.textContent;
-                btn.textContent = 'Sure?';
-                btn.style.cssText = 'background:var(--n-red)!important;color:#fff!important;border-color:var(--n-red)!important';
-                clearTimeout(_confirmTimers[id]);
-                _confirmTimers[id] = setTimeout(function() {
-                    if (btn._armed) {
-                        btn._armed = false;
-                        btn.textContent = _prevText;
-                        btn.style.cssText = '';
-                    }
-                    delete _confirmTimers[id];
-                }, 3000);
-                return;
+        // ── Safety Send Flow ──────────────────────────────────────
+        var _sspId = null, _sspCount = 0, _sspNotif = null;
+        var _sspTimerId = null, _sspCancelled = false;
+        var _SSP_CIRC = 276.46; // 2π × 44 (SVG circle radius)
+
+        async function openSendSafety(id) {
+            _sspId = id; _sspCount = 0; _sspNotif = null;
+            _sspShowStep(1);
+            document.getElementById('send-safety-modal').classList.add('active');
+            // Show loading state
+            var cb = document.getElementById('ssp-count-box');
+            while (cb.firstChild) cb.removeChild(cb.firstChild);
+            var ld = document.createElement('span'); ld.className = 'ssp-count-loading'; ld.textContent = 'Loading...'; cb.appendChild(ld);
+            document.getElementById('ssp-preview-title').textContent = '';
+            document.getElementById('ssp-preview-body').textContent = '';
+            try {
+                var r = await notifAPI('get', { id: id });
+                _sspNotif = r.notification;
+                var tc = await notifAPI('get_token_count', { audience: _sspNotif.audience, platform: _sspNotif.platform });
+                _sspCount = tc.count || 0;
+                _sspFillStep1(_sspNotif, _sspCount);
+            } catch(e) {
+                document.getElementById('send-safety-modal').classList.remove('active');
+                showToast('Failed to load notification: ' + e.message, true);
             }
-            // Second click — fire the send
-            btn._armed = false;
-            clearTimeout(_confirmTimers[id]);
-            delete _confirmTimers[id];
-            _sending[id] = true;
-            if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; btn.style.cssText = ''; }
+        }
+
+        function _sspShowStep(n) {
+            [1,2,3].forEach(function(i) {
+                var el = document.getElementById('ssp-step' + i);
+                if (el) el.style.display = (i === n) ? '' : 'none';
+            });
+        }
+
+        function _sspFillStep1(notif, count) {
+            // Recipient count
+            var cb = document.getElementById('ssp-count-box');
+            while (cb.firstChild) cb.removeChild(cb.firstChild);
+            var left = document.createElement('div');
+            var num = document.createElement('div'); num.className = 'ssp-count-num'; num.textContent = count.toLocaleString(); left.appendChild(num);
+            var lbl = document.createElement('div'); lbl.className = 'ssp-count-lbl'; lbl.textContent = 'Recipients'; left.appendChild(lbl);
+            cb.appendChild(left);
+            var right = document.createElement('div'); right.style.cssText = 'font-size:12px;color:var(--n-text3);text-align:right;line-height:1.6';
+            right.textContent = labelPlatform(notif.platform) + '\n' + labelAudience(notif.audience);
+            right.style.whiteSpace = 'pre-line';
+            cb.appendChild(right);
+            // Phone preview
+            document.getElementById('ssp-preview-title').textContent = notif.title || '';
+            document.getElementById('ssp-preview-body').textContent = notif.body || '';
+            // Meta chips
+            var mc = document.getElementById('ssp-meta-chips');
+            while (mc.firstChild) mc.removeChild(mc.firstChild);
+            function addChip(txt) { var c = document.createElement('span'); c.className = 'ssp-chip'; c.textContent = txt; mc.appendChild(c); }
+            addChip(labelPlatform(notif.platform));
+            addChip(labelAudience(notif.audience));
+            if (notif.scheduled_at) addChip('Scheduled: ' + formatDate(notif.scheduled_at));
+            if (notif.deep_link_type && notif.deep_link_type !== 'none') addChip('Link: ' + notif.deep_link_type + (notif.deep_link_id ? ' #' + notif.deep_link_id : ''));
+            // Update the send button label
+            document.getElementById('ssp-send-btn').textContent = 'Send to ' + count.toLocaleString() + ' devices →';
+        }
+
+        function _sspAbort() {
+            _sspCancelled = true;
+            if (_sspTimerId) { clearInterval(_sspTimerId); _sspTimerId = null; }
+            document.getElementById('send-safety-modal').classList.remove('active');
+            _sspId = null;
+        }
+
+        function _sspAdvanceTo2() {
+            _sspShowStep(2);
+            document.getElementById('ssp-count2').textContent = _sspCount.toLocaleString();
+            var inp = document.getElementById('ssp-tci-input');
+            inp.value = ''; inp.className = 'ssp-tci-input';
+            document.getElementById('ssp-confirm-btn').disabled = true;
+        }
+
+        function _sspCheckInput() {
+            var inp = document.getElementById('ssp-tci-input');
+            var ok = inp.value === 'SEND';
+            inp.className = 'ssp-tci-input' + (ok ? ' ok' : '');
+            document.getElementById('ssp-confirm-btn').disabled = !ok;
+        }
+
+        function _sspStartCountdown() {
+            _sspShowStep(3);
+            _sspCancelled = false;
+            document.getElementById('ssp-count3').textContent = _sspCount.toLocaleString();
+            var seconds = 30;
+            var fill = document.getElementById('ssp-cd-fill');
+            // Full circle at start (dashoffset = 0), shrinks to 0 as time runs out
+            function updateRing(s) {
+                fill.style.strokeDashoffset = (_SSP_CIRC * (1 - s / 30)).toFixed(2);
+                document.getElementById('ssp-cd-num').textContent = s;
+            }
+            updateRing(seconds);
+            _sspTimerId = setInterval(function() {
+                if (_sspCancelled) { clearInterval(_sspTimerId); return; }
+                seconds--;
+                updateRing(seconds);
+                if (seconds <= 0) { clearInterval(_sspTimerId); _sspExecuteSend(); }
+            }, 1000);
+        }
+
+        function _sspAbortCountdown() {
+            _sspCancelled = true;
+            if (_sspTimerId) { clearInterval(_sspTimerId); _sspTimerId = null; }
+            document.getElementById('send-safety-modal').classList.remove('active');
+            showToast('Delivery cancelled');
+        }
+
+        async function _sspExecuteSend() {
+            var id = _sspId;
+            document.getElementById('send-safety-modal').classList.remove('active');
             try {
                 var result = await notifAPI('send', { id: id });
                 loadPage();
                 showToast('Sent to ' + result.sent + ' of ' + result.total + ' devices');
-            } catch(e) {
-                if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
-                showToast('Send failed: ' + e.message, true);
-            } finally {
-                delete _sending[id];
-            }
+            } catch(e) { showToast('Send failed: ' + e.message, true); }
         }
+
+        async function sendTestToDevice(id) {
+            try {
+                var r = await notifAPI('send_test', { id: id });
+                showToast('Test sent to ' + r.sent + ' of ' + r.total + ' of your device(s)');
+            } catch(e) { showToast('Test failed: ' + e.message, true); }
+        }
+
+        async function _sspTestFromModal() {
+            if (!_sspId) return;
+            await sendTestToDevice(_sspId);
+        }
+
+        // ── Legacy shim (called from detail modal) ───────────────
+        function confirmSend(id, btn) { openSendSafety(id); }
 
         async function cancelNotif(id) {
             if (!confirm('Cancel this scheduled notification?')) return;
@@ -2726,11 +2863,15 @@
             if (_role !== 'analyst') {
                 if (n.status === 'draft' || n.status === 'scheduled' || n.status === 'failed') {
                     footer.appendChild(makeBtn('Edit', '', function() { closeDetailModal(); openEditModal(n); }));
-                    var sendBtn = makeBtn('Send Now', 'btn-send-green', function() { closeDetailModal(); confirmSend(n.id, null); });
-                    footer.appendChild(sendBtn);
+                    (function(_id) {
+                        footer.appendChild(makeBtn('Test on My Device', '', function() { sendTestToDevice(_id); }));
+                        footer.appendChild(makeBtn('Send Now', 'btn-send-green', function() { closeDetailModal(); openSendSafety(_id); }));
+                    })(n.id);
                 }
                 if (n.status === 'sent') {
-                    footer.appendChild(makeBtn('Resend (Duplicate)', '', function() { closeDetailModal(); duplicateNotif(n.id); }));
+                    (function(_id) {
+                        footer.appendChild(makeBtn('Edit (Copy)', '', function() { closeDetailModal(); duplicateNotif(_id); }));
+                    })(n.id);
                 }
             }
 
@@ -2752,5 +2893,88 @@
     </script>
 <script src="/utils/admin-command-palette.js?v=2"></script>
     <script src="/utils/admin-presence-avatars.js"></script>
+
+    <!-- ── Safety Send Modal ─────────────────────────────────────── -->
+    <div id="send-safety-modal" class="modal" onclick="if(event.target===this)_sspAbort()">
+        <div class="modal-content" style="max-width:480px">
+
+            <!-- Step 1: Preview + recipient count -->
+            <div id="ssp-step1">
+                <div class="modal-header">
+                    <h2 class="modal-title">Review Before Sending</h2>
+                    <button class="modal-close" onclick="_sspAbort()"><i data-lucide="x"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div id="ssp-count-box" class="ssp-count-box">
+                        <span class="ssp-count-loading">Loading...</span>
+                    </div>
+                    <div class="ssp-phone-wrap">
+                        <div class="ssp-notif-card">
+                            <div class="ssp-notif-hdr">
+                                <div class="ssp-notif-dot">T</div>
+                                <div class="ssp-notif-app-name">TafsirKurd</div>
+                                <div class="ssp-notif-time-lbl">now</div>
+                            </div>
+                            <div class="ssp-notif-t" id="ssp-preview-title"></div>
+                            <div class="ssp-notif-b" id="ssp-preview-body"></div>
+                        </div>
+                    </div>
+                    <div id="ssp-meta-chips" class="ssp-meta-chips"></div>
+                </div>
+                <div class="modal-footer" style="gap:8px">
+                    <button class="btn btn-secondary" onclick="_sspAbort()" style="margin-right:auto">Cancel</button>
+                    <button class="btn btn-secondary" onclick="_sspTestFromModal()">Test on My Device</button>
+                    <button class="btn btn-primary btn-send-green" id="ssp-send-btn" onclick="_sspAdvanceTo2()">Send to 0 devices →</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Type to confirm -->
+            <div id="ssp-step2" style="display:none">
+                <div class="modal-header">
+                    <h2 class="modal-title">Confirm Global Send</h2>
+                    <button class="modal-close" onclick="_sspAbort()"><i data-lucide="x"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="ssp-type-wrap">
+                        <div class="ssp-tci-heading">You are about to send to <span id="ssp-count2">0</span> devices</div>
+                        <div class="ssp-tci-sub">This cannot be undone. Type <strong>SEND</strong> below to unlock the button.</div>
+                        <input id="ssp-tci-input" class="ssp-tci-input" type="text" autocomplete="off"
+                               placeholder="SEND" oninput="_sspCheckInput()" spellcheck="false">
+                    </div>
+                </div>
+                <div class="modal-footer" style="gap:8px">
+                    <button class="btn btn-secondary" onclick="_sspShowStep(1)" style="margin-right:auto">← Back</button>
+                    <button class="btn btn-primary btn-send-green" id="ssp-confirm-btn" onclick="_sspStartCountdown()" disabled>Send Now</button>
+                </div>
+            </div>
+
+            <!-- Step 3: 30-second countdown -->
+            <div id="ssp-step3" style="display:none">
+                <div class="modal-header">
+                    <h2 class="modal-title">Sending in...</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="ssp-countdown-wrap">
+                        <div class="ssp-cd-circle">
+                            <svg class="ssp-cd-svg" viewBox="0 0 96 96">
+                                <circle class="ssp-cd-track" cx="48" cy="48" r="44"></circle>
+                                <circle class="ssp-cd-fill" id="ssp-cd-fill" cx="48" cy="48" r="44"></circle>
+                            </svg>
+                            <span class="ssp-cd-num" id="ssp-cd-num">30</span>
+                        </div>
+                        <div class="ssp-cd-lbl">Sending to <strong id="ssp-count3">0</strong> devices</div>
+                        <div class="ssp-cd-sub">Cancel below to abort delivery</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="justify-content:center">
+                    <button class="btn" onclick="_sspAbortCountdown()"
+                            style="background:var(--n-red-bg);color:var(--n-red);border-color:rgba(244,63,94,.3);font-weight:700;padding:10px 28px">
+                        Cancel Delivery
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </body>
 </html>
