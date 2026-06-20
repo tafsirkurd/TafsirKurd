@@ -1243,6 +1243,7 @@ function init(){
             // Push fresh widget data if date or city changed since last push
             if(window.PrayerUI)PrayerUI.pushWidgetIfStale();
             pushGoalDataToWidget();
+            pushAutoAyahSchedule();
             syncWidgetTranslations();
             initDailyVerse();
             scheduleStreakReminder();
@@ -1775,6 +1776,8 @@ function _checkDataReady(){
     QuranSearch.init(S.quranData,S.tafsirData);
     QuranSearch.setWorkerUrl('https://quran-search.tefsirkurd.workers.dev');
   }
+  // Push 24h auto-rotating ayah schedule to widget now that full data is ready
+  pushAutoAyahSchedule();
 }
 
 // Pre-render all 6 tabs so they're built before user ever taps them.
@@ -9747,12 +9750,87 @@ function pushAyahToWidget(surahNum,ayahNum){
   _sharedPrefsSet('widgetAyahData',payload)
     .then(function(){
       console.log('[WidgetAyah] write SUCCESS ✓');
+      localStorage.setItem('_tkWidgetUserSelected','1');
       toast(t('toast.widget_saved'));
     })
     .catch(function(e){
       console.error('[WidgetAyah] write FAILED:',e);
       toast(t('toast.widget_error'));
     });
+}
+
+// Clear user-selected ayah and resume auto-rotation.
+function clearAyahWidgetSelection(){
+  localStorage.removeItem('_tkWidgetUserSelected');
+  pushAutoAyahSchedule();
+}
+
+// Build cumulative ayah count array from loaded quran data.
+// cum[0]=0, cum[1]=7, cum[2]=293 ... cum[114]=6236
+function _buildQuranCumulative(){
+  if(!S.quranData)return null;
+  var cum=[0];
+  for(var s=1;s<=114;s++){
+    var sr=S.quranData[String(s)];
+    cum.push(cum[cum.length-1]+(sr?sr.length:0));
+  }
+  return cum;
+}
+
+// Map 0-based global ayah index → {surah, ayah} both 1-based
+function _globalIdxToSurahAyah(idx,cum){
+  var lo=0,hi=113;
+  while(lo<hi){var mid=(lo+hi)>>1;if(cum[mid+1]<=idx)lo=mid+1;else hi=mid;}
+  return{surah:lo+1,ayah:idx-cum[lo]+1};
+}
+
+// Write 24-hour hourly ayah schedule to iOS widget App Group.
+// Widget cycles through entire Quran (6236 ayahs) sequentially, 1/hour, looping forever.
+// Skipped when user has manually selected an ayah.
+function pushAutoAyahSchedule(){
+  var sp=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SharedPrefs;
+  if(!sp||!S.quranData)return;
+  if(localStorage.getItem('_tkWidgetUserSelected')==='1')return;
+  var cum=_buildQuranCumulative();
+  var total=cum&&cum[114];
+  if(!total||total<6000)return;
+  var start=parseInt(localStorage.getItem('_tkWidgetAutoStart')||'0',10);
+  if(!start){
+    start=Math.floor(Date.now()/3600000)*3600000;
+    localStorage.setItem('_tkWidgetAutoStart',String(start));
+  }
+  var nowMs=Date.now();
+  var currentIdx=Math.floor((nowMs-start)/3600000)%total;
+  var currentHourMs=Math.floor(nowMs/3600000)*3600000;
+  var entries=[];
+  for(var h=0;h<24;h++){
+    var idx=(currentIdx+h)%total;
+    var sa=_globalIdxToSurahAyah(idx,cum);
+    var qsr=S.quranData[String(sa.surah)];
+    if(!qsr||!qsr[sa.ayah-1])continue;
+    var ayah=qsr[sa.ayah-1];
+    var tafsirText='';
+    if(S.tafsirData&&S.tafsirData[sa.surah-1]){
+      var _td=S.tafsirData[sa.surah-1];
+      if(_td.verses){
+        var _tv=_td.verses.find(function(v){return(v.verse||v.ayah)===sa.ayah;});
+        if(_tv&&_tv.text)tafsirText=_tv.text.substring(0,400);
+      }
+    }
+    var si=SURAHS[sa.surah-1]||{};
+    entries.push({
+      ms:currentHourMs+h*3600000,
+      chapter:sa.surah,
+      verse:sa.ayah,
+      arabic:ayah.text||'',
+      tafsir:tafsirText,
+      surahName:si.ar||('سورة '+sa.surah),
+      showTafsir:true,
+      showReference:true
+    });
+  }
+  if(!entries.length)return;
+  sp.set({key:'widgetAyahSchedule',value:JSON.stringify({v:1,userSelected:false,entries:entries})}).catch(function(){});
 }
 
 // Push reading progress + streak to iOS goal widget.

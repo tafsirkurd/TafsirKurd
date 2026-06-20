@@ -1183,6 +1183,40 @@ struct AyahWidgetData: Codable {
     }
 }
 
+// MARK: — Ayah auto-rotation schedule
+
+private struct AyahScheduleEntry: Decodable {
+    let ms:            Double
+    let chapter:       Int
+    let verse:         Int
+    let arabic:        String
+    let tafsir:        String
+    let surahName:     String
+    let showTafsir:    Bool
+    let showReference: Bool
+
+    var date: Date { Date(timeIntervalSince1970: ms / 1000) }
+
+    var asWidgetData: AyahWidgetData {
+        AyahWidgetData(chapter: chapter, verse: verse, arabic: arabic, tafsir: tafsir,
+                       surahName: surahName, showTafsir: showTafsir, showReference: showReference)
+    }
+}
+
+private struct AyahSchedule: Decodable {
+    let v:            Int
+    let userSelected: Bool
+    let entries:      [AyahScheduleEntry]
+
+    static func load() -> AyahSchedule? {
+        guard let ud   = UserDefaults(suiteName: kAppGroup),
+              let json = ud.string(forKey: "widgetAyahSchedule"),
+              let raw  = json.data(using: .utf8)
+        else { return nil }
+        return try? JSONDecoder().decode(AyahSchedule.self, from: raw)
+    }
+}
+
 // MARK: — Goal widget data model
 
 struct GoalWidgetData: Codable {
@@ -1239,9 +1273,30 @@ struct AyahProvider: TimelineProvider {
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<AyahEntry>) -> Void) {
         WT.reload(); DS.reloadAccent()
-        let now = Date()
-        let e   = AyahEntry(date: now, data: AyahWidgetData.load())
-        // 6h policy — app calls reloadTimelines when ayah changes, so hourly polling is wasteful
+        let now   = Date()
+        let nowMs = now.timeIntervalSince1970 * 1000
+
+        // Auto-rotation: JS writes a 24-entry hourly schedule when no user selection exists.
+        if let schedule = AyahSchedule.load(), !schedule.userSelected, !schedule.entries.isEmpty {
+            var entries: [AyahEntry] = []
+
+            // Current entry: latest entry whose timestamp ≤ now
+            let current = schedule.entries.filter { $0.ms <= nowMs + 60_000 }.last
+                       ?? schedule.entries.first
+            entries.append(AyahEntry(date: now, data: current?.asWidgetData))
+
+            // Future entries: one per hour boundary
+            for se in schedule.entries where se.ms > nowMs {
+                entries.append(AyahEntry(date: se.date, data: se.asWidgetData))
+            }
+
+            // Policy 25 h — app refreshes schedule on next open; this covers one full day offline
+            completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(25 * 3600))))
+            return
+        }
+
+        // User-selected (or no schedule yet): show whatever was last written
+        let e = AyahEntry(date: now, data: AyahWidgetData.load())
         completion(Timeline(entries: [e], policy: .after(now.addingTimeInterval(6 * 3600))))
     }
 }
