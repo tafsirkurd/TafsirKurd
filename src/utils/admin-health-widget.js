@@ -540,22 +540,31 @@
         return panel;
     }
 
+    // ── Remove all existing strips/details from DOM ───────────────────────
+    function removeAllWidgetEls() {
+        var wasOpen = false;
+        var all = document.querySelectorAll('[id="ahw-strip"],[id="ahw-detail"]');
+        for (var i = 0; i < all.length; i++) {
+            if (all[i].id === 'ahw-detail' && all[i].style.display === 'block') wasOpen = true;
+            if (all[i].parentNode) all[i].parentNode.removeChild(all[i]);
+        }
+        return wasOpen;
+    }
+
     // ── Replace strip + panel in place ───────────────────────────────────
     function updateUI(sectionId, result) {
-        var oldStrip  = document.getElementById('ahw-strip');
-        var oldDetail = document.getElementById('ahw-detail');
-        var wasOpen   = oldDetail && oldDetail.style.display === 'block';
+        var wasOpen = removeAllWidgetEls();
 
         var newStrip  = buildStrip(sectionId, result);
         var newDetail = buildDetailPanel(sectionId, result);
         if (wasOpen) newDetail.style.display = 'block';
 
-        if (oldStrip && oldStrip.parentNode) {
-            oldStrip.parentNode.insertBefore(newStrip,  oldStrip);
-            oldStrip.parentNode.insertBefore(newDetail, oldStrip);
-            oldStrip.parentNode.removeChild(oldStrip);
-            if (oldDetail && oldDetail.parentNode) oldDetail.parentNode.removeChild(oldDetail);
-        }
+        var pageHeader = document.querySelector('.page-header');
+        if (!pageHeader) return;
+        var container = pageHeader.parentNode;
+        var anchor = pageHeader.nextSibling;
+        container.insertBefore(newDetail, anchor);
+        container.insertBefore(newStrip, newDetail);
     }
 
     // ── Run checks and update UI ──────────────────────────────────────────
@@ -589,7 +598,6 @@
 
     // ── Main init ─────────────────────────────────────────────────────────
     function init() {
-        if (document.getElementById('ahw-strip')) return; // already injected
         var sectionId = detectSection();
         if (!sectionId) return;
 
@@ -603,6 +611,9 @@
         if (!pageHeader) return;
         var container = pageHeader.parentNode;
         if (!container) return;
+
+        // Purge any stale/duplicate widgets before inserting
+        removeAllWidgetEls();
 
         injectStyles();
 
