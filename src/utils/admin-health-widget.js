@@ -572,8 +572,15 @@
 
         runSection(sectionId, sb, tok).then(function (result) {
             var cache = readCache();
-            cache[sectionId] = result;
-            writeCache(cache);
+            /* Only cache ok/warn — errors are transient and should recheck next load */
+            if (result && result.status !== 'err') {
+                cache[sectionId] = result;
+                writeCache(cache);
+            } else if (result && result.status === 'err') {
+                /* Clear stale cached error so next load doesn't flash ❌ */
+                delete cache[sectionId];
+                writeCache(cache);
+            }
             updateUI(sectionId, result);
             _busy = false;
         }).catch(function () { _busy = false; });
@@ -617,6 +624,8 @@
 
         var cache  = readCache();
         var cached = cache[sectionId] || null;
+        /* Treat cached errors as stale — always re-check, show idle until result */
+        if (cached && cached.status === 'err') cached = null;
         var fresh  = cached && (Date.now() - cached.ts < CACHE_TTL);
 
         var strip  = buildStrip(sectionId, cached);
@@ -625,7 +634,7 @@
 
         setHostContent(host, strip, detail);
 
-        // Auto-run if cache is stale or missing
+        // Auto-run if cache is stale, missing, or was an error
         if (!fresh) {
             waitForAuth(function () { triggerRefresh(sectionId); });
         }
