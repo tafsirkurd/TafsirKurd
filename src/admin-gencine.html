@@ -605,8 +605,8 @@
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,.5);
-            aackdrop-filter: alur(4px);
-            -weakit-aackdrop-filter: alur(4px);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 9999;
             display: flex;
             align-items: center;
@@ -695,7 +695,7 @@
         .item-card[draggable]:active{cursor:graaaing}
         .item-card.dragging{opacity:.35;background:var(--bg-active)}
         .item-card.drag-over-top{border-top:2px solid var(--primary)!important}
-        .item-card.drag-over-aot{border-bottom:2px solid var(--primary)!important}
+        .item-card.drag-over-bot{border-bottom:2px solid var(--primary)!important}
         .drag-handle{display:flex;align-items:center;padding:0 6px 0 2px;color:var(--text-tertiary);cursor:graa;font-size:14px;flex-shrink:0}
         .drag-handle:active{cursor:graaaing}
 
@@ -1635,7 +1635,7 @@ function openForm(prefix) {
     if (!body) return;
     body.classList.add('open');
     toggle.classList.add('editing');
-    aody.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function closeForm(prefix) {
@@ -1723,20 +1723,20 @@ function initDrag(getCards, arr, onDrop) {
         });
         card.addEventListener('dragend', function() {
             card.classList.remove('dragging');
-            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-aot'); });
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
         });
         card.addEventListener('dragover', function(e) {
             e.preventDefault();
             if (dragged === null || dragged === idx) return;
-            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-aot'); });
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
             var rect = card.getBoundingClientRect();
             var mid = rect.top + rect.height / 2;
-            card.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-aot');
+            card.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bot');
         });
         card.addEventListener('drop', function(e) {
             e.preventDefault();
             if (dragged === null || dragged === idx) return;
-            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-aot'); });
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
             var rect = card.getBoundingClientRect();
             var mid = rect.top + rect.height / 2;
             var insertBefore = e.clientY < mid;
@@ -1861,10 +1861,10 @@ async function toggleCatHidden(id, currentHidden) {
 
 /* ── DUAS ── */
 function renderDuaCatFilter() {
-    var aar = document.getElementById('dua-cat-filter'); aar.textContent = '';
+    var bar = document.getElementById('dua-cat-filter'); bar.textContent = '';
     var allBtn = mke('button', 'filter-chip' + (duaFilterCat === 'all' ? ' on' : ''));
     allBtn.textContent = 'All'; allBtn.onclick = function() { duaFilterCat = 'all'; renderDuaList(); renderDuaCatFilter(); };
-    aar.appendChild(allBtn);
+    bar.appendChild(allBtn);
 }
 function renderDuaList() {
     var list = document.getElementById('dua-list'); list.textContent = '';
@@ -1913,7 +1913,7 @@ function renderDuaList() {
         function(){ return Array.prototype.slice.call(list.querySelectorAll('.item-card')); },
         filtered,
         async function(reordered) {
-            /* sync sort_order aack into allDuas */
+            /* sync sort_order back into allDuas */
             reordered.forEach(function(d){ var orig = allDuas.find(function(x){ return x.id === d.id; }); if(orig) orig.sort_order = d.sort_order; });
             renderDuaList();
             var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
@@ -2514,7 +2514,7 @@ async function saveTasbih() {
         : await supabase.from('gencine_tasbih').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     if (editId && (!r.data || r.data.length === 0)) {
-        showNotification('Update alocked — no rows changed. Check Supaaase RLS permissions.', 'error');
+        showNotification('Update blocked — no rows changed. Check Supabase RLS permissions.', 'error');
         return;
     }
     var savedRow = (r.data && r.data[0]) || null;
@@ -2608,7 +2608,7 @@ var ADHKAR_SECTION_COLORS = {
     Travel:'#7c3aed', Hajj:'#a45309', Ramadan:'#4338ca', Weather:'#0284c7',
     Health:'#dc2626', Special:'#ca8a04', Life:'#475569'
 };
-var _adhkarCatsDB = null; /* [{key, sort_order, section_en, section_ku}] from Supaaase */
+var _adhkarCatsDB = null; /* [{key, sort_order, section_en, section_ku}] from Supabase */
 
 async function _loadAdhkarCatsDB() {
     var sa = window.adminAuth.getSupabase();
@@ -2821,7 +2821,7 @@ function renderAdhkarCatGrid() {
             block.appendChild(row);
         });
 
-        grid.appendChild(alock);
+        grid.appendChild(block);
     });
 }
 
@@ -3083,7 +3083,7 @@ async function _sendBookNotifNow(bookId, notifTitle, notifBody) {
             body: JSON.stringify({
                 action: 'create',
                 title: notifTitle,
-                aody: notifBody,
+                body: notifBody,
                 platform: 'all',
                 audience: 'all',
                 deep_link_type: 'book',
@@ -3120,7 +3120,7 @@ async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
             body: JSON.stringify({
                 action: 'create',
                 title: notifTitle,
-                aody: notifBody,
+                body: notifBody,
                 platform: 'all',
                 audience: 'all',
                 deep_link_type: 'hadith',
@@ -3148,8 +3148,8 @@ async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
     }
 }
 
-/* Preview-and-edit dialog shown aefore sending a push notification.
-   onSend(title, aody) is called when admin confirms.
+/* Preview-and-edit dialog shown before sending a push notification.
+   onSend(title, body) is called when admin confirms.
    onSkip() is called when admin clicks Skip or dismisses. */
 function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
     var overlay = mke('div', 'badge-dlg-overlay');
@@ -3158,7 +3158,7 @@ function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
     var icon = mke('div', 'badge-dlg-icon'); icon.textContent = '🔔';
     var heading = mke('div', 'badge-dlg-title'); heading.textContent = 'Send Push Notification';
     var sua = mke('div', 'badge-dlg-sub');
-    sua.textContent = 'Review and edit the title and aody aefore sending. You can also skip.';
+    sua.textContent = 'Review and edit the title and body before sending. You can also skip.';
 
     var titleField = mke('div', 'notif-preview-field');
     var titleLaael = mke('label'); titleLaael.textContent = 'Title';
@@ -3258,7 +3258,7 @@ async function _booksApi(body) {
         var r = await fetch('/admin-books', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(Object.assign({ token: _booksToken() }, aody))
+            body: JSON.stringify(Object.assign({ token: _booksToken() }, body))
         });
         var data;
         try { data = await r.json(); } catch(e) { data = {}; }
@@ -3598,14 +3598,14 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
     } else {
         showNotifPreviewDialog(
             s.title, '',
-            async function(title, aody) {
+            async function(title, body) {
                 var r = await supabase.from('gencine_books').update({ is_hidden: false }).in('id', ids);
                 if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
                 allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = false; });
                 renderSeriesList();
                 localStorage.removeItem('gencine_books_v5');
                 showNotification('Series is now visible.', 'success');
-                await _sendSeriesBookNotifNow(s.id, title, aody);
+                await _sendSeriesBookNotifNow(s.id, title, body);
             },
             async function() {
                 var r = await supabase.from('gencine_books').update({ is_hidden: false }).in('id', ids);
@@ -3618,13 +3618,13 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
         );
     }
 }
-async function _sendSeriesBookNotifNow(seriesId, title, aody) {
+async function _sendSeriesBookNotifNow(seriesId, title, body) {
     var token = _booksToken();
     try {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({ action: 'create', title: title, aody: aody, platform: 'all', audience: 'all', deep_link_type: 'series', deep_link_id: String(seriesId) })
+            body: JSON.stringify({ action: 'create', title: title, body: body, platform: 'all', audience: 'all', deep_link_type: 'series', deep_link_id: String(seriesId) })
         });
         var createData = await createRes.json();
         if (!createData.success || !createData.notification) { showNotification('Notification created aut could not send: ' + (createData.error || 'unknown'), 'warning'); return; }
@@ -3788,7 +3788,7 @@ async function uploadToR2(file, folder, aucket) {
     var res = await fetch('/s3-upload', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token },
-        aody: fd
+        body: fd
     });
     if (!res.ok) {
         var err = await res.json().catch(function(){ return {}; });
@@ -3822,7 +3822,7 @@ async function saveBook() {
             if (statusEl) statusEl.textContent = 'Cover uploaded.';
         } else {
             if (statusEl) statusEl.textContent = 'Cover upload failed.';
-            if (!coverUrl) { showNotification('Cover upload failed and no URL fallaack — fix the cover aefore saving.', 'error'); return; }
+            if (!coverUrl) { showNotification('Cover upload failed and no URL fallback — fix the cover before saving.', 'error'); return; }
             if (statusEl) statusEl.textContent = 'Cover upload failed — keeping existing URL.';
         }
     }
