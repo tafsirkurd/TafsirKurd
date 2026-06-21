@@ -213,6 +213,7 @@ window.ForceUpdate = (function(){
         ? (cachedCfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
         : (cachedCfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
       _storeUrl = storeUrl2;
+      if(platform2!=='ios')window._tkAndroidStoreUrl=storeUrl2;
 
       // Write lock so the next cold start uses faster Path 1
       try {
@@ -497,6 +498,7 @@ window.ForceUpdate = (function(){
           _storeUrl = platform === 'ios'
             ? (_s1cfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
             : (_s1cfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
+          if(platform!=='ios')window._tkAndroidStoreUrl=_storeUrl;
           console.log('[Update] Stage-1 instant block (cached config) — network fetch continuing');
           showHard(version, _s1min, _s1cfg);
         } else {
@@ -520,6 +522,7 @@ window.ForceUpdate = (function(){
       _storeUrl      = platform === 'ios'
         ? (cfg.ios_store_url     || 'https://apps.apple.com/us/app/tafsirkurd/id6760433688')
         : (cfg.android_store_url || 'https://play.google.com/store/apps/details?id=com.tafsirkurd.app');
+      if(platform!=='ios')window._tkAndroidStoreUrl=_storeUrl;
 
       var stage      = cfg.update_stage || cfg.update_mode || 'off';
       var cooldown   = cfg.soft_update_cooldown_days;
@@ -11077,8 +11080,10 @@ function renderSettings(){
     if(_plat==='ios'){
       window.open('itms-apps://itunes.apple.com/app/id6760433688?action=write-review','_system');
     }else{
-      // market:// is intercepted by Android as an Intent — opens Play Store app directly
-      window.location.href='market://details?id=com.tafsirkurd.app';
+      // Use remotely-configured store URL — works on Play Store AND AppGallery/Huawei.
+      // market:// has no handler on Huawei devices without Google Play installed.
+      var _rateUrl=window._tkAndroidStoreUrl||'https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
+      try{window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Browser?Capacitor.Plugins.Browser.open({url:_rateUrl}):window.open(_rateUrl,'_system');}catch(e){window.open(_rateUrl,'_system');}
     }
   });
   g5.appendChild(_rateRow);

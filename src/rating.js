@@ -69,9 +69,16 @@ function _openStorePage(){
     window.open('itms-apps://itunes.apple.com/app/id'+IOS_APP_ID+'?action=write-review','_system');
     return;
   }
-  // Android: window.location.href with market:// is intercepted by Android/Capacitor
-  // as a native Intent → opens Play Store app (same approach as original working code)
-  window.location.href = 'market://details?id='+ANDROID_PKG;
+  // Android: use the remotely-configured store URL so this works on both Play Store and
+  // AppGallery/Huawei (where market:// fails — no Play Store installed).
+  // window._tkAndroidStoreUrl is set by the update-config loader from android_store_url.
+  // On AppGallery builds, set android_store_url to the AppGallery listing URL in remote config.
+  var url = window._tkAndroidStoreUrl || 'https://play.google.com/store/apps/details?id='+ANDROID_PKG;
+  try{
+    window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Browser
+      ?Capacitor.Plugins.Browser.open({url:url})
+      :window.open(url,'_system');
+  }catch(e){window.open(url,'_system');}
 }
 
 /* ── Popup DOM ──────────────────────────────────────────────────────────── */
