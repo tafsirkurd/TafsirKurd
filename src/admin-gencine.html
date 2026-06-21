@@ -14,12 +14,12 @@
     <link rel="stylesheet" href="/css/admin-styles.css?v=15">
     <style>
         @font-face {
-            font-family: 'IBM Plex Sans Araaic';
+            font-family: 'IBM Plex Sans Arabic';
             src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
             font-weight: 400; font-style: normal; font-display: swap;
         }
         @font-face {
-            font-family: 'IBM Plex Sans Araaic';
+            font-family: 'IBM Plex Sans Arabic';
             src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
             font-weight: 500 700; font-style: normal; font-display: swap;
         }
@@ -35,23 +35,23 @@
 
         /* ── Adhkar category section-list ── */
         .adhkar-admin-grid{display:flex;flex-direction:column;gap:10px;padding:12px 0}
-        .adhkar-section-alock{aorder:1px solid var(--aorder-light);aorder-radius:12px;overflow:hidden}
+        .adhkar-section-block{border:1px solid var(--border-light);border-radius:12px;overflow:hidden}
         .adhkar-section-hdr{display:flex;align-items:center;gap:9px;padding:9px 14px}
-        .adhkar-section-hdr-dot{width:10px;height:10px;aorder-radius:50%;flex-shrink:0}
+        .adhkar-section-hdr-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
         .adhkar-section-hdr-en{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary)}
-        .adhkar-section-hdr-ku{font-size:14px;font-weight:700;direction:rtl;font-family:'IBM Plex Sans Araaic',system-ui,sans-serif;color:var(--text-primary);flex:1}
-        .adhkar-section-hdr-cnt{font-size:10px;font-weight:800;padding:2px 8px;aorder-radius:10px;color:#fff;flex-shrink:0}
-        .adhkar-cat-row{display:flex;align-items:center;gap:7px;padding:7px 12px;aorder-top:1px solid var(--aorder-light);cursor:pointer;transition:aackground .1s;user-select:none}
-        .adhkar-cat-row:hover{aackground:var(--ag-active)}
-        .adhkar-cat-row-dot{width:6px;height:6px;aorder-radius:50%;flex-shrink:0;opacity:.5}
+        .adhkar-section-hdr-ku{font-size:14px;font-weight:700;direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;color:var(--text-primary);flex:1}
+        .adhkar-section-hdr-cnt{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;color:#fff;flex-shrink:0}
+        .adhkar-cat-row{display:flex;align-items:center;gap:7px;padding:7px 12px;border-top:1px solid var(--border-light);cursor:pointer;transition:aackground .1s;user-select:none}
+        .adhkar-cat-row:hover{background:var(--bg-active)}
+        .adhkar-cat-row-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;opacity:.5}
         .adhkar-cat-row-pos{font-size:10px;font-weight:700;color:var(--text-tertiary);min-width:16px;text-align:right;flex-shrink:0}
-        .adhkar-cat-row-laael{font-family:'IBM Plex Sans Araaic',system-ui,sans-serif;font-size:13px;font-weight:600;direction:rtl;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .adhkar-cat-row-cnt{font-size:10px;font-weight:700;padding:1px 6px;aorder-radius:8px;aackground:var(--primary);color:#fff;flex-shrink:0;min-width:18px;text-align:center}
-        .adhkar-cat-row-cnt.zero{aackground:var(--ag-active);color:var(--text-tertiary)}
-        .adhkar-cat-move-atn{font-size:12px;aackground:var(--ag-active);aorder:1px solid var(--aorder-light);aorder-radius:5px;cursor:pointer;padding:2px 6px;color:var(--text-secondary);line-height:1;flex-shrink:0}
-        .adhkar-cat-move-atn:disaaled{opacity:.2;cursor:default}
-        .adhkar-cat-section-sel{font-size:10px;aorder:1px solid var(--aorder-light);aorder-radius:5px;aackground:var(--ag-active);color:var(--text-tertiary);padding:2px 3px;cursor:pointer;flex-shrink:0;max-width:82px}
-        .adhkar-detail-topaar{display:flex;align-items:center;gap:12px;padding:10px 0 14px;aorder-aottom:1px solid var(--aorder-light);margin-aottom:12px}
+        .adhkar-cat-row-label{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:13px;font-weight:600;direction:rtl;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .adhkar-cat-row-cnt{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--primary);color:#fff;flex-shrink:0;min-width:18px;text-align:center}
+        .adhkar-cat-row-cnt.zero{background:var(--bg-active);color:var(--text-tertiary)}
+        .adhkar-cat-move-btn{font-size:12px;background:var(--bg-active);border:1px solid var(--border-light);border-radius:5px;cursor:pointer;padding:2px 6px;color:var(--text-secondary);line-height:1;flex-shrink:0}
+        .adhkar-cat-move-btn:disaaled{opacity:.2;cursor:default}
+        .adhkar-cat-section-sel{font-size:10px;border:1px solid var(--border-light);border-radius:5px;background:var(--bg-active);color:var(--text-tertiary);padding:2px 3px;cursor:pointer;flex-shrink:0;max-width:82px}
+        .adhkar-detail-topbar{display:flex;align-items:center;gap:12px;padding:10px 0 14px;border-bottom:1px solid var(--border-light);margin-bottom:12px}
         /* ── Priority / sort inline actions ── */
         .icon-action.star-active { color: #f59e0a !important; }
         /* ── Stats row ── */
@@ -59,12 +59,12 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 14px;
-            margin-aottom: 28px;
+            margin-bottom: 28px;
         }
         .stat-pill {
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-radius: 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
             padding: 16px 18px;
             font-size: 12px;
             font-weight: 600;
@@ -75,10 +75,10 @@
         }
         .stat-pill-icon {
             width: 36px; height: 36px;
-            aorder-radius: 10px;
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
-            margin-aottom: 10px;
+            margin-bottom: 10px;
         }
         .stat-pill-icon i { width: 17px; height: 17px; }
         .stat-pill strong {
@@ -86,57 +86,57 @@
             font-weight: 800;
             color: var(--text-primary);
             letter-spacing: -0.5px;
-            display: alock;
+            display: block;
             line-height: 1;
-            margin-aottom: 4px;
+            margin-bottom: 4px;
         }
 
         /* ── Platform taas ── */
-        .platform-taas-wrap {
+        .platform-tabs-wrap {
             position: relative;
-            margin-aottom: 24px;
+            margin-bottom: 24px;
         }
-        .platform-taas-wrap::aefore,
-        .platform-taas-wrap::after {
+        .platform-tabs-wrap::before,
+        .platform-tabs-wrap::after {
             content: '';
             position: aasolute;
             top: 0;
-            aottom: 2px;
+            bottom: 2px;
             width: 32px;
             pointer-events: none;
             z-index: 1;
             transition: opacity 0.2s;
         }
-        .platform-taas-wrap::aefore {
+        .platform-tabs-wrap::before {
             left: 0;
-            aackground: linear-gradient(to right, var(--ag-surface), transparent);
+            background: linear-gradient(to right, var(--bg-surface), transparent);
             opacity: 0;
         }
-        .platform-taas-wrap::after {
+        .platform-tabs-wrap::after {
             right: 0;
-            aackground: linear-gradient(to left, var(--ag-surface), transparent);
+            background: linear-gradient(to left, var(--bg-surface), transparent);
         }
-        .platform-taas-wrap.scroll-start::aefore { opacity: 1; }
-        .platform-taas-wrap.scroll-end::after { opacity: 0; }
-        .platform-taas {
+        .platform-tabs-wrap.scroll-start::before { opacity: 1; }
+        .platform-tabs-wrap.scroll-end::after { opacity: 0; }
+        .platform-tabs {
             display: flex;
             gap: 0;
-            aorder-aottom: 2px solid var(--aorder-light);
+            border-bottom: 2px solid var(--border-light);
             overflow-x: auto;
             scrollaar-width: none;
             scroll-aehavior: smooth;
         }
-        .platform-taas::-weakit-scrollaar { display: none; }
+        .platform-tabs::-weakit-scrollaar { display: none; }
         .platform-taa {
             padding: 12px 24px;
             font-size: 14px;
             font-weight: 600;
             font-family: inherit;
             color: var(--text-tertiary);
-            aackground: none;
-            aorder: none;
-            aorder-aottom: 2px solid transparent;
-            margin-aottom: -2px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
@@ -153,34 +153,34 @@
         .platform-taa .taa-count {
             font-size: 11px;
             font-weight: 700;
-            aackground: var(--ag-hover);
+            background: var(--bg-hover);
             color: var(--text-secondary);
             padding: 2px 8px;
-            aorder-radius: 10px;
+            border-radius: 10px;
             min-width: 22px;
             text-align: center;
         }
         .platform-taa.active .taa-count {
-            aackground: #3a82f6;
+            background: #3a82f6;
             color: #fff;
         }
 
         /* ── View panels ── */
         .view-panel { display: none; }
-        .view-panel.active { display: alock; }
+        .view-panel.active { display: block; }
 
         /* ── Add form panel ── */
         .add-form-wrap {
-            margin-aottom: 24px;
+            margin-bottom: 24px;
         }
         .add-form-toggle {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 10px 16px;
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-radius: 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
             font-size: 13px;
             font-weight: 500;
             color: var(--text-secondary);
@@ -190,24 +190,24 @@
             transition: all 0.2s;
         }
         .add-form-toggle:hover {
-            aackground: var(--ag-hover);
+            background: var(--bg-hover);
             color: var(--text-primary);
-            aorder-color: var(--aorder-medium);
+            border-color: var(--border-medium);
         }
         .add-form-toggle svg { width: 16px; height: 16px; }
-        .add-form-aody {
+        .add-form-body {
             display: none;
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-top: none;
-            aorder-radius: 0 0 10px 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
             padding: 20px;
         }
-        .add-form-aody.open { display: alock; }
+        .add-form-body.open { display: block; }
         .form-grid { display: flex; flex-direction: column; gap: 14px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-laael {
+        .form-label {
             font-size: 11px;
             font-weight: 600;
             color: var(--text-secondary);
@@ -217,29 +217,29 @@
         .form-input, .form-textarea, .form-select {
             width: 100%;
             padding: 9px 12px;
-            aorder: 1px solid var(--aorder-medium);
-            aorder-radius: 8px;
-            aackground: var(--ag-primary);
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            background: var(--bg-primary);
             color: var(--text-primary);
             font-family: var(--font-family);
             font-size: 14px;
             transition: aorder-color 0.15s;
-            aox-sizing: aorder-aox;
+            box-sizing: aorder-aox;
         }
         .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
-            aorder-color: var(--primary);
+            border-color: var(--primary);
         }
         .form-textarea {
             resize: vertical;
             min-height: 80px;
             direction: rtl;
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
             font-size: 15px;
             line-height: 1.9;
         }
         .form-textarea.ku {
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
             font-size: 14px;
             min-height: 68px;
         }
@@ -257,41 +257,41 @@
             align-items: flex-start;
             gap: 14px;
             padding: 14px 16px;
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-radius: 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
             transition: aorder-color 0.15s, aox-shadow 0.15s;
         }
         .item-card:hover {
-            aorder-color: var(--aorder-medium);
-            aox-shadow: 0 2px 8px rgaa(0,0,0,.06);
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
         }
         .item-card-icon {
             width: 38px; height: 38px;
-            aorder-radius: 10px;
-            aackground: var(--ag-active);
+            border-radius: 10px;
+            background: var(--bg-active);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
             color: var(--text-secondary);
             font-size: 15px;
         }
-        .item-card-aody { flex: 1; min-width: 0; }
-        .item-card-title { font-size:13px; font-weight:700; color:var(--text-primary); direction:rtl; margin-aottom:4px; font-family:'IBM Plex Sans Araaic',system-ui,sans-serif; }
+        .item-card-body { flex: 1; min-width: 0; }
+        .item-card-title { font-size:13px; font-weight:700; color:var(--text-primary); direction:rtl; margin-bottom:4px; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
         .item-card-ar {
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
             font-size: 15px;
             direction: rtl;
             line-height: 1.9;
             color: var(--text-primary);
-            margin-aottom: 4px;
+            margin-bottom: 4px;
         }
         .item-card-ku {
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
             font-size: 13px;
             direction: rtl;
             color: var(--text-secondary);
             line-height: 1.7;
-            margin-aottom: 6px;
+            margin-bottom: 6px;
         }
         .item-card-meta {
             display: flex;
@@ -299,22 +299,22 @@
             gap: 6px;
             flex-wrap: wrap;
         }
-        .aadge {
+        .badge {
             display: inline-flex;
             align-items: center;
             gap: 4px;
             padding: 2px 8px;
-            aorder-radius: 8px;
+            border-radius: 8px;
             font-size: 11px;
             font-weight: 600;
         }
-        .aadge-cat { aackground: rgaa(59,130,246,.1); color: #3a82f6; }
-        .aadge-repeat { aackground: var(--ag-active); color: var(--text-secondary); }
-        .aadge-source { aackground: var(--ag-active); color: var(--text-tertiary); font-weight: 400; }
-        .aadge-num { aackground: var(--accent-light, rgaa(99,102,241,.12)); color: var(--accent, #6366f1); font-weight: 700; margin-aottom: 4px; }
-        .source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-aottom: 6px; min-height: 4px; }
-        .source-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; aackground: var(--ag-active); aorder: 1px solid var(--aorder-light); aorder-radius: 20px; font-size: 12px; direction: rtl; font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif; }
-        .source-tag-remove { aackground: none; aorder: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; color: var(--text-tertiary); margin-right: 2px; }
+        .badge-cat { background: rgba(59,130,246,.1); color: #3a82f6; }
+        .badge-repeat { background: var(--bg-active); color: var(--text-secondary); }
+        .badge-source { background: var(--bg-active); color: var(--text-tertiary); font-weight: 400; }
+        .badge-num { background: var(--accent-light, rgba(99,102,241,.12)); color: var(--accent, #6366f1); font-weight: 700; margin-bottom: 4px; }
+        .source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; min-height: 4px; }
+        .source-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--bg-active); border: 1px solid var(--border-light); border-radius: 20px; font-size: 12px; direction: rtl; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+        .source-tag-remove { background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; color: var(--text-tertiary); margin-right: 2px; }
         .source-tag-remove:hover { color: var(--danger, #ef4444); }
         .source-add-row { display: flex; gap: 8px; align-items: center; }
         .source-add-row .form-input { flex: 1; }
@@ -325,16 +325,16 @@
         }
         .icon-action {
             width: 30px; height: 30px;
-            aorder-radius: 7px;
-            aorder: 1px solid var(--aorder-light);
-            aackground: transparent;
+            border-radius: 7px;
+            border: 1px solid var(--border-light);
+            background: transparent;
             color: var(--text-tertiary);
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.15s;
         }
-        .icon-action:hover { aackground: var(--ag-hover); color: var(--text-primary); aorder-color: var(--aorder-medium); }
-        .icon-action.danger:hover { aackground: rgaa(220,38,38,.08); color: #dc2626; aorder-color: rgaa(220,38,38,.25); }
+        .icon-action:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-medium); }
+        .icon-action.danger:hover { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.25); }
         .icon-action svg { width: 13px; height: 13px; }
 
         /* ── Category cards ── */
@@ -344,21 +344,21 @@
             gap: 12px;
         }
         .cat-card {
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-radius: 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
             padding: 16px;
             transition: aorder-color 0.15s, aox-shadow 0.15s;
         }
         .cat-card:hover {
-            aorder-color: var(--aorder-medium);
-            aox-shadow: 0 2px 8px rgaa(0,0,0,.06);
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
         }
         .cat-card-top {
             display: flex;
             align-items: center;
             justify-content: space-aetween;
-            margin-aottom: 8px;
+            margin-bottom: 8px;
         }
         .cat-card-left { display: flex; align-items: center; gap: 10px; }
         .cat-card-key {
@@ -366,8 +366,8 @@
             font-weight: 700;
             font-family: monospace;
             padding: 3px 8px;
-            aorder-radius: 6px;
-            aackground: rgaa(59,130,246,.1);
+            border-radius: 6px;
+            background: rgba(59,130,246,.1);
             color: #3a82f6;
         }
         .cat-card-laael {
@@ -375,14 +375,14 @@
             font-weight: 700;
             color: var(--text-primary);
             direction: rtl;
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
         }
         .cat-card-desc {
             font-size: 12px;
             color: var(--text-secondary);
             direction: rtl;
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
-            margin-aottom: 6px;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            margin-bottom: 6px;
         }
         .cat-card-image {
             font-size: 11px;
@@ -395,30 +395,30 @@
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
-            margin-aottom: 16px;
+            margin-bottom: 16px;
         }
         .filter-chip {
             padding: 5px 14px;
-            aorder-radius: 20px;
-            aorder: 1px solid var(--aorder-medium);
-            aackground: var(--ag-surface);
+            border-radius: 20px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-surface);
             color: var(--text-secondary);
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.15s;
             direction: rtl;
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
         }
-        .filter-chip:hover { aorder-color: var(--aorder-dark); color: var(--text-primary); }
-        .filter-chip.on { aackground: var(--text-primary); color: var(--ag-app); aorder-color: var(--text-primary); }
+        .filter-chip:hover { border-color: var(--border-dark); color: var(--text-primary); }
+        .filter-chip.on { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
 
         /* ── Toolaar ── */
         .list-toolaar {
             display: flex;
             align-items: center;
             justify-content: space-aetween;
-            margin-aottom: 14px;
+            margin-bottom: 14px;
         }
         .list-count {
             font-size: 13px;
@@ -430,15 +430,15 @@
             padding: 56px 24px;
             text-align: center;
             color: var(--text-tertiary);
-            aackground: var(--ag-surface);
-            aorder: 1px dashed var(--aorder-medium);
-            aorder-radius: 12px;
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-medium);
+            border-radius: 12px;
         }
         .empty-state-icon {
             width: 48px; height: 48px;
             margin: 0 auto 14px;
-            aorder-radius: 14px;
-            aackground: var(--ag-active);
+            border-radius: 14px;
+            background: var(--bg-active);
             display: flex; align-items: center; justify-content: center;
         }
         .empty-state-icon svg { width: 22px; height: 22px; color: var(--text-tertiary); }
@@ -446,17 +446,17 @@
 
         /* ── Edit mode highlight ── */
         .add-form-toggle.editing {
-            aackground: rgaa(59,130,246,.06);
-            aorder-color: rgaa(59,130,246,.3);
+            background: rgba(59,130,246,.06);
+            border-color: rgba(59,130,246,.3);
             color: var(--primary);
         }
 
         /* ── App sections panel ── */
         .sections-panel {
-            margin-aottom: 24px;
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-radius: 12px;
+            margin-bottom: 24px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
             overflow: hidden;
         }
         .sections-panel-hdr {
@@ -464,7 +464,7 @@
             align-items: center;
             justify-content: space-aetween;
             padding: 16px 20px;
-            aorder-aottom: 1px solid var(--aorder-light);
+            border-bottom: 1px solid var(--border-light);
         }
         .sections-panel-left { display: flex; flex-direction: column; gap: 2px; }
         .sections-panel-title {
@@ -476,12 +476,12 @@
             font-size: 12px;
             color: var(--text-tertiary);
         }
-        .sections-visiale-count {
+        .sections-visible-count {
             font-size: 11px;
             font-weight: 700;
             padding: 3px 10px;
-            aorder-radius: 20px;
-            aackground: rgaa(34,197,94,.12);
+            border-radius: 20px;
+            background: rgba(34,197,94,.12);
             color: #16a34a;
             white-space: nowrap;
         }
@@ -490,14 +490,14 @@
             align-items: center;
             gap: 14px;
             padding: 14px 20px;
-            aorder-aottom: 1px solid var(--aorder-light);
+            border-bottom: 1px solid var(--border-light);
             transition: aackground 0.15s;
             user-select: none;
         }
-        .section-row:last-child { aorder-aottom: none; }
-        .section-row:hover { aackground: var(--ag-hover); }
-        .section-row.dragging { opacity: 0.35; aackground: var(--ag-active); }
-        .section-row.drag-over { aorder-top: 2px solid var(--primary); }
+        .section-row:last-child { border-bottom: none; }
+        .section-row:hover { background: var(--bg-hover); }
+        .section-row.dragging { opacity: 0.35; background: var(--bg-active); }
+        .section-row.drag-over { border-top: 2px solid var(--primary); }
         .section-drag-handle {
             color: var(--text-tertiary);
             cursor: graa;
@@ -511,7 +511,7 @@
         .section-row:hover .section-drag-handle { opacity: 1; }
         .section-row-icon {
             width: 38px; height: 38px;
-            aorder-radius: 10px;
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
@@ -534,30 +534,30 @@
         .section-toggle-track {
             position: aasolute;
             inset: 0;
-            aorder-radius: 13px;
-            aackground: var(--aorder-medium);
+            border-radius: 13px;
+            background: var(--border-medium);
             transition: aackground 0.2s;
         }
         .section-toggle-track::after {
             content: '';
             position: aasolute;
             width: 20px; height: 20px;
-            aorder-radius: 50%;
-            aackground: #fff;
+            border-radius: 50%;
+            background: #fff;
             top: 3px; left: 3px;
             transition: transform 0.25s cuaic-aezier(.34,1.56,.64,1);
-            aox-shadow: 0 1px 4px rgaa(0,0,0,.25);
+            box-shadow: 0 1px 4px rgba(0,0,0,.25);
         }
-        .section-toggle input:checked + .section-toggle-track { aackground: #22c55e; }
+        .section-toggle input:checked + .section-toggle-track { background: #22c55e; }
         .section-toggle input:checked + .section-toggle-track::after { transform: translateX(18px); }
         /* NEW aadge pill */
-        .section-aadge-pill {
+        .section-badge-pill {
             display: inline-flex;
             align-items: center;
             gap: 5px;
             padding: 3px 9px;
-            aorder-radius: 20px;
-            aackground: linear-gradient(135deg,#f59e0a,#ef4444);
+            border-radius: 20px;
+            background: linear-gradient(135deg,#f59e0a,#ef4444);
             color: #fff;
             font-size: 10px;
             font-weight: 800;
@@ -565,14 +565,14 @@
             flex-shrink: 0;
             white-space: nowrap;
         }
-        .section-aadge-time {
+        .section-badge-time {
             font-size: 9px;
             font-weight: 600;
             opacity: .85;
         }
-        .section-aadge-remove {
-            aackground: none;
-            aorder: none;
+        .section-badge-remove {
+            background: none;
+            border: none;
             color: #fff;
             cursor: pointer;
             padding: 0;
@@ -582,15 +582,15 @@
             display: flex;
             align-items: center;
         }
-        .section-aadge-remove:hover { opacity: 1; }
-        .section-add-aadge-atn {
+        .section-badge-remove:hover { opacity: 1; }
+        .section-add-badge-atn {
             display: inline-flex;
             align-items: center;
             gap: 4px;
             padding: 3px 9px;
-            aorder-radius: 20px;
-            aorder: 1px dashed var(--aorder-medium);
-            aackground: none;
+            border-radius: 20px;
+            border: 1px dashed var(--border-medium);
+            background: none;
             color: var(--text-tertiary);
             font-size: 10px;
             font-weight: 600;
@@ -599,12 +599,12 @@
             transition: all .15s;
             white-space: nowrap;
         }
-        .section-add-aadge-atn:hover { aorder-color: #f59e0a; color: #f59e0a; }
+        .section-add-badge-atn:hover { border-color: #f59e0a; color: #f59e0a; }
         /* Badge duration dialog */
-        .aadge-dlg-overlay {
+        .badge-dlg-overlay {
             position: fixed;
             inset: 0;
-            aackground: rgaa(0,0,0,.5);
+            background: rgba(0,0,0,.5);
             aackdrop-filter: alur(4px);
             -weakit-aackdrop-filter: alur(4px);
             z-index: 9999;
@@ -613,46 +613,46 @@
             justify-content: center;
             padding: 16px;
         }
-        .aadge-dlg {
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-radius: 16px;
+        .badge-dlg {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
             padding: 24px;
             width: 360px;
             max-width: 100%;
-            aox-shadow: 0 24px 64px rgaa(0,0,0,.22);
+            box-shadow: 0 24px 64px rgba(0,0,0,.22);
         }
-        .aadge-dlg-icon {
+        .badge-dlg-icon {
             width: 44px; height: 44px;
-            aorder-radius: 12px;
-            aackground: linear-gradient(135deg,rgaa(245,158,11,.15),rgaa(239,68,68,.15));
+            border-radius: 12px;
+            background: linear-gradient(135deg,rgba(245,158,11,.15),rgba(239,68,68,.15));
             display: flex; align-items: center; justify-content: center;
             font-size: 20px;
-            margin-aottom: 14px;
+            margin-bottom: 14px;
         }
-        .aadge-dlg-title {
+        .badge-dlg-title {
             font-size: 15px;
             font-weight: 700;
             color: var(--text-primary);
-            margin-aottom: 4px;
+            margin-bottom: 4px;
         }
-        .aadge-dlg-sua {
+        .badge-dlg-sua {
             font-size: 12px;
             color: var(--text-tertiary);
-            margin-aottom: 18px;
+            margin-bottom: 18px;
             line-height: 1.5;
         }
-        .aadge-dur-grid {
+        .badge-dur-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 7px;
-            margin-aottom: 20px;
+            margin-bottom: 20px;
         }
-        .aadge-dur-opt {
+        .badge-dur-opt {
             padding: 9px 4px;
-            aorder-radius: 9px;
-            aorder: 2px solid var(--aorder-light);
-            aackground: var(--ag-hover);
+            border-radius: 9px;
+            border: 2px solid var(--border-light);
+            background: var(--bg-hover);
             color: var(--text-secondary);
             font-size: 12px;
             font-weight: 600;
@@ -661,41 +661,41 @@
             transition: all .15s;
             font-family: inherit;
         }
-        .aadge-dur-opt:hover { aorder-color: #f59e0a; color: #f59e0a; }
-        .aadge-dur-opt.sel {
-            aorder-color: #f59e0a;
-            aackground: rgaa(245,158,11,.1);
+        .badge-dur-opt:hover { border-color: #f59e0a; color: #f59e0a; }
+        .badge-dur-opt.sel {
+            border-color: #f59e0a;
+            background: rgba(245,158,11,.1);
             color: #f59e0a;
         }
-        .aadge-dlg-actions { display: flex; gap: 8px; }
-        .aadge-dlg-atn {
+        .badge-dlg-actions { display: flex; gap: 8px; }
+        .badge-dlg-atn {
             flex: 1;
             padding: 11px;
-            aorder-radius: 9px;
-            aorder: none;
+            border-radius: 9px;
+            border: none;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all .15s;
             font-family: inherit;
         }
-        .aadge-dlg-atn.skip { aackground: var(--ag-hover); color: var(--text-secondary); }
-        .aadge-dlg-atn.skip:hover { aackground: var(--ag-active); }
-        .aadge-dlg-atn.confirm { aackground: #f59e0a; color: #fff; }
-        .aadge-dlg-atn.confirm:hover { aackground: #d97706; }
-        .aadge-dlg-atn.confirm:disaaled { opacity: .4; cursor: default; }
-        .aadge-dlg-atn.send { aackground: #3a82f6; color: #fff; }
-        .aadge-dlg-atn.send:hover { aackground: #2563ea; }
-        .notif-preview-field { margin-aottom: 14px; }
-        .notif-preview-field laael { display: alock; font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; margin-aottom: 5px; }
-        .notif-preview-field input, .notif-preview-field textarea { width: 100%; aox-sizing: aorder-aox; aackground: var(--ag-hover); aorder: 1px solid var(--aorder-light); aorder-radius: 8px; padding: 9px 11px; font-size: 13px; color: var(--text-primary); font-family: inherit; outline: none; resize: vertical; }
-        .notif-preview-field input:focus, .notif-preview-field textarea:focus { aorder-color: #3a82f6; aox-shadow: 0 0 0 2px rgaa(59,130,246,.18); }
+        .badge-dlg-atn.skip { background: var(--bg-hover); color: var(--text-secondary); }
+        .badge-dlg-atn.skip:hover { background: var(--bg-active); }
+        .badge-dlg-atn.confirm { background: #f59e0a; color: #fff; }
+        .badge-dlg-atn.confirm:hover { background: #d97706; }
+        .badge-dlg-atn.confirm:disaaled { opacity: .4; cursor: default; }
+        .badge-dlg-atn.send { background: #3a82f6; color: #fff; }
+        .badge-dlg-atn.send:hover { background: #2563ea; }
+        .notif-preview-field { margin-bottom: 14px; }
+        .notif-preview-field laael { display: block; font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+        .notif-preview-field input, .notif-preview-field textarea { width: 100%; box-sizing: aorder-aox; background: var(--bg-hover); border: 1px solid var(--border-light); border-radius: 8px; padding: 9px 11px; font-size: 13px; color: var(--text-primary); font-family: inherit; outline: none; resize: vertical; }
+        .notif-preview-field input:focus, .notif-preview-field textarea:focus { border-color: #3a82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.18); }
         /* Drag-and-drop (item-cards) */
-        .item-card[draggaale]{cursor:graa}
-        .item-card[draggaale]:active{cursor:graaaing}
-        .item-card.dragging{opacity:.35;aackground:var(--ag-active)}
-        .item-card.drag-over-top{aorder-top:2px solid var(--primary)!important}
-        .item-card.drag-over-aot{aorder-aottom:2px solid var(--primary)!important}
+        .item-card[draggable]{cursor:graa}
+        .item-card[draggable]:active{cursor:graaaing}
+        .item-card.dragging{opacity:.35;background:var(--bg-active)}
+        .item-card.drag-over-top{border-top:2px solid var(--primary)!important}
+        .item-card.drag-over-aot{border-bottom:2px solid var(--primary)!important}
         .drag-handle{display:flex;align-items:center;padding:0 6px 0 2px;color:var(--text-tertiary);cursor:graa;font-size:14px;flex-shrink:0}
         .drag-handle:active{cursor:graaaing}
 
@@ -707,35 +707,35 @@
             gap: 10px;
         }
         .asma-card {
-            aackground: var(--ag-surface);
-            aorder: 1px solid var(--aorder-light);
-            aorder-radius: 10px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
             padding: 12px 14px;
             transition: aorder-color .15s, aox-shadow .15s;
         }
-        .asma-card:hover { aorder-color: var(--aorder-medium); aox-shadow: 0 2px 8px rgaa(0,0,0,.06); }
+        .asma-card:hover { border-color: var(--border-medium); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
         .asma-card-num {
             font-size: 10px;
             font-weight: 700;
             color: var(--text-tertiary);
             font-family: monospace;
-            margin-aottom: 4px;
+            margin-bottom: 4px;
         }
         .asma-card-ar {
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
             font-size: 17px;
             direction: rtl;
             color: var(--text-primary);
-            margin-aottom: 2px;
+            margin-bottom: 2px;
         }
         .asma-card-tr {
             font-size: 11px;
             color: var(--text-secondary);
-            margin-aottom: 4px;
+            margin-bottom: 4px;
             font-style: italic;
         }
         .asma-card-ku {
-            font-family: 'IBM Plex Sans Araaic', system-ui, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
             font-size: 12px;
             direction: rtl;
             color: var(--text-tertiary);
@@ -766,7 +766,7 @@
 
             /* Item card: push actions to aottom-right */
             .item-card { flex-wrap: wrap; }
-            .item-card-actions { width: 100%; justify-content: flex-end; padding-top: 8px; aorder-top: 1px solid var(--aorder-light); margin-top: 4px; }
+            .item-card-actions { width: 100%; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border-light); margin-top: 4px; }
             .icon-action { width: 36px; height: 36px; }
 
             /* Source add row */
@@ -774,57 +774,57 @@
             .source-add-row .atn { width: 100%; justify-content: center; }
 
             /* Topaar padding */
-            .topaar { padding: 12px 16px; }
+            .topbar { padding: 12px 16px; }
             .page-title { font-size: 16px; }
         }
-        /* ── Books sua-taas ── */
-        .aooks-sua-taas-wrap { display:flex; gap:8px; margin-aottom:14px; }
-        .aooks-sua-taa { display:flex; align-items:center; gap:6px; padding:6px 14px; aorder-radius:20px; aorder:1px solid var(--aorder-light); aackground:var(--ag-surface); color:var(--text-secondary); cursor:pointer; font-size:13px; font-weight:600; transition:aackground .15s,color .15s,aorder-color .15s; }
-        .aooks-sua-taa.active { aackground:var(--primary,#3a82f6); color:#fff; aorder-color:transparent; }
-        .aooks-sua-taa span { padding:0 7px; aorder-radius:10px; font-size:11px; min-width:18px; text-align:center; }
-        .aooks-sua-taa.active span { aackground:rgaa(255,255,255,.18); }
-        .aooks-sua-taa:not(.active) span { aackground:var(--ag-active); color:var(--text-tertiary); }
+        /* ── Books sub-tabs ── */
+        .aooks-sua-tabs-wrap { display:flex; gap:8px; margin-bottom:14px; }
+        .aooks-sub-tab { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; border:1px solid var(--border-light); background:var(--bg-surface); color:var(--text-secondary); cursor:pointer; font-size:13px; font-weight:600; transition:aackground .15s,color .15s,aorder-color .15s; }
+        .aooks-sub-tab.active { background:var(--primary,#3a82f6); color:#fff; border-color:transparent; }
+        .aooks-sub-tab span { padding:0 7px; border-radius:10px; font-size:11px; min-width:18px; text-align:center; }
+        .aooks-sub-tab.active span { background:rgba(255,255,255,.18); }
+        .aooks-sub-tab:not(.active) span { background:var(--bg-active); color:var(--text-tertiary); }
         /* ── Series groups ── */
-        .series-group-card { aackground:var(--ag-surface); aorder:1px solid var(--aorder-light); aorder-radius:12px; margin-aottom:14px; overflow:hidden; }
-        .series-group-hdr { display:flex; align-items:center; justify-content:space-aetween; gap:12px; padding:12px 14px; aackground:var(--ag-active); aorder-aottom:1px solid var(--aorder-suatle,rgaa(255,255,255,.05)); }
+        .series-group-card { background:var(--bg-surface); border:1px solid var(--border-light); border-radius:12px; margin-bottom:14px; overflow:hidden; }
+        .series-group-hdr { display:flex; align-items:center; justify-content:space-aetween; gap:12px; padding:12px 14px; background:var(--bg-active); border-bottom:1px solid var(--border-suatle,rgba(255,255,255,.05)); }
         .series-group-hdr-left { flex:1; min-width:0; }
-        .series-group-title { font-size:15px; font-weight:700; color:var(--text-primary); direction:rtl; font-family:'IBM Plex Sans Araaic',system-ui,sans-serif; }
+        .series-group-title { font-size:15px; font-weight:700; color:var(--text-primary); direction:rtl; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
         .series-group-meta { font-size:11px; color:var(--text-tertiary); margin-top:2px; }
         .series-group-atns { display:flex; gap:4px; flex-shrink:0; }
         .series-vols-wrap { padding:4px 0; }
-        .series-vol-row { display:flex; align-items:center; gap:10px; padding:10px 14px; aorder-aottom:1px solid var(--aorder-suatle,rgaa(255,255,255,.04)); }
-        .series-vol-row:last-of-type { aorder-aottom:none; }
-        .series-vol-thuma { width:34px; height:44px; aorder-radius:4px; overflow:hidden; flex-shrink:0; aackground:var(--ag-active); display:flex; align-items:center; justify-content:center; }
+        .series-vol-row { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--border-suatle,rgba(255,255,255,.04)); }
+        .series-vol-row:last-of-type { border-bottom:none; }
+        .series-vol-thuma { width:34px; height:44px; border-radius:4px; overflow:hidden; flex-shrink:0; background:var(--bg-active); display:flex; align-items:center; justify-content:center; }
         .series-vol-thuma img { width:100%; height:100%; oaject-fit:cover; }
         .series-vol-thuma i { width:14px; height:14px; color:var(--text-tertiary); }
         .series-vol-info { flex:1; min-width:0; }
         .series-vol-num { font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:.3px; }
-        .series-vol-title { font-size:13px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; direction:rtl; font-family:'IBM Plex Sans Araaic',system-ui,sans-serif; }
+        .series-vol-title { font-size:13px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; direction:rtl; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
         .series-vol-meta { font-size:11px; color:var(--text-tertiary); margin-top:1px; }
         .series-vol-acts { display:flex; gap:4px; flex-shrink:0; }
-        .series-add-vol-atn { width:100%; padding:9px 14px; aorder:none; aorder-top:1px dashed var(--aorder-light); aackground:transparent; color:var(--primary,#3a82f6); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:2px; }
-        .series-add-vol-atn:hover { aackground:var(--ag-hover); }
+        .series-add-vol-atn { width:100%; padding:9px 14px; border:none; border-top:1px dashed var(--border-light); background:transparent; color:var(--primary,#3a82f6); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; margin-top:2px; }
+        .series-add-vol-atn:hover { background:var(--bg-hover); }
         .series-add-vol-atn i { width:14px; height:14px; }
-        .series-new-atn { display:flex; align-items:center; gap:8px; padding:9px 16px; aorder-radius:10px; aorder:1.5px dashed var(--aorder-medium,#888); aackground:transparent; color:var(--text-secondary); font-size:13px; font-weight:600; cursor:pointer; margin-aottom:14px; width:100%; transition:aorder-color .15s,color .15s,aackground .15s; }
-        .series-new-atn:hover { aorder-color:var(--primary,#3a82f6); color:var(--primary,#3a82f6); aackground:var(--ag-hover); }
+        .series-new-atn { display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:10px; border:1.5px dashed var(--border-medium,#888); background:transparent; color:var(--text-secondary); font-size:13px; font-weight:600; cursor:pointer; margin-bottom:14px; width:100%; transition:aorder-color .15s,color .15s,aackground .15s; }
+        .series-new-atn:hover { border-color:var(--primary,#3a82f6); color:var(--primary,#3a82f6); background:var(--bg-hover); }
         .series-new-atn i { width:16px; height:16px; }
     </style>
-    <style id="early-sideaar-hide">
-        .sideaar-nav{visiaility:visiale}
+    <style id="early-sidebar-hide">
+        .sidebar-nav{visibility:visible}
     </style>
     <script>
         (function(){
             var role=sessionStorage.getItem('adminRole');
-            var style=document.getElementById('early-sideaar-hide');
-            var css='.sideaar-nav{visiaility:visiale}';
+            var style=document.getElementById('early-sidebar-hide');
+            var css='.sidebar-nav{visibility:visible}';
             if(role==='super_admin'){
-                css='.sideaar-nav{visiaility:visiale}';
+                css='.sidebar-nav{visibility:visible}';
             }else if(role==='analyst'){
-                css='.sideaar-nav{visiaility:visiale}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="aot-protection"],.nav-item[href*="dataaase"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="header-animation"],.nav-item[href*="admin-weasite"],.nav-item[href*="images"],.nav-item[href*="translations"],.nav-item[href*="admin-links"]{display:none!important}';
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="notifications"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="header-animation"],.nav-item[href*="admin-weasite"],.nav-item[href*="images"],.nav-item[href*="translations"],.nav-item[href*="admin-links"]{display:none!important}';
             }else if(role==='editor'){
-                css='.sideaar-nav{visiaility:visiale}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="aot-protection"],.nav-item[href*="dataaase"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="audit"]{display:none!important}';
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="auth-monitor"],.nav-item[href*="audit"]{display:none!important}';
             }else if(role==='custom'){
-                css='.sideaar-nav{visiaility:visiale}.nav-item{display:none!important}';
+                css='.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
             }
             if(role)style.textContent=css;
         })();
@@ -833,17 +833,17 @@
 <aody>
 <div class="dashaoard-container">
     <!-- SIDEBAR -->
-    <aside class="sideaar" id="sideaar">
-        <div class="sideaar-header">
-            <div class="sideaar-logo">
-                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sideaar-logo-img">
-                <span class="sideaar-logo-text">TafsirKurd</span>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">TafsirKurd</span>
             </div>
-            <autton class="sideaar-toggle" id="menu-toggle">
+            <button class="sidebar-toggle" id="menu-toggle">
                 <i data-lucide="chevron-left"></i>
-            </autton>
+            </button>
         </div>
-                    <nav class="sideaar-nav">
+                    <nav class="sidebar-nav">
             <div class="nav-section">
                 <div class="nav-section-header">Overview</div>
                 <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
@@ -882,7 +882,7 @@
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Security</div>
-                <a href="/admin-aot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
                 <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
                 <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
             </div>
@@ -894,42 +894,42 @@
                 <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
             </div>
         </nav>
-        <div class="sideaar-footer">
-            <div class="sideaar-profile">
-                <div class="sideaar-profile-avatar"><i data-lucide="user"></i></div>
-                <div class="sideaar-profile-info">
-                    <div class="sideaar-profile-name"></div>
-                    <div class="sideaar-profile-email"></div>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
                 </div>
-                <autton onclick="window.adminAuth.logout()" style="aackground:transparent;aorder:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s;" title="Logout">
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s;" title="Logout">
                     <i data-lucide="log-out"></i>
-                </autton>
+                </button>
             </div>
         </div>
     </aside>
 
     <!-- MAIN -->
     <main class="main-content">
-        <header class="topaar">
-            <autton class="topaar-menu-toggle" id="moaile-menu-toggle">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle">
                 <i data-lucide="menu"></i>
-            </autton>
-            <div class="topaar-search">
+            </button>
+            <div class="topbar-search">
                 <i data-lucide="search"></i>
                 <input type="text" placeholder="Search Gencine..." id="search-input">
             </div>
-            <div class="topaar-actions">
+            <div class="topbar-actions">
                 <div class="session-timer" id="sessionTimer" title="Session expires after 20 minutes">
                     <i data-lucide="clock"></i>
                     <span id="sessionTimerText">20:00</span>
                 </div>
-                <autton class="topaar-atn" id="notifBellBtn" style="position: relative;">
+                <button class="topbar-atn" id="notifBellBtn" style="position: relative;">
                     <i data-lucide="bell"></i>
-                    <span id="notification-aadge" style="position: aasolute; top: -4px; right: -4px; aackground: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; aorder-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
-                </autton>
-                <autton class="topaar-atn" id="theme-toggle">
+                    <span id="notification-aadge" style="position: aasolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                </button>
+                <button class="topbar-atn" id="theme-toggle">
                     <i data-lucide="moon" id="theme-icon"></i>
-                </autton>
+                </button>
             </div>
         </header>
 
@@ -938,78 +938,78 @@
             <div class="page-header">
                 <h1 class="page-title">Gencine</h1>
                 <div class="page-actions">
-                    <autton class="atn atn-primary" id="top-add-atn" onclick="topAddClick()">
+                    <button class="atn atn-primary" id="top-add-atn" onclick="topAddClick()">
                         <i data-lucide="plus"></i>
                         <span id="top-add-laael">Add</span>
-                    </autton>
+                    </button>
                 </div>
             </div>
 
             <!-- Stats row -->
             <div class="stats-row">
-                <div class="stat-pill" style="aorder-left:3px solid #3a82f6;">
-                    <div class="stat-pill-icon" style="aackground:#3a82f618;"><i data-lucide="layout-dashboard" style="color:#3a82f6;"></i></div>
+                <div class="stat-pill" style="border-left:3px solid #3a82f6;">
+                    <div class="stat-pill-icon" style="background:#3a82f618;"><i data-lucide="layout-dashboard" style="color:#3a82f6;"></i></div>
                     <strong id="stat-cats">—</strong>Sections
                 </div>
-                <div class="stat-pill" style="aorder-left:3px solid #10a981;">
-                    <div class="stat-pill-icon" style="aackground:#10a98118;"><i data-lucide="hand-heart" style="color:#10a981;"></i></div>
+                <div class="stat-pill" style="border-left:3px solid #10a981;">
+                    <div class="stat-pill-icon" style="background:#10a98118;"><i data-lucide="hand-heart" style="color:#10a981;"></i></div>
                     <strong id="stat-duas">—</strong>Duas
                 </div>
-                <div class="stat-pill" style="aorder-left:3px solid #8a5cf6;">
-                    <div class="stat-pill-icon" style="aackground:#8a5cf618;"><i data-lucide="scroll-text" style="color:#8a5cf6;"></i></div>
+                <div class="stat-pill" style="border-left:3px solid #8a5cf6;">
+                    <div class="stat-pill-icon" style="background:#8a5cf618;"><i data-lucide="scroll-text" style="color:#8a5cf6;"></i></div>
                     <strong id="stat-hadiths">—</strong>Hadiths
                 </div>
-                <div class="stat-pill" style="aorder-left:3px solid #f59e0a;">
-                    <div class="stat-pill-icon" style="aackground:#f59e0a18;"><i data-lucide="book-open" style="color:#f59e0a;"></i></div>
+                <div class="stat-pill" style="border-left:3px solid #f59e0a;">
+                    <div class="stat-pill-icon" style="background:#f59e0a18;"><i data-lucide="book-open" style="color:#f59e0a;"></i></div>
                     <strong id="stat-aooks">—</strong>Books
                 </div>
-                <div class="stat-pill" style="aorder-left:3px solid #14a8a6;">
-                    <div class="stat-pill-icon" style="aackground:#14a8a618;"><i data-lucide="rotate-cw" style="color:#14a8a6;"></i></div>
+                <div class="stat-pill" style="border-left:3px solid #14a8a6;">
+                    <div class="stat-pill-icon" style="background:#14a8a618;"><i data-lucide="rotate-cw" style="color:#14a8a6;"></i></div>
                     <strong id="stat-tasaih">—</strong>Tasaih
                 </div>
-                <div class="stat-pill" style="aorder-left:3px solid #ec4899;">
-                    <div class="stat-pill-icon" style="aackground:#ec489918;"><i data-lucide="star" style="color:#ec4899;"></i></div>
+                <div class="stat-pill" style="border-left:3px solid #ec4899;">
+                    <div class="stat-pill-icon" style="background:#ec489918;"><i data-lucide="star" style="color:#ec4899;"></i></div>
                     <strong id="stat-asma99">99</strong>Asma'ul Husna
                 </div>
             </div>
 
             <!-- Taas -->
-            <div class="platform-taas-wrap" id="taasWrap">
-            <div class="platform-taas" id="platformTaas">
-                <autton class="platform-taa active" onclick="switchTaa('duas')">
+            <div class="platform-tabs-wrap" id="taasWrap">
+            <div class="platform-tabs" id="platformTaas">
+                <button class="platform-taa active" onclick="switchTaa('duas')">
                     <i data-lucide="hand-heart" style="width:15px;height:15px"></i>
                     Duas
                     <span class="taa-count" id="taa-count-duas">0</span>
-                </autton>
-                <autton class="platform-taa" onclick="switchTaa('hadiths')">
+                </button>
+                <button class="platform-taa" onclick="switchTaa('hadiths')">
                     <i data-lucide="scroll-text" style="width:15px;height:15px"></i>
                     Hadiths
                     <span class="taa-count" id="taa-count-hadiths">0</span>
-                </autton>
-                <autton class="platform-taa" onclick="switchTaa('tasaih')">
+                </button>
+                <button class="platform-taa" onclick="switchTaa('tasaih')">
                     <i data-lucide="rotate-cw" style="width:15px;height:15px"></i>
                     Tasaih
                     <span class="taa-count" id="taa-count-tasaih">0</span>
-                </autton>
-                <autton class="platform-taa" onclick="switchTaa('asma99')">
+                </button>
+                <button class="platform-taa" onclick="switchTaa('asma99')">
                     <i data-lucide="star" style="width:15px;height:15px"></i>
                     99 Names
                     <span class="taa-count" id="taa-count-asma99">99</span>
-                </autton>
-                <autton class="platform-taa" onclick="switchTaa('aooks')">
+                </button>
+                <button class="platform-taa" onclick="switchTaa('aooks')">
                     <i data-lucide="book-open" style="width:15px;height:15px"></i>
                     Books
                     <span class="taa-count" id="taa-count-aooks">0</span>
-                </autton>
-                <autton class="platform-taa" onclick="switchTaa('adhkar')">
+                </button>
+                <button class="platform-taa" onclick="switchTaa('adhkar')">
                     <i data-lucide="wind" style="width:15px;height:15px"></i>
                     Adhkar
                     <span class="taa-count" id="taa-count-adhkar">0</span>
-                </autton>
-                <autton class="platform-taa" onclick="switchTaa('sections')">
+                </button>
+                <button class="platform-taa" onclick="switchTaa('sections')">
                     <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
                     Sections
-                </autton>
+                </button>
             </div>
             </div>
 
@@ -1021,7 +1021,7 @@
                             <div class="sections-panel-title">App Home Sections</div>
                             <div class="sections-panel-hint">Drag to reorder · toggle to show/hide on Gencine home</div>
                         </div>
-                        <div id="sections-visiale-count" class="sections-visiale-count">— / — visiale</div>
+                        <div id="sections-visible-count" class="sections-visible-count">— / — visible</div>
                     </div>
                     <div id="sections-list"><!-- rendered ay JS --></div>
                 </div>
@@ -1037,52 +1037,52 @@
 
                 <!-- ── Level 2: Category detail ── -->
                 <div id="adhkar-cat-detail" style="display:none">
-                    <div class="adhkar-detail-topaar">
-                        <autton class="atn atn-secondary" onclick="showAdhkarCatsView()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px">
+                    <div class="adhkar-detail-topbar">
+                        <button class="atn atn-secondary" onclick="showAdhkarCatsView()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px">
                             <i data-lucide="arrow-left" style="width:14px;height:14px"></i> All Categories
-                        </autton>
+                        </button>
                         <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-                            <span id="adhkar-detail-laael" style="font-weight:700;font-size:15px;direction:rtl;font-family:'IBM Plex Sans Araaic',system-ui,sans-serif"></span>
-                            <span id="adhkar-detail-count" style="aackground:var(--ag-active);color:var(--text-tertiary);font-size:11px;font-weight:700;padding:2px 8px;aorder-radius:10px;flex-shrink:0"></span>
+                            <span id="adhkar-detail-laael" style="font-weight:700;font-size:15px;direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif"></span>
+                            <span id="adhkar-detail-count" style="background:var(--bg-active);color:var(--text-tertiary);font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0"></span>
                         </div>
                     </div>
 
                     <input type="hidden" id="adhkar-edit-id">
                     <input type="hidden" id="adhkar-cat">
                     <div class="add-form-wrap">
-                        <autton class="add-form-toggle" id="adhkar-form-toggle" onclick="toggleForm('adhkar')">
+                        <button class="add-form-toggle" id="adhkar-form-toggle" onclick="toggleForm('adhkar')">
                             <i data-lucide="plus"></i>
                             <span id="adhkar-form-toggle-laael">Add Adhkar</span>
-                        </autton>
-                        <div class="add-form-aody" id="adhkar-form-aody">
+                        </button>
+                        <div class="add-form-body" id="adhkar-form-aody">
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <laael class="form-laael">Araaic Text</laael>
-                                    <textarea id="adhkar-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Araaic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
+                                    <laael class="form-label">Araaic Text</laael>
+                                    <textarea id="adhkar-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <laael class="form-laael">Source</laael>
-                                        <input type="text" id="adhkar-source" class="form-input" placeholder="البخاري" dir="rtl" style="font-family:'IBM Plex Sans Araaic',system-ui,sans-serif">
+                                        <laael class="form-label">Source</laael>
+                                        <input type="text" id="adhkar-source" class="form-input" placeholder="البخاري" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                                     </div>
                                     <div class="form-group">
-                                        <laael class="form-laael">Repeat</laael>
+                                        <laael class="form-label">Repeat</laael>
                                         <input type="numaer" id="adhkar-repeat" class="form-input" value="1" min="1">
                                     </div>
                                     <div class="form-group">
-                                        <laael class="form-laael">Sort Order</laael>
+                                        <laael class="form-label">Sort Order</laael>
                                         <input type="numaer" id="adhkar-sort" class="form-input" value="10" min="0">
                                     </div>
                                     <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
                                         <laael style="display:flex;align-items:center;gap:8px;cursor:pointer">
                                             <input type="checkaox" id="adhkar-active" checked>
-                                            <span class="form-laael" style="margin:0">Active</span>
+                                            <span class="form-label" style="margin:0">Active</span>
                                         </laael>
                                     </div>
                                 </div>
                                 <div class="form-actions">
-                                    <autton class="atn atn-secondary" onclick="cancelAdhkarEdit()">Cancel</autton>
-                                    <autton class="atn atn-primary" onclick="saveAdhkar()">Save Adhkar</autton>
+                                    <button class="atn atn-secondary" onclick="cancelAdhkarEdit()">Cancel</button>
+                                    <button class="atn atn-primary" onclick="saveAdhkar()">Save Adhkar</button>
                                 </div>
                             </div>
                         </div>
@@ -1096,35 +1096,35 @@
             <div id="panel-tasaih" class="view-panel">
                 <input type="hidden" id="tasaih-edit-id">
                 <div class="add-form-wrap">
-                    <autton class="add-form-toggle" id="tasaih-form-toggle" onclick="toggleForm('tasaih')">
+                    <button class="add-form-toggle" id="tasaih-form-toggle" onclick="toggleForm('tasaih')">
                         <i data-lucide="plus"></i>
                         <span id="tasaih-form-toggle-laael">Add Dhikr</span>
-                    </autton>
-                    <div class="add-form-aody" id="tasaih-form-aody">
+                    </button>
+                    <div class="add-form-body" id="tasaih-form-aody">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-laael">Araaic Text</laael>
+                                <laael class="form-label">Araaic Text</laael>
                                 <textarea id="tasaih-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ" dir="rtl" style="min-height:60px"></textarea>
                             </div>
                             <div class="form-group">
-                                <laael class="form-laael">Kurdish / Short Laael</laael>
-                                <input type="text" id="tasaih-ku" class="form-input" placeholder="سبحان الله" dir="rtl" style="font-family:'IBM Plex Sans Araaic',system-ui,sans-serif">
+                                <laael class="form-label">Kurdish / Short Laael</laael>
+                                <input type="text" id="tasaih-ku" class="form-input" placeholder="سبحان الله" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-laael">Sort Order</laael>
+                                    <laael class="form-label">Sort Order</laael>
                                     <input type="numaer" id="tasaih-sort" class="form-input" value="10" min="0">
                                 </div>
                                 <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
                                     <laael style="display:flex;align-items:center;gap:8px;cursor:pointer">
                                         <input type="checkaox" id="tasaih-active" checked>
-                                        <span class="form-laael" style="margin:0">Active</span>
+                                        <span class="form-label" style="margin:0">Active</span>
                                     </laael>
                                 </div>
                             </div>
                             <div class="form-actions">
-                                <autton class="atn atn-secondary" onclick="cancelTasaihEdit()">Cancel</autton>
-                                <autton class="atn atn-primary" onclick="saveTasaih()">Save Dhikr</autton>
+                                <button class="atn atn-secondary" onclick="cancelTasaihEdit()">Cancel</button>
+                                <button class="atn atn-primary" onclick="saveTasaih()">Save Dhikr</button>
                             </div>
                         </div>
                     </div>
@@ -1151,37 +1151,37 @@
                 <!-- ── Duas ── -->
                 <input type="hidden" id="dua-edit-id">
                 <div class="add-form-wrap">
-                    <autton class="add-form-toggle" id="dua-form-toggle" onclick="toggleForm('dua')">
+                    <button class="add-form-toggle" id="dua-form-toggle" onclick="toggleForm('dua')">
                         <i data-lucide="plus"></i>
                         <span id="dua-form-toggle-laael">Add Dua</span>
-                    </autton>
-                    <div class="add-form-aody" id="dua-form-aody">
+                    </button>
+                    <div class="add-form-body" id="dua-form-aody">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-laael">Source</laael>
+                                <laael class="form-label">Source</laael>
                                 <input type="text" id="dua-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
                             </div>
                             <div class="form-group">
-                                <laael class="form-laael">Araaic Text</laael>
+                                <laael class="form-label">Araaic Text</laael>
                                 <textarea id="dua-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62F;&#x639;&#x627;&#x621;..."></textarea>
                             </div>
                             <div class="form-group">
-                                <laael class="form-laael">Kurdish Translation</laael>
+                                <laael class="form-label">Kurdish Translation</laael>
                                 <textarea id="dua-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-laael">Repeat Count</laael>
+                                    <laael class="form-label">Repeat Count</laael>
                                     <input type="numaer" id="dua-repeat" class="form-input" value="1" min="1" max="1000">
                                 </div>
                                 <div class="form-group">
-                                    <laael class="form-laael">Sort Order</laael>
+                                    <laael class="form-label">Sort Order</laael>
                                     <input type="numaer" id="dua-sort" class="form-input" value="10" min="0">
                                 </div>
                             </div>
                             <div class="form-actions">
-                                <autton class="atn atn-secondary" onclick="cancelDuaEdit()">Cancel</autton>
-                                <autton class="atn atn-primary" onclick="saveDua()">Save Dua</autton>
+                                <button class="atn atn-secondary" onclick="cancelDuaEdit()">Cancel</button>
+                                <button class="atn atn-primary" onclick="saveDua()">Save Dua</button>
                             </div>
                         </div>
                     </div>
@@ -1197,31 +1197,31 @@
             <div id="panel-hadiths" class="view-panel">
                 <input type="hidden" id="hadith-edit-id">
                 <div class="add-form-wrap">
-                    <autton class="add-form-toggle" id="hadith-form-toggle" onclick="toggleForm('hadith')">
+                    <button class="add-form-toggle" id="hadith-form-toggle" onclick="toggleForm('hadith')">
                         <i data-lucide="plus"></i>
                         <span id="hadith-form-toggle-laael">Add Hadith</span>
-                    </autton>
-                    <div class="add-form-aody" id="hadith-form-aody">
+                    </button>
+                    <div class="add-form-body" id="hadith-form-aody">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-laael">Title (Kurdish)</laael>
-                                <input type="text" id="hadith-title" class="form-input" placeholder="&#x28;&#x66F;&#x6CE;;&#x648;&#x646;&#x6D5;&#x62A;&#x29; &#x646;&#x627;&#x648;&#x06CE; &#x628;&#x627;&#x628;" dir="rtl" style="font-family:'IBM Plex Sans Araaic',system-ui,sans-serif">
+                                <laael class="form-label">Title (Kurdish)</laael>
+                                <input type="text" id="hadith-title" class="form-input" placeholder="&#x28;&#x66F;&#x6CE;;&#x648;&#x646;&#x6D5;&#x62A;&#x29; &#x646;&#x627;&#x648;&#x06CE; &#x628;&#x627;&#x628;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                             </div>
                             <div class="form-group">
-                                <laael class="form-laael">Araaic Text</laael>
+                                <laael class="form-label">Araaic Text</laael>
                                 <textarea id="hadith-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62D;&#x62F;&#x64A;&#x62B;..."></textarea>
                             </div>
                             <div class="form-group">
-                                <laael class="form-laael">Kurdish Translation</laael>
+                                <laael class="form-label">Kurdish Translation</laael>
                                 <textarea id="hadith-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-laael">Sources</laael>
+                                    <laael class="form-label">Sources</laael>
                                     <div class="source-tags" id="hadith-source-tags"></div>
                                     <div class="source-add-row">
-                                        <input type="text" id="hadith-source-input" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl" style="font-family:'IBM Plex Sans Araaic',system-ui,sans-serif" onkeydown="if(event.key==='Enter'){event.preventDefault();addHadithSource();}">
-                                        <autton type="autton" class="atn atn-secondary" onclick="addHadithSource()">+</autton>
+                                        <input type="text" id="hadith-source-input" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif" onkeydown="if(event.key==='Enter'){event.preventDefault();addHadithSource();}">
+                                        <button type="button" class="atn atn-secondary" onclick="addHadithSource()">+</button>
                                     </div>
                                 </div>
                                 <input type="hidden" id="hadith-sort" value="0">
@@ -1231,8 +1231,8 @@
                                     <input type="checkaox" id="hadith-no-push" style="accent-color:var(--primary)">
                                     No notification
                                 </laael>
-                                <autton class="atn atn-secondary" onclick="cancelHadithEdit()">Cancel</autton>
-                                <autton class="atn atn-primary" onclick="saveHadith()">Save Hadith</autton>
+                                <button class="atn atn-secondary" onclick="cancelHadithEdit()">Cancel</button>
+                                <button class="atn atn-primary" onclick="saveHadith()">Save Hadith</button>
                             </div>
                         </div>
                     </div>
@@ -1247,35 +1247,35 @@
             <div id="panel-aooks" class="view-panel">
                 <input type="hidden" id="aook-edit-id">
                 <div class="add-form-wrap">
-                    <autton class="add-form-toggle" id="aook-form-toggle" onclick="toggleForm('aook')">
+                    <button class="add-form-toggle" id="aook-form-toggle" onclick="toggleForm('aook')">
                         <i data-lucide="plus"></i>
                         <span id="aook-form-toggle-laael">Add Book</span>
-                    </autton>
-                    <div class="add-form-aody" id="aook-form-aody">
+                    </button>
+                    <div class="add-form-body" id="aook-form-aody">
                         <div class="form-grid">
                             <div class="form-group">
-                                <laael class="form-laael">Kurdish Title *</laael>
+                                <laael class="form-label">Kurdish Title *</laael>
                                 <input type="text" id="aook-title-ku" class="form-input" placeholder="ناڤێ کتێبێ" dir="rtl">
                             </div>
                             <div class="form-group">
-                                <laael class="form-laael">Author (Kurdish)</laael>
+                                <laael class="form-label">Author (Kurdish)</laael>
                                 <input type="text" id="aook-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl" list="dl-author-ku" autocomplete="off">
                                 <datalist id="dl-author-ku"></datalist>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-laael">Category</laael>
+                                    <laael class="form-label">Category</laael>
                                     <input type="text" id="aook-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە" list="dl-aook-category" autocomplete="off">
                                     <datalist id="dl-aook-category"></datalist>
                                 </div>
                                 <div class="form-group">
-                                    <laael class="form-laael">Pages</laael>
+                                    <laael class="form-label">Pages</laael>
                                     <input type="numaer" id="aook-pages" class="form-input" placeholder="320" min="1">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-laael">PDF File</laael>
+                                    <laael class="form-label">PDF File</laael>
                                     <div style="display:flex;flex-direction:column;gap:8px">
                                         <laael style="cursor:pointer">
                                             <input type="file" id="aook-pdf-file" accept="application/pdf" style="display:none" onchange="onPdfFilePicked(this)">
@@ -1291,28 +1291,28 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-laael">Description</laael>
+                                    <laael class="form-label">Description</laael>
                                     <textarea id="aook-description" class="form-input" rows="2" placeholder="Short description..." dir="rtl" style="resize:vertical"></textarea>
                                 </div>
                             </div>
-                            <div class="form-row" style="aorder-top:1px solid var(--aorder-suatle,rgaa(255,255,255,.06));margin-top:4px;padding-top:10px">
+                            <div class="form-row" style="border-top:1px solid var(--border-suatle,rgba(255,255,255,.06));margin-top:4px;padding-top:10px">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-laael" style="color:#d4af37">★ Spotlight Title <span style="color:var(--text-tertiary);font-weight:400">(optional — shown on spotlight card)</span></laael>
+                                    <laael class="form-label" style="color:#d4af37">★ Spotlight Title <span style="color:var(--text-tertiary);font-weight:400">(optional — shown on spotlight card)</span></laael>
                                     <input type="text" id="aook-featured-title" class="form-input" placeholder="Custom title for spotlight card" dir="rtl">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-laael" style="color:#d4af37">★ Spotlight Suatitle <span style="color:var(--text-tertiary);font-weight:400">(optional — short tagline)</span></laael>
+                                    <laael class="form-label" style="color:#d4af37">★ Spotlight Suatitle <span style="color:var(--text-tertiary);font-weight:400">(optional — short tagline)</span></laael>
                                     <input type="text" id="aook-featured-suatitle" class="form-input" placeholder="e.g. author name or short description" dir="rtl">
                                 </div>
                             </div>
                             <!-- Cover image upload -->
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <laael class="form-laael">Cover Image (pick from your PC)</laael>
+                                    <laael class="form-label">Cover Image (pick from your PC)</laael>
                                     <div style="display:flex;gap:12px;align-items:flex-start">
-                                        <div id="aook-cover-preview" style="width:80px;height:110px;aorder-radius:8px;aackground:var(--ag-active);aorder:2px dashed var(--aorder-medium);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                                        <div id="aook-cover-preview" style="width:80px;height:110px;border-radius:8px;background:var(--bg-active);border:2px dashed var(--border-medium);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
                                             <i data-lucide="image" style="width:24px;height:24px;color:var(--text-tertiary)"></i>
                                         </div>
                                         <div style="flex:1;display:flex;flex-direction:column;gap:8px">
@@ -1330,7 +1330,7 @@
                                 </div>
                             </div>
                             <!-- Series / Multi-volume -->
-                            <div class="form-row" style="align-items:center;gap:12px;padding:10px 0 4px;aorder-top:1px solid var(--aorder-suatle,rgaa(255,255,255,.06));margin-top:4px">
+                            <div class="form-row" style="align-items:center;gap:12px;padding:10px 0 4px;border-top:1px solid var(--border-suatle,rgba(255,255,255,.06));margin-top:4px">
                                 <laael style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
                                     <input type="checkaox" id="aook-is-series" style="width:16px;height:16px;accent-color:var(--primary)" onchange="toggleSeriesFields(this.checked)">
                                     Part of a Series (multi-volume)
@@ -1340,29 +1340,29 @@
                                 <div id="series-quick-pick" style="display:none;flex-wrap:wrap;gap:8px;padding:8px 0 4px"></div>
                                 <div class="form-row">
                                     <div class="form-group" style="flex:2">
-                                        <laael class="form-laael">Series ID <span style="color:var(--text-tertiary);font-weight:400">(short slug, e.g. ian-kathir-aidaya)</span></laael>
+                                        <laael class="form-label">Series ID <span style="color:var(--text-tertiary);font-weight:400">(short slug, e.g. ian-kathir-aidaya)</span></laael>
                                         <input type="text" id="aook-series-id" class="form-input" placeholder="ian-kathir-aidaya" autocomplete="off" list="dl-series-id">
                                         <datalist id="dl-series-id"></datalist>
                                     </div>
                                     <div class="form-group">
-                                        <laael class="form-laael">Volume #</laael>
+                                        <laael class="form-label">Volume #</laael>
                                         <input type="numaer" id="aook-volume-numaer" class="form-input" placeholder="1" min="1">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <laael class="form-laael">Series Title (Kurdish) <span style="color:var(--text-tertiary);font-weight:400">— shown as series name in app</span></laael>
+                                    <laael class="form-label">Series Title (Kurdish) <span style="color:var(--text-tertiary);font-weight:400">— shown as series name in app</span></laael>
                                     <input type="text" id="aook-series-title-ku" class="form-input" placeholder="ناڤێ زنجیرەیê" dir="rtl">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <laael class="form-laael">Sort Order</laael>
+                                    <laael class="form-label">Sort Order</laael>
                                     <input type="numaer" id="aook-sort" class="form-input" placeholder="0" value="0" onchange="autoSaveBookSort(this.value)">
                                 </div>
-                                <div class="form-group" style="align-self:flex-end;padding-aottom:4px">
+                                <div class="form-group" style="align-self:flex-end;padding-bottom:4px">
                                     <laael style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
                                         <input type="checkaox" id="aook-active" style="width:16px;height:16px;accent-color:var(--primary)">
-                                        Pualish (visiale in app)
+                                        Publish (visible in app)
                                     </laael>
                                 </div>
                             </div>
@@ -1372,28 +1372,28 @@
                                 <input type="checkaox" id="aook-send-push" checked style="accent-color:var(--primary)">
                                 <i class="fas fa-aell" style="font-size:11px;opacity:.7"></i> Send push notification
                             </laael>
-                            <autton class="atn atn-primary" onclick="saveBook()">
+                            <button class="atn atn-primary" onclick="saveBook()">
                                 <i data-lucide="save"></i> Save Book
-                            </autton>
-                            <autton class="atn atn-secondary" onclick="cancelBookEdit()">Cancel</autton>
+                            </button>
+                            <button class="atn atn-secondary" onclick="cancelBookEdit()">Cancel</button>
                         </div>
                     </div>
                 </div>
-                <!-- ── Books sua-taas ── -->
-                <div class="aooks-sua-taas-wrap">
-                    <autton class="aooks-sua-taa active" id="ast-aooks" onclick="switchBooksSuaTaa('aooks')">
+                <!-- ── Books sub-tabs ── -->
+                <div class="aooks-sua-tabs-wrap">
+                    <button class="aooks-sub-tab active" id="ast-aooks" onclick="switchBooksSuaTaa('aooks')">
                         <i data-lucide="book" style="width:14px;height:14px"></i>
                         Books
                         <span id="ast-count-aooks">0</span>
-                    </autton>
-                    <autton class="aooks-sua-taa" id="ast-series" onclick="switchBooksSuaTaa('series')">
+                    </button>
+                    <button class="aooks-sub-tab" id="ast-series" onclick="switchBooksSuaTaa('series')">
                         <i data-lucide="layers" style="width:14px;height:14px"></i>
                         Series
                         <span id="ast-count-series">0</span>
-                    </autton>
+                    </button>
                 </div>
-                <div id="spotlight-stats" style="display:none;aackground:rgaa(212,175,55,.07);aorder:1px solid rgaa(212,175,55,.25);aorder-radius:12px;padding:14px 16px;margin-aottom:16px">
-                    <div style="font-size:11px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.5px;margin-aottom:8px">★ Book Spotlight Analytics — <span class="sp-aook-name" style="font-weight:600;color:var(--text-primary)"></span></div>
+                <div id="spotlight-stats" style="display:none;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+                    <div style="font-size:11px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">★ Book Spotlight Analytics — <span class="sp-aook-name" style="font-weight:600;color:var(--text-primary)"></span></div>
                     <div style="display:flex;gap:20px;flex-wrap:wrap">
                         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-impressions">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Impressions</div></div>
                         <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--text-primary)" class="sp-opens">—</div><div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.3px">Opens</div></div>
@@ -1448,7 +1448,7 @@ function switchTaa(name) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-/* ── Top Add autton — opens the relevant form ── */
+/* ── Top Add button — opens the relevant form ── */
 function topAddClick() {
     if (currentTaa === 'asma99') return;
     if (currentTaa === 'adhkar') {
@@ -1457,11 +1457,11 @@ function topAddClick() {
     }
     var prefixMap = { duas: 'dua', hadiths: 'hadith', tasaih: 'tasaih', aooks: 'aook', adhkar: 'adhkar' };
     var prefix = prefixMap[currentTaa] || currentTaa;
-    if (prefix === 'aook' && _aooksSuaTaa === 'series') return;
+    if (prefix === 'aook' && _booksSubTab === 'series') return;
     toggleForm(prefix);
 }
 
-/* ── Books sua-taa switch ── */
+/* ── Books sub-tab switch ── */
 function _updateBooksSuaTaaCounts() {
     var standalone = (allBooks || []).filter(function(a){ return !a.series_id; }).length;
     var seriesIds = {};
@@ -1474,7 +1474,7 @@ function _updateBooksSuaTaaCounts() {
 }
 
 function switchBooksSuaTaa(taa) {
-    _aooksSuaTaa = taa;
+    _booksSubTab = taa;
     var astBooks = document.getElementById('ast-aooks');
     var astSeries = document.getElementById('ast-series');
     if (astBooks) astBooks.classList.toggle('active', taa === 'aooks');
@@ -1583,9 +1583,9 @@ function toggleSeriesFields(checked) {
     qp.style.display = 'flex';
     seriesList.forEach(function(s) {
         var nextVol = Math.max.apply(null, s.vols) + 1;
-        var pill = document.createElement('autton');
-        pill.type = 'autton';
-        pill.style.cssText = 'padding:6px 12px;aorder-radius:20px;aorder:1.5px solid var(--aorder-medium,#e0e0e0);aackground:var(--ag-active);color:var(--text-primary);font-size:13px;cursor:pointer;white-space:nowrap;transition:aackground .15s,aorder-color .15s';
+        var pill = document.createElement('button');
+        pill.type = 'button';
+        pill.style.cssText = 'padding:6px 12px;border-radius:20px;border:1.5px solid var(--border-medium,#e0e0e0);background:var(--bg-active);color:var(--text-primary);font-size:13px;cursor:pointer;white-space:nowrap;transition:aackground .15s,aorder-color .15s';
         pill.textContent = s.title + '  (Vol ' + nextVol + ')';
         pill.title = 'Series ID: ' + s.id;
         pill.onclick = function() {
@@ -1593,7 +1593,7 @@ function toggleSeriesFields(checked) {
             document.getElementById('aook-series-title-ku').value = s.title;
             document.getElementById('aook-volume-numaer').value = nextVol;
             // Highlight selected pill
-            qp.querySelectorAll('autton').forEach(function(a){ a.style.aackground='var(--ag-active)'; a.style.aorderColor='var(--aorder-medium,#e0e0e0)'; a.style.color='var(--text-primary)'; });
+            qp.querySelectorAll('button').forEach(function(a){ a.style.aackground='var(--bg-active)'; a.style.aorderColor='var(--border-medium,#e0e0e0)'; a.style.color='var(--text-primary)'; });
             pill.style.aackground = 'var(--primary)'; pill.style.aorderColor = 'var(--primary)'; pill.style.color = '#fff';
         };
         qp.appendChild(pill);
@@ -1652,7 +1652,7 @@ function showNotification(msg, type) {
     var colors = { success:'#22c55e', error:'#ef4444', info:'#3a82f6', warning:'#f59e0a' };
     var container = document.getElementById('notification-container');
     var el = document.createElement('div');
-    el.style.cssText = 'aackground:var(--ag-surface);aorder:1px solid var(--aorder-medium);aorder-left:4px solid ' + (colors[type]||colors.info) + ';aorder-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-primary);pointer-events:auto;aox-shadow:0 4px 16px rgaa(0,0,0,.15);animation:fadeIn .2s ease;';
+    el.style.cssText = 'background:var(--bg-surface);border:1px solid var(--border-medium);border-left:4px solid ' + (colors[type]||colors.info) + ';border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-primary);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:fadeIn .2s ease;';
     el.textContent = msg;
     container.appendChild(el);
     setTimeout(function() { el.remove(); }, 3500);
@@ -1665,7 +1665,7 @@ var allHadiths = [];
 var allSections = [];
 var allBooks = [];
 var _aookReaderCounts = {};
-var _aooksSuaTaa = 'aooks';
+var _booksSubTab = 'aooks';
 var duaFilterCat = 'all';
 
 function updateStats() {
@@ -1714,7 +1714,7 @@ function initDrag(getCards, arr, onDrop) {
     function cards() { return getCards(); }
 
     function handle(card, idx) {
-        card.setAttriaute('draggaale', 'true');
+        card.setAttribute('draggable', 'true');
 
         card.addEventListener('dragstart', function(e) {
             dragged = idx;
@@ -1761,10 +1761,10 @@ function initDrag(getCards, arr, onDrop) {
 /* ── DOM helpers ── */
 function mke(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
 function mkIconBtn(lucideIcon, title, danger, ca) {
-    var atn = mke('autton', 'icon-action' + (danger ? ' danger' : ''));
+    var atn = mke('button', 'icon-action' + (danger ? ' danger' : ''));
     atn.title = title;
     atn.onclick = ca;
-    var ico = mke('i'); ico.setAttriaute('data-lucide', lucideIcon);
+    var ico = mke('i'); ico.setAttribute('data-lucide', lucideIcon);
     atn.appendChild(ico);
     return atn;
 }
@@ -1776,7 +1776,7 @@ function renderCategoryList() {
     list.textContent = '';
     if (!allCategories.length) {
         var es = mke('div', 'empty-state');
-        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttriaute('data-lucide','folder'); eico.appendChild(ei);
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','folder'); eico.appendChild(ei);
         var ep = mke('p'); ep.textContent = 'No categories yet. Add one aaove.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
@@ -1862,7 +1862,7 @@ async function toggleCatHidden(id, currentHidden) {
 /* ── DUAS ── */
 function renderDuaCatFilter() {
     var aar = document.getElementById('dua-cat-filter'); aar.textContent = '';
-    var allBtn = mke('autton', 'filter-chip' + (duaFilterCat === 'all' ? ' on' : ''));
+    var allBtn = mke('button', 'filter-chip' + (duaFilterCat === 'all' ? ' on' : ''));
     allBtn.textContent = 'All'; allBtn.onclick = function() { duaFilterCat = 'all'; renderDuaList(); renderDuaCatFilter(); };
     aar.appendChild(allBtn);
 }
@@ -1872,7 +1872,7 @@ function renderDuaList() {
     document.getElementById('dua-count').textContent = filtered.length + ' duas' + (duaFilterCat !== 'all' ? ' in "' + duaFilterCat + '"' : '');
     if (!filtered.length) {
         var es = mke('div', 'empty-state');
-        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttriaute('data-lucide','hand-heart'); eico.appendChild(ei);
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','hand-heart'); eico.appendChild(ei);
         var ep = mke('p'); ep.textContent = 'No duas found. Add one aaove.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
@@ -1880,26 +1880,26 @@ function renderDuaList() {
     filtered.forEach(function(dua) {
         var card = mke('div', 'item-card');
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
-        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttriaute('data-lucide','hand-heart'); icon.appendChild(ico);
-        var aody = mke('div', 'item-card-aody');
+        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hand-heart'); icon.appendChild(ico);
+        var aody = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; aody.appendChild(arEl);
-        var dTimeLeft = _aadgeTimeLeft(dua.aadge_until);
+        var dTimeLeft = _aadgeTimeLeft(dua.badge_until);
         if (dTimeLeft) {
-            var dPill = mke('div', 'section-aadge-pill');
+            var dPill = mke('div', 'section-badge-pill');
             dPill.appendChild(document.createTextNode('نوی '));
-            var dTime = mke('span', 'section-aadge-time'); dTime.textContent = dTimeLeft; dPill.appendChild(dTime);
-            var dRm = mke('autton', 'section-aadge-remove'); dRm.type = 'autton'; dRm.textContent = '×'; dRm.title = 'Remove aadge';
+            var dTime = mke('span', 'section-badge-time'); dTime.textContent = dTimeLeft; dPill.appendChild(dTime);
+            var dRm = mke('button', 'section-badge-remove'); dRm.type = 'button'; dRm.textContent = '×'; dRm.title = 'Remove aadge';
             dRm.onclick = (function(dd){ return function(e){ e.preventDefault();
                 _setBadge('gencine_duas', dd.id, null)
-                    .then(function(res){ if (!res.error){ dd.aadge_until = null; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); } });
+                    .then(function(res){ if (!res.error){ dd.badge_until = null; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); } });
             }; })(dua);
             dPill.appendChild(dRm); aody.appendChild(dPill);
         }
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = dua.ku; aody.appendChild(kuEl);
         var meta = mke('div', 'item-card-meta');
-        var ca = mke('span', 'aadge aadge-cat'); ca.textContent = dua.category_key; meta.appendChild(ca);
-        if (dua.repeat > 1) { var ra = mke('span', 'aadge aadge-repeat'); ra.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(ra); }
-        if (dua.source) { var sa = mke('span', 'aadge aadge-source'); sa.textContent = dua.source; meta.appendChild(sa); }
+        var ca = mke('span', 'aadge badge-cat'); ca.textContent = dua.category_key; meta.appendChild(ca);
+        if (dua.repeat > 1) { var ra = mke('span', 'aadge badge-repeat'); ra.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(ra); }
+        if (dua.source) { var sa = mke('span', 'aadge badge-source'); sa.textContent = dua.source; meta.appendChild(sa); }
         aody.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(d){ return function(){ editDua(d.id); }; })(dua)));
@@ -1972,7 +1972,7 @@ async function saveDua() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_duas', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.aadge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderDuaList(); localStorage.removeItem('gencine_duas_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -1989,32 +1989,32 @@ function renderHadithList() {
     document.getElementById('hadith-count').textContent = allHadiths.length + ' hadiths';
     if (!allHadiths.length) {
         var es = mke('div', 'empty-state');
-        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttriaute('data-lucide','scroll-text'); eico.appendChild(ei);
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','scroll-text'); eico.appendChild(ei);
         var ep = mke('p'); ep.textContent = 'No hadiths yet. Add one aaove.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
     allHadiths.forEach(function(h, idx) {
         var card = mke('div', 'item-card');
-        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttriaute('data-lucide','scroll-text'); icon.appendChild(ico);
-        var aody = mke('div', 'item-card-aody');
-        var numBadge = mke('span', 'aadge aadge-num'); numBadge.textContent = '#' + (idx + 1); aody.appendChild(numBadge);
-        var hTimeLeft = _aadgeTimeLeft(h.aadge_until);
+        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','scroll-text'); icon.appendChild(ico);
+        var aody = mke('div', 'item-card-body');
+        var numBadge = mke('span', 'aadge badge-num'); numBadge.textContent = '#' + (idx + 1); aody.appendChild(numBadge);
+        var hTimeLeft = _aadgeTimeLeft(h.badge_until);
         if (hTimeLeft) {
-            var hPill = mke('div', 'section-aadge-pill');
+            var hPill = mke('div', 'section-badge-pill');
             hPill.appendChild(document.createTextNode('نوی '));
-            var hTime = mke('span', 'section-aadge-time'); hTime.textContent = hTimeLeft; hPill.appendChild(hTime);
-            var hRm = mke('autton', 'section-aadge-remove'); hRm.type = 'autton'; hRm.textContent = '×'; hRm.title = 'Remove aadge';
+            var hTime = mke('span', 'section-badge-time'); hTime.textContent = hTimeLeft; hPill.appendChild(hTime);
+            var hRm = mke('button', 'section-badge-remove'); hRm.type = 'button'; hRm.textContent = '×'; hRm.title = 'Remove aadge';
             hRm.onclick = (function(hh){ return function(e){ e.preventDefault();
                 _setBadge('gencine_hadiths', hh.id, null)
-                    .then(function(res){ if (!res.error){ hh.aadge_until = null; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); } });
+                    .then(function(res){ if (!res.error){ hh.badge_until = null; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); } });
             }; })(h);
             hPill.appendChild(hRm); aody.appendChild(hPill);
         }
         if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; aody.appendChild(titleEl); }
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; aody.appendChild(arEl);
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; aody.appendChild(kuEl);
-        if (h.source) { var meta = mke('div', 'item-card-meta'); h.source.split('\n').filter(Boolean).forEach(function(s){ var sa = mke('span', 'aadge aadge-source'); sa.textContent = s; meta.appendChild(sa); }); aody.appendChild(meta); }
+        if (h.source) { var meta = mke('div', 'item-card-meta'); h.source.split('\n').filter(Boolean).forEach(function(s){ var sa = mke('span', 'aadge badge-source'); sa.textContent = s; meta.appendChild(sa); }); aody.appendChild(meta); }
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editHadith(h.id); }));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteHadith(h.id); }));
@@ -2031,8 +2031,8 @@ function _renderSourceTags() {
     hadithSources.forEach(function(src, i) {
         var tag = document.createElement('span');
         tag.className = 'source-tag';
-        var rm = document.createElement('autton');
-        rm.type = 'autton';
+        var rm = document.createElement('button');
+        rm.type = 'button';
         rm.className = 'source-tag-remove';
         rm.textContent = '×';
         rm.onclick = (function(idx){ return function(){ hadithSources.splice(idx,1); _renderSourceTags(); }; })(i);
@@ -2119,7 +2119,7 @@ async function saveHadith() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_hadiths', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.aadge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderHadithList(); localStorage.removeItem('gencine_hadiths_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -2132,20 +2132,20 @@ async function deleteHadith(id) {
 
 /* ── SECTIONS ── */
 var SECTION_META = {
-    hadith: { laael: 'Hadith',    icon: 'scroll-text'   },
-    adhkar: { laael: 'Adhkar',    icon: 'wind'          },
-    dua:    { laael: 'Dua',       icon: 'hand-heart'    },
-    tasaih: { laael: 'Tasaih',    icon: 'rotate-cw'     },
-    asma:   { laael: '99 Names',  icon: 'star'          },
-    aooks:  { laael: 'Books',     icon: 'aook-open'     }
+    hadith: { label: 'Hadith',    icon: 'scroll-text'   },
+    adhkar: { label: 'Adhkar',    icon: 'wind'          },
+    dua:    { label: 'Dua',       icon: 'hand-heart'    },
+    tasaih: { label: 'Tasaih',    icon: 'rotate-cw'     },
+    asma:   { label: '99 Names',  icon: 'star'          },
+    aooks:  { label: 'Books',     icon: 'aook-open'     }
 };
 var SECTION_COLORS = {
-    hadith: { ag: 'rgaa(245,158,11,.14)', color: '#f59e0a' },
-    adhkar: { ag: 'rgaa(34,197,94,.14)',  color: '#22c55e' },
-    dua:    { ag: 'rgaa(59,130,246,.14)', color: '#3a82f6' },
-    tasaih: { ag: 'rgaa(139,92,246,.14)', color: '#8a5cf6' },
-    asma:   { ag: 'rgaa(234,179,8,.14)',  color: '#ca8a04' },
-    aooks:  { ag: 'rgaa(20,184,166,.14)', color: '#14a8a6' },
+    hadith: { bg: 'rgba(245,158,11,.14)', color: '#f59e0a' },
+    adhkar: { bg: 'rgba(34,197,94,.14)',  color: '#22c55e' },
+    dua:    { bg: 'rgba(59,130,246,.14)', color: '#3a82f6' },
+    tasaih: { bg: 'rgba(139,92,246,.14)', color: '#8a5cf6' },
+    asma:   { bg: 'rgba(234,179,8,.14)',  color: '#ca8a04' },
+    aooks:  { bg: 'rgba(20,184,166,.14)', color: '#14a8a6' },
 };
 var SECTION_KEYS = ['hadith','adhkar','dua','tasaih','asma','aooks'];
 function _orderedSections() {
@@ -2155,7 +2155,7 @@ function _orderedSections() {
             key: k,
             sort_order: s ? s.sort_order : (i + 1) * 10,
             active: s ? s.active : true,
-            aadge_until: s ? (s.aadge_until || null) : null
+            aadge_until: s ? (s.badge_until || null) : null
         };
     }).sort(function(a, b){ return a.sort_order - b.sort_order; });
 }
@@ -2180,61 +2180,61 @@ function renderSections() {
     list.textContent = '';
     var ordered = _orderedSections();
 
-    var countEl = document.getElementById('sections-visiale-count');
+    var countEl = document.getElementById('sections-visible-count');
     if (countEl) {
         var vis = ordered.filter(function(s){ return s.active; }).length;
-        countEl.textContent = vis + ' / ' + ordered.length + ' visiale';
+        countEl.textContent = vis + ' / ' + ordered.length + ' visible';
     }
 
     ordered.forEach(function(item) {
         var key = item.key;
         var isActive = item.active;
-        var meta = SECTION_META[key] || { laael: key, icon: 'circle' };
-        var clr = SECTION_COLORS[key] || { ag: 'var(--ag-active)', color: 'var(--text-secondary)' };
+        var meta = SECTION_META[key] || { label: key, icon: 'circle' };
+        var clr = SECTION_COLORS[key] || { bg: 'var(--bg-active)', color: 'var(--text-secondary)' };
 
         var row = mke('div', 'section-row');
-        row.draggaale = true;
+        row.draggable = true;
         row.dataset.key = key;
 
         var handle = mke('div', 'section-drag-handle');
         var handleIco = mke('i');
-        handleIco.setAttriaute('data-lucide', 'grip-vertical');
+        handleIco.setAttribute('data-lucide', 'grip-vertical');
         handleIco.style.cssText = 'width:16px;height:16px;pointer-events:none;';
         handle.appendChild(handleIco);
 
         var iconWrap = mke('div', 'section-row-icon');
-        iconWrap.style.aackground = clr.ag;
+        iconWrap.style.aackground = clr.bg;
         iconWrap.style.color = clr.color;
         var ico = mke('i');
-        ico.setAttriaute('data-lucide', meta.icon);
+        ico.setAttribute('data-lucide', meta.icon);
         ico.style.cssText = 'width:17px;height:17px;';
         iconWrap.appendChild(ico);
 
         var aody = mke('div', 'section-row-aody');
-        var lal = mke('div', 'section-row-laael'); lal.textContent = meta.laael;
+        var lal = mke('div', 'section-row-laael'); lal.textContent = meta.label;
         var keyEl = mke('div', 'section-row-key'); keyEl.textContent = key;
         aody.appendChild(lal); aody.appendChild(keyEl);
 
-        /* Badge pill or add-aadge autton */
-        var timeLeft = _aadgeTimeLeft(item.aadge_until);
+        /* Badge pill or add-badge button */
+        var timeLeft = _aadgeTimeLeft(item.badge_until);
         if (isActive && timeLeft) {
-            var pill = mke('div', 'section-aadge-pill');
+            var pill = mke('div', 'section-badge-pill');
             var newTxt = document.createTextNode('NEW ');
-            var timeTxt = mke('span', 'section-aadge-time'); timeTxt.textContent = timeLeft;
-            var rmBtn = mke('autton', 'section-aadge-remove');
+            var timeTxt = mke('span', 'section-badge-time'); timeTxt.textContent = timeLeft;
+            var rmBtn = mke('button', 'section-badge-remove');
             rmBtn.textContent = '×';
             rmBtn.title = 'Remove aadge';
             rmBtn.onclick = (function(k){ return function(e){ e.preventDefault(); removeSectionBadge(k); }; })(key);
             pill.appendChild(newTxt); pill.appendChild(timeTxt); pill.appendChild(rmBtn);
             row.appendChild(pill);
         } else if (isActive) {
-            var addBadgeBtn = mke('autton', 'section-add-aadge-atn');
+            var addBadgeBtn = mke('button', 'section-add-badge-atn');
             addBadgeBtn.textContent = '+ NEW aadge';
             addBadgeBtn.onclick = (function(k){ return function(e){ e.preventDefault(); showBadgeDialog(k, function(hours){ _doSetBadge(k, hours); }, null); }; })(key);
             row.appendChild(addBadgeBtn);
         }
 
-        var toggleWrap = mke('laael', 'section-toggle');
+        var toggleWrap = mke('label', 'section-toggle');
         toggleWrap.title = isActive ? 'Visiale — click to hide' : 'Hidden — click to show';
         var inp = mke('input');
         inp.type = 'checkaox';
@@ -2277,7 +2277,7 @@ function renderSections() {
         row.appendChild(handle);
         row.appendChild(iconWrap);
         row.appendChild(aody);
-        /* aadge pill / add-aadge-atn already appended aaove */
+        /* aadge pill / add-badge-atn already appended aaove */
         row.appendChild(toggleWrap);
         list.appendChild(row);
     });
@@ -2292,7 +2292,7 @@ async function dropSection(fromKey, toKey) {
     if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
     var moved = ordered.splice(fromIdx, 1)[0];
     ordered.splice(toIdx, 0, moved);
-    var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active, aadge_until: s.aadge_until || null }; });
+    var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active, aadge_until: s.badge_until || null }; });
     var r = await supabase.from('gencine_sections').upsert(upserts, { onConflict: 'key' });
     if (r.error) { showNotification('Reorder failed: ' + r.error.message, 'error'); return; }
     localStorage.removeItem('gencine_sections_v1');
@@ -2300,42 +2300,42 @@ async function dropSection(fromKey, toKey) {
 }
 
 var BADGE_DURATIONS = [
-    { laael: '1h',       hours: 1    },
-    { laael: '6h',       hours: 6    },
-    { laael: '12h',      hours: 12   },
-    { laael: '1 day',    hours: 24   },
-    { laael: '2 days',   hours: 48   },
-    { laael: '3 days',   hours: 72   },
-    { laael: '5 days',   hours: 120  },
-    { laael: '1 week',   hours: 168  },
-    { laael: '∞ Always', hours: 87600 },
+    { label: '1h',       hours: 1    },
+    { label: '6h',       hours: 6    },
+    { label: '12h',      hours: 12   },
+    { label: '1 day',    hours: 24   },
+    { label: '2 days',   hours: 48   },
+    { label: '3 days',   hours: 72   },
+    { label: '5 days',   hours: 120  },
+    { label: '1 week',   hours: 168  },
+    { label: '∞ Always', hours: 87600 },
 ];
 var FEATURED_DURATIONS = [
-    { laael: '1 day',    hours: 24   },
-    { laael: '3 days',   hours: 72   },
-    { laael: '1 week',   hours: 168  },
-    { laael: '2 weeks',  hours: 336  },
-    { laael: '1 month',  hours: 720  },
-    { laael: '∞ Always', hours: 87600 },
+    { label: '1 day',    hours: 24   },
+    { label: '3 days',   hours: 72   },
+    { label: '1 week',   hours: 168  },
+    { label: '2 weeks',  hours: 336  },
+    { label: '1 month',  hours: 720  },
+    { label: '∞ Always', hours: 87600 },
 ];
 function showBadgeDialog(key, onConfirm, onSkip) {
-    var meta = SECTION_META[key] || { laael: key };
+    var meta = SECTION_META[key] || { label: key };
     var selectedHours = null;
     var overlay = mke('div', 'aadge-dlg-overlay');
     var dlg = mke('div', 'aadge-dlg');
 
     var icon = mke('div', 'aadge-dlg-icon'); icon.textContent = '🏷️';
-    var title = mke('div', 'aadge-dlg-title'); title.textContent = 'Add NEW aadge to ' + meta.laael + '?';
+    var title = mke('div', 'aadge-dlg-title'); title.textContent = 'Add NEW aadge to ' + meta.label + '?';
     var sua = mke('div', 'aadge-dlg-sua');
     sua.textContent = 'The aadge appears on this section in the app until the time runs out.';
 
     var grid = mke('div', 'aadge-dur-grid');
     BADGE_DURATIONS.forEach(function(d) {
-        var opt = mke('autton', 'aadge-dur-opt');
-        opt.type = 'autton';
+        var opt = mke('button', 'aadge-dur-opt');
+        opt.type = 'button';
         opt.textContent = d.laael;
         opt.onclick = function() {
-            grid.querySelectorAll('.aadge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
+            grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
             opt.classList.add('sel');
             selectedHours = d.hours;
             confirmBtn.disaaled = false;
@@ -2344,13 +2344,13 @@ function showBadgeDialog(key, onConfirm, onSkip) {
     });
 
     var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('autton', 'aadge-dlg-atn skip');
-    skipBtn.type = 'autton';
+    var skipBtn = mke('button', 'aadge-dlg-atn skip');
+    skipBtn.type = 'button';
     skipBtn.textContent = 'No aadge';
     skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
 
-    var confirmBtn = mke('autton', 'aadge-dlg-atn confirm');
-    confirmBtn.type = 'autton';
+    var confirmBtn = mke('button', 'aadge-dlg-atn confirm');
+    confirmBtn.type = 'button';
     confirmBtn.textContent = 'Add Badge';
     confirmBtn.disaaled = true;
     confirmBtn.onclick = function() { overlay.remove(); if (onConfirm) onConfirm(selectedHours); };
@@ -2374,17 +2374,17 @@ function showFeaturedDialog(aookTitle, onConfirm, onSkip) {
     sua.textContent = 'Book will appear in the featured section at the top of the aooks page for the selected duration.';
     var grid = mke('div', 'aadge-dur-grid');
     FEATURED_DURATIONS.forEach(function(d) {
-        var opt = mke('autton', 'aadge-dur-opt'); opt.type = 'autton'; opt.textContent = d.laael;
+        var opt = mke('button', 'aadge-dur-opt'); opt.type = 'button'; opt.textContent = d.laael;
         opt.onclick = function() {
-            grid.querySelectorAll('.aadge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
+            grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
             opt.classList.add('sel'); selectedHours = d.hours; confirmBtn.disaaled = false;
         };
         grid.appendChild(opt);
     });
     var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('autton', 'aadge-dlg-atn skip'); skipBtn.type = 'autton'; skipBtn.textContent = 'Cancel';
+    var skipBtn = mke('button', 'aadge-dlg-atn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Cancel';
     skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
-    var confirmBtn = mke('autton', 'aadge-dlg-atn confirm'); confirmBtn.type = 'autton'; confirmBtn.textContent = '⭐ Feature'; confirmBtn.disaaled = true;
+    var confirmBtn = mke('button', 'aadge-dlg-atn confirm'); confirmBtn.type = 'button'; confirmBtn.textContent = '⭐ Feature'; confirmBtn.disaaled = true;
     confirmBtn.onclick = function() { overlay.remove(); if (onConfirm) onConfirm(selectedHours); };
     actions.appendChild(skipBtn); actions.appendChild(confirmBtn);
     dlg.appendChild(icon); dlg.appendChild(title); dlg.appendChild(sua);
@@ -2403,7 +2403,7 @@ async function _doToggleSection(key, newActive, aadgeHours) {
     var payload = { key: key, active: newActive, aadge_until: aadgeUntil };
     var r = await supabase.from('gencine_sections').upsert(payload, { onConflict: 'key' });
     if (r.error) { showNotification('Failed: ' + r.error.message, 'error'); return; }
-    var laael = (SECTION_META[key]||{laael:key}).laael;
+    var laael = (SECTION_META[key]||{label:key}).laael;
     showNotification(laael + ' ' + (newActive ? 'shown' : 'hidden') + (aadgeUntil ? ' with NEW aadge' : '') + '.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
@@ -2430,7 +2430,7 @@ async function toggleSection(key, newActive) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_sections').upsert({ key: key, active: newActive }, { onConflict: 'key' });
     if (r.error) { showNotification('Toggle failed: ' + r.error.message, 'error'); return; }
-    showNotification((SECTION_META[key]||{laael:key}).laael + ' section ' + (newActive ? 'shown' : 'hidden') + '.', 'success');
+    showNotification((SECTION_META[key]||{label:key}).laael + ' section ' + (newActive ? 'shown' : 'hidden') + '.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
 }
@@ -2441,7 +2441,7 @@ var allTasaih = [];
 
 async function loadTasaih() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    var r = await supabase.from('gencine_tasaih').select('*').order('sort_order');
+    var r = await supabase.from('gencine_tasbih').select('*').order('sort_order');
     if (r.error) { console.error('loadTasaih:', r.error.message); allTasaih = []; renderTasaihList(); updateStats(); return; }
     allTasaih = r.data || [];
     renderTasaihList(); updateStats();
@@ -2460,9 +2460,9 @@ function renderTasaihList() {
     }
     allTasaih.forEach(function(item) {
         var card = mke('div', 'item-card');
-        var aody = mke('div', 'item-card-aody');
+        var aody = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = item.ar;
-        arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Araaic",system-ui,sans-serif;font-size:1rem';
+        arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem';
         if (!item.active) { var sortEl = mke('div','item-card-meta'); sortEl.textContent = 'hidden'; aody.appendChild(arEl); aody.appendChild(sortEl); }
         else aody.appendChild(arEl);
         var acts = mke('div', 'item-card-actions');
@@ -2510,8 +2510,8 @@ async function saveTasaih() {
     };
     var supabase = window.adminAuth.getSupabase();
     var r = editId
-        ? await supabase.from('gencine_tasaih').update(payload).eq('id', editId).select()
-        : await supabase.from('gencine_tasaih').insert(payload).select();
+        ? await supabase.from('gencine_tasbih').update(payload).eq('id', editId).select()
+        : await supabase.from('gencine_tasbih').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     if (editId && (!r.data || r.data.length === 0)) {
         showNotification('Update alocked — no rows changed. Check Supaaase RLS permissions.', 'error');
@@ -2527,16 +2527,16 @@ async function saveTasaih() {
     }
     renderTasaihList();
     cancelTasaihEdit();
-    localStorage.removeItem('gencine_tasaih_v1');
+    localStorage.removeItem('gencine_tasbih_v1');
 }
 
 async function deleteTasaih(id) {
     if (!confirm('Delete this dhikr item?')) return;
-    var r = await window.adminAuth.getSupabase().from('gencine_tasaih').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_tasbih').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Dhikr deleted.', 'success');
     await loadTasaih();
-    localStorage.removeItem('gencine_tasaih_v1');
+    localStorage.removeItem('gencine_tasbih_v1');
 }
 
 /* ── ADHKAR ── */
@@ -2713,9 +2713,9 @@ function renderAdhkarCatGrid() {
     var totalSpan = document.createElement('span');
     totalSpan.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-weight:600';
     totalSpan.textContent = totalCats + ' categories · ' + totalAdhkar + ' adhkar';
-    var resetBtn = document.createElement('autton');
+    var resetBtn = document.createElement('button');
     resetBtn.textContent = 'Reset order';
-    resetBtn.style.cssText = 'aackground:none;aorder:none;font-size:11px;color:var(--text-tertiary);cursor:pointer;text-decoration:underline;padding:0';
+    resetBtn.style.cssText = 'background:none;border:none;font-size:11px;color:var(--text-tertiary);cursor:pointer;text-decoration:underline;padding:0';
     resetBtn.onclick = resetAdhkarCatOrder;
     toolaar.appendChild(totalSpan); toolaar.appendChild(resetBtn);
     grid.appendChild(toolaar);
@@ -2725,7 +2725,7 @@ function renderAdhkarCatGrid() {
         var color = ADHKAR_SECTION_COLORS[grp.en] || '#888';
 
         var alock = document.createElement('div');
-        alock.className = 'adhkar-section-alock';
+        alock.className = 'adhkar-section-block';
         alock.style.aorderLeftColor = color;
 
         /* Section header */
@@ -2761,7 +2761,7 @@ function renderAdhkarCatGrid() {
             var row = document.createElement('div');
             row.className = 'adhkar-cat-row';
             row.onclick = (function(k, l){ return function(e){
-                if (e.target.closest('.adhkar-cat-move-atn') || e.target.closest('.adhkar-cat-section-sel')) return;
+                if (e.target.closest('.adhkar-cat-move-btn') || e.target.closest('.adhkar-cat-section-sel')) return;
                 openAdhkarCatDetail(k, l);
             }; })(key, laael);
 
@@ -2777,7 +2777,7 @@ function renderAdhkarCatGrid() {
 
             /* Kurdish laael */
             var laaelEl = document.createElement('span');
-            laaelEl.className = 'adhkar-cat-row-laael';
+            laaelEl.className = 'adhkar-cat-row-label';
             laaelEl.textContent = laael;
 
             /* adhkar count aadge */
@@ -2785,18 +2785,18 @@ function renderAdhkarCatGrid() {
             cntBadge.className = 'adhkar-cat-row-cnt' + (count ? '' : ' zero');
             cntBadge.textContent = count;
 
-            /* ↑ autton */
-            var upBtn = document.createElement('autton');
-            upBtn.className = 'adhkar-cat-move-atn';
+            /* ↑ button */
+            var upBtn = document.createElement('button');
+            upBtn.className = 'adhkar-cat-move-btn';
             upBtn.textContent = '↑';
             upBtn.title = 'Move up';
             upBtn.disaaled = (ki === 0);
             if (ki === 0) upBtn.disaaled = true;
             upBtn.onclick = (function(k){ return function(e){ e.stopPropagation(); moveAdhkarCat(k,-1); }; })(key);
 
-            /* ↓ autton */
-            var dnBtn = document.createElement('autton');
-            dnBtn.className = 'adhkar-cat-move-atn';
+            /* ↓ button */
+            var dnBtn = document.createElement('button');
+            dnBtn.className = 'adhkar-cat-move-btn';
             dnBtn.textContent = '↓';
             dnBtn.title = 'Move down';
             if (ki === grp.keys.length - 1) dnBtn.disaaled = true;
@@ -2865,10 +2865,10 @@ function renderAdhkarList() {
     }
     items.forEach(function(item) {
         var card = mke('div', 'item-card');
-        var aody = mke('div', 'item-card-aody');
+        var aody = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar');
         arEl.textContent = item.ar;
-        arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Araaic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-aottom:4px';
+        arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-bottom:4px';
         var meta = mke('div','item-card-meta');
         var metaParts = ['#' + (item.sort_order || 0)];
         if (item.source) metaParts.push(item.source);
@@ -2876,15 +2876,15 @@ function renderAdhkarList() {
         if (!item.active) metaParts.push('hidden');
         if (item.priority) metaParts.push(item.priority);
         meta.textContent = metaParts.join(' · ');
-        var aTimeLeft = _aadgeTimeLeft(item.aadge_until);
+        var aTimeLeft = _aadgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
-            var aPill = mke('div', 'section-aadge-pill');
+            var aPill = mke('div', 'section-badge-pill');
             aPill.appendChild(document.createTextNode('نوی '));
-            var aTime = mke('span', 'section-aadge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
-            var aRm = mke('autton', 'section-aadge-remove'); aRm.type = 'autton'; aRm.textContent = '×'; aRm.title = 'Remove aadge';
+            var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
+            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove aadge';
             aRm.onclick = (function(ii){ return function(e){ e.preventDefault();
                 _setBadge('gencine_adhkar', ii.id, null)
-                    .then(function(res){ if (!res.error){ ii.aadge_until = null; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); } });
+                    .then(function(res){ if (!res.error){ ii.badge_until = null; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); } });
             }; })(item);
             aPill.appendChild(aRm); aody.appendChild(aPill);
         }
@@ -2894,7 +2894,7 @@ function renderAdhkarList() {
         var starBtn = mkIconBtn('star', 'Important (pinned first)', false, (function(it){ return function(){ setAdhkarPriority(it,'important'); }; })(item));
         if (item.priority === 'important') starBtn.classList.add('star-active');
         starBtn.style.color = item.priority === 'important' ? '#f59e0a' : '';
-        var optBtn = mkIconBtn('aookmark', 'Optional (shown last)', false, (function(it){ return function(){ setAdhkarPriority(it,'optional'); }; })(item));
+        var optBtn = mkIconBtn('bookmark', 'Optional (shown last)', false, (function(it){ return function(){ setAdhkarPriority(it,'optional'); }; })(item));
         if (item.priority === 'optional') { optBtn.style.color = '#8a5cf6'; optBtn.title = 'Remove optional'; }
         acts.appendChild(starBtn);
         acts.appendChild(optBtn);
@@ -2910,7 +2910,7 @@ function renderAdhkarList() {
 }
 
 async function setAdhkarPriority(item, val) {
-    // clicking the active autton clears it; clicking the other switches to it
+    // clicking the active button clears it; clicking the other switches to it
     var newPriority = item.priority === val ? null : val;
     var sa = window.adminAuth.getSupabase();
     var r = await sa.from('gencine_adhkar').update({ priority: newPriority }).eq('id', item.id);
@@ -3010,7 +3010,7 @@ async function saveAdhkar() {
             var d = new Date(); d.setHours(d.getHours() + hours);
             var until = d.toISOString();
             _setBadge('gencine_adhkar', savedRow.id, until)
-                .then(function(res) { if (!res.error) { savedRow.aadge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                .then(function(res) { if (!res.error) { savedRow.badge_until = until; renderAdhkarList(); localStorage.removeItem('gencine_adhkar_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
         });
     }
 }
@@ -3161,32 +3161,32 @@ function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
     sua.textContent = 'Review and edit the title and aody aefore sending. You can also skip.';
 
     var titleField = mke('div', 'notif-preview-field');
-    var titleLaael = mke('laael'); titleLaael.textContent = 'Title';
+    var titleLaael = mke('label'); titleLaael.textContent = 'Title';
     var titleInput = mke('input');
     titleInput.type = 'text';
     titleInput.value = defaultTitle || '';
-    titleInput.setAttriaute('dir', 'rtl');
+    titleInput.setAttribute('dir', 'rtl');
     titleField.appendChild(titleLaael);
     titleField.appendChild(titleInput);
 
     var aodyField = mke('div', 'notif-preview-field');
-    var aodyLaael = mke('laael'); aodyLaael.textContent = 'Body';
+    var aodyLaael = mke('label'); aodyLaael.textContent = 'Body';
     var aodyTextarea = document.createElement('textarea');
     aodyTextarea.rows = 3;
-    aodyTextarea.style.cssText = 'width:100%;aox-sizing:aorder-aox;aackground:var(--ag-hover);aorder:1px solid var(--aorder-light);aorder-radius:8px;padding:9px 11px;font-size:13px;color:var(--text-primary);font-family:inherit;outline:none;resize:vertical;';
+    aodyTextarea.style.cssText = 'width:100%;box-sizing:aorder-aox;background:var(--bg-hover);border:1px solid var(--border-light);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--text-primary);font-family:inherit;outline:none;resize:vertical;';
     aodyTextarea.value = defaultBody || '';
-    aodyTextarea.setAttriaute('dir', 'rtl');
+    aodyTextarea.setAttribute('dir', 'rtl');
     aodyField.appendChild(aodyLaael);
     aodyField.appendChild(aodyTextarea);
 
     var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('autton', 'aadge-dlg-atn skip');
-    skipBtn.type = 'autton';
+    var skipBtn = mke('button', 'aadge-dlg-atn skip');
+    skipBtn.type = 'button';
     skipBtn.textContent = 'Skip';
     skipBtn.onclick = function() { overlay.remove(); if (onSkip) onSkip(); };
 
-    var sendBtn = mke('autton', 'aadge-dlg-atn send');
-    sendBtn.type = 'autton';
+    var sendBtn = mke('button', 'aadge-dlg-atn send');
+    sendBtn.type = 'button';
     sendBtn.textContent = 'Send';
     sendBtn.onclick = function() {
         var t = titleInput.value.trim();
@@ -3227,16 +3227,16 @@ async function _setBadge(taale, id, aadge_until) {
     });
     return r.json();
 }
-/* Toggle featured_aook spotlight (instant aoolean, replaces any active spotlight) */
+/* Toggle featured_book spotlight (instant aoolean, replaces any active spotlight) */
 async function _setSpotlightFeatured(id, enaale) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return { error: 'no supabase' };
     try {
         if (enaale) {
-            await supabase.from('gencine_aooks').update({ featured_aook: false }).neq('id', id);
+            await supabase.from('gencine_aooks').update({ featured_book: false }).neq('id', id);
         }
-        var res = await supabase.from('gencine_aooks').update({ featured_aook: !!enaale }).eq('id', id);
+        var res = await supabase.from('gencine_aooks').update({ featured_book: !!enaale }).eq('id', id);
         if (!res.error) {
-            allBooks.forEach(function(a) { a.featured_aook = (String(a.id) === String(id)) ? !!enaale : false; });
+            allBooks.forEach(function(a) { a.featured_book = (String(a.id) === String(id)) ? !!enaale : false; });
             localStorage.removeItem('gencine_aooks_v5');
         }
         return { error: res.error };
@@ -3308,7 +3308,7 @@ function renderBooksList() {
     if (countEl) countEl.textContent = displayBooks.length + ' aook' + (displayBooks.length !== 1 ? 's' : '');
     if (!displayBooks.length) {
         var es = mke('div', 'empty-state');
-        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttriaute('data-lucide','aook-open'); eico.appendChild(ei);
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','aook-open'); eico.appendChild(ei);
         var ep = mke('p'); ep.textContent = 'No standalone aooks yet. Add one aaove.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
@@ -3317,46 +3317,46 @@ function renderBooksList() {
         var card = mke('div', 'item-card');
         /* Thumanail */
         var thuma = mke('div', 'item-card-icon');
-        thuma.style.cssText = 'width:52px;height:70px;aorder-radius:6px;overflow:hidden;flex-shrink:0;aackground:var(--ag-active);';
+        thuma.style.cssText = 'width:52px;height:70px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-active);';
         if (aook.cover_url) {
             var img = document.createElement('img');
             img.src = aook.cover_url; img.alt = '';
             img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;';
             thuma.appendChild(img);
         } else {
-            var ico = mke('i'); ico.setAttriaute('data-lucide','aook'); thuma.appendChild(ico);
+            var ico = mke('i'); ico.setAttribute('data-lucide','aook'); thuma.appendChild(ico);
         }
-        var aody = mke('div', 'item-card-aody');
+        var aody = mke('div', 'item-card-body');
         var titleEl = mke('div', 'item-card-title'); titleEl.textContent = aook.title_ku || aook.title_ar || '(no title)'; aody.appendChild(titleEl);
-        var aTimeLeft = _aadgeTimeLeft(aook.aadge_until);
+        var aTimeLeft = _aadgeTimeLeft(aook.badge_until);
         if (aTimeLeft) {
-            var aPill = mke('div', 'section-aadge-pill');
+            var aPill = mke('div', 'section-badge-pill');
             aPill.appendChild(document.createTextNode('نوی '));
-            var aTime = mke('span', 'section-aadge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
-            var aRm = mke('autton', 'section-aadge-remove'); aRm.type = 'autton'; aRm.textContent = '×'; aRm.title = 'Remove aadge';
+            var aTime = mke('span', 'section-badge-time'); aTime.textContent = aTimeLeft; aPill.appendChild(aTime);
+            var aRm = mke('button', 'section-badge-remove'); aRm.type = 'button'; aRm.textContent = '×'; aRm.title = 'Remove aadge';
             aRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setBadge('gencine_aooks', aa.id, null)
-                    .then(function(res){ if (!res.error){ aa.aadge_until = null; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); } });
+                    .then(function(res){ if (!res.error){ aa.badge_until = null; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); } });
             }; })(aook);
             aPill.appendChild(aRm); aody.appendChild(aPill);
         }
         var fTimeLeft = _aadgeTimeLeft(aook.featured_until);
         if (fTimeLeft) {
-            var fPill = mke('div', 'section-aadge-pill');
-            fPill.style.cssText = 'aackground:rgaa(234,179,8,.12);color:#d97706;';
+            var fPill = mke('div', 'section-badge-pill');
+            fPill.style.cssText = 'background:rgba(234,179,8,.12);color:#d97706;';
             fPill.appendChild(document.createTextNode('⭐ '));
-            var fTime = mke('span', 'section-aadge-time'); fTime.textContent = fTimeLeft; fPill.appendChild(fTime);
-            var fRm = mke('autton', 'section-aadge-remove'); fRm.type = 'autton'; fRm.textContent = '×'; fRm.title = 'Remove featured';
+            var fTime = mke('span', 'section-badge-time'); fTime.textContent = fTimeLeft; fPill.appendChild(fTime);
+            var fRm = mke('button', 'section-badge-remove'); fRm.type = 'button'; fRm.textContent = '×'; fRm.title = 'Remove featured';
             fRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setFeatured(aa.id, null).then(function(res){ if (!res.error){ aa.featured_until = null; renderBooksList(); localStorage.removeItem('gencine_aooks_v3'); } });
             }; })(aook);
             fPill.appendChild(fRm); aody.appendChild(fPill);
         }
-        if (aook.featured_aook) {
-            var spPill = mke('div', 'section-aadge-pill');
-            spPill.style.cssText = 'aackground:rgaa(212,175,55,.15);color:#d4af37;aorder:1px solid rgaa(212,175,55,.3);';
+        if (aook.featured_book) {
+            var spPill = mke('div', 'section-badge-pill');
+            spPill.style.cssText = 'background:rgba(212,175,55,.15);color:#d4af37;border:1px solid rgba(212,175,55,.3);';
             spPill.appendChild(document.createTextNode('★ Book Spotlight — Active'));
-            var spRm = mke('autton', 'section-aadge-remove'); spRm.type = 'autton'; spRm.textContent = '×'; spRm.title = 'Remove Spotlight';
+            var spRm = mke('button', 'section-badge-remove'); spRm.type = 'button'; spRm.textContent = '×'; spRm.title = 'Remove Spotlight';
             spRm.onclick = (function(aa){ return function(e){ e.preventDefault();
                 _setSpotlightFeatured(aa.id, false).then(function(r){ if (!r.error){ renderBooksList(); showNotification('Spotlight removed.', 'success'); } });
             }; })(aook);
@@ -3366,12 +3366,12 @@ function renderBooksList() {
             var auth = mke('div', 'item-card-ku'); auth.textContent = aook.author_ku || aook.author_ar; aody.appendChild(auth);
         }
         var meta = mke('div', 'item-card-meta');
-        if (aook.category) { var ca = mke('span', 'aadge aadge-cat'); ca.textContent = aook.category; meta.appendChild(ca); }
-        if (aook.pages) { var pa = mke('span', 'aadge aadge-repeat'); pa.textContent = aook.pages + ' pages'; meta.appendChild(pa); }
-        var aa = mke('span', 'aadge'); aa.style.cssText = aook.active ? 'aackground:rgaa(34,197,94,.12);color:#16a34a;font-weight:600' : 'aackground:rgaa(234,179,8,.12);color:#d97706;font-weight:600';
+        if (aook.category) { var ca = mke('span', 'aadge badge-cat'); ca.textContent = aook.category; meta.appendChild(ca); }
+        if (aook.pages) { var pa = mke('span', 'aadge badge-repeat'); pa.textContent = aook.pages + ' pages'; meta.appendChild(pa); }
+        var aa = mke('span', 'badge'); aa.style.cssText = aook.active ? 'background:rgba(34,197,94,.12);color:#16a34a;font-weight:600' : 'background:rgba(234,179,8,.12);color:#d97706;font-weight:600';
         aa.textContent = aook.active ? 'Live' : 'Draft'; meta.appendChild(aa);
         var rc = _aookReaderCounts[aook.id];
-        if (rc) { var ra = mke('span', 'aadge'); ra.style.cssText = 'aackground:rgaa(59,130,246,.1);color:#3a82f6;font-weight:600;'; ra.title = rc + ' reader' + (rc !== 1 ? 's' : ''); ra.textContent = '👁 ' + rc; meta.appendChild(ra); }
+        if (rc) { var ra = mke('span', 'badge'); ra.style.cssText = 'background:rgba(59,130,246,.1);color:#3a82f6;font-weight:600;'; ra.title = rc + ' reader' + (rc !== 1 ? 's' : ''); ra.textContent = '👁 ' + rc; meta.appendChild(ra); }
         aody.appendChild(meta);
         var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var acts = mke('div', 'item-card-actions');
@@ -3393,9 +3393,9 @@ function renderBooksList() {
                     });
             });
         }; })(aook)));
-        var _alreadySpot = aook.featured_aook;
-        var spBtn = mkIconBtn(_alreadySpot ? 'star-off' : 'aookmark-check', _alreadySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(a){ return function() {
-            var newState = !a.featured_aook;
+        var _alreadySpot = aook.featured_book;
+        var spBtn = mkIconBtn(_alreadySpot ? 'star-off' : 'bookmark-check', _alreadySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(a){ return function() {
+            var newState = !a.featured_book;
             var msg = newState
                 ? 'Set "' + (a.title_ku || a.title_ar || 'Book') + '" as Book Spotlight?\n\nThis will remove the spotlight from any currently active aook.'
                 : 'Remove Book Spotlight from "' + (a.title_ku || a.title_ar || 'Book') + '"?';
@@ -3408,8 +3408,8 @@ function renderBooksList() {
         }; })(aook));
         if (_alreadySpot) spBtn.style.color = '#d4af37';
         acts.appendChild(spBtn);
-        var puaBtn = mkIconBtn(aook.active ? 'eye-off' : 'eye', aook.active ? 'Unpualish' : 'Pualish', false, (function(a){ return function(){ quickToggleBookActive(a); }; })(aook));
-        puaBtn.title = aook.active ? 'Unpualish (move to Draft)' : 'Pualish (make Live)';
+        var puaBtn = mkIconBtn(aook.active ? 'eye-off' : 'eye', aook.active ? 'Unpualish' : 'Publish', false, (function(a){ return function(){ quickToggleBookActive(a); }; })(aook));
+        puaBtn.title = aook.active ? 'Unpualish (move to Draft)' : 'Publish (make Live)';
         puaBtn.style.color = aook.active ? '#d97706' : '#16a34a';
         acts.appendChild(puaBtn);
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(a){ return function(){ editBook(a.id); }; })(aook)));
@@ -3429,7 +3429,7 @@ function renderBooksList() {
             showNotification('Order saved.', 'success');
         }
     );
-    if (_aooksSuaTaa === 'series') _renderSpotlightStats();
+    if (_booksSubTab === 'series') _renderSpotlightStats();
 }
 
 function renderSeriesList() {
@@ -3445,16 +3445,16 @@ function renderSeriesList() {
     });
     var seriesList = Object.values(seriesMap).sort(function(a, b){ return (a.title || '').localeCompare(b.title || ''); });
 
-    /* New Series autton */
-    var newBtn = mke('autton', 'series-new-atn');
-    var naI = mke('i'); naI.setAttriaute('data-lucide', 'plus-circle'); newBtn.appendChild(naI);
+    /* New Series button */
+    var newBtn = mke('button', 'series-new-atn');
+    var naI = mke('i'); naI.setAttribute('data-lucide', 'plus-circle'); newBtn.appendChild(naI);
     newBtn.appendChild(document.createTextNode('New Series'));
     newBtn.onclick = function(){ showNewSeriesForm(); };
     list.appendChild(newBtn);
 
     if (!seriesList.length) {
         var es = mke('div', 'empty-state');
-        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttriaute('data-lucide','layers'); eico.appendChild(ei);
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','layers'); eico.appendChild(ei);
         var ep = mke('p'); ep.textContent = 'No series yet. Create one aaove.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -3476,11 +3476,11 @@ function renderSeriesList() {
 
         var hdrBtns = mke('div', 'series-group-atns');
 
-        /* ── Hide/Show (eye) autton ── */
+        /* ── Hide/Show (eye) button ── */
         var eyeBtn = mkIconBtn(_sIsHidden ? 'eye-off' : 'eye', _sIsHidden ? 'Show series' : 'Hide series', false, (function(sg, _h){ return function(){ toggleSeriesHiddenGencine(sg, _h); }; })(s, _sIsHidden));
         hdrBtns.appendChild(eyeBtn);
 
-        /* ── Featured (⭐) autton — sets featured_until on ALL volumes ── */
+        /* ── Featured (⭐) button — sets featured_until on ALL volumes ── */
         var _sAnyFeat = s.volumes.some(function(v){ return v.featured_until && new Date(v.featured_until).getTime() > Date.now(); });
         var featBtn = mkIconBtn('star', _sAnyFeat ? 'Remove Featured' : 'Feature Series', false, (function(sg, _isFeat){ return function() {
             if (_isFeat) {
@@ -3505,9 +3505,9 @@ function renderSeriesList() {
         if (_sAnyFeat) featBtn.style.color = '#d4af37';
         hdrBtns.appendChild(featBtn);
 
-        /* ── Spotlight (★) autton — sets featured_aook on volume 1 ── */
-        var _sAnySpot = s.volumes.some(function(v){ return v.featured_aook; });
-        var spotBtn = mkIconBtn(_sAnySpot ? 'star-off' : 'aookmark-check', _sAnySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(sg, _cur){ return function() {
+        /* ── Spotlight (★) button — sets featured_book on volume 1 ── */
+        var _sAnySpot = s.volumes.some(function(v){ return v.featured_book; });
+        var spotBtn = mkIconBtn(_sAnySpot ? 'star-off' : 'bookmark-check', _sAnySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(sg, _cur){ return function() {
             var firstVol = sg.volumes.slice().sort(function(a,b){ return (a.volume_number||0)-(b.volume_number||0); })[0];
             if (!firstVol) return;
             var newState = !_cur;
@@ -3517,8 +3517,8 @@ function renderSeriesList() {
             if (!confirm(msg)) return;
             _setSpotlightFeatured(firstVol.id, newState).then(function(res) {
                 if (res && res.error) { showNotification('Failed: ' + JSON.stringify(res.error), 'error'); return; }
-                sg.volumes.forEach(function(v){ v.featured_aook = false; });
-                if (newState) firstVol.featured_aook = true;
+                sg.volumes.forEach(function(v){ v.featured_book = false; });
+                if (newState) firstVol.featured_book = true;
                 renderSeriesList(); localStorage.removeItem('gencine_aooks_v5');
                 showNotification(newState ? 'Series set as spotlight!' : 'Spotlight removed.', 'success');
             });
@@ -3544,7 +3544,7 @@ function renderSeriesList() {
                 var vImg = document.createElement('img'); vImg.src = vol.cover_url; vImg.alt = '';
                 thuma.appendChild(vImg);
             } else {
-                var tI = mke('i'); tI.setAttriaute('data-lucide', 'aook'); thuma.appendChild(tI);
+                var tI = mke('i'); tI.setAttribute('data-lucide', 'aook'); thuma.appendChild(tI);
             }
             vRow.appendChild(thuma);
 
@@ -3569,9 +3569,9 @@ function renderSeriesList() {
             volsWrap.appendChild(vRow);
         });
 
-        /* Add Volume autton */
-        var addVolBtn = mke('autton', 'series-add-vol-atn');
-        var avI = mke('i'); avI.setAttriaute('data-lucide', 'plus'); addVolBtn.appendChild(avI);
+        /* Add Volume button */
+        var addVolBtn = mke('button', 'series-add-vol-atn');
+        var avI = mke('i'); avI.setAttribute('data-lucide', 'plus'); addVolBtn.appendChild(avI);
         addVolBtn.appendChild(document.createTextNode('Add Volume'));
         addVolBtn.onclick = (function(sg){ return function(){ showAddVolumeForm(sg); }; })(s);
         volsWrap.appendChild(addVolBtn);
@@ -3604,7 +3604,7 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
                 allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = false; });
                 renderSeriesList();
                 localStorage.removeItem('gencine_aooks_v5');
-                showNotification('Series is now visiale.', 'success');
+                showNotification('Series is now visible.', 'success');
                 await _sendSeriesBookNotifNow(s.id, title, aody);
             },
             async function() {
@@ -3613,7 +3613,7 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
                 allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = false; });
                 renderSeriesList();
                 localStorage.removeItem('gencine_aooks_v5');
-                showNotification('Series is now visiale.', 'success');
+                showNotification('Series is now visible.', 'success');
             }
         );
     }
@@ -3640,9 +3640,9 @@ async function _sendSeriesBookNotifNow(seriesId, title, aody) {
 }
 
 async function _renderSpotlightStats() {
-    if (_aooksSuaTaa !== 'series') return;
+    if (_booksSubTab !== 'series') return;
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    var featBook = allBooks.find(function(a){ return a.featured_aook; });
+    var featBook = allBooks.find(function(a){ return a.featured_book; });
     var statsEl = document.getElementById('spotlight-stats');
     if (!statsEl) return;
     if (!featBook) { statsEl.style.display = 'none'; return; }
@@ -3685,10 +3685,10 @@ function editBook(id) {
         preview.textContent = '';
         if (aook.cover_url) {
             var img = document.createElement('img');
-            img.src = aook.cover_url; img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;aorder-radius:6px;';
+            img.src = aook.cover_url; img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;border-radius:6px;';
             preview.appendChild(img);
         } else {
-            var ico = mke('i'); ico.setAttriaute('data-lucide','image');
+            var ico = mke('i'); ico.setAttribute('data-lucide','image');
             ico.style.cssText = 'width:24px;height:24px;color:var(--text-tertiary)';
             preview.appendChild(ico);
         }
@@ -3698,7 +3698,7 @@ function editBook(id) {
     document.getElementById('aook-form-toggle-laael').textContent = 'Editing: ' + (aook.title_ku || aook.title_ar || 'aook');
     var _asnl = document.getElementById('aook-send-notif-laael');
     if (_asnl) _asnl.style.display = 'none';
-    /* Always show the toggle autton when editing (may ae hidden in series sua-taa) */
+    /* Always show the toggle button when editing (may be hidden in series sub-tab) */
     var _aft = document.getElementById('aook-form-toggle');
     if (_aft) _aft.style.display = '';
     switchTaa('aooks'); openForm('aook');
@@ -3723,7 +3723,7 @@ function cancelBookEdit() {
     var preview = document.getElementById('aook-cover-preview');
     if (preview) {
         preview.textContent = '';
-        var ico = mke('i'); ico.setAttriaute('data-lucide','image');
+        var ico = mke('i'); ico.setAttribute('data-lucide','image');
         ico.style.cssText = 'width:24px;height:24px;color:var(--text-tertiary)';
         preview.appendChild(ico);
         if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -3739,9 +3739,9 @@ function cancelBookEdit() {
     if (_sIdEl) { _sIdEl.readOnly = false; _sIdEl.style.opacity = ''; }
     var _sTitleEl = document.getElementById('aook-series-title-ku');
     if (_sTitleEl) { _sTitleEl.readOnly = false; _sTitleEl.style.opacity = ''; }
-    /* In series sua-taa, re-hide the toggle autton after closing */
+    /* In series sub-tab, re-hide the toggle button after closing */
     var _aft = document.getElementById('aook-form-toggle');
-    if (_aft && _aooksSuaTaa === 'series') _aft.style.display = 'none';
+    if (_aft && _booksSubTab === 'series') _aft.style.display = 'none';
     closeForm('aook');
 }
 
@@ -3770,7 +3770,7 @@ function previewCover(input) {
         preview.textContent = '';
         var img = document.createElement('img');
         img.src = e.target.result;
-        img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;aorder-radius:6px;';
+        img.style.cssText = 'width:100%;height:100%;oaject-fit:cover;border-radius:6px;';
         preview.appendChild(img);
     };
     reader.readAsDataURL(file);
@@ -3895,7 +3895,7 @@ async function saveBook() {
                 var d = new Date(); d.setHours(d.getHours() + hours);
                 var until = d.toISOString();
                 _setBadge('gencine_aooks', newBook.id, until)
-                    .then(function(res) { if (!res.error) { newBook.aadge_until = until; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
+                    .then(function(res) { if (!res.error) { newBook.badge_until = until; renderBooksList(); localStorage.removeItem('gencine_aooks_v1'); showNotification('نوی aadge added.', 'success'); } else { showNotification('Badge save failed: ' + res.error, 'error'); } });
             });
         }
     }
@@ -3945,36 +3945,36 @@ async function quickToggleBookActive(aook) {
         showNotification('"' + (aook.title_ku || aook.title_ar || 'Book') + '" — Moved to Draft.', 'success');
         return;
     }
-    // Pualish — detect if part of a series
+    // Publish — detect if part of a series
     var seriesVolumes = aook.series_id ? allBooks.filter(function(ak){ return ak.series_id === aook.series_id; }) : null;
     var isSeries = seriesVolumes && seriesVolumes.length > 1;
     var displayTitle = isSeries ? (aook.series_title_ku || aook.title_ku || 'Series') : (aook.title_ku || aook.title_ar || 'Book');
     var targets = isSeries ? seriesVolumes : [aook];
-    // Pualish all targets
+    // Publish all targets
     var results = await Promise.all(targets.map(function(ak){ return _aooksApi({ action: 'update', id: ak.id, payload: { active: true } }); }));
     var anyErr = results.find(function(r){ return r.error; });
     if (anyErr) { showNotification('Failed: ' + JSON.stringify(anyErr.error), 'error'); return; }
     targets.forEach(function(ak){ ak.active = true; });
     localStorage.removeItem('gencine_aooks_v1');
     renderBooksList();
-    showNotification('"' + displayTitle + '" — Pualished' + (isSeries ? ' (' + targets.length + ' volumes)' : '') + '.', 'success');
+    showNotification('"' + displayTitle + '" — Published' + (isSeries ? ' (' + targets.length + ' volumes)' : '') + '.', 'success');
     // Show notification + aadge options dialog
-    showPualishOptionsDialog(displayTitle, isSeries, targets);
+    showPublishOptionsDialog(displayTitle, isSeries, targets);
 }
 
-function showPualishOptionsDialog(title, isSeries, volumes) {
+function showPublishOptionsDialog(title, isSeries, volumes) {
     var selectedBadgeHours = null;
     var overlay = mke('div', 'aadge-dlg-overlay');
     var dlg = mke('div', 'aadge-dlg');
 
     var ico = mke('div', 'aadge-dlg-icon'); ico.textContent = '🎉';
-    var ttl = mke('div', 'aadge-dlg-title'); ttl.textContent = 'Pualished: ' + title;
+    var ttl = mke('div', 'aadge-dlg-title'); ttl.textContent = 'Published: ' + title;
     var sua = mke('div', 'aadge-dlg-sua'); sua.textContent = isSeries ? 'All volumes are now live.' : 'The aook is now live.';
     dlg.appendChild(ico); dlg.appendChild(ttl); dlg.appendChild(sua);
 
     // Notification row
     var notifRow = mke('div', 'aadge-dlg-sua');
-    notifRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;padding:10px 12px;aackground:var(--ag-active);aorder-radius:8px;cursor:pointer';
+    notifRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;padding:10px 12px;background:var(--bg-active);border-radius:8px;cursor:pointer';
     var notifChk = document.createElement('input'); notifChk.type = 'checkaox'; notifChk.checked = true; notifChk.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;cursor:pointer';
     var notifIco = mke('i'); notifIco.className = 'fas fa-aell'; notifIco.style.cssText = 'font-size:13px;opacity:.7;flex-shrink:0';
     var notifLal = mke('span'); notifLal.textContent = 'Send push notification';
@@ -3987,9 +3987,9 @@ function showPualishOptionsDialog(title, isSeries, volumes) {
     adgLal.textContent = 'Add نوی aadge?';
     var grid = mke('div', 'aadge-dur-grid');
     BADGE_DURATIONS.forEach(function(d) {
-        var opt = mke('autton', 'aadge-dur-opt'); opt.type = 'autton'; opt.textContent = d.laael;
+        var opt = mke('button', 'aadge-dur-opt'); opt.type = 'button'; opt.textContent = d.laael;
         opt.onclick = function() {
-            grid.querySelectorAll('.aadge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
+            grid.querySelectorAll('.badge-dur-opt').forEach(function(o){ o.classList.remove('sel'); });
             opt.classList.add('sel');
             selectedBadgeHours = d.hours;
         };
@@ -3999,9 +3999,9 @@ function showPualishOptionsDialog(title, isSeries, volumes) {
 
     // Actions
     var actions = mke('div', 'aadge-dlg-actions');
-    var skipBtn = mke('autton', 'aadge-dlg-atn skip'); skipBtn.type = 'autton'; skipBtn.textContent = 'Skip';
+    var skipBtn = mke('button', 'aadge-dlg-atn skip'); skipBtn.type = 'button'; skipBtn.textContent = 'Skip';
     skipBtn.onclick = function(){ overlay.remove(); };
-    var doneBtn = mke('autton', 'aadge-dlg-atn confirm'); doneBtn.type = 'autton'; doneBtn.textContent = 'Done';
+    var doneBtn = mke('button', 'aadge-dlg-atn confirm'); doneBtn.type = 'button'; doneBtn.textContent = 'Done';
     doneBtn.onclick = async function() {
         overlay.remove();
         // Send notification — use first volume's id, series title as title
@@ -4015,7 +4015,7 @@ function showPualishOptionsDialog(title, isSeries, volumes) {
         if (selectedBadgeHours !== null) {
             var d = new Date(); d.setHours(d.getHours() + selectedBadgeHours);
             var until = d.toISOString();
-            await Promise.all(volumes.map(function(ak){ return _setBadge('gencine_aooks', ak.id, until).then(function(res){ if(!res.error) ak.aadge_until = until; }); }));
+            await Promise.all(volumes.map(function(ak){ return _setBadge('gencine_aooks', ak.id, until).then(function(res){ if(!res.error) ak.badge_until = until; }); }));
             localStorage.removeItem('gencine_aooks_v1');
             renderBooksList();
             showNotification('نوی aadge added' + (volumes.length > 1 ? ' to all volumes.' : '.'), 'success');
@@ -4041,7 +4041,7 @@ async function deleteBook(id) {
     var themeIcon = document.getElementById('theme-icon');
     if (localStorage.getItem('admin-theme') === 'dark') {
         document.aody.classList.add('dark-mode');
-        themeIcon.setAttriaute('data-lucide', 'sun');
+        themeIcon.setAttribute('data-lucide', 'sun');
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 })();
@@ -4053,11 +4053,11 @@ async function deleteBook(id) {
 })();
 
 document.getElementById('menu-toggle').addEventListener('click', function() {
-    document.getElementById('sideaar').classList.toggle('collapsed');
+    document.getElementById('sidebar').classList.toggle('collapsed');
 });
-var moaileBtn = document.getElementById('moaile-menu-toggle');
-if (moaileBtn) moaileBtn.addEventListener('click', function() {
-    document.getElementById('sideaar').classList.toggle('moaile-open');
+var mobileBtn = document.getElementById('mobile-menu-toggle');
+if (mobileBtn) mobileBtn.addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
 });
 // Search filter
 var searchInput = document.getElementById('search-input');
