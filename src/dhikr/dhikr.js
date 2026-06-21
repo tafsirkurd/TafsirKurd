@@ -543,8 +543,9 @@ function _initDbData(onDone) {
     if (!_dbSections   && _fullBndl.sections) _dbSections   = _fullBndl.sections;
     if (!_dbBooks      && _fullBndl.books) {
       _dbBooks = _fullBndl.books;
-      /* Do NOT write bundle to gencine_books_v5 — bundle has no series_id/series_title_ku
-         so smart-dhikr can't filter series volumes. Cache is written by Supabase fetch only. */
+      /* Bundle now includes series_id/series_title_ku — safe to persist so
+         smart-dhikr's "book of the day" slide works on first install / offline. */
+      _writeCache('gencine_books_v5', _dbBooks);
     }
     if (!_dbTasbih     && _fullBndl.tasbih)   _dbTasbih     = _fullBndl.tasbih;
     if (!_dbAdhkar     && _fullBndl.adhkar)   _dbAdhkar     = _fullBndl.adhkar;
