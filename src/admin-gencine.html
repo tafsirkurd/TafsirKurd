@@ -2645,7 +2645,12 @@ function renderAdhkarList() {
         arEl.textContent = item.ar;
         arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-bottom:4px';
         var meta = mke('div','item-card-meta');
-        meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + (item.active ? '' : ' · hidden');
+        var metaParts = ['#' + (item.sort_order || 0)];
+        if (item.source) metaParts.push(item.source);
+        if (item.repeat > 1) metaParts.push('×' + item.repeat);
+        if (!item.active) metaParts.push('hidden');
+        if (item.priority) metaParts.push(item.priority);
+        meta.textContent = metaParts.join(' · ');
         var aTimeLeft = _badgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
