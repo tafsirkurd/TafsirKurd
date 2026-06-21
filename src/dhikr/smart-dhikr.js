@@ -1042,7 +1042,7 @@
     if (preview.length > 55) preview = preview.slice(0, 55) + '…';
     return {
       _type: 'daily', id: 'hadith_day',
-      icon: 'fas fa-scroll', tag: 'حەدیسا ڕۆژێ',
+      icon: 'fas fa-scroll', tag: 'فەرمودەیا ڕۆژێ',
       title:    h.title || preview,
       subtitle: h.source || 'پێغەمبەرێ ئیسلامێ ﷺ',
       nav: function(ui) {

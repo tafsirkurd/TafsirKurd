@@ -5,10 +5,10 @@
 function _sections(){
   var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
   var all = [
-    { name:'hadith', label:T('gencine.hadith','حەدیس'),     sub:T('gencine.hadith_sub','فەرمودێن پێغەمبەرێ ئیسلامێ'),           icon:'fas fa-scroll'             },
-    { name:'adhkar', label:T('gencine.adhkar','زکیر'),        sub:T('gencine.adhkar_sub','زکرێن بەیانی، ئێوار و زیاتر'),         icon:'fas fa-heart'               },
-    { name:'dua',    label:T('gencine.dua','دوعا'),          sub:T('gencine.dua_sub','دعاهای قورئانی'),                         icon:'fa-solid fa-person-praying' },
-    { name:'tasbih', label:T('gencine.tasbih','تەسبیح'),    sub:T('gencine.tasbih_sub','ژمارتنا دیکرێن ئیسلامی'),              icon:'fas fa-rotate'             },
+    { name:'hadith', label:T('gencine.hadith','فەرمودە'),     sub:T('gencine.hadith_sub','فەرمودێن پێغەمبەرێ ئیسلامێ'),           icon:'fas fa-scroll'             },
+    { name:'adhkar', label:T('gencine.adhkar','زکر'),          sub:T('gencine.adhkar_sub','زکرێ سپێدە، ئێڤاری و زێدەتر'),       icon:'fas fa-heart'               },
+    { name:'dua',    label:T('gencine.dua','دوعا'),          sub:T('gencine.dua_sub','دوعایێن قورئانێ'),                       icon:'fa-solid fa-person-praying' },
+    { name:'tasbih', label:T('gencine.tasbih','تەسبیح'),    sub:T('gencine.tasbih_sub','هەژمارتنا زکری'),                     icon:'fas fa-rotate'             },
     { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' },
     { name:'books',  label:T('gencine.books','پەرتوک'),        sub:T('gencine.books_sub','پەرتوکێن ئیسلامی'),                       icon:'fas fa-book-open' }
   ];

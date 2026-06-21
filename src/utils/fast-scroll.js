@@ -252,7 +252,7 @@ window._initFastScroll = function(){
           if(!rows.length) return null;
           var idx = Math.min(rows.length - 1, Math.floor(ratio * rows.length));
           var num = rows[idx].querySelector('.hadith-num');
-          return num ? num.textContent + ' - حەدیس' : null;
+          return num ? num.textContent + ' - فەرمودە' : null;
         }
 
         if(view === 'books'){
