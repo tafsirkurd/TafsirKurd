@@ -224,7 +224,29 @@ async function _handleRequest(context) {
         // One notification per series per run — when a playlist gains 2+ new episodes
         // in the same sync cycle, both show the same series-name title and look like
         // duplicates to users. Send only the most recent episode (first in DESC order).
+        //
+        // Pre-populate from DB so cron retries (Cloudflare at-least-once guarantee)
+        // don't bypass the in-memory set and send a second episode from the same series.
         const notifiedSeries = new Set();
+        const { data: recentVideoNotifs } = await supabase
+            .from('admin_notifications')
+            .select('deep_link_id')
+            .eq('deep_link_type', 'video')
+            .in('status', ['sent', 'sending', 'scheduled'])
+            .gte('created_at', twoHoursAgo);
+        if (recentVideoNotifs?.length) {
+            const sentEpIds = recentVideoNotifs.map(n => n.deep_link_id).filter(Boolean);
+            if (sentEpIds.length) {
+                const { data: sentEps } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('series_id')
+                    .in('id', sentEpIds);
+                for (const e of (sentEps || [])) {
+                    if (e.series_id) notifiedSeries.add(e.series_id);
+                }
+            }
+        }
+
         for (const ep of (episodes || [])) {
             const seriesName = ep.islamvoice_series?.name_ku || ep.title;
             if (ep.series_id && notifiedSeries.has(ep.series_id)) {
