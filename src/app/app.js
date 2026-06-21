@@ -1788,9 +1788,6 @@ function _checkDataReady(){
 function _startTabPrerender(){
   if(_tabsPrerendering)return;
   _tabsPrerendering=true;
-  // SAFE MODE: skip non-essential modules on repeated crash launches
-  var _safeMode = !!window._tkSafeMode;
-  if(_safeMode) console.warn('[Startup] SAFE MODE active — skipping non-essential pre-renders');
   console.log('[Startup] Tab pre-render start',Date.now()-_startupT0,'ms');
   // Performance-tier gating: skip expensive pre-renders on weaker devices.
   // Skipped tabs still render on-demand when the user taps them (hash-cache check).
@@ -1814,9 +1811,9 @@ function _startTabPrerender(){
     _shieldedJob(function(){renderSettings();_renderHash.settings=_tabHash('settings');},'settings','panelSettings'),
     _shieldedJob(function(){if(window.PrayerUI){PrayerUI.render();_renderHash.prayer=_tabHash('prayer');
       requestAnimationFrame(function(){var _s=document.getElementById('prayerSkyScene');if(_s&&S.tab!=='prayer')_s.classList.add('sky-paused');});}},'prayer','panelPrayer'),
-    // IslamVoice/Gencine: skip on safe mode, medium/low/critical — expensive, rarely first
-    (_safeMode||_isLowEndDev||_isMediumPerf) ? null : _shieldedJob(function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},'islamvoice','panelIslamvoice'),
-    (_safeMode||_isLowEndDev||_isMediumPerf) ? null : _shieldedJob(function(){if(window.GencineUI)GencineUI.render();},'gencine','panelGencine')
+    // IslamVoice/Gencine: skip on medium/low/critical — expensive, rarely first
+    (_isLowEndDev||_isMediumPerf) ? null : _shieldedJob(function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},'islamvoice','panelIslamvoice'),
+    (_isLowEndDev||_isMediumPerf) ? null : _shieldedJob(function(){if(window.GencineUI)GencineUI.render();},'gencine','panelGencine')
   ].filter(Boolean); // remove nulls for lower perf tiers
   var _ji=0;
   // Use requestIdleCallback so pre-render jobs only run when the browser has
