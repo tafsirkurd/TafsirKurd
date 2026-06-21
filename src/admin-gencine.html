@@ -2579,19 +2579,19 @@ var ADHKAR_ADMIN_CATS = {
     gratitude:'سوپاسگوزاری'
 };
 
-/* Mirrors dhikr.js GROUPS — within each section, keys are alphabetical (matching app DB query order) */
+/* Matches ADHKAR_CAT_KEYS order in dhikr.js — same order the app shows */
 var ADHKAR_ADMIN_GROUPS_DEFAULT = [
-    { en:'Daily',   ku:'ڕۆژانە',       keys:['evening','morning','sleep','waking'] },
-    { en:'Prayer',  ku:'نوێژ',          keys:['adhan','after_prayer','between_sujood','opening_prayer','qunut','rising_ruku','ruku','sujood','tashahhud'] },
-    { en:'Food',    ku:'خواردن',        keys:['breaking_fast','eating_after','eating_before','fasting'] },
-    { en:'Places',  ku:'مالبیا و جێ',  keys:['bathroom_enter','bathroom_exit','house_enter','house_exit','masjid_enter','masjid_exit','marketplace','vehicle'] },
+    { en:'Daily',   ku:'ڕۆژانە',       keys:['morning','evening','sleep','waking'] },
+    { en:'Prayer',  ku:'نوێژ',          keys:['opening_prayer','ruku','rising_ruku','sujood','between_sujood','tashahhud','after_prayer','adhan','qunut'] },
+    { en:'Food',    ku:'خواردن',        keys:['eating_before','eating_after','breaking_fast','fasting'] },
+    { en:'Places',  ku:'مالبیا و جێ',  keys:['house_enter','house_exit','bathroom_enter','bathroom_exit','masjid_enter','masjid_exit','vehicle','marketplace'] },
     { en:'Travel',  ku:'گەشت',          keys:['travel','travel_return'] },
-    { en:'Hajj',    ku:'حەج',           keys:['arafat','dhul_hijjah','entering_makkah','safa_marwa','talbiyah','zamzam'] },
+    { en:'Hajj',    ku:'حەج',           keys:['dhul_hijjah','talbiyah','safa_marwa','zamzam','entering_makkah','arafat'] },
     { en:'Ramadan', ku:'ڕەمەزان',      keys:['lailat_qadr'] },
-    { en:'Weather', ku:'هەوا',          keys:['eclipse','rain','thunder','wind'] },
-    { en:'Health',  ku:'تەندروستی',    keys:['condolence','illness','pain','ruqyah','visiting_sick'] },
-    { en:'Special', ku:'کاتی تایبەت',  keys:['friday','new_moon','salawat'] },
-    { en:'Life',    ku:'ژیانی ڕۆژانە', keys:['anger','before_quran','charity','debt','distress','dressing','fear','forgiveness','gratitude','grave','istikhara','kaffarah','mirror','new_clothes','newborn','nightmare','protection','sneeze','wedding','wudu'] }
+    { en:'Weather', ku:'هەوا',          keys:['rain','thunder','wind','eclipse'] },
+    { en:'Health',  ku:'تەندروستی',    keys:['illness','pain','ruqyah','visiting_sick','condolence'] },
+    { en:'Special', ku:'کاتی تایبەت',  keys:['salawat','new_moon','friday'] },
+    { en:'Life',    ku:'ژیانی ڕۆژانە', keys:['wudu','charity','distress','debt','fear','forgiveness','protection','grave','newborn','anger','sneeze','new_clothes','dressing','mirror','nightmare','istikhara','wedding','kaffarah','before_quran','gratitude'] }
 ];
 var _adhkarCatsDB = null; /* [{key, sort_order, section_en, section_ku}] from Supabase */
 
@@ -2601,41 +2601,44 @@ async function _loadAdhkarCatsDB() {
     if (!r.error && r.data && r.data.length) _adhkarCatsDB = r.data;
 }
 
-/* Build grouped order from _adhkarCatsDB or default */
+/* Build grouped order — sections always in ADHKAR_ADMIN_GROUPS_DEFAULT order, keys sorted by DB sort_order */
 function _buildAdhkarCatOrder() {
     if (_adhkarCatsDB && _adhkarCatsDB.length) {
-        /* Group rows by section_en */
-        var sectionMap = {}, sectionOrder = [];
-        _adhkarCatsDB.forEach(function(row) {
-            var se = row.section_en || 'Other', sk = row.section_ku || '';
-            if (!sectionMap[se]) { sectionMap[se] = { en:se, ku:sk, keys:[] }; sectionOrder.push(se); }
-            sectionMap[se].keys.push(row.key);
+        var sortedKeys = _adhkarCatsDB.slice().sort(function(a,b){ return a.sort_order - b.sort_order; }).map(function(r){ return r.key; });
+        return ADHKAR_ADMIN_GROUPS_DEFAULT.map(function(grp) {
+            return {
+                en: grp.en, ku: grp.ku,
+                keys: sortedKeys.filter(function(k){ return grp.keys.indexOf(k) !== -1; })
+            };
         });
-        return sectionOrder.map(function(se){ return sectionMap[se]; });
     }
     return ADHKAR_ADMIN_GROUPS_DEFAULT.map(function(g){ return { en:g.en, ku:g.ku, keys:g.keys.slice() }; });
 }
 
 async function moveAdhkarCat(catKey, dir) {
     if (!_adhkarCatsDB) return;
-    var idx = _adhkarCatsDB.findIndex(function(r){ return r.key === catKey; });
+    /* find which section this key belongs to */
+    var sectionKeys = null;
+    ADHKAR_ADMIN_GROUPS_DEFAULT.forEach(function(g){ if (g.keys.indexOf(catKey) !== -1) sectionKeys = g.keys; });
+    if (!sectionKeys) return;
+    /* get current DB order filtered to this section */
+    var sorted = _adhkarCatsDB.slice().sort(function(a,b){ return a.sort_order - b.sort_order; });
+    var sectionRows = sorted.filter(function(r){ return sectionKeys.indexOf(r.key) !== -1; });
+    var idx = sectionRows.findIndex(function(r){ return r.key === catKey; });
     if (idx === -1) return;
     var ni = idx + dir;
-    /* only swap within same section */
-    if (ni < 0 || ni >= _adhkarCatsDB.length) return;
-    if (_adhkarCatsDB[ni].section_en !== _adhkarCatsDB[idx].section_en) return;
+    if (ni < 0 || ni >= sectionRows.length) return;
+    var rowA = sectionRows[idx], rowB = sectionRows[ni];
     var sb = window.adminAuth.getSupabase();
-    var aOrder = _adhkarCatsDB[idx].sort_order;
-    var bOrder = _adhkarCatsDB[ni].sort_order;
-    /* swap sort_order values */
+    var aOrder = rowA.sort_order, bOrder = rowB.sort_order;
     if (aOrder === bOrder) { dir > 0 ? bOrder++ : aOrder++; }
     var res = await Promise.all([
-        sb.from('gencine_adhkar_cats').update({ sort_order: bOrder }).eq('key', catKey),
-        sb.from('gencine_adhkar_cats').update({ sort_order: aOrder }).eq('key', _adhkarCatsDB[ni].key)
+        sb.from('gencine_adhkar_cats').update({ sort_order: bOrder }).eq('key', rowA.key),
+        sb.from('gencine_adhkar_cats').update({ sort_order: aOrder }).eq('key', rowB.key)
     ]);
     if (res[0].error || res[1].error) { showNotification('Failed to save order', 'error'); return; }
-    _adhkarCatsDB[idx].sort_order = bOrder;
-    _adhkarCatsDB[ni].sort_order = aOrder;
+    rowA.sort_order = bOrder;
+    rowB.sort_order = aOrder;
     /* re-sort local cache */
     _adhkarCatsDB.sort(function(a,b){ return a.sort_order - b.sort_order; });
     renderAdhkarCatGrid();

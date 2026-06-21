@@ -815,8 +815,14 @@ function _getAllAdhkar() {
 }
 /* Return unique adhkar category keys in the admin-controlled sort order */
 function _getAdhkarCatKeys() {
-  var catsCached = _dbAdhkarCats || (function(){ try{ var r=localStorage.getItem('gencine_adhkar_cats_v1'); return r?JSON.parse(r):null; }catch(e){return null;} })();
-  if (catsCached && catsCached.length) return catsCached.map(function(c){ return c.key; });
+  var cats = _dbAdhkarCats;
+  if (!cats) {
+    try {
+      var raw = localStorage.getItem('gencine_adhkar_cats_v1');
+      if (raw) { var p = JSON.parse(raw); cats = p.data || p; }
+    } catch(e) {}
+  }
+  if (cats && cats.length) return cats.map(function(c){ return c.key; });
   if (!_dbAdhkar || !_dbAdhkar.length) return ADHKAR_CAT_KEYS;
   var seen = {}, keys = [];
   _dbAdhkar.forEach(function(a){ if (!seen[a.category_key]){ seen[a.category_key]=1; keys.push(a.category_key); } });
