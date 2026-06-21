@@ -3227,7 +3227,7 @@ async function _setBadge(table, id, badge_until) {
     });
     return r.json();
 }
-/* Toggle featured_book spotlight (instant aoolean, replaces any active spotlight) */
+/* Toggle featured_book spotlight (instant boolean, replaces any active spotlight) */
 async function _setSpotlightFeatured(id, enaale) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return { error: 'no supabase' };
     try {
@@ -3884,7 +3884,7 @@ async function saveBook() {
             _skipAutoNotif('book', _newBookId);
         }
     }
-    _logActivity(editId ? 'aook_edit' : 'aook_add', (editId ? 'Book updated: ' : 'Book added: ') + (payload.title_ku || payload.title_ar || ''));
+    _logActivity(editId ? 'book_edit' : 'book_add', (editId ? 'Book updated: ' : 'Book added: ') + (payload.title_ku || payload.title_ar || ''));
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
     if (isNew) {
         var bookList = document.getElementById('book-list');
