@@ -2942,6 +2942,10 @@ window._showBatteryOptWarning=function(){
   var _warnedAt=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
   if(Date.now()-_warnedAt<7*24*60*60*1000)return; // shown within last 7 days
   localStorage.setItem('batteryOptWarnedAt',String(Date.now()));
+  // Detect Huawei/Honor EMUI — these devices have a proprietary "App Launch" restriction
+  // in addition to the standard Android battery optimization, and the AOSP dialog alone
+  // is not sufficient to allow athan to fire reliably on EMUI.
+  var _isHuaweiEMUI=/HUAWEI|HONOR/i.test(navigator.userAgent||'');
   var overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;z-index:9002;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:0 0 var(--safe-b,20px)';
   var card=document.createElement('div');
@@ -2954,9 +2958,13 @@ window._showBatteryOptWarning=function(){
   title.textContent=t('notif.setup.direct_title','بانگ ڕاستەوخۆ بیت');
   var msg=document.createElement('div');
   msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.9;direction:rtl;margin-bottom:18px;white-space:pre-line;text-align:right';
-  msg.textContent=
+  var _baseMsg=
     'دا کو بانگ ل دەمێ خۆ یێ دروست دا لێبدەت، پێویستە ئەپ د بن کۆنترۆلا پاتریێ دا یێ "بێ ڕێگری" (unrestricted) بیت.\n\n'+
     'دوگمەیا خوارێ لێبدە و "بێ ڕێگری" هەڵبژێره.';
+  var _huaweiMsg=_isHuaweiEMUI
+    ? '\n\n📱 Huawei / Honor (EMUI):\nڕێكخستن ← پاتری ← App Launch ← TafsirKurd ← Manual ←\nBackground Activity + Run-up Activity چالاك بكە.'
+    : '';
+  msg.textContent=_baseMsg+_huaweiMsg;
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
   btn.textContent=t('notif.setup.open_settings','ڤەکرنا ڕێکخستنان');
