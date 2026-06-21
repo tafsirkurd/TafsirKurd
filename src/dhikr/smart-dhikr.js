@@ -1548,7 +1548,8 @@
        formula: -(count - cur) * W                          */
     function _posX(cur) { return -(count - cur) * _W(); }
 
-    var _trackX = _posX(0); // JS-tracked position — avoids getComputedStyle reads
+    var _trackX    = _posX(0); // JS-tracked position — avoids getComputedStyle reads
+    var _dotActive = 0;        // tracks which dot currently has sd-dot-active
 
     /* ── depth effect: scale + opacity per card based on distance from active ── */
     var _slides = [].slice.call(track.children);
@@ -1602,8 +1603,13 @@
     }
 
     function _syncDots() {
-      for (var j = 0; j < count; j++) dots[j].classList.remove('sd-dot-active');
-      dots[current].classList.add('sd-dot-active');
+      /* Swap active class directly — avoids the one-frame flash where
+         all dots would be inactive between remove-all and add-one. */
+      if (_dotActive !== current) {
+        if (dots[_dotActive]) dots[_dotActive].classList.remove('sd-dot-active');
+        _dotActive = current;
+      }
+      if (dots[_dotActive]) dots[_dotActive].classList.add('sd-dot-active');
     }
 
     /* Pending transitionend handler for silent teleport after infinite wrap */
@@ -1648,7 +1654,10 @@
            transitionend fires once per property — guard with _cancelTeleport. */
         if (isWrap && anim !== false) {
           var tX = teleportX;
-          _teleportFn = function() {
+          _teleportFn = function(e) {
+            /* Ignore bubbled transitionend from child cards — only handle
+               the track's own transform transition to avoid double-teleport. */
+            if (e && e.target !== track) return;
             _cancelTeleport();
             _applyX(tX, false);
           };

@@ -281,7 +281,9 @@ window.ForceUpdate = (function(){
     if (stage === 'soft' && cfg.update_release_time && cfg.update_enforce_delay_hours) {
       var releaseTs  = new Date(cfg.update_release_time).getTime();
       var delayMs    = parseFloat(cfg.update_enforce_delay_hours) * 3600000;
-      if (!isNaN(releaseTs) && releaseTs > 0 && !isNaN(delayMs) && Date.now() > releaseTs + delayMs) {
+      // delayMs > 0 guard: zero means "no auto-transition" — without it, saving
+      // the default delay=0 would immediately promote every soft to hard.
+      if (!isNaN(releaseTs) && releaseTs > 0 && !isNaN(delayMs) && delayMs > 0 && Date.now() > releaseTs + delayMs) {
         console.log('[Update] Auto-transition: soft → hard (delay elapsed)');
         return 'hard';
       }
