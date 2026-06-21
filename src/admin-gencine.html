@@ -33,12 +33,17 @@
             --accent-purple: #8b5cf6;
         }
 
-        /* ── Adhkar filter chips ── */
-        .adhkar-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border-light);cursor:pointer;white-space:nowrap;transition:all .15s}
-        .adhkar-filter-btn.active{background:#3b82f6;color:#fff;border-color:transparent}
+        /* ── Adhkar category grid ── */
+        .adhkar-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:12px 0}
+        .adhkar-admin-cat-card{position:relative;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:14px 12px 10px;cursor:pointer;transition:all .15s;user-select:none}
+        .adhkar-admin-cat-card:hover{border-color:var(--primary);background:var(--bg-active);transform:translateY(-1px)}
+        .adhkar-admin-cat-label{font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.4;margin-bottom:4px;direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+        .adhkar-admin-cat-key{font-size:10px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em}
+        .adhkar-admin-cat-count{position:absolute;top:8px;left:8px;background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center}
+        .adhkar-admin-cat-count:empty,.adhkar-admin-cat-count[data-zero]{background:var(--bg-active);color:var(--text-tertiary)}
+        .adhkar-detail-topbar{display:flex;align-items:center;gap:12px;padding:10px 0 14px;border-bottom:1px solid var(--border-light);margin-bottom:12px}
         /* ── Priority / sort inline actions ── */
         .icon-action.star-active { color: #f59e0b !important; }
-        .adhkar-pos { display:inline-block;min-width:20px;text-align:center;font-size:11px;font-weight:700;color:var(--text-tertiary);background:var(--bg-active);border-radius:6px;padding:1px 5px;margin-left:4px; }
         /* ── Stats row ── */
         .stats-row {
             display: grid;
@@ -1014,192 +1019,67 @@
 
             <!-- ── ADHKAR ── -->
             <div id="panel-adhkar" class="view-panel">
-                <input type="hidden" id="adhkar-edit-id">
-                <div class="add-form-wrap">
-                    <button class="add-form-toggle" id="adhkar-form-toggle" onclick="toggleForm('adhkar')">
-                        <i data-lucide="plus"></i>
-                        <span id="adhkar-form-toggle-label">Add Adhkar</span>
-                    </button>
-                    <div class="add-form-body" id="adhkar-form-body">
-                        <div class="form-grid">
-                            <div class="form-row">
+
+                <!-- ── Level 1: Category grid ── -->
+                <div id="adhkar-cats-view">
+                    <div id="adhkar-cats-grid" class="adhkar-admin-grid"></div>
+                </div>
+
+                <!-- ── Level 2: Category detail ── -->
+                <div id="adhkar-cat-detail" style="display:none">
+                    <div class="adhkar-detail-topbar">
+                        <button class="btn btn-secondary" onclick="showAdhkarCatsView()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px">
+                            <i data-lucide="arrow-left" style="width:14px;height:14px"></i> All Categories
+                        </button>
+                        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+                            <span id="adhkar-detail-label" style="font-weight:700;font-size:15px;direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif"></span>
+                            <span id="adhkar-detail-count" style="background:var(--bg-active);color:var(--text-tertiary);font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0"></span>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="adhkar-edit-id">
+                    <input type="hidden" id="adhkar-cat">
+                    <div class="add-form-wrap">
+                        <button class="add-form-toggle" id="adhkar-form-toggle" onclick="toggleForm('adhkar')">
+                            <i data-lucide="plus"></i>
+                            <span id="adhkar-form-toggle-label">Add Adhkar</span>
+                        </button>
+                        <div class="add-form-body" id="adhkar-form-body">
+                            <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="form-label">Category Key</label>
-                                    <select id="adhkar-cat" class="form-select">
-                                        <option value="morning">morning — زکرێن بەیانیکردن</option>
-                                        <option value="evening">evening — زکرێن ئێواربوون</option>
-                                        <option value="sleep">sleep — دوای خەوکردن</option>
-                                        <option value="waking">waking — دوای هاتنا خوو</option>
-                                        <option value="house_enter">house_enter — چونا ماڵ</option>
-                                        <option value="house_exit">house_exit — دەرچوونا ماڵ</option>
-                                        <option value="masjid_enter">masjid_enter — چونا مزگەوت</option>
-                                        <option value="masjid_exit">masjid_exit — دەرچوونا مزگەوت</option>
-                                        <option value="wudu">wudu — وەزوو</option>
-                                        <option value="opening_prayer">opening_prayer — دوعای دەستپێکردنا نوێژ</option>
-                                        <option value="ruku">ruku — زکرێن ڕکووع</option>
-                                        <option value="rising_ruku">rising_ruku — ڕاستبوونا ڕکووعێ</option>
-                                        <option value="sujood">sujood — زکرێن سەجدەیێ</option>
-                                        <option value="between_sujood">between_sujood — نێو دووسەجدەیێ</option>
-                                        <option value="tashahhud">tashahhud — شەهدەدان</option>
-                                        <option value="eating_before">eating_before — بەرا خواردن</option>
-                                        <option value="eating_after">eating_after — دوای خواردن</option>
-                                        <option value="breaking_fast">breaking_fast — کاتا ئیفتارێ</option>
-                                        <option value="fasting">fasting — نیەتا ڕۆژوو</option>
-                                        <option value="travel">travel — گەشت</option>
-                                        <option value="travel_return">travel_return — گەرانا ماڵ</option>
-                                        <option value="vehicle">vehicle — سواربوونا نەقلیەتێ</option>
-                                        <option value="marketplace">marketplace — چونا بازارێ</option>
-                                        <option value="charity">charity — کاتا سەدەقەیێ</option>
-                                        <option value="distress">distress — پەریشانی</option>
-                                        <option value="debt">debt — کاتا قەرزێ</option>
-                                        <option value="fear">fear — کاتا تیرسێ</option>
-                                        <option value="forgiveness">forgiveness — داواکاری لێبوردن</option>
-                                        <option value="protection">protection — پاراستن</option>
-                                        <option value="rain">rain — باران</option>
-                                        <option value="wind">wind — کاتا هەوایی</option>
-                                        <option value="after_prayer">after_prayer — دوای نوێژ</option>
-                                        <option value="adhan">adhan — دوای ئەزان</option>
-                                        <option value="salawat">salawat — سەلاوات</option>
-                                        <option value="qunut">qunut — دوعای قونووت</option>
-                                        <option value="lailat_qadr">lailat_qadr — شەوا قەدرێ</option>
-                                        <option value="dhul_hijjah">dhul_hijjah — دەیا ذولحیجەیێ</option>
-                                        <option value="talbiyah">talbiyah — تەلبیەی حەج</option>
-                                        <option value="safa_marwa">safa_marwa — سەفا و مەروە</option>
-                                        <option value="zamzam">zamzam — ئاوا زەمزەمێ</option>
-                                        <option value="entering_makkah">entering_makkah — چونا مەکەیێ</option>
-                                        <option value="arafat">arafat — دوعای عەرەفاتێ</option>
-                                        <option value="grave">grave — سەردانی گۆرستانێ</option>
-                                        <option value="eclipse">eclipse — کاتا کووسووفێ</option>
-                                        <option value="illness">illness — نەخۆشی</option>
-                                        <option value="pain">pain — کاتا ئازارێ</option>
-                                        <option value="ruqyah">ruqyah — ڕووقیای شەرعی</option>
-                                        <option value="visiting_sick">visiting_sick — سەردانی نەخۆش</option>
-                                        <option value="condolence">condolence — سووزداری</option>
-                                        <option value="newborn">newborn — زێدەبوونا منداڵ</option>
-                                        <option value="new_clothes">new_clothes — جلێن نوێ</option>
-                                        <option value="anger">anger — کاتا هەرسێ</option>
-                                        <option value="sneeze">sneeze — کاتا بزنکوی</option>
-                                        <option value="dressing">dressing — کاتا جلوبەرگکردنێ</option>
-                                        <option value="mirror">mirror — دیتنا ئاوینێ</option>
-                                        <option value="nightmare">nightmare — خەوا خراپ</option>
-                                        <option value="istikhara">istikhara — دوعای ئیستیخارە</option>
-                                        <option value="wedding">wedding — تەبریکا زاوایێ</option>
-                                        <option value="kaffarah">kaffarah — کەفارەتا کۆمەلکردنێ</option>
-                                        <option value="before_quran">before_quran — بەری خوێندنا قورئانێ</option>
-                                        <option value="bathroom_enter">bathroom_enter — چونا دەستشوینکێ</option>
-                                        <option value="bathroom_exit">bathroom_exit — دەرچوونا دەستشوینکێ</option>
-                                        <option value="thunder">thunder — کاتا برووسکێ</option>
-                                        <option value="new_moon">new_moon — دیتنا مانگا نوێ</option>
-                                        <option value="friday">friday — ڕۆژا ئینانێ</option>
-                                        <option value="gratitude">gratitude — سوپاسگوزاری</option>
-                                    </select>
+                                    <label class="form-label">Arabic Text</label>
+                                    <textarea id="adhkar-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Source</label>
-                                    <input type="text" id="adhkar-source" class="form-input" placeholder="البخاري" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Source</label>
+                                        <input type="text" id="adhkar-source" class="form-input" placeholder="البخاري" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Repeat</label>
+                                        <input type="number" id="adhkar-repeat" class="form-input" value="1" min="1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Sort Order</label>
+                                        <input type="number" id="adhkar-sort" class="form-input" value="10" min="0">
+                                    </div>
+                                    <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
+                                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                                            <input type="checkbox" id="adhkar-active" checked>
+                                            <span class="form-label" style="margin:0">Active</span>
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Arabic Text</label>
-                                <textarea id="adhkar-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Repeat</label>
-                                    <input type="number" id="adhkar-repeat" class="form-input" value="1" min="1">
+                                <div class="form-actions">
+                                    <button class="btn btn-secondary" onclick="cancelAdhkarEdit()">Cancel</button>
+                                    <button class="btn btn-primary" onclick="saveAdhkar()">Save Adhkar</button>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Sort Order</label>
-                                    <input type="number" id="adhkar-sort" class="form-input" value="10" min="0">
-                                </div>
-<div class="form-group" style="justify-content:flex-end;align-items:flex-end">
-                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                                        <input type="checkbox" id="adhkar-active" checked>
-                                        <span class="form-label" style="margin:0">Active</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button class="btn btn-secondary" onclick="cancelAdhkarEdit()">Cancel</button>
-                                <button class="btn btn-primary" onclick="saveAdhkar()">Save Adhkar</button>
                             </div>
                         </div>
                     </div>
+
+                    <div id="adhkar-list" class="items-list"></div>
                 </div>
-                <!-- filter by category -->
-                <div style="display:flex;gap:8px;padding:12px 0 4px;overflow-x:auto;scrollbar-width:none">
-                    <button class="adhkar-filter-btn active" data-cat="" onclick="filterAdhkarCat(this,'')">All</button>
-                    <button class="adhkar-filter-btn" data-cat="morning" onclick="filterAdhkarCat(this,'morning')">Morning</button>
-                    <button class="adhkar-filter-btn" data-cat="evening" onclick="filterAdhkarCat(this,'evening')">Evening</button>
-                    <button class="adhkar-filter-btn" data-cat="sleep" onclick="filterAdhkarCat(this,'sleep')">Sleep</button>
-                    <button class="adhkar-filter-btn" data-cat="waking" onclick="filterAdhkarCat(this,'waking')">Waking</button>
-                    <button class="adhkar-filter-btn" data-cat="house_enter" onclick="filterAdhkarCat(this,'house_enter')">House In</button>
-                    <button class="adhkar-filter-btn" data-cat="house_exit" onclick="filterAdhkarCat(this,'house_exit')">House Out</button>
-                    <button class="adhkar-filter-btn" data-cat="masjid_enter" onclick="filterAdhkarCat(this,'masjid_enter')">Masjid In</button>
-                    <button class="adhkar-filter-btn" data-cat="masjid_exit" onclick="filterAdhkarCat(this,'masjid_exit')">Masjid Out</button>
-                    <button class="adhkar-filter-btn" data-cat="wudu" onclick="filterAdhkarCat(this,'wudu')">Wudu</button>
-                    <button class="adhkar-filter-btn" data-cat="opening_prayer" onclick="filterAdhkarCat(this,'opening_prayer')">Opening Prayer</button>
-                    <button class="adhkar-filter-btn" data-cat="ruku" onclick="filterAdhkarCat(this,'ruku')">Ruku</button>
-                    <button class="adhkar-filter-btn" data-cat="rising_ruku" onclick="filterAdhkarCat(this,'rising_ruku')">Rising Ruku</button>
-                    <button class="adhkar-filter-btn" data-cat="sujood" onclick="filterAdhkarCat(this,'sujood')">Sujood</button>
-                    <button class="adhkar-filter-btn" data-cat="between_sujood" onclick="filterAdhkarCat(this,'between_sujood')">Between Sujood</button>
-                    <button class="adhkar-filter-btn" data-cat="tashahhud" onclick="filterAdhkarCat(this,'tashahhud')">Tashahhud</button>
-                    <button class="adhkar-filter-btn" data-cat="eating_before" onclick="filterAdhkarCat(this,'eating_before')">Before Eat</button>
-                    <button class="adhkar-filter-btn" data-cat="eating_after" onclick="filterAdhkarCat(this,'eating_after')">After Eat</button>
-                    <button class="adhkar-filter-btn" data-cat="breaking_fast" onclick="filterAdhkarCat(this,'breaking_fast')">Iftar</button>
-                    <button class="adhkar-filter-btn" data-cat="fasting" onclick="filterAdhkarCat(this,'fasting')">Fasting</button>
-                    <button class="adhkar-filter-btn" data-cat="travel" onclick="filterAdhkarCat(this,'travel')">Travel</button>
-                    <button class="adhkar-filter-btn" data-cat="travel_return" onclick="filterAdhkarCat(this,'travel_return')">Travel Return</button>
-                    <button class="adhkar-filter-btn" data-cat="vehicle" onclick="filterAdhkarCat(this,'vehicle')">Vehicle</button>
-                    <button class="adhkar-filter-btn" data-cat="marketplace" onclick="filterAdhkarCat(this,'marketplace')">Marketplace</button>
-                    <button class="adhkar-filter-btn" data-cat="charity" onclick="filterAdhkarCat(this,'charity')">Charity</button>
-                    <button class="adhkar-filter-btn" data-cat="distress" onclick="filterAdhkarCat(this,'distress')">Distress</button>
-                    <button class="adhkar-filter-btn" data-cat="debt" onclick="filterAdhkarCat(this,'debt')">Debt</button>
-                    <button class="adhkar-filter-btn" data-cat="fear" onclick="filterAdhkarCat(this,'fear')">Fear</button>
-                    <button class="adhkar-filter-btn" data-cat="forgiveness" onclick="filterAdhkarCat(this,'forgiveness')">Forgiveness</button>
-                    <button class="adhkar-filter-btn" data-cat="protection" onclick="filterAdhkarCat(this,'protection')">Protection</button>
-                    <button class="adhkar-filter-btn" data-cat="rain" onclick="filterAdhkarCat(this,'rain')">Rain</button>
-                    <button class="adhkar-filter-btn" data-cat="wind" onclick="filterAdhkarCat(this,'wind')">Wind</button>
-                    <button class="adhkar-filter-btn" data-cat="after_prayer" onclick="filterAdhkarCat(this,'after_prayer')">After Prayer</button>
-                    <button class="adhkar-filter-btn" data-cat="adhan" onclick="filterAdhkarCat(this,'adhan')">Adhan</button>
-                    <button class="adhkar-filter-btn" data-cat="salawat" onclick="filterAdhkarCat(this,'salawat')">Salawat</button>
-                    <button class="adhkar-filter-btn" data-cat="qunut" onclick="filterAdhkarCat(this,'qunut')">Qunut</button>
-                    <button class="adhkar-filter-btn" data-cat="lailat_qadr" onclick="filterAdhkarCat(this,'lailat_qadr')">Lailat Qadr</button>
-                    <button class="adhkar-filter-btn" data-cat="dhul_hijjah" onclick="filterAdhkarCat(this,'dhul_hijjah')">Dhul Hijjah</button>
-                    <button class="adhkar-filter-btn" data-cat="talbiyah" onclick="filterAdhkarCat(this,'talbiyah')">Talbiyah</button>
-                    <button class="adhkar-filter-btn" data-cat="safa_marwa" onclick="filterAdhkarCat(this,'safa_marwa')">Safa Marwa</button>
-                    <button class="adhkar-filter-btn" data-cat="zamzam" onclick="filterAdhkarCat(this,'zamzam')">Zamzam</button>
-                    <button class="adhkar-filter-btn" data-cat="entering_makkah" onclick="filterAdhkarCat(this,'entering_makkah')">Entering Makkah</button>
-                    <button class="adhkar-filter-btn" data-cat="arafat" onclick="filterAdhkarCat(this,'arafat')">Arafat</button>
-                    <button class="adhkar-filter-btn" data-cat="grave" onclick="filterAdhkarCat(this,'grave')">Grave</button>
-                    <button class="adhkar-filter-btn" data-cat="eclipse" onclick="filterAdhkarCat(this,'eclipse')">Eclipse</button>
-                    <button class="adhkar-filter-btn" data-cat="illness" onclick="filterAdhkarCat(this,'illness')">Illness</button>
-                    <button class="adhkar-filter-btn" data-cat="pain" onclick="filterAdhkarCat(this,'pain')">Pain</button>
-                    <button class="adhkar-filter-btn" data-cat="ruqyah" onclick="filterAdhkarCat(this,'ruqyah')">Ruqyah</button>
-                    <button class="adhkar-filter-btn" data-cat="visiting_sick" onclick="filterAdhkarCat(this,'visiting_sick')">Visiting Sick</button>
-                    <button class="adhkar-filter-btn" data-cat="condolence" onclick="filterAdhkarCat(this,'condolence')">Condolence</button>
-                    <button class="adhkar-filter-btn" data-cat="newborn" onclick="filterAdhkarCat(this,'newborn')">Newborn</button>
-                    <button class="adhkar-filter-btn" data-cat="new_clothes" onclick="filterAdhkarCat(this,'new_clothes')">New Clothes</button>
-                    <button class="adhkar-filter-btn" data-cat="anger" onclick="filterAdhkarCat(this,'anger')">Anger</button>
-                    <button class="adhkar-filter-btn" data-cat="sneeze" onclick="filterAdhkarCat(this,'sneeze')">Sneeze</button>
-                    <button class="adhkar-filter-btn" data-cat="dressing" onclick="filterAdhkarCat(this,'dressing')">Dressing</button>
-                    <button class="adhkar-filter-btn" data-cat="mirror" onclick="filterAdhkarCat(this,'mirror')">Mirror</button>
-                    <button class="adhkar-filter-btn" data-cat="nightmare" onclick="filterAdhkarCat(this,'nightmare')">Nightmare</button>
-                    <button class="adhkar-filter-btn" data-cat="istikhara" onclick="filterAdhkarCat(this,'istikhara')">Istikhara</button>
-                    <button class="adhkar-filter-btn" data-cat="wedding" onclick="filterAdhkarCat(this,'wedding')">Wedding</button>
-                    <button class="adhkar-filter-btn" data-cat="kaffarah" onclick="filterAdhkarCat(this,'kaffarah')">Kaffarah</button>
-                    <button class="adhkar-filter-btn" data-cat="before_quran" onclick="filterAdhkarCat(this,'before_quran')">Before Quran</button>
-                    <button class="adhkar-filter-btn" data-cat="bathroom_enter" onclick="filterAdhkarCat(this,'bathroom_enter')">Bathroom In</button>
-                    <button class="adhkar-filter-btn" data-cat="bathroom_exit" onclick="filterAdhkarCat(this,'bathroom_exit')">Bathroom Out</button>
-                    <button class="adhkar-filter-btn" data-cat="thunder" onclick="filterAdhkarCat(this,'thunder')">Thunder</button>
-                    <button class="adhkar-filter-btn" data-cat="new_moon" onclick="filterAdhkarCat(this,'new_moon')">New Moon</button>
-                    <button class="adhkar-filter-btn" data-cat="friday" onclick="filterAdhkarCat(this,'friday')">Friday</button>
-                    <button class="adhkar-filter-btn" data-cat="gratitude" onclick="filterAdhkarCat(this,'gratitude')">Gratitude</button>
-                </div>
-                <div class="list-toolbar">
-                    <span class="list-count" id="adhkar-count"></span>
-                </div>
-                <div id="adhkar-list" class="items-list"></div>
             </div>
 
             <!-- ── TASBIH ── -->
@@ -1552,7 +1432,7 @@ function switchTab(name) {
     if (addBtn) addBtn.style.display = (name === 'asma99' || name === 'sections') ? 'none' : '';
     if (name === 'tasbih') renderTasbihList();
     if (name === 'books') renderBooksList();
-    if (name === 'adhkar') renderAdhkarList();
+    if (name === 'adhkar') showAdhkarCatsView();
     document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
     if (name === 'asma99') renderAsma99();
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -1561,9 +1441,13 @@ function switchTab(name) {
 /* ── Top Add button — opens the relevant form ── */
 function topAddClick() {
     if (currentTab === 'asma99') return;
+    if (currentTab === 'adhkar') {
+        var det = document.getElementById('adhkar-cat-detail');
+        if (!det || det.style.display === 'none') { showNotification('Select a category first.', 'info'); return; }
+    }
     var prefixMap = { duas: 'dua', hadiths: 'hadith', tasbih: 'tasbih', books: 'book', adhkar: 'adhkar' };
     var prefix = prefixMap[currentTab] || currentTab;
-    if (prefix === 'book' && _booksSubTab === 'series') return; // use New Series button instead
+    if (prefix === 'book' && _booksSubTab === 'series') return;
     toggleForm(prefix);
 }
 
@@ -2659,11 +2543,81 @@ async function loadAdhkar() {
     }
 }
 
-function filterAdhkarCat(btn, cat) {
-    adhkarCatFilter = cat;
-    document.querySelectorAll('.adhkar-filter-btn').forEach(function(b){ b.classList.remove('active'); });
-    btn.classList.add('active');
+var ADHKAR_ADMIN_CATS = [
+    ['morning','زکرێن بەیانیکردن'],['evening','زکرێن ئێواربوون'],['sleep','دوای خەوکردن'],
+    ['waking','دوای هاتنا خوو'],['house_enter','چونا ماڵ'],['house_exit','دەرچوونا ماڵ'],
+    ['masjid_enter','چونا مزگەوت'],['masjid_exit','دەرچوونا مزگەوت'],['wudu','وەزوو'],
+    ['opening_prayer','دوعای دەستپێکردنا نوێژ'],['ruku','زکرێن ڕکووع'],
+    ['rising_ruku','ڕاستبوونا ڕکووعێ'],['sujood','زکرێن سەجدەیێ'],
+    ['between_sujood','نێو دووسەجدەیێ'],['tashahhud','شەهدەدان'],
+    ['eating_before','بەرا خواردن'],['eating_after','دوای خواردن'],
+    ['breaking_fast','کاتا ئیفتارێ'],['fasting','نیەتا ڕۆژوو'],
+    ['travel','گەشت'],['travel_return','گەرانا ماڵ'],['vehicle','سواربوونا نەقلیەتێ'],
+    ['marketplace','چونا بازارێ'],['charity','کاتا سەدەقەیێ'],['distress','پەریشانی'],
+    ['debt','کاتا قەرزێ'],['fear','کاتا تیرسێ'],['forgiveness','داواکاری لێبوردن'],
+    ['protection','پاراستن'],['rain','باران'],['wind','کاتا هەوایی'],
+    ['after_prayer','دوای نوێژ'],['adhan','دوای ئەزان'],['salawat','سەلاوات'],
+    ['qunut','دوعای قونووت'],['lailat_qadr','شەوا قەدرێ'],['dhul_hijjah','دەیا ذولحیجەیێ'],
+    ['talbiyah','تەلبیەی حەج'],['safa_marwa','سەفا و مەروە'],['zamzam','ئاوا زەمزەمێ'],
+    ['entering_makkah','چونا مەکەیێ'],['arafat','دوعای عەرەفاتێ'],
+    ['grave','سەردانی گۆرستانێ'],['eclipse','کاتا کووسووفێ'],
+    ['illness','نەخۆشی'],['pain','کاتا ئازارێ'],['ruqyah','ڕووقیای شەرعی'],
+    ['visiting_sick','سەردانی نەخۆش'],['condolence','سووزداری'],['newborn','زێدەبوونا منداڵ'],
+    ['new_clothes','جلێن نوێ'],['anger','کاتا هەرسێ'],['sneeze','کاتا بزنکوی'],
+    ['dressing','کاتا جلوبەرگکردنێ'],['mirror','دیتنا ئاوینێ'],['nightmare','خەوا خراپ'],
+    ['istikhara','دوعای ئیستیخارە'],['wedding','تەبریکا زاوایێ'],
+    ['kaffarah','کەفارەتا کۆمەلکردنێ'],['before_quran','بەری خوێندنا قورئانێ'],
+    ['bathroom_enter','چونا دەستشوینکێ'],['bathroom_exit','دەرچوونا دەستشوینکێ'],
+    ['thunder','کاتا برووسکێ'],['new_moon','دیتنا مانگا نوێ'],['friday','ڕۆژا ئینانێ'],
+    ['gratitude','سوپاسگوزاری']
+];
+
+function renderAdhkarCatGrid() {
+    var grid = document.getElementById('adhkar-cats-grid');
+    if (!grid) return;
+    grid.textContent = '';
+    var counts = {};
+    allAdhkar.forEach(function(a) { counts[a.category_key] = (counts[a.category_key] || 0) + 1; });
+    ADHKAR_ADMIN_CATS.forEach(function(pair) {
+        var key = pair[0], label = pair[1];
+        var count = counts[key] || 0;
+        var card = document.createElement('div');
+        card.className = 'adhkar-admin-cat-card';
+        card.onclick = (function(k, l) { return function() { openAdhkarCatDetail(k, l); }; })(key, label);
+        var badge = document.createElement('span');
+        badge.className = 'adhkar-admin-cat-count';
+        badge.textContent = count;
+        if (!count) badge.setAttribute('data-zero', '1');
+        var labelEl = document.createElement('div');
+        labelEl.className = 'adhkar-admin-cat-label';
+        labelEl.textContent = label;
+        var keyEl = document.createElement('div');
+        keyEl.className = 'adhkar-admin-cat-key';
+        keyEl.textContent = key.replace(/_/g, ' ');
+        card.appendChild(badge);
+        card.appendChild(labelEl);
+        card.appendChild(keyEl);
+        grid.appendChild(card);
+    });
+}
+
+function openAdhkarCatDetail(catKey, catLabel) {
+    adhkarCatFilter = catKey;
+    document.getElementById('adhkar-cats-view').style.display = 'none';
+    document.getElementById('adhkar-cat-detail').style.display = '';
+    document.getElementById('adhkar-cat').value = catKey;
+    var labelEl = document.getElementById('adhkar-detail-label');
+    if (labelEl) labelEl.textContent = catLabel;
     renderAdhkarList();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function showAdhkarCatsView() {
+    adhkarCatFilter = '';
+    cancelAdhkarEdit();
+    document.getElementById('adhkar-cat-detail').style.display = 'none';
+    document.getElementById('adhkar-cats-view').style.display = '';
+    renderAdhkarCatGrid();
 }
 
 function renderAdhkarList() {
@@ -2677,8 +2631,8 @@ function renderAdhkarList() {
         if (pa !== pb) return pa - pb;
         return (a.sort_order || 0) - (b.sort_order || 0);
     });
-    var countEl = document.getElementById('adhkar-count');
-    if (countEl) countEl.textContent = items.length + ' adhkar items';
+    var countEl = document.getElementById('adhkar-detail-count');
+    if (countEl) countEl.textContent = items.length + ' items';
     if (!items.length) {
         var es = mke('div', 'empty-state');
         var ep = mke('p'); ep.textContent = 'No adhkar yet.';
@@ -2687,15 +2641,11 @@ function renderAdhkarList() {
     items.forEach(function(item) {
         var card = mke('div', 'item-card');
         var body = mke('div', 'item-card-body');
-        var catBadge = mke('span');
-        catBadge.style.cssText = 'font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:block';
-        catBadge.textContent = item.category_key;
         var arEl = mke('div', 'item-card-ar');
         arEl.textContent = item.ar;
         arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-bottom:4px';
         var meta = mke('div','item-card-meta');
         meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + (item.active ? '' : ' · hidden');
-        body.appendChild(catBadge);
         var aTimeLeft = _badgeTimeLeft(item.badge_until);
         if (aTimeLeft) {
             var aPill = mke('div', 'section-badge-pill');
@@ -2766,8 +2716,13 @@ async function moveAdhkar(itemId, dir) {
 function editAdhkar(id) {
     var item = allAdhkar.find(function(x){ return x.id === id; });
     if (!item) return;
+    var catKey = item.category_key || 'morning';
+    if (adhkarCatFilter !== catKey) {
+        var catPair = ADHKAR_ADMIN_CATS.find(function(p){ return p[0] === catKey; });
+        openAdhkarCatDetail(catKey, catPair ? catPair[1] : catKey);
+    }
     document.getElementById('adhkar-edit-id').value = id;
-    document.getElementById('adhkar-cat').value = item.category_key || 'morning';
+    document.getElementById('adhkar-cat').value = catKey;
     document.getElementById('adhkar-ar').value = item.ar || '';
     document.getElementById('adhkar-source').value = item.source || '';
     document.getElementById('adhkar-repeat').value = item.repeat || 1;
