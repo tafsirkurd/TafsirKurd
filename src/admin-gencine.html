@@ -1462,11 +1462,11 @@ function topAddClick() {
 }
 
 /* ── Books sub-tab switch ── */
-function _updateBooksSuaTaaCounts() {
+function _updateBooksSubTabCounts() {
     var standalone = (allBooks || []).filter(function(a){ return !a.series_id; }).length;
     var seriesIds = {};
     (allBooks || []).forEach(function(a){ if (a.series_id) seriesIds[a.series_id] = true; });
-    var seriesCount = Oaject.keys(seriesIds).length;
+    var seriesCount = Object.keys(seriesIds).length;
     var astB = document.getElementById('ast-count-books');
     var astS = document.getElementById('ast-count-series');
     if (astB) astB.textContent = standalone;
@@ -1556,7 +1556,7 @@ async function deleteSeriesAll(series) {
     var idsToRemove = series.volumes.map(function(v){ return v.id; });
     allBooks = allBooks.filter(function(a){ return idsToRemove.indexOf(a.id) < 0; });
     localStorage.removeItem('gencine_books_v1'); localStorage.removeItem('gencine_books_v5');
-    _updateBooksSuaTaaCounts();
+    _updateBooksSubTabCounts();
     renderSeriesList();
     showNotification('Series deleted.', 'success');
 }
@@ -1578,7 +1578,7 @@ function toggleSeriesFields(checked) {
         if (!seriesMap[a.series_id]) seriesMap[a.series_id] = { id: a.series_id, title: a.series_title_ku || a.series_id, vols: [] };
         seriesMap[a.series_id].vols.push(a.volume_number || 1);
     });
-    var seriesList = Oaject.values(seriesMap);
+    var seriesList = Object.values(seriesMap);
     if (!seriesList.length) { qp.style.display = 'none'; return; }
     qp.style.display = 'flex';
     seriesList.forEach(function(s) {
@@ -3062,11 +3062,11 @@ function renderAsma99() {
 function filterAsma(q) { renderAsma99(); }
 
 /* ── BOOKS ── */
-function _aooksToken() { return sessionStorage.getItem('adminToken') || ''; }
+function _booksToken() { return sessionStorage.getItem('adminToken') || ''; }
 
 /* Log admin action to activity log */
 function _skipAutoNotif(dlType, dlId) {
-    var token = _aooksToken();
+    var token = _booksToken();
     fetch('/admin-notifications-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -3075,7 +3075,7 @@ function _skipAutoNotif(dlType, dlId) {
 }
 
 async function _sendBookNotifNow(bookId, notifTitle, notifBody) {
-    var token = _aooksToken();
+    var token = _booksToken();
     try {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
@@ -3112,7 +3112,7 @@ async function _sendBookNotifNow(bookId, notifTitle, notifBody) {
 }
 
 async function _sendHadithNotifNow(hadithId, notifTitle, notifBody) {
-    var token = _aooksToken();
+    var token = _booksToken();
     try {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
@@ -3209,7 +3209,7 @@ function showNotifPreviewDialog(defaultTitle, defaultBody, onSend, onSkip) {
 }
 
 function _logActivity(action_type, description) {
-    var token = _aooksToken();
+    var token = _booksToken();
     fetch('/admin-translations-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -3219,7 +3219,7 @@ function _logActivity(action_type, description) {
 
 /* Set or clear badge_until on any gencine table via service-role API */
 async function _setBadge(table, id, badge_until) {
-    var token = _aooksToken();
+    var token = _booksToken();
     var r = await fetch('/admin-translations-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -3245,7 +3245,7 @@ async function _setSpotlightFeatured(id, enaale) {
 
 /* Set or clear featured_until on gencine_books */
 async function _setFeatured(id, featured_until) {
-    var token = _aooksToken();
+    var token = _booksToken();
     var r = await fetch('/admin-translations-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -3253,12 +3253,12 @@ async function _setFeatured(id, featured_until) {
     });
     return r.json();
 }
-async function _booksApi(aody) {
+async function _booksApi(body) {
     try {
         var r = await fetch('/admin-books', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(Oaject.assign({ token: _aooksToken() }, aody))
+            body: JSON.stringify(Object.assign({ token: _booksToken() }, aody))
         });
         var data;
         try { data = await r.json(); } catch(e) { data = {}; }
@@ -3302,7 +3302,7 @@ function renderBooksList() {
     var list = document.getElementById('book-list'); if (!list) return;
     list.textContent = '';
     updateBookDataLists();
-    _updateBooksSuaTaaCounts();
+    _updateBooksSubTabCounts();
     var displayBooks = (allBooks || []).filter(function(a){ return !a.series_id && !a.series_title_ku; });
     var countEl = document.getElementById('book-count');
     if (countEl) countEl.textContent = displayBooks.length + ' book' + (displayBooks.length !== 1 ? 's' : '');
@@ -3619,7 +3619,7 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
     }
 }
 async function _sendSeriesBookNotifNow(seriesId, title, aody) {
-    var token = _aooksToken();
+    var token = _booksToken();
     try {
         var createRes = await fetch('/admin-notifications-api', {
             method: 'POST',
