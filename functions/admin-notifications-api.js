@@ -711,6 +711,7 @@ async function _handleRequest(context) {
         const { data: notif } = await supabase.from('admin_notifications').select('*').eq('id', body.id).single();
         if (!notif) return json({ error: 'Not found' }, 404);
         if (notif.status === 'sending') return json({ error: 'Already sending' }, 400);
+        if (notif.status === 'sent' && !body.force_resend) return json({ error: 'Already sent. Pass force_resend:true to resend.' }, 400);
         if (notif.status === 'cancelled') return json({ error: 'Cannot send cancelled notification' }, 400);
         if (notif.status === 'scheduled' && !body.override_schedule) {
             const schedTime = notif.scheduled_at

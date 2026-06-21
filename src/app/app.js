@@ -3278,6 +3278,12 @@ function initPushToken(){
 // Retry-with-backoff push token registration.
 // attempt 0 = immediate; 1 = 4s; 2 = 8s; 3 = 16s; 4 = 32s (cap).
 // On cross-session retry (app re-opened before success), attempt starts at 1.
+function _getInstallId(){
+  var key='push_install_id';
+  var id=localStorage.getItem(key);
+  if(!id){id='inst_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);localStorage.setItem(key,id);}
+  return id;
+}
 function _registerPushToken(token,platform,attempt){
   var delay=attempt===0?0:Math.min(4000*Math.pow(2,attempt-1),32000);
   setTimeout(function(){
@@ -3286,7 +3292,7 @@ function _registerPushToken(token,platform,attempt){
     fetch('https://tafsirkurd.com/register-push-token',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({token:token,platform:platform,user_id:(S.user&&S.user.id)||null}),
+      body:JSON.stringify({token:token,platform:platform,user_id:(S.user&&S.user.id)||null,install_id:_getInstallId()}),
       signal:ctrl.signal
     }).then(function(r){clearTimeout(tid);return r.json();}).then(function(res){
       if(res.error){
