@@ -162,7 +162,7 @@
      not the network â€” eliminates the data-loading wait on first launch -->
 <link rel="preload" href="/data/quran.json" as="fetch" crossorigin="anonymous">
 <link rel="preload" href="/i18n/kmr-bundled.js?v=20260620b" as="script">
-<link rel="preload" href="/app/app.min.js?v=1211" as="script">
+<link rel="preload" href="/app/app.min.js?v=1212" as="script">
 <link rel="preload" href="/prayer/prayer.ui.js?v=20260616d" as="script">
 <!-- platform.js inlined: eliminates one parser-blocking network request -->
 <script>window.isNativePlatform=(function(){try{return window.Capacitor&&window.Capacitor.isNativePlatform();}catch(e){return false;}})();</script>
@@ -839,7 +839,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <script>(function(){try{var _r=indexedDB.open('tk-data-v1',1);_r.onupgradeneeded=function(e){e.target.result.createObjectStore('files');};_r.onsuccess=function(e){window._tkIDBConn=e.target.result;try{var _g=e.target.result.transaction('files','readonly').objectStore('files').get('quran_v1');_g.onsuccess=function(){window._tkQuranPreload=_g.result||false;};}catch(e2){};};}catch(e){}})();</script>
 <script src="/img-cache.js?v=1"></script>
 <script src="/utils/app-hardening.js?v=2"></script>
-<script src="/app/app.min.js?v=1211"></script>
+<script src="/app/app.min.js?v=1212"></script>
 <script>
 /* Register service worker — web/PWA only; native Capacitor loads from bundle, no SW needed */
 if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform())) {
