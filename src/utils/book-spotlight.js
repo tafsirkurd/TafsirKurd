@@ -147,6 +147,9 @@
           return b.featured_book === true && b.featured_enabled !== false && b.active !== false;
         });
         if (found) { _lsSet(BS_CACHE, found); return found; }
+        /* Full cache present but no active spotlight — clear stale BS_CACHE */
+        _lsSet(BS_CACHE, null);
+        return null;
       }
     } catch(e) {}
     /* 2. Fall back to dedicated spotlight cache (populated by _fetchFeaturedBook) */
@@ -179,6 +182,8 @@
         .then(function(res) {
           if (res && res.data && res.data.id) {
             _lsSet(BS_CACHE, res.data);
+          } else {
+            _lsSet(BS_CACHE, null);
           }
         })
         .catch(function() {});
