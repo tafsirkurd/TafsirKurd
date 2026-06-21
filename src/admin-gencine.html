@@ -2543,61 +2543,179 @@ async function loadAdhkar() {
     }
 }
 
-var ADHKAR_ADMIN_CATS = [
-    ['morning','زکرێن بەیانیکردن'],['evening','زکرێن ئێواربوون'],['sleep','دوای خەوکردن'],
-    ['waking','دوای هاتنا خوو'],['house_enter','چونا ماڵ'],['house_exit','دەرچوونا ماڵ'],
-    ['masjid_enter','چونا مزگەوت'],['masjid_exit','دەرچوونا مزگەوت'],['wudu','وەزوو'],
-    ['opening_prayer','دوعای دەستپێکردنا نوێژ'],['ruku','زکرێن ڕکووع'],
-    ['rising_ruku','ڕاستبوونا ڕکووعێ'],['sujood','زکرێن سەجدەیێ'],
-    ['between_sujood','نێو دووسەجدەیێ'],['tashahhud','شەهدەدان'],
-    ['eating_before','بەرا خواردن'],['eating_after','دوای خواردن'],
-    ['breaking_fast','کاتا ئیفتارێ'],['fasting','نیەتا ڕۆژوو'],
-    ['travel','گەشت'],['travel_return','گەرانا ماڵ'],['vehicle','سواربوونا نەقلیەتێ'],
-    ['marketplace','چونا بازارێ'],['charity','کاتا سەدەقەیێ'],['distress','پەریشانی'],
-    ['debt','کاتا قەرزێ'],['fear','کاتا تیرسێ'],['forgiveness','داواکاری لێبوردن'],
-    ['protection','پاراستن'],['rain','باران'],['wind','کاتا هەوایی'],
-    ['after_prayer','دوای نوێژ'],['adhan','دوای ئەزان'],['salawat','سەلاوات'],
-    ['qunut','دوعای قونووت'],['lailat_qadr','شەوا قەدرێ'],['dhul_hijjah','دەیا ذولحیجەیێ'],
-    ['talbiyah','تەلبیەی حەج'],['safa_marwa','سەفا و مەروە'],['zamzam','ئاوا زەمزەمێ'],
-    ['entering_makkah','چونا مەکەیێ'],['arafat','دوعای عەرەفاتێ'],
-    ['grave','سەردانی گۆرستانێ'],['eclipse','کاتا کووسووفێ'],
-    ['illness','نەخۆشی'],['pain','کاتا ئازارێ'],['ruqyah','ڕووقیای شەرعی'],
-    ['visiting_sick','سەردانی نەخۆش'],['condolence','سووزداری'],['newborn','زێدەبوونا منداڵ'],
-    ['new_clothes','جلێن نوێ'],['anger','کاتا هەرسێ'],['sneeze','کاتا بزنکوی'],
-    ['dressing','کاتا جلوبەرگکردنێ'],['mirror','دیتنا ئاوینێ'],['nightmare','خەوا خراپ'],
-    ['istikhara','دوعای ئیستیخارە'],['wedding','تەبریکا زاوایێ'],
-    ['kaffarah','کەفارەتا کۆمەلکردنێ'],['before_quran','بەری خوێندنا قورئانێ'],
-    ['bathroom_enter','چونا دەستشوینکێ'],['bathroom_exit','دەرچوونا دەستشوینکێ'],
-    ['thunder','کاتا برووسکێ'],['new_moon','دیتنا مانگا نوێ'],['friday','ڕۆژا ئینانێ'],
-    ['gratitude','سوپاسگوزاری']
+/* Label lookup — key → Kurdish label */
+var ADHKAR_ADMIN_CATS = {
+    morning:'زکرێن بەیانیکردن',     evening:'زکرێن ئێواربوون',     sleep:'بەرى نڤستنێ',
+    waking:'دوای هاتنا خوو',         house_enter:'چونا ماڵ',          house_exit:'دەرچوونا ماڵ',
+    masjid_enter:'چونا مزگەوت',      masjid_exit:'دەرچوونا مزگەوت',  wudu:'وەزوو',
+    opening_prayer:'دوعای دەستپێکردنا نوێژ', ruku:'زکرێن ڕکووع',
+    rising_ruku:'ڕاستبوونا ڕکووعێ', sujood:'زکرێن سەجدەیێ',
+    between_sujood:'نێو دووسەجدەیێ',tashahhud:'شەهدەدان',
+    eating_before:'بەرا خواردن',     eating_after:'دوای خواردن',
+    breaking_fast:'کاتا ئیفتارێ',   fasting:'نیەتا ڕۆژوو',
+    travel:'گەشت',                   travel_return:'گەرانا ماڵ',
+    vehicle:'سواربوونا نەقلیەتێ',   marketplace:'چونا بازارێ',
+    charity:'کاتا سەدەقەیێ',        distress:'پەریشانی',
+    debt:'کاتا قەرزێ',              fear:'کاتا تیرسێ',
+    forgiveness:'داواکاری لێبوردن', protection:'پاراستن',
+    rain:'باران',                    thunder:'کاتا برووسکێ',
+    wind:'کاتا هەوایی',             after_prayer:'دوای نوێژ',
+    adhan:'دوای ئەزان',             salawat:'سەلاوات',
+    qunut:'دوعای قونووت',           lailat_qadr:'شەوا قەدرێ',
+    dhul_hijjah:'دەیا ذولحیجەیێ',  talbiyah:'تەلبیەی حەج',
+    safa_marwa:'سەفا و مەروە',      zamzam:'ئاوا زەمزەمێ',
+    entering_makkah:'چونا مەکەیێ', arafat:'دوعای عەرەفاتێ',
+    grave:'سەردانی گۆرستانێ',       eclipse:'کاتا کووسووفێ',
+    illness:'نەخۆشی',               pain:'کاتا ئازارێ',
+    ruqyah:'ڕووقیای شەرعی',        visiting_sick:'سەردانی نەخۆش',
+    condolence:'سووزداری',           newborn:'زێدەبوونا منداڵ',
+    new_clothes:'جلێن نوێ',         anger:'کاتا هەرسێ',
+    sneeze:'کاتا بزنکوی',           dressing:'کاتا جلوبەرگکردنێ',
+    mirror:'دیتنا ئاوینێ',          nightmare:'خەوا خراپ',
+    istikhara:'دوعای ئیستیخارە',   wedding:'تەبریکا زاوایێ',
+    kaffarah:'کەفارەتا کۆمەلکردنێ',before_quran:'بەری خوێندنا قورئانێ',
+    bathroom_enter:'چونا دەستشوینکێ',bathroom_exit:'دەرچوونا دەستشوینکێ',
+    new_moon:'دیتنا مانگا نوێ',     friday:'ڕۆژا ئینانێ',
+    gratitude:'سوپاسگوزاری'
+};
+
+/* Mirrors dhikr.js GROUPS — each key appears in exactly one section */
+var ADHKAR_ADMIN_GROUPS_DEFAULT = [
+    { en:'Daily',   ku:'ڕۆژانە',       keys:['morning','evening','waking','sleep'] },
+    { en:'Prayer',  ku:'نوێژ',          keys:['adhan','opening_prayer','ruku','rising_ruku','sujood','between_sujood','tashahhud','after_prayer','qunut'] },
+    { en:'Food',    ku:'خواردن',        keys:['eating_before','eating_after','fasting','breaking_fast'] },
+    { en:'Places',  ku:'مالبیا و جێ',  keys:['house_enter','house_exit','bathroom_enter','bathroom_exit','masjid_enter','masjid_exit','marketplace','vehicle'] },
+    { en:'Travel',  ku:'گەشت',          keys:['travel','travel_return'] },
+    { en:'Hajj',    ku:'حەج',           keys:['talbiyah','safa_marwa','zamzam','entering_makkah','arafat','dhul_hijjah'] },
+    { en:'Ramadan', ku:'ڕەمەزان',      keys:['lailat_qadr'] },
+    { en:'Weather', ku:'هەوا',          keys:['rain','thunder','wind','eclipse'] },
+    { en:'Health',  ku:'تەندروستی',    keys:['illness','pain','ruqyah','visiting_sick','condolence'] },
+    { en:'Special', ku:'کاتی تایبەت',  keys:['friday','salawat','new_moon'] },
+    { en:'Life',    ku:'ژیانی ڕۆژانە', keys:['wudu','dressing','mirror','new_clothes','sneeze','anger','fear','debt','charity','distress','forgiveness','protection','before_quran','gratitude','nightmare','istikhara','wedding','newborn','kaffarah','grave'] }
 ];
+var _ADHKAR_CAT_ORDER_LS = 'adhkar_admin_cat_order_v1';
+
+function _loadAdhkarCatOrder() {
+    try {
+        var saved = localStorage.getItem(_ADHKAR_CAT_ORDER_LS);
+        if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return ADHKAR_ADMIN_GROUPS_DEFAULT.map(function(g){ return { en:g.en, ku:g.ku, keys:g.keys.slice() }; });
+}
+
+function _saveAdhkarCatOrder(order) {
+    try { localStorage.setItem(_ADHKAR_CAT_ORDER_LS, JSON.stringify(order)); } catch(e) {}
+}
+
+function moveAdhkarCat(catKey, dir) {
+    var order = _loadAdhkarCatOrder();
+    for (var gi = 0; gi < order.length; gi++) {
+        var ki = order[gi].keys.indexOf(catKey);
+        if (ki === -1) continue;
+        var ni = ki + dir;
+        if (ni < 0 || ni >= order[gi].keys.length) return;
+        var tmp = order[gi].keys[ki];
+        order[gi].keys[ki] = order[gi].keys[ni];
+        order[gi].keys[ni] = tmp;
+        _saveAdhkarCatOrder(order);
+        renderAdhkarCatGrid();
+        return;
+    }
+}
+
+function resetAdhkarCatOrder() {
+    localStorage.removeItem(_ADHKAR_CAT_ORDER_LS);
+    renderAdhkarCatGrid();
+}
 
 function renderAdhkarCatGrid() {
     var grid = document.getElementById('adhkar-cats-grid');
     if (!grid) return;
     grid.textContent = '';
+    var order = _loadAdhkarCatOrder();
     var counts = {};
     allAdhkar.forEach(function(a) { counts[a.category_key] = (counts[a.category_key] || 0) + 1; });
-    ADHKAR_ADMIN_CATS.forEach(function(pair) {
-        var key = pair[0], label = pair[1];
-        var count = counts[key] || 0;
-        var card = document.createElement('div');
-        card.className = 'adhkar-admin-cat-card';
-        card.onclick = (function(k, l) { return function() { openAdhkarCatDetail(k, l); }; })(key, label);
-        var badge = document.createElement('span');
-        badge.className = 'adhkar-admin-cat-count';
-        badge.textContent = count;
-        if (!count) badge.setAttribute('data-zero', '1');
-        var labelEl = document.createElement('div');
-        labelEl.className = 'adhkar-admin-cat-label';
-        labelEl.textContent = label;
-        var keyEl = document.createElement('div');
-        keyEl.className = 'adhkar-admin-cat-key';
-        keyEl.textContent = key.replace(/_/g, ' ');
-        card.appendChild(badge);
-        card.appendChild(labelEl);
-        card.appendChild(keyEl);
-        grid.appendChild(card);
+
+    /* Reset link */
+    var resetRow = document.createElement('div');
+    resetRow.style.cssText = 'grid-column:1/-1;text-align:right;padding-bottom:4px';
+    var resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Reset order';
+    resetBtn.style.cssText = 'background:none;border:none;font-size:11px;color:var(--text-tertiary);cursor:pointer;text-decoration:underline;padding:0';
+    resetBtn.onclick = resetAdhkarCatOrder;
+    resetRow.appendChild(resetBtn);
+    grid.appendChild(resetRow);
+
+    order.forEach(function(grp) {
+        if (!grp.keys.length) return;
+
+        /* Section header */
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:10px 2px 4px;border-bottom:1px solid var(--border-light);margin-top:6px';
+        var enSpan = document.createElement('span');
+        enSpan.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary)';
+        enSpan.textContent = grp.en;
+        var kuSpan = document.createElement('span');
+        kuSpan.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:12px;font-weight:700;color:var(--text-secondary)';
+        kuSpan.textContent = grp.ku;
+        hdr.appendChild(enSpan); hdr.appendChild(kuSpan);
+        grid.appendChild(hdr);
+
+        grp.keys.forEach(function(key, ki) {
+            var count = counts[key] || 0;
+            var label = ADHKAR_ADMIN_CATS[key] || key;
+            var card = document.createElement('div');
+            card.className = 'adhkar-admin-cat-card';
+            card.onclick = (function(k, l){ return function(e){
+                if (e.target.closest('.adhkar-cat-move-btn')) return;
+                openAdhkarCatDetail(k, l);
+            }; })(key, label);
+
+            /* position # — top right */
+            var posEl = document.createElement('span');
+            posEl.style.cssText = 'position:absolute;top:8px;right:8px;font-size:10px;font-weight:700;color:var(--text-tertiary);background:var(--bg-active);border-radius:4px;padding:1px 5px';
+            posEl.textContent = (ki + 1);
+
+            /* count badge — top left */
+            var badge = document.createElement('span');
+            badge.className = 'adhkar-admin-cat-count';
+            badge.textContent = count;
+            if (!count) badge.setAttribute('data-zero', '1');
+
+            var labelEl = document.createElement('div');
+            labelEl.className = 'adhkar-admin-cat-label';
+            labelEl.textContent = label;
+
+            var keyEl = document.createElement('div');
+            keyEl.className = 'adhkar-admin-cat-key';
+            keyEl.textContent = key.replace(/_/g, ' ');
+
+            /* ↑↓ move buttons */
+            var btnRow = document.createElement('div');
+            btnRow.style.cssText = 'display:flex;gap:3px;margin-top:8px';
+
+            var upBtn = document.createElement('button');
+            upBtn.className = 'adhkar-cat-move-btn';
+            upBtn.textContent = '↑';
+            upBtn.title = 'Move up within section';
+            upBtn.disabled = (ki === 0);
+            upBtn.style.cssText = 'flex:1;font-size:13px;background:var(--bg-active);border:1px solid var(--border-light);border-radius:5px;cursor:pointer;padding:2px;color:var(--text-secondary);line-height:1;opacity:' + (ki === 0 ? '.3' : '1');
+            upBtn.onclick = (function(k){ return function(e){ e.stopPropagation(); moveAdhkarCat(k,-1); }; })(key);
+
+            var dnBtn = document.createElement('button');
+            dnBtn.className = 'adhkar-cat-move-btn';
+            dnBtn.textContent = '↓';
+            dnBtn.title = 'Move down within section';
+            dnBtn.disabled = (ki === grp.keys.length - 1);
+            dnBtn.style.cssText = 'flex:1;font-size:13px;background:var(--bg-active);border:1px solid var(--border-light);border-radius:5px;cursor:pointer;padding:2px;color:var(--text-secondary);line-height:1;opacity:' + (ki === grp.keys.length - 1 ? '.3' : '1');
+            dnBtn.onclick = (function(k){ return function(e){ e.stopPropagation(); moveAdhkarCat(k,1); }; })(key);
+
+            btnRow.appendChild(upBtn); btnRow.appendChild(dnBtn);
+            card.appendChild(posEl); card.appendChild(badge);
+            card.appendChild(labelEl); card.appendChild(keyEl);
+            card.appendChild(btnRow);
+            grid.appendChild(card);
+        });
     });
 }
 
@@ -2723,8 +2841,7 @@ function editAdhkar(id) {
     if (!item) return;
     var catKey = item.category_key || 'morning';
     if (adhkarCatFilter !== catKey) {
-        var catPair = ADHKAR_ADMIN_CATS.find(function(p){ return p[0] === catKey; });
-        openAdhkarCatDetail(catKey, catPair ? catPair[1] : catKey);
+        openAdhkarCatDetail(catKey, ADHKAR_ADMIN_CATS[catKey] || catKey);
     }
     document.getElementById('adhkar-edit-id').value = id;
     document.getElementById('adhkar-cat').value = catKey;
