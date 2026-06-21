@@ -1,4 +1,4 @@
-<!DOCTYPE html><html dir="rtl" lang="ku"><head>
+﻿﻿<!DOCTYPE html><html dir="rtl" lang="ku"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0d0d0d">
@@ -315,7 +315,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <section class="panel" id="panelBookmarks" data-tab="bookmarks">
   <div class="hdr">
     <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
-    <div class="hdr-title"><span data-i18n="header.bookmarks" data-t="android_span_2">نیشانەکری</span></div>
+    <div class="hdr-title"><span data-i18n="header.bookmarks" data-t="android_span_2">نیشانکرین</span></div>
   </div>
   <div id="bmStats"></div>
   <div id="bmControls"></div>
@@ -445,7 +445,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="App.closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sidebar-hdr">
-    <button class="sidebar-tab on" data-st="surah" onclick="App.sidebarTab('surah')" data-i18n="sidebar.surah" data-t="android_button_7">سوورەت</button>
+    <button class="sidebar-tab on" data-st="surah" onclick="App.sidebarTab('surah')" data-i18n="sidebar.surah" data-t="android_button_7">سورەت</button>
     <button class="sidebar-tab" data-st="juz" onclick="App.sidebarTab('juz')" data-i18n="sidebar.juz" data-t="android_button_8">جوز</button>
   </div>
   <div class="sidebar-list" id="sidebarList"></div>
@@ -455,7 +455,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="qs-overlay" id="qsOverlay" onclick="App.closeReaderSettings()"></div>
 <div class="qs-sheet" id="qsSheet" style="display:none">
   <div class="qs-hdr">
-    <span data-i18n="settings.appearance">ڕووکار</span>
+    <span data-i18n="settings.appearance">شێواز</span>
     <button class="qs-close-btn" onclick="App.closeReaderSettings()"><i class="fas fa-times"></i></button>
   </div>
   <div id="qsBody"></div>
@@ -517,7 +517,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="rec-picker" id="recPicker" style="display:none">
   <div class="rp-handle-bar" onclick="App.closeRecPicker()"></div>
   <div class="rp-hdr">
-    <div class="rp-title" data-i18n="audio.reciter">قاریء</div>
+    <div class="rp-title" data-i18n="audio.reciter">خواندەڤان</div>
     <button class="rp-close" onclick="App.closeRecPicker()"><i class="fas fa-times"></i></button>
   </div>
   <div class="rp-list" id="rpList"></div>
@@ -527,7 +527,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="audio-settings-panel" id="audioSettingsPanel" role="dialog" aria-modal="true" aria-label="Audio settings">
   <div class="audio-settings-hdr">
     <button class="hdr-btn" onclick="App.closeAudioSettings()"><i class="fas fa-times"></i></button>
-    <div class="hdr-title" data-i18n="header.audio_settings" data-t="android_div_9">ڕێکخستنی دەنگ</div>
+    <div class="hdr-title" data-i18n="header.audio_settings" data-t="android_div_9">ڕێکخستنا دەنگی</div>
   </div>
   <div class="audio-settings-body" id="audioSettingsBody"></div>
 </div>
@@ -541,8 +541,8 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
   <div class="wizard-progress"><div class="wizard-progress-fill" id="wizardProgress"></div></div>
   <div class="wizard-body" id="wizardBody"></div>
   <div class="wizard-footer">
-    <button class="wizard-btn secondary" id="wizardBack" onclick="App.wizardBack()"><i class="fas fa-arrow-right"></i> <span data-i18n="wizard.btn_back" data-t="android_span_10">پاشگەز</span></button>
-    <button class="wizard-btn primary" id="wizardNext" onclick="App.wizardNext()"><span data-i18n="wizard.btn_next" data-t="android_span_11">دواتر</span> <i class="fas fa-arrow-left"></i></button>
+    <button class="wizard-btn secondary" id="wizardBack" onclick="App.wizardBack()"><i class="fas fa-arrow-right"></i> <span data-i18n="wizard.btn_back" data-t="android_span_10">نەخێر</span></button>
+    <button class="wizard-btn primary" id="wizardNext" onclick="App.wizardNext()"><span data-i18n="wizard.btn_next" data-t="android_span_11">پاشتر</span> <i class="fas fa-arrow-left"></i></button>
   </div>
 </div>
 
@@ -624,9 +624,9 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       <button onclick="App.closeCopyModal()"><i class="fas fa-times"></i></button>
     </div>
     <div id="copyMainOpts">
-      <button class="copy-opt-btn" onclick="App.copyDo('both')"><i class="fas fa-layer-group"></i><span data-i18n="copy.both">Ù‚ÙˆØ±Ø¦Ø§Ù† + ØªÛ•ÙØ³ÛŒØ±</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('both')"><i class="fas fa-layer-group"></i><span data-i18n="copy.both">قورئان + تەفسیر</span></button>
       <button class="copy-opt-btn" onclick="App.copyDo('quran')"><i class="fas fa-book"></i><span data-i18n="copy.quran_only">قورئان تەنها</span></button>
-      <button class="copy-opt-btn" onclick="App.copyDo('tafsir')"><i class="fas fa-book-open"></i><span data-i18n="copy.tafsir_only">ØªÛ•ÙØ³ÛŒØ± ØªÛ•Ù†Ù‡Ø§</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('tafsir')"><i class="fas fa-book-open"></i><span data-i18n="copy.tafsir_only">تەفسیر تەنها</span></button>
       <button class="copy-opt-btn" onclick="App.copyShowRange()"><i class="fas fa-list-ol"></i><span data-i18n="copy.range">مەودای ئایەتەکان</span></button>
     </div>
     <div id="copyRangeOpts" style="display:none">
@@ -639,9 +639,9 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
         <input type="number" id="copyTo" min="1" value="3">
       </div>
       <div class="copy-range-fmt">
-        <button class="copy-fmt-btn on" data-i18n="copy.both" onclick="App.copyFmtSelect(this,'both')">Ù‚ÙˆØ±Ø¦Ø§Ù† + ØªÛ•ÙØ³ÛŒØ±</button>
+        <button class="copy-fmt-btn on" data-i18n="copy.both" onclick="App.copyFmtSelect(this,'both')">قورئان + تەفسیر</button>
         <button class="copy-fmt-btn" data-i18n="copy.fmt_quran" onclick="App.copyFmtSelect(this,'quran')">قورئان</button>
-        <button class="copy-fmt-btn" data-i18n="copy.fmt_tafsir" onclick="App.copyFmtSelect(this,'tafsir')">ØªÛ•ÙØ³ÛŒØ±</button>
+        <button class="copy-fmt-btn" data-i18n="copy.fmt_tafsir" onclick="App.copyFmtSelect(this,'tafsir')">تەفسیر</button>
       </div>
       <button class="copy-range-copy-btn" onclick="App.copyRangeDo()"><i class="fas fa-copy"></i> <span data-i18n="copy.copy_btn">کۆپیکرن</span></button>
       <button class="copy-back-btn" onclick="App.copyBackToMain()"><i class="fas fa-arrow-right"></i> <span data-i18n="copy.back">گەڕانەڤە</span></button>
@@ -653,13 +653,13 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
 <div class="repeat-modal" id="repeatModal">
   <div class="repeat-modal-content">
     <div class="repeat-modal-hdr">
-      <h3 data-i18n="repeat.title" data-t="android_h3_17">دووبارەکردنەوە</h3>
+      <h3 data-i18n="repeat.title" data-t="android_h3_17">دووبارەکرن</h3>
       <button class="repeat-modal-close" onclick="App.closeRepeat()"><i class="fas fa-times"></i></button>
     </div>
     <div class="repeat-mode-tabs">
-      <button class="repeat-tab on" data-rmode="single" onclick="App.repeatMode('single')" data-i18n="repeat.single" data-t="android_button_18">ئایەتی تاک</button>
+      <button class="repeat-tab on" data-rmode="single" onclick="App.repeatMode('single')" data-i18n="repeat.single" data-t="android_button_18">ئایەتەک</button>
       <button class="repeat-tab" data-rmode="range" onclick="App.repeatMode('range')" data-i18n="repeat.range" data-t="android_button_19">مەودا</button>
-      <button class="repeat-tab" data-rmode="surah" onclick="App.repeatMode('surah')" data-i18n="repeat.surah" data-t="android_button_20">سوورەت</button>
+      <button class="repeat-tab" data-rmode="surah" onclick="App.repeatMode('surah')" data-i18n="repeat.surah" data-t="android_button_20">سورەت</button>
     </div>
     <div class="repeat-mode-body" id="rmSingle">
       <div class="repeat-input-group">
@@ -669,7 +669,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     </div>
     <div class="repeat-mode-body hide" id="rmRange">
       <div class="repeat-input-group">
-        <label data-i18n="repeat.from" data-t="android_label_22">لە ئایەت:</label>
+        <label data-i18n="repeat.from" data-t="android_label_22">ژ ئایەت:</label>
         <input type="text" id="rmRangeStart" placeholder="1:1">
       </div>
       <div class="repeat-input-group">
@@ -679,13 +679,13 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
     </div>
     <div class="repeat-mode-body hide" id="rmSurah">
       <div class="repeat-input-group">
-        <label data-i18n="repeat.surah_label" data-t="android_label_24">سوورەت:</label>
+        <label data-i18n="repeat.surah_label" data-t="android_label_24">سورەت:</label>
         <select id="rmSurahSelect"></select>
       </div>
     </div>
     <div class="repeat-controls">
       <div class="repeat-ctrl-item">
-        <span class="repeat-ctrl-label" data-i18n="repeat.play_count" data-t="android_span_25">ژمارەی لێدان</span>
+        <span class="repeat-ctrl-label" data-i18n="repeat.play_count" data-t="android_span_25">ژمارا لێدانان</span>
         <div class="repeat-counter">
           <button class="repeat-counter-btn" onclick="App.rmCounter('play',-1)">-</button>
           <span class="repeat-counter-val" id="rmPlayCount">2</span>
@@ -694,7 +694,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
         </div>
       </div>
       <div class="repeat-ctrl-item">
-        <span class="repeat-ctrl-label" data-i18n="repeat.verse_repeat" data-t="android_span_27">دووبارەی هەر ئایەت</span>
+        <span class="repeat-ctrl-label" data-i18n="repeat.verse_repeat" data-t="android_span_27">دووبارا ھەر ئایەتێ</span>
         <div class="repeat-counter">
           <button class="repeat-counter-btn" onclick="App.rmCounter('verse',-1)">-</button>
           <span class="repeat-counter-val" id="rmVerseCount">1</span>
@@ -703,7 +703,7 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
         </div>
       </div>
       <div class="repeat-ctrl-item">
-        <span class="repeat-ctrl-label" data-i18n="repeat.delay" data-t="android_span_29">چاوەڕوانی نێوان</span>
+        <span class="repeat-ctrl-label" data-i18n="repeat.delay" data-t="android_span_29">ماوێ چاڤەڕێکرنێ</span>
         <div class="repeat-counter">
           <button class="repeat-counter-btn" onclick="App.rmCounter('delay',-1)">-</button>
           <span class="repeat-counter-val" id="rmDelayCount">0</span>
@@ -713,15 +713,15 @@ html{background:var(--bg,#0a0a0a)}body{margin:0;background:var(--bg,#0a0a0a)}
       </div>
     </div>
     <div class="repeat-actions">
-      <button class="repeat-cancel-btn" onclick="App.closeRepeat()" data-i18n="repeat.cancel" data-t="android_button_31">پاشگەز</button>
-      <button class="repeat-start-btn" onclick="App.startRepeat()" data-i18n="repeat.start" data-t="android_button_32">دەستپێکردن</button>
+      <button class="repeat-cancel-btn" onclick="App.closeRepeat()" data-i18n="repeat.cancel" data-t="android_button_31">هەلوەشاندن</button>
+      <button class="repeat-start-btn" onclick="App.startRepeat()" data-i18n="repeat.start" data-t="android_button_32">دەستپێکرن</button>
     </div>
   </div>
 </div>
 
 <!-- REPEAT STATUS BAR -->
 <div class="repeat-status" id="repeatStatus">
-  <span class="repeat-status-text" id="repeatStatusText" data-i18n="repeat.active" data-t="android_span_33">دووبارەکردنەوە...</span>
+  <span class="repeat-status-text" id="repeatStatusText" data-i18n="repeat.active" data-t="android_span_33">دووبارەکرن...</span>
   <button class="repeat-status-stop" onclick="App.stopRepeat()"><i class="fas fa-stop"></i></button>
 </div>
 
