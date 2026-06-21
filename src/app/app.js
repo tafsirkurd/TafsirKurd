@@ -5919,7 +5919,7 @@ function renderReaderSettings(){
   clear(body);
 
   /* ---- READING ---- */
-  body.appendChild(el('div','qs-section-title',t('settings.reading')||'خوێندن'));
+  body.appendChild(el('div','qs-section-title',t('settings.reading')||'خواندن'));
 
   // Show tafsir
   var tafRow=el('div','qs-row');
@@ -6036,7 +6036,7 @@ function renderReaderSettings(){
   body.appendChild(lhRow);
 
   /* ---- RECITER ---- */
-  body.appendChild(el('div','qs-section-title',t('audio.reciter')||'خوێنەر'));
+  body.appendChild(el('div','qs-section-title',t('audio.reciter')||'خواندەڤان'));
   var recList=el('div','qs-reciter-list');
   RECITERS.forEach(function(r){
     var chip=el('div','qs-reciter-chip'+(RECITER===r.id?' on':''));
