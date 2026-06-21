@@ -3275,10 +3275,10 @@ async function loadBooks() {
     allBooks = r.data || [];
     var supabase = window.adminAuth.getSupabase();
     if (supabase) {
-        var cr = await supabase.from('aook_reader_counts').select('aook_id,reader_count');
+        var cr = await supabase.from('book_reader_counts').select('book_id,reader_count');
         if (!cr.error && cr.data) {
             _bookReaderCounts = {};
-            cr.data.forEach(function(row){ _bookReaderCounts[row.aook_id] = Numaer(row.reader_count); });
+            cr.data.forEach(function(row){ _bookReaderCounts[row.book_id] = Number(row.reader_count); });
         }
     }
     renderBooksList(); renderSeriesList(); updateStats();
@@ -3646,7 +3646,7 @@ async function _renderSpotlightStats() {
     var statsEl = document.getElementById('spotlight-stats');
     if (!statsEl) return;
     if (!featBook) { statsEl.style.display = 'none'; return; }
-    var res = await supabase.from('aook_spotlight_events').select('event_type').eq('aook_id', featBook.id);
+    var res = await supabase.from('book_spotlight_events').select('event_type').eq('book_id', featBook.id);
     var data = res.data;
     if (!data) { statsEl.style.display = 'none'; return; }
     var impressions = data.filter(function(e){ return e.event_type === 'impression'; }).length;
