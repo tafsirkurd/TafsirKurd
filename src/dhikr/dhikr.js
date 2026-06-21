@@ -1472,6 +1472,7 @@ window.GencineUI = {
         var label = (window.t && window.t('adhkar.' + key)) || ADHKAR_CAT_LABELS[key] || key;
         var meta  = ADHKAR_ICONS[key] || { icon:'fas fa-circle' };
         var newInCat = catItems.filter(function(x){ return x.badge_until && new Date(x.badge_until).getTime() > Date.now(); }).length;
+        var hasImportant = catItems.some(function(x){ return x.priority === 'important'; });
 
         var row = document.createElement('button');
         row.className = 'adhkar-list-row' + (ki === keys.length - 1 ? ' adhkar-list-row-last' : '');
@@ -1495,11 +1496,28 @@ window.GencineUI = {
 
         var right = document.createElement('div');
         right.className = 'adhkar-list-right';
+        var _savedProg = 0;
+        var _isDoneToday = false;
+        try {
+          _savedProg = Math.min(parseInt(localStorage.getItem('adhkar_prog_' + key + '_' + _todayStr)) || 0, count);
+          _isDoneToday = !!localStorage.getItem('adhkar_done_' + key + '_' + _todayStr);
+        } catch(e) {}
         if (newInCat) {
           var newDot = document.createElement('span');
           newDot.className = 'adhkar-new-dot';
           newDot.textContent = newInCat;
           right.appendChild(newDot);
+        }
+        if (_isDoneToday) {
+          var _chip = document.createElement('span');
+          _chip.className = 'adhkar-done-chip';
+          _chip.textContent = 'ئەڤڕۆ ✓';
+          right.appendChild(_chip);
+        } else if (_savedProg > 0 && count) {
+          var cnt = document.createElement('span');
+          cnt.className = 'adhkar-list-count adhkar-list-count--prog';
+          cnt.textContent = _savedProg + ' / ' + count;
+          right.appendChild(cnt);
         } else if (count) {
           var cnt = document.createElement('span');
           cnt.className = 'adhkar-list-count';
@@ -1509,14 +1527,6 @@ window.GencineUI = {
         if (key === _timeCat || (_isFriday && key === 'friday')) {
           row.classList.add('adhkar-list-row--featured');
         }
-        try {
-          if (localStorage.getItem('adhkar_done_' + key + '_' + _todayStr)) {
-            var _chip = document.createElement('span');
-            _chip.className = 'adhkar-done-chip';
-            _chip.textContent = 'ئەڤڕۆ ✓';
-            right.appendChild(_chip);
-          }
-        } catch(e) {}
         var chev = document.createElement('i');
         chev.className = 'fas fa-chevron-left adhkar-list-chev';
         right.appendChild(chev);
@@ -1543,7 +1553,11 @@ window.GencineUI = {
     var self = this;
     var T = function(k,d){ var v=window.t?window.t(k):undefined; return (!v||v===k)?(d||k):v; };
 
-    var items = _getAdhkar(this._adhkarCat);
+    var items = _getAdhkar(this._adhkarCat).slice().sort(function(a, b) {
+      var pa = a.priority === 'important' ? 0 : a.priority === 'optional' ? 2 : 1;
+      var pb = b.priority === 'important' ? 0 : b.priority === 'optional' ? 2 : 1;
+      return pa !== pb ? pa - pb : (a.sort_order || 0) - (b.sort_order || 0);
+    });
     if (!items.length) {
       var emptyEl = document.createElement('div');
       emptyEl.style.cssText = 'text-align:center;padding:40px 16px;color:var(--text3);direction:rtl;font-size:.88rem';
@@ -1606,7 +1620,10 @@ window.GencineUI = {
       var arText = item.ar || '';
       var isSurah = arText.indexOf('۝') !== -1; // U+06DD Arabic End of Ayah ۝
       var card = document.createElement('div');
-      card.className = 'adhkar-card' + (isSurah ? ' adhkar-card-surah' : '');
+      card.className = 'adhkar-card'
+        + (isSurah ? ' adhkar-card-surah' : '')
+        + (item.priority === 'important' ? ' adhkar-card-important' : '')
+        + (item.priority === 'optional'  ? ' adhkar-card-optional'  : '');
 
       if (item.badge_until && new Date(item.badge_until).getTime() > Date.now()) {
         var aNewChip = document.createElement('div');
@@ -1641,6 +1658,12 @@ window.GencineUI = {
 
       var footer = document.createElement('div');
       footer.className = 'adhkar-card-footer';
+      if (item.priority === 'important' || item.priority === 'optional') {
+        var _prioChip = document.createElement('span');
+        _prioChip.className = 'adhkar-prio-chip adhkar-prio-chip--' + item.priority;
+        _prioChip.textContent = item.priority === 'important' ? '★ گرنگ' : '◎ دلخوازانە';
+        footer.appendChild(_prioChip);
+      }
       var src = document.createElement('span');
       src.className = 'adhkar-card-src';
       src.textContent = item.source || '';
@@ -1689,13 +1712,6 @@ window.GencineUI = {
     list.appendChild(comp);
 
     container.appendChild(list);
-
-    // ── Restore scroll to where the user left off today ──
-    if (_savedProg > 0 && _savedProg < totalCount && cardEls[_savedProg - 1]) {
-      requestAnimationFrame(function() {
-        cardEls[_savedProg - 1].scrollIntoView({ behavior: 'auto', block: 'start' });
-      });
-    }
 
     // ── Scroll: update live progress in sticky header ──
     var panel = document.getElementById('gencineContent');
