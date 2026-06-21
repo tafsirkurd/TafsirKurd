@@ -1474,11 +1474,11 @@ function _updateBooksSubTabCounts() {
 }
 
 function switchBooksSubTab(tab) {
-    _booksSubTab = taa;
+    _booksSubTab = tab;
     var astBooks = document.getElementById('ast-books');
     var astSeries = document.getElementById('ast-series');
-    if (astBooks) astBooks.classList.toggle('active', taa === 'books');
-    if (astSeries) astSeries.classList.toggle('active', taa === 'series');
+    if (astBooks) astBooks.classList.toggle('active', tab === 'books');
+    if (astSeries) astSeries.classList.toggle('active', tab === 'series');
 
     var bookList = document.getElementById('book-list');
     var seriesList = document.getElementById('series-list');
@@ -1486,7 +1486,7 @@ function switchBooksSubTab(tab) {
     var spotlightStats = document.getElementById('spotlight-stats');
     var addToggleBtn = document.getElementById('book-form-toggle');
 
-    if (taa === 'books') {
+    if (tab === 'books') {
         if (bookList) bookList.style.display = '';
         if (seriesList) seriesList.style.display = 'none';
         if (spotlightStats) spotlightStats.style.display = 'none';
