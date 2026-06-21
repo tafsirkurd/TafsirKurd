@@ -2579,21 +2579,21 @@ var ADHKAR_ADMIN_CATS = {
     gratitude:'سوپاسگوزاری'
 };
 
-/* Mirrors dhikr.js GROUPS — each key appears in exactly one section */
+/* Mirrors dhikr.js GROUPS — within each section, keys are alphabetical (matching app DB query order) */
 var ADHKAR_ADMIN_GROUPS_DEFAULT = [
-    { en:'Daily',   ku:'ڕۆژانە',       keys:['morning','evening','waking','sleep'] },
-    { en:'Prayer',  ku:'نوێژ',          keys:['adhan','opening_prayer','ruku','rising_ruku','sujood','between_sujood','tashahhud','after_prayer','qunut'] },
-    { en:'Food',    ku:'خواردن',        keys:['eating_before','eating_after','fasting','breaking_fast'] },
-    { en:'Places',  ku:'مالبیا و جێ',  keys:['house_enter','house_exit','bathroom_enter','bathroom_exit','masjid_enter','masjid_exit','marketplace','vehicle'] },
+    { en:'Daily',   ku:'ڕۆژانە',       keys:['evening','morning','sleep','waking'] },
+    { en:'Prayer',  ku:'نوێژ',          keys:['adhan','after_prayer','between_sujood','opening_prayer','qunut','rising_ruku','ruku','sujood','tashahhud'] },
+    { en:'Food',    ku:'خواردن',        keys:['breaking_fast','eating_after','eating_before','fasting'] },
+    { en:'Places',  ku:'مالبیا و جێ',  keys:['bathroom_enter','bathroom_exit','house_enter','house_exit','masjid_enter','masjid_exit','marketplace','vehicle'] },
     { en:'Travel',  ku:'گەشت',          keys:['travel','travel_return'] },
-    { en:'Hajj',    ku:'حەج',           keys:['talbiyah','safa_marwa','zamzam','entering_makkah','arafat','dhul_hijjah'] },
+    { en:'Hajj',    ku:'حەج',           keys:['arafat','dhul_hijjah','entering_makkah','safa_marwa','talbiyah','zamzam'] },
     { en:'Ramadan', ku:'ڕەمەزان',      keys:['lailat_qadr'] },
-    { en:'Weather', ku:'هەوا',          keys:['rain','thunder','wind','eclipse'] },
-    { en:'Health',  ku:'تەندروستی',    keys:['illness','pain','ruqyah','visiting_sick','condolence'] },
-    { en:'Special', ku:'کاتی تایبەت',  keys:['friday','salawat','new_moon'] },
-    { en:'Life',    ku:'ژیانی ڕۆژانە', keys:['wudu','dressing','mirror','new_clothes','sneeze','anger','fear','debt','charity','distress','forgiveness','protection','before_quran','gratitude','nightmare','istikhara','wedding','newborn','kaffarah','grave'] }
+    { en:'Weather', ku:'هەوا',          keys:['eclipse','rain','thunder','wind'] },
+    { en:'Health',  ku:'تەندروستی',    keys:['condolence','illness','pain','ruqyah','visiting_sick'] },
+    { en:'Special', ku:'کاتی تایبەت',  keys:['friday','new_moon','salawat'] },
+    { en:'Life',    ku:'ژیانی ڕۆژانە', keys:['anger','before_quran','charity','debt','distress','dressing','fear','forgiveness','gratitude','grave','istikhara','kaffarah','mirror','new_clothes','newborn','nightmare','protection','sneeze','wedding','wudu'] }
 ];
-var _ADHKAR_CAT_ORDER_LS = 'adhkar_admin_cat_order_v1';
+var _ADHKAR_CAT_ORDER_LS = 'adhkar_admin_cat_order_v2';
 
 function _loadAdhkarCatOrder() {
     try {
