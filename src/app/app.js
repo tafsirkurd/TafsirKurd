@@ -3287,27 +3287,36 @@ function _getInstallId(){
 function _registerPushToken(token,platform,attempt){
   var delay=attempt===0?0:Math.min(4000*Math.pow(2,attempt-1),32000);
   setTimeout(function(){
-    var ctrl=new AbortController();
-    var tid=setTimeout(function(){ctrl.abort();},10000);
-    fetch('https://tafsirkurd.com/register-push-token',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({token:token,platform:platform,user_id:(S.user&&S.user.id)||null,install_id:_getInstallId()}),
-      signal:ctrl.signal
-    }).then(function(r){clearTimeout(tid);return r.json();}).then(function(res){
-      if(res.error){
-        _pushLog('register FAILED (attempt '+attempt+'): '+res.error);
-        localStorage.setItem('push_reg_api_error',res.error);
+    // Get Supabase JWT for this session (used server-side to verify user identity).
+    // user_id is intentionally NOT sent in the body — the server derives it from the JWT.
+    var sessionPromise=S.supabase
+      ?S.supabase.auth.getSession().then(function(r){return r.data&&r.data.session&&r.data.session.access_token;}).catch(function(){return null;})
+      :Promise.resolve(null);
+    sessionPromise.then(function(accessToken){
+      var ctrl=new AbortController();
+      var tid=setTimeout(function(){ctrl.abort();},10000);
+      var reqHeaders={'Content-Type':'application/json'};
+      if(accessToken)reqHeaders['Authorization']='Bearer '+accessToken;
+      fetch('https://tafsirkurd.com/register-push-token',{
+        method:'POST',
+        headers:reqHeaders,
+        body:JSON.stringify({token:token,platform:platform,install_id:_getInstallId()}),
+        signal:ctrl.signal
+      }).then(function(r){clearTimeout(tid);return r.json();}).then(function(res){
+        if(res.error){
+          _pushLog('register FAILED (attempt '+attempt+'): '+res.error);
+          localStorage.setItem('push_reg_api_error',res.error);
+          if(attempt<4)_registerPushToken(token,platform,attempt+1);
+        }else{
+          _pushLog('token stored OK attempt='+attempt);
+          localStorage.removeItem('push_reg_api_error');
+          localStorage.removeItem('push_token_pending');
+        }
+      }).catch(function(e){
+        clearTimeout(tid);
+        _pushLog('register EXCEPTION (attempt '+attempt+'): '+(e&&e.message));
         if(attempt<4)_registerPushToken(token,platform,attempt+1);
-      }else{
-        _pushLog('token stored OK attempt='+attempt);
-        localStorage.removeItem('push_reg_api_error');
-        localStorage.removeItem('push_token_pending');
-      }
-    }).catch(function(e){
-      clearTimeout(tid);
-      _pushLog('register EXCEPTION (attempt '+attempt+'): '+(e&&e.message));
-      if(attempt<4)_registerPushToken(token,platform,attempt+1);
+      });
     });
   },delay);
 }
