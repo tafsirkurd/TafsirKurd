@@ -2,6 +2,12 @@
 // Stores a device push token in push_tokens using the service role key.
 // user_id is derived ONLY from a verified Supabase JWT in the Authorization header —
 // never from the request body — to prevent spoofed user_id deleting other users' tokens.
+//
+// Two-step upsert handles all device states:
+//   Step 1 (install_id patch): if this install already has a row with a different token
+//           (FCM/APNs token rotation), update that row's token in-place.
+//   Step 2 (token upsert): insert or update by token string — always safe since token is unique.
+//   Together these ensure exactly one row per device installation at all times.
 
 const CORS = {
     'Access-Control-Allow-Origin': '*',
@@ -44,36 +50,52 @@ export async function onRequest(context) {
         } catch (_) {}
     }
 
+    const now = new Date().toISOString();
     const serviceHeaders = {
         apikey: env.SUPABASE_SERVICE_ROLE_KEY,
         Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates,return=minimal',
+        Prefer: 'return=minimal',
     };
 
-    // For verified logged-in users: delete their other tokens on the same platform so
-    // reinstalls / token refreshes don't cause duplicate notification delivery.
+    // For verified logged-in users: remove their other tokens on this platform so
+    // reinstalls don't leave stale rows that cause duplicate notification delivery.
     if (verified_user_id) {
         await fetch(
             `${env.SUPABASE_URL}/rest/v1/push_tokens?user_id=eq.${encodeURIComponent(verified_user_id)}&platform=eq.${platform}&token=neq.${encodeURIComponent(token)}`,
-            { method: 'DELETE', headers: { ...serviceHeaders, Prefer: 'return=minimal' } }
+            { method: 'DELETE', headers: serviceHeaders }
         ).catch(() => {});
     }
 
-    // Upsert: conflict on install_id (same device, refreshed token) or fall back to token string.
-    const conflictCol = install_id ? 'install_id' : 'token';
-    const url = `${env.SUPABASE_URL}/rest/v1/push_tokens?on_conflict=${conflictCol}`;
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: serviceHeaders,
-        body: JSON.stringify({
-            token,
-            platform,
-            user_id: verified_user_id,
-            install_id: install_id || null,
-            updated_at: new Date().toISOString(),
-        }),
-    });
+    // Step 1: If this install already has a row with a DIFFERENT token (token rotation),
+    // update that row's token in-place so we don't accumulate a second row.
+    if (install_id) {
+        await fetch(
+            `${env.SUPABASE_URL}/rest/v1/push_tokens?install_id=eq.${encodeURIComponent(install_id)}&token=neq.${encodeURIComponent(token)}`,
+            {
+                method: 'PATCH',
+                headers: serviceHeaders,
+                body: JSON.stringify({ token, user_id: verified_user_id, updated_at: now }),
+            }
+        ).catch(() => {});
+    }
+
+    // Step 2: Upsert by token — always safe since token has a unique constraint.
+    // Covers: new device, re-registration of existing token, first launch after Step 1 patched nothing.
+    const res = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/push_tokens?on_conflict=token`,
+        {
+            method: 'POST',
+            headers: { ...serviceHeaders, Prefer: 'resolution=merge-duplicates,return=minimal' },
+            body: JSON.stringify({
+                token,
+                platform,
+                user_id: verified_user_id,
+                install_id: install_id || null,
+                updated_at: now,
+            }),
+        }
+    );
 
     if (!res.ok) {
         const err = await res.text().catch(() => '');
