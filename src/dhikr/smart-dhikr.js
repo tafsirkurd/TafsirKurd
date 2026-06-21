@@ -53,7 +53,7 @@
     },
     {
       id: 'waking', categoryKey: 'waking', icon: 'fas fa-cloud-sun',
-      labelKey: 'adhkar.waking', labelFallback: 'پشتی ڕابوونێ ژ خەوێ',
+      labelKey: 'adhkar.waking', labelFallback: 'دەمێ دەرکەفتنا ڕۆژێ',
       subtitleKey: 'gencine.smart.waking_hint', subtitleFallback: 'پشتی ژ خەو ڕابوونێ بخوێنە',
       fallbackAr: 'الحَمْدُ للَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا',
       fallbackRepeat: 1,
@@ -70,7 +70,7 @@
     },
     {
       id: 'evening', categoryKey: 'evening', icon: 'fas fa-moon',
-      labelKey: 'adhkar.evening', labelFallback: 'زکرێن ئێڤاری',
+      labelKey: 'adhkar.evening', labelFallback: 'زکرێ ئێڤاری',
       subtitleKey: 'gencine.smart.evening_hint', subtitleFallback: 'ئێوارا خوە ب زکرێ بکە',
       fallbackAr: 'اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا',
       fallbackRepeat: 3,
@@ -80,7 +80,7 @@
     },
     {
       id: 'sleep', categoryKey: 'sleep', icon: 'fas fa-bed',
-      labelKey: 'adhkar.sleep', labelFallback: 'بەرى نڤستنێ',
+      labelKey: 'adhkar.sleep', labelFallback: 'بەری نڤستنێ',
       subtitleKey: 'gencine.smart.sleep_hint', subtitleFallback: 'پێش خەوکردنێ بخوێنە',
       fallbackAr: 'بِاسْمِكَ اللَّهُمَّ أَموُتُ وَأَحْيَا',
       fallbackRepeat: 3,

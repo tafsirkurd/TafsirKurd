@@ -182,10 +182,10 @@ var DHIKR_LIST = [
 /* Adhkar category keys and Kurdish labels */
 var ADHKAR_CAT_KEYS = ['morning','evening','sleep','waking','house_enter','house_exit','bathroom_enter','bathroom_exit','masjid_enter','masjid_exit','wudu','opening_prayer','ruku','rising_ruku','sujood','between_sujood','tashahhud','eating_before','eating_after','breaking_fast','fasting','travel','travel_return','vehicle','marketplace','charity','distress','debt','fear','forgiveness','protection','rain','thunder','wind','after_prayer','adhan','salawat','qunut','lailat_qadr','dhul_hijjah','talbiyah','safa_marwa','zamzam','entering_makkah','arafat','grave','eclipse','illness','pain','ruqyah','visiting_sick','condolence','newborn','anger','sneeze','new_clothes','dressing','mirror','new_moon','nightmare','istikhara','wedding','kaffarah','before_quran','friday','gratitude'];
 var ADHKAR_CAT_LABELS = {
-  morning:        'زکرێن بەیانیکردن',
-  evening:        'زکرێن ئێواربوون',
-  sleep:          'بەرى نڤستنێ',
-  waking:         'دوای هاتنا خوو',
+  morning:        'زکرێ سپێدێ',
+  evening:        'زکرێ ئێڤاری',
+  sleep:          'بەری نڤستنێ',
+  waking:         'دەمێ دەرکەفتنا ڕۆژێ',
   house_enter:    'چونا ماڵ',
   house_exit:     'دەرچوونا ماڵ',
   bathroom_enter: 'چونا دەستشوینکێ',
@@ -322,7 +322,7 @@ var ADHKAR_ICONS = {
 var FALLBACK_CAT_KEYS   = ['morning','evening','travel','eating','sleep','general'];
 var FALLBACK_CAT_LABELS = {
   morning: (window.t&&window.t('gencine.cat_morning'))||'بەیانیکردن',
-  evening: (window.t&&window.t('gencine.cat_evening'))||'ئێواربوون',
+  evening: (window.t&&window.t('gencine.cat_evening'))||'ئێڤاربوون',
   travel:  (window.t&&window.t('gencine.cat_travel')) ||'گەشت',
   eating:  (window.t&&window.t('gencine.cat_eating')) ||'خواردن',
   sleep:   (window.t&&window.t('gencine.cat_sleep'))  ||'خەو',

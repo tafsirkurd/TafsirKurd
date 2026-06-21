@@ -1268,7 +1268,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "gencine.cat_all",          kurdish_text: "هەمی",                                     category: "gencine",    page: "android" },
     { key_id: "gencine.cat_quran",        kurdish_text: "ژ قورئانا پیرۆز.",                               category: "gencine",    page: "android" },
     { key_id: "gencine.cat_morning",      kurdish_text: "بەیانیکردن",                               category: "gencine",    page: "android" },
-    { key_id: "gencine.cat_evening",      kurdish_text: "ئێواربوون",                                category: "gencine",    page: "android" },
+    { key_id: "gencine.cat_evening",      kurdish_text: "ئێڤاربوون",                               category: "gencine",    page: "android" },
     { key_id: "gencine.cat_travel",       kurdish_text: "گەشت",                                     category: "gencine",    page: "android" },
     { key_id: "gencine.cat_eating",       kurdish_text: "خواردن",                                   category: "gencine",    page: "android" },
     { key_id: "gencine.cat_sleep",        kurdish_text: "خەو",                                      category: "gencine",    page: "android" },
@@ -1524,10 +1524,10 @@ window.BULK_TRANSLATIONS = [
     { key_id: "settings.font_madani_new",     kurdish_text: "مەدینی نوێ",         category: "settings", page: "android" },
 
     // Adhkar subcategory labels
-    { key_id: "adhkar.morning",         kurdish_text: "زکرێن بەیانیکردن",               category: "adhkar", page: "android" },
-    { key_id: "adhkar.evening",         kurdish_text: "زکرێن ئێواربوون",                category: "adhkar", page: "android" },
-    { key_id: "adhkar.sleep",           kurdish_text: "بەرى نڤستنێ",                   category: "adhkar", page: "android" },
-    { key_id: "adhkar.waking",          kurdish_text: "دوای هاتنا خوو",                 category: "adhkar", page: "android" },
+    { key_id: "adhkar.morning",         kurdish_text: "زکرێ سپێدێ",                    category: "adhkar", page: "android" },
+    { key_id: "adhkar.evening",         kurdish_text: "زکرێ ئێڤاری",                   category: "adhkar", page: "android" },
+    { key_id: "adhkar.sleep",           kurdish_text: "بەری نڤستنێ",                   category: "adhkar", page: "android" },
+    { key_id: "adhkar.waking",          kurdish_text: "دەمێ دەرکەفتنا ڕۆژێ",           category: "adhkar", page: "android" },
     { key_id: "adhkar.house_enter",     kurdish_text: "چونا ماڵ",                       category: "adhkar", page: "android" },
     { key_id: "adhkar.house_exit",      kurdish_text: "دەرچوونا ماڵ",                   category: "adhkar", page: "android" },
     { key_id: "adhkar.masjid_enter",    kurdish_text: "چونا مزگەوت",                    category: "adhkar", page: "android" },
