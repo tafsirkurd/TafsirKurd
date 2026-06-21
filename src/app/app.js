@@ -2942,10 +2942,11 @@ window._showBatteryOptWarning=function(){
   var _warnedAt=parseInt(localStorage.getItem('batteryOptWarnedAt')||'0');
   if(Date.now()-_warnedAt<7*24*60*60*1000)return; // shown within last 7 days
   localStorage.setItem('batteryOptWarnedAt',String(Date.now()));
-  // Detect Huawei/Honor EMUI — these devices have a proprietary "App Launch" restriction
-  // in addition to the standard Android battery optimization, and the AOSP dialog alone
-  // is not sufficient to allow athan to fire reliably on EMUI.
-  var _isHuaweiEMUI=/HUAWEI|HONOR/i.test(navigator.userAgent||'');
+  // OEM-specific proprietary restrictions block athan even after AOSP battery opt is granted.
+  // Huawei/EMUI: "App Launch" manual mode; Xiaomi/MIUI: "Autostart" permission.
+  var _ua=navigator.userAgent||'';
+  var _isHuaweiEMUI=/HUAWEI|HONOR/i.test(_ua);
+  var _isMIUI=/MIUI|Xiaomi|Redmi|POCO/i.test(_ua);
   var overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;z-index:9002;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:0 0 var(--safe-b,20px)';
   var card=document.createElement('div');
@@ -2964,7 +2965,10 @@ window._showBatteryOptWarning=function(){
   var _huaweiMsg=_isHuaweiEMUI
     ? '\n\n📱 Huawei / Honor (EMUI):\nڕێكخستن ← پاتری ← App Launch ← TafsirKurd ← Manual ←\nBackground Activity + Run-up Activity چالاك بكە.'
     : '';
-  msg.textContent=_baseMsg+_huaweiMsg;
+  var _miuiMsg=_isMIUI
+    ? '\n\n📱 Xiaomi / Redmi / POCO (MIUI):\nئەمنیت (Security) ← ئۆتۆماتیک (Autostart) ← TafsirKurd چالاك بكە.'
+    : '';
+  msg.textContent=_baseMsg+_huaweiMsg+_miuiMsg;
   var btn=document.createElement('button');
   btn.style.cssText='width:100%;padding:13px;background:var(--accent,#1f5f4a);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
   btn.textContent=t('notif.setup.open_settings','ڤەکرنا ڕێکخستنان');

@@ -67,12 +67,16 @@ public class AthanRescheduleWorker extends Worker {
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
 
-        // Create channel (safe to call multiple times — idempotent)
+        // Create channel (safe to call multiple times — idempotent).
+        // IMPORTANCE_HIGH so the notification shows as a HUD heads-up on OEMs (MIUI,
+        // ColorOS, OneUI) that collapse IMPORTANCE_DEFAULT notifications silently.
+        // Without heads-up, users on aggressive OEMs never see the rescue notification
+        // and athan silently stops after 28 days without an app open.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel ch = new NotificationChannel(
                 CHANNEL_ID,
                 "Athan Reminder",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             );
             ch.setDescription("Reminds you to open the app to refresh athan schedule");
             nm.createNotificationChannel(ch);
@@ -95,7 +99,7 @@ public class AthanRescheduleWorker extends Worker {
             .setContentText("بۆ نوویكرنا دەمێن بانگی، ئەپێ (بەرنامەی) ڤەکە")
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+            .setPriority(NotificationCompat.PRIORITY_HIGH);
 
         nm.notify(NOTIF_ID, builder.build());
     }
