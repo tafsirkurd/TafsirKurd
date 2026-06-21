@@ -18,12 +18,15 @@ export default {
       'Authorization': `Bearer ${secret}`,
     };
 
-    // 1. Sync YouTube playlists (also triggers video notifications internally)
+    const ts = new Date().toISOString();
+
+    // 1. Sync YouTube playlists → insert new episodes into DB
     const syncRes = await fetch(`${site}/cron-sync`, {
       method:  'POST',
       headers,
       body:    '{}',
     }).catch(e => ({ ok: false, _err: e.message }));
+    const syncBody = syncRes.ok ? await syncRes.json().catch(() => ({})) : {};
 
     // 2. Dispatch any scheduled notifications whose time has arrived
     const schedRes = await fetch(`${site}/admin-notifications-api`, {
@@ -31,18 +34,21 @@ export default {
       headers,
       body:    JSON.stringify({ action: 'process_scheduled' }),
     }).catch(e => ({ ok: false, _err: e.message }));
+    const schedBody = schedRes.ok ? await schedRes.json().catch(() => ({})) : {};
 
-    // 3. Auto-notify new content (videos + books + hadiths added in last 2 h)
+    // 3. Auto-notify new content (videos + books + hadiths added in last 8 h)
+    //    One notification per series per run — series dedup handled server-side.
     const notifRes = await fetch(`${site}/admin-notifications-api`, {
       method:  'POST',
       headers,
       body:    JSON.stringify({ action: 'auto_notify_content' }),
     }).catch(e => ({ ok: false, _err: e.message }));
+    const notifBody = notifRes.ok ? await notifRes.json().catch(() => ({})) : {};
 
-    console.log('[notify-cron]', new Date().toISOString(),
-      'sync:', syncRes.ok ? 'ok' : 'fail',
-      'scheduled:', schedRes.ok ? 'ok' : 'fail',
-      'notify:', notifRes.ok ? 'ok' : 'fail');
+    console.log('[notify-cron]', ts,
+      `sync=${syncRes.ok ? 'ok' : 'FAIL'} new_eps=${syncBody.totalNewEpisodes ?? '?'}`,
+      `scheduled=${schedRes.ok ? 'ok' : 'FAIL'} processed=${schedBody.processed ?? '?'}`,
+      `notify=${notifRes.ok ? 'ok' : 'FAIL'} notified=${notifBody.notified ?? '?'}`);
   },
 
   // Health check — GET /

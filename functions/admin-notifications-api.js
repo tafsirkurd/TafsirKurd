@@ -216,14 +216,25 @@ async function _handleRequest(context) {
         // ── New episodes ──────────────────────────────────────────
         const { data: episodes } = await supabase
             .from('islamvoice_episodes')
-            .select('id,title,thumbnail_url,created_at,islamvoice_series(name_ku)')
+            .select('id,title,thumbnail_url,created_at,series_id,islamvoice_series(name_ku)')
             .eq('is_published', true)
             .gte('created_at', twoHoursAgo)
             .order('created_at', { ascending: false });
 
+        // One notification per series per run — when a playlist gains 2+ new episodes
+        // in the same sync cycle, both show the same series-name title and look like
+        // duplicates to users. Send only the most recent episode (first in DESC order).
+        const notifiedSeries = new Set();
         for (const ep of (episodes || [])) {
             const seriesName = ep.islamvoice_series?.name_ku || ep.title;
+            if (ep.series_id && notifiedSeries.has(ep.series_id)) {
+                console.log(`[auto_notify] series-dedup skip ep=${ep.id} series=${ep.series_id}`);
+                notified.push({ type: 'video', id: ep.id, title: seriesName, skipped: true, reason: 'series_dedup' });
+                continue;
+            }
             const r = await assignAndSend(seriesName, ep.title, ep.thumbnail_url, 'video', ep.id, 'video');
+            if (ep.series_id && !r.skipped && !r.error) notifiedSeries.add(ep.series_id);
+            console.log(`[auto_notify] video ep=${ep.id} series=${ep.series_id} slot=${r.slot||'now'} skipped=${!!r.skipped}`);
             notified.push({ type: 'video', id: ep.id, title: seriesName, ...r });
         }
 
