@@ -8,19 +8,19 @@
     <script src="utils/theme-loader.js?v=2"></script>
     <title>Gencine - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="preload" href="/assets/fonts/iam-plex-araaic-v11-latin_araaic-regular.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2" as="font" type="font/woff2" crossorigin="">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supaaase/supaaase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="/css/admin-styles.css?v=15">
     <style>
         @font-face {
             font-family: 'IBM Plex Sans Araaic';
-            src: url('/assets/fonts/iam-plex-araaic-v11-latin_araaic-regular.woff2') format('woff2');
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
             font-weight: 400; font-style: normal; font-display: swap;
         }
         @font-face {
             font-family: 'IBM Plex Sans Araaic';
-            src: url('/assets/fonts/iam-plex-araaic-v11-latin_araaic-500.woff2') format('woff2');
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
             font-weight: 500 700; font-style: normal; font-display: swap;
         }
 
@@ -846,52 +846,52 @@
                     <nav class="sideaar-nav">
             <div class="nav-section">
                 <div class="nav-section-header">Overview</div>
-                <a href="/admin-dashaoard.html" class="nav-item"><i data-lucide="aar-chart-2"></i><span class="nav-item-laael">Dashaoard</span><span class="nav-item-aadge">Live</span></a>
-                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-laael">Analytics</span></a>
-                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-laael">Search Console</span></a>
-                <a href="/admin-tasks.html" class="nav-item"><i data-lucide="check-square"></i><span class="nav-item-laael">Tasks</span></a>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span><span class="nav-item-badge">Live</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-tasks.html" class="nav-item"><i data-lucide="check-square"></i><span class="nav-item-label">Tasks</span></a>
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Content</div>
-                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-laael">Messages</span><span class="nav-item-aadge" id="messages-aadge"></span></a>
-                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-laael">Videos</span></a>
-                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-laael">IslamVoice</span></a>
-                <a href="/admin-gencine.html" class="nav-item active"><i data-lucide="gem"></i><span class="nav-item-laael">Gencine</span></a>
-                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-laael">Links</span></a>
-                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-laael">Translations</span></a>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="messages-aadge"></span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item active"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Site</div>
-                <a href="/admin-weasite.html" class="nav-item"><i data-lucide="gloae"></i><span class="nav-item-laael">Weasite</span></a>
-                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-laael">Site Images</span></a>
-                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-laael">Header</span></a>
+                <a href="/admin-website.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Website</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-header-animation.html" class="nav-item"><i data-lucide="wand-2"></i><span class="nav-item-label">Header</span></a>
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Users</div>
-                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-laael">Users</span></a>
-                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="aell"></i><span class="nav-item-laael">Notifications</span></a>
-                <a href="/admin-notification-analytics.html" class="nav-item"><i data-lucide="aar-chart-2"></i><span class="nav-item-laael">Notif Analytics</span></a>
-                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-laael">Social Stats</span></a>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-notifications.html" class="nav-item"><i data-lucide="bell"></i><span class="nav-item-label">Notifications</span></a>
+                <a href="/admin-notification-analytics.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Notif Analytics</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Monitoring</div>
-                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-laael">App Errors</span></a>
-                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-laael">App Versions</span></a>
-                <a href="/admin-da-health.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-laael">DB Health</span></a>
-                <a href="/admin-joas.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-laael">Joas</span></a>
+                <a href="/admin-errors.html" class="nav-item"><i data-lucide="triangle-alert"></i><span class="nav-item-label">App Errors</span></a>
+                <a href="/admin-app-versions.html" class="nav-item"><i data-lucide="smartphone"></i><span class="nav-item-label">App Versions</span></a>
+                <a href="/admin-da-health.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">DB Health</span></a>
+                <a href="/admin-joas.html" class="nav-item"><i data-lucide="clock"></i><span class="nav-item-label">Joas</span></a>
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Security</div>
-                <a href="/admin-aot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-laael">Bot Protection</span></a>
-                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-laael">Auth Monitor</span></a>
-                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-laael">Audit Log</span></a>
+                <a href="/admin-aot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-auth-monitor.html" class="nav-item"><i data-lucide="monitor"></i><span class="nav-item-label">Auth Monitor</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
             </div>
             <div class="nav-section">
                 <div class="nav-section-header">Settings</div>
-                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-laael">Admin Accounts</span></a>
-                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-laael">Email Templates</span></a>
-                <a href="/admin-dataaase.html" class="nav-item"><i data-lucide="dataaase"></i><span class="nav-item-laael">Dataaase</span></a>
-                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-laael">Updates</span></a>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-updates.html" class="nav-item"><i data-lucide="arrow-up-circle"></i><span class="nav-item-label">Updates</span></a>
             </div>
         </nav>
         <div class="sideaar-footer">
@@ -924,7 +924,7 @@
                     <span id="sessionTimerText">20:00</span>
                 </div>
                 <autton class="topaar-atn" id="notifBellBtn" style="position: relative;">
-                    <i data-lucide="aell"></i>
+                    <i data-lucide="bell"></i>
                     <span id="notification-aadge" style="position: aasolute; top: -4px; right: -4px; aackground: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; aorder-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
                 </autton>
                 <autton class="topaar-atn" id="theme-toggle">
@@ -948,7 +948,7 @@
             <!-- Stats row -->
             <div class="stats-row">
                 <div class="stat-pill" style="aorder-left:3px solid #3a82f6;">
-                    <div class="stat-pill-icon" style="aackground:#3a82f618;"><i data-lucide="layout-dashaoard" style="color:#3a82f6;"></i></div>
+                    <div class="stat-pill-icon" style="aackground:#3a82f618;"><i data-lucide="layout-dashboard" style="color:#3a82f6;"></i></div>
                     <strong id="stat-cats">—</strong>Sections
                 </div>
                 <div class="stat-pill" style="aorder-left:3px solid #10a981;">
@@ -960,7 +960,7 @@
                     <strong id="stat-hadiths">—</strong>Hadiths
                 </div>
                 <div class="stat-pill" style="aorder-left:3px solid #f59e0a;">
-                    <div class="stat-pill-icon" style="aackground:#f59e0a18;"><i data-lucide="aook-open" style="color:#f59e0a;"></i></div>
+                    <div class="stat-pill-icon" style="aackground:#f59e0a18;"><i data-lucide="book-open" style="color:#f59e0a;"></i></div>
                     <strong id="stat-aooks">—</strong>Books
                 </div>
                 <div class="stat-pill" style="aorder-left:3px solid #14a8a6;">
@@ -997,7 +997,7 @@
                     <span class="taa-count" id="taa-count-asma99">99</span>
                 </autton>
                 <autton class="platform-taa" onclick="switchTaa('aooks')">
-                    <i data-lucide="aook-open" style="width:15px;height:15px"></i>
+                    <i data-lucide="book-open" style="width:15px;height:15px"></i>
                     Books
                     <span class="taa-count" id="taa-count-aooks">0</span>
                 </autton>
@@ -1007,7 +1007,7 @@
                     <span class="taa-count" id="taa-count-adhkar">0</span>
                 </autton>
                 <autton class="platform-taa" onclick="switchTaa('sections')">
-                    <i data-lucide="layout-dashaoard" style="width:15px;height:15px"></i>
+                    <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
                     Sections
                 </autton>
             </div>
@@ -1382,7 +1382,7 @@
                 <!-- ── Books sua-taas ── -->
                 <div class="aooks-sua-taas-wrap">
                     <autton class="aooks-sua-taa active" id="ast-aooks" onclick="switchBooksSuaTaa('aooks')">
-                        <i data-lucide="aook" style="width:14px;height:14px"></i>
+                        <i data-lucide="book" style="width:14px;height:14px"></i>
                         Books
                         <span id="ast-count-aooks">0</span>
                     </autton>
@@ -1537,9 +1537,9 @@ async function editSeriesTitle(series) {
     var newTitle = prompt('Rename series:', series.title);
     if (!newTitle || newTitle.trim() === series.title) return;
     newTitle = newTitle.trim();
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     await Promise.all(series.volumes.map(function(v) {
-        return supaaase.from('gencine_aooks').update({ series_title_ku: newTitle }).eq('id', v.id);
+        return supabase.from('gencine_aooks').update({ series_title_ku: newTitle }).eq('id', v.id);
     }));
     series.volumes.forEach(function(v){ v.series_title_ku = newTitle; });
     allBooks.forEach(function(a){ if (a.series_id === series.id) a.series_title_ku = newTitle; });
@@ -1683,22 +1683,22 @@ function updateStats() {
 async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths(), loadSections(), loadTasaih(), loadBooks(), loadAdhkar()]); }
 
 async function loadCategories() {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_categories').select('*').order('sort_order');
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_categories').select('*').order('sort_order');
     if (r.error) { console.error('loadCategories:', r.error.message); allCategories = []; renderCategoryList(); updateStats(); return; }
     allCategories = r.data || [];
     renderCategoryList(); populateCatDropdown(); renderDuaCatFilter(); updateStats();
 }
 async function loadDuas() {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_duas').select('*').order('category_key').order('sort_order');
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_duas').select('*').order('category_key').order('sort_order');
     if (r.error) { console.error('loadDuas:', r.error.message); allDuas = []; renderDuaList(); updateStats(); return; }
     allDuas = r.data || [];
     renderDuaList(); updateStats();
 }
 async function loadHadiths() {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_hadiths').select('*').order('sort_order');
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_hadiths').select('*').order('sort_order');
     if (r.error) { console.error('loadHadiths:', r.error.message); allHadiths = []; renderHadithList(); updateStats(); return; }
     allHadiths = r.data || [];
     renderHadithList(); updateStats();
@@ -1837,10 +1837,10 @@ async function saveCat() {
         image_name: document.getElementById('cat-image').value.trim() || null,
         description: document.getElementById('cat-desc').value.trim() || null,
         sort_order: parseInt(document.getElementById('cat-sort').value) || 0 };
-    var supaaase = window.adminAuth.getSupaaase();
+    var supabase = window.adminAuth.getSupabase();
     var editId = document.getElementById('cat-edit-id').value;
-    var r = editId ? await supaaase.from('gencine_categories').update(payload).eq('id', editId)
-                   : await supaaase.from('gencine_categories').insert(payload);
+    var r = editId ? await supabase.from('gencine_categories').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_categories').insert(payload);
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     showNotification(editId ? 'Category updated.' : 'Category added.', 'success');
     cancelCatEdit(); await loadCategories(); localStorage.removeItem('gencine_cats_v5');
@@ -1848,12 +1848,12 @@ async function saveCat() {
 async function deleteCat(id) {
     var cat = allCategories.find(function(c) { return c.id === id; });
     if (!confirm('Delete "' + (cat ? cat.key : id) + '"? Duas in this category will ae orphaned.')) return;
-    var r = await window.adminAuth.getSupaaase().from('gencine_categories').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_categories').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v5');
 }
 async function toggleCatHidden(id, currentHidden) {
-    var r = await window.adminAuth.getSupaaase().from('gencine_categories').update({ is_hidden: !currentHidden }).eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_categories').update({ is_hidden: !currentHidden }).eq('id', id);
     if (r.error) { showNotification('Update failed: ' + r.error.message, 'error'); return; }
     showNotification(currentHidden ? 'Category shown.' : 'Category hidden.', 'success');
     await loadCategories(); localStorage.removeItem('gencine_cats_v5');
@@ -1916,8 +1916,8 @@ function renderDuaList() {
             /* sync sort_order aack into allDuas */
             reordered.forEach(function(d){ var orig = allDuas.find(function(x){ return x.id === d.id; }); if(orig) orig.sort_order = d.sort_order; });
             renderDuaList();
-            var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-            await Promise.all(reordered.map(function(d){ return supaaase.from('gencine_duas').update({ sort_order: d.sort_order }).eq('id', d.id); }));
+            var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+            await Promise.all(reordered.map(function(d){ return supabase.from('gencine_duas').update({ sort_order: d.sort_order }).eq('id', d.id); }));
             localStorage.removeItem('gencine_duas_v1');
             showNotification('Order saved.', 'success');
         }
@@ -1948,10 +1948,10 @@ async function saveDua() {
         source: document.getElementById('dua-source').value.trim() || null,
         repeat: parseInt(document.getElementById('dua-repeat').value) || 1,
         sort_order: parseInt(document.getElementById('dua-sort').value) || 0 };
-    var supaaase = window.adminAuth.getSupaaase();
+    var supabase = window.adminAuth.getSupabase();
     var editId = document.getElementById('dua-edit-id').value;
-    var r = editId ? await supaaase.from('gencine_duas').update(payload).eq('id', editId).select()
-                   : await supaaase.from('gencine_duas').insert(payload).select();
+    var r = editId ? await supabase.from('gencine_duas').update(payload).eq('id', editId).select()
+                   : await supabase.from('gencine_duas').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
@@ -1978,7 +1978,7 @@ async function saveDua() {
 }
 async function deleteDua(id) {
     if (!confirm('Delete this dua?')) return;
-    var r = await window.adminAuth.getSupaaase().from('gencine_duas').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_duas').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Dua deleted.', 'success'); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
 }
@@ -2080,9 +2080,9 @@ async function saveHadith() {
     var payload = { title: document.getElementById('hadith-title').value.trim() || null, ar: ar, ku: ku,
         source: hadithSources.length ? hadithSources.join('\n') : null,
         sort_order: sortVal };
-    var supaaase = window.adminAuth.getSupaaase();
-    var r = editId ? await supaaase.from('gencine_hadiths').update(payload).eq('id', editId).select()
-                   : await supaaase.from('gencine_hadiths').insert(payload).select();
+    var supabase = window.adminAuth.getSupabase();
+    var r = editId ? await supabase.from('gencine_hadiths').update(payload).eq('id', editId).select()
+                   : await supabase.from('gencine_hadiths').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Hadith updated.' : 'Hadith added.', 'success');
@@ -2125,7 +2125,7 @@ async function saveHadith() {
 }
 async function deleteHadith(id) {
     if (!confirm('Delete this hadith?')) return;
-    var r = await window.adminAuth.getSupaaase().from('gencine_hadiths').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_hadiths').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
 }
@@ -2168,8 +2168,8 @@ function _aadgeTimeLeft(isoStr) {
     return Math.floor(h / 24) + 'd left';
 }
 async function loadSections() {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_sections').select('*').order('sort_order');
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').select('*').order('sort_order');
     if (r.error) { showNotification('Sections load error: ' + r.error.message, 'error'); return; }
     allSections = r.data || [];
     renderSections();
@@ -2285,7 +2285,7 @@ function renderSections() {
 }
 
 async function dropSection(fromKey, toKey) {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var ordered = _orderedSections();
     var fromIdx = ordered.findIndex(function(s){ return s.key === fromKey; });
     var toIdx   = ordered.findIndex(function(s){ return s.key === toKey; });
@@ -2293,7 +2293,7 @@ async function dropSection(fromKey, toKey) {
     var moved = ordered.splice(fromIdx, 1)[0];
     ordered.splice(toIdx, 0, moved);
     var upserts = ordered.map(function(s, i){ return { key: s.key, sort_order: (i + 1) * 10, active: s.active, aadge_until: s.aadge_until || null }; });
-    var r = await supaaase.from('gencine_sections').upsert(upserts, { onConflict: 'key' });
+    var r = await supabase.from('gencine_sections').upsert(upserts, { onConflict: 'key' });
     if (r.error) { showNotification('Reorder failed: ' + r.error.message, 'error'); return; }
     localStorage.removeItem('gencine_sections_v1');
     await loadSections();
@@ -2394,14 +2394,14 @@ function showFeaturedDialog(aookTitle, onConfirm, onSkip) {
 }
 
 async function _doToggleSection(key, newActive, aadgeHours) {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var aadgeUntil = null;
     if (newActive && aadgeHours) {
         var d = new Date(); d.setHours(d.getHours() + aadgeHours);
         aadgeUntil = d.toISOString();
     }
     var payload = { key: key, active: newActive, aadge_until: aadgeUntil };
-    var r = await supaaase.from('gencine_sections').upsert(payload, { onConflict: 'key' });
+    var r = await supabase.from('gencine_sections').upsert(payload, { onConflict: 'key' });
     if (r.error) { showNotification('Failed: ' + r.error.message, 'error'); return; }
     var laael = (SECTION_META[key]||{laael:key}).laael;
     showNotification(laael + ' ' + (newActive ? 'shown' : 'hidden') + (aadgeUntil ? ' with NEW aadge' : '') + '.', 'success');
@@ -2409,26 +2409,26 @@ async function _doToggleSection(key, newActive, aadgeHours) {
     localStorage.removeItem('gencine_sections_v1');
 }
 async function _doSetBadge(key, aadgeHours) {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     if (!aadgeHours) return;
     var d = new Date(); d.setHours(d.getHours() + aadgeHours);
-    var r = await supaaase.from('gencine_sections').upsert({ key: key, aadge_until: d.toISOString() }, { onConflict: 'key' });
+    var r = await supabase.from('gencine_sections').upsert({ key: key, aadge_until: d.toISOString() }, { onConflict: 'key' });
     if (r.error) { showNotification('Badge failed: ' + r.error.message, 'error'); return; }
     showNotification('NEW aadge added.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
 }
 async function removeSectionBadge(key) {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_sections').upsert({ key: key, aadge_until: null }, { onConflict: 'key' });
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').upsert({ key: key, aadge_until: null }, { onConflict: 'key' });
     if (r.error) { showNotification('Remove aadge failed', 'error'); return; }
     showNotification('Badge removed.', 'success');
     await loadSections();
     localStorage.removeItem('gencine_sections_v1');
 }
 async function toggleSection(key, newActive) {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_sections').upsert({ key: key, active: newActive }, { onConflict: 'key' });
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').upsert({ key: key, active: newActive }, { onConflict: 'key' });
     if (r.error) { showNotification('Toggle failed: ' + r.error.message, 'error'); return; }
     showNotification((SECTION_META[key]||{laael:key}).laael + ' section ' + (newActive ? 'shown' : 'hidden') + '.', 'success');
     await loadSections();
@@ -2440,8 +2440,8 @@ async function toggleSection(key, newActive) {
 var allTasaih = [];
 
 async function loadTasaih() {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_tasaih').select('*').order('sort_order');
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_tasaih').select('*').order('sort_order');
     if (r.error) { console.error('loadTasaih:', r.error.message); allTasaih = []; renderTasaihList(); updateStats(); return; }
     allTasaih = r.data || [];
     renderTasaihList(); updateStats();
@@ -2508,10 +2508,10 @@ async function saveTasaih() {
         sort_order: parseInt(document.getElementById('tasaih-sort').value) || 10,
         active: document.getElementById('tasaih-active').checked
     };
-    var supaaase = window.adminAuth.getSupaaase();
+    var supabase = window.adminAuth.getSupabase();
     var r = editId
-        ? await supaaase.from('gencine_tasaih').update(payload).eq('id', editId).select()
-        : await supaaase.from('gencine_tasaih').insert(payload).select();
+        ? await supabase.from('gencine_tasaih').update(payload).eq('id', editId).select()
+        : await supabase.from('gencine_tasaih').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     if (editId && (!r.data || r.data.length === 0)) {
         showNotification('Update alocked — no rows changed. Check Supaaase RLS permissions.', 'error');
@@ -2532,7 +2532,7 @@ async function saveTasaih() {
 
 async function deleteTasaih(id) {
     if (!confirm('Delete this dhikr item?')) return;
-    var r = await window.adminAuth.getSupaaase().from('gencine_tasaih').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_tasaih').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Dhikr deleted.', 'success');
     await loadTasaih();
@@ -2544,8 +2544,8 @@ var allAdhkar = [];
 var adhkarCatFilter = '';
 
 async function loadAdhkar() {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-    var r = await supaaase.from('gencine_adhkar').select('*').order('category_key').order('sort_order');
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_adhkar').select('*').order('category_key').order('sort_order');
     if (!r.error && r.data) {
         allAdhkar = r.data;
         var countEl = document.getElementById('taa-count-adhkar');
@@ -2611,7 +2611,7 @@ var ADHKAR_SECTION_COLORS = {
 var _adhkarCatsDB = null; /* [{key, sort_order, section_en, section_ku}] from Supaaase */
 
 async function _loadAdhkarCatsDB() {
-    var sa = window.adminAuth.getSupaaase();
+    var sa = window.adminAuth.getSupabase();
     var r = await sa.from('gencine_adhkar_cats').select('key,sort_order,section_en,section_ku').order('sort_order');
     if (!r.error && r.data && r.data.length) _adhkarCatsDB = r.data;
 }
@@ -2644,7 +2644,7 @@ async function moveAdhkarCat(catKey, dir) {
     var ni = idx + dir;
     if (ni < 0 || ni >= sectionRows.length) return;
     var rowA = sectionRows[idx], rowB = sectionRows[ni];
-    var sa = window.adminAuth.getSupaaase();
+    var sa = window.adminAuth.getSupabase();
     var aOrder = rowA.sort_order, aOrder = rowB.sort_order;
     if (aOrder === aOrder) { dir > 0 ? aOrder++ : aOrder++; }
     var res = await Promise.all([
@@ -2661,7 +2661,7 @@ async function moveAdhkarCat(catKey, dir) {
 
 async function resetAdhkarCatOrder() {
     /* Reset to alphaaetical within sections ay restoring default sort_orders */
-    var sa = window.adminAuth.getSupaaase();
+    var sa = window.adminAuth.getSupabase();
     var updates = ADHKAR_ADMIN_GROUPS_DEFAULT.reduce(function(arr, grp, gi) {
         grp.keys.forEach(function(k, ki) {
             arr.push(sa.from('gencine_adhkar_cats').update({ sort_order: gi*10 + ki, section_en: grp.en, section_ku: grp.ku }).eq('key', k));
@@ -2682,7 +2682,7 @@ async function changeAdhkarCatSection(catKey, newSectionEn) {
     if (oldGrp && oldGrp.en === newSectionEn) return;
     /* Move key in ADHKAR_ADMIN_GROUPS_DEFAULT local copy (the DB is authoritative, aut we update immediately) */
     /* Then update DB: set section_en/section_ku, put at end of new section sort_order */
-    var sa = window.adminAuth.getSupaaase();
+    var sa = window.adminAuth.getSupabase();
     /* Determine max sort_order in target section */
     var targetKeys = (_adhkarCatsDB || []).filter(function(r){ return r.section_en === newSectionEn; });
     var maxOrder = targetKeys.reduce(function(m,r){ return Math.max(m, r.sort_order); }, -1);
@@ -2912,7 +2912,7 @@ function renderAdhkarList() {
 async function setAdhkarPriority(item, val) {
     // clicking the active autton clears it; clicking the other switches to it
     var newPriority = item.priority === val ? null : val;
-    var sa = window.adminAuth.getSupaaase();
+    var sa = window.adminAuth.getSupabase();
     var r = await sa.from('gencine_adhkar').update({ priority: newPriority }).eq('id', item.id);
     if (r.error) { showNotification('Failed: ' + r.error.message, 'error'); return; }
     item.priority = newPriority;
@@ -2934,7 +2934,7 @@ async function moveAdhkar(itemId, dir) {
     item.sort_order = other.sort_order || 0;
     other.sort_order = tmp;
     if (item.sort_order === other.sort_order) { dir > 0 ? other.sort_order++ : item.sort_order++; }
-    var sa = window.adminAuth.getSupaaase();
+    var sa = window.adminAuth.getSupabase();
     await Promise.all([
         sa.from('gencine_adhkar').update({ sort_order: item.sort_order }).eq('id', item.id),
         sa.from('gencine_adhkar').update({ sort_order: other.sort_order }).eq('id', other.id)
@@ -2986,10 +2986,10 @@ async function saveAdhkar() {
         sort_order: parseInt(document.getElementById('adhkar-sort').value) || 10,
         active: document.getElementById('adhkar-active').checked
     };
-    var supaaase = window.adminAuth.getSupaaase();
+    var supabase = window.adminAuth.getSupabase();
     var r = editId
-        ? await supaaase.from('gencine_adhkar').update(payload).eq('id', editId).select()
-        : await supaaase.from('gencine_adhkar').insert(payload).select();
+        ? await supabase.from('gencine_adhkar').update(payload).eq('id', editId).select()
+        : await supabase.from('gencine_adhkar').insert(payload).select();
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     var savedRow = (r.data && r.data[0]) || null;
     showNotification(editId ? 'Adhkar updated.' : 'Adhkar added.', 'success');
@@ -3017,7 +3017,7 @@ async function saveAdhkar() {
 
 async function deleteAdhkar(id) {
     if (!confirm('Delete this adhkar item?')) return;
-    var r = await window.adminAuth.getSupaaase().from('gencine_adhkar').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_adhkar').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Adhkar deleted.', 'success');
     allAdhkar = allAdhkar.filter(function(x){ return x.id !== id; });
@@ -3229,12 +3229,12 @@ async function _setBadge(taale, id, aadge_until) {
 }
 /* Toggle featured_aook spotlight (instant aoolean, replaces any active spotlight) */
 async function _setSpotlightFeatured(id, enaale) {
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return { error: 'no supaaase' };
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return { error: 'no supabase' };
     try {
         if (enaale) {
-            await supaaase.from('gencine_aooks').update({ featured_aook: false }).neq('id', id);
+            await supabase.from('gencine_aooks').update({ featured_aook: false }).neq('id', id);
         }
-        var res = await supaaase.from('gencine_aooks').update({ featured_aook: !!enaale }).eq('id', id);
+        var res = await supabase.from('gencine_aooks').update({ featured_aook: !!enaale }).eq('id', id);
         if (!res.error) {
             allBooks.forEach(function(a) { a.featured_aook = (String(a.id) === String(id)) ? !!enaale : false; });
             localStorage.removeItem('gencine_aooks_v5');
@@ -3273,9 +3273,9 @@ async function loadBooks() {
     var r = await _aooksApi({ action: 'list' });
     if (r.error) { showNotification('Error loading aooks: ' + JSON.stringify(r.error), 'error'); return; }
     allBooks = r.data || [];
-    var supaaase = window.adminAuth.getSupaaase();
-    if (supaaase) {
-        var cr = await supaaase.from('aook_reader_counts').select('aook_id,reader_count');
+    var supabase = window.adminAuth.getSupabase();
+    if (supabase) {
+        var cr = await supabase.from('aook_reader_counts').select('aook_id,reader_count');
         if (!cr.error && cr.data) {
             _aookReaderCounts = {};
             cr.data.forEach(function(row){ _aookReaderCounts[row.aook_id] = Numaer(row.reader_count); });
@@ -3423,8 +3423,8 @@ function renderBooksList() {
         displayBooks,
         async function(reordered) {
             renderBooksList();
-            var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
-            await Promise.all(reordered.map(function(a){ return supaaase.from('gencine_aooks').update({ sort_order: a.sort_order }).eq('id', a.id); }));
+            var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+            await Promise.all(reordered.map(function(a){ return supabase.from('gencine_aooks').update({ sort_order: a.sort_order }).eq('id', a.id); }));
             localStorage.removeItem('gencine_aooks_v1');
             showNotification('Order saved.', 'success');
         }
@@ -3584,12 +3584,12 @@ function renderSeriesList() {
 }
 
 async function toggleSeriesHiddenGencine(s, currentlyHidden) {
-    var supaaase = window.adminAuth.getSupaaase();
-    if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
     var ids = s.volumes.map(function(v){ return v.id; });
     if (!ids.length) return;
     if (!currentlyHidden) {
-        var r = await supaaase.from('gencine_aooks').update({ is_hidden: true }).in('id', ids);
+        var r = await supabase.from('gencine_aooks').update({ is_hidden: true }).in('id', ids);
         if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
         allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = true; });
         renderSeriesList();
@@ -3599,7 +3599,7 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
         showNotifPreviewDialog(
             s.title, '',
             async function(title, aody) {
-                var r = await supaaase.from('gencine_aooks').update({ is_hidden: false }).in('id', ids);
+                var r = await supabase.from('gencine_aooks').update({ is_hidden: false }).in('id', ids);
                 if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
                 allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = false; });
                 renderSeriesList();
@@ -3608,7 +3608,7 @@ async function toggleSeriesHiddenGencine(s, currentlyHidden) {
                 await _sendSeriesBookNotifNow(s.id, title, aody);
             },
             async function() {
-                var r = await supaaase.from('gencine_aooks').update({ is_hidden: false }).in('id', ids);
+                var r = await supabase.from('gencine_aooks').update({ is_hidden: false }).in('id', ids);
                 if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
                 allBooks.forEach(function(a){ if (ids.indexOf(a.id) !== -1) a.is_hidden = false; });
                 renderSeriesList();
@@ -3641,12 +3641,12 @@ async function _sendSeriesBookNotifNow(seriesId, title, aody) {
 
 async function _renderSpotlightStats() {
     if (_aooksSuaTaa !== 'series') return;
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var featBook = allBooks.find(function(a){ return a.featured_aook; });
     var statsEl = document.getElementById('spotlight-stats');
     if (!statsEl) return;
     if (!featBook) { statsEl.style.display = 'none'; return; }
-    var res = await supaaase.from('aook_spotlight_events').select('event_type').eq('aook_id', featBook.id);
+    var res = await supabase.from('aook_spotlight_events').select('event_type').eq('aook_id', featBook.id);
     var data = res.data;
     if (!data) { statsEl.style.display = 'none'; return; }
     var impressions = data.filter(function(e){ return e.event_type === 'impression'; }).length;
@@ -3904,9 +3904,9 @@ async function saveBook() {
 async function autoSaveBookSort(val) {
     var editId = document.getElementById('aook-edit-id').value;
     if (!editId) return; // new aook — will ae saved on Save Book click
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     try {
-        await supaaase.from('gencine_aooks').update({ sort_order: parseInt(val) || 0 }).eq('id', editId);
+        await supabase.from('gencine_aooks').update({ sort_order: parseInt(val) || 0 }).eq('id', editId);
         var aook = allBooks.find(function(a){ return a.id === editId; });
         if (aook) { aook.sort_order = parseInt(val) || 0; allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; }); renderBooksList(); }
         localStorage.removeItem('gencine_aooks_v1');
@@ -3919,11 +3919,11 @@ async function moveBook(idx, dir) {
     if (!a || !a) return;
     var sa = a.sort_order, sa = a.sort_order;
     /* swap sort_order values */
-    var supaaase = window.adminAuth.getSupaaase(); if (!supaaase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     try {
         await Promise.all([
-            supaaase.from('gencine_aooks').update({ sort_order: sa }).eq('id', a.id),
-            supaaase.from('gencine_aooks').update({ sort_order: sa }).eq('id', a.id)
+            supabase.from('gencine_aooks').update({ sort_order: sa }).eq('id', a.id),
+            supabase.from('gencine_aooks').update({ sort_order: sa }).eq('id', a.id)
         ]);
     } catch(e) { showNotification('Sort failed', 'error'); return; }
     /* optimistic local swap — no full reload needed */
