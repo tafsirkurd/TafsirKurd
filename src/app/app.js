@@ -1110,7 +1110,7 @@ function init(){
 
     // Pull-to-refresh on all tabs
     // On tablet the quran panel is a flex row — quranHome is the actual scroll container.
-    var _isTabletLayout=document.documentElement.classList.contains('is-tablet')&&(window.innerWidth>=768||document.documentElement.classList.contains('is-ipad'));
+    var _isTabletLayout=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
     setupPullToRefresh(_isTabletLayout?'quranHome':'panelQuran',function(_,done){renderSurahGrid();renderContinue();done();},_isTabletLayout?null:function(){return !S.surah});
     setupPullToRefresh('panelBookmarks',function(_,done){_renderHash.bm=null;renderBookmarks();_renderHash.bm=_tabHash('bookmarks');done();});
     setupPullToRefresh('panelGoals',function(_,done){_renderHash.goals=null;renderGoals();_renderHash.goals=_tabHash('goals');done();});
@@ -3882,7 +3882,7 @@ App.openSurah=function(num,scrollTo){
   var s=SURAHS[num-1]; // bounds-check before any state mutation
   if(!s){console.warn('[openSurah] invalid surah num:',num);return;}
   H.light();
-  var _isT=document.documentElement.classList.contains('is-tablet')&&(window.innerWidth>=768||document.documentElement.classList.contains('is-ipad'));
+  var _isT=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
   // Auto-enable mushaf mode on iPad when no preference saved yet
   if(_isT&&!S.mushafMode&&localStorage.getItem('mushafMode')===null){
     S.mushafMode=true;
@@ -3925,7 +3925,7 @@ App.backToList=function(){
   _endSession();
   S.surah=null;
   $('quranReader').classList.remove('on');
-  var _isT2=document.documentElement.classList.contains('is-tablet')&&(window.innerWidth>=768||document.documentElement.classList.contains('is-ipad'));
+  var _isT2=window.innerWidth>=768||document.documentElement.classList.contains('is-ipad');
   if(!_isT2){$('quranHome').style.display='';}
   if(al)al.scrollTop=0;
   if(S._quranListScroll!=null){
@@ -4611,7 +4611,7 @@ function renderMushafView(){
     },{passive:true});
 
     // iPad (any orientation â‰¥768px): page-by-page horizontal navigation
-    if(document.documentElement.classList.contains('is-ipad')&&document.documentElement.classList.contains('is-tablet')&&window.innerWidth>=768){
+    if(document.documentElement.classList.contains('is-ipad')&&window.innerWidth>=768){
       _mushafWrapSpreads(view);
     }
   }).catch(function(){
@@ -6690,7 +6690,7 @@ App.openMushafSettings=function(){
   var _abH=(_abEl&&_abEl.classList.contains('on'))?_abEl.offsetHeight:0;
   if(_abH>0)body.style.paddingBottom='calc(var(--tab-h) + var(--safe-b) + '+(_abH+20)+'px)';
 
-  var _isIpad=document.documentElement.classList.contains('is-tablet')&&(document.documentElement.classList.contains('is-ipad')||window.innerWidth>=768);
+  var _isIpad=document.documentElement.classList.contains('is-ipad')||window.innerWidth>=768;
   // Phone 16-24 / iPad 22-34: most of the range sits BELOW the fit-to-width cap
   // (~20px on a 384px-wide phone) so every step visibly changes the page.
   // _fitQCFLines hard-guarantees no line ever clips, whatever value is chosen.
