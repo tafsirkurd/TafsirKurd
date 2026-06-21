@@ -44,7 +44,6 @@
     },
     "homepage": "https://tafsirkurd.com",
     "dependencies": {
-        "@capacitor-community/in-app-review": "^8.0.0",
         "@capacitor-community/media": "^9.0.2",
         "@capacitor/android": "8.0.1",
         "@capacitor/app": "8.0.1",

@@ -1,10 +1,7 @@
 // ── App Rating ────────────────────────────────────────────────────────────────
 // Handles the smart in-app review prompt and the Settings "Rate" button.
-// Uses @capacitor-community/in-app-review for native dialogs.
-//
-// Android: Google Play In-App Review API (stays in-app, native bottom sheet)
-// iOS:     SKStoreReviewController.requestReview() (native dialog, OS-controlled)
-// Web:     falls back to opening the Play Store URL
+// Opens the configured store URL (Play Store or AppGallery) via Browser.open().
+// window._tkAndroidStoreUrl is set from remote config android_store_url field.
 //
 // Smart prompt fires after all of these are true:
 //   - not already accepted  (ratingPromptDone = 'true')
