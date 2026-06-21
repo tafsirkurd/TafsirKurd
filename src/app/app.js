@@ -5582,7 +5582,7 @@ function _setAyahMark(surahNum,ayahNum){
 }
 
 function updateProgress(list,total){
-  window._onNewAyahCard=null; // clear immediately so old hook can't fire on new surah's cards
+  window._onNewAyahCard=null;
   if(_progressCleanup){_progressCleanup();_progressCleanup=null}
 
   var progressEl=document.querySelector('.sticky-progress');
@@ -5590,38 +5590,48 @@ function updateProgress(list,total){
   var scrollEl=$('ayahList');
   var saveTimer=null;
   var destroyed=false;
+  var _debug=false;try{_debug=localStorage.getItem('readerProgressDebug')==='1';}catch(e){}
 
-  // Always show progress bar
   if(progressEl)progressEl.style.display='';
 
-  // One-time migration: clear all old incorrectly-saved progress data
+  // One-time migration
   if(localStorage.getItem('surah_progress_ver')!=='10'){
     var _pk=[];for(var _pi=0;_pi<localStorage.length;_pi++){var _k=localStorage.key(_pi);if(_k)_pk.push(_k);}
     _pk.forEach(function(k){if(k.indexOf('surah_progress_')===0||k.indexOf('surah_read_')===0)localStorage.removeItem(k);});
     localStorage.setItem('surah_progress_ver','10');
   }
 
-  // Progress = highest ayah number that's been visible on screen.
-  // Scroll to ayah 1 → 1/total. Scroll further → count increases naturally.
+  var _savedMax=0;
+  try{var _sv=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;if(_sv>=1&&_sv<=total)_savedMax=_sv;}catch(e){}
+
+  // maxSeen = highest ayah committed this session (for trackVerse + save-merge).
+  // currentAyah = ayah the reading line is on right now (for display).
+  // Both start at 0; display resets to 0 on open — never show stale saved state.
   var maxSeen=0;
-  try{
-    var saved=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;
-    if(saved>=1&&saved<=total)maxSeen=saved;
-  }catch(e){}
+  var currentAyah=0;
+
+  if(_debug)console.log('[ReaderProgress] OPEN surah='+surahId+' savedMax='+_savedMax+' total='+total);
+
+  (function(){var fe=$('readerProgressFill'),le=$('readerAyahLabel'),pe=$('readerPct');
+    if(fe)fe.style.width='0%';
+    if(le)le.textContent='0/'+total+' '+t('reader.ayah');
+    if(pe)pe.textContent='0%';
+  })();
 
   var _rafPending=false;
-  function updateHeader(){
+  function updateHeader(ayah){
     if(destroyed||S.surah!==surahId)return;
     if(_rafPending)return;
     _rafPending=true;
     requestAnimationFrame(function(){
       _rafPending=false;
       if(destroyed||S.surah!==surahId)return;
-      if(maxSeen>0){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:maxSeen}))}catch(e){}}
-      var pct=Math.min(100,Math.round(maxSeen/total*100));
+      if(ayah>0){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:ayah}))}catch(e){}}
+      var pct=Math.min(100,Math.round(ayah/total*100));
       $('readerProgressFill').style.width=pct+'%';
-      $('readerAyahLabel').textContent=maxSeen+'/'+total+' '+t('reader.ayah');
+      $('readerAyahLabel').textContent=ayah+'/'+total+' '+t('reader.ayah');
       $('readerPct').textContent=pct+'%';
+      if(_debug)console.log('[ReaderProgress] header: ayah='+ayah+' pct='+pct+'%');
     });
   }
 
@@ -5629,46 +5639,117 @@ function updateProgress(list,total){
     clearTimeout(saveTimer);
     saveTimer=setTimeout(function(){
       if(destroyed||S.surah!==surahId)return;
-      try{localStorage.setItem('surah_read_v3_'+surahId,String(maxSeen))}catch(e){}
+      var toSave=Math.max(maxSeen,_savedMax);
+      try{localStorage.setItem('surah_read_v3_'+surahId,String(toSave))}catch(e){}
       try{localStorage.setItem('surah_scroll_'+surahId,String(scrollEl.scrollTop))}catch(e){}
       debouncedSync();
+      if(_debug)console.log('[ReaderProgress] saved='+toSave);
     },300);
   }
 
-  // Show saved progress on open
-  if(maxSeen>0)updateHeader();
+  // ── Reading-position tracker ──────────────────────────────────────────────
+  // Model: invisible reading line at 50% of viewport height.
+  // At any moment, the ayah whose vertical center is closest to that line is
+  // the "current" ayah. Progress commits only after the line has rested on the
+  // same ayah for 400ms (dwell). Fast flings cancel the dwell and never commit.
+  // Gate: requires a real downward touch-scroll before any counting begins.
+  // This blocks programmatic restore scrolls and initial layout shifts.
 
-  // IntersectionObserver: browser tracks visibility natively — zero reflow, zero polling
-  var _ioProgress=new IntersectionObserver(function(entries){
-    if(destroyed||S.surah!==surahId)return;
-    var highest=maxSeen;
-    entries.forEach(function(entry){
-      if(!entry.isIntersecting)return;
-      var idx=parseInt(entry.target.dataset.ayah)||0;
-      if(idx&&idx<=total&&idx>highest)highest=idx;
-    });
-    if(highest>maxSeen){
-      var prevMax=maxSeen;
-      maxSeen=highest;
-      for(var _av=prevMax+1;_av<=maxSeen;_av++){trackVerse(surahId,_av);}
-      updateHeader();
-      scheduleSave();
+  var _touchStartTop=-1;
+  var _gateOpen=false;
+  var _dwellTimer=null;
+  var _stopTimer=null;
+
+  function _onTouchStart(){
+    _touchStartTop=scrollEl.scrollTop;
+    if(_debug)console.log('[ReaderProgress] touchstart scrollTop='+_touchStartTop);
+  }
+
+  function _getAyahAtLine(){
+    // Reading line: 50% of viewport — works on all screen sizes, no px hardcoding
+    var line=window.innerHeight*0.5;
+    var cards=scrollEl.querySelectorAll('.ayah-card[data-ayah]');
+    var best=0,bestDist=Infinity;
+    for(var i=0;i<cards.length;i++){
+      var r=cards[i].getBoundingClientRect();
+      var center=r.top+r.height*0.5;
+      var dist=Math.abs(center-line);
+      if(dist<bestDist){
+        bestDist=dist;
+        var idx=parseInt(cards[i].dataset.ayah)||0;
+        if(idx)best=idx;
+      }
     }
-  },{root:scrollEl,threshold:0.1});
+    if(_debug&&best)console.log('[ReaderProgress] line='+Math.round(line)+'px closest=ayah'+best+' dist='+Math.round(bestDist)+'px');
+    return best;
+  }
 
-  // Observe cards already in DOM
-  list.querySelectorAll('.ayah-card').forEach(function(c){_ioProgress.observe(c);});
+  function _commitAyah(ayah){
+    if(!ayah||destroyed||S.surah!==surahId)return;
+    currentAyah=ayah;
+    if(_debug)console.log('[ReaderProgress] COMMIT ayah='+ayah);
+    if(ayah>maxSeen){
+      var prev=maxSeen;
+      maxSeen=ayah;
+      for(var _av=prev+1;_av<=maxSeen;_av++){trackVerse(surahId,_av);}
+      if(_debug)console.log('[ReaderProgress] maxSeen: '+prev+' → '+maxSeen);
+    }
+    updateHeader(currentAyah);
+    scheduleSave();
+  }
 
-  // New cards appended during progressive loading get observed automatically
-  window._onNewAyahCard=function(c){_ioProgress.observe(c);};
+  function _onScrollStopped(){
+    if(destroyed||S.surah!==surahId||!_gateOpen)return;
+    var ayah=_getAyahAtLine();
+    if(!ayah)return;
+    // Dwell: commit only if user stays on this ayah for 400ms
+    _dwellTimer=setTimeout(function(){
+      _dwellTimer=null;
+      if(!destroyed&&S.surah===surahId)_commitAyah(ayah);
+    },400);
+  }
+
+  function _onScroll(){
+    // Gate: require a real downward touch-scroll before any tracking
+    if(!_gateOpen){
+      if(_touchStartTop<0)return;
+      if(scrollEl.scrollTop<=_touchStartTop)return;
+      _gateOpen=true;
+      if(_debug)console.log('[ReaderProgress] gate open scrollTop='+scrollEl.scrollTop);
+    }
+    // User is scrolling — cancel any pending dwell commit
+    if(_dwellTimer){clearTimeout(_dwellTimer);_dwellTimer=null;}
+    // Reset the scroll-stop detector (150ms of silence = scrolling has stopped)
+    clearTimeout(_stopTimer);
+    _stopTimer=setTimeout(_onScrollStopped,150);
+  }
+
+  scrollEl.addEventListener('touchstart',_onTouchStart,{passive:true});
+  scrollEl.addEventListener('scroll',_onScroll,{passive:true});
 
   _progressCleanup=function(){
     destroyed=true;
-    _ioProgress.disconnect();
+    scrollEl.removeEventListener('touchstart',_onTouchStart);
+    scrollEl.removeEventListener('scroll',_onScroll);
+    if(_dwellTimer){clearTimeout(_dwellTimer);_dwellTimer=null;}
+    if(_stopTimer){clearTimeout(_stopTimer);_stopTimer=null;}
     clearTimeout(saveTimer);
     window._onNewAyahCard=null;
   };
 }
+
+// Dev helpers (run in console):
+//   _resetSurahProgress()     — clear saved progress for current surah
+//   _resetSurahProgress(2)    — clear for surah 2
+//   localStorage.setItem('readerProgressDebug','1')  — verbose logging
+window._resetSurahProgress=function(n){
+  n=n||(window.S&&S.surah)||0;
+  if(!n){console.log('[ReaderProgress] no active surah');return;}
+  localStorage.removeItem('surah_read_v3_'+n);
+  localStorage.removeItem('surah_scroll_'+n);
+  localStorage.removeItem('lastRead');
+  console.log('[ReaderProgress] reset surah '+n+' — reopen to verify');
+};
 
 function updateMushafProgress(view){
   if(_progressCleanup){_progressCleanup();_progressCleanup=null;}
