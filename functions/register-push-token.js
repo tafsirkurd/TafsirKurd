@@ -69,9 +69,11 @@ export async function onRequest(context) {
 
     // Step 1: If this install already has a row with a DIFFERENT token (token rotation),
     // update that row's token in-place so we don't accumulate a second row.
-    if (install_id) {
+    // Only done for verified logged-in users (user_id scopes the filter) — unauthenticated
+    // callers skip this to prevent install_id spoofing from hijacking another user's row.
+    if (install_id && verified_user_id) {
         await fetch(
-            `${env.SUPABASE_URL}/rest/v1/push_tokens?install_id=eq.${encodeURIComponent(install_id)}&token=neq.${encodeURIComponent(token)}`,
+            `${env.SUPABASE_URL}/rest/v1/push_tokens?install_id=eq.${encodeURIComponent(install_id)}&user_id=eq.${encodeURIComponent(verified_user_id)}&token=neq.${encodeURIComponent(token)}`,
             {
                 method: 'PATCH',
                 headers: serviceHeaders,
