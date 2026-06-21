@@ -541,7 +541,7 @@ function _initDbData(onDone) {
       _writeCache('gencine_hadiths_v2', cachedHadiths); /* persist so smart-dhikr reads on first install */
     }
     if (!_dbSections   && _fullBndl.sections) _dbSections   = _fullBndl.sections;
-    if (!_dbBooks      && _fullBndl.books) {
+    if (!_dbBooks.length && _fullBndl.books) {
       _dbBooks = _fullBndl.books;
       /* Bundle now includes series_id/series_title_ku — safe to persist so
          smart-dhikr's "book of the day" slide works on first install / offline. */

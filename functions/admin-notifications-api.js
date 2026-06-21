@@ -738,7 +738,17 @@ async function _handleRequest(context) {
             if (!copy) return json({ error: 'Failed to create send record' }, 500);
             trackingId = copy.id;
         } else {
-            await supabase.from('admin_notifications').update({ status: 'sending' }).eq('id', body.id);
+            // Optimistic lock: only claim the row if its status hasn't changed since
+            // we read it above — prevents two simultaneous Send requests from both
+            // proceeding (same class of race that caused the original double-delivery).
+            const { data: claimed } = await supabase
+                .from('admin_notifications')
+                .update({ status: 'sending' })
+                .eq('id', body.id)
+                .eq('status', notif.status)
+                .select('id')
+                .single();
+            if (!claimed) return json({ error: 'Concurrent send detected — refresh and try again' }, 409);
         }
 
         const r = await doSend(supabase, env, notif, trackingId, adminEmail);

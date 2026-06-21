@@ -233,7 +233,8 @@
 
   // On every cold start: check if previous launch was pending (= crashed)
   (function () {
-    var prev = localStorage.getItem(CC_KEY);
+    var prev;
+    try { prev = localStorage.getItem(CC_KEY); } catch(e) { return; } // localStorage disabled
     if (prev) {
       // Previous launch didn't clear the flag → count as crash
       var count = parseInt(localStorage.getItem(CC_COUNT) || '0', 10) + 1;

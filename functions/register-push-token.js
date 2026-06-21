@@ -89,13 +89,12 @@ export async function onRequest(context) {
         {
             method: 'POST',
             headers: { ...serviceHeaders, Prefer: 'resolution=merge-duplicates,return=minimal' },
-            body: JSON.stringify({
-                token,
-                platform,
-                user_id: verified_user_id,
-                install_id: install_id || null,
-                updated_at: now,
-            }),
+            body: JSON.stringify(Object.assign(
+                { token, platform, install_id: install_id || null, updated_at: now },
+                // Only include user_id when verified — omitting it lets merge-duplicates
+                // keep an existing user_id intact (avoids nulling it out on guest re-reg).
+                verified_user_id ? { user_id: verified_user_id } : {}
+            )),
         }
     );
 
