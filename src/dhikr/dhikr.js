@@ -341,6 +341,7 @@ var _dbSections = null;   /* [{key, active, sort_order}] */
 var _dbTasbih   = null;   /* [{ar, ku, sort_order}] */
 var _dbAsma99   = null;   /* [{n, ku}] overrides */
 var _dbAdhkar   = null;   /* [{category_key, ar, repeat, source, sort_order}] */
+var _dbAdhkarCats = null; /* [{key, sort_order, section_en, section_ku}] */
 var _adhkarScrollCleanup = null; /* removes scroll listener + restores header on view change */
 var _dbBooks    = [];
 var _loadingDb  = false;
@@ -633,14 +634,15 @@ function _fetchDbData(onDone) {
   var tasbihPromise   = sb.from('gencine_tasbih').select('*').eq('active', true).order('sort_order');
   var asma99Promise   = sb.from('gencine_asma99').select('n,ku');
   var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).eq('is_hidden', false).order('sort_order', { ascending: false }).order('created_at', { ascending: false });
-  var adhkarPromise   = sb.from('gencine_adhkar').select('*').eq('active', true).order('category_key').order('sort_order');
+  var adhkarPromise     = sb.from('gencine_adhkar').select('*').eq('active', true).order('category_key').order('sort_order');
+  var adhkarCatsPromise = sb.from('gencine_adhkar_cats').select('key,sort_order,section_en,section_ku').order('sort_order');
   var _gcTimeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('gencine_timeout'));},15000);});
   Promise.race([
-    Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise, tasbihPromise, asma99Promise, adhkarPromise]),
+    Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise, tasbihPromise, asma99Promise, adhkarPromise, adhkarCatsPromise]),
     _gcTimeout
   ]).then(function(results) {
     _loadingDb = false;
-    var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4], tasbihRes = results[5], asma99Res = results[6], adhkarRes = results[7];
+    var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4], tasbihRes = results[5], asma99Res = results[6], adhkarRes = results[7], adhkarCatsRes = results[8];
     if (!catRes.error && catRes.data) {
       _dbCats = catRes.data;
       _writeCache('gencine_cats_v5', _dbCats);
@@ -672,6 +674,7 @@ function _fetchDbData(onDone) {
     if (tasbihRes && !tasbihRes.error && tasbihRes.data) { _dbTasbih = tasbihRes.data; _writeCache('gencine_tasbih_v1', _dbTasbih); }
     if (asma99Res && !asma99Res.error && asma99Res.data) { _dbAsma99 = asma99Res.data; _writeCache('gencine_asma99_v1', _dbAsma99); }
     if (adhkarRes && !adhkarRes.error && adhkarRes.data) { _dbAdhkar = adhkarRes.data; _writeCache('gencine_adhkar_v1', _dbAdhkar); }
+    if (adhkarCatsRes && !adhkarCatsRes.error && adhkarCatsRes.data && adhkarCatsRes.data.length) { _dbAdhkarCats = adhkarCatsRes.data; _writeCache('gencine_adhkar_cats_v1', _dbAdhkarCats); }
     _dbLoaded = true;
     if (window._splashReadyGencine) window._splashReadyGencine();
     var cbs = _fetchQueue.splice(0);
@@ -810,8 +813,10 @@ function _getAdhkar(catKey) {
 function _getAllAdhkar() {
   return _dbAdhkar || [];
 }
-/* Return unique adhkar category keys from DB */
+/* Return unique adhkar category keys in the admin-controlled sort order */
 function _getAdhkarCatKeys() {
+  var catsCached = _dbAdhkarCats || (function(){ try{ var r=localStorage.getItem('gencine_adhkar_cats_v1'); return r?JSON.parse(r):null; }catch(e){return null;} })();
+  if (catsCached && catsCached.length) return catsCached.map(function(c){ return c.key; });
   if (!_dbAdhkar || !_dbAdhkar.length) return ADHKAR_CAT_KEYS;
   var seen = {}, keys = [];
   _dbAdhkar.forEach(function(a){ if (!seen[a.category_key]){ seen[a.category_key]=1; keys.push(a.category_key); } });

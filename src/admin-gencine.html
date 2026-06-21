@@ -2593,46 +2593,74 @@ var ADHKAR_ADMIN_GROUPS_DEFAULT = [
     { en:'Special', ku:'کاتی تایبەت',  keys:['friday','new_moon','salawat'] },
     { en:'Life',    ku:'ژیانی ڕۆژانە', keys:['anger','before_quran','charity','debt','distress','dressing','fear','forgiveness','gratitude','grave','istikhara','kaffarah','mirror','new_clothes','newborn','nightmare','protection','sneeze','wedding','wudu'] }
 ];
-var _ADHKAR_CAT_ORDER_LS = 'adhkar_admin_cat_order_v2';
+var _adhkarCatsDB = null; /* [{key, sort_order, section_en, section_ku}] from Supabase */
 
-function _loadAdhkarCatOrder() {
-    try {
-        var saved = localStorage.getItem(_ADHKAR_CAT_ORDER_LS);
-        if (saved) return JSON.parse(saved);
-    } catch(e) {}
+async function _loadAdhkarCatsDB() {
+    var sb = window.adminAuth.getSupabase();
+    var r = await sb.from('gencine_adhkar_cats').select('key,sort_order,section_en,section_ku').order('sort_order');
+    if (!r.error && r.data && r.data.length) _adhkarCatsDB = r.data;
+}
+
+/* Build grouped order from _adhkarCatsDB or default */
+function _buildAdhkarCatOrder() {
+    if (_adhkarCatsDB && _adhkarCatsDB.length) {
+        /* Group rows by section_en */
+        var sectionMap = {}, sectionOrder = [];
+        _adhkarCatsDB.forEach(function(row) {
+            var se = row.section_en || 'Other', sk = row.section_ku || '';
+            if (!sectionMap[se]) { sectionMap[se] = { en:se, ku:sk, keys:[] }; sectionOrder.push(se); }
+            sectionMap[se].keys.push(row.key);
+        });
+        return sectionOrder.map(function(se){ return sectionMap[se]; });
+    }
     return ADHKAR_ADMIN_GROUPS_DEFAULT.map(function(g){ return { en:g.en, ku:g.ku, keys:g.keys.slice() }; });
 }
 
-function _saveAdhkarCatOrder(order) {
-    try { localStorage.setItem(_ADHKAR_CAT_ORDER_LS, JSON.stringify(order)); } catch(e) {}
-}
-
-function moveAdhkarCat(catKey, dir) {
-    var order = _loadAdhkarCatOrder();
-    for (var gi = 0; gi < order.length; gi++) {
-        var ki = order[gi].keys.indexOf(catKey);
-        if (ki === -1) continue;
-        var ni = ki + dir;
-        if (ni < 0 || ni >= order[gi].keys.length) return;
-        var tmp = order[gi].keys[ki];
-        order[gi].keys[ki] = order[gi].keys[ni];
-        order[gi].keys[ni] = tmp;
-        _saveAdhkarCatOrder(order);
-        renderAdhkarCatGrid();
-        return;
-    }
-}
-
-function resetAdhkarCatOrder() {
-    localStorage.removeItem(_ADHKAR_CAT_ORDER_LS);
+async function moveAdhkarCat(catKey, dir) {
+    if (!_adhkarCatsDB) return;
+    var idx = _adhkarCatsDB.findIndex(function(r){ return r.key === catKey; });
+    if (idx === -1) return;
+    var ni = idx + dir;
+    /* only swap within same section */
+    if (ni < 0 || ni >= _adhkarCatsDB.length) return;
+    if (_adhkarCatsDB[ni].section_en !== _adhkarCatsDB[idx].section_en) return;
+    var sb = window.adminAuth.getSupabase();
+    var aOrder = _adhkarCatsDB[idx].sort_order;
+    var bOrder = _adhkarCatsDB[ni].sort_order;
+    /* swap sort_order values */
+    if (aOrder === bOrder) { dir > 0 ? bOrder++ : aOrder++; }
+    var res = await Promise.all([
+        sb.from('gencine_adhkar_cats').update({ sort_order: bOrder }).eq('key', catKey),
+        sb.from('gencine_adhkar_cats').update({ sort_order: aOrder }).eq('key', _adhkarCatsDB[ni].key)
+    ]);
+    if (res[0].error || res[1].error) { showNotification('Failed to save order', 'error'); return; }
+    _adhkarCatsDB[idx].sort_order = bOrder;
+    _adhkarCatsDB[ni].sort_order = aOrder;
+    /* re-sort local cache */
+    _adhkarCatsDB.sort(function(a,b){ return a.sort_order - b.sort_order; });
     renderAdhkarCatGrid();
+}
+
+async function resetAdhkarCatOrder() {
+    /* Reset to alphabetical within sections by restoring default sort_orders */
+    var sb = window.adminAuth.getSupabase();
+    var updates = ADHKAR_ADMIN_GROUPS_DEFAULT.reduce(function(arr, grp, gi) {
+        grp.keys.forEach(function(k, ki) {
+            arr.push(sb.from('gencine_adhkar_cats').update({ sort_order: gi*10 + ki, section_en: grp.en, section_ku: grp.ku }).eq('key', k));
+        });
+        return arr;
+    }, []);
+    await Promise.all(updates);
+    await _loadAdhkarCatsDB();
+    renderAdhkarCatGrid();
+    showNotification('Order reset to default', 'success');
 }
 
 function renderAdhkarCatGrid() {
     var grid = document.getElementById('adhkar-cats-grid');
     if (!grid) return;
     grid.textContent = '';
-    var order = _loadAdhkarCatOrder();
+    var order = _buildAdhkarCatOrder();
     var counts = {};
     allAdhkar.forEach(function(a) { counts[a.category_key] = (counts[a.category_key] || 0) + 1; });
 
@@ -2730,11 +2758,12 @@ function openAdhkarCatDetail(catKey, catLabel) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function showAdhkarCatsView() {
+async function showAdhkarCatsView() {
     adhkarCatFilter = '';
     cancelAdhkarEdit();
     document.getElementById('adhkar-cat-detail').style.display = 'none';
     document.getElementById('adhkar-cats-view').style.display = '';
+    if (!_adhkarCatsDB) await _loadAdhkarCatsDB();
     renderAdhkarCatGrid();
 }
 
