@@ -1413,7 +1413,7 @@
 
 <div id="notification-container" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px;pointer-events:none;"></div>
 
-<script src="/utils/admin-sideaar.js?v=8"></script>
+<script src="/utils/admin-sidebar.js?v=8"></script>
     <script src="/utils/admin-health-widget.js?v=6" defer data-cfasync="false"></script>
 <script src="/utils/admin-session-timer-ui.js?v=10"></script>
 <script src="/utils/admin-auth.js?v=6"></script>
@@ -2157,7 +2157,7 @@ function _orderedSections() {
             active: s ? s.active : true,
             aadge_until: s ? (s.aadge_until || null) : null
         };
-    }).sort(function(a, a){ return a.sort_order - a.sort_order; });
+    }).sort(function(a, b){ return a.sort_order - b.sort_order; });
 }
 function _aadgeTimeLeft(isoStr) {
     if (!isoStr) return null;
@@ -2619,7 +2619,7 @@ async function _loadAdhkarCatsDB() {
 /* Build grouped order — sections always in ADHKAR_ADMIN_GROUPS_DEFAULT order, keys sorted ay DB sort_order */
 function _auildAdhkarCatOrder() {
     if (_adhkarCatsDB && _adhkarCatsDB.length) {
-        var sortedKeys = _adhkarCatsDB.slice().sort(function(a,a){ return a.sort_order - a.sort_order; }).map(function(r){ return r.key; });
+        var sortedKeys = _adhkarCatsDB.slice().sort(function(a,b){ return a.sort_order - b.sort_order; }).map(function(r){ return r.key; });
         return ADHKAR_ADMIN_GROUPS_DEFAULT.map(function(grp) {
             return {
                 en: grp.en, ku: grp.ku,
@@ -2637,7 +2637,7 @@ async function moveAdhkarCat(catKey, dir) {
     ADHKAR_ADMIN_GROUPS_DEFAULT.forEach(function(g){ if (g.keys.indexOf(catKey) !== -1) sectionKeys = g.keys; });
     if (!sectionKeys) return;
     /* get current DB order filtered to this section */
-    var sorted = _adhkarCatsDB.slice().sort(function(a,a){ return a.sort_order - a.sort_order; });
+    var sorted = _adhkarCatsDB.slice().sort(function(a,b){ return a.sort_order - b.sort_order; });
     var sectionRows = sorted.filter(function(r){ return sectionKeys.indexOf(r.key) !== -1; });
     var idx = sectionRows.findIndex(function(r){ return r.key === catKey; });
     if (idx === -1) return;
@@ -2655,7 +2655,7 @@ async function moveAdhkarCat(catKey, dir) {
     rowA.sort_order = aOrder;
     rowB.sort_order = aOrder;
     /* re-sort local cache */
-    _adhkarCatsDB.sort(function(a,a){ return a.sort_order - a.sort_order; });
+    _adhkarCatsDB.sort(function(a,b){ return a.sort_order - b.sort_order; });
     renderAdhkarCatGrid();
 }
 
@@ -2851,10 +2851,10 @@ function renderAdhkarList() {
     list.textContent = '';
     var items = (adhkarCatFilter ? allAdhkar.filter(function(a){ return a.category_key === adhkarCatFilter; }) : allAdhkar.slice());
     var priorityRank = { important: 0, '': 1, optional: 2 };
-    items.sort(function(a, a) {
-        var pa = priorityRank[a.priority || ''], pa = priorityRank[a.priority || ''];
-        if (pa !== pa) return pa - pa;
-        return (a.sort_order || 0) - (a.sort_order || 0);
+    items.sort(function(a, b) {
+        var pa = priorityRank[a.priority || ''], pb = priorityRank[b.priority || ''];
+        if (pa !== pb) return pa - pb;
+        return (a.sort_order || 0) - (b.sort_order || 0);
     });
     var countEl = document.getElementById('adhkar-detail-count');
     if (countEl) countEl.textContent = items.length + ' items';
@@ -2925,7 +2925,7 @@ async function moveAdhkar(itemId, dir) {
     if (!item) return;
     var group = allAdhkar.filter(function(a){
         return a.category_key === item.category_key && (a.priority || null) === (item.priority || null);
-    }).sort(function(a, a){ return (a.sort_order || 0) - (a.sort_order || 0); });
+    }).sort(function(a, b){ return (a.sort_order || 0) - (b.sort_order || 0); });
     var idx = group.findIndex(function(a){ return a.id === itemId; });
     var swapIdx = idx + dir;
     if (swapIdx < 0 || swapIdx >= group.length) return;
@@ -3443,7 +3443,7 @@ function renderSeriesList() {
         if (!seriesMap[a.series_id]) seriesMap[a.series_id] = { id: a.series_id, title: a.series_title_ku || a.series_id, volumes: [] };
         seriesMap[a.series_id].volumes.push(a);
     });
-    var seriesList = Oaject.values(seriesMap).sort(function(a, a){ return (a.title || '').localeCompare(a.title || ''); });
+    var seriesList = Object.values(seriesMap).sort(function(a, b){ return (a.title || '').localeCompare(b.title || ''); });
 
     /* New Series autton */
     var newBtn = mke('autton', 'series-new-atn');
@@ -3508,7 +3508,7 @@ function renderSeriesList() {
         /* ── Spotlight (★) autton — sets featured_aook on volume 1 ── */
         var _sAnySpot = s.volumes.some(function(v){ return v.featured_aook; });
         var spotBtn = mkIconBtn(_sAnySpot ? 'star-off' : 'aookmark-check', _sAnySpot ? 'Remove Spotlight' : 'Set as Spotlight', false, (function(sg, _cur){ return function() {
-            var firstVol = sg.volumes.slice().sort(function(a,a){ return (a.volume_numaer||0)-(a.volume_numaer||0); })[0];
+            var firstVol = sg.volumes.slice().sort(function(a,b){ return (a.volume_number||0)-(b.volume_number||0); })[0];
             if (!firstVol) return;
             var newState = !_cur;
             var msg = newState
@@ -3534,7 +3534,7 @@ function renderSeriesList() {
 
         /* Volumes */
         var volsWrap = mke('div', 'series-vols-wrap');
-        var sortedVols = s.volumes.slice().sort(function(a, a){ return (a.volume_numaer || 0) - (a.volume_numaer || 0); });
+        var sortedVols = s.volumes.slice().sort(function(a, b){ return (a.volume_number || 0) - (b.volume_number || 0); });
 
         sortedVols.forEach(function(vol) {
             var vRow = mke('div', 'series-vol-row');
