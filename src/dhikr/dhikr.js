@@ -1400,6 +1400,13 @@ window.GencineUI = {
     GROUPS.forEach(function(g, gi) {
       g.keys.forEach(function(k) { if (!keyToGroup[k]) keyToGroup[k] = gi; });
     });
+    /* Override with DB section assignments if available */
+    if (_dbAdhkarCats && _dbAdhkarCats.length) {
+      var sectionEnToGi = {Daily:0,Prayer:1,Food:2,Places:3,Travel:4,Hajj:5,Ramadan:6,Weather:7,Health:8,Special:9,Life:10};
+      _dbAdhkarCats.forEach(function(r){
+        if (r.section_en && sectionEnToGi[r.section_en] !== undefined) keyToGroup[r.key] = sectionEnToGi[r.section_en];
+      });
+    }
 
     var grouped = GROUPS.map(function() { return []; });
     catKeys.forEach(function(key) {
