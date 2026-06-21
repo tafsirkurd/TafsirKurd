@@ -95,7 +95,6 @@
 		}
 	},
 	"packageClassList": [
-		"InAppReviewPlugin",
 		"MediaPlugin",
 		"AppPlugin",
 		"CAPBrowserPlugin",
