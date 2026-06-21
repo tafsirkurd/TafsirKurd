@@ -67,6 +67,13 @@
   // Platform classes — used for platform-specific CSS (e.g. animation gating)
   if(isIOS)document.documentElement.classList.add('ios');
   else if(/Android/.test(ua))document.documentElement.classList.add('android');
+  // Phone vs tablet detection — uses smallest physical side in CSS px (dp on Android).
+  // Phones have smallest side < 600dp; 7"+ tablets have ≥ 600dp.
+  // Uses screen.width/height (physical device size) not window.innerWidth (viewport),
+  // so multi-window, split-screen and landscape rotation never trigger tablet layout on phones.
+  var _sw=Math.min(screen.width,screen.height);
+  if(isIPad||_sw>=600){document.documentElement.classList.add('is-tablet');}
+  else{document.documentElement.classList.add('is-phone');}
   // ── Automatic 4-tier Performance Detection ──────────────────────────────
   // Score-based: high(80-100) / medium(55-79) / low(30-54) / critical(0-29)
   // Runs synchronously in <head> so perf-* classes are ready before first paint.
