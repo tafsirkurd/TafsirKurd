@@ -2710,10 +2710,14 @@ function renderAdhkarList() {
         }
         body.appendChild(arEl); body.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
-        // ⭐ Star — toggle important
-        var starBtn = mkIconBtn('star', item.priority === 'important' ? 'Remove important' : 'Mark as important', false, (function(it){ return function(){ toggleAdhkarImportant(it); }; })(item));
+        // ⭐ Important / 🔖 Optional toggles
+        var starBtn = mkIconBtn('star', 'Important (pinned first)', false, (function(it){ return function(){ setAdhkarPriority(it,'important'); }; })(item));
         if (item.priority === 'important') starBtn.classList.add('star-active');
+        starBtn.style.color = item.priority === 'important' ? '#f59e0b' : '';
+        var optBtn = mkIconBtn('bookmark', 'Optional (shown last)', false, (function(it){ return function(){ setAdhkarPriority(it,'optional'); }; })(item));
+        if (item.priority === 'optional') { optBtn.style.color = '#8b5cf6'; optBtn.title = 'Remove optional'; }
         acts.appendChild(starBtn);
+        acts.appendChild(optBtn);
         // ↑ ↓ — reorder within category
         acts.appendChild(mkIconBtn('arrow-up',   'Move up',   false, (function(id){ return function(){ moveAdhkar(id, -1); }; })(item.id)));
         acts.appendChild(mkIconBtn('arrow-down', 'Move down', false, (function(id){ return function(){ moveAdhkar(id,  1); }; })(item.id)));
@@ -2725,8 +2729,9 @@ function renderAdhkarList() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-async function toggleAdhkarImportant(item) {
-    var newPriority = item.priority === 'important' ? null : 'important';
+async function setAdhkarPriority(item, val) {
+    // clicking the active button clears it; clicking the other switches to it
+    var newPriority = item.priority === val ? null : val;
     var sb = window.adminAuth.getSupabase();
     var r = await sb.from('gencine_adhkar').update({ priority: newPriority }).eq('id', item.id);
     if (r.error) { showNotification('Failed: ' + r.error.message, 'error'); return; }
