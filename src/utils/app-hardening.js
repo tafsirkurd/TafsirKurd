@@ -270,38 +270,86 @@
   // Expose safe mode state
   window._tkSafeMode = window._tkSafeMode || (localStorage.getItem(SM_KEY) === '1');
 
-  // Show recovery banner if in safe mode (injected when DOM is ready)
+  // Show recovery modal if in safe mode (injected when DOM is ready)
   if (window._tkSafeMode) {
     document.addEventListener('DOMContentLoaded', function () {
-      var banner = document.createElement('div');
-      banner.id = 'tk-recovery-banner';
-      banner.style.cssText = [
-        'position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:99999',
-        'background:#b91c1c;color:#fff;padding:10px 14px',
-        'display:flex;align-items:center;gap:10px',
-        'font-size:13px;font-family:sans-serif;direction:rtl'
-      ].join(';');
-      var icon = document.createElement('span');
-      icon.textContent = '⚠️';
-      var text = document.createElement('span');
-      text.style.flex = '1';
-      text.textContent = 'ئەپ ' + (window._tkCrashCount || 3) + ' جار کراش کرد. دەستکەوتی بەئەمنی چالاک کرا.';
-      var btn = document.createElement('button');
-      btn.textContent = '✕';
-      btn.style.cssText = 'background:none;border:none;color:inherit;font-size:18px;cursor:pointer;padding:0 4px;line-height:1';
-      btn.onclick = function () { if (banner.parentNode) banner.parentNode.removeChild(banner); };
-      var reset = document.createElement('button');
-      reset.textContent = 'ڕیستکردن';
-      reset.style.cssText = 'background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap';
-      reset.onclick = function () {
+      var style = document.createElement('style');
+      style.textContent = [
+        '@keyframes tk-slide-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}',
+        '#tk-recovery-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);',
+        'display:flex;align-items:flex-end;justify-content:center;',
+        'padding:0 0 env(safe-area-inset-bottom,0px);backdrop-filter:blur(4px)}',
+        '#tk-recovery-card{width:100%;max-width:480px;background:#1a1a2e;border-radius:24px 24px 0 0;',
+        'padding:28px 24px calc(24px + env(safe-area-inset-bottom,0px));',
+        'animation:tk-slide-up .35s cubic-bezier(.34,1.56,.64,1) both;',
+        'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;direction:rtl;color:#f1f5f9}',
+        '#tk-recovery-card .tk-icon-wrap{width:64px;height:64px;border-radius:20px;',
+        'background:linear-gradient(135deg,#7f1d1d,#b91c1c);',
+        'display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px}',
+        '#tk-recovery-card h2{margin:0 0 8px;font-size:20px;font-weight:700;text-align:center;color:#f8fafc}',
+        '#tk-recovery-card p{margin:0 0 24px;font-size:14px;line-height:1.6;text-align:center;color:#94a3b8}',
+        '#tk-recovery-card .tk-count-badge{display:inline-block;background:rgba(185,28,28,.25);',
+        'color:#fca5a5;border-radius:6px;padding:2px 8px;font-size:13px;font-weight:600;margin-bottom:20px}',
+        '#tk-recovery-card .tk-btns{display:flex;flex-direction:column;gap:10px}',
+        '#tk-recovery-card .tk-btn-reset{background:linear-gradient(135deg,#b91c1c,#dc2626);',
+        'color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:600;',
+        'cursor:pointer;width:100%;letter-spacing:.3px}',
+        '#tk-recovery-card .tk-btn-dismiss{background:rgba(255,255,255,.07);',
+        'color:#94a3b8;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px;',
+        'font-size:14px;cursor:pointer;width:100%}',
+      ].join('');
+      document.head.appendChild(style);
+
+      var overlay = document.createElement('div');
+      overlay.id = 'tk-recovery-overlay';
+
+      var card = document.createElement('div');
+      card.id = 'tk-recovery-card';
+
+      var iconWrap = document.createElement('div');
+      iconWrap.className = 'tk-icon-wrap';
+      iconWrap.textContent = '🛡️';
+
+      var title = document.createElement('h2');
+      title.textContent = 'دەستکەوتی بەئەمنی';
+
+      var countBadge = document.createElement('div');
+      countBadge.style.cssText = 'text-align:center';
+      var badge = document.createElement('span');
+      badge.className = 'tk-count-badge';
+      badge.textContent = 'ئەپ ' + (window._tkCrashCount || 3) + ' جار کراش کرد';
+      countBadge.appendChild(badge);
+
+      var desc = document.createElement('p');
+      desc.textContent = 'ئەپ چەند جاریک ب شێوەیەکی نیشانەداری دایست. ئەوا بە دەستکەوتی بەئەمنی کاردەکات. ڕیستکردن پێشنیار دەکرێت.';
+
+      var btns = document.createElement('div');
+      btns.className = 'tk-btns';
+
+      var resetBtn = document.createElement('button');
+      resetBtn.className = 'tk-btn-reset';
+      resetBtn.textContent = '🔄  ڕیستکردن و دووبارە کردنەوە';
+      resetBtn.onclick = function () {
         window._tkMarkCleanLaunch();
         window.location.reload();
       };
-      banner.appendChild(icon);
-      banner.appendChild(text);
-      banner.appendChild(reset);
-      banner.appendChild(btn);
-      document.body.appendChild(banner);
+
+      var dismissBtn = document.createElement('button');
+      dismissBtn.className = 'tk-btn-dismiss';
+      dismissBtn.textContent = 'بەردەوامبوون بە دەستکەوتی بەئەمنی';
+      dismissBtn.onclick = function () {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      };
+
+      btns.appendChild(resetBtn);
+      btns.appendChild(dismissBtn);
+      card.appendChild(iconWrap);
+      card.appendChild(title);
+      card.appendChild(countBadge);
+      card.appendChild(desc);
+      card.appendChild(btns);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
     });
   }
 
